@@ -208,7 +208,8 @@ function Truth.Draw( d, conf, out )
         local rec = i >= 1 and i <= out.count and out.recs[ i ] or nil
         local spell = 0
         if rec and rec.actionName and rec.exact_time and not rec.item and ( rec.actionID or 0 ) > 0 then spell = rec.actionID end
-        ov.glow = conf.truth.confirm and ( press or b.isFocus == true ) and i >= 1 and d.resolved[ i ].glow or false
+        -- spell > 0: a published spell record (i within out.count); a slot past it keeps a stale resolved glow
+        ov.glow = conf.truth.confirm and spell > 0 and ( press or b.isFocus == true ) and d.resolved[ i ].glow or false
         if spell ~= ov.spell then
             -- only a spell change shows its state undebounced; a press-only change keeps the settle (no blink)
             ov.spell = spell

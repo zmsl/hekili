@@ -1009,6 +1009,16 @@ describe("Modern's proc mark (R3, M11)", function()
             local press = nextButton(d)
             assert.is_true(ov[press].real)
             assert.is_true(ov[press].markShown)
+            local dimmed = 0 -- the button drawing slam (record 3): a dim and a mark never share a button
+            for c, b in ipairs(d.Buttons) do
+                if b.recIndex == 3 then
+                    dimmed = c
+                end
+            end
+            assert.are_not.equal(0, dimmed)
+            assert.are_not.equal(press, dimmed)
+            assert.is_true(ov[dimmed].dimShown)
+            assert.is_true(ov[dimmed].veil.__shown)
             collectgarbage("collect")
             collectgarbage("stop")
             local before = collectgarbage("count")
@@ -1047,6 +1057,110 @@ describe("Modern's usability edge on a press-only change (Task 5 review)", funct
         assert.is_true(ov.dimShown)
         frame(H, d, 0.1)
         assert.is_false(ov.dimShown)
+        assert.are.same({}, H.errors)
+    end)
+end)
+
+describe("Modern's proc mark: only a published spell, settled, keyed apart (Task 6 review)", function()
+    it("never marks from a stale resolved slot past the published count", function()
+        local H, d = boot("classic", true)
+        usableAll(H)
+        publish(H, SET_ONE)
+        frame(H, d, 0.2)
+        local Truth, conf = H.ns.UI.Truth, H.Hekili.DB.profile.displays.Primary
+        local out, b, ov = d.truthState.out, d.Buttons[2], d.truthState.ov[2]
+        d.resolved[2].glow = true -- left over from an earlier, longer publish (Resolve rewrites 1 .. out.count)
+        b.recIndex, b.isFocus = 2, true -- a contract pointing past out.count
+        Truth.Draw(d, conf, out)
+        for _ = 1, 3 do
+            H.ctl.now = H.ctl.now + 0.2
+            Truth.Tick(d, conf, out, H.ctl.now)
+        end
+        assert.is_false(ov.markShown)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("never marks an item record, even on an overlayed id", function()
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        overlayed[A.mortal_strike] = true
+        local s = H.ns.Output.Begin("Primary")
+        local r = s[1]
+        r.actionName, r.actionID, r.texture, r.keybind = "mortal_strike", A.mortal_strike, "tex1", "K1"
+        r.time, r.exact_time, r.item = 0.5, H.ctl.now + 0.5, 1
+        H.ns.Output.Publish("Primary", 1)
+        for _ = 1, 3 do
+            frame(H, d, 0.2)
+        end
+        assert.is_true(d.resolved[1].glow) -- the glow is there; the record is not a spell
+        assert.is_false(d.truthState.ov[1].markShown)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("settles a mark a press-only change brings, and drops one it takes away by the next frame", function()
+        local H, d = boot("timeline", true)
+        local A = ids(H)
+        usableAll(H)
+        H.ns.Output.hold = 3
+        overlayed[A.mortal_strike] = true
+        local FOCUS_FIRST = { { "overpower", 0.5, 1 }, { "mortal_strike", 1.0 }, { "slam", 2.0 }, { "rend", 3.0 } }
+        local MS_FIRST = { { "mortal_strike", 0.5 }, { "slam", 1.0 }, { "overpower", 2.0, 1 }, { "rend", 3.0 } }
+        publish(H, FOCUS_FIRST)
+        frame(H, d, 0.2)
+        local T, ov = d.styleFrames.timeline, d.truthState.ov[2]
+        assert.are.equal(2, T.rec[2]) -- the next box draws mortal strike as record 2: not the press, no mark
+        assert.is_false(ov.press)
+        assert.is_false(ov.markShown)
+        publish(H, MS_FIRST)
+        frame(H, d, 0.01)
+        assert.are.equal(1, T.rec[2]) -- the same spell, now the press: only the press flag changed
+        assert.is_true(ov.press)
+        assert.is_false(ov.markShown) -- no blink in: the glow must hold first
+        frame(H, d, 0.05)
+        assert.is_false(ov.markShown)
+        frame(H, d, 0.11)
+        assert.is_true(ov.markShown)
+        publish(H, FOCUS_FIRST)
+        frame(H, d, 0.01)
+        frame(H, d, 0.01)
+        assert.is_false(ov.markShown) -- less ready shows at once
+        assert.are.same({}, H.errors)
+    end)
+
+    it("stops only its own keyed glow: the style's glow and Timeline's focus glow stay", function()
+        local H, d = boot("timeline", true)
+        local A = ids(H)
+        usableAll(H)
+        local tl = H.Hekili.DB.profile.displays.Primary.timeline
+        tl.focusReadyStyle, tl.nowFallback = "glow", "empty"
+        tl.glow.enabled, tl.glow.mode = true, "autocast" -- the style's own glow: unkeyed
+        overlayed[A.overpower] = true
+        publish(H, { { "overpower", 0, 1 }, { "mortal_strike", 1.0 }, { "slam", 2.0 }, { "rend", 3.0 } })
+        frame(H, d, 0.2)
+        local b, ov = d.Buttons[1], d.truthState.ov[1]
+        assert.is_true(ov.markShown)
+        assert.truthy(rawget(b, "_AutoCastGlowtruth"))
+        assert.truthy(rawget(b, "_AutoCastGlowfocus"))
+        assert.is_true(b.glowing)
+        local own = rawget(b, "_AutoCastGlow")
+        assert.truthy(own)
+        assert.is_true(b.readyGlow)
+        -- the headless frame pool's Release is a no-op, so the stop calls themselves are what we check
+        local Glower, stops = H.env.LibStub("LibCustomGlow-1.0"), {}
+        local stop = Glower.AutoCastGlow_Stop
+        Glower.AutoCastGlow_Stop = function(r, key)
+            stops[#stops + 1] = { r, key }
+            return stop(r, key)
+        end
+        H.ctl.usable[A.overpower] = { false, true }
+        H.Fire("SPELL_UPDATE_USABLE")
+        Glower.AutoCastGlow_Stop = stop
+        assert.is_false(ov.markShown)
+        assert.are.same({ { b, "truth" } }, stops)
+        assert.are.equal(own, rawget(b, "_AutoCastGlow"))
+        assert.is_true(b.glowing)
+        assert.is_true(b.readyGlow)
         assert.are.same({}, H.errors)
     end)
 end)
