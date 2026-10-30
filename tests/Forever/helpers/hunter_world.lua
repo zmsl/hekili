@@ -23,8 +23,13 @@ M.CLIENT_SPEC, M.CLASS_ID = 1484, 3 -- the client's Hunter pseudo-spec
 local MANA = 0 -- Enum.PowerType
 local MAX = 5000
 local GCD = { spell = 1.5, off = 0 }
--- UNMEASURED: the true regen parts (the class file declares 15 and 2: the out-of-combat read corrects them).
+-- The default regen parts (a pack's `fsr` replaces them; the class file declares them per spec, as wowsims's logs).
 local FSR = { 18, 3 }
+local RESOURCEFULNESS = 1242688 -- its aura: +50% of the spirit regen while casting, 30 s (talent 440529)
+-- The share of a landed melee or ranged ability (not Auto Shot) that crits, counted in wowsims's logs (the abilities
+-- that gave Resourcefulness there: Raptor Strike, Mongoose Bite, Arcane Shot, Multi-Shot, Strider Kick): Marksmanship
+-- 5 of 43, Survival 8 of 42. The world's shots do not roll crits, so the aura rolls this itself.
+local CRIT = { Marksmanship = 5 / 43, Survival = 8 / 42 }
 local QUICK_SHOTS = 0.1 -- wowsims aspects.go: Deadly Aspects' 2% a rank, 5 ranks
 local AUTO_SHOT = 75
 
@@ -112,6 +117,13 @@ local function drop(W, e, X, key) -- aura `key` off us, if up
     end
 end
 
+-- Resourcefulness: a landed ability of a build that has the talent (`rate`: its measured crit rate) crits.
+local function resourceful(W, e, rate, X)
+    if rate and W.rng.chance(rate) then
+        aura(W, X, e, "resourcefulness")
+    end
+end
+
 -- Our dodge of a swing at us within 5 s, after the last bite: Mongoose Bite's window (Defensive State 5302).
 local function dodged(W, e)
     for i = #W.truth, 1, -1 do
@@ -125,8 +137,9 @@ local function dodged(W, e)
     return false
 end
 
-local function shot(key, extra)
+local function shot(key, crits)
     return {
+        crits = crits, -- a landed hit may give Resourcefulness (C.resolve)
         effect = function(W, e, p, X)
             local other = SHARED[key]
             if other then
@@ -134,9 +147,6 @@ local function shot(key, extra)
             end
             if AMOUNT[key] then
                 W.hit(e, e.target, AMOUNT[key], key == "arcane_shot" and 64 or 1) -- the rest physical (DB2)
-            end
-            if extra then
-                extra(W, e, p, X)
             end
         end,
     }
@@ -186,12 +196,12 @@ M.MAP = {
             end
         end,
     },
-    arcane_shot = shot("arcane_shot"),
+    arcane_shot = shot("arcane_shot", true),
     summon_hawk = shot("summon_hawk"),
-    aimed_shot = shot("aimed_shot"),
-    multi_shot = shot("multi_shot"),
-    sniper_shot = shot("sniper_shot"),
-    strider_kick = shot("strider_kick"),
+    aimed_shot = shot("aimed_shot", true),
+    multi_shot = shot("multi_shot", true),
+    sniper_shot = shot("sniper_shot", true),
+    strider_kick = shot("strider_kick", true),
     wing_clip = shot("wing_clip"),
     immolation_trap = {}, -- the trap's burn is unmodelled (no read of it)
     -- the Orc racial (Hekili_Shared, the wowsims build's race): its buff on us; the attack power it adds is unmodelled
@@ -200,11 +210,12 @@ M.MAP = {
             aura(W, X, e, "blood_fury")
         end,
     },
-    raptor_strike = { bonus = 100 }, -- the queued swing's damage over the weapon's
+    raptor_strike = { bonus = 100, queued = true }, -- the queued swing's damage over the weapon's; may give Resourcefulness at its swing
     mongoose_bite = {
         requires = function(W, e)
             return dodged(W, e), "no dodge"
         end,
+        crits = true,
         effect = function(W, e)
             e.bitAt = W.t
             W.hit(e, e.target, AMOUNT.mongoose_bite, 1)
@@ -235,6 +246,8 @@ local PACKS = {
         weapon = { 150, 220, 3.5 },
         ranged = { 140, 200, 3.0 },
         aspect = "aspect_of_the_hawk",
+        -- wowsims's log (hunter_beast_mastery.log): 7.94 a second while casting (Bestial Discipline's 50%), 15.88 outside
+        fsr = { 7.94, 7.94, share = 0.5 },
         uptime = { "serpent_sting", "hunters_mark" },
     },
     Marksmanship = {
@@ -255,6 +268,9 @@ local PACKS = {
         weapon = { 150, 220, 3.5 },
         ranged = { 140, 200, 3.0 },
         aspect = "aspect_of_the_hawk",
+        resourceful = true, -- the build has Resourcefulness 2/2 (hunter_marksmanship.log)
+        -- wowsims's log: 15.88 outside the rule, 0 while casting, Resourcefulness adding half the 15.88 while casting
+        fsr = { 15.88, 0, auras = { [RESOURCEFULNESS] = { share = 0.5 } } },
         uptime = { "serpent_sting", "hunters_mark" },
     },
     -- Melee: a two-hander, no Auto Shots.
@@ -275,6 +291,8 @@ local PACKS = {
         },
         weapon = { 180, 260, 3.6 },
         aspect = "aspect_of_the_hawk", -- the pack's (its precombat Aspect of the Hawk)
+        resourceful = true, -- the build has Resourcefulness 2/2 (hunter_survival.log)
+        fsr = { 15.88, 0, auras = { [RESOURCEFULNESS] = { share = 0.5 } } },
         uptime = { "hunters_mark" },
     },
 }
@@ -349,6 +367,9 @@ end
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, IDS = {} }
+    -- shortcut: the world's character takes no talents, so Resourcefulness's cost cut is not applied (costOf) while its
+    -- regen proc is; seat the talent in `character` and the cost cut follows, when the loop worlds take the builds' talents
+    local rate = P.resourceful and CRIT[name] -- nil: the build lacks Resourcefulness
     C.SPEC = ({ BeastMastery = 100031, Marksmanship = 100032, Survival = 100033 })[name]
 
     function C.character()
@@ -392,9 +413,18 @@ local function content(name)
     local function hooks(W, us)
         us.health, us.healthMax = 1e9, 1e9 -- never killed: see C.WORLD
         local A = class().auras
+        local X = { aura = { resourcefulness = { id = A.resourcefulness.id, duration = A.resourcefulness.duration } } }
         local asp = A[P.aspect]
         if not us.auras[asp.id] then
             W.applyAura(us, asp.id, asp.duration, 1, asp.max_stack)
+        end
+        us.landed = function(W, act) -- the queued Raptor Strike's swing: the next of ours to land
+            if us.raptorQueued then
+                us.raptorQueued = false
+                if act == "WOUND" then
+                    resourceful(W, us, rate, X)
+                end
+            end
         end
         if not P.ranged then
             return
@@ -422,7 +452,7 @@ local function content(name)
         weapons = { P.weapon },
         ranged = P.ranged,
         max = MAX,
-        fsr = { [MANA] = FSR },
+        fsr = { [MANA] = P.fsr or FSR },
         power = MAX,
         mobHealth = 1e9,
         distance = P.distance,
@@ -504,6 +534,11 @@ local function content(name)
         p.effect = function(W, e)
             if m.effect then
                 m.effect(W, e, p, X)
+            end
+            if m.queued then
+                e.raptorQueued = true -- the next landed swing of ours is the strike (hooks)
+            elseif m.crits and e.lastHit and e.lastHit.act == "WOUND" then
+                resourceful(W, e, rate, X)
             end
         end
         return p

@@ -87,12 +87,24 @@ describe("Forever Hunter", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 1, 16, 14, 16 }, n)
+        assert.are.same({ [0] = 2, 16, 14, 16 }, n)
     end)
 
-    it("declares mana under the five-second rule", function()
+    it("declares mana as wowsims's logs measure it per spec, and the two casting shares", function()
         assert.are.same({ 0 }, w.order)
-        assert.are.same({ spirit = 15, mp5 = 2 }, w.resources[0].meta.fsr)
+        local r, e = w.resources[0], ld.env(w)
+        local function seed(key)
+            w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
+            return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
+        end
+        assert.are.same({ 7.94, 7.94, 0.5 }, seed("beast_mastery")) -- Bestial Discipline
+        assert.are.same({ 15.88, 0, 0 }, seed("marksmanship"))
+        assert.are.same({ 15.88, 0, 0 }, seed("survival"))
+        assert.are.same({ aura = "resourcefulness", share = 0.5 }, r.models.resourcefulness)
+        assert.are.same({ aura = "rapid_recuperation", share = 0.5 }, r.models.rapid_recuperation)
+        assert.are.same(1242688, w.auras.resourcefulness.id)
+        assert.are.same(1242512, w.auras.rapid_recuperation.id)
+        assert.are.same({ 0, 1223987, 2 }, w.talents.rapid_recuperation)
     end)
 
     it("anchors the ranged clock on Auto Shot, off the GCD", function()

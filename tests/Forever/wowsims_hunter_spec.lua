@@ -49,11 +49,14 @@ local REPLAY = { hidden = { [1310726] = true } }
 -- (their worlds at 11 yd, the weave's range) believe Arcane Shot's mana short after Rapid Fire's 100 (BM less long: its
 -- Efficiency; MM longer since Improved Arcane Shot 3/5 casts it every 5.1 s); SV, whose strikes Resourcefulness makes
 -- cheap, never idles at 60.
+-- MM 11.8 -> 12.8 (Task 5): the world's regen is now wowsims's log (15.88 a second outside the rule, 0 while casting
+-- but for Resourcefulness) instead of 21 / 3, so Arcane Shot's 190 mana is reached about a second later; with the old
+-- world regen and the new class seeds the idle is still 11.8 (measured), so the cause is the world's truth.
 -- Re-floored on central fix 14 (percent-of-base costs from base mana): BM 0.963 -> 1.000, MM 0.881 -> 0.929, SV
 -- 0.878 -> 0.976.
 local PACKS = {
     { "hunter_beast_mastery", "BeastMastery", "Beast Mastery (wowsims.com)", 1.00, 5.4 },
-    { "hunter_marksmanship", "Marksmanship", "Marksmanship (wowsims.com)", 0.92, 11.8 },
+    { "hunter_marksmanship", "Marksmanship", "Marksmanship (wowsims.com)", 0.92, 12.8 },
     { "hunter_survival", "Survival", "Survival (wowsims.com)", 0.97, 0 },
 }
 

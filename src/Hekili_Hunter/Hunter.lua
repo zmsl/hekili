@@ -200,11 +200,37 @@ local function removes(key)
 end
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace. UNMEASURED: a level 60 Hunter's spirit regen and a little mp5 from gear.
-spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
-    fsr = { spirit = 15, mp5 = 2 },
-    base = 1720, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
-})
+-- the in-combat calibration replace, as wowsims's logs measure them at 60: hunter_beast_mastery 7.94 a second while
+-- casting (Bestial Discipline 2/2's 50% share of 15.88) and 15.88 outside, so spirit 7.94, mp5 7.94 and share 0.5;
+-- hunter_marksmanship and hunter_survival 0 while casting and 15.88 outside. Forever's Spirit regen is `6.25 + Spirit/8`
+-- a second for every class (wowsims mana.go:75-76), not Classic's formula.
+-- Resourcefulness (1242688, DB2 aura 134) and Rapid Recuperation (1242512) are +50% of Spirit regen while casting.
+-- shortcut: Rapid Recuperation's share is 25/50% on a Serpent Sting hit and 50/100% on spending Rapid Killing by rank,
+-- one aura ID for both (wowsims talents_marksmanship.go:160-200); 0.5 is the common rank; upgrade if a build's rank or
+-- source differs.
+-- state.spec: the functions run in the state's environment (the file's `spec` is the class).
+spec:RegisterResource(
+    Enum.PowerType.Mana,
+    {
+        resourcefulness = { aura = "resourcefulness", share = 0.5 },
+        rapid_recuperation = { aura = "rapid_recuperation", share = 0.5 },
+    },
+    nil,
+    {
+        fsr = {
+            spirit = function()
+                return state.spec.beast_mastery and 7.94 or 15.88
+            end,
+            mp5 = function()
+                return state.spec.beast_mastery and 7.94 or 0
+            end,
+            share = function()
+                return state.spec.beast_mastery and 0.5 or 0
+            end,
+        },
+        base = 1720, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
+    }
+)
 
 -- Summon Hawk's guardians (C1): 2 up at most (DB2 1293527 effect 3), 18 s each (1293248's duration); the oldest gives
 -- way to a third.
@@ -220,6 +246,10 @@ spec:RegisterAuras({
     rapid_fire = { id = 3045, duration = 15, max_stack = 1 },
     -- Aspect of the Hawk's proc (Deadly Aspects) on an Auto Shot: +30% ranged haste.
     quick_shots = { id = 6150, duration = 12, max_stack = 1 },
+    -- Resourcefulness (talent 440529): a melee or ranged ability's crit gives +50% Spirit regen while casting (the mana
+    -- entry). Rapid Recuperation (talent 1223987): the same share on a Serpent Sting hit or spending Rapid Killing.
+    resourcefulness = { id = 1242688, duration = 30, max_stack = 1 },
+    rapid_recuperation = { id = 1242512, duration = 15, max_stack = 1 },
     -- Mongoose Bite's window after we dodge (Defensive State, 5 s), timed from the plain usability flip (reset_precast).
     defensive_state = { id = 5302, duration = 5, max_stack = 1 },
     -- Raptor Strike queued on the next main-hand swing (C_Spell.IsCurrentSpell, applied in reset_precast).
@@ -624,6 +654,7 @@ spec:RegisterTalents({
     talent_19386 = { 3, 19386, 1 },
     -- Forever-only (tree 0: not in the DB2's Talent table; wowsims's tree places it in Survival, 2 ranks)
     resourcefulness = { 0, 440529, 2 },
+    rapid_recuperation = { 0, 1223987, 2 }, -- wowsims's Marksmanship (spell_data_auto_gen.go:401); the DB2 names the spell only
 })
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and

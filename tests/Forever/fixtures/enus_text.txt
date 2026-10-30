@@ -15265,6 +15265,8 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.d
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.caption	name	Caption
@@ -19202,6 +19204,8 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.def
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.caption	name	Caption
@@ -20864,6 +20868,8 @@ options.packs.survival.Survival (wowsims.com).lists.buff_name	values.defensive_s
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
 options.packs.survival.Survival (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.survival.Survival (wowsims.com).lists.caption	name	Caption

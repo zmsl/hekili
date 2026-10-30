@@ -336,7 +336,7 @@ under Aspect of the Hawk (10%); they run the same pack text and kit, so their li
 distance (every check in range), swings a two-hander and keeps the pack's Aspect of the Hawk up. Its Mongoose Bite
 window never opens: our dodge is meant to open it for 5 s, but `dodged()` in `tests/Forever/helpers/hunter_world.lua`
 reads `W.t`/`W.truth`, which a batched list answer sees at the finished world. Each world prices the known rank under
-the character's Resourcefulness and Efficiency (the leveling brackets; the replay's builds). Raptor Strike's cooldown
+the character's Resourcefulness and Efficiency (the leveling brackets; the replay's builds). Their mana regen is wowsims's logs' (Beast Mastery 7.94 casting / 15.88 outside; Marksmanship and Survival 0 / 15.88, Resourcefulness adding half the 15.88 while casting for 30 s, rolled on a landed ability at the crit rate counted in the logs; the loop worlds apply no cost cut, gap BV). Raptor Strike's cooldown
 starts at its swing (class-neutral: a queued strike's cooldown). Each fight's fresh world gets the pack's aspect at the
 pull (the character keeps a permanent buff between fights). Neither side dies (shaman_world's workaround for the loop's
 missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35, Combat Range 0-5). "The Hunter at range, then

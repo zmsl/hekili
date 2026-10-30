@@ -41,7 +41,11 @@ M.FLICKER = {
     ["Subtlety"] = { flicker = 0.4, retracted = 0 }, -- 0.18 / 0 / 0.34, 0
     ["Survival"] = { flicker = 0.1, retracted = 0 }, -- 0.05 / 0 / 0, 0
     ["Marksmanship"] = { flicker = 0, retracted = 0 }, -- 0, 0
-    ["Beast Mastery"] = { flicker = 0, retracted = 0 }, -- 0, 0
+    -- 0 -> 0.2 (Task 5, wowsims's Hunter regen in; seeds 1-20 / 21-40 / 41-60: 0 / 0.12 / 0, was 0 / 0 / 0): the new BM
+    -- regen puts Arcane Shot's mana crossing 0.14 s from Hunter's Mark's refresh; lo runs ~3 mana under truth (gaps
+    -- BQ/BT, G7), so the near-tie resolves both ways (fight 21); controller ruling 2026-10-29 while the owner was away
+    -- (logged in hekili-open-questions.md)
+    ["Beast Mastery"] = { flicker = 0.2, retracted = 0 }, -- 0 / 0.12 / 0, 0
     ["Retribution"] = { flicker = 0.1, retracted = 0 }, -- 0.04 / 0 / 0.02, 0
     -- near an empty pool our rounded waits trade places with Holy Strike (near-tie wobble of the mana belief, gap AB);
     -- steady icons (experimental) is the player's remedy. s41-60 0.68 after Task 4a: gap AB near-tie in fight 18, a
