@@ -17,8 +17,7 @@ local M = {}
 M.CLIENT_SPEC, M.CLASS_ID = 1486, 2 -- the client's Paladin pseudo-spec
 local MANA = 0 -- Enum.PowerType
 local GCD = { totem = 1.0, spell = 1.5, off = 0 }
--- UNMEASURED: the true regen parts (the class file declares 17 and 2: the out-of-combat read corrects them).
-local FSR = { 20, 3 }
+-- The true regen parts per pack: wowsims's logs at 60 (the class file declares the same, per spec).
 
 -- UNMEASURED: the hits' amounts.
 local AMOUNT = {
@@ -188,6 +187,7 @@ local PACKS = {
         },
         talents = { [1310735] = 1, [20375] = 1 },
         weapon = { 150, 230, 3.6 },
+        fsr = { 13.65, 8.25 },
         uptime = { "consecrated_ground" },
     },
     -- Seal of Fury, Holy Shield and Swift Judgement, a one-hander and a shield; the mob's swings at us blocked.
@@ -208,6 +208,7 @@ local PACKS = {
         },
         talents = { [1310994] = 1, [20925] = 1, [20473] = 1 },
         weapon = { 70, 130, 2.7 },
+        fsr = { 17.38, 0 },
         uptime = { "consecrated_ground" },
     },
 }
@@ -313,7 +314,7 @@ local function content(name, pack)
         level = 60,
         weapons = { P.weapon },
         max = 6000,
-        fsr = { [MANA] = FSR },
+        fsr = { [MANA] = P.fsr },
         power = 6000,
         mobHealth = 15000,
         script = hooks,

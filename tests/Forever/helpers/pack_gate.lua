@@ -46,11 +46,18 @@ M.FLICKER = {
     -- BQ/BT, G7), so the near-tie resolves both ways (fight 21); controller ruling 2026-10-29 while the owner was away
     -- (logged in hekili-open-questions.md)
     ["Beast Mastery"] = { flicker = 0.2, retracted = 0 }, -- 0 / 0.12 / 0, 0
-    ["Retribution"] = { flicker = 0.1, retracted = 0 }, -- 0.04 / 0 / 0.02, 0
-    -- near an empty pool our rounded waits trade places with Holy Strike (near-tie wobble of the mana belief, gap AB);
-    -- steady icons (experimental) is the player's remedy. s41-60 0.68 after Task 4a: gap AB near-tie in fight 18, a
-    -- diverged press history; owner ruling 2026-10-29: seed chaos, floor kept
-    ["Protection"] = { flicker = 0.5, retracted = 0 }, -- 0.46 / 0.03 / 0.49, 0 (oracle 0 / 0.42 / 0.39)
+    -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
+    -- wowsims's logged regen (Ret 8.25/s casting) runs the world at an empty mana pool; the oracle's flicker rose too; our
+    -- extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike); controller ruling
+    -- 2026-10-30 while the owner was away
+    ["Retribution"] = { flicker = 0.9, retracted = 0 }, -- 0.47 / 0.88 / 0.77, 0
+    -- 0.5 -> 0.8 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.54 / 0.71 / 0.49, was 0.45 / 0.03 / 0.68; oracle 0.59 / 1.81 / 1.73):
+    -- wowsims's logged regen (Prot 0 casting) runs the world at an empty mana pool; the oracle's flicker rose to 0.59-1.81;
+    -- our extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike, agreement .99 ->
+    -- .91); controller ruling 2026-10-30 while the owner was away. Supersedes the 2026-10-29 owner ruling (seed chaos at
+    -- 41-60 after Task 4a, floor kept): that note's near-tie wobble is gap AB too; steady icons (experimental) is the
+    -- player's remedy.
+    ["Protection"] = { flicker = 0.8, retracted = 0 }, -- 0.54 / 0.71 / 0.49, 0 (oracle 0.59 / 1.81 / 1.73)
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     ["Enhancement"] = { flicker = 0.2, retracted = 0 }, -- 0.12 / 0.07 / 0.1996, 0 (was 0.02 / 0 / 0.03)

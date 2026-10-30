@@ -115,7 +115,14 @@ describe("Forever Paladin", function()
 
     it("declares mana under the five-second rule", function()
         assert.are.same({ 0 }, w.order)
-        assert.are.same({ spirit = 17, mp5 = 2 }, w.resources[0].meta.fsr)
+        local fsr, e = w.resources[0].meta.fsr, ld.env(w)
+        local function seed(key)
+            w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
+            return { ld.run(fsr.spirit, e), ld.run(fsr.mp5, e) }
+        end
+        assert.are.same({ 13.65, 8.25 }, seed("retribution")) -- wowsims's logs: 21.9 outside, 8.25 while casting
+        assert.are.same({ 17.38, 0 }, seed("protection"))
+        assert.is_nil(fsr.share)
     end)
 
     it("puts one seal up at a time; with Twist of Light the replaced seal leaves its Echo", function()

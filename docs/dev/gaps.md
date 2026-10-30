@@ -135,7 +135,14 @@ commit.
   `docs/dev/layout.md`). Paladin Protection seeds 41-60 rose 0.49 -> 0.68/min under Task 4a (floor 0.5; the gated
   seeds 1-20 read 0.45, the oracle fell 0.39 -> 0.00): fight 18's 16 flickers are a 9 s seal_of_fury (mana wait) /
   holy_strike (cooldown) countdown near-tie set off by a diverged press history, far outside the near-cost hold's
-  windows. Owner ruling 2026-10-29: seed chaos, the 0.5 floor stays.
+  windows. Owner ruling 2026-10-29: seed chaos, the 0.5 floor stays (superseded by the 0.8 floor below).
+  Task 7 (wowsims's Paladin regen: Ret 8.25/s casting, Prot 0): the world runs at an empty pool and AB is the
+  agreement cost, Protection .99 -> .91 (seeds 1-20 / 21-40 / 41-60: .917 / .912 / .920), Retribution .999 -> .98.
+  Trace, Protection seed 0 fight 5, t=7.8: floor lo = 0 while est 14.2, truth 15.9; Judgement (90) from the floor is
+  ready in 9.0 s (3.8 s window + 90 / 17.38), from the truth 8.1 s; Holy Strike 8.8 s, so we pick it over the oracle's
+  Judgement ("judgement -> holy_strike" 1450-1539 ticks a seed set). Diagnostic: Prot mp5 0 -> 0.5 in pack and world
+  makes ours 7.61 vs oracle 7.17 at the same tick, so the zero casting rate pins the floor at 0 between windows.
+  Open question for the owner (a core task): lift the empty-pool floor.
 - AO / AP: our own DoTs from the target's nameplate aura frames; the nameplate aura probe (ForeverProbe) first.
 - AX's residue: a foreign avoid landing in our cast's landing window (partly fixed by final review fix 4); a group
   fight with `/vslog` (O1, O2).

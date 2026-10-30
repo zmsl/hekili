@@ -215,7 +215,7 @@ Subtlety solo: fights=20 agreement 0.973 (13157 ticks); react median 0 p90 0 nev
 `make test-paladin` (`#paladin`), asserting its flagged lines ran (Retribution: the seal twist at tier 1; Protection:
 Seal of Fury and Holy Shield at tier 2). The mob swings at us in both worlds: Holy Shield raises the block chance and
 each block spends a charge (the world's class-neutral `taking`/`took`); our landed swing spends an Echo (`landed`); mana
-runs under the five-second rule (`fsr`). Both packs are gated by `pack_gate.gate`; both are wowsims.com packs since the
+runs under the five-second rule (`fsr`: wowsims's logs, Retribution 13.65 spirit / 8.25 mp5, Protection 17.38 / 0, an empty pool; Task 7 floors Retribution 0.9 and Protection 0.8, gap AB). Both packs are gated by `pack_gate.gate`; both are wowsims.com packs since the
 wowsims packs plan, Task 9 (the hand-built lists retired). Retribution (wowsims.com)'s swing-gap fillers carry
 wowsims's own `mana.pct>=10`, judged on the secret-mana belief; each fight starts with the mana the last one left,
 regenerated through the 30 s gap (GAP X, closed: the 20-fight line was 0.911, never 0.226, while fights restarted at

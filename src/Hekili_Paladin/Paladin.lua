@@ -218,10 +218,20 @@ local function selfBuff(key, ids, extra)
 end
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace. UNMEASURED: a level 60 Paladin's spirit regen ((spirit / 5 + 15) per 2 s tick at
--- about 100 spirit) and a little mp5 from gear.
+-- the in-combat calibration replace, as wowsims's logs measure them at 60: Retribution 8.25 a second while casting
+-- (mp5: Reverence's 30% share of the 21.9 outside, 13.65 of it spirit) and 21.9 outside, Protection 0 while casting and
+-- 17.38 outside. Forever's Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76), not
+-- Classic's formula.
+-- state.spec: the functions run in the state's environment (the file's `spec` is the class).
 spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
-    fsr = { spirit = 17, mp5 = 2 },
+    fsr = {
+        spirit = function()
+            return state.spec.retribution and 13.65 or 17.38
+        end,
+        mp5 = function()
+            return state.spec.retribution and 8.25 or 0
+        end,
+    },
     base = 1512, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
 })
 
