@@ -48,6 +48,22 @@ describe("the sim's five-second-rule forecast", function()
         assert.are.equal(110, at(13) - at(8))
     end)
 
+    it(
+        "holds the window to a paid channel's end at a spend queued while channeling (wowsims mana.go:236-241)",
+        function()
+            r.actual, r.fsr_until = 1000, 100
+            local saved = rawget(S.buff, "casting") -- no character booted: the record itself, not the aura registry
+            local casting = { up = true, v3 = 1, expires = 108 } -- v3 = 1: a channel to 108
+            rawset(S.buff, "casting", casting)
+            S.spend(100, "mana")
+            assert.are.equal(108, r.fsr_until)
+            casting.v3 = 0 -- a hard cast's end holds nothing: it spends at its end
+            S.spend(100, "mana")
+            assert.are.equal(105, r.fsr_until)
+            rawset(S.buff, "casting", saved)
+        end
+    )
+
     it("pads time_to_X by the tick a ticked pool waits for, as Hekili's energy (0.1 s by default)", function()
         r.tick_rate, r.last_tick = 0.1, 100.05 -- a tick 0.05 s before the next: now is mid-tick
         S.forecastResources("mana")

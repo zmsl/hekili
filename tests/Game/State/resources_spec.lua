@@ -2170,6 +2170,70 @@ describe("resources", function()
             end, 1000)
             assert.are.equal(0, bytes)
         end)
+
+        -- One channel ability (index 1) for the Channel observations (Families/Casts.lua).
+        local function bootChannel(fsr, decayInterval)
+            boot({
+                abilities = { { key = "chan", spend = 100 } },
+                abilityIds = { { 1001 } },
+                abilitySlot = { 1 },
+                resources = {
+                    {
+                        key = "mana",
+                        type = MANA,
+                        token = "MANA",
+                        max = 1000,
+                        rest = true,
+                        fsr = fsr or { spirit = 10, mp5 = 2 },
+                        decayInterval = decayInterval,
+                    },
+                },
+                auras = {},
+                auraIds = {},
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.Settle(10)
+        end
+
+        it("holds the window to a paid channel's end, either event order, and to its stop when clipped", function()
+            bootChannel()
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess)
+            obs(Obs.ChannelStart, 10, 1, 18, 0) -- an 8 s channel from 10 (a = ability index 1, b = its end)
+            I.Fold(10, false)
+            assert.are.equal(18, VS.FsrUntil(MANA))
+            obs(Obs.ChannelStop, 16, 1, 0, 0)
+            I.Fold(16, false)
+            assert.are.equal(16, VS.FsrUntil(MANA))
+            obs(Obs.ChannelStart, 30, 1, 38, 0)
+            I.Fold(30, false)
+            I.ResourceShift(1, -100, 30, Obs.CastSuccess) -- the spend after the start
+            assert.are.equal(38, VS.FsrUntil(MANA))
+            obs(Obs.ChannelUpdate, 32, 1, 40, 0) -- pushed back
+            I.Fold(32, false)
+            assert.are.equal(40, VS.FsrUntil(MANA))
+            obs(Obs.ChannelStop, 40, 1, 0, 0)
+            I.Fold(40, false)
+            obs(Obs.ChannelStart, 50, 1, 58, 0) -- a free channel: no spend
+            I.Fold(50, false)
+            assert.are.equal(40, VS.FsrUntil(MANA))
+            obs(Obs.ChannelStop, 52, 1, 0, 0) -- its stop holds nothing either
+            I.Fold(52, false)
+            assert.are.equal(40, VS.FsrUntil(MANA))
+        end)
+
+        it("makes a throwing or non-finite `spirit`, `mp5` or `decayInterval` inert at the build", function()
+            local function bad()
+                error("TacoDog: no stat yet")
+            end
+            bootChannel({
+                spirit = bad,
+                mp5 = function()
+                    return 0 / 0
+                end,
+            }, bad)
+            assert.are.same({ 0, 0, 0 }, { I.res.spDecl[1], I.res.decl[1], I.res.decayIv[1] })
+        end)
     end)
 
     describe("a regen `mult` (C3b: energy 10/s, x2 while rate_aura is up)", function()

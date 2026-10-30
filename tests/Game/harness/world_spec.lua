@@ -162,6 +162,26 @@ describe("the world's resources", function()
         assert.are.same({ 12, 2 }, { ev.regen[POOL], ev.regenCasting[POOL] })
     end)
 
+    it("holds an `fsr` pool's casting rate to a paid channel's end, and to the 5 s rule after a clip", function()
+        setup()
+        W.startRegen(us, {}, 0.1, nil, { [POOL] = { 10, 2 } })
+        local chan = { spell = 1, gcd = 1.5, cost = 10, pt = POOL, channel = { length = 8, tick = 1 } }
+        assert.is_true(W.press(us, "chan", chan))
+        W.run(6.5)
+        assert.are.equal(2, W.regenRate(us, POOL)) -- held past the 5 s
+        W.run(8.05)
+        assert.are.equal(12, W.regenRate(us, POOL))
+        assert.is_true(W.press(us, "chan", chan)) -- at 8.05, clipped at 14.05
+        W.run(14.05)
+        assert.are.equal(2, W.regenRate(us, POOL))
+        W.stopChannel(us)
+        assert.are.equal(12, W.regenRate(us, POOL)) -- 6 s after its spend: the 5 s rule
+        W.run(20)
+        W.press(us, "free", { spell = 2, gcd = 1.5, channel = { length = 8, tick = 1 } }) -- free: holds nothing
+        W.run(26)
+        assert.are.equal(12, W.regenRate(us, POOL))
+    end)
+
     it("lets the victim's `taking` change a swing's rates and its `took` see the outcome", function()
         setup()
         local seen = {}

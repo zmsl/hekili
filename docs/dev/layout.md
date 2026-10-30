@@ -459,9 +459,9 @@ Soul Fire on Decimation at tier 1). The packs are Affliction, SM Ruin (Afflictio
 Warlock builds; their replay and leveling gates `tests/Forever/wowsims_warlock_spec.lua`. The worlds
 (`tests/Forever/helpers/warlock_world.lua`) cast at 25 yd with cast bars and channels, the build's demon out from the
 pull (its mana and regen from the logs), the Soul Shards in the bags; the pools are the logs' (5353, Demonology's 6156).
-Flicker floors (pack_gate `FLICKER`, 20 fights, K 1.6): Affliction 1.6 (1.60, oracle 1.60), SM Ruin 4.9 (4.81, oracle
-4.66), Demonology 3.4 (3.36, oracle 3.38), Shadow Brand 2.9 (2.81, oracle 2.69), Destruction 4.6 (4.51, oracle 3.38),
-retracted 0 each. The lines (the end-of-lane gate, on 06eec227 + Task 13):
+Flicker floors (pack_gate `FLICKER`, 20 fights): Affliction 0 (0 / 0 / 0 over seeds 1-20 / 21-40 / 41-60, oracle 0;
+0.4 -> 0 on the mana-regen plan's Task 10: Wrack's 6 s paid channel holds the casting rate to its end), SM Ruin 0.3,
+Demonology 0.1, Shadow Brand 0.1, Destruction 0.4 (their measured values beside them in pack_gate), retracted 0 each. The lines (the end-of-lane gate, on 06eec227 + Task 13):
 
 ```
 Affliction solo: fights=3 agreement 0.997 (2706 ticks); react median 0 p90 0 never 0.005; refused per 100 [casting 76.9 (oracle 76.3, unmatched 0.2)], episodes 9.76/min; dps A/B 0.996; ... [seeds 1-3]
@@ -582,7 +582,7 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 | Shadow (wowsims.com) | 1.00 | 1.000 (85) | 6 (1.8) | L10 0.0, L40 0.0, L60 1.8 | 0.000 / 1.600 | 1.500, 36 | 0 | 1.50, 36 |
 | Smite (wowsims.com) | 0.93 | 0.932 (44) | 6 (0.2) | L10 0.0, L40 0.2, L60 0.2 | 0.400 / 3.100 | 0.500, 27 | 3 | 0.50, 27 |
 | Elemental (wowsims.com) | 0.93 | 0.937 (95) | 6 (5.0) | L10 0.0, L40 0.0, L60 5.0 (Lava Burst r4 and Elemental Mastery learned at 1: not in the DB2) | 0.380 / 0.980 | 0.480, 54 | 6 | 0.48, 54 |
-| Affliction (wowsims.com) | 0.87 | 0.877 (81) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 1.000 | 1.000, 21 | 10 | 1.00, 21 |
+| Affliction (wowsims.com) | 0.87 | 0.914 (81; 0.877 before the mana-regen plan's Task 10) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 1.000 | 1.000, 21 | 7 | 1.00, 23 |
 | SM Ruin (wowsims.com) | 0.70 | 0.702 (94) | 6 (0.2) | L10 0.0, L40 0.0, L60 0.2 | 0.000 / 1.000 | 0.900, 18 | 28 | 0.90, 18 |
 | Demonology (wowsims.com) | 0.77 | 0.776 (116) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 0.000 | 0.100, 3 | 26 | 0.10, 3 |
 | Shadow Brand (wowsims.com) | 0.73 | 0.735 (98) | 6 (0.2) | L10 0.0, L40 0.0, L60 0.2 | 0.000 / 1.000 | 0.900, 16 | 26 | 0.90, 16 |

@@ -37,7 +37,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- The five-second rule (C3): a slot with an `fsr` meta splits its continuous regen in two parts, each with its own
 -- calibrated state: the `mp5` part (regE/regL/regH, decl, dev) always, the `spirit` part (spE/spL/spH, spDecl, spDev;
 -- 0 for every other slot) only outside the window our own spend opens (`fsrUntil[r]`: its end, I.FSR after the
--- spend); `share[r]` (c, 0-1): the static casting share the learned split already holds (the `fsr` meta's `share`), so
+-- spend at `fsrFrom[r]`, or a paid channel's end when later, however it ends: `fsrHeld[r]`, wowsims mana.go:236-241);
+-- `share[r]` (c, 0-1): the static casting share the learned split already holds (the `fsr` meta's `share`), so
 -- the mp5 part is wowsims's casting rate M + cS and the spirit part (1 - c)S. `shaped[r]`: the slot has an `fsr` or a
 -- regen entry (else its regen is the plain rate x dt). `pinA[r]` / `pinB[r]`: the integrals of each part's weight
 -- (coefAt's fa and fb) since the last pin (the calibration's weights).
@@ -77,6 +78,8 @@ local R = {
     dev = {},
     fsr = {},
     fsrUntil = {},
+    fsrFrom = {}, -- our last spend's time, and whether the channel in progress paid it (its end holds the window)
+    fsrHeld = {},
     share = {},
     shareDef = {}, -- the fsr share as declared (a number or a function)
     spE = {},
@@ -169,12 +172,18 @@ I.FSR = 5
 -- (seconds, `decayIv[r]`; 0: continuous) it is lost in quanta of decay x interval, the first at once when the decay
 -- starts and one at the start of each interval after it (`decayNext[r]`: the next one's time, 0 while inactive;
 -- stepped-decay design §3.2). Allocates nothing.
-local function decayOf(r)
-    local d = R.decayDef[r]
-    if type(d) == "function" then
-        d = d()
+-- `v`, or a function's return, when it is a finite number; else nil (a NaN, infinity, nil or thrown value is inert).
+local function finite(v)
+    if type(v) == "function" then
+        local ok, r = pcall(v) -- a pack function may error before the first stat read: inert
+        v = ok and r or nil
     end
-    return type(d) == "number" and d > 0 and d or 0
+    return type(v) == "number" and v == v and v > -math.huge and v < math.huge and v or nil
+end
+
+local function decayOf(r)
+    local d = finite(R.decayDef[r])
+    return d and d > 0 and d or 0
 end
 
 local function eval(v)
@@ -319,14 +328,6 @@ end
 -- Re-reads every function-valued regen field (a number is read as it stands) into the number arrays; a result that is
 -- not a valid number makes the field inert. Called at the build and at each combat start only: the functions read
 -- state (a pack's Spirit, max mana), which does not move mid-fight.
-local function finite(v)
-    if type(v) == "function" then
-        local ok, r = pcall(v) -- a pack function may error before the first stat read: inert
-        v = ok and r or nil
-    end
-    return type(v) == "number" and v == v and v > -math.huge and v < math.huge and v or nil
-end
-
 local function refresh()
     for r = 1, R.n do
         local c = finite(R.shareDef[r]) or 0
@@ -372,10 +373,10 @@ I.OnBuild(function(def, now)
         local fsr = type(d.fsr) == "table" and d.fsr or false
         local rate, spirit = d.regen or 0, 0
         if fsr then
-            rate, spirit = eval(fsr.mp5), eval(fsr.spirit)
-            rate, spirit = type(rate) == "number" and rate or 0, type(spirit) == "number" and spirit or 0
+            rate, spirit = finite(fsr.mp5) or 0, finite(fsr.spirit) or 0
         end
         R.fsr[r], R.fsrUntil[r], R.shaped[r], R.pinA[r], R.pinB[r] = fsr ~= false, 0, fsr ~= false, 0, 0
+        R.fsrFrom[r], R.fsrHeld[r] = -1e9, false
         R.shareDef[r] = fsr and fsr.share
         R.decl[r] = rate
         R.regE[r], R.regL[r], R.regH[r] = rate, rate * (1 - I.REGEN_SPREAD), rate * (1 + I.REGEN_SPREAD)
@@ -393,8 +394,8 @@ I.OnBuild(function(def, now)
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
         R.decay[r] = decayOf(r)
-        local iv = eval(d.decayInterval)
-        R.decayIv[r], R.decayNext[r] = type(iv) == "number" and iv > 0 and iv or 0, 0
+        local iv = finite(d.decayInterval) or 0
+        R.decayIv[r], R.decayNext[r] = iv > 0 and iv or 0, 0
         R.taken[r] = type(d.taken) == "function" and setfenv(d.taken, I.nowCtx) or false
         R.takenBin[r], R.takenSec[r] = {}, {}
         for i = 1, I.TAKEN_WINDOW do
@@ -1602,6 +1603,61 @@ I.On(Obs.CombatEnd, function(o, t)
     end
 end)
 
+-- Slot r's window ends at `u` from t on: what the move changes of the spirit part credited since t (a success folded
+-- late, GAP W) is taken back (the window grew) or credited (it shrank). Allocates nothing.
+local function window(r, t, u)
+    local late = I.clock - t
+    late = late > 0 and late or 0
+    local _, b0 = spans(r, t, late)
+    R.fsrUntil[r] = u
+    local _, b1 = spans(r, t, late)
+    local d = b0 - b1
+    if d ~= 0 then
+        local max = R.max[r]
+        R.est0[r] = clamp(R.est0[r] - R.spE[r] * d, max)
+        R.lo0[r] = clamp(R.lo0[r] - R.spL[r] * d, max)
+        R.hi0[r] = clamp(R.hi0[r] - R.spH[r] * d, max)
+        R.pinB[r] = R.pinB[r] - d
+        norm(r)
+    end
+end
+
+local chanT = -1e9 -- the channel in progress's start (Obs.ChannelStart's time)
+
+-- A paid channel holds the casting rate to its end, however it ends (wowsims mana.go:236-241, 405-416): the spend
+-- made within I.GAIN_SHOWS of its start is the channel's, in either event order.
+I.On(Obs.ChannelStart, function(o)
+    chanT = o.t
+    for r = 1, R.n do
+        if R.fsr[r] then
+            local held = abs(o.t - R.fsrFrom[r]) <= I.GAIN_SHOWS
+            R.fsrHeld[r] = held
+            if held and o.b > R.fsrUntil[r] then
+                window(r, o.t, o.b)
+            end
+        end
+    end
+end)
+
+I.On(Obs.ChannelUpdate, function(o)
+    for r = 1, R.n do
+        if R.fsrHeld[r] then
+            local u = R.fsrFrom[r] + I.FSR
+            window(r, o.t, o.b > u and o.b or u)
+        end
+    end
+end)
+
+I.On(Obs.ChannelStop, function(o)
+    for r = 1, R.n do
+        if R.fsrHeld[r] then
+            R.fsrHeld[r] = false
+            local u = R.fsrFrom[r] + I.FSR
+            window(r, o.t, o.t > u and o.t or u)
+        end
+    end
+end)
+
 --- Our own cast changed slot r by `delta` at t (spec §5.3): the interval moves by the same amount, written as a
 --- `modelled` sample. Allocates nothing.
 function I.ResourceShift(r, delta, t, event)
@@ -1627,18 +1683,11 @@ function I.ResourceShift(r, delta, t, event)
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
         R.sinceShort[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, false, false
         if R.fsr[r] then
-            local late = I.clock - t -- a success folded late (GAP W): the spirit part was credited since t
-            local _, b0 = spans(r, t, late > 0 and late or 0)
-            R.fsrUntil[r] = t + I.FSR -- our own spend: the spirit part pauses (the five-second rule, C3)
-            local _, b1 = spans(r, t, late > 0 and late or 0)
-            local d = b0 - b1 -- what the window opened at t takes back of it
-            if d > 0 then
-                R.est0[r] = clamp(R.est0[r] - R.spE[r] * d, max)
-                R.lo0[r] = clamp(R.lo0[r] - R.spL[r] * d, max)
-                R.hi0[r] = clamp(R.hi0[r] - R.spH[r] * d, max)
-                R.pinB[r] = R.pinB[r] - d
-                norm(r)
-            end
+            -- our own spend: the spirit part pauses (the five-second rule, C3), to the channel's end when it paid one
+            local u = t + I.FSR
+            local held = I.channel == true and abs(t - chanT) <= I.GAIN_SHOWS
+            R.fsrFrom[r], R.fsrHeld[r] = t, held
+            window(r, t, held and I.castEnd > u and I.castEnd or u)
         end
     end
     I.Sample(R.power[r], "modelled", R.est0[r], t, event)

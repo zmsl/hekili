@@ -135,7 +135,14 @@ function M.new(seed)
         end
         local us = W.ents[1]
         if ev.kind == "cast" and ev.src == us and (ev.cost or 0) > 0 then -- the five-second rule's window opens
-            us.spentAt[ev.pt or us.pt] = W.t
+            local pt = ev.pt or us.pt
+            us.spentAt[pt], us.heldUntil[pt] = W.t, ev.chanEnds or 0 -- a paid channel holds it to its end (wowsims)
+        elseif ev.kind == "channelStop" and ev.src == us then -- however it ends: the stop (a clip) ends the hold
+            for pt, u in pairs(us.heldUntil) do
+                if u > W.t then
+                    us.heldUntil[pt] = W.t
+                end
+            end
         end
         if ev.src == us and (ev.rage or ev.cost) then
             local r = ev.pt and ev.pt ~= us.pt and us.res[ev.pt]
@@ -465,13 +472,17 @@ function M.new(seed)
 
     --- `e`'s regen per second of `pt` now: the rate, times `W.regenAfter.k` after `W.regenAfter.s` seconds in one form.
     --- An `fsr` type's is its mp5 part A (wowsims's casting rate), plus its spirit part B from 5 s after our last cast
-    --- that spent it; `mode` "idle" or "casting" (the out-of-combat read's two returns) asks for both parts or A alone.
+    --- that spent it and after a paid channel's end (held however it ends, mana.go:236-241); `mode` "idle" or "casting" (the out-of-combat read's two returns) asks for both parts or A alone.
     --- While an entry's `auras` are up on `e`, wowsims's PseudoStats rule runs (mana.go:186-206): S = B / (1 - c) (c the
     --- entry's `share`; A - `mp5` when c >= 1), M = A - c x S (or `mp5`); inside the window M + sum(mp5) + S x prod(spirit)
     --- x min(c + sum(share), 1), outside it M + sum(mp5) + S x prod(spirit); "idle" reads the outside rate.
     function W.regenRate(e, pt, mode)
         local f = W.fsr[pt]
-        local open = f and (mode == "idle" or (mode ~= "casting" and W.t - (e.spentAt[pt] or -1e9) >= 5))
+        local open = f
+            and (
+                mode == "idle"
+                or (mode ~= "casting" and W.t - (e.spentAt[pt] or -1e9) >= 5 and W.t >= (e.heldUntil[pt] or 0))
+            )
         local m, x, s, any = 1, 0, 0, false
         for id, a in pairs(f and f.auras or {}) do
             local up = e.auras[id]

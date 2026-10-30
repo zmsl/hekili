@@ -74,7 +74,11 @@ M.FLICKER = {
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     ["Elemental"] = { flicker = 0.2, retracted = 0 }, -- 0.15 / 0.1996 / 0.17, 0 (was 0.03 / 0.03 / 0.02)
-    ["Affliction"] = { flicker = 0.4, retracted = 0 }, -- 0 / 0 / 0.32, 0
+    -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
+    -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
+    -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996
+    -- on seeds 21-40); controller rule, the measured values beside the line
+    ["Affliction"] = { flicker = 0, retracted = 0 }, -- 0 / 0 / 0, 0
     ["SM Ruin"] = { flicker = 0.3, retracted = 0 }, -- 0.25 / 0.12 / 0.27, 0
     ["Demonology"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0.05 / 0, 0
     ["Shadow Brand"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.02 / 0.02, 0

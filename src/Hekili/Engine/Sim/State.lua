@@ -1451,7 +1451,10 @@ local resourceChange = function( amount, resource, overcap )
     local r = state[ resource ]
     local pre = r.current
 
-    if amount < 0 and rawget( r, "fsr_until" ) then r.fsr_until = state.query_time + VS.FSR end -- opens the window
+    if amount < 0 and rawget( r, "fsr_until" ) then -- opens the window, held to a paid channel's end (wowsims mana.go:236-241)
+        local u, c = state.query_time + VS.FSR, state.buff.casting
+        r.fsr_until = ( c.up and c.v3 == 1 and c.expires > u ) and c.expires or u
+    end
 
     if amount < 0 and r.spend then r.spend( -amount, resource, overcap )
     elseif amount > 0 and r.gain then r.gain( amount, resource, overcap )
