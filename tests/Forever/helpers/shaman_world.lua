@@ -23,7 +23,7 @@ local M = {}
 M.CLIENT_SPEC, M.CLASS_ID = 1489, 7 -- the client's Shaman pseudo-spec
 local MANA = 0 -- Enum.PowerType
 local GCD = { totem = 1.0, spell = 1.5, off = 0 }
--- UNMEASURED: the true regen parts (the class file declares 17 and 2: the out-of-combat read corrects them).
+-- The default regen parts (a pack's `fsr` replaces them; the class file declares them per spec, as wowsims's logs).
 local FSR = { 20, 3 }
 local MAELSTROM_PPM = 10 -- wowsims talents_enhancement.go (fits a 3.6 s weapon)
 local CLEARCASTING = 0.1 -- Elemental Focus's chance (DB2 16164 ProcChance)
@@ -213,6 +213,7 @@ M.MAP = {
     },
     stormstrike = {
         effect = function(W, e, _, X)
+            aura(W, X, e, "improved_stormstrike") -- every cast: rank 2's 100%, 15 s
             if W.hit(e, e.target, AMOUNT.stormstrike, 1).act == "WOUND" then
                 maelstrom(W, e, X)
             end
@@ -284,6 +285,10 @@ local PACKS = {
         spec = 100072,
         weapon = { 180, 260, 3.6 },
         parry = true, -- the build's Spirit Weapons (wowsims's applySpiritWeapons: CanParry)
+        talents = { [1223031] = 2 }, -- Improved Stormstrike 2/2 (rank 2: always; wowsims talents_enhancement.go:188-210)
+        -- wowsims's log (shaman_enhancement.log): 9.8 a second while casting, 38.42 outside; Improved Stormstrike
+        -- (1238931, DB2 aura 134 = 50) adds half the spirit part while casting
+        fsr = { 28.62, 9.8, auras = { [1238931] = { share = 0.5 } } },
         uptime = { "flame_shock" },
     },
     -- wowsims/forever's Elemental build (builds/testing.build.json, talents 5500331023001351-053002001-053): the casts,
@@ -329,7 +334,7 @@ local PACKS = {
         -- wowsims's log (shaman_elemental.log): 5590 mana, 29.75 a second while casting (OtherID 2 Tag 1, Mana Spring
         -- Totem and Mindfulness's share included) and 42.5 more outside the five-second rule (Tag 2)
         mana = 5590,
-        fsr = { 42.5, 29.75 },
+        fsr = { 12.75, 29.75, share = 0.15 },
         distance = 20, -- the build's distanceFromTarget: the shocks reach 20 yd
         uptime = { "flame_shock" },
     },

@@ -8,6 +8,7 @@
 - When your mana (or another resource) sits within a hair of an ability's cost, the first icon no longer flips to a cheaper ability for one update and back: the higher-priority ability keeps its countdown until it is affordable. Nothing shows as ready any earlier than before.
 
 ### Fixed
+- Enhancement Shamans: mana regen counts Improved Stormstrike, and Shaman mana starts from measured rates (wowsims's Elemental and Enhancement logs) instead of a guess.
 
 ### Known issues
 

@@ -17049,6 +17049,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.clearcasting	|T136000:0|t Spell 16246
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.flame_shock	|T136000:0|t Spell 8050
+options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.improved_stormstrike	|T136000:0|t Spell 1238931
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.lightning_shield	|T136000:0|t Spell 324
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.maelstrom_weapon	|T136000:0|t Spell 408505
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
@@ -17344,6 +17345,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	name	Buff Na
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.clearcasting	|T136000:0|t Spell 16246
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.flame_shock	|T136000:0|t Spell 8050
+options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.improved_stormstrike	|T136000:0|t Spell 1238931
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.lightning_shield	|T136000:0|t Spell 324
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.maelstrom_weapon	|T136000:0|t Spell 408505
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336

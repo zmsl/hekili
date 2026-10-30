@@ -17,8 +17,8 @@
 -- pack that casts it, as that list's pre-pull does), Water Shield (one shield at a time), Convection's and Elemental
 -- Alacrity's cuts, Clearcasting on Chain Lightning and Lava Burst, Revelation's charge.
 -- Also unmodelled: Mana Tide's mana, Water Shield's mana, Revelation's proc (the weapon enchant's; the player aura read
--- answers it), Lightning Overload, Mindfulness (mana regen while casting: the `fsr` meta has no casting share; the
--- out-of-combat regen read's casting rate carries it).
+-- answers it), Lightning Overload, Mindfulness (mana regen while casting: Elemental's `fsr.share`, below, carries it;
+-- Improved Stormstrike's casting share is the mana entry below).
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (in-game checks): Call of Flame's +3 s a
 -- rank on Flame Shock, Stormstrike's cost, Lava Burst's and Mana Tide Totem's rank 4 (1326047, 1325256), Elemental
 -- Mastery, Revelation, Elemental Alacrity's Forever ranks. Fire Nova's (375 there) is not modelled (FIRE_NOVA_COST
@@ -310,11 +310,33 @@ local function shock(other, ids, costs, debuffKey)
 end
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace. UNMEASURED: a level 60 Shaman's spirit regen and a little mp5 from gear.
-spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
-    fsr = { spirit = 17, mp5 = 2 },
-    base = 1520, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
-})
+-- the in-combat calibration replace, as wowsims's logs measure them at 60: shaman_elemental 29.75 a second while casting
+-- (Mana Spring Totem, Mindfulness 3/3's 15% share and gear) and 42.5 outside the rule, so spirit 12.75 (the outside
+-- rate less the casting one) and mp5 29.75; shaman_enhancement 9.8 / 38.42, so spirit 28.62 and mp5 9.8. Forever's
+-- Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76), not Classic's formula.
+-- Improved Stormstrike (1238931, DB2 aura 134 = 50): +50% of Spirit regen while casting for 15 s.
+-- state.spec: the functions run in the state's environment (the file's `spec` is the class).
+spec:RegisterResource(
+    Enum.PowerType.Mana,
+    {
+        improved_stormstrike = { aura = "improved_stormstrike", share = 0.5 },
+    },
+    nil,
+    {
+        fsr = {
+            spirit = function()
+                return state.spec.elemental and 12.75 or 28.62
+            end,
+            mp5 = function()
+                return state.spec.elemental and 29.75 or 9.8
+            end,
+            share = function()
+                return state.spec.elemental and 0.15 or 0
+            end,
+        },
+        base = 1520, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
+    }
+)
 
 -- The totems (C6): each one's element and duration with its ranks, for `totem.<key>`.
 local registered = {}
@@ -342,6 +364,8 @@ spec:RegisterAuras({
     revelation = { id = 1323418, duration = 15, max_stack = 1 },
     -- Maelstrom Weapon (408498, a rune: D4, inert until learned): our melee hits stack it to 5, Lightning Bolt spends it.
     maelstrom_weapon = { id = 408505, duration = 30, max_stack = 5 },
+    -- Improved Stormstrike (DB2 1238931): Stormstrike's 15 s buff, +50% Spirit regen while casting (the mana entry).
+    improved_stormstrike = { id = 1238931, duration = 15, max_stack = 1 },
     -- Elemental Focus's Clearcasting (16246): the next elemental damage spell costs nothing (1 charge, 15 s).
     clearcasting = { id = 16246, duration = 15, max_stack = 1 },
     -- The target's DoT, modelled from our cast (target auras are unreadable in combat).
@@ -624,6 +648,7 @@ spec:RegisterTalents({
     spirit_weapons = { 2, 16268, 1 },
     weapon_mastery = { 2, 29082, 5 },
     stormstrike = { 2, 17364, 1 },
+    improved_stormstrike = { 2, 1223031, 2 }, -- wowsims's tree (spell_data_auto_gen.go:238); the DB2 names the spell only
     -- Forever-only (wowsims/forever's tree; not in the DB2's Talent table at 70338: checkpoint)
     shamanistic_focus = { 0, 1223030, 1 },
     rage_of_the_farseer = { 0, 425336, 1 },

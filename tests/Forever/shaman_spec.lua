@@ -106,19 +106,28 @@ describe("Forever Shaman", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 2, 15, 16, 15 }, n)
+        assert.are.same({ [0] = 2, 15, 17, 15 }, n)
         assert.are.same({ 0, 1223030, 1 }, w.talents.shamanistic_focus) -- wowsims's tree; not in the DB2's Talent table
         assert.are.same({ 0, 425336, 1 }, w.talents.rage_of_the_farseer)
     end)
 
-    it(
-        "declares mana under the five-second rule and no settings (the hand-built list's are retired with it)",
-        function()
-            assert.are.same({ 0 }, w.order)
-            assert.are.same({ spirit = 17, mp5 = 2 }, w.resources[0].meta.fsr)
-            assert.is_nil(next(w.settings or {}))
+    it("declares no settings (the hand-built list's are retired with it)", function()
+        assert.are.same({ 0 }, w.order)
+        assert.is_nil(next(w.settings or {}))
+    end)
+
+    it("declares mana as wowsims's logs measure it per spec, and Improved Stormstrike's casting share", function()
+        local r, e = w.resources[0], ld.env(w)
+        local function seed(key)
+            w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
+            return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
-    )
+        assert.are.same({ 12.75, 29.75, 0.15 }, seed("elemental")) -- Mindfulness 3/3: 15% while casting
+        assert.are.same({ 28.62, 9.8, 0 }, seed("enhancement"))
+        assert.are.same({ aura = "improved_stormstrike", share = 0.5 }, r.models.improved_stormstrike)
+        assert.are.same({ 2, 1223031, 2 }, w.talents.improved_stormstrike)
+        assert.are.same(1238931, w.auras.improved_stormstrike.id)
+    end)
 
     it("registers each totem with its element and durations, and its summon fills that slot for its rank's", function()
         for key, want in pairs(TOTEMS) do

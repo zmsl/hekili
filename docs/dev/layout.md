@@ -268,8 +268,9 @@ mob swings at us and each hit that lands spends a Lightning Shield charge; our l
 elemental spell rolls Clearcasting (10%); the shocks share a cooldown (6 s, 0.2 s less a rank of Reverberation); Rage
 of the Farseer (the build's talent, in the kit) gives its 25 s buff, its +30% attack speed not modelled. Neither side dies: a kill by our last press
 ends the loop before the client sees it, so the next fight's prepull would be believed in combat and its totem slots
-never read (a harness quirk every pack shares). The world runs out of mana about 35 s in (idle about 0.68: UNMEASURED
-pool and regen, no Mana Spring regen, Water Shield or potions), so most in-combat ticks show no icon on either side.
+never read (a harness quirk every pack shares). The world runs out of mana about 35 s in (idle about 0.69: regen as
+wowsims's logs measure it per spec (Mana Spring and Mindfulness inside Elemental's, Improved Stormstrike's casting share
+in Enhancement's), UNMEASURED pool, no Water Shield or potions), so most in-combat ticks show no icon on either side.
 The imbues are not in the solo world's kit (it has no weapon enchant read). The world's costs are each rank's (DB2),
 with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever's), and the shocks' cooldown and Flame
 Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,

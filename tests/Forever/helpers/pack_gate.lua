@@ -47,14 +47,18 @@ M.FLICKER = {
     -- steady icons (experimental) is the player's remedy. s41-60 0.68 after Task 4a: gap AB near-tie in fight 18, a
     -- diverged press history; owner ruling 2026-10-29: seed chaos, floor kept
     ["Protection"] = { flicker = 0.5, retracted = 0 }, -- 0.46 / 0.03 / 0.49, 0 (oracle 0 / 0.42 / 0.39)
-    ["Enhancement"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0 / 0.03, 0
+    -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
+    -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
+    ["Enhancement"] = { flicker = 0.2, retracted = 0 }, -- 0.12 / 0.07 / 0.1996, 0 (was 0.02 / 0 / 0.03)
     ["Arcane"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0.02 / 0.03, 0
     ["Fire"] = { flicker = 0.3, retracted = 0 }, -- 0.22 / 0.13 / 0.12, 0
     ["Frostfire"] = { flicker = 0.2, retracted = 0 }, -- 0.17 / 0.13 / 0.07, 0 (oracle 0.30 / 0.28 / 0.48)
     ["Shadow"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.02 / 0.02, 0
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     ["Smite"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.02 / 0.03, 0
-    ["Elemental"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.03 / 0.02, 0
+    -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
+    -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
+    ["Elemental"] = { flicker = 0.2, retracted = 0 }, -- 0.15 / 0.1996 / 0.17, 0 (was 0.03 / 0.03 / 0.02)
     ["Affliction"] = { flicker = 0.4, retracted = 0 }, -- 0 / 0 / 0.32, 0
     ["SM Ruin"] = { flicker = 0.3, retracted = 0 }, -- 0.25 / 0.12 / 0.27, 0
     ["Demonology"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0.05 / 0, 0
