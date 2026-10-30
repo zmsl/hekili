@@ -227,7 +227,8 @@ spec:RegisterResource(
 
             interval = 4,
             value = function()
-                return 0.02 * state.mana.max
+                local max = state.mana and state.mana.max
+                return type(max) == "number" and 0.02 * max or 0 -- inert before the first read
             end,
         },
     },

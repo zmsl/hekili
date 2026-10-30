@@ -528,7 +528,7 @@ local function sacrificeOn(W, e, id)
         local a = e.auras[id]
         local function step()
             if e.auras[id] == a then
-                W.emit({ kind = "gain", src = e, pt = MANA, rage = 0.02 * e.powerMax })
+                W.emit({ kind = "gain", src = e, pt = MANA, rage = 0.02 * e.powerMax }) -- scenarios.world sets powerMax from WORLD.max
                 W.at(W.t + 4, step)
             end
         end
@@ -848,6 +848,8 @@ local function content(name)
 
     return C
 end
+
+M.sacrificeOn = sacrificeOn -- the spec's world check of Fel Energy's ticks
 
 M.Affliction = content("Affliction")
 M.Demonology = content("Demonology")

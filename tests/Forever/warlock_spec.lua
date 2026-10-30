@@ -161,6 +161,28 @@ describe("Forever Warlock", function()
         assert.is_true(math.abs(m.last() - 13.2) < 1e-9) -- 5.2 + 4 x floor(8.2 / 4); the brief's 9.2 is an arithmetic slip
     end)
 
+    it("Fel Energy in the world: 2% of the pool every 4 s while the aura is up, none after it is removed", function()
+        local ww = require("Forever.helpers.warlock_world")
+        local W = require("Game.harness.scenarios").world({ max = 5353, power = 0, noMelee = true }, 1)
+        local us = W.ents[1]
+        ww.sacrificeOn(W, us, 18792)
+        W.run(4.001)
+        assert.is_true(math.abs(us.power - 107.06) < 1e-6)
+        W.run(8.001)
+        assert.is_true(math.abs(us.power - 214.12) < 1e-6)
+        us.auras[18792] = nil
+        W.run(20)
+        assert.is_true(math.abs(us.power - 214.12) < 1e-6)
+    end)
+
+    it("Fel Energy's value is inert before the first mana read", function()
+        local m = w.resources[0].models.fel_energy
+        w.state.mana = nil
+        assert.are.equal(0, m.value())
+        w.state.mana = { max = false }
+        assert.are.equal(0, m.value())
+    end)
+
     it(
         "counts the Soul Shards in the bags; the shard spells refuse without one, Soul Fire not under Decimation",
         function()
