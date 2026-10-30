@@ -136,7 +136,9 @@ function M.new(seed)
         local us = W.ents[1]
         if ev.kind == "cast" and ev.src == us and (ev.cost or 0) > 0 then -- the five-second rule's window opens
             local pt = ev.pt or us.pt
-            us.spentAt[pt], us.heldUntil[pt] = W.t, ev.chanEnds or 0 -- a paid channel holds it to its end (wowsims)
+            -- a paid channel holds it to its end (wowsims); a later paid cast drops the hold (wowsims keeps it on the
+            -- channel's dot, mana.go:272-281: a known difference, the belief's too)
+            us.spentAt[pt], us.heldUntil[pt] = W.t, ev.chanEnds or 0
         elseif ev.kind == "channelStop" and ev.src == us then -- however it ends: the stop (a clip) ends the hold
             for pt, u in pairs(us.heldUntil) do
                 if u > W.t then

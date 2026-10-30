@@ -461,7 +461,8 @@ Warlock builds; their replay and leveling gates `tests/Forever/wowsims_warlock_s
 pull (its mana and regen from the logs), the Soul Shards in the bags; the pools are the logs' (5353, Demonology's 6156).
 Flicker floors (pack_gate `FLICKER`, 20 fights): Affliction 0 (0 / 0 / 0 over seeds 1-20 / 21-40 / 41-60, oracle 0;
 0.4 -> 0 on the mana-regen plan's Task 10: Wrack's 6 s paid channel holds the casting rate to its end), SM Ruin 0.3,
-Demonology 0.1, Shadow Brand 0.1, Destruction 0.4 (their measured values beside them in pack_gate), retracted 0 each. The lines (the end-of-lane gate, on 06eec227 + Task 13):
+Demonology 0.1, Shadow Brand 0.1, Destruction 0.4 (their measured values beside them in pack_gate), retracted 0 each.
+The lines (the end-of-lane gate, on 06eec227 + Task 13):
 
 ```
 Affliction solo: fights=3 agreement 0.997 (2706 ticks); react median 0 p90 0 never 0.005; refused per 100 [casting 76.9 (oracle 76.3, unmatched 0.2)], episodes 9.76/min; dps A/B 0.996; ... [seeds 1-3]

@@ -2172,17 +2172,18 @@ describe("resources", function()
         end)
 
         -- One channel ability (index 1) for the Channel observations (Families/Casts.lua).
-        local function bootChannel(fsr, decayInterval)
+        local function bootChannel(fsr, decayInterval, max, maxMods)
             boot({
-                abilities = { { key = "chan", spend = 100 } },
-                abilityIds = { { 1001 } },
-                abilitySlot = { 1 },
+                abilities = { { key = "chan", spend = 100 }, { key = "chan_b", spend = 100 } },
+                abilityIds = { { 1001 }, { 1002 } },
+                abilitySlot = { 1, 1 },
                 resources = {
                     {
                         key = "mana",
                         type = MANA,
                         token = "MANA",
-                        max = 1000,
+                        max = max or 1000,
+                        maxMods = maxMods,
                         rest = true,
                         fsr = fsr or { spirit = 10, mp5 = 2 },
                         decayInterval = decayInterval,
@@ -2220,6 +2221,63 @@ describe("resources", function()
             obs(Obs.ChannelStop, 52, 1, 0, 0) -- its stop holds nothing either
             I.Fold(52, false)
             assert.are.equal(40, VS.FsrUntil(MANA))
+        end)
+
+        it("ignores a stop or update of an older channel while a newer paid one holds the window", function()
+            bootChannel()
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess)
+            obs(Obs.ChannelStart, 10, 1, 18, 0)
+            I.Fold(10, false)
+            obs(Obs.ChannelStart, 20, 2, 28, 0) -- the next channel (ability 2), paid
+            I.Fold(20, false)
+            I.ResourceShift(1, -100, 20, Obs.CastSuccess)
+            assert.are.equal(28, VS.FsrUntil(MANA))
+            obs(Obs.ChannelStop, 21, 1, 0, 0) -- the old channel's late stop
+            I.Fold(21, false)
+            assert.are.equal(28, VS.FsrUntil(MANA))
+            obs(Obs.ChannelUpdate, 22, 1, 40, 0) -- and its late update
+            I.Fold(22, false)
+            assert.are.equal(28, VS.FsrUntil(MANA))
+            obs(Obs.ChannelStop, 24, 2, 0, 0) -- the new one's own clip: back to the 5 s rule
+            I.Fold(24, false)
+            assert.are.equal(25, VS.FsrUntil(MANA))
+        end)
+
+        it("ends the window at spend + 5 when the paid channel is clipped before it", function()
+            bootChannel()
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess)
+            obs(Obs.ChannelStart, 10, 1, 18, 0)
+            I.Fold(10, false)
+            obs(Obs.ChannelStop, 13, 1, 0, 0)
+            I.Fold(13, false)
+            assert.are.equal(15, VS.FsrUntil(MANA))
+        end)
+
+        it("credits the spirit part a late-folded clip freed: est as the timely fold's (GAP W)", function()
+            local function est(late)
+                bootChannel()
+                obs(Obs.CombatStart, 10, 0, 0, 0)
+                I.ResourceShift(1, -800, 10, Obs.CastSuccess)
+                obs(Obs.ChannelStart, 10, 1, 18, 0)
+                I.Fold(10, false)
+                if late then
+                    S.Direct(Obs.Moving, 16.142, 0, 1, 0) -- the next frame's observation, in the log first
+                end
+                obs(Obs.ChannelStop, 16, 1, 0, 0)
+                I.Fold(16.2, false)
+                return VS.Power(MANA, 30).est
+            end
+            local timely = est(false)
+            assert.is_true(timely < 1000) -- not capped: the comparison means something
+            within(timely, est(true))
+        end)
+
+        it("keeps the default maximum when `max` throws, and a throwing maxMod `when` holds nothing", function()
+            local function bad()
+                error("TacoDog: no stat yet")
+            end
+            bootChannel(nil, nil, bad, { { pct = 0.5, when = bad } })
+            assert.are.equal(100, I.res.max[1])
         end)
 
         it("makes a throwing or non-finite `spirit`, `mp5` or `decayInterval` inert at the build", function()

@@ -181,29 +181,31 @@ local function finite(v)
     return type(v) == "number" and v == v and v > -math.huge and v < math.huge and v or nil
 end
 
+-- Whether `v`, or a function's return, is true; a thrown value counts as false (inert).
+local function holds(v)
+    if type(v) == "function" then
+        local ok, r = pcall(v)
+        return ok and r == true
+    end
+    return v == true
+end
+
 local function decayOf(r)
     local d = finite(R.decayDef[r])
     return d and d > 0 and d or 0
-end
-
-local function eval(v)
-    if type(v) == "function" then
-        v = v()
-    end
-    return v
 end
 
 -- Slot r's declared maximum from its `max` (a number or a state-bound function; default 100) x the product of
 -- (1 + pct) over its `maxMods` whose `when` holds (Families/Modifiers.lua), used until a plain read arrives.
 -- Allocates nothing.
 local function maxOf(r)
-    local m = eval(R.maxDef[r])
-    m = type(m) == "number" and m > 0 and m or 100
+    local m = finite(R.maxDef[r]) -- a throwing or non-finite `max` keeps the default
+    m = m and m > 0 and m or 100
     local mods = R.maxMods[r]
     if mods then
         for k = 1, #mods do
             local mod = mods[k]
-            if mod.when == nil or eval(mod.when) == true then
+            if mod.when == nil or holds(mod.when) then
                 m = m * (1 + (type(mod.pct) == "number" and mod.pct or 0))
             end
         end
@@ -1625,7 +1627,11 @@ end
 local chanT = -1e9 -- the channel in progress's start (Obs.ChannelStart's time)
 
 -- A paid channel holds the casting rate to its end, however it ends (wowsims mana.go:236-241, 405-416): the spend
--- made within I.GAIN_SHOWS of its start is the channel's, in either event order.
+-- made within I.GAIN_SHOWS of its start is the channel's, in either event order. Known difference: wowsims records the
+-- payment on the channel's dot at its start (mana.go:272-281) and keeps the hold through a later unrelated spend; we
+-- cannot tell whose a spend is, so any spend further than I.GAIN_SHOWS from the start drops the hold and opens a plain
+-- 5 s window: optimistic when that spend was the channel's own, heard late (the spirit part is credited early, until
+-- the next pin). A stop or update of an older channel (Casts.lua's check) leaves the newer channel's hold alone.
 I.On(Obs.ChannelStart, function(o)
     chanT = o.t
     for r = 1, R.n do
@@ -1640,6 +1646,9 @@ I.On(Obs.ChannelStart, function(o)
 end)
 
 I.On(Obs.ChannelUpdate, function(o)
+    if I.channel and I.castAb ~= o.a then
+        return -- an older channel's
+    end
     for r = 1, R.n do
         if R.fsrHeld[r] then
             local u = R.fsrFrom[r] + I.FSR
@@ -1649,6 +1658,9 @@ I.On(Obs.ChannelUpdate, function(o)
 end)
 
 I.On(Obs.ChannelStop, function(o)
+    if I.channel and I.castAb ~= o.a then
+        return -- an older channel's (Casts.lua already cleared I.channel for this channel's own stop)
+    end
     for r = 1, R.n do
         if R.fsrHeld[r] then
             R.fsrHeld[r] = false
@@ -1683,7 +1695,8 @@ function I.ResourceShift(r, delta, t, event)
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
         R.sinceShort[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, false, false
         if R.fsr[r] then
-            -- our own spend: the spirit part pauses (the five-second rule, C3), to the channel's end when it paid one
+            -- our own spend: the spirit part pauses (the five-second rule, C3), to the channel's end when it paid one;
+            -- any other spend during a channel drops the hold (the known difference above)
             local u = t + I.FSR
             local held = I.channel == true and abs(t - chanT) <= I.GAIN_SHOWS
             R.fsrFrom[r], R.fsrHeld[r] = t, held
