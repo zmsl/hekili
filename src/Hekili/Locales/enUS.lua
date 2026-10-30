@@ -325,7 +325,7 @@ L["Show the game's own cooldown on an icon while it runs, instead of Hekili's es
 L["Grey When Not Usable"] = true
 L["Grey an icon as soon as the game says the ability cannot be used yet (short of resource, or its proc or condition is not up)."] = true
 L["Proc Glow"] = true
-L["Glow the next ability (and the focus ability) when the game lights its proc. Never on a greyed icon."] = true
+L["Glow the next ability (and the focus ability) when the game lights its proc. An alternative to the display style's own proc glow: never shown on a greyed icon, and only on the next and focus icons. Turn the style's own glow off when you use this."] = true
 L["Visibility"] = true
 L["Visibility and transparency settings in PvE / PvP."] = true
 L["Advanced"] = true

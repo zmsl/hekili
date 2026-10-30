@@ -219,7 +219,7 @@ local displayTemplate = {
         },
     },
 
-    truth = { enabled = false, swipes = true, edge = true, confirm = true }, -- the Modern layer (UI/Truth.lua): core's, on every style (Modern display spec §5.1, §7)
+    truth = { enabled = false, swipes = true, edge = true, confirm = false }, -- the Modern layer (UI/Truth.lua): core's, on every style (Modern display spec §5.1, §7)
 }
 
 -- A style's defaults subtable and option tab are keyed by its name, so a style may not take a core display field
@@ -1566,7 +1566,7 @@ return L["Position"] end,
                             confirm = {
                                 type = "toggle",
                                 name = L["Proc Glow"],
-                                desc = L["Glow the next ability (and the focus ability) when the game lights its proc. Never on a greyed icon."],
+                                desc = L["Glow the next ability (and the focus ability) when the game lights its proc. An alternative to the display style's own proc glow: never shown on a greyed icon, and only on the next and focus icons. Turn the style's own glow off when you use this."],
                                 disabled = truthOff,
                                 order = 4,
                             },

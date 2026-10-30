@@ -334,7 +334,7 @@ L["Frame Strata determines which graphical layer that this display is drawn on.\
 -- L["Grey When Not Usable"] = ""
 -- L["Grey an icon as soon as the game says the ability cannot be used yet (short of resource, or its proc or condition is not up)."] = ""
 -- L["Proc Glow"] = ""
--- L["Glow the next ability (and the focus ability) when the game lights its proc. Never on a greyed icon."] = ""
+-- L["Glow the next ability (and the focus ability) when the game lights its proc. An alternative to the display style's own proc glow: never shown on a greyed icon, and only on the next and focus icons. Turn the style's own glow off when you use this."] = ""
 L["Visibility"] = "可见性"
 L["Visibility and transparency settings in PvE / PvP."] = "PvE / PvP 中的可见性与透明度设置。"
 L["Advanced"] = "高级"

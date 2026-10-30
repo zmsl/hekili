@@ -272,7 +272,7 @@ overlay toggles are disabled while `enabled` is off. Defaults:
 | `enabled` | off | "Modern (game truth)", marked experimental: attach the truth layer to this display's style |
 | `swipes` | on | real cooldown swipes |
 | `edge` | on | redraw on the usability edge |
-| `confirm` | on | proc glow from usability and overlay; next and focus icons only (R3, no queue option) |
+| `confirm` | off | proc glow from usability and overlay; next and focus icons only (R3, no queue option); off by default so Classic's own glow is not doubled (owner ruling 2026-10-29) |
 | `execute` | on, shown only while `VERIFIED.execute` | the border colour (gold) and width |
 | `ride` | off, shown only while `VERIFIED.ride` and the display's style is `timeline` | |
 

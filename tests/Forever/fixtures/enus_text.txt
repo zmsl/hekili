@@ -8213,7 +8213,7 @@ options.displays.AOE.timeline.tab_timeline.sec_ruler.rulerStyle	values.lines	Lin
 options.displays.AOE.timeline.tab_timeline.sec_ruler.rulerStyle	values.ruler	Ruler
 options.displays.AOE.truth	desc	The game's own truth painted over this display's icons, whatever its style.
 options.displays.AOE.truth	name	Modern
-options.displays.AOE.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. Never on a greyed icon.
+options.displays.AOE.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. An alternative to the display style's own proc glow: never shown on a greyed icon, and only on the next and focus icons. Turn the style's own glow off when you use this.
 options.displays.AOE.truth.confirm	name	Proc Glow
 options.displays.AOE.truth.edge	desc	Grey an icon as soon as the game says the ability cannot be used yet (short of resource, or its proc or condition is not up).
 options.displays.AOE.truth.edge	name	Grey When Not Usable
@@ -9147,7 +9147,7 @@ options.displays.Cooldowns.timeline.tab_timeline.sec_ruler.rulerStyle	values.lin
 options.displays.Cooldowns.timeline.tab_timeline.sec_ruler.rulerStyle	values.ruler	Ruler
 options.displays.Cooldowns.truth	desc	The game's own truth painted over this display's icons, whatever its style.
 options.displays.Cooldowns.truth	name	Modern
-options.displays.Cooldowns.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. Never on a greyed icon.
+options.displays.Cooldowns.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. An alternative to the display style's own proc glow: never shown on a greyed icon, and only on the next and focus icons. Turn the style's own glow off when you use this.
 options.displays.Cooldowns.truth.confirm	name	Proc Glow
 options.displays.Cooldowns.truth.edge	desc	Grey an icon as soon as the game says the ability cannot be used yet (short of resource, or its proc or condition is not up).
 options.displays.Cooldowns.truth.edge	name	Grey When Not Usable
@@ -10081,7 +10081,7 @@ options.displays.Defensives.timeline.tab_timeline.sec_ruler.rulerStyle	values.li
 options.displays.Defensives.timeline.tab_timeline.sec_ruler.rulerStyle	values.ruler	Ruler
 options.displays.Defensives.truth	desc	The game's own truth painted over this display's icons, whatever its style.
 options.displays.Defensives.truth	name	Modern
-options.displays.Defensives.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. Never on a greyed icon.
+options.displays.Defensives.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. An alternative to the display style's own proc glow: never shown on a greyed icon, and only on the next and focus icons. Turn the style's own glow off when you use this.
 options.displays.Defensives.truth.confirm	name	Proc Glow
 options.displays.Defensives.truth.edge	desc	Grey an icon as soon as the game says the ability cannot be used yet (short of resource, or its proc or condition is not up).
 options.displays.Defensives.truth.edge	name	Grey When Not Usable
@@ -11015,7 +11015,7 @@ options.displays.Interrupts.timeline.tab_timeline.sec_ruler.rulerStyle	values.li
 options.displays.Interrupts.timeline.tab_timeline.sec_ruler.rulerStyle	values.ruler	Ruler
 options.displays.Interrupts.truth	desc	The game's own truth painted over this display's icons, whatever its style.
 options.displays.Interrupts.truth	name	Modern
-options.displays.Interrupts.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. Never on a greyed icon.
+options.displays.Interrupts.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. An alternative to the display style's own proc glow: never shown on a greyed icon, and only on the next and focus icons. Turn the style's own glow off when you use this.
 options.displays.Interrupts.truth.confirm	name	Proc Glow
 options.displays.Interrupts.truth.edge	desc	Grey an icon as soon as the game says the ability cannot be used yet (short of resource, or its proc or condition is not up).
 options.displays.Interrupts.truth.edge	name	Grey When Not Usable
@@ -12037,7 +12037,7 @@ options.displays.Multi.timeline.tab_timeline.sec_ruler.rulerStyle	values.lines	L
 options.displays.Multi.timeline.tab_timeline.sec_ruler.rulerStyle	values.ruler	Ruler
 options.displays.Multi.truth	desc	The game's own truth painted over this display's icons, whatever its style.
 options.displays.Multi.truth	name	Modern
-options.displays.Multi.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. Never on a greyed icon.\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFF00FF00Checked|r\n|cFF00B4FFDefensives:|r |cFF00FF00Checked|r\n|cFF00B4FFInterrupts:|r |cFF00FF00Checked|r
+options.displays.Multi.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. An alternative to the display style's own proc glow: never shown on a greyed icon, and only on the next and focus icons. Turn the style's own glow off when you use this.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
 options.displays.Multi.truth.confirm	name	Proc Glow
 options.displays.Multi.truth.edge	desc	Grey an icon as soon as the game says the ability cannot be used yet (short of resource, or its proc or condition is not up).\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFF00FF00Checked|r\n|cFF00B4FFDefensives:|r |cFF00FF00Checked|r\n|cFF00B4FFInterrupts:|r |cFF00FF00Checked|r
 options.displays.Multi.truth.edge	name	Grey When Not Usable
@@ -12971,7 +12971,7 @@ options.displays.Primary.timeline.tab_timeline.sec_ruler.rulerStyle	values.lines
 options.displays.Primary.timeline.tab_timeline.sec_ruler.rulerStyle	values.ruler	Ruler
 options.displays.Primary.truth	desc	The game's own truth painted over this display's icons, whatever its style.
 options.displays.Primary.truth	name	Modern
-options.displays.Primary.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. Never on a greyed icon.
+options.displays.Primary.truth.confirm	desc	Glow the next ability (and the focus ability) when the game lights its proc. An alternative to the display style's own proc glow: never shown on a greyed icon, and only on the next and focus icons. Turn the style's own glow off when you use this.
 options.displays.Primary.truth.confirm	name	Proc Glow
 options.displays.Primary.truth.edge	desc	Grey an icon as soon as the game says the ability cannot be used yet (short of resource, or its proc or condition is not up).
 options.displays.Primary.truth.edge	name	Grey When Not Usable

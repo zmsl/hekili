@@ -89,6 +89,7 @@ local function boot(style, truth)
     conf.style = style
     if conf.truth then -- Task 3 adds the field; Task 2's cases boot with it off
         conf.truth.enabled = truth == true
+        conf.truth.confirm = truth == true -- the mark is off by default (owner ruling 2026-10-29); tests that boot it on want it
     end
     H.Hekili:BuildUI()
     local d = rawget(H.env, "HekiliDisplayPrimary")
@@ -358,7 +359,7 @@ describe("the Modern toggle (spec §5.1, §7)", function()
         local conf = H.Hekili.DB.profile.displays.Primary
         -- AceDB serves defaults through metatables: read each field
         local t = conf.truth
-        assert.are.same({ false, true, true, true }, { t.enabled, t.swipes, t.edge, t.confirm })
+        assert.are.same({ false, true, true, false }, { t.enabled, t.swipes, t.edge, t.confirm })
         assert.is_true(H.ns.UI.StyleNameTaken("truth"))
         assert.is_nil(H.ns.UI.Styles.modern)
         H.Hekili:EmbedDisplayOptions()
@@ -372,9 +373,10 @@ describe("the Modern toggle (spec §5.1, §7)", function()
         H.Hekili:SetDisplayOption(path, true)
         assert.is_true(conf.truth.enabled)
         assert.is_false(args.truth.args.swipes.disabled())
-        for _, k in ipairs({ "swipes", "edge", "confirm" }) do
+        for _, k in ipairs({ "swipes", "edge" }) do
             assert.is_true(H.Hekili:GetDisplayOption({ "displays", "Primary", "truth", k }), k)
         end
+        assert.is_false(H.Hekili:GetDisplayOption({ "displays", "Primary", "truth", "confirm" }))
         assert.is_nil(args.truth.args.execute)
         assert.is_nil(args.truth.args.ride)
         conf.style = "timeline"
@@ -985,6 +987,18 @@ describe("Modern's proc mark (R3, M11)", function()
         assert.is_false(ov.dimShown)
         assert.is_true(ov.markShown)
         H.Hekili.DB.profile.displays.Primary.truth.confirm = false
+        H.Hekili:BuildUI()
+        publish(H, SET)
+        frame(H, d, 0.2)
+        assert.is_false(d.truthState.ov[1].markShown)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("draws no proc mark with the default settings (confirm off)", function()
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        H.Hekili.DB.profile.displays.Primary.truth.confirm = nil -- back to the default
         H.Hekili:BuildUI()
         publish(H, SET)
         frame(H, d, 0.2)

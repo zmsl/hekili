@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### New
-- New experimental display option, Modern (game truth): keeps your Classic or Timeline display as it is and adds the game's own cooldown swipes, an immediate grey when the game says an ability cannot be used yet, and a glow on the next ability when the game lights its proc. Hekili still decides what to show; turn it on in a display's Modern tab to try it.
+- New experimental display option, Modern (game truth): keeps your Classic or Timeline display as it is and adds the game's own cooldown swipes, an immediate grey when the game says an ability cannot be used yet, and, optionally (off by default), a proc mark on the next ability when the game lights its proc, an alternative to the display style's own glow. Hekili still decides what to show; turn it on in a display's Modern tab to try it.
 
 ### Changed
 
