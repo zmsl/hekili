@@ -225,11 +225,24 @@ end
 --- tag's most frequent amount a tick (partial ticks at the five-second rule's edges are rarer). A casting rate above
 --- the not-casting one is a temporary boost (Innervate: wowsims's casting rate is the mp5 part plus at most all of the
 --- spirit part), so the casting rate is then 0; with no not-casting line the casting rate stands for both.
-function M.manaRegen(ev)
+function M.manaRegen(ev, shares)
     local count, best = { {}, {} }, { 0, 0 }
+    local up, boost = {}, 0 -- the declared casting-share auras up (shares: { [aura id] = share }) and their total
+    local bcount, bboost, bbest = {}, {}, 0 -- casting ticks under a share aura: count, boost by amount, modal amount
     for _, e in ipairs(ev) do
+        if e.kind == "aura" and e.unit == "player" and shares and shares[e.id] then
+            local was = up[e.id]
+            up[e.id] = e.verb ~= "faded" or nil
+            boost = boost + ((up[e.id] and 1 or 0) - (was and 1 or 0)) * shares[e.id]
+        end
         local tag = e.kind == "power" and e.name == "mana" and e.other == M.MANA_REGEN and e.tag
-        if tag == 1 or tag == 2 then
+        if tag == 1 and boost > 1e-9 then
+            local n = (bcount[e.amount] or 0) + 1
+            bcount[e.amount], bboost[e.amount] = n, boost
+            if n > (bcount[bbest] or 0) then
+                bbest = e.amount
+            end
+        elseif tag == 1 or tag == 2 then
             local n = (count[tag][e.amount] or 0) + 1
             count[tag][e.amount] = n
             if n > (count[tag][best[tag]] or 0) then
@@ -238,6 +251,13 @@ function M.manaRegen(ev)
         end
     end
     local casting, idle = best[1] / M.MANA_TICK, best[2] / M.MANA_TICK
+    -- shortcut: the boosted casting ticks outnumber the unboosted ones (edge partials are no evidence): take the modal
+    -- tick b, with spirit part S = (idle - b) / (1 - share) and the unboosted rate b - share x S (exact when the slot's
+    -- static casting share is 0; upgrade with the pack's declared one).
+    if bbest ~= 0 and (count[1][best[1]] or 0) < bcount[bbest] then
+        local b, sh = bbest / M.MANA_TICK, bboost[bbest]
+        casting = sh < 1 and math.max(0, b - sh * (idle - b) / (1 - sh)) or 0
+    end
     if idle == 0 and casting == 0 then
         return nil
     elseif idle == 0 then
@@ -549,7 +569,17 @@ function M.new(text, H, o)
     local start0
     start0, R.maxOf = M.pools(p.ev)
 
-    R.manaIdle, R.manaCasting = M.manaRegen(p.ev)
+    -- the class's declared casting-share auras (a regen entry with a `share`): their ticks are not the unboosted rate
+    local shares, Class = {}, H.Hekili.Class
+    for _, rs in pairs(Class.resources or {}) do
+        for _, m in ipairs(rs.state and rs.state.regenMult or {}) do
+            local a = m.share and m.aura and Class.auras[m.aura]
+            if a and a.id then
+                shares[a.id] = m.share
+            end
+        end
+    end
+    R.manaIdle, R.manaCasting = M.manaRegen(p.ev, shares)
 
     local ci = 1
     --- wowsims's next cast strictly after world time `t` (its key), or false; `t` only grows within a world.

@@ -749,6 +749,35 @@ describe("the replay's mana regen (wowsims's regen lines)", function()
         assert.is_nil(replay.manaRegen(replay.parse(log({})).ev))
     end)
 
+    it("seeds the casting rate from ticks with no declared casting-share aura up", function()
+        local function withAura(rows) -- rows: ticks and the aura lines, in log order
+            local out = { "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63" }
+            for _, r in ipairs(rows) do
+                out[#out + 1] = r[1] == "aura" and ("[%.2f] [Tester (#1)] Aura %s: {SpellID: 77}"):format(r[2], r[3])
+                    or line(r[1], r[2], r[3])
+            end
+            return replay.parse(table.concat(out, "\n")).ev
+        end
+        local shares = { [77] = 0.5 }
+        -- every casting tick boosted (0.794 a tick under a +50% share of the 15.88 idle): the unboosted rate is 0
+        local ev = withAura({ { "aura", 1, "gained" }, { 1.1, 0.794, 1 }, { 1.2, 0.794, 1 }, { 1.3, 1.588, 2 } })
+        local idle, casting = replay.manaRegen(ev, shares)
+        assert.is_true(math.abs(idle - 15.88) < 1e-9 and casting == 0)
+        -- the modal tick is boosted but an unboosted one was logged: that one is the rate
+        ev = withAura({
+            { 0.5, 0.2, 1 },
+            { "aura", 1, "gained" },
+            { 1.1, 0.794, 1 },
+            { 1.2, 0.794, 1 },
+            { "aura", 2, "faded" },
+            { 2.1, 0.2, 1 },
+            { 2.2, 1.588, 2 },
+        })
+        idle, casting = replay.manaRegen(ev, shares)
+        assert.is_true(math.abs(casting - 2) < 1e-9)
+        assert.is_true(math.abs(select(2, replay.manaRegen(ev)) - 7.94) < 1e-9, "no shares declared: the modal tick")
+    end)
+
     it("answers them to the client out of combat (W.fsr, the fake's GetManaRegen), secret in combat", function()
         local R = replay.new(log({ { 0.5, 2.2, 2 }, { 0.6, 2.2, 2 } }), H, {})
         local W = R.world(setmetatable({ tag = "-m" }, { __index = WO }), 1)
