@@ -1,0 +1,3 @@
+local _, ns = ...
+-- a file other than UI/Truth.lua reading the display class: tools/check_api_reads.sh must fail on line 3
+return ns.Facade.Display.C_Spell.GetSpellCooldownDuration(1, false)

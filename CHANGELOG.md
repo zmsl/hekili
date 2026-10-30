@@ -4,6 +4,7 @@
 
 ### New
 - High Order Skyborne Hunters, Mages and Druids: Read Ley Line is tracked and recommended where the wowsims priorities cast it (the Mage's), and Energized's doubled mana regen counts in the predicted mana. The Windshaper Skyborne get neither.
+- New experimental display option, Modern (game truth): keeps your Classic or Timeline display as it is and adds the game's own cooldown swipes, an immediate grey when the game says an ability cannot be used yet, and, optionally (off by default), a proc mark on the next ability when the game lights its proc, an alternative to the display style's own glow. Hekili still decides what to show; turn it on in a display's Modern tab to try it.
 
 ### Changed
 - Mana regen during a channel you paid for (Wrack, Drain Soul, Rain of Fire, Hellfire, Arcane Missiles, Blizzard, Hurricane, Volley): the icons now keep the casting-rate regen until the channel ends, as wowsims does, instead of resuming Spirit regen 5 s in; a channel that costs nothing (Evocation, a free Arcane Missiles) holds nothing.

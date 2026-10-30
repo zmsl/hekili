@@ -167,6 +167,7 @@ local function newCell( d, T, i )
         b.Cooldown:SetDrawEdge( false )
         b.Cooldown:SetHideCountdownNumbers( true ) -- the ETA text is the countdown
         if i == 1 then
+            b.round = true
             b.Cooldown:SetSwipeTexture( CIRCLE )
             b.Cooldown:SetUseCircularEdge( true )
         end
@@ -639,6 +640,7 @@ local function assign( d, T, tl, conf, out, now, combat )
             b:Hide()
             glowOff( b )
             b.Action, b.Ability, b.ExactTime, b.Key, b.cdAction = nil, nil, nil, nil, nil
+            b.recIndex, b.isFocus = 0, false
             T.want[ i ], T.inLane[ i ] = false, false
         end
         T.has = false
@@ -655,6 +657,7 @@ local function assign( d, T, tl, conf, out, now, combat )
         local i = T.rec[ c ] -- record i, drawn by cell c
         local b, r = cells[ c ], recs[ i ] or NONE
         b.Recommendation = recs[ i ]
+        b.recIndex, b.isFocus = i, c == 1 and T.focused
         local action, exact = r.actionName, r.exact_time
         local key = exact
         if pinned and exact then key = r.time - T.pressTime end
@@ -826,6 +829,7 @@ function Timeline.Draw( d, conf, out, status )
         for i = 1, SLOTS do
             local b = T.cells[ i ]
             b.Eta:SetShown( not quiet )
+            b.timersHidden = quiet
             if quiet and b.Cooldown then
                 b.Cooldown:SetCooldown( 0, 0 )
                 b.cdStart, b.cdEnd, b.cdAction = -1, -1, nil -- the held start goes: combat starts the sweep fresh
@@ -934,6 +938,7 @@ function Timeline.Clear( d )
         glowOff( b )
         readyGlow( b, false )
         b.Action, b.Ability, b.ExactTime, b.Key, b.cdAction = nil, nil, nil, nil, nil
+        b.recIndex, b.isFocus = 0, false
     end
     for i = 1, SLOTS do T.want[ i ], T.inLane[ i ] = false, false end
     for _, w in ipairs( T.widgets ) do w:Hide() end

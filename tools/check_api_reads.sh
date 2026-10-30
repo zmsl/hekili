@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 if [ -z "${LUACHECK:-}" ]; then [ -x .lua/bin/luacheck ] && LUACHECK=.lua/bin/luacheck || LUACHECK=luacheck; fi
 command -v "$LUACHECK" >/dev/null || { echo "luacheck not found: set LUACHECK" >&2; exit 1; }
 [ -x .lua/bin/lua ] && LUA=.lua/bin/lua || LUA=lua5.1
-mapfile -t files < <("$LUA" tests/helpers/addons.lua lua) # every addon's TOC, in dependency order
+if [ $# -gt 0 ]; then files=("$@"); else mapfile -t files < <("$LUA" tests/helpers/addons.lua lua); fi # every addon's TOC, in dependency order
 [ ${#files[@]} -gt 0 ] || { echo "no addon files listed (is $LUA working?)" >&2; exit 1; }
 globals=$(cut -f1 tools/api_inventory.txt | sed -E 's/\..*//' | sort -u | paste -sd'|')
 fail=0
@@ -22,6 +22,11 @@ hits=$(grep -nE "_G(\.|\[[\"'])($globals)\b" "${files[@]}")
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
 # shortcut: catches only a getmetatable read and a (Un)Register...Event call on one line; a split read needs review.
 hits=$(grep -nE "getmetatable\(.*(Register|Unregister)[A-Za-z]*Event" "${files[@]}")
+[ -n "$hits" ] && { echo "$hits"; fail=1; }
+# Modern display spec §4 (M3): the display class answers raw, possibly secret values meant for a widget; only
+# UI/Truth.lua reads it. shortcut: catches Facade.Display / Client.Display spelled out; an alias of the facade
+# table (`local F = ns.Facade; F.Display`) needs review.
+hits=$(grep -nHE '(Facade|Client)\.Display\b' "${files[@]}" | grep -vE '^src/Hekili/(UI/Truth|Game/API/Facade)\.lua:')
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
 [ $fail -eq 0 ] && echo "ok: no direct game API read in ${#files[@]} loaded files"
 exit $fail

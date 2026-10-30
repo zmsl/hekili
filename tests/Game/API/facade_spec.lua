@@ -40,10 +40,11 @@ describe("ns.Facade", function()
 
     local function entry(name)
         local nsName, key = name:match("^([%w_]+)%.([%w_]+)$")
+        local root = Facade.Status(name) == "display" and Facade.Display or Facade
         if nsName then
-            return Facade[nsName] and Facade[nsName][key]
+            return root[nsName] and root[nsName][key]
         end
-        return Facade[name]
+        return root[name]
     end
 
     setup(function()
@@ -108,7 +109,7 @@ describe("ns.Facade", function()
 
     it("keeps exactly the inventory's names, each with its class, a reason and a function", function()
         assert.are.same(names, Facade.Inventory())
-        local count = { passthrough = 0, hybrid = 0, virtual = 0 }
+        local count = { passthrough = 0, hybrid = 0, virtual = 0, display = 0 }
         for _, n in ipairs(names) do
             local c = Facade.Status(n)
             assert.are.equal(classes[n], c, n)
@@ -116,7 +117,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 125, hybrid = 34, virtual = 25 }, count)
+        assert.are.same({ passthrough = 125, hybrid = 34, virtual = 25, display = 1 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -132,6 +133,16 @@ describe("ns.Facade", function()
         assert.are.same({ false, true }, { Facade.UnitInRange("party1") })
         assert.is_nil(Facade.CombatLogGetCurrentEventInfo())
         assert.is_nil(Facade.C_Spell.GetSpellLossOfControlCooldown(1))
+    end)
+
+    it("answers a display row raw from Facade.Display only, untraced (Modern spec §4, plan ruling 5)", function()
+        assert.is_nil(Facade.C_Spell.GetSpellCooldownDuration)
+        local n = #calls
+        assert.is_true(rawequal(fake.SECRET, Facade.Display.C_Spell.GetSpellCooldownDuration(7, true)))
+        assert.are.equal(n + 1, #calls)
+        assert.are.equal("C_Spell.GetSpellCooldownDuration", calls[#calls])
+        assert.is_nil(Facade.counts["C_Spell.GetSpellCooldownDuration"])
+        assert.is_truthy(Facade.Why("C_Spell.GetSpellCooldownDuration"):find("widget", 1, true))
     end)
 
     it("answers resources: UnitPower floors lo for every resource; swing regen 0 in and out of combat", function()

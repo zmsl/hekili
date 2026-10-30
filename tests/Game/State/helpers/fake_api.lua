@@ -670,6 +670,7 @@ function M.new()
         return ""
     end
     C.GetSpellCharges, C.RequestLoadSpellData, C.IsSpellPassive, C.IsSpellHelpful = none, none, no, no
+    C.GetSpellCooldownDuration = none -- MayReturnNothing: the fake client has no duration objects (display class)
     function C.IsSpellHarmful()
         return true
     end

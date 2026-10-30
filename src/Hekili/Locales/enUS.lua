@@ -315,6 +315,17 @@ L["Set the vertical position for this display's primary icon relative to the cen
 L["Display Frame Layer"] = true
 L["Strata"] = true
 L["Frame Strata determines which graphical layer that this display is drawn on.\n\nThe default layer is |cFFFFD100MEDIUM|r."] = true
+L["Modern"] = true
+L["The game's own truth painted over this display's icons, whatever its style."] = true
+L["Experimental. Keeps this display's style and settings, and adds the game's own cooldown swipes, an immediate grey when the game says an ability cannot be used yet, and a gold glow on the next ability when the game lights its proc. Hekili still decides what to show."] = true
+L["Modern (game truth)"] = true
+L["Turn the Modern overlays on for this display. Turn it off to go back to the plain style."] = true
+L["Real Cooldown Swipes"] = true
+L["Show the game's own cooldown on an icon while it runs, instead of Hekili's estimate."] = true
+L["Grey When Not Usable"] = true
+L["Grey an icon as soon as the game says the ability cannot be used yet (short of resource, or its proc or condition is not up)."] = true
+L["Proc Glow"] = true
+L["Glow the next ability (and the focus ability) when the game lights its proc. An alternative to the display style's own proc glow: never shown on a greyed icon, and only on the next and focus icons. Turn the style's own glow off when you use this."] = true
 L["Visibility"] = true
 L["Visibility and transparency settings in PvE / PvP."] = true
 L["Advanced"] = true

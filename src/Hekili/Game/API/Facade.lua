@@ -1,9 +1,10 @@
 -- Game/API/Facade.lua
 -- ns.Facade (spec §7; event-facade spec §1.1): every game function Hekili core and the class files read, in one of
--- three classes (event-facade decision 8): `passthrough` (the raw call: plain by probe, or a value Hekili never uses
+-- four classes (event-facade decision 8): `passthrough` (the raw call: plain by probe, or a value Hekili never uses
 -- in a way a secret breaks), `hybrid` (the raw call; a secret answer is replaced by the policy's, for names secret
 -- only sometimes) and `virtual` (the policy only, never the game's answer: secret always, absent on Forever, or
--- answered from VirtualState for a reason beyond secrecy). Namespaces mirror the game (Facade.UnitPower,
+-- answered from VirtualState for a reason beyond secrecy), and `display` (the raw call whose answer may be secret, for a
+-- widget only: kept in Facade.Display, never in Facade itself, and read only by UI/Truth.lua). Namespaces mirror the game (Facade.UnitPower,
 -- Facade.C_Spell.GetSpellCooldown, Facade.AuraUtil.ForEachAura). Query with Facade.Status(name) (the class),
 -- Facade.Why(name), Facade.Inventory(); tools/api_inventory.txt lists every name with its class.
 -- Every policy uses now = GetTime(), or the clock Drain pins while it applies a cast (spec §5.5 R1), and returns
@@ -995,6 +996,27 @@ local PASSTHROUGH = {
 for i = 1, #PASSTHROUGH do
     passthrough(PASSTHROUGH[i][1], PASSTHROUGH[i][2])
 end
+
+----------------------------------------------------------------------------------------------------------------------
+-- The display class (Modern display spec §4, plan ruling 5): the raw function, untraced so no secret answer sits in the
+-- trace's locals or counters, stored only in Facade.Display (tools/check_api_reads.sh lets only UI/Truth.lua read it).
+
+Facade.Display = {}
+local function display(name, reason)
+    local nsName, key = split(name)
+    local t = Facade.Display
+    if nsName then
+        t[nsName] = t[nsName] or {}
+        t = t[nsName]
+    end
+    t[key] = resolve(name) or nothing
+    inventory[#inventory + 1] = name
+    status[name], why[name] = "display", reason
+end
+display(
+    "C_Spell.GetSpellCooldownDuration",
+    "a duration object (userdata; its getters secret in combat), 56 B per call [W PR11, PR28]; MayReturnNothing [SP:327-343]; for a widget only (Cooldown:SetCooldownFromDurationObject), UI/Truth.lua"
+)
 
 ----------------------------------------------------------------------------------------------------------------------
 

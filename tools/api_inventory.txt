@@ -34,6 +34,7 @@ C_SpecializationInfo.GetTalentInfo	passthrough
 C_Spell.GetSpellCastCount	virtual
 C_Spell.GetSpellCharges	hybrid
 C_Spell.GetSpellCooldown	hybrid
+C_Spell.GetSpellCooldownDuration	display
 C_Spell.GetSpellDescription	passthrough
 C_Spell.GetSpellInfo	passthrough
 C_Spell.GetSpellLossOfControlCooldown	virtual

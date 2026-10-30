@@ -932,6 +932,7 @@ do
         if out then Hekili.Engine.Unsubscribe( d.id, d.OnPublish ) end
         d.blankVersion = ( out or noOutput ).version
         d.style.Clear( d )
+        if d.truthOn then ns.UI.Truth.Clear( d ) end
     end
 
     local alphaUpdateEvents = {
@@ -1091,8 +1092,12 @@ do
         d.style = style
         d.styleState = d.styleState or {} -- per-display scratch, shared by every style the display has bound
         d.styleFrames = d.styleFrames or {} -- per style name, the frames it built (WoW cannot free frames)
+        if d.truthOn then ns.UI.Truth.Clear( d ) end -- what the layer drew on the old buttons goes with them
         ns.UI.Buttons[ d.id ] = d.style.Build( d, conf )
         d.Buttons = ns.UI.Buttons[ d.id ]
+        -- Modern (spec §5.1, M2): core's layer over whichever style is bound, only while its toggle is on
+        d.truthOn = conf.truth.enabled == true
+        if d.truthOn then ns.UI.Truth.Build( d, conf, d.Buttons ) end
     end
 
     function Hekili:CreateDisplay( id )
@@ -1155,10 +1160,12 @@ do
             local draw = self.NewRecommendations or self.timer < 0
             if draw then ns.UI.Resolve( self, conf, out, now ) end
             style.Tick( self, conf, out, now, elapsed )
+            if self.truthOn then ns.UI.Truth.Tick( self, conf, out, now ) end
 
             if draw then
                 self.timer = pulseDisplay
                 style.Draw( self, conf, out, Status )
+                if self.truthOn then ns.UI.Truth.Draw( self, conf, out ) end
             end
         end
 
@@ -1222,6 +1229,7 @@ do
             end
 
             self.style.OnGameEvent( self, conf, event, ... )
+            if self.truthOn then ns.UI.Truth.OnGameEvent( self, conf, event, ... ) end
 
             local finish = debugprofilestop()
 
@@ -1305,6 +1313,7 @@ do
             self:SetScript( "OnEvent", nil )
 
             self.style.Clear( self )
+            if self.truthOn then ns.UI.Truth.Clear( self ) end
         end
 
 

@@ -32,8 +32,8 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `Engine/Schema/`: the class/race/shared registration API (`Spec`, `Races`, `Shared`, `Threat`), the engine core the
     boundary spec scans;
   - `UI/`: the display core and editor widgets (`UI`, `Formatting`, `MultilineEditor`, `PopupSlider`), the display
-    style registry (`Styles`), the shared "what to show" (`Resolve`) and the styles themselves (`Styles/Classic`,
-    `Styles/Timeline`); architecture §7;
+    style registry (`Styles`), the shared "what to show" (`Resolve`), the styles themselves (`Styles/Classic`,
+    `Styles/Timeline`) and the Modern layer (`Truth`, the only reader of `Facade.Display`); architecture §7;
   - `Integrations/`: bridges to other addons that subscribe to the engine like the UI does (`WeakAuras`);
   - `Locales/`: the core's string table, AceLocale-3.0 app `Hekili`: `enUS.lua` (generated), one file per language
     (`zhCN`), then `Locales.lua` (`ns.L`); kept in step with the code by `tools/locales.py`; architecture §9;
