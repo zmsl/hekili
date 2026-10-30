@@ -764,7 +764,25 @@ describe("Forever Druid", function()
     )
 
     it("declares Innervate as wowsims applies it: the spirit regen x 5, inside the five-second rule too", function()
-        assert.are.same({ innervate = { aura = "innervate", spirit = 5, share = 1 } }, w.resources[0].models)
+        local m = w.resources[0].models
+        assert.are.same({ aura = "innervate", spirit = 5, share = 1 }, m.innervate)
+    end)
+
+    it("declares the Serenity Field trinket's Spirit: +72 Spirit, 9 a second, from the read Spirit", function()
+        assert.are.same(
+            { 1291103, 15, 1 },
+            { w.auras.serenity_field.id, w.auras.serenity_field.duration, w.auras.serenity_field.max_stack }
+        )
+        local m = w.resources[0].models.serenity_field
+        assert.are.equal("serenity_field", m.aura)
+        w.state.stat = function()
+            return 0, 126
+        end
+        assert.is_true(math.abs(m.spirit() - (1 + 9 / 22)) < 1e-9) -- druid_balance.log: 22.0 -> 31.0 a second
+        w.state.stat = function()
+            return 0, 0
+        end
+        assert.are.equal(1, m.spirit()) -- before the first stat read: inert, never NaN
     end)
 
     it("refunds 80% of an avoided ability's energy or rage where wowsims does, per ability", function()

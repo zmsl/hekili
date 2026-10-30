@@ -42,6 +42,13 @@ describe("the Hunter loop worlds", function()
             out[pk[1]] = { C.resolve("raptor_strike", H).cost, H.Hekili.State.action.raptor_strike.cost }
         end
         assert.are.same({ BeastMastery = { 100, 100 }, Marksmanship = { 40, 40 }, Survival = { 40, 40 } }, out)
+        -- every Resourcefulness-cut ability of the Survival kit: the world's price is the pack's (the client pays whole
+        -- mana, so the world's is floored)
+        local C = hw.Survival
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        for _, k in ipairs({ "mongoose_bite", "wing_clip", "strider_kick" }) do
+            assert.are.equal(H.Hekili.State.action[k].cost, math.floor(C.resolve(k, H).cost), k)
+        end
     end)
 end)
 

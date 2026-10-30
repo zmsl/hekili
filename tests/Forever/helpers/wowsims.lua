@@ -273,7 +273,11 @@ M.READY = {
     druid_guardian = { 0.54, 41 }, -- 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     hunter_beast_mastery = { 0.32, 5 },
     hunter_marksmanship = { 0.15, 8 }, -- was { 0.15, 10 } (b8d673eb8 raised it to 0.18 for gap BW, reverted with BW's fix): measured real 8 median 0.15 once the replay seeds the casting rate from unboosted ticks (168.28 strider_kick back to never)
-    hunter_survival = { 0.14, 10 }, -- was { 0.14, 9 }: row 91.49 mongoose_bite now late 0.14 s, a cost decision with the belief 1.9 mana under truth (the standing lo lag, gaps BQ/BT, G7); the base's in:grain there rested on the replay double count fixed with gap BW (belief 5.5 mana over truth); controller ruling 2026-10-30 while the owner was away
+    -- { 0.14, 10 } -> { 0.19, 6 } (Task 12): the replay world priced Strider Kick at 0.0581 of its 5000-mana pool (116
+    -- under Resourcefulness), now of the class file's base 1720 (39.6, wowsims's log); count 10 -> 6, p90 0.36 -> 0.19, the
+    -- median of the smaller set 0.14 -> 0.19 (the three 0.14 strider_kick rows and the 3.23 / 1.45 s cost rows gone, the
+    -- 100.24 and 126.89 rows now 0.19 / 0.27); owner standing approval 2026-10-30
+    hunter_survival = { 0.19, 6 },
     mage_arcane = { 0.47, 21 }, -- 0.470, 21 (Mage lane, ruling M13; first clean run on 0ce5d1a4)
     mage_fire = { 0.37, 31 }, -- 0.370, 31
     mage_frostfire = { 0.38, 31 }, -- 0.380, 31 (Task FFB, ruling M13; first clean run on 3e104ce9)

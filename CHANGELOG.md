@@ -10,6 +10,7 @@
 - When your mana (or another resource) sits within a hair of an ability's cost, the first icon no longer flips to a cheaper ability for one update and back: the higher-priority ability keeps its countdown until it is affordable. Nothing shows as ready any earlier than before.
 
 ### Fixed
+- Druids: mana regen counts the Serenity Field trinket's buff (Spirit +72 for 15 seconds, about 9 mana a second more), so the icons follow the extra mana while it is up.
 - Warlocks: mana regen counts Fel Energy (the Voidwalker sacrifice: 2% of your maximum mana every 4 seconds while it is up).
 - Priests: mana regen counts Dark Inspiration's Spirit, Dark Sacrifice's mana follows your Spirit instead of a fixed amount, and Priest mana starts from measured rates per spec (wowsims's Shadow and Smite logs).
 - Mages: Evocation's mana follows your learned mana regen (Spirit regen x 16, all of it while casting) instead of a fixed amount, and Mage mana starts from measured rates per spec (wowsims's Arcane, Fire and Frostfire logs).

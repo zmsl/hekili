@@ -268,6 +268,17 @@ spec:RegisterResource(
         -- second over 22-41 s). wowsims's rule (owner: matches the game), not yet measured on Forever.
         -- DB2 29166: aura 110 +400% (`spirit` x 5), aura 134 100% (`share` 1). Its seconds weigh the calibration.
         innervate = { aura = "innervate", spirit = 5, share = 1 },
+        -- The Serenity Field trinket's buff (item 272439; DB2 aura 1291103: aura 29 Spirit +72, 15 s; an item's buff any
+        -- Druid may wear; the other classes' packs: docs/dev/gaps.md): Spirit +72 raises the spirit regen S = 6.25 +
+        -- Spirit/8 by 9 a second, so the part x (S + 9) / S, Spirit the belief's out-of-combat read (druid_balance.log:
+        -- Tag 2 22.0 -> 31.0 over 114.9-126 s at Spirit 126); 1 before that read.
+        serenity_field = {
+            aura = "serenity_field",
+            spirit = function()
+                local _, s = state.stat("UnitStat", 5)
+                return s > 0 and 1 + 9 / (6.25 + s / 8) or 1
+            end,
+        },
     },
     nil,
     {
@@ -339,6 +350,7 @@ spec:RegisterTalents({
 })
 
 spec:RegisterAuras({
+    serenity_field = { id = 1291103, duration = 15, max_stack = 1 },
     aquatic_form = {
         id = 1066,
         duration = 3600,

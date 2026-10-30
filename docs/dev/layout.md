@@ -345,16 +345,16 @@ pull (the character keeps a permanent buff between fights). Neither side dies (s
 missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35, Combat Range 0-5). "The Hunter at range, then
 in melee" runs Survival at 25 yd, then 5 yd: its four `target.within5` lines stay shut while the bracket reads [8, 35],
 open at [0, 5], and the bracket holds when every read goes secret. Mana is secret in combat, so the belief holds its
-lower bound and the worlds idle 0.820 (Beast Mastery, Marksmanship) and 0.711 (Survival) of the time at 3 fights. The
+lower bound and the worlds idle 0.823 (Beast Mastery), 0.844 (Marksmanship) and 0.394 (Survival, whose strikes the Resourcefulness cut makes cheap) of the time at 3 fights. The
 lines (the forever gate on 51a0b1ac, central fixes 1-17; the hand-built lists' were 0.983/0.986/0.945 at 3 fights):
 
 ```
 Beast Mastery solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.997; ... [seeds 1-3]
 Marksmanship solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.997; ... [seeds 1-3]
-Survival solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.991; ... [seeds 1-3]
+Survival solo: fights=3 agreement 0.976 (2706 ticks); react median 0 p90 1 never 0.008; refused per 100 [], episodes 0.00/min; dps A/B 0.968; ... [seeds 1-3]
 Beast Mastery solo: fights=20 agreement 1.000 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.012; ...
 Marksmanship solo: fights=20 agreement 1.000 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.012; ...
-Survival solo: fights=20 agreement 0.999 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.003; ...
+Survival solo: fights=20 agreement 0.987 (18040 ticks); react median 0 p90 1 never 0.029; refused per 100 [], episodes 0.00/min; dps A/B 0.990; ...
 ```
 
 Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter

@@ -14986,6 +14986,7 @@ options.packs.balance.Balance (wowsims.com).lists.buff_name	values.moonkin_form	
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079
+options.packs.balance.Balance (wowsims.com).lists.buff_name	values.serenity_field	|T136000:0|t Spell 1291103
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.travel_form	|T136000:0|t Spell 783
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.wolfshead_helm	|T136000:0|t Spell 17768
 options.packs.balance.Balance (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
@@ -17700,6 +17701,7 @@ options.packs.feral.Feral (wowsims.com).lists.buff_name	values.moonkin_form	|T13
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079
+options.packs.feral.Feral (wowsims.com).lists.buff_name	values.serenity_field	|T136000:0|t Spell 1291103
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.travel_form	|T136000:0|t Spell 783
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.wolfshead_helm	|T136000:0|t Spell 17768
 options.packs.feral.Feral (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
@@ -18911,6 +18913,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.moonkin_for
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079
+options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.serenity_field	|T136000:0|t Spell 1291103
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.travel_form	|T136000:0|t Spell 783
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.wolfshead_helm	|T136000:0|t Spell 17768
 options.packs.guardian.Guardian (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.

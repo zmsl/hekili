@@ -45,7 +45,13 @@ M.FLICKER = {
     -- 0.5 s the client's not-ready flag holds our ready time at now + CD_PROBE while the truth counts down, so the other
     -- shows one tick (every one of the 17 flips; Fire Blast's CD_PROBE class in layout.md); owner standing approval
     -- 2026-10-30
-    ["Survival"] = { flicker = 0.2, retracted = 0 }, -- 0.20 / 0.02 / 0.07, 0 (oracle 2.18 / 1.68 / 2.26)
+    -- 0.2 -> 0.3 (Task 12, the world prices Strider Kick as the pack does: 0.0581 of the class file's base mana 1720 =
+    -- 99.9, x 0.4 under Resourcefulness = 39.97, wowsims's log 39.6, not 0.0581 of the world's 5000-mana pool = 290; seeds
+    -- 1-20 / 21-40 / 41-60: 0.27 / 0.08 / 0.15, was 0.20 / 0.02 / 0.07; oracle 2.03 / 2.00 / 1.96, agreement 0.987 /
+    -- 0.988 / 0.988, was 0.978 / 0.978 / 0.981): Strider Kick now comes up with Raptor Strike's cooldown and the same
+    -- raptor_strike -> wing_clip -> raptor_strike flip rests on CD_PROBE (all 16 flips of seeds 1-20 traced, each at the
+    -- tick before Raptor Strike's cooldown ends); owner standing approval 2026-10-30
+    ["Survival"] = { flicker = 0.3, retracted = 0 }, -- 0.27 / 0.08 / 0.15, 0 (oracle 2.03 / 2.00 / 1.96)
     ["Marksmanship"] = { flicker = 0, retracted = 0 }, -- 0, 0
     -- 0 -> 0.2 (Task 5, wowsims's Hunter regen in; seeds 1-20 / 21-40 / 41-60: 0 / 0.12 / 0, was 0 / 0 / 0): the new BM
     -- regen puts Arcane Shot's mana crossing 0.14 s from Hunter's Mark's refresh; lo runs ~3 mana under truth (gaps
