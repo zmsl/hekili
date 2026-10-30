@@ -74,4 +74,12 @@ describe("the sim's near-cost mark (TimeToReady)", function()
         assert.is_false(S.nearCost)
         rawset(S.buff, "veil_up", nil)
     end)
+
+    it("does not mark a swing-paid resource: it moves only at swings, so no regen is answered late", function()
+        r.swingGen = true -- Spec.lua's flag for a resource a swing entry pays
+        local w = S:TimeToReady("surge")
+        r.swingGen = false
+        assert.is_true(w >= 0.26 and w <= 0.27, w)
+        assert.is_false(S.nearCost)
+    end)
 end)

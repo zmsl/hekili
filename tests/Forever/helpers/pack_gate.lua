@@ -44,7 +44,8 @@ M.FLICKER = {
     ["Beast Mastery"] = { flicker = 0, retracted = 0 }, -- 0, 0
     ["Retribution"] = { flicker = 0.1, retracted = 0 }, -- 0.04 / 0 / 0.02, 0
     -- near an empty pool our rounded waits trade places with Holy Strike (near-tie wobble of the mana belief, gap AB);
-    -- steady icons (experimental) is the player's remedy
+    -- steady icons (experimental) is the player's remedy. s41-60 0.68 after Task 4a: gap AB near-tie in fight 18, a
+    -- diverged press history; owner ruling 2026-10-29: seed chaos, floor kept
     ["Protection"] = { flicker = 0.5, retracted = 0 }, -- 0.46 / 0.03 / 0.49, 0 (oracle 0 / 0.42 / 0.39)
     ["Enhancement"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0 / 0.03, 0
     ["Arcane"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0.02 / 0.03, 0

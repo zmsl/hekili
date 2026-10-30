@@ -6335,8 +6335,10 @@ do
             if res then
                 res.actual = UnitPower( "player", power.type )
                 res.max = UnitPowerMax( "player", power.type )
-                -- the belief's estimate above the floor it answered (TimeToReady's near-cost mark, mana-regen plan Task 4a)
-                res.estGap = VS.Power( power.type, state.now ).est - res.actual
+                -- the belief's estimate above the floor it answered (TimeToReady's near-cost mark, mana-regen plan Task 4a);
+                -- 0 for a type the belief does not track (its estimate reads 0)
+                local gap = VS.Power( power.type, state.now ).est - res.actual
+                res.estGap = gap > 0 and gap or 0
 
                 if res.max > 0 then foundResource = true end
 
@@ -7300,8 +7302,10 @@ function state:TimeToReady( action, pool )
         -- one more update (the usability poll that settles it; the client answers a gain late, so the floor runs a few
         -- mana under the truth there). Core keeps such a pick over a later entry that is merely ready sooner; the wait
         -- stays the floor's (a countdown, never ready early). Confirmed below: nothing but the resource may hold it.
+        -- Never for a swing-paid resource (swingGen): it moves only at swings, so no regen is answered late.
         z = self[ resource ]
-        nearRes = wait <= ns.EARLY_EXIT + ( Hekili.combatRate or 0.2 )
+        nearRes = not z.swingGen
+            and wait <= ns.EARLY_EXIT + ( Hekili.combatRate or 0.2 )
             and self:TimeToResource( z, spend - ( z.estGap or 0 ) ) <= ns.EARLY_EXIT
         waitRes = wait
     end
