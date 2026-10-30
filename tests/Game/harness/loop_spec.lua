@@ -59,6 +59,38 @@ describe("the headless loop, class-neutral", function()
     )
 end)
 
+describe("the headless loop's CPU metric", function()
+    local function stub()
+        return {
+            character = function()
+                return { level = 60, power = { type = 1, token = "RAGE", max = 100 } }
+            end,
+            resolve = function()
+                return {}
+            end,
+            usable = function()
+                return {}
+            end,
+            uptime = function()
+                return {}
+            end,
+            gain = function()
+                return 0
+            end,
+            WORLD = { level = 60, max = 100, mobHealth = 1e9 },
+        }
+    end
+
+    it("leaves the traced fight (the debug pass) out of the cpu samples", function()
+        local L = loop.new(stub())
+        -- an unkillable mob: every fight runs its full 6 s, so each counts the same ticks
+        local plain = #loop.tally(L, 1, { duration = 6, trace = false }).cpu
+        assert.is_true(plain > 0)
+        assert.are.equal(0, #loop.tally(L, 1, { duration = 6 }).cpu) -- fight 1 runs traced by default
+        assert.are.equal(plain, #loop.tally(L, 2, { duration = 6 }).cpu) -- fight 2 only
+    end)
+end)
+
 describe("the headless loop between two fights on one boot", function()
     it("ends a fight killed by the last tick's press out of combat for every instance", function()
         local stub = {

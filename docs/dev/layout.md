@@ -122,7 +122,8 @@ spec file at one tag: `.lua/bin/busted --tags=druid tests/Forever/loop_druid_fer
 (the Cooldown Manager coverage report, dev-only) are described in `docs/dev/providers-ab.md`, with the two
 experimental options and their Snapshot audit lines.
 The CPU budget (`pack_gate.health`, `r.cpuMean <= 10` ms, p99 reported) is process CPU time (`os.clock` around each
-Update in `tests/Game/harness/loop.lua`), so other processes waiting for a core do not count; shared cores (SMT,
+Update in `tests/Game/harness/loop.lua`; a traced fight, every tally's first, adds no sample: its debug pass formats a
+line per APL entry, Feral 3-fight 6.25 / 27.55 -> 4.47 / 6.80 ms mean / p99 when it left the metric), so other processes waiting for a core do not count; shared cores (SMT,
 cache) still raise it: Arms reads 4.1 ms alone, wall clock the same, and 6.1-6.7 ms in `make check`'s 16-wide run.
 
 `make check`'s 6-fight Arms gate is two files of 3 fights (`tests/Forever/loop_warrior_spec.lua`, seeds 1-3, and

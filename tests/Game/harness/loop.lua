@@ -193,7 +193,7 @@ end
 --- theirs (first icons by in-combat tick), pressed and shadowPress (the driver's press, the shadow's would-be press, by
 --- in-combat tick: loop.flips), focus (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu (ms per tick of
 --- the first instance, timed around headless.cycle: VirtualState's flush and the timers as well as Update, so it errs
---- high), damage, t }. `o.replay` (replay.lua's R: its world, no presses, wowsims's next cast as `theirs`, a cycle
+--- high; empty in a traced run, whose debug pass is not runtime cost), damage, t }. `o.replay` (replay.lua's R: its world, no presses, wowsims's next cast as `theirs`, a cycle
 --- just before each decision; `run.dec` { ours, theirs }: our first on-GCD icon and wowsims's on-GCD cast).
 function M.run(L, seed, o, drivers)
     o = o or {}
@@ -372,7 +372,7 @@ function M.run(L, seed, o, drivers)
             st.H.Hekili.ActiveDebug = o.trace or false
             local c0 = os.clock()
             local ok = headless.cycle(st.H, st.base + tc)
-            if i == 1 then
+            if i == 1 and not o.trace then -- the traced fight's debug pass is not runtime cost
                 run.cpu[#run.cpu + 1] = (os.clock() - c0) * 1000
             end
             st.H.Hekili.ActiveDebug = false
@@ -642,7 +642,8 @@ local function blank()
 end
 
 --- `n` fights (seeds 1..n, from `o.seed0` + 1) on `L`'s boot: run A and run B each, tallied (§5.1). The first fight
---- runs traced when `o.trace` is unset (one per scenario: the facade's secret passthroughs). Returns the tally; its
+--- runs traced when `o.trace` is unset (one per scenario: the facade's secret passthroughs), and adds no cpu sample
+--- (the debug pass's cost is not runtime). Returns the tally; its
 --- `focus` (run A's in-combat ticks whose first record of ours has `focus` set) shows a pack's flagged lines ran.
 function M.tally(L, n, o)
     o = o or {}
