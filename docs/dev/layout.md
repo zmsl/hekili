@@ -215,12 +215,13 @@ Subtlety solo: fights=20 agreement 0.973 (13157 ticks); react median 0 p90 0 nev
 `make test-paladin` (`#paladin`), asserting its flagged lines ran (Retribution: the seal twist at tier 1; Protection:
 Seal of Fury and Holy Shield at tier 2). The mob swings at us in both worlds: Holy Shield raises the block chance and
 each block spends a charge (the world's class-neutral `taking`/`took`); our landed swing spends an Echo (`landed`); mana
-runs under the five-second rule (`fsr`: wowsims's logs, Retribution 13.65 spirit / 8.25 mp5, Protection 17.38 / 0, an empty pool; Task 7 floors Retribution 0.9 and Protection 0.8, gap AB). Both packs are gated by `pack_gate.gate`; both are wowsims.com packs since the
-wowsims packs plan, Task 9 (the hand-built lists retired). Retribution (wowsims.com)'s swing-gap fillers carry
-wowsims's own `mana.pct>=10`, judged on the secret-mana belief; each fight starts with the mana the last one left,
-regenerated through the 30 s gap (GAP X, closed: the 20-fight line was 0.911, never 0.226, while fights restarted at
-full mana). The holy_shock list is gone with the hand-built Retribution list; Hammer of Wrath's window is not
-exercised by the solo worlds. The runs (central fixes 1-23):
+runs under the five-second rule (`fsr`: wowsims's logs, Retribution 13.65 spirit / 8.25 mp5, Protection 17.38 / 0, an
+empty pool; Task 7 floors Retribution 0.9 and Protection 0.8, gap AB). Both packs are gated by `pack_gate.gate`; both
+are wowsims.com packs since the wowsims packs plan, Task 9 (the hand-built lists retired). Retribution (wowsims.com)'s
+swing-gap fillers carry wowsims's own `mana.pct>=10`, judged on the secret-mana belief; each fight starts with the mana
+the last one left, regenerated through the 30 s gap (GAP X, closed: the 20-fight line was 0.911, never 0.226, while
+fights restarted at full mana). The holy_shock list is gone with the hand-built Retribution list; Hammer of Wrath's
+window is not exercised by the solo worlds. The runs (central fixes 1-23):
 
 ```
 Retribution solo: fights=3 agreement 0.999 (2371 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.018; ... [seeds 1-3]
@@ -438,9 +439,10 @@ build's dominant tree; Holy unsupported), Task 14 of the wowsims packs plan, fro
 (`ui/specs/priest/dps/builds/testing.build.json`, `smite_testing.build.json`); their replay and leveling gates
 `tests/Forever/wowsims_priest_spec.lua`. The worlds (`tests/Forever/helpers/priest_world.lua`) cast at 20 yd with cast
 bars and channels (Mind Flay, Penance, the wand's Shoot as one shot a wand speed long); Shadow starts in Shadowform; the
-pools and regen are the logs' (Shadow 4711, Smite 6151). Flicker floors (pack_gate `FLICKER`): Shadow 0.3 (0.27, oracle
-0.15), Smite 0.5 (0.45, oracle 0.12; retracted 0.9 from 0.83, oracle 0.63: the wand's Shoot at the 10% mana edge). The
-lines (on 30e92574 + Task 14):
+pools and regen are the logs' (Shadow 4711, Smite 6151; Shadow's regen without Dark Inspiration, its Spirit x 1.15 an
+aura on the pull, each landed Mind Blast and each full Mind Flay: mana-regen Task 8, every line within its floor).
+Flicker floors (pack_gate `FLICKER`): Shadow 0.3 (0.27, oracle 0.15), Smite 0.5 (0.45, oracle 0.12; retracted 0.9 from
+0.83, oracle 0.63: the wand's Shoot at the 10% mana edge). The lines (on 30e92574 + Task 14):
 
 ```
 Shadow solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 59.5 (oracle 58.7, unmatched 2.0)], episodes 6.10/min; dps A/B 1.000; ... [seeds 1-3]

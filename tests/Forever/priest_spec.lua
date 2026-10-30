@@ -105,13 +105,28 @@ describe("Forever Priest", function()
         assert.are.same({ 3, 1309950, 2 }, w.talents.devouring_contagion)
     end)
 
-    it("declares mana under the five-second rule, base 1376, and Dark Sacrifice's mana while its aura is up", function()
+    it("declares mana per spec as wowsims's logs, base 1376, Dark Inspiration's Spirit and Dark Sacrifice's", function()
         assert.are.same({ 0 }, w.order)
-        local r = w.resources[0]
-        assert.are.same({ spirit = 16.62, mp5 = 28.63 }, r.meta.fsr)
+        local r, e = w.resources[0], ld.env(w)
+        local function seed(key)
+            w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
+            return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
+        end
+        assert.are.same({ 14.79, 26.88, 0.5 }, seed("shadow")) -- Meditation's 50%, before Dark Inspiration
+        assert.are.same({ 20.12, 35.73, 0 }, seed("discipline")) -- the Smite build's
         assert.are.equal(1376, r.meta.base)
-        local ds = r.models.dark_sacrifice
-        assert.are.same({ "dark_sacrifice", 3, 374.4 }, { ds.aura, ds.interval, near(ds.value) })
+        -- the regen functions read the file's `state` (the stand-in's w.state): Spirit is UnitStat(5)'s second return
+        local di, ds = r.models.dark_inspiration, r.models.dark_sacrifice
+        assert.are.equal("dark_inspiration", di.aura)
+        w.state.stat = function()
+            return 0, 187
+        end
+        assert.is_true(math.abs(di.spirit() - (1 + 0.15 * 23.375 / 29.625)) < 1e-6) -- Spirit x 1.15 (+15% of 187/8)
+        assert.are.same({ "dark_sacrifice", 3, 320 + 187 / 5 }, { ds.aura, ds.interval, ds.value() })
+        w.state.stat = function()
+            return 0, 0
+        end
+        assert.are.same({ 1, 320 }, { di.spirit(), ds.value() }) -- before the first stat read: inert, never NaN
         w.state.query_time, w.state.buff.dark_sacrifice = 17.4, { applied = 10.2 }
         assert.is_true(math.abs(ds.last() - 16.2) < 1e-9) -- the last 3 s tick since the aura's application
     end)

@@ -15,8 +15,9 @@
 -- Starshards 6 s, a tick a second; Penance 2 s, a bolt at its start and each second; the wand's Shoot one shot a wand
 -- speed after the press (wowsims's core/wand.go: Shoot blocks the rotation until it).
 -- Not modelled here: the procs (Holy Purpose from Searing Light's roll on Holy Fire's ticks: no solo fight casts Holy
--- Nova, wowsims's line needs three targets; Dark Inspiration's Spirit: the Shadow regen below is the log's under it;
--- Spirit Tap; Shadow Weaving), resists of the DoTs, Shadow Word: Death's backlash.
+-- Nova, wowsims's line needs three targets; Spirit Tap; Shadow Weaving), resists of the DoTs, Shadow Word: Death's
+-- backlash. Dark Inspiration (1326168, 10 s; the Shadow build's 5/5) is on us at the pull, on each landed Mind Blast
+-- and on each Mind Flay channel's last tick (wowsims talents_shadow.go:107-138), its Spirit x 1.15 in the regen.
 -- Credit: wowsims/forever (MIT, https://github.com/wowsims/forever) as the reference for the talent, wand and Dark
 -- Sacrifice rules and the source of the builds; no code copied.
 local ld = require("Forever.helpers.load_druid")
@@ -123,6 +124,7 @@ local T = {
     devouring_contagion = 1309950,
     divine_fury = 18530,
     improved_shadow_word_pain = 15275,
+    dark_inspiration = 1326159,
 }
 
 local W0
@@ -156,14 +158,17 @@ end
 -- character knows (every rank), `talents` the preset build's ({ [rank-1 spell] = rank }; a rank past the DB2's maximum
 -- as the DB2's), `forms` / `form` the client's forms and the one up at login (wowsims's preShadowform), `uptime` the
 -- debuffs reported. `max` the mana pool and `fsr` the regen ({ the spirit part, the part that continues while casting }
--- a second): the logs' (Shadow: 2.863 a 0.1 s tick while casting under Dark Inspiration, the spirit part's other half
--- 16.62; Smite: 3.573 casting, 5.585 outside).
+-- a second, as W.regenRate): the logs' (Shadow: 2.688 a 0.1 s tick pre-pull while casting, Meditation's 0.5 share,
+-- S = 6.25 + 186.67/8 = 29.58 without Dark Inspiration; under it Spirit +28, S + 3.5: the log's 2.863 a tick while
+-- casting; Smite: 3.573 casting, 5.585 outside); `stats` UnitStat's (the belief's Spirit read: Shadow 187, Dark
+-- Inspiration's 186.67; Smite 272, the Dark Sacrifice tick's).
 local PACKS = {
     Shadow = {
         pack = "Shadow (wowsims.com)",
         spec = 100053,
         max = 4711,
-        fsr = { 16.62, 28.63 },
+        fsr = { 14.79, 26.88, share = 0.5, auras = { [1326168] = { spirit = (29.58 + 3.5) / 29.58 } } },
+        stats = { [5] = 187 },
         kit = {
             "shadowform",
             "shadow_word_pain",
@@ -205,6 +210,7 @@ local PACKS = {
         spec = 100051,
         max = 6151,
         fsr = { 20.12, 35.73 },
+        stats = { [5] = 272 },
         kit = {
             "smite",
             "holy_fire",
@@ -342,8 +348,12 @@ local function spell(key, school, debuff, dur)
             if key == "holy_nova" then
                 drop(W, e, X, "holy_purpose")
             end
-            if W.hit(e, e.target, AMOUNT[key], SCHOOL[school]).act == "WOUND" and debuff then
+            local landed = W.hit(e, e.target, AMOUNT[key], SCHOOL[school]).act == "WOUND"
+            if landed and debuff then
                 aura(W, X, e.target, debuff, dur and dur(H))
+            end
+            if landed and key == "mind_blast" and talentRank(H, T.dark_inspiration) > 0 then
+                aura(W, X, e, "dark_inspiration")
             end
         end,
     }
@@ -369,12 +379,16 @@ local function channel(key, school, length, tick, first)
                 W.hit(e, e.target, AMOUNT[key], SCHOOL[school], "spell")
             end
         end,
-        channel = function()
+        channel = function(H)
+            local inspires = key == "mind_flay" and talentRank(H, T.dark_inspiration) > 0
             return {
                 length = length,
                 tick = tick,
-                effect = function(W, e)
+                effect = function(W, e, _, n)
                     W.hit(e, e.target, AMOUNT[key], SCHOOL[school], "spell")
+                    if inspires and n == math.floor(length / tick + 1e-9) then -- the full channel's last tick
+                        aura(W, classData(H), e, "dark_inspiration")
+                    end
                 end,
             }
         end,
@@ -488,8 +502,11 @@ local function content(name)
 
     -- Level 60 against a level 60 mob in range, the pack's mana full and under the five-second rule. Neither side dies
     -- (hunter_world's reason: a kill ends the loop before the client sees it).
-    local function hooks(_, us)
+    local function hooks(W, us)
         us.health, us.healthMax = 1e9, 1e9
+        if P.talents[T.dark_inspiration] then -- up at the pull (wowsims's log: from 0.01 s)
+            W.applyAura(us, 1326168, 10, 1, 1)
+        end
     end
     C.WORLD = {
         level = 60,
@@ -502,6 +519,7 @@ local function content(name)
         mobHealth = 1e9,
         distance = 20, -- wowsims's distanceFromTarget: no melee swings of ours
         script = hooks,
+        stats = P.stats,
     }
 
     -- No other power read (mana is secret in combat).

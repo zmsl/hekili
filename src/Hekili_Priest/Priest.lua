@@ -181,18 +181,29 @@ local function pain()
 end
 
 -- The five-second rule (C3): the regen per second the declared starting point the out-of-combat read and the in-combat
--- calibration replace: wowsims's Shadow log at 60 (testing.build.json: 2.863 a 0.1 s tick while casting, Meditation's
--- 50% of the spirit part and the mp5 under Dark Inspiration; 4.175 outside the rule before it, so the spirit part's
--- other half 16.62 under it). The Smite build's: 35.73 and 20.12. UNMEASURED in game.
-local CASTING_REGEN, SPIRIT_REGEN = 28.63, 16.62
+-- calibration replace, per spec as wowsims's logs measure it at 60 (Forever's Spirit regen is `6.25 + Spirit/8` a
+-- second for every class, wowsims mana.go:75-76). Shadow (testing.build.json, priest_shadow.log): 2.688 a 0.1 s tick
+-- pre-pull while casting, so mp5 26.88 (Meditation's 50% share of the spirit part); Dark Inspiration's "Spirit *= 1.15:
+-- +28.000" puts Spirit at 186.67 without it, so S = 6.25 + 186.67/8 = 29.58 and the spirit part's other half 14.79
+-- (the log's 2.863 a tick from 0.01 s is under Dark Inspiration). Smite (Discipline): 35.73 casting, 20.12 the rest.
+-- UNMEASURED in game.
+-- state.spec: the functions run in the state's environment (the file's `spec` is the class).
+-- Dark Inspiration (aura 1326168, wowsims spells_auto_gen.go: Spirit +15%, 10 s; on Mind Blast and a full Mind Flay,
+-- talents_shadow.go:107-138): the spirit part x (6.25 + 1.15 x Spirit/8) / (6.25 + Spirit/8), Spirit the belief's
+-- out-of-combat read (1 before it).
 -- Dark Sacrifice (1277324-1277328, 15 s): mana every 3 s, 320 at the top rank (DB2 aura 24) and Spirit once over its
--- five ticks (wowsims dark_sacrifice.go, the tooltip's $o2+$SPI), Spirit the Undead Smite build's (about 272).
--- shortcut: fixed at build at the top rank and that Spirit (the regen entries take a number); upgrade when a regen entry
--- can scale by rank and the read Spirit.
-local DARK_SACRIFICE_TICK = 320 + 272 / 5
+-- five ticks (wowsims dark_sacrifice.go, the tooltip's $o2+$SPI).
+-- shortcut: the top rank's 320 assumed; upgrade when a lower rank's build matters.
 spec:RegisterResource(
     Enum.PowerType.Mana,
     {
+        dark_inspiration = {
+            aura = "dark_inspiration",
+            spirit = function()
+                local _, s = state.stat("UnitStat", 5)
+                return s > 0 and 1 + 0.15 * (s / 8) / (6.25 + s / 8) or 1
+            end,
+        },
         dark_sacrifice = {
             aura = "dark_sacrifice",
 
@@ -202,12 +213,25 @@ spec:RegisterResource(
             end,
 
             interval = 3,
-            value = DARK_SACRIFICE_TICK,
+            value = function()
+                local _, s = state.stat("UnitStat", 5)
+                return 320 + s / 5
+            end,
         },
     },
     nil,
     {
-        fsr = { spirit = SPIRIT_REGEN, mp5 = CASTING_REGEN },
+        fsr = {
+            spirit = function()
+                return state.spec.shadow and 14.79 or 20.12
+            end,
+            mp5 = function()
+                return state.spec.shadow and 26.88 or 35.73
+            end,
+            share = function()
+                return state.spec.shadow and 0.5 or 0
+            end,
+        },
         base = 1376, -- a fraction cost is of base mana (wowsims's priest base mana at 60, base_stats_auto_gen.go)
     }
 )
