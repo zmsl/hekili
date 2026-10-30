@@ -107,16 +107,21 @@ describe("Forever Mage", function()
         assert.are.same({ 0, 400624, 1 }, w.talents.heating_up)
     end)
 
-    it("declares mana under the five-second rule, base 1213, and Evocation's mana while its aura is up", function()
-        assert.are.same({ 0 }, w.order)
-        local r = w.resources[0]
-        assert.are.same({ spirit = 29.13, mp5 = 0 }, r.meta.fsr) -- wowsims's logs at 60 (P1 gear)
-        assert.are.equal(1213, r.meta.base)
-        local evo = r.models.evocation
-        assert.are.same({ "evocation", 1, 15 * 29.13 }, { evo.aura, evo.interval, evo.value })
-        w.state.query_time, w.state.buff.evocation = 13.4, { applied = 10.2 }
-        assert.is_true(math.abs(evo.last() - 13.2) < 1e-9) -- the last whole tick since the aura's application
-    end)
+    it(
+        "declares mana as wowsims's logs measure it per spec, base 1213, and Evocation's spirit x 16 while up",
+        function()
+            assert.are.same({ 0 }, w.order)
+            local r, e = w.resources[0], ld.env(w)
+            local function seed(key)
+                w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
+                return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
+            end
+            assert.are.same({ 0, 29.13, 1 }, seed("arcane")) -- Arcane Meditation 50% + Mage Armor 50%: all while casting
+            assert.are.same({ 14.57, 14.56, 0.5 }, seed("fire")) -- Mage Armor's 50% (Fire and Frostfire)
+            assert.are.equal(1213, r.meta.base)
+            assert.are.same({ aura = "evocation", spirit = 16, share = 1 }, r.models.evocation) -- DB2 12051: 110, 134
+        end
+    )
 
     it(
         "channels Arcane Missiles (5 s, a missile a second; 2.5 s and 0.5 s under Missile Barrage) and Evocation",

@@ -17,9 +17,9 @@
 -- The hard casts are cast bars (a press with a cast time: UNIT_SPELLCAST_START and UnitCastingInfo at the press, the
 -- success at the end) and the two channels are the world's channels (W.press `channel`): Arcane Missiles a missile a
 -- tick (its rank's 3-5 s, a tick a second; Missile Barrage's half the time, a tick each 0.5 s, free), Evocation 8 s,
--- a tick a second, each tick's mana 16x the spirit part less the part the regen already pays (all of it continues
--- while channelling: DB2 12051 auras 110 and 134). Any press while Evocation runs at 99% mana or more clips it
--- (wowsims's interruptIf in both APLs' Evocation group).
+-- a tick a second with no gain: its mana is the regen's (W.regenRate's aura entry, spirit x 16 and all of it while
+-- casting: DB2 12051 auras 110 and 134; wowsims credits it at the 0.1 s regen tick, 466 a second in its logs). Any
+-- press while Evocation runs at 99% mana or more clips it (wowsims's interruptIf in both APLs' Evocation group).
 -- Credit: wowsims/forever (MIT) as the reference for the charge, proc and gem rules; no code copied.
 local ld = require("Forever.helpers.load_druid")
 local world = require("Game.harness.world")
@@ -30,9 +30,9 @@ M.CLIENT_SPEC, M.CLASS_ID = 1485, 8 -- the client's Mage pseudo-spec (assumed: t
 local MANA = 0 -- Enum.PowerType
 local BASE = 1213 -- base mana at 60 (wowsims's ExtraClassBaseStats): a percent-of-base cost's base
 local GCD = { spell = 1.5, off = 0 }
--- The spirit regen a second outside the five-second rule (wowsims's logs at 60: 2.913 a 0.1 s tick, both builds; the
--- class file declares the same 29.13, which the out-of-combat read corrects); each pack's share of it that continues while casting
--- is its own (below). UNMEASURED in game.
+-- The spirit regen a second outside the five-second rule (wowsims's logs at 60: 2.913 a 0.1 s tick, every build; the
+-- class file declares the same per spec, which the out-of-combat read corrects); each pack's share of it that continues
+-- while casting is its own (below). UNMEASURED in game.
 local SPIRIT = 29.13
 
 -- Each rank's mana cost (DB2; Arcane Wrath wowsims's), lowest rank first, the world's truth the class file's are
@@ -491,13 +491,8 @@ M.MAP = {
             aura(W, X, e, "evocation")
         end,
         channel = function()
-            return {
-                length = 8,
-                tick = 1,
-                effect = function(W, e)
-                    W.emit({ kind = "gain", src = e, pt = MANA, rage = 16 * SPIRIT - W.regenRate(e, MANA) })
-                end,
-            }
+            -- its mana is the regen's while the aura is up (FSR's 12051 entry), not a tick's
+            return { length = 8, tick = 1 }
         end,
     },
 }
@@ -511,7 +506,13 @@ local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, SPEC = P.spec, IDS = {} }
     local MAX = P.max
-    local FSR = { SPIRIT * (1 - P.casting), SPIRIT * P.casting } -- { spirit part, the part that continues }
+    -- { spirit part, the part that continues }; Evocation (12051): spirit x 16, all of it while casting
+    local FSR = {
+        SPIRIT * (1 - P.casting),
+        SPIRIT * P.casting,
+        share = P.casting,
+        auras = { [12051] = { spirit = 16, share = 1 } },
+    }
 
     function C.character()
         local w = class()

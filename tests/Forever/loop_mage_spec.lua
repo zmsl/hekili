@@ -34,9 +34,10 @@ describe("the Mage loop worlds", function()
             end
             assert.are.equal(C.SPEC, H.Hekili.State.spec.id)
             assert.is_false(pcall(C.resolve, "not_an_ability", H))
-            -- the channels: Evocation 8 s a tick a second (its mana each tick's effect), Arcane Missiles at its rank
+            -- the channels: Evocation 8 s a tick a second (no tick effect: its mana is the regen's), Arcane Missiles at
+            -- its rank
             local evo, am = C.resolve("evocation", H), C.resolve("arcane_missiles", H)
-            assert.are.same({ 8, 1, true, 5, 1, true, false }, {
+            assert.are.same({ 8, 1, false, 5, 1, true, false }, {
                 evo.channel.length,
                 evo.channel.tick,
                 type(evo.channel.effect) == "function",
@@ -58,7 +59,7 @@ describe("the Mage loop worlds", function()
     end
 
     -- The presses in the world: a cast bar (castStart at the press, the cast at its end) and Evocation's channel (its
-    -- mana each tick, stopped at its end; a later press with `clip` cuts it).
+    -- mana the regen's while its aura is up, stopped at its end; a later press with `clip` cuts it).
     it("Arcane: casts Arcane Wrath as a cast bar and channels Evocation's mana, clipped by a `clip` press", function()
         local C = mw.Arcane
         local H = headless.new({ character = C.character() })
@@ -85,18 +86,11 @@ describe("the Mage loop worlds", function()
         W.t = 5
         assert.is_true(W.press(us, "evocation", C.resolve("evocation", H)))
         W.run(8)
-        local gained = 0
-        for i = n0 + 1, #W.truth do
-            local ev = W.truth[i]
-            if ev.kind == "gain" and ev.src == us and ev.pt == 0 then
-                gained = gained + (ev.rage or 0)
-            end
-        end
         assert.are.same({ "cast 5" }, kinds(n0 + 1)) -- a channel: its cast at the start, still running at 8
-        -- three ticks inside the five-second window, each 16x the spirit regen less the Arcane build's casting regen,
-        -- which continues (all of it: 29.13 a second)
-        assert.is_true(math.abs(3 * 15 * 29.13 - gained) < 1e-6, tostring(gained))
-        assert.is_true(W.res(us, 0) > p0)
+        -- 3 s inside the five-second window at 16x the spirit regen, all of it while casting (the world's 12051 entry:
+        -- 466.08 a second, wowsims's), on the regen's 0.1 s tick
+        local gained = W.res(us, 0) - p0
+        assert.is_true(math.abs(3 * 16 * 29.13 - gained) < 1e-6, tostring(gained))
         assert.is_truthy(us.auras[12051]) -- Evocation's buff for the channel
         local b = C.resolve("arcane_blast", H)
         b.clip = true

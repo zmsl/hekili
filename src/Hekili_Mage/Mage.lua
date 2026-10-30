@@ -33,7 +33,6 @@ if UnitClassBase("player") ~= "MAGE" then
 end
 
 local state = Hekili.State
-local floor = math.floor
 
 -- The class kit and one spec a talent tree (ids the core's: Arcane 100081, Fire 100082, Frost 100083, unsupported:
 -- wowsims/forever has no Frost APL; the client's one pseudo-spec, assumed 1485, only keys the legacy profile the core
@@ -173,35 +172,33 @@ local function casts(spends)
 end
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace: wowsims's logs at 60 (the P1 gear, both builds: 2.913 a 0.1 s tick outside the
--- rule); no mp5. UNMEASURED in game.
-local SPIRIT_REGEN = 29.13
--- Evocation (12051): spirit regen +1500% (aura 110) and all of it while casting (aura 134), 8 s; its periodic dummy
--- (aura 226) every second. A tick here is 15x the declared spirit rate (wowsims's logs: 46.6 a 0.1 s tick, 16x, the
--- 1x the regen's).
--- shortcut: fixed at build from SPIRIT_REGEN (the regen entries take a number), and the 1x spirit part the window
--- withholds inside the five-second rule is not added; upgrade when a regen entry can scale the calibrated rate.
-local EVOCATION_TICK = 15 * SPIRIT_REGEN
+-- the in-combat calibration replace, as wowsims's logs measure them at 60 (the P1 gear, 29.13 a second outside the
+-- rule in every build): Arcane all of it while casting (Arcane Meditation 50% + Mage Armor 50%: share 1), so spirit 0
+-- and mp5 29.13; Fire and Frostfire half (Mage Armor's 50%: share 0.5), 14.57 / 14.56 (the logs' Tag 2 / Tag 1).
+-- Forever's Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76). UNMEASURED in game.
+-- shortcut: Mage Armor assumed up, as every wowsims export pre-buffs it (30 min); a Mage without it has a 0 share and
+-- Evocation counts double: upgrade by reading the armor when such a build matters (docs/dev/gaps.md BX).
+-- Evocation (12051, 8 s): spirit regen +1500% (aura 110) and all of it while casting (aura 134): the learned spirit
+-- regen x 16 in and out of the rule (wowsims evocation.go:11-27; its logs 466 a second).
+-- state.spec: the functions run in the state's environment (the file's `spec` is the class).
 spec:RegisterResource(
     Enum.PowerType.Mana,
     {
-        evocation = {
-            aura = "evocation",
-
-            last = function()
-                local app = state.buff.evocation.applied
-                return app + floor(state.query_time - app)
-            end,
-
-            interval = 1,
-            value = EVOCATION_TICK,
-        },
+        evocation = { aura = "evocation", spirit = 16, share = 1 },
     },
     nil,
     {
-        -- the starting point: GetPowerRegenForPowerType's out-of-combat read calibrates both parts, the casting share
-        -- included (Game/State/Sources/Power.lua's regen read)
-        fsr = { spirit = SPIRIT_REGEN, mp5 = 0 },
+        fsr = {
+            spirit = function()
+                return state.spec.arcane and 0 or 14.57
+            end,
+            mp5 = function()
+                return state.spec.arcane and 29.13 or 14.56
+            end,
+            share = function()
+                return state.spec.arcane and 1 or 0.5
+            end,
+        },
         base = 1213, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
     }
 )
@@ -512,8 +509,8 @@ spec:RegisterAbilities({
         handler = casts(true),
     },
 
-    -- A channel of 8 s, its mana from the resource's evocation entry while its aura is up (a channel's `handler` never
-    -- runs in Hekili's simulation: `start`).
+    -- A channel of 8 s; its mana is the mana resource's evocation regen entry (spirit x 16, all of it while casting)
+    -- while its aura is up (a channel's `handler` never runs in Hekili's simulation: `start`).
     evocation = {
         id = 12051,
         cast = 8,

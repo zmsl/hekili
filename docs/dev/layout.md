@@ -407,9 +407,11 @@ tier 2; Fire also Pyroblast on Heating Up at tier 1 and Scorch at tier 2: ruling
 The worlds (`tests/Forever/helpers/mage_world.lua`) cast at 25 yd with cast bars and channels (Arcane Missiles,
 Evocation: any press at 99% mana clips it); the character is trainer-taught (no book ranks, as wowsims's), its pool and
 regen are the logs' (Arcane 6678, Fire 6168; 29.13 a second outside the five-second rule, all of it while casting for
-Arcane, half for Fire and Frostfire). Flicker floors (pack_gate `FLICKER`): Arcane 1.7 (1.66, oracle 1.46; 1.5 since the
+Arcane, half for Fire and Frostfire; Evocation's mana is that regen's aura entry, spirit x 16 and all of it while
+casting, 466 a second as wowsims's logs, its channel ticks gaining nothing). Flicker floors (pack_gate `FLICKER`): Arcane 1.7 (1.66, oracle 1.46; 1.5 since the
 lane review's Arcane Power fix measured 1.43, oracle 1.41), Fire 1.3 (1.21, oracle 0.40), Frostfire 0.3 (0.30, oracle
-0.38), retracted 0 each. Fire's excess over its oracle is Fire Blast's cooldown end (fire_blast > fireball > fire_blast,
+0.38; 0.2 after the flicker counter, back to 0.3 in the mana-regen plan's Task 6: 0.12 / 0.20 / 0.23, Evocation's
+mana on the 0.1 s regen tick re-times the fights onto gap BS's frostfire_bolt <-> scorch edge), retracted 0 each. Fire's excess over its oracle is Fire Blast's cooldown end (fire_blast > fireball > fire_blast,
 7 of 10 flickers in 3 fights: the not-ready flag's CD_PROBE push, central); the Scorch line's Fire Vulnerability edge is
 a candidate. Frostfire's 20-fight agreement (0.958) is lowest where its mana runs dry: pooling for Frostfire Bolt, the
 believed mana a few points under the truth (Master of Elements' refunds unseen) puts Frostfire Bolt's ready time past

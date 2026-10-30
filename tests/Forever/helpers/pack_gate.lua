@@ -56,7 +56,11 @@ M.FLICKER = {
     ["Enhancement"] = { flicker = 0.2, retracted = 0 }, -- 0.12 / 0.07 / 0.1996, 0 (was 0.02 / 0 / 0.03)
     ["Arcane"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0.02 / 0.03, 0
     ["Fire"] = { flicker = 0.3, retracted = 0 }, -- 0.22 / 0.13 / 0.12, 0
-    ["Frostfire"] = { flicker = 0.2, retracted = 0 }, -- 0.17 / 0.13 / 0.07, 0 (oracle 0.30 / 0.28 / 0.48)
+    -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits
+    -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
+    -- after its Evocation, more fights reach the existing frostfire_bolt <-> scorch pooling edge (gap BS); isolated by
+    -- swapping pack and world; controller ruling 2026-10-30 while the owner was away
+    ["Frostfire"] = { flicker = 0.3, retracted = 0 }, -- 0.12 / 0.20 / 0.23, 0 (oracle 0.28 / 0.20 / 0.23)
     ["Shadow"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.02 / 0.02, 0
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     ["Smite"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.02 / 0.03, 0
