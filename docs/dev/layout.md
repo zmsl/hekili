@@ -441,8 +441,8 @@ build's dominant tree; Holy unsupported), Task 14 of the wowsims packs plan, fro
 bars and channels (Mind Flay, Penance, the wand's Shoot as one shot a wand speed long); Shadow starts in Shadowform; the
 pools and regen are the logs' (Shadow 4711, Smite 6151; Shadow's regen without Dark Inspiration, its Spirit x 1.15 an
 aura on the pull, each landed Mind Blast and each full Mind Flay: mana-regen Task 8, every line within its floor).
-Flicker floors (pack_gate `FLICKER`): Shadow 0.3 (0.27, oracle 0.15), Smite 0.5 (0.45, oracle 0.12; retracted 0.9 from
-0.83, oracle 0.63: the wand's Shoot at the 10% mana edge). The lines (on 30e92574 + Task 14):
+Flicker floors (pack_gate `FLICKER`): Shadow 0.1 (0.03 / 0.02 / 0.02 over seeds 1-20 / 21-40 / 41-60, oracle 0), Smite
+0.1 (0.03 / 0.02 / 0.03, oracle 0), retracted 0 each. The lines (on 30e92574 + Task 14):
 
 ```
 Shadow solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 59.5 (oracle 58.7, unmatched 2.0)], episodes 6.10/min; dps A/B 1.000; ... [seeds 1-3]

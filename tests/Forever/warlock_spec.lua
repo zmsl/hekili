@@ -152,6 +152,15 @@ describe("Forever Warlock", function()
         assert.are.equal(1373, r.meta.base)
     end)
 
+    it("declares Fel Energy: 2% of max mana every 4 s while the Voidwalker sacrifice's aura is up", function()
+        local m = w.resources[0].models.fel_energy
+        w.state.mana = { max = 5353 }
+        assert.are.same({ "fel_energy", 4 }, { m.aura, m.interval })
+        assert.is_true(math.abs(m.value() - 107.06) < 1e-9)
+        w.state.query_time, w.state.buff.fel_energy = 13.4, { applied = 5.2 }
+        assert.is_true(math.abs(m.last() - 13.2) < 1e-9) -- 5.2 + 4 x floor(8.2 / 4); the brief's 9.2 is an arithmetic slip
+    end)
+
     it(
         "counts the Soul Shards in the bags; the shard spells refuse without one, Soul Fire not under Decimation",
         function()

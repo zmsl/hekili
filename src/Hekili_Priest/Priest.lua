@@ -17,9 +17,10 @@
 -- Where the DB2 and wowsims's newer data (build 70450) disagree and wowsims's log casts its own (the Mage lane's ruling
 -- M9 precedent; wowsims packs Task 14; in-game checks): Devouring Plague's cooldown 24 s (DB2 60 s), Shadow Word:
 -- Death's 18 s (DB2 15 s).
--- Unmodelled: the procs' rolls (Holy Purpose from Searing Light, Spirit Tap on a kill, Dark Inspiration, Shadow Weaving:
--- unseen; the player aura walk reads the player's where plain), the DoTs' resists, Shadow Word: Death's backlash, Inner
--- Focus's crit, pushback, the healing spells Shadowform forbids (no priority casts one).
+-- Unmodelled: the procs' rolls (Holy Purpose from Searing Light, Spirit Tap on a kill, Shadow Weaving: unseen; Dark
+-- Inspiration is modelled, in the mana regen and the world; the player aura walk reads the player's where plain), the
+-- DoTs' resists, Shadow Word: Death's backlash, Inner Focus's crit, pushback, the healing spells Shadowform forbids (no
+-- priority casts one).
 -- Credits: Hekili (registration API and pack format). wowsims/forever (MIT, https://github.com/wowsims/forever:
 -- ui/specs/priest/dps/builds/*.build.json and sim/priest/) is the reference for the abilities and the talent, proc,
 -- wand and Dark Sacrifice rules; no code is copied.

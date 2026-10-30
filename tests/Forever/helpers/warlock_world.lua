@@ -524,6 +524,16 @@ end
 -- A Demonic Sacrifice effect's aura on `e` (DB2's duration, 2 h; wowsims: until a summon ends it), or off.
 local function sacrificeOn(W, e, id)
     W.applyAura(e, id, 7200, 1, 1)
+    if id == 18792 then -- Fel Energy: 2% of the pool every 4 s while it is up (DB2 aura 21; wowsims talents_demonology.go)
+        local a = e.auras[id]
+        local function step()
+            if e.auras[id] == a then
+                W.emit({ kind = "gain", src = e, pt = MANA, rage = 0.02 * e.powerMax })
+                W.at(W.t + 4, step)
+            end
+        end
+        W.at(W.t + 4, step)
+    end
 end
 local function sacrificeOff(W, e, id)
     if e.auras[id] then

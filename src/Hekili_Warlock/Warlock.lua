@@ -44,6 +44,7 @@ if UnitClassBase("player") ~= "WARLOCK" then
 end
 
 local state = Hekili.State
+local floor = math.floor
 
 -- The class kit and one spec a talent tree (ids the core's: Affliction 100091, Demonology 100092, Destruction 100093;
 -- the client's one pseudo-spec, assumed 1490, only keys the legacy profile the core migrates). Icons: the DB2 talent
@@ -211,10 +212,31 @@ end
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
 -- the in-combat calibration replace: wowsims's logs at 60 (the five builds on the preraid gear: 1.04 a 0.1 s tick
 -- inside the rule, 4.428 outside it, Blessing of Wisdom's mp5 included). UNMEASURED in game.
-spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
-    fsr = { spirit = 33.88, mp5 = 10.4 },
-    base = 1373, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
-})
+-- Fel Energy (the Voidwalker sacrifice, aura 18792, DB2 aura 21: 2 every 4000 ms; wowsims talents_demonology.go:168-185):
+-- 2% of max mana every 4 s while it is up, the tick times counted from its application.
+spec:RegisterResource(
+    Enum.PowerType.Mana,
+    {
+        fel_energy = {
+            aura = "fel_energy",
+
+            last = function()
+                local app = state.buff.fel_energy.applied
+                return app + 4 * floor((state.query_time - app) / 4)
+            end,
+
+            interval = 4,
+            value = function()
+                return 0.02 * state.mana.max
+            end,
+        },
+    },
+    nil,
+    {
+        fsr = { spirit = 33.88, mp5 = 10.4 },
+        base = 1373, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
+    }
+)
 
 -- The Soul Shards in the bags (plain [W PR13]); read live each evaluation.
 -- shortcut: a shard spell the simulation casts spends none (no bag write in the sim; gaps.md's reagent prediction), so
