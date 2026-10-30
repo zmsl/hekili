@@ -60,7 +60,13 @@ M.FLICKER = {
     ["Protection"] = { flicker = 0.8, retracted = 0 }, -- 0.54 / 0.71 / 0.49, 0 (oracle 0.59 / 1.81 / 1.73)
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
-    ["Enhancement"] = { flicker = 0.2, retracted = 0 }, -- 0.12 / 0.07 / 0.1996, 0 (was 0.02 / 0 / 0.03)
+    -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was
+    -- 0.12 / 0.07 / 0.1996; oracle 0.13 / 0.00 / 0.02): Task 11 re-times Enhancement's fights (the world's starting mana
+    -- now truthful to the log) onto Stormstrike / Lightning Shield near-ties where the estimate sits 2-3 mana under truth
+    -- at the crossing floor (Task 4's mechanism, gap BT; the swap test shows the Mana Spring entry is not involved); the
+    -- one-poll-wider near-cost window (task-4c-wip.patch) fixes it but loosens Protection and Affliction instead;
+    -- owner-approved standing named-cause policy, 2026-10-30 (controller ruling (b), task-4c-report.md)
+    ["Enhancement"] = { flicker = 0.3, retracted = 0 }, -- 0.10 / 0.25 / 0.22, 0 (was 0.12 / 0.07 / 0.1996)
     ["Arcane"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0.02 / 0.03, 0
     ["Fire"] = { flicker = 0.3, retracted = 0 }, -- 0.22 / 0.13 / 0.12, 0
     -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits

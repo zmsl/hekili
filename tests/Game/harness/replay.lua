@@ -580,6 +580,12 @@ function M.new(text, H, o)
         end
     end
     R.manaIdle, R.manaCasting = M.manaRegen(p.ev, shares)
+    R.gained = {} -- the player auras the log gains (an `mp5` aura of the content's fsr is inside its modal casting tick)
+    for _, e in ipairs(p.ev) do
+        if e.kind == "aura" and e.unit == "player" and e.verb ~= "faded" then
+            R.gained[e.id] = true
+        end
+    end
 
     local ci = 1
     --- wowsims's next cast strictly after world time `t` (its key), or false; `t` only grows within a world.
@@ -642,7 +648,16 @@ function M.new(text, H, o)
             W.fsr[pt] = f
         end
         if R.manaIdle then -- the log's own mana regen wins over the content's: { spirit part, mp5 part } (W.fsr)
-            W.rates[0], W.fsr[0] = 0, { R.manaIdle - R.manaCasting, R.manaCasting }
+            -- the content's `mp5` auras (no share or spirit part) that the log gains stay in the world's fsr: the logged
+            -- casting rate holds their mp5, so the rate without them is the part A, and the client's read follows them
+            local auras, without = nil, R.manaCasting
+            for id, x in pairs(wo.fsr and wo.fsr[0] and wo.fsr[0].auras or {}) do
+                if x.mp5 and not x.share and not x.spirit and R.gained[id] then
+                    auras, without = auras or {}, without - x.mp5
+                    auras[id] = x
+                end
+            end
+            W.rates[0], W.fsr[0] = 0, { R.manaIdle - R.manaCasting, math.max(0, without), auras = auras }
         end
         local function show(dst, id, a) -- an aura change the client sees (not a hidden one)
             if not hidden[id] then

@@ -15,6 +15,7 @@
 - Mages: Evocation's mana follows your learned mana regen (Spirit regen x 16, all of it while casting) instead of a fixed amount, and Mage mana starts from measured rates per spec (wowsims's Arcane, Fire and Frostfire logs).
 - Hunters: mana regen counts Resourcefulness and Rapid Recuperation, and Hunter mana starts from measured rates (wowsims's Beast Mastery, Marksmanship and Survival logs) instead of a guess.
 - Enhancement Shamans: mana regen counts Improved Stormstrike, and Shaman mana starts from measured rates (wowsims's Elemental and Enhancement logs) instead of a guess.
+- Shamans: mana regen counts Mana Spring Totem's buff only while your water totem stands (4 to 10 mana every 2 seconds by rank, +5% a rank of Restorative Totems), instead of always, as wowsims does.
 
 ### Known issues
 

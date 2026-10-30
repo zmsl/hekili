@@ -122,10 +122,24 @@ describe("Forever Shaman", function()
             w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
-        assert.are.same({ 12.75, 29.75, 0.15 }, seed("elemental")) -- Mindfulness 3/3: 15% while casting
-        assert.are.same({ 28.62, 9.8, 0 }, seed("enhancement"))
+        assert.are.same({ 12.75, 24.75, 0.15 }, seed("elemental")) -- Mindfulness 3/3: 15% while casting; no totem
+        assert.are.same({ 28.62, 4.8, 0 }, seed("enhancement"))
         assert.are.same({ aura = "improved_stormstrike", share = 0.5 }, r.models.improved_stormstrike)
         assert.are.same({ 2, 1223031, 2 }, w.talents.improved_stormstrike)
+        -- Mana Spring Totem's buff: 10 every 2 s at rank 4 (DB2 aura 24), +5% a rank of Restorative Totems
+        local ms = r.models.mana_spring
+        assert.are.equal("mana_spring", ms.aura)
+        assert.are.same({ 10494, { 5677, 10491, 10493 } }, { w.auras.mana_spring.id, w.auras.mana_spring.copy })
+        for _, id in ipairs({ 5675, 10495, 10496 }) do
+            w.game.known[id] = false
+        end
+        w.game.known[10497] = true
+        w.state.talent.restorative_totems = { rank = 0 }
+        assert.are.equal(5, ms.mp5())
+        w.state.talent.restorative_totems = { rank = 5 }
+        assert.are.equal(6.25, ms.mp5())
+        w.game.known[10497], w.game.known[5675] = false, true -- rank 1: 4 every 2 s
+        assert.are.equal(2.5, ms.mp5())
         assert.are.same(1238931, w.auras.improved_stormstrike.id)
     end)
 

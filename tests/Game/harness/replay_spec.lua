@@ -778,6 +778,27 @@ describe("the replay's mana regen (wowsims's regen lines)", function()
         assert.is_true(math.abs(select(2, replay.manaRegen(ev)) - 7.94) < 1e-9, "no shares declared: the modal tick")
     end)
 
+    it(
+        "keeps the content's mp5 auras that the log gains out of the part A, the client's read following them",
+        function()
+            local text = table.concat({
+                "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+                "[-1.00] [Tester (#1)] Aura gained: {SpellID: 77}",
+                line(0.5, 0.5, 1),
+                line(0.6, 0.5, 1),
+                line(0.7, 2.2, 2),
+            }, "\n")
+            local R = replay.new(text, H, {})
+            local fsr = { [0] = { 0, 0, auras = { [77] = { mp5 = 5 }, [900078] = { mp5 = 9 } } } } -- 900078 is never gained
+            local W = R.world(setmetatable({ tag = "-a", fsr = fsr }, { __index = WO }), 1)
+            local us = W.ents[1]
+            us.auras[77] = { expires = 1e9 }
+            assert.are.same({ 22, 5 }, { W.regenRate(us, 0, "idle"), W.regenRate(us, 0, "casting") }) -- the logged rates
+            us.auras[77] = nil
+            assert.are.same({ 17, 0 }, { W.regenRate(us, 0, "idle"), W.regenRate(us, 0, "casting") }) -- without the aura
+        end
+    )
+
     it("answers them to the client out of combat (W.fsr, the fake's GetManaRegen), secret in combat", function()
         local R = replay.new(log({ { 0.5, 2.2, 2 }, { 0.6, 2.2, 2 } }), H, {})
         local W = R.world(setmetatable({ tag = "-m" }, { __index = WO }), 1)

@@ -173,8 +173,11 @@ local function spell(key, extra)
 end
 local function totem(key)
     return {
-        effect = function(W, e, p)
+        effect = function(W, e, p, X)
             W.summonTotem(e, TOTEM[key][1], TOTEM[key][2], p.spell)
+            if key == "mana_spring_totem" then -- its buff on us for the totem's life (the only water totem in the kits)
+                aura(W, X, e, "mana_spring", TOTEM[key][2])
+            end
         end,
     }
 end
@@ -287,8 +290,9 @@ local PACKS = {
         parry = true, -- the build's Spirit Weapons (wowsims's applySpiritWeapons: CanParry)
         talents = { [1223031] = 2 }, -- Improved Stormstrike 2/2 (rank 2: always; wowsims talents_enhancement.go:188-210)
         -- wowsims's log (shaman_enhancement.log): 9.8 a second while casting, 38.42 outside; Improved Stormstrike
-        -- (1238931, DB2 aura 134 = 50) adds half the spirit part while casting
-        fsr = { 28.62, 9.8, auras = { [1238931] = { share = 0.5 } } },
+        -- (1238931, DB2 aura 134 = 50) adds half the spirit part while casting; the 9.8 is 4.8 without Mana Spring
+        -- Totem's buff (10494: 5 a second, up while the totem stands)
+        fsr = { 28.62, 4.8, auras = { [1238931] = { share = 0.5 }, [10494] = { mp5 = 5 } } },
         uptime = { "flame_shock" },
     },
     -- wowsims/forever's Elemental build (builds/testing.build.json, talents 5500331023001351-053002001-053): the casts,
@@ -332,9 +336,9 @@ local PACKS = {
         },
         weapon = { 40, 70, 3.0 },
         -- wowsims's log (shaman_elemental.log): 5590 mana, 29.75 a second while casting (OtherID 2 Tag 1, Mana Spring
-        -- Totem and Mindfulness's share included) and 42.5 more outside the five-second rule (Tag 2)
+        -- Totem and Mindfulness's share included: 24.75 without the totem's 5) and 42.5 outside the five-second rule
         mana = 5590,
-        fsr = { 12.75, 29.75, share = 0.15 },
+        fsr = { 12.75, 24.75, share = 0.15, auras = { [10494] = { mp5 = 5 } } },
         distance = 20, -- the build's distanceFromTarget: the shocks reach 20 yd
         uptime = { "flame_shock" },
     },

@@ -270,15 +270,17 @@ elemental spell rolls Clearcasting (10%); the shocks share a cooldown (6 s, 0.2 
 of the Farseer (the build's talent, in the kit) gives its 25 s buff, its +30% attack speed not modelled. Neither side dies: a kill by our last press
 ends the loop before the client sees it, so the next fight's prepull would be believed in combat and its totem slots
 never read (a harness quirk every pack shares). The world runs out of mana about 35 s in (idle about 0.69: regen as
-wowsims's logs measure it per spec (Mana Spring and Mindfulness inside Elemental's, Improved Stormstrike's casting share
-in Enhancement's), UNMEASURED pool, no Water Shield or potions), so most in-combat ticks show no icon on either side.
+wowsims's logs measure it per spec (Mindfulness inside Elemental's, Improved Stormstrike's casting share in
+Enhancement's; Mana Spring Totem's 5 a second as its own aura entry (10494) while the water totem stands, in both),
+UNMEASURED pool, no Water Shield or potions), so most in-combat ticks show no icon on either side.
 The imbues are not in the solo world's kit (it has no weapon enchant read). The world's costs are each rank's (DB2),
 with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever's), and the shocks' cooldown and Flame
 Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,
 the forever gate on 51a0b1ac: Fire Nova at the DB2's 520). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's
 own fight (floor 0.98; 0.989 of 88 with Rage of the Farseer, held) and runs the levels 10, 40 and 60 (40 pending: GAP AB, the secret-mana floor's last mana).
 Elemental (wowsims.com) (Task 14) runs the same gates on the Elemental world (20 yd, wowsims's 5590 mana and regen:
-29.75 a second casting, 42.5 more outside the five-second rule): replay floor 0.93 (0.937 of 95), live L10 0.0,
+24.75 a second casting without Mana Spring Totem's buff, 29.75 with it, 42.5 more outside the five-second rule):
+replay floor 0.93 (0.937 of 95), live L10 0.0,
 L40 0.0, L60 5.0 s (LIVE60 5.0), flicker floor 0.6. The lines:
 
 ```

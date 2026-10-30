@@ -157,6 +157,9 @@ local TOTEMS = {
     },
 }
 
+-- Mana Spring's buff on us (DB2 aura 24), mana every 2 s by totem rank.
+local MANA_SPRING = { 4, 6, 8, 10 }
+
 local function rest(ids)
     local out = {}
     for i = 2, #ids do
@@ -314,12 +317,24 @@ end
 -- (Mana Spring Totem, Mindfulness 3/3's 15% share and gear) and 42.5 outside the rule, so spirit 12.75 (the outside
 -- rate less the casting one) and mp5 29.75; shaman_enhancement 9.8 / 38.42, so spirit 28.62 and mp5 9.8. Forever's
 -- Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76), not Classic's formula.
+-- The seeds' mp5 is the rate without the totem's buff (the logs' casting rate a tick before it: 2.475 a tick in
+-- shaman_elemental.log before -2.0 s, 0.480 in shaman_enhancement.log before -5.0 s), so 24.75 and 4.8; the totem's
+-- own entry (below) adds its mp5 while the buff is up, as wowsims models it (totems.go:105-109).
 -- Improved Stormstrike (1238931, DB2 aura 134 = 50): +50% of Spirit regen while casting for 15 s.
+-- Mana Spring (DB2 aura 24, 4/6/8/10 every 2 s by rank, +5% a rank of Restorative Totems 16187): mp5 = value / 2.
 -- state.spec: the functions run in the state's environment (the file's `spec` is the class).
 spec:RegisterResource(
     Enum.PowerType.Mana,
     {
         improved_stormstrike = { aura = "improved_stormstrike", share = 0.5 },
+        mana_spring = {
+            aura = "mana_spring",
+            mp5 = function()
+                return byRank(MANA_SPRING, TOTEMS.mana_spring_totem.ids)
+                    / 2
+                    * (1 + 0.05 * state.talent.restorative_totems.rank)
+            end,
+        },
     },
     nil,
     {
@@ -328,7 +343,7 @@ spec:RegisterResource(
                 return state.spec.elemental and 12.75 or 28.62
             end,
             mp5 = function()
-                return state.spec.elemental and 29.75 or 9.8
+                return state.spec.elemental and 24.75 or 4.8
             end,
             share = function()
                 return state.spec.elemental and 0.15 or 0
@@ -366,6 +381,8 @@ spec:RegisterAuras({
     maelstrom_weapon = { id = 408505, duration = 30, max_stack = 5 },
     -- Improved Stormstrike (DB2 1238931): Stormstrike's 15 s buff, +50% Spirit regen while casting (the mana entry).
     improved_stormstrike = { id = 1238931, duration = 15, max_stack = 1 },
+    -- Mana Spring Totem's buff on us (ranks 1-4: 5677, 10491, 10493, 10494), up while its water totem stands (the mana entry).
+    mana_spring = { id = 10494, copy = { 5677, 10491, 10493 }, duration = 300, max_stack = 1 },
     -- Elemental Focus's Clearcasting (16246): the next elemental damage spell costs nothing (1 charge, 15 s).
     clearcasting = { id = 16246, duration = 15, max_stack = 1 },
     -- The target's DoT, modelled from our cast (target auras are unreadable in combat).
