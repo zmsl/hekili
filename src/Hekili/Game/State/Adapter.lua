@@ -294,6 +294,16 @@ local function buildDef()
         local race = ns.raceMods
         if race then
             d.maxMods, d.costMods = not ns.ResourceIsPoints(k) and race.maxMods or nil, race.costMods
+            -- the race's regen entries on this resource (Races.lua RegisterRegenMod), after the class's: a fresh list,
+            -- so a rebuild never appends to the class's own `regenMult`
+            for _, e in ipairs(race.regenMods or {}) do
+                if e.resource == k then
+                    if d.mult == (r.state and r.state.regenMult) then
+                        d.mult = { unpack(d.mult or {}) }
+                    end
+                    insert(d.mult, e)
+                end
+            end
         end
     end
     for _, k in ipairs(sortedKeys(class.abilities)) do

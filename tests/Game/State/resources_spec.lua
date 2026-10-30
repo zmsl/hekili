@@ -1903,6 +1903,18 @@ describe("resources", function()
             I.Settle(10)
         end
 
+        it("doubles the whole rate in and out of the window under a `mult` entry, out of the calibration", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "surge", mult = 2 } })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 1, 10, 40, 1, 10, 0) -- surge up 10 to 40
+            -- inside (M + c x S) x 2 = (2 + 10) x 2, outside (M + S) x 2 = 22 x 2 (wowsims mana.go:186-211)
+            assert.are.same({ 24, 44 }, { VS.Regen(MANA, 12).est, VS.Regen(MANA, 16).est })
+            read(20, 400 + 5 * 24 + 5 * 44) -- the model's own answer: no news for either part
+            within(12, I.res.regE[1])
+            within(10, I.res.spE[1])
+        end)
+
         it("re-reads function `spirit`, `mp5` and `share` values at each combat start", function()
             local m, x, c = 2, 5, 0.5
             shaped({

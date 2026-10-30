@@ -251,7 +251,7 @@ local function content()
     end
     for _, file in ipairs(addons.lua({ "Hekili_Shared" })) do -- the race and shared files
         local path = file:gsub("^src/", "")
-        run(path, read(file):match('NewRace%("(%w+)"%)'))
+        run(path, read(file):match('NewRace%("(%w+)"'))
     end
     _G.Hekili = saved or nil
     return { keys = keys, ids = ids, abilities = abilities }

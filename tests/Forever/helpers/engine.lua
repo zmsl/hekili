@@ -220,10 +220,10 @@ function M.load(classToken, race)
         __newindex = function(t, k, v)
             if k == "NewRace" then
                 local newRace = v
-                v = function(self, token)
+                v = function(self, token, ...)
                     local keys = { abilities = {}, auras = {} }
                     env.races[#env.races + 1], env.raceKeys[token] = token, keys
-                    local race = newRace(self, token)
+                    local race = newRace(self, token, ...)
                     return setmetatable({
                         RegisterAbility = function(_, key, def)
                             table.insert(keys.abilities, key)

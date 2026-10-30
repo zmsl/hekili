@@ -555,7 +555,8 @@ state.faction = Facade.UnitFactionGroup( "player" )
 -- The race token (UnitRace's second return), the same on every client language: race packs match it (Engine/Schema/Races.lua), and
 -- race.gnome, race.troll ... hold beside the localized key.
 local raceName
-raceName, state.race_token = Facade.UnitRace( "player" )
+-- the race ID (the third return) is for a race file whose token is unconfirmed
+raceName, state.race_token, state.race_id = Facade.UnitRace( "player" )
 state.race[ formatKey( raceName ) ] = true
 if state.race_token then state.race[ formatKey( state.race_token ) ] = true end
 

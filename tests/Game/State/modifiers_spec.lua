@@ -204,4 +204,18 @@ describe("resource modifiers", function()
         end, 1000)
         assert.are.equal(0, bytes)
     end)
+
+    it("adds a race's regen entry to its named resource only, once per build, the class's list untouched", function()
+        h.Class.auras.mod_aura_b = { key = "mod_aura_b", id = 1032, duration = 30 }
+        ns.raceMods.regenMods = {
+            { resource = "rage", aura = "mod_aura_b", mult = 2 },
+            { resource = "mana", aura = "mod_aura_b", mult = 2 }, -- the class has no mana: inert
+        }
+        VS.SpecChanged()
+        VS.SpecChanged() -- a rebuild adds it once
+        local R = I.res
+        local M = R.regenMult
+        assert.are.same({ 1, R.slotOfToken.RAGE, 2 }, { M.n, M.slot[1], M.mult[1] })
+        assert.is_nil(h.Class.resources.rage.state.regenMult)
+    end)
 end)

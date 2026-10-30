@@ -1,9 +1,10 @@
 -- Engine/Schema/Races.lua
 -- Race packs (event-facade spec §12b). `Hekili:NewRace( token )` returns a registration object a race file
--- (Hekili_Shared/Races/<Race>.lua) uses like a spec: RegisterAbility, RegisterAura, RegisterResourceMod, RegisterCostMod
+-- (Hekili_Shared/Races/<Race>.lua) uses like a spec: RegisterAbility, RegisterAura, RegisterResourceMod, RegisterCostMod,
+-- RegisterRegenMod
 -- (a class file declares its own cost modifiers with spec:RegisterCostMod, into the same list).
 -- Registrations count only when the token is the player's race (`state.race_token`, UnitRace's locale-free second
--- return), so every race file runs unconditionally and loads headless. Another race's abilities and auras still go to
+-- return, or the race ID, its third, for a race whose token is unconfirmed), so every race file runs unconditionally and loads headless. Another race's abilities and auras still go to
 -- `all` (under a key `all` lacks), the abilities `known = false` and unlisted: a priority naming any race's racial
 -- reads `action.<racial>.known` false instead of indexing nothing; its modifiers stay inert.
 -- Abilities and auras go to the shared `all` spec (over `all`'s own entry for the same key), and ns.applyRace writes
@@ -15,7 +16,7 @@
 local addon, ns = ...
 local Hekili = _G[addon]
 
-local mods = { maxMods = {}, costMods = {} }
+local mods = { maxMods = {}, costMods = {}, regenMods = {} }
 ns.raceMods = mods
 Hekili.RaceMods = mods -- read in game at CHECKPOINT B (ns is not global)
 
@@ -90,8 +91,20 @@ function Race:RegisterCostMod(def)
     end
 end
 
-function Hekili:NewRace(token)
-    return setmetatable({ token = token, live = Hekili.State.race_token == token }, Race)
+--- { resource = key, aura = key, mult = n | spirit = m | share = s | mp5 = x }: a regen entry (Engine/Schema/Spec.lua's
+--- rate fields) on the class's resource `resource` while the player's aura `aura` is up; a class without that resource
+--- ignores it (Adapter.lua). The belief's only: the sim's forecast reads the belief's rate.
+function Race:RegisterRegenMod(def)
+    if self.live and type(def.resource) == "string" and type(def.aura) == "string" then
+        mods.regenMods[#mods.regenMods + 1] = def
+    end
+end
+
+--- `raceID` (optional): UnitRace's third return, for a race whose token is unconfirmed; either match makes it live.
+function Hekili:NewRace(token, raceID)
+    local s = Hekili.State
+    local live = s.race_token == token or (raceID ~= nil and rawget(s, "race_id") == raceID) -- rawget: a strict state
+    return setmetatable({ token = token, live = live }, Race)
 end
 
 ----------------------------------------------------------------------------------------------------------------------

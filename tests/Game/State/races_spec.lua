@@ -56,6 +56,7 @@ describe("Engine/Schema/Races.lua", function()
         race:RegisterAura("racial_a", { id = 1001, copy = { 1002 }, duration = 15, max_stack = 3 })
         race:RegisterResourceMod({ max = 0.05 })
         race:RegisterCostMod(mod or { aura = "racial_a", pct = -0.10, charges = 3, spells = { 1011 } })
+        race:RegisterRegenMod({ resource = "pool_a", aura = "racial_a", mult = 2 })
     end
 
     -- An ability as Engine/Schema/Spec.lua's RegisterAbility builds it: function fields in `funcs`, called on access, wrapped.
@@ -88,6 +89,18 @@ describe("Engine/Schema/Races.lua", function()
         _G.Hekili = saved or nil
     end)
 
+    it("goes live by race ID (UnitRace's third return) whatever the token, and only for that ID", function()
+        load("Other")
+        state.race_id = 95
+        local race = hekili:NewRace("Unconfirmed", 95)
+        race:RegisterRegenMod({ resource = "pool_a", aura = "racial_a", mult = 2 })
+        race:RegisterRegenMod({ aura = "racial_a", mult = 2 }) -- no resource key: dropped
+        assert.is_true(race.live)
+        assert.are.same({ { resource = "pool_a", aura = "racial_a", mult = 2 } }, ns.raceMods.regenMods)
+        assert.is_false(hekili:NewRace("Unconfirmed", 96).live) -- another race's ID
+        assert.is_false(hekili:NewRace("Unconfirmed").live) -- no ID, another token
+    end)
+
     it("registers another race's ability unknown and unlisted, its aura, no modifier", function()
         load("Other")
         local a = all.abilities.racial_a
@@ -96,7 +109,7 @@ describe("Engine/Schema/Races.lua", function()
         local class = { abilities = {}, auras = {} }
         ns.applyRace(class) -- nothing owned: the class keeps its own
         assert.are.same({ abilities = {}, auras = {} }, class)
-        assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods)
+        assert.are.same({ maxMods = {}, costMods = {}, regenMods = {} }, ns.raceMods)
         assert.are.equal(ns.raceMods, hekili.RaceMods) -- the table read in game
     end)
 
@@ -109,6 +122,7 @@ describe("Engine/Schema/Races.lua", function()
             assert.are.equal(all.abilities.racial_a, all.abilities[1002]) -- a `copy` alias
             assert.are.equal(3, all.auras.racial_a.max_stack)
             assert.are.same({ { pct = 0.05 } }, ns.raceMods.maxMods)
+            assert.are.same({ { resource = "pool_a", aura = "racial_a", mult = 2 } }, ns.raceMods.regenMods)
             assert.are.same({ "racial_a", -0.10, 3, 1 }, {
                 ns.raceMods.costMods[1].aura,
                 ns.raceMods.costMods[1].pct,
