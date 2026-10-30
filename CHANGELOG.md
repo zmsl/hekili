@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- High Order Skyborne Hunters, Mages and Druids: Read Ley Line is tracked and recommended where the wowsims priorities cast it (the Mage's), and Energized's doubled mana regen counts in the predicted mana. The Windshaper Skyborne get neither.
 
 ### Changed
 - Mana regen during a channel you paid for (Wrack, Drain Soul, Rain of Fire, Hellfire, Arcane Missiles, Blizzard, Hurricane, Volley): the icons now keep the casting-rate regen until the channel ends, as wowsims does, instead of resuming Spirit regen 5 s in; a channel that costs nothing (Evocation, a free Arcane Missiles) holds nothing.

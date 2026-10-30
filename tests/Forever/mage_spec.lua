@@ -453,8 +453,15 @@ describe("Forever Mage priorities", function()
     it("names only registered abilities and auras", function()
         local cls = ld.load(nil, FILE, "MAGE")
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, action = cls.abilities }
-        -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items and the mana gem
-        local shared = { use_items = true, mana_gem = true, call_action_list = true }
+        -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items and the mana gem, and the High Order Skyborne race
+        -- file's Read Ley Line and Energized (Hekili_Shared/Races/)
+        local shared = {
+            use_items = true,
+            mana_gem = true,
+            call_action_list = true,
+            read_ley_line = true,
+            energized = true,
+        }
         for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "mage")) do
             for list, entries in pairs(p.lists) do
                 for i, e in ipairs(entries) do
@@ -462,7 +469,7 @@ describe("Forever Mage priorities", function()
                     assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action], where)
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
-                            assert.is_true(kinds[kind][key] ~= nil, where .. ": " .. key)
+                            assert.is_true(kinds[kind][key] ~= nil or shared[key], where .. ": " .. key)
                         end
                     end
                 end

@@ -19,7 +19,7 @@ for _, path in ipairs(addons.files("Hekili_Shared")) do
     if path:match("/Races/") then
         RACE_LINES = RACE_LINES + 1
         local f = assert(io.open(path))
-        RACES[#RACES + 1] = assert(f:read("*a"):match('NewRace%("(%w+)"%)'), path)
+        RACES[#RACES + 1] = assert(f:read("*a"):match('NewRace%("(%w+)"[,%)]'), path)
         f:close()
     end
 end

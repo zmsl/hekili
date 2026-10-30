@@ -622,7 +622,7 @@ Recorded deviations (each one's reason in the named file):
   run one wowsims APL, so their lines match.
 - Mage (`mage_*.lua`, `Mage.lua`, `mage_world.lua`): Arcane Blast's 1.5 s cast and 15 s charges from wowsims's data and
   log over the DB2's 2.5 s and 8 s (ruling M9; the charges' price floor(fraction x 1213), wowsims's 181 x (1 + 1.75 n));
-  Read Ley Line (a Skyborne racial) dropped (rule 12: no Skyborne race pack); Master of Elements' refunds unbelieved
+  Read Ley Line a High Order Skyborne racial (unknown for the exports' Human); Master of Elements' refunds unbelieved
   (crits unseen, mana secret); the worlds' Mage is trainer-taught (no book ranks), as wowsims's; wowsims clips
   Evocation at >= 99% mana (interruptIf), the translator drops channelSpell.interruptIf (shared gap, reported), the
   world clips by wowsims's rule. Frostfire: Fingers of Frost's grant (a Chill's 15% roll) is unseen, so the sim spends

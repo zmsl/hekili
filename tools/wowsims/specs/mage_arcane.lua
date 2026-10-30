@@ -34,8 +34,8 @@
 -- Deviation (Evocation's clip): wowsims clips Evocation at >= 99% mana (its channelSpell interruptIf); the translator
 -- drops channelSpell.interruptIf (tools/wowsims/apl.lua; a shared gap, reported), so the pack's line has no clip
 -- condition; the world clips by wowsims's rule (mage_world.lua: any press while the belief channels it at 99%).
--- Rule 12 drops Read Ley Line (1259705, a Skyborne racial; its buff 1270842): no Skyborne race pack (the Human the UI
--- defaults to never casts it). Innervate (29166, another player's) reads false (rule 4).
+-- Read Ley Line (1259705) and its Energized (1270842) resolve to the High Order Skyborne race file; the Human the UI
+-- defaults to never knows it. Innervate (29166, another player's) reads false (rule 4).
 return {
     class = "MAGE",
     pack = "Arcane (wowsims.com)",

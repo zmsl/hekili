@@ -33,7 +33,11 @@ local OWN = {
     Orc = { { "blood_fury", "shatter_curse" }, 0, 0 },
     Troll = { { "berserking", "rapid_regeneration" }, 0, 0 },
     Undead = { { "cannibalize", "will_of_the_forsaken" }, 0, 0 },
+    HighOrderSkyborne = { { "read_ley_line" }, 0, 0 },
 }
+
+-- The racials whose aura is not under their own key
+local AURA_OF = { read_ley_line = "energized" }
 
 describe("race packs", function()
     local ns, hekili, state, all, saved
@@ -52,6 +56,7 @@ describe("race packs", function()
     local function load(token, seed, class)
         state = {
             race_token = token,
+            race_id = type(token) == "number" and token or nil,
             buff = setmetatable({}, {
                 __index = function()
                     return { up = false, count = 0 }
@@ -83,6 +88,32 @@ describe("race packs", function()
         assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
         loadRaces(ns)
     end
+
+    it("registers Read Ley Line, Energized and its mana regen entry for the High Order Skyborne only", function()
+        for _, who in ipairs({ "HighOrderSkyborne", 95 }) do -- by token, and by race ID alone (an unconfirmed token)
+            load(who)
+            local rll = all.abilities.read_ley_line
+            assert.are.same(
+                { 1259705, 2, 120, "spell", "cooldowns", false },
+                { rll.id, rll.cast, rll.cooldown, rll.gcd, rll.toggle, rll.startsCombat },
+                tostring(who)
+            )
+            assert.is_function(rll.now)
+            assert.are_not.equal(rll.handler, rll.now)
+            assert.are.same(
+                { 1270842, 30, 1 },
+                { all.auras.energized.id, all.auras.energized.duration, all.auras.energized.max_stack }
+            )
+            assert.are.same({ { resource = "mana", aura = "energized", mult = 2 } }, ns.raceMods.regenMods)
+        end
+        -- one faction's: the Windshaper Skyborne (Horde, race ID 96) and the Classic races get neither the racial nor the regen
+        for _, other in ipairs({ 96, "WindshaperSkyborne", "Orc", "NightElf", "Human" }) do
+            load(other)
+            local rll = all.abilities.read_ley_line
+            assert.are.same({ false, true }, { rll.known, rll.unlisted }, tostring(other))
+            assert.are.same({}, ns.raceMods.regenMods, tostring(other))
+        end
+    end)
 
     -- An ability as Engine/Schema/Spec.lua's RegisterAbility builds it: function fields in `funcs`, called on access, wrapped.
     local function ability(key, data)
@@ -371,7 +402,7 @@ describe("race packs in VirtualState's now context", function()
     -- One cast of race ability `key` (its aura: the same key) in a fresh VirtualState: 0 errors, 1 run, the aura believed
     -- up; then 1000 more allocate nothing.
     local function cast(all, key)
-        local a, aura = all.abilities[key], all.auras[key]
+        local a, aura = all.abilities[key], all.auras[AURA_OF[key] or key]
         local api, ctl = fake.new()
         ctl.now = 1
         _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue =
@@ -393,8 +424,13 @@ describe("race packs in VirtualState's now context", function()
             recharge = 0,
             funcs = { now = a.now, handler = a.handler },
         }
-        h.Class.auras[key] =
-            { key = key, id = aura.id, copy = aura.copy, duration = aura.duration, max_stack = aura.max_stack }
+        h.Class.auras[AURA_OF[key] or key] = {
+            key = AURA_OF[key] or key,
+            id = aura.id,
+            copy = aura.copy,
+            duration = aura.duration,
+            max_stack = aura.max_stack,
+        }
         fs.clock = api.GetTime
         ns.spendResources = fs.spend
         ns.ResourceRegenerates = function()
