@@ -131,13 +131,13 @@ repeats seeds 1-3 against its every-slot fixture). Each fight seeds its own worl
 boot carries nothing between fights, so the halves play the same fights as the old single run.
 The gate runs Arms (wowsims.com), the Arms default since the wowsims packs plan's Warrior swap (the hand-built Arms,
 Fury and Protection lists retired), on the world's wowsims build (Spearing Strike and Berserker Rage in the kit). Its
-lines (central fix 23, the pre-pull guards; 20 fights: agreement 0.966, flicker 1.51/min, oracle 1.07):
+lines (the mana regen plan's gate on 0ce56d64f; central fix 23, the pre-pull guards, read 20 fights: agreement 0.966, flicker 1.51/min, oracle 1.07):
 
 ```
-Arms solo: fights=3 agreement 0.966 (2466 ticks); react median 0 p90 0 never 0.019; refused per 100 [cost 16.0 (oracle 21.9, unmatched 0.5)], episodes 3.65/min; dps A/B 1.022; ... [seeds 1-3]
-Arms solo: fights=3 agreement 0.985 (2487 ticks); react median 0 p90 0 never 0.050; refused per 100 [cost 16.3 (oracle 16.0, unmatched 0.0)], episodes 3.62/min; dps A/B 1.000; ... [seeds 4-6]
-Arms solo: fights=20 agreement 0.966 (16858 ticks); react median 0 p90 0 never 0.038; refused per 100 [cost 13.3 (oracle 18.2, unmatched 1.0)], episodes 2.78/min; dps A/B 0.975; ...
-Arms party: fights=10 agreement 0.975 (4432 ticks); react median 0 p90 0 never 0.005; refused per 100 [cost 4.6 (oracle 12.5, unmatched 0.0)], episodes 0.88/min; dps A/B 1.008; ...
+Arms solo: fights=3 agreement 0.967 (2399 ticks); react median 0 p90 1 never 0.032; refused per 100 [cost 10.9 (oracle 13.8, unmatched 3.6)], episodes 1.75/min; dps A/B 0.984; ... [seeds 1-3]
+Arms solo: fights=3 agreement 0.976 (2452 ticks); react median 0 p90 1 never 0.009; refused per 100 [cost 14.4 (oracle 19.9, unmatched 0.0)], episodes 3.18/min; dps A/B 1.014; ... [seeds 4-6]
+Arms solo: fights=20 agreement 0.956 (16342 ticks); react median 0 p90 0 never 0.032; refused per 100 [cost 13.5 (oracle 17.7, unmatched 2.7)], episodes 2.55/min; dps A/B 0.979; ...
+Arms party: fights=10 agreement 0.942 (4293 ticks); react median 0 p90 0 never 0.036; refused per 100 [cost 2.7 (oracle 4.5, unmatched 0.0), requires:no dodge 1.7 (oracle 1.7, unmatched 0.0)], episodes 0.63/min; dps A/B 0.942; ...
 ```
 
 `make test-loop` also runs Fury (wowsims.com) 20 fights at level 60 and 24 (`loop_warrior_fury_spec.lua`,
@@ -183,15 +183,15 @@ cast-boundary flicker that replaced them).
 `make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Every Druid spec runs its
 wowsims.com default (wowsims packs plan, Tasks 7b and 7g; the hand-built lists retired); Feral and Balance are gated by
 `pack_gate.gate`, Guardian is reported (engine health and focus asserted, not the agreement): its first icon waits on
-rage the usability ladder cannot place. Current lines (forever b0a5f8ee, central fix 22):
+rage the usability ladder cannot place. Current lines (the mana regen plan's gate on 0ce56d64f):
 
 ```
-Feral solo: fights=3 agreement 0.924 (2336 ticks); react median 0 p90 0 never 0.031; refused per 100 [], episodes 0.00/min; dps A/B 1.049; ... [seeds 1-3]
-Guardian solo: fights=3 agreement 0.899 (2631 ticks); react median 0 p90 1 never 0.019; refused per 100 [cost 8.1 (oracle 8.8, unmatched 0.0)], episodes 1.71/min; dps A/B 1.003; ...
-Balance solo: fights=3 agreement 0.961 (2705 ticks); react median 0 p90 1 never 0.009; refused per 100 [casting 73.7 (oracle 70.7, unmatched 5.0), cost 0.6 (oracle 2.5, unmatched 0.0)], episodes 9.21/min; dps A/B 0.920; ... [seeds 1-3]
-Feral solo: fights=20 agreement 0.941 (16304 ticks); react median 0 p90 0 never 0.043; refused per 100 [cost 1.4 (oracle 2.3, unmatched 1.1)], episodes 0.05/min; dps A/B 1.024; ...
-Guardian solo: fights=20 agreement 0.850 (17957 ticks); react median 0 p90 1 never 0.018; refused per 100 [cost 25.1 (oracle 11.6, unmatched 15.2)], episodes 4.26/min; dps A/B 1.011; ...
-Balance solo: fights=20 agreement 0.980 (17833 ticks); react median 0 p90 1 never 0.019; refused per 100 [casting 72.3 (oracle 70.7, unmatched 8.5), cost 0.9 (oracle 2.9, unmatched 0.4)], episodes 9.76/min; dps A/B 0.980; ...
+Feral solo: fights=3 agreement 0.942 (2370 ticks); react median 0 p90 0 never 0.014; refused per 100 [], episodes 0.00/min; dps A/B 1.063; ... [seeds 1-3]
+Guardian solo: fights=3 agreement 0.915 (2566 ticks); react median 0 p90 1 never 0.007; refused per 100 [cost 7.3 (oracle 8.3, unmatched 0.0)], episodes 1.64/min; dps A/B 0.987; ...
+Balance solo: fights=3 agreement 1.000 (2611 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 5.3 (oracle 4.8, unmatched 0.0)], episodes 0.57/min; dps A/B 1.013; ... [seeds 1-3]
+Feral solo: fights=20 agreement 0.963 (16606 ticks); react median 0 p90 0 never 0.031; refused per 100 [], episodes 0.00/min; dps A/B 0.991; ...
+Guardian solo: fights=20 agreement 0.900 (17064 ticks); react median 0 p90 1 never 0.012; refused per 100 [cost 13.6 (oracle 12.2, unmatched 2.3)], episodes 3.29/min; dps A/B 0.979; ...
+Balance solo: fights=20 agreement 1.000 (17524 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 5.0 (oracle 4.7, unmatched 0.5), cost 1.2 (oracle 9.9, unmatched 0.2)], episodes 0.62/min; dps A/B 0.997; ...
 ```
 
 The Feral and Balance worlds keep the wowsims logs' mana pools and five-second rule (22 a second outside it).
@@ -200,15 +200,15 @@ The Feral and Balance worlds keep the wowsims logs' mana pools and five-second r
 `make test-rogue` (`#rogue`), each on its "<Spec> (wowsims.com)" pack (wowsims packs plan, Task 8), gated by
 `pack_gate.gate` and asserting its flagged lines ran (`r.focus > 0`: Slice and Dice at tier 1 in every pack). The
 worlds carry the wowsims.com builds' abilities and talents (Subtlety Hemo has no Ghostly Strike); the replay and
-leveling gates are `tests/Forever/wowsims_rogue_spec.lua`. The lines (the forever gate on 51a0b1ac, central fixes 1-17):
+leveling gates are `tests/Forever/wowsims_rogue_spec.lua`. The lines (the mana regen plan's gate on 0ce56d64f):
 
 ```
-Combat solo: fights=3 agreement 0.991 (2158 ticks); react median 0 p90 0 never 0.000; refused per 100 [requires:in combat 1.3 (oracle 1.3, unmatched 0.0)], episodes 0.28/min; dps A/B 1.023; ... [seeds 1-3]
-Assassination solo: fights=3 agreement 0.991 (2373 ticks); react median 0 p90 0 never 0.040; refused per 100 [requires:in combat 1.7 (oracle 2.5, unmatched 0.0)], episodes 0.25/min; dps A/B 0.973; ... [seeds 1-3]
-Subtlety solo: fights=3 agreement 0.974 (2041 ticks); react median 0 p90 0 never 0.063; refused per 100 [requires:in combat 1.9 (oracle 1.2, unmatched 0.0)], episodes 0.44/min; dps A/B 0.969; ... [seeds 1-3]
-Combat solo: fights=20 agreement 0.992 (14181 ticks); react median 0 p90 0 never 0.000; refused per 100 [requires:in combat 0.8 (oracle 1.3, unmatched 0.0)], episodes 0.17/min; dps A/B 0.999; ...
-Assassination solo: fights=20 agreement 0.996 (15402 ticks); react median 0 p90 0 never 0.007; refused per 100 [requires:in combat 1.7 (oracle 1.7, unmatched 0.0)], episodes 0.25/min; dps A/B 1.000; ...
-Subtlety solo: fights=20 agreement 0.973 (13157 ticks); react median 0 p90 0 never 0.037; refused per 100 [requires:in combat 1.5 (oracle 1.4, unmatched 0.0)], episodes 0.36/min; dps A/B 1.000; ...
+Combat solo: fights=3 agreement 0.991 (2237 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.927; ... [seeds 1-3]
+Assassination solo: fights=3 agreement 1.000 (2282 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.010; ... [seeds 1-3]
+Subtlety solo: fights=3 agreement 0.991 (2043 ticks); react median 0 p90 0 never 0.011; refused per 100 [], episodes 0.00/min; dps A/B 0.979; ... [seeds 1-3]
+Combat solo: fights=20 agreement 0.987 (14145 ticks); react median 0 p90 0 never 0.006; refused per 100 [], episodes 0.00/min; dps A/B 0.980; ...
+Assassination solo: fights=20 agreement 1.000 (15091 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.992; ...
+Subtlety solo: fights=20 agreement 0.980 (13319 ticks); react median 0 p90 0 never 0.030; refused per 100 [], episodes 0.00/min; dps A/B 0.996; ...
 ```
 
 `tests/Forever/loop_paladin_spec.lua` runs 3 fights a Paladin pack in `make check` (seeds 1-3, `#slow`) and 20 in
@@ -221,13 +221,13 @@ are wowsims.com packs since the wowsims packs plan, Task 9 (the hand-built lists
 swing-gap fillers carry wowsims's own `mana.pct>=10`, judged on the secret-mana belief; each fight starts with the mana
 the last one left, regenerated through the 30 s gap (GAP X, closed: the 20-fight line was 0.911, never 0.226, while
 fights restarted at full mana). The holy_shock list is gone with the hand-built Retribution list; Hammer of Wrath's
-window is not exercised by the solo worlds. The runs (central fixes 1-23):
+window is not exercised by the solo worlds. The runs (the mana regen plan's gate on 0ce56d64f):
 
 ```
-Retribution solo: fights=3 agreement 0.999 (2371 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.018; ... [seeds 1-3]
-Protection solo: fights=3 agreement 0.998 (2418 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.993; ... [seeds 1-3]
-Retribution solo: fights=20 agreement 0.999 (17049 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.5 (oracle 11.1, unmatched 0.0)], episodes 0.16/min; dps A/B 1.026; ...
-Protection solo: fights=20 agreement 0.990 (17589 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 0.9 (oracle 9.1, unmatched 0.0)], episodes 0.10/min; dps A/B 1.022; ...
+Retribution solo: fights=3 agreement 0.994 (2174 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.997; ... [seeds 1-3]
+Protection solo: fights=3 agreement 0.933 (2519 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.982; ... [seeds 1-3]
+Retribution solo: fights=20 agreement 0.986 (15465 ticks); react median 0 p90 0 never 0.004; refused per 100 [], episodes 0.00/min; dps A/B 0.996; ...
+Protection solo: fights=20 agreement 0.917 (17754 ticks); react median 0 p90 0 never 0.021; refused per 100 [], episodes 0.00/min; dps A/B 1.010; ...
 ```
 
 Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):
@@ -284,10 +284,10 @@ replay floor 0.93 (0.937 of 95), live L10 0.0,
 L40 0.0, L60 5.0 s (LIVE60 5.0), flicker floor 0.6. The lines:
 
 ```
-Enhancement solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.1 (oracle 11.9, unmatched 0.0)], episodes 0.11/min; dps A/B 0.964; ... [seeds 1-3]
-Enhancement solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.3 (oracle 14.6, unmatched 0.0)], episodes 0.12/min; dps A/B 1.014; ... flicker 1.13/min (oracle 1.10); ... top [stormstrike -> rage_of_the_farseer 44; rage_of_the_farseer -> stormstrike 1]; ...
-Elemental solo: fights=3 agreement 0.993 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 59.6 (oracle 56.5, unmatched 0.5)], episodes 10.86/min; dps A/B 1.025; ... [seeds 1-3]
-Elemental solo: fights=20 agreement 0.996 (18040 ticks); react median 0 p90 0 never 0.001; refused per 100 [casting 58.6 (oracle 54.8, unmatched 0.5), cost 0.0 (oracle 5.0, unmatched 0.0)], episodes 9.38/min; dps A/B 0.998; ... flicker 0.55/min (oracle 0.17); ...
+Enhancement solo: fights=3 agreement 0.997 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.027; ... [seeds 1-3]
+Enhancement solo: fights=20 agreement 0.995 (18040 ticks); react median 0 p90 0 never 0.004; refused per 100 [cost 0.1 (oracle 3.2, unmatched 0.0)], episodes 0.02/min; dps A/B 1.004; ... flicker 0.10/min (oracle 0.13); ... top [lightning_shield -> stormstrike 53; stormstrike -> lightning_shield 37; earth_shock -> stormstrike 1]; ...
+Elemental solo: fights=3 agreement 0.985 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 4.2 (oracle 3.8, unmatched 0.0)], episodes 0.67/min; dps A/B 0.990; ... [seeds 1-3]
+Elemental solo: fights=20 agreement 0.981 (18040 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 1.1 (oracle 1.0, unmatched 0.0), cost 0.3 (oracle 12.7, unmatched 0.0)], episodes 0.18/min; dps A/B 1.000; ... flicker 0.13/min (oracle 0.05); ...
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
@@ -346,14 +346,14 @@ missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35, Combat Ra
 in melee" runs Survival at 25 yd, then 5 yd: its four `target.within5` lines stay shut while the bracket reads [8, 35],
 open at [0, 5], and the bracket holds when every read goes secret. Mana is secret in combat, so the belief holds its
 lower bound and the worlds idle 0.823 (Beast Mastery), 0.844 (Marksmanship) and 0.394 (Survival, whose strikes the Resourcefulness cut makes cheap) of the time at 3 fights. The
-lines (the forever gate on 51a0b1ac, central fixes 1-17; the hand-built lists' were 0.983/0.986/0.945 at 3 fights):
+lines (the mana regen plan's gate on 0ce56d64f; the hand-built lists' were 0.983/0.986/0.945 at 3 fights):
 
 ```
-Beast Mastery solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.997; ... [seeds 1-3]
-Marksmanship solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.997; ... [seeds 1-3]
+Beast Mastery solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.994; ... [seeds 1-3]
+Marksmanship solo: fights=3 agreement 1.000 (2503 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.000; ... [seeds 1-3]
 Survival solo: fights=3 agreement 0.976 (2706 ticks); react median 0 p90 1 never 0.008; refused per 100 [], episodes 0.00/min; dps A/B 0.968; ... [seeds 1-3]
-Beast Mastery solo: fights=20 agreement 1.000 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.012; ...
-Marksmanship solo: fights=20 agreement 1.000 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.012; ...
+Beast Mastery solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.019; refused per 100 [], episodes 0.00/min; dps A/B 1.004; ...
+Marksmanship solo: fights=20 agreement 1.000 (16797 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.000; ...
 Survival solo: fights=20 agreement 0.987 (18040 ticks); react median 0 p90 1 never 0.029; refused per 100 [], episodes 0.00/min; dps A/B 0.990; ...
 ```
 
@@ -422,15 +422,15 @@ the Scorch line's Fire Vulnerability `remains<5` edge, so ours shows Scorch wher
 (API-forced; the modelled Fire Vulnerability measured equal to the world's, no early end). Fire's and Frostfire's uptime
 0.96 (ours driving) against 0.99 (the oracle) is an Evocation at a carried fight's start: the believed mana's lower
 bound reads `mana.pct<=10` where the truth is 16-19%, and the 8 s channel delays the first Scorch (shared gap,
-reported). The lines (on 0ce5d1a4 + Task 12 and its lane review fixes; Frostfire's on 3e104ce9 + Task FFB):
+reported). The lines (the mana regen plan's gate on 0ce56d64f):
 
 ```
-Arcane solo: fights=3 agreement 0.987 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 79.7 (oracle 78.3, unmatched 0.9), cost 2.2 (oracle 4.3, unmatched 0.2)], episodes 12.20/min; dps A/B 1.136; ... [seeds 1-3]
-Fire solo: fights=3 agreement 0.993 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 68.4 (oracle 68.8, unmatched 0.6), cost 9.8 (oracle 9.3, unmatched 1.9)], episodes 6.21/min; dps A/B 1.030; ... [seeds 1-3]
-Arcane solo: fights=20 agreement 0.994 (18040 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 77.2 (oracle 77.5, unmatched 0.7), cost 4.6 (oracle 4.8, unmatched 0.6)], episodes 10.83/min; dps A/B 1.025; ...
-Fire solo: fights=20 agreement 0.992 (18040 ticks); react median 0 p90 0 never 0.009; refused per 100 [casting 68.0 (oracle 66.8, unmatched 0.7), cost 10.3 (oracle 12.3, unmatched 1.3)], episodes 5.77/min; dps A/B 1.018; ...
-Frostfire solo: fights=3 agreement 0.992 (2706 ticks); react median 0 p90 0 never 0.022; refused per 100 [casting 74.8 (oracle 75.0, unmatched 1.6)], episodes 6.43/min; dps A/B 1.026; ... [seeds 1-3]
-Frostfire solo: fights=20 agreement 0.958 (18040 ticks); react median 0 p90 1 never 0.034; refused per 100 [casting 75.0 (oracle 73.5, unmatched 1.7), cost 0.3 (oracle 2.8, unmatched 0.1)], episodes 5.44/min; dps A/B 0.986; ...
+Arcane solo: fights=3 agreement 0.984 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 1.4 (oracle 1.3, unmatched 0.0)], episodes 0.22/min; dps A/B 0.948; ... [seeds 1-3]
+Fire solo: fights=3 agreement 0.999 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 7.1 (oracle 8.1, unmatched 0.0)], episodes 1.00/min; dps A/B 0.964; ... [seeds 1-3]
+Arcane solo: fights=20 agreement 0.993 (18040 ticks); react median 0 p90 0 never 0.003; refused per 100 [casting 2.1 (oracle 1.9, unmatched 0.0), cost 0.3 (oracle 4.0, unmatched 0.2)], episodes 0.35/min; dps A/B 0.978; ...
+Fire solo: fights=20 agreement 0.994 (18040 ticks); react median 0 p90 0 never 0.009; refused per 100 [casting 7.6 (oracle 9.5, unmatched 0.0)], episodes 0.96/min; dps A/B 0.984; ...
+Frostfire solo: fights=3 agreement 0.947 (2706 ticks); react median 0 p90 0 never 0.093; refused per 100 [], episodes 0.00/min; dps A/B 1.026; ... [seeds 1-3]
+Frostfire solo: fights=20 agreement 0.934 (18040 ticks); react median 0 p90 0 never 0.030; refused per 100 [], episodes 0.00/min; dps A/B 0.997; ...
 ```
 
 `tests/Forever/loop_priest_spec.lua` runs 3 fights of each Priest pack in `make check` (seeds 1-3, `#slow`) and 20 in
@@ -444,13 +444,13 @@ bars and channels (Mind Flay, Penance, the wand's Shoot as one shot a wand speed
 pools and regen are the logs' (Shadow 4711, Smite 6151; Shadow's regen without Dark Inspiration, its Spirit x 1.15 an
 aura on the pull, each landed Mind Blast and each full Mind Flay: mana-regen Task 8, every line within its floor).
 Flicker floors (pack_gate `FLICKER`): Shadow 0.1 (0.03 / 0.02 / 0.02 over seeds 1-20 / 21-40 / 41-60, oracle 0), Smite
-0.1 (0.03 / 0.02 / 0.03, oracle 0), retracted 0 each. The lines (on 30e92574 + Task 14):
+0.1 (0.03 / 0.02 / 0.03, oracle 0), retracted 0 each. The lines (the mana regen plan's gate on 0ce56d64f):
 
 ```
-Shadow solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 59.5 (oracle 58.7, unmatched 2.0)], episodes 6.10/min; dps A/B 1.000; ... [seeds 1-3]
-Smite solo: fights=3 agreement 0.973 (2706 ticks); react median 0 p90 1 never 0.007; refused per 100 [casting 83.8 (oracle 83.9, unmatched 2.4)], episodes 43.90/min; dps A/B 1.065; ... [seeds 1-3]
-Shadow solo: fights=20 agreement 0.993 (18040 ticks); react median 0 p90 2 never 0.000; refused per 100 [casting 48.4 (oracle 46.4, unmatched 3.4)], episodes 3.39/min; dps A/B 1.001; ...
-Smite solo: fights=20 agreement 0.972 (18040 ticks); react median 0 p90 1 never 0.002; refused per 100 [casting 84.1 (oracle 84.2, unmatched 2.3)], episodes 44.28/min; dps A/B 0.988; ...
+Shadow solo: fights=3 agreement 0.993 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 6.7 (oracle 6.3, unmatched 0.0)], episodes 1.44/min; dps A/B 0.987; ... [seeds 1-3]
+Smite solo: fights=3 agreement 0.958 (2706 ticks); react median 0 p90 0 never 0.007; refused per 100 [casting 27.1 (oracle 27.3, unmatched 0.8)], episodes 14.75/min; dps A/B 1.025; ... [seeds 1-3]
+Shadow solo: fights=20 agreement 0.989 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 7.1 (oracle 6.7, unmatched 0.0), cost 0.1 (oracle 5.2, unmatched 0.0)], episodes 1.46/min; dps A/B 0.993; ...
+Smite solo: fights=20 agreement 0.934 (18040 ticks); react median 0 p90 1 never 0.026; refused per 100 [casting 27.6 (oracle 27.6, unmatched 1.6)], episodes 15.47/min; dps A/B 1.005; ...
 ```
 
 `tests/Forever/loop_warlock_spec.lua` runs 3 fights of each Warlock pack in `make check` (seeds 1-3, `#slow`) and 20 in
@@ -464,19 +464,19 @@ pull (its mana and regen from the logs), the Soul Shards in the bags; the pools 
 Flicker floors (pack_gate `FLICKER`, 20 fights): Affliction 0 (0 / 0 / 0 over seeds 1-20 / 21-40 / 41-60, oracle 0;
 0.4 -> 0 on the mana-regen plan's Task 10: Wrack's 6 s paid channel holds the casting rate to its end), SM Ruin 0.3,
 Demonology 0.1, Shadow Brand 0.1, Destruction 0.4 (their measured values beside them in pack_gate), retracted 0 each.
-The lines (the end-of-lane gate, on 06eec227 + Task 13):
+The lines (the mana regen plan's gate on 0ce56d64f):
 
 ```
-Affliction solo: fights=3 agreement 0.997 (2706 ticks); react median 0 p90 0 never 0.005; refused per 100 [casting 76.9 (oracle 76.3, unmatched 0.2)], episodes 9.76/min; dps A/B 0.996; ... [seeds 1-3]
-SM Ruin solo: fights=3 agreement 0.995 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 66.7 (oracle 66.5, unmatched 0.4)], episodes 12.97/min; dps A/B 0.999; ... [seeds 1-3]
-Demonology solo: fights=3 agreement 0.998 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.4 (oracle 3.4, unmatched 0.0)], episodes 1.33/min; dps A/B 1.000; ... [seeds 1-3]
-Shadow Brand solo: fights=3 agreement 0.999 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 60.0 (oracle 60.0, unmatched 0.1)], episodes 11.86/min; dps A/B 1.000; ... [seeds 1-3]
-Destruction solo: fights=3 agreement 0.989 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 41.7 (oracle 41.5, unmatched 0.2)], episodes 10.31/min; dps A/B 0.992; ... [seeds 1-3]
-Affliction solo: fights=20 agreement 0.995 (18040 ticks); react median 0 p90 0 never 0.001; refused per 100 [casting 77.4 (oracle 77.5, unmatched 0.3)], episodes 9.84/min; dps A/B 1.012; ...
-SM Ruin solo: fights=20 agreement 0.996 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 65.9 (oracle 65.8, unmatched 0.3)], episodes 12.46/min; dps A/B 0.998; ...
-Demonology solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.001; refused per 100 [casting 3.2 (oracle 3.3, unmatched 0.0)], episodes 1.23/min; dps A/B 1.001; ...
-Shadow Brand solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 59.6 (oracle 59.4, unmatched 0.2)], episodes 12.17/min; dps A/B 0.992; ...
-Destruction solo: fights=20 agreement 0.987 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 41.3 (oracle 41.6, unmatched 0.7)], episodes 10.19/min; dps A/B 1.006; ...
+Affliction solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.6 (oracle 3.6, unmatched 0.0)], episodes 1.00/min; dps A/B 1.000; ... [seeds 1-3]
+SM Ruin solo: fights=3 agreement 0.992 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.976; ... [seeds 1-3]
+Demonology solo: fights=3 agreement 0.997 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.4 (oracle 3.4, unmatched 0.0)], episodes 1.33/min; dps A/B 0.993; ... [seeds 1-3]
+Shadow Brand solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.4 (oracle 3.4, unmatched 0.0)], episodes 1.11/min; dps A/B 1.000; ... [seeds 1-3]
+Destruction solo: fights=3 agreement 0.980 (2706 ticks); react median 0 p90 0 never 0.003; refused per 100 [casting 12.2 (oracle 12.1, unmatched 0.6)], episodes 4.77/min; dps A/B 1.028; ... [seeds 1-3]
+Affliction solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.001; refused per 100 [casting 3.5 (oracle 4.1, unmatched 0.0), cost 0.1 (oracle 0.0, unmatched 0.1)], episodes 0.98/min; dps A/B 1.020; ...
+SM Ruin solo: fights=20 agreement 0.994 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.995; ...
+Demonology solo: fights=20 agreement 0.997 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.2 (oracle 3.4, unmatched 0.0)], episodes 1.21/min; dps A/B 0.999; ...
+Shadow Brand solo: fights=20 agreement 0.997 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.5 (oracle 3.7, unmatched 0.0)], episodes 1.13/min; dps A/B 0.995; ...
+Destruction solo: fights=20 agreement 0.990 (18040 ticks); react median 0 p90 0 never 0.001; refused per 100 [casting 11.5 (oracle 11.4, unmatched 0.2)], episodes 4.49/min; dps A/B 1.013; ...
 ```
 
 Priest checkpoints (a level 60 Priest; the `Hekili_Priest` mklink first):
