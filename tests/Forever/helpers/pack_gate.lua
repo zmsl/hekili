@@ -56,8 +56,8 @@ M.FLICKER = {
     -- 0 -> 0.2 (Task 5, wowsims's Hunter regen in; seeds 1-20 / 21-40 / 41-60: 0 / 0.12 / 0, was 0 / 0 / 0): the new BM
     -- regen puts Arcane Shot's mana crossing 0.14 s from Hunter's Mark's refresh; lo runs ~3 mana under truth (gaps
     -- BQ/BT, G7), so the near-tie resolves both ways (fight 21); controller ruling 2026-10-29 while the owner was away
-    -- (logged in hekili-open-questions.md)
-    ["Beast Mastery"] = { flicker = 0.2, retracted = 0 }, -- 0 / 0.12 / 0, 0
+    -- (logged in hekili-open-questions.md); the oracle's own 0.02 / 0 / 0 (agreement 0.998 / 0.996 / 0.999)
+    ["Beast Mastery"] = { flicker = 0.2, retracted = 0 }, -- 0 / 0.12 / 0, 0 (oracle 0.02 / 0 / 0)
     -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
     -- wowsims's logged regen (Ret 8.25/s casting) runs the world at an empty mana pool; the oracle's flicker rose too; our
     -- extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike); controller ruling
@@ -89,9 +89,11 @@ M.FLICKER = {
     ["Shadow"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.02 / 0.02, 0
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     ["Smite"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.02 / 0.03, 0
-    -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
-    -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
-    ["Elemental"] = { flicker = 0.2, retracted = 0 }, -- 0.15 / 0.1996 / 0.17, 0 (was 0.03 / 0.03 / 0.02)
+    -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
+    -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
+    -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
+    -- mp5 as its own entry): 0.13 / 0.17 / 0.08, oracle 0.05 / 0.07 / 0.05, floor kept
+    ["Elemental"] = { flicker = 0.2, retracted = 0 }, -- 0.15 / 0.1996 / 0.17, 0 (oracle 0.03 / 0.03 / 0.03)
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996
