@@ -1,5 +1,5 @@
--- tests/Forever/loop_warlock_demonology_spec.lua: the Demonology 20-fight gate (#warlock), one pack a file so each runs in its
--- own process; loop_warlock_spec.lua keeps the boot checks and the 3-fight #slow gates.
+-- tests/Forever/loop_warlock_demonology_spec.lua: the Demonology gates, 3 fights (#slow, `make check`) and 20 (#warlock),
+-- one pack a file so each runs in its own process; loop_warlock_spec.lua keeps the boot and world checks.
 local pack_gate = require("Forever.helpers.pack_gate")
 local w = require("Forever.helpers.warlock_world")
 
@@ -9,4 +9,15 @@ describe("the headless Warlock gates, 20 fights a pack #warlock", function()
         print("Demonology focus ticks: " .. r.focus)
         assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
     end)
+end)
+
+describe("the headless Warlock gates, 3 fights a pack #slow", function()
+    it(
+        "Demonology solo, level 60, one mob, 3 fights of up to 3 minutes: the first icon against the oracle's",
+        function()
+            local r, line = pack_gate.solo("Demonology", w.Demonology, 3, nil, "seeds 1-3")
+            print("Demonology focus ticks: " .. r.focus)
+            assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
+        end
+    )
 end)

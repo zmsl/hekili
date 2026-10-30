@@ -110,8 +110,11 @@ Sim identifier already uses (`git blame` the Sim line and say so in the commit);
 The shape (central fix 17): `make check` runs lint, fmt-check, typecheck and test at once (`make -j4 -Otarget`, each
 check's output kept whole), then syntax, api-check, packs-check and tools-test in order; one exit code. `make test`,
 `make test-<tag>` (loop, party, druid, rogue, paladin, shaman, hunter) and `make gate` all go through
-`scripts/busted_parallel.sh`: one busted process per spec file, each file's output in path order (files that ran no
-test skipped), then the summed counts. `make test` and `make test-<tag>` run `$(nproc)` files at a time; `make gate`
+`scripts/busted_parallel.sh`: one busted process per spec file, started longest first by the previous run's busted
+times for the same arguments (`~/.cache/hekili-busted/`; a file with no time first), each file's output in path order
+(files that ran no test skipped), then the summed counts. Path order started `tests/Game/harness/detect_more_spec.lua`
+(220 s) about 155 s in: `make test` 361 s before the longest-first start and the slow specs' split
+(`alts_spec.lua` one seed a file, the Warlock 3-fight gates one pack a file), 265 s after (2026-10-30, under the lock). `make test` and `make test-<tag>` run `$(nproc)` files at a time; `make gate`
 runs all seven tags in one call capped at `nproc - 2` for the whole gate (`BUSTED_JOBS`), under the machine-wide
 `flock /tmp/hekili-gate.lock`. So each 20-fight pack is its own file (`tests/Forever/loop_<class>_<pack>_spec.lua`;
 the class's `loop_<class>_spec.lua` keeps the boot checks and the 3-fight `#slow` gates), and the gate is bounded by
@@ -454,8 +457,8 @@ Shadow solo: fights=20 agreement 0.989 (18040 ticks); react median 0 p90 0 never
 Smite solo: fights=20 agreement 0.934 (18040 ticks); react median 0 p90 1 never 0.026; refused per 100 [casting 27.6 (oracle 27.6, unmatched 1.6)], episodes 15.47/min; dps A/B 1.005; ...
 ```
 
-`tests/Forever/loop_warlock_spec.lua` runs 3 fights of each Warlock pack in `make check` (seeds 1-3, `#slow`) and 20 in
-`make test-warlock` (`#warlock`, `loop_warlock_<pack>_spec.lua`), gated by `pack_gate.solo` and asserting that some
+`tests/Forever/loop_warlock_<pack>_spec.lua` runs 3 fights of its Warlock pack in `make check` (seeds 1-3, `#slow`) and
+20 in `make test-warlock` (`#warlock`), gated by `pack_gate.solo` and asserting that some
 focus line ran (the DoTs, Banes, curses and Searing Pain's brand upkeep at tier 2; Shadow Bolt on Shadow Trance and
 Soul Fire on Decimation at tier 1). The packs are Affliction, SM Ruin (Affliction's second), Demonology, Shadow Brand
 (Demonology's second) and Destruction (wowsims.com), Task 13 of the wowsims packs plan, from wowsims/forever's five

@@ -1,117 +1,17 @@
 -- tests/Forever/alts_spec.lua (display styles plan, Task 3c): alternatives under resource uncertainty. A subscriber
 -- declaring needs = { alts = true } gets, on records 1 and 2, the picks the APL makes with the gating resource pinned
 -- at the belief's low and high bound. The invariant first: the main records never depend on whether they were
--- computed (the seeds 1-3 Arms gate run twice in-process, the need off then on, every field but alts compared).
-local loop = require("Game.harness.loop")
+-- computed (one Arms gate fight run twice in-process, the need off then on, every field but alts compared:
+-- helpers/alts.lua); seed 1 here, seeds 2 and 3 in alts_seed2_spec.lua and alts_seed3_spec.lua, one fight a file so
+-- the parallel runner spreads them.
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 local alts = require("Forever.helpers.alts")
 
--- One record as a string: every field but alts, nested tables (resources, belief) with sorted keys.
-local function dump(v)
-    if type(v) ~= "table" then
-        return type(v) == "string" and ("%q"):format(v) or tostring(v)
-    end
-    local keys = {}
-    for k in pairs(v) do
-        if k ~= "alts" then
-            keys[#keys + 1] = k
-        end
-    end
-    table.sort(keys, function(a, b)
-        return tostring(a) < tostring(b)
-    end)
-    local parts = {}
-    for _, k in ipairs(keys) do
-        parts[#parts + 1] = tostring(k) .. "=" .. dump(v[k])
-    end
-    return "{" .. table.concat(parts, ",") .. "}"
-end
-
-local DISPLAYS = { "Interrupts", "Defensives", "Cooldowns", "Primary", "AOE" }
-
--- The seeds 1-3 gate on a fresh boot, the band widened in both runs (helpers/alts.lua), every display computed (each
--- subscribed, the toggles separate, the mode dual): a display following one whose passes ran (AOE after Primary, the
--- next Update's Interrupts after AOE) starts from whatever reset it gets. Every Update of both instances appends one
--- string of every display's records. With `need`, a passive subscriber on Primary and on AOE declares the need.
--- Returns the Update strings, how many records carried an alternative and, per display, how many Updates computed it.
-local function run(need)
-    local L = loop.new(ww)
-    local seen, withAlts, computed = {}, 0, {}
-    for _, d in ipairs(DISPLAYS) do
-        computed[d] = 0
-    end
-    for name, H in pairs({ us = L.us, oracle = L.oracle }) do
-        local hk = H.Hekili
-        alts.widen(H.ns.VirtualState)
-        local toggles = hk.DB.profile.toggles
-        for _, k in ipairs({ "interrupts", "defensives", "cooldowns" }) do
-            toggles[k].value, toggles[k].separate = true, true
-        end
-        toggles.mode.value = "dual"
-        for _, d in ipairs(DISPLAYS) do
-            assert.is_true(hk.Engine.Subscribe(d, function() end))
-        end
-        if need then
-            assert.is_true(hk.Engine.Subscribe("Primary", function() end, true, { alts = true }))
-            assert.is_true(hk.Engine.Subscribe("AOE", function() end, true, { alts = true }))
-        end
-        local upd, versions = hk.Update, {}
-        hk.Update = function(...)
-            local r = upd(...)
-            local parts = { name }
-            for _, d in ipairs(DISPLAYS) do
-                local p = hk.Engine.Output[d]
-                if p.version ~= versions[d] then
-                    versions[d], computed[d] = p.version, computed[d] + 1
-                end
-                parts[#parts + 1] = d .. " " .. p.version
-                for i = 1, p.count do
-                    parts[#parts + 1] = dump(p.recs[i])
-                    if p.recs[i].alts.n > 0 then
-                        withAlts = withAlts + 1
-                    end
-                end
-            end
-            seen[#seen + 1] = table.concat(parts, ";")
-            return r
-        end
-    end
-    loop.tally(L, 3)
-    return seen, withAlts, computed
-end
-
 describe("alternatives: the main records never depend on them #slow", function()
-    it(
-        "every display's recs[1..count], every field but alts, is identical with the need off and on, seeds 1-3",
-        function()
-            local off, offAlts = run(false)
-            local on, onAlts, computed = run(true)
-            local c = {}
-            for _, d in ipairs(DISPLAYS) do
-                c[#c + 1] = d .. " " .. computed[d]
-            end
-            print(
-                ("\nalts invariant: %d Updates, records with alts: off %d, on %d; computed: %s"):format(
-                    #on,
-                    offAlts,
-                    onAlts,
-                    table.concat(c, ", ")
-                )
-            )
-            for _, d in ipairs(DISPLAYS) do
-                assert.is_true(computed[d] > 100, d .. " was not computed")
-            end
-            assert.are.equal(0, offAlts)
-            assert.is_true(onAlts > 0, "no record carried an alternative: the passes never ran")
-            assert.are.equal(#off, #on)
-            for i = 1, #off do
-                if off[i] ~= on[i] then
-                    assert.are.equal(off[i], on[i], "Update " .. i)
-                end
-            end
-        end
-    )
+    it("every display's recs[1..count], every field but alts, is identical with the need off and on, seed 1", function()
+        alts.invariant(1)
+    end)
 end)
 
 describe("alternatives (headless Arms, a scripted belief band)", function()
