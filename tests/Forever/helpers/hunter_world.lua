@@ -268,7 +268,7 @@ local PACKS = {
         weapon = { 150, 220, 3.5 },
         ranged = { 140, 200, 3.0 },
         aspect = "aspect_of_the_hawk",
-        resourceful = true, -- the build has Resourcefulness 2/2 (hunter_marksmanship.log)
+        talents = { [440529] = 2 }, -- the export's Resourcefulness 2/2 (hunter_marksmanship.json)
         -- wowsims's log: 15.88 outside the rule, 0 while casting, Resourcefulness adding half the 15.88 while casting
         fsr = { 15.88, 0, auras = { [RESOURCEFULNESS] = { share = 0.5 } } },
         uptime = { "serpent_sting", "hunters_mark" },
@@ -291,7 +291,7 @@ local PACKS = {
         },
         weapon = { 180, 260, 3.6 },
         aspect = "aspect_of_the_hawk", -- the pack's (its precombat Aspect of the Hawk)
-        resourceful = true, -- the build has Resourcefulness 2/2 (hunter_survival.log)
+        talents = { [440529] = 2 }, -- the export's Resourcefulness 2/2 (hunter_survival.json)
         fsr = { 15.88, 0, auras = { [RESOURCEFULNESS] = { share = 0.5 } } },
         uptime = { "hunters_mark" },
     },
@@ -317,7 +317,7 @@ end
 -- The talents' cost cuts, restated from the DB2 masks and wowsims's data (the world's truth the class file's are
 -- measured against), their percents added: Resourcefulness (440529) 30% / 60% a rank, Efficiency (19416) 3% a rank.
 local RESOURCEFUL = { raptor_strike = true, mongoose_bite = true, wing_clip = true, immolation_trap = true }
-RESOURCEFUL.strider_kick = true -- wowsims's log (39.6), outside 440529's DB2 mask
+RESOURCEFUL.strider_kick = true -- wowsims's mask word 2 (0x200000) and log (39.6); our DB2 row lacks that word
 local EFFICIENT = {
     raptor_strike = true,
     mongoose_bite = true,
@@ -367,9 +367,9 @@ end
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, IDS = {} }
-    -- shortcut: the world's character takes no talents, so Resourcefulness's cost cut is not applied (costOf) while its
-    -- regen proc is; seat the talent in `character` and the cost cut follows, when the loop worlds take the builds' talents
-    local rate = P.resourceful and CRIT[name] -- nil: the build lacks Resourcefulness
+    -- Resourcefulness's proc: 50% a rank of a crit (wowsims: 440529 effect 2); nil: the build lacks the talent
+    local res = P.talents and P.talents[440529]
+    local rate = res and CRIT[name] * res / 2
     C.SPEC = ({ BeastMastery = 100031, Marksmanship = 100032, Survival = 100033 })[name]
 
     function C.character()
@@ -400,7 +400,7 @@ local function content(name)
             specID = M.CLIENT_SPEC,
             level = 60,
             known = known,
-            talents = {},
+            talents = P.talents or {},
             power = { type = MANA, token = "MANA", max = MAX },
             speed = { P.weapon[3] },
             ranges = ranges,

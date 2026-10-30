@@ -39,7 +39,13 @@ M.FLICKER = {
     ["Assassination"] = { flicker = 0, retracted = 0 }, -- 0 / 0 / 0, 0
     ["Combat"] = { flicker = 0.4, retracted = 0 }, -- 0.32 / 0.02 / 0, 0
     ["Subtlety"] = { flicker = 0.4, retracted = 0 }, -- 0.18 / 0 / 0.34, 0
-    ["Survival"] = { flicker = 0.1, retracted = 0 }, -- 0.05 / 0 / 0, 0
+    -- 0.1 -> 0.2 (Task 5b, gap BV: the world takes the export's Resourcefulness 2/2, so wowsims's 60% cut makes the
+    -- strikes cheap; seeds 1-20 / 21-40 / 41-60: 0.20 / 0.02 / 0.07, was 0.05 / 0 / 0; oracle 2.18 / 1.68 / 2.26, was 0):
+    -- no longer mana-gated, Raptor Strike comes up on its cooldown end beside Wing Clip or Strider Kick, and in its last
+    -- 0.5 s the client's not-ready flag holds our ready time at now + CD_PROBE while the truth counts down, so the other
+    -- shows one tick (every one of the 17 flips; Fire Blast's CD_PROBE class in layout.md); owner standing approval
+    -- 2026-10-30
+    ["Survival"] = { flicker = 0.2, retracted = 0 }, -- 0.20 / 0.02 / 0.07, 0 (oracle 2.18 / 1.68 / 2.26)
     ["Marksmanship"] = { flicker = 0, retracted = 0 }, -- 0, 0
     -- 0 -> 0.2 (Task 5, wowsims's Hunter regen in; seeds 1-20 / 21-40 / 41-60: 0 / 0.12 / 0, was 0 / 0 / 0): the new BM
     -- regen puts Arcane Shot's mana crossing 0.14 s from Hunter's Mark's refresh; lo runs ~3 mana under truth (gaps

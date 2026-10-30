@@ -31,6 +31,18 @@ describe("the Hunter loop worlds", function()
             assert.is_false(pcall(C.resolve, "not_an_ability", H))
         end)
     end
+
+    -- Gap BV: the wowsims exports carry Resourcefulness (440529) 2/2 in Marksmanship and Survival, none in Beast
+    -- Mastery; wowsims cuts the strikes' cost 60% under it (its log's 40-mana Raptor Strike). World and belief agree.
+    it("price Raptor Strike under the builds' Resourcefulness, the world and the pack alike", function()
+        local out = {}
+        for _, pk in ipairs(PACKS) do
+            local C = hw[pk[1]]
+            local H = headless.new({ character = C.character(), pack = C.PACK })
+            out[pk[1]] = { C.resolve("raptor_strike", H).cost, H.Hekili.State.action.raptor_strike.cost }
+        end
+        assert.are.same({ BeastMastery = { 100, 100 }, Marksmanship = { 40, 40 }, Survival = { 40, 40 } }, out)
+    end)
 end)
 
 describe("the headless Hunter gates, 3 fights a pack #slow", function()
