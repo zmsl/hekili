@@ -5,6 +5,7 @@
 ### New
 
 ### Changed
+- Less memory churn in big pulls: the engine no longer builds its nameplate debug text on every update, only when you take a snapshot.
 
 ### Fixed
 

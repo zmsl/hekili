@@ -370,7 +370,7 @@ do
             return lastCount, lastStationary
         end
 
-        local debugging = true
+        local debugging = Hekili.ActiveDebug
         local details = nil
         local showNPs = GetCVar( "nameplateShowEnemies" ) == "1" and GetCVar( "nameplateShowAll" ) == "1"
 

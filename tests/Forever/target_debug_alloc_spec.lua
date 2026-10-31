@@ -1,0 +1,70 @@
+-- tests/Forever/target_debug_alloc_spec.lua: ns.getNumberTargets( true ) builds the nameplate log (Hekili.TargetDebug,
+-- read by Snapshot.lua's "detected_targets") only while a debug pass is on (Hekili.ActiveDebug). With plates on and
+-- debug off it allocates nothing per plate; with debug on the log carries a line per plate.
+local fake = require("Game.State.helpers.fake_api")
+local headless = require("Game.harness.headless")
+local ww = require("Forever.helpers.warrior_world")
+
+describe("Engine/Sim/Targets.lua's nameplate log", function()
+    local H
+
+    before_each(function()
+        -- both plate CVars on (Targets.lua's showNPs), set on the fake client before the Facade resolves GetCVar
+        local new = fake.new
+        fake.new = function(...)
+            local api, ctl = new(...)
+            api.GetCVar = function()
+                return "1"
+            end
+            return api, ctl
+        end
+        local ok, h = pcall(headless.new, { character = ww.character(), pack = ww.PACK })
+        fake.new = new
+        assert(ok, h)
+        H = h
+        assert.are.same({}, H.loadErrors)
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert(headless.cycle(H, H.ctl.now + 0.2))
+    end)
+
+    local function plates(n)
+        for i = 1, n do
+            local unit = "nameplate" .. i
+            H.ctl.guid[unit], H.ctl.exists[unit] = "Creature-p" .. i, true
+            H.Fire("NAME_PLATE_UNIT_ADDED", unit)
+        end
+    end
+
+    -- Bytes of one forced count with the collector stopped, after a warm-up call.
+    local function bytes()
+        H.ns.getNumberTargets(true)
+        collectgarbage("collect")
+        collectgarbage("stop")
+        local b = collectgarbage("count")
+        H.ns.getNumberTargets(true)
+        local d = (collectgarbage("count") - b) * 1024
+        collectgarbage("restart")
+        return d
+    end
+
+    it("allocates nothing per count at 0, 5 and 15 plates while debug is off", function()
+        local got = {}
+        H.Hekili.ActiveDebug = false
+        for _, n in ipairs({ 0, 5, 15 }) do
+            plates(n - (n == 15 and 5 or 0))
+            got[#got + 1] = bytes()
+        end
+        print("bytes per count at 0/5/15 plates: " .. table.concat(got, "/"))
+        assert.are.same({ 0, 0, 0 }, got, "bytes per count at 0/5/15 plates")
+    end)
+
+    it("keeps the log, a line per plate, while debug is on", function()
+        plates(15)
+        H.Hekili.ActiveDebug = true
+        H.Hekili.TargetDebug = nil
+        H.ns.getNumberTargets(true)
+        assert.is_truthy(tostring(H.Hekili.TargetDebug):find("Nameplates are enabled", 1, true))
+        assert.is_true(select(2, H.Hekili.TargetDebug:gsub("nameplate", "")) > 0, "no plate line in the log")
+    end)
+end)
