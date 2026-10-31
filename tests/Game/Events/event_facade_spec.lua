@@ -128,6 +128,27 @@ describe("the event facade", function()
         assert.is_nil(other[2].a2)
     end)
 
+    it("delivers the target's UNIT_AURA to nobody in combat (the walk still runs), to all again after", function()
+        VS.Start(api)
+        local log, other = {}, {}
+        subscriber(log):RegisterUnitEvent("UNIT_AURA", "player", "target")
+        subscriber(other):RegisterEvent("UNIT_AURA")
+        ctl.combat = true
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        local walks = S.stN
+        ctl.Fire("UNIT_AURA", "target", fake.SECRET)
+        assert.are.same({ 0, 0 }, { #log, #other }) -- the payload is secret and the believed changes come as deltas
+        assert.is_true(S.stN >= walks) -- the sources ran (the walk's status feeds the presence provider)
+        ctl.Fire("UNIT_AURA", "player", fake.SECRET)
+        assert.are.same({ 1, 1 }, { #log, #other }) -- the player's real event keeps its full update
+        assert.is_true(log[1].a2.isFullUpdate)
+        ctl.combat = false
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        ctl.Fire("UNIT_AURA", "target", { addedAuras = {} })
+        assert.are.same({ 2, 2 }, { #log, #other })
+        assert.is_true(log[2].a2.isFullUpdate)
+    end)
+
     it("stops on UnregisterEvent, dropping the client registration nobody needs, and on a cleared OnEvent", function()
         local log = {}
         local f = subscriber(log)

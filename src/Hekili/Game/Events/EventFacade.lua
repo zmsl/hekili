@@ -232,6 +232,13 @@ local function onEvent(_, event, r1, r2, r3, r4, r5, r6, r7, r8)
         pcall(h.Debug, h, "[vs] event %s(%s, %s, %s)", event, tostring(a1), tostring(a2), tostring(a3))
     end
     if event == "UNIT_AURA" then
+        if a1 == "target" and I.inCombat then
+            -- the target's real event in combat: its payload is secret and the walk above (its status feeds the
+            -- presence provider) is all it is good for; the believed changes reach Hekili as the drain's deltas
+            -- (Game/API/Facade.lua), and an empty delivery would only mark a rescan for nothing
+            I.Log.Deliver()
+            return
+        end
         a2 = AURA_INFO[a1]
     end
     deliver(event, a1, a2, a3, a4, a5, a6, a7, a8)
