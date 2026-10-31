@@ -180,14 +180,28 @@ describe("the Protection world", function()
                 by[u[1]] = u[2]
             end
             local id = L.oracle.Hekili.Class.abilities.revenge.id
-            local e = { form = ww.FORM.defensive_stance }
+            local e = { guid = "Player-1", form = ww.FORM.defensive_stance }
             local W = { t = 10, truth = {} }
             assert.is_false((by[id](W, e, 100)))
             W.truth[1] = { t = 8, kind = "swing", dst = e, act = "BLOCK" }
             assert.is_true((by[id](W, e, 100)))
             assert.is_false((by[id](W, e, 1))) -- short of its cost
+            -- the observer hands the answers a proxy of us (its own view of our form), never the entity itself
+            assert.is_true((by[id](W, setmetatable({}, { __index = e }), 100)))
         end
     )
+
+    it("presses Revenge through the client: the window reaches IsSpellUsable, the APL's Revenge line fires", function()
+        local L = loop.new(pg.content())
+        local presses = 0
+        local run = loop.run(L, 1, { duration = 120 }, { { H = L.us } })
+        for _, k in pairs(run.pressed) do
+            if k == "revenge" then
+                presses = presses + 1
+            end
+        end
+        assert.is_true(presses > 0, "Revenge presses in 120 s at seed 1: " .. presses)
+    end)
 end)
 
 describe("the headless Arms loop", function()

@@ -244,7 +244,7 @@ M.MAP = {
                     break
                 elseif
                     ev.kind == "swing"
-                    and ev.dst == e
+                    and ev.dst.guid == e.guid -- by guid: the observer's usability answers see a proxy of us, not us
                     and (ev.act == "DODGE" or ev.act == "PARRY" or ev.act == "BLOCK")
                 then
                     return true
