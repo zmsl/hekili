@@ -523,7 +523,22 @@ function ns.SpendPoints( c, res, ability )
     if c > 0 and ( c < 1 or ability and rawget( ability, "spendBase" ) ) then return ns.FractionCost( c, res ) end
     return c
 end
-state.knownRank, state.swingBase, state.healthMax = VS.KnownRank, VS.SwingBase, VS.HealthMax
+-- (audit E8) Through the facade: knownRank(ids) is the highest rank of the list the spellbook knows (0 none);
+-- swingBase(hand) the hand's unhasted swing speed, the attack speed with the melee haste taken out (0 unknown; hands
+-- 1 and 2); healthMax(unit) the client's. Allocate nothing.
+function state.knownRank( ids )
+    for k = #ids, 1, -1 do
+        if C_SpellBook.IsSpellKnown( ids[ k ] ) == true then return k end
+    end
+    return 0
+end
+function state.swingBase( hand )
+    local main, off = UnitAttackSpeed( "player" )
+    local speed = hand == 1 and main or hand == 2 and off or 0
+    if not speed or speed <= 0 then return 0 end
+    return speed * ( 1 + Facade.GetMeleeHaste() / 100 )
+end
+state.healthMax = UnitHealthMax
 
 -- Forever (gap 13): an on-next-swing strike's own range check answers in range at any distance (probe W PR7), so its
 -- reach is the target's range bracket (VS.TargetRange): beyond melee once the bracket's lower bound is at or past

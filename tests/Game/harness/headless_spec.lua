@@ -168,32 +168,59 @@ describe("headless Hekili", function()
     describe("the content's environment names", function()
         local VS, I, S
         local function probe()
-            return knownRank, swingBase, healthMax, stat("UnitArmor") -- luacheck: ignore 113 (the env names)
+            return knownRank, swingBase, healthMax, stat -- luacheck: ignore 113 (the env names)
         end
         setup(function()
             VS, I, S = H.ns.VirtualState, H.ns.VirtualStateInternal, H.Hekili.State
         end)
 
-        local function answers(env)
-            local kr, sb, hm, a, b = setfenv(probe, env)()
-            local x, y = VS.Stat("UnitArmor")
-            assert.are.same({ VS.KnownRank, VS.SwingBase, VS.HealthMax, x, y }, { kr, sb, hm, a, b })
+        -- The sim's names read the client through the facade (audit E8, E10): out of combat every read is plain, so
+        -- the belief's own functions are never reached.
+        local function facadeAnswers(kr, sb, hm)
+            local ctl = H.ctl
+            local saved = { VS.KnownRank, VS.SwingBase, VS.HealthMax }
+            local was = { ctl.speed[1], ctl.meleeHaste, ctl.healthMax }
+            ctl.known[900071], ctl.known[900072] = true, false
+            ctl.speed[1], ctl.meleeHaste, ctl.healthMax = 2.0, 25, 4321
+            VS.KnownRank, VS.SwingBase, VS.HealthMax = error, error, error
+            local ok, err = pcall(function()
+                assert.are.equal(1, kr({ 900071, 900072 }))
+                assert.are.equal(0, kr({ 900072 }))
+                assert.are.equal(2.5, sb(1)) -- the unhasted base: UnitAttackSpeed times the haste
+                assert.are.equal(4321, hm("player"))
+            end)
+            VS.KnownRank, VS.SwingBase, VS.HealthMax = unpack(saved)
+            ctl.speed[1], ctl.meleeHaste, ctl.healthMax = unpack(was)
+            assert(ok, err)
         end
 
-        it("answers knownRank, stat, swingBase and healthMax from the belief in a sim handler's `state`", function()
-            answers(S)
-            assert.is_number(S.stat.crit) -- `stat` stays Hekili's stat table; calling it reads the belief's cache
+        it("answers stat(name, arg) through the facade's stat hybrids in a sim handler's `state`", function()
+            local ctl, st = H.ctl, select(4, setfenv(probe, S)())
+            local saved, was = VS.Stat, ctl.stats.armor
+            VS.Stat, ctl.stats.armor = error, 777
+            local ok, err = pcall(function()
+                local a, b = st("UnitArmor")
+                assert.are.same({ 777, 777 }, { a, b })
+                assert.are.same({ 0, 0, 0, 0, 0, 0, 0 }, { st("NoSuchStat") })
+            end)
+            VS.Stat, ctl.stats.armor = saved, was
+            assert(ok, err)
+            assert.is_number(S.stat.crit) -- `stat` stays Hekili's stat table; calling it reads the client's stats
         end)
 
-        it("answers them in a `now` handler's context, which a resource's `taken` runs in too", function()
-            answers(I.nowCtx)
+        it("answers knownRank, swingBase and healthMax through the facade in a sim handler's `state`", function()
+            facadeAnswers(setfenv(probe, S)())
+        end)
+
+        it("answers them from the belief in a `now` handler's context, which a resource's `taken` runs in too", function()
+            local kr, sb, hm, st = setfenv(probe, I.nowCtx)()
+            assert.are.same({ VS.KnownRank, VS.SwingBase, VS.HealthMax, VS.Stat }, { kr, sb, hm, st })
         end)
 
         it("answers them in a resource model function: RegisterResource binds its meta functions to `state`", function()
             local meta = { probe = probe }
             H.Hekili.Class.specs[0]:RegisterResource(H.env.Enum.PowerType.Rage, {}, nil, meta)
-            local kr, sb, hm = meta.probe()
-            assert.are.same({ VS.KnownRank, VS.SwingBase, VS.HealthMax }, { kr, sb, hm })
+            facadeAnswers(meta.probe())
         end)
 
         it(
@@ -202,7 +229,7 @@ describe("headless Hekili", function()
                 local spec, meta = H.Hekili.Class.specs[0], { fsr = { spirit = probe, mp5 = 2 } }
                 local entry = { aura = "rate_aura", mult = 2 }
                 spec:RegisterResource(H.env.Enum.PowerType.Focus, { surge = entry }, nil, meta)
-                assert.are.equal(VS.KnownRank, (meta.fsr.spirit()))
+                assert.are.equal(S.knownRank, (meta.fsr.spirit()))
                 local st = spec.resources.focus.state
                 assert.are.same(
                     { {}, { entry }, true },

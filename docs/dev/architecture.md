@@ -139,7 +139,8 @@ Two environments have them:
   plain function `stat(name, arg)`. A `now` handler cannot read `stat.crit`.
 
 `RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec.lua`) is a spell the spellbook knows and the
-player never casts. The belief tracks its known rank (`knownRank` reads it); the sim never sees it.
+player never casts. The belief tracks its known rank (the `now` context's `knownRank` reads it; the sim's asks the
+spellbook through the facade); the sim never sees it.
 
 **Target creature type.** `target.creature_type` (`Engine/Sim/State.lua`'s target table, cached per reset) is the
 target's creature type as a key: UnitCreatureType's second return, CreatureType.db2's ID (the same on every client
