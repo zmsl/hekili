@@ -199,19 +199,20 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             PROT_REPLAY
         )
     end)
-    -- the pack's own worst idle at 60. 5.4 -> 14.8 (gap CI, 2026-10-31; L40 5.4 -> 14.8 too, L10 5.6 unchanged): the
-    -- Warrior world now answers Revenge's usability from its window, so `buff.revenge_usable` is down whenever the mob's
-    -- swings on us land, and the APL's Shield Block fishing branch (`!buff.revenge_usable.up&cooldown.revenge.remains<=1.5`)
-    -- spends the 10 rage Sunder Armor needed; seed 1 then parries and misses four swings in a row (t 28.4-35.4) on 7.2
-    -- rage while the APL pools for Shield Slam (Rend and Sunder are gated on its cooldown), and the world pays no rage
-    -- from damage taken (gap AH). Before, Revenge read usable on cost alone and the branch never ran.
-    local PROT_LIVE60 = 14.8
+    -- the pack's own worst idle by level over seeds 1-20, 120 s (gap CK, 2026-10-31; was 5.4 at 60 and 40 from one
+    -- seed): L60 median 11.8 worst 17.2, L40 11.8 / 19.0; L10 7.8 / 10.4 in those 120 s fights while this check's own
+    -- fight reads 5.6, so 10 keeps the 6 s floor. The world pays rage for our white swings only (wowsims's Protection log earns 55% of its rage
+    -- from damage taken, 20% from white swings) and raises no block for Shield Block (no `us.taking`), so the character
+    -- pools at 7-10 rage through runs of avoided swings while the APL waits on Shield Slam (Rend and Sunder gated on its
+    -- cooldown). 5.4 was measured while Revenge's window never reached the client (review C1), which held the APL in
+    -- the Shield Block fishing branch. A world fix (gap CK) tightens these again.
+    local PROT_LIVE = { [10] = 6, [40] = 19.0, [60] = 17.2 }
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()
             ws.live(
                 "Protection (wowsims.com)",
                 content("warrior_protection", ww.Protection, "Protection (wowsims.com)", level, { kit = PROT_KIT }),
-                math.max(6, PROT_LIVE60)
+                PROT_LIVE[level]
             )
         end)
     end
