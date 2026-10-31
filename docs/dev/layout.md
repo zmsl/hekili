@@ -155,7 +155,9 @@ Arms party: fights=10 agreement 0.942 (4293 ticks); react median 0 p90 0 never 0
 `make test-loop` also runs Fury (wowsims.com) 20 fights at level 60 and 24 (`loop_warrior_fury_spec.lua`,
 `loop_warrior_fury24_spec.lua`, `helpers/fury_gate.lua`): Arms never waits on Heroic Strike (`rage>=90`), Fury does
 (`rage.current>=40`), so its flicker/min is the on-next-swing strike's jitter gate (central fix 21: L60 agreement 0.934,
-flicker 1.71/min, oracle 0.56; L24 0.908, 3.31/min, oracle 2.16).
+flicker 1.71/min, oracle 0.56; L24 0.908, 3.31/min, oracle 2.16), and Protection (wowsims.com) 20 fights at level 60
+(`loop_warrior_protection_spec.lua`, `helpers/protection_gate.lua`; gap CI, 2026-10-31: agreement 0.916, flicker
+0.94/min, oracle 0.40, its own `oracleGap` 0.6 in `pack_gate.FLICKER`; about 3 min a file, under the gate's slowest).
 
 The flicker columns (the flicker ledger, `tests/Game/harness/flicker.lua`; what counts and the cause classes: the
 headless loop design §5.1). `flicker X/min (oracle Y)` stays where it was (the first icon's A->B->A within 3 ticks,
