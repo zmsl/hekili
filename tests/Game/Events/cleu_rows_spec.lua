@@ -114,6 +114,25 @@ describe("the synthesized combat log", function()
         })
     end)
 
+    it("emits PARTY_KILL for our kill and UNIT_DIED once per registry death, in the client's shape", function()
+        ctl.now = 10
+        ctl.Fire("PLAYER_TARGET_CHANGED") -- binds Creature-1
+        ctl.Fire("PARTY_KILL", "Player-1", "Creature-1")
+        ctl.Fire("UNIT_DIED", "Creature-1")
+        ctl.Fire("PLAYER_TARGET_DIED") -- the same death, a second time: no second row
+        ctl.Fire("PARTY_KILL", "Player-2", "Creature-1") -- another's kill: no row
+        assert.are.equal(2, #got)
+        assert.are.same(
+            { "PARTY_KILL", "Player-1", L.PLAYER_FLAGS, "Creature-1", L.HOSTILE_FLAGS, 12, false },
+            { got[1].row[2], got[1].row[4], got[1].row[6], got[1].row[8], got[1].row[10], got[1].n, got[1].row[12] }
+        )
+        assert.are.same(
+            { "UNIT_DIED", "", L.NONE_FLAGS, "Creature-1", 13, 0, false },
+            { got[2].row[2], got[2].row[4], got[2].row[6], got[2].row[8], got[2].n, got[2].row[12], got[2].row[13] }
+        )
+        assert.are.equal(2, L.counts.death)
+    end)
+
     it("answers a back-dated row's time from Facade.GetTime while it is delivered, the clock after", function()
         local r = L.Emit("SWING_DAMAGE", 21, 7.25, true, "swing", "observed", "Player-1", 1, "Creature-1", 2)
         for k = 12, 21 do

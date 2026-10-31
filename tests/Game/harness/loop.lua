@@ -126,6 +126,7 @@ local function feed(H, obs, t, base, sink)
         end
     end
 end
+M.feed = feed -- a spec with its own ticks over a world (a fight past a kill: tests/Forever/kill_rows_spec.lua)
 
 -- The first `n` entries of an instance's Primary queue into `q` (names, waits, costs in power `res`, else 0) and its
 -- focus entry into slot flicker.FOCUS (the display's focus: the best tier within the Timeline's 10 s horizon, then the

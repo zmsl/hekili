@@ -9,6 +9,7 @@
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
+local S = I.Sources
 local unpack = unpack
 
 local L = {}
@@ -17,6 +18,7 @@ I.Log = L
 L.POOL = 64
 L.PLAYER_FLAGS = 0x511 -- mine, friendly, player
 L.HOSTILE_FLAGS = 0xA48 -- outsider, hostile, NPC
+L.NONE_FLAGS = 0x80000000 -- COMBATLOG_OBJECT_NONE: a death row's empty source
 
 local rows = {}
 for i = 1, L.POOL do
@@ -35,7 +37,7 @@ end
 local delivering, current = false, nil
 
 L.emitted, L.dropped, L.requeued, L.delivered = 0, 0, 0, 0
-L.counts = { cast = 0, swing = 0, missed = 0, damage = 0, onus = 0, aura = 0, energize = 0 }
+L.counts = { cast = 0, swing = 0, missed = 0, damage = 0, onus = 0, aura = 0, energize = 0, death = 0 }
 
 -- The player's plain GUID (rows' source), read by Sources/Casts.lua at Start and on PLAYER_ENTERING_WORLD.
 L.player = ""
@@ -221,6 +223,24 @@ function L.Energize(spellID, amount, powerType, maxPower, t)
     r[12], r[13], r[14], r[15], r[16], r[17], r[18] = spellID, "", 1, amount, 0, powerType, maxPower
 end
 
+-- Deaths (audit A14): UNIT_DIED for each death the unit registry learns (Sources/Units.lua: the client's UNIT_DIED and
+-- PLAYER_TARGET_DIED, a plain UnitIsDead), PARTY_KILL for our own kill, both in the client's shape, so Hekili's own
+-- enemy count drops the victim at once (Engine/Sim/Events.lua's death_events, ns.eliminateUnit) instead of at the
+-- damage grace. Units.lua loads first (Hekili.toc).
+I.Units.OnGone(function(_, guid, why, t)
+    if why == I.Units.DEAD and guid ~= "" then
+        local r = L.Emit("UNIT_DIED", 13, t, false, "death", "observed", "", L.NONE_FLAGS, guid, L.HOSTILE_FLAGS)
+        r[12], r[13] = 0, false -- recapID, unconsciousOnDeath
+    end
+end)
+S.On("PARTY_KILL", nil, function(_, t, killer, victim)
+    if killer ~= nil and killer == L.player and type(victim) == "string" then
+        local r =
+            L.Emit("PARTY_KILL", 12, t, false, "death", "observed", L.player, L.PLAYER_FLAGS, victim, L.HOSTILE_FLAGS)
+        r[12] = false -- unconsciousOnDeath
+    end
+end)
+
 --- (unit-registry spec §3.5) A white hit's row: SWING_DAMAGE at `t` (back-dated), from `src` to `dst`. A BLOCK_REDUCED
 --- wound's blocked slot (16) is 1: UNIT_COMBAT gives no blocked amount, only that part was blocked. Allocates nothing.
 function L.Swing(t, family, src, srcFlags, dst, dstFlags, amount, flag, offhand)
@@ -251,7 +271,7 @@ end
 I.OnSnapshot(function(out)
     local c = L.counts
     out[#out + 1] = string.format(
-        "rows emitted=%d delivered=%d requeued=%d dropped=%d cast=%d swing=%d missed=%d damage=%d onus=%d aura=%d energize=%d",
+        "rows emitted=%d delivered=%d requeued=%d dropped=%d cast=%d swing=%d missed=%d damage=%d onus=%d aura=%d energize=%d death=%d",
         L.emitted,
         L.delivered,
         L.requeued,
@@ -262,6 +282,7 @@ I.OnSnapshot(function(out)
         c.damage,
         c.onus,
         c.aura,
-        c.energize
+        c.energize,
+        c.death
     )
 end)
