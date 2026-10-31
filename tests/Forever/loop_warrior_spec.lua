@@ -5,6 +5,7 @@ local headless = require("Game.harness.headless")
 local loop = require("Game.harness.loop")
 local ww = require("Forever.helpers.warrior_world")
 local gate = require("Forever.helpers.arms_gate")
+local pg = require("Forever.helpers.protection_gate")
 
 describe("headless Arms", function()
     it("boots the Arms character: two entries out of combat with a target, no error, no unlisted nil read", function()
@@ -135,6 +136,56 @@ describe("the Warrior world mapping", function()
             assert.is_false(by[a.whirlwind.id](W, e, 100)) -- Berserker Stance's
             e.form = ww.FORM.berserker_stance
             assert.is_true(by[a.whirlwind.id](W, e, 100))
+        end
+    )
+end)
+
+-- The Protection content adds its kit through ws.content (helpers/protection_gate.lua), so a press must resolve every
+-- rank of an added ability (gap CI): the observer flags the cooldown on `ids`, and the sim asks the facade for the
+-- ability's base rank, which the fake client answers ready when unflagged.
+describe("the Protection world", function()
+    it("resolves a kit addition's every rank, so Shield Slam is never pressed through its cooldown", function()
+        local C = pg.content()
+        local L = loop.new(C)
+        local a = L.us.Hekili.Class.abilities.shield_slam
+        assert.are.same({ a.id, unpack(a.copy) }, C.resolve("shield_slam", L.us).ids)
+        local refused, wrapped = 0, {}
+        loop.run(L, 1, {
+            duration = 60,
+            on = function(run)
+                local W = run.W
+                if not wrapped[W] then -- count the loop's own presses of our first icon, by key and reason
+                    wrapped[W] = true
+                    local press = W.press
+                    W.press = function(e, key, p)
+                        local ok, why = press(e, key, p)
+                        if not ok and key == "shield_slam" and why == "cooldown" then
+                            refused = refused + 1
+                        end
+                        return ok, why
+                    end
+                end
+            end,
+        }, { { H = L.us } })
+        assert.are.equal(0, refused)
+    end)
+
+    it(
+        "answers a kit addition's usability from the world: Revenge needs an avoid of a swing at us within 5 s",
+        function()
+            local C = pg.content()
+            local L = loop.new(C)
+            local by = {}
+            for _, u in ipairs(C.usable(L.oracle)) do
+                by[u[1]] = u[2]
+            end
+            local id = L.oracle.Hekili.Class.abilities.revenge.id
+            local e = { form = ww.FORM.defensive_stance }
+            local W = { t = 10, truth = {} }
+            assert.is_false((by[id](W, e, 100)))
+            W.truth[1] = { t = 8, kind = "swing", dst = e, act = "BLOCK" }
+            assert.is_true((by[id](W, e, 100)))
+            assert.is_false((by[id](W, e, 1))) -- short of its cost
         end
     )
 end)

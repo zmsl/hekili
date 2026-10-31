@@ -345,6 +345,22 @@ end
 --- The resolved press of `key` (headless loop design §7), read from instance `H` (the loop passes the oracle's: its
 --- state is true): the ability's highest known rank's ID and every known rank's, its cost as the state resolves it, its
 --- cooldown and GCD, on-next-swing; the mapping's requirement (after the stance's) and effect. Raises "unmapped key" for a key the mapping lacks.
+-- Every rank of mapped key `key` (ability `a`): the kit's (M.IDS), else every rank the class registers, as the other
+-- worlds do (a key the kit lacks: ws.content's additions, Protection's Revenge, Shield Slam and Shield Bash), so a press
+-- flags its cooldown on the base rank the sim asks about and the client's usability answers carry the mapping's
+-- requirement (gap CI: Shield Slam read ready through its cooldown, Revenge usable without an avoid).
+local function ranks(key, a)
+    local ids = M.IDS[key]
+    if ids then
+        return ids
+    end
+    ids = { a.id }
+    for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
+        ids[#ids + 1] = id
+    end
+    return ids
+end
+
 function M.resolve(key, H)
     local m = M.MAP[key]
     if not m then
@@ -355,7 +371,7 @@ function M.resolve(key, H)
     local X = classData(H)
     local p = {
         spell = H.ns.VirtualState.KnownID(a.id), -- the rank the client casts: the highest known
-        ids = M.IDS[key],
+        ids = ranks(key, a),
         cost = H.Hekili.State.action[key].cost or 0,
         cooldown = tonumber(a.cooldown) or 0,
         gcd = 1.5,
@@ -384,16 +400,22 @@ function M.resolve(key, H)
     return p
 end
 
---- The client's usability answers (observer `k.usable`) for every rank of every mapped ability the character knows,
---- from instance `H`: unusable (not for power) when the stance or the mapping's requirement fails in the true world
---- (Execute's phase, Overpower's opening, Victory Rush's kill: the class file reads these, as in game), else usable
---- when the power (the client's view) covers the cost, short when it does not.
+--- The client's usability answers (observer `k.usable`) for every rank of every mapped ability the character knows
+--- (the kit's, and a ws.content addition any rank of which is known), from instance `H`: unusable (not for power) when
+--- the stance or the mapping's requirement fails in the true world (Execute's phase, Overpower's opening, Victory
+--- Rush's kill, Revenge's avoid: the class file reads these, as in game), else usable when the power (the client's
+--- view) covers the cost, short when it does not.
 function M.usable(H)
     local out = {}
     local X = classData(H)
     for key, m in pairs(M.MAP) do
         local a = H.Hekili.Class.abilities[key]
-        if a and M.IDS[key] then
+        local ids = a and ranks(key, a)
+        local known = ids and M.IDS[key] ~= nil
+        for _, id in ipairs(ids or {}) do
+            known = known or H.ctl.known[id] ~= nil
+        end
+        if known then
             local cost = H.Hekili.State.action[key].cost or 0
             local function answer(W, e, power)
                 if not stanceOk(a, e) or (m.requires and not m.requires(W, e, X)) then
@@ -401,7 +423,7 @@ function M.usable(H)
                 end
                 return power >= cost, power < cost
             end
-            for _, id in ipairs(M.IDS[key]) do
+            for _, id in ipairs(ids) do
                 out[#out + 1] = { id, answer }
             end
         end
