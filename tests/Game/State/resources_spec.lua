@@ -394,6 +394,19 @@ describe("resources", function()
             assert.is_false(e.capped)
         end)
 
+        it("keeps the mark when the usable answer on the same fold sits inside the band (under the top)", function()
+            I.Fold(10, false)
+            I.ResourceShift(1, -55, 10, Obs.CastSuccess) -- from rest: 45
+            obs(Obs.Usable, 10, BUILDER, 1, 0) -- a measured floor at the cost, 40
+            I.Fold(10, false)
+            obs(Obs.Usable, 10.2, BUILDER, 0, 1) -- then short at 40: the top is 39.99, the floor sits on the cap
+            obs(Obs.Usable, 10.2, FINISHER, 1, 0) -- usable at 25 on the same fold: inside [25, 39.99], no contradiction
+            I.Fold(10.2, false)
+            local e = VS.Power(ENERGY, 10.2)
+            within(40 - I.EPS, e.lo)
+            assert.is_true(e.capped) -- the read stays under the cap (38.99), not on it
+        end)
+
         it("leaves a read under a short answer's cap a measurement", function()
             I.Fold(10, false)
             I.ResourceShift(1, -80, 10, Obs.CastSuccess) -- from rest: 20
