@@ -42,13 +42,13 @@ end
 
 local DISPLAYS = { "Interrupts", "Defensives", "Cooldowns", "Primary", "AOE" }
 
--- Fight `seed` of the Arms gate on a fresh boot (traced, as the gate's first fight, when it is seed 1), the band
+-- `fights` (1) fights from `seed` of the Arms gate on a fresh boot (traced, as the gate's first fight, when it is seed 1), the band
 -- widened in both runs (M.widen), every display computed (each subscribed, the toggles separate, the mode dual): a
 -- display following one whose passes ran (AOE after Primary, the next Update's Interrupts after AOE) starts from
 -- whatever reset it gets. Every Update of both instances appends one
 -- string of every display's records. With `need`, a passive subscriber on Primary and on AOE declares the need.
 -- Returns the Update strings, how many records carried an alternative and, per display, how many Updates computed it.
-local function run(need, seed)
+local function run(need, seed, fights)
     local L = loop.new(ww)
     local seen, withAlts, computed = {}, 0, {}
     for _, d in ipairs(DISPLAYS) do
@@ -90,15 +90,16 @@ local function run(need, seed)
             return r
         end
     end
-    loop.tally(L, 1, { seed0 = seed - 1, trace = seed == 1 })
+    loop.tally(L, fights or 1, { seed0 = seed - 1, trace = seed == 1 })
     return seen, withAlts, computed
 end
 
 --- The invariant on Arms gate fight `seed` (split one seed a file from the seeds 1-3 run so the parallel runner
---- spreads them): every display's recs[1..count], every field but alts, identical with the need off and on.
-function M.invariant(seed)
-    local off, offAlts = run(false, seed)
-    local on, onAlts, computed = run(true, seed)
+--- spreads them), or on `fights` fights from it on one boot (the state a fight carries into the next): every display's
+--- recs[1..count], every field but alts, identical with the need off and on.
+function M.invariant(seed, fights)
+    local off, offAlts = run(false, seed, fights)
+    local on, onAlts, computed = run(true, seed, fights)
     local c = {}
     for _, d in ipairs(DISPLAYS) do
         c[#c + 1] = d .. " " .. computed[d]

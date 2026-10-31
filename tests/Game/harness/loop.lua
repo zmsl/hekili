@@ -216,7 +216,8 @@ end
 --- first one's first icon pressed, each press resolved from the run's truth instance (the oracle when it is driven,
 --- else the first driver). `o`: duration (combat seconds [180]), mobHealth, hz [5], react [REACT], reaction
 --- (seconds an icon shows ready before the press [0]), others (archetypes on our target), trace (the facade's trace
---- each tick), on(run, steps, t) (a per-tick hook). Returns the run { W, us, ticks, presses, refused (by reason),
+--- each tick), on(run, steps, t) (a per-tick hook), gcHeld (the caller holds the collector stopped: the bytes sample
+--- leaves it so). Returns the run { W, us, ticks, presses, refused (by reason),
 --- attempts, episodes, errors, raises, misses (unexpected run names), secrets (Facade.secrets), selfCheck (ticks where
 --- the oracle's belief missed the truth, by field), combat, full, idle, up (by debuff key: in-combat ticks), ours and
 --- theirs (first icons by in-combat tick), pressed and shadowPress (the driver's press, the shadow's would-be press, by
@@ -425,7 +426,9 @@ function M.run(L, seed, o, drivers)
             end
             if sampled then
                 run.bytes, run.sampled = run.bytes + (collectgarbage("count") - b0) * 1024, run.sampled + 1
-                collectgarbage("restart")
+                if not o.gcHeld then -- Lua 5.1 cannot ask whether the collector ran: a caller that stopped it says so
+                    collectgarbage("restart")
+                end
             end
             st.H.Hekili.ActiveDebug = false
             if not ok then

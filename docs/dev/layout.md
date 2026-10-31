@@ -111,15 +111,16 @@ The shape (central fix 17): `make check` runs lint, fmt-check, typecheck and tes
 check's output kept whole), then syntax, api-check, packs-check and tools-test in order; one exit code. `make test`,
 `make test-<tag>` (loop, party, druid, rogue, paladin, shaman, hunter) and `make gate` all go through
 `scripts/busted_parallel.sh`: one busted process per spec file, started longest first by the previous run's busted
-times for the same arguments (`~/.cache/hekili-busted/`; a file with no time first), each file's output in path order
+times for the same arguments (`~/.cache/hekili-busted/`; a file with no time first, so a first run with no cache
+gets no ordering gain, and a cache it cannot use, unwritable or no `$HOME`, means path order, never a failed run), each file's output in path order
 (files that ran no test skipped), then the summed counts. Path order started `tests/Game/harness/detect_more_spec.lua`
 (220 s) about 155 s in: `make test` 361 s before the longest-first start and the slow specs' split
-(`alts_spec.lua` one seed a file, the Warlock 3-fight gates one pack a file), 265 s after (2026-10-30, under the lock). `make test` and `make test-<tag>` run `$(nproc)` files at a time; `make gate`
+(`alts_spec.lua` one seed a file, the Warlock 3-fight gates one pack a file), 229 s after (2026-10-30, under the lock, the alts spec's two-fight tally included). `make test` and `make test-<tag>` run `$(nproc)` files at a time; `make gate`
 runs all seven tags in one call capped at `nproc - 2` for the whole gate (`BUSTED_JOBS`), under the machine-wide
 `flock /tmp/hekili-gate.lock`. So each 20-fight pack is its own file (`tests/Forever/loop_<class>_<pack>_spec.lua`;
 the class's `loop_<class>_spec.lua` keeps the boot checks and the 3-fight `#slow` gates), and the gate is bounded by
 its slowest file: `druid_harness_spec.lua`'s seven `#druid` scenarios (345 s under the gate's load), then
-`loop_warrior_spec.lua` (#loop and #party, 292 s) and Feral (303 s); `make gate` 694 s, `make check` 263 s here. One
+`loop_warrior_spec.lua` (#loop and #party, 292 s) and Feral (303 s); `make gate` 694 s, `make check` 246 s here. One
 spec file at one tag: `.lua/bin/busted --tags=druid tests/Forever/loop_druid_feral_spec.lua`.
 `make gate-ab` (the gate once per providers arm, provider arms recorded in `.ab/`, never failed) and `make cdv-coverage`
 (the Cooldown Manager coverage report, dev-only) are described in `docs/dev/providers-ab.md`, with the two
@@ -133,7 +134,8 @@ workload, about 7 ms alone, timed once per counted fight in the same process), `
 (1.4: the old 10 ms bar on a quiet run, 10 / ~7 ms; Arms reads 0.555), the ms mean and p99 reported beside it. Under a 16-wide `make test` Feral's 3-fight mean
 rose 4.25 -> 5.82 ms while its ratio moved 0.634 -> 0.494 (Arms 3.78 -> 5.92 ms, 0.624 -> 0.547). Each line also reports
 `bytes N per Update` (`collectgarbage("count")` around every 8th counted cycle, the collector stopped for that cycle:
-a running sweep makes the delta negative), not gated: every pack allocates a little per Update (gaps.md CD; only Arms has an allocation test).
+a running sweep makes the delta negative), a noisy indicator rather than a measurement (it can still read slightly
+negative: a sample's cycle can free what it did not allocate), not gated: every pack allocates a little per Update (gaps.md CD; only Arms has an allocation test).
 
 `make check`'s 6-fight Arms gate is two files of 3 fights (`tests/Forever/loop_warrior_spec.lua`, seeds 1-3, and
 `loop_warrior_late_spec.lua`, seeds 4-6), so it prints three `Arms solo:` lines (`tests/Forever/arms_recs_spec.lua`
