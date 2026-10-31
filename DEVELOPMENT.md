@@ -187,6 +187,13 @@ the gates run the shipped priorities in it (section 5).
 `make bench` reports the time and memory each update costs in a headless fight. It is reported, not gated. Run it
 when a change touches the update path, and compare it with a run on the base commit.
 
+An ability's modified cost is memoised per ability while the simulated state's mutation count (`state.changes`,
+bumped by every mutator in `Engine/Sim/State.lua` and by reset) and query_time stand (`Engine/Schema/Races.lua`,
+`M.Wrap`). A new mutator must bump the count, and a handler must change auras through the mutators, never by writing
+an aura's fields. The proof is the shadow check, off in shipped code: with `ns.costMods.shadow = true` (in a test,
+`H.ns.costMods.shadow`) every memo hit recomputes the cost and raises "Hekili: stale memoised cost of ..." on a
+difference; `shadowHits` counts the hits. Run the loops with it on when touching a mutator or a cost function.
+
 ### Review and merge
 
 Work happens on a branch from `forever`.

@@ -193,8 +193,34 @@ function M.Spend(base, key)
     end
 end
 
+--- Shadow check of the memoised cost (tests only; off in shipped code, where a memo hit costs this one boolean test and
+--- allocates nothing): on every memo hit the cost is computed again and a difference raises. `shadowHits` counts the hits.
+M.shadow = false
+M.shadowHits = 0
+
+local function shadowCheck(a, base, cost, resource)
+    M.shadowHits = M.shadowHits + 1
+    local c, r = base()
+    c = M.Apply(c, a)
+    if c ~= cost or r ~= resource then
+        error(
+            ("Hekili: stale memoised cost of %s at %s: %s %s held, %s %s now"):format(
+                tostring(rawget(a, "key")),
+                tostring(Hekili.State.query_time),
+                tostring(cost),
+                tostring(resource),
+                tostring(c),
+                tostring(r)
+            )
+        )
+    end
+end
+
 --- Engine/Schema/Spec.lua's RegisterAbility: the ability's `spend` answers through the modifiers; `baseSpend` keeps the declared
---- cost (VirtualState's belief applies the same modifiers to it itself).
+--- cost (VirtualState's belief applies the same modifiers to it itself). The answer is memoised per ability while the
+--- state's mutation count (`state.changes`: reset and every mutator in Engine/Sim/State.lua) and query_time stand: a
+--- cost-mod aura applied, consumed or expiring in the simulated future, the offset or delay moving, a form or stance
+--- change, a talent (reset) and whatever else a pack's cost function reads through a mutator all move one of the two.
 -- shortcut: a spend set later (by an ability's onLoad) skips this wrap; no ability does today, wrap there if one does.
 function M.Wrap(a)
     local declared = rawget(a.funcs, "spend")
@@ -215,8 +241,19 @@ function M.Wrap(a)
         return declared
     end
     a.funcs.baseSpend = base
+    local mChanges, mQ, mCost, mResource = -1, -1, nil, nil -- the memo: upvalues, so a nil cost or resource stores without a table write
     a.funcs.spend = function()
+        local state = Hekili.State
+        local changes, q = state.changes, state.query_time
+        if changes == mChanges and q == mQ then
+            if M.shadow then
+                shadowCheck(a, base, mCost, mResource)
+            end
+            return mCost, mResource
+        end
         local c, r = base()
-        return M.Apply(c, a), r
+        c = M.Apply(c, a)
+        mChanges, mQ, mCost, mResource = changes, q, c, r
+        return c, r
     end
 end

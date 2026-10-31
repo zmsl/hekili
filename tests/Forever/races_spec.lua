@@ -51,15 +51,22 @@ describe("race packs", function()
         else
             state.buff[aura] = nil
         end
+        state.changes = state.changes + 1
     end
 
     local function load(token, seed, class)
         state = {
             race_token = token,
             race_id = type(token) == "number" and token or nil,
+            changes = 0, -- as State.lua keeps them: every mutation (a buff set or a stack removed here) counts
+            query_time = 0,
             buff = setmetatable({}, {
                 __index = function()
                     return { up = false, count = 0 }
+                end,
+                __newindex = function(t, k, v)
+                    rawset(t, k, v)
+                    state.changes = state.changes + 1
                 end,
             }),
             removeStack = removeStack,

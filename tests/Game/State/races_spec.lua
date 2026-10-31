@@ -15,17 +15,25 @@ describe("Engine/Schema/Races.lua", function()
         else
             state.buff[aura] = nil
         end
+        state.changes = state.changes + 1
     end
 
     -- Loads Engine/Schema/Races.lua for a player of race `token` with `all` already holding `seed`, then runs the fake race
     -- "Fake": ability and aura `racial_a` (1001, `copy` 1002), +5% maximum resources, and `mod` (default: -10% on
     -- spell 1011 while racial_a is up, 3 charges) as its cost modifier.
     local function load(token, seed, mod)
+        -- `changes` and `query_time` as State.lua keeps them: every mutation (here a buff set or a stack removed) counts
         state = {
             race_token = token,
+            changes = 0,
+            query_time = 0,
             buff = setmetatable({}, {
                 __index = function()
                     return { up = false, count = 0 }
+                end,
+                __newindex = function(t, k, v)
+                    rawset(t, k, v)
+                    state.changes = state.changes + 1
                 end,
             }),
             removeStack = removeStack,
@@ -221,5 +229,49 @@ describe("Engine/Schema/Races.lua", function()
         assert.are.same({ 0, 45 }, { a.spend, b.spend })
         ns.costMods.Spend(a.baseSpend, "spender_a")
         assert.is_false(state.buff.proc_a.up)
+    end)
+
+    -- An aura whose `up` answers by the simulated offset, as State.lua's buffs do.
+    local function timedAura(expires)
+        return setmetatable({ count = 3, expires = expires }, {
+            __index = function(t, k)
+                if k == "up" then
+                    return state.query_time < t.expires
+                end
+            end,
+        })
+    end
+
+    it("recomputes a memoised cost when the state changes or the offset moves (an aura in the future)", function()
+        load("Fake")
+        local a = ability("spender_a", { id = 1011, spend = 15, spendType = "resource_a" })
+        state.query_time = 1
+        assert.are.same({ 15, 15 }, { a.spend, a.spend }) -- the second read is a memo hit
+        -- the aura is applied in the simulated future (a mutation) and the read moves to that offset
+        state.query_time = 4
+        state.buff.racial_a = timedAura(10)
+        assert.are.equal(13.5, a.spend)
+        -- nothing else changes; the offset moves past the aura's end: the modifier no longer applies
+        state.query_time = 12
+        assert.are.equal(15, a.spend)
+        state.query_time = 6
+        assert.are.equal(13.5, a.spend)
+    end)
+
+    it("shadow check: a hit recomputes and raises on a cost the memo holds stale", function()
+        load("Fake")
+        ns.costMods.shadow = true
+        ns.costMods.shadowHits = 0
+        local a = ability("spender_a", { id = 1011, spend = 15, spendType = "resource_a" })
+        state.query_time = 1
+        assert.are.same({ 15, 15 }, { a.spend, a.spend })
+        assert.are.equal(1, ns.costMods.shadowHits)
+        rawset(state.buff, "racial_a", timedAura(10)) -- a mutation that bypasses the counter: the memo is stale
+        assert.has_error(function()
+            return a.spend
+        end, "Hekili: stale memoised cost of spender_a at 1: 15 nil held, 13.5 nil now")
+        assert.are.equal(2, ns.costMods.shadowHits)
+        ns.costMods.shadow = false
+        assert.are.equal(15, a.spend) -- off: the hit answers from the memo, unchecked
     end)
 end)

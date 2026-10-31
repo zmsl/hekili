@@ -69,6 +69,24 @@ describe("headless Hekili", function()
         assert.are.equal(now + 5, H.ctl.now)
     end)
 
+    it("counts the simulated state's mutations in state.changes (the memoised cost's key)", function()
+        local s = H.Hekili.State
+        local n = s.changes
+        local function bumps(what, fn, ...)
+            fn(...)
+            assert.is_true(s.changes > n, what)
+            n = s.changes
+        end
+        bumps("applyBuff", s.applyBuff, "casting", 1.5) -- removeBuff and addStack go through it
+        bumps("removeStack", s.removeStack, "casting")
+        bumps("applyDebuff", s.applyDebuff, "target", "casting", 1.5) -- removeDebuff goes through it
+        bumps("setStance", s.setStance, "none")
+        bumps("gain", s.gain, 1, "health")
+        bumps("spend", s.spend, 1, "health")
+        bumps("setCooldown", s.setCooldown, "global_cooldown", 1.5)
+        bumps("advance", s.advance, 0.1)
+    end)
+
     it("counts every Hekili error path: the copy State.lua takes at load and Hekili:Error", function()
         local n = #H.errors
         H.Hekili.State.applyBuff(nil) -- State.lua's load-time `Error` copy (the nameless-aura report)

@@ -77,6 +77,9 @@ state.offset = 0
 state.modified = false
 state.resetType = "heavy"
 state.fullNext = false -- Core's alternative passes ran: the next reset is full (Engine/Sim/Core.lua altPasses)
+-- Counts the simulated mutations below (auras, debuffs, resources, cooldowns and charges, stance, pets, totems, advance and
+-- reset): Engine/Schema/Races.lua's memoised cost holds while it and query_time stand. Not auto-reset.
+state.changes = 0
 
 state.encounterID = 0
 state.encounterName = "None"
@@ -568,6 +571,7 @@ state._G = 0
 
 -- Place an ability on cooldown in the simulated game state.
 local function setCooldown( action, duration )
+    state.changes = state.changes + 1
     local cd = state.cooldown[ action ] or {}
     cd.duration = duration > 0 and duration or cd.duration
     cd.expires = state.query_time + duration
@@ -581,6 +585,7 @@ state.setCooldown = setCooldown
 
 
 local function spendCharges( action, charges )
+    state.changes = state.changes + 1
     local ability = class.abilities[ action ]
 
     if not ability.charges or ability.charges == 1 then
@@ -611,6 +616,7 @@ state.spendCharges = spendCharges
 
 
 local function gainCharges( action, charges )
+    state.changes = state.changes + 1
 
     if class.abilities[ action ].charges then
         state.cooldown[ action ].charge = min( class.abilities[ action ].charges, state.cooldown[ action ].charge + charges )
@@ -637,6 +643,7 @@ state.gainCharges = gainCharges
 
 
 function state.gainChargeTime( action, time, debug )
+    state.changes = state.changes + 1
     local ability = class.abilities[ action ]
     if not ability then return end
 
@@ -656,6 +663,7 @@ end
 
 
 function state.reduceCooldown( action, time )
+    state.changes = state.changes + 1
     local ability = class.abilities[ action ]
     if not ability then return end
 
@@ -777,6 +785,7 @@ end
 
 -- Apply a buff to the current game state.
 local function applyBuff( aura, duration, stacks, value, v2, v3, applied )
+    state.changes = state.changes + 1
     if not aura then
         Error( "Attempted to apply/remove a nameless aura '%s'.\n\n%s", aura or "nil", debugstack() )
         return
@@ -903,6 +912,7 @@ state.addStack = addStack
 
 
 local function removeStack( aura, stacks )
+    state.changes = state.changes + 1
     stacks = stacks or 1
 
     local b = state.buff[ aura ]
@@ -920,6 +930,7 @@ state.removeStack = removeStack
 -- Add a debuff to the simulated game state.
 -- Needs to actually use "unit" !
 local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
+    state.changes = state.changes + 1
     -- Off by 1.
     if not aura or type( aura ) == "number" then
         noPandemic = value
@@ -1025,6 +1036,7 @@ state.removeDebuffStack = removeDebuffStack
 
 
 local function setStance( stance )
+    state.changes = state.changes + 1
     for k in pairs( state.stance ) do
         state.stance[ k ] = false
     end
@@ -1051,6 +1063,7 @@ state.timeToInterrupt = timeToInterrupt
 
 -- Pet stuff.
 local function summonPet( name, duration, spec )
+    state.changes = state.changes + 1
     state.pet[ name ] = rawget( state.pet, name ) or {}
     state.pet[ name ].name = name
     state.pet[ name ].expires = state.query_time + ( duration or 3600 )
@@ -1073,6 +1086,7 @@ state.summonPet = summonPet
 
 
 local function dismissPet( name )
+    state.changes = state.changes + 1
     local pet = rawget( state.pet, name ) or {}
     pet.name = name
     pet.expires = 0
@@ -1085,6 +1099,7 @@ state.dismissPet = dismissPet
 
 
 local function summonTotem( name, elem, duration )
+    state.changes = state.changes + 1
     if elem then
         -- Forever: through mt_totem, so the element's table knows its slot (a bare {} would read slot nil after reset)
         local t = state.totem[ elem ]
@@ -1447,6 +1462,7 @@ end
 
 
 local resourceChange = function( amount, resource, overcap )
+    state.changes = state.changes + 1
     if amount == 0 then return false end
 
     local r = state[ resource ]
@@ -6232,6 +6248,7 @@ do
     local firstTime = true
 
     function state.reset( dispName, full )
+        state.changes = state.changes + 1
         dispName = dispName or "Primary"
 
         full = dispName == "Primary" or state.offset > 0 or state.fullNext
@@ -6567,6 +6584,7 @@ end
 
 
 function state.advance( time )
+    state.changes = state.changes + 1
     if not state.resetting and not state.modified then
         state.modified = true
     end
