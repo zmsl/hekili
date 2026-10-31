@@ -1182,7 +1182,7 @@ local function UNIT_POWER_FREQUENT( event, unit, power )
         end
     end
 
-    local newPower = UnitPower( "player", Enum.PowerType[ power ] )
+    local newPower = math.floor( UnitPower( "player", Enum.PowerType[ power ] ) ) -- a spend, not the belief's float drift
 
     if lastPower[ power ] and newPower < lastPower[ power ] then
         Hekili:ForceUpdate( event, true )

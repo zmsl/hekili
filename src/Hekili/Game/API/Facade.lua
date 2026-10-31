@@ -261,8 +261,15 @@ kept(
         local b = VS.Power(powerType, now())
         -- lo for every resource: rage's speed-based model has a zero band and errs upward only, so lo is a true floor (G4);
         -- for a slot resting at its maximum (mana, energy) lo is the build's rest assumption until a short answer, an exact
-        -- read or a pin's top below it ends it (Families/Resources.lua `over`): it can say affordable when it is not
-        return floor(b.lo)
+        -- read or a pin's top below it ends it (Families/Resources.lua `over`): it can say affordable when it is not.
+        -- A continuous resource keeps its fraction: a whole-number read lags its wait by up to 1 / regen, over Core's 0.05 s
+        -- rule at mana's rates, and each regen tick walks the fraction, so a near-tie swaps every other tick (gaps.md CE). A
+        -- swing-paid one (no such wait) stays whole: its fraction reads rage ready a swing early (Fury's retracted readies).
+        local r = I.res.slotOf[powerType]
+        if r and I.res.swing[r] > 0 then
+            return floor(b.lo)
+        end
+        return b.lo
     end,
     "secret always [W PR16]; Power().lo for every resource (G4's rage exception dropped 2026-10-16); the pet's raw "
         .. "while plain (plain 0 with no pet [W PR12]), PetPower() when secret"

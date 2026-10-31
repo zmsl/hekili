@@ -145,33 +145,37 @@ describe("ns.Facade", function()
         assert.is_truthy(Facade.Why("C_Spell.GetSpellCooldownDuration"):find("widget", 1, true))
     end)
 
-    it("answers resources: UnitPower floors lo for every resource; swing regen 0 in and out of combat", function()
-        I.Sources.Direct(VS.Obs.Usable, 5, 3, 1, 0) -- spender_c usable: rage >= 10
-        I.Fold(5, false)
-        ctl.now = 5
-        assert.are.equal(10, Facade.UnitPower("player", fs.RAGE))
-        assert.are.equal(10, Facade.UnitPower("player"))
-        assert.are.equal(0, Facade.UnitPower("target", fs.RAGE))
-        local power, asked = VS.Power, nil
-        VS.Power = function(pt, t)
-            asked = pt
-            return power(pt, t)
+    it(
+        "answers resources: UnitPower is lo, a continuous resource's fraction kept; swing regen 0 in and out of combat",
+        function()
+            I.Sources.Direct(VS.Obs.Usable, 5, 3, 1, 0) -- spender_c usable: rage >= 10
+            I.Fold(5, false)
+            ctl.now = 5
+            assert.are.equal(10, Facade.UnitPower("player", fs.RAGE))
+            assert.are.equal(10, Facade.UnitPower("player"))
+            assert.are.equal(0, Facade.UnitPower("target", fs.RAGE))
+            local power, asked = VS.Power, nil
+            VS.Power = function(pt, t)
+                asked = pt
+                return power(pt, t)
+            end
+            powerType = fake.SECRET -- a secret UnitPowerType reads as power type 0, never flows on
+            Facade.UnitPower("player")
+            VS.Power = power
+            assert.are.equal(0, asked)
+            VS.Power = function()
+                return { est = 98.6, lo = 31.8 }
+            end
+            assert.are.equal(31, Facade.UnitPower("player", fs.RAGE)) -- rage too: G4's est exception is gone; a swing's steps
+            -- the fraction stays, or a continuous resource's wait jumps by up to 1 / regen a tick
+            assert.are.equal(31.8, Facade.UnitPower("player", 3))
+            VS.Power = power
+            assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) }) -- out of combat too: no swings (G3)
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) })
+            assert.are.equal(2, select("#", Facade.GetManaRegen()))
         end
-        powerType = fake.SECRET -- a secret UnitPowerType reads as power type 0, never flows on
-        Facade.UnitPower("player")
-        VS.Power = power
-        assert.are.equal(0, asked)
-        VS.Power = function()
-            return { est = 98.6, lo = 31.8 }
-        end
-        assert.are.equal(31, Facade.UnitPower("player", fs.RAGE)) -- rage too: G4's est exception is gone
-        assert.are.equal(31, Facade.UnitPower("player", 3))
-        VS.Power = power
-        assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) }) -- out of combat too: no swings (G3)
-        ctl.Fire("PLAYER_REGEN_DISABLED")
-        assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) })
-        assert.are.equal(2, select("#", Facade.GetManaRegen()))
-    end)
+    )
 
     it("answers health, speed, haste and stats in the real shapes", function()
         assert.are.equal(100, Facade.UnitHealth("target"))

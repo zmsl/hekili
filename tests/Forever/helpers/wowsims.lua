@@ -272,7 +272,7 @@ M.READY = {
     druid_feral = { 0.43, 4 },
     druid_guardian = { 0.54, 41 }, -- 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     hunter_beast_mastery = { 0.32, 5 },
-    hunter_marksmanship = { 0.15, 8 }, -- was { 0.15, 10 } (b8d673eb8 raised it to 0.18 for gap BW, reverted with BW's fix): measured real 8 median 0.15 once the replay seeds the casting rate from unboosted ticks (168.28 strider_kick back to never)
+    hunter_marksmanship = { 0.15, 7 }, -- was { 0.15, 10 } (b8d673eb8 raised it to 0.18 for gap BW, reverted with BW's fix): measured real 8 median 0.15 once the replay seeds the casting rate from unboosted ticks (168.28 strider_kick back to never)
     -- { 0.14, 9 } -> { 0.14, 10 } (Task 5): row 91.49 mongoose_bite now late 0.14 s, a cost decision with the belief's
     -- lo 1.9 mana under truth (the lo lag, gaps BQ/BT, G7); the base row rested on the replay artifact (belief 5.5
     -- mana over truth); owner-approved 2026-10-30.
@@ -281,21 +281,25 @@ M.READY = {
     -- median of the smaller set 0.14 -> 0.19 (the three 0.14 strider_kick rows and the 3.23 / 1.45 s cost rows gone, the
     -- 100.24 and 126.89 rows now 0.19 / 0.27); owner standing approval 2026-10-30. The median's rise to 0.19 is a
     -- smaller set (the rows above gone), not slower recommendations: p90 fell 0.36 -> 0.19, on-GCD .976 -> 1.000
-    hunter_survival = { 0.19, 6 },
+    -- 0.19, 6 -> 0.20, 5 (gap CE; one fight, the log's seed; owner standing approval 2026-10-30): the whole-number read
+    -- gone, Hunter's Mark leaves the real set (late 0.19 -> in the cost window), so the median of the 5 left is their 0.20
+    hunter_survival = { 0.20, 5 },
     mage_arcane = { 0.47, 21 }, -- 0.470, 21 (Mage lane, ruling M13; first clean run on 0ce5d1a4)
     mage_fire = { 0.37, 31 }, -- 0.370, 31
     mage_frostfire = { 0.38, 31 }, -- 0.380, 31 (Task FFB, ruling M13; first clean run on 3e104ce9)
     paladin_protection = { 0.54, 12 },
-    paladin_retribution = { 0.25, 1 },
+    paladin_retribution = { 0, 0 },
     -- 1.500, 36 (Priest lane, Task 14; first clean run on 30e92574+): Mind Flay's 3 s channel, the next icon ready at
     -- the GCD's end inside it (Arcane's Missiles likewise, about 0.9 s)
     priest_shadow = { 1.50, 36 },
     -- 0.50, 27 -> 0.70, 10, owner ruling 2026-10-26: gap BD's cast-bar fix removed the small misses; decision by
     -- decision none worse and none new; the median of the rest rose
-    priest_smite = { 0.70, 10 },
-    rogue_assassination = { 0.20, 25 }, -- 30 -> 25 (fix 40): a short answer before our own energy gain shows is no rung
-    rogue_combat = { 0.28, 16 },
-    rogue_subtlety = { 0.20, 45 },
+    -- 0.70, 10 -> 0.70, 11 (gap CE; one fight, the log's seed; owner standing approval 2026-10-30): the fractional read shows
+    -- Penance one poll sooner at 150.7 s (an aura row), its offset -0.10 -> -0.30, past the reaction window: one early row
+    priest_smite = { 0.70, 11 },
+    rogue_assassination = { 0.15, 14 }, -- 30 -> 25 (fix 40): a short answer before our own energy gain shows is no rung
+    rogue_combat = { 0.22, 11 },
+    rogue_subtlety = { 0.15, 32 },
     shaman_enhancement = { 0.96, 3 },
     shaman_elemental = { 0.48, 54 }, -- 0.480, 54 (Elemental lane, Task 14; first clean run on a21329fc)
     -- 1.000, 18 (Warlock lane, Task 13; first clean run on 5d62f44c+): Shadow Bolt's 2.5 s cast, the next icon ready

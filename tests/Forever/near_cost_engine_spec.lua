@@ -11,14 +11,16 @@ local UNDER = 8 -- the floor under Fireball's cost: 0.31 s away (8 / 38 plus the
 -- (0.2) and within one update (0.2)
 
 -- Boots, targets, hand-sets the mana belief (the floor `UNDER` below Fireball's cost, the estimate `gap` above the
--- floor), loads the list and runs one cycle; returns the first slot and the cost.
-local function first(gap)
+-- floor, `frac` of a mana above a whole floor if given), loads the list and runs one cycle; returns the first slot and
+-- the cost.
+local function first(gap, frac)
     local C = mw.Fire
     local H = headless.new({ character = C.character(), pack = C.PACK })
     assert.are.same({}, H.loadErrors)
     H.Hekili.combatRate = 0.2
     local cost = H.Hekili.State.action.fireball.cost
-    local power = { est = cost - UNDER + gap, lo = cost - UNDER, hi = cost - UNDER + gap, conf = 1 }
+    local lo = frac and math.floor(cost) - UNDER + frac or cost - UNDER
+    local power = { est = lo + gap, lo = lo, hi = lo + gap, conf = 1 }
     local regen = { est = REGEN, lo = REGEN, hi = REGEN, conf = 1 }
     local VS = H.ns.VirtualState
     VS.Power = function()
@@ -53,6 +55,14 @@ describe("the engine's near-cost hold on a booted Mage", function()
             local slot = first(5) -- the estimate 3 mana short: 0.18 s; the floor 8 short: 0.31 s
             assert.are.equal("fireball", slot.actionName)
             assert.is_true(slot.wait > 0.2 and slot.wait < 0.4, slot.wait) -- the floor's wait: past EARLY_EXIT, never ready early
+        end
+    )
+
+    it(
+        "waits from the floor's fraction: a whole-mana read would lag it by up to 1 / regen, over the 0.05 s rule",
+        function()
+            local late, early = first(5, 0).wait, first(5, 0.9).wait
+            assert.is_true(math.abs(late - early - 0.9 / REGEN) < 0.011, late - early) -- the wait rounds up to 0.01 s
         end
     )
 

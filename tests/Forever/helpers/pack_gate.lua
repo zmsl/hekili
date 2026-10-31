@@ -34,11 +34,11 @@ M.FLICKER = {
     ["Arms"] = { flicker = 0.3, retracted = 0.1 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     ["Fury L60"] = { flicker = 0.9, retracted = 0.2 }, -- 0.81 / 0.70 / 0.88, 0.20 / 0.17 / 0.06
     ["Fury L24"] = { flicker = 0.8, retracted = 0.2 }, -- 0.68 / 0.75 / 0.66, 0.09 / 0.18 / 0.03
-    ["Feral"] = { flicker = 1.5, retracted = 0 }, -- 1.35 / 1.4967 / 1.25, 0
+    ["Feral"] = { flicker = 1.1, retracted = 0 }, -- 0.82 / 1.05 / 0.81, 0 (gap CE)
     ["Balance"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.05 / 0.07, 0
     ["Assassination"] = { flicker = 0, retracted = 0 }, -- 0 / 0 / 0, 0
-    ["Combat"] = { flicker = 0.4, retracted = 0 }, -- 0.32 / 0.02 / 0, 0
-    ["Subtlety"] = { flicker = 0.4, retracted = 0 }, -- 0.18 / 0 / 0.34, 0
+    ["Combat"] = { flicker = 0.1, retracted = 0 }, -- 0.04 / 0 / 0, 0 (gap CE)
+    ["Subtlety"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0 / 0, 0 (gap CE)
     -- 0.1 -> 0.2 (Task 5b, gap BV: the world takes the export's Resourcefulness 2/2, so wowsims's 60% cut makes the
     -- strikes cheap; seeds 1-20 / 21-40 / 41-60: 0.20 / 0.02 / 0.07, was 0.05 / 0 / 0; oracle 2.18 / 1.68 / 2.26, was 0):
     -- no longer mana-gated, Raptor Strike comes up on its cooldown end beside Wing Clip or Strider Kick, and in its last
@@ -57,19 +57,22 @@ M.FLICKER = {
     -- regen puts Arcane Shot's mana crossing 0.14 s from Hunter's Mark's refresh; lo runs ~3 mana under truth (gaps
     -- BQ/BT, G7), so the near-tie resolves both ways (fight 21); controller ruling 2026-10-29 while the owner was away
     -- (logged in hekili-open-questions.md); the oracle's own 0.02 / 0 / 0 (agreement 0.998 / 0.996 / 0.999)
-    ["Beast Mastery"] = { flicker = 0.2, retracted = 0 }, -- 0 / 0.12 / 0, 0 (oracle 0.02 / 0 / 0)
+    ["Beast Mastery"] = { flicker = 0, retracted = 0 }, -- 0 / 0 / 0, 0 (gap CE)
     -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
     -- wowsims's logged regen (Ret 8.25/s casting) runs the world at an empty mana pool; the oracle's flicker rose too; our
     -- extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike); controller ruling
     -- 2026-10-30 while the owner was away
-    ["Retribution"] = { flicker = 0.9, retracted = 0 }, -- 0.47 / 0.88 / 0.77, 0
+    -- 0.9 -> 0.6 (gap CE, the facade's whole-number read gone; oracle 0 / 0.29 / 0)
+    ["Retribution"] = { flicker = 0.6, retracted = 0 }, -- 0.37 / 0.54 / 0.40, 0
     -- 0.5 -> 0.8 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.54 / 0.71 / 0.49, was 0.45 / 0.03 / 0.68; oracle 0.59 / 1.81 / 1.73):
     -- wowsims's logged regen (Prot 0 casting) runs the world at an empty mana pool; the oracle's flicker rose to 0.59-1.81;
     -- our extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike, agreement .99 ->
     -- .91); controller ruling 2026-10-30 while the owner was away. Supersedes the 2026-10-29 owner ruling (seed chaos at
     -- 41-60 after Task 4a, floor kept): that note's near-tie wobble is gap AB too; steady icons (experimental) is the
     -- player's remedy.
-    ["Protection"] = { flicker = 0.8, retracted = 0 }, -- 0.54 / 0.71 / 0.49, 0 (oracle 0.59 / 1.81 / 1.73)
+    -- 0.8 -> 0.2 (gap CE, the facade's whole-number read gone): most of the flicker the two notes above blame on gap AB
+    -- was that read; gap AB's agreement cost stands
+    ["Protection"] = { flicker = 0.2, retracted = 0 }, -- 0.14 / 0.17 / 0.14, 0 (oracle 0.07 / 0 / 0.07)
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was
@@ -85,7 +88,7 @@ M.FLICKER = {
     -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
     -- after its Evocation, more fights reach the existing frostfire_bolt <-> scorch pooling edge (gap BS); isolated by
     -- swapping pack and world; controller ruling 2026-10-30 while the owner was away
-    ["Frostfire"] = { flicker = 0.3, retracted = 0 }, -- 0.12 / 0.20 / 0.23, 0 (oracle 0.28 / 0.20 / 0.23)
+    ["Frostfire"] = { flicker = 0.2, retracted = 0 }, -- 0.17 / 0.03 / 0.03, 0 (gap CE; oracle 0.13 / 0.13 / 0.10)
     ["Shadow"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.02 / 0.02, 0
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     ["Smite"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.02 / 0.03, 0
