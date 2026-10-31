@@ -35,12 +35,23 @@ M.UNMATCHED_BY = {
 -- is 0. The class left over is swing-paid rage: a forecast swing's gain shows a cost-gated ability ready (Arms, Fury, Guardian).
 -- heldReady (loop.heldReady, the mirror): ticks our first icon waited past REACT while the truth covered its cost and the
 -- oracle shadow showed the same icon ready; the worst of seeds 1-20 / 21-40 / 41-60 on the fix-round-4 sweep (gap CG), a
--- floor that only tightens. Agreement compares names only, so these passed it. The class left over is one tick per episode:
--- the first icon's wait (0.06-0.5 s) read from a floor a few units under the truth at a cost crossing (gap BT's lag bias:
--- the client answers a gain late, G7; its capped variant, the short answer heard a poll ago), a cooldown's last 0.5 s under
--- CD_PROBE (Arms sunder_armor, Protection holy_strike, Arcane Shot's shared cooldown) and the cost-0 waits; the icon
--- shows one poll later and does not jitter. Beast Mastery's 2288 / 1929 / 2512 -> 129 / 120 / 121 and Marksmanship's
--- 104 / 140 / 117 -> 101 / 112 / 101 were gap CG (an affordable Serpent Sting held dim for up to 22 s).
+-- floor that only tightens. Agreement compares names only, so these passed it. The class left over, per family (the
+-- fix-round-4 review's per-tick trace of the three head seed sets; base is identical on every pack, the floors are its
+-- measurement): Hunters, one tick per episode, the first icon's wait (0.06-0.5 s) read from a floor a few units under
+-- the truth at a cost crossing (gap BT's lag bias: the client answers a gain late, G7; its capped variant, the short
+-- answer heard a poll ago), Arcane Shot's shared cooldown's last 0.5 s under CD_PROBE and the cost-0 waits; the icon
+-- shows one poll later. Rage: Fury L24 2142 ticks in 746 episodes, 297 of them multi-tick (longest 14), 1104 ticks
+-- waiting over 0.5 s; Heroic Strike (1801 ticks: cost 15, lo 30-33, truth 41-45) waits on the APL's own
+-- `rage.current>=40` (Fury (wowsims.com).simc :52), a condition wait on a rage floor 10-35 under truth, not a cost
+-- wait; Arms sunder_armor 2.81 s (8 ticks, lo 30, truth 43.7), 175 ticks over 20 under truth. Mana: Retribution a
+-- 14-tick judgement episode (2.68 s, lo 68, truth 97); Protection 43 multi-tick episodes (lo 25 under); Fire fire_blast
+-- 1.6-3.8 s, lo 46-62 under truth, 124 at worst. Energy: Subtlety an 18-tick rupture episode right after Cold Blood
+-- (3.6 s, cost 25, truth 38-42), UNEXPLAINED, not traced (gap CJ with Fire's and the rage floors' depths). Beast
+-- Mastery's 2288 / 1929 / 2512 -> 129 / 120 / 121 and Marksmanship's 104 / 140 / 117 -> 101 / 112 / 101 were gap CG (an
+-- affordable Serpent Sting held dim for up to 22 s). Limit: the metric counts the first icon only, on the seeds a pack
+-- gates (1-20; the floor is the worst of three), so it would have caught Beast Mastery's regression (2288 > 129) but
+-- not Marksmanship's (104 <= 112 at seeds 1-20: its Serpent Sting presses 15 -> 26 moved only 3 ticks there, the lost
+-- presses hiding under another first icon or an oracle wait).
 M.FLICKER = {
     ["Arms"] = { flicker = 0.3, retracted = 0.1, readyShort = 173, heldReady = 340 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     ["Fury L60"] = { flicker = 0.9, retracted = 0.2, readyShort = 116, heldReady = 226 }, -- 0.81 / 0.70 / 0.88, 0.20 / 0.17 / 0.06
