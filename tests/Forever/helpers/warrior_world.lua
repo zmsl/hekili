@@ -342,9 +342,6 @@ local function stanceOk(a, e)
     return true
 end
 
---- The resolved press of `key` (headless loop design §7), read from instance `H` (the loop passes the oracle's: its
---- state is true): the ability's highest known rank's ID and every known rank's, its cost as the state resolves it, its
---- cooldown and GCD, on-next-swing; the mapping's requirement (after the stance's) and effect. Raises "unmapped key" for a key the mapping lacks.
 -- Every rank of mapped key `key` (ability `a`): the kit's (M.IDS), else every rank the class registers, as the other
 -- worlds do (a key the kit lacks: ws.content's additions, Protection's Revenge, Shield Slam and Shield Bash), so a press
 -- flags its cooldown on the base rank the sim asks about and the client's usability answers carry the mapping's
@@ -361,6 +358,9 @@ local function ranks(key, a)
     return ids
 end
 
+--- The resolved press of `key` (headless loop design §7), read from instance `H` (the loop passes the oracle's: its
+--- state is true): the ability's highest known rank's ID and every known rank's, its cost as the state resolves it, its
+--- cooldown and GCD, on-next-swing; the mapping's requirement (after the stance's) and effect. Raises "unmapped key" for a key the mapping lacks.
 function M.resolve(key, H)
     local m = M.MAP[key]
     if not m then
