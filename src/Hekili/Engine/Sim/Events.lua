@@ -1007,6 +1007,7 @@ RegisterUnitEvent( "UNIT_SPELLCAST_SUCCEEDED", "player", "target", function( eve
         local ability = class.abilities[ spellID ]
 
         if ability then
+            ns.Output.Acted() -- the steady icons show the next set at once (Engine/Output.lua)
             Hekili:ForceUpdate( event )
             if state.holds[ ability.key ] then Hekili:RemoveHold( ability.key, true ) end
         end
@@ -1018,6 +1019,7 @@ RegisterUnitEvent( "UNIT_SPELLCAST_START", "player", "target", function( event, 
     if unit == "player" then
         local ability = class.abilities[ spellID ]
         if ability then
+            ns.Output.Acted()
             Hekili:ForceUpdate( event )
             if state.holds[ ability.key ] then Hekili:RemoveHold( ability.key, true ) end
         end
@@ -1037,8 +1039,16 @@ end )
 
 
 RegisterUnitEvent( "UNIT_SPELLCAST_CHANNEL_STOP", "player", nil, function( event, unit, cast, spellID )
+    if class.abilities[ spellID ] then ns.Output.Acted() end
     Hekili:ForceUpdate( event )
 
+end )
+
+
+-- The swing queue changed (an on-next-swing strike queued or cleared): the steady icons show the next set at once.
+-- No update is forced (the event is spammy; the queue poll reads the change in the next cycle anyway).
+RegisterEvent( "CURRENT_SPELL_CAST_CHANGED", function()
+    ns.Output.Acted()
 end )
 
 

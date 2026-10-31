@@ -102,7 +102,7 @@ Output.interval = 0.2 -- seconds between updates in combat (Core sets it from th
 local acts = 0
 
 --- Our own cast started or succeeded, our channel ended or a swing queue changed: the next publish of every display
---- shows its new icons at once (Game/State/Sources/Casts.lua through Adapter.lua).
+--- shows its new icons at once (Engine/Sim/Events.lua's cast and CURRENT_SPELL_CAST_CHANGED handlers).
 function Output.Acted()
     acts = acts + 1
 end

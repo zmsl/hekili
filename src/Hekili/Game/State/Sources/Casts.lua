@@ -10,7 +10,7 @@ local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local S = I.Sources
 local Obs = VS.Obs
-local Plain, Stage, Direct, Urgent, Acted = S.Plain, S.Stage, S.Direct, S.Urgent, S.Acted
+local Plain, Stage, Direct, Urgent = S.Plain, S.Stage, S.Direct, S.Urgent
 
 -- The castGUIDs of our cast and channel in progress (plain strings; nil none or secret). Only these stop, delay or
 -- update them: a second press that fails ("another action is in progress") has another castGUID.
@@ -32,7 +32,6 @@ S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, guid, spellID)
         Stage(Obs.CastStart, t, a, finish / 1000)
         I.Log.Cast("SPELL_CAST_START", t, spellID, I.Units.Sent(guid)) -- nil when unknown: CLEU falls back to the target
     end
-    Acted()
     Urgent("UNIT_SPELLCAST_START")
 end)
 
@@ -45,7 +44,6 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     -- reach the log before this staged success) still prices it (I.CastCost)
     Stage(Obs.CastSuccess, t, a, I.CostOf(a), 1)
     I.Log.Cast("SPELL_CAST_SUCCESS", t, spellID, I.Units.Sent(castGUID) or I.Units.Pin(api, t))
-    Acted()
     Urgent("UNIT_SPELLCAST_SUCCEEDED")
 end)
 
@@ -119,7 +117,6 @@ S.On("UNIT_SPELLCAST_CHANNEL_STOP", "player", function(api, t, unit, guid, spell
     end
     Stage(Obs.ChannelStop, t, a)
     I.Log.Cast("SPELL_AURA_REMOVED", t, spellID, I.Log.player)
-    Acted()
     Urgent("UNIT_SPELLCAST_CHANNEL_STOP")
 end)
 
@@ -142,7 +139,6 @@ S.Poll(3, function(api, t)
                 if v ~= queued[a] then
                     queued[a] = v
                     Direct(Obs.Queued, t, a, v)
-                    Acted()
                 end
             end
         end

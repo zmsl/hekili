@@ -466,7 +466,16 @@ describe("Engine.Output (headless Arms)", function()
         t = t + 0.2
         assert(headless.cycle(H, t))
         assert.are.equal(3, H.ns.Output.hold)
-        assert.are.equal(H.ns.Output.Acted, H.ns.VirtualStateInternal.acted)
+        -- our cast reaches Output.Acted through Hekili's own cast handler (Engine/Sim/Events.lua), not the belief
+        local acts, acted = 0, H.ns.Output.Acted
+        H.ns.Output.Acted = function()
+            acts = acts + 1
+        end
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-acted", 6673) -- Battle Shout, a registered ability
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-none", 999999) -- not one: nothing
+        H.ns.Output.Acted = acted
+        assert.are.equal(1, acts)
+        assert.is_nil(H.ns.VirtualStateInternal.acted) -- the belief no longer pokes the engine's publish
         assert.are.same({}, H.errors)
     end)
 

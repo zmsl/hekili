@@ -468,7 +468,8 @@ out) with different names and the raw set has had the new one in that slot for n
 at most `hold` publishes late. The shown record table moves into the new set and the new one into the old, so the
 hold costs no copy and no allocation (`streak[i]` is a preallocated counter), and `out.held[i]` says which slots are
 held (the snapshot marks them `(held)`). A ready icon on either side and the first publish after our own cast start
-or success, channel end or swing queue change (`Output.Acted`, from `Game/State/Sources/Casts.lua`) show at once, so
+or success, channel end or swing queue change (`Output.Acted`, from the engine's own cast and
+`CURRENT_SPELL_CAST_CHANGED` handlers in `Engine/Sim/Events.lua`) show at once, so
 what is pressable and when never changes. Core reads both settings once per update into `Output.steady` and
 `Output.hold`; styles see only the held records and need nothing. Known limits: a held cell keeps the previous
 publish's `time` (one poll off in Timeline's out-of-combat pinned mode), and for some publishes the same icon can
