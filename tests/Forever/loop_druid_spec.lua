@@ -14,7 +14,9 @@ local PACKS = { "Feral", "Guardian", "Balance" }
 -- ladder's rage rungs cannot split: agreement 0.805 and cost refusals 10.5 (the oracle's 6.3) at seeds 1-3, under
 -- the gate's 0.85. Its engine health and focus are still asserted. Central fix 22 round 2 (presses resolve from the
 -- current state, not Update's leftover prediction): seeds 1-3 0.811 -> 0.899, the 20 fights 0.774 -> 0.850 (at the
--- gate, so still reported).
+-- gate, so still reported). Gap CH (2026-10-31): the 20 fights read agreement 0.900 / 0.896 / 0.881 at seeds 1-20 /
+-- 21-40 / 41-60, but unmatched cost refusals 2.3 / 2.5 / 3.5 (bar 3) and flicker 0.47 / 0.54 / 0.83 over the
+-- oracle's (FLICKER_K 0.5) hold only at seeds 1-20, so it stays reported; its M.FLICKER floors apply (pack_gate.solo).
 local REPORTED = { Guardian = true }
 local function solo(name, n, seed0, tag)
     return pack_gate.solo(name, dlw[name], n, seed0, tag, REPORTED[name])

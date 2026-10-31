@@ -22,7 +22,8 @@ M.UNMATCHED_BY = {
 -- unjustified retracted readies/min (tests/Game/harness/flicker.lua). A floor is the worst of seeds 1-20 / 21-40 /
 -- 41-60 (beside it) rounded up to the next 0.1, 0 where all three measured 0 (parry-haste spec decision 63: the
 -- loops are deterministic but a world change reorders every seeded fight). A floor only moves down, except with a
--- named cause recorded beside it. Guardian is reported, not floored.
+-- named cause recorded beside it. Guardian is reported (M.gate's bars and the oracle + K bar are not asserted) but
+-- floored: its row below is applied on the reported branch too (gap CH).
 -- Flicker re-floored on forever-gap-bd (2026-10-26): the loop's cast bar on each instance's clock (gap BD) made every
 -- hard cast and channel visible, and a proc or instant shown at a cast's landing and pressed at once (show-then-press)
 -- is no longer counted; every pack's flicker fell (base f09656c8e -> after, seeds 1-20: e.g. Balance 2.36 -> 0.03,
@@ -62,6 +63,13 @@ M.FLICKER = {
     -- seed set; owner standing approval 2026-10-30
     ["Feral"] = { flicker = 1.3, retracted = 0, heldReady = 383 }, -- 1.20 / 1.24 / 1.10, 0
     ["Balance"] = { flicker = 0.1, retracted = 0, heldReady = 140 }, -- 0.03 / 0.05 / 0.07, 0
+    -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
+    -- 0.37 / 0.21): the swing-paid rage class (a forecast swing's gain shows Lacerate or Primal Bite ready; retracted
+    -- is lacerate:swing/cost). Applied on the reported branch: Guardian clears M.gate's agreement (0.900 / 0.896 /
+    -- 0.881), react and health, but its unmatched cost refusals read 2.3 / 2.5 / 3.5 against the plain bar 3 and its
+    -- flicker sits 0.47 / 0.54 / 0.83 over the oracle's against FLICKER_K 0.5, so the gated branch would hold only at
+    -- seeds 1-20; neither bar is loosened for it.
+    ["Guardian"] = { flicker = 1.1, retracted = 0.7, readyShort = 190, heldReady = 330 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     ["Assassination"] = { flicker = 0, retracted = 0, heldReady = 329 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either
@@ -165,9 +173,9 @@ M.FLICKER = {
 -- 2.36 vs 1.23 on f09656c8e (gap 1.13: the old comment's oracle 0.65 was stale), all of it gap BD's invisible cast bar.
 M.FLICKER_K = 0.5
 
---- The flicker floors of `label` (M.FLICKER) and flicker <= oracle + FLICKER_K, reported next to react p90 and the
---- unmatched cost refusals (the line).
-function M.flicker(label, r, line)
+--- The flicker floors of `label` (M.FLICKER) and, unless `reported`, flicker <= oracle + FLICKER_K, reported next to
+--- react p90 and the unmatched cost refusals (the line).
+function M.flicker(label, r, line, reported)
     local fl = M.FLICKER[label]
     if fl then
         ab.check(r.flicker <= fl.flicker, label, "flicker floor: " .. line)
@@ -175,7 +183,9 @@ function M.flicker(label, r, line)
         ab.check(r.readyShort <= (fl.readyShort or 0), label, "ready-while-short floor: " .. line)
         ab.check(r.heldReady <= (fl.heldReady or 0), label, "held-while-ready floor: " .. line)
     end
-    ab.check(r.flicker <= r.oracleFlicker + M.FLICKER_K, label, "flicker over the oracle's + K: " .. line)
+    if not reported then
+        ab.check(r.flicker <= r.oracleFlicker + M.FLICKER_K, label, "flicker over the oracle's + K: " .. line)
+    end
 end
 
 -- The CPU bar (D5), on the ratio of each tick's process CPU to the in-process calibration timed once per fight
@@ -207,9 +217,9 @@ function M.gate(m, r, line, label)
 end
 
 --- `n` fights of `world` on a fresh boot (seeds `seed0` + 1 ..), the `<label> solo:` line printed (`tag` appended in
---- brackets), gated; `reported`: the engine's health only, " (reported)" appended. DPS A/B and never-reacts are
---- reported, not gated. Returns the summary (`r.focus`: run A's in-combat ticks whose first record has `focus` set,
---- kept out of the line) and the line.
+--- brackets), gated; `reported`: the engine's health and the label's M.FLICKER floors only (not M.gate's bars nor the
+--- oracle + K bar), " (reported)" appended. DPS A/B and never-reacts are reported, not gated. Returns the summary
+--- (`r.focus`: run A's in-combat ticks whose first record has `focus` set, kept out of the line) and the line.
 function M.solo(label, world, n, seed0, tag, reported)
     local m = loop.tally(loop.new(world), n, { seed0 = seed0 })
     local r, line = loop.summary(m), loop.line(m)
@@ -220,9 +230,9 @@ function M.solo(label, world, n, seed0, tag, reported)
         M.health(m, r, line)
     else
         M.gate(m, r, line, label)
-        if n >= 20 and not m.hold and not m.steady then -- the floors are the unheld display's
-            M.flicker(label, r, line)
-        end
+    end
+    if n >= 20 and not m.hold and not m.steady then -- the floors are the unheld display's
+        M.flicker(label, r, line, reported)
     end
     return r, line
 end

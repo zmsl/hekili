@@ -194,8 +194,10 @@ cast-boundary flicker that replaced them).
 `tests/Forever/loop_druid_spec.lua` runs 3 fights a Druid pack in `make check` (seeds 1-3, the `#slow` tag) and 20 in
 `make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Every Druid spec runs its
 wowsims.com default (wowsims packs plan, Tasks 7b and 7g; the hand-built lists retired); Feral and Balance are gated by
-`pack_gate.gate`, Guardian is reported (engine health and focus asserted, not the agreement): its first icon waits on
-rage the usability ladder cannot place. Current lines (the mana regen plan's gate on 0ce56d64f):
+`pack_gate.gate`, Guardian is reported (engine health and focus asserted, not the agreement, the unmatched bar or the
+oracle + K bar: unmatched 3.5 and a 0.83 gap at seeds 41-60) but floored (its `M.FLICKER` row: flicker 1.1, retracted
+0.7, ready-while-short 190, held-while-ready 330; gap CH): its first icon waits on rage the usability ladder cannot
+place. Current lines (the mana regen plan's gate on 0ce56d64f):
 
 ```
 Feral solo: fights=3 agreement 0.942 (2370 ticks); react median 0 p90 0 never 0.014; refused per 100 [], episodes 0.00/min; dps A/B 1.063; ... [seeds 1-3]
