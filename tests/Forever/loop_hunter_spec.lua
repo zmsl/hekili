@@ -5,6 +5,7 @@
 -- (review focus 5).
 -- The 20-fight gates live one pack a file (loop_hunter_<pack>_spec.lua), so `make test-hunter` runs them in parallel.
 local headless = require("Game.harness.headless")
+local loop = require("Game.harness.loop")
 local pack_gate = require("Forever.helpers.pack_gate")
 local hw = require("Forever.helpers.hunter_world")
 
@@ -50,6 +51,36 @@ describe("the Hunter loop worlds", function()
         for _, k in ipairs({ "mongoose_bite", "wing_clip", "strider_kick" }) do
             assert.are.equal(H.Hekili.State.action[k].cost, math.floor(C.resolve(k, H).cost), k)
         end
+    end)
+
+    -- The observer hands the usability answers a proxy of us (its own view of our form), never the entity itself, so
+    -- a window that tests the swing's target by identity never opens for the client.
+    it("answers Mongoose Bite's window through the observer's proxy of us: our dodge within 5 s", function()
+        local C = hw.Survival
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local by = {}
+        for _, u in ipairs(C.usable(H)) do
+            by[u[1]] = u[2]
+        end
+        local id = H.Hekili.Class.abilities.mongoose_bite.id
+        local e = { guid = "Player-1" }
+        local W = { t = 10, truth = {} }
+        assert.is_false((by[id](W, e, 100)))
+        W.truth[1] = { t = 8, kind = "swing", dst = e, act = "DODGE" }
+        assert.is_true((by[id](W, e, 100)))
+        assert.is_true((by[id](W, setmetatable({}, { __index = e }), 100)))
+    end)
+
+    it("presses Mongoose Bite through the client: the dodge reaches IsSpellUsable, the APL's line fires", function()
+        local L = loop.new(hw.Survival)
+        local presses = 0
+        local run = loop.run(L, 1, { duration = 120 }, { { H = L.us } })
+        for _, k in pairs(run.pressed) do
+            if k == "mongoose_bite" then
+                presses = presses + 1
+            end
+        end
+        assert.is_true(presses > 0, "Mongoose Bite presses in 120 s at seed 1: " .. presses)
     end)
 end)
 

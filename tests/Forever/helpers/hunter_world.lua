@@ -135,7 +135,8 @@ local function dodged(W, e)
         local ev = W.truth[i]
         if W.t - ev.t > 5 or ev.t <= (e.bitAt or -1e9) then
             break
-        elseif ev.kind == "swing" and ev.dst == e and ev.act == "DODGE" then
+        elseif ev.kind == "swing" and ev.dst.guid == e.guid and ev.act == "DODGE" then -- by guid: the observer's
+            -- usability answers see a proxy of us, not us
             return true
         end
     end
