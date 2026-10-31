@@ -52,7 +52,7 @@ local GetSpecialization = Facade.C_SpecializationInfo.GetSpecialization
 -- Clean up table_x later.
 ---@diagnostic disable-next-line: deprecated
 local insert, remove, sort, tcopy, unpack, wipe = table.insert, table.remove, table.sort, ns.tableCopy, table.unpack, table.wipe
-local format = string.format
+local format, find = string.format, string.find
 
 local Mark, SuperMark, ClearMarks = ns.Mark, ns.SuperMark, ns.ClearMarks
 
@@ -501,10 +501,10 @@ state.pairs = pairs
 state.rawget = rawget
 state.rawset = rawset
 state.select = select
--- The belief's plain reads, as names in every content function's environment (restructure plan, Task 8; the `now`
--- context has the same four, Game/State/Families/Now.lua). Here `stat` is two things: `stat.<field>` (stat.crit) is
--- the sim's stat table, as upstream; calling it, stat(name, arg), is the belief's out-of-combat stat cache (mt_stat's
--- __call below). In a `now` handler `stat` is only the plain function.
+-- Four names in every content function's environment (restructure plan, Task 8): here the client through the facade
+-- (audit E8, E10); in the `now` context the belief's own (Game/State/Families/Now.lua). Here `stat` is two things:
+-- `stat.<field>` (stat.crit) is the sim's stat table, as upstream; calling it, stat(name, arg), is the client's stat
+-- API of that name (mt_stat's __call below). In a `now` handler `stat` is only the plain function.
 local VS = ns.VirtualState
 
 --- A cost `c` between 0 and 1 of resource state `res`, as power: that fraction of the pool's base power, floored, when
@@ -2356,9 +2356,14 @@ local mt_spec = {
 ns.metatables.mt_spec = mt_spec
 
 
+-- stat(name, arg): the client's stat API of that name through the facade (its hybrids answer the out-of-combat cache
+-- when the read is secret, audit E10); a Unit* name takes the player, the others their one argument. Allocates nothing.
 local mt_stat = {
     __call = function( _, name, arg )
-        return VS.Stat( name, arg )
+        local read = Facade[ name ]
+        if type( read ) ~= "function" then return 0, 0, 0, 0, 0, 0, 0 end
+        if find( name, "^Unit" ) then return read( "player", arg ) end
+        return read( arg )
     end,
     __index = function(t, k)
         if k == "strength" then

@@ -130,10 +130,11 @@ What a content addon may use, and nothing else (`tests/boundary_spec.lua` enforc
   listed in its TOC before the class file (§9). A `RegisterPack` name is a key too: the options show a built-in
   priority through its label (`Registry.PackLabel`), while the name stays what is saved and typed.
 
-The belief's plain reads, names in every content function's environment: `knownRank`, `stat`, `swingBase`, `healthMax`.
+Four plain-read names in every content function's environment: `knownRank`, `stat`, `swingBase`, `healthMax`.
 Two environments have them:
 - the sim's `state` (`Engine/Sim/State.lua`): `knownRank`, `swingBase`, `healthMax` are plain functions; `stat` is the
-  sim's stat table (`stat.crit`) and also callable (`stat(name, arg)`, the belief's out-of-combat stat cache);
+  sim's stat table (`stat.crit`) and also callable (`stat(name, arg)`, the facade's stat API of that name: the client,
+  or its hybrid's out-of-combat cache when the read is secret);
 - the belief's `now` context (`Game/State/Families/Now.lua`, `NAMES`): the same four names, where `stat` is only the
   plain function `stat(name, arg)`. A `now` handler cannot read `stat.crit`.
 
