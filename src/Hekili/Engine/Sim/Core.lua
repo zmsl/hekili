@@ -1782,12 +1782,14 @@ function Hekili.Update()
                                 if t >= 0 then
                                     state.advance( t )
 
-                                    local resources
+                                    if debug then -- the one resources line built with debug off (gap CD: 150-200 B per update on mana packs)
+                                        local resources
 
-                                    for k in orderedPairs( class.resources ) do
-                                        resources = ( resources and ( resources .. ", " ) or "" ) .. string.format( "%s[ %.2f / %.2f ]", k, state[ k ].current, state[ k ].max )
+                                        for k in orderedPairs( class.resources ) do
+                                            resources = ( resources and ( resources .. ", " ) or "" ) .. string.format( "%s[ %.2f / %.2f ]", k, state[ k ].current, state[ k ].max )
+                                        end
+                                        Hekili:Debug( 1, "Resources: %s\n", resources )
                                     end
-                                    Hekili:Debug( 1, "Resources: %s\n", resources )
                                 end
                                 event = events[ 1 ]
                             else

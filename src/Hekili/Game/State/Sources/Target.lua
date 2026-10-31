@@ -24,7 +24,7 @@ end
 local dead = false
 local HUGE = math.huge
 local lastLo, lastHi = -1, -1 -- the bracket last logged (-1: none since the swap)
-local answer = {} -- by ability index: this poll's plain answer (true, false, or nil)
+local answer = {} -- by ability index: this poll's plain answer (true, false, or 0 for none)
 
 local function slotFor(g, t)
     local free, oldest = 0, 1
@@ -112,6 +112,9 @@ S.Poll(14, function(api, t)
                 band = true
             end
             seen = seen or r ~= nil
+        end
+        if r == nil then
+            r = 0 -- never nil: a hole drops the key at the next rehash and re-adding it grows the table again (gap CD)
         end
         answer[a] = r
     end
