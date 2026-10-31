@@ -596,6 +596,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
     local packInfo = scripts.PackInfo[ spec.package ]
     local list = pack.lists[ listName ]
+    local scriptIDs = list and scripts.IDs[ list ] -- the entries' "pack:list:n" (Scripts.lua), built as the scripts loaded
 
     local debug = self.ActiveDebug
 
@@ -653,7 +654,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
             if self:IsActionActive( packName, listName, actID ) then
                 -- Check for commands before checking actual actions.
-                local scriptID = packName .. ":" .. listName .. ":" .. actID
+                local scriptID = scriptIDs and scriptIDs[ actID ] or ( packName .. ":" .. listName .. ":" .. actID )
                 local action = entry.action
 
                 state.this_action = action
@@ -743,7 +744,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                         known, reason = self:IsSpellKnown( action )
                     end
 
-                    local scriptID = packName .. ":" .. listName .. ":" .. actID
+                    local scriptID = scriptIDs and scriptIDs[ actID ] or ( packName .. ":" .. listName .. ":" .. actID )
                     state.scriptID = scriptID
 
                     if debug then

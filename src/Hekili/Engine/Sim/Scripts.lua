@@ -1721,6 +1721,21 @@ end
 
 local scriptsLoaded = false
 
+-- Forever: each list's script IDs ("pack:list:n"), built as the list's scripts load (LoadScript, LoadItemScripts) so
+-- the APL walk reads `IDs[ list ][ actID ]` instead of building the string per entry per pass (Engine/Sim/Core.lua).
+-- Keyed by the list table itself (weak: a list the profile drops is collected); an entry's ID is a function of its
+-- pack, list and index, so a reload overwrites in place.
+scripts.IDs = setmetatable( {}, { __mode = "k" } )
+
+local function recordID( lData, id, scriptID )
+    local ids = scripts.IDs[ lData ]
+    if not ids then
+        ids = {}
+        scripts.IDs[ lData ] = ids
+    end
+    ids[ id ] = scriptID
+end
+
 local function scriptLoader()
     if not Hekili.LoadingScripts and not scriptsLoaded then scripts:LoadScripts() end
 end
@@ -1818,6 +1833,7 @@ function Hekili.Scripts:LoadItemScripts()
 
         for action, data in ipairs( lData ) do
             local scriptID = pack .. ":" .. list .. ":" .. action
+            recordID( lData, action, scriptID )
 
             local script = ConvertScript( data, true, scriptID )
             local lua = script.Lua
@@ -1919,6 +1935,7 @@ function Hekili:LoadScript( pack, list, id )
     local data = pData.lists[ list ][ id ]
     local specData = pData.spec and class.specs[ pData.spec ]
     local scriptID = pack .. ":" .. list .. ":" .. id
+    recordID( pData.lists[ list ], id, scriptID )
 
     local script = ConvertScript( data, true, scriptID )
 

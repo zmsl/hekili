@@ -7233,6 +7233,22 @@ end
 local power_tick_rate = 0.115
 
 
+-- Forever: TimeToReady once read `resource[ "time_to_" .. spend ]`, a string built per entry per pass whose number
+-- the resource metatable parsed back (mt_resource: `tonumber( k:sub( 9 ) )`, 3600 when it is no number). The amount
+-- that round trip yields (Lua's %.14g, so 0.40100000000000002 reads back as 0.401) is kept exactly, memoised per
+-- distinct spend: a bounded table (a pack's costs), no string after warm-up.
+local timeToAmount = {}
+
+local function spendAmount( spend )
+    if spend ~= spend then return false end -- NaN cannot key a table; the string "nan" was no number either
+    local n = timeToAmount[ spend ]
+    if n == nil then
+        n = tonumber( tostring( spend ) ) or false
+        timeToAmount[ spend ] = n
+    end
+    return n
+end
+
 
 function state:TimeToReady( action, pool )
     local now = self.now + self.offset
@@ -7298,7 +7314,10 @@ function state:TimeToReady( action, pool )
 
     -- Okay, so we don't have enough of the resource.
     z = resource and self[ resource ]
-    z = z and z[ "time_to_" .. spend ]
+    if z then
+        local amount = spendAmount( spend )
+        z = amount and self:TimeToResource( z, amount ) or 3600
+    end
     if spend and z and z > wait then
         wait = max( wait, ceil( z * 100 ) / 100 )
         -- Forever (mana-regen plan, Task 4a): near its cost when the belief's estimate (the floor plus estGap) reaches
