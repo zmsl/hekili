@@ -124,12 +124,19 @@ function M.flicker(label, r, line)
     ab.check(r.flicker <= r.oracleFlicker + M.FLICKER_K, label, "flicker over the oracle's + K: " .. line)
 end
 
+-- The CPU bar (D5), on the ratio of each tick's process CPU to the in-process calibration timed once per fight
+-- (loop.calibrate), not on ms: load from other processes slows both, so the bar stops depending on what else runs. Set
+-- as the 10 ms bar was, about 4x the measured Arms mean: Arms 20 fights alone 3.96 ms, ratio 0.555 (2026-10-30, under
+-- the lock) -> 2.2. Under a 16-wide `make test` beside it: Feral 3 fights 4.25 -> 5.82 ms, ratio 0.634 -> 0.494; Arms
+-- 3 fights 3.78 -> 5.92 ms, ratio 0.624 -> 0.547 (the calibration slows a little more than the engine).
+M.CPU_RATIO = 2.2
+
 --- The engine's health, gated at any fight count: no error, raise, self-check miss, unlisted read or secret, CPU.
 function M.health(m, r, line)
     assert.are.same({ 0, 0, 0 }, { m.errors, m.raises, m.selfCheck })
     assert.are.same({}, m.misses)
     assert.are.same({}, m.secrets) -- no facade passthrough answered a secret (the traced first fight)
-    assert.is_true(r.cpuMean <= 10, line) -- D5: about 4x the measured Arms mean; p99 reported
+    assert.is_true(r.cpuRatio <= M.CPU_RATIO, line) -- the ms mean and p99 reported
 end
 
 --- The engine and the first icon, gated at any fight count; `label` picks a re-based unmatched bar (M.UNMATCHED_BY).

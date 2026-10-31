@@ -89,6 +89,37 @@ describe("the headless loop's CPU metric", function()
         assert.are.equal(0, #loop.tally(L, 1, { duration = 6 }).cpu) -- fight 1 runs traced by default
         assert.are.equal(plain, #loop.tally(L, 2, { duration = 6 }).cpu) -- fight 2 only
     end)
+
+    it("times a fixed calibration workload that allocates nothing", function()
+        collectgarbage("collect")
+        collectgarbage("stop")
+        local b0 = collectgarbage("count")
+        local ms = loop.calibrate()
+        local grew = collectgarbage("count") - b0
+        collectgarbage("restart")
+        assert.is_true(ms > 0)
+        assert.are.equal(0, grew)
+    end)
+
+    it("reports cpu as a ratio to the calibration timed once per counted fight", function()
+        local m = loop.tally(loop.new(stub()), 2, { duration = 6 })
+        assert.are.equal(1, #m.cal) -- fight 2: the traced fight 1 is not counted
+        local r = loop.summary(m)
+        assert.is_true(r.calMean > 0 and r.cpuRatio > 0)
+        assert.is_true(math.abs(r.cpuRatio - r.cpuMean / m.cal[1]) < 1e-9) -- one fight: the mean over its calibration
+        assert.is_truthy(loop.line(m):find(("ratio %.3f (calibration %.2f ms)"):format(r.cpuRatio, r.calMean), 1, true))
+    end)
+
+    it("gates the ratio in pack_gate's health check, the ms figure reported only", function()
+        local gate = require("Forever.helpers.pack_gate")
+        local h = { errors = 0, raises = 0, selfCheck = 0, misses = {}, secrets = {} }
+        assert.has_no.errors(function()
+            gate.health(h, { cpuMean = 50, cpuRatio = gate.CPU_RATIO }, "line")
+        end)
+        assert.has.errors(function()
+            gate.health(h, { cpuMean = 0, cpuRatio = gate.CPU_RATIO + 0.001 }, "line")
+        end)
+    end)
 end)
 
 describe("the headless loop between two fights on one boot", function()
@@ -279,6 +310,7 @@ describe("the headless loop's paired refusals (loop.unmatched)", function()
                 reactMedian = 0,
                 reactP90 = 0,
                 cpuMean = 0,
+                cpuRatio = 0,
                 per100 = { cost = 40 },
                 per100U = { cost = u },
                 per100B = { cost = b },
