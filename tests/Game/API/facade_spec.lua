@@ -192,6 +192,14 @@ describe("ns.Facade", function()
             assert.is_true((121 - Facade.UnitPower("player", 3)) / 33 > 0.05)
             VS.Regen = regen
             VS.Power = function()
+                return { est = 24.7, lo = 24.7, capped = true, capB = 24.39 } -- inside the ready wait: past it, no deeper
+            end
+            assert.are.equal(24.39, Facade.UnitPower("player", 3))
+            VS.Power = function()
+                return { est = 24.2, lo = 24.2, capped = true, capB = 24.39 } -- already under the band
+            end
+            assert.are.equal(24.2, Facade.UnitPower("player", 3))
+            VS.Power = function()
                 return { est = 39.99, lo = 39.99, capped = false } -- a measured fraction keeps it
             end
             assert.are.equal(39.99, Facade.UnitPower("player", 3))

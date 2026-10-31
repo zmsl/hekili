@@ -305,7 +305,7 @@ M.READY = {
     -- client says so
     rogue_assassination = { 0.16, 15 },
     rogue_combat = { 0.22, 11 },
-    rogue_subtlety = { 0.16, 37 }, -- 0.20, 45 -> 0.15, 32 -> 0.16, 37 (gap CE): as rogue_assassination
+    rogue_subtlety = { 0.17, 40 }, -- 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
     shaman_enhancement = { 0.96, 3 },
     shaman_elemental = { 0.48, 54 }, -- 0.480, 54 (Elemental lane, Task 14; first clean run on a21329fc)
     -- 1.000, 18 (Warlock lane, Task 13; first clean run on 5d62f44c+): Shadow Bolt's 2.5 s cast, the next icon ready

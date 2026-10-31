@@ -30,21 +30,23 @@ M.UNMATCHED_BY = {
 -- touch them; lowered to the same rule where they sat above it: Fury L60 0.4 -> 0.2, Smite 0.9 -> 0, Elemental and
 -- Affliction 0.1 -> 0). Fury L60's retracted readies: the pre-existing swing-forecast class (a cost-gated ability shown
 -- ready on a swing's forecast rage).
+-- readyShort (loop.readyShort, the owner's rule dim never promote): ticks an icon was pressed as ready with the truth before
+-- the press under its cost and nothing in flight, worst of seeds 1-20 / 21-40 / 41-60, a floor that only tightens; absent
+-- is 0. The class left over is swing-paid rage: a forecast swing's gain shows a cost-gated ability ready (Arms, Fury, Guardian).
 M.FLICKER = {
-    ["Arms"] = { flicker = 0.3, retracted = 0.1 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
-    ["Fury L60"] = { flicker = 0.9, retracted = 0.2 }, -- 0.81 / 0.70 / 0.88, 0.20 / 0.17 / 0.06
-    ["Fury L24"] = { flicker = 0.8, retracted = 0.2 }, -- 0.68 / 0.75 / 0.66, 0.09 / 0.18 / 0.03
-    -- 1.1 -> 1.2, retracted 0 -> 0.1 (gap CE, a short answer's cap reads a whole unit under; seeds 1-20 / 21-40 / 41-60:
-    -- 0.87 / 1.20 / 1.00, retracted 0 / 0.04 / 0.04; was 0.82 / 1.05 / 0.81, 0; oracle 1.47 / 1.95 / 1.27): each retracted
-    -- ready is rake or shred shown ready, the client's short answer, its wait back to 0.11, where the old read pressed
-    -- into a refusal for up to 2 s (refused 0.8 / 1.6 / 1.5 -> 0 / 0.1 / 0.1 per 100); the flicker rise is fights re-timed around
-    -- those refusals: 1 of 97 flips of seeds 21-40 touches a capped read, and the oracle moved as much (seeds 61-120:
-    -- 1.18 / 0.88 / 0.85, was 1.06 / 0.94 / 0.87); owner standing approval 2026-10-30
-    ["Feral"] = { flicker = 1.2, retracted = 0.1 }, -- 0.87 / 1.20 / 1.00, 0 / 0.04 / 0.04
-    -- retracted 0 -> 0.1 (gap CE; 0.02 / 0 / 0; a capped read's one ready, as Feral's); owner standing approval 2026-10-30
-    ["Balance"] = { flicker = 0.1, retracted = 0.1 }, -- 0.03 / 0.03 / 0.07, 0.02 / 0 / 0
+    ["Arms"] = { flicker = 0.3, retracted = 0.1, readyShort = 173 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
+    ["Fury L60"] = { flicker = 0.9, retracted = 0.2, readyShort = 116 }, -- 0.81 / 0.70 / 0.88, 0.20 / 0.17 / 0.06
+    ["Fury L24"] = { flicker = 0.8, retracted = 0.2, readyShort = 41 }, -- 0.68 / 0.75 / 0.66, 0.09 / 0.18 / 0.03
+    -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
+    -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
+    -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); still under base's 1.23 / 1.44 / 1.16
+    -- but for seeds 21-40's 1.24 > 1.05; owner standing approval 2026-10-30
+    ["Feral"] = { flicker = 1.3, retracted = 0 }, -- 1.20 / 1.24 / 1.10, 0
+    ["Balance"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.05 / 0.07, 0
     ["Assassination"] = { flicker = 0, retracted = 0 }, -- 0 / 0 / 0, 0
-    ["Combat"] = { flicker = 0.1, retracted = 0 }, -- 0.04 / 0 / 0, 0 (gap CE)
+    -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04; fights re-timed by the mark on a
+    -- floor inside the ready wait, as Feral, flips not traced one by one); owner standing approval 2026-10-30
+    ["Combat"] = { flicker = 0.2, retracted = 0 }, -- 0.15 / 0 / 0.02, 0
     ["Subtlety"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0 / 0, 0 (gap CE)
     -- 0.1 -> 0.2 (Task 5b, gap BV: the world takes the export's Resourcefulness 2/2, so wowsims's 60% cut makes the
     -- strikes cheap; seeds 1-20 / 21-40 / 41-60: 0.20 / 0.02 / 0.07, was 0.05 / 0 / 0; oracle 2.18 / 1.68 / 2.26, was 0):
@@ -58,7 +60,7 @@ M.FLICKER = {
     -- 0.988 / 0.988, was 0.978 / 0.978 / 0.981): Strider Kick now comes up with Raptor Strike's cooldown and the same
     -- raptor_strike -> wing_clip -> raptor_strike flip rests on CD_PROBE (all 16 flips of seeds 1-20 traced, each at the
     -- tick before Raptor Strike's cooldown ends); owner standing approval 2026-10-30
-    ["Survival"] = { flicker = 0.3, retracted = 0 }, -- 0.27 / 0.08 / 0.15, 0 (oracle 1.18 / 1.28 / 1.03, gap CE)
+    ["Survival"] = { flicker = 0.3, retracted = 0 }, -- 0.27 / 0.08 / 0.15, 0 (oracle 2.03 / 2.00 / 1.96, gap CE)
     ["Marksmanship"] = { flicker = 0, retracted = 0 }, -- 0, 0
     -- 0 -> 0.2 (Task 5, wowsims's Hunter regen in; seeds 1-20 / 21-40 / 41-60: 0 / 0.12 / 0, was 0 / 0 / 0): the new BM
     -- regen puts Arcane Shot's mana crossing 0.14 s from Hunter's Mark's refresh; lo runs ~3 mana under truth (gaps
@@ -71,7 +73,8 @@ M.FLICKER = {
     -- 2026-10-30 while the owner was away
     -- 0.9 -> 0.6 (gap CE, the facade's whole-number read gone; oracle 0 / 0.29 / 0)
     -- 0.6 -> 0.5 (decision 63's rule, gap CE, the capped read follows the fold)
-    ["Retribution"] = { flicker = 0.5, retracted = 0 }, -- 0.29 / 0.41 / 0.40, 0 (oracle 0.47 / 0.21 / 0.02)
+    -- readyShort 1: judgement at wait 0.04 with lo 0.04 under truth, no short answer yet, the oracle showing the same wait
+    ["Retribution"] = { flicker = 0.5, retracted = 0, readyShort = 1 }, -- 0.29 / 0.47 / 0.40, 0 (oracle 0.53 / 0.22 / 0.02)
     -- 0.5 -> 0.8 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.54 / 0.71 / 0.49, was 0.45 / 0.03 / 0.68; oracle 0.59 / 1.81 / 1.73):
     -- wowsims's logged regen (Prot 0 casting) runs the world at an empty mana pool; the oracle's flicker rose to 0.59-1.81;
     -- our extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike, agreement .99 ->
@@ -80,7 +83,7 @@ M.FLICKER = {
     -- player's remedy.
     -- 0.8 -> 0.2 (gap CE, the facade's whole-number read gone): most of the flicker the two notes above blame on gap AB
     -- was that read; gap AB's agreement cost stands
-    ["Protection"] = { flicker = 0.2, retracted = 0 }, -- 0.10 / 0.18 / 0.12, 0 (oracle 0.07 / 0 / 0.07)
+    ["Protection"] = { flicker = 0.2, retracted = 0 }, -- 0.10 / 0.17 / 0.12, 0 (oracle 0.07 / 0 / 0.07)
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was
@@ -90,16 +93,15 @@ M.FLICKER = {
     -- one-poll-wider near-cost window (task-4c-wip.patch) fixes it but loosens Protection and Affliction instead;
     -- owner-approved standing named-cause policy, 2026-10-30 (controller ruling (b), task-4c-report.md)
     -- 0.3 -> 0.2 (decision 63's rule, gap CE; most of the Task 11 near-ties above went with the whole-number read)
-    ["Enhancement"] = { flicker = 0.2, retracted = 0 }, -- 0.10 / 0.18 / 0.17, 0 (oracle 0.03 / 0 / 0.02)
-    -- retracted 0 -> 0.1 (gap CE; 0 / 0.02 / 0.02; a capped read's one ready, as Feral's); owner standing approval 2026-10-30
-    ["Arcane"] = { flicker = 0.1, retracted = 0.1 }, -- 0.02 / 0 / 0, 0 / 0.02 / 0.02
+    ["Enhancement"] = { flicker = 0.2, retracted = 0 }, -- 0.13 / 0.13 / 0.13, 0 (oracle 0.03 / 0 / 0.02)
+    ["Arcane"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0 / 0, 0
     ["Fire"] = { flicker = 0.3, retracted = 0 }, -- 0.22 / 0.13 / 0.12, 0
     -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits
     -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
     -- after its Evocation, more fights reach the existing frostfire_bolt <-> scorch pooling edge (gap BS); isolated by
     -- swapping pack and world; controller ruling 2026-10-30 while the owner was away
     -- 0.2 -> 0.1 (decision 63's rule, gap CE, a short answer's cap reads a whole unit under)
-    ["Frostfire"] = { flicker = 0.1, retracted = 0 }, -- 0.07 / 0.02 / 0.02, 0 (oracle 0.13 / 0.13 / 0.10)
+    ["Frostfire"] = { flicker = 0.1, retracted = 0 }, -- 0.05 / 0.03 / 0, 0 (oracle 0.13 / 0.13 / 0.10)
     ["Shadow"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.02 / 0.02, 0
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     ["Smite"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.02 / 0.03, 0
@@ -108,7 +110,7 @@ M.FLICKER = {
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
     -- mp5 as its own entry): 0.13 / 0.17 / 0.08, oracle 0.05 / 0.07 / 0.05, floor kept
     -- 0.2 -> 0.1 (decision 63's rule, gap CE, the whole-number read gone)
-    ["Elemental"] = { flicker = 0.1, retracted = 0 }, -- 0.07 / 0.10 / 0.05, 0 (oracle 0.05 / 0.10 / 0.07)
+    ["Elemental"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0.03 / 0.10, 0 (oracle 0.05 / 0.07 / 0.05)
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996
@@ -135,6 +137,7 @@ function M.flicker(label, r, line)
     if fl then
         ab.check(r.flicker <= fl.flicker, label, "flicker floor: " .. line)
         ab.check(r.retracted <= fl.retracted, label, "retracted-ready floor: " .. line)
+        ab.check(r.readyShort <= (fl.readyShort or 0), label, "ready-while-short floor: " .. line)
     end
     ab.check(r.flicker <= r.oracleFlicker + M.FLICKER_K, label, "flicker over the oracle's + K: " .. line)
 end

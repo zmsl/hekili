@@ -15,7 +15,6 @@
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
-local CAP_WAIT = 0.06 -- seconds of regen a read on a short answer's cap sits under it: past a shown-ready wait's 0.05
 local floor, find, HUGE = math.floor, string.find, math.huge
 local _G = _G
 
@@ -272,10 +271,18 @@ kept(
             return floor(b.lo)
         end
         -- On a short answer's cap the client just said no, and the cap says nothing of how far under the cost: read it a
-        -- whole unit under, any cost's (39.97 too), or by what regen pays in CAP_WAIT at a mana rate, where one unit is
-        -- under the 0.05 s of a shown-ready wait; else the ability looks ready on every poll.
+        -- whole unit under, any cost's (39.97 too), or by what regen pays in I.CAP_WAIT at a mana rate, where one unit is
+        -- under Output's READY; else the ability looks ready on every poll. A floor just under the cap reads past READY, no
+        -- deeper: a regen crossing of a cost rung is no reason to step back (gaps.md CE).
+        -- shortcut: VS.Regen's rate here is the casting one inside the window (0 of 300 fights mattered; forcing
+        -- NOT_CASTING raised Retribution's flicker), upgrade if a short answer during a cast ever shows ready.
         if b.capped then
-            local depth = VS.Regen(powerType, now()).est * CAP_WAIT
+            local c = b.capB
+            if c then
+                c = c < b.lo and c or b.lo
+                return c > 0 and c or 0
+            end
+            local depth = VS.Regen(powerType, now()).est * I.CAP_WAIT
             depth = depth > 1 and depth or 1
             return b.lo > depth and b.lo - depth or 0
         end

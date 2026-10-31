@@ -46,8 +46,9 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- answer, a flip's pin: the game held more than we believed) and the latest lifting rung's time; a landed swing at or
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
 -- may pay the rest).
--- `capT[r]`: when a short answer last cut the floor since our last spend; until the next fold moves the clock a read
--- stands on a ceiling, not a measurement (VS.Power's `capped`), and a poll still short cuts it again.
+-- `capT[r]`: when a short answer last reached the floor since our last spend; until the next fold moves the clock a read
+-- stands on a ceiling, not a measurement (VS.Power's `capped`), and a poll still short marks it again. `capB[r]`: false
+-- when it cut the floor; a floor just under the top, inside the ready wait, reads no higher than this instead.
 -- `sinceShort[r]`: the lowest top a short answer set since our last spend from slot r (math.huge: none), and the
 -- estimate just after it (`sinceShortEst[r]`: what the slot gained since moves that top with it); `sinceYes[r]` /
 -- `sinceSnap[r]`: whether a usable answer raised its floor / its estimate since then. An avoided cast's refund
@@ -134,6 +135,7 @@ local R = {
     liftRec = {},
     sinceShort = {},
     capT = {},
+    capB = {},
     sinceShortEst = {},
     sinceYes = {},
     sinceSnap = {},
@@ -396,7 +398,7 @@ I.OnBuild(function(def, now)
         R.pinN[r], R.pinErr[r] = 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
-        R.capT[r] = -1e9
+        R.capT[r], R.capB[r] = -1e9, false
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
         R.decay[r] = decayOf(r)
@@ -915,8 +917,15 @@ local function ladder(r, c, affordable, t, lag)
         if R.lo0[r] > top then
             R.lo0[r] = top < 0 and 0 or top -- the newest bound wins
         end
-        if was >= top then -- one poll answers every ability: a dearer one's top is above the floor and says nothing of it
-            R.capT[r] = t
+        if was >= top then
+            R.capT[r], R.capB[r] = t, false
+        elseif R.swing[r] == 0 then
+            -- one poll answers every ability: a dearer one's top well above the floor says nothing of it; a floor inside the
+            -- ready wait of this top would show ready on the poll the client said short
+            local band = VS.Regen(R.type[r], t).est * I.CAP_WAIT
+            if was + band >= top and (R.capT[r] ~= t or (R.capB[r] and top - band < R.capB[r])) then
+                R.capT[r], R.capB[r] = t, top - band
+            end
         end
     end
     remeasure(r, was, affordable and R.max[r] or c - I.EPS)
@@ -1780,7 +1789,7 @@ function VS.Power(powerType, now)
         hi = est
     end
     rec.est, rec.lo, rec.hi = est, lo, hi
-    rec.capped = R.capT[r] == I.clock
+    rec.capped, rec.capB = R.capT[r] == I.clock, R.capB[r]
     local conf = 1 - (hi - lo) / max -- nonzero: max > 0 (the default 100, or a plain read above 0)
     if now - R.snapT[r] < I.SNAP_HOLD then
         conf = conf * 0.5

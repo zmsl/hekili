@@ -137,6 +137,20 @@ describe("the headless loop's CPU metric", function()
         assert.is_true(r10.bytes - r.bytes >= 10 * 32, r10.bytes - r.bytes)
     end)
 
+    it("counts a ready icon as ready while short only on the truth before its press, nothing in flight", function()
+        local us = { gcdUntil = 0 }
+        assert.is_true(loop.readyShort(39, { cost = 40 }, us, 1))
+        assert.is_false(loop.readyShort(40, { cost = 40 }, us, 1))
+        assert.is_false(loop.readyShort(39, {}, us, 1))
+        assert.is_false(loop.readyShort(39, { cost = 40 }, { gcdUntil = 2 }, 1)) -- the spend of a press in flight
+        assert.is_false(loop.readyShort(39, { cost = 40 }, { gcdUntil = 0, castUntil = 2 }, 1))
+    end)
+
+    it("prints the oracle's refusal reasons ours has none of", function()
+        local r = { per100 = {}, per100B = { cost = 5.5 }, per100U = {} }
+        assert.is_truthy(loop.refusedLine(r):find("cost 0.0 (oracle 5.5, unmatched 0.0)", 1, true))
+    end)
+
     it("gates the ratio in pack_gate's health check, the ms figure reported only", function()
         local gate = require("Forever.helpers.pack_gate")
         local h = { errors = 0, raises = 0, selfCheck = 0, misses = {}, secrets = {} }

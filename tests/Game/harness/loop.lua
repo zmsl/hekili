@@ -46,6 +46,12 @@ M.BYTES_EVERY = 8
 
 M.TICK = 0.2 -- 5 Hz, the in-game combat rate (D1); o.hz = 10 the option
 M.REACT = 0.05 -- a first icon whose wait is at most this is shown as ready: pressed
+
+--- Ready while short (the owner's rule, dim never promote): an icon pressed as ready with the truth before the press
+--- under its cost and nothing in flight whose spend explains it. The frames read after the press, so they can't see it.
+function M.readyShort(pre, p, us, t)
+    return (p.cost or 0) > pre and (us.castUntil or 0) <= t and us.gcdUntil <= t + 1e-9
+end
 M.PULL = 3 -- the world starts this long before the pull, the target selected (precombat presses)
 M.GAP = 30 -- out of combat between two fights on one boot (consecutive pulls)
 -- The display-side hold experiment (flicker.hold) on our instance's shown queue: o.hold, else this switch (off)
@@ -258,7 +264,17 @@ function M.run(L, seed, o, drivers)
     end
     local W = R and R.world(wo, seed) or scenarios.world(wo, seed)
     local us = W.ents[1]
-    local run = { W = W, us = us, ticks = 0, presses = 0, refused = {}, unmatched = {}, raises = 0, selfCheck = {} }
+    local run = {
+        W = W,
+        us = us,
+        ticks = 0,
+        presses = 0,
+        refused = {},
+        unmatched = {},
+        raises = 0,
+        selfCheck = {},
+        readyShort = 0,
+    }
     -- the instance whose state is the run's truth, a press resolving from it: the oracle when it is driven, else the
     -- driver (a run of ours alone, ws.live, never steps the oracle, whose state then stays at its boot)
     local truth = drivers[1].H
@@ -519,9 +535,13 @@ function M.run(L, seed, o, drivers)
         if shown and t - readySince[key] >= (o.reaction or 0) - 1e-9 then -- one attempt a tick
             truth.Hekili.State.reset("Primary", true) -- Update leaves its last prediction (a predicted buff, query_time ahead of now)
             local p = content.resolve(key, truth)
+            local pre = W.res(us, p.pt)
             local ok, why = W.press(us, key, p)
             if inCombat then
                 run.attempts = run.attempts + 1
+                if steps[2] and M.readyShort(pre, p, us, t) then
+                    run.readyShort = run.readyShort + 1
+                end
             end
             if ok then
                 run.presses = run.presses + 1
@@ -682,7 +702,17 @@ end
 
 --- An empty tally (M.tally's and M.replay's).
 local function blank()
-    local m = { fights = 0, both = 0, agree = 0, conf = {}, react = {}, refused = {}, attempts = 0, episodes = 0 }
+    local m = {
+        fights = 0,
+        both = 0,
+        agree = 0,
+        conf = {},
+        react = {},
+        refused = {},
+        attempts = 0,
+        episodes = 0,
+        readyShort = 0,
+    }
     m.unmatched = {} -- run A's refusals the oracle shadow would not have made (M.unmatched)
     m.refusedB, m.attemptsB = {}, 0 -- the oracle's own, driving run B (the projection's share: §5.2 as built)
     m.A = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
@@ -740,6 +770,7 @@ function M.tally(L, n, o)
             m.unmatched[why] = (m.unmatched[why] or 0) + k
         end
         m.attempts, m.episodes = m.attempts + a.attempts, m.episodes + a.episodes
+        m.readyShort = m.readyShort + a.readyShort
         m.focus = m.focus + a.focus
         for why, k in pairs(b.refused) do
             m.refusedB[why] = (m.refusedB[why] or 0) + k
@@ -869,7 +900,7 @@ end
 --- run's calibration, calMean the calibration's mean ms; bytes allocated per Update, sampled, reported only), and
 --- the tally's focus count (not in M.line).
 function M.summary(m)
-    local r = { focus = m.focus }
+    local r = { focus = m.focus, readyShort = m.readyShort or 0 }
     r.agreement = m.agree / math.max(1, m.both)
     local reacted, never = {}, 0
     for _, d in ipairs(m.react) do
@@ -943,18 +974,29 @@ end
 
 --- One line for a failure message: the summary, the confusion table's top three disagreements (oracle -> ours) and
 --- the believed power minus the truth where they disagree (mean), reported, never gated.
-function M.line(m)
-    local r = M.summary(m)
-    local refused = {}
-    for why, v in pairs(r.per100) do
+--- The refusal list of a summary, every reason either side has.
+function M.refusedLine(r)
+    local keys, refused = {}, {}
+    for why in pairs(r.per100) do
+        keys[why] = true
+    end
+    for why in pairs(r.per100B) do
+        keys[why] = true
+    end
+    for why in pairs(keys) do
         refused[#refused + 1] = ("%s %.1f (oracle %.1f, unmatched %.1f)"):format(
             why,
-            v,
+            r.per100[why] or 0,
             r.per100B[why] or 0,
-            r.per100U[why]
+            r.per100U[why] or 0
         )
     end
     table.sort(refused)
+    return table.concat(refused, ", ")
+end
+
+function M.line(m)
+    local r = M.summary(m)
     local up = {}
     for key, v in pairs(r.upA) do
         up[#up + 1] = ("%s %.2f/%.2f"):format(key, v, r.upB[key] or 0)
@@ -965,7 +1007,7 @@ function M.line(m)
         gap = gap + g
     end
     local line = (
-        "fights=%d agreement %.3f (%d ticks); react median %d p90 %d never %.3f; refused per 100 [%s], episodes %.2f/min; "
+        "fights=%d agreement %.3f (%d ticks); react median %d p90 %d never %.3f; ready while short %d; refused per 100 [%s], episodes %.2f/min; "
         .. "dps A/B %.3f; full %.3f/%.3f idle %.3f/%.3f; uptime [%s]; flicker %.2f/min (oracle %.2f); "
         .. "errors %d raises %d self-check %d; cpu mean %.2f p99 %.2f ms ratio %.3f (calibration %.2f ms) "
         .. "bytes %.0f per Update; top [%s]; power est-truth at disagreements %.1f"
@@ -976,7 +1018,8 @@ function M.line(m)
         r.reactMedian,
         r.reactP90,
         r.never,
-        table.concat(refused, ", "),
+        r.readyShort,
+        M.refusedLine(r),
         r.episodes,
         r.dps,
         r.fullA,

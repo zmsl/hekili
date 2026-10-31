@@ -352,6 +352,37 @@ describe("resources", function()
             assert.is_false(VS.Power(ENERGY, 10.4).capped)
         end)
 
+        it("marks a short answer whose floor sits inside the ready wait: the mark reads past that wait", function()
+            I.Fold(10, false)
+            I.ResourceShift(1, -80, 10, Obs.CastSuccess) -- from rest: 20
+            I.res.lo0[1], I.res.est0[1], I.res.over[1], I.res.assume[1] = 24.7, 24.7, 0, false -- 0.03 s from the cost at 10/s
+            obs(Obs.Usable, 10, FINISHER, 0, 1)
+            I.Fold(10, false)
+            local e = VS.Power(ENERGY, 10)
+            within(24.7, e.lo)
+            assert.is_true(e.capped)
+            within(25 - I.EPS - 10 * I.CAP_WAIT, e.capB)
+            assert.is_true((25 - e.capB) / 10 > 0.05)
+        end)
+
+        it("ends the mark at a fold with no answer and at a NOT answer", function()
+            I.Fold(10, false)
+            I.ResourceShift(1, -70, 10, Obs.CastSuccess) -- from rest: 30
+            obs(Obs.Usable, 10, FINISHER, 1, 0)
+            I.Fold(10, false)
+            obs(Obs.Usable, 10.2, FINISHER, 0, 1)
+            I.Fold(10.2, false)
+            assert.is_true(VS.Power(ENERGY, 10.2).capped)
+            I.Settle(10.4) -- the drain's end: no answer this time
+            assert.is_false(VS.Power(ENERGY, 10.4).capped)
+            obs(Obs.Usable, 10.4, FINISHER, 0, 1)
+            I.Fold(10.4, false)
+            assert.is_true(VS.Power(ENERGY, 10.4).capped)
+            obs(Obs.Usable, 10.6, FINISHER, 0, 0) -- not usable, not for its cost
+            I.Fold(10.6, false)
+            assert.is_false(VS.Power(ENERGY, 10.6).capped)
+        end)
+
         it("leaves a read under a short answer's cap a measurement", function()
             I.Fold(10, false)
             I.ResourceShift(1, -80, 10, Obs.CastSuccess) -- from rest: 20
