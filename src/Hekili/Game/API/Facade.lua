@@ -263,11 +263,17 @@ kept(
         -- for a slot resting at its maximum (mana, energy) lo is the build's rest assumption until a short answer, an exact
         -- read or a pin's top below it ends it (Families/Resources.lua `over`): it can say affordable when it is not.
         -- A continuous resource keeps its fraction: a whole-number read lags its wait by up to 1 / regen, over Core's 0.05 s
-        -- rule at mana's rates, and each regen tick walks the fraction, so a near-tie swaps every other tick (gaps.md CE). A
-        -- swing-paid one (no such wait) stays whole: its fraction reads rage ready a swing early (Fury's retracted readies).
+        -- rule at mana's rates, and each regen tick walks the fraction, so a near-tie swaps every other tick (gaps.md CE).
+        -- A swing-paid one stays whole: unfloored, Fury's retracted readies rose (untraced; likely its forecast lo + a
+        -- swing's gain reaching the cost where floor(lo) + gain doesn't).
         local r = I.res.slotOf[powerType]
         if r and I.res.swing[r] > 0 then
             return floor(b.lo)
+        end
+        -- On a short answer's cap the client just said no, and the cap says how far under the cost nothing: read it a whole
+        -- unit under, any cost's (39.97 too), or the wait is the cap's 0.01 on every poll and the ability looks ready.
+        if b.capped then
+            return b.lo > 1 and b.lo - 1 or 0
         end
         return b.lo
     end,

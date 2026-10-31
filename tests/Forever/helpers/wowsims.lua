@@ -272,7 +272,7 @@ M.READY = {
     druid_feral = { 0.43, 4 },
     druid_guardian = { 0.54, 41 }, -- 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     hunter_beast_mastery = { 0.32, 5 },
-    hunter_marksmanship = { 0.15, 7 }, -- was { 0.15, 10 } (b8d673eb8 raised it to 0.18 for gap BW, reverted with BW's fix): measured real 8 median 0.15 once the replay seeds the casting rate from unboosted ticks (168.28 strider_kick back to never)
+    hunter_marksmanship = { 0.15, 7 }, -- was { 0.15, 10 } (b8d673eb8 raised it to 0.18 for gap BW, reverted with BW's fix): measured real 8 median 0.15 once the replay seeds the casting rate from unboosted ticks (168.28 strider_kick back to never); real 7 since gap CE's fractional read
     -- { 0.14, 9 } -> { 0.14, 10 } (Task 5): row 91.49 mongoose_bite now late 0.14 s, a cost decision with the belief's
     -- lo 1.9 mana under truth (the lo lag, gaps BQ/BT, G7); the base row rested on the replay artifact (belief 5.5
     -- mana over truth); owner-approved 2026-10-30.
@@ -294,12 +294,18 @@ M.READY = {
     priest_shadow = { 1.50, 36 },
     -- 0.50, 27 -> 0.70, 10, owner ruling 2026-10-26: gap BD's cast-bar fix removed the small misses; decision by
     -- decision none worse and none new; the median of the rest rose
-    -- 0.70, 10 -> 0.70, 11 (gap CE; one fight, the log's seed; owner standing approval 2026-10-30): the fractional read shows
-    -- Penance one poll sooner at 150.7 s (an aura row), its offset -0.10 -> -0.30, past the reaction window: one early row
+    -- 0.70, 10 -> 0.70, 11 (gap CE; one fight, the log's seed; owner standing approval 2026-10-30): the fractional read
+    -- moves `shoot,if=mana.pct<=10`: at log 150.4 lo is 615.703, whole-number 615 stayed on the shoot side, the fraction
+    -- crosses, so Penance shows one poll sooner (150.4 vs 150.6) with truth 621.4 above the crossing; wowsims acts at
+    -- 150.7, offset -0.10 -> -0.30, past the reaction window: early against its decision grid, no promotion
     priest_smite = { 0.70, 11 },
-    rogue_assassination = { 0.15, 14 }, -- 30 -> 25 (fix 40): a short answer before our own energy gain shows is no rung
+    -- 30 -> 25 (fix 40): a short answer before our own energy gain shows is no rung; 0.20, 25 -> 0.15, 14 (gap CE, the
+    -- fractional read) -> 0.16, 15 (gap CE; one fight, the log's seed; owner standing approval 2026-10-30): a poll whose
+    -- short answer stands on the crossing now waits a whole energy, 0.10 s, the old read's wait: never ready before the
+    -- client says so
+    rogue_assassination = { 0.16, 15 },
     rogue_combat = { 0.22, 11 },
-    rogue_subtlety = { 0.15, 32 },
+    rogue_subtlety = { 0.16, 37 }, -- 0.20, 45 -> 0.15, 32 -> 0.16, 37 (gap CE): as rogue_assassination
     shaman_enhancement = { 0.96, 3 },
     shaman_elemental = { 0.48, 54 }, -- 0.480, 54 (Elemental lane, Task 14; first clean run on a21329fc)
     -- 1.000, 18 (Warlock lane, Task 13; first clean run on 5d62f44c+): Shadow Bolt's 2.5 s cast, the next icon ready

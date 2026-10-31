@@ -316,6 +316,39 @@ describe("resources", function()
             assert.is_false(I.res.assume[1])
         end)
 
+        it(
+            "marks a read standing on a short answer's cap: a ceiling, not a measurement (Facade's UnitPower)",
+            function()
+                I.Fold(10, false)
+                assert.is_false(VS.Power(ENERGY, 10).capped)
+                I.ResourceShift(1, -70, 10, Obs.CastSuccess) -- from rest: 30, the floor with it
+                obs(Obs.Usable, 10, FINISHER, 1, 0) -- a measured floor at the cost
+                I.Fold(10, false)
+                obs(Obs.Usable, 10.2, FINISHER, 0, 1) -- then short: the belief above the truth sits on the cap
+                I.Fold(10.2, false)
+                local e = VS.Power(ENERGY, 10.2)
+                within(25 - I.EPS, e.lo)
+                assert.is_true(e.capped)
+                assert.is_false(VS.Power(ENERGY, 10.4).capped) -- regen took it past, as any other read
+                obs(Obs.Usable, 10.2, BUILDER, 0, 1) -- a dearer ability's short answer, same poll: nothing of the floor
+                I.Fold(10.2, false)
+                assert.is_true(VS.Power(ENERGY, 10.2).capped)
+                I.ResourceShift(1, -5, 10.2, Obs.CastSuccess)
+                I.ResourceShift(1, 5, 10.2, Obs.CastSuccess) -- back on the old value: the spend ended the answer
+                assert.is_false(VS.Power(ENERGY, 10.2).capped)
+            end
+        )
+
+        it("leaves a read under a short answer's cap a measurement", function()
+            I.Fold(10, false)
+            I.ResourceShift(1, -80, 10, Obs.CastSuccess) -- from rest: 20
+            obs(Obs.Usable, 10.2, FINISHER, 0, 1) -- 22 believed, short at 25: true, and no news
+            I.Fold(10.2, false)
+            local e = VS.Power(ENERGY, 10.2)
+            assert.is_true(e.lo < 25 - 2 * I.EPS)
+            assert.is_false(e.capped)
+        end)
+
         it("drops the modelled floor on an exact read after a short answer that was no rung", function()
             I.Fold(10, false)
             I.ResourceShift(1, -80, 10, Obs.CastSuccess) -- from rest: 20, its floor moving with the spend

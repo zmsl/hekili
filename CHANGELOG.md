@@ -9,6 +9,7 @@
 ### Changed
 - Mana regen during a channel you paid for (Wrack, Drain Soul, Rain of Fire, Hellfire, Arcane Missiles, Blizzard, Hurricane, Volley): the icons now keep the casting-rate regen until the channel ends, as wowsims does, instead of resuming Spirit regen 5 s in; a channel that costs nothing (Evocation, a free Arcane Missiles) holds nothing.
 - Paladins: mana starts from measured rates per spec (wowsims's Retribution and Protection logs; Forever's Spirit regen is 6.25 + Spirit/8 a second for every class), so the icons now follow the empty mana pool those logs show.
+- Near-ties on mana and energy no longer flip the first icon every other update: predicted mana and energy keep their fraction instead of rounding down, so two abilities a hair apart stop swapping as your mana ticks up. An ability the game still says you can't afford keeps its countdown.
 - When your mana (or another resource) sits within a hair of an ability's cost, the first icon no longer flips to a cheaper ability for one update and back: the higher-priority ability keeps its countdown until it is affordable. Nothing shows as ready any earlier than before.
 
 ### Fixed

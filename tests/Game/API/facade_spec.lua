@@ -169,6 +169,23 @@ describe("ns.Facade", function()
             assert.are.equal(31, Facade.UnitPower("player", fs.RAGE)) -- rage too: G4's est exception is gone; a swing's steps
             -- the fraction stays, or a continuous resource's wait jumps by up to 1 / regen a tick
             assert.are.equal(31.8, Facade.UnitPower("player", 3))
+            -- a short answer's cap is a ceiling: the read sits a whole unit under it, any cost's (39.97's cap is 39.96)
+            VS.Power = function()
+                return { est = 39.99, lo = 39.99, capped = true }
+            end
+            assert.is_true(Facade.UnitPower("player", 3) <= 39)
+            VS.Power = function()
+                return { est = 39.96, lo = 39.96, capped = true }
+            end
+            assert.is_true(Facade.UnitPower("player", 3) <= 38.97)
+            VS.Power = function()
+                return { est = 0.49, lo = 0.49, capped = true }
+            end
+            assert.are.equal(0, Facade.UnitPower("player", 3))
+            VS.Power = function()
+                return { est = 39.99, lo = 39.99, capped = false } -- a measured fraction keeps it
+            end
+            assert.are.equal(39.99, Facade.UnitPower("player", 3))
             VS.Power = power
             assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) }) -- out of combat too: no swings (G3)
             ctl.Fire("PLAYER_REGEN_DISABLED")
