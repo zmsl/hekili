@@ -130,7 +130,7 @@ APL entry, Feral 3-fight 6.25 / 27.55 -> 4.47 / 6.80 ms mean / p99 when it left 
 waiting for a core do not count; shared cores (SMT, cache) still raise it: Arms read 4.1 ms alone and 6.1-6.7 ms in
 `make check`'s 16-wide run. So the bar is on a ratio: each tick's ms over `loop.calibrate`'s (a fixed pure-Lua
 workload, about 7 ms alone, timed once per counted fight in the same process), `r.cpuRatio <= pack_gate.CPU_RATIO`
-(2.2, about 4x Arms's 0.555), the ms mean and p99 reported beside it. Under a 16-wide `make test` Feral's 3-fight mean
+(1.4: the old 10 ms bar on a quiet run, 10 / ~7 ms; Arms reads 0.555), the ms mean and p99 reported beside it. Under a 16-wide `make test` Feral's 3-fight mean
 rose 4.25 -> 5.82 ms while its ratio moved 0.634 -> 0.494 (Arms 3.78 -> 5.92 ms, 0.624 -> 0.547). Each line also reports
 `bytes N per Update` (`collectgarbage("count")` around every 8th counted cycle, the collector stopped for that cycle:
 a running sweep makes the delta negative), not gated: every pack allocates a little per Update (gaps.md CD; only Arms has an allocation test).

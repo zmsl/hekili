@@ -126,10 +126,11 @@ end
 
 -- The CPU bar (D5), on the ratio of each tick's process CPU to the in-process calibration timed once per fight
 -- (loop.calibrate), not on ms: load from other processes slows both, so the bar stops depending on what else runs. Set
--- as the 10 ms bar was, about 4x the measured Arms mean: Arms 20 fights alone 3.96 ms, ratio 0.555 (2026-10-30, under
--- the lock) -> 2.2. Under a 16-wide `make test` beside it: Feral 3 fights 4.25 -> 5.82 ms, ratio 0.634 -> 0.494; Arms
--- 3 fights 3.78 -> 5.92 ms, ratio 0.624 -> 0.547 (the calibration slows a little more than the engine).
-M.CPU_RATIO = 2.2
+-- to the old 10 ms bar on a quiet run, so it did not loosen: 10 ms / the ~7 ms calibration = 1.4. Measured: Arms 20
+-- fights alone 3.96 ms, ratio 0.555 (2026-10-30, under the lock); under a 16-wide `make test` beside it: Feral 3 fights
+-- 4.25 -> 5.82 ms, ratio 0.634 -> 0.494; Arms 3 fights 3.78 -> 5.92 ms, ratio 0.624 -> 0.547 (the calibration slows a
+-- little more than the engine, so load lowers the ratio: the safe direction).
+M.CPU_RATIO = 1.4
 
 --- The engine's health, gated at any fight count: no error, raise, self-check miss, unlisted read or secret, CPU.
 function M.health(m, r, line)
