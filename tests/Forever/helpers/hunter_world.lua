@@ -35,10 +35,12 @@ local AUTO_SHOT = 75
 
 -- Each rank's mana cost (DB2), lowest rank first, the world's truth the class file's costs are measured against (a
 -- level's highest known rank pays its own: the leveling brackets); a percent-of-base cost (PowerCostPct) as the class
--- file prices it, a fraction of its base mana (1720), never of the pool (gaps.md CG). Audited against the pack's tables
--- and wowsims's logs (2026-10-31): every rank list is the pack's; the logs' spends (Efficiency 2/5 BM, Resourcefulness
--- 2/2 MM/SV) match every cast ability to the mana but Strider Kick, 39.97 here vs 39.6 logged (wowsims floors 99.93 to
--- 99: 0.37 over, the dim side, the pack prices it the same way).
+-- file prices it, a fraction of its base mana (1720), never of the pool (gaps.md CG). Audited by value against the
+-- pack's tables and wowsims's logs, each spec's world against its own log (2026-10-31, fix round 5): every rank list is
+-- the pack's; every cast ability's logged spend (Efficiency 2/5 BM, Resourcefulness 2/2 MM/SV) matches its world's
+-- charge to the mana. The fractions wowsims floors and the world keeps: Multi-Shot 239.08 vs 239 (224.74 vs 224.66
+-- under BM's Efficiency), Strider Kick 39.97 vs 39.6 (99.93 floored to 99): 0.08 and 0.37 over, the dim side, the pack
+-- prices both whole (239, 39).
 local COST = {
     hunters_mark = { 15, 30, 45, 60, 60 },
     aspect_of_the_hawk = { 20, 35, 50, 70, 90, 110, 120 },
@@ -48,7 +50,7 @@ local COST = {
     arcane_shot = { 25, 35, 50, 80, 105, 135, 160, 190 },
     summon_hawk = { 80, 105, 135, 190 },
     aimed_shot = { 75, 115, 160, 210, 260, 310 },
-    multi_shot = 0.139 * 1720, -- 239, as the pack and wowsims's log (239 MM/SV, 224.66 under BM's Efficiency); was 0.139 x 5000 = 695
+    multi_shot = 0.139 * 1720, -- 239.08, as the pack (239) and wowsims's log (239 MM/SV, 224.66 under BM's Efficiency); was 0.139 x 5000 = 695
     sniper_shot = 365,
     raptor_strike = { 10, 25, 35, 45, 55, 70, 85, 100 },
     mongoose_bite = { 30, 40, 50, 65 },
@@ -249,6 +251,7 @@ local PACKS = {
         weapon = { 150, 220, 3.5 },
         ranged = { 140, 200, 3.0 },
         aspect = "aspect_of_the_hawk",
+        talents = { [19416] = 2 }, -- the export's Efficiency 2/5 (the log header's 19416=2): the shots and Sting 6% off
         -- wowsims's log (hunter_beast_mastery.log): 7.94 a second while casting (Bestial Discipline's 50%), 15.88 outside
         fsr = { 7.94, 7.94, share = 0.5 },
         uptime = { "serpent_sting", "hunters_mark" },

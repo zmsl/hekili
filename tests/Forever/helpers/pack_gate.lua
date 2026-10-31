@@ -78,10 +78,19 @@ M.FLICKER = {
     -- (logged in hekili-open-questions.md); the oracle's own 0.02 / 0 / 0 (agreement 0.998 / 0.996 / 0.999)
     -- heldReady 129 (gap CG, the world's Multi-Shot priced as the pack's: 2288 / 1929 / 2512 -> 129 / 120 / 121; Serpent
     -- Sting presses seeds 1-20 29 -> 28; agreement 1.000 / 0.995 / 1.000 -> 0.998 / 0.997 / 0.999: the re-timed fights
-    -- 13 / 2 / 8 start on a drained pool with the floor at Aspect of the Hawk's 120 while the truth is ~176, so Rapid
-    -- Fire's cooldown shows before Arcane Shot's mana crossing for ~5 s; base had the same shape at seed 30, fight 10,
-    -- hunters_mark vs arcane_shot, 82 ticks)
-    ["Beast Mastery"] = { flicker = 0, retracted = 0, heldReady = 129 }, -- 0 / 0 / 0, 0 (gap CE)
+    -- 13+16 / 2+5+13+16 / 8+19 start on a drained pool with the floor at Aspect of the Hawk's 120 while the truth is
+    -- 155-186, so Rapid Fire's cooldown shows before Arcane Shot's mana crossing for ~5 s, 38-46 ticks a set; no press is
+    -- lost, Arcane Shot lands on the oracle's tick. Not new: 4e111189f (before Part B, the world at 695) shows the same
+    -- rapid_fire vs arcane_shot at t 3.6-7.6, agreement .998 / .996, its first rows those of head's seed 20 fight 2 (truth
+    -- 180.41, lo 120); head's dip is base's 1.000 going away, not a new class)
+    -- 129 -> 127 (fix round 5, gap CG's audit: the BM world takes the export's Efficiency 2/5, so its shots and Sting cost
+    -- the log's 178.6 / 235 / 224.66 instead of 190 / 250 / 239; seeds 1-20 / 21-40 / 41-60: 126 / 127 / 124, was 129 /
+    -- 120 / 121; agreement 1.000 / .999 / .996, was .998 / .997 / .999; flicker and readyShort 0; Arcane Shot presses
+    -- seeds 1-20 243 -> 258, Serpent Sting 28 -> 28. The drained-pool shape above moves with the fights: now seeds 1-20
+    -- fights 5 / 8 / 11 / 14 / 17 / 20 one tick each at t 3.6 (truth 179, lo 120), seeds 21-40 fights 3 / 6 / 9 / 12 / 15 /
+    -- 18 1-3 ticks, seeds 41-60 fights 2 / 5 / 8 / 11 14-21 ticks at t 3.6-7.6, truth 146-179; replay, M.READY and LIVE60
+    -- unmoved, the replay takes the log header's talents already)
+    ["Beast Mastery"] = { flicker = 0, retracted = 0, heldReady = 127 }, -- 0 / 0 / 0, 0 (gap CE)
     -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
     -- wowsims's logged regen (Ret 8.25/s casting) runs the world at an empty mana pool; the oracle's flicker rose too; our
     -- extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike); controller ruling
