@@ -39,6 +39,11 @@ function M.calibrate()
     return (os.clock() - c0) * 1000, sum
 end
 
+-- Bytes per Update (reported, never gated): every this many counted ticks, one cycle with the collector stopped. A
+-- running collector's sweep inside a cycle makes the delta negative; stopping it on every tick would keep the timed
+-- cycles from doing any collection at all.
+M.BYTES_EVERY = 8
+
 M.TICK = 0.2 -- 5 Hz, the in-game combat rate (D1); o.hz = 10 the option
 M.REACT = 0.05 -- a first icon whose wait is at most this is shown as ready: pressed
 M.PULL = 3 -- the world starts this long before the pull, the target selected (precombat presses)
@@ -218,8 +223,9 @@ end
 --- in-combat tick: loop.flips), focus (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu (ms per tick of
 --- the first instance, timed around headless.cycle: VirtualState's flush and the timers as well as Update, so it errs
 --- high; empty in a traced run, whose debug pass is not runtime cost), cal (M.calibrate's ms, timed once before an
---- untraced run's first tick), damage, t }. `o.replay` (replay.lua's R: its world, no presses, wowsims's next cast as `theirs`, a cycle
---- just before each decision; `run.dec` { ours, theirs }: our first on-GCD icon and wowsims's on-GCD cast).
+--- untraced run's first tick), bytes and sampled (allocated over `sampled` cycles, every M.BYTES_EVERY-th cpu
+--- tick, the collector stopped for each), damage, t }. `o.replay` (replay.lua's R: its world, no presses, wowsims's next cast as `theirs`, a cycle just before each
+--- decision; `run.dec` { ours, theirs }: our first on-GCD icon and wowsims's on-GCD cast).
 function M.run(L, seed, o, drivers)
     o = o or {}
     local content = L.content
@@ -372,6 +378,7 @@ function M.run(L, seed, o, drivers)
     local lastRefused, readySince = false, {}
     local traced = {}
     run.cal = not o.trace and M.calibrate() or nil
+    run.bytes, run.sampled = 0, 0
     if o.trace then -- the facade's trace (§5.1): Hekili's own debug pass, its lines counted and dropped
         for i, st in ipairs(steps) do
             local hk = st.H.Hekili
@@ -396,10 +403,22 @@ function M.run(L, seed, o, drivers)
         for i, st in ipairs(steps) do
             feed(st.H, st.obs, tc, st.base, st.sink)
             st.H.Hekili.ActiveDebug = o.trace or false
+            local counted = i == 1 and not o.trace -- the traced fight's debug pass is not runtime cost
+            -- the seed turns the phase: a fight's first cycle, the most expensive, must not be every fight's first sample
+            local sampled = counted and (#run.cpu + seed) % M.BYTES_EVERY == 0
+            local b0
+            if sampled then -- a sweep inside the cycle would swamp the delta
+                collectgarbage("stop")
+                b0 = collectgarbage("count")
+            end
             local c0 = os.clock()
             local ok = headless.cycle(st.H, st.base + tc)
-            if i == 1 and not o.trace then -- the traced fight's debug pass is not runtime cost
+            if counted then
                 run.cpu[#run.cpu + 1] = (os.clock() - c0) * 1000
+            end
+            if sampled then
+                run.bytes, run.sampled = run.bytes + (collectgarbage("count") - b0) * 1024, run.sampled + 1
+                collectgarbage("restart")
             end
             st.H.Hekili.ActiveDebug = false
             if not ok then
@@ -664,6 +683,7 @@ local function blank()
     m.oracleFlicker, m.errors, m.raises, m.misses, m.secrets, m.selfCheck = 0, 0, 0, {}, {}, 0
     m.cpu, m.gap, m.focus = {}, {}, 0
     m.ratio, m.cal = {}, {} -- per counted tick its cpu over its run's calibration; per counted run the calibration ms
+    m.bytes, m.sampled = 0, 0 -- allocated over the sampled ticks (M.BYTES_EVERY)
     m.led = { ours = flicker.merge(), oracle = flicker.merge() } -- run A's ledgers (flicker.ledger): ours, the shadow's
     return m
 end
@@ -747,6 +767,7 @@ function M.tally(L, n, o)
             m.ratio[#m.ratio + 1] = ms / a.cal
         end
         m.cal[#m.cal + 1] = a.cal
+        m.bytes, m.sampled = m.bytes + a.bytes, m.sampled + a.sampled
         for _, g in ipairs(a.gap) do
             m.gap[#m.gap + 1] = g
         end
@@ -782,7 +803,7 @@ function M.replay(L, R, o)
     s.flicker = flips(a.ours, a.combat)
     m.B = s -- one side: a replay has no oracle run (the line's A/B fields read 1)
     m.errors, m.raises, m.cpu = a.errors, a.raises, a.cpu
-    m.cal[1] = a.cal
+    m.cal[1], m.bytes, m.sampled = a.cal, a.bytes, a.sampled
     for i, ms in ipairs(a.cpu) do
         m.ratio[i] = ms / a.cal
     end
@@ -838,7 +859,8 @@ end
 --- The tally's derived metrics: agreement, react (median, p90, share never; in ticks), refusals per 100 attempts by
 --- reason (per100; per100U the unmatched ones, M.unmatched; per100B the oracle's own in run B), episodes per minute, damage per second A / B, full-power and GCD-idle shares and debuff uptimes (A, B),
 --- flicker per minute (ours, the oracle's), CPU per Update (mean, p99 ms; cpuRatio the mean of each tick's ms over its
---- run's calibration, calMean the calibration's mean ms), and the tally's focus count (not in M.line).
+--- run's calibration, calMean the calibration's mean ms; bytes allocated per Update, sampled, reported only), and
+--- the tally's focus count (not in M.line).
 function M.summary(m)
     local r = { focus = m.focus }
     r.agreement = m.agree / math.max(1, m.both)
@@ -889,6 +911,7 @@ function M.summary(m)
         sum = sum + ms
     end
     r.calMean = sum / math.max(1, #m.cal)
+    r.bytes = m.bytes / math.max(1, m.sampled)
     if m.dec then
         r.decisions = m.dec.agree / math.max(1, m.dec.both)
     end
@@ -937,7 +960,8 @@ function M.line(m)
     local line = (
         "fights=%d agreement %.3f (%d ticks); react median %d p90 %d never %.3f; refused per 100 [%s], episodes %.2f/min; "
         .. "dps A/B %.3f; full %.3f/%.3f idle %.3f/%.3f; uptime [%s]; flicker %.2f/min (oracle %.2f); "
-        .. "errors %d raises %d self-check %d; cpu mean %.2f p99 %.2f ms ratio %.3f (calibration %.2f ms); top [%s]; power est-truth at disagreements %.1f"
+        .. "errors %d raises %d self-check %d; cpu mean %.2f p99 %.2f ms ratio %.3f (calibration %.2f ms) "
+        .. "bytes %.0f per Update; top [%s]; power est-truth at disagreements %.1f"
     ):format(
         m.fights,
         r.agreement,
@@ -962,6 +986,7 @@ function M.line(m)
         r.cpuP99,
         r.cpuRatio,
         r.calMean,
+        r.bytes,
         top3(m.conf),
         gap / math.max(1, #m.gap)
     )

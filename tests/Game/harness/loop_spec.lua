@@ -110,6 +110,33 @@ describe("the headless loop's CPU metric", function()
         assert.is_truthy(loop.line(m):find(("ratio %.3f (calibration %.2f ms)"):format(r.cpuRatio, r.calMean), 1, true))
     end)
 
+    it("reports the bytes allocated per counted Update, reported only", function()
+        local headless = require("Game.harness.headless")
+        local cycle = headless.cycle
+        local function bytes(extra) -- a fresh boot each: the same allocations but `extra`
+            if extra then
+                headless.cycle = function(...)
+                    for _ = 1, extra do
+                        local _ = {}
+                    end
+                    return cycle(...)
+                end
+            end
+            local m = loop.tally(loop.new(stub()), 2, { duration = 6 })
+            headless.cycle = cycle
+            return m, loop.summary(m)
+        end
+        finally(function()
+            headless.cycle = cycle
+        end)
+        local m, r = bytes()
+        assert.are.equal(math.floor(#m.cpu / loop.BYTES_EVERY), m.sampled)
+        assert.is_truthy(loop.line(m):find(("bytes %.0f per Update"):format(r.bytes), 1, true))
+        local _, r10 = bytes(10)
+        -- ten empty tables a cycle, 32 B or more each: exact whatever the collector did between the sampled cycles
+        assert.is_true(r10.bytes - r.bytes >= 10 * 32, r10.bytes - r.bytes)
+    end)
+
     it("gates the ratio in pack_gate's health check, the ms figure reported only", function()
         local gate = require("Forever.helpers.pack_gate")
         local h = { errors = 0, raises = 0, selfCheck = 0, misses = {}, secrets = {} }
