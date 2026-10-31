@@ -1016,6 +1016,7 @@ state.removeDebuff = removeDebuff
 
 
 local function removeDebuffStack( unit, aura, stacks )
+    state.changes = state.changes + 1
     stacks = stacks or 1
     local d = state.debuff[ aura ]
     if not d then return 0 end
