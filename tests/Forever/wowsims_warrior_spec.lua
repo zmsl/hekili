@@ -199,7 +199,13 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             PROT_REPLAY
         )
     end)
-    local PROT_LIVE60 = 5.4 -- the pack's own worst idle at 60, under the 6 s floor
+    -- the pack's own worst idle at 60. 5.4 -> 14.8 (gap CI, 2026-10-31; L40 5.4 -> 14.8 too, L10 5.6 unchanged): the
+    -- Warrior world now answers Revenge's usability from its window, so `buff.revenge_usable` is down whenever the mob's
+    -- swings on us land, and the APL's Shield Block fishing branch (`!buff.revenge_usable.up&cooldown.revenge.remains<=1.5`)
+    -- spends the 10 rage Sunder Armor needed; seed 1 then parries and misses four swings in a row (t 28.4-35.4) on 7.2
+    -- rage while the APL pools for Shield Slam (Rend and Sunder are gated on its cooldown), and the world pays no rage
+    -- from damage taken (gap AH). Before, Revenge read usable on cost alone and the branch never ran.
+    local PROT_LIVE60 = 14.8
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()
             ws.live(
