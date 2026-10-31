@@ -212,10 +212,13 @@ describe("headless Hekili", function()
             facadeAnswers(setfenv(probe, S)())
         end)
 
-        it("answers them from the belief in a `now` handler's context, which a resource's `taken` runs in too", function()
-            local kr, sb, hm, st = setfenv(probe, I.nowCtx)()
-            assert.are.same({ VS.KnownRank, VS.SwingBase, VS.HealthMax, VS.Stat }, { kr, sb, hm, st })
-        end)
+        it(
+            "answers them from the belief in a `now` handler's context, which a resource's `taken` runs in too",
+            function()
+                local kr, sb, hm, st = setfenv(probe, I.nowCtx)()
+                assert.are.same({ VS.KnownRank, VS.SwingBase, VS.HealthMax, VS.Stat }, { kr, sb, hm, st })
+            end
+        )
 
         it("answers them in a resource model function: RegisterResource binds its meta functions to `state`", function()
             local meta = { probe = probe }

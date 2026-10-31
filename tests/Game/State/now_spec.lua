@@ -503,7 +503,7 @@ describe("now handlers", function()
         assert.are.equal(424242, VS.KnownID(424242)) -- untracked
         assert.is_nil(VS.KnownID(nil))
         assert.are.equal("spender_c", VS.KnownID("spender_c"))
-        assert.are.equal(VS.KnownID, ns.KnownSpellID)
+        assert.is_nil(ns.KnownSpellID) -- the engine asks range by ability ID; the facade's IsSpellInRange resolves the rank
     end)
 
     it("anchors a GCD at a hard cast's start once: a later instant cast of the same ability starts its own", function()

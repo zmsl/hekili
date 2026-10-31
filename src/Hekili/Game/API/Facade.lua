@@ -825,6 +825,18 @@ kept("C_Spell.GetSpellCharges", "hybrid", function(spellID)
     return chargesPolicy(spellID)
 end, "times secret in combat [W §4 cooldowns]; Charges()")
 
+-- Range by the known rank (audit H10): the engine asks by an ability's ID; the client is asked by the rank the
+-- spellbook knows (an unknown rank or a spell without a range answers nil, read as in range).
+local realIsSpellInRange = resolve("C_Spell.IsSpellInRange")
+kept("C_Spell.IsSpellInRange", "hybrid", function(spellID, unit)
+    local r = realIsSpellInRange and realIsSpellInRange(VS.KnownID(spellID), unit)
+    if issecretvalue(r) then
+        modelled = true
+        return nil
+    end
+    return r
+end, "plain [W PR7]; asked by the known rank's ID (KnownID); a secret answer is nothing (in range)")
+
 kept("C_Spell.GetSpellCastCount", "virtual", zero, "flagged SecretWhenCooldownsRestricted; unprobed, unused")
 kept("C_Spell.GetSpellLossOfControlCooldown", "virtual", nothing, "absent on Forever")
 

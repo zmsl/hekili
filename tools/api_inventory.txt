@@ -44,6 +44,7 @@ C_Spell.IsCurrentSpell	passthrough
 C_Spell.IsSpellDataCached	passthrough
 C_Spell.IsSpellHarmful	passthrough
 C_Spell.IsSpellHelpful	passthrough
+C_Spell.IsSpellInRange	hybrid
 C_Spell.IsSpellPassive	passthrough
 C_Spell.IsSpellUsable	passthrough
 C_Spell.RequestLoadSpellData	passthrough

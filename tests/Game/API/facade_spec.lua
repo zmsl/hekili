@@ -117,7 +117,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 125, hybrid = 34, virtual = 25, display = 1 }, count)
+        assert.are.same({ passthrough = 125, hybrid = 35, virtual = 25, display = 1 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -261,6 +261,22 @@ describe("ns.Facade", function()
             end, "player", "HELPFUL")
         )
         assert.are.equal(fs.SPENDER_A, found)
+    end)
+
+    it("C_Spell.IsSpellInRange asks by the known rank's ID; a secret answer is nothing (read as in range)", function()
+        local asked
+        answers["C_Spell.IsSpellInRange"] = function(id, unit)
+            asked = id
+            return unit == "target"
+        end
+        ctl.known[fs.SPENDER_C_R2] = true
+        ctl.Fire("SPELLS_CHANGED")
+        assert.is_true(Facade.C_Spell.IsSpellInRange(fs.SPENDER_C, "target"))
+        assert.are.equal(fs.SPENDER_C_R2, asked)
+        assert.is_false(Facade.C_Spell.IsSpellInRange(424242, "focus")) -- untracked: its own ID
+        assert.are.equal(424242, asked)
+        answers["C_Spell.IsSpellInRange"] = nil
+        assert.is_nil(Facade.C_Spell.IsSpellInRange(fs.SPENDER_C, "target"))
     end)
 
     it("returns the same two GCD numbers for the GCD spell and a GCD-locked spell, surviving the round trip", function()

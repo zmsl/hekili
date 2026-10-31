@@ -57,7 +57,6 @@ local format, find = string.format, string.find
 local Mark, SuperMark, ClearMarks = ns.Mark, ns.SuperMark, ns.ClearMarks
 
 local RC = LibStub( "LibRangeCheck-3.0" )
-local LSR = LibStub( "SpellRange-1.0" )
 
 local class = Hekili.Class
 local scripts = Hekili.Scripts
@@ -5235,8 +5234,8 @@ local mt_default_action = {
 
         elseif k == "in_range" then
             if ability.onNextSwing then return not beyondMelee() end -- gap 13: the client's answer is always yes
-            -- Forever E5: ask the known rank's ID; the client answers nil (read as in range) for an unknown rank.
-            if UnitExists( "target" ) and UnitCanAttack( "player", "target" ) and LSR.IsSpellInRange( ability.rangeSpell or ns.KnownSpellID( ability.id ), "target" ) == 0 then
+            -- Forever (audit H10): the facade asks by the known rank's ID; nil (an unknown rank, no range) reads as in range.
+            if UnitExists( "target" ) and UnitCanAttack( "player", "target" ) and C_Spell.IsSpellInRange( ability.rangeSpell or ability.id, "target" ) == false then
                 return false
             end
 
@@ -7132,8 +7131,8 @@ do
         local z -- scratch variable
 
         if self.rangefilter and UnitExists( "target" ) then
-            -- Forever E5: ask the known rank's ID; the client answers nil (read as in range) for an unknown rank.
-            if LSR.IsSpellInRange( ability.rangeSpell or ns.KnownSpellID( ability.id ), "target" ) == 0 then
+            -- Forever (audit H10): the facade asks by the known rank's ID; nil (an unknown rank, no range) reads as in range.
+            if C_Spell.IsSpellInRange( ability.rangeSpell or ability.id, "target" ) == false then
                 return false, "filtered out of range"
             end
 
