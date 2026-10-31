@@ -57,13 +57,13 @@ M.FLICKER = {
     ["Arms"] = { flicker = 0.3, retracted = 0.1, readyShort = 173, heldReady = 340 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     ["Fury L60"] = { flicker = 0.9, retracted = 0.2, readyShort = 116, heldReady = 226 }, -- 0.81 / 0.70 / 0.88, 0.20 / 0.17 / 0.06
     ["Fury L24"] = { flicker = 0.8, retracted = 0.2, readyShort = 41, heldReady = 910 }, -- 0.68 / 0.75 / 0.66, 0.09 / 0.18 / 0.03
-    -- none -> floored (gap CI, 2026-10-31, measured after the Warrior world resolved every rank of a kit addition, at
-    -- seeds 1-20 / 21-40 / 41-60; oracle flicker 0.40 / 0.54 / 0.45; agreement 0.916 / 0.919 / 0.915, unmatched cost
-    -- 2.0 / 1.5 / 1.1, cooldown 0): the swing-paid rage class (shield_block <-> rend, sunder_armor <-> shield_block,
-    -- shield_slam <-> thunder_clap near-ties on a forecast swing's rage). `oracleGap`: its flicker sits 0.54 / 0.44 / 0.57
-    -- over the oracle's, past FLICKER_K 0.5 (set on Fury L60's 0.47), so this label's bar is its own measured gap
-    -- rounded up (an addition; K stays 0.5 for every other pack)
-    ["Warrior Protection"] = { flicker = 1.1, retracted = 0.1, readyShort = 250, heldReady = 424, oracleGap = 0.6 }, -- 0.94 / 0.98 / 1.02, 0.08 / 0.08 / 0.07
+    -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
+    -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
+    -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
+    -- agreement 0.925 / 0.929 / 0.926, unmatched cost 1.0 / 0.6 / 0.6, cooldown 0): the swing-paid rage class
+    -- (sunder_armor <-> shield_block, shield_slam <-> thunder_clap, shield_block <-> rend near-ties on a forecast swing's
+    -- rage)
+    ["Warrior Protection"] = { flicker = 0.8, retracted = 0.1, readyShort = 203, heldReady = 378 }, -- 0.74 / 0.57 / 0.57, 0 / 0.03 / 0.02
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
@@ -96,7 +96,13 @@ M.FLICKER = {
     -- 0.988 / 0.988, was 0.978 / 0.978 / 0.981): Strider Kick now comes up with Raptor Strike's cooldown and the same
     -- raptor_strike -> wing_clip -> raptor_strike flip rests on CD_PROBE (all 16 flips of seeds 1-20 traced, each at the
     -- tick before Raptor Strike's cooldown ends); owner standing approval 2026-10-30
-    ["Survival"] = { flicker = 0.3, retracted = 0, heldReady = 258 }, -- 0.27 / 0.08 / 0.15, 0 (oracle 2.03 / 2.00 / 1.96, gap CE)
+    -- 0.3 / 258 -> 0.2 / 254, readyShort 1 (forever-gates fix round 1, 2026-10-31: Mongoose Bite's window reaches the
+    -- client, the Hunter world tests the swing's target by guid; seeds 1-20 / 21-40 / 41-60, was 0.27 / 0.08 / 0.15 and
+    -- 258 / 223 / 242 with the bite never usable): the bite's icon takes the ticks after our dodge, so the
+    -- strider_kick <-> wing_clip near-ties fall (197 / 190 / 192 -> 168 / 151 / 170 pairs) and its own held ticks
+    -- arrive (by key at 21-40 / 41-60: mongoose_bite 19 / 20, wing_clip 218 / 233 -> 209 / 221, raptor_strike 5 / 9
+    -- -> 4 / 13)
+    ["Survival"] = { flicker = 0.2, retracted = 0, readyShort = 1, heldReady = 254 }, -- 0.15 / 0.07 / 0.15, 0 (oracle 1.71 / 1.46 / 1.61), 249 / 232 / 254
     ["Marksmanship"] = { flicker = 0, retracted = 0, heldReady = 112 }, -- 0, 0
     -- 0 -> 0.2 (Task 5, wowsims's Hunter regen in; seeds 1-20 / 21-40 / 41-60: 0 / 0.12 / 0, was 0 / 0 / 0): the new BM
     -- regen puts Arcane Shot's mana crossing 0.14 s from Hunter's Mark's refresh; lo runs ~3 mana under truth (gaps
@@ -178,12 +184,10 @@ M.FLICKER = {
 -- 2026-10-26, the press rule and gap BD's cast bar; every gated pack, seeds 1-20 / 21-40 / 41-60): the widest gap is
 -- Fury L60 seeds 21-40, 0.70 vs 0.23 (0.466); next Protection seeds 1-20, 0.46 vs 0. Before, Balance seeds 1-20 read
 -- 2.36 vs 1.23 on f09656c8e (gap 1.13: the old comment's oracle 0.65 was stale), all of it gap BD's invisible cast bar.
--- A row's `oracleGap` replaces K for that label alone (Warrior Protection 0.6: its measured 0.57; gap CI), so K does not
--- widen for the rest.
 M.FLICKER_K = 0.5
 
---- The flicker floors of `label` (M.FLICKER) and, unless `reported`, flicker <= oracle + FLICKER_K (the row's own
---- `oracleGap` where it has one), reported next to react p90 and the unmatched cost refusals (the line).
+--- The flicker floors of `label` (M.FLICKER) and, unless `reported`, flicker <= oracle + FLICKER_K, reported next to
+--- react p90 and the unmatched cost refusals (the line).
 function M.flicker(label, r, line, reported)
     local fl = M.FLICKER[label]
     if fl then
@@ -193,8 +197,7 @@ function M.flicker(label, r, line, reported)
         ab.check(r.heldReady <= (fl.heldReady or 0), label, "held-while-ready floor: " .. line)
     end
     if not reported then
-        local k = fl and fl.oracleGap or M.FLICKER_K
-        ab.check(r.flicker <= r.oracleFlicker + k, label, "flicker over the oracle's + K: " .. line)
+        ab.check(r.flicker <= r.oracleFlicker + M.FLICKER_K, label, "flicker over the oracle's + K: " .. line)
     end
 end
 
