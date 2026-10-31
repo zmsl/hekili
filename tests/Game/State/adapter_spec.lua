@@ -317,16 +317,67 @@ describe("Adapter", function()
         end
     )
 
-    it("never resets or replays Hekili's state in the drain, and marks a unit whose believed auras moved", function()
+    -- A UNIT_AURA subscriber (Hekili's handler, Events.lua): records each delivery's unit and a copy of its lists.
+    local function auraSubscriber()
+        local log = {}
+        local f = I.Events.CreateFrame("Frame")
+        f:SetScript("OnEvent", function(_, _, unit, data)
+            local e = { unit = unit, full = data.isFullUpdate, added = {}, updated = {}, removed = {} }
+            for _, a in ipairs(data.addedAuras or {}) do
+                e.added[#e.added + 1] = { a.spellId, a.auraInstanceID, a.isFromPlayerOrPlayerPet }
+            end
+            for _, id in ipairs(data.updatedAuraInstanceIDs or {}) do
+                e.updated[#e.updated + 1] = id
+            end
+            for _, id in ipairs(data.removedAuraInstanceIDs or {}) do
+                e.removed[#e.removed + 1] = id
+            end
+            log[#log + 1] = e
+        end)
+        f:RegisterUnitEvent("UNIT_AURA", "player", "target")
+        return log
+    end
+
+    it("never resets or replays Hekili's state in the drain, and delivers a moved unit's believed delta", function()
+        local log = auraSubscriber()
         ctl.now = 3
         VS.Drain(3)
         ctl.now = 5
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
         ctl.Tick(5.05)
+        assert.are.equal(0, #log) -- the delta is the drain's (inside Hekili.Update, before its resets), not the event's
         VS.Drain(5.1)
         assert.are.same({ 0, 0, 0 }, { state.resets, state.offset, state.delay })
-        assert.is_true(state.target.updated) -- spender_c's `now` moved the target's set
         assert.are.equal(1, I.drainCasts)
+        assert.is_false(state.target.updated) -- Hekili's own handler sets it; the drain writes no Hekili state
+        assert.are.equal(1, #log) -- spender_c's `now` moved the target's set: UNIT_AURA(target, { addedAuras })
+        local rec, _, _, inst = VS.Aura("target", fs.SPENDER_C, 5.1)
+        assert.is_truthy(rec)
+        assert.are.same(
+            { unit = "target", full = nil, added = { { fs.SPENDER_C, inst, true } }, updated = {}, removed = {} },
+            log[1]
+        )
+    end)
+
+    it("delivers a refresh as updatedAuraInstanceIDs and a modelled expiry as removedAuraInstanceIDs", function()
+        local log = auraSubscriber()
+        ctl.now = 5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+        ctl.Tick(5.05)
+        VS.Drain(5.1)
+        local inst = select(4, VS.Aura("target", fs.SPENDER_C, 5.1))
+        ctl.now = 8
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C) -- a refresh: the instance stays
+        ctl.Tick(8.05)
+        VS.Drain(8.1)
+        assert.are.equal(2, #log)
+        assert.are.same({ unit = "target", added = {}, updated = { inst }, removed = {} }, log[2])
+        ctl.now = 30 -- past the 15 s duration: the settle models it down
+        ctl.Tick(30)
+        VS.Drain(30)
+        assert.are.equal(3, #log)
+        assert.are.same({ unit = "target", added = {}, updated = {}, removed = { inst } }, log[3])
+        assert.is_nil((VS.Aura("target", fs.SPENDER_C, 30)))
     end)
 
     it("profiles the registry's rows and the polls only while Prof.on is set", function()

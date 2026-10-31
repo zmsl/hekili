@@ -378,25 +378,19 @@ end
 -- (Families/Now.lua); Hekili's state is never reset or replayed here.
 
 --- The fold, called only from Hekili.Update after its guards: this frame's staged observations, the polls, the fold
---- to the cut-off, the settle, and Hekili's rescan flags. Allocates nothing.
+--- to the cut-off, the settle, and the believed aura deltas as UNIT_AURA (Hekili's own handler marks the rescan, G1;
+--- the drain writes no Hekili state). Allocates nothing.
 ---@param cutoff number GetTime() at the drain's entry
 function VS.Drain(cutoff)
     if not I.built then
         return
     end
     local t0 = debugprofilestop()
-    local genP, genT = VS.AuraGen("player"), VS.AuraGen("target")
     local casts = I.castsRun
     S.Flush() -- this frame's staged observations first, whichever OnUpdate runs first (poll 3's Queued(0) follows them)
     S.RunPolls(cutoff)
     I.Fold(cutoff)
     I.Settle(cutoff)
-    -- Hekili rescans a unit's auras when its believed set moved (G1)
-    if VS.AuraGen("player") ~= genP then
-        state.player.updated = true
-    end
-    if VS.AuraGen("target") ~= genT then
-        state.target.updated = true
-    end
+    I.DeliverAuraDeltas(cutoff)
     I.drainMs, I.drainCasts = debugprofilestop() - t0, I.castsRun - casts
 end

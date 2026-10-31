@@ -40,6 +40,9 @@ local U = {
     firstWalk = {}, -- by unit: the time of its first clean walk (Sources/Auras.lua), 0 none yet
 }
 I.auras = U
+-- The believed delta since the drain last delivered it (see `set` below); I.auraDelta for Game/API/Facade.lua.
+local D = { add = {}, upd = {}, rem = {}, nAdd = {}, nUpd = {}, nRem = {}, full = {} }
+I.auraDelta = D
 I.nextInst = 0
 
 -- Per-target memory (spec §6.3): TARGET_CAP slots, each a copy of the target's arrays; slot 0 is "no target".
@@ -85,6 +88,12 @@ I.OnBuild(function(def, now)
         U.exp0[u], U.applied[u], U.stacks[u], U.inst[u], U.harm[u], U.seq[u], U.rec[u] = e, ap, st, ins, hm, sq, rc
         U.ord[u], U.ordN[u], U.gen[u] = ord, 0, 0
         U.firstWalk[u] = 0
+        local add, upd, rem = {}, {}, {}
+        for j = 1, U.nAura do
+            add[j], upd[j], rem[j] = 0, 0, 0
+        end
+        D.add[u], D.upd[u], D.rem[u] = add, upd, rem
+        D.nAdd[u], D.nUpd[u], D.nRem[u], D.full[u] = 0, 0, 0, false
     end
     for s = 1, I.TARGET_CAP do
         local e, ap, st, ins = {}, {}, {}, {}
@@ -137,18 +146,38 @@ local function changed(u)
     U.gen[u] = U.gen[u] + 1
 end
 
+-- The believed delta of each unit's set since the drain last delivered it (event-facade spec §2.2, decision 2 phase
+-- C; Game/API/Facade.lua delivers it as UNIT_AURA's addedAuras / updatedAuraInstanceIDs / removedAuraInstanceIDs):
+-- per unit, the added auras' indices, the updated and removed instance IDs, each list nAura long, and `full` when a
+-- whole-set change (a target swap) or an overflow makes a full update the right shape. Preallocated at OnBuild (D).
+local function push(list, n, u, v)
+    local k = n[u] + 1
+    if k > U.nAura then
+        D.full[u] = true
+    else
+        list[u][k], n[u] = v, k
+    end
+end
+
 -- Writes one aura state on unit u (expiry 0: down). A newly up aura gets a fresh instance ID and walk order.
 local function set(u, j, expires, applied, stacks, t, origin, event, harmful)
     local e = U.exp0[u]
     local was, wasStacks = e[j], U.stacks[u][j]
+    local inst0 = U.inst[u][j]
     if expires > 0 and was == 0 then
         I.nextInst = I.nextInst + 1
         U.inst[u][j] = I.nextInst
         U.seq[u][j] = I.nextInst
+        push(D.add, D.nAdd, u, j)
     end
     if expires <= 0 then
+        if was > 0 then
+            push(D.rem, D.nRem, u, inst0)
+        end
         U.inst[u][j] = 0
         expires, applied, stacks = 0, 0, 0
+    elseif was > 0 and (was ~= expires or wasStacks ~= stacks) then
+        push(D.upd, D.nUpd, u, inst0)
     end
     e[j], U.applied[u][j], U.stacks[u][j] = expires, applied, stacks
     if harmful ~= nil then
@@ -249,6 +278,7 @@ local function load(s)
         local seen = rec.last.observed -- the old target's read: it must not stop or outrank a cast on this one
         seen.t, seen.event = 0, 0
     end
+    D.full[2] = true -- the whole set changed: a full update, not a delta
     changed(2)
 end
 

@@ -533,6 +533,63 @@ kept("C_UnitAuras.GetAuraDataByAuraInstanceID", "virtual", function(unit, instan
     return fill(single, spellID, rec, stacks, applied, instanceID, unit ~= "player")
 end, "secret in combat; errors when tainted [W §4]; AuraByInstance()")
 
+-- The believed delta (event-facade spec §2.2, decision 2 phase C): what the fold moved in a unit's aura set since the
+-- last drain (Families/Auras.lua, I.auraDelta), delivered from the drain (Adapter.lua) as UNIT_AURA(unit,
+-- { addedAuras, updatedAuraInstanceIDs, removedAuraInstanceIDs }) in the client's shape, so Hekili's own handler marks
+-- the unit for the same Update's scrape. A whole-set change (a target swap) or an overflow is the unit's full update
+-- instead. Preallocated per unit at OnBuild; allocates nothing per delivery.
+local DELTA, ADDED, FULL = {}, {}, {}
+I.OnBuild(function()
+    local U = I.auras
+    for u = 1, U.n do
+        local added = ADDED[u] or {}
+        for i = #added + 1, U.nAura do
+            added[i] = newAura()
+        end
+        ADDED[u] = added
+        DELTA[u] = DELTA[u] or { addedAuras = {}, updatedAuraInstanceIDs = {}, removedAuraInstanceIDs = {} }
+        FULL[u] = FULL[u] or { isFullUpdate = true }
+    end
+end)
+local function clear(list, n)
+    for i = 1, n do
+        list[i] = nil
+    end
+end
+function I.DeliverAuraDeltas(t)
+    local D, U = I.auraDelta, I.auras
+    for u = 1, U.n do
+        local nAdd, nUpd, nRem = D.nAdd[u], D.nUpd[u], D.nRem[u]
+        if D.full[u] then
+            I.Events.Deliver("UNIT_AURA", U.token[u], FULL[u])
+        elseif nAdd + nUpd + nRem > 0 then
+            local unit, payload = U.token[u], DELTA[u]
+            local added, upd, rem = payload.addedAuras, payload.updatedAuraInstanceIDs, payload.removedAuraInstanceIDs
+            local k = 0
+            for i = 1, nAdd do
+                local j = D.add[u][i]
+                local inst = U.inst[u][j]
+                local spellID, rec, stacks, applied = VS.AuraByInstance(unit, inst, t)
+                if spellID then -- still up: one added and removed within the drain comes as its removal alone
+                    k = k + 1
+                    added[k] = fill(ADDED[u][k], spellID, rec, stacks, applied, inst, U.harm[u][j])
+                end
+            end
+            for i = 1, nUpd do
+                upd[i] = D.upd[u][i]
+            end
+            for i = 1, nRem do
+                rem[i] = D.rem[u][i]
+            end
+            I.Events.Deliver("UNIT_AURA", unit, payload)
+            clear(added, k)
+            clear(upd, nUpd)
+            clear(rem, nRem)
+        end
+        D.nAdd[u], D.nUpd[u], D.nRem[u], D.full[u] = 0, 0, 0, false
+    end
+end
+
 kept("AuraUtil.ForEachAura", "virtual", function(unit, filter, maxCount, fn)
     local harmful = filter and find(filter, "HARMFUL", 1, true) ~= nil or false
     for i = 1, maxCount or AURA_SLOTS do
