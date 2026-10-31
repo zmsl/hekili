@@ -114,6 +114,7 @@ local function newState(class, race)
         offset = 0,
         delay = 0,
         query_time = 0,
+        changes = 0, -- the mutation count the memoised cost keys on (Engine/Schema/Races.lua)
         level = 60,
         haste = 1,
         active_enemies = 1,
