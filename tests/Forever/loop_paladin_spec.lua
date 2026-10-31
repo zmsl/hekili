@@ -4,6 +4,7 @@
 -- the 20 (#paladin). Each gate also asserts its flagged lines ran (review focus 5).
 -- The 20-fight gates live one pack a file (loop_paladin_<pack>_spec.lua), so `make test-paladin` runs them in parallel.
 local headless = require("Game.harness.headless")
+local loop = require("Game.harness.loop")
 local pack_gate = require("Forever.helpers.pack_gate")
 local pw = require("Forever.helpers.paladin_world")
 
@@ -52,6 +53,28 @@ describe("the Paladin world's Judgement", function()
         gained = {}
         C.resolve("judgement", H).effect(W, e)
         assert.are.same({}, gained)
+    end)
+end)
+
+describe("the oracle's regen", function()
+    it("takes no measurement from the other world's last read to a fresh world's first", function()
+        local rates = {}
+        loop.tally(loop.new(pw.Protection), 2, {
+            duration = 3,
+            on = function(run, steps, t)
+                if t > run.W.stopAt - 0.5 and run.us.power > 300 then
+                    -- each world ends low: the next one's start, as it is, reads as 300 gained over the 30 s gap
+                    run.W.emit({ kind = "gain", src = run.us, cost = 300 })
+                end
+                local st = steps[#steps]
+                local VS = st.H.ns.VirtualState
+                rates[#rates + 1] = VS.Regen(0, st.base + t, VS.NOT_CASTING).est
+            end,
+        })
+        assert.is_true(#rates > 0)
+        for _, r in ipairs(rates) do
+            assert.is_true(math.abs(r - 17.38) < 1e-9, r) -- the world's rate
+        end
     end)
 end)
 

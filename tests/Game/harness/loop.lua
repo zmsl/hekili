@@ -353,6 +353,13 @@ function M.run(L, seed, o, drivers)
         -- its length), or the instance keeps believing the last fight's (a self-buff or a long cooldown of run A
         -- carried into run B, a different world)
         ctl.now = base
+        if d.plain then -- two world lines (run A's, run B's): its last read is the other world's, its gain to this one's
+            -- first read no regen, yet a measurement over the 30 s gap (the Protection oracle's 18.12 for a world's 17.38)
+            local res = d.H.ns.VirtualStateInternal.res
+            for r = 1, res.n do
+                res.pinValid[r] = false
+            end
+        end
         d.H.Fire("UNIT_AURA", "player")
         d.H.Fire("SPELL_UPDATE_COOLDOWN")
         d.H.Fire("UPDATE_SHAPESHIFT_FORM")
