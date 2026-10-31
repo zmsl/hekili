@@ -39,8 +39,8 @@ M.FLICKER = {
     ["Fury L24"] = { flicker = 0.8, retracted = 0.2, readyShort = 41 }, -- 0.68 / 0.75 / 0.66, 0.09 / 0.18 / 0.03
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
-    -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); still under base's 1.23 / 1.44 / 1.16
-    -- but for seeds 21-40's 1.24 > 1.05; owner standing approval 2026-10-30
+    -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
+    -- seed set; owner standing approval 2026-10-30
     ["Feral"] = { flicker = 1.3, retracted = 0 }, -- 1.20 / 1.24 / 1.10, 0
     ["Balance"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.05 / 0.07, 0
     ["Assassination"] = { flicker = 0, retracted = 0 }, -- 0 / 0 / 0, 0
