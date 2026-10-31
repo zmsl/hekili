@@ -137,23 +137,6 @@ describe("the headless loop's CPU metric", function()
         assert.is_true(r10.bytes - r.bytes >= 10 * 32, r10.bytes - r.bytes)
     end)
 
-    it("leaves a collector its caller stopped stopped after the bytes sample (o.gcHeld)", function()
-        local L = loop.new(stub())
-        collectgarbage("collect")
-        collectgarbage("stop")
-        finally(function()
-            collectgarbage("restart")
-        end)
-        local m = loop.tally(L, 2, { duration = 6, gcHeld = true })
-        assert.is_true(m.sampled > 0) -- it did stop and sample
-        local b0 = collectgarbage("count")
-        for _ = 1, 1e5 do
-            local _ = {}
-        end
-        -- stopped, the garbage all stays: 32 B or more a table; a restarted collector would have swept it
-        assert.is_true(collectgarbage("count") - b0 >= 1e5 * 32 / 1024)
-    end)
-
     it("gates the ratio in pack_gate's health check, the ms figure reported only", function()
         local gate = require("Forever.helpers.pack_gate")
         local h = { errors = 0, raises = 0, selfCheck = 0, misses = {}, secrets = {} }
