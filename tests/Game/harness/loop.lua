@@ -52,6 +52,14 @@ M.REACT = 0.05 -- a first icon whose wait is at most this is shown as ready: pre
 function M.readyShort(pre, p, us, t)
     return (p.cost or 0) > pre and (us.castUntil or 0) <= t and us.gcdUntil <= t + 1e-9
 end
+
+--- Held while ready, the mirror: our first icon (queue `q`) waits past `react` while the truth `pre` covers its cost
+--- and the oracle shadow (queue `q2`, the same tick) shows the same icon ready. The cost is the oracle's pricing
+--- (q2.cost, the pack's cost in the truth instance; 0 for another resource, so a cooldown wait counts too).
+function M.heldReady(q, q2, react, pre)
+    local key = q.name[1]
+    return key and q.time[1] > react and not M.unmatched(key, q2, react) and (q2.cost[1] or 0) <= pre or false
+end
 M.PULL = 3 -- the world starts this long before the pull, the target selected (precombat presses)
 M.GAP = 30 -- out of combat between two fights on one boot (consecutive pulls)
 -- The display-side hold experiment (flicker.hold) on our instance's shown queue: o.hold, else this switch (off)
@@ -274,6 +282,7 @@ function M.run(L, seed, o, drivers)
         raises = 0,
         selfCheck = {},
         readyShort = 0,
+        heldReady = 0,
     }
     -- the instance whose state is the run's truth, a press resolving from it: the oracle when it is driven, else the
     -- driver (a run of ours alone, ws.live, never steps the oracle, whose state then stays at its boot)
@@ -563,6 +572,9 @@ function M.run(L, seed, o, drivers)
         if inCombat then
             local n = run.combat + 1
             run.combat = n
+            if steps[2] and M.heldReady(q, steps[2].q, o.react or M.REACT, W.res(us, L.power.type)) then
+                run.heldReady = run.heldReady + 1
+            end
             run.full = run.full + (us.power >= us.powerMax and 1 or 0)
             run.idle = run.idle + ((gcdFree and not gcdPress) and 1 or 0)
             local tgt = us.target
@@ -712,6 +724,7 @@ local function blank()
         attempts = 0,
         episodes = 0,
         readyShort = 0,
+        heldReady = 0,
     }
     m.unmatched = {} -- run A's refusals the oracle shadow would not have made (M.unmatched)
     m.refusedB, m.attemptsB = {}, 0 -- the oracle's own, driving run B (the projection's share: §5.2 as built)
@@ -771,6 +784,7 @@ function M.tally(L, n, o)
         end
         m.attempts, m.episodes = m.attempts + a.attempts, m.episodes + a.episodes
         m.readyShort = m.readyShort + a.readyShort
+        m.heldReady = m.heldReady + a.heldReady
         m.focus = m.focus + a.focus
         for why, k in pairs(b.refused) do
             m.refusedB[why] = (m.refusedB[why] or 0) + k
@@ -900,7 +914,7 @@ end
 --- run's calibration, calMean the calibration's mean ms; bytes allocated per Update, sampled, reported only), and
 --- the tally's focus count (not in M.line).
 function M.summary(m)
-    local r = { focus = m.focus, readyShort = m.readyShort or 0 }
+    local r = { focus = m.focus, readyShort = m.readyShort or 0, heldReady = m.heldReady or 0 }
     r.agreement = m.agree / math.max(1, m.both)
     local reacted, never = {}, 0
     for _, d in ipairs(m.react) do
@@ -1007,7 +1021,7 @@ function M.line(m)
         gap = gap + g
     end
     local line = (
-        "fights=%d agreement %.3f (%d ticks); react median %d p90 %d never %.3f; ready while short %d; refused per 100 [%s], episodes %.2f/min; "
+        "fights=%d agreement %.3f (%d ticks); react median %d p90 %d never %.3f; ready while short %d; held while ready %d; refused per 100 [%s], episodes %.2f/min; "
         .. "dps A/B %.3f; full %.3f/%.3f idle %.3f/%.3f; uptime [%s]; flicker %.2f/min (oracle %.2f); "
         .. "errors %d raises %d self-check %d; cpu mean %.2f p99 %.2f ms ratio %.3f (calibration %.2f ms) "
         .. "bytes %.0f per Update; top [%s]; power est-truth at disagreements %.1f"
@@ -1019,6 +1033,7 @@ function M.line(m)
         r.reactP90,
         r.never,
         r.readyShort,
+        r.heldReady,
         M.refusedLine(r),
         r.episodes,
         r.dps,

@@ -146,6 +146,20 @@ describe("the headless loop's CPU metric", function()
         assert.is_false(loop.readyShort(39, { cost = 40 }, { gcdUntil = 0, castUntil = 2 }, 1))
     end)
 
+    it(
+        "counts a waiting icon as held while ready only when the truth covers it and the oracle shows it ready",
+        function()
+            local ours = { name = { "x" }, time = { 0.4 }, cost = { 40 } }
+            local shadow = { name = { "x" }, time = { 0 }, cost = { 40 } }
+            assert.is_true(loop.heldReady(ours, shadow, 0.05, 40))
+            assert.is_false(loop.heldReady(ours, shadow, 0.05, 39)) -- the truth is short: an honest wait
+            assert.is_false(loop.heldReady({ name = { "x" }, time = { 0 }, cost = { 40 } }, shadow, 0.05, 40)) -- shown
+            assert.is_false(loop.heldReady(ours, { name = { "y" }, time = { 0 }, cost = { 0 } }, 0.05, 40)) -- another icon
+            assert.is_false(loop.heldReady(ours, { name = { "x" }, time = { 0.4 }, cost = { 40 } }, 0.05, 40)) -- both wait
+            assert.is_false(loop.heldReady({ name = { false }, time = { 0 }, cost = { 0 } }, shadow, 0.05, 40))
+        end
+    )
+
     it("prints the oracle's refusal reasons ours has none of", function()
         local r = { per100 = {}, per100B = { cost = 5.5 }, per100U = {} }
         assert.is_truthy(loop.refusedLine(r):find("cost 0.0 (oracle 5.5, unmatched 0.0)", 1, true))
