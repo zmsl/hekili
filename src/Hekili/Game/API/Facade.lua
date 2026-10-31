@@ -15,6 +15,7 @@
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
+local CAP_WAIT = 0.06 -- seconds of regen a read on a short answer's cap sits under it: past a shown-ready wait's 0.05
 local floor, find, HUGE = math.floor, string.find, math.huge
 local _G = _G
 
@@ -270,10 +271,13 @@ kept(
         if r and I.res.swing[r] > 0 then
             return floor(b.lo)
         end
-        -- On a short answer's cap the client just said no, and the cap says how far under the cost nothing: read it a whole
-        -- unit under, any cost's (39.97 too), or the wait is the cap's 0.01 on every poll and the ability looks ready.
+        -- On a short answer's cap the client just said no, and the cap says nothing of how far under the cost: read it a
+        -- whole unit under, any cost's (39.97 too), or by what regen pays in CAP_WAIT at a mana rate, where one unit is
+        -- under the 0.05 s of a shown-ready wait; else the ability looks ready on every poll.
         if b.capped then
-            return b.lo > 1 and b.lo - 1 or 0
+            local depth = VS.Regen(powerType, now()).est * CAP_WAIT
+            depth = depth > 1 and depth or 1
+            return b.lo > depth and b.lo - depth or 0
         end
         return b.lo
     end,

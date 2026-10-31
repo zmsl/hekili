@@ -182,6 +182,15 @@ describe("ns.Facade", function()
                 return { est = 0.49, lo = 0.49, capped = true }
             end
             assert.are.equal(0, Facade.UnitPower("player", 3))
+            local regen = VS.Regen
+            VS.Regen = function()
+                return { est = 33 } -- a mana rate: a whole unit alone is under the 0.05 s of a shown-ready wait
+            end
+            VS.Power = function()
+                return { est = 120.99, lo = 120.99, capped = true }
+            end
+            assert.is_true((121 - Facade.UnitPower("player", 3)) / 33 > 0.05)
+            VS.Regen = regen
             VS.Power = function()
                 return { est = 39.99, lo = 39.99, capped = false } -- a measured fraction keeps it
             end

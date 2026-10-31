@@ -46,8 +46,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- answer, a flip's pin: the game held more than we believed) and the latest lifting rung's time; a landed swing at or
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
 -- may pay the rest).
--- `capTop[r]`: the top of the latest short answer that cut the floor since our last spend (math.huge: none); a read on
--- it is a ceiling, not a measurement (VS.Power's `capped`).
+-- `capT[r]`: when a short answer last cut the floor since our last spend; until the next fold moves the clock a read
+-- stands on a ceiling, not a measurement (VS.Power's `capped`), and a poll still short cuts it again.
 -- `sinceShort[r]`: the lowest top a short answer set since our last spend from slot r (math.huge: none), and the
 -- estimate just after it (`sinceShortEst[r]`: what the slot gained since moves that top with it); `sinceYes[r]` /
 -- `sinceSnap[r]`: whether a usable answer raised its floor / its estimate since then. An avoided cast's refund
@@ -133,7 +133,7 @@ local R = {
     liftT = {},
     liftRec = {},
     sinceShort = {},
-    capTop = {},
+    capT = {},
     sinceShortEst = {},
     sinceYes = {},
     sinceSnap = {},
@@ -396,7 +396,7 @@ I.OnBuild(function(def, now)
         R.pinN[r], R.pinErr[r] = 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
-        R.capTop[r] = math.huge
+        R.capT[r] = -1e9
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
         R.decay[r] = decayOf(r)
@@ -916,7 +916,7 @@ local function ladder(r, c, affordable, t, lag)
             R.lo0[r] = top < 0 and 0 or top -- the newest bound wins
         end
         if was >= top then -- one poll answers every ability: a dearer one's top is above the floor and says nothing of it
-            R.capTop[r] = top
+            R.capT[r] = t
         end
     end
     remeasure(r, was, affordable and R.max[r] or c - I.EPS)
@@ -1700,7 +1700,7 @@ function I.ResourceShift(r, delta, t, event)
         end
     elseif delta < 0 then
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
-        R.sinceShort[r], R.sinceYes[r], R.sinceSnap[r], R.capTop[r] = math.huge, false, false, math.huge
+        R.sinceShort[r], R.sinceYes[r], R.sinceSnap[r], R.capT[r] = math.huge, false, false, -1e9
         if R.fsr[r] then
             -- our own spend: the spirit part pauses (the five-second rule, C3), to the channel's end when it paid one;
             -- any other spend during a channel drops the hold (the known difference above)
@@ -1780,7 +1780,7 @@ function VS.Power(powerType, now)
         hi = est
     end
     rec.est, rec.lo, rec.hi = est, lo, hi
-    rec.capped = abs(lo - R.capTop[r]) <= I.EPS
+    rec.capped = R.capT[r] == I.clock
     local conf = 1 - (hi - lo) / max -- nonzero: max > 0 (the default 100, or a plain read above 0)
     if now - R.snapT[r] < I.SNAP_HOLD then
         conf = conf * 0.5

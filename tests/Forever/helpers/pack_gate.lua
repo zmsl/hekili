@@ -35,13 +35,14 @@ M.FLICKER = {
     ["Fury L60"] = { flicker = 0.9, retracted = 0.2 }, -- 0.81 / 0.70 / 0.88, 0.20 / 0.17 / 0.06
     ["Fury L24"] = { flicker = 0.8, retracted = 0.2 }, -- 0.68 / 0.75 / 0.66, 0.09 / 0.18 / 0.03
     -- 1.1 -> 1.2, retracted 0 -> 0.1 (gap CE, a short answer's cap reads a whole unit under; seeds 1-20 / 21-40 / 41-60:
-    -- 0.83 / 1.20 / 0.83, retracted 0 / 0.04 / 0.04; was 0.82 / 1.05 / 0.81, 0; oracle 1.78 / 1.95 / 1.08): each retracted
+    -- 0.87 / 1.20 / 1.00, retracted 0 / 0.04 / 0.04; was 0.82 / 1.05 / 0.81, 0; oracle 1.47 / 1.95 / 1.27): each retracted
     -- ready is rake or shred shown ready, the client's short answer, its wait back to 0.11, where the old read pressed
-    -- into a refusal for up to 2 s (refused 0.8 / 1.6 / 1.5 -> 0.1 per 100); the flicker rise is fights re-timed around
+    -- into a refusal for up to 2 s (refused 0.8 / 1.6 / 1.5 -> 0 / 0.1 / 0.1 per 100); the flicker rise is fights re-timed around
     -- those refusals: 1 of 97 flips of seeds 21-40 touches a capped read, and the oracle moved as much (seeds 61-120:
     -- 1.18 / 0.88 / 0.85, was 1.06 / 0.94 / 0.87); owner standing approval 2026-10-30
-    ["Feral"] = { flicker = 1.2, retracted = 0.1 }, -- 0.83 / 1.20 / 0.83, 0 / 0.04 / 0.04
-    ["Balance"] = { flicker = 0.1, retracted = 0 }, -- 0.03 / 0.05 / 0.07, 0
+    ["Feral"] = { flicker = 1.2, retracted = 0.1 }, -- 0.87 / 1.20 / 1.00, 0 / 0.04 / 0.04
+    -- retracted 0 -> 0.1 (gap CE; 0.02 / 0 / 0; a capped read's one ready, as Feral's); owner standing approval 2026-10-30
+    ["Balance"] = { flicker = 0.1, retracted = 0.1 }, -- 0.03 / 0.03 / 0.07, 0.02 / 0 / 0
     ["Assassination"] = { flicker = 0, retracted = 0 }, -- 0 / 0 / 0, 0
     ["Combat"] = { flicker = 0.1, retracted = 0 }, -- 0.04 / 0 / 0, 0 (gap CE)
     ["Subtlety"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0 / 0, 0 (gap CE)
@@ -69,7 +70,8 @@ M.FLICKER = {
     -- extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike); controller ruling
     -- 2026-10-30 while the owner was away
     -- 0.9 -> 0.6 (gap CE, the facade's whole-number read gone; oracle 0 / 0.29 / 0)
-    ["Retribution"] = { flicker = 0.6, retracted = 0 }, -- 0.41 / 0.54 / 0.57, 0
+    -- 0.6 -> 0.5 (decision 63's rule, gap CE, the capped read follows the fold)
+    ["Retribution"] = { flicker = 0.5, retracted = 0 }, -- 0.29 / 0.41 / 0.40, 0 (oracle 0.47 / 0.21 / 0.02)
     -- 0.5 -> 0.8 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.54 / 0.71 / 0.49, was 0.45 / 0.03 / 0.68; oracle 0.59 / 1.81 / 1.73):
     -- wowsims's logged regen (Prot 0 casting) runs the world at an empty mana pool; the oracle's flicker rose to 0.59-1.81;
     -- our extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike, agreement .99 ->
@@ -78,7 +80,7 @@ M.FLICKER = {
     -- player's remedy.
     -- 0.8 -> 0.2 (gap CE, the facade's whole-number read gone): most of the flicker the two notes above blame on gap AB
     -- was that read; gap AB's agreement cost stands
-    ["Protection"] = { flicker = 0.2, retracted = 0 }, -- 0.10 / 0.18 / 0.14, 0 (oracle 0.07 / 0 / 0.10)
+    ["Protection"] = { flicker = 0.2, retracted = 0 }, -- 0.10 / 0.18 / 0.12, 0 (oracle 0.07 / 0 / 0.07)
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was
@@ -87,9 +89,10 @@ M.FLICKER = {
     -- at the crossing floor (Task 4's mechanism, gap BT; the swap test shows the Mana Spring entry is not involved); the
     -- one-poll-wider near-cost window (task-4c-wip.patch) fixes it but loosens Protection and Affliction instead;
     -- owner-approved standing named-cause policy, 2026-10-30 (controller ruling (b), task-4c-report.md)
-    -- 0.3 -> 0.2 (decision 63's rule, gap CE; the Task 11 near-ties above went with the whole-number read)
-    ["Enhancement"] = { flicker = 0.2, retracted = 0 }, -- 0.12 / 0.03 / 0.13, 0 (oracle 0 / 0 / 0.02)
-    ["Arcane"] = { flicker = 0.1, retracted = 0 }, -- 0.02 / 0.02 / 0.03, 0
+    -- 0.3 -> 0.2 (decision 63's rule, gap CE; most of the Task 11 near-ties above went with the whole-number read)
+    ["Enhancement"] = { flicker = 0.2, retracted = 0 }, -- 0.10 / 0.18 / 0.17, 0 (oracle 0.03 / 0 / 0.02)
+    -- retracted 0 -> 0.1 (gap CE; 0 / 0.02 / 0.02; a capped read's one ready, as Feral's); owner standing approval 2026-10-30
+    ["Arcane"] = { flicker = 0.1, retracted = 0.1 }, -- 0.02 / 0 / 0, 0 / 0.02 / 0.02
     ["Fire"] = { flicker = 0.3, retracted = 0 }, -- 0.22 / 0.13 / 0.12, 0
     -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits
     -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
@@ -105,7 +108,7 @@ M.FLICKER = {
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
     -- mp5 as its own entry): 0.13 / 0.17 / 0.08, oracle 0.05 / 0.07 / 0.05, floor kept
     -- 0.2 -> 0.1 (decision 63's rule, gap CE, the whole-number read gone)
-    ["Elemental"] = { flicker = 0.1, retracted = 0 }, -- 0.10 / 0.08 / 0.03, 0 (oracle 0.05 / 0.08 / 0.05)
+    ["Elemental"] = { flicker = 0.1, retracted = 0 }, -- 0.07 / 0.10 / 0.05, 0 (oracle 0.05 / 0.10 / 0.07)
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996

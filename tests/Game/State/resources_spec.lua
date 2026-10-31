@@ -329,7 +329,7 @@ describe("resources", function()
                 local e = VS.Power(ENERGY, 10.2)
                 within(25 - I.EPS, e.lo)
                 assert.is_true(e.capped)
-                assert.is_false(VS.Power(ENERGY, 10.4).capped) -- regen took it past, as any other read
+                assert.is_true(VS.Power(ENERGY, 10.216).capped) -- a later frame's read, no answer since: it stands
                 obs(Obs.Usable, 10.2, BUILDER, 0, 1) -- a dearer ability's short answer, same poll: nothing of the floor
                 I.Fold(10.2, false)
                 assert.is_true(VS.Power(ENERGY, 10.2).capped)
@@ -338,6 +338,19 @@ describe("resources", function()
                 assert.is_false(VS.Power(ENERGY, 10.2).capped)
             end
         )
+
+        it("ends a short answer's cap at the next fold, the client's yes at the same cost included", function()
+            I.Fold(10, false)
+            I.ResourceShift(1, -55, 10, Obs.CastSuccess) -- from rest: 45
+            obs(Obs.Usable, 10, BUILDER, 1, 0) -- a measured floor at the cost, 40
+            I.Fold(10, false)
+            obs(Obs.Usable, 10.2, BUILDER, 0, 1)
+            I.Fold(10.2, false)
+            assert.is_true(VS.Power(ENERGY, 10.2).capped)
+            obs(Obs.Usable, 10.4, BUILDER, 1, 0)
+            I.Fold(10.4, false)
+            assert.is_false(VS.Power(ENERGY, 10.4).capped)
+        end)
 
         it("leaves a read under a short answer's cap a measurement", function()
             I.Fold(10, false)
