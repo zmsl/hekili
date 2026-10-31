@@ -3,27 +3,67 @@
 ## Unreleased
 
 ### New
-- High Order Skyborne Hunters, Mages and Druids: Read Ley Line is tracked and recommended where the wowsims priorities cast it (the Mage's), and Energized's doubled mana regen counts in the predicted mana. The Windshaper Skyborne get neither.
-- New experimental display option, Modern (game truth): keeps your Classic or Timeline display as it is and adds the game's own cooldown swipes, an immediate grey when the game says an ability cannot be used yet, and, optionally (off by default), a proc mark on the next ability when the game lights its proc, an alternative to the display style's own glow. Hekili still decides what to show; turn it on in a display's Modern tab to try it.
 
 ### Changed
-- Mana regen during a channel you paid for (Wrack, Drain Soul, Rain of Fire, Hellfire, Arcane Missiles, Blizzard, Hurricane, Volley): the icons now keep the casting-rate regen until the channel ends, as wowsims does, instead of resuming Spirit regen 5 s in; a channel that costs nothing (Evocation, a free Arcane Missiles) holds nothing.
-- Paladins: mana starts from measured rates per spec (wowsims's Retribution and Protection logs; Forever's Spirit regen is 6.25 + Spirit/8 a second for every class), so the icons now follow the empty mana pool those logs show.
-- Near-ties on mana and energy no longer flip the first icon every other update: predicted mana and energy keep their fraction instead of rounding down, so two abilities a hair apart stop swapping as your mana ticks up. An ability the game still says you can't afford keeps its countdown.
-- When your mana (or another resource) sits within a hair of an ability's cost, the first icon no longer flips to a cheaper ability for one update and back: the higher-priority ability keeps its countdown until it is affordable. An ability shows as ready when your predicted mana or energy reaches its cost, which can be one update sooner than before; once the game says you can't afford it, it stays a countdown.
 
 ### Fixed
-- Druids: mana regen counts the Serenity Field trinket's buff (Spirit +72 for 15 seconds, about 9 mana a second more), so the icons follow the extra mana while it is up.
-- Warlocks: mana regen counts Fel Energy (the Voidwalker sacrifice: 2% of your maximum mana every 4 seconds while it is up).
-- Priests: mana regen counts Dark Inspiration's Spirit, Dark Sacrifice's mana follows your Spirit instead of a fixed amount, and Priest mana starts from measured rates per spec (wowsims's Shadow and Smite logs).
-- Mages: Evocation's mana follows your learned mana regen (Spirit regen x 16, all of it while casting) instead of a fixed amount, and Mage mana starts from measured rates per spec (wowsims's Arcane, Fire and Frostfire logs).
-- Hunters: mana regen counts Resourcefulness and Rapid Recuperation, and Hunter mana starts from measured rates (wowsims's Beast Mastery, Marksmanship and Survival logs) instead of a guess.
-- Enhancement Shamans: mana regen counts Improved Stormstrike, and Shaman mana starts from measured rates (wowsims's Elemental and Enhancement logs) instead of a guess.
-- Shamans: mana regen counts Mana Spring Totem's buff only while your water totem stands (4 to 10 mana every 2 seconds by rank, +5% a rank of Restorative Totems), instead of always, as wowsims does.
 
 ### Known issues
 
 ### Upgrade notes
+
+## v0.5.0
+
+_Released 2026-10-31_
+
+This release makes mana predictions much more accurate for every mana class, so recommendations near your mana cost are steadier. It also adds an experimental Modern display option that shows the game's own cooldown and usability feedback.
+
+### Druid
+- Mana prediction now includes the Serenity Field trinket's Spirit buff (about 9 mana a second more for its 15 seconds).
+- High Order Skyborne: Energized's doubled mana regen now counts in predicted mana, and Read Ley Line is tracked. Windshaper Skyborne don't get either.
+
+### Hunter
+- Mana prediction now includes Resourcefulness and Rapid Recuperation.
+- Mana prediction now starts from measured regen rates for Beast Mastery, Marksmanship and Survival instead of a guess.
+- High Order Skyborne: Energized's doubled mana regen now counts in predicted mana, and Read Ley Line is tracked. Windshaper Skyborne don't get either.
+
+### Mage
+- Evocation's mana now follows your actual mana regen instead of a fixed amount.
+- Mana prediction now starts from measured regen rates for Arcane, Fire and Frostfire.
+- High Order Skyborne: Read Ley Line is now recommended where the Mage priorities cast it, and Energized's doubled mana regen counts in predicted mana. Windshaper Skyborne don't get either.
+
+### Paladin
+- Retribution and Protection mana prediction now uses measured regen rates, so the icons follow you down to an empty mana pool.
+
+### Priest
+- Mana prediction now includes Dark Inspiration's Spirit.
+- Dark Sacrifice's mana now follows your Spirit instead of a fixed amount.
+- Shadow and Smite mana prediction now uses measured regen rates.
+
+### Shaman
+- Enhancement: mana prediction now includes Improved Stormstrike.
+- Elemental and Enhancement mana prediction now uses measured regen rates instead of a guess.
+- Mana Spring Totem's mana now counts only while your water totem is standing, not all the time.
+
+### Warlock
+- Mana prediction now includes Fel Energy from sacrificing your Voidwalker (2% of maximum mana every 4 seconds while it is up).
+
+### Core and display
+- Channels you paid mana for keep casting-rate regen until the channel ends, instead of switching back to Spirit regen after 5 seconds.
+  - This covers Wrack, Drain Soul, Rain of Fire, Hellfire, Arcane Missiles, Blizzard, Hurricane and Volley.
+  - Free channels, such as Evocation or a free Arcane Missiles, are not affected.
+- Two abilities that are nearly tied on mana or energy no longer swap places in the first icon on every update as your resource ticks up.
+- When your mana sits just under a higher-priority ability's cost, the first icon no longer flickers to a cheaper ability for one update.
+  - The higher-priority ability keeps its countdown until you can afford it.
+- Abilities can show as ready up to one update sooner. They stay on a countdown while the game says you can't afford them.
+- New experimental Modern option in each display's Modern tab. It keeps your Classic or Timeline look and adds:
+  - the game's own cooldown swipes;
+  - an immediate grey when the game says an ability can't be used yet;
+  - an optional proc mark on the next ability when the game lights its proc (off by default).
+
+### Known issues
+- With Timeline's Timers Out of Combat turned off, Modern's cooldown swipe still shows running cooldowns out of combat.
+- Modern is experimental, and parts of it may be switched off in a later update.
 
 ## v0.4.0
 
