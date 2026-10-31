@@ -383,6 +383,17 @@ describe("resources", function()
             assert.is_false(VS.Power(ENERGY, 10.6).capped)
         end)
 
+        it("clears the mark when a usable answer above the top contradicts the short one on the same fold", function()
+            I.Fold(10, false)
+            I.ResourceShift(1, -70, 10, Obs.CastSuccess) -- from rest: 30
+            obs(Obs.Usable, 10.2, FINISHER, 0, 1) -- short at 25: the floor sits on the cap
+            obs(Obs.Usable, 10.2, BUILDER, 1, 0) -- usable at 40, above that top: the short answer is contradicted
+            I.Fold(10.2, false)
+            local e = VS.Power(ENERGY, 10.2)
+            within(40, e.lo)
+            assert.is_false(e.capped)
+        end)
+
         it("leaves a read under a short answer's cap a measurement", function()
             I.Fold(10, false)
             I.ResourceShift(1, -80, 10, Obs.CastSuccess) -- from rest: 20

@@ -47,7 +47,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
 -- may pay the rest).
 -- `capT[r]`: when a short answer last reached the floor since our last spend; until the next fold moves the clock a read
--- stands on a ceiling, not a measurement (VS.Power's `capped`), and a poll still short marks it again. `capB[r]`: false
+-- stands on a ceiling, not a measurement (VS.Power's `capped`), and a poll still short marks it again; a usable answer
+-- above the top (the same poll's, a dearer ability) contradicts the short one and ends it. `capB[r]`: false
 -- when it cut the floor; a floor just under the top, inside the ready wait, reads no higher than this instead.
 -- `sinceShort[r]`: the lowest top a short answer set since our last spend from slot r (math.huge: none), and the
 -- estimate just after it (`sinceShortEst[r]`: what the slot gained since moves that top with it); `sinceYes[r]` /
@@ -905,6 +906,7 @@ local function ladder(r, c, affordable, t, lag)
             -- above the believed top: a gain the belief did not see (a refill: a potion, a pause, a mana return) put
             -- the slot anywhere from c to its maximum; a bound, never the pin [c, c] (GAP V)
             R.hi0[r] = R.max[r]
+            R.capT[r] = -1e9 -- a usable answer above the top: the short one is contradicted, the read stands
         end
     else
         local top = c - I.EPS
