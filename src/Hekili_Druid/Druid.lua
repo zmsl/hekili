@@ -274,6 +274,7 @@ spec:RegisterResource(
         -- Tag 2 22.0 -> 31.0 over 114.9-126 s at Spirit 126); 1 before that read.
         serenity_field = {
             aura = "serenity_field",
+            item = 272439, -- the replay's key: wowsims logs the buff by its item
             spirit = function()
                 local _, s = state.stat("UnitStat", 5)
                 return s > 0 and 1 + 9 / (6.25 + s / 8) or 1

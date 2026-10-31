@@ -775,6 +775,7 @@ describe("Forever Druid", function()
         )
         local m = w.resources[0].models.serenity_field
         assert.are.equal("serenity_field", m.aura)
+        assert.are.equal(272439, m.item) -- the replay's key: wowsims logs the buff by its item
         w.state.stat = function()
             return 0, 126
         end

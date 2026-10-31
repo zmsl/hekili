@@ -107,7 +107,10 @@ local function ours(rest)
     local verb
     verb, b = rest:match("^Aura (%a+): {([^}]*)}")
     if verb then
-        local id, _, tag = ids(b) -- an OtherID aura (a pre-pull move) is not a spell's
+        local id, _, tag, item = ids(b) -- an OtherID aura (a pre-pull move) is not a spell's
+        if item then -- an item's buff: M.new turns it into its aura, if a regen entry names the item
+            return { kind = "itemAura", verb = verb, item = item }
+        end
         return id and { kind = "aura", unit = "player", verb = verb, id = id, tag = tag }
     end
     local n
@@ -175,7 +178,8 @@ end
 --- The events of a log's text: { header = { pin, spec, seed, duration, targetLevel, talents = { { id, rank, tree } }
 --- }, ev = { { t, kind, ... } } } in line order. Kinds: casting { id | item, tag, cast, gcd, cost }, completed { id, other,
 --- tag, item },
---- power { name, from, to, amount, total, id, other, tag }, aura { unit ("player" | "target"), verb ("gained" | "faded" | "refreshed"), id }, stacks
+--- power { name, from, to, amount, total, id, other, tag }, aura { unit ("player" | "target"), verb ("gained" | "faded" | "refreshed"), id }, itemAura
+--- { verb, item } (the log names an item's buff by its item: M.new's aura if a regen entry says which), stacks
 --- { unit, id, to }, hit { what ("swing" | "spell" | "tick"), hand, id, act, flag, amount }, move { distance } (our
 --- Movement aura's stacks: wowsims's yards to the target, truncated, at least 1, while we move), petPower (our pet's
 --- power line: power's fields). Other lines are skipped.
@@ -212,7 +216,7 @@ function M.parse(text)
             if e then
                 e.t = t
                 -- a pet power line at [0.00] ends `opening`: opening aura lines after one lose `initial` (none today)
-                opening = opening and t == 0 and (e.kind == "aura" or e.kind == "stacks")
+                opening = opening and t == 0 and (e.kind == "aura" or e.kind == "itemAura" or e.kind == "stacks")
                 e.initial = opening or nil
                 ev[#ev + 1] = e
             end
@@ -317,6 +321,22 @@ function M.new(text, H, o)
         creatureType = o.creatureType,
     }
     local class = H.Hekili.Class
+    -- an item's buff (the log's "Aura gained: {ItemID: n}", the line before its "Gained {"Spirit": ...}"): a class regen
+    -- entry's `item` says which aura, so the belief's entry runs over the log's window
+    local itemAura = {}
+    for _, rs in pairs(class.resources or {}) do
+        for _, m in ipairs(rs.state and rs.state.regenMult or {}) do
+            local a = m.item and m.aura and class.auras[m.aura]
+            if a and a.id then
+                itemAura[m.item] = a.id
+            end
+        end
+    end
+    for _, e in ipairs(p.ev) do
+        if e.kind == "itemAura" and itemAura[e.item] then
+            e.kind, e.unit, e.id = "aura", "player", itemAura[e.item]
+        end
+    end
     -- a cooldown the kit computes (a function: talent-modified) as the booted engine answers it, or nil (an error
     -- too: the log's spacing stands in). shortcut: read once at boot, so a state-dependent cooldown (a buff, haste)
     -- keeps its boot value; read it at each cast when a kit's cooldown moves in a fight.

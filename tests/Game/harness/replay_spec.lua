@@ -550,6 +550,43 @@ describe("the replay's pet power", function()
     end)
 end)
 
+describe("an item's buff in the log", function()
+    local LOG = table.concat({
+        "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+        "[1.00] [Tester (#1)] Aura gained: {ItemID: 900200}",
+        '[1.00] [Tester (#1)] Gained {"Spirit": 72.000,} from {ItemID: 900200}.',
+        "[3.00] [Tester (#1)] Aura faded: {ItemID: 900200}",
+        "[3.10] [Tester (#1)] Aura gained: {ItemID: 900201}", -- no regen entry names this one
+    }, "\n")
+    local CLASS = {
+        abilities = {},
+        auras = { charm = { id = 900080, duration = 15 } },
+        resources = { mana = { state = { regenMult = { { aura = "charm", item = 900200, spirit = 2 } } } } },
+    }
+
+    it("applies the aura a regen entry's `item` names over the log's window, as a buff the client sees", function()
+        local R = replay.new(LOG, { Hekili = { Class = CLASS } }, {})
+        local W = R.world(WO, 1)
+        local us = W.ents[1]
+        assert.is_nil(at(W, R.pull + 0.5) and us.auras[900080])
+        local a = at(W, R.pull + 2) and us.auras[900080]
+        assert.is_table(a)
+        assert.is_true(math.abs(a.expires - (R.pull + 3)) < 0.01) -- the log's fade, not the declared 15 s
+        local shown
+        for _, ev in ipairs(W.truth) do
+            shown = shown or (ev.kind == "aura" and ev.aura == 900080)
+        end
+        assert.is_true(shown)
+        assert.is_nil(at(W, R.pull + 4) and us.auras[900080])
+    end)
+
+    it("skips an item's aura line no regen entry names", function()
+        local R = replay.new(LOG, H, O) -- no resources: nothing names the item
+        local W = R.world(WO, 1)
+        assert.are.same({}, at(W, R.pull + 2).ents[1].auras)
+    end)
+end)
+
 describe("the replay's channels and hard casts (central fix 22, gap BC)", function()
     local LOG = table.concat({
         "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",

@@ -25,6 +25,26 @@ local function content(spec, base, pack, level, extra)
 end
 
 describe("the Druid wowsims.com packs #slow #wowsims", function()
+    it("Balance's replay runs the Serenity Field regen entry over the log's window", function()
+        local C = ws.logged(content("druid_balance", W.Balance, "Balance (wowsims.com)", 60), "druid_balance")
+        local L = loop.new(C)
+        local R = replay.new(ws.log("druid_balance"), L.oracle, ws.replayOptions(C, "druid_balance"))
+        local up, down = 0, math.huge -- the belief's rate at the log's 116-125 s and 130-170 s
+        loop.replay(L, R, {
+            on = function(_, steps, t)
+                local st = steps[1]
+                local VS = st.H.ns.VirtualState
+                local rate, at = VS.Regen(0, st.base + t, VS.NOT_CASTING).est, t - R.pull
+                if at > 116 and at < 125 then
+                    up = math.max(up, rate)
+                elseif at > 130 and at < 170 then
+                    down = math.min(down, rate)
+                end
+            end,
+        })
+        assert.is_true(up > 30 and down < 24, up .. " vs " .. down) -- Tag 2's 31 and 22 a second
+    end)
+
     it("Feral's replay world reports the energy rate the client reads", function()
         local C = content("druid_feral", W.Feral, "Feral (wowsims.com)", 60)
         local R = replay.new(ws.log("druid_feral"), loop.new(C).oracle, {})
