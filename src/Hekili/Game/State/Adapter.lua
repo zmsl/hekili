@@ -365,11 +365,6 @@ function VS.SpecChanged()
     I.Build(def, GetTime())
 end
 
---- Re-reads the experimental toggles: applied at once out of combat, else at combat end (VS.SetProviders).
-function Hekili:ProvidersChanged()
-    VS.SetProviders(providersOf())
-end
-
 ----------------------------------------------------------------------------------------------------------------------
 -- The drain (event-facade spec §12a): our casts' effects are written by the `now` handlers as the fold reaches them
 -- (Families/Now.lua); Hekili's state is never reset or replayed here.

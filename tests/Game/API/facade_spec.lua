@@ -420,8 +420,8 @@ describe("ns.Facade", function()
                 assert.is_nil(src:find(retail, 1, true), file)
             end
             local spec = assert(io.open("src/Hekili/Engine/Schema/Spec.lua")):read("*a")
-            assert.is_truthy(spec:find("global_cooldown = {\n        id = ns.VirtualStateInternal.GCD_SPELL,", 1, true))
-            assert.are.equal(29515, I.GCD_SPELL)
+            assert.is_truthy(spec:find("global_cooldown = {\n        id = ns.GCD_SPELL,", 1, true))
+            assert.are.equal(29515, I.GCD_SPELL) -- the belief's copy; the engine's is ns.GCD_SPELL (Constants.lua)
         end
     )
 

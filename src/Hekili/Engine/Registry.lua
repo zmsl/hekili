@@ -7,7 +7,7 @@ local _, ns = ...
 local class, state = Hekili.Class, Hekili.State
 
 local Registry = {
-    GCD_SPELL = ns.VirtualStateInternal.GCD_SPELL,
+    GCD_SPELL = ns.GCD_SPELL,
 }
 Hekili.Engine.Registry = Registry
 

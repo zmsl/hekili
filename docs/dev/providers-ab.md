@@ -243,7 +243,7 @@ Options > Performance > Experimental, both off by default, profile-wide (`profil
   injected) the viewer leaf (`Sources/Presence/CooldownViewer.lua`). It needs the Cooldown Manager enabled in the
   game options (`C_CooldownViewer.IsCooldownViewerAvailable()`); without it the router covers nothing.
 
-Each setter calls `Hekili:ProvidersChanged()` (`Game/State/Adapter.lua`), which calls
+Each setter calls `Hekili:ProvidersChanged()` (`Options/Options.lua`), which calls
 `VS.SetProviders(outcomes, presence, viewer)`: at once out of combat; in combat the names are stored and applied at
 `PLAYER_REGEN_ENABLED`. A provider never changes mid-fight. `VS.SetProviders` swaps the active tables (`I.outcomes`,
 `I.presence`); `I.def.providers` keeps the build's names until the next build. A profile switch rebuilds through

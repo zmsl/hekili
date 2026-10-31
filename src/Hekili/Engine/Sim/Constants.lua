@@ -7,6 +7,10 @@ local C_SpecializationInfo = Facade.C_SpecializationInfo
 local GetClassInfo, GetNumClasses, UnitSex = Facade.GetClassInfo, Facade.GetNumClasses, Facade.UnitSex
 local Hekili = _G[ addon ]
 
+-- Forever's GCD spell (shared-content spec §5; audit E15): the one ID the engine asks the GCD's cooldown by. The
+-- belief keeps its own copy (Game/State/Sources/Spellbook.lua, I.GCD_SPELL).
+ns.GCD_SPELL = 29515
+
 local GetSpecialization = C_SpecializationInfo.GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 -- Class Localization

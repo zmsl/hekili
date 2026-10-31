@@ -48,7 +48,7 @@ describe("Engine.Registry (headless Arms)", function()
         assert.are.equal(class.potionList, R.PotionList())
         assert.are.equal(class.file, R.ClassFile())
         assert.are.equal(class.specs[ww.SPEC].settings, R.Settings(ww.SPEC))
-        assert.are.equal(H.ns.VirtualStateInternal.GCD_SPELL, R.GCD_SPELL)
+        assert.are.same({ 29515, 29515 }, { H.ns.GCD_SPELL, R.GCD_SPELL }) -- the engine's own constant (audit E15)
         assert.are.equal(ww.SPEC, H.Hekili.Engine.Output.status.specID)
     end)
 

@@ -1192,7 +1192,7 @@ local function UNIT_POWER_FREQUENT( event, unit, power )
         end
     end
 
-    local newPower = math.floor( UnitPower( "player", Enum.PowerType[ power ] ) ) -- a spend, not the belief's float drift
+    local newPower = math.floor( UnitPower( "player", Enum.PowerType[ power ] ) ) -- power is spent in whole points
 
     if lastPower[ power ] and newPower < lastPower[ power ] then
         Hekili:ForceUpdate( event, true )
@@ -1666,7 +1666,7 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
                 end
             end
 
-            state.gcd.lastStart = max( state.gcd.lastStart, ( GetSpellCooldown( ns.VirtualStateInternal.GCD_SPELL ) ) )
+            state.gcd.lastStart = max( state.gcd.lastStart, ( GetSpellCooldown( ns.GCD_SPELL ) ) )
             -- if subtype ~= "SPELL_DAMAGE" then Hekili:ForceUpdate( subtype, true ) end
         end
     end

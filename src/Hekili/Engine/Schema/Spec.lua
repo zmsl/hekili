@@ -1860,7 +1860,7 @@ all:RegisterAuras( {
 
 all:RegisterAbilities( {
     global_cooldown = {
-        id = ns.VirtualStateInternal.GCD_SPELL,
+        id = ns.GCD_SPELL,
         cast = 0,
         cooldown = 0,
         gcd = "spell",

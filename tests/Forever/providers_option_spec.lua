@@ -1,10 +1,33 @@
 -- tests/Forever/providers_option_spec.lua (providers plan, Tasks 4 and 7): the experimental damage-meter switch
 -- (profile.performance.damageMeter) and the Cooldown Manager switch (cooldownViewer) reach the build's def.providers
--- and Hekili:ProvidersChanged; a change in combat waits for the fight's end (VS.SetProviders).
+-- and Hekili:ProvidersChanged (Options' own, calling Hekili.Virtual.State.SetProviders: audit E17); a change in
+-- combat waits for the fight's end (VS.SetProviders).
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
 describe("the providers options", function()
+    it(
+        "the setters apply the toggles through Hekili.Virtual.State.SetProviders, not through the belief's glue",
+        function()
+            local H = headless.new({ character = ww.character(), pack = ww.PACK })
+            local I = H.ns.VirtualStateInternal
+            H.Hekili:EmbedSpecOptions()
+            H.Hekili:EmbedPackOptions()
+            local key = H.Hekili.State.spec.key
+            local args = H.Hekili.Options.args.packs.plugins.specializations[key].args.performance.args
+            args.damageMeter.set(nil, true)
+            args.cooldownViewer.set(nil, true)
+            assert.are.same({ "meter", true, true, true }, {
+                I.outcomes.name,
+                I.presenceViewer,
+                H.Hekili.DB.profile.performance.damageMeter,
+                H.Hekili.DB.profile.performance.cooldownViewer,
+            })
+            local src = assert(io.open("src/Hekili/Game/State/Adapter.lua")):read("*a")
+            assert.is_nil(src:find("ProvidersChanged", 1, true))
+        end
+    )
+
     it("default off: the build injects the Default outcomes and the router with no leaf", function()
         local H = headless.new({ character = ww.character(), pack = ww.PACK })
         local I = H.ns.VirtualStateInternal
