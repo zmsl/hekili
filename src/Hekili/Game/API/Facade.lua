@@ -62,10 +62,12 @@ local NO_LOG = {
 local log = NO_LOG
 
 --- The core's logger: `{ active(), write(fmt, ...) }`; fills `logger.onOpen()`, which writes the belief's own
---- Snapshot() (or one failure line when it raises). Load time only.
+--- Snapshot() (or one failure line when it raises), and `logger.debug`, the probe handle `{ State, Events, Prof }`.
+--- Load time only.
 ---@param logger table
 function VS.SetLog(logger)
     log, I.logger = logger, logger
+    logger.debug = { State = VS, Events = I.Events, Prof = I.Prof } -- the core publishes it as Hekili.Virtual
     function logger.onOpen()
         local ok, s = pcall(VS.Snapshot) -- a raising Snapshot must not abort the core's snapshot
         logger.write(ok and "%s" or "[vs] snapshot failed: %s", s)

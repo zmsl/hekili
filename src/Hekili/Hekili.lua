@@ -208,6 +208,10 @@ local log = {
 }
 ns.VirtualState.SetLog( log )
 
+-- The debug bridge (/run print(Hekili.Virtual.State.Snapshot()); ForeverProbe's Calib.lua and PerfKit read it): what the
+-- logger carries. Not for content, which reads the client through Hekili.Client and the belief through environment names.
+Hekili.Virtual = log.debug
+
 function Hekili:SetupDebug( display )
     if not self.ActiveDebug then return end
     if not display then return end

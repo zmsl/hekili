@@ -16,11 +16,6 @@ local scripts = Hekili.Scripts
 local Output = ns.Output
 local Displays = Hekili.Engine.Output -- the display table itself: the hot path skips ns.Output's __index
 
--- The debug bridge (/run print(Hekili.Virtual.State.Snapshot()); ForeverProbe's Calib.lua and PerfKit read it). Not
--- for content: the content addons read the client through Hekili.Client and the belief through their environment names.
--- Here, next to Drain: the one place the core names the belief's internals (tools/check_border.sh anchors this line).
-Hekili.Virtual = { State = ns.VirtualState, Events = ns.VirtualStateInternal.Events, Prof = ns.VirtualStateInternal.Prof }
-
 local callHook = ns.callHook
 local clashOffset = ns.clashOffset
 local formatKey = ns.formatKey

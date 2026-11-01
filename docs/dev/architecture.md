@@ -48,10 +48,8 @@ approved exceptions (`tools/check_border.sh` allows these and nothing else):
   change is the one event allowed to ask for it (a toggle never does: `Drain` swaps the providers);
 - `ns.VirtualState.SetLog(logger)` (`Hekili.lua`, at load): the snapshot trace writes into the core's debug log,
   which only the core can open (`{ active(), write(fmt, ...) }`; the belief fills `onOpen`, which `Hekili:SetupDebug`
-  calls as each display's log opens).
-The gate also allows one more line, the debug bridge `Hekili.Virtual = { State, Events, Prof }` (§4; `Engine/Sim/Core.lua`,
-anchored to the whole line): a fourth naming of the belief by the core, not among the approved calls, kept because
-ForeverProbe reads it; the owner has not ruled on it. Functions the build carries may run
+  calls as each display's log opens). `SetLog` also fills `logger.debug` (§4).
+Those three are all the core names; the gate allows nothing else. Functions the build carries may run
 under `state` when the belief reads them: the ability tables in `def.abilities` keep Spec.lua's metatable, so
 `Families/Casts.lua`'s `obj.cooldown` read runs the pack's function under the simulation's state; that is core code the
 belief runs, not a read of `state` by the belief.
@@ -259,7 +257,8 @@ as the string until that class logs in).
 
 ## 4. `Hekili.Virtual`
 
-`Hekili.Virtual = { State, Events, Prof }` (set by the core, `Engine/Sim/Core.lua`) is the probe and debug handle, for example
+`Hekili.Virtual = { State, Events, Prof }` is published by the core (`Hekili.lua`, `Hekili.Virtual = log.debug`) from what the
+logger carries: `VS.SetLog` fills `logger.debug`, so the core names no belief internals. It is the probe and debug handle, for example
 `/run print(Hekili.Virtual.State.Snapshot())` and ForeverProbe's `Calib.lua`. It is not for content, which has the
 facade and the environment names. The boundary scan rejects `Hekili.Virtual` and `VirtualState` in a content file.
 
@@ -280,9 +279,9 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
   another, and no player-visible literal sits outside `L[...]` (the lint, §9). `tests/Forever/enus_text_spec.lua`
   compares the English text with the golden written at the merge base.
 - `tools/check_border.sh` (in `make api-check`): the belief/core border (§1). Comments stripped, no file of `Game/`
-  names `Hekili`, `class.`, `state.` or `ns.Output`; no file of `Engine/`, `UI/`, `Options/` or `Hekili.lua` names
+  names `Hekili`, `class.`, `state.` or `ns.Output`; no file of `Engine/`, `UI/`, `Options/`, `Integrations/` or `Hekili.lua` names
   `VS`, `ns.VirtualState` or `VirtualStateInternal` except the three calls `ns.VirtualState.Drain`, `.Build`,
-  `.SetLog` and `Engine/Sim/Core.lua`'s `Hekili.Virtual = { ... }` line.
+  `.SetLog`.
 - `tools/check_engine_reads.sh` (in `make api-check`), both directions: the engine files (`Sim/{Core,State,Targets,
   Scripts}`, `Output`, `Registry`, `Snapshot`, `Driver`) name no `HekiliDisplay*`, `ns.UI.` or
   `DisplayPool`, and nothing in `Engine/` names `Hekili.DB` or `.profile` (exempt: `Settings.lua`, comments). UI,
