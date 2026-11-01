@@ -76,10 +76,11 @@ function I.NowAt(t)
     rawset(NAMES, "haste", I.Haste(t))
 end
 
---- The sim's `haste` (State.lua: 1 / (1 + spell haste)) from the belief's spell haste (Families/Player.lua, a percent).
+--- The sim's `haste` (State.lua: 1 / (1 + spell haste), a slow above 1, unclamped as there) from the belief's spell
+--- haste (Families/Player.lua, a percent).
 function I.Haste(t)
     local h = VS.SpellHaste and VS.SpellHaste(t).est or 0
-    return 1 / (1 + (h > 0 and h or 0) / 100)
+    return 1 / (1 + h / 100)
 end
 local abByKey, auraByKey, auraSpell, auraDur, auraMax, resByKey = {}, {}, {}, {}, {}, {}
 
