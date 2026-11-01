@@ -1846,7 +1846,6 @@ function VS.FsrUntil(powerType)
         return R.fsrUntil[r]
     end
 end
-VS.FSR = I.FSR -- the window's length, for the sim's own queued spends
 
 I.OnSnapshot(function(out, now)
     for r = 1, R.n do

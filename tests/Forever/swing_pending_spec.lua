@@ -5,28 +5,20 @@ local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
 describe("the rage forecast of a pending swing (GAP AK)", function()
-    local H, st, VS, pending0
+    local H, st
 
     before_each(function()
         H = headless.new({ character = ww.character(), pack = ww.PACK })
         assert.are.same({}, H.loadErrors)
         assert(headless.cycle(H, H.ctl.now + 0.2))
-        st, VS = H.Hekili.State, H.ns.VirtualState
-        pending0 = VS.SwingPending
+        st = H.Hekili.State
         st.reset("Primary", true)
-    end)
-
-    after_each(function()
-        VS.SwingPending = pending0
     end)
 
     -- The main-hand swing entries of the rage forecast after a swing at p, the model's last swing, 0.05 s ago.
     local function swings(pending)
         local p, speed = st.now - 0.05, 2.6
         st.swings.mh_actual, st.swings.mh_speed, st.mainhand_speed = p, speed, speed
-        VS.SwingPending = function()
-            return pending and p or 0
-        end
         st.swings.mh_pending = pending and p or 0 -- the reset's read of it (UnitAttackSpeed's third, border batch 2)
         st.rage.actual = 0
         st:ForecastSwingbasedResources()

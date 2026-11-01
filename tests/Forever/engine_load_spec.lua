@@ -183,7 +183,10 @@ describe("the engine's threat table (tank design §2)", function()
         assert.are.same({ 3, true, false }, { threat.situation, threat.on_me, threat.lost })
         c.threat, c.isUnit.targettarget = 1, false
         assert.are.same({ 1, false, true }, { threat.situation, threat.on_me, threat.lost })
-        assert.are.equal(0, threat.loose) -- UnitThreatSituation's second value (border batch 2); the stub client has none
+        assert.are.equal(0, threat.loose) -- UnitThreatSituation's second value (border batch 2); none answered: 0
+        c.loose = 2
+        assert.are.equal(2, threat.loose) -- the count flows through, end to end
+        c.loose = nil
         assert.is_nil(threat.other)
     end)
 

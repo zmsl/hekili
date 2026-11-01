@@ -311,7 +311,7 @@ function M.load(classToken, race)
         GetShapeshiftFormInfo = noop,
         CombatLogGetCurrentEventInfo = noop,
         UnitThreatSituation = function()
-            return client.threat
+            return client.threat, client.loose -- the loose hostiles (border batch 2's second value)
         end,
         UnitIsUnit = function(a, b)
             if b ~= "player" then -- only the "is it us" reads are scripted
