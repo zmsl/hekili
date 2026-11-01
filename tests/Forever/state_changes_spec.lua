@@ -18,7 +18,13 @@ describe("state.changes, the memoised cost's key", function()
         { "removeStack", "casting" },
         { "applyDebuff", "target", "casting", 1.5 },
         { "removeDebuff", "target", "casting" },
-        { "removeDebuffStack", "target", "sunder_armor", 1, prep = { "applyDebuff", "target", "sunder_armor", 1.5, 3 } }, -- max_stack 5, 3 stacks stay: the direct-count branch
+        {
+            "removeDebuffStack",
+            "target",
+            "sunder_armor",
+            1,
+            prep = { "applyDebuff", "target", "sunder_armor", 1.5, 3 },
+        }, -- max_stack 5, 3 stacks stay: the direct-count branch
         { "setCooldown", "heroic_strike", 1.5 },
         { "spendCharges", "heroic_strike", 1 },
         { "gainCharges", "heroic_strike", 1 },
