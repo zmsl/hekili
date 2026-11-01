@@ -113,7 +113,7 @@ describe("the tracked set", function()
 
     it("computes a function field's static value after the talents, not at the build", function()
         local f = function()
-            return 10 - state.talent.talent_a.rank -- luacheck: ignore 113 (the simulation's names)
+            return 10 - talent.talent_a.rank -- luacheck: ignore 113 (the simulation's names, the context's too)
         end
         setfenv(f, h.State) -- as Spec.lua binds a pack's function
         h.Class.abilities.spender_a.cooldown, h.Class.abilities.spender_a.funcs.cooldown = nil, f
@@ -125,7 +125,13 @@ describe("the tracked set", function()
         ns.TrackedStatics()
         assert.are.equal(8, I.ab.obj[a].static.cooldown)
         local errors = I.nowErrors
-        assert.are.equal(8, I.CooldownOf(a, 1)) -- raised in the belief's context (no `state` there): the static
+        assert.are.equal(10, I.CooldownOf(a, 1)) -- the function in the belief's context first: its own rank (unwalked, 0)
+        assert.are.equal(errors, I.nowErrors)
+        h.State.sim = h.State
+        I.ab.obj[a].cooldown = setfenv(function()
+            return 10 - sim.talent.talent_a.rank -- luacheck: ignore 113 (a name the context lacks: raises there)
+        end, h.State)
+        assert.are.equal(8, I.CooldownOf(a, 1)) -- raised in the context (counted): the static, never 0
         assert.are.equal(errors + 1, I.nowErrors)
     end)
 
