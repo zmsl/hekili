@@ -54,7 +54,12 @@ design 2026-11-01): no metatable, never a live Hekili table. Each field is a val
 `now` context (`Families/Casts.lua` `I.Eval`: a raise is counted in `I.nowErrors` and fails
 `tests/Forever/plain_records_spec.lua`), or absent; a function field may carry a static value the core computes under
 `state` after `ns.updateTalents` (`ns.TrackedStatics`), the live game's safety net: the belief's order is the function,
-then the static, then 0. Nothing in `def` runs under `state` at runtime. The spec's settings reach the belief the same
+then the static, then 0. No function in `def` has `state` as its environment at runtime; but a pack function that names
+`state` through its file-level upvalue (or through a file-local helper's) still reads Hekili's state when the belief runs
+it, until border batch 5 closes them: the `fsr` entries of Hunter, Mage, Paladin, Priest and Shaman (`state.spec.<tree>`),
+Warrior's Anger Management `decay`, Shaman's `mp5`, Druid's and Priest's `spirit`, Priest's and Warlock's regen `value`,
+the swing `value`/`crit` of Warrior (both hands) and Druid, Warrior's `taken`, and Priest's one `now` (`state.stat`).
+The spec's settings reach the belief the same
 way, as plain values in `def.settings` (`Hekili:SettingsChanged` refreshes them).
 
 ## 2. The `Hekili.Engine` port

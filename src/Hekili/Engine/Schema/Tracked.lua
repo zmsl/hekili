@@ -6,7 +6,10 @@
 -- function the belief runs in its own `now` context, or absent; Spec.lua's `funcs` are flattened in beside the raw
 -- fields. A function field may carry a static value the core computes under `state` once the talents are known
 -- (ns.TrackedStatics, after ns.updateTalents): the belief's order is the function in its context, then the static,
--- then 0. Nothing in `def` runs under `state` at runtime. Allocates; SpecializationChanged only.
+-- then 0. No function in `def` has `state` as its environment at runtime, but one that names `state` through its
+-- file-level upvalue (or a file-local helper's) still reads Hekili's state when the belief runs it, until border
+-- batch 5 closes them (docs/dev/architecture.md §1 lists them: regen `fsr`/`decay`/`mp5`/`spirit`/`value` entries,
+-- the swing `value`/`crit`, Warrior's `taken`, Priest's `now`). Allocates; SpecializationChanged only.
 
 local addon, ns = ...
 local Hekili = _G[addon]
