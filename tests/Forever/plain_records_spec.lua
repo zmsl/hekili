@@ -17,7 +17,8 @@ local WORLDS = {
 -- the function fields the belief evaluates, by record kind (Casts.lua, Resources.lua, Expect.lua)
 local ABILITY = { "cooldown", "spend", "gcdTime", "usable" }
 local AURA = { "duration", "tick_time", "base_tick_time" }
-local RESOURCE = { "max", "decay", "decayInterval" }
+local RESOURCE =
+    { "max", "decay", "decayInterval", "swingValue", "swingOff", "swingCrit", "swingOffCrit", "taken" }
 local ENTRY = { "spirit", "mp5", "share", "value", "mult", "when" }
 
 local function metatabled(v, path, seen, hits)
@@ -77,7 +78,7 @@ describe("the build's plain records at every pack #slow", function()
                 for _, field in ipairs(RESOURCE) do
                     try(d, field, d.key)
                 end
-                for _, list in ipairs({ "mult", "auraRegen", "maxMods" }) do
+                for _, list in ipairs({ "mult", "auraRegen", "maxMods", "costMods" }) do
                     for k = 1, d[list] and #d[list] or 0 do
                         for _, field in ipairs(ENTRY) do
                             try(d[list][k], field, d.key .. "." .. list .. "[" .. k .. "]")
