@@ -201,9 +201,11 @@ state.swings = {
     mh_actual = 0,
     mh_speed = UnitAttackSpeed( "player" ) > 0 and UnitAttackSpeed( "player" ) or 2.6,
     mh_projected = 2.6,
+    mh_pending = 0, -- the main hand's swing the game paid that the believed floor has not (0 none), from the reset
     oh_actual = 0,
     oh_speed = select( 2, UnitAttackSpeed( "player" ) ) or 2.6,
     oh_projected = 3.9,
+    oh_pending = 0,
     ranged_actual = 0,
     ranged_speed = 0,
     ranged_projected = 0
@@ -1358,15 +1360,17 @@ do
                     v.next = l + i
                     v.name = k
 
-                    -- Forever GAP AK: the game paid the latest swing already, the believed floor not yet (VS.SwingPending):
-                    -- its gain is forecast one poll after the usability answers can show it (ORACLE_MIN), not lost as past;
-                    -- the icon keeps its line, and nothing is pressable on it before an answer confirms it
-                    -- (the swings after it keep their own times: `resume`)
+                    -- Forever GAP AK: the game paid the latest swing already, the believed floor not yet (the reset's
+                    -- UnitAttackSpeed read: state.swings.mh_pending / oh_pending): its gain is forecast one poll after
+                    -- the usability answers can show it (ORACLE_MIN), not lost as past; the icon keeps its line, and
+                    -- nothing is pressable on it before an answer confirms it (the swings after it keep their own
+                    -- times: `resume`)
                     v.resume = nil
                     if v.swing and i > 0 then
-                        local p = VS.SwingPending( v.swing == "offhand" and 2 or 1 )
+                        local p
+                        if v.swing == "offhand" then p = state.swings.oh_pending else p = state.swings.mh_pending end
                         if p > 0 and l > p - i / 2 then
-                            v.next, v.resume = max( now, p + 2 * ns.VirtualStateInternal.Log.ORACLE_MIN ), l + i
+                            v.next, v.resume = max( now, p + 2 * ns.ORACLE_MIN ), l + i
                         end
                     end
 
@@ -6384,6 +6388,14 @@ do
         state.swings.mh_pseudo = nil
         state.swings.oh_pseudo = nil
 
+        -- (border batch 2) the one swing read, before the resource forecasts: the speeds are stored below, where they
+        -- always were (a forecast at the reset keeps the previous pass's speeds, as before); after them each hand's
+        -- pending swing (GAP AK: the forecast's, read here so the reset's forecast sees this pass's), the parry-haste
+        -- pull and the swing it was taken from (below)
+        local mhSpeed, ohSpeed, mhPending, ohPending, pull, pullFrom = UnitAttackSpeed( "player" )
+        state.swings.mh_pending, state.swings.oh_pending = mhPending or 0, ohPending or 0
+        pull, pullFrom = pull or 0, pullFrom or 0
+
         for k, power in pairs( class.resources ) do
             local res = rawget( state, k )
 
@@ -6458,9 +6470,8 @@ do
         state.health.regen = 0.001
 
         -- TODO: All of this stuff for swings is terrible.
-        state.swings.mh_speed, state.swings.oh_speed = UnitAttackSpeed( "player" )
-        state.swings.mh_speed = state.swings.mh_speed or 0
-        state.swings.oh_speed = state.swings.oh_speed or 0
+        state.swings.mh_speed = mhSpeed or 0
+        state.swings.oh_speed = ohSpeed or 0
 
         state.mainhand_speed = state.swings.mh_speed or 0
         state.offhand_speed = state.swings.oh_speed or 0
@@ -6477,7 +6488,6 @@ do
         -- Forever parry haste (parry-haste spec decision 59): after our parry the next main-hand swing comes early. The
         -- pull holds only while mh_actual is the swing it was taken from: that swing's row lands after its PLAYER_SWING,
         -- so a pull never shifts a later swing, nor an earlier one.
-        local pull, pullFrom = VS.SwingPull( 1 )
         if pull > 0 and state.nextMH > 0 and math.abs( state.swings.mh_actual - pullFrom ) < 0.001 then
             state.swings.mh_pseudo = state.swings.mh_actual - pull
             state.nextMH = state.nextMH - pull

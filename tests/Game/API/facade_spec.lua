@@ -245,6 +245,18 @@ describe("ns.Facade", function()
         assert.are.same({ 0, 7, 7, 4.72 }, { Facade.GetUnitSpeed("player") })
         assert.are.same({ 0, 0, 0, 0 }, { Facade.GetUnitSpeed("target") })
         assert.are.same({ 2, nil }, { Facade.UnitAttackSpeed("target") })
+        -- (border batch 2) the player's main and off (slot 2 stays `off`), then the swing of each hand the game paid
+        -- that the floor has not, the parry-haste pull and the swing it was taken from
+        local pending, pull = VS.SwingPending, VS.SwingPull
+        VS.SwingPending = function(hand)
+            return hand == 1 and 7.5 or 0
+        end
+        VS.SwingPull = function(hand)
+            return hand == 1 and 0.4 or 0, hand == 1 and 7.5 or 0
+        end
+        assert.are.same({ 7.5, 0, 0.4, 7.5 }, { select(3, Facade.UnitAttackSpeed("player")) })
+        assert.are.equal(2, select("#", Facade.UnitAttackSpeed("target"))) -- another unit: no trailing values
+        VS.SwingPending, VS.SwingPull = pending, pull
         assert.are.equal(7, select("#", Facade.UnitDamage("player")))
         assert.are.equal(0, Facade.GetMeleeHaste())
         assert.are.same({ false, "", 0, 0, 0 }, { Facade.GetTotemInfo(1) })

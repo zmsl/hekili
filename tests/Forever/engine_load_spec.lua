@@ -52,9 +52,14 @@ describe("Forever content through the real Engine/Schema/Spec.lua", function()
         end
     end)
 
-    it("keeps the five-second rule's window as the engine's own constant (border batch 2: no VS.FSR read)", function()
-        assert.are.equal(5, engine.load(CLASSES[1]).ns.FSR)
-    end)
+    it(
+        "keeps the five-second rule's window and the oracle's lag as the engine's own constants (border batch 2)",
+        function()
+            local ns = engine.load(CLASSES[1]).ns
+            assert.are.equal(5, ns.FSR) -- no VS.FSR read
+            assert.are.equal(0.1, ns.ORACLE_MIN) -- no VirtualStateInternal.Log read; the belief's L.ORACLE_MIN (Events/Melee.lua)
+        end
+    )
 
     it("answers a gear-gated function field's equipped[itemID] as not equipped under the stub state", function()
         local state = engine.load(CLASSES[1]).state

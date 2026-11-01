@@ -27,6 +27,7 @@ describe("the rage forecast of a pending swing (GAP AK)", function()
         VS.SwingPending = function()
             return pending and p or 0
         end
+        st.swings.mh_pending = pending and p or 0 -- the reset's read of it (UnitAttackSpeed's third, border batch 2)
         st.rage.actual = 0
         st:ForecastSwingbasedResources()
         local out = {}

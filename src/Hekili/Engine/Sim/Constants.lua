@@ -15,6 +15,11 @@ ns.GCD_SPELL = 29515
 -- The belief keeps its own copy (Game/State/Families/Resources.lua, I.FSR).
 ns.FSR = 5
 
+-- The usability oracle's lag (seconds): a swing the game paid shows in the usability answers no sooner than this
+-- after it, so the swing forecast holds a pending swing's gain two of these (GAP AK, Engine/Sim/State.lua). The
+-- belief keeps its own copy (Game/Events/Melee.lua, L.ORACLE_MIN).
+ns.ORACLE_MIN = 0.1
+
 local GetSpecialization = C_SpecializationInfo.GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 -- Class Localization

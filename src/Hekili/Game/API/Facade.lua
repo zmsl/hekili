@@ -441,18 +441,35 @@ hybrid("UnitSpellHaste", function(unit)
     return VS.SpellHaste(now()).est
 end, "secret in combat [W PR2, PR4]; SpellHaste()")
 
-hybrid("UnitAttackSpeed", function(unit)
+-- After the player's main and off (slot 2 stays `off`: Engine/Sim/State.lua and Events.lua select it): the swing of
+-- each hand the game paid that the believed floor has not (0 none; GAP AK), then the parry-haste pull and the swing it
+-- was taken from. Another unit: nothing.
+local function swingTail(unit)
     if unit ~= "player" then
-        return 2, nil
+        return
     end
-    local t = now()
-    local main = VS.SwingSpeed(1, t).est
-    local off = VS.SwingSpeed(2, t).est
-    if off > 0 then
-        return main, off
-    end
-    return main, nil
-end, "secret in combat [SU PR2]; SwingSpeed()")
+    local pull, from = VS.SwingPull(1)
+    return VS.SwingPending(1), VS.SwingPending(2), pull, from
+end
+
+hybrid(
+    "UnitAttackSpeed",
+    function(unit)
+        if unit ~= "player" then
+            return 2, nil
+        end
+        local t = now()
+        local main = VS.SwingSpeed(1, t).est
+        local off = VS.SwingSpeed(2, t).est
+        if off > 0 then
+            return main, off
+        end
+        return main, nil
+    end,
+    "secret in combat [SU PR2]; SwingSpeed(); then each hand's pending swing, the parry pull and its swing (border batch 2)",
+    2,
+    swingTail
+)
 
 -- The speed is the ranged hand's (C7: out of combat, or a swingType 2 duration); the rest the out-of-combat cache.
 hybrid("UnitRangedDamage", function()
