@@ -1954,6 +1954,7 @@ function Hekili.Update()
                     slot.delay = i > 1 and wait or ( state.offset + wait )
                     slot.since = i > 1 and slot.time - Queue[ i - 1 ].time or 0
                     slot.resources = slot.resources or {}
+                    slot.floors = slot.floors or {}
                     slot.depth = chosen_depth
 
                     state.scriptID = slot.script

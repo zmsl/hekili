@@ -3593,7 +3593,8 @@ function state:TimeToResource( t, amount, lo )
     -- Handle invalid or overflow cases.
     if not amount or amount > t.max then return 3600 end
     local field, times, current
-    if lo then field, times, current = "l", t.times_lo, t.lo else field, times, current = "v", t.times, t.current end
+    -- a pool without a floor stream (health) has no times_lo: it answers on the estimate
+    if lo and t.times_lo then field, times, current = "l", t.times_lo, t.lo else field, times, current = "v", t.times, t.current end
     if current >= amount then return 0 end
 
     local regen = t.regen
@@ -7575,52 +7576,6 @@ function state:IsReady( action )
     return self:HasRequiredResources( action ) and self.cooldown[ action ].remains <= self.delay
 end
 
-
-function state:IsReadyNow( action )
-    action = action or self.this_action
-    local a = class.abilities[ action ]
-
-    if not a then return false end
-
-    action = a.key
-    local settings = Hekili.Engine.settings
-    local spec = rawget( settings.specs, state.spec.id )
-    if not spec then return false end
-
-    local option = spec.abilities[ action ]
-    local clash = option.clash or 0
-
-    if self.cooldown[ action ].remains - clash > 0 then return false end
-    local wait = ns.callHook( "TimeToReady", 0, action )
-    if wait and wait > 0 then return false end
-
-    if a.ready and type( a.ready ) == "function" and a.ready() > 0 then return false end
-
-    if a.spend and a.spend ~= 0 then
-        local spend, resource
-
-        if type( a.spend ) == "number" then
-            spend = a.spend
-            resource = a.spendType or class.primaryResource
-
-        elseif type( a.spend ) == "function" then
-            spend, resource = a.spend()
-
-        end
-
-        if a.ready and type( a.ready ) == "number" then
-            spend = a.ready
-        end
-
-        spend = ns.SpendPoints( spend, state[ resource ], a )
-
-        if spend > 0 then
-            return state[ resource ].lo >= spend -- the press gate reads the believed floor (border batch 2)
-        end
-    end
-
-    return true
-end
 
 function state:ClashOffset( action )
     local a = class.abilities[ action ]

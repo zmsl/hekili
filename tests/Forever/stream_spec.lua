@@ -56,4 +56,38 @@ describe("the sim's resource streams (est, lo, hi) #loop", function()
             assert.is_nil(bad, bad)
         end)
     end
+
+    -- The literal "dim never promote" invariant: every published record's floor sits at or under its estimate, under
+    -- it at least once, and at or over the cost wherever the record carries one.
+    for _, w in ipairs(WORLDS) do
+        it(("publishes floors under the estimate and never under the cost: %s"):format(w[3]), function()
+            local world = require(w[1])
+            local L = loop.new(w[2] and world[w[2]] or world)
+            local ns = L.us.ns
+            local seen, under, over, short = 0, 0, 0, 0
+            local function ann(_, rec)
+                local rt = rec.resource_type
+                local f, e = rt and rec.floors[rt], rt and rec.resources[rt]
+                if f ~= nil and e ~= nil then
+                    seen = seen + 1
+                    if f < e then
+                        under = under + 1
+                    end
+                    if f > e + 1e-9 then
+                        over = over + 1
+                    end
+                    if rec.cost and rec.cost > 0 and f < rec.cost then
+                        short = short + 1
+                    end
+                end
+            end
+            ns.Output.Annotate(ann)
+            loop.run(L, 1, { duration = 60 }, { { H = L.us } })
+            ns.Output.Unannotate(ann)
+            assert.is_true(seen > 50, "records seen: " .. seen)
+            assert.are.equal(0, over, "a floor above the estimate")
+            assert.is_true(under > 0, "floors never under the estimate: do they read current?")
+            assert.are.equal(0, short, "a record whose floor is under its cost")
+        end)
+    end
 end)

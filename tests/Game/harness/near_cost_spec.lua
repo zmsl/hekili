@@ -82,4 +82,25 @@ describe("the sim's near-cost mark (TimeToReady)", function()
         assert.is_true(w >= 0.26 and w <= 0.27, w)
         assert.is_false(S.nearCost)
     end)
+
+    -- Press decisions read the floor (`lo`), never the estimate: an estimate over the truth must not light an ability.
+    it(
+        "holds a press the estimate affords but the floor does not: hasRequiredResources, the wait, pct_lo, timeToLo",
+        function()
+            r.actual, r.actual_lo, r.actual_hi = 380, 360, 400
+            S.forecastResources("mana")
+            assert.is_false(H.ns.hasRequiredResources("surge"), "hasRequiredResources promoted on the estimate")
+            local w = S:TimeToReady("surge")
+            assert.is_true(w >= 0.26 and w <= 0.27, w)
+            assert.is_true(r.pct_lo < r.pct)
+            assert.are.equal(0, r.timeTo(370))
+            assert.is_true(r.timeToLo(370) > 0.2, r.timeToLo(370))
+        end
+    )
+
+    it("compiles a `.lo` or `.pct_lo` line's recheck to timeToLo", function()
+        local Sc = H.Hekili.Scripts
+        assert.is_truthy((Sc:BuildRecheck("mana.lo>=370") or ""):find("timeToLo", 1, true))
+        assert.is_truthy((Sc:BuildRecheck("mana.pct_lo>=50") or ""):find("timeToLo", 1, true))
+    end)
 end)

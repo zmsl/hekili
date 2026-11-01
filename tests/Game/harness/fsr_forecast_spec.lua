@@ -148,4 +148,12 @@ describe("the sim's five-second-rule forecast", function()
         S.forecastResources("mana")
         assert.are.equal(50, at(5) - at(0))
     end)
+
+    it("answers timeToLo finitely at a pool whose estimate is full and whose floor is below the max", function()
+        r.actual, r.actual_lo = r.max, r.max - 100
+        r.fsr_until = false
+        S.forecastResources("mana")
+        local t = r.timeToLo(r.max - 50)
+        assert.is_true(t < 3600 and t >= 0, t)
+    end)
 end)

@@ -13,6 +13,7 @@
 ### Known issues
 
 ### Upgrade notes
+- In a custom or imported priority, `energy.current` and `mana.pct` now mean the addon's best estimate, not its cautious floor. Add `.lo` or `.pct_lo` (`energy.lo`, `mana.pct_lo`) for the old meaning. The press check still protects you: a line can show a countdown earlier, never ready early.
 
 ## v0.5.0
 
