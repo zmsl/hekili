@@ -162,18 +162,21 @@ describe("resource modifiers", function()
         end
     )
 
-    it("keeps a proc its own cast raised: the charge is spent at the cast's time, however late the success folds", function()
-        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -1, charges = 1, spells = { fs.SPENDER_B } } }
-        ns.BuildTracked()
-        local j = I.auras.bySpell[MOD_AURA]
-        ctl.now = 6
-        I.Sources.Direct(VS.Obs.Read, 6, j, 15, I.ReadOf.Aura + I.AURA_STACK) -- the proc's read, in the log first
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_B) -- staged at 6, the cast that raised it
-        I.Sources.Direct(VS.Obs.Moving, 6.15, 0, 1) -- a later direct row: the fold's clock passes the cast
-        ctl.Tick(6.16)
-        VS.Drain(6.17)
-        assert.is_truthy(VS.Aura("player", MOD_AURA, 6.2))
-    end)
+    it(
+        "keeps a proc its own cast raised: the charge is spent at the cast's time, however late the success folds",
+        function()
+            ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -1, charges = 1, spells = { fs.SPENDER_B } } }
+            ns.BuildTracked()
+            local j = I.auras.bySpell[MOD_AURA]
+            ctl.now = 6
+            I.Sources.Direct(VS.Obs.Read, 6, j, 15, I.ReadOf.Aura + I.AURA_STACK) -- the proc's read, in the log first
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_B) -- staged at 6, the cast that raised it
+            I.Sources.Direct(VS.Obs.Moving, 6.15, 0, 1) -- a later direct row: the fold's clock passes the cast
+            ctl.Tick(6.16)
+            VS.Drain(6.17)
+            assert.is_truthy(VS.Aura("player", MOD_AURA, 6.2))
+        end
+    )
 
     it("prices a declared cost function in the belief's context: its aura reads are the belief's", function()
         local spender_c = I.ab.bySpell[fs.SPENDER_C]
