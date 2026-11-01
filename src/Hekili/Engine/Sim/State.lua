@@ -1498,7 +1498,7 @@ local resourceChange = function( amount, resource, overcap )
     local pre = r.current
 
     if amount < 0 and rawget( r, "fsr_until" ) then -- opens the window, held to a paid channel's end (wowsims mana.go:236-241)
-        local u, c = state.query_time + VS.FSR, state.buff.casting
+        local u, c = state.query_time + ns.FSR, state.buff.casting
         r.fsr_until = ( c.up and c.v3 == 1 and c.expires > u ) and c.expires or u
     end
 

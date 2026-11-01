@@ -11,6 +11,10 @@ local Hekili = _G[ addon ]
 -- belief keeps its own copy (Game/State/Sources/Spellbook.lua, I.GCD_SPELL).
 ns.GCD_SPELL = 29515
 
+-- The five-second rule's window (seconds): the one length the engine's own queued spends open (Engine/Sim/State.lua).
+-- The belief keeps its own copy (Game/State/Families/Resources.lua, I.FSR).
+ns.FSR = 5
+
 local GetSpecialization = C_SpecializationInfo.GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 -- Class Localization

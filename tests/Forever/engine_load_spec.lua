@@ -52,6 +52,10 @@ describe("Forever content through the real Engine/Schema/Spec.lua", function()
         end
     end)
 
+    it("keeps the five-second rule's window as the engine's own constant (border batch 2: no VS.FSR read)", function()
+        assert.are.equal(5, engine.load(CLASSES[1]).ns.FSR)
+    end)
+
     it("answers a gear-gated function field's equipped[itemID] as not equipped under the stub state", function()
         local state = engine.load(CLASSES[1]).state
         -- an item ID and a slot name, as State.lua's `equipped` answers both
