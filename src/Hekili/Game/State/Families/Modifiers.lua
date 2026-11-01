@@ -1,8 +1,8 @@
 -- Game/State/Families/Modifiers.lua
 -- Declarative resource modifiers (event-facade spec §12b): two fields of a resource definition, filled by the race
 -- packs (Engine/Schema/Races.lua, through Engine/Schema/Tracked.lua) and open to talents and class auras alike.
--- - `maxMods`: { { pct = n, when = fn|nil }, ... }; the maximum is the declared `max` (a number or a state-bound
---   function, default 100) x the product of (1 + pct) over the modifiers whose `when` holds. Families/Resources.lua's
+-- - `maxMods`: { { pct = n, when = fn|nil }, ... }; the maximum is the declared `max` (a number, or a pack function run
+--   in the belief's context, default 100) x the product of (1 + pct) over the modifiers whose `when` holds. Families/Resources.lua's
 --   one maximum evaluator applies it (at the build, seeding the interval, and at each CombatEnd) until a plain maximum
 --   read arrives, which wins from then on.
 -- - `costMods`: { { aura = "<key>", pct = n | flat = n, charges = k|nil, spells = { IDs }|nil }, ... }; an ability

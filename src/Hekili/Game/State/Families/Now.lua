@@ -327,7 +327,6 @@ function NAMES.reduceCooldown(action, time)
     end
 end
 
--- The totem slots by element, as Hekili's `state.totem` numbers them (State.lua's mt_totem; the client's slot order).
 --- summonTotem(name, element, duration): Hekili's signature (State.lua); the element's slot expires `duration` s after
 --- the cast (an unknown element or a non-number duration writes nothing).
 function NAMES.summonTotem(name, elem, duration)

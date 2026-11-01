@@ -4,8 +4,8 @@
 -- kind reads (`velocity`, `school` by name), compiled at each build into per-ability
 -- arrays the ticket pool reads by ability index. A ticking kind's period and count are its aura's: the aura resolved as
 -- the simulation resolves it (`cycle`, else `aura`, else the ability's key: Engine/Sim/State.lua:676), its declared
--- `tick_time` and floor(`duration` / `tick_time`), read at the commit (X.Tick) in Hekili's own state when the pack
--- wrote a function. Declared: the pack's own value, before the haste wrapper RegisterAura installs (Engine/Schema/
+-- `tick_time` and floor(`duration` / `tick_time`), read at the commit (X.Tick); a pack's function runs in the belief's
+-- `now` context (I.Eval, Families/Casts.lua), never under Hekili's state. Declared: the pack's own value, before the haste wrapper RegisterAura installs (Engine/Schema/
 -- Spec.lua keeps it as `base_tick_time`), as Families/Casts.lua reads `declaredSpend`. A declared instant or travel
 -- ability also ticks when that aura is upstream's debuff dot (`dot = "debuff"`, the field mt_dot reads). "debuff" is
 -- an effect that deals no damage: the instant kind with school 0, so its ticket takes only its own MISS, DODGE or PARRY

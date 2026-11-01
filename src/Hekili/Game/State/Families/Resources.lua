@@ -173,7 +173,8 @@ R.regenMult = M
 -- I.FSR: the five-second rule's window after our own spend of an `fsr` slot, in seconds: the core's constant
 -- (def.fsr), set at the build below; read only by the fold.
 
--- Slot r's out-of-combat loss per second from its `decay` (a number or a state-bound function; absent: none),
+-- Slot r's out-of-combat loss per second from its `decay` (a number, or a pack function run in the belief's context;
+-- absent: none),
 -- evaluated at the build and at each combat end (talent ranks change out of combat only). With a `decayInterval`
 -- (seconds, `decayIv[r]`; 0: continuous) it is lost in quanta of decay x interval, the first at once when the decay
 -- starts and one at the start of each interval after it (`decayNext[r]`: the next one's time, 0 while inactive;
@@ -199,7 +200,7 @@ local function decayOf(r)
     return d and d > 0 and d or 0
 end
 
--- Slot r's declared maximum from its `max` (a number or a state-bound function; default 100) x the product of
+-- Slot r's declared maximum from its `max` (a number, or a pack function run in the belief's context; default 100) x the product of
 -- (1 + pct) over its `maxMods` whose `when` holds (Families/Modifiers.lua), used until a plain read arrives.
 -- Allocates nothing.
 local function maxOf(r)
@@ -492,8 +493,8 @@ I.OnBuild(function(def, now)
     end
 end)
 
--- Slot r's `main` or (the off hand of a main-hand slot) `off` field for `hand`: a number, or the model's state-bound
--- function; 0 while the slot's swing aura is not believed up at `at` (default the clock; a swing's own time: rage is
+-- Slot r's `main` or (the off hand of a main-hand slot) `off` field for `hand`: a number, or the model's function run
+-- in the belief's context (I.Eval); 0 while the slot's swing aura is not believed up at `at` (default the clock; a swing's own time: rage is
 -- gained at the swing) (its application after it, or its expiry at or before it). Allocates nothing.
 local function perSwing(r, hand, main, off, at)
     local j, t = R.swingAura[r], at or I.clock
