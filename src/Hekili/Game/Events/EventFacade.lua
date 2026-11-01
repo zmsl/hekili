@@ -32,7 +32,12 @@ E.AURA_INFO = AURA_INFO
 -- flag as their eighth slot, past the client's payload (S.Edge: a tracked ability's usability or cooldown flag
 -- flipped), so Hekili's handlers force a cycle as often as the urgent lane used to, no more; the display's truth
 -- layer reads every one as before.
-local EDGED = { SPELL_UPDATE_USABLE = true, ACTION_USABLE_CHANGED = true, SPELL_UPDATE_COOLDOWN = true, SPELL_UPDATE_CHARGES = true }
+local EDGED = {
+    SPELL_UPDATE_USABLE = true,
+    ACTION_USABLE_CHANGED = true,
+    SPELL_UPDATE_COOLDOWN = true,
+    SPELL_UPDATE_CHARGES = true,
+}
 
 -- Subscriptions by event: parallel arrays, `false` in `f` for a removed one (reused by the next subscription).
 local SUB = {}
