@@ -86,7 +86,6 @@ local function avoided(i, t, act)
     local a = T.ab[i]
     if REFUSED[act] and a > 0 then
         S.Stage(Obs.Avoided, t, a, T.at[i], I.HitKind[act])
-        S.Urgent("VS_CAST_AVOIDED")
     end
 end
 
@@ -274,7 +273,6 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
     if flag == "CRITICAL" then
         S.Stage(Obs.Swing, t, xx, id, 3) -- the same record: a retraction takes the crit back too
     end
-    S.Urgent("VS_SWING_LANDED")
 end
 
 -- The row TENT ticket i was paid by, displaced at `now` by a narrow-band row (attribution-recovery decision 48 as

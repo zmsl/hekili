@@ -10,7 +10,7 @@ local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local S = I.Sources
 local Obs = VS.Obs
-local Plain, Stage, Direct, Urgent = S.Plain, S.Stage, S.Direct, S.Urgent
+local Plain, Stage, Direct = S.Plain, S.Stage, S.Direct
 
 -- The castGUIDs of our cast and channel in progress (plain strings; nil none or secret). Only these stop, delay or
 -- update them: a second press that fails ("another action is in progress") has another castGUID.
@@ -32,7 +32,6 @@ S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, guid, spellID)
         Stage(Obs.CastStart, t, a, finish / 1000)
         I.Log.Cast("SPELL_CAST_START", t, spellID, I.Units.Sent(guid)) -- nil when unknown: CLEU falls back to the target
     end
-    Urgent("UNIT_SPELLCAST_START")
 end)
 
 S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spellID)
@@ -44,7 +43,6 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     -- reach the log before this staged success) still prices it (I.CastCost)
     Stage(Obs.CastSuccess, t, a, I.CostOf(a), 1)
     I.Log.Cast("SPELL_CAST_SUCCESS", t, spellID, I.Units.Sent(castGUID) or I.Units.Pin(api, t))
-    Urgent("UNIT_SPELLCAST_SUCCEEDED")
 end)
 
 local function stopped(api, t, unit, guid, spellID)
@@ -56,7 +54,6 @@ local function stopped(api, t, unit, guid, spellID)
     castGUID = nil
     Stage(Obs.CastStop, t, a)
     I.Log.Cast("SPELL_CAST_FAILED", t, spellID, nil)
-    Urgent("UNIT_SPELLCAST_FAILED")
 end
 S.On("UNIT_SPELLCAST_FAILED", "player", stopped)
 S.On("UNIT_SPELLCAST_INTERRUPTED", "player", stopped)
@@ -85,7 +82,6 @@ S.On("UNIT_SPELLCAST_CHANNEL_START", "player", function(api, t, unit, guid, spel
     if type(start) == "number" and type(finish) == "number" then
         Stage(Obs.ChannelStart, t, a, finish / 1000) -- its SPELL_CAST_SUCCESS row comes from UNIT_SPELLCAST_SUCCEEDED
     end
-    Urgent("UNIT_SPELLCAST_CHANNEL_START")
 end)
 
 -- Whether an update or stop is our channel's: its castGUID, or any when CHANNEL_START's was secret (TDF isChannel; the
@@ -117,7 +113,6 @@ S.On("UNIT_SPELLCAST_CHANNEL_STOP", "player", function(api, t, unit, guid, spell
     end
     Stage(Obs.ChannelStop, t, a)
     I.Log.Cast("SPELL_AURA_REMOVED", t, spellID, I.Log.player)
-    Urgent("UNIT_SPELLCAST_CHANNEL_STOP")
 end)
 
 -- By ability index: the last queued answer (-1 none).

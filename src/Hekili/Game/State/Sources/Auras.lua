@@ -242,7 +242,9 @@ local function apply(j, u, up, t, edge)
 end
 local function onEdge(j, u, up, t)
     if apply(j, u, up, t, true) then
-        S.Urgent("VS_PRESENCE")
+        -- the aura event the client would have fired (the unit's full update): Hekili's handler forces a cycle
+        local token = I.auras.token[u]
+        I.Events.Deliver("UNIT_AURA", token, I.Events.AURA_INFO[token])
     end
 end
 --- Called by whoever activates a presence provider: its edges come here.

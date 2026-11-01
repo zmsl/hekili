@@ -72,11 +72,16 @@ describe("casts and cooldowns", function()
         assert.is_truthy(VS.Snapshot():find(line, 1, true))
     end)
 
-    it("logs a Cooldown only on a plain flag edge, and the GCD's edges, on the urgent lane", function()
-        h.forced = {}
-        I.urgent = function(e)
-            h.forced[#h.forced + 1] = e
-        end
+    it("logs a Cooldown only on a plain flag edge, and the GCD's edges; the event reaches Hekili only then", function()
+        local delivered, edges = 0, 0 -- SPELL_UPDATE_COOLDOWN's eighth slot: the edge flag (EventFacade.lua)
+        local sink = I.Events.CreateFrame("Frame")
+        sink:SetScript("OnEvent", function(_, _, ...)
+            delivered = delivered + 1
+            if select(8, ...) then
+                edges = edges + 1
+            end
+        end)
+        sink:RegisterEvent("SPELL_UPDATE_COOLDOWN")
         ctl.cooldown[fs.SPENDER_C] = { isActive = true, isOnGCD = false }
         ctl.cooldown[29515] = { isActive = true, isOnGCD = false }
         ctl.now = 5
@@ -90,10 +95,12 @@ describe("casts and cooldowns", function()
             end
         end
         assert.are.equal(4, n) -- shout, strike ready; spender_c not; the GCD up (a second event repeats nothing)
-        assert.are.same({ "VS_COOLDOWN" }, h.forced)
+        assert.are.same({ 2, 1 }, { delivered, edges }) -- both delivered; only the first flagged an edge
         ctl.cooldown[fs.SPENDER_C] = { isActive = fake.SECRET, isOnGCD = false }
         ctl.Fire("SPELL_UPDATE_COOLDOWN") -- a secret flag is no news
         assert.are.equal(4, n + I.Sources.stN)
+        assert.are.same({ 3, 1 }, { delivered, edges })
+        sink:UnregisterEvent("SPELL_UPDATE_COOLDOWN")
     end)
 
     it(
@@ -131,23 +138,18 @@ describe("casts and cooldowns", function()
     end)
 
     it("FAILED with another castGUID changes nothing", function()
-        h.forced = {}
-        I.urgent = function(e)
-            h.forced[#h.forced + 1] = e
-        end
         ctl.casting = { 2000, 4000 }
         ctl.now = 2
         ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-A", fs.SPENDER_C)
         S.Flush()
         I.Fold(2, false)
         assert.are.equal(REND, I.castAb)
-        local n, forced = I.log.n + S.stN, #h.forced
+        local n = I.log.n + S.stN
         ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-B", fs.SPENDER_C) -- a second press: "another action..."
         S.Flush()
         I.Fold(2.5, false)
         assert.are.equal(REND, I.castAb)
         assert.are.equal(n, I.log.n + S.stN)
-        assert.are.equal(forced, #h.forced)
         ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-A", fs.SPENDER_C) -- the cast in progress
         S.Flush()
         I.Fold(3, false)

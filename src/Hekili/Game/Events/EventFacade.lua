@@ -26,6 +26,13 @@ local NEVER = { COMBAT_LOG_EVENT_UNFILTERED = true, FRAME_UPDATE = true }
 -- UNIT_AURA's payload for the units VirtualState believes (spec §2.5): always a full update, preallocated. Other units
 -- get nil (their table has secret fields in combat and the layer has no beliefs for them).
 local AURA_INFO = { player = { isFullUpdate = true }, target = { isFullUpdate = true } }
+E.AURA_INFO = AURA_INFO
+
+-- Events the client fires far more often than their news (border batch 2, E14): delivered with the belief's edge
+-- flag as their eighth slot, past the client's payload (S.Edge: a tracked ability's usability or cooldown flag
+-- flipped), so Hekili's handlers force a cycle as often as the urgent lane used to, no more; the display's truth
+-- layer reads every one as before.
+local EDGED = { SPELL_UPDATE_USABLE = true, ACTION_USABLE_CHANGED = true, SPELL_UPDATE_COOLDOWN = true }
 
 -- Subscriptions by event: parallel arrays, `false` in `f` for a removed one (reused by the next subscription).
 local SUB = {}
@@ -224,8 +231,12 @@ local function onEvent(_, event, r1, r2, r3, r4, r5, r6, r7, r8)
     local api = I.api or client
     local a1, a2, a3, a4 = Plain(api, r1), Plain(api, r2), Plain(api, r3), Plain(api, r4)
     local a5, a6, a7, a8 = Plain(api, r5), Plain(api, r6), Plain(api, r7), Plain(api, r8)
+    S.edge = false
     if I.api then
         S.Run(api, event, a1, a2, a3, a4, a5)
+    end
+    if EDGED[event] then
+        a8 = S.edge
     end
     local h = I.hekili -- the trace (§5): one line per event while Hekili makes a snapshot
     if h and h.ActiveDebug then

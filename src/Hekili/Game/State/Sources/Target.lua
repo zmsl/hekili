@@ -70,7 +70,6 @@ end
 
 S.On("PLAYER_TARGET_CHANGED", nil, function(api, t)
     swap(api, t)
-    S.Urgent("PLAYER_TARGET_CHANGED")
 end)
 S.OnStart(swap)
 I.OnBuild(function(def, now)

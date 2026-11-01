@@ -1070,6 +1070,19 @@ RegisterUnitEvent( "UNIT_SPELLCAST_STOP", "player", nil, function( event, unit, 
 end )
 
 
+-- Forever (border batch 2, E14): a usability or cooldown event carries, as its eighth slot past the client's payload,
+-- whether a tracked ability's flag flipped (Game/Events/EventFacade.lua); that, and the swing timer's own event, is a
+-- reason for a sooner cycle (the belief's urgent lane asked for one here before).
+for _, e in ipairs( { "SPELL_UPDATE_USABLE", "ACTION_USABLE_CHANGED", "SPELL_UPDATE_COOLDOWN" } ) do
+    RegisterEvent( e, function( event, ... )
+        if select( 8, ... ) then Hekili:ForceUpdate( event ) end
+    end )
+end
+RegisterEvent( "PLAYER_SWING", function( event )
+    Hekili:ForceUpdate( event )
+end )
+
+
 RegisterUnitEvent( "UNIT_SPELLCAST_DELAYED", "player", nil, function( event, unit, _, spellID )
     local ability = class.abilities[ spellID ]
 
@@ -1456,6 +1469,9 @@ end
 -- Use dots/debuffs to count active targets.
 -- Track dot power (until 6.0) for snapshotting.
 -- Note that this was ported from an unreleased version of Hekili, and is currently only counting damaged enemies.
+-- The avoids that refuse an ability outright (its cost given back), as the combat log names them.
+local REFUSED = { DODGE = true, PARRY = true, MISS = true }
+
 local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellID, spellName, school, amount, interrupt, a, b, c, d, offhand, multistrike, ... )
     -- This is used by both RegisterCombatLogEvent( x ) and RegisterHook( "COMBAT_LOG_EVENT_UNFILTERED", x ).
     ns.callHook( "COMBAT_LOG_EVENT_UNFILTERED", timestamp, subtype, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellID, spellName, school, amount, interrupt, a, b, c, d, offhand, multistrike, ... )
@@ -1562,6 +1578,12 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
     end
 
     if amSource then
+        -- Forever (border batch 2, E14): our ability refused outright (dodged, parried, missed: its cost comes back)
+        -- is a reason for a sooner cycle.
+        if subtype == "SPELL_MISSED" and REFUSED[ amount ] and class.abilities[ spellID ] then
+            Hekili:ForceUpdate( subtype )
+        end
+
         if cast_events[ subtype ] then
             local ability = class.abilities[ spellID ]
 
@@ -1681,6 +1703,8 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
 
     elseif subtype:sub( 1, 5 ) == 'SWING' and not multistrike then
         if subtype == 'SWING_MISSED' then offhand = spellName end
+        -- Forever (border batch 2, E14): our landed swing (its resource) is a reason for a sooner cycle.
+        if amSource and subtype == 'SWING_DAMAGE' then Hekili:ForceUpdate( subtype ) end
 
         local sw = state.swings
 

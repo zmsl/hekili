@@ -134,7 +134,7 @@ local function onCooldown(api, t)
         end
     end
     if edge then
-        S.Urgent("VS_COOLDOWN")
+        S.Edge()
     end
 end
 S.On("SPELL_UPDATE_COOLDOWN", nil, onCooldown)

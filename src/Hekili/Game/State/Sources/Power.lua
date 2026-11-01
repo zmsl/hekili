@@ -57,7 +57,7 @@ end)
 
 local function onUsable(api, t)
     if I.built and usability(api, t, true, false) then
-        S.Urgent("VS_USABLE")
+        S.Edge()
     end
 end
 S.On("SPELL_UPDATE_USABLE", nil, onUsable)

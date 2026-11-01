@@ -22,7 +22,6 @@ S.On("PLAYER_SWING", nil, function(api, t, duration, swingType)
     end
     local hand = swingType + 1
     Stage(Obs.Swing, t, hand, duration, 4)
-    S.Urgent("PLAYER_SWING")
 end)
 
 -- Both hands' speeds, base speeds and the melee haste, when plain (out of combat in practice). Allocates nothing.

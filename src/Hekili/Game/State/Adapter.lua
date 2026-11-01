@@ -74,11 +74,6 @@ do
     end
 end
 
--- The urgent lane (spec §4.4): shortens Hekili's wait before its next cycle; never interrupts one.
-I.urgent = function(event)
-    Hekili:ForceUpdate(event)
-end
-
 -- Start once, at PLAYER_LOGIN, on a frame of its own (a subscriber of the event facade like Hekili's frames).
 do
     local boot = CreateFrame("Frame")
