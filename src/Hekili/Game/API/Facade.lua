@@ -350,6 +350,24 @@ hybrid(
     end
 )
 
+-- The player's maximum: the raw while plain, the belief's (its last plain read, else the pack's declared) when secret;
+-- then the pool's base power (border batch 2), nil until a percent-of-base cost read has taught it (the sim's
+-- ns.FractionCost prices from the maximum meanwhile). Another unit: the raw, no base.
+hybrid(
+    "UnitPowerMax",
+    function(unit, powerType)
+        local r = unit == "player" and I.res.slotOf[powerType]
+        return r and I.res.max[r] or 0
+    end,
+    "plain (100 for rage) [W PR16]; the belief's maximum when secret; then the pool's base power (border batch 2)",
+    1,
+    function(unit, powerType)
+        if unit == "player" then
+            return VS.BasePower(powerType)
+        end
+    end
+)
+
 kept("UnitPartialPower", "virtual", zero, "secret always [W PR16]; no Forever user")
 
 ----------------------------------------------------------------------------------------------------------------------
@@ -1138,7 +1156,6 @@ local PASSTHROUGH = {
     { "UnitName", "plain in combat [W PR14; gate spike]" },
     { "UnitOnTaxi", "plain [W sweep 2026-10-16]" },
     { "UnitPhaseReason", "plain [W sweep 2026-10-16]" },
-    { "UnitPowerMax", "plain (100 for rage) [W PR16]" },
     { "UnitPowerType", "plain [W PR16]" },
     { "UnitRace", "plain [W sweep 2026-10-16]" },
     { "UnitSex", "plain [W sweep 2026-10-16]" },

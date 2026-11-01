@@ -33,8 +33,9 @@ describe("the sim's percent-of-base cost (spendBase)", function()
         end
         basePower = H.ns.VirtualState.BasePower
         H.ns.VirtualState.BasePower = function()
-            return BASE
+            return BASE + 7 -- not the sim's source any more: the reset's UnitPowerMax read is (border batch 2)
         end
+        S.mana.base = BASE -- as the reset stores UnitPowerMax's second value
     end)
 
     teardown(function()

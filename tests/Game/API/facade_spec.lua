@@ -117,7 +117,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 125, hybrid = 35, virtual = 25, display = 1 }, count)
+        assert.are.same({ passthrough = 124, hybrid = 36, virtual = 25, display = 1 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -223,6 +223,20 @@ describe("ns.Facade", function()
             assert.are.same({ 0, 0, nil, 7, 0.4 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) })
             assert.are.same({ 12.5, 0, 0 }, { select(3, Facade.GetManaRegen()) })
             VS.FsrUntil, VS.DecayAnchor, VS.TakenRate = fsr, anchor, taken
+            -- (border batch 2) UnitPowerMax: the client's while plain, the belief's when secret; then the pool's base
+            -- power, nil until a percent-of-base cost read taught it
+            assert.are.same({ 100 }, { Facade.UnitPowerMax("player", fs.RAGE) }) -- secret: the belief's declared maximum
+            answers.UnitPowerMax = function()
+                return 110
+            end
+            assert.are.same({ 110 }, { Facade.UnitPowerMax("player", fs.RAGE) })
+            local base = VS.BasePower
+            VS.BasePower = function(pt)
+                return pt == fs.RAGE and 219 or nil
+            end
+            assert.are.same({ 110, 219 }, { Facade.UnitPowerMax("player", fs.RAGE) })
+            assert.are.same({ 110 }, { Facade.UnitPowerMax("pet", fs.RAGE) }) -- another unit: no base
+            VS.BasePower = base
         end
     )
 
@@ -372,6 +386,7 @@ describe("ns.Facade", function()
         assert.is_nil(Facade.C_Spell.GetSpellCharges(999999))
         assert.are.equal(0, Facade.UnitPower("player", 99))
         assert.are.same({ 0, 0, nil, 0, 0 }, { Facade.GetPowerRegenForPowerType(99) })
+        assert.are.same({ 0 }, { Facade.UnitPowerMax("player", 99) }) -- secret: the belief's maximum (none); no base
         assert.is_nil(Facade.C_UnitAuras.GetPlayerAuraBySpellID(999999))
         assert.is_nil(Facade.C_UnitAuras.GetBuffDataByIndex("focus", 1))
         assert.are.equal(0, Facade.UnitSpellHaste("target"))

@@ -509,10 +509,10 @@ state.select = select
 local VS = ns.VirtualState
 
 --- A cost `c` between 0 and 1 of resource state `res`, as power: that fraction of the pool's base power, floored, when
---- the pack declares one (the meta's `base`; VS.BasePower, learned from the client's cost read), else of its `modmax`
---- (Hekili's). Allocates nothing.
+--- the reset's UnitPowerMax read carried one (`res.base`: the pack's declared or the one learned from the client's
+--- cost read; nil until then), else of its `modmax` (Hekili's). Allocates nothing.
 function ns.FractionCost( c, res )
-    local b = VS.BasePower( res.type )
+    local b = rawget( res, "base" )
     if b then return math.floor( c * b + 1e-6 ) end
     return c * res.modmax
 end
@@ -6401,7 +6401,8 @@ do
 
             if res then
                 res.actual = UnitPower( "player", power.type )
-                res.max = UnitPowerMax( "player", power.type )
+                -- then the pool's base power (border batch 2): nil until a cost read taught it (ns.FractionCost)
+                res.max, res.base = UnitPowerMax( "player", power.type )
                 -- the belief's estimate above the floor it answered (TimeToReady's near-cost mark, mana-regen plan Task 4a);
                 -- 0 for a type the belief does not track (its estimate reads 0)
                 local gap = VS.Power( power.type, state.now ).est - res.actual
