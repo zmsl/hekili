@@ -204,10 +204,25 @@ describe("ns.Facade", function()
             end
             assert.are.equal(39.99, Facade.UnitPower("player", 3))
             VS.Power = power
-            assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) }) -- out of combat too: no swings (G3)
+            -- (border batch 2) the client's pair, then the belief's: the window's end (nil for a type without one),
+            -- the stepped decay's anchor, the rate of hits on the player
+            assert.are.same({ 0, 0, nil, 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) }) -- out of combat too: no swings (G3)
             ctl.Fire("PLAYER_REGEN_DISABLED")
-            assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) })
-            assert.are.equal(2, select("#", Facade.GetManaRegen()))
+            assert.are.same({ 0, 0, nil, 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) })
+            assert.are.equal(5, select("#", Facade.GetManaRegen()))
+            local fsr, anchor, taken = VS.FsrUntil, VS.DecayAnchor, VS.TakenRate
+            VS.FsrUntil = function(pt)
+                return pt == 0 and 12.5 or nil
+            end
+            VS.DecayAnchor = function(pt)
+                return pt == fs.RAGE and 7 or 0
+            end
+            VS.TakenRate = function(pt, t)
+                return pt == fs.RAGE and t == 5 and 0.4 or 0 -- asked at now, never at a simulated time
+            end
+            assert.are.same({ 0, 0, nil, 7, 0.4 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) })
+            assert.are.same({ 12.5, 0, 0 }, { select(3, Facade.GetManaRegen()) })
+            VS.FsrUntil, VS.DecayAnchor, VS.TakenRate = fsr, anchor, taken
         end
     )
 
@@ -344,7 +359,7 @@ describe("ns.Facade", function()
         assert.are.same({ 0, 0, false }, { c.startTime, c.duration, c.isActive })
         assert.is_nil(Facade.C_Spell.GetSpellCharges(999999))
         assert.are.equal(0, Facade.UnitPower("player", 99))
-        assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(99) })
+        assert.are.same({ 0, 0, nil, 0, 0 }, { Facade.GetPowerRegenForPowerType(99) })
         assert.is_nil(Facade.C_UnitAuras.GetPlayerAuraBySpellID(999999))
         assert.is_nil(Facade.C_UnitAuras.GetBuffDataByIndex("focus", 1))
         assert.are.equal(0, Facade.UnitSpellHaste("target"))

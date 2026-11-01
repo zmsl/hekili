@@ -6404,22 +6404,31 @@ do
                 res.last_tick = rawget( res, "last_tick" ) or 0
                 res.tick_rate = rawget( res, "tick_rate" ) or 0.1
 
+                -- The regen read's trailing values (border batch 2): the five-second window's end (false for none),
+                -- then the stepped decay's anchor and the rate of hits taken, which the model's generated entries
+                -- read from here at every forecast (Game/State/Adapter.lua).
                 if power.type == Enum.PowerType.Mana then
-                    local inactive, active = GetManaRegen()
+                    local inactive, active, fsr, anchor, taken = GetManaRegen()
 
                     res.active_regen = active or 0
                     res.inactive_regen = inactive or 0
                     res.regen = nil
-                    res.fsr_until = VS.FsrUntil( power.type ) or false
+                    res.fsr_until = fsr or false
+                    res.decay_anchor, res.taken_rate = anchor, taken
                 else
                     if ResourceRegenerates( k ) then
-                        local inactive, active = GetPowerRegenForPowerType( power.type )
+                        local inactive, active, fsr, anchor, taken = GetPowerRegenForPowerType( power.type )
                         res.active_regen = active or 0.001
                         res.inactive_regen = inactive or 0.001
                         res.regen = nil
-                        res.fsr_until = VS.FsrUntil( power.type ) or false
+                        res.fsr_until = fsr or false
+                        res.decay_anchor, res.taken_rate = anchor, taken
                     else
                         res.regen = 0.001
+                        if rawget( res, "regenModel" ) then -- its entries may step the decay and the hits taken
+                            local _, _, _, anchor, taken = GetPowerRegenForPowerType( power.type )
+                            res.decay_anchor, res.taken_rate = anchor, taken
+                        end
                     end
                 end
 

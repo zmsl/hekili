@@ -174,16 +174,37 @@ local function pick(policy, x, y, z, a, b, c, d, ...)
     return a, b, c, d, ...
 end
 
---- A hybrid of up to three arguments: the raw call, its secret answer replaced by `policy`'s (absent: the policy).
-local function hybrid(name, policy, reason)
-    local real = resolve(name)
-    if not real then
-        kept(name, "virtual", policy, reason .. "; absent on this client")
-        return
+-- The row `head` with `tail(x, y, z)`'s values after its first `n` (1 or 2): the belief's facts the client has no shape
+-- for, on every path (border batch 2 ruling: a read through them satisfies the belief/core rule). Allocates nothing.
+local function tailed(n, head, tail)
+    if n == 1 then
+        return function(x, y, z)
+            local a = head(x, y, z)
+            return a, tail(x, y, z)
+        end
     end
-    kept(name, "hybrid", function(x, y, z)
-        return pick(policy, x, y, z, real(x, y, z))
-    end, reason)
+    return function(x, y, z)
+        local a, b = head(x, y, z)
+        return a, b, tail(x, y, z)
+    end
+end
+
+--- A hybrid of up to three arguments: the raw call, its secret answer replaced by `policy`'s (absent: the policy);
+--- with `n` and `tail`, the belief's trailing values after the client's `n` (see `tailed`).
+local function hybrid(name, policy, reason, n, tail)
+    local real = resolve(name)
+    local kind, fn = "hybrid", nil
+    if not real then
+        kind, fn, reason = "virtual", policy, reason .. "; absent on this client"
+    else
+        fn = function(x, y, z)
+            return pick(policy, x, y, z, real(x, y, z))
+        end
+    end
+    if tail then
+        fn = tailed(n, fn, tail)
+    end
+    kept(name, kind, fn, reason)
 end
 
 -- The raw answer when every value is plain, else nothing (no cast). Allocates nothing.
@@ -292,21 +313,42 @@ kept(
         .. "while plain (plain 0 with no pet [W PR12]), PetPower() when secret"
 )
 
-hybrid("GetPowerRegenForPowerType", function(powerType)
-    local r = I.res.slotOf[powerType]
-    if r and I.res.swing[r] > 0 then
-        return 0, 0 -- Hekili's swing regen model adds that resource in combat; no swings out of combat (G3)
-    end
-    local t = now()
-    local inactive = VS.Regen(powerType, t, VS.NOT_CASTING).est -- the client's pair; the window is the sim's
-    return inactive, VS.Regen(powerType, t, VS.CASTING).est
-end, "secret in combat [W PR16]; Regen() not casting and casting, 0 for a swing-paid resource (G3)")
+-- After the client's pair: the five-second window's end (nil for a type without one), the stepped decay's anchor and
+-- the rate of hits on the player, all facts about now (the sim's forecast reads them from its reset, Engine/Sim/State.lua).
+local function regenTail(powerType)
+    return VS.FsrUntil(powerType), VS.DecayAnchor(powerType), VS.TakenRate(powerType, now())
+end
+local REGEN_TAIL = "; then the window's end, the decay anchor and the taken rate (border batch 2)"
 
-hybrid("GetManaRegen", function()
-    local t = now()
-    local inactive = VS.Regen(0, t, VS.NOT_CASTING).est
-    return inactive, VS.Regen(0, t, VS.CASTING).est
-end, "secret in combat [W PR16]; Regen(0) not casting and casting")
+hybrid(
+    "GetPowerRegenForPowerType",
+    function(powerType)
+        local r = I.res.slotOf[powerType]
+        if r and I.res.swing[r] > 0 then
+            return 0, 0 -- Hekili's swing regen model adds that resource in combat; no swings out of combat (G3)
+        end
+        local t = now()
+        local inactive = VS.Regen(powerType, t, VS.NOT_CASTING).est -- the client's pair; the window is the sim's
+        return inactive, VS.Regen(powerType, t, VS.CASTING).est
+    end,
+    "secret in combat [W PR16]; Regen() not casting and casting, 0 for a swing-paid resource (G3)" .. REGEN_TAIL,
+    2,
+    regenTail
+)
+
+hybrid(
+    "GetManaRegen",
+    function()
+        local t = now()
+        local inactive = VS.Regen(0, t, VS.NOT_CASTING).est
+        return inactive, VS.Regen(0, t, VS.CASTING).est
+    end,
+    "secret in combat [W PR16]; Regen(0) not casting and casting" .. REGEN_TAIL,
+    2,
+    function()
+        return regenTail(0)
+    end
+)
 
 kept("UnitPartialPower", "virtual", zero, "secret always [W PR16]; no Forever user")
 

@@ -199,6 +199,10 @@ describe("Adapter", function()
             I.Sources.Direct(VS.Obs.PlayerHit, 15, 4, 0, 20)
             I.Fold(15)
             state.time, state.now, state.offset = 5, 16, 1.5
+            local res = h.Class.resources.rage.state
+            assert.are.same({ false, 0, 17 }, { e.stop(), e.value(), e.last() }) -- the entry reads the reset's field, not the belief
+            ctl.now = 16
+            res.taken_rate = select(5, ns.Facade.GetPowerRegenForPowerType(fs.RAGE)) -- the reset's read (border batch 2)
             assert.are.same({ false, 0.4, 17 }, { e.stop(), e.value(), e.last() }) -- 2 + 2 in 10 s; from the reset
             assert.are.equal(18, e.last() + e.interval) -- 1.5 s on, the next beat is the reset's +2, not +2.5
             state.offset = 2
@@ -247,6 +251,9 @@ describe("Adapter", function()
         I.Fold(2)
         I.Settle(3.5) -- the belief's quanta at 2 and 3, the next at 4
         state.now = 3.5 -- the reset at the belief's clock
+        local res = h.Class.resources.rage.state
+        assert.are.same({ 3, 2.5 }, { VS.DecayAnchor(fs.RAGE), e.last() }) -- before the reset's read: the belief's anchor is not the entry's
+        res.decay_anchor = select(4, ns.Facade.GetPowerRegenForPowerType(fs.RAGE)) -- the reset's read (border batch 2)
         assert.are.same({ 3, 3 }, { VS.DecayAnchor(fs.RAGE), e.last() }) -- the sim's next beat: 4, the belief's
         state.buff.regen_aura_a = { up = true, expires = 20 }
         assert.are.equal(19, e.last()) -- a tick aura up in the sim: the first quantum at its expiry, after its tick

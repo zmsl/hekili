@@ -122,7 +122,7 @@ end
 -- quantum), or start at a pausing aura's expiry (an entry flagged `pausesDecay`) while one is up in the sim: Hekili's
 -- forecast removes an entry whose `stop` holds, so the pause is in `last`, not `stop`. Built once per regen model, at a
 -- build.
-local function decayEntry(key, model, meta, powerType)
+local function decayEntry(key, model, meta)
     local e = { resource = key, interval = meta.decayInterval }
     function e.value()
         return -eval(meta.decay) * eval(meta.decayInterval)
@@ -140,7 +140,8 @@ local function decayEntry(key, model, meta, powerType)
             end
         end
         if a == 0 then
-            a = VS.DecayAnchor(powerType)
+            -- the reset's read: GetPowerRegenForPowerType's fourth value (Engine/Sim/State.lua), 0 before one
+            a = rawget(class.resources[key].state, "decay_anchor") or 0
             if a == 0 then
                 return t - iv -- the belief inactive: a quantum at the forecast's start
             end
@@ -159,13 +160,14 @@ local function decayEntry(key, model, meta, powerType)
 end
 
 -- The sim's rage from hits on the player (tank design §1.2.5): a regen-model entry Hekili's forecast steps every
--- second from the reset, the belief's learned rate (VS.TakenRate) a step, removed out of combat (`stop`). The belief
--- never reads it: real hits are observed. Built once per regen model, at a build. Its anchor rolls like `__decay`'s:
--- a re-forecast keeps the reset's grid (the last whole beat at or before the forecast's start is already in `actual`).
-local function takenEntry(key, powerType)
+-- second from the reset, the learned rate a step (the reset's read: GetPowerRegenForPowerType's fifth value,
+-- Engine/Sim/State.lua), removed out of combat (`stop`). The belief never reads it: real hits are observed. Built once
+-- per regen model, at a build. Its anchor rolls like `__decay`'s: a re-forecast keeps the reset's grid (the last whole
+-- beat at or before the forecast's start is already in `actual`).
+local function takenEntry(key)
     local e = { resource = key, interval = 1 }
     function e.value()
-        return VS.TakenRate(powerType, state.now)
+        return rawget(class.resources[key].state, "taken_rate") or 0
     end
     function e.last()
         return state.now + floor(state.offset)
@@ -251,12 +253,12 @@ local function buildDef()
         local meta = r.state and r.state.meta
         local iv = meta and meta.decay ~= nil and eval(meta.decayInterval)
         if model and type(iv) == "number" and iv > 0 and model[DECAY] == nil then
-            model[DECAY] = decayEntry(k, model, meta, r.type)
+            model[DECAY] = decayEntry(k, model, meta)
         end
         if model and type(taken) ~= "function" then
             model[TAKEN] = nil -- a stale entry out of the forecast's event list
         elseif model and model[TAKEN] == nil then
-            model[TAKEN] = takenEntry(k, r.type)
+            model[TAKEN] = takenEntry(k)
         end
         if swing == 0 and offValue ~= nil then
             swing, value, offValue, crit, offCrit = 2, offValue, nil, offCrit, nil -- the off hand alone pays it
