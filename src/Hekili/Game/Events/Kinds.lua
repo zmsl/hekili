@@ -134,6 +134,15 @@ function K.Band(i, p, t, isAvoid, act, sch)
         return nil
     end
     if k == FRAME or k == STRIKE then
+        -- a no-damage cast has no wound to close its ticket: while others avoid (GAP AX), the target's aura event in its
+        -- frame says it landed, so the avoid is another player's. Only its frame: a busy target's events are anyone's,
+        -- and a lost true avoid stays wrong (no aura read in combat), a false one heals on the next press
+        if isAvoid and T.school[i] == 0 and L.bg[7] >= L.FOREIGN_AVOIDS and T.guid[i] == I.Units.Bound(1) then
+            local seen = I.targetAuraT - a0
+            if seen >= 0 and seen <= SAME_FRAME then
+                return nil
+            end
+        end
         if p == 1 then
             return a0, a0 + SAME_FRAME, a0
         elseif isAvoid then

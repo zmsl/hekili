@@ -158,7 +158,9 @@ commit.
   Open question for the owner (a core task): lift the empty-pool floor.
 - AO / AP: our own DoTs from the target's nameplate aura frames; the nameplate aura probe (ForeverProbe) first.
 - AX's residue: a foreign avoid landing in our cast's landing window (partly fixed by final review fix 4); a group
-  fight with `/vslog` (O1, O2).
+  fight with `/vslog` (O1, O2). A no-damage ticket now refuses an avoid in a crowd when the target's UNIT_AURA came in
+  its frame (Kinds.lua K.Band). Launch check: if our own avoid row arrives over 50 ms after the success on a target
+  with 10+ aura events a second, true avoids are lost and Sunder over-reads (harness: Arms .806 against .828 unfixed).
 - `prev.1` from real casts: that the client's real casts fill `prev.1` as the harness does (PV1).
 
 ## Decided (user, 2026-10-21)

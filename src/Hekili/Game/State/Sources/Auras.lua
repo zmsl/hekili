@@ -151,7 +151,11 @@ local function walk(api, u, unit, t)
 end
 I.WalkAuras = walk
 
+I.targetAuraT = -1 -- the target's latest aura event, plain even when its payload is secret (Events/Kinds.lua K.Band)
 S.On("UNIT_AURA", nil, function(api, t, unit)
+    if unit == "target" then
+        I.targetAuraT = t
+    end
     local u = unit and I.built and I.auras.index[unit]
     if u then
         if u ~= 1 and Plain(api, api.UnitExists(unit)) ~= true then

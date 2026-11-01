@@ -44,6 +44,29 @@ describe("the kinds", function()
         assert.are.same({ 10, 10 + 0.2 }, { lo3, hi3 })
     end)
 
+    it("a no-damage ticket takes no avoid in a crowd once the target's aura event came in its frame", function()
+        local i = open(fs.SPENDER_F, 10)
+        T.school[i] = 0
+        I.Units.Bound = function()
+            return "Creature-1"
+        end
+        L.bg[7] = 1
+        assert.is_truthy(K.Band(i, 1, 10.01, true, "DODGE", 1)) -- no event: possibly ours
+        ctl.now = 10.02
+        ctl.Fire("UNIT_AURA", "target")
+        assert.is_nil(K.Band(i, 1, 10.03, true, "DODGE", 1)) -- it landed: another player's avoid
+        assert.is_nil(K.Band(i, 2, 10.1, true, "DODGE", 1))
+        L.bg[7] = 0 -- nobody else avoids here: the event may be anyone's, the row is ours
+        assert.is_truthy(K.Band(i, 2, 10.1, true, "DODGE", 1))
+        L.bg[7] = 1
+        T.guid[i] = "Creature-2" -- the event was another unit's
+        assert.is_truthy(K.Band(i, 2, 10.1, true, "DODGE", 1))
+        T.guid[i] = "Creature-1"
+        ctl.now = 10.09 -- only the cast's frame: an event past it is some other aura's
+        I.targetAuraT = 10.09
+        assert.is_truthy(K.Band(i, 2, 10.1, true, "DODGE", 1))
+    end)
+
     it("FRAME on a default type: a non-white WOUND only in its frame (today's rule)", function()
         local i = open(fs.SPENDER_C, 10)
         assert.is_nil(K.Band(i, 2, 10.1, false, "WOUND", 8))
