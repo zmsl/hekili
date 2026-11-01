@@ -243,8 +243,15 @@ local HekiliSpecMixin = {
             fcount = 0,
             times = {},
             values = {},
+            -- the believed band's streams beside the estimate's (border batch 2): the floor the press gates read
+            -- (`lo`, `timeToLo`) and the ceiling, moved by the sim's deltas as `actual` is, each clamped on its own
+            times_lo = {},
+            values_lo = {},
+            values_hi = {},
 
             actual = 0,
+            actual_lo = 0,
+            actual_hi = 0,
             max = 1,
 
             active_regen = 0.001,
@@ -261,6 +268,10 @@ local HekiliSpecMixin = {
 
             timeTo = function( x )
                 return state:TimeToResource( r.state, x )
+            end,
+
+            timeToLo = function( x )
+                return state:TimeToResource( r.state, x, true )
             end,
         }, mt_resource )
         r.state.regenModel = regen

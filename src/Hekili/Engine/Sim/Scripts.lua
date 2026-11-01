@@ -736,6 +736,39 @@ do
                     end
                 end
 
+                -- the floor's reads (border batch 2): `energy.lo>=N`, `mana.pct_lo<=N` reach on the floor's stream
+                if lhs == ( key .. ".lo" ) then
+                    if comp == ">" then
+                        return true, "0.01 + " .. key .. ".timeToLo( " .. rhs .. " ), " .. key .. ".timeToLo( 1 + ( " .. rhs .. " ) )"
+                    elseif moreOrEqual[ comp ] then
+                        return true, key .. ".timeToLo( " .. rhs .. " )"
+                    end
+                end
+
+                if rhs == ( key .. ".lo" ) then
+                    if comp == "<" then
+                        return true, "0.01 + " .. key .. ".timeToLo( " .. lhs .. " ), " .. key .. ".timeToLo( 1 + ( " .. lhs .. " ) )"
+                    elseif lessOrEqual[ comp ] then
+                        return true, key .. ".timeToLo( " .. lhs .. " )"
+                    end
+                end
+
+                if lhs == ( key .. ".pct_lo" ) then
+                    if comp == ">" then
+                        return true, "0.01 + " .. key .. ".timeToLo( " .. key .. ".max * ( " .. rhs .. " / 100 ) ), " .. key .. ".timeToLo( 1 + " .. key .. ".max * ( ( " .. rhs .. " ) / 100 ) )"
+                    elseif moreOrEqual[ comp ] then
+                        return true, key .. ".timeToLo( " .. key .. ".max * ( " .. rhs .. " / 100 ) ), " .. key .. ".timeToLo( 1 + " .. key .. ".max * ( ( " .. rhs .. " ) / 100 ) )"
+                    end
+                end
+
+                if rhs == ( key .. ".pct_lo" ) then
+                    if comp == "<" then
+                        return true, "0.01 + " .. key .. ".timeToLo( " .. key .. ".max * ( " .. lhs .. " / 100 ) ), " .. key .. ".timeToLo( 1 + " .. key .. ".max * ( ( " .. lhs .. " ) / 100 ) )"
+                    elseif lessOrEqual[ comp ] then
+                        return true, key .. ".timeToLo( " .. key .. ".max * ( " .. lhs .. " / 100 ) ), " .. key .. ".timeToLo( 1 + " .. key .. ".max * ( ( " .. lhs .. " ) / 100 ) )"
+                    end
+                end
+
                 if lhs == ( key .. ".percent" ) or lhs == ( key .. ".pct" ) then
                     if comp == ">" then
                         return true, "0.01 + " .. key .. ".timeTo( " .. key .. ".max * ( " .. rhs .. " / 100 ) ), " .. key .. ".timeTo( 1 + " .. key .. ".max * ( ( " .. rhs .. " ) / 100 ) )"

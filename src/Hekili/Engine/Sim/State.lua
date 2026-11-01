@@ -1185,7 +1185,10 @@ function state.stopChanneling( reset, action )
 
     -- This will lock in gains from channeling before the channel ends.
     for resource, auras in pairs( class.resourceAuras ) do
-        if auras.casting then state[ resource ].actual = state[ resource ].current end
+        if auras.casting then
+            local r = state[ resource ]
+            r.actual, r.actual_lo, r.actual_hi = r.current, r.lo, r.hi
+        end
     end
 
     removeBuff( "casting" )
@@ -1331,10 +1334,17 @@ do
 
         wipe( r.times )
         wipe( r.values )
+        wipe( r.times_lo )
+        wipe( r.values_lo )
+        wipe( r.values_hi )
 
+        -- Each slice carries the three streams (border batch 2): the estimate `v`, the floor `l` and the ceiling `h`,
+        -- moved by the same events and regen, each clamped to [0, max] on its own (the belief's I.ResourceShift).
         r.forecast[ 1 ] = r.forecast[ 1 ] or {}
         r.forecast[ 1 ].t = now
         r.forecast[ 1 ].v = r.actual
+        r.forecast[ 1 ].l = r.actual_lo
+        r.forecast[ 1 ].h = r.actual_hi
         r.forecast[ 1 ].e = "actual"
         r.fcount = 1
 
@@ -1410,10 +1420,13 @@ do
 
                 if stop or aura or channel then
                     table.remove( events, 1 )
-                    local v = max( 0, min( r.max, r.forecast[ r.fcount ].v + bonus ) )
+                    local last = r.forecast[ r.fcount ]
+                    local v = max( 0, min( r.max, last.v + bonus ) )
+                    local l = max( 0, min( r.max, last.l + bonus ) )
+                    local h = max( 0, min( r.max, last.h + bonus ) )
                     local idx
 
-                    if r.forecast[ r.fcount ].t == now then
+                    if last.t == now then
                         idx = r.fcount
                     else
                         idx = r.fcount + 1
@@ -1422,14 +1435,23 @@ do
                     r.forecast[ idx ] = r.forecast[ idx ] or {}
                     r.forecast[ idx ].t = now
                     r.forecast[ idx ].v = v
+                    r.forecast[ idx ].l = l
+                    r.forecast[ idx ].h = h
                     r.forecast[ idx ].e = ( e.name or "none" ) .. ( stop and "-stop" or aura and "-aura" or channel and "-channel" or "-unknown" )
                     r.fcount = idx
                 else
                     prev = now
 
-                    local val = r.fcount > 0 and r.forecast[ r.fcount ].v or r.actual
+                    local last = r.fcount > 0 and r.forecast[ r.fcount ]
+                    local val, vlo, vhi
+                    if last then val, vlo, vhi = last.v, last.l, last.h else val, vlo, vhi = r.actual, r.actual_lo, r.actual_hi end
+                    local gain = type( e.value ) == "number" and e.value or e.value( now ) -- once: the same gain for the three streams
                     local v = max( 0, min( r.max, val + bonus ) )
-                    v = max( 0, min( r.max, v + ( type( e.value ) == "number" and e.value or e.value( now ) ) ) )
+                    v = max( 0, min( r.max, v + gain ) )
+                    local l = max( 0, min( r.max, vlo + bonus ) )
+                    l = max( 0, min( r.max, l + gain ) )
+                    local h = max( 0, min( r.max, vhi + bonus ) )
+                    h = max( 0, min( r.max, h + gain ) )
                     local idx
 
                     if r.forecast[ r.fcount ].t == now then
@@ -1441,6 +1463,8 @@ do
                     r.forecast[ idx ] = r.forecast[ idx ] or {}
                     r.forecast[ idx ].t = now
                     r.forecast[ idx ].v = v
+                    r.forecast[ idx ].l = l
+                    r.forecast[ idx ].h = h
                     r.forecast[ idx ].e = e.name or "none"
                     r.fcount = idx
 
@@ -1466,14 +1490,20 @@ do
             end
         end
 
-        if regen > 0 and r.forecast[ r.fcount ].v < r.max then
+        -- gated on the floor, the lowest stream: the estimate at its maximum still leaves the floor rising to it
+        if regen > 0 and r.forecast[ r.fcount ].l < r.max then
             for k, v in pairs( remains ) do
-                local val = r.fcount > 0 and r.forecast[ r.fcount ].v or r.actual
+                local last = r.fcount > 0 and r.forecast[ r.fcount ]
+                local val, vlo, vhi
+                if last then val, vlo, vhi = last.v, last.l, last.h else val, vlo, vhi = r.actual, r.actual_lo, r.actual_hi end
                 local idx = r.fcount + 1
+                local bonus = fsr and fsrGain( r, finish - v, finish ) or v * regen
 
                 r.forecast[ idx ] = r.forecast[ idx ] or {}
                 r.forecast[ idx ].t = finish
-                r.forecast[ idx ].v = min( r.max, val + ( fsr and fsrGain( r, finish - v, finish ) or v * regen ) )
+                r.forecast[ idx ].v = min( r.max, val + bonus )
+                r.forecast[ idx ].l = min( r.max, vlo + bonus )
+                r.forecast[ idx ].h = min( r.max, vhi + bonus )
                 r.forecast[ idx ].e = "to_max"
                 r.fcount = idx
             end
@@ -1499,7 +1529,6 @@ local resourceChange = function( amount, resource, overcap )
     if amount == 0 then return false end
 
     local r = state[ resource ]
-    local pre = r.current
 
     if amount < 0 and rawget( r, "fsr_until" ) then -- opens the window, held to a paid channel's end (wowsims mana.go:236-241)
         local u, c = state.query_time + ns.FSR, state.buff.casting
@@ -1511,6 +1540,14 @@ local resourceChange = function( amount, resource, overcap )
     else
         r.actual = max( 0, r.current + amount )
         if not overcap then r.actual = min( r.max, r.actual ) end
+        if r.actual_lo then -- the band's streams, the same delta, their own clamps (state.health has none)
+            r.actual_lo = max( 0, r.lo + amount )
+            r.actual_hi = max( 0, r.hi + amount )
+            if not overcap then
+                r.actual_lo = min( r.max, r.actual_lo )
+                r.actual_hi = min( r.max, r.actual_hi )
+            end
+        end
     end
 
     return true
@@ -3547,32 +3584,35 @@ function state:CombinedResourceRegen( t )
     return regen
 end
 
-function state:TimeToResource( t, amount )
+-- The seconds until the pool reaches `amount`, on the estimate's stream, or on the floor's with `lo` (border batch 2:
+-- the press gates' wait; each stream keeps its own cache of reach times, keyed by amount).
+function state:TimeToResource( t, amount, lo )
     -- Handle invalid or overflow cases.
     if not amount or amount > t.max then return 3600 end
-    if t.current >= amount then return 0 end
+    local field, times, current
+    if lo then field, times, current = "l", t.times_lo, t.lo else field, times, current = "v", t.times, t.current end
+    if current >= amount then return 0 end
 
     local regen = t.regen
     local queryTime = state.query_time
-    local deficit = amount - t.current
 
     if regen == 0.001 then regen = 0 end
     local fsr = rawget( t, "fsr_until" )
 
     -- Handle forecasted resources with slices (e.g., energy/focus models).
     if t.forecast and t.fcount > 0 then
-        if t.times[ amount ] then return t.times[ amount ] - queryTime end
+        if times[ amount ] then return times[ amount ] - queryTime end
 
         if regen == 0 and not fsr then
             for i = 1, t.fcount do
                 local v = t.forecast[ i ]
-                if v.v >= amount then
-                    t.times[ amount ] = v.t
-                    return max( 0, t.times[ amount ] - queryTime )
+                if v[ field ] >= amount then
+                    times[ amount ] = v.t
+                    return max( 0, times[ amount ] - queryTime )
                 end
             end
-            t.times[ amount ] = queryTime + 3600
-            return max( 0, t.times[ amount ] - queryTime )
+            times[ amount ] = queryTime + 3600
+            return max( 0, times[ amount ] - queryTime )
         end
 
         for i = 1, t.fcount do
@@ -3580,34 +3620,78 @@ function state:TimeToResource( t, amount )
             -- the slices are reused between passes: one past fcount is a stale pass's (central fix 26)
             local after = i < t.fcount and t.forecast[ i + 1 ]
 
-            if slice.v >= amount then
+            if slice[ field ] >= amount then
                 -- a tick-paid pool reaches it at a tick (Forever: continuous regen arrives every tick_rate)
-                t.times[ amount ] = tickReach( t, slice.t, 0 )
-                return max( 0, t.times[ amount ] - queryTime )
+                times[ amount ] = tickReach( t, slice.t, 0 )
+                return max( 0, times[ amount ] - queryTime )
 
-            elseif after and after.v >= amount then
+            elseif after and after[ field ] >= amount then
                 -- Check if regeneration fills the deficit before the next slice.
                 local time_diff = after.t - slice.t
-                local deficit = amount - slice.v
+                local deficit = amount - slice[ field ]
                 local regen_time = fsr and fsrTime( t, slice.t, deficit ) or deficit / regen
 
                 if regen_time < time_diff then
-                    t.times[ amount ] = tickReach( t, slice.t, regen_time )
+                    times[ amount ] = tickReach( t, slice.t, regen_time )
                 else
-                    t.times[ amount ] = after.t
+                    times[ amount ] = after.t
                 end
-                return max( 0, t.times[ amount ] - queryTime )
+                return max( 0, times[ amount ] - queryTime )
             end
         end
 
-        t.times[ amount ] = queryTime + 3600
-        return max( 0, t.times[ amount ] - queryTime )
+        times[ amount ] = queryTime + 3600
+        return max( 0, times[ amount ] - queryTime )
     end
 
     -- Fallback for non-modeled resources.
-    if fsr then return tickReach( t, queryTime, fsrTime( t, queryTime, amount - t.current ) ) - queryTime end
+    if fsr then return tickReach( t, queryTime, fsrTime( t, queryTime, amount - current ) ) - queryTime end
     if regen <= 0 then return 3600 end
-    return max( 0, tickReach( t, queryTime, ( amount - t.current ) / regen ) - queryTime )
+    return max( 0, tickReach( t, queryTime, ( amount - current ) / regen ) - queryTime )
+end
+
+
+-- A stream's value at query_time (border batch 2): the latest forecast slice's `field` (v, l or h) plus the regen to
+-- the query, cached per query time in `cache`; `actual` is the stream's reset value when nothing is forecast.
+local function streamValue( t, field, actual, cache )
+    local regen = t.regen
+    if regen == 0.001 then regen = 0 end
+
+    -- If this is a modeled resource, use our lookup system.
+    if t.forecast and t.fcount > 0 then
+        local q = state.query_time
+        local index, slice
+
+        if cache[ q ] then return cache[ q ] end
+
+        for i = 1, t.fcount do
+            local v = t.forecast[ i ]
+            if v.t <= q and v[ field ] ~= nil then
+                index = i
+                slice = v
+            else
+                break
+            end
+        end
+
+        -- We have a slice.
+        if index and slice and slice[ field ] then
+            local fsr = rawget( t, "fsr_until" )
+            cache[ q ] = max( 0, min( t.max, slice[ field ] + ( fsr and fsrGain( t, slice.t, q ) or ( q - slice.t ) * regen ) ) )
+            return cache[ q ]
+        end
+    end
+
+    -- No forecast.
+    if rawget( t, "fsr_until" ) then
+        local q = state.query_time
+        return max( 0, min( t.max, actual + fsrGain( t, q - state.delay, q ) ) )
+    end
+    if regen ~= 0 then
+        return max( 0, min( t.max, actual + ( regen * state.delay ) ) )
+    end
+
+    return actual
 end
 
 
@@ -3630,44 +3714,20 @@ local mt_resource = {
             return 100 - t.pct
 
         elseif k == "current" then
-            local regen = t.regen
-            if regen == 0.001 then regen = 0 end
+            return streamValue( t, "v", t.actual, rawget( t, "values" ) ) -- rawget: state.health has no cache
 
-            -- If this is a modeled resource, use our lookup system.
-            if t.forecast and t.fcount > 0 then
-                local q = state.query_time
-                local index, slice
+        -- the believed band's floor and ceiling (border batch 2): what the press gates read (`lo`), moved by the
+        -- same events as the estimate; a pool with no band (state.health) answers its estimate
+        elseif k == "lo" then
+            if t.actual_lo == nil then return t.current end
+            return streamValue( t, "l", t.actual_lo, t.values_lo )
 
-                if t.values[ q ] then return t.values[ q ] end
+        elseif k == "hi" then
+            if t.actual_hi == nil then return t.current end
+            return streamValue( t, "h", t.actual_hi, t.values_hi )
 
-                for i = 1, t.fcount do
-                    local v = t.forecast[ i ]
-                    if v.t <= q and v.v ~= nil then
-                        index = i
-                        slice = v
-                    else
-                        break
-                    end
-                end
-
-                -- We have a slice.
-                if index and slice and slice.v then
-                    local fsr = rawget( t, "fsr_until" )
-                    t.values[ q ] = max( 0, min( t.max, slice.v + ( fsr and fsrGain( t, slice.t, q ) or ( q - slice.t ) * regen ) ) )
-                    return t.values[ q ]
-                end
-            end
-
-            -- No forecast.
-            if rawget( t, "fsr_until" ) then
-                local q = state.query_time
-                return max( 0, min( t.max, t.actual + fsrGain( t, q - state.delay, q ) ) )
-            end
-            if regen ~= 0 then
-                return max( 0, min( t.max, t.actual + ( regen * state.delay ) ) )
-            end
-
-            return t.actual
+        elseif k == "pct_lo" then
+            return 100 * ( t.lo / t.max )
 
         elseif k == "deficit" or k == "base_deficit" then
             return t.max - t.current
@@ -6401,6 +6461,7 @@ do
 
             if res then
                 res.actual = UnitPower( "player", power.type )
+                res.actual_lo, res.actual_hi = res.actual, res.actual
                 -- then the pool's base power (border batch 2): nil until a cost read taught it (ns.FractionCost)
                 res.max, res.base = UnitPowerMax( "player", power.type )
                 -- the belief's estimate above the floor it answered (TimeToReady's near-cost mark, mana-regen plan Task 4a);
@@ -6700,14 +6761,19 @@ function state.advance( time )
             local fsr = rawget( resource, "fsr_until" )
             if not override and fsr then
                 local q = state.query_time
-                resource.actual = min( resource.max, max( 0, resource.actual + fsrGain( resource, q, q + time ) ) )
+                local bonus = fsrGain( resource, q, q + time )
+                resource.actual = min( resource.max, max( 0, resource.actual + bonus ) )
+                resource.actual_lo = min( resource.max, max( 0, resource.actual_lo + bonus ) )
+                resource.actual_hi = min( resource.max, max( 0, resource.actual_hi + bonus ) )
             elseif not override and resource.regen and regen ~= 0 then
                 resource.actual = min( resource.max, max( 0, resource.actual + ( regen * time ) ) )
+                resource.actual_lo = min( resource.max, max( 0, resource.actual_lo + ( regen * time ) ) )
+                resource.actual_hi = min( resource.max, max( 0, resource.actual_hi + ( regen * time ) ) )
             end
         else
             -- revisit this, may want to forecastResources( k ) instead.
             state.delay = time
-            resource.actual = resource.current
+            resource.actual, resource.actual_lo, resource.actual_hi = resource.current, resource.lo, resource.hi
             state.delay = 0
         end
     end

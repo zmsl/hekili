@@ -1470,8 +1470,8 @@ local function altPick( dispName, packName, rec, i, bound, value, maxTime, abili
     state.reset( dispName )
     local rt = rec.resource_type
     local res = state[ rt ]
-    local keep = res.actual
-    res.actual = value
+    local keep, keepLo, keepHi = res.actual, res.actual_lo, res.actual_hi
+    res.actual, res.actual_lo, res.actual_hi = value, value, value -- the band's streams pinned too: the pass is at the bound
     state.forecastResources( rt )
     -- the reset may already have advanced (to the end of a cast in progress): only the rest of the way
     local dt = rec.time - state.offset
@@ -1483,7 +1483,7 @@ local function altPick( dispName, packName, rec, i, bound, value, maxTime, abili
     local action = Hekili:GetNextPrediction( dispName, packName, altProbe )
 
     -- unpinned: a following display's partial reset (no offset) keeps the resource it finds
-    res.actual = keep
+    res.actual, res.actual_lo, res.actual_hi = keep, keepLo, keepHi
     state.forecastResources( rt )
 
     if not action or action == "wait" or action == rec.actionName then return end

@@ -126,6 +126,10 @@ local resourceMeta = {
         local pt = rawget(r, "type")
         if f == "current" then
             return VS.Power(pt, T).est
+        elseif f == "lo" then
+            return VS.Power(pt, T).lo
+        elseif f == "hi" then
+            return VS.Power(pt, T).hi
         elseif f == "max" then
             return I.res.max[I.res.slotOf[pt]] or 0
         end
