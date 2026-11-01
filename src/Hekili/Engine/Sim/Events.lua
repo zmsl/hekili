@@ -1472,6 +1472,14 @@ end
 -- The avoids that refuse an ability outright (its cost given back), as the combat log names them.
 local REFUSED = { DODGE = true, PARRY = true, MISS = true }
 
+-- The pet's unit reads, once per moment (a row's time): a raid delivers many rows in one. The belief's summon model
+-- moves UnitExists( "pet" ) with no event, so UNIT_PET alone can't hold them; it only drops them within a moment.
+local petAt, petExists, petGUID
+
+RegisterUnitEvent( "UNIT_PET", "player", nil, function()
+    petAt = nil
+end )
+
 local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellID, spellName, school, amount, interrupt, a, b, c, d, offhand, multistrike, ... )
     -- This is used by both RegisterCombatLogEvent( x ) and RegisterHook( "COMBAT_LOG_EVENT_UNFILTERED", x ).
     ns.callHook( "COMBAT_LOG_EVENT_UNFILTERED", timestamp, subtype, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellID, spellName, school, amount, interrupt, a, b, c, d, offhand, multistrike, ... )
@@ -1496,8 +1504,10 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
 
     local time = GetTime()
 
+    if time ~= petAt then petAt, petExists, petGUID = time, UnitExists( "pet" ), UnitGUID( "pet" ) end
+
     local amSource  = ( sourceGUID == state.GUID )
-    local petSource = ( UnitExists( "pet" ) and sourceGUID == UnitGUID( "pet" ) )
+    local petSource = ( petExists and sourceGUID == petGUID )
     local amTarget  = ( destGUID   == state.GUID )
     local isSensePower = ( class.auras.sense_power_active and spellID == 361022 )
 
@@ -1521,8 +1531,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
         ns.updateMinion( destGUID, time )
         return
     end
-
-    local hostile = ( bit.band( destFlags, COMBATLOG_OBJECT_REACTION_FRIENDLY ) == 0 ) and not IsActuallyFriend( destName )
 
     if dmg_events[ subtype ] and not ( amSource or petSource ) and amTarget then
         local damage, damageType
@@ -1571,11 +1579,13 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
         end
     end
 
-    local minion = ns.isMinion( sourceGUID )
+    local minion = ns.isSummoned( sourceGUID ) or sourceGUID == petGUID
 
     if not ( amSource or petSource or isSensePower ) and not ( state.role.tank and destGUID == state.GUID ) and ( not minion or not countPets ) then
         return
     end
+
+    local hostile = ( bit.band( destFlags, COMBATLOG_OBJECT_REACTION_FRIENDLY ) == 0 ) and not IsActuallyFriend( destName )
 
     if amSource then
         -- Forever (border batch 2, E14): our ability refused outright (dodged, parried, missed: its cost comes back)

@@ -719,6 +719,10 @@ ns.updateMinion = function(id, time)
     minions[id] = time
 end
 
+ns.isSummoned = function(id)
+    return minions[id] ~= nil
+end
+
 ns.isMinion = function(id)
     return minions[id] ~= nil or UnitGUID("pet") == id
 end
