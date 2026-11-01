@@ -448,7 +448,7 @@ local function automatic(a, t, kind, o)
         end
         -- a charged cost modifier in scope loses a stack, even when its discount made the cast free (Modifiers.lua)
         if I.BaseCostOf(a) > 0 then
-            I.SpendCostCharges(a, r, t, kind)
+            I.SpendCostCharges(a, r, o.t < t and o.t or t, kind)
         end
     end
     -- from the cast's own time, as its spend: a success folded late starts its cooldown or recharge no later (GAP W);
