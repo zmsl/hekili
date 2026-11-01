@@ -131,6 +131,7 @@ IsSpellKnown	passthrough
 IsSpellKnownOrOverridesKnown	passthrough
 IsStealthed	hybrid
 IsUsableSpell	passthrough
+LibRangeCheck.GetRange	virtual
 SecureCmdOptionParse	passthrough
 SpellIsSelfBuff	passthrough
 UnitAffectingCombat	passthrough

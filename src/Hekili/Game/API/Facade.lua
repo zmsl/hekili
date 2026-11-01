@@ -525,6 +525,20 @@ end, "secret in combat [W PR14]; Moving()")
 
 kept("UnitInRange", "virtual", inRangeUnknown, "secret always [W PR7]; no signal")
 
+-- LibRangeCheck's `GetRange(unit)` shape (Engine/Sim/State.lua's RC), answered by the belief's target bracket (gap 13:
+-- the tracked abilities' own range checks, Families/Enemies.lua): the lower bound and the upper, nil past every range
+-- answered; nothing while unknown or for another unit (nil never blocks: upstream's defaults).
+kept("LibRangeCheck.GetRange", "virtual", function(_, unit)
+    local r = VS.TargetRange()
+    if unit ~= "target" or r.basis == "unknown" then
+        return nil
+    end
+    if r.hi < HUGE then
+        return r.lo, r.hi
+    end
+    return r.lo
+end, "LibRangeCheck resolves nothing on Forever (gap 13); TargetRange() (border batch 2, E7)")
+
 ----------------------------------------------------------------------------------------------------------------------
 -- Totems [W PR12]
 

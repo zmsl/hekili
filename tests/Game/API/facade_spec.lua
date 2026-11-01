@@ -117,7 +117,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 123, hybrid = 38, virtual = 25, display = 1 }, count)
+        assert.are.same({ passthrough = 123, hybrid = 38, virtual = 26, display = 1 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -593,4 +593,35 @@ describe("ns.Facade", function()
         local speed, lo, hi = Facade.UnitRangedDamage("player") -- secret: the fake's plain read at Start
         assert.are.same({ ctl.ranged[1], ctl.ranged[2], ctl.ranged[3] }, { speed, lo, hi })
     end)
+
+    it(
+        "LibRangeCheck.GetRange answers the target's believed bracket; no upper bound and unknown read as nil",
+        function()
+            local RC = Facade.LibRangeCheck
+            ctl.known[fs.SPENDER_A], ctl.known[fs.SPENDER_C] = true, true
+            ctl.ranges[fs.SPENDER_A], ctl.ranges[fs.SPENDER_C] = { 0, 5 }, { 8, 35 } -- a melee strike, a band
+            api.C_Spell.GetSpellInfo = function(id) -- the ranges the resolve reads (the before_each's has none)
+                local r = ctl.ranges[id]
+                return { name = "Spell " .. id, iconID = 1, minRange = r and r[1] or 0, maxRange = r and r[2] or 5 }
+            end
+            ctl.Fire("SPELLS_CHANGED")
+            local function at(d, t)
+                ctl.distance.target = d
+                ctl.Tick(t)
+                I.Sources.RunPolls(t)
+                I.Fold(t, false)
+                I.Settle(t)
+                return { RC:GetRange("target") }
+            end
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            assert.are.same({}, at(fake.SECRET, 2)) -- a target, no plain range answer yet: unknown
+            assert.are.same({ 8, 35 }, at(20, 3))
+            assert.are.same({ 0, 5 }, at(2, 4))
+            assert.are.same({ 5 }, at(40, 5)) -- past every range answered: a lower bound only
+            assert.are.same({}, { RC:GetRange("focus") }) -- only the target is bracketed
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            assert.are.same({}, at(fake.SECRET, 6)) -- a new target, every read secret: unknown again
+            assert.are.same({}, calls)
+        end
+    )
 end)

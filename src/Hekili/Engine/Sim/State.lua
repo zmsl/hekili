@@ -56,7 +56,8 @@ local format, find = string.format, string.find
 
 local Mark, SuperMark, ClearMarks = ns.Mark, ns.SuperMark, ns.ClearMarks
 
-local RC = LibStub( "LibRangeCheck-3.0" )
+-- Forever (gap 13, border batch 2 E7): the facade's LibRangeCheck shape, answered by the belief's target bracket.
+local RC = Facade.LibRangeCheck
 
 local class = Hekili.Class
 local scripts = Hekili.Scripts
@@ -556,12 +557,12 @@ end
 state.healthMax = UnitHealthMax
 
 -- Forever (gap 13): an on-next-swing strike's own range check answers in range at any distance (probe W PR7), so its
--- reach is the target's range bracket (VS.TargetRange): beyond melee once the bracket's lower bound is at or past
--- melee range and its upper bound past it; an unknown bracket never blocks.
+-- reach is the target's range bracket (RC:GetRange): beyond melee once the bracket's lower bound is at or past
+-- melee range and its upper bound (nil: none) past it; an unknown bracket (nil) never blocks.
 local MELEE_RANGE = 5
 local function beyondMelee()
-    local r = VS.TargetRange()
-    return r.basis ~= "unknown" and r.lo >= MELEE_RANGE and r.hi > MELEE_RANGE
+    local minR, maxR = RC:GetRange( "target" )
+    return minR ~= nil and minR >= MELEE_RANGE and ( maxR == nil or maxR > MELEE_RANGE )
 end
 state.tinsert = table.insert
 state.insert = table.insert
@@ -2960,41 +2961,37 @@ do
 
     mt_target = {
         __index = function( t, k )
-            -- Forever (gap 13): the range comes from VirtualState's bracket (Game/State/Families/Enemies.lua
-            -- VS.TargetRange: the tracked abilities' own ranges, plain C_Spell.IsSpellInRange), not LibRangeCheck,
-            -- which resolves nothing here. Unknown never blocks: within and outside are both true, distance and
-            -- minR/maxR keep upstream's defaults.
-            if k == "distance" then
-                local r = VS.TargetRange()
-                if r.basis ~= "unknown" then t[k] = r.est
-                else t[k] = ( t.minR + t.maxR ) / 2 end
+            -- Forever (gap 13): RC is the facade's LibRangeCheck shape (the belief's bracket from the tracked
+            -- abilities' own ranges; the library resolves nothing here): GetRange answers nil while unknown, and a
+            -- lower bound alone past every range answered. Unknown never blocks: within and outside are both true,
+            -- distance and minR/maxR keep upstream's defaults.
+            if k == "distance" then t[k] = ( t.minR + t.maxR ) / 2
             elseif k == "in_range" then return t.distance <= 8
             elseif k == "minR" or k == "maxR" then
-                local r = VS.TargetRange()
-                local known = r.basis ~= "unknown"
-                t.minR = known and r.lo or 5
+                local minR, maxR = RC:GetRange( "target" )
+                t.minR = minR or 5
                 -- no upper bound: past every range answered, at least 40 yd (the farthest spell ranges)
-                t.maxR = not known and 10 or ( r.hi < math.huge and r.hi or max( r.lo, 40 ) )
+                t.maxR = minR and ( maxR or max( minR, 40 ) ) or 10
 
             elseif k:sub(1, 7) == "outside" then
                 local minR = k:match( "^outside([0-9.]+)$" )
                 if not minR then return false end
                 -- >=: a lower bound from an out-of-range answer is strict (past a 0-5 check means beyond 5 yd)
-                return VS.TargetRange().basis == "unknown" or ( t.minR >= tonumber( minR ) )
+                return RC:GetRange( "target" ) == nil or ( t.minR >= tonumber( minR ) )
 
             elseif k:sub(1, 6) == "within" then
                 local maxR = k:match( "^within([0-9.]+)$" )
                 if not maxR then return false end
-                local r = VS.TargetRange()
-                if r.basis == "unknown" then return true end
-                return r.hi < math.huge and t.maxR <= tonumber( maxR ) -- no upper bound: within nothing
+                local lo, hi = RC:GetRange( "target" )
+                if lo == nil then return true end
+                return hi ~= nil and t.maxR <= tonumber( maxR ) -- no upper bound: within nothing
 
             elseif k:sub(1, 5) == "range" then
                 local minR, maxR = k:match( "^range([0-9.]+)to([0-9.]+)$" )
                 if not minR or not maxR then return false end
-                local r = VS.TargetRange()
-                if r.basis == "unknown" then return true end
-                return ( t.minR >= tonumber( minR ) and r.hi < math.huge and t.maxR <= tonumber( maxR ) )
+                local lo, hi = RC:GetRange( "target" )
+                if lo == nil then return true end
+                return ( t.minR >= tonumber( minR ) and hi ~= nil and t.maxR <= tonumber( maxR ) )
 
             elseif k == "adds" then t[k] = state.active_enemies - 1
             elseif k == "casting" then return state.debuff.casting.up and not state.debuff.casting.v2
