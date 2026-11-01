@@ -41,6 +41,7 @@ for name in p:lines() do
             spec(class, f[1]).loop[tonumber(f[2])] = parse.loop(f[3])
         elseif what == "crowd" then
             spec(class, f[1]).crowd = parse.loop(f[3])
+            spec(class, f[1]).crowdRatio = tonumber(f[4])
         elseif what == "floor" then
             spec(class, f[1]).replayFloor = tonumber(f[3])
             spec(class, f[1]).preset = f[2]
@@ -161,16 +162,16 @@ for _, s in ipairs(list) do
         class = s.class,
         spec = s.name,
         wowsims = s.hasPreset and { replay = s.replay and s.replay.agreement or "none", replayFloor = s.replayFloor or "none", readyMedian = s.ready and s.ready.median or "none", readyFloor = s.readyFloor and s.readyFloor.median or "none", readyNever = s.ready and s.ready.never or "none", liveIdle = next(s.live) and s.live or "none" } or "n/a",
-        loop = w and { seeds = { s.loop[1], s.loop[2], s.loop[3] }, worst = w, crowdedTarget39 = s.crowd or "none", once = { cpuMs = o.cpuMs, ratio = o.ratio, calibration = o.calibration, bytes = o.bytes } } or "none",
+        loop = w and { seeds = { s.loop[1], s.loop[2], s.loop[3] }, worst = w, crowdedTarget39 = s.crowd or "none", crowdTickRatio = s.crowdRatio or "none", once = { cpuMs = o.cpuMs, ratio = o.ratio, calibration = o.calibration, bytes = o.bytes } } or "none",
     }
 end
 local CROWD = "crowded target (39 others)"
 local md3 = { "", "## " .. CROWD .. ", seeds 1-20, beside the same seeds solo (reported only, no gate)", "",
-    "| Spec | Run | Ticks | Agree | Flicker (oracle) | Rdy short | dps A/B |", "|---|---|---|---|---|---|---|" }
+    "| Spec | Run | Ticks (crowd/solo) | Agree | Flicker (oracle) | Rdy short | dps A/B |", "|---|---|---|---|---|---|---|" }
 for _, s in ipairs(list) do
-    for _, row in ipairs({ { "solo", s.loop[1] }, { CROWD, s.crowd } }) do
+    for _, row in ipairs({ { "solo", s.loop[1] }, { CROWD, s.crowd, s.crowdRatio and ("%.2f"):format(s.crowdRatio) } }) do
         local r = row[2]
-        md3[#md3 + 1] = r and ("| %s %s | %s | %d | %.3f | %.2f (%.2f) | %d | %.3f |"):format(s.class, s.name, row[1], r.ticks, r.agreement, r.flicker, r.oracleFlicker, r.readyShort, r.dps)
+        md3[#md3 + 1] = r and ("| %s %s | %s | %d%s | %.3f | %.2f (%.2f) | %d | %.3f |"):format(s.class, s.name, row[1], r.ticks, row[3] and (" (" .. row[3] .. ")") or "", r.agreement, r.flicker, r.oracleFlicker, r.readyShort, r.dps)
             or ("| %s %s | %s | none | none | none | none | none |"):format(s.class, s.name, row[1])
     end
 end
