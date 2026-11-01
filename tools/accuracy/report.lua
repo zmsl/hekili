@@ -125,7 +125,13 @@ local md = {
     "| Spec | Replay (floor) | Ready med (floor) / never | Live idle | Agree | Flicker (oracle) | Rdy short | Held rdy | dps A/B | Refused cost/cd/unmatched | cpu ms | cal ratio | bytes |",
     "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
 }
-local md2 = { "", "## Per seed set", "", "| Spec | Seeds | Agree | Flicker (oracle) | Rdy short | Held rdy | dps A/B | Cost/cd/unmatched |", "|---|---|---|---|---|---|---|---|" }
+local md2 = {
+    "",
+    "## Per seed set",
+    "",
+    "| Spec | Seeds | Agree | Flicker (oracle) | Rdy short | Held rdy | dps A/B | Cost/cd/unmatched |",
+    "|---|---|---|---|---|---|---|---|",
+}
 for _, s in ipairs(list) do
     local nameText = s.class .. " " .. s.name
     local replay, ready, live
@@ -133,7 +139,9 @@ for _, s in ipairs(list) do
         replay, ready, live = "n/a", "n/a", "n/a"
     else
         replay = s.replay and (num(s.replay.agreement) .. " (" .. num(s.replayFloor, "%.2f") .. ")") or "none"
-        ready = s.ready and (num(s.ready.median, "%.2f") .. " (" .. num(s.readyFloor and s.readyFloor.median, "%.2f") .. ") / " .. s.ready.never) or "none"
+        ready = s.ready
+                and (num(s.ready.median, "%.2f") .. " (" .. num(s.readyFloor and s.readyFloor.median, "%.2f") .. ") / " .. s.ready.never)
+            or "none"
         local lv, lvl = {}, {}
         for level in pairs(s.live) do
             lvl[#lvl + 1] = level
@@ -147,31 +155,92 @@ for _, s in ipairs(list) do
     local w, o = s.worst, s.once
     if w then
         md[#md + 1] = ("| %s | %s | %s | %s | %.3f | %.2f (%.2f) | %d | %d | %.3f | %.1f/%.1f/%.1f | %.2f | %.2f | %.0f |"):format(
-            nameText, replay, ready, live, w.agreement, w.flicker, w.oracleFlicker, w.readyShort, w.heldReady, w.dps,
-            w.cost, w.cooldown, w.unmatched, o.cpuMs, o.ratio, o.bytes)
+            nameText,
+            replay,
+            ready,
+            live,
+            w.agreement,
+            w.flicker,
+            w.oracleFlicker,
+            w.readyShort,
+            w.heldReady,
+            w.dps,
+            w.cost,
+            w.cooldown,
+            w.unmatched,
+            o.cpuMs,
+            o.ratio,
+            o.bytes
+        )
         for set = 1, 3 do
             local r = s.loop[set]
             md2[#md2 + 1] = ("| %s | %d-%d | %.3f | %.2f (%.2f) | %d | %d | %.3f | %.1f/%.1f/%.1f |"):format(
-                nameText, set * 20 - 19, set * 20, r.agreement, r.flicker, r.oracleFlicker, r.readyShort, r.heldReady,
-                r.dps, r.cost, r.cooldown, r.unmatched)
+                nameText,
+                set * 20 - 19,
+                set * 20,
+                r.agreement,
+                r.flicker,
+                r.oracleFlicker,
+                r.readyShort,
+                r.heldReady,
+                r.dps,
+                r.cost,
+                r.cooldown,
+                r.unmatched
+            )
         end
     else
-        md[#md + 1] = ("| %s | %s | %s | %s | none | none | none | none | none | none | none | none | none |"):format(nameText, replay, ready, live)
+        md[#md + 1] = ("| %s | %s | %s | %s | none | none | none | none | none | none | none | none | none |"):format(
+            nameText,
+            replay,
+            ready,
+            live
+        )
     end
     json[#json + 1] = {
         class = s.class,
         spec = s.name,
-        wowsims = s.hasPreset and { replay = s.replay and s.replay.agreement or "none", replayFloor = s.replayFloor or "none", readyMedian = s.ready and s.ready.median or "none", readyFloor = s.readyFloor and s.readyFloor.median or "none", readyNever = s.ready and s.ready.never or "none", liveIdle = next(s.live) and s.live or "none" } or "n/a",
-        loop = w and { seeds = { s.loop[1], s.loop[2], s.loop[3] }, worst = w, crowdedTarget39 = s.crowd or "none", crowdTickRatio = s.crowdRatio or "none", once = { cpuMs = o.cpuMs, ratio = o.ratio, calibration = o.calibration, bytes = o.bytes } } or "none",
+        wowsims = s.hasPreset and {
+            replay = s.replay and s.replay.agreement or "none",
+            replayFloor = s.replayFloor or "none",
+            readyMedian = s.ready and s.ready.median or "none",
+            readyFloor = s.readyFloor and s.readyFloor.median or "none",
+            readyNever = s.ready and s.ready.never or "none",
+            liveIdle = next(s.live) and s.live or "none",
+        } or "n/a",
+        loop = w and {
+            seeds = { s.loop[1], s.loop[2], s.loop[3] },
+            worst = w,
+            crowdedTarget39 = s.crowd or "none",
+            crowdTickRatio = s.crowdRatio or "none",
+            once = { cpuMs = o.cpuMs, ratio = o.ratio, calibration = o.calibration, bytes = o.bytes },
+        } or "none",
     }
 end
 local CROWD = "crowded target (39 others)"
-local md3 = { "", "## " .. CROWD .. ", seeds 1-20, beside the same seeds solo (reported only, no gate)", "",
-    "| Spec | Run | Ticks (crowd/solo) | Agree | Flicker (oracle) | Rdy short | dps A/B |", "|---|---|---|---|---|---|---|" }
+local md3 = {
+    "",
+    "## " .. CROWD .. ", seeds 1-20, beside the same seeds solo (reported only, no gate)",
+    "",
+    "| Spec | Run | Ticks (crowd/solo) | Agree | Flicker (oracle) | Rdy short | dps A/B |",
+    "|---|---|---|---|---|---|---|",
+}
 for _, s in ipairs(list) do
     for _, row in ipairs({ { "solo", s.loop[1] }, { CROWD, s.crowd, s.crowdRatio and ("%.2f"):format(s.crowdRatio) } }) do
         local r = row[2]
-        md3[#md3 + 1] = r and ("| %s %s | %s | %d%s | %.3f | %.2f (%.2f) | %d | %.3f |"):format(s.class, s.name, row[1], r.ticks, row[3] and (" (" .. row[3] .. ")") or "", r.agreement, r.flicker, r.oracleFlicker, r.readyShort, r.dps)
+        md3[#md3 + 1] = r
+                and ("| %s %s | %s | %d%s | %.3f | %.2f (%.2f) | %d | %.3f |"):format(
+                    s.class,
+                    s.name,
+                    row[1],
+                    r.ticks,
+                    row[3] and (" (" .. row[3] .. ")") or "",
+                    r.agreement,
+                    r.flicker,
+                    r.oracleFlicker,
+                    r.readyShort,
+                    r.dps
+                )
             or ("| %s %s | %s | none | none | none | none | none |"):format(s.class, s.name, row[1])
     end
 end
