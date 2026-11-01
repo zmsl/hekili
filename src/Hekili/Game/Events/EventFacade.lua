@@ -243,9 +243,9 @@ local function onEvent(_, event, r1, r2, r3, r4, r5, r6, r7, r8)
     if EDGED[event] then
         a8 = S.edge
     end
-    local h = I.hekili -- the trace (§5): one line per event while Hekili makes a snapshot
-    if h and h.ActiveDebug then
-        pcall(h.Debug, h, "[vs] event %s(%s, %s, %s)", event, tostring(a1), tostring(a2), tostring(a3))
+    local h = I.logger -- the trace (§5): one line per event while the core makes a snapshot
+    if h and h.active() then
+        pcall(h.write, "[vs] event %s(%s, %s, %s)", event, tostring(a1), tostring(a2), tostring(a3))
     end
     if event == "UNIT_AURA" then
         if a1 == "target" and I.inCombat then

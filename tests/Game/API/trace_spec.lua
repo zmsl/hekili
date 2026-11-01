@@ -46,7 +46,14 @@ describe("the facade trace", function()
         function hekili:Debug(fmt, ...)
             lines[#lines + 1] = string.format(fmt, ...)
         end
-        Facade.Attach(hekili)
+        ns.VirtualState.SetLog({
+            active = function()
+                return hekili.ActiveDebug
+            end,
+            write = function(...)
+                hekili:Debug(...)
+            end,
+        })
         ns.VirtualStateInternal.Build(fs.def(fs.new(9)), 1)
         ns.VirtualState.Start(api)
     end)
@@ -55,6 +62,28 @@ describe("the facade trace", function()
         for k, v in pairs(saved) do
             _G[k] = v or nil
         end
+    end)
+
+    it("fills the logger's onOpen: the belief's own Snapshot(), or one failure line when it raises", function()
+        local logger = {
+            active = function()
+                return true
+            end,
+            write = function(...)
+                lines[#lines + 1] = string.format(...)
+            end,
+        }
+        ns.VirtualState.SetLog(logger)
+        logger.onOpen()
+        assert.are.equal(1, #lines)
+        assert.are.equal(1, lines[1]:find("VirtualState t=", 1, true))
+        local snapshot = ns.VirtualState.Snapshot
+        ns.VirtualState.Snapshot = function()
+            error("snap boom", 0)
+        end
+        logger.onOpen()
+        ns.VirtualState.Snapshot = snapshot
+        assert.are.equal("[vs] snapshot failed: snap boom", lines[2])
     end)
 
     it("writes nothing while Hekili is not debugging", function()

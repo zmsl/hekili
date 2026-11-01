@@ -139,8 +139,7 @@ commit.
   of the small negative residuals); the sweep's key omits `swingT`; the `tickShift` bound is tight (1 in 26 of 36 mixed
   runs).
 - `make bench-ta`: the expiry phase relies on success-event arming; the rows/s floor 97000 has no headroom beyond the
-  0.8x allowance. The `Hekili:ProfileCPU` registration in `Adapter.lua` is inert (nothing reads `ns.cpuProfile`; use
-  `Hekili.Virtual.Prof`); loading the Adapter twice wraps `S.RunPolls` twice.
+  0.8x allowance. Use `Hekili.Virtual.Prof` (`Game/State/Snapshot.lua`; loading that file twice wraps `S.RunPolls` twice).
 - `make spell-data-check`: a `"ticks"` ability with a DB2 Speed above 0 and no `velocity` gets no note.
 
 ## In game (on the in-game ledger, not a register item)

@@ -43,28 +43,6 @@ describe("Adapter", function()
         fs.clock = nil
     end)
 
-    it("opens the snapshot log with one failure line when Snapshot raises, and Hekili's setup still runs", function()
-        local lines, setup = {}, 0
-        local hk = fs.new(9)
-        function hk:SetupDebug()
-            setup = setup + 1
-        end
-        function hk:Debug(fmt, ...)
-            lines[#lines + 1] = string.format(fmt, ...)
-        end
-        load.adapter(ns, hk)
-        hk.ActiveDebug = true
-        local snapshot = VS.Snapshot
-        VS.Snapshot = function()
-            error("snap boom", 0)
-        end
-        local ok = pcall(hk.SetupDebug, hk, "Primary")
-        VS.Snapshot = snapshot
-        assert.is_true(ok)
-        assert.are.equal(1, setup)
-        assert.are.same({ "[vs] snapshot failed: snap boom" }, lines)
-    end)
-
     it("builds the tracked set from the registrations", function()
         local out = {}
         assert.are.equal(3, VS.Tracked("ability", out))
@@ -74,10 +52,7 @@ describe("Adapter", function()
         assert.are.same({ fs.RAGE }, out)
         assert.are.equal(2, VS.Tracked("unit", out))
         assert.are.equal(1, I.res.swing[1]) -- the mainhand swing model makes rage swing-paid
-        -- the debug handle only: the client is Hekili.Client (Facade.lua), and the alias is gone
-        assert.are.same({ VS, I.Events }, { h.Virtual.State, h.Virtual.Events })
-        assert.is_nil(h.Virtual.API)
-        assert.is_nil(h.VirtualState)
+        assert.is_nil(h.Virtual) -- the debug bridge is the core's (Hekili.lua), not the build's
     end)
 
     it("builds the tracked set's contents: ids from id and copy, spender slots, talents de-duplicated", function()
@@ -304,7 +279,7 @@ describe("Adapter", function()
     end)
 
     it("profiles the registry's rows and the polls only while Prof.on is set", function()
-        local prof = h.Virtual.Prof
+        local prof = I.Prof
         ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 1)
         VS.Drain(ctl.now)
         assert.are.same({ 0, 0, 0, 0 }, { prof.rows, prof.polls, prof.rowMs, prof.pollMs })

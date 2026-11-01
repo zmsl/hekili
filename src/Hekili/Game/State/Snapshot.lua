@@ -87,3 +87,34 @@ function VS.Snapshot()
     end
     return concat(out, "\n")
 end
+
+-- In-game CPU profiling (unit-registry spec §10): the registry's row path and the polls as debugprofilestop totals
+-- (ms, calls) in I.Prof (Hekili.Virtual.Prof) while its `on` is set (off by default: /run Hekili.Virtual.Prof.on =
+-- true). Plain numbers into preallocated fields; allocates nothing. Assumes one load per session (a spec that loads
+-- this file twice wraps S.RunPolls twice).
+do
+    local debugprofilestop = debugprofilestop
+    local prof = { on = false, rowMs = 0, rows = 0, pollMs = 0, polls = 0 }
+    I.Prof = prof
+    local onCombat, runPolls, list = I.Units.OnCombat, S.RunPolls, S.HANDLERS.UNIT_COMBAT
+    for k = 1, #list do
+        if list[k] == onCombat then
+            list[k] = function(api, t, unit, act, flag, amount, school)
+                if not prof.on then
+                    return onCombat(api, t, unit, act, flag, amount, school)
+                end
+                local t0 = debugprofilestop()
+                onCombat(api, t, unit, act, flag, amount, school)
+                prof.rowMs, prof.rows = prof.rowMs + debugprofilestop() - t0, prof.rows + 1
+            end
+        end
+    end
+    function S.RunPolls(t)
+        if not prof.on then
+            return runPolls(t)
+        end
+        local t0 = debugprofilestop()
+        runPolls(t)
+        prof.pollMs, prof.polls = prof.pollMs + debugprofilestop() - t0, prof.polls + 1
+    end
+end

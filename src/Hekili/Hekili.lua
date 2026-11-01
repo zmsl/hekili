@@ -200,6 +200,18 @@ local current_display
 
 local lastIndent = 0
 
+-- The belief's trace (event-facade spec §5; border batch 3): the belief imports nothing from Hekili, so the core
+-- hands it this logger and reads it through Drain, Build, SetLog and the facade only. The belief fills `onOpen`.
+local log = {
+    active = function() return Hekili.ActiveDebug end,
+    write = function( ... ) Hekili:Debug( ... ) end,
+}
+ns.VirtualState.SetLog( log )
+
+-- The debug bridge (/run print(Hekili.Virtual.State.Snapshot()); ForeverProbe's Calib.lua and PerfKit read it). Not
+-- for content: the content addons read the client through Hekili.Client and the belief through their environment names.
+Hekili.Virtual = { State = ns.VirtualState, Events = ns.VirtualStateInternal.Events, Prof = ns.VirtualStateInternal.Prof }
+
 function Hekili:SetupDebug( display )
     if not self.ActiveDebug then return end
     if not display then return end
@@ -217,9 +229,11 @@ function Hekili:SetupDebug( display )
 
 	local pack = self.State.system.packName
 
-    if not pack then return end
-
-	self:Debug( "New Recommendations for [ %s ] requested at %s ( %.2f ); using %s( %s ) priority.", display, date( "%H:%M:%S"), GetTime(), self.DB.profile.packs[ pack ].builtIn and "built-in " or "", pack )
+    if pack then
+	    self:Debug( "New Recommendations for [ %s ] requested at %s ( %.2f ); using %s( %s ) priority.", display, date( "%H:%M:%S"), GetTime(), self.DB.profile.packs[ pack ].builtIn and "built-in " or "", pack )
+    end
+    -- each display's log opens with the belief's own Snapshot() (event-facade spec §5)
+    if log.onOpen then log.onOpen() end
 end
 
 

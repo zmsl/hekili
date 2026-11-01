@@ -102,7 +102,7 @@ function L.Deliver()
         return
     end
     delivering = true
-    local h = I.hekili
+    local h = I.logger
     while count > 0 do
         local r = rows[head]
         head = head % L.POOL + 1
@@ -111,8 +111,8 @@ function L.Deliver()
         if r.backdate then
             I.backdate = r.t
         end
-        if h and h.ActiveDebug then
-            pcall(h.Debug, h, "[vs] row %s %s %s t=%.3f", r[2], r.family, r.prov, r.t)
+        if h and h.active() then
+            pcall(h.write, "[vs] row %s %s %s t=%.3f", r[2], r.family, r.prov, r.t)
         end
         I.Events.Deliver("COMBAT_LOG_EVENT_UNFILTERED")
         I.backdate = nil

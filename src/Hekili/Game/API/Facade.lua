@@ -48,14 +48,28 @@ end
 Facade.issecretvalue = issecretvalue -- the secrecy test a passthrough row's reader needs (Engine/Schema/Spec.lua's `threat`)
 
 ----------------------------------------------------------------------------------------------------------------------
--- The trace (event-facade spec §5, decision 3): while Hekili makes a snapshot (`Hekili.ActiveDebug`), every facade
--- read writes one line through Hekili:Debug into the snapshot: the class that answered (a hybrid says whether the
--- raw value or the model did), the name, two arguments and four results, a secret shown as S. Off, a read costs one
--- field test. Facade.Attach(Hekili) (Adapter.lua) names the addon table; until then nothing is traced.
+-- The trace (event-facade spec §5, decision 3): while the core makes a snapshot, every facade read writes one line
+-- into it: the class that answered (a hybrid says whether the raw value or the model did), the name, two arguments
+-- and four results, a secret shown as S. Off, a read costs one call. The core injects its logger through VS.SetLog
+-- (border batch 3): `active()` is true while a snapshot is being made, `write(fmt, ...)` adds one line to it; the
+-- belief fills `onOpen`, which the core calls as each display's log opens. Until SetLog nothing is traced.
 
-local hk = { ActiveDebug = false }
-function Facade.Attach(hekili)
-    hk, I.hekili = hekili, hekili
+local NO_LOG = {
+    active = function()
+        return false
+    end,
+}
+local log = NO_LOG
+
+--- The core's logger: `{ active(), write(fmt, ...) }`; fills `logger.onOpen()`, which writes the belief's own
+--- Snapshot() (or one failure line when it raises). Load time only.
+---@param logger table
+function VS.SetLog(logger)
+    log, I.logger = logger, logger
+    function logger.onOpen()
+        local ok, s = pcall(VS.Snapshot) -- a raising Snapshot must not abort the core's snapshot
+        logger.write(ok and "%s" or "[vs] snapshot failed: %s", s)
+    end
 end
 
 local busy, modelled = false, false
@@ -100,7 +114,7 @@ local function write(name, kind, a1, a2, n, r1, r2, r3, r4)
         kind = modelled and "hybrid:model" or "hybrid:raw"
     end
     if not Facade.QUIET[name] then
-        hk:Debug(
+        log.write(
             "[vs] %s %s(%s, %s) -> %s, %s, %s, %s #%d",
             kind,
             name,
@@ -134,7 +148,7 @@ local function kept(name, kind, fn, reason)
         t = Facade[nsName]
     end
     t[key] = function(...)
-        if hk.ActiveDebug then
+        if log.active() then
             local a1, a2 = ...
             modelled = false
             return traced(name, kind, a1, a2, fn(...))
