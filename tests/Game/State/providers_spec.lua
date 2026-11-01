@@ -50,7 +50,7 @@ describe("providers", function()
         I.Build(fs.def(fs.new(9)), 1)
         VS.Start(api)
         I.inCombat = true
-        VS.SetProviders("probe", "default")
+        I.SetProviders("probe", "default")
         assert.are.equal("default", I.outcomes.name)
         I.inCombat = false
         ctl.Fire("PLAYER_REGEN_ENABLED")

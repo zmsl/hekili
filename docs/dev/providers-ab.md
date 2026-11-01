@@ -243,11 +243,12 @@ Options > Performance > Experimental, both off by default, profile-wide (`profil
   injected) the viewer leaf (`Sources/Presence/CooldownViewer.lua`). It needs the Cooldown Manager enabled in the
   game options (`C_CooldownViewer.IsCooldownViewerAvailable()`); without it the router covers nothing.
 
-Each setter calls `Hekili:ProvidersChanged()` (`Options/Options.lua`), which calls
-`VS.SetProviders(outcomes, presence, viewer)`: at once out of combat; in combat the names are stored and applied at
-`PLAYER_REGEN_ENABLED`. A provider never changes mid-fight. `VS.SetProviders` swaps the active tables (`I.outcomes`,
-`I.presence`); `I.def.providers` keeps the build's names until the next build. A profile switch rebuilds through
-`buildDef`, which reads both options. The engine never reads the profile.
+Each setter writes the profile and calls `Hekili:ProvidersChanged()` (`Engine/Schema/Tracked.lua`), which rewrites the
+build's `def.providers` from `Engine.settings.performance`. The belief's `Drain` compares those names with its active
+providers on every update and swaps (`I.SetProviders`): at once out of combat; in combat the names are stored and
+applied at `PLAYER_REGEN_ENABLED`. A provider never changes mid-fight, and a toggle never rebuilds the belief (its
+records stay). A profile switch rebuilds through `buildDef`, which reads both options. The engine never reads the
+profile; Options never names the belief (border batch 3, E17).
 
 ### The audit lines
 

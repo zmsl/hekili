@@ -3632,13 +3632,6 @@ found = true end
         }
     end
 
-    -- (providers spec §3.4, decision 82; audit E17) The experimental toggles as the belief's providers: applied at once
-    -- out of combat, else at combat end. The build reads the same toggles itself (Game/State/Adapter.lua).
-    function Hekili:ProvidersChanged()
-        local p = self.DB.profile.performance
-        self.Virtual.State.SetProviders( p.damageMeter == true and "meter" or "default", "router", p.cooldownViewer == true )
-    end
-
     -- Options table constructors.
     function Hekili:EmbedSpecOptions( db )
         db = db or self.Options

@@ -665,7 +665,7 @@ L.OnTick(function(now)
 end)
 
 -- Combat end: nothing open survives into the next pull; the background and the lags are kept (decision D6). A
--- provider swap asked for in combat applies now (VS.SetProviders).
+-- provider swap asked for in combat applies now (I.SetProviders).
 S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
     M.advance(t)
     if aN > 0 then

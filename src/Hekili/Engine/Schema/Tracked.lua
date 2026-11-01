@@ -216,6 +216,14 @@ local function buildDef()
     def.units[1], def.units[2] = "player", "target"
 end
 
+--- (providers spec §3.4, decision 82; audit E17) The experimental toggles changed (Options' setters): the build's
+--- providers follow Engine.settings.performance; the belief swaps at its next drain (out of combat; at combat end
+--- otherwise), keeping its records. Never a rebuild.
+function Hekili:ProvidersChanged()
+    local pv = def.providers
+    pv.outcomes, pv.presence, pv.viewer = providersOf()
+end
+
 --- Rebuilds the belief's tracked set from the active spec (decision 8). Called at the end of
 --- Hekili:SpecializationChanged, after every registration. Allocates; SpecializationChanged only.
 function ns.BuildTracked()

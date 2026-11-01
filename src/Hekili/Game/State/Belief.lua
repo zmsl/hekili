@@ -98,7 +98,7 @@ end
 I.UNDECIDED, I.HIT, I.AVOID, I.OURS, I.FOREIGN, I.UP, I.DOWN = 0, 1, 2, 1, 2, 1, 2
 I.OUTCOMES, I.PRESENCE = {}, {}
 I.outcomes, I.presence, I.presenceViewer, I.restartProviders = nil, nil, nil, false
-local wantO, wantP, wantV -- a swap asked for in combat (VS.SetProviders): applied at combat end
+local wantO, wantP, wantV -- a swap asked for in combat (I.SetProviders): applied at combat end
 
 -- Activates the named providers (spec §3.1): unknown names are "default"; only a changed choice is swapped, except
 -- that a build (`def`) re-activates the presence provider (its map names the new set's auras).
@@ -144,8 +144,11 @@ function I.Build(def, now)
     I.built = true
 end
 
---- (spec §3.1) Swaps the providers without a rebuild: out of combat at once, in combat at PLAYER_REGEN_ENABLED.
-function VS.SetProviders(outcomes, presence, viewer)
+--- (spec §3.1; border batch 3, E17) Swaps the providers without a rebuild: out of combat at once, in combat at
+--- PLAYER_REGEN_ENABLED. Drain asks it every update with the build's `providers`, which the core keeps current
+--- (Hekili:ProvidersChanged, Engine/Schema/Tracked.lua), so a toggle applies at the next update and clears no record;
+--- a toggle back before the fight ends cancels the pending swap (the latest names win). Allocates nothing but a swap.
+function I.SetProviders(outcomes, presence, viewer)
     if I.inCombat then
         wantO, wantP, wantV = outcomes or "default", presence or "default", viewer
         return

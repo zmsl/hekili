@@ -214,6 +214,10 @@ function VS.Drain(cutoff)
     end
     local t0 = debugprofilestop()
     local casts = I.castsRun
+    local pv = I.def.providers
+    if pv then -- the core's experimental toggles (E17): a changed name swaps here, out of combat, else at combat end
+        I.SetProviders(pv.outcomes, pv.presence, pv.viewer)
+    end
     S.Flush() -- this frame's staged observations first, whichever OnUpdate runs first (poll 3's Queued(0) follows them)
     S.RunPolls(cutoff)
     I.Fold(cutoff)
