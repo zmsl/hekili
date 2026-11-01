@@ -1,15 +1,14 @@
--- Game/State/AplWarnings.lua
+-- Engine/Sim/AplWarnings.lua
 -- Target health is secret on Forever (spec §6.5, §7.4): it reads 100 until a health-gated ability pins it
--- (Families/TargetHealth.lua), always on a spec without one. An action-list condition that reads it is dead or
--- misled. Not warned: time to die, which answers "unknown" (Targets.lua's FOREVER, 3600 s: the fight never ends soon),
--- as a priority written for a long fight expects; and the player's health (`health.pct`, ...), which reads the plain
--- value when the client gives one and full while it is secret (Families/Player.lua), so a defensive line never fires
--- on an unknown and a gate on high health passes. VS.AplSecretToken finds
--- such a token in a condition string; Hekili:LoadScript (Scripts.lua) writes one warning per entry from it. Pure Lua:
--- no client read, no allocation.
+-- (Game/State/Families/TargetHealth.lua), always on a spec without one. An action-list condition that reads it is
+-- dead or misled. Not warned: time to die, which answers "unknown" (Targets.lua's FOREVER, 3600 s: the fight never
+-- ends soon), as a priority written for a long fight expects; and the player's health (`health.pct`, ...), which
+-- reads the plain value when the client gives one and full while it is secret (Families/Player.lua), so a defensive
+-- line never fires on an unknown and a gate on high health passes. ns.AplSecretToken finds such a token in a
+-- condition string; Hekili:LoadScript (Scripts.lua) writes one warning per entry from it. A load-time text scan of
+-- the core's (border batch 3, E20): pure Lua, no belief state, no client read, no allocation.
 
 local _, ns = ...
-local VS = ns.VirtualState
 local find, byte = string.find, string.byte
 
 local TARGET_HP = "target health is secret"
@@ -41,7 +40,7 @@ end
 ---@return string? token
 ---@return string? subject
 ---@return string? reads
-function VS.AplSecretToken(condition)
+function ns.AplSecretToken(condition)
     if type(condition) ~= "string" then
         return nil
     end

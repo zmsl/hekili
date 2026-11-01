@@ -975,7 +975,9 @@ describe("Forever Warrior", function()
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists")
-        local secretToken = require("Game.State.helpers.load").module().VirtualState.AplSecretToken
+        local scanNs = {}
+        assert(loadfile("src/Hekili/Engine/Sim/AplWarnings.lua"))("Hekili", scanNs)
+        local secretToken = scanNs.AplSecretToken
         local set = require("Forever.helpers.engine").abilitySet("WARRIOR") -- the class's, the shared kit's, every race's
         local racial = set.racial
         local kinds = {

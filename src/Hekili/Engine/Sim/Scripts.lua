@@ -1976,8 +1976,8 @@ function Hekili:LoadScript( pack, list, id )
         Hekili:Error( "Error in " .. scriptID .. " conditions:  " .. ( script.rs or "null" ) .. "\n\n" .. script.Error )
     end
 
-    -- Forever: health is secret, so VirtualState answers it with constants (spec §6.5, §7.4); time to die is unwarned.
-    local scan = ns.VirtualState.AplSecretToken
+    -- Forever: target health is secret, so the belief answers it with constants (spec §6.5, §7.4); time to die is unwarned.
+    local scan = ns.AplSecretToken
     local token, subject, reads = scan( data.criteria )
     if not token then token, subject, reads = scan( data.value ) end
     if not token then token, subject, reads = scan( data.value_else ) end

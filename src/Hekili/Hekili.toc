@@ -51,7 +51,6 @@ Game\State\Sources\Outcomes\Meter.lua
 Game\State\Sources\Presence\CooldownViewer.lua
 Game\State\Sources\Presence\Router.lua
 Game\State\Snapshot.lua
-Game\State\AplWarnings.lua
 Game\Events\EventFacade.lua
 Game\Events\CombatLog.lua
 Game\Events\Bands.lua
@@ -99,6 +98,7 @@ UI\Styles\Classic.lua
 UI\Styles\Timeline.lua
 UI\Truth.lua
 Integrations\WeakAuras.lua
+Engine\Sim\AplWarnings.lua
 Engine\Sim\Scripts.lua
 Engine\Sim\Core.lua
 Game\State\Adapter.lua

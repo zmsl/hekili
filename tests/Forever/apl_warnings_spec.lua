@@ -1,14 +1,16 @@
--- tests/Game/State/apl_warnings_spec.lua: VS.AplSecretToken (Task 9b), the scan behind Hekili:LoadScript's
--- "Forever: ... is secret" warnings for conditions that read target health (spec §6.5, §7.4); time to die answers
--- "unknown" (Targets.lua's FOREVER) and player health plain or full: neither is warned.
-local load = require("Game.State.helpers.load")
+-- tests/Forever/apl_warnings_spec.lua: ns.AplSecretToken (Task 9b; Engine/Sim/AplWarnings.lua, the core's own
+-- load-time scan since border batch 3), the scan behind Hekili:LoadScript's "Forever: ... is secret" warnings for
+-- conditions that read target health (spec §6.5, §7.4); time to die answers "unknown" (Targets.lua's FOREVER) and
+-- player health plain or full: neither is warned.
 local alloc = require("Game.State.helpers.alloc")
 
 describe("APL secret-token scan", function()
     local scan
 
     before_each(function()
-        scan = load.module().VirtualState.AplSecretToken
+        local ns = {}
+        assert(loadfile("src/Hekili/Engine/Sim/AplWarnings.lua"))("Hekili", ns)
+        scan = ns.AplSecretToken
     end)
 
     it("finds target health", function()

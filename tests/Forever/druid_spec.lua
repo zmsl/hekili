@@ -884,7 +884,9 @@ describe("Forever Druid", function()
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists", "druid")
-        local secretToken = require("Game.State.helpers.load").module().VirtualState.AplSecretToken
+        local scanNs = {}
+        assert(loadfile("src/Hekili/Engine/Sim/AplWarnings.lua"))("Hekili", scanNs)
+        local secretToken = scanNs.AplSecretToken
         -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items; Hekili_Shared/Races' Night Elf racial
         local shared = { use_items = true, elunes_light = true }
         local kinds = {
