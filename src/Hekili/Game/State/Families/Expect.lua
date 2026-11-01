@@ -26,20 +26,12 @@ X.KIND = { none = 0, instant = 1, debuff = 1, travel = 2, melee = 3, strike = 4,
 
 A.expKind, A.expDeclared, A.velocity, A.school, A.tickAura, A.ticking = {}, {}, {}, {}, {}, {}
 
--- Aura `au`'s declared field: `base` (where RegisterAura moves a wrapped one), else `k`, each on the aura or in its
--- `funcs`; rawget only, so neither the haste wrapper nor the aura's onLoad (a client read) runs.
+-- Aura record `au`'s declared field: `base` (where RegisterAura moves a wrapped one), else `k` (the plain record,
+-- Engine/Schema/Tracked.lua: a number or the pack's function).
 local function declared(au, base, k)
-    local f = rawget(au, "funcs")
-    f = type(f) == "table" and f or nil
-    local v = rawget(au, base)
-    if v == nil and f then
-        v = rawget(f, base)
-    end
+    local v = au[base]
     if v == nil then
-        v = rawget(au, k)
-    end
-    if v == nil and f then
-        v = rawget(f, k)
+        v = au[k]
     end
     return v
 end
@@ -55,12 +47,11 @@ local function tickAura(obj, key, byKey)
     end
 end
 
--- A declared number now: the pack's function called as the simulation calls it (bound to Hekili's `state` by
--- RegisterAura; a raising one answers nil).
+-- A declared number now: the pack's function in the belief's context (I.Eval, Families/Casts.lua; a raising one
+-- answers nil, counted).
 local function num(v)
     if type(v) == "function" then
-        local ok, r = pcall(v)
-        v = ok and r or nil
+        v = I.Eval(v, I.clock)
     end
     return type(v) == "number" and v > 0 and v or nil
 end

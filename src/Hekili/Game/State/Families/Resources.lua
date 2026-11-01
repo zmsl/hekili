@@ -181,8 +181,7 @@ R.regenMult = M
 -- `v`, or a function's return, when it is a finite number; else nil (a NaN, infinity, nil or thrown value is inert).
 local function finite(v)
     if type(v) == "function" then
-        local ok, r = pcall(v) -- a pack function may error before the first stat read: inert
-        v = ok and r or nil
+        v = I.Eval(v, I.clock) -- in the belief's context (Families/Casts.lua); a raise answers nil, counted
     end
     return type(v) == "number" and v == v and v > -math.huge and v < math.huge and v or nil
 end
@@ -190,8 +189,7 @@ end
 -- Whether `v`, or a function's return, is true; a thrown value counts as false (inert).
 local function holds(v)
     if type(v) == "function" then
-        local ok, r = pcall(v)
-        return ok and r == true
+        v = I.Eval(v, I.clock)
     end
     return v == true
 end
@@ -486,9 +484,8 @@ I.OnBuild(function(def, now)
         usable[a], ansT[a], shortCost[a], shortT[a], shortGain[a], shortCast[a], shortEst[a] =
             UNKNOWN, -1, 0, 0, 0, 0, 0
         local obj = def.abilities[a]
-        local funcs = rawget(obj, "funcs") -- Hekili keeps an ability's functions there
-        local f = type(funcs) == "table" and rawget(funcs, "usable") or rawget(obj, "usable")
-        pre[a] = rawget(obj, "ladder") ~= false and (type(f) ~= "function" or f)
+        local f = obj.usable -- the plain record's field (Engine/Schema/Tracked.lua)
+        pre[a] = obj.ladder ~= false and (type(f) ~= "function" or f)
     end
     for k = 1, RECORDS do
         recA[k], recR[k], recGone[k] = 0, 0, false
@@ -1174,19 +1171,14 @@ I.OnSettle(function()
     end
 end)
 
--- Whether ability a's `usable` holds at t, read in the `now` context (the belief's names). Its function is Hekili's
--- sim one, so it runs there for this call only; one that raises (a name the context lacks) holds from then on.
--- Allocates nothing once it has raised.
+-- Whether ability a's `usable` holds at t, read in the `now` context (the belief's names; I.Eval, Families/Casts.lua).
+-- One that raises (a name the context lacks; counted) holds from then on. Allocates nothing once it has raised.
 local function holds(a, t)
     local f = pre[a]
     if f == true then
         return true
     end
-    local env = getfenv(f)
-    setfenv(f, I.nowCtx)
-    I.NowAt(t)
-    local ok, v = pcall(f)
-    setfenv(f, env)
+    local v, ok = I.Eval(f, t)
     if not ok then
         pre[a] = true
         return true

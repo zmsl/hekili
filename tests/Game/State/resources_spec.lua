@@ -454,20 +454,16 @@ describe("resources", function()
                     {
                         key = "finisher",
                         spend = 30,
-                        funcs = {
-                            usable = function()
-                                return points.current > 0, "requires points" -- luacheck: ignore 113
-                            end,
-                        },
+                        usable = function()
+                            return points.current > 0, "requires points" -- luacheck: ignore 113
+                        end,
                     },
                     {
                         key = "reader",
                         spend = 20,
-                        funcs = {
-                            usable = function()
-                                return target.missing.field -- luacheck: ignore 113 (a name the context lacks)
-                            end,
-                        },
+                        usable = function()
+                            return target.missing.field -- luacheck: ignore 113 (a name the context lacks)
+                        end,
                     },
                     { key = "noladder", spend = 50, ladder = false },
                 },

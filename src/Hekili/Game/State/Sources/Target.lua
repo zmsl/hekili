@@ -25,6 +25,7 @@ local dead = false
 local HUGE = math.huge
 local lastLo, lastHi = -1, -1 -- the bracket last logged (-1: none since the swap)
 local answer = {} -- by ability index: this poll's plain answer (true, false, or 0 for none)
+I.rangeAnswer = answer -- Families/Now.lua's action.<key>.in_range reads it
 
 local function slotFor(g, t)
     local free, oldest = 0, 1

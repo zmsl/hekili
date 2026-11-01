@@ -36,6 +36,7 @@ local NAMES = {
     now = 0, -- set per cast and per I.NowAt; seeded so the first set adds no key on a per-event path
     combat = 0,
     level = 0, -- the player's (Sources/Player.lua; 0 before the first read), set with `now`
+    haste = 1, -- the sim's spell-haste multiplier (I.Haste), set with `now`
 }
 -- The environment itself stays empty, so every assignment from a `now` raises (a counted error) instead of
 -- shadowing a verb for every later cast.
@@ -72,6 +73,13 @@ function I.NowAt(t)
     rawset(NAMES, "now", t)
     rawset(NAMES, "combat", I.combatT) -- as `run` does
     rawset(NAMES, "level", I.level or 0)
+    rawset(NAMES, "haste", I.Haste(t))
+end
+
+--- The sim's `haste` (State.lua: 1 / (1 + spell haste)) from the belief's spell haste (Families/Player.lua, a percent).
+function I.Haste(t)
+    local h = VS.SpellHaste and VS.SpellHaste(t).est or 0
+    return 1 / (1 + (h > 0 and h or 0) / 100)
 end
 local abByKey, auraByKey, auraSpell, auraDur, auraMax, resByKey = {}, {}, {}, {}, {}, {}
 
@@ -120,6 +128,53 @@ NAMES.talent = setmetatable({}, {
         return NO_TALENT
     end,
 })
+
+-- totem.<element>: the belief's totem slot (Families/Totems.lua; the sim's state.totem shape, State.lua).
+local TOTEM_SLOT = { fire = 1, earth = 2, water = 3, air = 4 }
+local totemMeta = {
+    __index = function(r, f)
+        local rec = VS.Totem(rawget(r, "slot"), T)
+        if f == "up" or f == "active" then
+            return rec ~= nil
+        elseif f == "down" then
+            return rec == nil
+        elseif f == "remains" then
+            return rec and rec.est - T or 0
+        elseif f == "expires" then
+            return rec and rec.est or 0
+        end
+        return nil
+    end,
+}
+local NO_TOTEM = setmetatable({ slot = 0 }, totemMeta)
+NAMES.totem = setmetatable({}, {
+    __index = function()
+        return NO_TOTEM
+    end,
+})
+for elem, slot in pairs(TOTEM_SLOT) do
+    rawset(NAMES.totem, elem, setmetatable({ slot = slot }, totemMeta))
+end
+
+-- action.<key>.in_range: the range poll's last plain answer for the ability (Sources/Target.lua; the sim's
+-- state.action.x.in_range is the client's IsSpellInRange): true unless the client answered false. Entries per tracked
+-- ability at the build; an untracked key answers an empty record.
+local actionMeta = {
+    __index = function(r, f)
+        if f == "in_range" then
+            local ans = I.rangeAnswer
+            return not (ans and ans[rawget(r, "a")] == false)
+        end
+        return nil
+    end,
+}
+local NO_ACTION = setmetatable({ a = 0 }, actionMeta)
+NAMES.action = setmetatable({}, {
+    __index = function()
+        return NO_ACTION
+    end,
+})
+local NO_SETTINGS = {}
 
 local resourceMeta = {
     __index = function(r, f)
@@ -272,7 +327,6 @@ function NAMES.reduceCooldown(action, time)
 end
 
 -- The totem slots by element, as Hekili's `state.totem` numbers them (State.lua's mt_totem; the client's slot order).
-local TOTEM_SLOT = { fire = 1, earth = 2, water = 3, air = 4 }
 --- summonTotem(name, element, duration): Hekili's signature (State.lua); the element's slot expires `duration` s after
 --- the cast (an unknown element or a non-number duration writes nothing).
 function NAMES.summonTotem(name, elem, duration)
@@ -319,29 +373,33 @@ I.OnBuild(function(def)
     for k in pairs(NAMES.talent) do
         NAMES.talent[k] = nil
     end
+    for k in pairs(NAMES.action) do
+        NAMES.action[k] = nil
+    end
     for a = 1, A.n do
         abByKey[A.key[a]] = a
         A.known[a] = A.known[a] or false
         A.extra[a] = type(A.key[a]) == "string" and A.key[a]:sub(1, 6) == "track_"
         local obj = def.abilities[a]
-        local funcs = type(obj) == "table" and rawget(obj, "funcs")
-        local f = type(funcs) == "table" and rawget(funcs, "now") -- Hekili keeps unknown functions in `funcs`
-        if type(f) == "function" and (f == rawget(funcs, "handler") or f == rawget(obj, "handler")) then
+        local f = obj.now -- the plain record's field (Engine/Schema/Tracked.lua)
+        if type(f) == "function" and f == obj.handler then
             -- rebinding it would move the sim handler into the `now` context
             I.nowErrors, I.nowError = I.nowErrors + 1, "now: " .. tostring(A.key[a]) .. "'s now is its handler"
             f = false
         end
         A.now[a] = type(f) == "function" and setfenv(f, ctx) or false
-        local c = type(funcs) == "table" and rawget(funcs, "onCrit")
+        local c = obj.onCrit
         A.onCrit[a] = type(c) == "function" and setfenv(c, ctx) or false
+        rawset(NAMES.action, A.key[a], setmetatable({ a = a }, actionMeta))
     end
+    rawset(NAMES, "settings", def.settings or NO_SETTINGS) -- the spec's settings as plain values, the core's copy
     for r = 1, #def.resources do
         local f = def.resources[r].refundOnAvoid
         refund[r] = type(f) == "number" and f > 0 and f <= 1 and f or 0
     end
     for a = 1, A.n do -- true: the resource's default share; a number: its own
         local obj = def.abilities[a]
-        local f = type(obj) == "table" and rawget(obj, "refundOnAvoid")
+        local f = obj.refundOnAvoid
         local r = def.abilitySlot[a] or 0
         if f == true then
             f = r > 0 and refund[r] or 0
@@ -428,6 +486,7 @@ local function call(f, a, t)
     rawset(NAMES, "now", t)
     rawset(NAMES, "combat", I.combatT)
     rawset(NAMES, "level", I.level or 0)
+    rawset(NAMES, "haste", I.Haste(t))
     live = true
     local ok, err = pcall(f)
     live = false

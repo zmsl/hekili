@@ -49,10 +49,13 @@ approved exceptions (`tools/check_border.sh` allows these and nothing else):
 - `ns.VirtualState.SetLog(logger)` (`Hekili.lua`, at load): the snapshot trace writes into the core's debug log,
   which only the core can open (`{ active(), write(fmt, ...) }`; the belief fills `onOpen`, which `Hekili:SetupDebug`
   calls as each display's log opens). `SetLog` also fills `logger.debug` (§4).
-Those three are all the core names; the gate allows nothing else. Functions the build carries may run
-under `state` when the belief reads them: the ability tables in `def.abilities` keep Spec.lua's metatable, so
-`Families/Casts.lua`'s `obj.cooldown` read runs the pack's function under the simulation's state; that is core code the
-belief runs, not a read of `state` by the belief.
+Those three are all the core names; the gate allows nothing else. `def` carries plain records (batch 4, the owner's
+design 2026-11-01): no metatable, never a live Hekili table. Each field is a value, a function the belief runs in its own
+`now` context (`Families/Casts.lua` `I.Eval`: a raise is counted in `I.nowErrors` and fails
+`tests/Forever/plain_records_spec.lua`), or absent; a function field may carry a static value the core computes under
+`state` after `ns.updateTalents` (`ns.TrackedStatics`), the live game's safety net: the belief's order is the function,
+then the static, then 0. Nothing in `def` runs under `state` at runtime. The spec's settings reach the belief the same
+way, as plain values in `def.settings` (`Hekili:SettingsChanged` refreshes them).
 
 ## 2. The `Hekili.Engine` port
 

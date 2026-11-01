@@ -1,14 +1,17 @@
 -- Engine/Schema/Tracked.lua
 -- The tracked set (VirtualState spec §3.6, decision 8; border batch 3): what the belief tracks, built from the active
 -- spec's registrations (class.*, the race pack's modifiers, the passives, the experimental toggles) and handed to
--- it through ns.VirtualState.Build(def), the core's one build-time call into the belief. The belief reads Hekili's
--- ability and aura tables through `def` as they are: their metatables are Spec.lua's, so a `cooldown` read runs the
--- ability's function under `state`, and `funcs.now`, `funcs.usable`, `expects`, `school` are the pack's declarations.
--- Allocates; SpecializationChanged only.
+-- it through ns.VirtualState.Build(def), the core's one build-time call into the belief. `def` carries plain records
+-- (border batch 4, the owner's design 2026-11-01): no metatable, never a live Hekili table. Each field is a value, a
+-- function the belief runs in its own `now` context, or absent; Spec.lua's `funcs` are flattened in beside the raw
+-- fields. A function field may carry a static value the core computes under `state` once the talents are known
+-- (ns.TrackedStatics, after ns.updateTalents): the belief's order is the function in its context, then the static,
+-- then 0. Nothing in `def` runs under `state` at runtime. Allocates; SpecializationChanged only.
 
 local addon, ns = ...
 local Hekili = _G[addon]
 local class = Hekili.Class
+local state = Hekili.State
 local insert, sort = table.insert, table.sort
 local floor = math.floor
 
@@ -29,6 +32,7 @@ local def = {
     units = {},
     pets = {}, -- the guardians: { key, cap, duration, slot } of each pet registered with a `cap` (Families/Pets.lua)
     providers = {}, -- outcomes, presence, viewer: the experimental toggles (providersOf)
+    settings = {}, -- the spec's settings as plain values (Families/Now.lua's `settings`; refreshed by Hekili:SettingsChanged)
 }
 local LISTS = { "abilities", "abilityIds", "abilitySlot", "resources", "auras", "auraIds", "talents", "units", "pets" }
 
@@ -64,6 +68,46 @@ local function idsOf(obj)
     return ids
 end
 
+-- A plain copy of `v`: a table's raw fields by value, its sub-tables copied the same way (a `copy` list, `consumedBy`,
+-- a resource meta), never its metatable; a cycle maps to the copy already made. Functions and scalars as they are.
+local function plain(v, seen)
+    if type(v) ~= "table" then
+        return v
+    end
+    if seen[v] then
+        return seen[v]
+    end
+    local out = {}
+    seen[v] = out
+    for k, x in pairs(v) do
+        out[k] = plain(x, seen)
+    end
+    return out
+end
+
+-- The plain record of registration `a` (an ability or an aura): its raw fields, then Spec.lua's `funcs` flattened in
+-- (a declared function beside the values; a raw field of the same name wins). `spend` is the cost as declared (Races.lua's
+-- Wrap keeps it as `declaredSpend`; the sim's wrapped `spend` and `baseSpend` are its own). `onLoad` is a client read of
+-- the core's, never the belief's.
+local function recordOf(a)
+    local rec = plain(a, {})
+    local declared = rawget(a, "declaredSpend")
+    if declared ~= nil then
+        rec.spend = declared
+    end
+    local funcs = rawget(a, "funcs")
+    rec.funcs = nil
+    if type(funcs) == "table" then
+        for k, f in pairs(funcs) do
+            if rec[k] == nil then
+                rec[k] = f
+            end
+        end
+    end
+    rec.baseSpend, rec.declaredSpend, rec.onLoad = nil, nil, nil
+    return rec
+end
+
 local function sortedKeys(t)
     local keys = {}
     for k in pairs(t) do
@@ -77,7 +121,55 @@ end
 
 -- (providers spec §3.4, decision 82) The experimental toggles as the build config's providers. The router is always
 -- injected; without the viewer leaf it covers nothing (the Default path). No engine where a test loads the schema alone.
-local NO_PERF = {}
+local NO_PERF, NO_META, NO_SETTINGS = {}, {}, {}
+-- The active spec's settings (Engine.settings.specs[id].settings, the profile's) copied as plain values into
+-- def.settings, which Families/Now.lua's `settings` reads: a pack's `usable` may gate on one (`settings.behind`).
+-- The sim's `state.settings` reads the profile live; the record is refreshed by Hekili:SettingsChanged at every write.
+local function settingsOf()
+    local e = Hekili.Engine
+    local specs = e and e.settings.specs
+    local spec = specs and state and state.spec and specs[state.spec.id]
+    local src = spec and spec.settings or NO_SETTINGS
+    local dst = def.settings
+    wipe(dst)
+    for k, v in pairs(src) do
+        if type(v) ~= "table" and type(v) ~= "function" then
+            dst[k] = v
+        end
+    end
+end
+
+--- A spec setting changed (Spec.lua's setters, Options/ChatCommands.lua): the belief's plain copy follows. No rebuild.
+function Hekili:SettingsChanged()
+    settingsOf()
+end
+
+-- The fields a pack may declare as a function and the belief prices with: each gets a static value computed under
+-- `state` once the talents are known (ns.TrackedStatics), the live game's safety net when its function raises in the
+-- belief's context (the test suite fails on the raise itself).
+local STATIC_FIELDS = { "cooldown", "spend", "gcdTime" }
+
+--- Fills each ability record's `static` (by field, a number) from its declared functions under `state`. Called by
+--- Hekili:SpecializationChanged AFTER ns.updateTalents (a static computed at Build would see the previous spec's talent
+--- ranks: Build must precede updateTalents, whose ranks come from the belief's talent walk in Build). Allocates;
+--- SpecializationChanged only.
+function ns.TrackedStatics()
+    for i = 1, #def.abilities do
+        local rec = def.abilities[i]
+        rec.static = nil
+        for _, field in ipairs(STATIC_FIELDS) do
+            local f = rec[field]
+            if type(f) == "function" then
+                local ok, v = pcall(f)
+                if ok and type(v) == "number" then
+                    rec.static = rec.static or {}
+                    rec.static[field] = v
+                end
+            end
+        end
+    end
+end
+
 local function providersOf()
     local e = Hekili.Engine
     local p = e and e.settings.performance or NO_PERF
@@ -119,18 +211,19 @@ local function buildDef()
                     -- a player aura's regen { aura, interval, value }, or without `aura` a periodic one credited in
                     -- combat; either may name a `talent` (Resources.lua). Hekili's other gates are unseen there, so an
                     -- entry with one is not forwarded.
-                    auraRegen[#auraRegen + 1] = m
+                    auraRegen[#auraRegen + 1] = plain(m, {})
                 end
             end
         end
         if swing == 0 and offValue ~= nil then
             swing, value, offValue, crit, offCrit = 2, offValue, nil, offCrit, nil -- the off hand alone pays it
         end
+        local meta = r.state and r.state.meta or NO_META
         local d = {
             key = k,
             type = r.type,
             token = k:upper(),
-            max = r.state and r.state.meta and r.state.meta.max or 100, -- a number or a state-bound function
+            max = meta.max or 100, -- a number, or a function the belief runs in its context
             rest = ns.ResourceRegenerates(k) == true, -- a regenerating resource rests at its maximum (Resources.lua)
             swing = swing,
             swingValue = value,
@@ -140,14 +233,14 @@ local function buildDef()
             swingAura = swingAura,
             taken = taken,
             auraRegen = auraRegen,
-            decay = r.state and r.state.meta and r.state.meta.decay, -- out-of-combat loss per second (Resources.lua)
-            decayInterval = r.state and r.state.meta and r.state.meta.decayInterval, -- seconds per quantum (stepped)
-            fsr = r.state and r.state.meta and r.state.meta.fsr, -- the five-second rule's parts (Resources.lua, C3)
+            decay = meta.decay, -- out-of-combat loss per second (Resources.lua)
+            decayInterval = meta.decayInterval, -- seconds per quantum (stepped)
+            fsr = plain(meta.fsr, {}), -- the five-second rule's parts (Resources.lua, C3)
             -- the class's default share of an avoided cast's cost given back, for an ability with `refundOnAvoid = true`
             -- (a number, 0-1; Families/Now.lua's Obs.Avoided); the sim never reads it: it does not roll avoidance
-            refundOnAvoid = r.state and r.state.meta and r.state.meta.refundOnAvoid,
-            base = r.state and r.state.meta and r.state.meta.base, -- the pool's base power (Families/Casts.lua)
-            mult = r.state and r.state.regenMult, -- the rate multipliers, out of the regen model (Spec.lua, C3b)
+            refundOnAvoid = meta.refundOnAvoid,
+            base = meta.base, -- the pool's base power (Families/Casts.lua)
+            mult = plain(r.state and r.state.regenMult, {}), -- the rate multipliers, out of the regen model (Spec.lua, C3b)
         }
         insert(def.resources, d)
         slotByKey[k] = #def.resources
@@ -155,15 +248,14 @@ local function buildDef()
         -- but a maximum modifier never scales a point resource (ns.ResourceIsPoints, Constants.lua)
         local race = ns.raceMods
         if race then
-            d.maxMods, d.costMods = not ns.ResourceIsPoints(k) and race.maxMods or nil, race.costMods
-            -- the race's regen entries on this resource (Races.lua RegisterRegenMod), after the class's: a fresh list,
-            -- so a rebuild never appends to the class's own `regenMult`
+            d.maxMods = not ns.ResourceIsPoints(k) and plain(race.maxMods, {}) or nil
+            d.costMods = plain(race.costMods, {})
+            -- the race's regen entries on this resource (Races.lua RegisterRegenMod), after the class's (`mult` is a copy:
+            -- a rebuild never appends to the class's own `regenMult`)
             for _, e in ipairs(race.regenMods or {}) do
                 if e.resource == k then
-                    if d.mult == (r.state and r.state.regenMult) then
-                        d.mult = { unpack(d.mult or {}) }
-                    end
-                    insert(d.mult, e)
+                    d.mult = d.mult or {}
+                    insert(d.mult, plain(e, {}))
                 end
             end
         end
@@ -173,10 +265,10 @@ local function buildDef()
         if a.key == k and k ~= "global_cooldown" then
             local ids = idsOf(a)
             if #ids > 0 then
-                insert(def.abilities, a)
+                local rec = recordOf(a)
+                insert(def.abilities, rec)
                 def.abilityIds[#def.abilities] = ids
-                local spends = rawget(a, "spend") ~= nil or a.funcs and a.funcs.spend ~= nil
-                local slot = spends and slotByKey[a.spendType or class.primaryResource] or 0
+                local slot = rec.spend ~= nil and slotByKey[rec.spendType or class.primaryResource] or 0
                 def.abilitySlot[#def.abilities] = slot
             end
         end
@@ -194,7 +286,7 @@ local function buildDef()
                 ids[1] = a.id -- an id-less weapon-enchant pseudo-aura (C4): RegisterAura's negative pseudo-ID
             end
             if #ids > 0 then
-                insert(def.auras, a)
+                insert(def.auras, recordOf(a))
                 def.auraIds[#def.auras] = ids
             end
         end
@@ -214,6 +306,7 @@ local function buildDef()
         end
     end
     def.units[1], def.units[2] = "player", "target"
+    settingsOf()
 end
 
 --- (providers spec §3.4, decision 82; audit E17) The experimental toggles changed (Options' setters): the build's

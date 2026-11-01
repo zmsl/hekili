@@ -72,12 +72,56 @@ local function quantise(x)
 end
 I.Quantise = quantise
 
+-- By pack function: true once it raised in the belief's context (the error counted once in I.nowErrors; it answers nil
+-- from then on); weak keys, cleared at each build (a rebuilt spec's functions are new).
+local failed = setmetatable({}, { __mode = "k" })
+I.OnBuild(function()
+    for f in pairs(failed) do
+        failed[f] = nil
+    end
+end)
+
+--- A pack function (a record's `cooldown`, `spend`, `gcdTime`, `usable`, an aura's `duration`, a resource's `max`,
+--- ... Engine/Schema/Tracked.lua) evaluated in the belief's `now` context at `t`: its `buff`, `talent`, `totem`,
+--- `settings`, ... are the belief's, so a cost that reads an aura's stacks is the cast's own, not the simulation's last
+--- reset's. Returns its value and true; nil and false when it raised (counted once). Allocates nothing once it has raised.
+function I.Eval(f, t)
+    if failed[f] then
+        return nil, false
+    end
+    local env = getfenv(f)
+    setfenv(f, I.nowCtx)
+    I.NowAt(t)
+    local ok, v = pcall(f)
+    setfenv(f, env)
+    if not ok then
+        failed[f] = true
+        I.nowErrors, I.nowError = (I.nowErrors or 0) + 1, v
+        return nil, false
+    end
+    return v, true
+end
+
+-- Ability a's declared `gcdTime` at t: a number, or a function's answer in the belief's context (its static when it
+-- raised); nil when none. Allocates nothing.
+local function gcdTime(a, t)
+    local g = A.obj[a].gcdTime
+    if type(g) == "function" then
+        g = I.Eval(g, t)
+        if g == nil then
+            local obj = A.obj[a]
+            g = obj.static and obj.static.gcdTime
+        end
+    end
+    return g
+end
+
 --- The length of a GCD that ability a (0: none known, the last opener's kind) opens at t: its declared `gcdTime`,
 --- else its kind's learned length, else 1.0 for the totem kind and max(1.0, 1.5 / spell haste) for the spell kind. Allocates nothing.
 function I.GcdLen(a, t)
     local kind = I.gcdKindLast
     if a > 0 then
-        local g = A.obj[a].gcdTime
+        local g = gcdTime(a, t)
         if type(g) == "number" and g > 0 then
             return g
         end
@@ -264,7 +308,7 @@ I.On(Obs.Cooldown, function(o, t)
         else
             local len, owner = o.t - I.gcdStart, I.gcdOwner
             local kind = owner > 0 and A.gcdKind[owner] or 0
-            local g = owner > 0 and A.obj[owner].gcdTime
+            local g = owner > 0 and gcdTime(owner, t)
             -- an ownerless GCD, or one of a declared length, teaches nothing
             if I.gcdStart > 0 and kind > 0 and not (type(g) == "number" and g > 0) then
                 if len >= GCD_MIN[kind] and len < GCD_MAX[kind] then
@@ -362,48 +406,16 @@ function I.CostOf(a)
     return c
 end
 
--- By declared cost function: true once it raised in the belief's context (it then prices as the simulation does,
--- the error counted once in I.nowErrors); weak keys, cleared at each build (a rebuilt spec's functions are new).
-local simOnly = setmetatable({}, { __mode = "k" })
-I.OnBuild(function()
-    for f in pairs(simOnly) do
-        simOnly[f] = nil
-    end
-end)
-
--- A declared cost or cooldown function evaluated in the belief's `now` context at `t` (its `buff`, `talent`, ... the
--- belief's, as Resources.lua's `usable` check): a cost that reads an aura's stacks (a stacking free-cast proc) is the
--- cast's own, not the simulation's last reset's. Nil when it raised there. Allocates nothing once it has raised.
-local function beliefEval(f, t)
-    if simOnly[f] then
-        return nil
-    end
-    local env = getfenv(f)
-    setfenv(f, I.nowCtx)
-    I.NowAt(t)
-    local ok, v = pcall(f)
-    setfenv(f, env)
-    if not ok then
-        simOnly[f] = true
-        I.nowErrors, I.nowError = (I.nowErrors or 0) + 1, v
-        return nil
-    end
-    return v
-end
-
--- Ability a's declared cost as written (a fraction stays one), or nil. Allocates nothing.
+-- Ability a's declared cost as written (a fraction stays one), or nil: a function in the belief's context, then its
+-- static value (Engine/Schema/Tracked.lua). Allocates nothing.
 local function declaredCost(a)
-    local obj = I.ab.obj[a]
-    local f = rawget(obj, "declaredSpend")
-    local c = f and I.nowCtx and beliefEval(f, I.clock)
-    if c == nil then
-        c = obj.baseSpend -- the declared cost before the simulation's modifiers (Engine/Schema/Races.lua)
-    end
-    if c == nil then
-        c = obj.spend
-    end
+    local obj = A.obj[a]
+    local c = obj.spend
     if type(c) == "function" then
-        c = c()
+        c = I.Eval(c, I.clock)
+        if c == nil then
+            c = obj.static and obj.static.spend
+        end
     end
     return type(c) == "number" and c or nil
 end
@@ -411,7 +423,7 @@ end
 -- Whether declared cost c of ability a is a fraction of base power: any c > 0 when the ability declares
 -- `spendBase = true`, else 0 < c < 1 (the simulation's ns.SpendPoints, Engine/Sim/State.lua). Allocates nothing.
 local function isFraction(a, c)
-    return c > 0 and (c < 1 or rawget(A.obj[a], "spendBase"))
+    return c > 0 and (c < 1 or A.obj[a].spendBase)
 end
 
 --- Ability a's declared cost, before any cost modifier (0 when it has none); a fraction (isFraction: below 1, or any
@@ -467,24 +479,16 @@ function I.LearnBases()
     end
 end
 
---- Ability a's declared cooldown at `t` (0 when it has none): a function (Hekili keeps it in `funcs`) evaluated in the
---- belief's context, as BaseCostOf prices a cost (the simulation's answer when it raised there), so a talent or an
---- aura that changes it is the belief's own. Allocates nothing.
+--- Ability a's declared cooldown at `t` (0 when it has none): a function evaluated in the belief's context, as
+--- BaseCostOf prices a cost (its static value when it raised there, Engine/Schema/Tracked.lua), so a talent or an aura
+--- that changes it is the belief's own. Allocates nothing.
 function I.CooldownOf(a, t)
     local obj = A.obj[a]
-    local f = rawget(obj, "cooldown")
-    if f == nil then
-        local funcs = rawget(obj, "funcs")
-        f = type(funcs) == "table" and rawget(funcs, "cooldown") or nil
-    end
-    local c = f
-    if type(f) == "function" then
-        c = I.nowCtx and beliefEval(f, t)
+    local c = obj.cooldown
+    if type(c) == "function" then
+        c = I.Eval(c, t)
         if c == nil then
-            c = obj.cooldown -- the simulation's (Spec.lua's __index runs it under `state`)
-            if type(c) == "function" then
-                c = c()
-            end
+            c = obj.static and obj.static.cooldown
         end
     end
     return type(c) == "number" and c or 0

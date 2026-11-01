@@ -345,13 +345,16 @@ function Hekili:HandleSpecSetting( specSetting, specValue )
                 if specValue == nil or specValue == "toggle" then
                     local newValue = not profile.specs[ Status.specID ].settings[ setting.name ]
                     profile.specs[ Status.specID ].settings[ setting.name ] = newValue
+                    Hekili:SettingsChanged() -- the belief's plain copy (Engine/Schema/Tracked.lua)
                     local stateText = newValue and L["|cFF00FF00ON|r"] or L["|cFFFF0000OFF|r"]
                     self:Print( format( L["%s set to %s."], setting.name, stateText ) )
                 elseif specValue == "on" then
                     profile.specs[Status.specID].settings[setting.name] = true
+                    Hekili:SettingsChanged() -- the belief's plain copy (Engine/Schema/Tracked.lua)
                     self:Print( format( L["%s set to |cFF00FF00ON|r."], setting.name ) )
                 elseif specValue == "off" then
                     profile.specs[Status.specID].settings[setting.name] = false
+                    Hekili:SettingsChanged() -- the belief's plain copy (Engine/Schema/Tracked.lua)
                     self:Print( format( L["%s set to |cFFFF0000OFF|r."], setting.name ) )
                 else
                     self:Print( L["Invalid input. Use 'on', 'off', or leave blank to toggle for toggle settings."] )
@@ -363,6 +366,7 @@ function Hekili:HandleSpecSetting( specSetting, specValue )
                 local newValue = tonumber( specValue )
                 if newValue and newValue >= ( setting.info.min or -math.huge ) and newValue <= ( setting.info.max or math.huge ) then
                     profile.specs[ Status.specID ].settings[ setting.name ] = newValue
+                    Hekili:SettingsChanged() -- the belief's plain copy (Engine/Schema/Tracked.lua)
                     self:Print( format( L["%s set to |cFF00B4FF%.2f|r."], setting.name, newValue ) )
                 else
                     self:Print( format( L["Invalid value for %s. Must be between %.2f and %.2f."], setting.name, setting.info.min or 0, setting.info.max or 100 ) )
@@ -375,6 +379,7 @@ function Hekili:HandleSpecSetting( specSetting, specValue )
                 if type( values ) == "function" then values = values() end
                 if specValue and values and values[ specValue ] ~= nil then
                     profile.specs[ Status.specID ].settings[ setting.name ] = specValue
+                    Hekili:SettingsChanged() -- the belief's plain copy (Engine/Schema/Tracked.lua)
                     self:Print( format( L["%s set to |cFF00B4FF%s|r."], setting.name, tostring( values[ specValue ] ) ) )
                 else
                     self:Print( format( L["Invalid value for %s. Use one of: %s."], setting.name, table.concat( setting.info.sorting or {}, ", " ) ) )

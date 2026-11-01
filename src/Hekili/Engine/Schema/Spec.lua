@@ -1437,6 +1437,7 @@ local HekiliSpecMixin = {
     SetSetting = function( self, info, val )
         local setting = info[ #info ]
         Hekili.Engine.settings.specs[ self.id ].settings[ setting ] = val
+        Hekili:SettingsChanged() -- the belief's plain copy (Engine/Schema/Tracked.lua)
     end,
 
     -- option should be an AceOption table.
@@ -1499,6 +1500,7 @@ local HekiliSpecMixin = {
         option.set = option.set or function( info, val )
             local setting = info[ #info ]
             Hekili.Engine.settings.specs[ self.id ].settings[ setting ] = val
+            Hekili:SettingsChanged() -- the belief's plain copy (Engine/Schema/Tracked.lua)
         end
     end,
 
@@ -2511,6 +2513,7 @@ function Hekili:SpecializationChanged()
     ns.BuildTracked()
 
     ns.updateTalents()
+    ns.TrackedStatics() -- the records' static values, under `state` with this spec's talent ranks (Tracked.lua)
     if kit then self:SettleSpecChoice( clientID ) end
     ResetDisabledGearAndSpells()
 

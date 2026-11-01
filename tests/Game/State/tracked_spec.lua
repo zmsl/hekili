@@ -97,6 +97,38 @@ describe("the tracked set", function()
         assert.are.equal(0.8, A.obj[A.bySpell[fs.SPENDER_U]].gcdTime)
     end)
 
+    it("builds plain records: no metatable, `funcs` flattened, the declared `spend` as the record's", function()
+        h.Class.abilities.spender_a.funcs.usable = function()
+            return true
+        end
+        ns.BuildTracked()
+        local rec = I.ab.obj[I.ab.bySpell[fs.SPENDER_A]]
+        assert.is_nil(getmetatable(rec))
+        assert.is_nil(rec.funcs)
+        assert.are.equal("function", type(rec.usable))
+        assert.are.equal(10, rec.spend)
+        assert.are_not.equal(h.Class.abilities.spender_a, rec) -- a copy, never Hekili's table
+        assert.is_nil(getmetatable(I.auras.obj[1]))
+    end)
+
+    it("computes a function field's static value after the talents, not at the build", function()
+        local f = function()
+            return 10 - state.talent.talent_a.rank -- luacheck: ignore 113 (the simulation's names)
+        end
+        setfenv(f, h.State) -- as Spec.lua binds a pack's function
+        h.Class.abilities.spender_a.cooldown, h.Class.abilities.spender_a.funcs.cooldown = nil, f
+        h.State.talent = { talent_a = { rank = 0 } }
+        ns.BuildTracked() -- Spec.lua's order: the build, then ns.updateTalents, then ns.TrackedStatics
+        local a = I.ab.bySpell[fs.SPENDER_A]
+        assert.is_nil(I.ab.obj[a].static)
+        h.State.talent.talent_a.rank = 2 -- what updateTalents learns from the build's talent walk
+        ns.TrackedStatics()
+        assert.are.equal(8, I.ab.obj[a].static.cooldown)
+        local errors = I.nowErrors
+        assert.are.equal(8, I.CooldownOf(a, 1)) -- raised in the belief's context (no `state` there): the static
+        assert.are.equal(errors + 1, I.nowErrors)
+    end)
+
     it("forwards a resource's player-aura regen entries to the resources family", function()
         h.Class.resources.rage.state.regenModel.regen_aura_a = { aura = "regen_aura_a", interval = 1, value = 1 }
         h.Class.resources.rage.state.regenModel.debuff_test =

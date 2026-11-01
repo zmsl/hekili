@@ -164,18 +164,24 @@ describe("resource modifiers", function()
 
     it("prices a declared cost function in the belief's context: its aura reads are the belief's", function()
         local spender_c = I.ab.bySpell[fs.SPENDER_C]
-        -- Races.lua keeps the declared function; this one reads the aura's stacks (a stacking free-cast proc's shape)
-        rawset(I.ab.obj[spender_c], "declaredSpend", function()
+        -- the record's `spend` is the declared function (Tracked.lua); this one reads the aura's stacks (a stacking
+        -- free-cast proc's shape)
+        I.ab.obj[spender_c].spend = function()
             return 20 * math.max(0, 1 - 0.2 * buff.mod_aura_a.stack) -- luacheck: ignore 113 (the context's)
-        end)
+        end
         local j = I.auras.bySpell[MOD_AURA]
         I.AuraModel(1, j, 5, 20, 3, 5, VS.Obs.CastSuccess, false)
         I.clock = 5
         assert.is_true(math.abs(I.CostOf(spender_c) - 8) < 1e-9) -- 20 x (1 - 0.6)
-        rawset(I.ab.obj[spender_c], "declaredSpend", function()
-            return no_such_name.field -- luacheck: ignore 113 (raises in the context: the simulation prices it)
-        end)
+        local errors = I.nowErrors
+        I.ab.obj[spender_c].spend = function()
+            return no_such_name.field -- luacheck: ignore 113 (raises in the context: counted, the static prices it)
+        end
+        I.ab.obj[spender_c].static = { spend = 10 }
         assert.are.equal(10, I.CostOf(spender_c))
+        assert.are.equal(errors + 1, I.nowErrors)
+        I.ab.obj[spender_c].static = nil
+        assert.are.equal(0, I.CostOf(spender_c)) -- no static: 0, never the simulation's answer
     end)
 
     it("allocates nothing over 1000 casts with both modifiers declared", function()
