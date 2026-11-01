@@ -212,6 +212,33 @@ describe("headless Hekili", function()
             facadeAnswers(setfenv(probe, S)())
         end)
 
+        -- Spell knowledge changes only at SPELLS_CHANGED-class events: knownRank is Hekili's own memo of the facade's
+        -- answer, so a read makes no client call between events, and a rank learned mid-session is seen after one.
+        it("memoises knownRank: no client call between SPELLS_CHANGED events, a learned rank seen after one", function()
+            local ctl, SB = H.ctl, H.ns.Facade.C_SpellBook
+            local kr, ids = setfenv(probe, S)(), { 900071, 900072 }
+            ctl.known[900071], ctl.known[900072] = true, false
+            ctl.Fire("SPELLS_CHANGED")
+            assert.are.equal(1, kr(ids))
+            local real, calls = SB.IsSpellKnown, 0
+            SB.IsSpellKnown = function(...)
+                calls = calls + 1
+                return real(...)
+            end
+            local ok, err = pcall(function()
+                for _ = 1, 100 do
+                    kr(ids)
+                end
+                assert.are.equal(0, calls)
+                ctl.known[900072] = true -- a rank learned mid-session
+                ctl.Fire("SPELLS_CHANGED")
+                assert.are.equal(2, kr(ids))
+            end)
+            SB.IsSpellKnown = real
+            ctl.known[900071], ctl.known[900072] = nil, nil
+            assert(ok, err)
+        end)
+
         it(
             "answers them from the belief in a `now` handler's context, which a resource's `taken` runs in too",
             function()

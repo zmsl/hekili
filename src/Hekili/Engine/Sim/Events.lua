@@ -186,6 +186,10 @@ ns.RegisterEvent = function( event, handler )
 end
 local RegisterEvent = ns.RegisterEvent
 
+-- state.knownRank's memo (State.lua) is cleared first, before any handler of the event reads a rank.
+RegisterEvent( "SPELLS_CHANGED", ns.ForgetKnownRanks )
+RegisterEvent( "PLAYER_ENTERING_WORLD", ns.ForgetKnownRanks )
+
 
 ns.UnregisterEvent = function( event, handler )
     local hands = handlers[ event ]

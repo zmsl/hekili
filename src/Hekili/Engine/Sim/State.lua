@@ -525,11 +525,25 @@ end
 -- (audit E8) Through the facade: knownRank(ids) is the highest rank of the list the spellbook knows (0 none);
 -- swingBase(hand) the hand's unhasted swing speed, the attack speed with the melee haste taken out (0 unknown; hands
 -- 1 and 2); healthMax(unit) the client's. Allocate nothing.
+-- knownRank is memoised by rank list (weak keys: a pack's lists live as long as the pack): spell knowledge changes
+-- only at SPELLS_CHANGED-class events, where ns.ForgetKnownRanks (Events.lua) clears it, so a read between events
+-- makes no client call.
+local knownRanks = setmetatable( {}, { __mode = "k" } )
 function state.knownRank( ids )
+    local rank = knownRanks[ ids ]
+    if rank then return rank end
+    rank = 0
     for k = #ids, 1, -1 do
-        if C_SpellBook.IsSpellKnown( ids[ k ] ) == true then return k end
+        if C_SpellBook.IsSpellKnown( ids[ k ] ) == true then
+            rank = k
+            break
+        end
     end
-    return 0
+    knownRanks[ ids ] = rank
+    return rank
+end
+function ns.ForgetKnownRanks()
+    wipe( knownRanks )
 end
 function state.swingBase( hand )
     local main, off = UnitAttackSpeed( "player" )
