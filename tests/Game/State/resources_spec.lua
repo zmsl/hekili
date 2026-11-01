@@ -2880,20 +2880,23 @@ describe("resources", function()
         end)
     end)
 
-    it("runs a function swing value in the belief's context: its talent rank; a raise answers 0, counted once", function()
-        boot(fs.def(fs.new(function()
-            return 5 + talent.talent_a.rank -- luacheck: ignore 113 (the context's name: the belief's own rank)
-        end)))
-        I.SetTalentRank(1, 2)
-        assert.are.equal(7, I.SwingValue(1, 1, 1))
-        local errors = I.nowErrors
-        I.res.swingValue[1] = function()
-            return sim.rage -- luacheck: ignore 113 (a name the context lacks: raises there)
+    it(
+        "runs a function swing value in the belief's context: its talent rank; a raise answers 0, counted once",
+        function()
+            boot(fs.def(fs.new(function()
+                return 5 + talent.talent_a.rank -- luacheck: ignore 113 (the context's name: the belief's own rank)
+            end)))
+            I.SetTalentRank(1, 2)
+            assert.are.equal(7, I.SwingValue(1, 1, 1))
+            local errors = I.nowErrors
+            I.res.swingValue[1] = function()
+                return sim.rage -- luacheck: ignore 113 (a name the context lacks: raises there)
+            end
+            assert.are.equal(0, I.SwingValue(1, 1, 1))
+            assert.are.equal(0, I.SwingValue(1, 1, 2)) -- no second raise, no second count
+            assert.are.equal(errors + 1, I.nowErrors)
         end
-        assert.are.equal(0, I.SwingValue(1, 1, 1))
-        assert.are.equal(0, I.SwingValue(1, 1, 2)) -- no second raise, no second count
-        assert.are.equal(errors + 1, I.nowErrors)
-    end)
+    )
 end)
 
 describe("the usability oracle (harness design §2: Rows' credits judged by the next usability answer)", function()

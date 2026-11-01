@@ -17,8 +17,7 @@ local WORLDS = {
 -- the function fields the belief evaluates, by record kind (Casts.lua, Resources.lua, Expect.lua)
 local ABILITY = { "cooldown", "spend", "gcdTime", "usable" }
 local AURA = { "duration", "tick_time", "base_tick_time" }
-local RESOURCE =
-    { "max", "decay", "decayInterval", "swingValue", "swingOff", "swingCrit", "swingOffCrit", "taken" }
+local RESOURCE = { "max", "decay", "decayInterval", "swingValue", "swingOff", "swingCrit", "swingOffCrit", "taken" }
 local ENTRY = { "spirit", "mp5", "share", "value", "mult", "when" }
 
 local function metatabled(v, path, seen, hits)

@@ -100,7 +100,7 @@ local nowEnv = {
     "summonPet", "dismissPet", "reduceCooldown", "level",
     "talent",
     "buff", "debuff", "knownRank", "stat", "swingBase", "healthMax", "now", "combat", "rage", "energy", "mana", "focus",
-    "runic_power",
+    "runic_power", "totem", "action", "settings", "haste",
 }
 files["tests/Game/State/"] = { std = "+busted", read_globals = nowEnv }
 files["tests/Game/Events/"] = { std = "+busted", read_globals = nowEnv }

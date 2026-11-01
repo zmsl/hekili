@@ -493,6 +493,110 @@ describe("now handlers", function()
         assert.are.equal(2, seen.known)
     end)
 
+    it("reads totem.<element> from the belief's slots: up, remains; an unknown element is down", function()
+        local seen = {}
+        register("totem_air", {
+            id = 6262,
+            now = function()
+                summonTotem("totem_air", "air", 120)
+            end,
+        })
+        register("totem_read", {
+            id = 6263,
+            now = function()
+                seen[1], seen[2], seen[3], seen[4] =
+                    totem.air.up, totem.air.remains, totem.fire.up, totem.no_such_element.up
+                seen[5], seen[6] = totem.air.expires, totem.air.active
+            end,
+        })
+        start()
+        ctl.Fire("PLAYER_REGEN_DISABLED") -- out of combat poll 7 would read the fake client's empty slots
+        cast(6262, 20)
+        cast(6263, 25)
+        assert.are.same({ true, 115, false, false, 140, true }, seen)
+        cast(6263, 141) -- past the modelled expiry
+        assert.are.same({ false, 0, false, false, 0, false }, seen)
+        assert.are.equal(0, I.nowErrors)
+    end)
+
+    it(
+        "reads action.<key>.in_range from the range poll's last plain answer: true unless the client said false",
+        function()
+            local seen = {}
+            register("range_read", {
+                id = 6264,
+                now = function()
+                    seen[1], seen[2], seen[3] =
+                        action.spender_a.in_range, action.spender_c.in_range, action.no_such.in_range
+                end,
+            })
+            start()
+            ctl.known[fs.SPENDER_A], ctl.known[fs.SPENDER_C] = true, true
+            ctl.ranges[fs.SPENDER_A], ctl.ranges[fs.SPENDER_C] = { 0, 5 }, { 8, 35 } -- a melee strike, a band
+            ctl.Fire("SPELLS_CHANGED")
+            cast(6264, 10)
+            assert.are.same({ true, true, true }, seen) -- no poll yet: nothing said false
+            ctl.distance.target = 20 -- in the band, out of melee
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            VS.Drain(10.5) -- the swap folded: the poll asks only with a target slot
+            ctl.Tick(11)
+            I.Sources.RunPolls(11)
+            cast(6264, 12)
+            assert.are.same({ false, true, true }, seen)
+            ctl.distance.target = 2
+            ctl.Tick(13)
+            I.Sources.RunPolls(13)
+            cast(6264, 14)
+            assert.are.same({ true, false, true }, seen)
+            assert.are.equal(0, I.nowErrors)
+        end
+    )
+
+    it("reads settings.<name> as the core's plain copy, refreshed by Hekili:SettingsChanged", function()
+        local seen = {}
+        register("settings_read", {
+            id = 6265,
+            now = function()
+                seen[1], seen[2], seen[3] = settings.behind, settings.threshold, settings.missing
+            end,
+        })
+        h.State.spec = { id = 7 }
+        local prof = { behind = true, threshold = 55, nested = {} }
+        h.Engine = { settings = { specs = { [7] = { settings = prof } } } }
+        start() -- the build copies the active spec's settings
+        cast(6265, 10)
+        assert.are.same({ true, 55 }, seen)
+        assert.is_nil(seen[3])
+        assert.is_nil(I.nowCtx.settings.nested) -- plain values only
+        prof.threshold, prof.behind = 60, false
+        cast(6265, 11)
+        assert.are.same({ true, 55 }, seen) -- a write without SettingsChanged: the copy stands
+        h:SettingsChanged()
+        cast(6265, 12)
+        assert.are.same({ false, 60 }, seen)
+        assert.are.equal(0, I.nowErrors)
+    end)
+
+    it("reads `haste` as the sim's 1 / (1 + spell haste) from the belief's last plain read", function()
+        local seen = {}
+        register("haste_read", {
+            id = 6266,
+            now = function()
+                seen[1] = haste
+            end,
+        })
+        start() -- clears the start read's log entry: read again
+        ctl.spellHaste = 25
+        ctl.Fire("UNIT_SPELL_HASTE", "player")
+        cast(6266, 10)
+        assert.are.equal(0.8, seen[1])
+        ctl.spellHaste = 0
+        ctl.Fire("UNIT_SPELL_HASTE", "player")
+        cast(6266, 11)
+        assert.are.equal(1, seen[1])
+        assert.are.equal(0, I.nowErrors)
+    end)
+
     it("KnownID answers a tracked ability's known rank id, else its input unchanged (core edit E5)", function()
         start()
         assert.are.equal(fs.SPENDER_C, VS.KnownID(fs.SPENDER_C)) -- no rank known yet
