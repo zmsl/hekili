@@ -142,19 +142,26 @@ describe("the tracked set", function()
         local g = function()
             return talent.talent_a.rank > 0 and 15 or nil -- luacheck: ignore 113
         end
+        local s = function()
+            return talent.talent_a.rank > 0 and 20 or nil -- luacheck: ignore 113
+        end
         setfenv(f, h.State)
         setfenv(g, h.State)
+        setfenv(s, h.State)
         h.Class.abilities.spender_a.gcdTime, h.Class.abilities.spender_a.funcs.gcdTime = nil, f
         h.Class.abilities.spender_a.cooldown, h.Class.abilities.spender_a.funcs.cooldown = nil, g
-        h.State.talent = { talent_a = { rank = 2 } } -- the sim's rank: the statics are 1.0 and 15
+        h.Class.abilities.spender_a.spend, h.Class.abilities.spender_a.funcs.spend = nil, s
+        h.State.talent = { talent_a = { rank = 2 } } -- the sim's rank: the statics are 1.0, 15 and 20
         ns.BuildTracked()
         ns.TrackedStatics()
         local a = I.ab.bySpell[fs.SPENDER_A]
-        assert.are.same({ 1.0, 15 }, { I.ab.obj[a].static.gcdTime, I.ab.obj[a].static.cooldown })
+        local static = I.ab.obj[a].static
+        assert.are.same({ 1.0, 15, 20 }, { static.gcdTime, static.cooldown, static.spend })
         local errors = I.nowErrors
-        -- the belief's rank is 0 (unwalked): nil is the answer, not a failure: no declared GCD time, no cooldown
+        -- the belief's rank is 0 (unwalked): nil is the answer, not a failure: no declared GCD time, cooldown or cost
         assert.are.equal(1.5, I.GcdLen(a, 1)) -- the spell kind's default, not the static 1.0
         assert.are.equal(0, I.CooldownOf(a, 1))
+        assert.are.equal(0, I.BaseCostOf(a)) -- not the static 20
         assert.are.equal(errors, I.nowErrors)
     end)
 
