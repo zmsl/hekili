@@ -1196,7 +1196,8 @@ local function UNIT_POWER_FREQUENT( event, unit, power )
         end
     end
 
-    local newPower = math.floor( UnitPower( "player", Enum.PowerType[ power ] ) ) -- power is spent in whole points
+    local est, lo = UnitPower( "player", Enum.PowerType[ power ] )
+    local newPower = math.floor( lo or est ) -- power is spent in whole points; the floor, as before the streams split
 
     if lastPower[ power ] and newPower < lastPower[ power ] then
         Hekili:ForceUpdate( event, true )

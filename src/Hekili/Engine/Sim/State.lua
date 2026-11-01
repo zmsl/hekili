@@ -6463,14 +6463,13 @@ do
             local res = rawget( state, k )
 
             if res then
-                res.actual = UnitPower( "player", power.type )
-                res.actual_lo, res.actual_hi = res.actual, res.actual
+                -- the believed estimate, then the floor as the press gates read it and the ceiling (border batch 2); a
+                -- plain read answers one value: no band
+                res.actual, res.actual_lo, res.actual_hi = UnitPower( "player", power.type )
+                res.actual_lo = res.actual_lo or res.actual
+                res.actual_hi = res.actual_hi or res.actual
                 -- then the pool's base power (border batch 2): nil until a cost read taught it (ns.FractionCost)
                 res.max, res.base = UnitPowerMax( "player", power.type )
-                -- the belief's estimate above the floor it answered (TimeToReady's near-cost mark, mana-regen plan Task 4a);
-                -- 0 for a type the belief does not track (its estimate reads 0)
-                local gap = VS.Power( power.type, state.now ).est - res.actual
-                res.estGap = gap > 0 and gap or 0
 
                 if res.max > 0 then foundResource = true end
 
@@ -7461,7 +7460,7 @@ function state:TimeToReady( action, pool )
     end
     if spend and z and z > wait then
         wait = max( wait, ceil( z * 100 ) / 100 )
-        -- Forever (mana-regen plan, Task 4a): near its cost when the belief's estimate (the floor plus estGap) reaches
+        -- Forever (mana-regen plan, Task 4a): near its cost when the belief's estimate (the `current` stream) reaches
         -- the cost within EARLY_EXIT (at the estimate the pick would end the scan) while the floor reaches it within
         -- one more update (the usability poll that settles it; the client answers a gain late, so the floor runs a few
         -- mana under the truth there). Core keeps such a pick over a later entry that is merely ready sooner; the wait
@@ -7470,7 +7469,7 @@ function state:TimeToReady( action, pool )
         z = self[ resource ]
         nearRes = not z.swingGen
             and wait <= ns.EARLY_EXIT + ( Hekili.combatRate or 0.2 )
-            and self:TimeToResource( z, spend - ( z.estGap or 0 ) ) <= ns.EARLY_EXIT
+            and self:TimeToResource( z, spend ) <= ns.EARLY_EXIT
         waitRes = wait
     end
 

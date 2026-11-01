@@ -146,14 +146,15 @@ describe("ns.Facade", function()
     end)
 
     it(
-        "answers resources: UnitPower is lo, a continuous resource's fraction kept; swing regen 0 in and out of combat",
+        "answers resources: UnitPower is est, lo (a continuous resource's fraction kept), hi; swing regen 0 in and out of combat",
         function()
             I.Sources.Direct(VS.Obs.Usable, 5, 3, 1, 0) -- spender_c usable: rage >= 10
             I.Fold(5, false)
             ctl.now = 5
-            assert.are.equal(10, Facade.UnitPower("player", fs.RAGE))
-            assert.are.equal(10, Facade.UnitPower("player"))
-            assert.are.equal(0, Facade.UnitPower("target", fs.RAGE))
+            local hi = VS.Power(fs.RAGE, 5).hi -- the belief's ceiling (rage errs upward: 100 here)
+            assert.are.same({ 10, 10, hi }, { Facade.UnitPower("player", fs.RAGE) }) -- est, lo, hi (border batch 2)
+            assert.are.same({ 10, 10, hi }, { Facade.UnitPower("player") })
+            assert.are.same({ 0 }, { Facade.UnitPower("target", fs.RAGE) })
             local power, asked = VS.Power, nil
             VS.Power = function(pt, t)
                 asked = pt
@@ -164,24 +165,25 @@ describe("ns.Facade", function()
             VS.Power = power
             assert.are.equal(0, asked)
             VS.Power = function()
-                return { est = 98.6, lo = 31.8 }
+                return { est = 98.6, lo = 31.8, hi = 99 }
             end
-            assert.are.equal(31, Facade.UnitPower("player", fs.RAGE)) -- rage too: G4's est exception is gone; a swing's steps
+            -- slot 2 is lo: rage too (G4's est exception is gone), a swing's steps make it whole; slots 1 and 3 the band
+            assert.are.same({ 98.6, 31, 99 }, { Facade.UnitPower("player", fs.RAGE) })
             -- the fraction stays, or a continuous resource's wait jumps by up to 1 / regen a tick
-            assert.are.equal(31.8, Facade.UnitPower("player", 3))
+            assert.are.same({ 98.6, 31.8, 99 }, { Facade.UnitPower("player", 3) })
             -- a short answer's cap is a ceiling: the read sits a whole unit under it, any cost's (39.97's cap is 39.96)
             VS.Power = function()
                 return { est = 39.99, lo = 39.99, capped = true }
             end
-            assert.is_true(Facade.UnitPower("player", 3) <= 39)
+            assert.is_true((select(2, Facade.UnitPower("player", 3))) <= 39)
             VS.Power = function()
                 return { est = 39.96, lo = 39.96, capped = true }
             end
-            assert.is_true(Facade.UnitPower("player", 3) <= 38.97)
+            assert.is_true((select(2, Facade.UnitPower("player", 3))) <= 38.97)
             VS.Power = function()
                 return { est = 0.49, lo = 0.49, capped = true }
             end
-            assert.are.equal(0, Facade.UnitPower("player", 3))
+            assert.are.same({ 0.49, 0 }, { Facade.UnitPower("player", 3) }) -- the cap shapes lo alone (the stub has no hi)
             local regen = VS.Regen
             VS.Regen = function()
                 return { est = 33 } -- a mana rate: a whole unit alone is under the 0.05 s of a shown-ready wait
@@ -189,20 +191,20 @@ describe("ns.Facade", function()
             VS.Power = function()
                 return { est = 120.99, lo = 120.99, capped = true }
             end
-            assert.is_true((121 - Facade.UnitPower("player", 3)) / 33 > 0.05)
+            assert.is_true((121 - select(2, Facade.UnitPower("player", 3))) / 33 > 0.05)
             VS.Regen = regen
             VS.Power = function()
                 return { est = 24.7, lo = 24.7, capped = true, capB = 24.39 } -- inside the ready wait: past it, no deeper
             end
-            assert.are.equal(24.39, Facade.UnitPower("player", 3))
+            assert.are.equal(24.39, (select(2, Facade.UnitPower("player", 3))))
             VS.Power = function()
                 return { est = 24.2, lo = 24.2, capped = true, capB = 24.39 } -- already under the band
             end
-            assert.are.equal(24.2, Facade.UnitPower("player", 3))
+            assert.are.equal(24.2, (select(2, Facade.UnitPower("player", 3))))
             VS.Power = function()
                 return { est = 39.99, lo = 39.99, capped = false } -- a measured fraction keeps it
             end
-            assert.are.equal(39.99, Facade.UnitPower("player", 3))
+            assert.are.equal(39.99, (select(2, Facade.UnitPower("player", 3))))
             VS.Power = power
             -- (border batch 2) the client's pair, then the belief's: the window's end (nil for a type without one),
             -- the stepped decay's anchor, the rate of hits on the player

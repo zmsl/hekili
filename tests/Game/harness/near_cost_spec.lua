@@ -1,5 +1,5 @@
 -- tests/Game/harness/near_cost_spec.lua (mana-regen plan, Task 4a): the sim marks an ability "near its cost" when
--- its resource alone holds it, the belief's estimate (the floor the sim reads plus estGap) reaches the cost within
+-- its resource alone holds it, the belief's estimate (the `current` stream) reaches the cost within
 -- EARLY_EXIT (at the estimate the pick would end the list scan) and the floor reaches it within one more update
 -- (the usability poll that settles it). Core keeps such a pick over a later entry that is merely ready sooner
 -- (Engine/Sim/Core.lua); its wait stays the floor's, so it shows as a countdown and never ready early.
@@ -31,10 +31,9 @@ describe("the sim's near-cost mark (TimeToReady)", function()
 
     before_each(function()
         S.now, S.offset, S.delay = 100, 0, 0
-        r.actual, r.max, r.regen, r.tick_rate, r.last_tick = 360, 10000, nil, 0, nil -- floor 360, continuous 38/s
-        r.actual_lo, r.actual_hi = 360, 360 -- the reset seeds the three streams; the press gate reads the floor's
+        r.actual, r.max, r.regen, r.tick_rate, r.last_tick = 366, 10000, nil, 0, nil -- the estimate 366: 0.11 s from 370
+        r.actual_lo, r.actual_hi = 360, 366 -- the floor 360, 0.26 s; continuous 38/s
         r.active_regen, r.inactive_regen, r.fsr_until = 38, 38, false
-        r.estGap = 6 -- the estimate 366: 0.11 s from 370; the floor 0.26 s
         S.forecastResources("mana")
     end)
 
@@ -52,11 +51,11 @@ describe("the sim's near-cost mark (TimeToReady)", function()
     it(
         "does not mark it when the estimate's reach exceeds EARLY_EXIT, nor when the floor's exceeds it by over an update",
         function()
-            r.estGap = 0 -- the estimate is the floor: 0.26 s > EARLY_EXIT
+            r.actual = 360 -- the estimate is the floor: 0.26 s > EARLY_EXIT
             S.forecastResources("mana")
             S:TimeToReady("surge")
             assert.is_false(S.nearCost)
-            r.actual, r.actual_lo, r.estGap = 340, 340, 28 -- the estimate 368 (0.05 s), the floor 0.79 s away: past one update
+            r.actual, r.actual_lo = 368, 340 -- the estimate 368 (0.05 s), the floor 0.79 s away: past one update
             S.forecastResources("mana")
             S:TimeToReady("surge")
             assert.is_false(S.nearCost)

@@ -7,6 +7,7 @@ local Facade = ns.Facade
 local CreateFrame = Facade.CreateFrame
 local GetFrameCPUUsage, GetTime, InCombatLockdown = Facade.GetFrameCPUUsage, Facade.GetTime, Facade.InCombatLockdown
 local GetItemInfoInstant, GetSpellTexture = Facade.C_Item.GetItemInfoInstant, Facade.C_Spell.GetSpellTexture
+local UnitPower = Facade.UnitPower
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
@@ -1504,9 +1505,9 @@ local function altPasses( dispName, packName, Queue, numFilled, abilityOpts )
         local rt, cost = rec.resource_type, rec.cost
         local resource = rt and class.resources[ rt ]
         if resource and cost > 0 then
-            local band = ns.VirtualState.Power( resource.type, state.now )
-            local lo, hi = band.lo, band.hi
-            if lo < cost and hi >= cost then
+            -- the band as the facade answers it (border batch 2): slots 2-3, the floor the press gates read and the ceiling
+            local _, lo, hi = UnitPower( "player", resource.type )
+            if lo and hi and lo < cost and hi >= cost then
                 ran = true
                 altPick( dispName, packName, rec, i, "lo", lo, altMax[ i ], abilityOpts )
                 altPick( dispName, packName, rec, i, "hi", hi, altMax[ i ], abilityOpts )

@@ -18,8 +18,9 @@ describe("alternatives (headless Arms, a scripted belief band)", function()
     local H, out, t, band
     local function need() end
 
-    -- Rage (power type 1) as the belief: Core's bound read gets the scripted band; every other reader (the client
-    -- facade's UnitPower, so the main records) gets the estimate as its low bound.
+    -- Rage (power type 1) as the belief: Core's bound read (through the facade's UnitPower slots, border batch 2) gets
+    -- the scripted band; every other reader (the reset's UnitPower, so the main records) gets the estimate as its low
+    -- bound. The reader is the first frame above the facade's own.
     local function script()
         local VS = H.ns.VirtualState
         local power, fake = VS.Power, { est = 0, lo = 0, hi = 0, conf = 1 }
@@ -28,7 +29,17 @@ describe("alternatives (headless Arms, a scripted belief band)", function()
             if pt ~= 1 then
                 return r
             end
-            local core = debug.getinfo(2, "S").source:find("Engine/Sim/Core.lua", 1, true)
+            local core = false
+            for level = 2, 8 do
+                local info = debug.getinfo(level, "S")
+                if not info then
+                    break
+                end
+                if info.what ~= "tail" and not info.source:find("Game/API/Facade.lua", 1, true) then -- the wrapper's tail call
+                    core = info.source:find("Engine/Sim/Core.lua", 1, true) ~= nil
+                    break
+                end
+            end
             fake.est, fake.lo, fake.hi = band.est, core and band.lo or band.est, band.hi
             return fake
         end

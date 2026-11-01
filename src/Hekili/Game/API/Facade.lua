@@ -280,6 +280,7 @@ kept(
             end
         end
         local b = VS.Power(powerType, now())
+        local est, hi = b.est, b.hi -- (border batch 2) slot 1 the estimate, 2 the floor as shaped below, 3 the ceiling
         -- lo for every resource: rage's speed-based model has a zero band and errs upward only, so lo is a true floor (G4);
         -- for a slot resting at its maximum (mana, energy) lo is the build's rest assumption until a short answer, an exact
         -- read or a pin's top below it ends it (Families/Resources.lua `over`): it can say affordable when it is not.
@@ -289,7 +290,7 @@ kept(
         -- swing's gain reaching the cost where floor(lo) + gain doesn't).
         local r = I.res.slotOf[powerType]
         if r and I.res.swing[r] > 0 then
-            return floor(b.lo)
+            return est, floor(b.lo), hi
         end
         -- On a short answer's cap the client just said no, and the cap says nothing of how far under the cost: read it a
         -- whole unit under, any cost's (39.97 too), or by what regen pays in I.CAP_WAIT at a mana rate, where one unit is
@@ -301,16 +302,18 @@ kept(
             local c = b.capB
             if c then
                 c = c < b.lo and c or b.lo
-                return c > 0 and c or 0
+                return est, c > 0 and c or 0, hi
             end
+            local lo = b.lo -- before the Regen read: the records differ, the copy makes it order-safe
             local depth = VS.Regen(powerType, now()).est * I.CAP_WAIT
             depth = depth > 1 and depth or 1
-            return b.lo > depth and b.lo - depth or 0
+            return est, lo > depth and lo - depth or 0, hi
         end
-        return b.lo
+        return est, b.lo, hi
     end,
-    "secret always [W PR16]; Power().lo for every resource (G4's rage exception dropped 2026-10-16); the pet's raw "
-        .. "while plain (plain 0 with no pet [W PR12]), PetPower() when secret"
+    "secret always [W PR16]; the player's Power().est, then its lo as the press gates read it (the cap, capB, CAP_WAIT "
+        .. "depth and swing-paid whole number; G4's rage exception dropped 2026-10-16), then hi; the pet's raw while "
+        .. "plain (plain 0 with no pet [W PR12]), PetPower() when secret"
 )
 
 -- After the client's pair: the five-second window's end (nil for a type without one), the stepped decay's anchor and

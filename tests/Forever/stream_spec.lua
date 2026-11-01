@@ -1,8 +1,8 @@
 -- tests/Forever/stream_spec.lua (border batch 2 Part B): the sim carries three streams per pool, the estimate
 -- (`current`), the believed floor (`lo`) and ceiling (`hi`), moved by the same events (Engine/Sim/State.lua
--- forecastResources, resourceChange, advance). Step 2 of the migration: the reset still seeds the three from one
--- read, so they are equal everywhere a press gate asks (every TimeToReady, every forecast slice): a site left on a
--- stale stream shows here before the reset splits them. #loop
+-- forecastResources, resourceChange, advance). The reset seeds them from UnitPower's three slots, so lo <= current
+-- <= hi holds everywhere a press gate asks (every TimeToReady, every forecast slice): the same deltas and clamps
+-- keep the order. (Step 2 of the migration asserted equality here while one read seeded the three.) #loop
 local loop = require("Game.harness.loop")
 
 local WORLDS = {
@@ -13,14 +13,14 @@ local WORLDS = {
 
 describe("the sim's resource streams (est, lo, hi) #loop", function()
     for _, w in ipairs(WORLDS) do
-        it(("stay equal at every press gate: %s"):format(w[3]), function()
+        it(("keep lo <= current <= hi at every press gate: %s"):format(w[3]), function()
             local world = require(w[1])
             local L = loop.new(w[2] and world[w[2]] or world)
             local S, class = L.us.Hekili.State, L.us.Hekili.Class
             local checks, bad = 0, nil
             local function check(k, r)
                 local cur, lo, hi = r.current, r.lo, r.hi
-                if cur ~= lo or lo ~= hi or r.actual ~= r.actual_lo or r.actual ~= r.actual_hi then
+                if not (lo <= cur and cur <= hi and r.actual_lo <= r.actual and r.actual <= r.actual_hi) then
                     bad = bad
                         or ("%s: current %s lo %s hi %s actual %s/%s/%s"):format(
                             k,
@@ -34,7 +34,7 @@ describe("the sim's resource streams (est, lo, hi) #loop", function()
                 end
                 for i = 1, r.fcount or 0 do
                     local f = r.forecast[i]
-                    if f.v ~= f.l or f.v ~= f.h then
+                    if not (f.l <= f.v and f.v <= f.h) then
                         bad = bad or ("%s slice %d (%s): v %s l %s h %s"):format(k, i, f.e, f.v, f.l, f.h)
                     end
                 end
