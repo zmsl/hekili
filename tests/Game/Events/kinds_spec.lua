@@ -53,9 +53,15 @@ describe("the kinds", function()
         L.bg[7] = 1
         assert.is_truthy(K.Band(i, 1, 10.01, true, "DODGE", 1)) -- no event: possibly ours
         ctl.now = 10.02
+        ctl.Fire("UNIT_AURA", "player")
+        assert.is_truthy(K.Band(i, 1, 10.03, true, "DODGE", 1)) -- our own aura event says nothing of the target
         ctl.Fire("UNIT_AURA", "target")
         assert.is_nil(K.Band(i, 1, 10.03, true, "DODGE", 1)) -- it landed: another player's avoid
         assert.is_nil(K.Band(i, 2, 10.1, true, "DODGE", 1))
+        assert.is_truthy(K.Band(i, 1, 10.03, false, "WOUND", 1)) -- only an avoid is refused
+        T.school[i] = 4
+        assert.is_truthy(K.Band(i, 1, 10.03, true, "DODGE", 1)) -- a damaging ticket has its wound to close it
+        T.school[i] = 0
         L.bg[7] = 0 -- nobody else avoids here: the event may be anyone's, the row is ours
         assert.is_truthy(K.Band(i, 2, 10.1, true, "DODGE", 1))
         L.bg[7] = 1
@@ -63,7 +69,7 @@ describe("the kinds", function()
         assert.is_truthy(K.Band(i, 2, 10.1, true, "DODGE", 1))
         T.guid[i] = "Creature-1"
         ctl.now = 10.09 -- only the cast's frame: an event past it is some other aura's
-        I.targetAuraT = 10.09
+        ctl.Fire("UNIT_AURA", "target")
         assert.is_truthy(K.Band(i, 2, 10.1, true, "DODGE", 1))
     end)
 

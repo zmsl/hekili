@@ -249,9 +249,9 @@ local function onEvent(_, event, r1, r2, r3, r4, r5, r6, r7, r8)
     end
     if event == "UNIT_AURA" then
         if a1 == "target" and I.inCombat then
-            -- the target's real event in combat: its payload is secret and the walk above (its status feeds the
-            -- presence provider) is all it is good for; the believed changes reach Hekili as the drain's deltas
-            -- (Game/API/Facade.lua), and an empty delivery would only mark a rescan for nothing
+            -- the target's real event in combat: its payload is secret, so it is good for the walk above (its status
+            -- feeds the presence provider) and I.targetAuraT's stamp (Kinds.lua K.Band); the believed changes reach
+            -- Hekili as the drain's deltas (Game/API/Facade.lua), and an empty delivery would only mark a rescan for nothing
             I.Log.Deliver()
             return
         end
