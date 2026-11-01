@@ -28,7 +28,6 @@
 # Omitted: cd_trinkets #6: spell 29602
 # Omitted: cd_trinkets #7: item 21891
 # Omitted: cd_trinkets #8: item 274759
-# Omitted: pre_pull_stance #1: no guard: battle_stance's handler raised: src/Hekili_Warrior/Warrior.lua:716: stub resource lacks "lo"
 # Omitted: default: empty group engineering
 # Omitted: default: empty group cd_trinkets
 
@@ -63,7 +62,7 @@ actions+=/heroic_strike,use_off_gcd=1,focus=2,if=!action.mortal_strike.known&rag
 actions+=/thunder_clap,if=settings.maintain_thunder_clap&!action.mortal_strike.known&!debuff.thunder_clap.up
 actions+=/sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5
 actions+=/hamstring,if=!action.mortal_strike.known
-actions.pre_pull_stance=battle_stance,use_off_gcd=1,if=!settings.wowsims_stance_dance
+actions.pre_pull_stance=battle_stance,use_off_gcd=1,if=!buff.battle_stance.up&!settings.wowsims_stance_dance
 actions.pre_pull_move=charge,use_off_gcd=1,if=(!action.battle_stance.known|buff.battle_stance.up)
 actions.pre_pull_move+=/intercept,use_off_gcd=1,if=(!action.berserker_stance.known|buff.berserker_stance.up)
 actions.cd_racials=blood_fury,use_off_gcd=1
