@@ -505,7 +505,7 @@ local function perSwing(r, hand, main, off, at)
         v = off[r]
     end
     if type(v) == "function" then
-        v = v(I.clock)
+        v = I.Eval(v, I.clock) -- in the belief's context (Families/Casts.lua): a raise answers nil, counted once
     end
     return type(v) == "number" and v or 0
 end
