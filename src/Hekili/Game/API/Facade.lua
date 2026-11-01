@@ -1254,6 +1254,32 @@ end
 -- The display class (Modern display spec §4, plan ruling 5): the raw function, untraced so no secret answer sits in the
 -- trace's locals or counters, stored only in Facade.Display (tools/check_api_reads.sh lets only UI/Truth.lua read it).
 
+-- knownRank(ids), a pack's read in both the sim and the belief: the highest rank of the list the spellbook knows (0
+-- none). A facade read, so the belief running a pack function touches nothing of the core's. Memoised by rank list (weak
+-- keys: a pack's lists live as long as the pack): spell knowledge changes only at SPELLS_CHANGED-class events, where
+-- Facade.ForgetKnownRanks clears it (Engine/Sim/Events.lua), so a read between events makes no client call.
+local knownRanks = setmetatable({}, { __mode = "k" })
+function Facade.KnownRank(ids)
+    local rank = knownRanks[ids]
+    if rank then
+        return rank
+    end
+    rank = 0
+    for k = #ids, 1, -1 do
+        if Facade.C_SpellBook.IsSpellKnown(ids[k]) == true then
+            rank = k
+            break
+        end
+    end
+    knownRanks[ids] = rank
+    return rank
+end
+function Facade.ForgetKnownRanks()
+    for ids in pairs(knownRanks) do
+        knownRanks[ids] = nil
+    end
+end
+
 Facade.Display = {}
 local function display(name, reason)
     local nsName, key = split(name)

@@ -524,29 +524,10 @@ function ns.SpendPoints( c, res, ability )
     if c > 0 and ( c < 1 or ability and rawget( ability, "spendBase" ) ) then return ns.FractionCost( c, res ) end
     return c
 end
--- (audit E8) Through the facade: knownRank(ids) is the highest rank of the list the spellbook knows (0 none);
--- swingBase(hand) the hand's unhasted swing speed, the attack speed with the melee haste taken out (0 unknown; hands
--- 1 and 2); healthMax(unit) the client's. Allocate nothing.
--- knownRank is memoised by rank list (weak keys: a pack's lists live as long as the pack): spell knowledge changes
--- only at SPELLS_CHANGED-class events, where ns.ForgetKnownRanks (Events.lua) clears it, so a read between events
--- makes no client call.
-local knownRanks = setmetatable( {}, { __mode = "k" } )
-function state.knownRank( ids )
-    local rank = knownRanks[ ids ]
-    if rank then return rank end
-    rank = 0
-    for k = #ids, 1, -1 do
-        if C_SpellBook.IsSpellKnown( ids[ k ] ) == true then
-            rank = k
-            break
-        end
-    end
-    knownRanks[ ids ] = rank
-    return rank
-end
-function ns.ForgetKnownRanks()
-    wipe( knownRanks )
-end
+-- (audit E8) Through the facade: knownRank(ids) is the highest rank of the list the spellbook knows (0 none; memoised
+-- there); swingBase(hand) the hand's unhasted swing speed, the attack speed with the melee haste taken out (0 unknown;
+-- hands 1 and 2); healthMax(unit) the client's. Allocate nothing.
+state.knownRank = Facade.KnownRank
 function state.swingBase( hand )
     local main, off = UnitAttackSpeed( "player" )
     local speed = hand == 1 and main or hand == 2 and off or 0

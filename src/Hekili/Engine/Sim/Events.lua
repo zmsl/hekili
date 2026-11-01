@@ -187,8 +187,8 @@ end
 local RegisterEvent = ns.RegisterEvent
 
 -- state.knownRank's memo (State.lua) is cleared first, before any handler of the event reads a rank.
-RegisterEvent( "SPELLS_CHANGED", ns.ForgetKnownRanks )
-RegisterEvent( "PLAYER_ENTERING_WORLD", ns.ForgetKnownRanks )
+RegisterEvent( "SPELLS_CHANGED", Facade.ForgetKnownRanks )
+RegisterEvent( "PLAYER_ENTERING_WORLD", Facade.ForgetKnownRanks )
 
 
 ns.UnregisterEvent = function( event, handler )
