@@ -56,7 +56,9 @@ M.UNMATCHED_BY = {
 M.FLICKER = {
     ["Arms"] = { flicker = 0.3, retracted = 0.1, readyShort = 173, heldReady = 340 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     ["Fury L60"] = { flicker = 0.9, retracted = 0.2, readyShort = 116, heldReady = 226 }, -- 0.81 / 0.70 / 0.88, 0.20 / 0.17 / 0.06
-    ["Fury L24"] = { flicker = 0.8, retracted = 0.2, readyShort = 41, heldReady = 910 }, -- 0.68 / 0.75 / 0.66, 0.09 / 0.18 / 0.03
+    -- Fury L24's flicker up with a named cause (2026-11-01): Overpower was dead in Fury's loops (fury_gate answered a log-only
+    -- aura), live now it reads 0.84 / 1.04 / 0.77; without Warrior.lua's client read the same world reads 0.90 / 1.08 / 0.83.
+    ["Fury L24"] = { flicker = 1.1, retracted = 0.2, readyShort = 41, heldReady = 910 }, -- 0.84 / 1.04 / 0.77, 0.09 / 0.18 / 0.03
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
