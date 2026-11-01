@@ -55,6 +55,23 @@ describe("Hekili's own handlers force the cycles the urgent lane used to (E14)",
         assert.is_true(forced())
     end)
 
+    it("a charges event forces on a flag flip, and leaves none for the cooldown event after it", function()
+        H.Fire("SPELL_UPDATE_CHARGES")
+        forced()
+        H.Fire("SPELL_UPDATE_CHARGES")
+        assert.is_false(forced()) -- no flip, no edge
+        ctl.cooldown[id] = { isActive = true, isOnGCD = false }
+        H.Fire("SPELL_UPDATE_CHARGES")
+        assert.is_true(forced())
+        ctl.cooldown[id] = { isActive = false, isOnGCD = false }
+        H.Fire("SPELL_UPDATE_CHARGES")
+        forced()
+        ctl.cooldown[id] = { isActive = true, isOnGCD = false }
+        H.Fire("SPELL_UPDATE_CHARGES") -- the flip is consumed here ...
+        H.Fire("SPELL_UPDATE_COOLDOWN") -- ... and this one sees none, but the charges event already forced
+        assert.is_true(forced())
+    end)
+
     it("the swing timer's event forces", function()
         H.Fire("PLAYER_SWING", 2.6, 0)
         assert.is_true(forced())
@@ -80,6 +97,9 @@ describe("Hekili's own handlers force the cycles the urgent lane used to (E14)",
         L.Miss(t, "missed", me, mf, "Creature-9", hf, nil, 1, "DODGE", false)
         L.Deliver()
         assert.is_false(forced())
+        L.Swing(t, "swing", me, mf, "Creature-9", hf, 0, "HIT", false)
+        L.Deliver()
+        assert.is_false(forced()) -- unpaid: the swing timer's own row, not a landed swing
         L.Swing(t, "swing", me, mf, "Creature-9", hf, 100, "HIT", false)
         L.Deliver()
         assert.is_true(forced())

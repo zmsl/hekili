@@ -1073,7 +1073,7 @@ end )
 -- Forever (border batch 2, E14): a usability or cooldown event carries, as its eighth slot past the client's payload,
 -- whether a tracked ability's flag flipped (Game/Events/EventFacade.lua); that, and the swing timer's own event, is a
 -- reason for a sooner cycle (the belief's urgent lane asked for one here before).
-for _, e in ipairs( { "SPELL_UPDATE_USABLE", "ACTION_USABLE_CHANGED", "SPELL_UPDATE_COOLDOWN" } ) do
+for _, e in ipairs( { "SPELL_UPDATE_USABLE", "ACTION_USABLE_CHANGED", "SPELL_UPDATE_COOLDOWN", "SPELL_UPDATE_CHARGES" } ) do
     RegisterEvent( e, function( event, ... )
         if select( 8, ... ) then Hekili:ForceUpdate( event ) end
     end )
@@ -1703,8 +1703,9 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
 
     elseif subtype:sub( 1, 5 ) == 'SWING' and not multistrike then
         if subtype == 'SWING_MISSED' then offhand = spellName end
-        -- Forever (border batch 2, E14): our landed swing (its resource) is a reason for a sooner cycle.
-        if amSource and subtype == 'SWING_DAMAGE' then Hekili:ForceUpdate( subtype ) end
+        -- Forever (border batch 2, E14): our landed swing (its resource) is a reason for a sooner cycle; the swing
+        -- timer's unpaid close is SWING_DAMAGE 0 (amount rides the spellID slot) and is not one.
+        if amSource and subtype == 'SWING_DAMAGE' and type( spellID ) == 'number' and spellID > 0 then Hekili:ForceUpdate( subtype ) end
 
         local sw = state.swings
 

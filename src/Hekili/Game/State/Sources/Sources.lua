@@ -148,8 +148,8 @@ function S.OnStart(fn)
 end
 
 --- Marks the client event being run as one that carried an edge (a flag flip the belief logged): the event facade
---- delivers SPELL_UPDATE_USABLE, ACTION_USABLE_CHANGED and SPELL_UPDATE_COOLDOWN with the flag as their eighth slot,
---- so Hekili's own handlers force a cycle exactly as often as the urgent lane did (border batch 2, E14).
+--- delivers SPELL_UPDATE_USABLE, ACTION_USABLE_CHANGED, SPELL_UPDATE_COOLDOWN and SPELL_UPDATE_CHARGES with the flag as their
+--- eighth slot, so Hekili's own handlers force a cycle exactly as often as the urgent lane did (border batch 2, E14).
 S.edge = false
 function S.Edge()
     S.edge = true

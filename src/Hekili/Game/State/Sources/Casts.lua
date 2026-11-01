@@ -1,6 +1,6 @@
 -- Game/State/Sources/Casts.lua
 -- Own-cast sources (spec §4.2; event-facade spec §2.4): our UNIT_SPELLCAST_* events become staged observations
--- (urgent lane) and the combat log's own-cast rows (SPELL_CAST_START, _SUCCESS, _FAILED, a channel's
+-- and the combat log's own-cast rows (SPELL_CAST_START, _SUCCESS, _FAILED, a channel's
 -- SPELL_AURA_REMOVED), which Hekili's CLEU handler turns into its cast history and real queue as upstream Hekili does. Poll 3:
 -- the on-next-swing queue.
 -- Credits: secret-value handling after Catnip's (Durts) research.
