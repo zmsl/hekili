@@ -34,6 +34,28 @@ WeakAuras and the headless test loop are subscribers; none of them reads the sim
 abilities, auras and priorities through the public `Hekili` object and never touch `ns`. Options owns the saved profile
 and hands it to the engine; the engine never names `Hekili.DB`.
 
+**The belief/core border** (the owner's rule, 2026-10-31; border batches 1-3). The belief (`Game/`) imports nothing
+from the core: it never names `Hekili`, `class`, `state` or `ns.Output`, and everything it needs of the core's
+registrations arrives in the build's `def` (`Engine/Schema/Tracked.lua`: Hekili's ability and aura tables with their
+IDs and spender slots, the resources, talents, units, guardians, the experimental toggles as `providers`, and the core's
+`school`, `error`, `fsr`, `gcdSpell`, `oracleMin`). The core reads the belief through the facade's client-shaped rows
+and the API upgrades (trailing returns, event slots), and calls it by name in exactly three places, the owner's
+approved exceptions (`tools/check_border.sh` allows these and nothing else):
+- `ns.VirtualState.Drain(GetTime())` (`Engine/Sim/Core.lua`, once per update, after Update's guards): the fold is the
+  belief's own, and the core must say when its update starts so the belief folds to that cut-off before any reset;
+- `ns.VirtualState.Build(def)` (`Engine/Schema/Tracked.lua`, at the end of `SpecializationChanged`): the tracked set
+  is built from the registrations, which only the core holds, and a rebuild clears the belief's records, so a spec
+  change is the one event allowed to ask for it (a toggle never does: `Drain` swaps the providers);
+- `ns.VirtualState.SetLog(logger)` (`Hekili.lua`, at load): the snapshot trace writes into the core's debug log,
+  which only the core can open (`{ active(), write(fmt, ...) }`; the belief fills `onOpen`, which `Hekili:SetupDebug`
+  calls as each display's log opens).
+The gate also allows one more line, the debug bridge `Hekili.Virtual = { State, Events, Prof }` (§4; `Hekili.lua`,
+anchored to the whole line): a fourth naming of the belief by the core, not among the approved calls, kept because
+ForeverProbe reads it; the owner has not ruled on it. Functions the build carries may run
+under `state` when the belief reads them: the ability tables in `def.abilities` keep Spec.lua's metatable, so
+`Families/Casts.lua`'s `obj.cooldown` read runs the pack's function under the simulation's state; that is core code the
+belief runs, not a read of `state` by the belief.
+
 ## 2. The `Hekili.Engine` port
 
 `Hekili.Engine` is a plain table made in `Hekili.lua`; the Engine files fill it. UI and Options reach the engine only
@@ -257,6 +279,10 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
   codes, colours, textures and line breaks, no pack key is translated in a core file, no priority label reads as
   another, and no player-visible literal sits outside `L[...]` (the lint, §9). `tests/Forever/enus_text_spec.lua`
   compares the English text with the golden written at the merge base.
+- `tools/check_border.sh` (in `make api-check`): the belief/core border (§1). Comments stripped, no file of `Game/`
+  names `Hekili`, `class.`, `state.` or `ns.Output`; no file of `Engine/`, `UI/`, `Options/` or `Hekili.lua` names
+  `VS`, `ns.VirtualState` or `VirtualStateInternal` except the three calls `ns.VirtualState.Drain`, `.Build`,
+  `.SetLog` and `Hekili.lua`'s `Hekili.Virtual = { ... }` line.
 - `tools/check_engine_reads.sh` (in `make api-check`), both directions: the engine files (`Sim/{Core,State,Targets,
   Scripts}`, `Output`, `Registry`, `Snapshot`, `Driver`) name no `HekiliDisplay*`, `ns.UI.` or
   `DisplayPool`, and nothing in `Engine/` names `Hekili.DB` or `.profile` (exempt: `Settings.lua`, comments). UI,
