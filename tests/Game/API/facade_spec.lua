@@ -117,7 +117,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 124, hybrid = 36, virtual = 25, display = 1 }, count)
+        assert.are.same({ passthrough = 123, hybrid = 37, virtual = 25, display = 1 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -237,6 +237,18 @@ describe("ns.Facade", function()
             assert.are.same({ 110, 219 }, { Facade.UnitPowerMax("player", fs.RAGE) })
             assert.are.same({ 110 }, { Facade.UnitPowerMax("pet", fs.RAGE) }) -- another unit: no base
             VS.BasePower = base
+            -- (border batch 2) UnitThreatSituation: the client's status while plain, nothing when secret; then the
+            -- hostiles attacking someone else
+            assert.are.same({ nil, 0 }, { Facade.UnitThreatSituation("player", "target") }) -- secret: no status
+            answers.UnitThreatSituation = function()
+                return 3
+            end
+            local loose = VS.LooseEnemies
+            VS.LooseEnemies = function()
+                return 2
+            end
+            assert.are.same({ 3, 2 }, { Facade.UnitThreatSituation("player", "target") })
+            VS.LooseEnemies = loose
         end
     )
 

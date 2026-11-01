@@ -181,6 +181,6 @@ UnitRangedDamage	hybrid
 UnitSex	passthrough
 UnitSpellHaste	hybrid
 UnitStat	hybrid
-UnitThreatSituation	passthrough
+UnitThreatSituation	hybrid
 UnitTokenFromGUID	passthrough
 UnitWeaponAttackPower	hybrid

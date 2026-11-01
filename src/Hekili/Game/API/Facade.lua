@@ -402,6 +402,18 @@ end, "player plain in combat [probe 2026-10-16], HealthMax() when secret; target
 
 kept("UnitGetTotalAbsorbs", "virtual", zero, "target secret always [W PR14]")
 
+-- Threat: the client's status while plain, nothing when secret; then the hostiles attacking someone else (border
+-- batch 2; Engine/Schema/Threat.lua's `loose`), whatever the units asked.
+hybrid(
+    "UnitThreatSituation",
+    nothing,
+    "plain in combat [W PR14; gate spike]; nothing when secret; then the loose hostiles (border batch 2)",
+    1,
+    function()
+        return VS.LooseEnemies()
+    end
+)
+
 ----------------------------------------------------------------------------------------------------------------------
 -- Stats: the out-of-combat cache [W PR2, PR4]
 
@@ -1159,7 +1171,6 @@ local PASSTHROUGH = {
     { "UnitPowerType", "plain [W PR16]" },
     { "UnitRace", "plain [W sweep 2026-10-16]" },
     { "UnitSex", "plain [W sweep 2026-10-16]" },
-    { "UnitThreatSituation", "plain in combat [W PR14; gate spike]" },
     { "UnitTokenFromGUID", "plain [W sweep 2026-10-16]" },
 }
 for i = 1, #PASSTHROUGH do
