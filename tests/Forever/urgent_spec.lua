@@ -72,6 +72,21 @@ describe("Hekili's own handlers force the cycles the urgent lane used to (E14)",
         assert.is_true(forced())
     end)
 
+    it("a presence provider's edge forces only past the plain walk, and only when it differs from the belief", function()
+        local I = H.ns.VirtualStateInternal
+        local t = ctl.now
+        assert.is_true(I.auras.n >= 1 and I.auras.exp0[1][1] <= t) -- aura 1 is believed down
+        I.presence.onEdge(1, 1, true, t)
+        assert.is_false(forced()) -- a clean walk answers for the player: the edge is not news
+        ctl.auras.player.HELPFUL[1] = require("Game.State.helpers.fake_api").SECRET
+        H.Fire("UNIT_AURA", "player") -- a secret entry: the walk is incomplete
+        forced()
+        I.presence.onEdge(1, 1, false, t)
+        assert.is_false(forced()) -- agrees with the belief
+        I.presence.onEdge(1, 1, true, t)
+        assert.is_true(forced())
+    end)
+
     it("the swing timer's event forces", function()
         H.Fire("PLAYER_SWING", 2.6, 0)
         assert.is_true(forced())
