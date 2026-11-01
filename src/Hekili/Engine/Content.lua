@@ -5,8 +5,7 @@
 -- (a class with no pack still gets the shared and race content), then the player's class pack when its TOC's
 -- X-Hekili-ContentAPI is this core's CONTENT_API: the version of the content surface (the Register* API,
 -- Hekili.Client, the belief's environment names), bumped only when that surface changes. So the profile's defaults
--- (GetDefaults) and OnInitialize's RestoreDefaults see the class's spec and packs, as when the class files were in the
--- core's TOC. Missing pack, mismatch or failed load: one notice, shown by ns.ContentNotice at OnEnable (Hekili:Notify
+-- (GetDefaults) see the class's spec and packs, as when the class files were in the core's TOC. Missing pack, mismatch or failed load: one notice, shown by ns.ContentNotice at OnEnable (Hekili:Notify
 -- reads the profile, which does not exist yet), and the core runs with no class spec.
 -- Pattern after Taco Dog Forever's Boot.lua class-pack loader (its shared data addon is load-on-demand and loaded
 -- explicitly before the class pack; a pcall'd LoadAddOn; a notice for a class without a pack).

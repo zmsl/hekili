@@ -24,7 +24,6 @@ M.KNOWN_LOAD_NILS = {
     WeakAuras = "another addon",
     io = "LibDeflate.lua:3453 probes the standalone Lua io library (absent in WoW)",
     SpellFlashCore = "an optional library's host addon",
-    ChatThrottleLib = "AceComm's optional global (it embeds its own)",
     ["LibDualSpec-1.0-35 test"] = "LibStub probes a minor version",
     LibStub = "LibStub.lua's own `_G.LibStub` probe before it defines it",
     HekiliDB = "no saved variables (a fresh profile)",
@@ -36,10 +35,7 @@ M.KNOWN_LOAD_NILS = {
     ChatEdit_SendText = "chat UI",
     ChatFrameUtil = "chat UI (retail)",
     C_EventUtils = "retail-only namespace",
-    C_BattleNet = "retail-only namespace",
     C_PaperDollInfo = "retail-only namespace",
-    BNSendGameData = "Battle.net messaging",
-    Ambiguate = "chat name helper",
     AnimateTexCoords = "UI animation helper",
     TextureUtil = "retail UI helper",
     ClearCursor = "cursor UI",
@@ -253,7 +249,8 @@ end
 --- forms = { spellID... }, form }; `o.pack` the
 --- priority to select; `o.now` the clock [1000]; `o.raw` facade rows answered by the raw client (names: the oracle's
 --- secret-free client, §4), replaced as Facade.lua loads; `o.saved` the HekiliDB saved variables (default nil: a fresh
---- profile); `o.scenario` Hekili.Engine.scenario ("sim": the settings' harness defaults; default nil: in game).
+--- profile); `o.scenario` Hekili.Engine.scenario ("sim": the settings' harness defaults; default nil: in game);
+--- `o.beforeLogin` called with the loaded core, before ADDON_LOADED.
 --- Returns `H = { env, api, ctl, ns, Hekili, frames, timers, misses, errors, loadErrors, prints }`.
 function M.new(o)
     o = o or {}
@@ -970,6 +967,9 @@ function M.new(o)
         error("headless.new: the core did not load: " .. table.concat(H.loadErrors, "; "), 2)
     end
     core.Engine.scenario = o.scenario
+    if o.beforeLogin then
+        o.beforeLogin(core)
+    end
 
     -- login: ADDON_LOADED (OnInitialize: Hekili_Shared, the class pack, then the AceDB profile), PLAYER_LOGIN
     -- (OnEnable, VS.Start, the content notice) and PLAYER_ENTERING_WORLD

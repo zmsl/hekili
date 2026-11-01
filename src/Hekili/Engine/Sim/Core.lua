@@ -62,7 +62,7 @@ end
 -- OnInitialize()
 -- Addon has been loaded by the WoW client (1x).
 function Hekili:OnInitialize()
-    ns.LoadContent() -- Engine/Content.lua: the class pack first, so the profile's defaults and RestoreDefaults see its spec
+    ns.LoadContent() -- Engine/Content.lua: the class pack first, so the profile's defaults see its spec
     self:InitializeProfile() -- Options/Profile.lua: the AceDB profile, handed to the engine by Engine.Configure
 
     -- EmbedBlizOptions()
@@ -72,7 +72,7 @@ function Hekili:OnInitialize()
 
     self:CreateLaunchers() -- UI.lua: the compartment entry, the LDB data object and the minimap button
 
-    self:RestoreDefaults()
+    -- No RestoreDefaults here: class.packs fills in SpecializationChanged, so PLAYER_ENTERING_WORLD's is the one that decodes.
     self:RunOneTimeFixes()
 
     ns.primeTooltipColors()

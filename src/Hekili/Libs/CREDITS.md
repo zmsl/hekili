@@ -8,7 +8,7 @@ Forever = WoW Forever client 1.60.1.70338, `## Interface: 16001`.
 A library's own `.toc` is not loaded (Hekili loads the files through `embeds.xml`), so its `## Interface` line is
 evidence only. "Load gate" is any early return or branch keyed on build, interface or project ID.
 
-The thirteen Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development Team) copied into each folder.
+The eleven Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development Team) copied into each folder.
 
 | Library | Upstream | Pin | Licence | Author credit | Forever support upstream | Load gate |
 |---|---|---|---|---|---|---|
@@ -19,9 +19,7 @@ The thirteen Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Developmen
 | AceConsole-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
 | AceLocale-3.0 | Ace3 (`AceLocale-3.0/`) | Ace3 `Release-r1403`, d295b12 (MINOR 6; fetched 2026-10-25 from raw.githubusercontent.com/WoWUIDev/Ace3/d295b12f8b889a30e86e0e901c5494df4b149c49) | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None (reads the client's `GetLocale()` once at load, and `GAME_LOCALE`, a translator's override, when set; enGB maps to enUS) |
 | AceConfig-3.0 (Registry, Cmd, Dialog) | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
-| AceTimer-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
 | AceSerializer-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
-| AceComm-3.0 (with ChatThrottleLib) | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team; ChatThrottleLib by Mikk | No (as Ace3) | None |
 | AceEvent-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
 | AceDB-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
 | AceDBOptions-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
@@ -36,7 +34,6 @@ The thirteen Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Developmen
 | LibDBIcon-1.0 | https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0 | MINOR 57 (wowace trunk mirrored 2026-10-14) | None stated upstream (no file, no header) | wowace project libdbicon-1-0 (no author named in source) | No | None found |
 | LibDualSpec-1.0 | https://github.com/AdiAddons/LibDualSpec-1.0 | commit 71dcd66 (2026-09-20) | BSD-style with a no-standalone-redistribution clause (file header; quoted in `LICENSE-NOTE.md`) | Adirelle, Nebula | Yes: TOC `## Interface: 11509, 16001, ...`; Forever branches at lines 72-77 and 518 | `GetBuildInfo` 16000-20000 forces primary/secondary (dual spec) mode, then a Forever `GetProfileSpecialization` using `GetNumSpecGroups` |
 | LibCustomGlow-1.0 | https://github.com/Stanzilla/LibCustomGlow | commit 4f8f5c2 (2026-07-17) | MIT, `LICENSE` | deezo, Benjamin Staneck (Stanzilla) | No (TOC 120001, 120000) | `isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE` picks retail vs classic code paths (lines 16, 24, 151); no early return. Repo folder `LibCustomGlow` vendored as `LibCustomGlow-1.0` to match `embeds.xml` |
-| LibChatAnims | https://repos.wowace.com/wow/libchatanims/trunk/LibChatAnims | MINOR 7 (wowace trunk mirrored 2026-10-14) | None stated upstream (no file, no header) | wowace project libchatanims (no author named in source) | No | Early `return` when `WOW_PROJECT_ID == 1 or == 18` (line 17), retail-only block at line 256. Forever's `WOW_PROJECT_ID` is not yet confirmed, so whether it runs is unknown. Its XML uses a lowercase `<script>` tag (wow_xml_validate: error, case-sensitive element), so the client may skip the Lua file entirely |
 | LibTranslit-1.0 | https://github.com/Vardex/LibTranslit | commit 66a5aa7 (2022-11-11) | LGPL v3, `COPYING` + `COPYING.LESSER` | Vardex | No (TOC 100000) | None |
 | SpellFlashCore | Contributed copy kept in this repo (the 2024-09-15 copy; git history: added 617e3e6a 2023-11-29, last changed 1bd9f1c2 2024-07-08) | in-repo, TOC version 2.4.1 | No licence file in its folder | BigRedBrent, LightSpell | No | **Returns for builds below 110000** (`SpellFlashCore.lua` lines 1-4; 30400 for 3.4.x). Forever (16001) therefore does not load it: expected, not a Hekili failure |
 | VirtualGameAPI-1.0 | This repository | folded into `VirtualState/Facade.lua` (VirtualState Phase 1); the folder keeps only its `LICENSE` and `README.md` and is not loaded | MIT, `LICENSE` | Hekili Forever port | Yes (written for Forever) | None |
@@ -65,5 +62,4 @@ listed.
 | LibSpellRange-1.0 | licence unstated, ask or replace |
 | LibDataBroker-1.1 | licence unstated, ask or replace |
 | LibDBIcon-1.0 | licence unstated, ask or replace |
-| LibChatAnims | licence unstated, ask or replace |
 | SpellFlashCore | licence unstated, ask or replace |

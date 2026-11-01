@@ -8,6 +8,7 @@
 - Less memory churn in big pulls: the engine no longer builds its nameplate debug text on every update, only when you take a snapshot.
 - Less work per update, mostly for casters: the engine does less setup and bookkeeping each time the icons refresh, and works out an ability's cost once per moment instead of repeatedly. The recommendations are unchanged.
 - Auras on your target no longer trigger extra refreshes in combat, which matters most in raids.
+- Removed three bundled libraries the addon never used, so it no longer wakes up for addon messages in groups.
 
 ### Fixed
 - Enemies you kill leave the target count at once, so AoE and cleave lines aren't held by a dead mob for a few seconds.

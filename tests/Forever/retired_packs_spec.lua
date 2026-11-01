@@ -31,6 +31,33 @@ describe("retired built-in packs", function()
         assert.is_falsy(said:find("Retired Test|r priority was updated", 1, true), said)
     end)
 
+    it("runs RestoreDefaults once at login, and a saved retired pack still leaves by the end of it", function()
+        local calls = 0
+        local saved = {
+            profiles = {
+                Default = {
+                    packs = { Arms = { builtIn = true, spec = 71, version = 1, date = 1, lists = {}, profile = "" } },
+                },
+            },
+        }
+        local H = headless.new({
+            character = ww.character(),
+            pack = ww.PACK,
+            saved = saved,
+            beforeLogin = function(core)
+                local restore = core.RestoreDefaults
+                core.RestoreDefaults = function(...)
+                    calls = calls + 1
+                    return restore(...)
+                end
+            end,
+        })
+        assert.are.same({}, H.loadErrors)
+        assert.are.equal(1, calls)
+        assert.is_nil(rawget(H.Hekili.DB.profile.packs, "Arms"))
+        assert.is_not_nil(rawget(H.Hekili.DB.profile.packs, ww.PACK)) -- the one call is the one that decodes
+    end)
+
     it("is a kit method the content calls", function()
         local engine = require("Forever.helpers.engine")
         local env = engine.load("WARRIOR")

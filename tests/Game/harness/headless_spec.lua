@@ -29,6 +29,12 @@ describe("headless Hekili", function()
     it("reads no unset global at load or login beyond the known lists; safeAbs is not one", function()
         assert.are.same({}, headless.unexpected(H, "load"))
         assert.are.same({}, headless.unexpected(H, "login"))
+        -- Perf 1.5: gone from embeds.xml, and nothing loaded asked for them.
+        local LibStub = rawget(H.env, "LibStub")
+        for _, name in ipairs({ "AceComm-3.0", "AceTimer-3.0", "LibChatAnims" }) do
+            assert.is_nil(LibStub:GetLibrary(name, true))
+        end
+        assert.is_nil(rawget(H.env, "ChatThrottleLib"))
         assert.is_nil(H.misses.load.safeAbs)
         assert.is_nil(headless.KNOWN_LOAD_NILS.safeAbs)
         assert.are.equal(math.abs, H.Hekili.State.abs)
