@@ -135,31 +135,28 @@ describe("the tracked set", function()
         assert.are.equal(errors + 1, I.nowErrors)
     end)
 
-    it(
-        "takes a working function's nil as its answer, never its static (Warrior slam's gcdTime: nil without the talent)",
-        function()
-            local f = function()
-                return talent.talent_a.rank > 0 and 1.0 or nil -- luacheck: ignore 113 (as slam's: Improved Slam, or none)
-            end
-            local g = function()
-                return talent.talent_a.rank > 0 and 15 or nil -- luacheck: ignore 113
-            end
-            setfenv(f, h.State)
-            setfenv(g, h.State)
-            h.Class.abilities.spender_a.gcdTime, h.Class.abilities.spender_a.funcs.gcdTime = nil, f
-            h.Class.abilities.spender_a.cooldown, h.Class.abilities.spender_a.funcs.cooldown = nil, g
-            h.State.talent = { talent_a = { rank = 2 } } -- the sim's rank: the statics are 1.0 and 15
-            ns.BuildTracked()
-            ns.TrackedStatics()
-            local a = I.ab.bySpell[fs.SPENDER_A]
-            assert.are.same({ 1.0, 15 }, { I.ab.obj[a].static.gcdTime, I.ab.obj[a].static.cooldown })
-            local errors = I.nowErrors
-            -- the belief's rank is 0 (unwalked): nil is the answer, not a failure: no declared GCD time, no cooldown
-            assert.are.equal(1.5, I.GcdLen(a, 1)) -- the spell kind's default, not the static 1.0
-            assert.are.equal(0, I.CooldownOf(a, 1))
-            assert.are.equal(errors, I.nowErrors)
+    it("takes a working function's nil as its answer, never its static (nil while its talent is unranked)", function()
+        local f = function()
+            return talent.talent_a.rank > 0 and 1.0 or nil -- luacheck: ignore 113 (a talent's value, or none)
         end
-    )
+        local g = function()
+            return talent.talent_a.rank > 0 and 15 or nil -- luacheck: ignore 113
+        end
+        setfenv(f, h.State)
+        setfenv(g, h.State)
+        h.Class.abilities.spender_a.gcdTime, h.Class.abilities.spender_a.funcs.gcdTime = nil, f
+        h.Class.abilities.spender_a.cooldown, h.Class.abilities.spender_a.funcs.cooldown = nil, g
+        h.State.talent = { talent_a = { rank = 2 } } -- the sim's rank: the statics are 1.0 and 15
+        ns.BuildTracked()
+        ns.TrackedStatics()
+        local a = I.ab.bySpell[fs.SPENDER_A]
+        assert.are.same({ 1.0, 15 }, { I.ab.obj[a].static.gcdTime, I.ab.obj[a].static.cooldown })
+        local errors = I.nowErrors
+        -- the belief's rank is 0 (unwalked): nil is the answer, not a failure: no declared GCD time, no cooldown
+        assert.are.equal(1.5, I.GcdLen(a, 1)) -- the spell kind's default, not the static 1.0
+        assert.are.equal(0, I.CooldownOf(a, 1))
+        assert.are.equal(errors, I.nowErrors)
+    end)
 
     it("forwards a resource's player-aura regen entries to the resources family", function()
         h.Class.resources.rage.state.regenModel.regen_aura_a = { aura = "regen_aura_a", interval = 1, value = 1 }

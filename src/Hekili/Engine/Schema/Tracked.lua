@@ -5,11 +5,11 @@
 -- (border batch 4, the owner's design 2026-11-01): no metatable, never a live Hekili table. Each field is a value, a
 -- function the belief runs in its own `now` context, or absent; Spec.lua's `funcs` are flattened in beside the raw
 -- fields. A function field may carry a static value the core computes under `state` once the talents are known
--- (ns.TrackedStatics, after ns.updateTalents): the belief's order is the function in its context, then the static,
--- then 0. No function in `def` has `state` as its environment at runtime, but one that names `state` through its
--- file-level upvalue (or a file-local helper's) still reads Hekili's state when the belief runs it, until border
--- batch 5 closes them (docs/dev/architecture.md §1 lists them: regen `fsr`/`decay`/`mp5`/`spirit`/`value` entries,
--- the swing `value`/`crit`, Warrior's `taken`, Priest's `now`). Allocates; SpecializationChanged only.
+-- (ns.TrackedStatics, after ns.updateTalents): the belief's order is the function in its context, then the static only
+-- if it raised (a working function's nil is its answer), then 0. The belief runs no function in `def` with `state` as
+-- its environment (I.Eval, Game/State/Families/Casts.lua, swaps it for the call; `now`, `onCrit` and `taken` are bound
+-- to the context), but a pack function naming `state` through a file-level upvalue still reaches it, until border
+-- batch 5 closes them (docs/dev/architecture.md §1). Allocates; SpecializationChanged only.
 
 local addon, ns = ...
 local Hekili = _G[addon]
