@@ -283,6 +283,14 @@ end
 -- In game the frame exists from load, so the events before login (VARIABLES_LOADED, PLAYER_LOGIN) reach Hekili.
 if realCreateFrame then
     makeFrame(realCreateFrame)
+    -- The belief starts itself once, at PLAYER_LOGIN, on a frame of its own (a subscriber of this layer like
+    -- Hekili's frames; border batch 3: the core never calls Start).
+    local boot = E.CreateFrame("Frame")
+    boot:RegisterEvent("PLAYER_LOGIN")
+    boot:SetScript("OnEvent", function(self)
+        self:UnregisterAllEvents()
+        VS.Start(client)
+    end)
 end
 
 --- VirtualState.Start's half: the frame (from `api` when the client had none at load: a headless spec), then the

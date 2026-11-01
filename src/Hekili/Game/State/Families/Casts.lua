@@ -131,7 +131,7 @@ I.OnBuild(function(def, now)
         A.charges0[a], A.next0[a] = maxCharges(a), 0
         A.queued[a], A.castStartT[a] = false, 0
         A.rMin[a], A.rMax[a] = 0, 0
-        local g, extra = obj.gcd, type(obj.key) == "string" and obj.key:sub(1, 6) == "track_" -- VS.Track: no GCD
+        local g, extra = obj.gcd, type(obj.key) == "string" and obj.key:sub(1, 6) == "track_" -- a passive: no GCD
         A.gcdKind[a] = (g == "off" or extra) and 0 or (g == "totem" and 2 or 1) -- anything else: State.lua's "spell"
         A.cd[a] = I.NewBelief("cooldown " .. tostring(obj.key))
         I.Sample(A.cd[a], "default", 0, now, 0)

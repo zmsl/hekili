@@ -443,9 +443,9 @@ describe("race packs in VirtualState's now context", function()
         ns.ResourceRegenerates = function()
             return false
         end
-        vload.adapter(ns, h)
+        vload.schema(ns, h)
         VS.Start(api)
-        VS.SpecChanged()
+        ns.BuildTracked()
         ctl.Tick(1)
         ctl.now = 5
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", a.id)

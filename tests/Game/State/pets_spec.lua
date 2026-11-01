@@ -71,7 +71,7 @@ describe("the pets family", function()
         ns.ResourceRegenerates = function()
             return false
         end
-        load.adapter(ns, h)
+        load.schema(ns, h)
         h.Class.pets.guardian_a = { token = "guardian_a", cap = 2, duration = 18, slot = 6 } -- totem slots 6-7
         h.Class.pets.guardian_alias = h.Class.pets.guardian_a -- an alias (RegisterPet's copies) is not a second pet
         register("summon_a", SUMMON, function()
@@ -97,7 +97,7 @@ describe("the pets family", function()
 
     local function start()
         VS.Start(api)
-        VS.SpecChanged()
+        ns.BuildTracked()
         ctl.Tick(1)
         VS.Drain(1)
     end
@@ -259,7 +259,7 @@ describe("the simulation's pet reads", function()
         local H = headless.new()
         local VS, I = H.ns.VirtualState, H.ns.VirtualStateInternal
         H.Hekili.Class.pets.guardian_a = { token = "guardian_a", cap = 2, duration = 18, slot = 6 }
-        VS.SpecChanged()
+        H.ns.BuildTracked()
         local t, S = H.ctl.now, H.Hekili.State
         S.reset("AOE") -- partial: a class-neutral boot has no spec, whose state tables a full reset walks
         assert.is_false(S.pet.up)
@@ -278,7 +278,7 @@ describe("the simulation's pet reads", function()
         local H = headless.new()
         local S = H.Hekili.State
         H.ctl.exists.pet, H.ctl.petPower = true, 420
-        H.ns.VirtualState.SpecChanged()
+        H.ns.BuildTracked()
         S.reset("AOE") -- partial: a class-neutral boot has no spec, whose state tables a full reset walks
         assert.are.equal(420, S.pet.mana)
         assert.are.equal(0, S.pet.energy) -- not the pet's power type

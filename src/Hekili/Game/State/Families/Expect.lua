@@ -120,7 +120,7 @@ end
 X.Malformed = malformed -- the pack check (tests/Forever/expects_spec.lua) runs the build's own rule
 
 I.OnBuild(function(def)
-    local SCHOOL = ns.SCHOOL
+    local SCHOOL = def.school -- the core's spell schools by name (Spec.lua), carried in the build
     local byKey = {} -- once a build
     for j = 1, #(def.auras or {}) do
         local au = def.auras[j]

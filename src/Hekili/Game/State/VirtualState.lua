@@ -226,24 +226,11 @@ function VS.Tracked(kind, out)
     return n
 end
 
--- The pack exception (spec §3.6): IDs a class pack adds, merged at the next build.
-I.extra = { abilities = {}, auras = {}, units = {}, talents = {} }
-
---- Adds IDs core does not already track: `abilities` (spell IDs: cooldown flags and usability only), `auras` (spell
---- IDs, tracked on every aura unit), `units` (unit tokens walked for auras), `talents` (alias spell ID = the talent's
---- registered spell ID). They join the tracked set at the next SpecChanged. Allocates; load time only.
----@param t table
-function VS.Track(t)
-    for kind, list in pairs(t) do
-        local into = I.extra[kind]
-        if into then
-            for k, v in pairs(list) do
-                if type(k) == "number" and kind ~= "talents" then
-                    into[#into + 1] = v
-                else
-                    into[k] = v
-                end
-            end
-        end
-    end
+--- Rebuilds the tracked set from `def`, the core's build (Engine/Schema/Tracked.lua): Hekili's ability and aura
+--- tables with their IDs and spender slots, the resources, talents, units, guardians, providers, and the core's
+--- constants and channels. Every family allocates its arrays and records; the records are cleared. Allocates; a spec
+--- change only (never a toggle: Drain swaps the providers).
+---@param def table
+function VS.Build(def)
+    I.Build(def, ns.Facade.GetTime())
 end

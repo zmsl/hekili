@@ -47,9 +47,9 @@ describe("resource modifiers", function()
             costMods = { { aura = "mod_aura_a", pct = -0.10, charges = 3, spells = { fs.SPENDER_B, 999999 } } },
         }
         function h:ForceUpdate() end
-        load.adapter(ns, h)
+        load.schema(ns, h)
         VS.Start(api)
-        VS.SpecChanged()
+        ns.BuildTracked()
         ctl.Tick(1)
         I.ObsLog.Clear(I.log)
     end)
@@ -73,7 +73,7 @@ describe("resource modifiers", function()
         I.Fold(4)
         assert.are.equal(120, I.res.max[1]) -- the plain read keeps winning
         ns.raceMods = { maxMods = {}, costMods = {} } -- another race: no modifier
-        VS.SpecChanged()
+        ns.BuildTracked()
         assert.are.equal(100, I.res.max[1])
     end)
 
@@ -111,7 +111,7 @@ describe("resource modifiers", function()
 
     it("never raises a point resource's maximum", function()
         h.Class.resources.combo_points = { type = 4 }
-        VS.SpecChanged()
+        ns.BuildTracked()
         local R = I.res
         assert.are.same({ 105, 100 }, { R.max[R.slotOfToken.RAGE], R.max[R.slotOfToken.COMBO_POINTS] })
     end)
@@ -119,12 +119,12 @@ describe("resource modifiers", function()
     it("matches a listed `copy` rank, and every ability of the resource when `spells` is absent", function()
         local spender_b, spender_c = I.ab.bySpell[fs.SPENDER_B], I.ab.bySpell[fs.SPENDER_C]
         ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -0.10, spells = { fs.SPENDER_C_R2 } } }
-        VS.SpecChanged()
+        ns.BuildTracked()
         I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
         I.clock = 5
         assert.are.same({ 15, 9 }, { I.CostOf(spender_b), I.CostOf(spender_c) }) -- spender_c by its rank 2 ID
         ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -0.10 } }
-        VS.SpecChanged()
+        ns.BuildTracked()
         I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
         assert.are.same({ 13.5, 9 }, { I.CostOf(spender_b), I.CostOf(spender_c) })
     end)
@@ -132,7 +132,7 @@ describe("resource modifiers", function()
     it("spends a charge on a cast the modifier made free (pct = -1, a proc's shape)", function()
         local spender_b = I.ab.bySpell[fs.SPENDER_B]
         ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -1, charges = 1, spells = { fs.SPENDER_B } } }
-        VS.SpecChanged()
+        ns.BuildTracked()
         I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 1, 5, VS.Obs.CastSuccess, false)
         I.clock = 5
         assert.are.equal(0, I.CostOf(spender_b))
@@ -146,7 +146,7 @@ describe("resource modifiers", function()
         function()
             local spender_c = I.ab.bySpell[fs.SPENDER_C]
             ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -1, charges = 1, spells = { fs.SPENDER_C } } }
-            VS.SpecChanged()
+            ns.BuildTracked()
             local j = I.auras.bySpell[MOD_AURA]
             I.AuraModel(1, j, 5, 20, 1, 5, VS.Obs.CastSuccess, false)
             I.clock = 5
@@ -211,8 +211,8 @@ describe("resource modifiers", function()
             { resource = "rage", aura = "mod_aura_b", mult = 2 },
             { resource = "mana", aura = "mod_aura_b", mult = 2 }, -- the class has no mana: inert
         }
-        VS.SpecChanged()
-        VS.SpecChanged() -- a rebuild adds it once
+        ns.BuildTracked()
+        ns.BuildTracked() -- a rebuild adds it once
         local R = I.res
         local M = R.regenMult
         assert.are.same({ 1, R.slotOfToken.RAGE, 2 }, { M.n, M.slot[1], M.mult[1] })

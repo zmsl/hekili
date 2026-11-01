@@ -196,12 +196,14 @@ function M.new(swingValue, kinds, ranged, expect)
     return hekili
 end
 
---- The tracked-set definition Adapter.lua would build from M.new()'s class (for family specs without the Adapter).
+--- The tracked-set definition the core would build from M.new()'s class (Engine/Schema/Tracked.lua, for family
+--- specs without it).
 function M.def(hekili)
     local class = hekili.Class
     local rage = class.resources.rage
     local mh = rage.state.regenModel.mainhand
     local def = {
+        school = require("Game.State.helpers.load").school(),
         abilities = { class.abilities.spender_a, class.abilities.spender_b, class.abilities.spender_c },
         abilityIds = { { M.SPENDER_A }, { M.SPENDER_B }, { M.SPENDER_C, M.SPENDER_C_R2 } },
         abilitySlot = { 1, 1, 1 },
@@ -231,7 +233,7 @@ function M.def(hekili)
     return def
 end
 
---- One drain without Hekili: the polls, the fold, the settle (Adapter's Drain minus the apply).
+--- One drain without Hekili: the polls, the fold, the settle (VS.Drain minus the apply).
 function M.fold(ns, t)
     local I = ns.VirtualStateInternal
     I.Sources.RunPolls(t)

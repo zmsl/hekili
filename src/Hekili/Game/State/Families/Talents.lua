@@ -27,13 +27,6 @@ I.OnBuild(function(def)
         T.key[k], T.spell[k], T.max[k], T.rank[k] = d.key, d.spell, d.max or 1, 0
         T.bySpell[d.spell] = k
     end
-    -- the pack's aliases (VirtualState.Track{ talents = { [rankSpell] = registeredSpell } })
-    for alias, spell in pairs(I.extra.talents) do
-        local k = T.bySpell[spell]
-        if k then
-            T.bySpell[alias], T.alias[alias] = k, true
-        end
-    end
 end)
 
 --- Sets talent k's rank (the walk, Sources/Talents.lua); bumps TalentGen when it changed. True when it changed.

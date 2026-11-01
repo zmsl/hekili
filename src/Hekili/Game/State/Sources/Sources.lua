@@ -197,3 +197,27 @@ function VS.Start(api)
         end
     end
 end
+
+----------------------------------------------------------------------------------------------------------------------
+-- The drain (event-facade spec §12a): our casts' effects are written by the `now` handlers as the fold reaches them
+-- (Families/Now.lua); the core's state is never reset or replayed here.
+
+local debugprofilestop = debugprofilestop
+
+--- The fold, the core's one per-update call into the belief (Engine/Sim/Core.lua, after its guards): this frame's
+--- staged observations, the polls, the fold to the cut-off, the settle, and the believed aura deltas as UNIT_AURA
+--- (the core's own handler marks the rescan, G1; the drain writes nothing of the core's). Allocates nothing.
+---@param cutoff number GetTime() at the drain's entry
+function VS.Drain(cutoff)
+    if not I.built then
+        return
+    end
+    local t0 = debugprofilestop()
+    local casts = I.castsRun
+    S.Flush() -- this frame's staged observations first, whichever OnUpdate runs first (poll 3's Queued(0) follows them)
+    S.RunPolls(cutoff)
+    I.Fold(cutoff)
+    I.Settle(cutoff)
+    I.DeliverAuraDeltas(cutoff)
+    I.drainMs, I.drainCasts = debugprofilestop() - t0, I.castsRun - casts
+end

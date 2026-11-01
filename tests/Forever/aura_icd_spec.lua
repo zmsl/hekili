@@ -57,10 +57,10 @@ describe("a proc aura's internal cooldown", function()
         return st.buff.battle_shout.icd_remains
     end
 
-    -- `icd` declared, then the belief rebuilt from the spec (Adapter's VS.SpecChanged reads it at build).
+    -- `icd` declared, then the belief rebuilt from the spec (the core's build reads it).
     local function declare()
         aura.icd = 10
-        H.ns.VirtualState.SpecChanged()
+        H.ns.BuildTracked()
     end
 
     it("from the client: an aura already up at the first clean walk (a reload) has an unknown gain: ready", function()

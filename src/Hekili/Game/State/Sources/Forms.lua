@@ -72,9 +72,9 @@ local function read(api, t)
         if j then
             isForm[j] = true
             Direct(Obs.Read, t, j, i == active and -1 or 0, ReadOf.Aura) -- a = j: unit 1, the player
-        elseif type(spell) == "number" and not warned[spell] and ns.Error then -- Utils.lua loads after Game/
+        elseif type(spell) == "number" and not warned[spell] and I.def.error then -- the core's channel, in the build
             warned[spell] = true
-            ns.Error(UNTRACKED, i, spell) -- formats only here: once per spell per build
+            I.def.error(UNTRACKED, i, spell) -- formats only here: once per spell per build
         end
     end
 end

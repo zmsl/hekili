@@ -45,7 +45,7 @@ describe("now handlers", function()
         ns.ResourceRegenerates = function()
             return false
         end
-        load.adapter(ns, h)
+        load.schema(ns, h)
         rows = {}
         cleu = I.Events.CreateFrame("Frame")
         cleu:SetScript("OnEvent", function()
@@ -65,7 +65,7 @@ describe("now handlers", function()
 
     local function start()
         VS.Start(api)
-        VS.SpecChanged()
+        ns.BuildTracked()
         ctl.Tick(1)
         I.ObsLog.Clear(I.log)
     end
@@ -441,8 +441,8 @@ describe("now handlers", function()
         assert.is_nil(VS.Aura("target", fs.SPENDER_C, 1.5))
     end)
 
-    it("gives a tracked extra (VS.Track) no effects: no GCD, no cooldown", function()
-        I.extra.abilities[#I.extra.abilities + 1] = 9898
+    it("gives a tracked passive (ns.TrackPassive) no effects: no GCD, no cooldown", function()
+        ns.TrackPassive(9898)
         start()
         local g = VS.Gcd(30).basis
         cast(9898, 30)
@@ -1006,7 +1006,7 @@ describe("now handlers", function()
         it("an ability's own share overrides the class's; an ability without one refunds nothing", function()
             begin()
             h.Class.abilities.spender_c.refundOnAvoid = 0.5
-            VS.SpecChanged()
+            ns.BuildTracked()
             ctl.usable[fs.SPENDER_C] = { true, false }
             ctl.now = 4
             VS.Drain(4)
@@ -1014,7 +1014,7 @@ describe("now handlers", function()
             castOutcome(fs.SPENDER_C, 5, "DODGE")
             assert.are.equal(5, VS.Power(fs.RAGE, 5.1).est)
             h.Class.abilities.spender_c.refundOnAvoid = nil
-            VS.SpecChanged()
+            ns.BuildTracked()
             ctl.usable[fs.SPENDER_C] = { true, false }
             ctl.now = 9
             VS.Drain(9)

@@ -1,6 +1,7 @@
 -- tests/Game/State/helpers/load.lua
 -- Loads the VirtualState files headless, in Hekili.toc order, into a fresh `ns` (each spec gets its own module
--- state). Adapter.lua needs Hekili, so it loads only through `load.adapter`.
+-- state). The core's build of the tracked set (Engine/Schema/Tracked.lua) needs Hekili, so it loads only through
+-- `load.schema`.
 local M = {}
 
 --- The addon root (what WoW loads), relative to the repository root; Hekili.toc paths are relative to it.
@@ -17,16 +18,20 @@ function M.files()
     return out
 end
 
---- Spec.lua's school enum (Engine/Schema loads after Game in Hekili.toc and needs Hekili, so a headless ns, or a fake
---- Hekili, takes the table from Spec.lua's own line: one source of truth).
+--- Spec.lua's school enum, as a hand-built `def.school` (Engine/Schema loads after Game in Hekili.toc and needs
+--- Hekili, so a fake takes the table from Spec.lua's own line: one source of truth). Read once.
+local school
 function M.school()
-    local src = assert(io.open(M.ROOT .. "Engine/Schema/Spec.lua")):read("*a")
-    return assert(loadstring("return " .. assert(src:match("ns%.SCHOOL = (%b{})"))))()
+    if not school then
+        local src = assert(io.open(M.ROOT .. "Engine/Schema/Spec.lua")):read("*a")
+        school = assert(loadstring("return " .. assert(src:match("ns%.SCHOOL = (%b{})"))))()
+    end
+    return school
 end
 
---- A fresh ns with every VirtualState file but Adapter.lua loaded, `ns.SCHOOL` seeded as Spec.lua sets it.
+--- A fresh ns with every VirtualState file but Adapter.lua loaded.
 function M.module()
-    local ns = { SCHOOL = M.school() }
+    local ns = {}
     for _, path in ipairs(M.files()) do
         if not path:match("Adapter%.lua$") then
             assert(loadfile(path))("Hekili", ns)
@@ -35,11 +40,13 @@ function M.module()
     return ns
 end
 
---- Loads Adapter.lua into `ns` with `_G.Hekili` set to `hekili` (its State, Class) for the duration.
-function M.adapter(ns, hekili)
+--- Loads the core's build of the tracked set (Engine/Schema/Tracked.lua: `ns.BuildTracked`, `ns.TrackPassive`) into
+--- `ns` with `_G.Hekili` set to `hekili` (its State, Class) for the duration; `ns.SCHOOL` seeded as Spec.lua sets it.
+function M.schema(ns, hekili)
     local saved = rawget(_G, "Hekili")
     _G.Hekili = hekili
-    assert(loadfile(M.ROOT .. "Game/State/Adapter.lua"))("Hekili", ns)
+    ns.SCHOOL = ns.SCHOOL or M.school()
+    assert(loadfile(M.ROOT .. "Engine/Schema/Tracked.lua"))("Hekili", ns)
     _G.Hekili = saved
 end
 

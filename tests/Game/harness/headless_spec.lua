@@ -164,9 +164,17 @@ describe("headless Hekili", function()
     end)
 
     -- The content surface (restructure plan, Task 8): content reads the belief through four environment names, never
-    -- through VirtualState, and declares a passive instead of calling VS.Track.
+    -- through VirtualState, and declares a passive instead of asking the belief to track an ID.
     describe("the content's environment names", function()
         local VS, I, S
+        local function pos(list, v)
+            for i = 1, #list do
+                if list[i] == v then
+                    return i
+                end
+            end
+            return nil
+        end
         local function probe()
             return knownRank, swingBase, healthMax, stat -- luacheck: ignore 113 (the env names)
         end
@@ -278,18 +286,21 @@ describe("headless Hekili", function()
             )
         end)
 
-        it("forwards a passive ability to the belief's tracked set and registers no ability", function()
-            local track, seen = VS.Track, nil
-            VS.Track = function(t)
-                seen = t
+        it(
+            "forwards a passive ability to the belief's tracked set at the next build and registers no ability",
+            function()
+                H.Hekili.Class.specs[0]:RegisterAbility("passive_probe", { id = 999003, passive = true })
+                local out = {}
+                VS.Tracked("ability", out)
+                assert.is_nil(pos(out, 999003))
+                H.ns.BuildTracked()
+                VS.Tracked("ability", out)
+                assert.is_truthy(pos(out, 999003))
+                assert.is_nil(rawget(H.Hekili.Class.specs[0].abilities, "passive_probe"))
+                assert.has_error(function()
+                    H.Hekili.Class.specs[0]:RegisterAbility("passive_noid", { passive = true })
+                end)
             end
-            H.Hekili.Class.specs[0]:RegisterAbility("passive_probe", { id = 999003, passive = true })
-            VS.Track = track
-            assert.are.same({ abilities = { 999003 } }, seen)
-            assert.is_nil(rawget(H.Hekili.Class.specs[0].abilities, "passive_probe"))
-            assert.has_error(function()
-                H.Hekili.Class.specs[0]:RegisterAbility("passive_noid", { passive = true })
-            end)
-        end)
+        )
     end)
 end)

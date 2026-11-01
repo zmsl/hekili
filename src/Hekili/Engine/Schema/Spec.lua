@@ -915,7 +915,7 @@ local HekiliSpecMixin = {
         -- A passive (a spell the spellbook knows, never cast): the belief tracks its known rank; the sim never sees it.
         if data.passive then
             assert( type( data.id ) == "number", "RegisterAbility: passive " .. tostring( ability ) .. " needs a numeric id" )
-            ns.VirtualState.Track( { abilities = { data.id } } )
+            ns.TrackPassive( data.id )
             return
         end
 
@@ -2506,8 +2506,9 @@ function Hekili:SpecializationChanged()
 
     ns.callHook( "specializationChanged" )
 
-    -- VirtualState tracks what this spec registered; its talent walk runs here, before ns.updateTalents reads the ranks.
-    ns.VirtualState.SpecChanged()
+    -- the belief tracks what this spec registered (Engine/Schema/Tracked.lua); its talent walk runs here, before
+    -- ns.updateTalents reads the ranks.
+    ns.BuildTracked()
 
     ns.updateTalents()
     if kit then self:SettleSpecChoice( clientID ) end

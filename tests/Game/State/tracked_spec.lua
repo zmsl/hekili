@@ -1,10 +1,11 @@
--- tests/Game/State/adapter_spec.lua: Adapter.lua against the fake spec provider (spec §3.6, §4.6, §5): the tracked
--- set from the registrations, and Drain (the fold; our casts' effects are Families/Now.lua's, see now_spec.lua).
+-- tests/Game/State/tracked_spec.lua: the core's build of the tracked set (Engine/Schema/Tracked.lua) against the fake
+-- spec provider (spec §3.6, §4.6, §5): the set from the registrations, VS.Build, and Drain (the fold; our casts'
+-- effects are Families/Now.lua's, see now_spec.lua).
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
 
-describe("Adapter", function()
+describe("the tracked set", function()
     local ns, VS, I, api, ctl, h, state, saved
 
     before_each(function()
@@ -29,9 +30,9 @@ describe("Adapter", function()
         ns.ResourceRegenerates = function()
             return false
         end
-        load.adapter(ns, h)
+        load.schema(ns, h)
         VS.Start(api)
-        VS.SpecChanged()
+        ns.BuildTracked()
         ctl.Tick(1)
         I.ObsLog.Clear(I.log)
     end)
@@ -65,7 +66,7 @@ describe("Adapter", function()
         h.Class.talents.talent_a_alias = { 0, 1011, 3 } -- the same talent spell under a second key
         h.Class.abilities.spender_b.copy = 1006 -- a number `copy`
         h.Class.abilities.spender_a_nospend = { key = "spender_a_nospend", id = 1005, funcs = {} } -- no spend: slot 0
-        VS.SpecChanged()
+        ns.BuildTracked()
         I.Build = build
         assert.are.same(
             { { fs.SPENDER_A }, { 1005 }, { fs.SPENDER_B, 1006 }, { fs.SPENDER_C, fs.SPENDER_C_R2 } },
@@ -80,7 +81,7 @@ describe("Adapter", function()
     it("reads each ability's GCD kind and a declared gcdTime from Hekili's ability table as it is", function()
         h.Class.abilities.spender_t = { key = "spender_t", id = fs.SPENDER_T, gcd = "totem", funcs = {} }
         h.Class.abilities.spender_u = { key = "spender_u", id = fs.SPENDER_U, gcdTime = 0.8, funcs = {} }
-        VS.SpecChanged()
+        ns.BuildTracked()
         local A, kinds = I.ab, {}
         for a = 1, A.n do
             kinds[A.key[a]] = A.gcdKind[a]
@@ -94,7 +95,7 @@ describe("Adapter", function()
         h.Class.resources.rage.state.regenModel.debuff_test =
             { aura = "spender_c", debuff = true, interval = 3, value = 2 }
         h.Class.auras.regen_aura_a = { key = "regen_aura_a", id = 1021, duration = 10 }
-        VS.SpecChanged()
+        ns.BuildTracked()
         local G = I.res.auraRegen
         assert.are.equal(1, G.n) -- the debuff entry is not a player aura
         assert.are.same({ 1, 1, 1 }, { G.slot[1], G.value[1], G.interval[1] })
@@ -107,7 +108,7 @@ describe("Adapter", function()
         st.meta = { fsr = { spirit = 3, mp5 = 1 } }
         st.regenMult = { { aura = "regen_aura_a", mult = 2 } }
         h.Class.auras.regen_aura_a = { key = "regen_aura_a", id = 1021, duration = 10 }
-        VS.SpecChanged()
+        ns.BuildTracked()
         local M = I.res.regenMult
         assert.are.same({ true, 1, 3, 1, 2 }, { I.res.fsr[1], I.res.regE[1], I.res.spE[1], M.n, M.mult[1] })
         assert.are.equal(1021, I.auras.id[M.aura[1]])
@@ -117,17 +118,17 @@ describe("Adapter", function()
         local model = h.Class.resources.rage.state.regenModel
         model.offhand = { swing = "offhand", value = 4 }
         model.regen_talent_a = { talent = "talent_a", interval = 3, value = 1 }
-        VS.SpecChanged()
+        ns.BuildTracked()
         assert.are.same({ 1, 9, 4 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
         local G = I.res.auraRegen
         assert.are.same({ 1, 0, 1, 3, 1011 }, { G.n, G.aura[1], G.value[1], G.interval[1], G.talent[1] })
         model.shield_test = { equip = "shield", interval = 2, value = 1 } -- a gate VirtualState cannot see: dropped
         model.channel_test = { channel = "spender_c", interval = 1, value = 1 }
-        VS.SpecChanged()
+        ns.BuildTracked()
         assert.are.equal(1, I.res.auraRegen.n)
         model.shield_test, model.channel_test = nil, nil
         model.mainhand = nil -- an off hand alone pays as the paying hand
-        VS.SpecChanged()
+        ns.BuildTracked()
         assert.are.same({ 2, 4, 0 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
     end)
 
@@ -138,11 +139,11 @@ describe("Adapter", function()
         end
         model.mainhand.taken = taken
         model.offhand = { swing = "offhand", value = 4, taken = function() end } -- not the paying entry: unread
-        VS.SpecChanged()
+        ns.BuildTracked()
         assert.are.equal(taken, I.res.taken[1])
         assert.are.equal(I.nowCtx, getfenv(taken))
         model.mainhand.taken, model.offhand = nil, nil
-        VS.SpecChanged()
+        ns.BuildTracked()
         assert.is_false(I.res.taken[1])
     end)
 
@@ -158,7 +159,7 @@ describe("Adapter", function()
             got = def
             return build(def, t)
         end
-        VS.SpecChanged()
+        ns.BuildTracked()
         I.Build = build
         assert.are.same({ model.regen_aura_a }, got.resources[1].auraRegen) -- the two names are no regen entries
         assert.are.equal(1, I.res.auraRegen.n)
@@ -172,13 +173,13 @@ describe("Adapter", function()
             got = def
             return build(def, t)
         end
-        VS.SpecChanged()
+        ns.BuildTracked()
         assert.are.same({ false, nil }, { got.resources[1].rest, got.resources[1].swingAura })
         ns.ResourceRegenerates = function(k)
             return k == "rage"
         end
         h.Class.resources.rage.state.regenModel.mainhand.aura = "bear_form"
-        VS.SpecChanged()
+        ns.BuildTracked()
         I.Build = build
         assert.are.same({ true, "bear_form" }, { got.resources[1].rest, got.resources[1].swingAura })
     end)

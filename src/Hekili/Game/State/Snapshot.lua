@@ -49,7 +49,7 @@ function VS.Snapshot()
         out[#out + 1] = format("read %s: %s", name, S.status[name])
     end
     if not I.built then
-        out[#out + 1] = "no tracked set yet (VirtualState.SpecChanged has not run)"
+        out[#out + 1] = "no tracked set yet (VirtualState.Build has not run)"
         return concat(out, "\n")
     end
     for k = 1, #I.SNAPSHOT do

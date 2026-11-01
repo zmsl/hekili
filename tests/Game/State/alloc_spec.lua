@@ -53,7 +53,7 @@ describe("zero allocation", function()
         ns.ResourceRegenerates = function()
             return false
         end
-        load.adapter(ns, h)
+        load.schema(ns, h)
         I.Prof.on = true -- the in-game CPU profiling path allocates nothing either
         local sink = I.Events.CreateFrame("Frame") -- a combat-log subscriber: the rows ride along
         local GetInfo = Facade.CombatLogGetCurrentEventInfo
@@ -80,7 +80,7 @@ describe("zero allocation", function()
             return buff.spender_a.up and amount / 10 or 1, 0.5 -- luacheck: ignore 113 (the `now` context's names)
         end
         VS.Start(api)
-        VS.SpecChanged()
+        ns.BuildTracked()
         state.time, state.query_time = 0, 1
         ctl.guid.target = "Creature-2" -- a target never held before: its first flip learns M, then WOUNDs move it
         ctl.Fire("PLAYER_TARGET_CHANGED")

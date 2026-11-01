@@ -125,7 +125,7 @@ local function provide(oName, pName, viewer, now, def)
 end
 
 --- Rebuilds the tracked set from `def` (spec §3.6): every family allocates its arrays and records. `def` holds
---- `abilities` (Hekili ability tables), `resources`, `auras`, `talents` and `units` (see Adapter.lua). Allocates;
+--- `abilities` (Hekili ability tables), `resources`, `auras`, `talents` and `units` (Engine/Schema/Tracked.lua). Allocates;
 --- SpecChanged only.
 function I.Build(def, now)
     I.ClearRecords()

@@ -71,9 +71,9 @@ function M.boot(ns, api, edit)
         return k == "combo_points"
     end
     ns.raceMods = { maxMods = {}, costMods = w.costMods } -- Clearcasting, as spec:RegisterCostMod appends it
-    load.adapter(ns, h)
+    load.schema(ns, h)
     VS.Start(api)
-    VS.SpecChanged()
+    ns.BuildTracked()
     return w, h
 end
 

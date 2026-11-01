@@ -6,12 +6,13 @@ local fake = require("Game.State.helpers.fake_api")
 
 local FORM_A, FORM_B, OTHER = 2457, 2458, 1099
 
-local function def(ids)
+local function def(ids, error)
     local auras, auraIds = {}, {}
     for i = 1, #ids do
         auras[i], auraIds[i] = { key = "a" .. ids[i], id = ids[i] }, { ids[i] }
     end
     return {
+        error = error, -- the core's error channel, carried in the build
         abilities = { { key = "stance" } }, -- the stance cast (ability 1)
         abilityIds = { { FORM_B } },
         abilitySlot = { 0 },
@@ -30,18 +31,19 @@ describe("forms", function()
         api, ctl = fake.new()
         local ns = load.module()
         warnings = {}
-        ns.Error = function(msg, ...) -- Utils.lua's error channel, stubbed
-            warnings[#warnings + 1] = string.format(msg, ...)
-        end
         VS, I = ns.VirtualState, ns.VirtualStateInternal
         S, Obs = I.Sources, VS.Obs
         ctl.forms = { FORM_A, FORM_B }
         ctl.form = 1
     end)
 
+    local function warn(msg, ...) -- the core's error channel (Utils.lua's ns.Error), stubbed
+        warnings[#warnings + 1] = string.format(msg, ...)
+    end
+
     local function start(ids)
         ctl.now = 1
-        I.Build(def(ids), 1)
+        I.Build(def(ids, warn), 1)
         VS.Start(api)
     end
 
@@ -189,7 +191,7 @@ describe("forms", function()
         ctl.Fire("UPDATE_SHAPESHIFT_FORM")
         poll(11)
         assert.are.equal(1, #warnings) -- the same build: no repeat
-        I.Build(def({ FORM_A }), 11)
+        I.Build(def({ FORM_A }, warn), 11)
         poll(12)
         assert.are.equal(2, #warnings)
     end)
