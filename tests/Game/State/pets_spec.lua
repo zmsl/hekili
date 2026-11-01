@@ -72,7 +72,7 @@ describe("the pets family", function()
             return false
         end
         load.adapter(ns, h)
-        h.Class.pets.guardian_a = { token = "guardian_a", cap = 2, duration = 18 }
+        h.Class.pets.guardian_a = { token = "guardian_a", cap = 2, duration = 18, slot = 6 } -- totem slots 6-7
         h.Class.pets.guardian_alias = h.Class.pets.guardian_a -- an alias (RegisterPet's copies) is not a second pet
         register("summon_a", SUMMON, function()
             summonPet("pet_a", 3600)
@@ -217,11 +217,19 @@ describe("the pets family", function()
 
     it("counts 3 guardians against a cap of 2, each with its own expiry", function()
         start()
+        assert.are.same({ false, "", 0, 0, 0 }, { ns.Facade.GetTotemInfo(6) }) -- a free guardian slot: no totem
         cast(GUARD, 10)
         cast(GUARD, 12)
         assert.are.same({ 2, 30 }, { VS.PetCount("guardian_a", 12.1) })
+        -- the facade's totem slots past the client's five, one per guardian: its key, start and duration
+        assert.are.same({ true, "guardian_a", 10, 18, 0, 1, 0 }, { ns.Facade.GetTotemInfo(6) })
+        assert.are.same({ true, "guardian_a", 12, 18, 0, 1, 0 }, { ns.Facade.GetTotemInfo(7) })
+        assert.are.same({ false, "", 0, 0, 0 }, { ns.Facade.GetTotemInfo(8) }) -- past the cap: no slot
         cast(GUARD, 14) -- the third: the oldest (10's) gives way
         assert.are.same({ 2, 32 }, { VS.PetCount("guardian_a", 14.1) })
+        assert.are.same({ true, "guardian_a", 14, 18, 0, 1, 0 }, { ns.Facade.GetTotemInfo(6) })
+        ctl.now = 30.5
+        assert.are.same({ false, "guardian_a", 12, 18, 0, 1, 0 }, { ns.Facade.GetTotemInfo(7) }) -- expired: its times stay
         assert.are.same({ 1, 32 }, { VS.PetCount("guardian_a", 30.5) }) -- 12's expired at 30
         assert.are.same({ 0, 0 }, { VS.PetCount("guardian_a", 32.5) })
         assert.are.same({ 0, 0 }, { VS.PetCount("guardian_alias", 14.1) }) -- one pet, under its token
@@ -243,6 +251,7 @@ describe("the pets family", function()
             ctl.petPower = t % 7
             cast(DISMISS, t + 0.7)
             local _ = ns.Facade.UnitExists("pet"), ns.Facade.UnitIsDead("pet"), VS.PetCount("guardian_a", t)
+            _ = ns.Facade.GetTotemInfo(6)
             _ = ns.Facade.UnitPower("pet", 0), VS.PetPower()
         end, 1000)
         assert.are.equal(0, bytes)
@@ -253,7 +262,7 @@ describe("the simulation's pet reads", function()
     it("answers pet.up from the modelled summon and pet.<key>.count from the guardians", function()
         local H = headless.new()
         local VS, I = H.ns.VirtualState, H.ns.VirtualStateInternal
-        H.Hekili.Class.pets.guardian_a = { token = "guardian_a", cap = 2, duration = 18 }
+        H.Hekili.Class.pets.guardian_a = { token = "guardian_a", cap = 2, duration = 18, slot = 6 }
         VS.SpecChanged()
         local t, S = H.ctl.now, H.Hekili.State
         S.reset("AOE") -- partial: a class-neutral boot has no spec, whose state tables a full reset walks

@@ -96,7 +96,7 @@ local def = {
     auraIds = {},
     talents = {},
     units = {},
-    pets = {}, -- the guardians: { key, cap, duration } of each pet registered with a `cap` (Families/Pets.lua)
+    pets = {}, -- the guardians: { key, cap, duration, slot } of each pet registered with a `cap` (Families/Pets.lua)
     providers = {}, -- outcomes, presence, viewer: the experimental toggles (providersOf)
 }
 
@@ -269,7 +269,7 @@ local function buildDef()
     for _, k in ipairs(sortedKeys(class.pets or NO_PETS)) do
         local p = class.pets[k]
         if p.token == k and type(p.cap) == "number" and p.cap >= 1 then -- its token's entry, not an alias's
-            insert(def.pets, { key = k, cap = floor(p.cap), duration = p.duration })
+            insert(def.pets, { key = k, cap = floor(p.cap), duration = p.duration, slot = p.slot })
         end
     end
     def.units[1], def.units[2] = "player", "target"

@@ -282,6 +282,10 @@ local function takenEntry( resource, res )
     return e
 end
 
+-- Forever (border batch 2, E11): the facade's totem slots handed to capped guardians so far (RegisterPets); the
+-- client's are 1-5.
+local guardianSlots = 0
+
 local HekiliSpecMixin = {
     RegisterResource = function( self, resourceID, regen, model, meta )
         local resource = GetResourceKey( resourceID )
@@ -1357,6 +1361,8 @@ local HekiliSpecMixin = {
 
     RegisterPets = function( self, pets )
         for token, data in pairs( pets ) do
+            -- Forever (border batch 2, E11): a capped guardian's summons sit in the facade's totem slots past the client's
+            -- five (one per summon from `slot`); mt_pet's count reads them with GetTotemInfo at the query time.
             -- Extract fields from the pet definition.
             local id = data.id
             local spell = data.spell
@@ -1371,6 +1377,10 @@ local HekiliSpecMixin = {
             end
             -- Forever (content API 5): `cap` makes it a guardian the belief counts per summon (Game/State/Families/Pets.lua)
             self.pets[ token ].cap = data.cap
+            if data.cap then
+                self.pets[ token ].slot = 6 + guardianSlots
+                guardianSlots = guardianSlots + data.cap
+            end
         end
     end,
 

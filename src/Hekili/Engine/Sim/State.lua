@@ -507,7 +507,6 @@ state.select = select
 -- (audit E8, E10); in the `now` context the belief's own (Game/State/Families/Now.lua). Here `stat` is two things:
 -- `stat.<field>` (stat.crit) is the sim's stat table, as upstream; calling it, stat(name, arg), is the client's stat
 -- API of that name (mt_stat's __call below). In a `now` handler `stat` is only the plain function.
-local VS = ns.VirtualState
 
 --- A cost `c` between 0 and 1 of resource state `res`, as power: that fraction of the pool's base power, floored, when
 --- the reset's UnitPowerMax read carried one (`res.base`: the pack's declared or the one learned from the client's
@@ -2645,11 +2644,19 @@ do
                 return ( t.expires < ( state.query_time ) )
 
             elseif k == "count" then
-                -- Forever: a capped guardian's count is the belief's (Game/State/Families/Pets.lua); another pet's 1 while up.
+                -- Forever: a capped guardian's summons are totems in the facade's slots past the client's five (RegisterPets'
+                -- `slot`, one per guardian): those still up at the query time count; another pet's 1 while up.
                 -- shortcut: the belief's at query_time, so a summon this simulation predicts adds none; count it in the
                 -- class's handler if an APL needs it.
                 local model = rawget( t, "model" )
-                if model and model.cap then return ( VS.PetCount( model.token, state.query_time ) ) end
+                if model and model.slot then
+                    local n = 0
+                    for i = model.slot, model.slot + model.cap - 1 do
+                        local _, _, start, duration = GetTotemInfo( i )
+                        if duration > 0 and start + duration > state.query_time then n = n + 1 end
+                    end
+                    return n
+                end
                 return t.up and 1 or 0
 
             elseif k == "id" then

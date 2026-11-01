@@ -560,14 +560,33 @@ end, "LibRangeCheck resolves nothing on Forever (gap 13); TargetRange() (border 
 ----------------------------------------------------------------------------------------------------------------------
 -- Totems [W PR12]
 
-hybrid("GetTotemInfo", function(slot)
+local function totemPolicy(slot)
     local spellID, name, icon, start = VS.TotemFacts(slot)
     local rec = spellID and VS.Totem(slot, now())
     if not rec then
         return false, "", 0, 0, 0
     end
     return true, name, start, rec.est - start, icon, 1, spellID
-end, "secret in combat [W PR12]; Totem(), TotemFacts()")
+end
+
+-- Past the client's five slots: a capped guardian's summons (Families/Pets.lua), one slot each from the pet's
+-- registered `slot`, in the totem shape (the key as the name; no icon or spell); Hekili counts start + duration
+-- against its query time (border batch 2, E11). The client is never asked.
+local realGetTotemInfo = resolve("GetTotemInfo")
+kept("GetTotemInfo", realGetTotemInfo and "hybrid" or "virtual", function(slot)
+    if type(slot) == "number" and slot > 5 then
+        modelled = true
+        local key, start, duration, expiry = VS.Guardian(slot)
+        if not key or expiry == 0 then
+            return false, "", 0, 0, 0
+        end
+        return expiry > now(), key, start, duration, 0, 1, 0
+    end
+    if realGetTotemInfo then
+        return pick(totemPolicy, slot, nil, nil, realGetTotemInfo(slot))
+    end
+    return totemPolicy(slot)
+end, "secret in combat [W PR12]; Totem(), TotemFacts(); slots past 5 are the belief's guardians (border batch 2, E11)")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Auras [W §4]: one shared AuraData per index slot, one more for the by-ID and by-instance reads.
