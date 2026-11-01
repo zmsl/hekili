@@ -6,10 +6,11 @@
 -- function the belief runs in its own `now` context, or absent; Spec.lua's `funcs` are flattened in beside the raw
 -- fields. A function field may carry a static value the core computes under `state` once the talents are known
 -- (ns.TrackedStatics, after ns.updateTalents): the belief's order is the function in its context, then the static only
--- if it raised (a working function's nil is its answer), then 0. The belief runs no function in `def` with `state` as
--- its environment (I.Eval, Game/State/Families/Casts.lua, swaps it for the call; `now`, `onCrit` and `taken` are bound
--- to the context), but a pack function naming `state` through a file-level upvalue still reaches it, until border
--- batch 5 closes them (docs/dev/architecture.md §1). Allocates; SpecializationChanged only.
+-- if it raised (a working function's nil is its answer), then 0. Nothing in `def` runs under `state` at runtime: the
+-- belief swaps a function's environment for the call (I.Eval, Game/State/Families/Casts.lua; `now`, `onCrit` and `taken`
+-- are bound to the context), and no function it evaluates captures `state`, `Hekili` or `class`
+-- (tests/Forever/plain_records_spec.lua). What only the core knows arrives as a number (`fsrOf`). Allocates;
+-- SpecializationChanged only.
 
 local addon, ns = ...
 local Hekili = _G[addon]
@@ -109,6 +110,24 @@ local function recordOf(a)
     end
     rec.baseSpend, rec.declaredSpend, rec.onLoad = nil, nil, nil
     return rec
+end
+
+-- The five-second rule's parts as numbers, read here: they depend on the spec's tree, the core's fact (a function of
+-- a pack names `state.spec`), and only a spec change moves them. A raise is reported and leaves the part out (inert).
+local function fsrOf(meta)
+    local fsr = plain(meta.fsr, {})
+    if type(fsr) == "table" then
+        for k, v in pairs(fsr) do
+            if type(v) == "function" then
+                local ok, n = pcall(v)
+                if not ok then
+                    ns.Error("Tracked: fsr." .. tostring(k) .. ": " .. tostring(n))
+                end
+                fsr[k] = ok and n or nil
+            end
+        end
+    end
+    return fsr
 end
 
 local function sortedKeys(t)
@@ -238,7 +257,7 @@ local function buildDef()
             auraRegen = auraRegen,
             decay = meta.decay, -- out-of-combat loss per second (Resources.lua)
             decayInterval = meta.decayInterval, -- seconds per quantum (stepped)
-            fsr = plain(meta.fsr, {}), -- the five-second rule's parts (Resources.lua, C3)
+            fsr = fsrOf(meta), -- the five-second rule's parts, numbers (Resources.lua, C3)
             -- the class's default share of an avoided cast's cost given back, for an ability with `refundOnAvoid = true`
             -- (a number, 0-1; Families/Now.lua's Obs.Avoided); the sim never reads it: it does not roll avoidance
             refundOnAvoid = meta.refundOnAvoid,

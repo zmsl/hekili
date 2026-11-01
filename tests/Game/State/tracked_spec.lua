@@ -222,6 +222,31 @@ describe("the tracked set", function()
         assert.is_false(I.res.taken[1])
     end)
 
+    it("reads a function `fsr` part to a number at the build, the spec's tree being the core's fact", function()
+        local meta = {}
+        h.Class.resources.rage.state.meta = meta
+        meta.fsr = {
+            spirit = function()
+                return 12
+            end,
+            mp5 = function()
+                error("boom")
+            end,
+            share = 0.5,
+        }
+        local errors = {}
+        local was = ns.Error
+        ns.Error = function(msg)
+            errors[#errors + 1] = msg
+        end
+        ns.BuildTracked()
+        ns.Error = was
+        local fsr = I.def.resources[I.res.slotOf[h.Class.resources.rage.type]].fsr
+        h.Class.resources.rage.state.meta = nil
+        assert.are.same({ spirit = 12, share = 0.5 }, fsr)
+        assert.are.equal(1, #errors)
+    end)
+
     it("skips the sim's own generated entries (`__decay`, `__taken`: Engine/Schema/Spec.lua's) in the walk", function()
         local model = h.Class.resources.rage.state.regenModel
         model.__decay = { resource = "rage", interval = 1 }
