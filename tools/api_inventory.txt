@@ -103,6 +103,7 @@ GetRangedCritChance	hybrid
 GetRealmName	passthrough
 GetShapeshiftForm	passthrough
 GetShapeshiftFormInfo	passthrough
+GetShieldBlock	hybrid
 GetSpecializationInfoByID	passthrough
 GetSpellBaseCooldown	virtual
 GetSpellBonusDamage	hybrid

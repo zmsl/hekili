@@ -117,7 +117,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 123, hybrid = 37, virtual = 25, display = 1 }, count)
+        assert.are.same({ passthrough = 123, hybrid = 38, virtual = 25, display = 1 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -284,6 +284,12 @@ describe("ns.Facade", function()
         assert.are.equal(2, select("#", Facade.UnitAttackSpeed("target"))) -- another unit: no trailing values
         VS.SwingPending, VS.SwingPull = pending, pull
         assert.are.equal(7, select("#", Facade.UnitDamage("player")))
+        -- (batch 1 review) GetShieldBlock has a row: stat("GetShieldBlock") in a pack no longer answers zeros
+        assert.are.equal(0, Facade.GetShieldBlock()) -- secret: Stat()'s cache, nothing read yet
+        answers.GetShieldBlock = function()
+            return 31
+        end
+        assert.are.equal(31, Facade.GetShieldBlock())
         assert.are.equal(0, Facade.GetMeleeHaste())
         assert.are.same({ false, "", 0, 0, 0 }, { Facade.GetTotemInfo(1) })
     end)
