@@ -49,7 +49,7 @@ approved exceptions (`tools/check_border.sh` allows these and nothing else):
 - `ns.VirtualState.SetLog(logger)` (`Hekili.lua`, at load): the snapshot trace writes into the core's debug log,
   which only the core can open (`{ active(), write(fmt, ...) }`; the belief fills `onOpen`, which `Hekili:SetupDebug`
   calls as each display's log opens).
-The gate also allows one more line, the debug bridge `Hekili.Virtual = { State, Events, Prof }` (§4; `Hekili.lua`,
+The gate also allows one more line, the debug bridge `Hekili.Virtual = { State, Events, Prof }` (§4; `Engine/Sim/Core.lua`,
 anchored to the whole line): a fourth naming of the belief by the core, not among the approved calls, kept because
 ForeverProbe reads it; the owner has not ruled on it. Functions the build carries may run
 under `state` when the belief reads them: the ability tables in `def.abilities` keep Spec.lua's metatable, so
@@ -259,7 +259,7 @@ as the string until that class logs in).
 
 ## 4. `Hekili.Virtual`
 
-`Hekili.Virtual = { State, Events, Prof }` (set by the core, `Hekili.lua`) is the probe and debug handle, for example
+`Hekili.Virtual = { State, Events, Prof }` (set by the core, `Engine/Sim/Core.lua`) is the probe and debug handle, for example
 `/run print(Hekili.Virtual.State.Snapshot())` and ForeverProbe's `Calib.lua`. It is not for content, which has the
 facade and the environment names. The boundary scan rejects `Hekili.Virtual` and `VirtualState` in a content file.
 
@@ -282,7 +282,7 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
 - `tools/check_border.sh` (in `make api-check`): the belief/core border (§1). Comments stripped, no file of `Game/`
   names `Hekili`, `class.`, `state.` or `ns.Output`; no file of `Engine/`, `UI/`, `Options/` or `Hekili.lua` names
   `VS`, `ns.VirtualState` or `VirtualStateInternal` except the three calls `ns.VirtualState.Drain`, `.Build`,
-  `.SetLog` and `Hekili.lua`'s `Hekili.Virtual = { ... }` line.
+  `.SetLog` and `Engine/Sim/Core.lua`'s `Hekili.Virtual = { ... }` line.
 - `tools/check_engine_reads.sh` (in `make api-check`), both directions: the engine files (`Sim/{Core,State,Targets,
   Scripts}`, `Output`, `Registry`, `Snapshot`, `Driver`) name no `HekiliDisplay*`, `ns.UI.` or
   `DisplayPool`, and nothing in `Engine/` names `Hekili.DB` or `.profile` (exempt: `Settings.lua`, comments). UI,

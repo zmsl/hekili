@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The belief/core border (border batch 3; docs/dev/architecture.md §1, §5): Game/ (the belief) imports nothing from
 # the core, and the core reaches the belief only through ns.VirtualState.Drain, .Build and .SetLog (the owner's three
-# approved calls), the facade, and Hekili.lua's debug bridge. Comments are stripped before matching (`--` to the
+# approved calls), the facade, and Engine/Sim/Core.lua's debug bridge. Comments are stripped before matching (`--` to the
 # line's end; a string holding `--` is cut short, never a miss); the approved calls and the bridge line are blanked
 # before the core-side match.
 set -uo pipefail
@@ -15,7 +15,7 @@ for f in $(find src/Hekili/Game -name '*.lua' | sort); do
     [ -n "$hits" ] && { echo "$hits"; fail=1; }
 done
 # Engine/, UI/, Options/ and Hekili.lua: no VS, ns.VirtualState or VirtualStateInternal but the three calls and the
-# bridge line (Hekili.lua's `Hekili.Virtual = { ... }`, anchored to the whole line).
+# bridge line (Engine/Sim/Core.lua's `Hekili.Virtual = { ... }`, anchored to the whole line).
 bridge='^Hekili\.Virtual = \{ State = ns\.VirtualState, Events = ns\.VirtualStateInternal\.Events, Prof = ns\.VirtualStateInternal\.Prof \}$'
 for f in $(find src/Hekili/Engine src/Hekili/UI src/Hekili/Options -name '*.lua' | sort) src/Hekili/Hekili.lua; do
     hits=$(sed -E 's/--.*$//' "$f" | sed -E "s/$bridge//" | sed -E 's/\bns\.VirtualState\.(Drain|Build|SetLog)\b//g' |

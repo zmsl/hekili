@@ -208,10 +208,6 @@ local log = {
 }
 ns.VirtualState.SetLog( log )
 
--- The debug bridge (/run print(Hekili.Virtual.State.Snapshot()); ForeverProbe's Calib.lua and PerfKit read it). Not
--- for content: the content addons read the client through Hekili.Client and the belief through their environment names.
-Hekili.Virtual = { State = ns.VirtualState, Events = ns.VirtualStateInternal.Events, Prof = ns.VirtualStateInternal.Prof }
-
 function Hekili:SetupDebug( display )
     if not self.ActiveDebug then return end
     if not display then return end
