@@ -532,7 +532,12 @@ function M.new()
                 return i[1], nil, nil, nil, nil, nil, nil, nil, i[2]
             end
         end,
-        GetItemInfoInstant = none,
+        GetItemInfoInstant = function(id)
+            local i = ctl.items[id]
+            if i then
+                return id, nil, nil, i[2]
+            end
+        end,
         GetItemCooldown = function()
             return 0, 0, 1
         end,

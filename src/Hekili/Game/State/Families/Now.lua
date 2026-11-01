@@ -5,7 +5,7 @@
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
 -- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
 -- `summonPet`, `dismissPet`) and reads (`talent`, `buff`, `debuff`, the resources by key, `knownRank`, `stat`, `swingBase`,
--- `healthMax`, `now`, `combat`, `level`) with belief meanings. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
+-- `mainhand_speed`, `offhand_speed`, `main_hand`, `equipped`, `healthMax`, `now`, `combat`, `level`) with belief meanings. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
 
@@ -37,7 +37,12 @@ local NAMES = {
     combat = 0,
     level = 0, -- the player's (Sources/Player.lua; 0 before the first read), set with `now`
     haste = 1, -- the sim's spell-haste multiplier (I.Haste), set with `now`
+    mainhand_speed = 0, -- the believed swing speeds (VS.SwingSpeed), set with `now`
+    offhand_speed = 0,
+    main_hand = { size = 0 }, -- the gear (Sources/Player.lua): the sim's `main_hand.size`, 2 a two-hander
+    equipped = { shield = false }, -- and its `equipped.shield`
 }
+I.mainHand, I.equipped = NAMES.main_hand, NAMES.equipped
 -- The environment itself stays empty, so every assignment from a `now` raises (a counted error) instead of
 -- shadowing a verb for every later cast.
 local ctx = setmetatable({}, {
@@ -74,6 +79,8 @@ function I.NowAt(t)
     rawset(NAMES, "combat", I.combatT) -- as `run` does
     rawset(NAMES, "level", I.level or 0)
     rawset(NAMES, "haste", I.Haste(t))
+    rawset(NAMES, "mainhand_speed", VS.SwingSpeed(1, t).est)
+    rawset(NAMES, "offhand_speed", VS.SwingSpeed(2, t).est)
 end
 
 --- The sim's `haste` (State.lua: 1 / (1 + spell haste), a slow above 1, unclamped as there) from the belief's spell
@@ -482,11 +489,8 @@ end
 
 -- Runs ability a's bound function f in the shared context at belief time t; an error is counted, never raised.
 local function call(f, a, t)
-    T, curA = t, a
-    rawset(NAMES, "now", t)
-    rawset(NAMES, "combat", I.combatT)
-    rawset(NAMES, "level", I.level or 0)
-    rawset(NAMES, "haste", I.Haste(t))
+    curA = a
+    I.NowAt(t)
     live = true
     local ok, err = pcall(f)
     live = false

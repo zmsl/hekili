@@ -96,6 +96,24 @@ local function readSpellHaste(api, t, direct)
     end
 end
 
+-- The weapon slots' equip locations, as Hekili's own gear scan reads them (plain [W PR13]), by GetItemInfoInstant: no
+-- uncached answer at login. Called at login, at each build and at each change. Allocates nothing.
+local function equipLoc(api, slot)
+    local item = Plain(api, api.GetInventoryItemID("player", slot))
+    if item then
+        local _, _, _, loc = api.C_Item.GetItemInfoInstant(item)
+        return Plain(api, loc)
+    end
+end
+
+local function readGear(api)
+    local main = equipLoc(api, 16)
+    I.mainHand.size = main == "INVTYPE_2HWEAPON" and 2
+        or (main == "INVTYPE_WEAPON" or main == "INVTYPE_WEAPONMAINHAND") and 1
+        or 0
+    I.equipped.shield = equipLoc(api, 17) == "INVTYPE_SHIELD"
+end
+
 S.OnStart(function(api, t)
     -- the stat arguments: the CR_* constants as this client defines them (a missing one is skipped: zeros)
     Note("stats CR_* constants", "complete")
@@ -118,12 +136,14 @@ S.OnStart(function(api, t)
     I.level = Plain(api, api.UnitLevel("player")) or I.level -- plain [W PR14]; a `now`'s `level` (Families/Now.lua)
     readStats(api, t)
     readSpellHaste(api, t, true)
+    readGear(api)
 end)
 
 -- Build clears what the start read logged (PLAYER_LOGIN precedes the first build): read again
 I.OnBuild(function(_, now)
     if I.api then
         readSpellHaste(I.api, now, true)
+        readGear(I.api)
     end
 end)
 
@@ -141,6 +161,7 @@ end)
 
 S.On("PLAYER_EQUIPMENT_CHANGED", nil, function(api, t)
     readStats(api, t)
+    readGear(api)
 end)
 
 -- The weapon damage, attack power and level also change out of combat (Battle Shout before a pull, a level-up): read

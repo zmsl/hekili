@@ -80,6 +80,22 @@ describe("player start", function()
         )
     end)
 
+    it("reads the gear facts a pack's function names, at the start and at each change", function()
+        local ctx, ctl = I.nowCtx, nil
+        api, ctl = fake.new()
+        ctl.inventory[16], ctl.inventory[17] = 1, nil
+        ctl.items[1] = { "Two-Hander", "INVTYPE_2HWEAPON" }
+        VS.Start(api)
+        assert.are.same({ 2, false }, { ctx.main_hand.size, ctx.equipped.shield })
+        ctl.items[2], ctl.items[3] = { "Sword", "INVTYPE_WEAPON" }, { "Shield", "INVTYPE_SHIELD" }
+        ctl.inventory[16], ctl.inventory[17] = 2, 3
+        ctl.Fire("PLAYER_EQUIPMENT_CHANGED", 16, true)
+        assert.are.same({ 1, true }, { ctx.main_hand.size, ctx.equipped.shield })
+        ctl.inventory[16], ctl.inventory[17] = nil, nil
+        ctl.Fire("PLAYER_EQUIPMENT_CHANGED", 16, false)
+        assert.are.same({ 0, false }, { ctx.main_hand.size, ctx.equipped.shield })
+    end)
+
     it("notes complete when every CR_* constant resolves", function()
         VS.Start(api)
         assert.equal("complete", S.status["stats CR_* constants"])
