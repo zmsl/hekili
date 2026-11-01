@@ -1529,6 +1529,9 @@ local resourceChange = function( amount, resource, overcap )
     if amount == 0 then return false end
 
     local r = state[ resource ]
+    -- the pool before the window below moves: the reads cache per query time, so the spend applies to the value the
+    -- old window gave (a spend inside a channel otherwise read the new window's rate back to the slice)
+    local pre, preLo, preHi = r.current, r.actual_lo and r.lo, r.actual_hi and r.hi
 
     if amount < 0 and rawget( r, "fsr_until" ) then -- opens the window, held to a paid channel's end (wowsims mana.go:236-241)
         local u, c = state.query_time + ns.FSR, state.buff.casting
@@ -1538,11 +1541,11 @@ local resourceChange = function( amount, resource, overcap )
     if amount < 0 and r.spend then r.spend( -amount, resource, overcap )
     elseif amount > 0 and r.gain then r.gain( amount, resource, overcap )
     else
-        r.actual = max( 0, r.current + amount )
+        r.actual = max( 0, pre + amount )
         if not overcap then r.actual = min( r.max, r.actual ) end
-        if r.actual_lo then -- the band's streams, the same delta, their own clamps (state.health has none)
-            r.actual_lo = max( 0, r.lo + amount )
-            r.actual_hi = max( 0, r.hi + amount )
+        if preLo then -- the band's streams, the same delta, their own clamps (state.health has none)
+            r.actual_lo = max( 0, preLo + amount )
+            r.actual_hi = max( 0, preHi + amount )
             if not overcap then
                 r.actual_lo = min( r.max, r.actual_lo )
                 r.actual_hi = min( r.max, r.actual_hi )
