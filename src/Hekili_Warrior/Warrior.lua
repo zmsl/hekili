@@ -20,6 +20,8 @@
 local Facade = Hekili.Client
 local C_SpellBook, C_Spell, UnitClassBase = Facade.C_SpellBook, Facade.C_Spell, Facade.UnitClassBase
 local CombatLogGetCurrentEventInfo, GetTime = Facade.CombatLogGetCurrentEventInfo, Facade.GetTime
+local GetShapeshiftForm, GetShapeshiftFormInfo = Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo
+local issecretvalue = Facade.issecretvalue
 local L = Hekili:GetLocale("Hekili_Warrior")
 
 if UnitClassBase("player") ~= "WARRIOR" then
@@ -127,6 +129,17 @@ end
 local function usableNow(ids)
     local r = knownRank(ids)
     return r > 0 and IsSpellUsable(ids[r]) == true
+end
+
+-- The client's own stance is Battle Stance, by spell (its bar slot is unproved). The belief's buff turns at our press,
+-- a moment before the client's form does.
+local function clientInBattle()
+    local form = GetShapeshiftForm()
+    if issecretvalue(form) or form == 0 then
+        return false
+    end
+    local _, _, _, spell = GetShapeshiftFormInfo(form)
+    return not issecretvalue(spell) and spell == 2457
 end
 
 -- Rage per white swing, as measured on Forever (build 1.60.1; https://github.com/magey/forever-warrior/issues/3 and
@@ -811,7 +824,7 @@ spec:RegisterHook("reset_precast", function()
                 and (last_overpower == 0 or enemy_dodged - last_overpower > 5)
                 -- a dodge row can be another player's: in its stance the client's yes opens the window; out of it the client
                 -- says no either way, and Fury's stance weave needs the window to swap
-                and (usableNow(OVERPOWER) or not buff.battle_stance.up)
+                and (usableNow(OVERPOWER) or not clientInBattle())
             then
                 applyBuff("overpower_ready", enemy_dodged + 5 - now)
             elseif usableNow(OVERPOWER) then

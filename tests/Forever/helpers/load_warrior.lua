@@ -68,6 +68,9 @@ function M.load()
         GetShapeshiftFormInfo = function(i)
             return 0, true, true, game.formSpell[i]
         end,
+        issecretvalue = function()
+            return false
+        end,
         GetTime = function()
             return game.now
         end,

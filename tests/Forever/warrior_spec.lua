@@ -397,19 +397,25 @@ describe("Forever Warrior", function()
             assert.is_nil(reset(21).durations.overpower_ready)
         end)
 
-        it("takes a dodge row only with the client's yes while in its stance, where the read can say", function()
-            local function overpower(stance, usable)
+        it("takes a dodge row only with the client's yes while the client is in Battle Stance", function()
+            local BATTLE, BERSERKER = 2, 1 -- the stance bar's slots: the read goes by spell, not by slot
+            w.game.formSpell[BATTLE], w.game.formSpell[BERSERKER] = 2457, 2458
+            local function overpower(believed, client, usable)
                 local e = lw.env(w)
                 e.now, e.query_time, e.target.unit = 12, 12, MOB
-                e.buff.battle_stance = { up = stance }
-                w.game.usable[7384] = usable
+                e.buff.battle_stance = { up = believed == BATTLE }
+                w.game.form, w.game.usable[7384] = client, usable
                 lw.run(w.hooks.reset_precast, e)
                 return e.durations.overpower_ready
             end
             row(10, "SPELL_MISSED", ME, MOB, 7384, "DODGE") -- possibly another player's avoid credited to our cast
-            assert.is_nil(overpower(true, false)) -- the client's no: not ours
-            assert.are.equal(3, overpower(true, true))
-            assert.are.equal(3, overpower(false, false)) -- another stance: the client says no either way
+            assert.are.equal(3, overpower(BATTLE, BERSERKER, false)) -- our swap just succeeded: the client has not turned
+            assert.is_nil(overpower(BATTLE, BATTLE, false)) -- the client's no in its stance: not ours
+            assert.are.equal(3, overpower(BATTLE, BATTLE, true))
+            assert.are.equal(3, overpower(BERSERKER, BERSERKER, false)) -- another stance: the client says no either way
+            assert.is_nil(overpower(BERSERKER, BATTLE, false)) -- the swap out, client still in Battle: its no still counts
+            assert.are.equal(3, overpower(BERSERKER, BATTLE, true))
+            assert.are.equal(3, overpower(BERSERKER, 0, false)) -- no stance at all
         end)
 
         it("closes Overpower's window once Overpower is cast, and keeps the usability fallback", function()
