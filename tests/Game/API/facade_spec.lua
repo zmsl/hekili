@@ -588,10 +588,12 @@ describe("ns.Facade", function()
         answers.UnitRangedDamage = function()
             return 2.9, 10, 20, 0, 0, 1
         end
-        assert.are.same({ 2.9, 10, 20, 0, 0, 1 }, { Facade.UnitRangedDamage("player") })
+        -- after the client's six: the belief's next ranged shot and the ranged hand's speed (border batch 2, E6)
+        local shot, shotSpeed = VS.Swing(3, ctl.now).est, VS.SwingSpeed(3, ctl.now).est
+        assert.are.same({ 2.9, 10, 20, 0, 0, 1, shot, shotSpeed }, { Facade.UnitRangedDamage("player") })
         answers.UnitRangedDamage = nil
-        local speed, lo, hi = Facade.UnitRangedDamage("player") -- secret: the fake's plain read at Start
-        assert.are.same({ ctl.ranged[1], ctl.ranged[2], ctl.ranged[3] }, { speed, lo, hi })
+        local speed, lo, hi, _, _, _, s7, s8 = Facade.UnitRangedDamage("player") -- secret: the fake's plain read at Start
+        assert.are.same({ ctl.ranged[1], ctl.ranged[2], ctl.ranged[3], shot, shotSpeed }, { speed, lo, hi, s7, s8 })
     end)
 
     it(

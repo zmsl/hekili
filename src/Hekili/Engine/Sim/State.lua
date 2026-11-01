@@ -15,7 +15,7 @@ local UnitCanAttack, UnitClassification, UnitCreatureType, UnitExists = Facade.U
 local UnitGUID, UnitGetTotalAbsorbs, UnitHealth, UnitHealthMax = Facade.UnitGUID, Facade.UnitGetTotalAbsorbs, Facade.UnitHealth, Facade.UnitHealthMax
 local UnitInRange, UnitIsConnected, UnitIsDead, UnitIsDeadOrGhost = Facade.UnitInRange, Facade.UnitIsConnected, Facade.UnitIsDead, Facade.UnitIsDeadOrGhost
 local UnitIsPlayer, UnitLevel, UnitPower, UnitPowerMax = Facade.UnitIsPlayer, Facade.UnitLevel, Facade.UnitPower, Facade.UnitPowerMax
-local UnitPowerType, UnitStat, UnitThreatSituation = Facade.UnitPowerType, Facade.UnitStat, Facade.UnitThreatSituation
+local UnitPowerType, UnitRangedDamage, UnitStat, UnitThreatSituation = Facade.UnitPowerType, Facade.UnitRangedDamage, Facade.UnitStat, Facade.UnitThreatSituation
 local Hekili = _G[ addon ]
 
 local auras = ns.auras
@@ -6538,9 +6538,9 @@ do
         state.mainhand_speed = state.swings.mh_speed or 0
         state.offhand_speed = state.swings.oh_speed or 0
 
-        -- Forever C7: the ranged hand is the belief's (hand 3): the next shot, the one before it and the speed.
-        local ranged = VS.Swing( 3, state.now ).est
-        state.swings.ranged_speed = VS.SwingSpeed( 3, state.now ).est
+        -- Forever C7 (border batch 2, E6): the ranged hand's next shot and speed ride UnitRangedDamage's trailing slots.
+        local ranged, rangedSpeed = select( 7, UnitRangedDamage( "player" ) )
+        state.swings.ranged_speed = rangedSpeed
         state.swings.ranged_projected = ranged
         state.swings.ranged_actual = ranged > 0 and ranged - state.swings.ranged_speed or 0
 

@@ -174,13 +174,18 @@ local function pick(policy, x, y, z, a, b, c, d, ...)
     return a, b, c, d, ...
 end
 
--- The row `head` with `tail(x, y, z)`'s values after its first `n` (1 or 2): the belief's facts the client has no shape
--- for, on every path (border batch 2 ruling: a read through them satisfies the belief/core rule). Allocates nothing.
+-- The row `head` with `tail(x, y, z)`'s values after its first `n` (1, 2 or 6): the belief's facts the client has no
+-- shape for, on every path (border batch 2 ruling: a read through them satisfies the belief/core rule). Allocates nothing.
 local function tailed(n, head, tail)
     if n == 1 then
         return function(x, y, z)
             local a = head(x, y, z)
             return a, tail(x, y, z)
+        end
+    elseif n == 6 then
+        return function(x, y, z)
+            local a, b, c, d, e, f = head(x, y, z)
+            return a, b, c, d, e, f, tail(x, y, z)
         end
     end
     return function(x, y, z)
@@ -507,12 +512,25 @@ hybrid(
     swingTail
 )
 
+-- After the client's six: the belief's next ranged shot and the ranged hand's speed (hand 3; Engine/Sim/State.lua's
+-- reset reads them into swings.ranged_*).
+local function rangedTail()
+    local t = now()
+    return VS.Swing(3, t).est, VS.SwingSpeed(3, t).est
+end
+
 -- The speed is the ranged hand's (C7: out of combat, or a swingType 2 duration); the rest the out-of-combat cache.
-hybrid("UnitRangedDamage", function()
-    local speed, lo, hi, pos, neg, pct = VS.Stat("UnitRangedDamage")
-    local s = VS.SwingSpeed(3, now()).est
-    return s > 0 and s or speed, lo, hi, pos, neg, pct
-end, "SecretWhenUnitStatsRestricted (API docs); unprobed (Hunter Q1); SwingSpeed(3), Stat()")
+hybrid(
+    "UnitRangedDamage",
+    function()
+        local speed, lo, hi, pos, neg, pct = VS.Stat("UnitRangedDamage")
+        local s = VS.SwingSpeed(3, now()).est
+        return s > 0 and s or speed, lo, hi, pos, neg, pct
+    end,
+    "SecretWhenUnitStatsRestricted (API docs); unprobed (Hunter Q1); SwingSpeed(3), Stat(); then the next shot and the speed (border batch 2, E6)",
+    6,
+    rangedTail
+)
 
 hybrid("GetUnitSpeed", function(unit)
     if unit == "player" and VS.Moving() then
