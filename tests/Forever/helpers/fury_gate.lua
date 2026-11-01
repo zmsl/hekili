@@ -2,7 +2,8 @@
 -- fix 21), shared by loop_warrior_fury_spec.lua and loop_warrior_fury24_spec.lua. Fury shows the on-next-swing
 -- strike's wait (`rage.lo>=40`), which Arms (`rage>=90`) never reaches; the loop has no snap-back metric, so its
 -- flicker/min stands in for it. The content is wowsims_warrior_spec.lua's Fury: the dual-wield world, Berserker Rage
--- in the kit, Forever's Overpower window.
+-- in the kit. Overpower keeps the world's own rule (warrior_world.lua), as Arms's loops: the replay's log-driven answer
+-- reads aura 1282733, which nothing in a loop world writes.
 local ab = require("Game.harness.ab")
 local assert = require("luassert")
 local arms_gate = require("Forever.helpers.arms_gate")
@@ -11,12 +12,6 @@ local ws = require("Forever.helpers.wowsims")
 local ww = require("Forever.helpers.warrior_world")
 
 local M = {}
-
-local REQUIRES = {
-    overpower = function(_, e)
-        return e.auras[1282733] ~= nil and e.form == 1, "no window"
-    end,
-}
 
 --- The Fury (wowsims.com) content at `level`.
 function M.content(level)
@@ -27,7 +22,6 @@ function M.content(level)
         learn = ws.learn("WARRIOR"),
         race = ws.race("warrior_fury"),
         kit = { "berserker_rage" },
-        requires = REQUIRES,
     })
 end
 
