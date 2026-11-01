@@ -7360,7 +7360,7 @@ ns.hasRequiredResources = function( ability )
         spend = ns.SpendPoints( spend, state[ resource ], action )
 
         if spend > 0 then
-            return ( state[ resource ].current >= spend )
+            return ( state[ resource ].lo >= spend ) -- the press gate reads the believed floor (border batch 2)
         end
     end
 
@@ -7457,7 +7457,7 @@ function state:TimeToReady( action, pool )
     z = resource and self[ resource ]
     if z then
         local amount = spendAmount( spend )
-        z = amount and self:TimeToResource( z, amount ) or 3600
+        z = amount and self:TimeToResource( z, amount, true ) or 3600 -- the wait: the believed floor's reach (border batch 2)
     end
     if spend and z and z > wait then
         wait = max( wait, ceil( z * 100 ) / 100 )
@@ -7616,7 +7616,7 @@ function state:IsReadyNow( action )
         spend = ns.SpendPoints( spend, state[ resource ], a )
 
         if spend > 0 then
-            return state[ resource ].current >= spend
+            return state[ resource ].lo >= spend -- the press gate reads the believed floor (border batch 2)
         end
     end
 

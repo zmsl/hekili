@@ -682,9 +682,9 @@ local function assign( d, T, tl, conf, out, now, combat )
             end
             b.Keybinding:SetText( kb.enabled and ( not queued or kb.queued and c ~= 1 ) and r.keybind or nil ) -- none on a focus
 
-            -- the gate: the resource at the start of the pick's wait below its cost
+            -- the gate: the resource's believed floor at the start of the pick's wait below its cost
             local rt = r.resource_type
-            local have = rt and r.resources[ rt ]
+            local have = rt and r.floors[ rt ]
             local gated = have ~= nil and have < r.cost
             local style = tl.gate.style
             b.gated = gated

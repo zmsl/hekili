@@ -779,7 +779,7 @@ local function tlPublish(H, focus, edit)
         r.actionName, r.actionID = e[1], abilities[e[1]].id
         r.texture, r.caption, r.keybind, r.indicator = "tex" .. i, "cap" .. i, "K" .. i, e[3]
         r.time, r.exact_time, r.since = e[2], now + e[2], e[2] - prev
-        r.resource_type, r.cost, r.resources.rage, r.busy = "rage", e[4], e[5], e[6]
+        r.resource_type, r.cost, r.floors.rage, r.busy = "rage", e[4], e[5], e[6]
         prev = e[2]
         r.alts.n = 0
     end

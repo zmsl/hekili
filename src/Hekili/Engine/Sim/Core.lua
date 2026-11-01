@@ -1185,11 +1185,11 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                                 if debug then self:Debug( "Attempted to Pool Resources for Next Entry ( %s ), but the next entry is not usable because %s.  Skipping.", next_action, next_why or "of an unknown reason" ) end
                                                             elseif state.cooldown[ next_action ].remains > 0 then
                                                                 if debug then self:Debug( "Attempted to Pool Resources for Next Entry ( %s ), but the next entry is on cooldown.  Skipping.", next_action ) end
-                                                            elseif state[ next_res ].current >= next_cost + extra_amt then
+                                                            elseif state[ next_res ].lo >= next_cost + extra_amt then -- the press gate: the believed floor (border batch 2)
                                                                 if debug then self:Debug( "Attempted to Pool Resources for Next Entry ( %s ), but we already have all the resources needed ( %.2f > %.2f + %.2f ).  Skipping.", next_ation, state[ next_res ].current, next_cost, extra_amt ) end
                                                             else
                                                                 -- Oops.  We only want to wait if
-                                                                local next_wait = state[ next_res ][ "time_to_" .. ( next_cost + extra_amt ) ]
+                                                                local next_wait = state[ next_res ].timeToLo( next_cost + extra_amt )
 
                                                                 --[[ if next_wait > 0 then
                                                                     if debug then self:Debug( "Next Wait: %.2f; TTR: %.2f, Resource(%.2f): %.2f", next_wait, state:TimeToReady( next_action, true ), next_cost + extra_amt, state[ next_res ][ "time_to_" .. ( next_cost + extra_amt ) ] ) end
@@ -1989,7 +1989,8 @@ function Hekili.Update()
                     slot.busy = max( ability.gcd ~= "off" and gcdLength( action ) or 0, ability.cast or 0 )
 
                     for k,v in pairs( class.resources ) do
-                        slot.resources[ k ] = state[ k ].current
+                        slot.resources[ k ] = state[ k ].current -- the estimate: the tooltip's number
+                        slot.floors[ k ] = state[ k ].lo -- the believed floor: the Timeline's gate veil (border batch 2)
                     end
 
                     if not slot.offGCD then onGcd = onGcd + 1 end

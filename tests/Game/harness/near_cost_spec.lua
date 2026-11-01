@@ -32,6 +32,7 @@ describe("the sim's near-cost mark (TimeToReady)", function()
     before_each(function()
         S.now, S.offset, S.delay = 100, 0, 0
         r.actual, r.max, r.regen, r.tick_rate, r.last_tick = 360, 10000, nil, 0, nil -- floor 360, continuous 38/s
+        r.actual_lo, r.actual_hi = 360, 360 -- the reset seeds the three streams; the press gate reads the floor's
         r.active_regen, r.inactive_regen, r.fsr_until = 38, 38, false
         r.estGap = 6 -- the estimate 366: 0.11 s from 370; the floor 0.26 s
         S.forecastResources("mana")
@@ -55,7 +56,7 @@ describe("the sim's near-cost mark (TimeToReady)", function()
             S.forecastResources("mana")
             S:TimeToReady("surge")
             assert.is_false(S.nearCost)
-            r.actual, r.estGap = 340, 28 -- the estimate 368 (0.05 s), the floor 0.79 s away: past one update
+            r.actual, r.actual_lo, r.estGap = 340, 340, 28 -- the estimate 368 (0.05 s), the floor 0.79 s away: past one update
             S.forecastResources("mana")
             S:TimeToReady("surge")
             assert.is_false(S.nearCost)

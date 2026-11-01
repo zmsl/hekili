@@ -15,7 +15,7 @@ local READY = 0.05 -- steady icons: a record due within this is shown as ready (
 local function records()
     local t = {}
     for i = 1, SLOTS do
-        t[i] = { resources = {}, belief = {}, cost = 0, busy = 0, alts = { n = 0 } } -- cost, busy: Core writes them on every published record
+        t[i] = { resources = {}, floors = {}, belief = {}, cost = 0, busy = 0, alts = { n = 0 } } -- cost, busy: Core writes them on every published record; floors: the believed floor per pool (the gate veil), resources the estimate (the tooltip)
         -- focus (nil or the entry's `focus=N` tier, 1 highest) is a scalar Core also writes on every record, so Begin clears it
         -- alts[1..n]: { actionName, actionID, texture, action, list, bound = "lo"|"hi" }, filled for a needs.alts subscriber
         for j = 1, ALTS do
