@@ -165,6 +165,28 @@ describe("the active spec (headless Warrior)", function()
         assert.are.equal(PROT, H.Hekili.State.spec.id)
         assert.are.equal("Protection (wowsims.com)", H.Hekili.DB.profile.specs[PROT].package)
     end)
+
+    it("refreshes the belief's settings copy when the legacy profile's settings migrate onto the spec", function()
+        local saved =
+            { profiles = { Default = { specs = { [1491] = { settings = { wowsims_recklessness = true } } } } } }
+        local H = boot({ saved = saved })
+        settle(H)
+        assert.are.equal(ARMS, H.Hekili.State.spec.id)
+        assert.is_true(H.Hekili.DB.profile.specs[ARMS].settings.wowsims_recklessness)
+        assert.is_true(H.ns.VirtualStateInternal.def.settings.wowsims_recklessness)
+    end)
+
+    it("refreshes the belief's settings copy when the options page fills a spec setting's default", function()
+        local H = boot()
+        settle(H)
+        local prof = H.Hekili.DB.profile.specs[ARMS].settings
+        prof.wowsims_recklessness = nil
+        H.Hekili:SettingsChanged()
+        assert.is_nil(H.ns.VirtualStateInternal.def.settings.wowsims_recklessness)
+        H.Hekili:EmbedSpecOptions()
+        assert.is_not_nil(prof.wowsims_recklessness)
+        assert.are.equal(prof.wowsims_recklessness, H.ns.VirtualStateInternal.def.settings.wowsims_recklessness)
+    end)
 end)
 
 describe("the spec options and /hekili spec (headless Warrior)", function()

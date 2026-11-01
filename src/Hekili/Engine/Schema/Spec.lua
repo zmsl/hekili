@@ -2553,7 +2553,9 @@ function Hekili:SettleSpecChoice( clientID )
     local choice = charChoice( tree )
     if tree then choice.last = tree end
     local pick = ns.PickSpec( kit, choice, talentRank )
-    ns.MigrateTrees( settings.specs, settings.packs, settings.specMigrated, kit, clientID, pick )
+    if ns.MigrateTrees( settings.specs, settings.packs, settings.specMigrated, kit, clientID, pick ) then
+        self:SettingsChanged() -- the migrated settings reach the belief's plain copy (Engine/Schema/Tracked.lua)
+    end
     ns.ResolvePackSpecs( settings.packs, class.specByShare )
     if pick.id ~= state.spec.id then self.PendingSpecializationChange = true end
 end

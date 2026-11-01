@@ -4282,6 +4282,7 @@ found = true end
                         options.args.core.plugins.settings[ option.name ] = option.info
                         if self.DB.profile.specs[ id ].settings[ option.name ] == nil then
                             self.DB.profile.specs[ id ].settings[ option.name ] = Hekili.Engine.SettingDefault( option )
+                            self:SettingsChanged() -- the belief's plain copy (Engine/Schema/Tracked.lua); options build only
                         end
                     end
                 end
