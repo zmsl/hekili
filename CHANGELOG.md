@@ -12,7 +12,6 @@
 ### Fixed
 - Enemies you kill leave the target count at once, so AoE and cleave lines aren't held by a dead mob for a few seconds.
 - Elemental Shamans: Mana Spring Totem counts at your real rank from the first fight of a session.
-- Warriors: in Battle Stance, Overpower no longer shows on another player's dodge; it waits for the game to say the spell is usable.
 - In raids, other players' dodges and parries on your target are no longer read as your debuff missing, so stacking debuffs like Sunder Armor stop being recommended again when they are already up.
 - A free-cast proc raised by the cast that just landed is no longer counted as spent at low frame rates, so your mana estimate stays right.
 

@@ -397,21 +397,6 @@ describe("Forever Warrior", function()
             assert.is_nil(reset(21).durations.overpower_ready)
         end)
 
-        it("takes a dodge row only with the client's yes while in its stance, where the read can say", function()
-            local function overpower(stance, usable)
-                local e = lw.env(w)
-                e.now, e.query_time, e.target.unit = 12, 12, MOB
-                e.buff.battle_stance = { up = stance }
-                w.game.usable[7384] = usable
-                lw.run(w.hooks.reset_precast, e)
-                return e.durations.overpower_ready
-            end
-            row(10, "SPELL_MISSED", ME, MOB, 7384, "DODGE") -- possibly another player's avoid credited to our cast
-            assert.is_nil(overpower(true, false)) -- the client's no: not ours
-            assert.are.equal(3, overpower(true, true))
-            assert.are.equal(3, overpower(false, false)) -- another stance: the client says no either way
-        end)
-
         it("closes Overpower's window once Overpower is cast, and keeps the usability fallback", function()
             row(10, "SWING_MISSED", ME, MOB, "DODGE")
             row(10.5, "SPELL_CAST_SUCCESS", ME, MOB, 7384)

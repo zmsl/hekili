@@ -809,9 +809,6 @@ spec:RegisterHook("reset_precast", function()
                 and query_time - enemy_dodged < 6
                 and target.unit == enemy_dodged_target
                 and (last_overpower == 0 or enemy_dodged - last_overpower > 5)
-                -- a dodge row can be another player's: in its stance the client's yes opens the window; out of it the client
-                -- says no either way, and Fury's stance weave needs the window to swap
-                and (usableNow(OVERPOWER) or not buff.battle_stance.up)
             then
                 applyBuff("overpower_ready", enemy_dodged + 5 - now)
             elseif usableNow(OVERPOWER) then
