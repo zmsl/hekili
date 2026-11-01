@@ -107,76 +107,9 @@ local def = {
 
 local HANDS = { mainhand = 1, offhand = 2 }
 local NO_PETS = {} -- a test's stand-in class may have no `pets`
-local DECAY = "__decay" -- the generated entry's reserved name in a regen model
-local TAKEN = "__taken" -- the generated incoming-rage entry's (tank design §1.2.5)
-
-local function eval(v)
-    if type(v) == "function" then
-        return v()
-    end
-    return v
-end
-
--- The sim's stepped decay (stepped-decay design §3.3): a regen-model entry Hekili's forecast steps like a class's,
--- `value` (negative, talent-scaled) every `interval`, never in combat. Its beats are the belief's (from its last
--- quantum), or start at a pausing aura's expiry (an entry flagged `pausesDecay`) while one is up in the sim: Hekili's
--- forecast removes an entry whose `stop` holds, so the pause is in `last`, not `stop`. Built once per regen model, at a
--- build.
-local function decayEntry(key, model, meta)
-    local e = { resource = key, interval = meta.decayInterval }
-    function e.value()
-        return -eval(meta.decay) * eval(meta.decayInterval)
-    end
-    function e.last()
-        -- Hekili's forecast starts at now + offset and steps every beat after `last`; after an advance `actual` holds
-        -- every beat to there already, so the anchor rolls forward to the last beat at or before it (as Warrior.lua's
-        -- swing entries do).
-        local iv, t, a = eval(meta.decayInterval), state.now + state.offset, 0
-        for _, m in pairs(model) do
-            -- a pausing aura present at the reset (up, or expired in the sim since): the beats start at its expiry
-            local b = m.pausesDecay and m.aura and not (m.swing or m.debuff) and state.buff[m.aura]
-            if b and b.expires > a then
-                a = b.expires
-            end
-        end
-        if a == 0 then
-            -- the reset's read: GetPowerRegenForPowerType's fourth value (Engine/Sim/State.lua), 0 before one
-            a = rawget(class.resources[key].state, "decay_anchor") or 0
-            if a == 0 then
-                return t - iv -- the belief inactive: a quantum at the forecast's start
-            end
-        end
-        if a > t then
-            -- a beat at the expiry, with its last tick: State.lua keeps one point per instant, 10 - 1.25 in either
-            -- order (not at a cap: above 99 or below 1.25 rage the order changes what the clamp keeps)
-            return a - iv
-        end
-        return a + floor((t - a) / iv) * iv
-    end
-    function e.stop()
-        return state.time > 0
-    end
-    return e
-end
-
--- The sim's rage from hits on the player (tank design §1.2.5): a regen-model entry Hekili's forecast steps every
--- second from the reset, the learned rate a step (the reset's read: GetPowerRegenForPowerType's fifth value,
--- Engine/Sim/State.lua), removed out of combat (`stop`). The belief never reads it: real hits are observed. Built once
--- per regen model, at a build. Its anchor rolls like `__decay`'s: a re-forecast keeps the reset's grid (the last whole
--- beat at or before the forecast's start is already in `actual`).
-local function takenEntry(key)
-    local e = { resource = key, interval = 1 }
-    function e.value()
-        return rawget(class.resources[key].state, "taken_rate") or 0
-    end
-    function e.last()
-        return state.now + floor(state.offset)
-    end
-    function e.stop()
-        return state.time == 0
-    end
-    return e
-end
+-- The sim's own generated entries (Engine/Schema/Spec.lua RegisterResource: the stepped decay and the hits taken),
+-- reserved names the walk below skips: they are no regen entries of the belief.
+local DECAY, TAKEN = "__decay", "__taken"
 
 -- The spell IDs of a registration: its `id`, then its `copy` IDs (rank order), positive numbers only.
 local function idsOf(obj)
@@ -249,16 +182,6 @@ local function buildDef()
                     auraRegen[#auraRegen + 1] = m
                 end
             end
-        end
-        local meta = r.state and r.state.meta
-        local iv = meta and meta.decay ~= nil and eval(meta.decayInterval)
-        if model and type(iv) == "number" and iv > 0 and model[DECAY] == nil then
-            model[DECAY] = decayEntry(k, model, meta)
-        end
-        if model and type(taken) ~= "function" then
-            model[TAKEN] = nil -- a stale entry out of the forecast's event list
-        elseif model and model[TAKEN] == nil then
-            model[TAKEN] = takenEntry(k)
         end
         if swing == 0 and offValue ~= nil then
             swing, value, offValue, crit, offCrit = 2, offValue, nil, offCrit, nil -- the off hand alone pays it

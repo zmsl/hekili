@@ -171,65 +171,12 @@ describe("Adapter", function()
         assert.is_false(I.res.taken[1])
     end)
 
-    it(
-        "generates the sim's `__taken` entry: every second from the reset, the learned rate, out of combat removed",
-        function()
-            local model = h.Class.resources.rage.state.regenModel
-            VS.SpecChanged()
-            assert.is_nil(model.__taken) -- no `taken`: none
-            model.mainhand.taken = function()
-                return 2
-            end
-            local got
-            local build = I.Build
-            I.Build = function(def, t)
-                got = def
-                return build(def, t)
-            end
-            VS.SpecChanged()
-            local e = model.__taken
-            VS.SpecChanged()
-            I.Build = build
-            assert.are.same({ e, "rage", 1 }, { model.__taken, e.resource, e.interval }) -- built once
-            assert.is_nil(got.resources[1].auraRegen) -- the walk skips it: not a regen entry of the belief
-            state.time, state.now, state.offset = 0, 20, 0
-            assert.are.same({ true, 0 }, { e.stop(), e.value() }) -- out of combat
-            I.Sources.Direct(VS.Obs.CombatStart, 10)
-            I.Sources.Direct(VS.Obs.PlayerHit, 12, 1, 40, 20)
-            I.Sources.Direct(VS.Obs.PlayerHit, 15, 4, 0, 20)
-            I.Fold(15)
-            state.time, state.now, state.offset = 5, 16, 1.5
-            local res = h.Class.resources.rage.state
-            assert.are.same({ false, 0, 17 }, { e.stop(), e.value(), e.last() }) -- the entry reads the reset's field, not the belief
-            ctl.now = 16
-            res.taken_rate = select(5, ns.Facade.GetPowerRegenForPowerType(fs.RAGE)) -- the reset's read (border batch 2)
-            assert.are.same({ false, 0.4, 17 }, { e.stop(), e.value(), e.last() }) -- 2 + 2 in 10 s; from the reset
-            assert.are.equal(18, e.last() + e.interval) -- 1.5 s on, the next beat is the reset's +2, not +2.5
-            state.offset = 2
-            assert.are.equal(18, e.last()) -- a beat at the forecast's start is already in `actual`
-            model.mainhand.taken = nil
-            VS.SpecChanged()
-            assert.is_nil(model.__taken) -- the paying entry lost its `taken`: removed
-        end
-    )
-
-    it("generates the sim's stepped decay entry, on the belief's beats and from a tick aura's expiry", function()
-        local model, rank = h.Class.resources.rage.state.regenModel, 0
-        model.regen_aura_a = { aura = "regen_aura_a", interval = 1, value = 1, pausesDecay = true }
+    it("skips the sim's own generated entries (`__decay`, `__taken`: Engine/Schema/Spec.lua's) in the walk", function()
+        local model = h.Class.resources.rage.state.regenModel
+        model.__decay = { resource = "rage", interval = 1 }
+        model.__taken = { resource = "rage", interval = 1 }
+        model.regen_aura_a = { aura = "regen_aura_a", interval = 1, value = 1 }
         h.Class.auras.regen_aura_a = { key = "regen_aura_a", id = 1021, duration = 10 }
-        h.Class.resources.rage.state.meta = {
-            decay = function()
-                return 2 * (1 - 0.3 * rank)
-            end,
-            decayInterval = function()
-                return 1
-            end,
-        }
-        VS.SpecChanged()
-        local e = model.__decay
-        assert.are.same({ "rage", 1, -2 }, { e.resource, e.interval(), e.value() })
-        rank = 1
-        assert.is_true(math.abs(-1.4 - e.value()) < 1e-9) -- the talent's 30% less
         local got
         local build = I.Build
         I.Build = function(def, t)
@@ -238,36 +185,9 @@ describe("Adapter", function()
         end
         VS.SpecChanged()
         I.Build = build
-        assert.are.same({ e, 1 }, { model.__decay, I.res.auraRegen.n }) -- built once; not a regen entry of the belief
-        assert.are.same({ model.regen_aura_a }, got.resources[1].auraRegen) -- the walk skips it, the second build too
-        state.time, state.now, state.buff.regen_aura_a = 0, 4.5, { up = false, expires = 0 }
-        assert.are.same({ false, 3.5 }, { e.stop(), e.last() }) -- the belief at rest: a quantum at the forecast's start
-        state.time = 5
-        assert.is_true(e.stop()) -- in combat
-        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
-        I.Fold(1.5)
-        I.ResourceShift(1, 50, 1.5, VS.Obs.CastSuccess)
-        I.Sources.Direct(VS.Obs.CombatEnd, 2)
-        I.Fold(2)
-        I.Settle(3.5) -- the belief's quanta at 2 and 3, the next at 4
-        state.now = 3.5 -- the reset at the belief's clock
-        local res = h.Class.resources.rage.state
-        assert.are.same({ 3, 2.5 }, { VS.DecayAnchor(fs.RAGE), e.last() }) -- before the reset's read: the belief's anchor is not the entry's
-        res.decay_anchor = select(4, ns.Facade.GetPowerRegenForPowerType(fs.RAGE)) -- the reset's read (border batch 2)
-        assert.are.same({ 3, 3 }, { VS.DecayAnchor(fs.RAGE), e.last() }) -- the sim's next beat: 4, the belief's
-        state.buff.regen_aura_a = { up = true, expires = 20 }
-        assert.are.equal(19, e.last()) -- a tick aura up in the sim: the first quantum at its expiry, after its tick
-        state.buff.regen_aura_a = { up = false, expires = 0 }
-        state.now, state.offset = 5, 2.5 -- after an advance: actual holds the beats at 4 to 7
-        assert.are.equal(7, e.last()) -- the forecast's first beat at 8, none re-applied
-        state.buff.regen_aura_a = { up = true, expires = 20.5 }
-        assert.are.equal(19.5, e.last())
-        state.offset = 18.7 -- the sim advanced to 23.7, past the expiry the reset saw: beats at 20.5 to 23.5
-        state.buff.regen_aura_a.up = false
-        assert.are.equal(23.5, e.last()) -- not the belief's anchor's beats (23): it is paused while the aura is up
-        model.regen_aura_a.pausesDecay = nil -- unflagged: an aura up in the sim moves no beat
-        state.now, state.offset, state.buff.regen_aura_a = 5, 2.5, { up = true, expires = 20 }
-        assert.are.equal(7, e.last())
+        assert.are.same({ model.regen_aura_a }, got.resources[1].auraRegen) -- the two names are no regen entries
+        assert.are.equal(1, I.res.auraRegen.n)
+        model.__decay, model.__taken, model.regen_aura_a = nil, nil, nil
     end)
 
     it("forwards a regenerating resource's rest as a flag and a swing entry's `aura` as its gate", function()

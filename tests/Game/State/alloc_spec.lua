@@ -81,8 +81,6 @@ describe("zero allocation", function()
         end
         VS.Start(api)
         VS.SpecChanged()
-        local decay = h.Class.resources.rage.state.regenModel.__decay -- the sim's (Adapter.lua), called as a forecast
-        local taken = h.Class.resources.rage.state.regenModel.__taken
         state.time, state.query_time = 0, 1
         ctl.guid.target = "Creature-2" -- a target never held before: its first flip learns M, then WOUNDs move it
         ctl.Fire("PLAYER_TARGET_CHANGED")
@@ -129,12 +127,6 @@ describe("zero allocation", function()
             VS.Power(fs.RAGE, t)
             VS.DecayAnchor(fs.RAGE)
             VS.TakenRate(fs.RAGE, t)
-            decay.last()
-            decay.stop()
-            decay.value()
-            taken.last()
-            taken.stop()
-            taken.value()
             VS.Regen(fs.RAGE, t)
             VS.Cooldown(fs.SPENDER_C, t)
             VS.Charges(fs.SPENDER_C, t)

@@ -31,6 +31,7 @@ local RegisterUnitEvent = ns.RegisterUnitEvent
 local getSpecializationKey = ns.getSpecializationKey
 
 local insert, wipe = table.insert, table.wipe
+local floor = math.floor
 
 local mt_resource = ns.metatables.mt_resource
 
@@ -222,6 +223,65 @@ end
 --                                    both layers (ns.SpendPoints, Families/Casts.lua). The
 --                                    belief learns the player's own from a plain out-of-combat cost read (login,
 --                                    level-up, spell changes); without `base` a fraction is of the maximum (Hekili's).
+
+-- The sim's two generated regen entries (border batch 2 Part C, E3; until it Game/State/Adapter.lua wrote them into
+-- the model): `__decay`, the stepped out-of-combat decay from the meta's `decay` and `decayInterval` (stepped-decay
+-- design §3.3), and `__taken`, the resource from hits on the player while a main-hand swing entry has a `taken`
+-- (tank design §1.2.5). Both read the reset's regen tail (`decay_anchor`, `taken_rate`: GetPowerRegenForPowerType's
+-- fourth and fifth values, Engine/Sim/State.lua) and nothing of the belief; the belief's walk skips the two names.
+local function eval( v )
+    if type( v ) == "function" then return v() end
+    return v
+end
+
+-- The decay: `value` (negative, talent-scaled) every `interval`, never in combat. Its beats are the reset's anchor's
+-- (the belief's last quantum), or start at a pausing aura's expiry (an entry flagged `pausesDecay`) while one is up in
+-- the sim: the forecast removes an entry whose `stop` holds, so the pause is in `last`, not `stop`.
+local function decayEntry( resource, res, model, meta )
+    local e = { resource = resource, interval = meta.decayInterval }
+    function e.value()
+        return -eval( meta.decay ) * eval( meta.decayInterval )
+    end
+    function e.last()
+        -- the forecast starts at now + offset and steps every beat after `last`; after an advance `actual` holds every
+        -- beat to there already, so the anchor rolls forward to the last beat at or before it (as swing entries do)
+        local iv, t, a = eval( meta.decayInterval ), state.now + state.offset, 0
+        for _, m in pairs( model ) do
+            -- a pausing aura present at the reset (up, or expired in the sim since): the beats start at its expiry
+            local b = m.pausesDecay and m.aura and not ( m.swing or m.debuff ) and state.buff[ m.aura ]
+            if b and b.expires > a then a = b.expires end
+        end
+        if a == 0 then
+            a = rawget( res, "decay_anchor" ) or 0
+            if a == 0 then return t - iv end -- the belief inactive: a quantum at the forecast's start
+        end
+        -- a beat at the expiry, with its last tick: State.lua keeps one point per instant, 10 - 1.25 in either order
+        -- (not at a cap: above 99 or below 1.25 rage the order changes what the clamp keeps)
+        if a > t then return a - iv end
+        return a + floor( ( t - a ) / iv ) * iv
+    end
+    function e.stop()
+        return state.time > 0
+    end
+    return e
+end
+
+-- The hits taken: the learned rate every second from the reset, removed out of combat. Its anchor rolls like the
+-- decay's: a re-forecast keeps the reset's grid (the last whole beat at or before the forecast's start is in `actual`).
+local function takenEntry( resource, res )
+    local e = { resource = resource, interval = 1 }
+    function e.value()
+        return rawget( res, "taken_rate" ) or 0
+    end
+    function e.last()
+        return state.now + floor( state.offset )
+    end
+    function e.stop()
+        return state.time == 0
+    end
+    return e
+end
+
 local HekiliSpecMixin = {
     RegisterResource = function( self, resourceID, regen, model, meta )
         local resource = GetResourceKey( resourceID )
@@ -307,6 +367,17 @@ local HekiliSpecMixin = {
 
                 if v.swing then
                     r.state.swingGen = true
+                end
+            end
+
+            local m = r.state.meta
+            if m.decay ~= nil and m.decayInterval ~= nil then
+                r.state.regenModel.__decay = decayEntry( resource, r.state, r.state.regenModel, m )
+            end
+            for _, v in pairs( r.state.regenModel ) do
+                if v.swing == "mainhand" and type( v.taken ) == "function" then
+                    r.state.regenModel.__taken = takenEntry( resource, r.state )
+                    break
                 end
             end
         end
