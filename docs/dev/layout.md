@@ -757,3 +757,10 @@ follows the tree with the most points: the spec activated for that tree, else it
 The checkpoint list moved to `docs/dev/ingame-ledger.md` (one table: id, what to look for, why it matters,
 status), with the long-term in-game items. The Paladin (P1-P13), Shaman (S1-S11) and Hunter (H1-H21) checkpoints are with
 their gate lines above.
+
+`make accuracy` (dev-only, not part of gate or check; `tools/accuracy/`): every loop and wowsims spec file runs once under the
+gate lock (`run.sh`, nproc - 2 jobs, `wrap.lua` as a busted helper so the specs' own helpers print structured lines)
+and `report.lua` writes `.accuracy/report.json` and `.accuracy/report.md` (gitignored): per spec the three seed sets
+(1-20, 21-40, 41-60) and their worst, the wowsims replay agreement and floor, ready-time median and misses, live idle per
+level, cpu/calibration/bytes, and a reported-only "crowded target (39 others)" run beside the solo one. `none` = expected
+but not printed, `n/a` = no wowsims preset. The line parsers are `tools/accuracy/parse.lua`, tested by `tests/accuracy_parse_spec.lua`.

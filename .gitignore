@@ -69,3 +69,4 @@ __pycache__/
 .ab/
 
 debug/
+.accuracy/

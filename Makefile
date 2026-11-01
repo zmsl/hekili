@@ -6,7 +6,7 @@ LUACHECK := $(LUA_ENV)/bin/luacheck
 LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
-.PHONY: gate gate-ab bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check cdv-coverage syntax api-check \
+.PHONY: accuracy gate gate-ab bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check cdv-coverage syntax api-check \
 	packs-check tools-test check packs package package-check wowsims-cli wowsims-export wowsims-learn wowsims-packs test-wowsims
 
 bootstrap:
@@ -54,6 +54,12 @@ GATE_LOCK ?= /tmp/hekili-gate.lock
 unexport HEKILI_AB
 gate: check
 	flock $(GATE_LOCK) env $(if $(AB_ARM),HEKILI_AB=$(AB_ARM)) BUSTED=$(BUSTED) BUSTED_JOBS=$$(($$(nproc) > 3 ? $$(nproc) - 2 : 1)) scripts/busted_parallel.sh --tags=$(GATE_TAGS)
+
+# The per-spec accuracy table (.accuracy/report.{json,md}, gitignored): every loop and wowsims spec file once, three
+# seed sets, under the gate lock for the whole run. Dev tooling: not part of gate or check (tools/accuracy/).
+accuracy:
+	flock $(GATE_LOCK) env BUSTED=$(BUSTED) GATE_TAGS=$(GATE_TAGS) tools/accuracy/run.sh
+	$(LUA) tools/accuracy/report.lua
 
 # The A/B (providers spec §4.1): the gate once per arm on the same seeds; the provider arms record in .ab/<arm>.tsv.
 gate-ab:
