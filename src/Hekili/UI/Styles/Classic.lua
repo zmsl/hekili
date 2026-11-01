@@ -500,7 +500,8 @@ end
 
 -- The cooldown spirals of the drawn buttons (was d:RefreshCooldowns).
 local function RefreshCooldowns( self, out )
-    local gStart = GetSpellCooldown( Registry.GCD_SPELL )
+    local resolved = self.resolved -- this frame's client answers (UI/Resolve.lua)
+    local gStart = resolved.gcdStart
     -- The last GCD start seen, what the stock engine kept from the combat log (gcd.lastStart), for the extend below.
     if gStart > lastGcdStart then lastGcdStart = gStart end
     local cStart = ( select( 4, UnitCastingInfo( "player" ) ) or select( 4, UnitChannelInfo( "player" ) ) or 0 ) / 1000
@@ -518,7 +519,10 @@ local function RefreshCooldowns( self, out )
 
             local start, duration, enabled, modRate = 0, 0, 1, 1
 
-            if ability.item then
+            local r = resolved[ i ]
+            if r.cdAsked then
+                start, duration, enabled, modRate = r.cdStart, r.cdDuration, r.cdEnabled, r.cdModRate
+            elseif ability.item then
                 start, duration, enabled, modRate = GetItemCooldown( ability.item )
             else
                 start, duration, enabled, modRate = GetSpellCooldown( ability.actionID )

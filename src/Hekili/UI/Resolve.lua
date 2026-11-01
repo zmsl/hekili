@@ -36,14 +36,16 @@ local SLOTS = 12 -- Output's records per display
 --- `inMelee` (the target within 7 yd, asked only while the bound style's range check is `melee`, true otherwise),
 --- `usable`, `delay` (exact_time - now), `earliest` (when the GCD, the cast and the ability's cooldown allow it, from
 --- now), `desaturate` (delay past earliest: a wait to show), `targets` (the count shown, clamped by the toggle mode),
---- `detected` (the count seen), `single` (clamped to one) and `glow` (overlayed).
+--- `detected` (the count seen), `single` (clamped to one) and `glow` (overlayed). Classic's spirals reuse this frame's
+--- client answers: `res.gcdStart`, and `cdAsked` with `cdStart`, `cdDuration`, `cdEnabled`, `cdModRate` on a record whose
+--- cooldown was asked (only while it waits).
 --- A record with no action or time answers in range, usable, no delay and no glow.
 function ns.UI.Resolve( d, conf, out, now )
     local res = d.resolved
     if not res then
         res = {}
         for i = 1, SLOTS do
-            res[ i ] = { inRange = true, inMelee = true, usable = true, delay = 0, earliest = 0, desaturate = false, targets = 0, detected = 0, single = false, glow = false }
+            res[ i ] = { inRange = true, inMelee = true, usable = true, delay = 0, earliest = 0, desaturate = false, targets = 0, detected = 0, single = false, glow = false, cdAsked = false, cdStart = 0, cdDuration = 0, cdEnabled = false, cdModRate = 0 }
         end
         d.resolved = res
     end
@@ -74,6 +76,7 @@ function ns.UI.Resolve( d, conf, out, now )
     end
 
     local gStart, gDuration = GetSpellCooldown( Registry.GCD_SPELL )
+    res.gcdStart = gStart
     local cStart, cEnd = select( 4, UnitCastingInfo( "player" ) )
 
     for i = 1, out.count do
@@ -82,6 +85,7 @@ function ns.UI.Resolve( d, conf, out, now )
         local exact_time = rec.exact_time
 
         r.targets, r.detected, r.single, r.inMelee = shown, detected, tMax == 1, inMelee
+        r.cdAsked = false
 
         if def and exact_time then
             local name = def.rangeSpell or def.itemSpellName or def.actualName or def.name
@@ -103,12 +107,15 @@ function ns.UI.Resolve( d, conf, out, now )
 
                 if cStart and cStart > 0 then earliest_time = max( ( cStart / 1000 ) + ( cEnd / 1000 ) - now, earliest_time ) end
 
-                local rStart, rDuration = 0, 0
+                local rStart, rDuration, rEnabled, rModRate = 0, 0, nil, nil
                 if rec.item then
-                    rStart, rDuration = GetItemCooldown( rec.item )
+                    rStart, rDuration, rEnabled, rModRate = GetItemCooldown( rec.item )
+                    r.cdAsked = true
                 elseif def.cooldown > 0 or def.spendType ~= "runes" then
-                    rStart, rDuration = GetSpellCooldown( rec.actionID )
+                    rStart, rDuration, rEnabled, rModRate = GetSpellCooldown( rec.actionID )
+                    r.cdAsked = true
                 end
+                r.cdStart, r.cdDuration, r.cdEnabled, r.cdModRate = rStart, rDuration, rEnabled, rModRate
                 if rStart > 0 then earliest_time = max( earliest_time, rStart + rDuration - now ) end
             end
 

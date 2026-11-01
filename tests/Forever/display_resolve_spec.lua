@@ -71,6 +71,76 @@ describe("the shared resolve", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- Perf 1.3: Classic's spirals reuse what Resolve asked this frame, so a publish asks the client once per spell.
+    local function countAsks(H)
+        local cs, asks = H.ns.Facade.C_Spell, {}
+        local getCd = cs.GetSpellCooldown
+        cs.GetSpellCooldown = function(id)
+            asks[id] = (asks[id] or 0) + 1
+            return getCd(id)
+        end
+        return asks, function()
+            cs.GetSpellCooldown = getCd
+        end
+    end
+
+    it("asks the GCD and each waiting record's cooldown once on a publish, not twice", function()
+        local H, d = boot()
+        local abilities, gcd = H.Hekili.Engine.Registry.Abilities(), H.Hekili.Engine.Registry.GCD_SPELL
+        publish(H)
+        local asks, restore = countAsks(H)
+        frame(H, d, 0.2) -- both records wait: Resolve asks all three, the spirals ask none
+        restore()
+        assert.are.equal(1, asks[gcd])
+        assert.are.equal(1, asks[abilities.mortal_strike.id])
+        assert.are.equal(1, asks[abilities.overpower.id])
+        assert.are.same({}, H.errors)
+    end)
+
+    it("draws the spiral from the same answer, modRate included", function()
+        local H, d = boot()
+        local abilities = H.Hekili.Engine.Registry.Abilities()
+        local cs, ms = H.ns.Facade.C_Spell, abilities.mortal_strike.id
+        local getCd, start = cs.GetSpellCooldown, H.ctl.now
+        cs.GetSpellCooldown = function(id)
+            if id == ms then
+                return { startTime = start, duration = 6, isEnabled = true, modRate = 1.25 }
+            end
+            return getCd(id)
+        end
+        SET[1][2] = 3 -- inside the cooldown, so no extend rewrites the answer
+        publish(H)
+        SET[1][2] = 1.0
+        local cd = d.Buttons[1].Cooldown
+        local set, got = cd.SetCooldown, nil
+        cd.SetCooldown = function(self, s, dur, m)
+            got = { s, dur, m }
+            return set(self, s, dur, m)
+        end
+        frame(H, d, 0.2)
+        cd.SetCooldown = set
+        cs.GetSpellCooldown = getCd
+        assert.are.same({ start, 6, 1.25 }, got)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("never reuses an answer Resolve did not ask this frame: a record due now asks for itself", function()
+        local H, d = boot()
+        local abilities, gcd = H.Hekili.Engine.Registry.Abilities(), H.Hekili.Engine.Registry.GCD_SPELL
+        publish(H)
+        frame(H, d, 0.2)
+        SET[1][2] = 0 -- due at once: Resolve skips its cooldown
+        publish(H)
+        SET[1][2] = 1.0
+        local asks, restore = countAsks(H)
+        d.__scripts.OnUpdate(d, 0) -- the same instant: exact_time == now
+        restore()
+        assert.are.equal(1, asks[gcd])
+        assert.are.equal(1, asks[abilities.mortal_strike.id]) -- the spiral's own, no stale answer from the last frame
+        assert.are.equal(1, asks[abilities.overpower.id])
+        assert.are.same({}, H.errors)
+    end)
+
     it("allocates nothing over 1,000 display frames of a moving clock after the first publish", function()
         local H, d = boot()
         publish(H)
