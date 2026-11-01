@@ -54,13 +54,15 @@ design 2026-11-01): no metatable, never a live Hekili table. Each field is a val
 `now` context (`Families/Casts.lua` `I.Eval`: a raise is counted in `I.nowErrors` and fails
 `tests/Forever/plain_records_spec.lua`), or absent; a function field may carry a static value the core computes under
 `state` after `ns.updateTalents` (`ns.TrackedStatics`), the live game's safety net: the belief's order is the function,
-then the static only if it raised (a working function's nil is its answer), then 0. The belief runs no function in `def`
-with `state` as its environment (`I.Eval` swaps it for the call; `now`, `onCrit` and `taken` are bound to the context; the
-sim runs most of the same functions under `state`), but a pack function naming `state` through a file-level upvalue
-(or a file-local helper's) still reaches it when the belief runs it, until border batch 5 closes them:
-the `fsr` entries of Hunter, Mage, Paladin, Priest and Shaman (`state.spec.<tree>`),
-Warrior's Anger Management `decay`, Shaman's `mp5`, Druid's and Priest's `spirit`, Priest's and Warlock's regen `value`,
-Warrior's swing `value`/`crit` (both hands), Druid's swing `crit`, Warrior's `taken`, and Priest's one `now` (`state.stat`).
+then the static only if it raised (a working function's nil is its answer), then 0. Nothing in `def` runs under `state`
+at runtime: `I.Eval` swaps a function's environment for the call, `now`, `onCrit` and `taken` are bound to the context,
+and the same pack function runs under `state` in the sim, so a bare name answers from whichever side runs it. A helper
+keeps its file's environment, so a function passes it what it read. No function the belief evaluates captures `state`,
+`Hekili` or `class`, or anything they hold (`state.swings`, `state.knownRank`): `plain_records_spec.lua` walks the
+upvalues at every pack. That walk is test-only (`debug.getupvalue` is not in the client) and sees a capture, not a read,
+and not a global read inside a helper. What only the core knows arrives as a value: the `fsr` parts, which may name the
+spec's tree, are numbers read at the build. The belief evaluates a resource's functions after all its build hooks
+(`I.OnBuilt`), and again at the combat edges, where a function that raised is run again.
 The spec's settings reach the belief the same
 way, as plain values in `def.settings` (`Hekili:SettingsChanged` refreshes them).
 
