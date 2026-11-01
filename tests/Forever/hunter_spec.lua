@@ -432,14 +432,14 @@ describe("Forever Hunter through the engine", function()
             assert.is_true(headless.cycle(H, H.ctl.now + 0.1))
         end
         local now = H.ctl.now + 0.1
-        assert.are.same({ 2, t + 12 + 18 }, { VS.PetCount("hawk", now) })
         -- the simulation counts them in the facade's totem slots past the client's five (RegisterPets' `cap`: slots 6-7)
         assert.are.equal(6, H.Hekili.Class.pets.hawk.slot)
         local up, name, start, dur = H.ns.Facade.GetTotemInfo(6) -- the third dive took the oldest's slot
         assert.are.same({ true, "hawk", t + 12, 18 }, { up, name, start, dur })
         S.reset("Primary", true)
         assert.are.equal(2, S.pet.hawk.count)
-        assert.are.same({ 1 }, { (VS.PetCount("hawk", t + 6 + 18 + 0.1)) })
+        H.ctl.now = t + 6 + 18 + 0.1 -- the second dive's hawk is gone, the third's is up
+        assert.are.same({ true, false }, { (H.ns.Facade.GetTotemInfo(6)), (H.ns.Facade.GetTotemInfo(7)) })
         assert.are.same({}, H.errors)
     end)
 

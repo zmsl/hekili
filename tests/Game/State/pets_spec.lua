@@ -188,7 +188,7 @@ describe("the pets family", function()
         cast(GUARD, 10)
         cast(GUARD, 12)
         cast(DISMISS_G, 13)
-        assert.are.same({ 0, 0 }, { VS.PetCount("guardian_a", 13.1) })
+        assert.is_false((ns.Facade.GetTotemInfo(6))) -- both slots free
         assert.are.same({ false, false, false }, pet(13.1))
     end)
 
@@ -220,21 +220,17 @@ describe("the pets family", function()
         assert.are.same({ false, "", 0, 0, 0 }, { ns.Facade.GetTotemInfo(6) }) -- a free guardian slot: no totem
         cast(GUARD, 10)
         cast(GUARD, 12)
-        assert.are.same({ 2, 30 }, { VS.PetCount("guardian_a", 12.1) })
         -- the facade's totem slots past the client's five, one per guardian: its key, start and duration
         assert.are.same({ true, "guardian_a", 10, 18, 0, 1, 0 }, { ns.Facade.GetTotemInfo(6) })
         assert.are.same({ true, "guardian_a", 12, 18, 0, 1, 0 }, { ns.Facade.GetTotemInfo(7) })
         assert.are.same({ false, "", 0, 0, 0 }, { ns.Facade.GetTotemInfo(8) }) -- past the cap: no slot
         cast(GUARD, 14) -- the third: the oldest (10's) gives way
-        assert.are.same({ 2, 32 }, { VS.PetCount("guardian_a", 14.1) })
         assert.are.same({ true, "guardian_a", 14, 18, 0, 1, 0 }, { ns.Facade.GetTotemInfo(6) })
         ctl.now = 30.5
         assert.are.same({ false, "guardian_a", 12, 18, 0, 1, 0 }, { ns.Facade.GetTotemInfo(7) }) -- expired: its times stay
-        assert.are.same({ 1, 32 }, { VS.PetCount("guardian_a", 30.5) }) -- 12's expired at 30
-        assert.are.same({ 0, 0 }, { VS.PetCount("guardian_a", 32.5) })
-        assert.are.same({ 0, 0 }, { VS.PetCount("guardian_alias", 14.1) }) -- one pet, under its token
+        ctl.now = 32.5
+        assert.is_false((ns.Facade.GetTotemInfo(6))) -- 14's expired at 32 too
         assert.are.same({ false, false, false }, pet(14.1)) -- guardians never model the pet unit
-        assert.are.same({ 0, 0 }, { VS.PetCount("pet_a", 14.1) }) -- untracked
     end)
 
     it("allocates nothing across 1000 UNIT_PETs, polls, summons and facade reads", function()
@@ -250,7 +246,7 @@ describe("the pets family", function()
             cast(SUMMON, t + 0.5)
             ctl.petPower = t % 7
             cast(DISMISS, t + 0.7)
-            local _ = ns.Facade.UnitExists("pet"), ns.Facade.UnitIsDead("pet"), VS.PetCount("guardian_a", t)
+            local _ = ns.Facade.UnitExists("pet"), ns.Facade.UnitIsDead("pet")
             _ = ns.Facade.GetTotemInfo(6)
             _ = ns.Facade.UnitPower("pet", 0), VS.PetPower()
         end, 1000)

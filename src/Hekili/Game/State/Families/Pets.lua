@@ -119,23 +119,6 @@ function VS.Pet(now)
     return exists, dead, false, rec
 end
 
---- (C1) The guardians of `key` up at `now` and the last one's expiry (0, 0 for none or an untracked key). Allocates
---- nothing.
-function VS.PetCount(key, now)
-    local s = slots[key]
-    local n, last = 0, 0
-    for j = 1, s and #s or 0 do
-        local e = s[j]
-        if e > now then
-            n = n + 1
-            if e > last then
-                last = e
-            end
-        end
-    end
-    return n, last
-end
-
 --- The pet's power as last read plain (its own power type, UnitPower("pet")), 0 with no pet or before a read.
 --- shortcut: no pet regen or spend model; UnitPower("pet") is unprobed with a pet out (SecretWhenUnitPowerRestricted
 --- in the API docs; plain 0 with none, probe W PR12): model it if an in-game check finds it secret.
