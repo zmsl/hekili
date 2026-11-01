@@ -180,9 +180,10 @@ R.regenMult = M
 -- starts and one at the start of each interval after it (`decayNext[r]`: the next one's time, 0 while inactive;
 -- stepped-decay design §3.2). Allocates nothing.
 -- `v`, or a function's return, when it is a finite number; else nil (a NaN, infinity, nil or thrown value is inert).
+-- Only at the build and the combat edges, so a function that raised is run again (I.Eval's `retry`).
 local function finite(v)
     if type(v) == "function" then
-        v = I.Eval(v, I.clock) -- in the belief's context (Families/Casts.lua); a raise answers nil, counted
+        v = I.Eval(v, I.clock, true) -- in the belief's context (Families/Casts.lua); a raise answers nil, counted
     end
     return type(v) == "number" and v == v and v > -math.huge and v < math.huge and v or nil
 end
@@ -190,7 +191,7 @@ end
 -- Whether `v`, or a function's return, is true; a thrown value counts as false (inert).
 local function holds(v)
     if type(v) == "function" then
-        v = I.Eval(v, I.clock)
+        v = I.Eval(v, I.clock, true)
     end
     return v == true
 end
@@ -381,7 +382,7 @@ I.OnBuild(function(def, now)
         local fsr = type(d.fsr) == "table" and d.fsr or false
         local rate, spirit = d.regen or 0, 0
         if fsr then
-            rate, spirit = finite(fsr.mp5) or 0, finite(fsr.spirit) or 0
+            rate, spirit = finite(fsr.mp5) or 0, finite(fsr.spirit) or 0 -- numbers: the core's (Tracked.lua)
         end
         R.fsr[r], R.fsrUntil[r], R.shaped[r], R.pinA[r], R.pinB[r] = fsr ~= false, 0, fsr ~= false, 0, 0
         R.fsrFrom[r], R.fsrHeld[r] = -1e9, false
@@ -402,9 +403,8 @@ I.OnBuild(function(def, now)
         R.capT[r], R.capB[r] = -1e9, false
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
-        R.decay[r] = decayOf(r)
-        local iv = finite(d.decayInterval) or 0
-        R.decayIv[r], R.decayNext[r] = iv > 0 and iv or 0, 0
+        R.decay[r] = 0
+        R.decayIv[r], R.decayNext[r] = 0, 0
         R.taken[r] = type(d.taken) == "function" and setfenv(d.taken, I.nowCtx) or false
         R.takenBin[r], R.takenSec[r] = {}, {}
         for i = 1, I.TAKEN_WINDOW do
@@ -480,7 +480,6 @@ I.OnBuild(function(def, now)
             end
         end
     end
-    refresh()
     for a = 1, #def.abilities do
         usable[a], ansT[a], shortCost[a], shortT[a], shortGain[a], shortCast[a], shortEst[a] =
             UNKNOWN, -1, 0, 0, 0, 0, 0
@@ -491,6 +490,20 @@ I.OnBuild(function(def, now)
     for k = 1, RECORDS do
         recA[k], recR[k], recGone[k] = 0, 0, false
     end
+end)
+
+-- The declared functions, once the `now` context's names and the talent ranks are this build's (Now.lua and
+-- Sources/Talents.lua build after this family).
+I.OnBuilt(function(def)
+    for r = 1, R.n do
+        if not R.maxRead[r] then
+            setMax(r, maxOf(r))
+        end
+        R.decay[r] = decayOf(r)
+        local iv = finite(def.resources[r].decayInterval) or 0
+        R.decayIv[r] = iv > 0 and iv or 0
+    end
+    refresh()
 end)
 
 -- Slot r's `main` or (the off hand of a main-hand slot) `off` field for `hand`: a number, or the model's function run
@@ -506,7 +519,7 @@ local function perSwing(r, hand, main, off, at)
         v = off[r]
     end
     if type(v) == "function" then
-        v = I.Eval(v, I.clock) -- in the belief's context (Families/Casts.lua): a raise answers nil, counted once
+        v = I.Eval(v, t) -- in the belief's context (Families/Casts.lua): a raise answers nil, counted once
     end
     return type(v) == "number" and v or 0
 end

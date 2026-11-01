@@ -194,11 +194,17 @@ I.UNKNOWN = {
 }
 
 -- Build hooks (families allocate their arrays and records) and the snapshot writers, in registration order.
-I.BUILD, I.SNAPSHOT = {}, {}
+I.BUILD, I.BUILT, I.SNAPSHOT = {}, {}, {}
 
 --- Registers `fn(def, now)`, run by I.Build for every family. Load time only.
 function I.OnBuild(fn)
     I.BUILD[#I.BUILD + 1] = fn
+end
+
+--- Registers `fn(def, now)`, run after every OnBuild: the `now` context's names and the talent ranks are this build's,
+--- so a pack function may be evaluated. Load time only.
+function I.OnBuilt(fn)
+    I.BUILT[#I.BUILT + 1] = fn
 end
 
 --- Registers `fn(out)`, which appends Snapshot() lines to `out`. Load time only.

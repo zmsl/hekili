@@ -84,9 +84,12 @@ end)
 --- A pack function (a record's `cooldown`, `spend`, `gcdTime`, `usable`, an aura's `duration`, a resource's `max`,
 --- ... Engine/Schema/Tracked.lua) evaluated in the belief's `now` context at `t`: its `buff`, `talent`, `totem`,
 --- `settings`, ... are the belief's, so a cost that reads an aura's stacks is the cast's own, not the simulation's last
---- reset's. Returns its value and true; nil and false when it raised (counted once). Allocates nothing once it has raised.
-function I.Eval(f, t)
-    if failed[f] then
+--- reset's. Returns its value and true; nil and false when it raised (counted once). `retry`: a rare read (the build's,
+--- a combat edge's) runs it even after a raise, so a transient at login does not disable it until the next build; it
+--- clears on an answer. Allocates nothing once it has raised.
+function I.Eval(f, t, retry)
+    local raised = failed[f]
+    if raised and not retry then
         return nil, false
     end
     local env = getfenv(f)
@@ -95,9 +98,14 @@ function I.Eval(f, t)
     local ok, v = pcall(f)
     setfenv(f, env)
     if not ok then
-        failed[f] = true
-        I.nowErrors, I.nowError = (I.nowErrors or 0) + 1, v
+        if not raised then
+            failed[f] = true
+            I.nowErrors, I.nowError = (I.nowErrors or 0) + 1, v
+        end
         return nil, false
+    end
+    if raised then
+        failed[f] = nil
     end
     return v, true
 end

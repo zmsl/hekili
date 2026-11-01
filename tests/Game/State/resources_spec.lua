@@ -2015,6 +2015,79 @@ describe("resources", function()
             within(10, I.res.spE[1])
         end)
 
+        it("runs a function that raised at the build again at the next combat edge, counted once", function()
+            local ready = false
+            boot({
+                resources = {
+                    {
+                        type = ENERGY,
+                        token = "ENERGY",
+                        max = 100,
+                        decay = function()
+                            if not ready then
+                                error("not yet")
+                            end
+                            return 2
+                        end,
+                    },
+                },
+                abilities = {},
+                auras = {},
+                talents = {},
+                units = { "player", "target" },
+            })
+            assert.are.same({ 0, 1 }, { I.res.decay[1], I.nowErrors })
+            obs(Obs.CombatEnd, 5, 0, 0, 0) -- still raising: no second count
+            I.Fold(5, false)
+            assert.are.same({ 0, 1 }, { I.res.decay[1], I.nowErrors })
+            ready = true
+            obs(Obs.CombatEnd, 6, 0, 0, 0)
+            I.Fold(6, false)
+            assert.are.same({ 2, 1 }, { I.res.decay[1], I.nowErrors })
+        end)
+
+        it("evaluates a declared function with the context of this build, not the last one's", function()
+            boot({
+                resources = {
+                    {
+                        type = ENERGY,
+                        token = "ENERGY",
+                        max = 100,
+                        decay = function()
+                            return talent.talent_a.spell -- luacheck: ignore 113 (the context's name)
+                        end,
+                    },
+                },
+                abilities = {},
+                auras = {},
+                talents = { { key = "talent_a", spell = 1011, max = 3 } },
+                units = { "player", "target" },
+            })
+            assert.are.equal(1011, I.res.decay[1])
+        end)
+
+        it("evaluates a swing function at the swing's own time", function()
+            boot({
+                resources = {
+                    {
+                        type = ENERGY,
+                        token = "ENERGY",
+                        max = 100,
+                        swing = 1,
+                        swingValue = function()
+                            return now -- luacheck: ignore 113 (the context's name)
+                        end,
+                    },
+                },
+                abilities = {},
+                auras = {},
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.clock = 20
+            assert.are.equal(25, I.SwingValue(1, 1, 25))
+        end)
+
         it("re-reads function `spirit`, `mp5` and `share` values at each combat start", function()
             local m, x, c = 2, 5, 0.5
             shaped({

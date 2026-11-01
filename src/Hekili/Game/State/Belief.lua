@@ -139,6 +139,9 @@ function I.Build(def, now)
     for k = 1, #I.BUILD do
         I.BUILD[k](def, now)
     end
+    for k = 1, #I.BUILT do
+        I.BUILT[k](def, now)
+    end
     local pv = def.providers or {}
     provide(pv.outcomes, pv.presence, pv.viewer, now, def)
     I.built = true
