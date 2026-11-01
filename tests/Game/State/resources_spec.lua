@@ -20,6 +20,9 @@ describe("resources", function()
         ns = load.module()
         VS, I = ns.VirtualState, ns.VirtualStateInternal
         S, Obs = I.Sources, VS.Obs
+        def.fsr = def.fsr or load.constant("FSR") -- a hand-built def carries the core's constants as the build does
+        def.gcdSpell = def.gcdSpell or load.constant("GCD_SPELL")
+        def.oracleMin = def.oracleMin or load.constant("ORACLE_MIN")
         I.Build(def, 1)
         I.api = api
     end

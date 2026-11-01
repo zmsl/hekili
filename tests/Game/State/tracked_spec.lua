@@ -56,6 +56,13 @@ describe("the tracked set", function()
         assert.is_nil(h.Virtual) -- the debug bridge is the core's (Hekili.lua), not the build's
     end)
 
+    it("carries the core's game constants in the build, and the belief reads them from it alone", function()
+        ns.FSR, ns.GCD_SPELL, ns.ORACLE_MIN = 7, 4242, 0.3
+        ns.BuildTracked()
+        assert.are.same({ 7, 4242, 0.3 }, { I.FSR, I.GCD_SPELL, I.Log.ORACLE_MIN })
+        assert.are.same({ 7, 4242, 0.3 }, { I.def.fsr, I.def.gcdSpell, I.def.oracleMin })
+    end)
+
     it("builds the tracked set's contents: ids from id and copy, spender slots, talents de-duplicated", function()
         local got
         local build = I.Build

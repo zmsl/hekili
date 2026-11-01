@@ -7,17 +7,19 @@ local C_SpecializationInfo = Facade.C_SpecializationInfo
 local GetClassInfo, GetNumClasses, UnitSex = Facade.GetClassInfo, Facade.GetNumClasses, Facade.UnitSex
 local Hekili = _G[ addon ]
 
--- Forever's GCD spell (shared-content spec §5; audit E15): the one ID the engine asks the GCD's cooldown by. The
--- belief keeps its own copy (Game/State/Sources/Spellbook.lua, I.GCD_SPELL).
+-- The game constants the engine and the belief share, defined here once and carried to the belief in the tracked
+-- set's build (Engine/Schema/Tracked.lua: def.gcdSpell, def.fsr, def.oracleMin; border batch 3 item 4).
+-- Forever's GCD spell (shared-content spec §5; audit E15): the one ID the engine asks the GCD's cooldown by (the
+-- belief: Game/State/Sources/Spellbook.lua, I.GCD_SPELL).
 ns.GCD_SPELL = 29515
 
--- The five-second rule's window (seconds): the one length the engine's own queued spends open (Engine/Sim/State.lua).
--- The belief keeps its own copy (Game/State/Families/Resources.lua, I.FSR).
+-- The five-second rule's window (seconds): the one length the engine's own queued spends open (Engine/Sim/State.lua;
+-- the belief: Game/State/Families/Resources.lua, I.FSR).
 ns.FSR = 5
 
 -- The usability oracle's lag (seconds): a swing the game paid shows in the usability answers no sooner than this
--- after it, so the swing forecast holds a pending swing's gain two of these (GAP AK, Engine/Sim/State.lua). The
--- belief keeps its own copy (Game/Events/Melee.lua, L.ORACLE_MIN).
+-- after it, so the swing forecast holds a pending swing's gain two of these (GAP AK, Engine/Sim/State.lua; the
+-- belief: Game/Events/Melee.lua, L.ORACLE_MIN).
 ns.ORACLE_MIN = 0.1
 
 local GetSpecialization = C_SpecializationInfo.GetSpecialization

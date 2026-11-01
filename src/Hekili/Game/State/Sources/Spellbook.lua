@@ -13,8 +13,9 @@ local S = I.Sources
 local Obs = VS.Obs
 local Plain, Stage, Note = S.Plain, S.Stage, S.Note
 
---- Forever's GCD spell (cleanup Q6): the one constant core and the facade ask the GCD by (shared-content spec §5).
-I.GCD_SPELL = 29515
+-- I.GCD_SPELL: Forever's GCD spell (cleanup Q6), the one constant the core and the facade ask the GCD by
+-- (shared-content spec §5); the core's (def.gcdSpell), set at the build below. Before it the facade's cooldown
+-- policy knows no GCD spell (its times are plain out of combat anyway).
 
 -- By ability index: the last ready flag reported (-1 none, 0 not ready, 1 ready); the GCD's (-1, 0 idle, 1 active).
 local last, gcdLast = {}, -1
@@ -56,6 +57,7 @@ local function resolve(api)
 end
 
 I.OnBuild(function(def)
+    I.GCD_SPELL = def.gcdSpell
     for a = 1, #def.abilities do
         last[a] = -1
     end

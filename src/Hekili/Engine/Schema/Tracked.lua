@@ -92,6 +92,10 @@ local function buildDef()
     pv.outcomes, pv.presence, pv.viewer = providersOf()
     def.school = ns.SCHOOL -- the spell schools by name (Families/Expect.lua compiles an ability's `school` to the mask)
     def.error = ns.Error -- the core's error channel (Sources/Forms.lua warns once per untracked form)
+    -- the game constants, defined once in Engine/Sim/Constants.lua (border batch 3 item 4): the five-second rule's
+    -- window (Families/Resources.lua), the GCD spell (Sources/Spellbook.lua, the facade) and the usability oracle's lag
+    -- (Events/Melee.lua)
+    def.fsr, def.gcdSpell, def.oracleMin = ns.FSR, ns.GCD_SPELL, ns.ORACLE_MIN
     local slotByKey = {}
     for _, k in ipairs(sortedKeys(class.resources)) do
         local r = class.resources[k]

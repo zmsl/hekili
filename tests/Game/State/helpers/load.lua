@@ -40,12 +40,25 @@ function M.module()
     return ns
 end
 
+--- A game constant as Engine/Sim/Constants.lua defines it (`ns.FSR`, `ns.GCD_SPELL`, `ns.ORACLE_MIN`), read from its
+--- own line: the one definition; a hand-built `def` carries them as the core's build does.
+local constants = {}
+function M.constant(name)
+    if constants[name] == nil then
+        local src = assert(io.open(M.ROOT .. "Engine/Sim/Constants.lua")):read("*a")
+        constants[name] = assert(tonumber(src:match("\nns%." .. name .. " = ([%d%.]+)")), name)
+    end
+    return constants[name]
+end
+
 --- Loads the core's build of the tracked set (Engine/Schema/Tracked.lua: `ns.BuildTracked`, `ns.TrackPassive`) into
 --- `ns` with `_G.Hekili` set to `hekili` (its State, Class) for the duration; `ns.SCHOOL` seeded as Spec.lua sets it.
 function M.schema(ns, hekili)
     local saved = rawget(_G, "Hekili")
     _G.Hekili = hekili
     ns.SCHOOL = ns.SCHOOL or M.school()
+    ns.FSR, ns.GCD_SPELL = ns.FSR or M.constant("FSR"), ns.GCD_SPELL or M.constant("GCD_SPELL")
+    ns.ORACLE_MIN = ns.ORACLE_MIN or M.constant("ORACLE_MIN")
     assert(loadfile(M.ROOT .. "Engine/Schema/Tracked.lua"))("Hekili", ns)
     _G.Hekili = saved
 end

@@ -67,8 +67,11 @@ L.credited, L.background, L.avoidsBack = { 0, 0, 0 }, 0, 0
 -- the last avoid credited to our swing: its count, swing hand, swing time, row time and, for a parry, the parrying
 -- mob's GUID ("" otherwise; Attackers dates that mob's parry by it)
 L.avoids, L.avoidX, L.avoidT, L.avoidRowT, L.avoidRowG = 0, 0, 0, -1, ""
--- The usability oracle (harness design §2, decision D8).
-L.ORACLE_MIN = 0.1
+-- The usability oracle (harness design §2, decision D8); its lag is the core's constant (def.oracleMin), set at the
+-- build (its readers, Rows.lua's verdict and the resources' fold, run only after one).
+I.OnBuild(function(def)
+    L.ORACLE_MIN = def.oracleMin
+end)
 L.THETA_MIN, L.THETA_MAX = 2, 16
 L.theta = {}
 for k = 1, 16 do

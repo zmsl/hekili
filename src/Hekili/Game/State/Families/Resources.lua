@@ -170,8 +170,8 @@ R.auraRegen = G
 -- out of the window (default 0). See coefAt.
 local M = { n = 0, slot = {}, aura = {}, mult = {}, spirit = {}, share = {}, mp5 = {}, spiritDef = {}, mp5Def = {} }
 R.regenMult = M
---- The five-second rule's window after our own spend of an `fsr` slot, in seconds.
-I.FSR = 5
+-- I.FSR: the five-second rule's window after our own spend of an `fsr` slot, in seconds: the core's constant
+-- (def.fsr), set at the build below; read only by the fold.
 
 -- Slot r's out-of-combat loss per second from its `decay` (a number or a state-bound function; absent: none),
 -- evaluated at the build and at each combat end (talent ranks change out of combat only). With a `decayInterval`
@@ -353,6 +353,7 @@ local function refresh()
 end
 
 I.OnBuild(function(def, now)
+    I.FSR = def.fsr
     for k in pairs(R.slotOf) do
         R.slotOf[k] = nil
     end

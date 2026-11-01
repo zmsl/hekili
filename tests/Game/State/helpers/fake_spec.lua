@@ -199,11 +199,15 @@ end
 --- The tracked-set definition the core would build from M.new()'s class (Engine/Schema/Tracked.lua, for family
 --- specs without it).
 function M.def(hekili)
+    local load = require("Game.State.helpers.load")
     local class = hekili.Class
     local rage = class.resources.rage
     local mh = rage.state.regenModel.mainhand
     local def = {
-        school = require("Game.State.helpers.load").school(),
+        school = load.school(),
+        fsr = load.constant("FSR"),
+        gcdSpell = load.constant("GCD_SPELL"),
+        oracleMin = load.constant("ORACLE_MIN"),
         abilities = { class.abilities.spender_a, class.abilities.spender_b, class.abilities.spender_c },
         abilityIds = { { M.SPENDER_A }, { M.SPENDER_B }, { M.SPENDER_C, M.SPENDER_C_R2 } },
         abilitySlot = { 1, 1, 1 },
