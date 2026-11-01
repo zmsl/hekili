@@ -6,7 +6,7 @@
 
 ### Changed
 - Less memory churn in big pulls: the engine no longer builds its nameplate debug text on every update, only when you take a snapshot.
-- Less work per update: the engine builds its script names once as a priority loads, no longer builds a debug line with debugging off, and prices an ability's cost once per simulated moment. Mana and caster specs allocate a fraction of what they did each update (Smite 284 to 43 bytes, Balance 171 to 2, Arcane 107 to 18), so the collector interrupts less; the recommendations are unchanged.
+- Less work per update, mostly for casters: the engine does less setup and bookkeeping each time the icons refresh, and works out an ability's cost once per moment instead of repeatedly. The recommendations are unchanged.
 
 ### Fixed
 

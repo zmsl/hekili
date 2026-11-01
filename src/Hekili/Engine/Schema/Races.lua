@@ -221,6 +221,7 @@ end
 --- state's mutation count (`state.changes`: reset and every mutator in Engine/Sim/State.lua) and query_time stand: a
 --- cost-mod aura applied, consumed or expiring in the simulated future, the offset or delay moving, a form or stance
 --- change, a talent (reset) and whatever else a pack's cost function reads through a mutator all move one of the two.
+--- A cost function may read auras, talents and known ranks; anything else is not covered by the memo's key.
 -- shortcut: a spend set later (by an ability's onLoad) skips this wrap; no ability does today, wrap there if one does.
 function M.Wrap(a)
     local declared = rawget(a.funcs, "spend")

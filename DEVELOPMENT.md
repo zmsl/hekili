@@ -193,7 +193,7 @@ bumped by every mutator in `Engine/Sim/State.lua` and by reset) and query_time s
 which calls every mutator the memo relies on and fails when one stops bumping; a handler must change auras through
 the mutators, never by writing an aura's fields. The proof is the shadow check, off in shipped code: with `ns.costMods.shadow = true` (in a test,
 `H.ns.costMods.shadow`) every memo hit recomputes the cost and raises "Hekili: stale memoised cost of ..." on a
-difference; `shadowHits` counts the hits. Run the loops with it on when touching a mutator or a cost function.
+difference; `shadowHits` counts the hits. Run the loops with it on when touching a mutator or a cost function. A cost function may read auras, talents and known ranks; anything else it reads is not part of the memo's key, so the memo would serve a stale cost.
 
 ### Review and merge
 
