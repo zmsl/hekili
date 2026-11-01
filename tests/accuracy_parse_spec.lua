@@ -10,25 +10,22 @@ local LOOP = "fights=20 agreement 0.926 (45678 ticks); react median 0 p90 1 neve
 describe("tools/accuracy/parse.lua", function()
     it("reads a loop line", function()
         local r = parse.loop(LOOP)
-        assert.are.same(
-            { 0.926, 45678, 12, 340, 0.998, 0.74, 0.42, 3.12, 1.123, 2.78, 1234, 5.2, 0.4, 1.3 },
-            {
-                r.agreement,
-                r.ticks,
-                r.readyShort,
-                r.heldReady,
-                r.dps,
-                r.flicker,
-                r.oracleFlicker,
-                r.cpuMs,
-                r.ratio,
-                r.calibration,
-                r.bytes,
-                r.cost,
-                r.cooldown,
-                r.unmatched,
-            }
-        )
+        assert.are.same({ 0.926, 45678, 12, 340, 0.998, 0.74, 0.42, 3.12, 1.123, 2.78, 1234, 5.2, 0.4, 1.3 }, {
+            r.agreement,
+            r.ticks,
+            r.readyShort,
+            r.heldReady,
+            r.dps,
+            r.flicker,
+            r.oracleFlicker,
+            r.cpuMs,
+            r.ratio,
+            r.calibration,
+            r.bytes,
+            r.cost,
+            r.cooldown,
+            r.unmatched,
+        })
         assert.are.equal(0, parse.loop((LOOP:gsub("%[cooldown.-%], episodes", "[], episodes"))).cost)
     end)
     it("reads the wowsims lines", function()
