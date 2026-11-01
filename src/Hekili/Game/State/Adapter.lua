@@ -10,7 +10,7 @@ local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local S = I.Sources
 
 local Hekili = _G[addon]
-local state, class = Hekili.State, Hekili.Class
+local class = Hekili.Class
 local GetTime, CreateFrame = ns.Facade.GetTime, ns.Facade.CreateFrame
 local debugprofilestop = debugprofilestop
 local insert, sort = table.insert, table.sort

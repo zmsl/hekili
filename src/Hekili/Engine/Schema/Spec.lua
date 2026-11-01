@@ -375,7 +375,8 @@ local HekiliSpecMixin = {
             end
 
             local m = r.state.meta
-            if m.decay ~= nil and m.decayInterval ~= nil then
+            local iv = m.decay ~= nil and eval( m.decayInterval )
+            if type( iv ) == "number" and iv > 0 then
                 r.state.regenModel.__decay = decayEntry( resource, r.state, r.state.regenModel, m )
             end
             for _, v in pairs( r.state.regenModel ) do
