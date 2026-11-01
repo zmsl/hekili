@@ -694,7 +694,7 @@ kept("C_UnitAuras.GetAuraDataByAuraInstanceID", "virtual", function(unit, instan
 end, "secret in combat; errors when tainted [W §4]; AuraByInstance()")
 
 -- The believed delta (event-facade spec §2.2, decision 2 phase C): what the fold moved in a unit's aura set since the
--- last drain (Families/Auras.lua, I.auraDelta), delivered from the drain (Adapter.lua) as UNIT_AURA(unit,
+-- last drain (Families/Auras.lua, I.auraDelta), delivered from the drain (Sources/Sources.lua) as UNIT_AURA(unit,
 -- { addedAuras, updatedAuraInstanceIDs, removedAuraInstanceIDs }) in the client's shape, so Hekili's own handler marks
 -- the unit for the same Update's scrape. A whole-set change (a target swap) or an overflow is the unit's full update
 -- instead. Preallocated per unit at OnBuild; allocates nothing per delivery.

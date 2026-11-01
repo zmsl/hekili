@@ -117,7 +117,7 @@ function ns.ResourceRegenerates( key )
     return false
 end
 
--- Forever: point resources (a count, not a pool), which a percentage maximum modifier does not scale (Adapter.lua).
+-- Forever: point resources (a count, not a pool), which a percentage maximum modifier does not scale (Engine/Schema/Tracked.lua).
 local points = {
     combo_points = 1,
     runes = 1,

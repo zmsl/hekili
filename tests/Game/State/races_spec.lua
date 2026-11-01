@@ -222,7 +222,7 @@ describe("Engine/Schema/Races.lua", function()
         local mixin = assert(loadstring("local ns = ...\nreturn {\n" .. entry .. "\n}"))(ns)
         local def = { aura = "proc_a", pct = -1, charges = 1, spells = { 1021 } }
         mixin:RegisterCostMod(def)
-        assert.are.equal(def, ns.raceMods.costMods[1]) -- the list Adapter.lua forwards to the belief
+        assert.are.equal(def, ns.raceMods.costMods[1]) -- the list Tracked.lua forwards to the belief
         local a = ability("spender_a", { id = 1021, copy = { 1022 }, spend = 60, spendType = "resource_b" })
         local b = ability("spender_b", { id = 1023, spend = 45, spendType = "resource_b" })
         state.buff.proc_a = { up = true, count = 1 }

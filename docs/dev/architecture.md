@@ -237,7 +237,7 @@ as the string until that class logs in).
 
 ## 4. `Hekili.Virtual`
 
-`Hekili.Virtual = { State, Events }` (`Game/State/Adapter.lua`) is the probe and debug handle, for example
+`Hekili.Virtual = { State, Events, Prof }` (set by the core, `Hekili.lua`) is the probe and debug handle, for example
 `/run print(Hekili.Virtual.State.Snapshot())` and ForeverProbe's `Calib.lua`. It is not for content, which has the
 facade and the environment names. The boundary scan rejects `Hekili.Virtual` and `VirtualState` in a content file.
 

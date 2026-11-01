@@ -101,4 +101,3 @@ Integrations\WeakAuras.lua
 Engine\Sim\AplWarnings.lua
 Engine\Sim\Scripts.lua
 Engine\Sim\Core.lua
-Game\State\Adapter.lua

@@ -1,6 +1,6 @@
 -- Game/State/Families/Auras.lua
 -- The auras family (spec §6.3): per unit and tracked aura, the believed expiry, stacks, applied time and an invented
--- stable instance ID; plain walk reads (observed), our casts' handler writes (modelled, Adapter.lua), expiry by time;
+-- stable instance ID; plain walk reads (observed), our casts' handler writes (modelled, Families/Now.lua), expiry by time;
 -- per-target memory by GUID slot (TARGET_CAP); the index order for AuraAt; AuraGen; Count.WithAura; a player aura's
 -- stacks spent by hits on the player (its `consumedBy`, tank design §3).
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Auras.lua and Belief/Targets.lua (Applier TargetSwap
@@ -240,7 +240,7 @@ end
 I.On(Obs.PlayerHit, function(o, t)
     for k = 1, CONS.n do
         local j = CONS[k]
-        if consKinds[k][o.a] and U.exp0[1][j] > t then -- unit 1 is always "player" (Adapter.lua's def.units)
+        if consKinds[k][o.a] and U.exp0[1][j] > t then -- unit 1 is always "player" (Tracked.lua's def.units)
             local n = U.stacks[1][j] - 1
             if n > 0 then
                 set(1, j, U.exp0[1][j], U.applied[1][j], n, t, "modelled", Obs.PlayerHit)

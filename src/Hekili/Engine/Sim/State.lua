@@ -6487,7 +6487,7 @@ do
 
                 -- The regen read's trailing values (border batch 2): the five-second window's end (false for none),
                 -- then the stepped decay's anchor and the rate of hits taken, which the model's generated entries
-                -- read from here at every forecast (Game/State/Adapter.lua).
+                -- read from here at every forecast (Engine/Schema/Spec.lua).
                 if power.type == Enum.PowerType.Mana then
                     local inactive, active, fsr, anchor, taken = GetManaRegen()
 

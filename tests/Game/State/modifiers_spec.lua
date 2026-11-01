@@ -41,7 +41,7 @@ describe("resource modifiers", function()
             return k == "combo_points"
         end
         h.Class.auras.mod_aura_a = { key = "mod_aura_a", id = MOD_AURA, duration = 15 }
-        -- a race pack's declarations (Engine/Schema/Races.lua), as Adapter.lua reads them
+        -- a race pack's declarations (Engine/Schema/Races.lua), as Engine/Schema/Tracked.lua reads them
         ns.raceMods = {
             maxMods = { { pct = 0.05 } },
             costMods = { { aura = "mod_aura_a", pct = -0.10, charges = 3, spells = { fs.SPENDER_B, 999999 } } },

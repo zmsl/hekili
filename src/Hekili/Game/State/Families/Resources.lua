@@ -1,7 +1,7 @@
 -- Game/State/Families/Resources.lua
 -- The resources family (spec §6.1): the cost ladder (a usability report pins or bounds a resource at the ability's
 -- cost), exact reads, regen calibration between pins (an EMA), swing steps for a swing-paid resource (rage), our own
--- casts' changes (Adapter.lua, spec §5.3), periodic regen (Hekili's regen-model entries with `interval` and `value`:
+-- casts' changes (Families/Now.lua, spec §5.3), periodic regen (Hekili's regen-model entries with `interval` and `value`:
 -- with an `aura`, Bloodrage's rage over time; without one, in combat: Anger Management), the gain from a hit on the
 -- player (the paying entry's `taken`, tank design §1.2) and its learned rate, and the Power/Regen accessors.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Resources.lua (calibrate :117-136, pin :218-263,
@@ -501,7 +501,7 @@ end)
 local function perSwing(r, hand, main, off, at)
     local j, t = R.swingAura[r], at or I.clock
     if j < 0 or j > 0 and (I.auras.exp0[1][j] <= t or I.auras.applied[1][j] > t) then
-        return 0 -- unit 1 is always "player" (Adapter.lua's def.units)
+        return 0 -- unit 1 is always "player" (Tracked.lua's def.units)
     end
     local v = main[r]
     if hand == 2 and R.swing[r] == 1 then
@@ -538,7 +538,7 @@ local function auraGain(g, from, to)
         end
         e, ap = to, fightT
     else
-        e, ap = I.auras.exp0[1][j], I.auras.applied[1][j] -- unit 1 is always "player" (Adapter.lua's def.units)
+        e, ap = I.auras.exp0[1][j], I.auras.applied[1][j] -- unit 1 is always "player" (Tracked.lua's def.units)
     end
     if e <= from then
         return 0
@@ -1802,7 +1802,7 @@ function VS.Power(powerType, now)
 end
 
 --- (stepped-decay design §3.3) The time of a power type's last stepped decay quantum, the anchor of the sim's
---- `__decay` entry (Adapter.lua): 0 while its decay is inactive or continuous, or the type untracked. Allocates nothing.
+--- `__decay` entry (Engine/Schema/Spec.lua): 0 while its decay is inactive or continuous, or the type untracked. Allocates nothing.
 function VS.DecayAnchor(powerType)
     local r = R.slotOf[powerType]
     local n = r and R.decayNext[r] or 0

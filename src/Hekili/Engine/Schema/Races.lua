@@ -12,7 +12,7 @@
 -- them over the class's after Engine/Schema/Spec.lua's merge (which takes the class first and only adds missing keys), so a race
 -- registration wins a key clash with the class and with `all`. Resource and cost modifiers go to `ns.raceMods`, one
 -- declaration read by two layers:
--- VirtualState's belief (Game/State/Families/Modifiers.lua, through Adapter.lua) and Hekili's simulation (below).
+-- VirtualState's belief (Game/State/Families/Modifiers.lua, through Tracked.lua) and Hekili's simulation (below).
 
 local addon, ns = ...
 local Hekili = _G[addon]
@@ -94,7 +94,7 @@ end
 
 --- { resource = key, aura = key, mult = n | spirit = m | share = s | mp5 = x }: a regen entry (Engine/Schema/Spec.lua's
 --- rate fields) on the class's resource `resource` while the player's aura `aura` is up; a class without that resource
---- ignores it (Adapter.lua). The belief's only: the sim's forecast reads the belief's rate.
+--- ignores it (Tracked.lua). The belief's only: the sim's forecast reads the belief's rate.
 function Race:RegisterRegenMod(def)
     if self.live and type(def.resource) == "string" and type(def.aura) == "string" then
         mods.regenMods[#mods.regenMods + 1] = def

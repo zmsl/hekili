@@ -117,7 +117,7 @@ local function guarded(k, a, t)
     elseif j == 0 then
         return true
     end
-    local up = I.auras.exp0[1][j] > t -- unit 1 is always "player" (Adapter.lua's def.units)
+    local up = I.auras.exp0[1][j] > t -- unit 1 is always "player" (Tracked.lua's def.units)
     return up == H.up[k]
 end
 

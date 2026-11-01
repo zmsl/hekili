@@ -29,13 +29,11 @@ function M.school()
     return school
 end
 
---- A fresh ns with every VirtualState file but Adapter.lua loaded.
+--- A fresh ns with every VirtualState file loaded.
 function M.module()
     local ns = {}
     for _, path in ipairs(M.files()) do
-        if not path:match("Adapter%.lua$") then
-            assert(loadfile(path))("Hekili", ns)
-        end
+        assert(loadfile(path))("Hekili", ns)
     end
     return ns
 end

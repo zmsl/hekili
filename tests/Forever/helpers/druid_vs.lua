@@ -1,7 +1,7 @@
 -- tests/Forever/helpers/druid_vs.lua: the Forever Druid in a real VirtualState (tests/Forever/druid_spec.lua's "in
 -- VirtualState's now context" and the Druid harness scenarios, tests/Forever/helpers/druid_world.lua): Hekili's class
 -- built from the class file's registrations (load_druid.lua's recording load; values evaluated at talent rank 0,
--- functions kept in `funcs`) and handed to the Adapter through the fake spec provider.
+-- functions kept in `funcs`) and handed to the build (Engine/Schema/Tracked.lua) through the fake spec provider.
 local ld = require("Forever.helpers.load_druid")
 local load = require("Game.State.helpers.load")
 local fs = require("Game.State.helpers.fake_spec")

@@ -11,19 +11,17 @@ describe("the registry's and tickets' resident memory", function()
     it("stays under its ceiling", function()
         local ns, kb = { SCHOOL = load.school() }, 0
         for _, path in ipairs(load.files()) do
-            if not path:match("Adapter%.lua$") then
-                local mine = FOUR[path:match("[^/]+$")] and path:match("([^/]+)%.lua$")
+            local mine = FOUR[path:match("[^/]+$")] and path:match("([^/]+)%.lua$")
+            collectgarbage("collect")
+            collectgarbage("collect")
+            local before = collectgarbage("count")
+            assert(loadfile(path))("Hekili", ns)
+            if mine then
                 collectgarbage("collect")
                 collectgarbage("collect")
-                local before = collectgarbage("count")
-                assert(loadfile(path))("Hekili", ns)
-                if mine then
-                    collectgarbage("collect")
-                    collectgarbage("collect")
-                    local d = collectgarbage("count") - before
-                    print(("\n%s resident: %.1f KB"):format(mine, d))
-                    kb = kb + d
-                end
+                local d = collectgarbage("count") - before
+                print(("\n%s resident: %.1f KB"):format(mine, d))
+                kb = kb + d
             end
         end
         print(("\nregistry + tickets + kinds resident: %.1f KB"):format(kb))
