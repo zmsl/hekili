@@ -54,8 +54,8 @@ return {
     maintenance = { demoralizing_roar = "maintain_demoralizing_roar" },
     leveling = {
         "maul,use_off_gcd=1,focus=2,if=!action.primal_bite.known",
-        "demoralizing_roar,if=!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.current<action.primal_bite.cost)",
-        "faerie_fire,if=!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.current<action.primal_bite.cost)",
+        "demoralizing_roar,if=!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.lo<action.primal_bite.cost)",
+        "faerie_fire,if=!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.lo<action.primal_bite.cost)",
         "bear_form,if=!buff.bear_form.up",
     },
 }

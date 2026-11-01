@@ -10,7 +10,7 @@
 actions.precombat=shadowguard,if=!buff.shadowguard.up&action.shadowguard.known
 actions.precombat+=/mind_blast
 actions=shadowform,if=!buff.shadowform.up
-actions+=/dark_sacrifice,if=mana.current<=2000
+actions+=/dark_sacrifice,if=mana.lo<=2000
 actions+=/elunes_light,use_off_gcd=1,if=(time=3|time>=180|action.elunes_light.known)
 actions+=/eureka,use_off_gcd=1,if=(time=3|time>=120|action.eureka.known)
 actions+=/use_items,use_off_gcd=1

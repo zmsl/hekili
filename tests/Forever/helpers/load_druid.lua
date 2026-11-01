@@ -154,6 +154,19 @@ function M.load(vs, file, class)
     return w
 end
 
+-- A pool fake whose floor and ceiling (`lo`, `hi`: the sim's streams, border batch 2) mirror the one `current` a test sets.
+local poolMeta = {
+    __index = function(t, k)
+        if k == "lo" or k == "hi" then
+            return t.current
+        end
+        return nil
+    end,
+}
+local function pool(fields)
+    return setmetatable(fields, poolMeta)
+end
+
 local function default(value)
     return setmetatable({}, {
         __index = function()
@@ -177,8 +190,8 @@ function M.env(w)
     for k, s in pairs(w.settings) do
         e.settings[k] = s.default
     end
-    e.energy = { current = 100, max = 100, regen = 10 }
-    e.rage = { current = 50 }
+    e.energy = pool({ current = 100, max = 100, regen = 10 })
+    e.rage = pool({ current = 50 })
     e.mana = { current = 1000 }
     e.combo_points = { current = 0 }
     e.combat, e.active_enemies, e.group = 0, 1, false

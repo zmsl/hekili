@@ -84,7 +84,7 @@ return {
     -- Thunder Clap drops its 40-rage hold: Hamstring would spend the rage it pools for, and the harness (rule 15's
     -- setting on) never cast it (tests/Forever/maintenance_spec.lua); in game the setting is off and the line silent.
     leveling = {
-        "heroic_strike,use_off_gcd=1,focus=2,if=!action.mortal_strike.known&rage.current>=30",
+        "heroic_strike,use_off_gcd=1,focus=2,if=!action.mortal_strike.known&rage.lo>=30",
         "thunder_clap,if=!action.mortal_strike.known&!debuff.thunder_clap.up",
         "sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5",
         "hamstring,if=!action.mortal_strike.known",

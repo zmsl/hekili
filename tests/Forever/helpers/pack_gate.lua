@@ -43,7 +43,7 @@ M.UNMATCHED_BY = {
 -- answer heard a poll ago), Arcane Shot's shared cooldown's last 0.5 s under CD_PROBE and the cost-0 waits; the icon
 -- shows one poll later. Rage: Fury L24 2142 ticks in 746 episodes, 297 of them multi-tick (longest 14), 1104 ticks
 -- waiting over 0.5 s; Heroic Strike (1801 ticks: cost 15, lo 30-33, truth 41-45) waits on the APL's own
--- `rage.current>=40` (Fury (wowsims.com).simc :52), a condition wait on a rage floor 10-35 under truth, not a cost
+-- `rage.lo>=40` (Fury (wowsims.com).simc :52), a condition wait on a rage floor 10-35 under truth, not a cost
 -- wait; Arms sunder_armor 2.81 s (8 ticks, lo 30, truth 43.7), 175 ticks over 20 under truth. Mana: Retribution a
 -- 14-tick judgement episode (2.68 s, lo 68, truth 97); Protection 43 multi-tick episodes (lo 25 under); Fire fire_blast
 -- 1.6-3.8 s, lo 46-62 under truth, 124 at worst. Energy: Subtlety an 18-tick rupture episode right after Cold Blood

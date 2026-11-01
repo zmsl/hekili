@@ -153,6 +153,19 @@ function M.load()
     return w
 end
 
+-- A pool fake whose floor and ceiling (`lo`, `hi`: the sim's streams, border batch 2) mirror the one `current` a test sets.
+local poolMeta = {
+    __index = function(t, k)
+        if k == "lo" or k == "hi" then
+            return t.current
+        end
+        return nil
+    end,
+}
+local function pool(fields)
+    return setmetatable(fields, poolMeta)
+end
+
 local function default(value)
     return setmetatable({}, {
         __index = function()
@@ -170,7 +183,7 @@ function M.env(w)
     e.debuff = e.buff
     e.cooldown = default({ remains = 0 })
     e.active_dot = default(0)
-    e.rage = { current = 50 }
+    e.rage = pool({ current = 50 })
     e.target = { minR = 10, is_boss = false }
     e.combat, e.active_enemies = 0, 1
     function e.applyBuff(key, duration, stacks)

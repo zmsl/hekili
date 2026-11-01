@@ -46,12 +46,12 @@ actions+=/victory_rush,focus=1
 actions+=/bloodthirst
 actions+=/whirlwind,if=(!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)
 actions+=/execute,if=execute_phase
-actions+=/cleave,use_off_gcd=1,focus=2,if=(active_enemies>1&rage.current>=40)
+actions+=/cleave,use_off_gcd=1,focus=2,if=(active_enemies>1&rage.lo>=40)
 actions+=/call_action_list,name=overpower_weaving
 actions+=/berserker_stance,use_off_gcd=1,if=(!buff.berserker_stance.up&(!(action.bloodthirst.known|action.whirlwind.known)|((action.bloodthirst.known&cooldown.bloodthirst.remains<=0)|(action.whirlwind.known&cooldown.whirlwind.remains<=0))))
-actions+=/heroic_strike,use_off_gcd=1,focus=2,if=(active_enemies=1&!execute_phase&rage.current>=40)
-actions+=/heroic_strike,use_off_gcd=1,focus=2,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&rage.current>60)
-actions+=/bloodrage,use_off_gcd=1,if=rage.current<90
+actions+=/heroic_strike,use_off_gcd=1,focus=2,if=(active_enemies=1&!execute_phase&rage.lo>=40)
+actions+=/heroic_strike,use_off_gcd=1,focus=2,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&rage.lo>60)
+actions+=/bloodrage,use_off_gcd=1,if=rage.lo<90
 actions+=/berserker_rage,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&talent.improved_berserker_rage.enabled)
 actions+=/battle_shout,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&buff.battle_shout.remains<=10)
 actions+=/sunder_armor,if=!action.bloodthirst.known&debuff.sunder_armor.stack<5
@@ -63,7 +63,7 @@ actions.cd_racials+=/berserking,use_off_gcd=1
 actions.cd_racials+=/eureka,use_off_gcd=1
 actions.cd_racials+=/elunes_light,use_off_gcd=1
 actions.sunder_armor=sunder_armor,if=debuff.sunder_armor.stack<5
-actions.overpower_weaving=battle_stance,use_off_gcd=1,focus=1,if=(((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&!execute_phase&(buff.overpower_ready.up&rage.current>=5&rage.current<=100))&gcd.remains=0)&(!action.overpower.known|(stance_rage_kept>=action.overpower.cost&cooldown.overpower.remains<buff.overpower_ready.remains))
+actions.overpower_weaving=battle_stance,use_off_gcd=1,focus=1,if=(((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&!execute_phase&(buff.overpower_ready.up&rage.lo>=5&rage.lo<=100))&gcd.remains=0)&(!action.overpower.known|(stance_rage_kept>=action.overpower.cost&cooldown.overpower.remains<buff.overpower_ready.remains))
 actions.overpower_weaving+=/overpower,focus=1,if=buff.overpower_ready.up
-actions.overpower_weaving+=/rend,focus=2,if=((!action.battle_stance.known|buff.battle_stance.up)&(settings.wowsims_rend_weave&(!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&!execute_phase&debuff.rend.remains<=3&rage.current>=10))
-actions.overpower_weaving+=/berserker_stance,use_off_gcd=1,if=(!buff.berserker_stance.up&(!action.overpower.known|!cooldown.overpower.ready)&!((!action.battle_stance.known|buff.battle_stance.up)&(settings.wowsims_rend_weave&(!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&!execute_phase&(!action.rend.known|debuff.rend.remains<=3)&rage.current>=10)))
+actions.overpower_weaving+=/rend,focus=2,if=((!action.battle_stance.known|buff.battle_stance.up)&(settings.wowsims_rend_weave&(!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&!execute_phase&debuff.rend.remains<=3&rage.lo>=10))
+actions.overpower_weaving+=/berserker_stance,use_off_gcd=1,if=(!buff.berserker_stance.up&(!action.overpower.known|!cooldown.overpower.ready)&!((!action.battle_stance.known|buff.battle_stance.up)&(settings.wowsims_rend_weave&(!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&!execute_phase&(!action.rend.known|debuff.rend.remains<=3)&rage.lo>=10)))

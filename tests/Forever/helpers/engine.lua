@@ -55,7 +55,7 @@ local function newState(class, race)
     -- an aura, talent, cooldown or action entry: the fields the loaded functions read (strict, like the state)
     local leaf =
         strict({ up = false, down = true, remains = 0, stack = 0, rank = 0, enabled = false, in_range = true }, "leaf")
-    local resource = strict({ current = 0, max = 100 }, "resource")
+    local resource = strict({ current = 0, lo = 0, hi = 0, max = 100 }, "resource") -- lo, hi: the sim's streams (border batch 2)
     local s = {
         table = table,
         max = math.max,

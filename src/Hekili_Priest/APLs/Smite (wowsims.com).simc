@@ -7,11 +7,11 @@
 # Omitted: default #8: hidden
 
 actions.precombat=power_infusion,use_off_gcd=1
-actions=shoot,use_off_gcd=1,if=mana.pct<=10
-actions+=/holy_fire,focus=2,if=(!debuff.holy_fire.up&mana.pct<=20)
-actions+=/holy_fire,focus=2,if=(!debuff.holy_fire.up&mana.pct>=20)
+actions=shoot,use_off_gcd=1,if=mana.pct_lo<=10
+actions+=/holy_fire,focus=2,if=(!debuff.holy_fire.up&mana.pct_lo<=20)
+actions+=/holy_fire,focus=2,if=(!debuff.holy_fire.up&mana.pct_lo>=20)
 actions+=/holy_nova,if=(buff.holy_purpose.up&active_enemies>=3)
 actions+=/shadow_word_pain,focus=2,if=!debuff.shadow_word_pain.up
 actions+=/penance,if=action.penance.ready
-actions+=/smite,if=mana.pct<=20
+actions+=/smite,if=mana.pct_lo<=20
 actions+=/smite

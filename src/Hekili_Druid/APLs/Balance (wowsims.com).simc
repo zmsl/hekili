@@ -7,7 +7,7 @@
 
 actions=moonkin_form,if=!buff.moonkin_form.up
 actions+=/elunes_light,use_off_gcd=1
-actions+=/innervate,if=mana.pct<10
+actions+=/innervate,if=mana.pct_lo<10
 actions+=/moonfire,focus=2,if=!debuff.moonfire.up
 actions+=/insect_swarm,focus=2,if=!debuff.insect_swarm.up
 actions+=/hurricane,if=active_enemies>=4

@@ -80,7 +80,7 @@ describe("the Warrior world mapping", function()
 
     it("keeps the rage the class file's swap_stance keeps on a stance swap", function()
         local s = H.Hekili.State
-        s.rage.current, s.rage.actual = 100, 100
+        s.rage.current, s.rage.lo, s.rage.actual = 100, 100, 100 -- the class file reads the floor (border batch 2)
         s.swap_stance("berserker_stance") -- the booted class file, on the character's talents and spells
         local keep = s.rage.actual
         assert.are.equal(85, keep) -- Forever's Tactical Mastery passive 10, the talent's 5 ranks 15 each

@@ -191,10 +191,12 @@ M.MATH = { OpAdd = "+", OpSub = "-", OpMul = "*", OpDiv = "/" }
 -- Values with one translation.
 M.VALUES = {
     numberTargets = "active_enemies",
-    currentRage = "rage.current",
-    currentEnergy = "energy.current",
-    currentMana = "mana.current",
-    currentManaPercent = "mana.pct",
+    -- a banded pool reads its believed floor (border batch 2: `.lo`, `.pct_lo`; `.current` is the estimate), as every
+    -- APL read did before the streams split; combo points have no band
+    currentRage = "rage.lo",
+    currentEnergy = "energy.lo",
+    currentMana = "mana.lo",
+    currentManaPercent = "mana.pct_lo",
     maxMana = "mana.max",
     currentManaRegen = "mana.regen",
     currentComboPoints = "combo_points.current",
@@ -632,7 +634,7 @@ local function value(c, n, pct)
         return s, false
     elseif M.VALUES[k] then
         local u = v.sourceUnit and v.sourceUnit.type or "Self"
-        local res = u == "Pet" and M.VALUES[k]:match("^(%a+)%.current$") -- the pet's power: the sim's pet.<resource>
+        local res = u == "Pet" and M.VALUES[k]:match("^(%a+)%.lo$") -- the pet's power: the sim's pet.<resource> (no band)
         if res then
             return "pet." .. res, false
         elseif u ~= "Self" then

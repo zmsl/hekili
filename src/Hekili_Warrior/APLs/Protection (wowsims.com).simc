@@ -41,7 +41,7 @@ actions+=/shatter_curse,if=((!(action.last_stand.known|action.shield_wall.known)
 actions+=/healthstone,use_off_gcd=1,if=health.pct<=30
 actions+=/death_wish
 actions+=/call_action_list,name=cd_racials
-actions+=/shield_block,use_off_gcd=1,if=(rage.current>=40|(!buff.revenge_usable.up&(!action.revenge.known|cooldown.revenge.remains<=1.5)))
+actions+=/shield_block,use_off_gcd=1,if=(rage.lo>=40|(!buff.revenge_usable.up&(!action.revenge.known|cooldown.revenge.remains<=1.5)))
 actions+=/sweeping_strikes,use_off_gcd=1,if=active_enemies>1
 actions+=/thunder_clap,if=active_enemies>2
 actions+=/shield_slam
@@ -55,9 +55,9 @@ actions+=/thunder_clap,if=debuff.thunder_clap.remains<=6
 actions+=/battle_shout,if=buff.battle_shout.remains<=10
 actions+=/rend,if=(!debuff.rend.up&(!(offhand_speed=0)|(offhand_speed=0&(!action.shield_slam.known|cooldown.shield_slam.remains>=1.5))))
 actions+=/sunder_armor,if=(debuff.sunder_armor.stack<5|((!action.shield_slam.known|cooldown.shield_slam.remains>=1.5)&debuff.sunder_armor.remains<=10))
-actions+=/cleave,use_off_gcd=1,focus=2,if=(active_enemies>1&rage.current>=40)
-actions+=/heroic_strike,use_off_gcd=1,focus=2,if=(active_enemies=1&rage.current>=40)
-actions+=/bloodrage,use_off_gcd=1,if=rage.current<90
+actions+=/cleave,use_off_gcd=1,focus=2,if=(active_enemies>1&rage.lo>=40)
+actions+=/heroic_strike,use_off_gcd=1,focus=2,if=(active_enemies=1&rage.lo>=40)
+actions+=/bloodrage,use_off_gcd=1,if=rage.lo<90
 actions.cd_racials=blood_fury,use_off_gcd=1
 actions.cd_racials+=/berserking,use_off_gcd=1
 actions.cd_racials+=/eureka,use_off_gcd=1

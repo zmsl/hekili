@@ -435,7 +435,7 @@ describe("the wowsims APL translator", function()
         assert.are.equal(
             table.concat({
                 "actions=strike,focus=1,if=settings.wowsims_big",
-                "actions+=/roar,use_off_gcd=1,if=rage.current<30",
+                "actions+=/roar,use_off_gcd=1,if=rage.lo<30",
                 "actions+=/call_action_list,name=opener",
                 "actions.opener=dot",
             }, "\n"),
@@ -600,7 +600,7 @@ describe("the wowsims APL translator", function()
         }, ctx({}))
         assert.are.equal(
             table.concat({
-                "actions=strike,if=mana.pct>10",
+                "actions=strike,if=mana.pct_lo>10",
                 "actions+=/strike,if=fight_remains<120",
                 "actions+=/strike,if=gcd.remains<90.5",
                 "actions+=/strike,if=(!action.dot.known|debuff.dot.up)",
@@ -649,8 +649,8 @@ describe("the wowsims APL translator", function()
                 "actions=strike,if=20<=health.pct",
                 "actions+=/strike,if=health.pct<35",
                 "actions+=/strike,if=(fight_remains-((time+fight_remains)*0.35))<=0",
-                "actions+=/strike,if=mana.pct>(0.1+5)",
-                "actions+=/strike,if=rage.current<0.5",
+                "actions+=/strike,if=mana.pct_lo>(0.1+5)",
+                "actions+=/strike,if=rage.lo<0.5",
             }, "\n"),
             text
         )
@@ -684,8 +684,8 @@ describe("the wowsims APL translator", function()
             assert.are.equal(
                 table.concat({
                     "actions=strike,if=(!(action.dot.known|action.big_hit.known)|min((action.dot.known&debuff.dot.remains),(action.big_hit.known&cooldown.big_hit.remains))<3)",
-                    "actions+=/strike,if=max(rage.current,(action.dot.known&debuff.dot.remains),5)>4",
-                    "actions+=/strike,if=rage.current<5",
+                    "actions+=/strike,if=max(rage.lo,(action.dot.known&debuff.dot.remains),5)>4",
+                    "actions+=/strike,if=rage.lo<5",
                     "actions+=/strike",
                 }, "\n"),
                 text
@@ -717,14 +717,14 @@ describe("the wowsims APL translator", function()
             }, ctx({}))
             assert.are.equal(
                 table.concat({
-                    "actions=strike,if=((action.big_hit.known&cooldown.big_hit.ready)|rage.current>10)",
-                    "actions+=/strike,if=((!action.big_hit.known|cooldown.big_hit.ready)&rage.current>10)",
-                    "actions+=/strike,if=((action.big_hit.known&!cooldown.big_hit.ready)|rage.current>10)",
-                    "actions+=/strike,if=!((action.dot.known&buff.dot.up)|rage.current>10)",
-                    "actions+=/strike,if=((!action.big_hit.known|!cooldown.big_hit.ready)&rage.current>10)",
-                    "actions+=/strike,if=((!(action.big_hit.known|action.dot.known)|((action.big_hit.known&cooldown.big_hit.ready)|(action.dot.known&buff.dot.up)))&rage.current>10)",
-                    "actions+=/strike,if=(((action.big_hit.known|action.dot.known)&((!action.big_hit.known|cooldown.big_hit.ready)&(!action.dot.known|buff.dot.up)))|rage.current>10)",
-                    "actions+=/strike,if=((!action.big_hit.known|cooldown.big_hit.ready)&rage.current>10)", -- `A|A` is A
+                    "actions=strike,if=((action.big_hit.known&cooldown.big_hit.ready)|rage.lo>10)",
+                    "actions+=/strike,if=((!action.big_hit.known|cooldown.big_hit.ready)&rage.lo>10)",
+                    "actions+=/strike,if=((action.big_hit.known&!cooldown.big_hit.ready)|rage.lo>10)",
+                    "actions+=/strike,if=!((action.dot.known&buff.dot.up)|rage.lo>10)",
+                    "actions+=/strike,if=((!action.big_hit.known|!cooldown.big_hit.ready)&rage.lo>10)",
+                    "actions+=/strike,if=((!(action.big_hit.known|action.dot.known)|((action.big_hit.known&cooldown.big_hit.ready)|(action.dot.known&buff.dot.up)))&rage.lo>10)",
+                    "actions+=/strike,if=(((action.big_hit.known|action.dot.known)&((!action.big_hit.known|cooldown.big_hit.ready)&(!action.dot.known|buff.dot.up)))|rage.lo>10)",
+                    "actions+=/strike,if=((!action.big_hit.known|cooldown.big_hit.ready)&rage.lo>10)", -- `A|A` is A
                 }, "\n"),
                 text
             )
@@ -896,10 +896,10 @@ describe("the wowsims APL translator", function()
             assert.are.equal(
                 table.concat({
                     "actions.precombat=big_hit,if=talent.cuts.enabled",
-                    "actions=strike,if=talent.furious.enabled&((action.big_hit.known&cooldown.big_hit.ready)|rage.current>10)",
+                    "actions=strike,if=talent.furious.enabled&((action.big_hit.known&cooldown.big_hit.ready)|rage.lo>10)",
                     "actions+=/big_hit,if=talent.cuts.enabled",
-                    "actions+=/strike,if=talent.furious.enabled&((!action.big_hit.known|cooldown.big_hit.ready)&rage.current>10)",
-                    "actions+=/roar,use_off_gcd=1,if=rage.current>10",
+                    "actions+=/strike,if=talent.furious.enabled&((!action.big_hit.known|cooldown.big_hit.ready)&rage.lo>10)",
+                    "actions+=/roar,use_off_gcd=1,if=rage.lo>10",
                     "actions+=/call_action_list,name=big,if=talent.cuts.enabled",
                     "actions.big=big_hit,if=talent.cuts.enabled&(!action.dot.known|!buff.dot.up)",
                 }, "\n"),
@@ -930,11 +930,11 @@ describe("the wowsims APL translator", function()
                 maintenance = { dot = "keep_dot" },
                 leveling = {
                     "dot,if=!action.big_hit.known",
-                    "strike,if=rage.current>10&debuff.dot.up",
+                    "strike,if=rage.lo>10&debuff.dot.up",
                     -- under a negation: another line's copied condition (Guardian's Lacerate lines repeat Berserk's)
                     "strike,if=!(cooldown.big_hit.ready&debuff.dot.up)",
                     -- the documented limit: any negated group reads as if the debuff were up (setting off: !(rage>10))
-                    "big_hit,if=!(debuff.dot.up&rage.current>10)",
+                    "big_hit,if=!(debuff.dot.up&rage.lo>10)",
                 },
             }
             local text, _, _, header = apl.translate({
@@ -951,16 +951,16 @@ describe("the wowsims APL translator", function()
             assert.are.equal(
                 table.concat({
                     "actions=strike,if=(!action.dot.known|debuff.dot.up|!settings.keep_dot)",
-                    "actions+=/big_hit,if=((!action.dot.known|debuff.dot.up|!settings.keep_dot)&rage.current>10)",
+                    "actions+=/big_hit,if=((!action.dot.known|debuff.dot.up|!settings.keep_dot)&rage.lo>10)",
                     "actions+=/big_hit,if=(!action.dot.known|!debuff.dot.up)",
                     "actions+=/strike,if=(!action.dot.known|debuff.dot.remains>2|!settings.keep_dot)",
                     "actions+=/dot,if=settings.keep_dot&!debuff.dot.up",
-                    "actions+=/dot,if=settings.keep_dot&(rage.current>10|debuff.dot.remains>2)",
+                    "actions+=/dot,if=settings.keep_dot&(rage.lo>10|debuff.dot.remains>2)",
                     "actions+=/dot,if=settings.keep_dot",
                     "actions+=/dot,if=settings.keep_dot&!action.big_hit.known",
-                    "actions+=/strike,if=rage.current>10&(debuff.dot.up|!settings.keep_dot)",
+                    "actions+=/strike,if=rage.lo>10&(debuff.dot.up|!settings.keep_dot)",
                     "actions+=/strike,if=!(cooldown.big_hit.ready&(debuff.dot.up|!settings.keep_dot))",
-                    "actions+=/big_hit,if=!((debuff.dot.up|!settings.keep_dot)&rage.current>10)",
+                    "actions+=/big_hit,if=!((debuff.dot.up|!settings.keep_dot)&rage.lo>10)",
                 }, "\n"),
                 text
             )
@@ -1005,7 +1005,7 @@ describe("the wowsims APL translator", function()
         local lines = {
             "actions=dot,if=settings.pick='one'&(!(" .. one .. "|" .. gTwo .. "))",
             "actions+=/big_hit,if=settings.pick='two'&(!(" .. gOne .. "|" .. two .. "))",
-            "actions+=/strike,if=((" .. gOne .. "|" .. gTwo .. ")&rage.current>10)",
+            "actions+=/strike,if=((" .. gOne .. "|" .. gTwo .. ")&rage.lo>10)",
         }
         local isAbility = function(k)
             return k == "dot" or k == "big_hit" or k == "strike"
@@ -1062,7 +1062,7 @@ describe("the wowsims APL translator", function()
         assert.are.equal(
             table.concat({
                 "actions=dot,if=debuff.dot.remains<=0",
-                "actions+=/dot,if=(rage.current>10&debuff.dot.remains<=2)",
+                "actions+=/dot,if=(rage.lo>10&debuff.dot.remains<=2)",
                 "actions+=/dot,if=debuff.dot.remains<=0",
             }, "\n"),
             text
@@ -1084,9 +1084,9 @@ describe("the wowsims APL translator", function()
         }, ctx({ requires = { strike = "furious" } }))
         assert.are.equal(
             table.concat({
-                "actions=strike,if=(rage.current>10&talent.furious.enabled)",
+                "actions=strike,if=(rage.lo>10&talent.furious.enabled)",
                 "actions+=/strike,if=talent.furious.enabled",
-                "actions+=/strike,if=talent.furious.enabled&(rage.current>10|talent.furious.enabled)",
+                "actions+=/strike,if=talent.furious.enabled&(rage.lo>10|talent.furious.enabled)",
             }, "\n"),
             text
         )
@@ -1097,13 +1097,13 @@ describe("the wowsims APL translator", function()
         local text = apl.translate({
             prepullActions = { { action = cast(200).action, doAtValue = const("-1s") } },
             priorityList = { cast(200, OR(rage, ready)), cast(100), cast(200, rage) },
-        }, ctx({ requires = { big_hit = "cuts" }, guard = { big_hit = "buff.fury.remains>1|rage.current>50" } }))
+        }, ctx({ requires = { big_hit = "cuts" }, guard = { big_hit = "buff.fury.remains>1|rage.lo>50" } }))
         assert.are.equal(
             table.concat({
-                "actions.precombat=big_hit,if=talent.cuts.enabled&(buff.fury.remains>1|rage.current>50)",
-                "actions=big_hit,if=(talent.cuts.enabled&(rage.current>10|cooldown.big_hit.ready))&(buff.fury.remains>1|rage.current>50)",
+                "actions.precombat=big_hit,if=talent.cuts.enabled&(buff.fury.remains>1|rage.lo>50)",
+                "actions=big_hit,if=(talent.cuts.enabled&(rage.lo>10|cooldown.big_hit.ready))&(buff.fury.remains>1|rage.lo>50)",
                 "actions+=/strike",
-                "actions+=/big_hit,if=talent.cuts.enabled&rage.current>10&(buff.fury.remains>1|rage.current>50)",
+                "actions+=/big_hit,if=talent.cuts.enabled&rage.lo>10&(buff.fury.remains>1|rage.lo>50)",
             }, "\n"),
             text
         )
@@ -1174,12 +1174,12 @@ describe("the wowsims APL translator", function()
         }, ctx({ executePhase = "execute_phase" }))
         assert.are.equal(
             table.concat({
-                "actions=strike,if=rage.current>10",
-                "actions+=/strike,if=rage.current>10",
+                "actions=strike,if=rage.lo>10",
+                "actions+=/strike,if=rage.lo>10",
                 "actions+=/strike",
-                "actions+=/strike,if=(rage.current>10&execute_phase)",
+                "actions+=/strike,if=(rage.lo>10&execute_phase)",
                 "actions+=/strike",
-                "actions+=/strike,if=rage.current>10",
+                "actions+=/strike,if=rage.lo>10",
                 "actions+=/strike",
             }, "\n"),
             text
@@ -1359,14 +1359,14 @@ describe("the wowsims APL translator", function()
             },
             auras = {},
         }
-        local guard = { big_hit = "rage.current>50", roar = "rage.current>50|time>9" }
+        local guard = { big_hit = "rage.lo>50", roar = "rage.lo>50|time>9" }
         local text = apl.translate({
             priorityList = { cast(200, early), { action = { autocastOtherCooldowns = {}, condition = early } } },
         }, apl.context(kit, { guard = guard }, LOG))
         assert.are.equal(
             table.concat({
-                "actions=big_hit,if=(time>=5|rage.current>10)&rage.current>50",
-                "actions+=/roar,use_off_gcd=1,if=(time>=5|rage.current>10)&(rage.current>50|time>9)",
+                "actions=big_hit,if=(time>=5|rage.lo>10)&rage.lo>50",
+                "actions+=/roar,use_off_gcd=1,if=(time>=5|rage.lo>10)&(rage.lo>50|time>9)",
             }, "\n"),
             text
         )

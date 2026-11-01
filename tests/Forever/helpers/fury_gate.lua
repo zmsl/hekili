@@ -1,6 +1,6 @@
 -- tests/Forever/helpers/fury_gate.lua: the headless Fury (wowsims.com) 20-fight gates at level 60 and 24 (central
 -- fix 21), shared by loop_warrior_fury_spec.lua and loop_warrior_fury24_spec.lua. Fury shows the on-next-swing
--- strike's wait (`rage.current>=40`), which Arms (`rage>=90`) never reaches; the loop has no snap-back metric, so its
+-- strike's wait (`rage.lo>=40`), which Arms (`rage>=90`) never reaches; the loop has no snap-back metric, so its
 -- flicker/min stands in for it. The content is wowsims_warrior_spec.lua's Fury: the dual-wield world, Berserker Rage
 -- in the kit, Forever's Overpower window.
 local ab = require("Game.harness.ab")

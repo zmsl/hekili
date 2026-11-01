@@ -175,7 +175,7 @@ describe("tools/make_pack.lua", function()
 
         it("versions only the pack whose text changed: unchanged keeps it, a later day gives today * 1000", function()
             local src = slurp("src/Hekili_Warrior/Warrior.lua")
-            local out, report = edit(src, "rage.current>=40", "rage.current>40", TODAY) -- one character
+            local out, report = edit(src, "rage.lo>=40", "rage.lo>40", TODAY) -- one character
             assert.are.same({ "Fury (wowsims.com)", "updated" }, report[2])
             assert.are.equal(TODAY * 1000, version(out, "Fury (wowsims.com)"))
             for _, name in ipairs({ "Protection (wowsims.com)", "Arms (wowsims.com)" }) do
@@ -187,19 +187,19 @@ describe("tools/make_pack.lua", function()
 
         it("counts up on the same day, once per change", function()
             local src = slurp("src/Hekili_Warrior/Warrior.lua")
-            local one = edit(src, "rage.current>=40", "rage.current>40", TODAY)
-            local two = edit(one, "rage.current>=40", "rage.current>41", TODAY) -- Fury's text differs from `one`'s again
+            local one = edit(src, "rage.lo>=40", "rage.lo>40", TODAY)
+            local two = edit(one, "rage.lo>=40", "rage.lo>41", TODAY) -- Fury's text differs from `one`'s again
             assert.are.equal(TODAY * 1000 + 1, version(two, "Fury (wowsims.com)"))
-            local three = edit(two, "rage.current>=40", "rage.current>42", TODAY)
+            local three = edit(two, "rage.lo>=40", "rage.lo>42", TODAY)
             assert.are.equal(TODAY * 1000 + 2, version(three, "Fury (wowsims.com)"))
         end)
 
         it("refuses a thousandth same-day change", function()
             local src = slurp("src/Hekili_Warrior/Warrior.lua")
-            local one = edit(src, "rage.current>=40", "rage.current>40", TODAY)
+            local one = edit(src, "rage.lo>=40", "rage.lo>40", TODAY)
             local full = one:gsub('(Fury %(wowsims%.com%)",\n    )%d+', "%1" .. TODAY * 1000 + 999)
             assert.has_error(function()
-                edit(full, "rage.current>=40", "rage.current>41", TODAY)
+                edit(full, "rage.lo>=40", "rage.lo>41", TODAY)
             end)
         end)
     end)

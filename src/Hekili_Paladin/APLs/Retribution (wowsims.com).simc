@@ -16,5 +16,5 @@ actions+=/call_action_list,name=consecration
 actions+=/call_action_list,name=exorcism
 actions+=/seal_of_command,focus=2,if=!talent.twist_of_light.enabled&!buff.seal_of_command.up
 actions+=/seal_of_righteousness,focus=2,if=!action.seal_of_command.known&buff.seal_of_righteousness.remains<24
-actions.exorcism=exorcism,if=(mainhand_remains>1.5&mana.pct>=10)
-actions.consecration=consecration,focus=2,if=(mainhand_remains>1.5&mana.pct>=10)
+actions.exorcism=exorcism,if=(mainhand_remains>1.5&mana.pct_lo>=10)
+actions.consecration=consecration,focus=2,if=(mainhand_remains>1.5&mana.pct_lo>=10)
