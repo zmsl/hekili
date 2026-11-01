@@ -107,8 +107,9 @@ end
 local function gcdTime(a, t)
     local g = A.obj[a].gcdTime
     if type(g) == "function" then
-        g = I.Eval(g, t)
-        if g == nil then
+        local ok
+        g, ok = I.Eval(g, t)
+        if not ok then -- a raise only: a working function's nil is its answer
             local obj = A.obj[a]
             g = obj.static and obj.static.gcdTime
         end
@@ -412,8 +413,9 @@ local function declaredCost(a)
     local obj = A.obj[a]
     local c = obj.spend
     if type(c) == "function" then
-        c = I.Eval(c, I.clock)
-        if c == nil then
+        local ok
+        c, ok = I.Eval(c, I.clock)
+        if not ok then
             c = obj.static and obj.static.spend
         end
     end
@@ -486,8 +488,9 @@ function I.CooldownOf(a, t)
     local obj = A.obj[a]
     local c = obj.cooldown
     if type(c) == "function" then
-        c = I.Eval(c, t)
-        if c == nil then
+        local ok
+        c, ok = I.Eval(c, t)
+        if not ok then
             c = obj.static and obj.static.cooldown
         end
     end
