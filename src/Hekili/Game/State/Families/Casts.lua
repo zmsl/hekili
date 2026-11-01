@@ -407,8 +407,8 @@ function I.CostOf(a)
     return c
 end
 
--- Ability a's declared cost as written (a fraction stays one), or nil: a function in the belief's context, then its
--- static value (Engine/Schema/Tracked.lua). Allocates nothing.
+-- Ability a's declared cost as written (a fraction stays one), or nil: a function in the belief's context, its static
+-- value only if it raised (Engine/Schema/Tracked.lua). Allocates nothing.
 local function declaredCost(a)
     local obj = A.obj[a]
     local c = obj.spend
