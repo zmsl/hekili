@@ -181,6 +181,13 @@ end
 --- to it.
 function M.env(w)
     local e = { applied = {}, durations = {}, stacks = {}, removed = {}, spent = {}, gained = {}, added = {} }
+    -- the bare reads a pack function resolves in its environment, as the stand-in's state answers them
+    function e.knownRank(ids)
+        return w.state.knownRank(ids)
+    end
+    function e.stat(...)
+        return w.state.stat(...)
+    end
     e.talent = default({ rank = 0, enabled = false })
     e.buff = default({ up = false, remains = 0, stack = 0, applied = 0 })
     e.debuff = e.buff

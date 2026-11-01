@@ -561,19 +561,19 @@ describe("Forever Warrior", function()
         w.state.main_hand.size = 1
         w.game.base = { 2.2, 2.5 }
         w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 2.2, 2.5, 1
-        near(3.46 * 2.2 + 0.375, models.mainhand.value()) -- 7.612 + 0.375 = 7.987
-        near(1.73 * 2.5 * 1.3 + 0.375, models.offhand.value()) -- 5.6225 + 0.375 = 5.9975
+        near(3.46 * 2.2 + 0.375, lw.run(models.mainhand.value, w.state)) -- 7.612 + 0.375 = 7.987
+        near(1.73 * 2.5 * 1.3 + 0.375, lw.run(models.offhand.value, w.state)) -- 5.6225 + 0.375 = 5.9975
         -- haste shortens the swing but not its rage: the hasted speeds do not enter
         w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 1.76, 2.0, 1.25
-        near(3.46 * 2.2 + 0.375, models.mainhand.value())
-        near(1.73 * 2.5 * 1.3 + 0.375, models.offhand.value())
+        near(3.46 * 2.2 + 0.375, lw.run(models.mainhand.value, w.state))
+        near(1.73 * 2.5 * 1.3 + 0.375, lw.run(models.offhand.value, w.state))
         w.state.main_hand.size = 2 -- a two-hander: 4.5 x speed, Unbridled Wrath 2 rage a proc
         w.game.base = { 3.3, 0 }
-        near(4.5 * 3.3 + 0.75, models.mainhand.value()) -- 14.85 + 0.75 = 15.6
-        near(3.46 * 3.3, models.mainhand.crit()) -- a white crit: one more base swing, 3.46 x speed with a two-hander too
+        near(4.5 * 3.3 + 0.75, lw.run(models.mainhand.value, w.state)) -- 14.85 + 0.75 = 15.6
+        near(3.46 * 3.3, lw.run(models.mainhand.crit, w.state)) -- a white crit: one more base swing, 3.46 x speed with a two-hander too
         w.state.main_hand.size, w.game.base = 1, { 2.2, 2.5 }
-        near(3.46 * 2.2, models.mainhand.crit())
-        near(1.73 * 2.5, models.offhand.crit()) -- the off hand's own base (unmeasured on Forever)
+        near(3.46 * 2.2, lw.run(models.mainhand.crit, w.state))
+        near(1.73 * 2.5, lw.run(models.offhand.crit, w.state)) -- the off hand's own base (unmeasured on Forever)
         assert.are.same({ "offhand", "offhand_speed" }, { models.offhand.swing, models.offhand.interval })
     end)
 
@@ -584,6 +584,7 @@ describe("Forever Warrior", function()
         local function ctx(auras, ranks)
             e = {
                 stat = w.state.stat,
+                equipped = w.state.equipped,
                 buff = setmetatable({}, {
                     __index = function(_, k)
                         return { up = auras[k] == true }
@@ -598,6 +599,7 @@ describe("Forever Warrior", function()
         end
 
         local function run(kind, amount, level)
+            e.level = w.state.level
             return lw.run(taken, e, kind, amount, level)
         end
 
@@ -693,6 +695,8 @@ describe("Forever Warrior", function()
             w.state.equipped.shield = true
             e = { -- plain tables: the belief's proxies are preallocated, so only `taken` itself is measured
                 stat = w.state.stat,
+                equipped = w.state.equipped,
+                level = 60,
                 buff = {
                     defensive_stance = { up = true },
                     shield_wall = { up = false },
@@ -738,7 +742,10 @@ describe("Forever Warrior", function()
         w.state.main_hand.size = 1
         w.game.base = { 0, 0 }
         w.state.mainhand_speed, w.state.offhand_speed = 2.6, 0
-        assert.are.same({ 3.46 * 2.6, 0 }, { models.mainhand.value(), models.offhand.value() })
+        assert.are.same(
+            { 3.46 * 2.6, 0 },
+            { lw.run(models.mainhand.value, w.state), lw.run(models.offhand.value, w.state) }
+        )
     end)
 
     it("gains Anger Management's 1.5 rage every 5 s in combat through a combat-gated periodic entry", function()
@@ -752,7 +759,7 @@ describe("Forever Warrior", function()
     end)
 
     it("loses rage out of combat at the tooltip's 1.25/s, 30% less with Anger Management", function()
-        local decay = w.resource[4].decay
+        local decay = setfenv(w.resource[4].decay, w.state)
         w.state.talent = { anger_management = { rank = 0 } }
         assert.are.equal(1.25, decay())
         w.state.talent.anger_management.rank = 1

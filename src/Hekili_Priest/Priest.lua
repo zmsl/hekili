@@ -201,7 +201,7 @@ spec:RegisterResource(
         dark_inspiration = {
             aura = "dark_inspiration",
             spirit = function()
-                local _, s = state.stat("UnitStat", 5)
+                local _, s = stat("UnitStat", 5)
                 return s > 0 and 1 + 0.15 * (s / 8) / (6.25 + s / 8) or 1
             end,
         },
@@ -215,7 +215,7 @@ spec:RegisterResource(
 
             interval = 3,
             value = function()
-                local _, s = state.stat("UnitStat", 5)
+                local _, s = stat("UnitStat", 5)
                 return 320 + s / 5
             end,
         },
@@ -257,20 +257,19 @@ spec:RegisterCostMod({ aura = "holy_purpose", pct = -1, charges = 1, spells = { 
 -- The wand's speed: the ranged hand's (UnitRangedDamage's first return, the belief's out-of-combat stat read), else
 -- the Smite build's Brilliant Wand (ItemSparse 249385, ItemDelay 1200) before a plain read.
 local WAND_SPEED = 1.2
-local function wand()
-    local s = state.stat("UnitRangedDamage")
+local function wand(s)
     return s > 0 and s or WAND_SPEED
 end
 local function wandSpeed()
     return function()
-        return wand()
+        return wand((stat("UnitRangedDamage")))
     end
 end
 -- Shoot's target aura: its one shot, a wand speed after the press (the world's), as each channel's aura lasts its
 -- channel.
 local function shot()
     return function()
-        applyDebuff("target", "shoot", wand())
+        applyDebuff("target", "shoot", wand((stat("UnitRangedDamage"))))
     end
 end
 

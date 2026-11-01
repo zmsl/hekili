@@ -121,12 +121,12 @@ describe("Forever Priest", function()
         w.state.stat = function()
             return 0, 187
         end
-        assert.is_true(math.abs(di.spirit() - (1 + 0.15 * 23.375 / 29.625)) < 1e-6) -- Spirit x 1.15 (+15% of 187/8)
-        assert.are.same({ "dark_sacrifice", 3, 320 + 187 / 5 }, { ds.aura, ds.interval, ds.value() })
+        assert.is_true(math.abs(setfenv(di.spirit, w.state)() - (1 + 0.15 * 23.375 / 29.625)) < 1e-6) -- Spirit x 1.15 (+15% of 187/8)
+        assert.are.same({ "dark_sacrifice", 3, 320 + 187 / 5 }, { ds.aura, ds.interval, setfenv(ds.value, w.state)() })
         w.state.stat = function()
             return 0, 0
         end
-        assert.are.same({ 1, 320 }, { di.spirit(), ds.value() }) -- before the first stat read: inert, never NaN
+        assert.are.same({ 1, 320 }, { setfenv(di.spirit, w.state)(), setfenv(ds.value, w.state)() }) -- before the first stat read: inert, never NaN
         w.state.query_time, w.state.buff.dark_sacrifice = 17.4, { applied = 10.2 }
         assert.is_true(math.abs(ds.last() - 16.2) < 1e-9) -- the last 3 s tick since the aura's application
     end)

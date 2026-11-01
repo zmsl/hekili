@@ -150,23 +150,11 @@ end
 -- `crit`. Dual Wield Specialization: the tooltip's +10% off-hand rage a rank (unverified on
 -- Forever). Unbridled Wrath: 1 rage a proc (2 with a two-hander) at a measured ~7.5% a rank (36% at 5/5; the tooltip
 -- says 60%). The two-hander flag is Hekili's gear scan (main_hand.size from C_Item.GetItemInfo's equip location on
--- PLAYER_EQUIPMENT_CHANGED; the Forever API data marks neither it nor GetInventoryItemID secret).
-local function baseSpeed(hand)
-    local speed = state.swingBase(hand)
-    if speed <= 0 then
-        speed = hand == 1 and state.mainhand_speed or state.offhand_speed
-    end -- no plain base read yet
-    return speed
-end
-
-local function rageOf(hand)
-    local speed = baseSpeed(hand)
-    local twoHand = state.main_hand.size == 2
-    local wrath = 0.075 * state.talent.unbridled_wrath.rank * (twoHand and 2 or 1)
-    if hand ~= 1 then
-        return 1.73 * speed * (1 + 0.1 * state.talent.dual_wield_specialization.rank) + wrath
-    end
-    return (twoHand and 4.5 or 3.46) * speed + wrath
+-- PLAYER_EQUIPMENT_CHANGED, and the belief's own read of the same answers; the Forever API data marks neither it nor
+-- GetInventoryItemID secret). The helpers below run in the file's environment: the entry functions, which run in the sim's
+-- `state` and the belief's context both, read those names and pass them in.
+local function wrathRage(rank, twoHand)
+    return 0.075 * rank * (twoHand and 2 or 1)
 end
 
 -- Rage from damage taken: wowsims/forever's rule (MIT, sim/core/rage.go:11-49 and 91-103; owner ruling 2026-10-25,
@@ -215,13 +203,10 @@ local function assumedReduction(level)
     return ASSUMED_REDUCTION[n]
 end
 
--- The rage of a post-armor amount `post` from an attacker of `level`, divided back by `reduced` (the percentage
--- reductions' product), with `armorScale` x the cached armor. Allocates nothing.
-local function rageTaken(post, level, reduced, armorScale)
-    if level <= 0 then -- the source's 0: an unreadable attacker level; ours keeps the rage near right
-        level = state.level
-    end
-    local armor = select(2, state.stat("UnitArmor")) * armorScale
+-- The rage of a post-armor amount `post` from an attacker of level `attacker` (`own`: the player's), divided back by `reduced` (the percentage
+-- reductions' product), with `armor` the cached armor x its buffs. Allocates nothing.
+local function rageTaken(post, attacker, own, reduced, armor)
+    local level = attacker > 0 and attacker or own -- the source's 0: unreadable; ours keeps the rage near right
     local mitigated = armor / (armor + 400 + 85 * level) -- below 1: 400 + 85 x level > 0
     local conversion = 0.0091107836 * level * level + 3.225598133 * level + 4.2652911 -- wowsims's rageConversion: > 4
     return post / (1 - mitigated) / reduced * TAKEN_RAGE_FACTOR * (1 - assumedReduction(level)) / conversion
@@ -256,15 +241,18 @@ spec:RegisterResource(
                 return state.swings.mainhand == 0
             end,
             value = function()
-                return rageOf(1)
+                local speed, twoHand = swingBase(1), main_hand.size == 2 -- speed 0: no plain base read yet
+                speed = speed > 0 and speed or mainhand_speed
+                return (twoHand and 4.5 or 3.46) * speed + wrathRage(talent.unbridled_wrath.rank, twoHand)
             end,
             crit = function()
-                return 3.46 * baseSpeed(1)
+                local speed = swingBase(1)
+                return 3.46 * (speed > 0 and speed or mainhand_speed)
             end,
             -- The belief's rage from a hit on us (kind: "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS"): the
             -- expected gain and its half-width. Run in the belief's `now` context: `buff`, `talent` and `stat` read the belief
             -- at the hit; the helpers it calls get those values as arguments (their own environment is the file's).
-            taken = function(kind, amount, level)
+            taken = function(kind, amount, attacker)
                 local reduced = 1
                 if buff.defensive_stance.up then
                     reduced = reduced * DEFENSIVE_STANCE_TAKEN
@@ -281,6 +269,8 @@ spec:RegisterResource(
                         armorScale = armorScale * ARMOR_BUFF_MULTIPLIER[i]
                     end
                 end
+                local _, armor = stat("UnitArmor")
+                armor = armor * armorScale
                 local gain, width = 0, 0
                 if kind == "WOUND" or kind == "BLOCKED" then
                     local post = amount
@@ -288,10 +278,10 @@ spec:RegisterResource(
                         post = post + stat("GetShieldBlock") -- the unblocked amount
                     end
                     unblockedAvg = unblockedAvg + UNBLOCKED_WEIGHT * (post - unblockedAvg)
-                    gain = rageTaken(post, level, reduced, armorScale)
+                    gain = rageTaken(post, attacker, level, reduced, armor)
                     width = TAKEN_SPREAD * gain
                 elseif kind == "BLOCK" then
-                    gain = rageTaken(min(stat("GetShieldBlock"), unblockedAvg), level, reduced, armorScale)
+                    gain = rageTaken(min(stat("GetShieldBlock"), unblockedAvg), attacker, level, reduced, armor)
                     width = gain
                 end
                 local rank = talent.shield_specialization.rank
@@ -300,7 +290,7 @@ spec:RegisterResource(
                     gain, width = gain + g, width + w
                 end
                 rank = talent.master_of_defense.rank
-                if (kind == "DODGE" or kind == "PARRY") and rank > 0 and state.equipped.shield then
+                if (kind == "DODGE" or kind == "PARRY") and rank > 0 and equipped.shield then
                     gain, width = proc(MASTER_OF_DEFENSE_CHANCE * rank)
                 end
                 return gain, width
@@ -325,11 +315,15 @@ spec:RegisterResource(
                 return state.swings.offhand == 0
             end,
             value = function()
-                return rageOf(2)
+                local speed = swingBase(2)
+                speed = speed > 0 and speed or offhand_speed
+                return 1.73 * speed * (1 + 0.1 * talent.dual_wield_specialization.rank)
+                    + wrathRage(talent.unbridled_wrath.rank, main_hand.size == 2)
             end,
             -- shortcut: the off hand's crit bonus is unmeasured (issue 3); assumed its own base, 1.73 x speed.
             crit = function()
-                return 1.73 * baseSpeed(2)
+                local speed = swingBase(2)
+                return 1.73 * (speed > 0 and speed or offhand_speed)
             end,
         },
 
@@ -379,7 +373,7 @@ spec:RegisterResource(
         -- No `max`: rage is 100, and a Gnome's 105 comes from Expansive Mind in the Gnome's race pack
         -- (Hekili_Shared/Races/Gnome.lua, the belief's `maxMods`, event-facade spec §12b).
         decay = function()
-            return 1.25 * (1 - 0.3 * state.talent.anger_management.rank)
+            return 1.25 * (1 - 0.3 * talent.anger_management.rank)
         end,
         -- Stepped and front-loaded (stepped-decay design): 1.25 lost at once at the start of each 1 s window, the first
         -- when the decay starts (combat end, a tick aura's expiry), so Bloodrage's last tick ends at 10 - 1.25.

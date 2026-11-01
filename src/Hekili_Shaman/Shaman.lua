@@ -170,16 +170,17 @@ end
 
 -- The highest known rank of a rank list, from the belief's spellbook: the same answer in the sim's `state`
 -- environment and in a `now` handler's (event-facade spec §12a).
-local knownRank = state.knownRank
+-- A helper's environment is the file's, so it keeps this local; a pack function's bare `knownRank` is its environment's.
+local rankOf = state.knownRank
 
 local function knows(ids)
     return function()
-        return knownRank(ids) > 0
+        return rankOf(ids) > 0
     end
 end
 
 local function byRank(values, ids)
-    return values[knownRank(ids)] or values[1]
+    return values[rankOf(ids)] or values[1]
 end
 
 local function cost(costs, ids)
@@ -330,9 +331,10 @@ spec:RegisterResource(
         mana_spring = {
             aura = "mana_spring",
             mp5 = function()
-                return byRank(MANA_SPRING, TOTEMS.mana_spring_totem.ids)
+                local ranks = TOTEMS.mana_spring_totem.ids
+                return (MANA_SPRING[knownRank(ranks)] or MANA_SPRING[1])
                     / 2
-                    * (1 + 0.05 * state.talent.restorative_totems.rank)
+                    * (1 + 0.05 * talent.restorative_totems.rank)
             end,
         },
     },

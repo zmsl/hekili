@@ -733,12 +733,12 @@ describe("Forever Druid", function()
             near(2.5 * 4.5, models.mainhand.value()) -- before a plain base read
             w.game.base = { 1.0, 0 } -- a Cat pull's base, stale after the shift (D4: the form's period, not the read)
             near(11.25, models.mainhand.value())
-            near(8.65, models.mainhand.crit()) -- a white crit: one more base swing, without the two-hand factor
+            near(8.65, setfenv(models.mainhand.crit, w.state)()) -- a white crit: one more base swing, without the two-hand factor
             local talent = w.state.talent
             w.state.talent = rank(2) -- Primal Fury ("Blood Frenzy", DB2 16958): 16959's 5 rage at 2/2
-            near(13.65, models.mainhand.crit())
+            near(13.65, setfenv(models.mainhand.crit, w.state)())
             w.state.talent = rank(1) -- 50% at 1/2 (wowsims's ladder): its expected 2.5
-            near(11.15, models.mainhand.crit())
+            near(11.15, setfenv(models.mainhand.crit, w.state)())
             w.state.talent = talent
             assert.are.same({ "enrage", 1, 2 }, { models.enrage.aura, models.enrage.interval, models.enrage.value })
             assert.is_nil(models.enrage.pausesDecay) -- unverified (checkpoint Q9)
@@ -779,11 +779,11 @@ describe("Forever Druid", function()
         w.state.stat = function()
             return 0, 126
         end
-        assert.is_true(math.abs(m.spirit() - (1 + 9 / 22)) < 1e-9) -- druid_balance.log: 22.0 -> 31.0 a second
+        assert.is_true(math.abs(setfenv(m.spirit, w.state)() - (1 + 9 / 22)) < 1e-9) -- druid_balance.log: 22.0 -> 31.0 a second
         w.state.stat = function()
             return 0, 0
         end
-        assert.are.equal(1, m.spirit()) -- before the first stat read: inert, never NaN
+        assert.are.equal(1, setfenv(m.spirit, w.state)()) -- before the first stat read: inert, never NaN
     end)
 
     it("refunds 80% of an avoided ability's energy or rage where wowsims does, per ability", function()

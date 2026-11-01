@@ -154,9 +154,10 @@ describe("Forever Warlock", function()
 
     it("declares Fel Energy: 2% of max mana every 4 s while the Voidwalker sacrifice's aura is up", function()
         local m = w.resources[0].models.fel_energy
+        w.state.type = type
         w.state.mana = { max = 5353 }
         assert.are.same({ "fel_energy", 4 }, { m.aura, m.interval })
-        assert.is_true(math.abs(m.value() - 107.06) < 1e-9)
+        assert.is_true(math.abs(setfenv(m.value, w.state)() - 107.06) < 1e-9)
         w.state.query_time, w.state.buff.fel_energy = 13.4, { applied = 5.2 }
         assert.is_true(math.abs(m.last() - 13.2) < 1e-9) -- 5.2 + 4 x floor(8.2 / 4); the brief's 9.2 is an arithmetic slip
     end)
@@ -177,10 +178,11 @@ describe("Forever Warlock", function()
 
     it("Fel Energy's value is inert before the first mana read", function()
         local m = w.resources[0].models.fel_energy
+        w.state.type = type
         w.state.mana = nil
-        assert.are.equal(0, m.value())
+        assert.are.equal(0, setfenv(m.value, w.state)())
         w.state.mana = { max = false }
-        assert.are.equal(0, m.value())
+        assert.are.equal(0, setfenv(m.value, w.state)())
     end)
 
     it(

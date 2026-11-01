@@ -135,11 +135,11 @@ describe("Forever Shaman", function()
         end
         w.game.known[10497] = true
         w.state.talent.restorative_totems = { rank = 0 }
-        assert.are.equal(5, ms.mp5())
+        assert.are.equal(5, setfenv(ms.mp5, w.state)())
         w.state.talent.restorative_totems = { rank = 5 }
-        assert.are.equal(6.25, ms.mp5())
+        assert.are.equal(6.25, setfenv(ms.mp5, w.state)())
         w.game.known[10497], w.game.known[5675] = false, true -- rank 1: 4 every 2 s
-        assert.are.equal(2.5, ms.mp5())
+        assert.are.equal(2.5, setfenv(ms.mp5, w.state)())
         assert.are.same(1238931, w.auras.improved_stormstrike.id)
     end)
 

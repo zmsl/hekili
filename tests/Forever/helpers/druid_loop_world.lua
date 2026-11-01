@@ -356,7 +356,7 @@ local function classData(H)
     local w, base = class(), rules().crit
     local talent = w.state.talent
     w.state.talent = H.Hekili.State.talent
-    X.primalFury = w.resources[RAGE].models.mainhand.crit() - base
+    X.primalFury = setfenv(w.resources[RAGE].models.mainhand.crit, w.state)() - base
     w.state.talent = talent
     pfRage = X.primalFury
     X.cc = class().costMods[1]

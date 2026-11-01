@@ -159,17 +159,18 @@ end
 
 -- The highest known rank of a rank list, from the belief's spellbook: the same answer in the sim's `state`
 -- environment and in a `now` handler's (event-facade spec §12a).
-local knownRank = state.knownRank
+-- A helper's environment is the file's, so it keeps this local; a pack function's bare `knownRank` is its environment's.
+local rankOf = state.knownRank
 
 local function knows(ids)
     return function()
-        return knownRank(ids) > 0
+        return rankOf(ids) > 0
     end
 end
 
 -- A per-rank value at the highest known rank, else the first rank's (nothing known yet).
 local function byRank(values, ids)
-    return values[knownRank(ids)] or values[1]
+    return values[rankOf(ids)] or values[1]
 end
 
 -- Moonglow (16845) on its class mask's spells (Wrath, Moonfire, Starfire, Insect Swarm, Hurricane, Entangling Roots,
@@ -221,7 +222,7 @@ spec:RegisterResource(
                 return BEAR_RAGE_RATE * BEAR_SWING
             end,
             crit = function()
-                return BEAR_CRIT_RATE * BEAR_SWING + primalFury(state.talent.primal_fury.rank)
+                return BEAR_CRIT_RATE * BEAR_SWING + primalFury(talent.primal_fury.rank)
             end,
         },
 
@@ -276,7 +277,7 @@ spec:RegisterResource(
             aura = "serenity_field",
             item = 272439, -- the replay's key: wowsims logs the buff by its item
             spirit = function()
-                local _, s = state.stat("UnitStat", 5)
+                local _, s = stat("UnitStat", 5)
                 return s > 0 and 1 + 9 / (6.25 + s / 8) or 1
             end,
         },

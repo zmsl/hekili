@@ -84,17 +84,17 @@ end
 local function rageModel()
     local w = class()
     local r = w.resources[M.RAGE]
-    return r.models, r.meta
+    return r.models, r.meta, w
 end
 
 --- The world's rates and rules read from the class file: { swing, crit, payIn, tick = { every, amount }, decay = {
 --- rate, interval }, enterBear, enterCat, shiftingPower (energy), enrage (rage at once) }.
 function M.rules()
-    local models, meta = rageModel()
+    local models, meta, w = rageModel()
     local mh, en = models.mainhand, models.enrage
     return {
         swing = mh.value(),
-        crit = mh.crit(),
+        crit = setfenv(mh.crit, w.state)(), -- the white crit's rule, under the recording load's talents
         payIn = M.FORM[mh.aura],
         tick = { every = en.interval, amount = en.value },
         decay = { rate = meta.decay(), interval = meta.decayInterval() },
