@@ -58,6 +58,7 @@ local DECLARED = {
 describe("the packs' declared outcomes", function()
     local ns = load.module()
     local X = ns.VirtualStateInternal.Expect
+    local SCHOOL = load.school() -- Spec.lua's enum, as the build hands it to the belief (def.school)
 
     for class, list in pairs(DECLARED) do
         it(class .. ": each declaration is the spec's and well formed", function()
@@ -66,7 +67,7 @@ describe("the packs' declared outcomes", function()
             for key, want in pairs(list) do
                 local d = assert(w.abilities[key], key)
                 assert.are.same(want, { d.expects, d.velocity, d.school }, key)
-                local s = d.school and ns.SCHOOL[d.school] or nil
+                local s = d.school and SCHOOL[d.school] or nil
                 local au = w.auras[d.cycle or d.aura or key] -- resolved as the simulation does
                 if TICKING[key] then
                     assert.is_truthy(au and au.tick_time and au.dot == "debuff", key .. ": its aura is no debuff dot")

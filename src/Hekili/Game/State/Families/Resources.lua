@@ -1549,7 +1549,8 @@ end)
 --- what the game had), or for a slot read plain. Allocates nothing.
 function VS.SwingPending(hand)
     local p = I.Tickets.SwingPending(hand, I.clock) -- the swing ticket owns it (open, uncredited, in its window)
-    if p == 0 or heardT > p + I.Log.ORACLE_MIN - 1e-6 then
+    -- `not I.built`: no slot pays before a build (the harness's stub world ticks swings unbuilt; ORACLE_MIN arrives in it)
+    if p == 0 or not I.built or heardT > p + I.Log.ORACLE_MIN - 1e-6 then
         return 0 -- shown, credited, or no credit one landing lag on: avoided
     end
     local paid = false

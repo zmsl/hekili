@@ -198,19 +198,21 @@ describe("the event facade", function()
     end)
 
     it("keeps delivering after a handler raises or unregisters itself mid-delivery", function()
+        -- not PLAYER_LOGIN: the belief's own boot frame (EventFacade.lua) answers it with VS.Start(_G), and this
+        -- spec's _G is no client
         local boot = E.CreateFrame("Frame")
         boot:SetScript("OnEvent", function(self)
             self:UnregisterAllEvents()
             error("boom")
         end)
-        boot:RegisterEvent("PLAYER_LOGIN")
+        boot:RegisterEvent("PLAYER_ENTERING_WORLD")
         local log = {}
-        subscriber(log):RegisterEvent("PLAYER_LOGIN")
-        ctl.Fire("PLAYER_LOGIN")
-        ctl.Fire("PLAYER_LOGIN")
+        subscriber(log):RegisterEvent("PLAYER_ENTERING_WORLD")
+        ctl.Fire("PLAYER_ENTERING_WORLD")
+        ctl.Fire("PLAYER_ENTERING_WORLD")
         assert.are.equal(2, #log)
         assert.are.equal(1, E.errors)
-        assert.is_false(boot:IsEventRegistered("PLAYER_LOGIN"))
+        assert.is_false(boot:IsEventRegistered("PLAYER_ENTERING_WORLD"))
     end)
 
     it("starts a subscription made mid-delivery with the next event, even in a freed slot", function()

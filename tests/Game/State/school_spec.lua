@@ -1,14 +1,15 @@
 -- tests/Game/State/school_spec.lua (unit-registry spec §5.1): the school enum is one core table, Engine/Schema/Spec.lua's
--- `ns.SCHOOL`, and the headless loader hands the same table to the Game files.
+-- `ns.SCHOOL`, which the build hands the belief in `def.school` (Engine/Schema/Tracked.lua); the headless loader
+-- reads the same table off Spec.lua's line (load.school) for the fakes' defs.
 local load = require("Game.State.helpers.load")
 
 describe("the school enum", function()
-    it("is Spec.lua's table, seeded into a headless ns", function()
-        local ns = load.module()
+    it("is Spec.lua's table, read for the headless fakes' defs", function()
         assert.are.same(
             { physical = 1, holy = 2, fire = 4, nature = 8, frost = 16, shadow = 32, arcane = 64 },
-            ns.SCHOOL
+            load.school()
         )
+        assert.is_nil(load.module().SCHOOL) -- the belief gets it in def.school, never off ns
     end)
 
     it("is published on the Hekili object and read by Hekili_Shared's lockouts", function()
