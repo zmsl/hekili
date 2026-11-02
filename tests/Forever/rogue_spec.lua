@@ -386,3 +386,31 @@ describe("Forever Rogue through the engine", function()
         assert.are.same({}, headless.unexpected(H, "run"))
     end)
 end)
+
+-- Audit item 1: an Assassination Rogue whose energy rate never came plain (a /reload or a build in combat) has
+-- regen_combined 0; the forecast window must stay finite (the client raises on x/0, stock Lua gives inf).
+describe("Forever Assassination with no plain energy rate", function()
+    it("keeps every forecast window finite", function()
+        local C = require("Forever.helpers.rogue_world").Assassination
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        local S = H.Hekili.State
+        local maxes, set = {}, S.SetConstraint
+        S.SetConstraint = function(self, lo, hi)
+            maxes[#maxes + 1] = hi
+            return set(self, lo, hi)
+        end
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        assert.is_true(headless.cycle(H, H.ctl.now + 0.5))
+        S.SetConstraint = set
+        assert.is_true(S.spec.assassination and true or false)
+        assert.are.equal(0, S.energy.regen_combined)
+        assert.is_true(#maxes > 0)
+        for _, hi in ipairs(maxes) do
+            assert.is_true(hi == nil or hi < math.huge, "window " .. tostring(hi))
+        end
+    end)
+end)

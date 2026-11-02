@@ -1632,15 +1632,6 @@ function Hekili.Update()
 
             if debug then Hekili:Debug( "Combat Timer: %.2f", state.time ) end
 
-            local isMain = ( dispName == "Primary" and dispName == "AOE" )
-            local defaultMax = isMain and 15 or ( display.forecastPeriod or 15 )
-
-            if class.file == "DEATHKNIGHT" then
-                defaultMax = max( defaultMax, 0.01 + 20 * state.haste )
-            elseif state.spec.assassination then
-                defaultMax = max( state.delayMax, 0.01 + state.energy.max / state.energy.regen_combined )
-            end
-
             for i = 1, maxRecs do
                 local chosen_depth = 0
 
@@ -1657,7 +1648,7 @@ function Hekili.Update()
 
                 if class.file == "DEATHKNIGHT" then
                     defaultMax = max( defaultMax, 0.01 + 20 * state.haste )
-                elseif state.spec.assassination then
+                elseif state.spec.assassination and state.energy.regen_combined > 0 then -- a rate never read plain is 0: keep the default window
                     defaultMax = max( state.delayMax, 0.01 + state.energy.max / state.energy.regen_combined )
                 end
                 if i <= 2 then altMax[ i ] = defaultMax end
@@ -1878,7 +1869,7 @@ function Hekili.Update()
 
                     if class.file == "DEATHKNIGHT" then
                         state:SetConstraint( 0, max( state.delayMax, 0.01 + 20 * state.haste ) )
-                    elseif state.spec.assassination then
+                    elseif state.spec.assassination and state.energy.regen_combined > 0 then
                         -- Cap recommend generation above worst-case energy generation.
                         state:SetConstraint( 0, max( state.delayMax, 0.01 + state.energy.max / state.energy.regen_combined ) )
                     end
