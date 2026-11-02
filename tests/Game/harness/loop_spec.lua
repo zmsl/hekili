@@ -389,6 +389,28 @@ describe("the headless loop's paired refusals (loop.unmatched)", function()
             gate.gate(h, r(3.1, 30), "line") -- the oracle refusing more does not widen it
         end)
     end)
+
+    it("bars every other unmatched refusal at 0 (pack_gate), except cost and our own cast bar's casting", function()
+        local gate = require("Forever.helpers.pack_gate")
+        local ab = require("Game.harness.ab")
+        local arm = ab.arm
+        ab.arm = function()
+            return "default"
+        end
+        finally(function()
+            ab.arm = arm
+        end)
+        local h = { errors = 0, raises = 0, selfCheck = 0, misses = {}, secrets = {} }
+        local function r(u)
+            return { agreement = 1, reactMedian = 0, reactP90 = 0, cpuRatio = 0, per100 = {}, per100U = u }
+        end
+        assert.has_no.errors(function()
+            gate.gate(h, r({ cost = 1, casting = 1.4, range = 0 }), "line")
+        end)
+        assert.has.errors(function()
+            gate.gate(h, r({ cost = 1, range = 0.5 }), "line")
+        end)
+    end)
 end)
 
 describe("the headless loop's replay injection (o.replay)", function()

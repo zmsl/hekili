@@ -251,6 +251,10 @@ function M.gate(m, r, line, label)
     -- our cost refusals the oracle shadow would not have made at that tick (loop.unmatched: the round-3 ruling); a
     -- refusal both make is the press protocol meeting the world's rage timing, kept visible in the raw rate
     ab.check((r.per100U.cost or 0) <= (M.UNMATCHED_BY[label] or M.UNMATCHED), at, line)
+    -- every other refusal the oracle would not have made is 0; `casting` is our own cast bar meeting the press protocol
+    for key, n in pairs(r.per100U) do
+        ab.check(key == "cost" or key == "casting" or n == 0, at, line)
+    end
     M.health(m, r, line)
 end
 
