@@ -419,7 +419,7 @@ spec:RegisterAbilities({
     vampiric_embrace = {
         id = 15286,
         cast = 0,
-        cooldown = 60,
+        cooldown = 30, -- DB2 70707 and wowsims (spells_auto_gen.go 15286)
         gcd = "spell",
 
         spend = agile({ 40 }, { 15286 }),
