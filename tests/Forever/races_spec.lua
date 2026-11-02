@@ -108,10 +108,10 @@ describe("race packs", function()
             assert.is_function(rll.now)
             assert.are_not.equal(rll.handler, rll.now)
             assert.are.same(
-                { 1270842, 30, 1 },
+                { 1270842, 15, 1 }, -- 15 s x 1.5 (26 Oct dev notes, wowsims racials.go)
                 { all.auras.energized.id, all.auras.energized.duration, all.auras.energized.max_stack }
             )
-            assert.are.same({ { resource = "mana", aura = "energized", mult = 2 } }, ns.raceMods.regenMods)
+            assert.are.same({ { resource = "mana", aura = "energized", mult = 1.5 } }, ns.raceMods.regenMods)
         end
         -- one faction's: the Windshaper Skyborne (Horde, race ID 96) and the Classic races get neither the racial nor the regen
         for _, other in ipairs({ 96, "WindshaperSkyborne", "Orc", "NightElf", "Human" }) do
