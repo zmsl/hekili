@@ -4,8 +4,9 @@
 --       tools/wowsims/specs/<spec>.lua and the wowsims checkout's preset files, wowsimcli run on it, and
 --       tests/Forever/wowsims/<spec>.log: the debug log (noise lines dropped) under a header (the pin, the spec, the
 --       seed, the duration, the target level, the build's talents). Needs the checkout at M.PIN and its CLI.
---   .lua/bin/lua tools/wowsims/export.lua rerun <spec>   the log only: the checked-in request, unchanged, on the CLI
---       of a checkout at M.SIM_PIN (the oracle moves with the sim while the requests stay at M.PIN)
+--   .lua/bin/lua tools/wowsims/export.lua rerun <spec>   the log only: the checked-in request, unchanged, on the
+--       oracle CLI (`make wowsims-sim-cli`) of a checkout at M.SIM_PIN (the oracle moves with the sim while the
+--       requests stay at M.PIN)
 --   .lua/bin/lua tools/wowsims/export.lua learn <CLASS>  tests/Forever/wowsims/learn_<class>.lua: the DB2 learn level
 --       of every rank of every ability in the class's ability set: kit, shared content, racials (wowdb)
 --   .lua/bin/lua tools/wowsims/export.lua pack <spec>    the spec's pack .simc from its checked-in request (Task 4;
@@ -177,12 +178,12 @@ end
 
 --- Runs the checked-in request of `spec` on the CLI of the wowsims checkout `root` (at commit `head`) and writes its
 --- log under M.OUT (see the header).
-function M.run(spec, root, head)
+function M.run(spec, root, head, cli)
     local r = M.recipe(spec)
     local reqPath = M.OUT .. spec .. ".json"
     local req = decode(slurp(reqPath), reqPath)
     local resPath = os.tmpname()
-    local cli = env("WOWSIMS_CLI", root .. "/wowsimcli-amd64-linux")
+    cli = cli or env("WOWSIMS_CLI", root .. "/wowsimcli-amd64-linux")
     if os.execute(("'%s' sim --infile '%s' --outfile '%s'"):format(cli, reqPath, resPath)) ~= 0 then
         error("wowsimcli failed on " .. reqPath, 0)
     end
@@ -273,14 +274,15 @@ function M.learn(token)
     spit(M.OUT .. "learn_" .. name .. ".lua", table.concat(out, "\n") .. "\n")
 end
 
---- Re-runs the checked-in request of `spec` on the CLI of the wowsims checkout at M.SIM_PIN (the request unchanged).
+--- Re-runs the checked-in request of `spec` on the oracle CLI of the wowsims checkout at M.SIM_PIN (the request
+--- unchanged): its wowsimcli-sim-pin, `make wowsims-sim-cli`'s build with the oracle patches (tools/wowsims/sim-pin).
 function M.rerun(spec)
     local root = env("WOWSIMS", "~/src/wowsims-forever")
     local head = capture("git -C '" .. root .. "' rev-parse HEAD"):gsub("%s+$", "")
     if head ~= M.SIM_PIN then
         error(("wowsims checkout at %s, the sim pin is %s"):format(head, M.SIM_PIN), 0)
     end
-    M.run(spec, root, head)
+    M.run(spec, root, head, env("WOWSIMS_CLI", root .. "/wowsimcli-sim-pin"))
 end
 
 local mode, arg = ...

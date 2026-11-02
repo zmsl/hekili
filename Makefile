@@ -7,7 +7,7 @@ LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
 .PHONY: accuracy gate gate-ab bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check cdv-coverage syntax api-check \
-	packs-check tools-test check packs package package-check wowsims-cli wowsims-export wowsims-learn wowsims-packs test-wowsims
+	packs-check tools-test check packs package package-check wowsims-cli wowsims-sim-cli wowsims-export wowsims-learn wowsims-packs test-wowsims
 
 bootstrap:
 	scripts/bootstrap.sh
@@ -98,6 +98,11 @@ cdv-coverage:
 WOWSIMS ?= $(HOME)/src/wowsims-forever
 wowsims-cli:
 	cd $(WOWSIMS) && make sim/core/proto/api.pb.go && go build --tags=with_db -o wowsimcli-amd64-linux ./cmd/wowsimcli/cli_main.go
+
+# wowsims-sim-cli: the oracle CLI (wowsimcli-sim-pin) that `export.lua rerun` uses, from a checkout at M.SIM_PIN
+# with the oracle patches (tools/wowsims/sim-pin/build.sh; docs/dev/wowsims-packs.md "Oracle patches").
+wowsims-sim-cli:
+	sh tools/wowsims/sim-pin/build.sh $(WOWSIMS)
 
 wowsims-export:
 	WOWSIMS=$(WOWSIMS) $(LUA) tools/wowsims/export.lua export $(SPEC)
