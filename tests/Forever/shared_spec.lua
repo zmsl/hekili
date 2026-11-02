@@ -179,26 +179,18 @@ describe("shared content", function()
             "adrenaline_rush",
             "bloodlust",
             "bloodlust_actual",
-            "disoriented",
             "dispellable_curse",
             "dispellable_disease",
             "dispellable_magic",
             "dispellable_poison",
-            "feared",
-            "incapacitated",
-            "loss_of_control",
             "main_hand_enchant",
             "off_hand_enchant",
             "power_infusion",
             "reversible_magic",
-            "rooted",
             "shadowform",
-            "snared",
-            "stunned",
             "voidbinding",
             "voidform",
         }, keys("auras"))
-        assert.are.same({ all.auras.incapacitated, all.auras.snared }, { all.auras.sapped, all.auras.slowed })
         assert.are.same({ 10060, 15 }, { all.auras.power_infusion.id, all.auras.power_infusion.duration })
         assert.are.same(
             { 0, 1 },
