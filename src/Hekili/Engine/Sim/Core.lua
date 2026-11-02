@@ -125,8 +125,6 @@ local z_PVP = {
 }
 
 
-local listStack = {}    -- listStack for a given index returns the scriptID of its caller (or 0 if called by a display).
-
 local listCache = {}    -- listCache is a table of return values for a given scriptID at various times.
 local listValue = {}    -- listValue shows the cached values from the listCache.
 
@@ -1183,7 +1181,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                             elseif state.cooldown[ next_action ].remains > 0 then
                                                                 if debug then self:Debug( "Attempted to Pool Resources for Next Entry ( %s ), but the next entry is on cooldown.  Skipping.", next_action ) end
                                                             elseif state[ next_res ].lo >= next_cost + extra_amt then -- the press gate: the believed floor (border batch 2)
-                                                                if debug then self:Debug( "Attempted to Pool Resources for Next Entry ( %s ), but we already have all the resources needed ( %.2f > %.2f + %.2f ).  Skipping.", next_ation, state[ next_res ].current, next_cost, extra_amt ) end
+                                                                if debug then self:Debug( "Attempted to Pool Resources for Next Entry ( %s ), but we already have all the resources needed ( %.2f > %.2f + %.2f ).  Skipping.", next_action, state[ next_res ].current, next_cost, extra_amt ) end
                                                             else
                                                                 -- Oops.  We only want to wait if
                                                                 local next_wait = state[ next_res ].timeToLo( next_cost + extra_amt )
@@ -1318,12 +1316,6 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
     if debug then self:Debug( "Exiting %s with recommendation of %s at +%.2fs.", listName or "UNKNOWN", action or "NO ACTION", wait or state.delayMax ) end
 
 
-    local scriptID = listStack[ listName ]
-    listStack[ listName ] = nil
-
-    if listCache[ scriptID ] then twipe( listCache[ scriptID ] ) end
-    if listValue[ scriptID ] then twipe( listValue[ scriptID ] ) end
-
     inPrecombat = wasPrecombat
     return rAction, rWait, rDepth
 end
@@ -1341,8 +1333,6 @@ function Hekili:GetNextPrediction( dispName, packName, slot )
     for i = #Block, 1, -1 do tinsert( StackPool, tremove( Block, i ) ) end
     twipe( InUse )
     inPrecombat = false -- in case a walk was interrupted
-
-    twipe( listStack )
 
     for k, v in pairs( listCache ) do tinsert( lcPool, v ); twipe( v ); listCache[ k ] = nil end
     for k, v in pairs( listValue ) do tinsert( lvPool, v ); twipe( v ); listValue[ k ] = nil end
@@ -1438,11 +1428,11 @@ local aoeDisplayRule = function( p )
 end
 
 local displayRules = {
-    Interrupts = { function( p ) return p.toggles.interrupts.value and p.toggles.interrupts.separate end, true , "Defensives" },
-    Defensives = { function( p ) return p.toggles.defensives.value and p.toggles.defensives.separate end, false, "Cooldowns"  },
-    Cooldowns  = { function( p ) return p.toggles.cooldowns.value  and p.toggles.cooldowns.separate  end, false, "Primary"    },
-    Primary    = { function(   ) return true                                                         end, false, "AOE"        },
-    AOE        = { aoeDisplayRule                                                                       , true , "Interrupts" },
+    Interrupts = { function( p ) return p.toggles.interrupts.value and p.toggles.interrupts.separate end, "Defensives" },
+    Defensives = { function( p ) return p.toggles.defensives.value and p.toggles.defensives.separate end, "Cooldowns"  },
+    Cooldowns  = { function( p ) return p.toggles.cooldowns.value  and p.toggles.cooldowns.separate  end, "Primary"    },
+    Primary    = { function(   ) return true                                                         end, "AOE"        },
+    AOE        = { aoeDisplayRule                                                                       , "Interrupts" },
 }
 
 -- Alternatives under resource uncertainty (display styles plan, Task 3c), for a display a subscriber asked them of
@@ -1563,7 +1553,6 @@ function Hekili.Update()
     Output.steady = spec.steadyIcons == true -- the experimental steady icons, read once per update
     local hold = spec.steadyHold
     Output.hold = type( hold ) == "number" and hold >= 1 and hold <= 3 and hold - hold % 1 or 1 -- a profile can hold anything
-    Output.interval = Hekili.combatRate or 0.2
 
     local snaps
 
@@ -1571,10 +1560,8 @@ function Hekili.Update()
     state.display = dispName
 
     for round = 1, 5 do
-        local rule, fullReset, nextDisplay = unpack( displayRules[ dispName ] )
+        local rule, nextDisplay = unpack( displayRules[ dispName ] )
         local display = rawget( settings.displays, dispName )
-
-        fullReset = fullReset or state.offset > 0
 
         if debug and lastSnapshot[ dispName ] and GetTime() - lastSnapshot[ dispName ] < 0.5 then
             -- Disable snapshotting to prevent loops with errors.
@@ -1599,7 +1586,7 @@ function Hekili.Update()
             for i = #Stack, 1, -1 do tinsert( StackPool, tremove( Stack, i ) ) end
             for i = #Block, 1, -1 do tinsert( StackPool, tremove( Block, i ) ) end
 
-            state.reset( dispName, fullReset )
+            state.reset( dispName )
 
             -- Clear the stack in case we interrupted ourselves.
             wipe( InUse )

@@ -62,7 +62,7 @@ end
 --- the pack's other variables, then fills `results` with the values of the entry's conditions (`mod` nil) or of its
 --- modifier `mod` (a ModElements key: "value", "value_else", "strict_if"). Returns results, list, action.
 function Hekili.Engine.Evaluate(pack, list, action, mod, results)
-    state.reset("Primary", true)
+    state.reset("Primary")
 
     local apack = rawget(Hekili.Engine.settings.packs, pack)
 

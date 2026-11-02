@@ -6335,11 +6335,11 @@ end
 do
     local firstTime = true
 
-    function state.reset( dispName, full )
+    function state.reset( dispName )
         state.changes = state.changes + 1
         dispName = dispName or "Primary"
 
-        full = dispName == "Primary" or state.offset > 0 or state.fullNext
+        local full = dispName == "Primary" or state.offset > 0 or state.fullNext
         state.fullNext = false
 
         ClearMarks( firstTime )
@@ -7455,7 +7455,7 @@ function state:TimeToReady( action, pool )
         -- Never for a swing-paid resource (swingGen): it moves only at swings, so no regen is answered late.
         z = self[ resource ]
         nearRes = not z.swingGen
-            and wait <= ns.EARLY_EXIT + ( Hekili.combatRate or 0.2 )
+            and wait <= ns.EARLY_EXIT + 0.2 -- the driver's combat update interval
             and self:TimeToResource( z, spend ) <= ns.EARLY_EXIT
         waitRes = wait
     end

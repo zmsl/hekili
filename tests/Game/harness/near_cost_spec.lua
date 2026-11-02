@@ -26,7 +26,6 @@ describe("the sim's near-cost mark (TimeToReady)", function()
             spec:RegisterAbility(k, d)
             class.abilities[k] = spec.abilities[k]
         end
-        H.Hekili.combatRate = 0.2
     end)
 
     before_each(function()

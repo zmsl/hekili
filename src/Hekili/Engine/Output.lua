@@ -98,7 +98,7 @@ local annotators = slots()
 -- changes since the start (Output.Acted).
 Output.steady = false
 Output.hold = 1
-Output.interval = 0.2 -- seconds between updates in combat (Core sets it from the driver's combatRate)
+Output.interval = 0.2 -- seconds between updates in combat (the driver's combatRate)
 local acts = 0
 
 --- Our own cast started or succeeded, our channel ended or a swing queue changed: the next publish of every display

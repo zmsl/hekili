@@ -17,7 +17,6 @@ local function first(gap, frac)
     local C = mw.Fire
     local H = headless.new({ character = C.character(), pack = C.PACK })
     assert.are.same({}, H.loadErrors)
-    H.Hekili.combatRate = 0.2
     local cost = H.Hekili.State.action.fireball.cost
     local lo = frac and math.floor(cost) - UNDER + frac or cost - UNDER
     local power = { est = lo + gap, lo = lo, hi = lo + gap, conf = 1 }
