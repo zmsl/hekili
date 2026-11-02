@@ -110,7 +110,7 @@ describe("Forever Paladin", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 4, 14, 15, 16 }, n)
+        assert.are.same({ [0] = 4, 14, 16, 16 }, n)
     end)
 
     it("declares mana under the five-second rule", function()
@@ -266,6 +266,13 @@ describe("Forever Paladin", function()
 
 
 
+    it("cuts Holy Strike's cooldown to 6 s with Shieldsworn (hotfix 113554, 1328544)", function()
+        local e = ld.env(w)
+        assert.are.equal(10, ld.run(w.abilities.holy_strike.cooldown, e))
+        e.talent = talents({ shieldsworn = 1 })
+        assert.are.equal(6, ld.run(w.abilities.holy_strike.cooldown, e))
+        assert.are.same({ 2, 1328544, 1 }, w.talents.shieldsworn)
+    end)
     it("gives Holy Shield 4 charges, each block or partial block on us spending one", function()
         local a = w.auras.holy_shield
         assert.are.same({ 4, 10, { BLOCK = true, BLOCKED = true } }, { a.max_stack, a.duration, a.consumedBy })

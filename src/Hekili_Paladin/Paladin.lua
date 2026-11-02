@@ -252,6 +252,7 @@ spec:RegisterTalents({
     reckoning = { 2, 20177, 5 },
     one_handed_weapon_specialization = { 2, 20196, 5 },
     holy_shield = { 2, 20925, 1 },
+    shieldsworn = { 2, 1328544, 1 }, -- hotfix 113554
     -- Retribution (tree 3)
     improved_blessing_of_might = { 3, 20042, 5 },
     benediction = { 3, 20101, 5 },
@@ -441,7 +442,9 @@ spec:RegisterAbilities({
         id = 679,
         copy = rest(HOLY_STRIKE),
         cast = 0,
-        cooldown = 10,
+        cooldown = function() -- Shieldsworn (1328544; hotfix 113554, wowsims holy_strike.go): 4 s off
+            return talent.shieldsworn.enabled and 6 or 10
+        end,
         gcd = "spell",
 
         spend = function()
