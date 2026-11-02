@@ -1210,8 +1210,6 @@ do
         function d:OnEvent( event, ... )
             local conf = Hekili.DB.profile.displays[ self.id ]
 
-            local init = debugprofilestop()
-
             if kbEvents[ event ] then
                 self.style.UpdateKeybindings( self )
 
@@ -1230,24 +1228,6 @@ do
 
             self.style.OnGameEvent( self, conf, event, ... )
             if self.truthOn then ns.UI.Truth.OnGameEvent( self, conf, event, ... ) end
-
-            local finish = debugprofilestop()
-
-            if self.eventTime then
-                local newTime = self.eventTime * self.eventCount + finish - init
-                self.eventCount = self.eventCount + 1
-                self.eventTime = newTime / self.eventCount
-
-                if finish - init > self.eventMax then
-                    self.eventMax = finish - init
-                    self.eventMaxType = event
-                end
-            else
-                self.eventCount = 1
-                self.eventTime = finish - init
-                self.eventMax = finish - init
-                self.eventMaxType = event
-            end
         end
 
         Hekili:ProfileCPU( "HekiliDisplay" .. id .. ":OnEvent", d.OnEvent )

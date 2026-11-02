@@ -743,17 +743,13 @@ end
 function Classic.Draw( d, conf, out, status )
     local self, st = d, d.styleState
     local elapsed = st.elapsed
-    local init = debugprofilestop()
     local profile = Hekili.DB.profile
     local fullUpdate = true -- core calls Draw only on a full update (a publish or the pulse)
-
-    local madeUpdate = false
 
     local now = GetTime()
 
     if self.NewRecommendations then
         self.NewRecommendations = nil
-        madeUpdate = true
 
         local alpha = self.alpha
 
@@ -892,12 +888,8 @@ function Classic.Draw( d, conf, out, status )
         end
     end
 
-    local postRecs = debugprofilestop()
-
     if st.HasRecommendations then
         if fullUpdate and conf.classic.glow.enabled then
-            madeUpdate = true
-
             for i, b in ipairs( self.Buttons ) do
                 if not b.Action then break end
 
@@ -940,18 +932,12 @@ function Classic.Draw( d, conf, out, status )
             end
         end
 
-        local postGlow = debugprofilestop()
-
-        if ns.UI.FlashRecommendation( st, conf.classic.flash, self.Buttons[ 1 ].Action, elapsed ) then madeUpdate = true end
-
-        local postFlash = debugprofilestop()
+        ns.UI.FlashRecommendation( st, conf.classic.flash, self.Buttons[ 1 ].Action, elapsed )
 
         if fullUpdate then
             local b = self.Buttons[ 1 ]
 
             if conf.classic.targets.enabled then
-                madeUpdate = true
-
                 local r = self.resolved[ 1 ]
                 local detected, shown = r.detected, r.targets
 
@@ -964,18 +950,13 @@ function Classic.Draw( d, conf, out, status )
                     b.targetShown = false
                 end
             elseif b.targetShown then
-                madeUpdate = true
                 b.Targets:SetText(nil)
             end
         end
 
-        local postTargets = debugprofilestop()
-
         st.delayTimer = st.delayTimer - elapsed
 
         if fullUpdate and self.Buttons[ 1 ].ExactTime then
-            madeUpdate = true
-
             local b = self.Buttons[ 1 ]
             local delay, earliest_time = self.resolved[ 1 ].delay, self.resolved[ 1 ].earliest
 
@@ -1033,8 +1014,6 @@ function Classic.Draw( d, conf, out, status )
 
         st.rangeTimer = st.rangeTimer - elapsed
         if fullUpdate or st.rangeTimer < 0 then
-            madeUpdate = true
-
             for i, b in ipairs( self.Buttons ) do
                 local a = b.Ability
 
@@ -1091,36 +1070,6 @@ function Classic.Draw( d, conf, out, status )
             end
 
             st.rangeTimer = pulseRange
-        end
-
-        local postRange = debugprofilestop()
-        local finish = debugprofilestop()
-
-        if madeUpdate then
-            if st.updateTime then
-                local newTime = st.updateTime * st.updateCount + ( finish - init )
-                st.updateCount = st.updateCount + 1
-                st.updateTime = newTime / st.updateCount
-
-                st.updateMax = max( st.updateMax, finish - init )
-                st.postRecs = max( st.postRecs, postRecs - init )
-                st.postGlow = max( st.postGlow, postGlow - postRecs )
-                st.postRange = max( st.postRange, postRange - postGlow )
-                st.postFlash = max( st.postFlash, postFlash - postRange )
-                st.postTargets = max( st.postTargets, postTargets - postFlash )
-                st.postDelay = max( st.postDelay, finish - postTargets )
-            else
-                st.updateCount = 1
-                st.updateTime = finish - init
-                st.updateMax = finish - init
-
-                st.postRecs = postRecs - init
-                st.postGlow = postGlow - postRecs
-                st.postRange = postRange - postGlow
-                st.postFlash = postFlash - postRange
-                st.postTargets = postTargets - postFlash
-                st.postDelay = finish - postTargets
-            end
         end
     end
 end
