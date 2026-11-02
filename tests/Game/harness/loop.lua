@@ -231,7 +231,7 @@ end
 --- first one's first icon pressed, each press resolved from the run's truth instance (the oracle when it is driven,
 --- else the first driver). `o`: duration (combat seconds [180]), mobHealth, hz [5], react [REACT], reaction
 --- (seconds an icon shows ready before the press [0]), others (archetypes on our target), trace (the facade's trace
---- each tick), on(run, steps, t) (a per-tick hook). Returns the run { W, us, ticks, presses, refused (by reason),
+--- each tick), on(run, steps, t) (a per-tick hook). Returns the run { W, us, ticks, presses, pressedBy (by key), refused (by reason),
 --- attempts, episodes, errors, raises, misses (unexpected run names), secrets (Facade.secrets), selfCheck (ticks where
 --- the oracle's belief missed the truth, by field), combat, full, idle, up (by debuff key: in-combat ticks), ours and
 --- theirs (first icons by in-combat tick), pressed and shadowPress (the driver's press, the shadow's would-be press, by
@@ -278,6 +278,7 @@ function M.run(L, seed, o, drivers)
         us = us,
         ticks = 0,
         presses = 0,
+        pressedBy = {},
         refused = {},
         unmatched = {},
         raises = 0,
@@ -555,6 +556,7 @@ function M.run(L, seed, o, drivers)
             end
             if ok then
                 run.presses = run.presses + 1
+                run.pressedBy[key] = (run.pressedBy[key] or 0) + 1
                 gcdPress, pressedKey = not p.offGcd, key
             else
                 if inCombat then -- over the in-combat attempts (per100)
@@ -732,7 +734,7 @@ local function blank()
     m.A = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
     m.B = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
     m.oracleFlicker, m.errors, m.raises, m.misses, m.secrets, m.selfCheck = 0, 0, 0, {}, {}, 0
-    m.cpu, m.gap, m.focus = {}, {}, 0
+    m.cpu, m.gap, m.focus, m.pressedBy = {}, {}, 0, {}
     m.ratio, m.cal = {}, {} -- per counted tick its cpu over its run's calibration; per counted run the calibration ms
     m.bytes, m.sampled = 0, 0 -- allocated over the sampled ticks (M.BYTES_EVERY)
     m.led = { ours = flicker.merge(), oracle = flicker.merge() } -- run A's ledgers (flicker.ledger): ours, the shadow's
@@ -787,6 +789,9 @@ function M.tally(L, n, o)
         m.readyShort = m.readyShort + a.readyShort
         m.heldReady = m.heldReady + a.heldReady
         m.focus = m.focus + a.focus
+        for key, k in pairs(a.pressedBy) do
+            m.pressedBy[key] = (m.pressedBy[key] or 0) + k
+        end
         for why, k in pairs(b.refused) do
             m.refusedB[why] = (m.refusedB[why] or 0) + k
         end
@@ -913,9 +918,9 @@ end
 --- reason (per100; per100U the unmatched ones, M.unmatched; per100B the oracle's own in run B), episodes per minute, damage per second A / B, full-power and GCD-idle shares and debuff uptimes (A, B),
 --- flicker per minute (ours, the oracle's), CPU per Update (mean, p99 ms; cpuRatio the mean of each tick's ms over its
 --- run's calibration, calMean the calibration's mean ms; bytes allocated per Update, sampled, reported only), and
---- the tally's focus count (not in M.line).
+--- the tally's focus and run A's presses by key (pressedBy) (neither in M.line).
 function M.summary(m)
-    local r = { focus = m.focus, readyShort = m.readyShort or 0, heldReady = m.heldReady or 0 }
+    local r = { focus = m.focus, pressedBy = m.pressedBy, readyShort = m.readyShort or 0, heldReady = m.heldReady or 0 }
     r.agreement = m.agree / math.max(1, m.both)
     local reacted, never = {}, 0
     for _, d in ipairs(m.react) do

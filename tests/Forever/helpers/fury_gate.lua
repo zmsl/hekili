@@ -27,7 +27,7 @@ end
 
 --- 20 fights at `level`, the `Fury L<level> solo:` line printed, pack_gate's gate, the Arms 20-fight gate's outcome
 --- checks (never-reacts, idle, uptimes but arms_gate.REPORTED), then `floors` (agreement, reactP90, unmatched cost
---- refusals per 100, flicker/min, dps A/B).
+--- refusals per 100, flicker/min, dps A/B, Overpower presses).
 function M.solo(level, floors)
     local label = "Fury L" .. level
     local r, line = pack_gate.solo(label, M.content(level), 20)
@@ -47,6 +47,9 @@ function M.solo(level, floors)
         end
     end
     assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
+    -- the loop client's Overpower answer stays alive: an always-no client presses none of them
+    local overpower = r.pressedBy.overpower or 0
+    ab.check(overpower >= floors.overpower, label, "Overpower presses " .. overpower .. ": " .. line)
     return r, line
 end
 
