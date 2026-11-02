@@ -126,7 +126,9 @@ changes a trace; `tests/Forever/driver_rate_spec.lua` is their proof, through th
   (`Engine/Driver.lua`). A force keeps the 0.2 s wait, so a target change, a cast or combat wakes it. The belief drains at
   that rate too, so its 256-entry log holds 1.5 s of observations out of combat.
 
-**The rate switches** (perf phase 2; Options > Performance > Experimental, `profile.performance`, profile-wide).
+**The rate switches** (perf phase 2; Options > Performance > Experimental, `profile.performance`, profile-wide). Dev
+builds only, like `damageMeter` and `cooldownViewer`: a non-dev build (`Hekili.IsDev` unset) hides all four and
+`providersOf` (`Engine/Schema/Tracked.lua`) reads each as off, whatever the saved profile says.
 - `coalesceCooldown`, default off: the event facade holds SPELL_UPDATE_COOLDOWN to its per-frame OnUpdate and runs it once.
 - `narrowUnitAura`, default off: UNIT_AURA is asked for only on `I.auras.token`, applied at a drain out of combat; a
   general subscriber keeps it general. UNIT_TARGET stays general, because `Game/Events/Attackers.lua` reads the target,

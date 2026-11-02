@@ -194,7 +194,8 @@ end
 
 local function providersOf()
     local e = Hekili.Engine
-    local p = e and e.settings.performance or NO_PERF
+    -- a non-dev build hides these switches (Options.lua) and ignores a saved value: each reads as its default, off
+    local p = Hekili.IsDev and e and e.settings.performance or NO_PERF
     return p.damageMeter == true and "meter" or "default",
         "router",
         p.cooldownViewer == true,

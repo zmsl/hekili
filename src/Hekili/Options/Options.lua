@@ -4219,6 +4219,7 @@ found = true end
                                 },
                                 damageMeter = {
                                     type = "toggle",
+                                    hidden = not Hekili.IsDev, -- dev builds only; providersOf (Tracked.lua) ignores it otherwise
                                     name = L["Experimental: use the damage meter for swing outcomes"],
                                     desc = L["Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know "
                                         .. "at once whether your white swing hit, and that another player's hit was not yours.\n\n"
@@ -4234,6 +4235,7 @@ found = true end
                                 },
                                 cooldownViewer = {
                                     type = "toggle",
+                                    hidden = not Hekili.IsDev, -- dev builds only; providersOf (Tracked.lua) ignores it otherwise
                                     name = L["Experimental: use the Cooldown Manager for aura presence"],
                                     desc = L["Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, "
                                         .. "for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. "
@@ -4250,6 +4252,7 @@ found = true end
                                 },
                                 coalesceCooldown = {
                                     type = "toggle",
+                                    hidden = not Hekili.IsDev, -- dev builds only; providersOf (Tracked.lua) ignores it otherwise
                                     name = L["Experimental: read cooldown changes once per frame"],
                                     desc = L["When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. "
                                         .. "Costs less in busy fights; a changed cooldown shows up to one frame later.\n\n"
@@ -4265,6 +4268,7 @@ found = true end
                                 },
                                 narrowUnitAura = {
                                     type = "toggle",
+                                    hidden = not Hekili.IsDev, -- dev builds only; providersOf (Tracked.lua) ignores it otherwise
                                     name = L["Experimental: listen for aura changes on you and your target only"],
                                     desc = L["Asks the game for buff and debuff changes on you and your target only, instead of every unit, "
                                         .. "which matters most in raids.\n\n"
