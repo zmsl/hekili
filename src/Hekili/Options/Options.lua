@@ -341,8 +341,6 @@ do
                     forecastWindow = 15, -- Forever E9
                     damageMeter = false, -- experimental (providers spec decision 82): the meter as the Outcomes provider
                     cooldownViewer = false, -- experimental: the Cooldown Manager as the presence leaf (providers Task 7)
-                    auraForceOrdinary = true, -- perf 2.1a: aura events no longer shorten the 0.2 s wait (Events.lua)
-                    idleGate = true, -- perf 2.4: the unforced wait is 1.5 s with nothing to fight (Driver.lua)
                     coalesceCooldown = false, -- perf 2.2: SPELL_UPDATE_COOLDOWN once per frame (EventFacade.lua)
                     narrowUnitAura = false, -- perf 2.3: UNIT_AURA for player and target only (Sources.lua)
                 },
@@ -4248,30 +4246,6 @@ found = true end
                                         Hekili:ProvidersChanged()
                                     end,
                                     order = 23,
-                                    width = "full",
-                                },
-                                auraForceOrdinary = {
-                                    type = "toggle",
-                                    name = L["Experimental: aura changes wait for the next regular update"],
-                                    desc = L["A buff or debuff change refreshes the icons at the next regular update (usually within 0.2 s) "
-                                        .. "instead of bringing that update forward, so fights with many aura changes cost less.\n\n"
-                                        .. "Applies at once to every specialization.\n\n"
-                                        .. "|cFFFF7F00Experimental|r: on by default; turn it off if the icons seem slow to react to your buffs."],
-                                    get = function() return Hekili.DB.profile.performance.auraForceOrdinary == true end,
-                                    set = function( _, v ) Hekili.DB.profile.performance.auraForceOrdinary = v end,
-                                    order = 24,
-                                    width = "full",
-                                },
-                                idleGate = {
-                                    type = "toggle",
-                                    name = L["Experimental: slow updates when there is nothing to fight"],
-                                    desc = L["Out of combat with no hostile target, the icons refresh every 1.5 s instead of every 0.5 s. "
-                                        .. "Changing target, casting and entering combat still refresh them at once.\n\n"
-                                        .. "Applies at once to every specialization.\n\n"
-                                        .. "|cFFFF7F00Experimental|r: on by default; turn it off if the icons seem slow out of combat."],
-                                    get = function() return Hekili.DB.profile.performance.idleGate == true end,
-                                    set = function( _, v ) Hekili.DB.profile.performance.idleGate = v end,
-                                    order = 25,
                                     width = "full",
                                 },
                                 coalesceCooldown = {

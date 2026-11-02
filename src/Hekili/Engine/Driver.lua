@@ -75,8 +75,7 @@ end
 -- The unforced wait after an update (perf 2.4). With nothing to fight it stretches to 1.5 s; a force (a target change,
 -- a cast, combat) still gets the 0.2 s wait, and the update it brings reads this again. A secret answer counts as hostile.
 local function restRate()
-    local perf = Hekili.Engine.settings.performance
-    if perf and perf.idleGate and not InCombatLockdown() then
+    if not InCombatLockdown() then
         local hostile = UnitCanAttack("player", "target")
         if not issecretvalue(hostile) and not hostile then
             return 1.5

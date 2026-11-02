@@ -1,6 +1,6 @@
 -- tests/Forever/driver_rate_spec.lua (perf phase 2, items 2.1a and 2.4): the rate of Hekili.Update through the real
 -- engine frame (Engine/Driver.lua's OnUpdate) at 60 frames a second on the fake clock. Traces call Update directly and
--- bypass the Driver, so this spec is the proof of what the two default-on switches do. Update is a counter here: the
+-- bypass the Driver, so this spec is the proof of the aura force and the idle gate. Update is a counter here: the
 -- spec measures how often the Driver starts one, not what one does.
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
@@ -8,12 +8,12 @@ local ww = require("Forever.helpers.warrior_world")
 local DT = 1 / 60
 
 describe("the Driver's update rate", function()
-    local H, f, runs, perf
+    local H, f, runs
 
     before_each(function()
         H = headless.new({ character = ww.character(), pack = ww.PACK })
         assert.are.same({}, H.loadErrors)
-        f, perf = H.ns.EngineFrame, H.Hekili.DB.profile.performance
+        f = H.ns.EngineFrame
         H.Hekili.Update = function()
             runs = runs + 1
         end
@@ -49,23 +49,14 @@ describe("the Driver's update rate", function()
     end
 
     describe("2.1a, the aura force", function()
-        it("on (the default): aura events leave the rate where the 0.2 s wait puts it, at any aura rate", function()
-            assert.is_true(perf.auraForceOrdinary)
+        it("aura events leave the rate where the 0.2 s wait puts it, at any aura rate", function()
             local base = fight(0)
             assert.is_true(base > 4 and base <= 5, "the wait's rate: " .. base)
             assert.is_true(math.abs(fight(4) - base) <= 0.1)
             assert.is_true(math.abs(fight(20) - base) <= 0.1)
         end)
 
-        it("off: each aura event pushes the timer on, as before the switch", function()
-            perf.auraForceOrdinary = false
-            local base = fight(0)
-            local at4, at20 = fight(4), fight(20)
-            assert.is_true(at4 > base + 1, "at 4 events/s: " .. at4 .. " against " .. base)
-            assert.is_true(at20 > base * 2, "at 20 events/s: " .. at20 .. " against " .. base)
-        end)
-
-        it("on: an aura event alone still gets its update within the 0.2 s wait", function()
+        it("an aura event alone still gets its update within the 0.2 s wait", function()
             rate(1)
             f.refreshTimer = 0
             H.Fire("UNIT_AURA", "player")
@@ -74,7 +65,7 @@ describe("the Driver's update rate", function()
             assert.are.equal(1, rate(0.1) * 0.1)
         end)
 
-        it("on: a target change still pushes the timer on", function()
+        it("a target change still pushes the timer on", function()
             f.refreshTimer = 0
             H.Fire("PLAYER_TARGET_CHANGED")
             assert.is_true(f.refreshTimer >= 0.1)
@@ -94,16 +85,9 @@ describe("the Driver's update rate", function()
             H.ctl.friendly.target = true -- what UnitCanAttack answers with no target, or a friendly one
         end)
 
-        it("on (the default), out of combat with no hostile target: one update each 1.5 s", function()
-            assert.is_true(perf.idleGate)
+        it("out of combat with no hostile target: one update each 1.5 s", function()
             local r = rest()
             assert.is_true(r > 0.6 and r <= 2 / 3, "idle rate: " .. r)
-        end)
-
-        it("off: every 0.5 s, as before the switch", function()
-            perf.idleGate = false
-            local r = rest()
-            assert.is_true(r > 1.8 and r <= 2, "rest rate: " .. r)
         end)
 
         it("a hostile target, combat, or a secret answer each keep the 0.5 s rest rate", function()
@@ -145,18 +129,5 @@ describe("the Driver's update rate", function()
             local r = rate(30)
             assert.is_true(r > 1.8 and r <= 2, "in combat: " .. r)
         end)
-    end)
-
-    it("each option writes the profile, on by default", function()
-        H.Hekili:EmbedSpecOptions()
-        H.Hekili:EmbedPackOptions()
-        local key = H.Hekili.State.spec.key
-        local args = H.Hekili.Options.args.packs.plugins.specializations[key].args.performance.args
-        for _, name in ipairs({ "auraForceOrdinary", "idleGate" }) do
-            assert.is_true(args[name].get())
-            args[name].set(nil, false)
-            assert.is_false(perf[name])
-            assert.is_false(args[name].get())
-        end
     end)
 end)
