@@ -268,10 +268,10 @@ spec:RegisterTalents({
     sanctity_aura = { 3, 20218, 1 },
     vengeance = { 3, 20049, 5 },
     repentance = { 3, 20066, 1 },
+    champion_of_the_light = { 3, 1311084, 5 }, -- hotfix 113554 (replaces Instrument of Law)
     -- Forever-only (tree unknown until the export)
     twist_of_light = { 0, 1310735, 1 },
     swift_judgement = { 0, 1310994, 1 },
-    instrument_of_law = { 0, 1311085, 1 },
     holy_conduit = { 0, 1237268, 2 },
     sanctified_judgement = { 0, 1311074, 3 },
 })
@@ -409,8 +409,8 @@ spec:RegisterAbilities({
         handler = judgementCast(),
     },
 
-    -- Only at or below 20% of the target's health: the belief's target health reads the usability answer. Instrument
-    -- of Law (1311085 aura 107 base -1000): its cast 1 s shorter a rank.
+    -- Only at or below 20% of the target's health: the belief's target health reads the usability answer. Champion of
+    -- the Light (1311084, 5 ranks; hotfix 113554, wowsims applyChampionOfTheLight): its cast 0.2 s shorter a rank.
     hammer_of_wrath = {
         id = 24275,
         expects = "travel",
@@ -418,7 +418,7 @@ spec:RegisterAbilities({
         school = "holy",
         copy = rest(HAMMER_OF_WRATH),
         cast = function()
-            return max(0, 1 - talent.instrument_of_law.rank)
+            return max(0, 1 - 0.2 * talent.champion_of_the_light.rank)
         end,
         cooldown = 6,
         gcd = "totem",

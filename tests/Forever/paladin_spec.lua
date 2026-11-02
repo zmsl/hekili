@@ -110,7 +110,7 @@ describe("Forever Paladin", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 5, 14, 15, 15 }, n)
+        assert.are.same({ [0] = 4, 14, 15, 16 }, n)
     end)
 
     it("declares mana under the five-second rule", function()
@@ -248,7 +248,7 @@ describe("Forever Paladin", function()
         assert.is_nil(ld.run(x.usable_on, ld.env(w)))
     end)
 
-    it("gates Hammer of Wrath on the target's health, its cast shortened by Instrument of Law", function()
+    it("gates Hammer of Wrath on the target's health, its cast 0.2 s shorter a rank of Champion of the Light", function()
         local h = w.abilities.hammer_of_wrath
         assert.are.equal(0.2, h.healthGate)
         local e = ld.env(w)
@@ -256,8 +256,15 @@ describe("Forever Paladin", function()
         w.game.known[24239] = true
         w.game.usable[24239] = { false, true } -- short only of mana: in the window
         e.talent = rank(1)
-        assert.are.same({ 0, true }, { ld.run(h.cast, e), (ld.run(h.usable, e)) })
+        assert.is_true(math.abs(ld.run(h.cast, e) - 0.8) < 1e-9) -- hotfix 113554: 1311084, 5 ranks
+        assert.is_true((ld.run(h.usable, e)))
+        e.talent = rank(5)
+        assert.are.equal(0, ld.run(h.cast, e))
+        assert.are.same({ 3, 1311084, 5 }, w.talents.champion_of_the_light)
+        assert.is_nil(w.talents.instrument_of_law)
     end)
+
+
 
     it("gives Holy Shield 4 charges, each block or partial block on us spending one", function()
         local a = w.auras.holy_shield
