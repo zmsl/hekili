@@ -35,7 +35,7 @@ local def = {
     talents = {},
     units = {},
     pets = {}, -- the guardians: { key, cap, duration, slot } of each pet registered with a `cap` (Families/Pets.lua)
-    providers = {}, -- outcomes, presence, viewer: the experimental toggles (providersOf)
+    providers = {}, -- outcomes, presence, viewer, coalesceCooldown: the experimental toggles (providersOf)
     settings = {}, -- the spec's settings as plain values (Families/Now.lua's `settings`; refreshed by Hekili:SettingsChanged)
 }
 local LISTS = { "abilities", "abilityIds", "abilitySlot", "resources", "auras", "auraIds", "talents", "units", "pets" }
@@ -195,7 +195,10 @@ end
 local function providersOf()
     local e = Hekili.Engine
     local p = e and e.settings.performance or NO_PERF
-    return p.damageMeter == true and "meter" or "default", "router", p.cooldownViewer == true
+    return p.damageMeter == true and "meter" or "default",
+        "router",
+        p.cooldownViewer == true,
+        p.coalesceCooldown == true
 end
 
 local function buildDef()
@@ -203,7 +206,7 @@ local function buildDef()
         wipe(def[name])
     end
     local pv = def.providers
-    pv.outcomes, pv.presence, pv.viewer = providersOf()
+    pv.outcomes, pv.presence, pv.viewer, pv.coalesceCooldown = providersOf()
     def.school = ns.SCHOOL -- the spell schools by name (Families/Expect.lua compiles an ability's `school` to the mask)
     def.error = ns.Error -- the core's error channel (Sources/Forms.lua warns once per untracked form)
     -- the game constants, defined once in Engine/Sim/Constants.lua (border batch 3 item 4): the five-second rule's
@@ -336,7 +339,7 @@ end
 --- otherwise), keeping its records. Never a rebuild.
 function Hekili:ProvidersChanged()
     local pv = def.providers
-    pv.outcomes, pv.presence, pv.viewer = providersOf()
+    pv.outcomes, pv.presence, pv.viewer, pv.coalesceCooldown = providersOf()
 end
 
 --- Rebuilds the belief's tracked set from the active spec (decision 8). Called at the end of

@@ -343,6 +343,7 @@ do
                     cooldownViewer = false, -- experimental: the Cooldown Manager as the presence leaf (providers Task 7)
                     auraForceOrdinary = true, -- perf 2.1a: aura events no longer shorten the 0.2 s wait (Events.lua)
                     idleGate = true, -- perf 2.4: the unforced wait is 1.5 s with nothing to fight (Driver.lua)
+                    coalesceCooldown = false, -- perf 2.2: SPELL_UPDATE_COOLDOWN once per frame (EventFacade.lua)
                 },
                 toggles = {
                     pause = {
@@ -4270,6 +4271,21 @@ found = true end
                                     get = function() return Hekili.DB.profile.performance.idleGate == true end,
                                     set = function( _, v ) Hekili.DB.profile.performance.idleGate = v end,
                                     order = 25,
+                                    width = "full",
+                                },
+                                coalesceCooldown = {
+                                    type = "toggle",
+                                    name = L["Experimental: read cooldown changes once per frame"],
+                                    desc = L["When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. "
+                                        .. "Costs less in busy fights; a changed cooldown shows up to one frame later.\n\n"
+                                        .. "Applies at once to every specialization.\n\n"
+                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
+                                    get = function() return Hekili.DB.profile.performance.coalesceCooldown == true end,
+                                    set = function( _, v )
+                                        Hekili.DB.profile.performance.coalesceCooldown = v
+                                        Hekili:ProvidersChanged()
+                                    end,
+                                    order = 26,
                                     width = "full",
                                 },
                             }

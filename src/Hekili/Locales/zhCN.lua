@@ -518,6 +518,8 @@ L["When an icon that is still counting down would be replaced by another icon th
 -- L["A buff or debuff change refreshes the icons at the next regular update (at most 0.2 s later) instead of bringing that update forward, so fights with many aura changes cost less.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: on by default; turn it off if the icons seem slow to react to your buffs."] = ""
 -- L["Experimental: slow updates when there is nothing to fight"] = ""
 -- L["Out of combat with no hostile target, the icons refresh every 1.5 s instead of every 0.5 s. Changing target, casting and entering combat still refresh them at once.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: on by default; turn it off if the icons seem slow out of combat."] = ""
+-- L["Experimental: read cooldown changes once per frame"] = ""
+-- L["When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested."] = ""
 L["%s Preferences"] = "%s偏好设置"
 L["No priorities on Forever for %s: Hekili Forever recommends nothing while this specialization is active."] = "Forever 上没有%s的优先级：此专精激活时，Hekili Forever 不会给出任何推荐。"
 L["Priorities"] = "优先级"
