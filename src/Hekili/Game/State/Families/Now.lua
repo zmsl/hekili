@@ -5,7 +5,7 @@
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
 -- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
 -- `summonPet`, `dismissPet`) and reads (`talent`, `buff`, `debuff`, the resources by key, `knownRank`, `stat`, `swingBase`,
--- `mainhand_speed`, `offhand_speed`, `main_hand`, `equipped`, `healthMax`, `now`, `combat`, `level`) with belief meanings. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
+-- `mainhand_speed`, `offhand_speed`, `weapon`, `equipped`, `healthMax`, `now`, `combat`, `level`) with belief meanings. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
 
@@ -39,10 +39,10 @@ local NAMES = {
     haste = 1, -- the sim's spell-haste multiplier (I.Haste), set with `now`
     mainhand_speed = 0, -- the believed swing speeds (VS.SwingSpeed), set with `now`
     offhand_speed = 0,
-    main_hand = { size = 0 }, -- the gear (Sources/Player.lua): the sim's `main_hand.size`, 2 a two-hander
+    weapon = { size = 0 }, -- the gear (Sources/Player.lua): the main hand's size, 2 a two-hander, as the sim's `weapon`
     equipped = { shield = false }, -- and its `equipped.shield`
 }
-I.mainHand, I.equipped = NAMES.main_hand, NAMES.equipped
+I.weapon, I.equipped = NAMES.weapon, NAMES.equipped
 -- The environment itself stays empty, so every assignment from a `now` raises (a counted error) instead of
 -- shadowing a verb for every later cast.
 local ctx = setmetatable({}, {
@@ -201,8 +201,7 @@ local resourceMeta = {
 }
 
 --- The highest known rank of a tracked ability's rank list (1-based), 0 when none is known or the list is untracked.
---- Reads the belief's spellbook, never the game: the class file's own `knownRank` may call it in both its sim and its
---- `now` environments. Allocates nothing.
+--- Reads the belief's spellbook, never the game: a pack function's bare `knownRank` here. Allocates nothing.
 function VS.KnownRank(ids)
     local a = ids and A.bySpell[ids[1]]
     if not a or not A.known[a] then

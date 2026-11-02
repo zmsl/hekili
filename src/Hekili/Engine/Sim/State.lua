@@ -139,9 +139,10 @@ state.health = {
 state.debuff = {}
 state.dot = {}
 state.equipped = {}
-state.main_hand = {
+state.weapon = { -- the main hand; a pack function's name for it, in the belief's context too (Families/Now.lua)
     size = 0
 }
+state.main_hand = state.weapon
 state.off_hand = {
     size = 0
 }

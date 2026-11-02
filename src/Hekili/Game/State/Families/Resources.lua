@@ -335,7 +335,7 @@ end
 
 -- Re-reads every function-valued regen field (a number is read as it stands) into the number arrays; a result that is
 -- not a valid number makes the field inert. Called at the build and at each combat start only: the functions read
--- state (a pack's Spirit, max mana), which does not move mid-fight.
+-- what does not move mid-fight (a pack's Spirit, max mana).
 local function refresh()
     for r = 1, R.n do
         local c = finite(R.shareDef[r]) or 0

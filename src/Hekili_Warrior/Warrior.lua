@@ -241,7 +241,7 @@ spec:RegisterResource(
                 return state.swings.mainhand == 0
             end,
             value = function()
-                local speed, twoHand = swingBase(1), main_hand.size == 2 -- speed 0: no plain base read yet
+                local speed, twoHand = swingBase(1), weapon.size == 2 -- speed 0: no plain base read yet
                 speed = speed > 0 and speed or mainhand_speed
                 return (twoHand and 4.5 or 3.46) * speed + wrathRage(talent.unbridled_wrath.rank, twoHand)
             end,
@@ -318,7 +318,7 @@ spec:RegisterResource(
                 local speed = swingBase(2)
                 speed = speed > 0 and speed or offhand_speed
                 return 1.73 * speed * (1 + 0.1 * talent.dual_wield_specialization.rank)
-                    + wrathRage(talent.unbridled_wrath.rank, main_hand.size == 2)
+                    + wrathRage(talent.unbridled_wrath.rank, weapon.size == 2)
             end,
             -- shortcut: the off hand's crit bonus is unmeasured (issue 3); assumed its own base, 1.73 x speed.
             crit = function()

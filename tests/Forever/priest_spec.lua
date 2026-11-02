@@ -115,7 +115,7 @@ describe("Forever Priest", function()
         assert.are.same({ 14.79, 26.88, 0.5 }, seed("shadow")) -- Meditation's 50%, before Dark Inspiration
         assert.are.same({ 20.12, 35.73, 0 }, seed("discipline")) -- the Smite build's
         assert.are.equal(1376, r.meta.base)
-        -- the regen functions read the file's `state` (the stand-in's w.state): Spirit is UnitStat(5)'s second return
+        -- the regen functions run under the stand-in's w.state, as the sim's: Spirit is UnitStat(5)'s second return
         local di, ds = r.models.dark_inspiration, r.models.dark_sacrifice
         assert.are.equal("dark_inspiration", di.aura)
         w.state.stat = function()

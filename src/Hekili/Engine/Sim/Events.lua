@@ -186,7 +186,7 @@ ns.RegisterEvent = function( event, handler )
 end
 local RegisterEvent = ns.RegisterEvent
 
--- state.knownRank's memo (State.lua) is cleared first, before any handler of the event reads a rank.
+-- the facade's knownRank memo (Facade.lua) is cleared first, before any handler of the event reads a rank.
 RegisterEvent( "SPELLS_CHANGED", Facade.ForgetKnownRanks )
 RegisterEvent( "PLAYER_ENTERING_WORLD", Facade.ForgetKnownRanks )
 

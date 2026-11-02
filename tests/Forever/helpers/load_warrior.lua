@@ -36,6 +36,7 @@ function M.load()
     }
     local w = { game = game, abilities = {}, auras = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { main_hand = { size = 2 }, equipped = {}, timeToInterrupt = function() end }
+    w.state.weapon = w.state.main_hand
     local hekili = { State = w.state }
     function hekili:GetLocale()
         return require("helpers.english")

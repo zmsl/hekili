@@ -101,14 +101,14 @@ end
 local function equipLoc(api, slot)
     local item = Plain(api, api.GetInventoryItemID("player", slot))
     if item then
-        local _, _, _, loc = api.C_Item.GetItemInfoInstant(item)
+        local _, _, _, loc = api.C_Item.GetItemInfoInstant(item) -- secret: read through Plain next
         return Plain(api, loc)
     end
 end
 
 local function readGear(api)
     local main = equipLoc(api, 16)
-    I.mainHand.size = main == "INVTYPE_2HWEAPON" and 2
+    I.weapon.size = main == "INVTYPE_2HWEAPON" and 2
         or (main == "INVTYPE_WEAPON" or main == "INVTYPE_WEAPONMAINHAND") and 1
         or 0
     I.equipped.shield = equipLoc(api, 17) == "INVTYPE_SHIELD"

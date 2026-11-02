@@ -162,13 +162,19 @@ What a content addon may use, and nothing else (`tests/boundary_spec.lua` enforc
   listed in its TOC before the class file (§9). A `RegisterPack` name is a key too: the options show a built-in
   priority through its label (`Registry.PackLabel`), while the name stays what is saved and typed.
 
-Four plain-read names in every content function's environment: `knownRank`, `stat`, `swingBase`, `healthMax`.
+Plain-read names in every content function's environment: `knownRank`, `stat`, `swingBase`, `healthMax`,
+`mainhand_speed`, `offhand_speed`, `weapon.size`, `equipped.shield`.
 Two environments have them:
-- the sim's `state` (`Engine/Sim/State.lua`): `knownRank`, `swingBase`, `healthMax` are plain functions; `stat` is the
+- the sim's `state` (`Engine/Sim/State.lua`): `knownRank` (`Facade.KnownRank`), `swingBase`, `healthMax` are plain
+  functions; the speeds and gear are the sim's own fields; `stat` is the
   sim's stat table (`stat.crit`) and also callable (`stat(name, arg)`, the facade's stat API of that name: the client,
   or its hybrid's out-of-combat cache when the read is secret);
-- the belief's `now` context (`Game/State/Families/Now.lua`, `NAMES`): the same four names, where `stat` is only the
-  plain function `stat(name, arg)`. A `now` handler cannot read `stat.crit`.
+- the belief's `now` context (`Game/State/Families/Now.lua`, `NAMES`): the same names, where `stat` is only the
+  plain function `stat(name, arg)` and the gear comes from the belief's own read of the weapon slots
+  (`Sources/Player.lua`). A `now` handler cannot read `stat.crit`, and `equipped` holds `shield` alone.
+
+A file-level helper keeps its file's environment, so these names do not resolve there: a pack function passes what it
+read. A file's `state.knownRank` local is the facade's function, safe in a helper on either side.
 
 `RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec.lua`) is a spell the spellbook knows and the
 player never casts. The belief tracks its known rank (the `now` context's `knownRank` reads it; the sim's asks the

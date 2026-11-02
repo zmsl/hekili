@@ -111,7 +111,7 @@ files["tests/Forever/"] = { std = "+busted" }
 -- further `state` names they use.
 local warriorEnv = {
     "rage", "cooldown", "combat", "active_enemies", "active_dot", "setDistance", "interrupt", "swap_stance",
-    "mainhand_remains", "nextMH", "mainhand_speed",
+    "mainhand_remains", "nextMH", "mainhand_speed", "offhand_speed", "weapon", "level",
 }
 for _, k in ipairs(stateEnv) do
     warriorEnv[#warriorEnv + 1] = k
@@ -167,6 +167,7 @@ end
 files["src/Hekili_Priest/Priest.lua"] = { globals = priestEnv }
 -- The Warlock's further `state` names.
 local warlockEnv = {
+    "mana",
     "min", "max", "level", "pet", "summonPet", "dismissPet", "soul_shards", "locked_out_shadow", "locked_out_fire",
 }
 for _, k in ipairs(stateEnv) do
