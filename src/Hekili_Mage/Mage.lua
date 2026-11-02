@@ -353,6 +353,8 @@ spec:RegisterAbilities({
 
     arcane_wrath = {
         id = 1326079,
+        expects = "travel",
+        velocity = 24, -- DB2 and wowsims Speed 24
         copy = rest(ARCANE_WRATH),
         cast = function()
             -- Accelerant (Improved Fireball's 11069 node; wowsims): 0.1 s off a rank
