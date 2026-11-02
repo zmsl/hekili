@@ -101,7 +101,7 @@ describe("race packs", function()
             load(who)
             local rll = all.abilities.read_ley_line
             assert.are.same(
-                { 1259705, 2, 120, "spell", "cooldowns", false },
+                { 1259705, 0.5, 120, "spell", "cooldowns", false }, -- 0.5 s cast (wowsims #800)
                 { rll.id, rll.cast, rll.cooldown, rll.gcd, rll.toggle, rll.startsCombat },
                 tostring(who)
             )
