@@ -98,8 +98,8 @@ only when a non-passive subscriber exists. WeakAuras is passive, so it never mak
 `RegisterSetting`, or nil) and `IsDisabled(key, strict)` (true plus a reason when the profile disables the ability).
 
 **`Engine.Snapshot(isAuto)`** runs one update with debugging on, so the displays' reports are saved. `isAuto` is only
-passed on to the snapshot listeners and is always false now (the engine's automatic snapshot was removed). It also drops a suspended build thread, so the
-stale thread cannot write into the set it just published.
+passed on to the snapshot listeners and is always false now (the engine's automatic snapshot was removed). It also
+drops a suspended build thread, so the stale thread cannot write into the set it just published.
 
 **`Hekili:RegisterSnapshotListener(fn)`** / **`Hekili:UnregisterSnapshotListener(fn)`** (`Engine/Snapshot.lua`): other
 addons' hook on the snapshot. Once per `Engine.Snapshot`, after all its records (one per display) are stored, the
