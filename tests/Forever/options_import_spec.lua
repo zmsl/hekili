@@ -44,3 +44,29 @@ describe("the import boxes", function()
         assert.is_string(b)
     end)
 end)
+
+-- Audit item 4: Apply Changes assigns the imported tables raw, so AceDB's `**` defaults miss them; an older export
+-- (no truth/timeline/classic subtables) must still build once applied.
+describe("the style import's Apply Changes", function()
+    it("fills the defaults an older export lacks, so the display builds", function()
+        local H = headless.new({ character = ww.character(), pack = ww.PACK })
+        assert.are.same({}, H.loadErrors)
+        local p = H.Hekili.DB.profile
+        local saved = p.displays.Primary
+        p.displays.Primary = { enabled = true, numIcons = 3, x = 0, y = -225 }
+        local old = H.Hekili.SerializeStyle("Primary")
+        p.displays.Primary = saved
+
+        H.Hekili:EmbedDisplayOptions()
+        local import = H.Hekili.Options.args.displays.args.shareDisplays.args.import.args
+        import.stage0.args.importString.set(nil, old)
+        import.stage0.args.importBtn.func()
+        import.stage1.args.apply.func()
+
+        assert.has_no.errors(function()
+            H.Hekili:BuildUI()
+        end)
+        assert.is_table(H.Hekili.DB.profile.displays.Primary.truth)
+        assert.is_table(H.Hekili.DB.profile.displays.Primary.classic)
+    end)
+end)

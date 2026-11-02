@@ -2252,6 +2252,8 @@ return L["Position"] end,
                                                         self.DB.profile.displays[ k ] = v
                                                     end
                                                 end
+                                                -- raw tables miss AceDB's `**` defaults: an older export lacks subtables
+                                                ns.UI.LateStyleDefaults()
 
                                                 shareDB.import = ""
                                                 shareDB.imported = {}
