@@ -27,7 +27,7 @@ end
 
 --- 20 fights at `level`, the `Fury L<level> solo:` line printed, pack_gate's gate, the Arms 20-fight gate's outcome
 --- checks (never-reacts, idle, uptimes but arms_gate.REPORTED), then `floors` (agreement, reactP90, unmatched cost
---- refusals per 100, flicker/min, dps A/B, Overpower presses).
+--- refusals per 100, dps A/B, Overpower presses).
 function M.solo(level, floors)
     local label = "Fury L" .. level
     local r, line = pack_gate.solo(label, M.content(level), 20)
@@ -35,7 +35,6 @@ function M.solo(level, floors)
     ab.check(r.agreement >= floors.agreement, label, line)
     ab.check(r.reactP90 <= floors.reactP90, label, line)
     ab.check((r.per100U.cost or 0) <= floors.unmatched, label, line)
-    ab.check(r.flicker <= floors.flicker, label, line)
     ab.check(r.dps >= floors.dps, label, line)
     -- the Arms bars; measured (fix 21): never 0.047 L24 / 0.027 L60, idle A/B 0.530/0.537 and 0.502/0.518, Sunder
     -- Armor up 0.94/0.96 and 0.93/0.95

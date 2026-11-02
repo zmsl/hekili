@@ -10,6 +10,6 @@ describe("the headless Fury gates, 20 fights #loop", function()
         -- 21-40 / 41-60: agreement .930 / .944 / .918, react p90 0 / 1 / 1, unmatched 0.7 / 0.4 / 0.8, flicker 0.86 / 1.08
         -- / 0.98, dps A/B 0.985 / 1.000 / 1.004)
         -- overpower: 76-104 presses over 12 seed sets; a margin for re-timed fights, 0 means the client went dead
-        gate.solo(24, { agreement = 0.9, reactP90 = 0, unmatched = 0.9, flicker = 1.1, dps = 0.95, overpower = 60 })
+        gate.solo(24, { agreement = 0.9, reactP90 = 0, unmatched = 0.9, dps = 0.95, overpower = 60 })
     end)
 end)

@@ -1187,7 +1187,7 @@ end)
 
 -- Whether ability a's `usable` holds at t, read in the `now` context (the belief's names; I.Eval, Families/Casts.lua).
 -- One that raises (a name the context lacks; counted) holds from then on. Allocates nothing once it has raised.
-local function holds(a, t)
+local function usableHolds(a, t)
     local f = pre[a]
     if f == true then
         return true
@@ -1233,7 +1233,7 @@ I.On(Obs.Usable, function(o, t, lag)
     local now = o.b == 1 and YES or (o.c == 1 and SHORT or NOT)
     local r = I.ab.slot[a]
     I.SettleDebt(r)
-    if now == SHORT and r ~= 0 and not R.readable[r] and pre[a] and not holds(a, t) then
+    if now == SHORT and r ~= 0 and not R.readable[r] and pre[a] and not usableHolds(a, t) then
         now = NOT -- short for another requirement: no rung, and no flip from it later
     elseif now == SHORT and r ~= 0 and o.t >= R.ownT[r] and o.t - R.ownT[r] < I.GAIN_SHOWS then
         local c = I.CostOf(a)

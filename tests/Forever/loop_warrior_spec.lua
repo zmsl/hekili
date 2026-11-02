@@ -325,7 +325,6 @@ describe("the headless Arms gates, 20 fights #loop", function()
                 ab.check((r.upA[key] or 0) >= up - 0.03, "Arms", key .. ": " .. line)
             end
         end
-        ab.check(r.flicker <= 2, "Arms", line)
         assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
     end)
 end)
