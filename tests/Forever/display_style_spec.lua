@@ -515,7 +515,7 @@ describe("a display's style", function()
         local log = stub(H)
         H.Hekili:GetDefaults()
         H.Hekili.DB.profile.displays.Custom1.style = "stub"
-        H.Hekili:CreateCustomDisplay("Custom1")
+        H.Hekili:CreateDisplay("Custom1")
         assert.are.same({ "Custom1" }, log.builds)
         assert.are.equal(H.ns.UI.Styles.stub, H.ns.UI.Displays.Custom1.style)
     end)

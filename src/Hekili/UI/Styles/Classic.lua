@@ -725,10 +725,6 @@ function Classic.Tick( d, conf, out, now, elapsed )
     local self, st = d, d.styleState
     st.elapsed = elapsed
 
-    if not self.id == "Primary" and not ( self.Buttons[ 1 ] and self.Buttons[ 1 ].Action ) and not ( st.HasRecommendations or not self.NewRecommendations ) then
-        return
-    end
-
     if Hekili.Pause and not st.paused then
         self.Buttons[ 1 ].Overlay:Show()
         st.paused = true

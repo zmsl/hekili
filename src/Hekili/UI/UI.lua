@@ -1301,29 +1301,6 @@ do
     end
 
 
-    function Hekili:CreateCustomDisplay( id )
-        local conf = rawget( self.DB.profile.displays, id )
-        if not conf then return end
-
-        dPool[ id ] = dPool[ id ] or CreateFrame( "Frame", "HekiliDisplay" .. id, UIParent )
-        local d = dPool[ id ]
-        self:ProfileFrame( "HekiliDisplay" .. id, d )
-
-        d.id = id
-
-        d:SetPoint( "CENTER", nil, "CENTER", conf.x, conf.y )
-        d:SetFrameStrata( "MEDIUM" )
-        d:SetClampedToScreen( true )
-        d:EnableMouse( false )
-        d:SetMovable( true )
-
-        d.Activate = HekiliDisplayPrimary.Activate
-        d.Deactivate = HekiliDisplayPrimary.Deactivate
-        d.UpdateAlpha = HekiliDisplayPrimary.UpdateAlpha
-
-        bindStyle( d, conf )
-    end
-
     local dispActive = {}
     local listActive = {}
     local actsActive = {}
@@ -1452,9 +1429,6 @@ do
         return pack == "UseItems" or ( actsActive[ pack .. ":" .. list .. ":" .. action ] == true )
     end
 
-    function Hekili:DumpActionActive()
-        DevTools_Dump( actsActive )
-    end
 end
 
 -- Builds and maintains the visible UI elements.

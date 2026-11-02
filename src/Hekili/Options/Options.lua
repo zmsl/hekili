@@ -83,9 +83,6 @@ end
 local GetSpecialization = C_SpecializationInfo.GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 
--- One Time Fixes
-local oneTimeFixes = {}
-
 -- Classic's settings, flat on the display table before every style had its own subtable (display styles plan, Task 2b).
 local legacyClassic = { "primaryWidth", "primaryHeight", "zoom", "keepAspectRatio", "queue", "border", "range", "glow",
     "flash", "captions", "indicators", "targets", "delays", "keybindings" }
@@ -146,33 +143,6 @@ function Hekili:RunOneTimeFixes()
     -- not a runOnce fix: an imported or copied older display can bring flat fields back
     for _, conf in pairs( profile.displays ) do
         if type( conf ) == "table" then migrateDisplay( conf ) end
-    end
-
-    profile.runOnce = profile.runOnce or {}
-
-    for k, v in pairs( oneTimeFixes ) do
-        if not profile.runOnce[ k ] then
-            profile.runOnce[k] = true
-            local ok, err = pcall( v, profile )
-            if err then
-                Hekili:Error( "One-time update failed: " .. k .. ": " .. err )
-                profile.runOnce[ k ] = nil
-            end
-        end
-    end
-end
-
-function Hekili:LoadOptionModules()
-    local modules = {
-        "DevTools",
-        "ChatCommands",
-        -- "ControlBar",
-        -- "Displays",
-        -- etc.
-    }
-
-    for _, m in ipairs( modules ) do
-        require( "Hekili.Options." .. m )
     end
 end
 
