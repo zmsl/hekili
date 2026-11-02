@@ -10,7 +10,9 @@ What only the game can answer (the in-game checkpoints and the long-term items) 
 Two pins (`tools/wowsims/export.lua`): `M.PIN` names the recipes, requests and APLs; `M.SIM_PIN` the CLI that made the
 logs, but `M.OLD_SIM`'s (`tests/Forever/wowsims_pin_spec.lua`). `export.lua rerun <spec>` runs a checked-in request on a checkout at
 `M.SIM_PIN`: the oracle gains new mechanics, the translated rotation stays. That CLI needs the 28 items upstream dropped
-from its db put back in its leftover_db.bin; the request edits and that patch are in the 2026-11-02 lane P report.
+from its db put back in its leftover_db.bin (871, 5267, 10136, 10246, 10247, 10251, 10253, 10255, 10271, 11904,
+13001, 13002, 13015, 13022, 13070, 13072, 13077, 13096, 13116, 14332, 14978, 14979, 271928, 271948, 272411, 272414, 272415,
+284716: not in the live client's cache; their procs are upstream's, so Flurry Axe 871 has no extra attacks); the request edits and that patch are in the 2026-11-02 lane P report.
 
 ## The rules (the user's; binding)
 
