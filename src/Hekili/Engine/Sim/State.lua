@@ -504,7 +504,7 @@ state.pairs = pairs
 state.rawget = rawget
 state.rawset = rawset
 state.select = select
--- Four names in every content function's environment (restructure plan, Task 8): here the client through the facade
+-- Names in every content function's environment (restructure plan, Task 8): here the client through the facade
 -- (audit E8, E10); in the `now` context the belief's own (Game/State/Families/Now.lua). Here `stat` is two things:
 -- `stat.<field>` (stat.crit) is the sim's stat table, as upstream; calling it, stat(name, arg), is the client's stat
 -- API of that name (mt_stat's __call below). In a `now` handler `stat` is only the plain function.

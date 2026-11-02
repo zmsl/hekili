@@ -4,7 +4,7 @@
 -- it through ns.VirtualState.Build(def), the core's one build-time call into the belief. `def` carries plain records
 -- (border batch 4, the owner's design 2026-11-01): no metatable, never a live Hekili table. Each field is a value, a
 -- function the belief runs in its own `now` context, or absent; Spec.lua's `funcs` are flattened in beside the raw
--- fields. A function field may carry a static value the core computes under `state` once the talents are known
+-- fields, and the belief never runs auraRegen's `last`/`stop` or the flattened `handler`, `cast`, `known`. A function field may carry a static value the core computes under `state` once the talents are known
 -- (ns.TrackedStatics, after ns.updateTalents): the belief's order is the function in its context, then the static only
 -- if it raised (a working function's nil is its answer), then 0. Nothing in `def` runs under `state` at runtime: the
 -- belief swaps a function's environment for the call (I.Eval, Game/State/Families/Casts.lua; `now`, `onCrit` and `taken`

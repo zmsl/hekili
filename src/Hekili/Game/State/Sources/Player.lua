@@ -106,12 +106,19 @@ local function equipLoc(api, slot)
     end
 end
 
-local function readGear(api)
+local function gearFacts(api)
     local main = equipLoc(api, 16)
     I.weapon.size = main == "INVTYPE_2HWEAPON" and 2
         or (main == "INVTYPE_WEAPON" or main == "INVTYPE_WEAPONMAINHAND") and 1
         or 0
     I.equipped.shield = equipLoc(api, 17) == "INVTYPE_SHIELD"
+end
+
+-- Unprobed in game, and it runs inside Build: a raise here must cost the gear facts, never every class's Build.
+local function readGear(api)
+    if not pcall(gearFacts, api) then
+        Note("gear reads", "partial")
+    end
 end
 
 S.OnStart(function(api, t)

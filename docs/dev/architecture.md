@@ -54,11 +54,11 @@ design 2026-11-01): no metatable, never a live Hekili table. Each field is a val
 `now` context (`Families/Casts.lua` `I.Eval`: a raise is counted in `I.nowErrors` and fails
 `tests/Forever/plain_records_spec.lua`), or absent; a function field may carry a static value the core computes under
 `state` after `ns.updateTalents` (`ns.TrackedStatics`), the live game's safety net: the belief's order is the function,
-then the static only if it raised (a working function's nil is its answer), then 0. Nothing in `def` runs under `state`
+then the static only if it raised (a working function's nil is its answer), then 0. `def` also carries functions the belief never runs: auraRegen's `last` and `stop`, which capture `state`, and the flattened `handler`, `cast` and `known`. Nothing in `def` runs under `state`
 at runtime: `I.Eval` swaps a function's environment for the call, `now`, `onCrit` and `taken` are bound to the context,
 and the same pack function runs under `state` in the sim, so a bare name answers from whichever side runs it. A helper
 keeps its file's environment, so a function passes it what it read. No function the belief evaluates captures `state`,
-`Hekili` or `class`, or anything they hold (`state.swings`, `state.knownRank`): `plain_records_spec.lua` walks the
+`Hekili` or `class`, or anything they hold (`state.swings`; a pack's `rankOf` is `state.knownRank`, the facade's own function, which the walk stops at): `plain_records_spec.lua` walks the
 upvalues at every pack. That walk is test-only (`debug.getupvalue` is not in the client) and sees a capture, not a read,
 and not a global read inside a helper. What only the core knows arrives as a value: the `fsr` parts, which may name the
 spec's tree, are numbers read at the build. The belief evaluates a resource's functions after all its build hooks

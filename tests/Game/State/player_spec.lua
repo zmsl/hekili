@@ -96,6 +96,19 @@ describe("player start", function()
         assert.are.same({ 0, false }, { ctx.weapon.size, ctx.equipped.shield })
     end)
 
+    it("a raising gear read costs the gear facts only, never a build", function()
+        local ctx = I.nowCtx
+        api = fake.new()
+        VS.Start(api)
+        api.GetInventoryItemID = function()
+            error("no such API")
+        end
+        assert.has_no.errors(function()
+            I.Build(fs.def(fs.new(9)), 1)
+        end)
+        assert.are.same({ 0, false }, { ctx.weapon.size, ctx.equipped.shield })
+    end)
+
     it("notes complete when every CR_* constant resolves", function()
         VS.Start(api)
         assert.equal("complete", S.status["stats CR_* constants"])
