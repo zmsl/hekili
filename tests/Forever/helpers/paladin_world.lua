@@ -100,7 +100,6 @@ M.MAP = {
     seal_of_fury = seal("seal_of_fury"),
     judgement = {
         effect = function(W, e, _, X)
-            drop(W, e, X, "swift_judgement")
             W.hit(e, e.target, AMOUNT.judgement, 2, up(e, X, "seal_of_the_crusader") and "none" or nil)
             -- shortcut: the world refunds only at 3/3 (the belief's rule) and has no proc chance below it; model the
             -- 33/66% chance if a world build takes 1-2 ranks.
@@ -120,12 +119,6 @@ M.MAP = {
                 end
             end
             return false, "no seal"
-        end,
-    },
-    swift_judgement = {
-        effect = function(W, e, _, X)
-            W.resetCooldown(e, "judgement", X.ids.judgement)
-            aura(W, X, e, "swift_judgement")
         end,
     },
     hammer_of_wrath = { -- the target's true health at or under 20%
@@ -203,8 +196,11 @@ local PACKS = {
     },
 }
 
+-- Swift Judgement: a second Judgement on its own cooldown (hotfix 113554, wowsims swift_judgement.go).
+M.MAP.swift_judgement = M.MAP.judgement
+
 -- The class data a press reads from a booted instance `H` (once per instance): each aura's ID, duration and stacks,
--- Twist of Light, Sanctified Judgement, each ability's known rank IDs.
+-- Unsealed Wrath, Sanctified Judgement, each ability's known rank IDs.
 local cache = setmetatable({}, { __mode = "k" })
 local function classData(H, C)
     if cache[H] then
@@ -332,13 +328,6 @@ local function content(name, pack)
         return 0
     end
 
-    -- An answer's mana cost: the state's (the booted oracle's talents), none for Judgement under Swift Judgement.
-    local function cost(key, H, e, X)
-        if key == "judgement" and up(e, X, "swift_judgement") then
-            return 0
-        end
-        return H.Hekili.State.action[key].cost or 0
-    end
 
     --- The resolved press of `key` from instance `H` (the oracle's: its state is true): the highest known rank's ID
     --- and every known rank's, the cost, the cooldown, GCD and cast time, the mapping's effects. Raises "unmapped key".
@@ -353,10 +342,7 @@ local function content(name, pack)
         local p = {
             spell = H.ns.VirtualState.KnownID(a.id),
             ids = C.IDS[key],
-            cost = (key == "judgement" and H.ns.VirtualState.Aura("player", X.aura.swift_judgement.id, H.ctl.now))
-                    and 0
-                or S.action[key].cost
-                or 0, -- Swift Judgement's charge from the oracle's (true) belief, as Clearcasting
+            cost = S.action[key].cost or 0,
             pt = MANA,
             cooldown = tonumber(a.cooldown) or S.action[key].cooldown or 0,
             gcd = GCD[a.gcd or "spell"],
@@ -390,7 +376,7 @@ local function content(name, pack)
                     if m.requires and not m.requires(W, e, X) then
                         return false, false
                     end
-                    local c = cost(key, H, e, X)
+                    local c = H.Hekili.State.action[key].cost or 0
                     return power >= c, power < c
                 end
                 for _, id in ipairs(C.IDS[key]) do

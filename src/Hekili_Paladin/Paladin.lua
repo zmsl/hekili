@@ -294,8 +294,6 @@ spec:RegisterAuras({
         max_stack = 4,
         consumedBy = { BLOCK = true, BLOCKED = true },
     },
-    -- Swift Judgement's charge (1310994, until spent): the next Judgement costs nothing.
-    swift_judgement = { id = 1310994, duration = 3600, max_stack = 1 },
     righteous_fury = { id = 25780, copy = { 407627 }, duration = 1800, max_stack = 1 },
     retribution_aura = { id = 7294, copy = rest(RETRIBUTION_AURA), duration = 3600, max_stack = 1 },
     divine_favor = { id = 20216, duration = 3600, max_stack = 1 },
@@ -316,11 +314,10 @@ local SEAL_BASE = {
     { "seal_of_the_crusader", SEAL_OF_THE_CRUSADER_COST, SEAL_OF_THE_CRUSADER },
     { "seal_of_fury", SEAL_OF_FURY_COST, SEAL_OF_FURY },
 }
--- Judgement's cast effect (the `now` and the `handler`, two closures so each gets its own environment): Swift
--- Judgement's charge goes; the refund.
+-- A Judgement's cast effect, Judgement's and Swift Judgement's (the `now` and the `handler`, two closures so each gets
+-- its own environment): the refund.
 local function judgementCast()
     return function()
-        removeBuff("swift_judgement")
         if talent.sanctified_judgement.rank < 3 then
             return
         end
@@ -366,7 +363,7 @@ spec:RegisterAbilities({
     seal_of_the_crusader = seal("seal_of_the_crusader", SEAL_OF_THE_CRUSADER, SEAL_OF_THE_CRUSADER_COST),
     seal_of_fury = seal("seal_of_fury", SEAL_OF_FURY, SEAL_OF_FURY_COST),
 
-    -- Unleashes the seal up (it stays up: wowsims judgement.go, the DB2 tooltip); Swift Judgement's charge pays it.
+    -- Unleashes the seal up (it stays up: wowsims judgement.go, the DB2 tooltip).
     judgement = {
         id = 20271,
         cast = 0,
@@ -377,7 +374,7 @@ spec:RegisterAbilities({
         gcd = "off",
 
         spend = function()
-            return buff.swift_judgement.up and 0 or 0.06 * (1 - 0.02 * talent.benediction.rank)
+            return 0.06 * (1 - 0.02 * talent.benediction.rank)
         end,
         spendType = "mana",
 
@@ -393,25 +390,23 @@ spec:RegisterAbilities({
         handler = judgementCast(),
     },
 
-    -- Forever-only (talent): finishes Judgement's cooldown, the next Judgement free.
+    -- Forever-only (talent; hotfix 113554, wowsims swift_judgement.go): a second Judgement on its own 60 s cooldown,
+    -- free, off the GCD, no reset of Judgement's.
     swift_judgement = {
         id = 1310994,
         cast = 0,
         cooldown = 60,
         gcd = "off",
 
-        startsCombat = false,
+        startsCombat = true,
         known = knows({ 1310994 }),
 
-        now = function()
-            setCooldown("judgement", 0)
-            applyBuff("swift_judgement")
+        usable = function()
+            return seal_up, "requires a seal"
         end,
 
-        handler = function()
-            setCooldown("judgement", 0)
-            applyBuff("swift_judgement")
-        end,
+        now = judgementCast(),
+        handler = judgementCast(),
     },
 
     -- Only at or below 20% of the target's health: the belief's target health reads the usability answer. Instrument

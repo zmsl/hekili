@@ -148,7 +148,7 @@ describe("Forever Paladin", function()
         assert.are.equal(210, ld.run(w.abilities.seal_of_command.spend, e)) -- Unsealed Wrath: no cost cut
     end)
 
-    it("judges only under a seal, leaves the seal up, and Swift Judgement's charge pays it", function()
+    it("judges only under a seal and leaves the seal up; Swift Judgement is a second Judgement (hotfix 113554)", function()
         local j = w.abilities.judgement
         local e = ld.env(w)
         e.seal_up = false
@@ -156,20 +156,24 @@ describe("Forever Paladin", function()
         e.seal_up = true
         assert.is_true((ld.run(j.usable, e)))
         assert.is_false(j.ladder)
-        e.buff = buffs({ swift_judgement = true })
-        assert.are.equal(0, ld.run(j.spend, e))
-        for _, field in ipairs({ "now", "handler" }) do
-            e = ld.env(w)
-            ld.run(j[field], e)
-            assert.are.same({ { "swift_judgement" }, {} }, { e.removed, e.applied }, field)
-        end
-        local cds = {}
+        assert.is_nil(w.auras.swift_judgement) -- no charge: its own 60 s cooldown, no reset (wowsims swift_judgement.go)
+        local sj = w.abilities.swift_judgement
         e = ld.env(w)
-        e.setCooldown = function(k, v)
-            cds[#cds + 1] = { k, v }
+        e.seal_up = false
+        assert.is_false((ld.run(sj.usable, e)))
+        e.seal_up = true
+        assert.is_true((ld.run(sj.usable, e)))
+        for _, a in ipairs({ j, sj }) do
+            for _, field in ipairs({ "now", "handler" }) do
+                local cds = {}
+                e = ld.env(w)
+                e.setCooldown = function(k, v)
+                    cds[#cds + 1] = { k, v }
+                end
+                ld.run(a[field], e)
+                assert.are.same({ {}, {}, {} }, { e.removed, e.applied, cds }, field)
+            end
         end
-        ld.run(w.abilities.swift_judgement.now, e)
-        assert.are.same({ { { "judgement", 0 } }, { "swift_judgement" } }, { cds, e.applied })
         local exp = w.exprs.seal_up
         e = ld.env(w)
         assert.is_false(ld.run(exp, e))
