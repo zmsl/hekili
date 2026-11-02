@@ -344,6 +344,7 @@ do
                     auraForceOrdinary = true, -- perf 2.1a: aura events no longer shorten the 0.2 s wait (Events.lua)
                     idleGate = true, -- perf 2.4: the unforced wait is 1.5 s with nothing to fight (Driver.lua)
                     coalesceCooldown = false, -- perf 2.2: SPELL_UPDATE_COOLDOWN once per frame (EventFacade.lua)
+                    narrowUnitAura = false, -- perf 2.3: UNIT_AURA for player and target only (Sources.lua)
                 },
                 toggles = {
                     pause = {
@@ -4286,6 +4287,21 @@ found = true end
                                         Hekili:ProvidersChanged()
                                     end,
                                     order = 26,
+                                    width = "full",
+                                },
+                                narrowUnitAura = {
+                                    type = "toggle",
+                                    name = L["Experimental: listen for aura changes on you and your target only"],
+                                    desc = L["Asks the game for buff and debuff changes on you and your target only, instead of every unit, "
+                                        .. "which matters most in raids.\n\n"
+                                        .. "Changes apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n"
+                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
+                                    get = function() return Hekili.DB.profile.performance.narrowUnitAura == true end,
+                                    set = function( _, v )
+                                        Hekili.DB.profile.performance.narrowUnitAura = v
+                                        Hekili:ProvidersChanged()
+                                    end,
+                                    order = 27,
                                     width = "full",
                                 },
                             }

@@ -12,6 +12,7 @@
 - Aura changes no longer bring the next update forward, so busy fights cost less. New on-by-default option under Options > Performance > Experimental to turn this off.
 - Out of combat with no hostile target, the icons refresh every 1.5 s instead of 0.5 s; changing target, casting and entering combat still refresh them at once. On by default, with an option under Options > Performance > Experimental.
 - New experimental option, off by default (Options > Performance > Experimental): read cooldown changes once per frame.
+- New experimental option, off by default (Options > Performance > Experimental): listen for aura changes on you and your target only, which matters most in raids.
 
 ### Fixed
 - Enemies you kill leave the target count at once, so AoE and cleave lines aren't held by a dead mob for a few seconds.
