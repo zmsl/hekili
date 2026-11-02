@@ -136,6 +136,7 @@ local TALENTS = {
     heart_of_the_wild = { 17003, 5 },
     leader_of_the_pack = { 17007, 1 },
     predatory_discipline = { 1328613, 1 }, -- hotfix 113554
+    lacerate = { 1328617, 1 }, -- hotfix 113554
     improved_mark_of_the_wild = { 17050, 5 },
     furor = { 17056, 5 },
     improved_healing_touch = { 17069, 5 },
@@ -497,7 +498,7 @@ describe("Forever Druid", function()
         for _ in pairs(w.talents) do
             registered = registered + 1
         end
-        assert.are.same({ 50, 50 }, { n, registered })
+        assert.are.same({ 51, 51 }, { n, registered })
     end)
 
     it("reads only registered talent keys, in the class file and every race file", function()
@@ -946,7 +947,7 @@ describe("Forever Druid", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 2, 16, 17, 15 }, n)
+        assert.are.same({ [0] = 2, 16, 18, 15 }, n) -- hotfix 113554: furor to Feral, Heart of the Wild to Restoration
     end)
 end)
 

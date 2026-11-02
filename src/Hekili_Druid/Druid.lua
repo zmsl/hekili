@@ -327,12 +327,13 @@ spec:RegisterTalents({
     primal_fury = { 2, 16958, 2 }, -- "Blood Frenzy" on Forever
     savage_fury = { 2, 16998, 2 },
     faerie_fire_feral = { 2, 16857, 1 },
-    heart_of_the_wild = { 2, 17003, 5 },
+    heart_of_the_wild = { 3, 17003, 5 }, -- hotfix 113554: moved to Restoration
     leader_of_the_pack = { 2, 17007, 1 },
     predatory_discipline = { 2, 1328613, 1 }, -- hotfix 113554: Bite keeps its extra energy
+    lacerate = { 2, 1328617, 1 }, -- hotfix 113554: Lacerate's rank 1 is a talent
     -- Restoration (15)
     improved_mark_of_the_wild = { 3, 17050, 5 },
-    furor = { 3, 17056, 5 },
+    furor = { 2, 17056, 5 }, -- hotfix 113554: moved to Feral Combat
     improved_healing_touch = { 3, 17069, 5 },
     natures_focus = { 3, 17063, 5 },
     improved_enrage = { 3, 17079, 2 },
