@@ -140,11 +140,11 @@ packs:
 	for d in src/Hekili_*/APLs; do c=$${d#src/Hekili_}; $(LUA) tools/make_pack.lua write $$(echo $${c%/APLs} | tr A-Z a-z) || exit 1; done
 
 # The BigWigs packager run locally, no upload (-d): zip in .release/ (docs/publishing/README.md). Needs network once.
-PACKAGER_REF ?= v2
+PACKAGER_REF ?= e50a250f8705041e40f2fa1ddcb280a686d65aa0
 package:
 	@mkdir -p $(LUA_ENV)
-	@test -s $(LUA_ENV)/release.sh || curl -fsSL https://raw.githubusercontent.com/BigWigsMods/packager/$(PACKAGER_REF)/release.sh -o $(LUA_ENV)/release.sh
-	bash $(LUA_ENV)/release.sh -d -l -r $(CURDIR)/.release
+	@test -s $(LUA_ENV)/release-$(PACKAGER_REF).sh || curl -fsSL https://raw.githubusercontent.com/BigWigsMods/packager/$(PACKAGER_REF)/release.sh -o $(LUA_ENV)/release-$(PACKAGER_REF).sh
+	bash $(LUA_ENV)/release-$(PACKAGER_REF).sh -d -l -r $(CURDIR)/.release
 
 package-check: package
 	bash tools/check_package.sh "$$(ls -t .release/Hekili-*.zip | head -1)"
