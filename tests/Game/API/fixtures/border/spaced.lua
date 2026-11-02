@@ -1,0 +1,3 @@
+-- tools/check_border.sh must fail this Game/ stand-in on line 3 (an ns member read by spaced string key)
+local _, ns = ...
+return ns["Output"]

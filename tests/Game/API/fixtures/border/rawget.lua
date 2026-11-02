@@ -1,0 +1,3 @@
+-- tools/check_border.sh must fail this Game/ stand-in on line 3 (ns through rawget)
+local _, ns = ...
+return rawget(ns, "x")

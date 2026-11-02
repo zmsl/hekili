@@ -19,3 +19,13 @@ describe("tools/check_api_reads.sh's display rule", function()
         assert.are.equal(0, rc, out)
     end)
 end)
+
+describe("tools/check_api_reads.sh's _G rule", function()
+    for _, name in ipairs({ "g_spaced_double", "g_spaced_single" }) do
+        it("fails fixtures/" .. name .. ".lua, a spaced _G string key, on line 3", function()
+            local rc, out = run("tests/Game/API/fixtures/" .. name .. ".lua")
+            assert.are.equal(1, rc, out)
+            assert.is_truthy(out:find(name .. ".lua:3:", 1, true), out)
+        end)
+    end
+end)

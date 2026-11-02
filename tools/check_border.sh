@@ -6,11 +6,14 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 fail=0
-# Game/: no Hekili (the addon table, its methods, its debug flag), no `class.`/`state.` (the registry and the
-# simulation), no ns.Output (the engine's publish side). `class.`/`state.` not after `.` or a name character, so
-# `I.class` and `r.state.meta` (a resource's own declarations, read through `def`) pass.
-for f in $(find src/Hekili/Game -name '*.lua' | sort); do
-    hits=$(sed -E 's/--.*$//' "$f" | grep -nE '\bHekili\b|(^|[^.[:alnum:]_])(state[.:]|class\.)|ns\.Output' | sed "s|^|$f:|")
+# Game/: no Hekili (the addon table, its methods, its debug flag), no `class.`/`class:`/`class[`/`state.`/`state:`
+# (the registry and the simulation), and no `ns` but `local _, ns = ...` and ns.Facade, ns.VirtualState,
+# ns.VirtualStateInternal (so no ns.Output, ns["x"], rawget(ns, ...)). `class`/`state` not after `.` or a name
+# character, so `I.class` and `r.state.meta` (a resource's own declarations, read through `def`) pass; no `state[`,
+# Tickets.lua's own state array. An optional path argument (a file or a tree) stands in for Game/, for the spec.
+for f in $(find "${1:-src/Hekili/Game}" -name '*.lua' | sort); do
+    hits=$(sed -E 's/--.*$//' "$f" | sed -E 's/^[[:space:]]*local _, ns = \.\.\.[[:space:]]*$//; s/\bns\.(Facade|VirtualStateInternal|VirtualState)\b//g' |
+        grep -nE '\bHekili\b|(^|[^.[:alnum:]_])(state[.:]|class[.:[])|\bns\b' | sed "s|^|$f:|")
     [ -n "$hits" ] && { echo "$hits"; fail=1; }
 done
 # Engine/, UI/, Options/, Integrations/ and Hekili.lua: no VS, ns.VirtualState or VirtualStateInternal but the three calls.

@@ -1,0 +1,3 @@
+-- tools/check_border.sh must fail this Game/ stand-in on line 3 (a bare ns member)
+local _, ns = ...
+ns.callHook("X")

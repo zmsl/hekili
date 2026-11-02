@@ -18,7 +18,7 @@ out=$("$LUACHECK" --no-config --std none --formatter plain --codes "${files[@]}"
 [ $rc -ge 2 ] && { echo "luacheck failed (syntax error?)" >&2; exit 1; }
 hits=$(grep -E "accessing undefined variable '($globals)'" <<<"$out")
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
-hits=$(grep -nE "_G(\.|\[[\"'])($globals)\b" "${files[@]}")
+hits=$(grep -nHE "_G(\.|\[[[:space:]]*[\"'])($globals)\b" "${files[@]}")
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
 # shortcut: catches only a getmetatable read and a (Un)Register...Event call on one line; a split read needs review.
 hits=$(grep -nE "getmetatable\(.*(Register|Unregister)[A-Za-z]*Event" "${files[@]}")
