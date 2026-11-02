@@ -174,6 +174,17 @@ describe("the headless loop's CPU metric", function()
         assert.has.errors(function()
             gate.health(h, { cpuMean = 0, cpuRatio = gate.CPU_RATIO + 0.001 }, "line")
         end)
+        h.cal = { 7 } -- one fight, one calibration: its own bar
+        assert.has_no.errors(function()
+            gate.health(h, { cpuMean = 0, cpuRatio = gate.CPU_RATIO_ONE_FIGHT }, "line")
+        end)
+        assert.has.errors(function()
+            gate.health(h, { cpuMean = 0, cpuRatio = gate.CPU_RATIO_ONE_FIGHT + 0.001 }, "line")
+        end)
+        h.cal = { 7, 7 }
+        assert.has.errors(function()
+            gate.health(h, { cpuMean = 0, cpuRatio = gate.CPU_RATIO + 0.001 }, "line")
+        end)
     end)
 end)
 

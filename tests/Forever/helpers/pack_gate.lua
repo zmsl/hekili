@@ -224,15 +224,20 @@ end
 -- fights alone 3.96 ms, ratio 0.555 (2026-10-30, under the lock); under a 16-wide `make test` beside it: Feral 3 fights
 -- 4.25 -> 5.82 ms, ratio 0.634 -> 0.494; Arms 3 fights 3.78 -> 5.92 ms, ratio 0.624 -> 0.547 (the calibration slows a
 -- little more than the engine, so load lowers the ratio: the safe direction). 1.4 -> 1.0 (2026-11-01, the pre-launch perf
--- work left room: worst of headless probes 0.62, of the 81 rig runs 0.593).
+-- work left room: 20-fight lines stay under 0.6).
 M.CPU_RATIO = 1.0
+-- A one-fight line's bar (wowsims.gate's replay): one calibration per fight, so a single slow or fast calibration moves
+-- the whole line's ratio, where a many-fight line averages them. Feral replay alone: median 0.50, p90 0.81; worst 0.893
+-- at 16-wide, 0.909 at 24-wide.
+M.CPU_RATIO_ONE_FIGHT = 1.2
 
 --- The engine's health, gated at any fight count: no error, raise, self-check miss, unlisted read or secret, CPU.
 function M.health(m, r, line)
     assert.are.same({ 0, 0, 0 }, { m.errors, m.raises, m.selfCheck })
     assert.are.same({}, m.misses)
     assert.are.same({}, m.secrets) -- no facade passthrough answered a secret (the traced first fight)
-    assert.is_true(r.cpuRatio <= M.CPU_RATIO, line) -- the ms mean and p99 reported
+    local oneFight = m.cal ~= nil and #m.cal == 1
+    assert.is_true(r.cpuRatio <= (oneFight and M.CPU_RATIO_ONE_FIGHT or M.CPU_RATIO), line) -- the ms mean and p99 reported
 end
 
 --- The engine and the first icon, gated at any fight count; `label` picks a re-based unmatched bar (M.UNMATCHED_BY).
