@@ -124,7 +124,7 @@
             "talentsString":"5500331023001351-053002001-053",
             "profession2":"Enchanting",
             "buffs":{
-              "greaterBlessingOfWisdom":true,
+              "greaterBlessingOfWisdom":2,
               "greaterBlessingOfKings":true
             },
             "rotation":{

@@ -574,7 +574,7 @@
             "talentsString":"011-0305003201220301351-0050055003",
             "apiVersion":2,
             "buffs":{
-              "greaterBlessingOfWisdom":true,
+              "greaterBlessingOfWisdom":2,
               "greaterBlessingOfKings":true
             },
             "profession2":"Tailoring",

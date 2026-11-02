@@ -7,6 +7,11 @@ step-by-step procedure the lanes ran is the plan's "per-spec procedure" (P1-P10,
 `docs/superpowers/plans/2026-10-19-wowsims-packs.md`). This page is what a pack author needs to know beside them.
 What only the game can answer (the in-game checkpoints and the long-term items) is in `docs/dev/ingame-ledger.md`.
 
+Two pins (`tools/wowsims/export.lua`): `M.PIN` names the recipes, requests and APLs; `M.SIM_PIN` the CLI that made the
+logs, but `M.OLD_SIM`'s (`tests/Forever/wowsims_pin_spec.lua`). `export.lua rerun <spec>` runs a checked-in request on a checkout at
+`M.SIM_PIN`: the oracle gains new mechanics, the translated rotation stays. That CLI needs the 28 items upstream dropped
+from its db put back in its leftover_db.bin; the request edits and that patch are in the 2026-11-02 lane P report.
+
 ## The rules (the user's; binding)
 
 - Every priority is wowsims-built: `"<Spec> (wowsims.com)"`, generated from a recipe. The hand-built lists are gone

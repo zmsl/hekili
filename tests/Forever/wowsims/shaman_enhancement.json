@@ -119,7 +119,7 @@
             "profession2":"Leatherworking",
             "buffs":{
               "greaterBlessingOfSalvation":true,
-              "greaterBlessingOfMight":true,
+              "greaterBlessingOfMight":2,
               "greaterBlessingOfKings":true
             },
             "rotation":{

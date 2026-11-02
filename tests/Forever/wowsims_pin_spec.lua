@@ -1,5 +1,5 @@
 -- tests/Forever/wowsims_pin_spec.lua (wowsims packs plan, Task 2; check_wowsims_pin): every checked-in wowsims log
--- comes from the wowsims/forever commit tools/wowsims/export.lua pins, every recipe has its request and log, and the
+-- comes from the wowsims/forever commit tools/wowsims/export.lua pins as its sim (M.SIM_PIN), every recipe has its request and log, and the
 -- exporter's pure parts (the talent string, the request) hold. Data: wowsims/forever (MIT).
 local ex = assert(loadfile("tools/wowsims/export.lua"))()
 
@@ -20,7 +20,7 @@ local function tmp(text)
 end
 
 describe("check_wowsims_pin", function()
-    it("finds every recipe's log made at the pinned wowsims commit, beside its request", function()
+    it("finds every recipe's log made at the pinned wowsims sim commit, beside its request", function()
         local pipe = assert(io.popen("ls tools/wowsims/specs"))
         for file in pipe:lines() do
             local spec = file:match("^(.+)%.lua$")
@@ -29,12 +29,13 @@ describe("check_wowsims_pin", function()
                 local f = assert(io.open(ex.OUT .. spec .. ".log", "rb"), spec)
                 local first = f:read("*l")
                 f:close()
-                assert.are.equal(ex.PIN, first:match("^# wowsims (%x+) "), spec)
+                assert.are.equal(ex.OLD_SIM[spec] and ex.PIN or ex.SIM_PIN, first:match("^# wowsims (%x+) "), spec)
                 assert.are.equal(spec, first:match("^# wowsims %x+ (%S+) "), spec)
             end
         end
         pipe:close()
         assert.are.equal(40, #ex.PIN)
+        assert.are.equal(40, #ex.SIM_PIN)
     end)
 
     it("decodes a talent string in its tree file's order: { spell, rank, tree }", function()

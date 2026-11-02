@@ -61,7 +61,7 @@
             },
             "race":"RaceNightElf",
             "name":"Guardian",
-            "talentsString":"0500220000000000-55200322120132012551-0000000000000000",
+            "talentsString":"050022-5020032212310212551-05",
             "profession2":"Enchanting",
             "rotation":{
               "valueVariables":[{
@@ -139,7 +139,7 @@
                             "lhs":{
                               "spellTimeToReady":{
                                 "spellId":{
-                                  "spellId":1238073
+                                  "spellId":1238070
                                 }
                               }
                             }
@@ -277,7 +277,7 @@
                       "action":{
                         "castSpell":{
                           "spellId":{
-                            "spellId":1238073
+                            "spellId":1238070
                           }
                         }
                       }

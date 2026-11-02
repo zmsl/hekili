@@ -4,6 +4,8 @@
 --       tools/wowsims/specs/<spec>.lua and the wowsims checkout's preset files, wowsimcli run on it, and
 --       tests/Forever/wowsims/<spec>.log: the debug log (noise lines dropped) under a header (the pin, the spec, the
 --       seed, the duration, the target level, the build's talents). Needs the checkout at M.PIN and its CLI.
+--   .lua/bin/lua tools/wowsims/export.lua rerun <spec>   the log only: the checked-in request, unchanged, on the CLI
+--       of a checkout at M.SIM_PIN (the oracle moves with the sim while the requests stay at M.PIN)
 --   .lua/bin/lua tools/wowsims/export.lua learn <CLASS>  tests/Forever/wowsims/learn_<class>.lua: the DB2 learn level
 --       of every rank of every ability in the class's ability set: kit, shared content, racials (wowdb)
 --   .lua/bin/lua tools/wowsims/export.lua pack <spec>    the spec's pack .simc from its checked-in request (Task 4;
@@ -16,8 +18,13 @@ local json = require("dkjson")
 
 local M = {}
 
---- The wowsims/forever commit every checked-in request and log comes from (tests/Forever/wowsims_pin_spec.lua).
+--- The wowsims/forever commit every checked-in request (its APL, gear, talents) and recipe comes from.
 M.PIN = "d33930d04030c3f556582f31949f1f22c17da0e4"
+--- The wowsims/forever commit whose CLI made every checked-in log (`rerun`; tests/Forever/wowsims_pin_spec.lua).
+M.SIM_PIN = "e2842f0a784d2f329dde0bc682a6b84202a780f2"
+--- The specs whose logs stay at M.PIN: their old rotation does nothing on M.SIM_PIN's CLI (the hunter weave APLs: no
+--- auto shot or swing, dps 0), so a rerun would need a rotation change (a re-export).
+M.OLD_SIM = { hunter_beast_mastery = true, hunter_marksmanship = true, hunter_survival = true }
 M.OUT = "tests/Forever/wowsims/"
 M.SEED, M.DURATION, M.TARGET_LEVEL = 101, 180, 63
 
@@ -165,6 +172,15 @@ function M.export(spec)
     local req = M.request(r, root)
     local reqPath = M.OUT .. spec .. ".json"
     spit(reqPath, json.encode(req, { indent = true }) .. "\n")
+    M.run(spec, root, head)
+end
+
+--- Runs the checked-in request of `spec` on the CLI of the wowsims checkout `root` (at commit `head`) and writes its
+--- log under M.OUT (see the header).
+function M.run(spec, root, head)
+    local r = M.recipe(spec)
+    local reqPath = M.OUT .. spec .. ".json"
+    local req = decode(slurp(reqPath), reqPath)
     local resPath = os.tmpname()
     local cli = env("WOWSIMS_CLI", root .. "/wowsimcli-amd64-linux")
     if os.execute(("'%s' sim --infile '%s' --outfile '%s'"):format(cli, reqPath, resPath)) ~= 0 then
@@ -181,7 +197,7 @@ function M.export(spec)
         talents[#talents + 1] = ("%d=%d@%d"):format(t[1], t[2], t[3])
     end
     local out = {
-        ("# wowsims %s %s seed %d %d s target %d"):format(M.PIN, spec, M.SEED, M.DURATION, M.TARGET_LEVEL),
+        ("# wowsims %s %s seed %d %d s target %d"):format(head, spec, M.SEED, M.DURATION, M.TARGET_LEVEL),
         "# talents " .. table.concat(talents, " "),
     }
     for line in res.logs:gmatch("[^\n]+") do
@@ -257,9 +273,21 @@ function M.learn(token)
     spit(M.OUT .. "learn_" .. name .. ".lua", table.concat(out, "\n") .. "\n")
 end
 
+--- Re-runs the checked-in request of `spec` on the CLI of the wowsims checkout at M.SIM_PIN (the request unchanged).
+function M.rerun(spec)
+    local root = env("WOWSIMS", "~/src/wowsims-forever")
+    local head = capture("git -C '" .. root .. "' rev-parse HEAD"):gsub("%s+$", "")
+    if head ~= M.SIM_PIN then
+        error(("wowsims checkout at %s, the sim pin is %s"):format(head, M.SIM_PIN), 0)
+    end
+    M.run(spec, root, head)
+end
+
 local mode, arg = ...
 if mode == "export" then
     M.export(assert(arg, "usage: export <spec>"))
+elseif mode == "rerun" then
+    M.rerun(assert(arg, "usage: rerun <spec>"))
 elseif mode == "learn" then
     M.learn(assert(arg, "usage: learn <CLASS>"))
 elseif mode == "pack" then

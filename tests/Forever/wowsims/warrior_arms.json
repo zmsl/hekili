@@ -795,7 +795,7 @@
                     "castSpell":{
                       "spellId":{
                         "spellId":1680,
-                        "tag":1
+                        "tag":14
                       }
                     },
                     "condition":{
@@ -1207,7 +1207,7 @@
                                     "spellTimeToReady":{
                                       "spellId":{
                                         "spellId":1680,
-                                        "tag":1
+                                        "tag":14
                                       }
                                     }
                                   }
