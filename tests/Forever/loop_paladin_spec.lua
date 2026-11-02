@@ -34,7 +34,7 @@ describe("the Paladin loop worlds", function()
 end)
 
 describe("the Paladin world's Judgement", function()
-    it("returns Sanctified Judgement's mana at 3/3, as the class file believes (wowsims's log: 161.28)", function()
+    it("returns Sanctified Judgement's mana at 3/3, as the class file believes (210 x (2 - 0.9) x 0.6)", function()
         local C = pw.Retribution
         local c = C.character()
         c.talents = { [1310735] = 1, [20101] = 5, [1311074] = 3 } -- Twist of Light, Benediction 5/5, Sanctified 3/3
@@ -47,7 +47,7 @@ describe("the Paladin world's Judgement", function()
         end
         C.resolve("judgement", H).effect(W, e)
         assert.are.equal(1, #gained)
-        assert.is_true(math.abs(gained[1] - 161.28) < 1e-6, tostring(gained[1]))
+        assert.is_true(math.abs(gained[1] - 138.6) < 1e-6, tostring(gained[1])) -- no seal cut since hotfix 113554
         c.talents[1311074] = 2 -- a chance below 3/3: the world, as the belief, returns nothing
         H = headless.new({ character = c, pack = C.PACK })
         gained = {}

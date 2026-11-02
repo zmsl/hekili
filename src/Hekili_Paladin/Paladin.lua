@@ -114,37 +114,19 @@ local function reactive(ids)
     return usable == true or noMana == true
 end
 
--- The seals, and the Echo Twist of Light leaves when each is replaced (Seal of the Crusader leaves none).
+-- The seals. Unsealed Wrath's Echoes (hotfix 113554; the talent keeps Twist of Light's 1310735) come from our landed
+-- hits, not the seal swap: the belief holds them from the aura read.
 local SEALS = { "seal_of_command", "seal_of_righteousness", "seal_of_the_crusader", "seal_of_fury" }
-local ECHO = {
-    seal_of_command = "echo_of_command",
-    seal_of_righteousness = "echo_of_righteousness",
-    seal_of_fury = "echo_of_fury",
-}
-local ECHOES = { "echo_of_command", "echo_of_righteousness", "echo_of_fury" }
 
 -- A seal cast's effect (the `now` and the `handler`, two closures so each gets its own environment): the other seal up
--- goes down, leaving its Echo with Twist of Light (one Echo at a time); the seal's own Echo goes down with it up.
+-- goes down.
 local function sealCast(key)
     return function()
         for i = 1, #SEALS do
             local other = SEALS[i]
             if other ~= key and buff[other].up then
                 removeBuff(other)
-                local echo = ECHO[other]
-                if echo and talent.twist_of_light.enabled then
-                    for k = 1, #ECHOES do
-                        if ECHOES[k] ~= echo and buff[ECHOES[k]].up then
-                            removeBuff(ECHOES[k])
-                        end
-                    end
-                    applyBuff(echo)
-                end
             end
-        end
-        local own = ECHO[key]
-        if own and buff[own].up then
-            removeBuff(own)
         end
         applyBuff(key)
     end
@@ -161,10 +143,10 @@ local function conduitCost(costs, ids)
     end
 end
 
--- Twist of Light (1310735 aura 108 base -20): seals cost 20% less. The seals' multiplier, given the caller's `talent`
--- (the state's: a cost function runs in the state's environment, this helper in the file's).
+-- The seals' multiplier (Unsealed Wrath has no cost cut since hotfix 113554), given the caller's `talent` (the state's:
+-- a cost function runs in the state's environment, this helper in the file's).
 local function sealMult(t)
-    return (1 - 0.2 * t.twist_of_light.rank) * (1 - 0.02 * t.benediction.rank)
+    return 1 - 0.02 * t.benediction.rank
 end
 
 local function sealCost(costs, ids)
@@ -299,11 +281,11 @@ spec:RegisterAuras({
     seal_of_righteousness = { id = 20154, copy = rest(SEAL_OF_RIGHTEOUSNESS), duration = 30, max_stack = 1 },
     seal_of_the_crusader = { id = 21082, copy = rest(SEAL_OF_THE_CRUSADER), duration = 30, max_stack = 1 },
     seal_of_fury = { id = 1311649, copy = rest(SEAL_OF_FURY), duration = 30, max_stack = 1 },
-    -- Twist of Light's Echoes (DB2: until spent, 1 charge): our next landed melee attack spends it. The belief holds it
-    -- from the replacing seal's cast until the player aura read drops it (secrecy unprobed: checkpoint).
-    echo_of_command = { id = 1311703, duration = 3600, max_stack = 1 },
-    echo_of_righteousness = { id = 1311704, duration = 3600, max_stack = 1 },
-    echo_of_fury = { id = 1311701, duration = 3600, max_stack = 1 },
+    -- Unsealed Wrath's Echoes (hotfix 113554 rows: 15 s, 3 stacks): each landed melee hit stores a stack of the active
+    -- seal's; a hit under another seal spends them. From the player aura read (secrecy unprobed: checkpoint).
+    echo_of_command = { id = 1311703, duration = 15, max_stack = 3 },
+    echo_of_righteousness = { id = 1311704, duration = 15, max_stack = 3 },
+    echo_of_fury = { id = 1311701, duration = 15, max_stack = 3 },
     -- Holy Shield: +30% block for 10 s, 4 charges (DB2 ProcCharges), each block or partial block on us spending one.
     holy_shield = {
         id = 20925,

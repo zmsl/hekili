@@ -4,7 +4,7 @@
 -- answers. IDs, costs, cooldowns and durations come from the class file (load_druid's recording load of Paladin.lua for
 -- the character, the booted oracle's Hekili.Class and Hekili.State for the rest); the seal twist, Swift Judgement and
 -- Holy Shield's charges restate the class file's rules (circular on purpose, as rogue_world's finishers: the loop
--- measures the picks, not the rules). The world's own: our landed swing spends an Echo (`landed`), Holy Shield's +30%
+-- measures the picks, not the rules). The world's own: our landed swing stores an Echo (`landed`), Holy Shield's +30%
 -- block on the mob's swings at us and a block spending a charge (`taking`, `took`), mana under the five-second rule.
 -- Damage amounts, the weapons, the regen parts and the mana pool are UNMEASURED.
 -- Credit: wowsims/forever (MIT) as the reference for the priorities and the seal, Echo and Holy Shield rules; no code
@@ -56,23 +56,14 @@ local ECHO = {
 }
 local ECHOES = { "echo_of_command", "echo_of_righteousness", "echo_of_fury" }
 
--- A seal: the other seal up goes down, leaving its Echo with Twist of Light (one Echo at a time); its own Echo goes.
+-- A seal: the other seal up goes down (Unsealed Wrath's Echoes come from our landed swings: `landed`).
 local function seal(key)
     return {
         effect = function(W, e, _, X)
             for _, other in ipairs(SEALS) do
                 if other ~= key and up(e, X, other) then
                     drop(W, e, X, other)
-                    if ECHO[other] and X.twist then
-                        for _, echo in ipairs(ECHOES) do
-                            drop(W, e, X, echo)
-                        end
-                        aura(W, X, e, ECHO[other])
-                    end
                 end
-            end
-            if ECHO[key] then
-                drop(W, e, X, ECHO[key])
             end
             aura(W, X, e, key)
         end,
@@ -231,7 +222,7 @@ local function classData(H, C)
     X.twist = (talent.twist_of_light.rank or 0) > 0
     -- Sanctified Judgement's refund, as the class file believes it (only at 3/3, a sure one): the seals' cost multiplier
     X.S, X.sanctified = H.Hekili.State, (talent.sanctified_judgement.rank or 0) >= 3
-    X.mult = (1 - 0.2 * (talent.twist_of_light.rank or 0)) * (1 - 0.02 * (talent.benediction.rank or 0))
+    X.mult = 1 - 0.02 * (talent.benediction.rank or 0)
     return X
 end
 
@@ -266,18 +257,31 @@ local function content(name, pack)
         }
     end
 
-    -- The class's world hooks on us, from the class file's aura IDs: our landed swing spends an Echo; Holy Shield
+    -- The class's world hooks on us, from the class file's aura IDs: our landed swing stores an Echo; Holy Shield
     -- raises the block chance on a swing at us by 30% and a block spends one of its charges.
     local function hooks(_, us)
         local A = class().auras
         local hs = A.holy_shield.id
+        -- Unsealed Wrath (wowsims applyUnsealedWrath): the active seal's Echo gains a stack, the others are spent.
+        -- shortcut: our white swings only; wowsims also hears landed specials, model them if a pack leans on it.
         us.landed = function(W, act)
-            if act ~= "WOUND" then
+            if act ~= "WOUND" or not (P.talents and P.talents[1310735]) then
+                return
+            end
+            local own
+            for _, key in ipairs(SEALS) do
+                if ECHO[key] and us.auras[A[key].id] then
+                    own = ECHO[key]
+                end
+            end
+            if not own then
                 return
             end
             for _, key in ipairs(ECHOES) do
                 local id = A[key].id
-                if us.auras[id] then
+                if key == own then
+                    W.applyAura(us, id, A[key].duration, 1, A[key].max_stack)
+                elseif us.auras[id] then
                     us.auras[id] = nil
                     W.emit({ kind = "aura", dst = us, aura = id, stacks = 0, expires = 0, duration = 0 })
                 end

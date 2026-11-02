@@ -125,30 +125,27 @@ describe("Forever Paladin", function()
         assert.is_nil(fsr.share)
     end)
 
-    it("puts one seal up at a time; with Twist of Light the replaced seal leaves its Echo", function()
+    it("puts one seal up at a time; Unsealed Wrath's Echoes come from hits, not the seal swap (hotfix 113554)", function()
         for _, field in ipairs({ "now", "handler" }) do
             local e = ld.env(w)
             e.buff = buffs({ seal_of_command = true, echo_of_righteousness = true })
             e.talent = rank(1)
             ld.run(w.abilities.seal_of_righteousness[field], e)
-            -- the old Echo goes (one at a time), the seal's own Echo with it, then the new seal
-            assert.are.same({ "seal_of_command", "echo_of_righteousness", "echo_of_righteousness" }, e.removed, field)
-            assert.are.same({ "echo_of_command", "seal_of_righteousness" }, e.applied, field)
+            -- the old seal goes; no Echo made or spent by the cast (the aura read holds them)
+            assert.are.same({ { "seal_of_command" }, { "seal_of_righteousness" } }, { e.removed, e.applied }, field)
             e = ld.env(w)
             e.buff = buffs({ seal_of_command = true })
-            ld.run(w.abilities.seal_of_fury[field], e) -- no talent: no Echo
+            ld.run(w.abilities.seal_of_fury[field], e)
             assert.are.same({ { "seal_of_command" }, { "seal_of_fury" } }, { e.removed, e.applied }, field)
-            e = ld.env(w)
-            e.buff = buffs({ seal_of_fury = true })
-            e.talent = rank(1)
-            ld.run(w.abilities.seal_of_the_crusader[field], e)
-            assert.are.same({ "echo_of_fury", "seal_of_the_crusader" }, e.applied, field)
         end
         assert.is_nil(w.abilities.seal_of_command.ladder) -- mana is a seal's only requirement: its answers are rungs
+        for _, key in ipairs({ "echo_of_command", "echo_of_righteousness", "echo_of_fury" }) do
+            assert.are.same({ 15, 3 }, { w.auras[key].duration, w.auras[key].max_stack }, key) -- DB2 rows (hotfix)
+        end
         local e = ld.env(w)
         e.talent = talents({ twist_of_light = 1 })
         w.game.known[20920] = true
-        assert.are.equal(210 * 0.8, ld.run(w.abilities.seal_of_command.spend, e)) -- Twist of Light: -20%
+        assert.are.equal(210, ld.run(w.abilities.seal_of_command.spend, e)) -- Unsealed Wrath: no cost cut
     end)
 
     it("judges only under a seal, leaves the seal up, and Swift Judgement's charge pays it", function()
@@ -208,8 +205,9 @@ describe("Forever Paladin", function()
         end
         local e = ld.env(w)
         e.talent = talents({ benediction = 5, twist_of_light = 1, holy_conduit = 2 })
-        -- wowsims's log of the Twist of Light build: Seal of Command 151.2, Holy Strike 18, Consecration 305.1
-        assert.is_true(math.abs(ld.run(w.abilities.seal_of_command.spend, e) - 151.2) < 1e-9)
+        -- wowsims's log of the Twist of Light build: Holy Strike 18, Consecration 305.1; Seal of Command 210 x 0.9 (the
+        -- 20% cut gone with hotfix 113554)
+        assert.is_true(math.abs(ld.run(w.abilities.seal_of_command.spend, e) - 189) < 1e-9)
         assert.is_true(math.abs(ld.run(w.abilities.holy_strike.spend, e) - 18) < 1e-9)
         assert.is_true(math.abs(ld.run(w.abilities.consecration.spend, e) - 305.1) < 1e-9)
         assert.is_true(math.abs(ld.run(w.abilities.hammer_of_wrath.spend, e) - 425 * 0.6) < 1e-9)
@@ -225,9 +223,9 @@ describe("Forever Paladin", function()
                 e.talent = talents({ benediction = 5, twist_of_light = 1, sanctified_judgement = 3 })
                 e.buff = buffs({ seal_of_command = true })
                 ld.run(w.abilities.judgement[field], e)
-                -- wowsims's log: "Gained 161.280 mana from {SpellID: 1311074}" = 210 x (2 - 0.72) x 0.6
+                -- wowsims (talents_retribution.go): 210 x (2 - 0.9) x 0.6, the seal's multiplier Benediction's alone
                 assert.are.equal(1, #e.gained, field)
-                assert.is_true(math.abs(e.gained[1][1] - 161.28) < 1e-9, field)
+                assert.is_true(math.abs(e.gained[1][1] - 138.6) < 1e-9, field)
                 assert.are.equal("mana", e.gained[1][2], field)
                 e = ld.env(w)
                 e.talent = talents({ sanctified_judgement = 2 }) -- a chance under 100%: no refund believed
@@ -414,7 +412,7 @@ describe("Forever Paladin through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
-    it("twists the seals in the belief: Seal of Command, then Seal of Righteousness leaves Echo of Command", function()
+    it("twists the seals in the belief: Seal of Command, then Seal of Righteousness, no Echo from the swap", function()
         local VS = H.ns.VirtualState
         local t = H.ctl.now + 1
         H.ctl.now = t
@@ -424,7 +422,7 @@ describe("Forever Paladin through the engine", function()
         H.ctl.now = t
         H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", 20154)
         assert.is_true(headless.cycle(H, t + 0.1))
-        assert.are.same({ false, true, true }, {
+        assert.are.same({ false, true, false }, { -- Unsealed Wrath's Echoes come from hits (hotfix 113554)
             VS.Aura("player", 20375, t + 0.1) ~= nil,
             VS.Aura("player", 20154, t + 0.1) ~= nil,
             VS.Aura("player", 1311703, t + 0.1) ~= nil,
