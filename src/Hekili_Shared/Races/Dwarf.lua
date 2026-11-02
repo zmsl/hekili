@@ -5,7 +5,8 @@
 -- `all`'s stock entry (120 s, off the GCD, its buff 65116 absent on Forever: the buff is 20594 itself). Kept from
 -- `all`: usable only while a dispellable effect it removes is up. The gate covers poison and disease: a bleed carries no
 -- dispel type, so no `dispellable_bleed` aura can exist. Find Treasure, Mace Specialization and Big Game Hunter have no
--- rotation effect. No resource or cost modifier. No pack names it. Unknown for any other race (Engine/Schema/Races.lua).
+-- rotation effect. No resource or cost modifier. Protection (wowsims.com) names it (its low-health line). Unknown for
+-- any other race (Engine/Schema/Races.lua).
 
 local race = Hekili:NewRace("Dwarf")
 
