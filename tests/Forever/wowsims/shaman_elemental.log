@@ -124,7 +124,6 @@
 [3.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4819.500 --> 4822.475) of 5590 total.
 [3.00] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Crit for 223.560 damage (SpellSchool: 4). (Threat: 219.089)
 [3.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4822.475 --> 4825.450) of 5590 total.
-[3.18] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 3.182000001s.
 [3.18] [Elemental (#1)] Completed cast {SpellID: 1326047}
 [3.18] [Elemental (#1)] Spent 238.500 mana from {SpellID: 1326047} (4825.450 --> 4586.950) of 5590 total.
 [3.18] [Elemental (#1)] Casting {SpellID: 16166} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 12
@@ -149,7 +148,6 @@
 [4.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4622.650 --> 4625.625) of 5590 total.
 [4.45] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 72.102 damage (SpellSchool: 4). (Threat: 70.660)
 [4.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4625.625 --> 4628.600) of 5590 total.
-[4.55] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 4.546000001s.
 [4.55] [Elemental (#1)] Completed cast {SpellID: 15208}
 [4.55] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (4628.600 --> 4430.600) of 5590 total.
 [4.55] [Elemental (#1)] Casting {ItemID: 13444} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 1
@@ -175,7 +173,6 @@
 [5.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (5590.000 --> 5590.000) of 5590 total.
 [5.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (5590.000 --> 5590.000) of 5590 total.
 [5.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (5590.000 --> 5590.000) of 5590 total.
-[5.91] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 5.910000001s.
 [5.91] [Elemental (#1)] Completed cast {SpellID: 15208}
 [5.91] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (5590.000 --> 5392.000) of 5590 total.
 [5.91] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 1.364s, GCD = 1.364s, Effective Time = 1.364s) APL: priority 14
@@ -195,7 +192,6 @@
 [7.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (5421.750 --> 5424.725) of 5590 total.
 [7.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (5424.725 --> 5427.700) of 5590 total.
 [7.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (5427.700 --> 5430.675) of 5590 total.
-[7.27] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 7.274000001s.
 [7.27] [Elemental (#1)] Completed cast {SpellID: 15208}
 [7.27] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (5430.675 --> 5232.675) of 5590 total.
 [7.27] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 1.364s, GCD = 1.364s, Effective Time = 1.364s) APL: priority 14
@@ -216,7 +212,6 @@
 [8.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (5265.400 --> 5268.375) of 5590 total.
 [8.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (5268.375 --> 5271.350) of 5590 total.
 [8.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (5271.350 --> 5274.325) of 5590 total.
-[8.64] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 8.638000001s.
 [8.64] [Elemental (#1)] Completed cast {SpellID: 15208}
 [8.64] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (5274.325 --> 5076.325) of 5590 total.
 [8.64] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 1.364s, GCD = 1.364s, Effective Time = 1.364s) APL: priority 14
@@ -239,7 +234,6 @@
 [10.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (5115.000 --> 5117.975) of 5590 total.
 [10.00] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [10.00] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[10.00] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 10.002000001s.
 [10.00] [Elemental (#1)] Completed cast {SpellID: 15208}
 [10.00] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (5117.975 --> 4919.975) of 5590 total.
 [10.00] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 1.364s, GCD = 1.364s, Effective Time = 1.364s) APL: priority 14
@@ -258,7 +252,6 @@
 [11.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4949.725 --> 4952.700) of 5590 total.
 [11.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4952.700 --> 4955.675) of 5590 total.
 [11.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4955.675 --> 4958.650) of 5590 total.
-[11.37] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 11.366000001s.
 [11.37] [Elemental (#1)] Completed cast {SpellID: 15208}
 [11.37] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (4958.650 --> 4760.650) of 5590 total.
 [11.37] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 1.364s, GCD = 1.364s, Effective Time = 1.364s) APL: priority 14
@@ -280,7 +273,6 @@
 [12.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4793.375 --> 4796.350) of 5590 total.
 [12.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4796.350 --> 4799.325) of 5590 total.
 [12.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4799.325 --> 4802.300) of 5590 total.
-[12.73] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 12.730000001s.
 [12.73] [Elemental (#1)] Completed cast {SpellID: 15208}
 [12.73] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (4802.300 --> 4604.300) of 5590 total.
 [12.73] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 1.364s, GCD = 1.364s, Effective Time = 1.364s) APL: priority 14
@@ -299,7 +291,6 @@
 [13.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4634.050 --> 4637.025) of 5590 total.
 [13.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4637.025 --> 4640.000) of 5590 total.
 [14.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4640.000 --> 4642.975) of 5590 total.
-[14.09] [Elemental (#1)] Queueing up {SpellID: 1326047} to cast at 14.094000001s.
 [14.09] [Elemental (#1)] Completed cast {SpellID: 15208}
 [14.09] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (4642.975 --> 4444.975) of 5590 total.
 [14.09] [Elemental (#1)] Casting {SpellID: 1326047} (Cost = 238.500, Cast Time = 1.364s, GCD = 1.364s, Effective Time = 1.364s) APL: priority 9
@@ -323,7 +314,6 @@
 [15.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4480.675 --> 4483.650) of 5590 total.
 [15.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4483.650 --> 4486.625) of 5590 total.
 [15.45] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 75.846 damage (SpellSchool: 4). (Threat: 74.329)
-[15.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 15.458000001s.
 [15.46] [Elemental (#1)] Completed cast {SpellID: 1326047}
 [15.46] [Elemental (#1)] Spent 238.500 mana from {SpellID: 1326047} (4486.625 --> 4248.125) of 5590 total.
 [15.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -345,7 +335,6 @@
 [16.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4283.825 --> 4286.800) of 5590 total.
 [16.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4286.800 --> 4289.775) of 5590 total.
 [16.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4289.775 --> 4292.750) of 5590 total.
-[16.96] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 16.958000001s.
 [16.96] [Elemental (#1)] Completed cast {SpellID: 15208}
 [16.96] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (4292.750 --> 4094.750) of 5590 total.
 [16.96] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -368,7 +357,6 @@
 [18.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4130.450 --> 4133.425) of 5590 total.
 [18.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4133.425 --> 4136.400) of 5590 total.
 [18.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4136.400 --> 4139.375) of 5590 total.
-[18.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 18.458000001s.
 [18.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [18.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (4139.375 --> 3941.375) of 5590 total.
 [18.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -396,7 +384,6 @@
 [20.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3991.950 --> 3994.925) of 5590 total.
 [20.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3994.925 --> 3997.900) of 5590 total.
 [20.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3997.900 --> 4000.875) of 5590 total.
-[20.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 20.458000001s.
 [20.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [20.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (4000.875 --> 3802.875) of 5590 total.
 [20.46] [Elemental (#1)] Casting {ItemID: 12662} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 2
@@ -431,7 +418,6 @@
 [22.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4807.491 --> 4810.466) of 5590 total.
 [22.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4810.466 --> 4813.441) of 5590 total.
 [22.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4813.441 --> 4816.416) of 5590 total.
-[22.46] [Elemental (#1)] Queueing up {SpellID: 10448} to cast at 22.458000001s.
 [22.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [22.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (4816.416 --> 4618.416) of 5590 total.
 [22.46] [Elemental (#1)] Casting {SpellID: 10448} (Cost = 170.775, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 10
@@ -480,7 +466,6 @@
 [25.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4542.841 --> 4545.816) of 5590 total.
 [25.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4545.816 --> 4548.791) of 5590 total.
 [25.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4548.791 --> 4551.766) of 5590 total.
-[25.96] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 25.958000001s.
 [25.96] [Elemental (#1)] Completed cast {SpellID: 15208}
 [25.96] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (4551.766 --> 4353.766) of 5590 total.
 [25.96] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -508,7 +493,6 @@
 [27.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4404.341 --> 4407.316) of 5590 total.
 [27.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4407.316 --> 4410.291) of 5590 total.
 [27.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4410.291 --> 4413.266) of 5590 total.
-[27.96] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 27.958000001s.
 [27.96] [Elemental (#1)] Completed cast {SpellID: 15208}
 [27.96] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (4413.266 --> 4215.266) of 5590 total.
 [27.96] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -536,7 +520,6 @@
 [29.80] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [29.80] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
 [29.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4271.791 --> 4274.766) of 5590 total.
-[29.96] [Elemental (#1)] Queueing up {SpellID: 10448} to cast at 29.958000001s.
 [29.96] [Elemental (#1)] Completed cast {SpellID: 15208}
 [29.96] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (4274.766 --> 4076.766) of 5590 total.
 [29.96] [Elemental (#1)] Casting {SpellID: 10448} (Cost = 170.775, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 10
@@ -586,7 +569,6 @@
 [33.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4001.191 --> 4004.166) of 5590 total.
 [33.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4004.166 --> 4007.141) of 5590 total.
 [33.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (4007.141 --> 4010.116) of 5590 total.
-[33.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 33.458000001s.
 [33.46] [Elemental (#1)] Completed cast {SpellID: 1326047}
 [33.46] [Elemental (#1)] Spent 238.500 mana from {SpellID: 1326047} (4010.116 --> 3771.616) of 5590 total.
 [33.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -614,7 +596,6 @@
 [35.25] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Crit for 122.148 damage (SpellSchool: 4). (Threat: 119.705)
 [35.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3825.166 --> 3828.141) of 5590 total.
 [35.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3828.141 --> 3831.116) of 5590 total.
-[35.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 35.458000001s.
 [35.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [35.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (3831.116 --> 3633.116) of 5590 total.
 [35.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -643,7 +624,6 @@
 [37.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3686.666 --> 3689.641) of 5590 total.
 [37.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3689.641 --> 3692.616) of 5590 total.
 [37.45] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 68.936 damage (SpellSchool: 4). (Threat: 67.557)
-[37.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 37.458000001s.
 [37.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [37.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (3692.616 --> 3494.616) of 5590 total.
 [37.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -671,7 +651,6 @@
 [39.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3545.191 --> 3548.166) of 5590 total.
 [39.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3548.166 --> 3551.141) of 5590 total.
 [39.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3551.141 --> 3554.116) of 5590 total.
-[39.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 39.458000001s.
 [39.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [39.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (3554.116 --> 3356.116) of 5590 total.
 [39.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -699,7 +678,6 @@
 [41.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3406.691 --> 3409.666) of 5590 total.
 [41.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3409.666 --> 3412.641) of 5590 total.
 [41.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3412.641 --> 3415.616) of 5590 total.
-[41.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 41.458000001s.
 [41.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [41.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (3415.616 --> 3217.616) of 5590 total.
 [41.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -728,7 +706,6 @@
 [43.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3268.191 --> 3271.166) of 5590 total.
 [43.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3271.166 --> 3274.141) of 5590 total.
 [43.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3274.141 --> 3277.116) of 5590 total.
-[43.46] [Elemental (#1)] Queueing up {SpellID: 1326047} to cast at 43.458000001s.
 [43.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [43.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (3277.116 --> 3079.116) of 5590 total.
 [43.46] [Elemental (#1)] Casting {SpellID: 1326047} (Cost = 238.500, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 9
@@ -757,7 +734,6 @@
 [45.20] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
 [45.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3132.666 --> 3135.641) of 5590 total.
 [45.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (3135.641 --> 3138.616) of 5590 total.
-[45.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 45.458000001s.
 [45.46] [Elemental (#1)] Completed cast {SpellID: 1326047}
 [45.46] [Elemental (#1)] Spent 238.500 mana from {SpellID: 1326047} (3138.616 --> 2900.116) of 5590 total.
 [45.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -785,7 +761,6 @@
 [47.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2956.641 --> 2959.616) of 5590 total.
 [47.40] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [47.40] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[47.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 47.458000001s.
 [47.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [47.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (2959.616 --> 2761.616) of 5590 total.
 [47.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -812,7 +787,6 @@
 [49.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2812.191 --> 2815.166) of 5590 total.
 [49.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2815.166 --> 2818.141) of 5590 total.
 [49.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2818.141 --> 2821.116) of 5590 total.
-[49.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 49.458000001s.
 [49.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [49.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (2821.116 --> 2623.116) of 5590 total.
 [49.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -842,7 +816,6 @@
 [51.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2673.691 --> 2676.666) of 5590 total.
 [51.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2676.666 --> 2679.641) of 5590 total.
 [51.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2679.641 --> 2682.616) of 5590 total.
-[51.46] [Elemental (#1)] Queueing up {SpellID: 10448} to cast at 51.458000001s.
 [51.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [51.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (2682.616 --> 2484.616) of 5590 total.
 [51.46] [Elemental (#1)] Casting {SpellID: 10448} (Cost = 170.775, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 10
@@ -892,7 +865,6 @@
 [54.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2409.041 --> 2412.016) of 5590 total.
 [54.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2412.016 --> 2414.991) of 5590 total.
 [54.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2414.991 --> 2417.966) of 5590 total.
-[54.96] [Elemental (#1)] Queueing up {SpellID: 10438} to cast at 54.958000001s.
 [54.96] [Elemental (#1)] Completed cast {SpellID: 15208}
 [54.96] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (2417.966 --> 2219.966) of 5590 total.
 [54.96] [Elemental (#1)] Casting {SpellID: 10438} (Cost = 170.000, Cast Time = 0s, GCD = 1s, Effective Time = 1s) APL: priority 5
@@ -934,7 +906,6 @@
 [57.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2130.291 --> 2133.266) of 5590 total.
 [57.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2133.266 --> 2136.241) of 5590 total.
 [57.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2136.241 --> 2139.216) of 5590 total.
-[57.96] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 57.958000001s.
 [57.96] [Elemental (#1)] Completed cast {SpellID: 1326047}
 [57.96] [Elemental (#1)] Spent 238.500 mana from {SpellID: 1326047} (2139.216 --> 1900.716) of 5590 total.
 [57.96] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -964,7 +935,6 @@
 [59.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1951.291 --> 1954.266) of 5590 total.
 [59.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1954.266 --> 1957.241) of 5590 total.
 [59.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1957.241 --> 1960.216) of 5590 total.
-[59.96] [Elemental (#1)] Queueing up {SpellID: 10414} to cast at 59.958000001s.
 [59.96] [Elemental (#1)] Completed cast {SpellID: 15208}
 [59.96] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1960.216 --> 1762.216) of 5590 total.
 [59.96] [Elemental (#1)] Aura gained: {SpellID: 16246}
@@ -1019,7 +989,6 @@
 [63.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1860.391 --> 1863.366) of 5590 total.
 [63.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1863.366 --> 1866.341) of 5590 total.
 [63.46] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
-[63.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 1m3.458000001s.
 [63.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [63.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1866.341 --> 1668.341) of 5590 total.
 [63.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -1047,7 +1016,6 @@
 [65.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1718.916 --> 1721.891) of 5590 total.
 [65.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1721.891 --> 1724.866) of 5590 total.
 [65.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1724.866 --> 1727.841) of 5590 total.
-[65.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 1m5.458000001s.
 [65.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [65.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1727.841 --> 1529.841) of 5590 total.
 [65.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -1076,7 +1044,6 @@
 [67.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1580.416 --> 1583.391) of 5590 total.
 [67.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1583.391 --> 1586.366) of 5590 total.
 [67.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1586.366 --> 1589.341) of 5590 total.
-[67.46] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 1m7.458000001s.
 [67.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [67.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1589.341 --> 1391.341) of 5590 total.
 [67.46] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -1107,7 +1074,6 @@
 [69.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1444.891 --> 1447.866) of 5590 total.
 [69.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1447.866 --> 1450.841) of 5590 total.
 [69.46] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
-[69.46] [Elemental (#1)] Queueing up {SpellID: 1326047} to cast at 1m9.458000001s.
 [69.46] [Elemental (#1)] Completed cast {SpellID: 15208}
 [69.46] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1450.841 --> 1252.841) of 5590 total.
 [69.46] [Elemental (#1)] Casting {SpellID: 1326047} (Cost = 238.500, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 9
@@ -1137,7 +1103,6 @@
 [71.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1306.391 --> 1309.366) of 5590 total.
 [71.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1309.366 --> 1312.341) of 5590 total.
 [71.41] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 69.648 damage (SpellSchool: 4). (Threat: 68.255)
-[71.46] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 1m11.458000001s.
 [71.46] [Elemental (#1)] Completed cast {SpellID: 1326047}
 [71.46] [Elemental (#1)] Spent 238.500 mana from {SpellID: 1326047} (1312.341 --> 1073.841) of 5590 total.
 [71.46] [Elemental (#1)] Aura gained: {SpellID: 16246}
@@ -1168,7 +1133,6 @@
 [73.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1124.416 --> 1127.391) of 5590 total.
 [73.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1127.391 --> 1130.366) of 5590 total.
 [73.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1130.366 --> 1133.341) of 5590 total.
-[73.46] [Elemental (#1)] Queueing up {SpellID: 10448} to cast at 1m13.458000001s.
 [73.46] [Elemental (#1)] Completed cast {SpellID: 10392}
 [73.46] [Elemental (#1)] {SpellID: 16246} stacks: 1 --> 0
 [73.46] [Elemental (#1)] Aura faded: {SpellID: 16246}
@@ -1221,7 +1185,6 @@
 [76.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1063.716 --> 1066.691) of 5590 total.
 [76.96] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [76.96] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[76.96] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 1m16.958000001s.
 [76.96] [Elemental (#1)] Completed cast {SpellID: 10392}
 [76.96] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (1066.691 --> 922.691) of 5590 total.
 [76.96] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
@@ -1249,7 +1212,6 @@
 [78.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (973.266 --> 976.241) of 5590 total.
 [78.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (976.241 --> 979.216) of 5590 total.
 [78.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (979.216 --> 982.191) of 5590 total.
-[78.96] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 1m18.958000001s.
 [78.96] [Elemental (#1)] Completed cast {SpellID: 10392}
 [78.96] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (982.191 --> 838.191) of 5590 total.
 [78.96] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
@@ -1279,7 +1241,6 @@
 [80.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (888.766 --> 891.741) of 5590 total.
 [80.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (891.741 --> 894.716) of 5590 total.
 [80.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (894.716 --> 897.691) of 5590 total.
-[80.96] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 1m20.958000001s.
 [80.96] [Elemental (#1)] Completed cast {SpellID: 10392}
 [80.96] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (897.691 --> 753.691) of 5590 total.
 [80.96] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
@@ -1308,7 +1269,6 @@
 [82.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (804.266 --> 807.241) of 5590 total.
 [82.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (807.241 --> 810.216) of 5590 total.
 [82.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (810.216 --> 813.191) of 5590 total.
-[82.96] [Elemental (#1)] Queueing up {SpellID: 1326047} to cast at 1m22.958000001s.
 [82.96] [Elemental (#1)] Completed cast {SpellID: 10392}
 [82.96] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (813.191 --> 669.191) of 5590 total.
 [82.96] [Elemental (#1)] Casting {SpellID: 1326047} (Cost = 238.500, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 9
@@ -1336,7 +1296,6 @@
 [84.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (719.766 --> 722.741) of 5590 total.
 [84.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (722.741 --> 725.716) of 5590 total.
 [84.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (725.716 --> 728.691) of 5590 total.
-[84.96] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 1m24.958000001s.
 [84.96] [Elemental (#1)] Completed cast {SpellID: 1326047}
 [84.96] [Elemental (#1)] Spent 238.500 mana from {SpellID: 1326047} (728.691 --> 490.191) of 5590 total.
 [84.96] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
@@ -1365,7 +1324,6 @@
 [86.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (543.741 --> 546.716) of 5590 total.
 [86.81] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 74.469 damage (SpellSchool: 4). (Threat: 72.979)
 [86.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (546.716 --> 549.691) of 5590 total.
-[86.96] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 1m26.958000001s.
 [86.96] [Elemental (#1)] Completed cast {SpellID: 10392}
 [86.96] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (549.691 --> 405.691) of 5590 total.
 [86.96] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
@@ -1393,7 +1351,6 @@
 [88.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (456.266 --> 459.241) of 5590 total.
 [88.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (459.241 --> 462.216) of 5590 total.
 [88.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (462.216 --> 465.191) of 5590 total.
-[88.96] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 1m28.958000001s.
 [88.96] [Elemental (#1)] Completed cast {SpellID: 10392}
 [88.96] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (465.191 --> 321.191) of 5590 total.
 [88.96] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
@@ -1421,7 +1378,6 @@
 [90.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (371.766 --> 374.741) of 5590 total.
 [90.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (374.741 --> 377.716) of 5590 total.
 [90.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (377.716 --> 380.691) of 5590 total.
-[90.96] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 1m30.958000001s.
 [90.96] [Elemental (#1)] Completed cast {SpellID: 10392}
 [90.96] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (380.691 --> 236.691) of 5590 total.
 [90.96] [Elemental (#1)] Casting {ItemID: 272438} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 3
@@ -1457,7 +1413,6 @@
 [92.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (287.266 --> 290.241) of 5590 total.
 [92.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (290.241 --> 293.216) of 5590 total.
 [92.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (293.216 --> 296.191) of 5590 total.
-[92.96] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 1m32.958000001s.
 [92.96] [Elemental (#1)] Completed cast {SpellID: 10392}
 [92.96] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (296.191 --> 152.191) of 5590 total.
 [92.96] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
@@ -1902,7 +1857,6 @@
 [128.95] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [128.95] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
 [129.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1454.659 --> 1457.634) of 5590 total.
-[129.05] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 2m9.046000002s.
 [129.05] [Elemental (#1)] Completed cast {SpellID: 1326047}
 [129.05] [Elemental (#1)] Spent 238.500 mana from {SpellID: 1326047} (1457.634 --> 1219.134) of 5590 total.
 [129.05] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
@@ -1928,7 +1882,6 @@
 [130.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1269.709 --> 1272.684) of 5590 total.
 [130.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1272.684 --> 1275.659) of 5590 total.
 [131.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1275.659 --> 1278.634) of 5590 total.
-[131.05] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m11.046000002s.
 [131.05] [Elemental (#1)] Completed cast {SpellID: 15208}
 [131.05] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1278.634 --> 1080.634) of 5590 total.
 [131.05] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
@@ -1957,7 +1910,6 @@
 [132.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1131.209 --> 1134.184) of 5590 total.
 [132.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1134.184 --> 1137.159) of 5590 total.
 [133.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1137.159 --> 1140.134) of 5590 total.
-[133.05] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m13.046000002s.
 [133.05] [Elemental (#1)] Completed cast {SpellID: 10392}
 [133.05] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (1140.134 --> 996.134) of 5590 total.
 [133.05] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
@@ -1986,7 +1938,6 @@
 [134.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1046.709 --> 1049.684) of 5590 total.
 [134.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1049.684 --> 1052.659) of 5590 total.
 [135.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1052.659 --> 1055.634) of 5590 total.
-[135.05] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m15.046000002s.
 [135.05] [Elemental (#1)] Completed cast {SpellID: 10392}
 [135.05] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (1055.634 --> 911.634) of 5590 total.
 [135.05] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
@@ -2014,7 +1965,6 @@
 [136.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (962.209 --> 965.184) of 5590 total.
 [136.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (965.184 --> 968.159) of 5590 total.
 [137.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (968.159 --> 971.134) of 5590 total.
-[137.05] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m17.046000002s.
 [137.05] [Elemental (#1)] Completed cast {SpellID: 10392}
 [137.05] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (971.134 --> 827.134) of 5590 total.
 [137.05] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
@@ -2045,7 +1995,6 @@
 [138.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (877.709 --> 880.684) of 5590 total.
 [138.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (880.684 --> 883.659) of 5590 total.
 [139.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (883.659 --> 886.634) of 5590 total.
-[139.05] [Elemental (#1)] Queueing up {SpellID: 1326047} to cast at 2m19.046000002s.
 [139.05] [Elemental (#1)] Completed cast {SpellID: 10392}
 [139.05] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (886.634 --> 742.634) of 5590 total.
 [139.05] [Elemental (#1)] Aura gained: {SpellID: 16246}
@@ -2078,7 +2027,6 @@
 [140.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (796.184 --> 799.159) of 5590 total.
 [141.00] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Crit for 116.155 damage (SpellSchool: 4). (Threat: 113.832)
 [141.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (799.159 --> 802.134) of 5590 total.
-[141.05] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m21.046000002s.
 [141.05] [Elemental (#1)] Completed cast {SpellID: 1326047}
 [141.05] [Elemental (#1)] {SpellID: 16246} stacks: 1 --> 0
 [141.05] [Elemental (#1)] Aura faded: {SpellID: 16246}
@@ -2087,7 +2035,7 @@
 [141.05] [Elemental (#1)] Gained 1217.813 mana from {ItemID: 12662} (802.134 --> 2019.946) of 5590 total.
 [141.05] [Elemental (#1)] [Elemental (#1)] {ItemID: 12662, Tag: 1} Crit for 1087.807 damage (SpellSchool: 32). (Threat: 1066.051)
 [141.05] [Elemental (#1)] Spent 1087.807 health from {OtherID: 9} (1431.487 --> 343.680) of 2420 total.
-[141.05] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
+[141.05] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
 [141.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2019.946 --> 2022.921) of 5590 total.
 [141.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2022.921 --> 2025.896) of 5590 total.
 [141.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2025.896 --> 2028.871) of 5590 total.
@@ -2111,549 +2059,532 @@
 [142.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2070.521 --> 2073.496) of 5590 total.
 [142.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2073.496 --> 2076.471) of 5590 total.
 [143.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (2076.471 --> 2079.446) of 5590 total.
-[143.05] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 2m23.046000002s.
-[143.05] [Elemental (#1)] Completed cast {SpellID: 10392}
-[143.05] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (2079.446 --> 1935.446) of 5590 total.
+[143.05] [Elemental (#1)] Completed cast {SpellID: 15208}
+[143.05] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (2079.446 --> 1881.446) of 5590 total.
 [143.05] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
-[143.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1935.446 --> 1938.421) of 5590 total.
+[143.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1881.446 --> 1884.421) of 5590 total.
 [143.20] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 61.766 damage (SpellSchool: 4). (Threat: 60.531)
-[143.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1938.421 --> 1941.396) of 5590 total.
-[143.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1941.396 --> 1944.371) of 5590 total.
-[143.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1944.371 --> 1947.346) of 5590 total.
-[143.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1947.346 --> 1950.321) of 5590 total.
+[143.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1884.421 --> 1887.396) of 5590 total.
+[143.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1887.396 --> 1890.371) of 5590 total.
+[143.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1890.371 --> 1893.346) of 5590 total.
+[143.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1893.346 --> 1896.321) of 5590 total.
 [143.55] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
-[143.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1950.321 --> 1953.296) of 5590 total.
-[143.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1953.296 --> 1956.271) of 5590 total.
-[143.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1956.271 --> 1959.246) of 5590 total.
-[143.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1959.246 --> 1962.221) of 5590 total.
-[144.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1962.221 --> 1965.196) of 5590 total.
-[144.05] [Elemental (#1)] [Target 1] {SpellID: 10392} Hit for 696.255 damage (SpellSchool: 8). (Threat: 682.330)
-[144.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1965.196 --> 1968.171) of 5590 total.
-[144.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1968.171 --> 1971.146) of 5590 total.
-[144.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1971.146 --> 1974.121) of 5590 total.
+[143.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1896.321 --> 1899.296) of 5590 total.
+[143.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1899.296 --> 1902.271) of 5590 total.
+[143.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1902.271 --> 1905.246) of 5590 total.
+[143.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1905.246 --> 1908.221) of 5590 total.
+[144.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1908.221 --> 1911.196) of 5590 total.
+[144.05] [Elemental (#1)] [Target 1] {SpellID: 15208} Hit for 731.762 damage (SpellSchool: 8). (Threat: 717.127)
+[144.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1911.196 --> 1914.171) of 5590 total.
+[144.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1914.171 --> 1917.146) of 5590 total.
+[144.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1917.146 --> 1920.121) of 5590 total.
 [144.35] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [144.35] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[144.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1974.121 --> 1977.096) of 5590 total.
-[144.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1977.096 --> 1980.071) of 5590 total.
-[144.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1980.071 --> 1983.046) of 5590 total.
-[144.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1983.046 --> 1986.021) of 5590 total.
-[144.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1986.021 --> 1988.996) of 5590 total.
-[144.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1988.996 --> 1991.971) of 5590 total.
-[145.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1991.971 --> 1994.946) of 5590 total.
-[145.05] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 2m25.046000002s.
+[144.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1920.121 --> 1923.096) of 5590 total.
+[144.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1923.096 --> 1926.071) of 5590 total.
+[144.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1926.071 --> 1929.046) of 5590 total.
+[144.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1929.046 --> 1932.021) of 5590 total.
+[144.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1932.021 --> 1934.996) of 5590 total.
+[144.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1934.996 --> 1937.971) of 5590 total.
+[145.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1937.971 --> 1940.946) of 5590 total.
 [145.05] [Elemental (#1)] Completed cast {SpellID: 15208}
-[145.05] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1994.946 --> 1796.946) of 5590 total.
+[145.05] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1940.946 --> 1742.946) of 5590 total.
 [145.05] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
-[145.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1796.946 --> 1799.921) of 5590 total.
-[145.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1799.921 --> 1802.896) of 5590 total.
-[145.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1802.896 --> 1805.871) of 5590 total.
+[145.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1742.946 --> 1745.921) of 5590 total.
+[145.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1745.921 --> 1748.896) of 5590 total.
+[145.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1748.896 --> 1751.871) of 5590 total.
 [145.40] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 76.111 damage (SpellSchool: 4). (Threat: 74.589)
-[145.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1805.871 --> 1808.846) of 5590 total.
-[145.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1808.846 --> 1811.821) of 5590 total.
-[145.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1811.821 --> 1814.796) of 5590 total.
-[145.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1814.796 --> 1817.771) of 5590 total.
-[145.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1817.771 --> 1820.746) of 5590 total.
-[145.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1820.746 --> 1823.721) of 5590 total.
-[146.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1823.721 --> 1826.696) of 5590 total.
+[145.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1751.871 --> 1754.846) of 5590 total.
+[145.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1754.846 --> 1757.821) of 5590 total.
+[145.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1757.821 --> 1760.796) of 5590 total.
+[145.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1760.796 --> 1763.771) of 5590 total.
+[145.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1763.771 --> 1766.746) of 5590 total.
+[145.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1766.746 --> 1769.721) of 5590 total.
+[146.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1769.721 --> 1772.696) of 5590 total.
 [146.05] [Elemental (#1)] [Target 1] {SpellID: 15208} Hit for 784.022 damage (SpellSchool: 8). (Threat: 768.342)
-[146.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1826.696 --> 1829.671) of 5590 total.
-[146.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1829.671 --> 1832.646) of 5590 total.
-[146.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1832.646 --> 1835.621) of 5590 total.
-[146.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1835.621 --> 1838.596) of 5590 total.
-[146.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1838.596 --> 1841.571) of 5590 total.
+[146.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1772.696 --> 1775.671) of 5590 total.
+[146.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1775.671 --> 1778.646) of 5590 total.
+[146.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1778.646 --> 1781.621) of 5590 total.
+[146.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1781.621 --> 1784.596) of 5590 total.
+[146.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1784.596 --> 1787.571) of 5590 total.
 [146.55] [Target 1] Aura faded: {SpellID: 10448}
 [146.55] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
 [146.55] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [146.55] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[146.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1841.571 --> 1844.546) of 5590 total.
-[146.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1844.546 --> 1847.521) of 5590 total.
-[146.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1847.521 --> 1850.496) of 5590 total.
-[146.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1850.496 --> 1853.471) of 5590 total.
-[147.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1853.471 --> 1856.446) of 5590 total.
-[147.05] [Elemental (#1)] Queueing up {SpellID: 10448} to cast at 2m27.046000002s.
+[146.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1787.571 --> 1790.546) of 5590 total.
+[146.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1790.546 --> 1793.521) of 5590 total.
+[146.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1793.521 --> 1796.496) of 5590 total.
+[146.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1796.496 --> 1799.471) of 5590 total.
+[147.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1799.471 --> 1802.446) of 5590 total.
 [147.05] [Elemental (#1)] Completed cast {SpellID: 15208}
-[147.05] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1856.446 --> 1658.446) of 5590 total.
+[147.05] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1802.446 --> 1604.446) of 5590 total.
 [147.05] [Elemental (#1)] Casting {SpellID: 10448} (Cost = 170.775, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 10
 [147.05] [Elemental (#1)] Completed cast {SpellID: 10448}
-[147.05] [Elemental (#1)] Spent 170.775 mana from {SpellID: 10448} (1658.446 --> 1487.671) of 5590 total.
+[147.05] [Elemental (#1)] Spent 170.775 mana from {SpellID: 10448} (1604.446 --> 1433.671) of 5590 total.
 [147.05] [Target 1] Aura gained: {SpellID: 10448}
 [147.05] [Elemental (#1)] [Target 1] {SpellID: 10448} Crit for 625.020 damage (SpellSchool: 4). (Threat: 612.520)
-[147.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1487.671 --> 1490.646) of 5590 total.
-[147.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1490.646 --> 1493.621) of 5590 total.
-[147.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1493.621 --> 1496.596) of 5590 total.
-[147.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1496.596 --> 1499.571) of 5590 total.
-[147.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1499.571 --> 1502.546) of 5590 total.
+[147.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1433.671 --> 1436.646) of 5590 total.
+[147.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1436.646 --> 1439.621) of 5590 total.
+[147.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1439.621 --> 1442.596) of 5590 total.
+[147.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1442.596 --> 1445.571) of 5590 total.
+[147.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1445.571 --> 1448.546) of 5590 total.
 [147.60] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 69.667 damage (SpellSchool: 4). (Threat: 68.273)
-[147.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1502.546 --> 1505.521) of 5590 total.
-[147.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1505.521 --> 1508.496) of 5590 total.
-[147.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1508.496 --> 1511.471) of 5590 total.
-[147.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1511.471 --> 1514.446) of 5590 total.
-[148.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1514.446 --> 1517.421) of 5590 total.
+[147.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1448.546 --> 1451.521) of 5590 total.
+[147.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1451.521 --> 1454.496) of 5590 total.
+[147.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1454.496 --> 1457.471) of 5590 total.
+[147.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1457.471 --> 1460.446) of 5590 total.
+[148.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1460.446 --> 1463.421) of 5590 total.
 [148.05] [Elemental (#1)] [Target 1] {SpellID: 15208} Crit for 1561.196 damage (SpellSchool: 8). (Threat: 1529.972)
-[148.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1517.421 --> 1520.396) of 5590 total.
-[148.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1520.396 --> 1523.371) of 5590 total.
-[148.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1523.371 --> 1526.346) of 5590 total.
-[148.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1526.346 --> 1529.321) of 5590 total.
-[148.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1529.321 --> 1532.296) of 5590 total.
+[148.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1463.421 --> 1466.396) of 5590 total.
+[148.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1466.396 --> 1469.371) of 5590 total.
+[148.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1469.371 --> 1472.346) of 5590 total.
+[148.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1472.346 --> 1475.321) of 5590 total.
+[148.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1475.321 --> 1478.296) of 5590 total.
 [148.55] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
-[148.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1532.296 --> 1535.271) of 5590 total.
-[148.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1535.271 --> 1538.246) of 5590 total.
+[148.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1478.296 --> 1481.271) of 5590 total.
+[148.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1481.271 --> 1484.246) of 5590 total.
 [148.75] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [148.75] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[148.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1538.246 --> 1541.221) of 5590 total.
-[148.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1541.221 --> 1544.196) of 5590 total.
-[149.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1544.196 --> 1547.171) of 5590 total.
-[149.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1547.171 --> 1550.146) of 5590 total.
-[149.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1550.146 --> 1553.121) of 5590 total.
-[149.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1553.121 --> 1556.096) of 5590 total.
-[149.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1556.096 --> 1559.071) of 5590 total.
-[149.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1559.071 --> 1562.046) of 5590 total.
-[149.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1562.046 --> 1565.021) of 5590 total.
-[149.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1565.021 --> 1567.996) of 5590 total.
+[148.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1484.246 --> 1487.221) of 5590 total.
+[148.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1487.221 --> 1490.196) of 5590 total.
+[149.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1490.196 --> 1493.171) of 5590 total.
+[149.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1493.171 --> 1496.146) of 5590 total.
+[149.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1496.146 --> 1499.121) of 5590 total.
+[149.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1499.121 --> 1502.096) of 5590 total.
+[149.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1502.096 --> 1505.071) of 5590 total.
+[149.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1505.071 --> 1508.046) of 5590 total.
+[149.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1508.046 --> 1511.021) of 5590 total.
+[149.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1511.021 --> 1513.996) of 5590 total.
 [149.80] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 66.302 damage (SpellSchool: 4). (Threat: 64.976)
-[149.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1567.996 --> 1570.971) of 5590 total.
-[149.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1570.971 --> 1573.946) of 5590 total.
-[150.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1573.946 --> 1576.921) of 5590 total.
+[149.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1513.996 --> 1516.971) of 5590 total.
+[149.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1516.971 --> 1519.946) of 5590 total.
+[150.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1519.946 --> 1522.921) of 5590 total.
 [150.05] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Crit for 223.560 damage (SpellSchool: 4). (Threat: 219.089)
-[150.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1576.921 --> 1579.896) of 5590 total.
-[150.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1579.896 --> 1582.871) of 5590 total.
-[150.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1582.871 --> 1585.846) of 5590 total.
-[150.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1585.846 --> 1588.821) of 5590 total.
-[150.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1588.821 --> 1591.796) of 5590 total.
-[150.55] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 2m30.546000002s.
+[150.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1522.921 --> 1525.896) of 5590 total.
+[150.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1525.896 --> 1528.871) of 5590 total.
+[150.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1528.871 --> 1531.846) of 5590 total.
+[150.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1531.846 --> 1534.821) of 5590 total.
+[150.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1534.821 --> 1537.796) of 5590 total.
 [150.55] [Elemental (#1)] Completed cast {SpellID: 15208}
-[150.55] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1591.796 --> 1393.796) of 5590 total.
+[150.55] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1537.796 --> 1339.796) of 5590 total.
 [150.55] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
-[150.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1393.796 --> 1396.771) of 5590 total.
-[150.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1396.771 --> 1399.746) of 5590 total.
-[150.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1399.746 --> 1402.721) of 5590 total.
-[150.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1402.721 --> 1405.696) of 5590 total.
+[150.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1339.796 --> 1342.771) of 5590 total.
+[150.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1342.771 --> 1345.746) of 5590 total.
+[150.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1345.746 --> 1348.721) of 5590 total.
+[150.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1348.721 --> 1351.696) of 5590 total.
 [150.95] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [150.95] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[151.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1405.696 --> 1408.671) of 5590 total.
-[151.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1408.671 --> 1411.646) of 5590 total.
-[151.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1411.646 --> 1414.621) of 5590 total.
-[151.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1414.621 --> 1417.596) of 5590 total.
-[151.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1417.596 --> 1420.571) of 5590 total.
-[151.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1420.571 --> 1423.546) of 5590 total.
+[151.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1351.696 --> 1354.671) of 5590 total.
+[151.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1354.671 --> 1357.646) of 5590 total.
+[151.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1357.646 --> 1360.621) of 5590 total.
+[151.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1360.621 --> 1363.596) of 5590 total.
+[151.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1363.596 --> 1366.571) of 5590 total.
+[151.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1366.571 --> 1369.546) of 5590 total.
 [151.55] [Elemental (#1)] [Target 1] {SpellID: 15208} Hit for 784.017 damage (SpellSchool: 8). (Threat: 768.337)
 [151.55] [Elemental (#1)] Casting {SpellID: 15208, Tag: 6} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [151.55] [Elemental (#1)] Completed cast {SpellID: 15208, Tag: 6}
-[151.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1423.546 --> 1426.521) of 5590 total.
-[151.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1426.521 --> 1429.496) of 5590 total.
-[151.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1429.496 --> 1432.471) of 5590 total.
-[151.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1432.471 --> 1435.446) of 5590 total.
+[151.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1369.546 --> 1372.521) of 5590 total.
+[151.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1372.521 --> 1375.496) of 5590 total.
+[151.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1375.496 --> 1378.471) of 5590 total.
+[151.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1378.471 --> 1381.446) of 5590 total.
 [152.00] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 62.062 damage (SpellSchool: 4). (Threat: 60.820)
-[152.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1435.446 --> 1438.421) of 5590 total.
-[152.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1438.421 --> 1441.396) of 5590 total.
-[152.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1441.396 --> 1444.371) of 5590 total.
-[152.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1444.371 --> 1447.346) of 5590 total.
-[152.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1447.346 --> 1450.321) of 5590 total.
-[152.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1450.321 --> 1453.296) of 5590 total.
-[152.55] [Elemental (#1)] Queueing up {SpellID: 1326047} to cast at 2m32.546000002s.
+[152.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1381.446 --> 1384.421) of 5590 total.
+[152.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1384.421 --> 1387.396) of 5590 total.
+[152.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1387.396 --> 1390.371) of 5590 total.
+[152.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1390.371 --> 1393.346) of 5590 total.
+[152.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1393.346 --> 1396.321) of 5590 total.
+[152.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1396.321 --> 1399.296) of 5590 total.
 [152.55] [Elemental (#1)] Completed cast {SpellID: 15208}
-[152.55] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1453.296 --> 1255.296) of 5590 total.
+[152.55] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1399.296 --> 1201.296) of 5590 total.
 [152.55] [Elemental (#1)] Aura gained: {SpellID: 16246}
 [152.55] [Elemental (#1)] {SpellID: 16246} stacks: 0 --> 1
 [152.55] [Elemental (#1)] Casting {SpellID: 1326047} (Cost = 0.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 9
 [152.55] [Elemental (#1)] [Target 1] {SpellID: 15208, Tag: 6} Hit for 370.526 damage (SpellSchool: 8). (Threat: 0.000)
-[152.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1255.296 --> 1258.271) of 5590 total.
-[152.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1258.271 --> 1261.246) of 5590 total.
-[152.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1261.246 --> 1264.221) of 5590 total.
-[152.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1264.221 --> 1267.196) of 5590 total.
-[153.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1267.196 --> 1270.171) of 5590 total.
+[152.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1201.296 --> 1204.271) of 5590 total.
+[152.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1204.271 --> 1207.246) of 5590 total.
+[152.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1207.246 --> 1210.221) of 5590 total.
+[152.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1210.221 --> 1213.196) of 5590 total.
+[153.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1213.196 --> 1216.171) of 5590 total.
 [153.05] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
-[153.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1270.171 --> 1273.146) of 5590 total.
+[153.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1216.171 --> 1219.146) of 5590 total.
 [153.15] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [153.15] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[153.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1273.146 --> 1276.121) of 5590 total.
-[153.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1276.121 --> 1279.096) of 5590 total.
-[153.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1279.096 --> 1282.071) of 5590 total.
-[153.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1282.071 --> 1285.046) of 5590 total.
+[153.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1219.146 --> 1222.121) of 5590 total.
+[153.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1222.121 --> 1225.096) of 5590 total.
+[153.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1225.096 --> 1228.071) of 5590 total.
+[153.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1228.071 --> 1231.046) of 5590 total.
 [153.55] [Elemental (#1)] [Target 1] {SpellID: 15208} Hit for 776.939 damage (SpellSchool: 8). (Threat: 761.400)
-[153.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1285.046 --> 1288.021) of 5590 total.
-[153.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1288.021 --> 1290.996) of 5590 total.
-[153.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1290.996 --> 1293.971) of 5590 total.
-[153.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1293.971 --> 1296.946) of 5590 total.
-[154.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1296.946 --> 1299.921) of 5590 total.
-[154.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1299.921 --> 1302.896) of 5590 total.
+[153.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1231.046 --> 1234.021) of 5590 total.
+[153.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1234.021 --> 1236.996) of 5590 total.
+[153.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1236.996 --> 1239.971) of 5590 total.
+[153.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1239.971 --> 1242.946) of 5590 total.
+[154.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1242.946 --> 1245.921) of 5590 total.
+[154.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1245.921 --> 1248.896) of 5590 total.
 [154.20] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 61.517 damage (SpellSchool: 4). (Threat: 60.286)
-[154.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1302.896 --> 1305.871) of 5590 total.
-[154.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1305.871 --> 1308.846) of 5590 total.
-[154.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1308.846 --> 1311.821) of 5590 total.
-[154.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1311.821 --> 1314.796) of 5590 total.
-[154.55] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 2m34.546000002s.
+[154.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1248.896 --> 1251.871) of 5590 total.
+[154.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1251.871 --> 1254.846) of 5590 total.
+[154.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1254.846 --> 1257.821) of 5590 total.
+[154.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1257.821 --> 1260.796) of 5590 total.
 [154.55] [Elemental (#1)] Completed cast {SpellID: 1326047}
 [154.55] [Elemental (#1)] {SpellID: 16246} stacks: 1 --> 0
 [154.55] [Elemental (#1)] Aura faded: {SpellID: 16246}
 [154.55] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
-[154.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1314.796 --> 1317.771) of 5590 total.
-[154.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1317.771 --> 1320.746) of 5590 total.
-[154.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1320.746 --> 1323.721) of 5590 total.
-[154.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1323.721 --> 1326.696) of 5590 total.
-[155.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1326.696 --> 1329.671) of 5590 total.
-[155.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1329.671 --> 1332.646) of 5590 total.
-[155.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1332.646 --> 1335.621) of 5590 total.
-[155.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1335.621 --> 1338.596) of 5590 total.
+[154.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1260.796 --> 1263.771) of 5590 total.
+[154.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1263.771 --> 1266.746) of 5590 total.
+[154.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1266.746 --> 1269.721) of 5590 total.
+[154.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1269.721 --> 1272.696) of 5590 total.
+[155.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1272.696 --> 1275.671) of 5590 total.
+[155.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1275.671 --> 1278.646) of 5590 total.
+[155.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1278.646 --> 1281.621) of 5590 total.
+[155.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1281.621 --> 1284.596) of 5590 total.
 [155.35] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [155.35] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[155.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1338.596 --> 1341.571) of 5590 total.
-[155.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1341.571 --> 1344.546) of 5590 total.
+[155.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1284.596 --> 1287.571) of 5590 total.
+[155.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1287.571 --> 1290.546) of 5590 total.
 [155.55] [Elemental (#1)] [Target 1] {SpellID: 1326047} Crit for 1972.098 damage (SpellSchool: 4). (Threat: 1932.656)
-[155.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1344.546 --> 1347.521) of 5590 total.
-[155.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1347.521 --> 1350.496) of 5590 total.
-[155.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1350.496 --> 1353.471) of 5590 total.
-[155.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1353.471 --> 1356.446) of 5590 total.
-[156.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1356.446 --> 1359.421) of 5590 total.
+[155.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1290.546 --> 1293.521) of 5590 total.
+[155.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1293.521 --> 1296.496) of 5590 total.
+[155.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1296.496 --> 1299.471) of 5590 total.
+[155.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1299.471 --> 1302.446) of 5590 total.
+[156.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1302.446 --> 1305.421) of 5590 total.
 [156.05] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
-[156.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1359.421 --> 1362.396) of 5590 total.
-[156.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1362.396 --> 1365.371) of 5590 total.
-[156.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1365.371 --> 1368.346) of 5590 total.
+[156.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1305.421 --> 1308.396) of 5590 total.
+[156.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1308.396 --> 1311.371) of 5590 total.
+[156.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1311.371 --> 1314.346) of 5590 total.
 [156.40] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Crit for 117.529 damage (SpellSchool: 4). (Threat: 115.178)
-[156.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1368.346 --> 1371.321) of 5590 total.
-[156.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1371.321 --> 1374.296) of 5590 total.
-[156.55] [Elemental (#1)] Queueing up {SpellID: 15208} to cast at 2m36.546000002s.
+[156.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1314.346 --> 1317.321) of 5590 total.
+[156.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1317.321 --> 1320.296) of 5590 total.
 [156.55] [Elemental (#1)] Completed cast {SpellID: 15208}
-[156.55] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1374.296 --> 1176.296) of 5590 total.
+[156.55] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1320.296 --> 1122.296) of 5590 total.
 [156.55] [Elemental (#1)] Casting {SpellID: 15208} (Cost = 198.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 14
-[156.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1176.296 --> 1179.271) of 5590 total.
-[156.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1179.271 --> 1182.246) of 5590 total.
-[156.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1182.246 --> 1185.221) of 5590 total.
-[156.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1185.221 --> 1188.196) of 5590 total.
-[157.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1188.196 --> 1191.171) of 5590 total.
-[157.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1191.171 --> 1194.146) of 5590 total.
-[157.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1194.146 --> 1197.121) of 5590 total.
-[157.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1197.121 --> 1200.096) of 5590 total.
-[157.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1200.096 --> 1203.071) of 5590 total.
-[157.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1203.071 --> 1206.046) of 5590 total.
+[156.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1122.296 --> 1125.271) of 5590 total.
+[156.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1125.271 --> 1128.246) of 5590 total.
+[156.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1128.246 --> 1131.221) of 5590 total.
+[156.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1131.221 --> 1134.196) of 5590 total.
+[157.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1134.196 --> 1137.171) of 5590 total.
+[157.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1137.171 --> 1140.146) of 5590 total.
+[157.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1140.146 --> 1143.121) of 5590 total.
+[157.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1143.121 --> 1146.096) of 5590 total.
+[157.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1146.096 --> 1149.071) of 5590 total.
+[157.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1149.071 --> 1152.046) of 5590 total.
 [157.55] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [157.55] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
 [157.55] [Elemental (#1)] [Target 1] {SpellID: 15208} Hit for 796.662 damage (SpellSchool: 8). (Threat: 780.729)
-[157.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1206.046 --> 1209.021) of 5590 total.
-[157.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1209.021 --> 1211.996) of 5590 total.
-[157.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1211.996 --> 1214.971) of 5590 total.
-[157.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1214.971 --> 1217.946) of 5590 total.
-[158.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1217.946 --> 1220.921) of 5590 total.
-[158.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1220.921 --> 1223.896) of 5590 total.
-[158.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1223.896 --> 1226.871) of 5590 total.
-[158.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1226.871 --> 1229.846) of 5590 total.
-[158.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1229.846 --> 1232.821) of 5590 total.
-[158.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1232.821 --> 1235.796) of 5590 total.
-[158.55] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m38.546000002s.
+[157.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1152.046 --> 1155.021) of 5590 total.
+[157.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1155.021 --> 1157.996) of 5590 total.
+[157.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1157.996 --> 1160.971) of 5590 total.
+[157.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1160.971 --> 1163.946) of 5590 total.
+[158.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1163.946 --> 1166.921) of 5590 total.
+[158.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1166.921 --> 1169.896) of 5590 total.
+[158.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1169.896 --> 1172.871) of 5590 total.
+[158.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1172.871 --> 1175.846) of 5590 total.
+[158.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1175.846 --> 1178.821) of 5590 total.
+[158.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1178.821 --> 1181.796) of 5590 total.
 [158.55] [Elemental (#1)] Completed cast {SpellID: 15208}
-[158.55] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1235.796 --> 1037.796) of 5590 total.
+[158.55] [Elemental (#1)] Spent 198.000 mana from {SpellID: 15208} (1181.796 --> 983.796) of 5590 total.
 [158.55] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
 [158.60] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 62.688 damage (SpellSchool: 4). (Threat: 61.435)
-[158.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1037.796 --> 1040.771) of 5590 total.
-[158.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1040.771 --> 1043.746) of 5590 total.
-[158.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1043.746 --> 1046.721) of 5590 total.
-[158.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1046.721 --> 1049.696) of 5590 total.
-[159.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1049.696 --> 1052.671) of 5590 total.
+[158.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (983.796 --> 986.771) of 5590 total.
+[158.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (986.771 --> 989.746) of 5590 total.
+[158.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (989.746 --> 992.721) of 5590 total.
+[158.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (992.721 --> 995.696) of 5590 total.
+[159.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (995.696 --> 998.671) of 5590 total.
 [159.05] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Crit for 223.560 damage (SpellSchool: 4). (Threat: 219.089)
-[159.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1052.671 --> 1055.646) of 5590 total.
-[159.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1055.646 --> 1058.621) of 5590 total.
-[159.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1058.621 --> 1061.596) of 5590 total.
-[159.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1061.596 --> 1064.571) of 5590 total.
-[159.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1064.571 --> 1067.546) of 5590 total.
+[159.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (998.671 --> 1001.646) of 5590 total.
+[159.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1001.646 --> 1004.621) of 5590 total.
+[159.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1004.621 --> 1007.596) of 5590 total.
+[159.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1007.596 --> 1010.571) of 5590 total.
+[159.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1010.571 --> 1013.546) of 5590 total.
 [159.55] [Elemental (#1)] [Target 1] {SpellID: 15208} Crit for 1565.617 damage (SpellSchool: 8). (Threat: 1534.305)
-[159.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1067.546 --> 1070.521) of 5590 total.
-[159.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1070.521 --> 1073.496) of 5590 total.
+[159.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1013.546 --> 1016.521) of 5590 total.
+[159.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1016.521 --> 1019.496) of 5590 total.
 [159.75] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [159.75] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[159.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1073.496 --> 1076.471) of 5590 total.
-[159.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1076.471 --> 1079.446) of 5590 total.
-[160.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1079.446 --> 1082.421) of 5590 total.
-[160.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1082.421 --> 1085.396) of 5590 total.
-[160.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1085.396 --> 1088.371) of 5590 total.
-[160.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1088.371 --> 1091.346) of 5590 total.
-[160.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1091.346 --> 1094.321) of 5590 total.
-[160.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1094.321 --> 1097.296) of 5590 total.
-[160.55] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m40.546000002s.
+[159.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1019.496 --> 1022.471) of 5590 total.
+[159.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1022.471 --> 1025.446) of 5590 total.
+[160.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1025.446 --> 1028.421) of 5590 total.
+[160.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1028.421 --> 1031.396) of 5590 total.
+[160.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1031.396 --> 1034.371) of 5590 total.
+[160.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1034.371 --> 1037.346) of 5590 total.
+[160.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1037.346 --> 1040.321) of 5590 total.
+[160.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1040.321 --> 1043.296) of 5590 total.
 [160.55] [Elemental (#1)] Completed cast {SpellID: 10392}
-[160.55] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (1097.296 --> 953.296) of 5590 total.
+[160.55] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (1043.296 --> 899.296) of 5590 total.
 [160.55] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
-[160.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (953.296 --> 956.271) of 5590 total.
-[160.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (956.271 --> 959.246) of 5590 total.
+[160.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (899.296 --> 902.271) of 5590 total.
+[160.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (902.271 --> 905.246) of 5590 total.
 [160.80] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 63.170 damage (SpellSchool: 4). (Threat: 61.906)
-[160.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (959.246 --> 962.221) of 5590 total.
-[160.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (962.221 --> 965.196) of 5590 total.
-[161.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (965.196 --> 968.171) of 5590 total.
-[161.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (968.171 --> 971.146) of 5590 total.
-[161.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (971.146 --> 974.121) of 5590 total.
-[161.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (974.121 --> 977.096) of 5590 total.
-[161.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (977.096 --> 980.071) of 5590 total.
-[161.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (980.071 --> 983.046) of 5590 total.
+[160.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (905.246 --> 908.221) of 5590 total.
+[160.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (908.221 --> 911.196) of 5590 total.
+[161.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (911.196 --> 914.171) of 5590 total.
+[161.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (914.171 --> 917.146) of 5590 total.
+[161.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (917.146 --> 920.121) of 5590 total.
+[161.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (920.121 --> 923.096) of 5590 total.
+[161.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (923.096 --> 926.071) of 5590 total.
+[161.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (926.071 --> 929.046) of 5590 total.
 [161.55] [Elemental (#1)] [Target 1] {SpellID: 10392} Crit for 1372.729 damage (SpellSchool: 8). (Threat: 1345.274)
-[161.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (983.046 --> 986.021) of 5590 total.
-[161.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (986.021 --> 988.996) of 5590 total.
-[161.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (988.996 --> 991.971) of 5590 total.
-[161.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (991.971 --> 994.946) of 5590 total.
+[161.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (929.046 --> 932.021) of 5590 total.
+[161.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (932.021 --> 934.996) of 5590 total.
+[161.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (934.996 --> 937.971) of 5590 total.
+[161.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (937.971 --> 940.946) of 5590 total.
 [161.95] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [161.95] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[162.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (994.946 --> 997.921) of 5590 total.
+[162.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (940.946 --> 943.921) of 5590 total.
 [162.05] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
-[162.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (997.921 --> 1000.896) of 5590 total.
-[162.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1000.896 --> 1003.871) of 5590 total.
-[162.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1003.871 --> 1006.846) of 5590 total.
-[162.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1006.846 --> 1009.821) of 5590 total.
-[162.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (1009.821 --> 1012.796) of 5590 total.
-[162.55] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m42.546000002s.
+[162.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (943.921 --> 946.896) of 5590 total.
+[162.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (946.896 --> 949.871) of 5590 total.
+[162.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (949.871 --> 952.846) of 5590 total.
+[162.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (952.846 --> 955.821) of 5590 total.
+[162.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (955.821 --> 958.796) of 5590 total.
 [162.55] [Elemental (#1)] Completed cast {SpellID: 10392}
-[162.55] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (1012.796 --> 868.796) of 5590 total.
+[162.55] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (958.796 --> 814.796) of 5590 total.
 [162.55] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
-[162.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (868.796 --> 871.771) of 5590 total.
-[162.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (871.771 --> 874.746) of 5590 total.
-[162.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (874.746 --> 877.721) of 5590 total.
-[162.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (877.721 --> 880.696) of 5590 total.
+[162.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (814.796 --> 817.771) of 5590 total.
+[162.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (817.771 --> 820.746) of 5590 total.
+[162.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (820.746 --> 823.721) of 5590 total.
+[162.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (823.721 --> 826.696) of 5590 total.
 [163.00] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 67.317 damage (SpellSchool: 4). (Threat: 65.971)
-[163.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (880.696 --> 883.671) of 5590 total.
-[163.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (883.671 --> 886.646) of 5590 total.
-[163.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (886.646 --> 889.621) of 5590 total.
-[163.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (889.621 --> 892.596) of 5590 total.
-[163.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (892.596 --> 895.571) of 5590 total.
-[163.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (895.571 --> 898.546) of 5590 total.
+[163.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (826.696 --> 829.671) of 5590 total.
+[163.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (829.671 --> 832.646) of 5590 total.
+[163.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (832.646 --> 835.621) of 5590 total.
+[163.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (835.621 --> 838.596) of 5590 total.
+[163.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (838.596 --> 841.571) of 5590 total.
+[163.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (841.571 --> 844.546) of 5590 total.
 [163.55] [Elemental (#1)] [Target 1] {SpellID: 10392} Hit for 738.204 damage (SpellSchool: 8). (Threat: 723.440)
 [163.55] [Elemental (#1)] Casting {SpellID: 10392, Tag: 6} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [163.55] [Elemental (#1)] Completed cast {SpellID: 10392, Tag: 6}
-[163.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (898.546 --> 901.521) of 5590 total.
-[163.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (901.521 --> 904.496) of 5590 total.
-[163.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (904.496 --> 907.471) of 5590 total.
-[163.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (907.471 --> 910.446) of 5590 total.
-[164.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (910.446 --> 913.421) of 5590 total.
-[164.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (913.421 --> 916.396) of 5590 total.
+[163.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (844.546 --> 847.521) of 5590 total.
+[163.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (847.521 --> 850.496) of 5590 total.
+[163.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (850.496 --> 853.471) of 5590 total.
+[163.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (853.471 --> 856.446) of 5590 total.
+[164.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (856.446 --> 859.421) of 5590 total.
+[164.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (859.421 --> 862.396) of 5590 total.
 [164.15] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [164.15] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[164.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (916.396 --> 919.371) of 5590 total.
-[164.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (919.371 --> 922.346) of 5590 total.
-[164.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (922.346 --> 925.321) of 5590 total.
-[164.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (925.321 --> 928.296) of 5590 total.
-[164.55] [Elemental (#1)] Queueing up {SpellID: 1326047} to cast at 2m44.546000002s.
+[164.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (862.396 --> 865.371) of 5590 total.
+[164.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (865.371 --> 868.346) of 5590 total.
+[164.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (868.346 --> 871.321) of 5590 total.
+[164.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (871.321 --> 874.296) of 5590 total.
 [164.55] [Elemental (#1)] Completed cast {SpellID: 10392}
-[164.55] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (928.296 --> 784.296) of 5590 total.
+[164.55] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (874.296 --> 730.296) of 5590 total.
 [164.55] [Elemental (#1)] Casting {SpellID: 1326047} (Cost = 238.500, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 9
 [164.55] [Elemental (#1)] [Target 1] {SpellID: 10392, Tag: 6} Hit for 366.158 damage (SpellSchool: 8). (Threat: 0.000)
-[164.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (784.296 --> 787.271) of 5590 total.
-[164.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (787.271 --> 790.246) of 5590 total.
-[164.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (790.246 --> 793.221) of 5590 total.
-[164.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (793.221 --> 796.196) of 5590 total.
-[165.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (796.196 --> 799.171) of 5590 total.
+[164.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (730.296 --> 733.271) of 5590 total.
+[164.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (733.271 --> 736.246) of 5590 total.
+[164.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (736.246 --> 739.221) of 5590 total.
+[164.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (739.221 --> 742.196) of 5590 total.
+[165.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (742.196 --> 745.171) of 5590 total.
 [165.05] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
-[165.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (799.171 --> 802.146) of 5590 total.
+[165.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (745.171 --> 748.146) of 5590 total.
 [165.20] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Crit for 117.848 damage (SpellSchool: 4). (Threat: 115.491)
-[165.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (802.146 --> 805.121) of 5590 total.
-[165.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (805.121 --> 808.096) of 5590 total.
-[165.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (808.096 --> 811.071) of 5590 total.
-[165.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (811.071 --> 814.046) of 5590 total.
+[165.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (748.146 --> 751.121) of 5590 total.
+[165.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (751.121 --> 754.096) of 5590 total.
+[165.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (754.096 --> 757.071) of 5590 total.
+[165.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (757.071 --> 760.046) of 5590 total.
 [165.55] [Elemental (#1)] [Target 1] {SpellID: 10392} Hit for 691.682 damage (SpellSchool: 8). (Threat: 677.848)
-[165.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (814.046 --> 817.021) of 5590 total.
-[165.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (817.021 --> 819.996) of 5590 total.
-[165.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (819.996 --> 822.971) of 5590 total.
-[165.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (822.971 --> 825.946) of 5590 total.
-[166.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (825.946 --> 828.921) of 5590 total.
-[166.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (828.921 --> 831.896) of 5590 total.
-[166.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (831.896 --> 834.871) of 5590 total.
-[166.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (834.871 --> 837.846) of 5590 total.
+[165.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (760.046 --> 763.021) of 5590 total.
+[165.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (763.021 --> 765.996) of 5590 total.
+[165.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (765.996 --> 768.971) of 5590 total.
+[165.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (768.971 --> 771.946) of 5590 total.
+[166.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (771.946 --> 774.921) of 5590 total.
+[166.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (774.921 --> 777.896) of 5590 total.
+[166.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (777.896 --> 780.871) of 5590 total.
+[166.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (780.871 --> 783.846) of 5590 total.
 [166.35] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [166.35] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[166.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (837.846 --> 840.821) of 5590 total.
-[166.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (840.821 --> 843.796) of 5590 total.
-[166.55] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m46.546000002s.
+[166.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (783.846 --> 786.821) of 5590 total.
+[166.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (786.821 --> 789.796) of 5590 total.
 [166.55] [Elemental (#1)] Completed cast {SpellID: 1326047}
-[166.55] [Elemental (#1)] Spent 238.500 mana from {SpellID: 1326047} (843.796 --> 605.296) of 5590 total.
+[166.55] [Elemental (#1)] Spent 238.500 mana from {SpellID: 1326047} (789.796 --> 551.296) of 5590 total.
 [166.55] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
-[166.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (605.296 --> 608.271) of 5590 total.
-[166.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (608.271 --> 611.246) of 5590 total.
-[166.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (611.246 --> 614.221) of 5590 total.
-[166.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (614.221 --> 617.196) of 5590 total.
-[167.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (617.196 --> 620.171) of 5590 total.
-[167.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (620.171 --> 623.146) of 5590 total.
-[167.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (623.146 --> 626.121) of 5590 total.
-[167.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (626.121 --> 629.096) of 5590 total.
+[166.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (551.296 --> 554.271) of 5590 total.
+[166.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (554.271 --> 557.246) of 5590 total.
+[166.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (557.246 --> 560.221) of 5590 total.
+[166.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (560.221 --> 563.196) of 5590 total.
+[167.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (563.196 --> 566.171) of 5590 total.
+[167.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (566.171 --> 569.146) of 5590 total.
+[167.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (569.146 --> 572.121) of 5590 total.
+[167.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (572.121 --> 575.096) of 5590 total.
 [167.40] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 61.019 damage (SpellSchool: 4). (Threat: 59.799)
-[167.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (629.096 --> 632.071) of 5590 total.
-[167.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (632.071 --> 635.046) of 5590 total.
+[167.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (575.096 --> 578.071) of 5590 total.
+[167.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (578.071 --> 581.046) of 5590 total.
 [167.55] [Elemental (#1)] [Target 1] {SpellID: 1326047} Hit for 905.691 damage (SpellSchool: 4). (Threat: 887.577)
-[167.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (635.046 --> 638.021) of 5590 total.
-[167.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (638.021 --> 640.996) of 5590 total.
-[167.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (640.996 --> 643.971) of 5590 total.
-[167.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (643.971 --> 646.946) of 5590 total.
-[168.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (646.946 --> 649.921) of 5590 total.
+[167.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (581.046 --> 584.021) of 5590 total.
+[167.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (584.021 --> 586.996) of 5590 total.
+[167.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (586.996 --> 589.971) of 5590 total.
+[167.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (589.971 --> 592.946) of 5590 total.
+[168.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (592.946 --> 595.921) of 5590 total.
 [168.05] [Target 1] Aura faded: {SpellID: 10448}
 [168.05] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
-[168.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (649.921 --> 652.896) of 5590 total.
-[168.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (652.896 --> 655.871) of 5590 total.
-[168.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (655.871 --> 658.846) of 5590 total.
-[168.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (658.846 --> 661.821) of 5590 total.
-[168.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (661.821 --> 664.796) of 5590 total.
+[168.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (595.921 --> 598.896) of 5590 total.
+[168.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (598.896 --> 601.871) of 5590 total.
+[168.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (601.871 --> 604.846) of 5590 total.
+[168.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (604.846 --> 607.821) of 5590 total.
+[168.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (607.821 --> 610.796) of 5590 total.
 [168.55] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [168.55] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[168.55] [Elemental (#1)] Queueing up {SpellID: 10448} to cast at 2m48.546000002s.
 [168.55] [Elemental (#1)] Completed cast {SpellID: 10392}
-[168.55] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (664.796 --> 520.796) of 5590 total.
+[168.55] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (610.796 --> 466.796) of 5590 total.
 [168.55] [Elemental (#1)] Casting {SpellID: 10448} (Cost = 170.775, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 10
 [168.55] [Elemental (#1)] Completed cast {SpellID: 10448}
-[168.55] [Elemental (#1)] Spent 170.775 mana from {SpellID: 10448} (520.796 --> 350.021) of 5590 total.
+[168.55] [Elemental (#1)] Spent 170.775 mana from {SpellID: 10448} (466.796 --> 296.021) of 5590 total.
 [168.55] [Target 1] Aura gained: {SpellID: 10448}
 [168.55] [Elemental (#1)] [Target 1] {SpellID: 10448} Hit for 312.510 damage (SpellSchool: 4). (Threat: 306.260)
-[168.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (350.021 --> 352.996) of 5590 total.
-[168.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (352.996 --> 355.971) of 5590 total.
-[168.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (355.971 --> 358.946) of 5590 total.
-[168.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (358.946 --> 361.921) of 5590 total.
-[169.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (361.921 --> 364.896) of 5590 total.
-[169.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (364.896 --> 367.871) of 5590 total.
-[169.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (367.871 --> 370.846) of 5590 total.
-[169.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (370.846 --> 373.821) of 5590 total.
-[169.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (373.821 --> 376.796) of 5590 total.
-[169.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (376.796 --> 379.771) of 5590 total.
+[168.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (296.021 --> 298.996) of 5590 total.
+[168.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (298.996 --> 301.971) of 5590 total.
+[168.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (301.971 --> 304.946) of 5590 total.
+[168.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (304.946 --> 307.921) of 5590 total.
+[169.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (307.921 --> 310.896) of 5590 total.
+[169.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (310.896 --> 313.871) of 5590 total.
+[169.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (313.871 --> 316.846) of 5590 total.
+[169.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (316.846 --> 319.821) of 5590 total.
+[169.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (319.821 --> 322.796) of 5590 total.
+[169.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (322.796 --> 325.771) of 5590 total.
 [169.55] [Elemental (#1)] [Target 1] {SpellID: 10392} Hit for 759.411 damage (SpellSchool: 8). (Threat: 744.222)
 [169.60] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 74.637 damage (SpellSchool: 4). (Threat: 73.144)
-[169.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (379.771 --> 382.746) of 5590 total.
-[169.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (382.746 --> 385.721) of 5590 total.
-[169.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (385.721 --> 388.696) of 5590 total.
-[169.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (388.696 --> 391.671) of 5590 total.
-[170.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (391.671 --> 394.646) of 5590 total.
+[169.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (325.771 --> 328.746) of 5590 total.
+[169.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (328.746 --> 331.721) of 5590 total.
+[169.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (331.721 --> 334.696) of 5590 total.
+[169.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (334.696 --> 337.671) of 5590 total.
+[170.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (337.671 --> 340.646) of 5590 total.
 [170.05] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
-[170.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (394.646 --> 397.621) of 5590 total.
-[170.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (397.621 --> 400.596) of 5590 total.
-[170.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (400.596 --> 403.571) of 5590 total.
-[170.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (403.571 --> 406.546) of 5590 total.
-[170.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (406.546 --> 409.521) of 5590 total.
-[170.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (409.521 --> 412.496) of 5590 total.
-[170.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (412.496 --> 415.471) of 5590 total.
+[170.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (340.646 --> 343.621) of 5590 total.
+[170.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (343.621 --> 346.596) of 5590 total.
+[170.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (346.596 --> 349.571) of 5590 total.
+[170.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (349.571 --> 352.546) of 5590 total.
+[170.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (352.546 --> 355.521) of 5590 total.
+[170.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (355.521 --> 358.496) of 5590 total.
+[170.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (358.496 --> 361.471) of 5590 total.
 [170.75] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [170.75] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[170.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (415.471 --> 418.446) of 5590 total.
-[170.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (418.446 --> 421.421) of 5590 total.
-[171.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (421.421 --> 424.396) of 5590 total.
-[171.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (424.396 --> 427.371) of 5590 total.
-[171.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (427.371 --> 430.346) of 5590 total.
-[171.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (430.346 --> 433.321) of 5590 total.
-[171.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (433.321 --> 436.296) of 5590 total.
-[171.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (436.296 --> 439.271) of 5590 total.
+[170.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (361.471 --> 364.446) of 5590 total.
+[170.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (364.446 --> 367.421) of 5590 total.
+[171.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (367.421 --> 370.396) of 5590 total.
+[171.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (370.396 --> 373.371) of 5590 total.
+[171.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (373.371 --> 376.346) of 5590 total.
+[171.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (376.346 --> 379.321) of 5590 total.
+[171.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (379.321 --> 382.296) of 5590 total.
+[171.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (382.296 --> 385.271) of 5590 total.
 [171.55] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
-[171.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (439.271 --> 442.246) of 5590 total.
-[171.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (442.246 --> 445.221) of 5590 total.
+[171.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (385.271 --> 388.246) of 5590 total.
+[171.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (388.246 --> 391.221) of 5590 total.
 [171.80] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Crit for 148.570 damage (SpellSchool: 4). (Threat: 145.598)
-[171.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (445.221 --> 448.196) of 5590 total.
-[171.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (448.196 --> 451.171) of 5590 total.
-[172.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (451.171 --> 454.146) of 5590 total.
-[172.05] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m52.046000002s.
+[171.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (391.221 --> 394.196) of 5590 total.
+[171.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (394.196 --> 397.171) of 5590 total.
+[172.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (397.171 --> 400.146) of 5590 total.
 [172.05] [Elemental (#1)] Completed cast {SpellID: 10392}
-[172.05] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (454.146 --> 310.146) of 5590 total.
+[172.05] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (400.146 --> 256.146) of 5590 total.
 [172.05] [Elemental (#1)] Aura gained: {SpellID: 16246}
 [172.05] [Elemental (#1)] {SpellID: 16246} stacks: 0 --> 1
 [172.05] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 0.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
-[172.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (310.146 --> 313.121) of 5590 total.
-[172.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (313.121 --> 316.096) of 5590 total.
-[172.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (316.096 --> 319.071) of 5590 total.
-[172.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (319.071 --> 322.046) of 5590 total.
-[172.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (322.046 --> 325.021) of 5590 total.
-[172.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (325.021 --> 327.996) of 5590 total.
-[172.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (327.996 --> 330.971) of 5590 total.
-[172.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (330.971 --> 333.946) of 5590 total.
-[172.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (333.946 --> 336.921) of 5590 total.
+[172.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (256.146 --> 259.121) of 5590 total.
+[172.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (259.121 --> 262.096) of 5590 total.
+[172.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (262.096 --> 265.071) of 5590 total.
+[172.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (265.071 --> 268.046) of 5590 total.
+[172.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (268.046 --> 271.021) of 5590 total.
+[172.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (271.021 --> 273.996) of 5590 total.
+[172.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (273.996 --> 276.971) of 5590 total.
+[172.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (276.971 --> 279.946) of 5590 total.
+[172.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (279.946 --> 282.921) of 5590 total.
 [172.95] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [172.95] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[173.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (336.921 --> 339.896) of 5590 total.
+[173.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (282.921 --> 285.896) of 5590 total.
 [173.05] [Elemental (#1)] [Target 1] {SpellID: 10392} Crit for 1507.044 damage (SpellSchool: 8). (Threat: 1476.904)
-[173.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (339.896 --> 342.871) of 5590 total.
-[173.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (342.871 --> 345.846) of 5590 total.
-[173.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (345.846 --> 348.821) of 5590 total.
-[173.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (348.821 --> 351.796) of 5590 total.
-[173.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (351.796 --> 354.771) of 5590 total.
-[173.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (354.771 --> 357.746) of 5590 total.
-[173.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (357.746 --> 360.721) of 5590 total.
-[173.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (360.721 --> 363.696) of 5590 total.
-[173.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (363.696 --> 366.671) of 5590 total.
+[173.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (285.896 --> 288.871) of 5590 total.
+[173.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (288.871 --> 291.846) of 5590 total.
+[173.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (291.846 --> 294.821) of 5590 total.
+[173.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (294.821 --> 297.796) of 5590 total.
+[173.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (297.796 --> 300.771) of 5590 total.
+[173.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (300.771 --> 303.746) of 5590 total.
+[173.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (303.746 --> 306.721) of 5590 total.
+[173.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (306.721 --> 309.696) of 5590 total.
+[173.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (309.696 --> 312.671) of 5590 total.
 [174.00] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 58.650 damage (SpellSchool: 4). (Threat: 57.477)
-[174.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (366.671 --> 369.646) of 5590 total.
-[174.05] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m54.046000002s.
+[174.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (312.671 --> 315.646) of 5590 total.
 [174.05] [Elemental (#1)] Completed cast {SpellID: 10392}
 [174.05] [Elemental (#1)] {SpellID: 16246} stacks: 1 --> 0
 [174.05] [Elemental (#1)] Aura faded: {SpellID: 16246}
 [174.05] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
-[174.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (369.646 --> 372.621) of 5590 total.
-[174.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (372.621 --> 375.596) of 5590 total.
-[174.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (375.596 --> 378.571) of 5590 total.
-[174.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (378.571 --> 381.546) of 5590 total.
-[174.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (381.546 --> 384.521) of 5590 total.
+[174.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (315.646 --> 318.621) of 5590 total.
+[174.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (318.621 --> 321.596) of 5590 total.
+[174.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (321.596 --> 324.571) of 5590 total.
+[174.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (324.571 --> 327.546) of 5590 total.
+[174.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (327.546 --> 330.521) of 5590 total.
 [174.55] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
-[174.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (384.521 --> 387.496) of 5590 total.
-[174.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (387.496 --> 390.471) of 5590 total.
-[174.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (390.471 --> 393.446) of 5590 total.
-[174.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (393.446 --> 396.421) of 5590 total.
-[175.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (396.421 --> 399.396) of 5590 total.
+[174.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (330.521 --> 333.496) of 5590 total.
+[174.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (333.496 --> 336.471) of 5590 total.
+[174.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (336.471 --> 339.446) of 5590 total.
+[174.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (339.446 --> 342.421) of 5590 total.
+[175.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (342.421 --> 345.396) of 5590 total.
 [175.05] [Elemental (#1)] [Target 1] {SpellID: 10392} Hit for 741.711 damage (SpellSchool: 8). (Threat: 726.877)
-[175.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (399.396 --> 402.371) of 5590 total.
+[175.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (345.396 --> 348.371) of 5590 total.
 [175.15] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [175.15] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[175.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (402.371 --> 405.346) of 5590 total.
-[175.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (405.346 --> 408.321) of 5590 total.
-[175.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (408.321 --> 411.296) of 5590 total.
-[175.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (411.296 --> 414.271) of 5590 total.
-[175.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (414.271 --> 417.246) of 5590 total.
-[175.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (417.246 --> 420.221) of 5590 total.
-[175.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (420.221 --> 423.196) of 5590 total.
-[175.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (423.196 --> 426.171) of 5590 total.
-[176.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (426.171 --> 429.146) of 5590 total.
-[176.05] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m56.046000002s.
+[175.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (348.371 --> 351.346) of 5590 total.
+[175.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (351.346 --> 354.321) of 5590 total.
+[175.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (354.321 --> 357.296) of 5590 total.
+[175.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (357.296 --> 360.271) of 5590 total.
+[175.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (360.271 --> 363.246) of 5590 total.
+[175.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (363.246 --> 366.221) of 5590 total.
+[175.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (366.221 --> 369.196) of 5590 total.
+[175.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (369.196 --> 372.171) of 5590 total.
+[176.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (372.171 --> 375.146) of 5590 total.
 [176.05] [Elemental (#1)] Completed cast {SpellID: 10392}
-[176.05] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (429.146 --> 285.146) of 5590 total.
+[176.05] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (375.146 --> 231.146) of 5590 total.
 [176.05] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
-[176.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (285.146 --> 288.121) of 5590 total.
+[176.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (231.146 --> 234.121) of 5590 total.
 [176.20] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 61.142 damage (SpellSchool: 4). (Threat: 59.919)
-[176.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (288.121 --> 291.096) of 5590 total.
-[176.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (291.096 --> 294.071) of 5590 total.
-[176.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (294.071 --> 297.046) of 5590 total.
-[176.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (297.046 --> 300.021) of 5590 total.
-[176.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (300.021 --> 302.996) of 5590 total.
-[176.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (302.996 --> 305.971) of 5590 total.
-[176.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (305.971 --> 308.946) of 5590 total.
-[176.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (308.946 --> 311.921) of 5590 total.
-[177.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (311.921 --> 314.896) of 5590 total.
+[176.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (234.121 --> 237.096) of 5590 total.
+[176.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (237.096 --> 240.071) of 5590 total.
+[176.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (240.071 --> 243.046) of 5590 total.
+[176.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (243.046 --> 246.021) of 5590 total.
+[176.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (246.021 --> 248.996) of 5590 total.
+[176.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (248.996 --> 251.971) of 5590 total.
+[176.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (251.971 --> 254.946) of 5590 total.
+[176.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (254.946 --> 257.921) of 5590 total.
+[177.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (257.921 --> 260.896) of 5590 total.
 [177.05] [Elemental (#1)] [Target 1] {SpellID: 10392} Hit for 701.732 damage (SpellSchool: 8). (Threat: 687.698)
-[177.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (314.896 --> 317.871) of 5590 total.
-[177.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (317.871 --> 320.846) of 5590 total.
-[177.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (320.846 --> 323.821) of 5590 total.
+[177.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (260.896 --> 263.871) of 5590 total.
+[177.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (263.871 --> 266.846) of 5590 total.
+[177.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (266.846 --> 269.821) of 5590 total.
 [177.35] [Elemental (#1)] Casting {SpellID: 10438, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [177.35] [Elemental (#1)] Completed cast {SpellID: 10438, Tag: 1}
-[177.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (323.821 --> 326.796) of 5590 total.
-[177.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (326.796 --> 329.771) of 5590 total.
+[177.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (269.821 --> 272.796) of 5590 total.
+[177.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (272.796 --> 275.771) of 5590 total.
 [177.55] [Elemental (#1)] [Target 1] {SpellID: 10448} tick Hit for 111.780 damage (SpellSchool: 4). (Threat: 109.544)
-[177.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (329.771 --> 332.746) of 5590 total.
-[177.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (332.746 --> 335.721) of 5590 total.
-[177.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (335.721 --> 338.696) of 5590 total.
-[177.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (338.696 --> 341.671) of 5590 total.
-[178.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (341.671 --> 344.646) of 5590 total.
-[178.05] [Elemental (#1)] Queueing up {SpellID: 10392} to cast at 2m58.046000002s.
+[177.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (275.771 --> 278.746) of 5590 total.
+[177.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (278.746 --> 281.721) of 5590 total.
+[177.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (281.721 --> 284.696) of 5590 total.
+[177.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (284.696 --> 287.671) of 5590 total.
+[178.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (287.671 --> 290.646) of 5590 total.
 [178.05] [Elemental (#1)] Completed cast {SpellID: 10392}
-[178.05] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (344.646 --> 200.646) of 5590 total.
+[178.05] [Elemental (#1)] Spent 144.000 mana from {SpellID: 10392} (290.646 --> 146.646) of 5590 total.
 [178.05] [Elemental (#1)] Casting {SpellID: 10392} (Cost = 144.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s) APL: priority 13
-[178.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (200.646 --> 203.621) of 5590 total.
-[178.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (203.621 --> 206.596) of 5590 total.
-[178.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (206.596 --> 209.571) of 5590 total.
+[178.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (146.646 --> 149.621) of 5590 total.
+[178.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (149.621 --> 152.596) of 5590 total.
+[178.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (152.596 --> 155.571) of 5590 total.
 [178.40] [Elemental (#1)] [Target 1] {SpellID: 10438, Tag: 1} Hit for 71.133 damage (SpellSchool: 4). (Threat: 69.711)
-[178.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (209.571 --> 212.546) of 5590 total.
-[178.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (212.546 --> 215.521) of 5590 total.
-[178.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (215.521 --> 218.496) of 5590 total.
-[178.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (218.496 --> 221.471) of 5590 total.
-[178.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (221.471 --> 224.446) of 5590 total.
-[178.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (224.446 --> 227.421) of 5590 total.
-[179.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (227.421 --> 230.396) of 5590 total.
+[178.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (155.571 --> 158.546) of 5590 total.
+[178.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (158.546 --> 161.521) of 5590 total.
+[178.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (161.521 --> 164.496) of 5590 total.
+[178.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (164.496 --> 167.471) of 5590 total.
+[178.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (167.471 --> 170.446) of 5590 total.
+[178.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (170.446 --> 173.421) of 5590 total.
+[179.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (173.421 --> 176.396) of 5590 total.
 [179.05] [Elemental (#1)] [Target 1] {SpellID: 10392} Hit for 715.367 damage (SpellSchool: 8). (Threat: 701.059)
 [179.05] [Elemental (#1)] Casting {SpellID: 10392, Tag: 6} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [179.05] [Elemental (#1)] Completed cast {SpellID: 10392, Tag: 6}
-[179.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (230.396 --> 233.371) of 5590 total.
-[179.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (233.371 --> 236.346) of 5590 total.
-[179.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (236.346 --> 239.321) of 5590 total.
-[179.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (239.321 --> 242.296) of 5590 total.
-[179.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (242.296 --> 245.271) of 5590 total.
+[179.10] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (176.396 --> 179.371) of 5590 total.
+[179.20] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (179.371 --> 182.346) of 5590 total.
+[179.30] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (182.346 --> 185.321) of 5590 total.
+[179.40] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (185.321 --> 188.296) of 5590 total.
+[179.50] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (188.296 --> 191.271) of 5590 total.
 [179.55] [Elemental (#1)] Aura faded: {SpellID: 10438}
-[179.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (245.271 --> 248.246) of 5590 total.
-[179.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (248.246 --> 251.221) of 5590 total.
-[179.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (251.221 --> 254.196) of 5590 total.
-[179.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (254.196 --> 257.171) of 5590 total.
-[180.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (257.171 --> 260.146) of 5590 total.
+[179.60] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (191.271 --> 194.246) of 5590 total.
+[179.70] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (194.246 --> 197.221) of 5590 total.
+[179.80] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (197.221 --> 200.196) of 5590 total.
+[179.90] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (200.196 --> 203.171) of 5590 total.
+[180.00] [Elemental (#1)] Gained 2.975 mana from {OtherID: 2, Tag: 1} (203.171 --> 206.146) of 5590 total.
 [180.00] [Elemental (#1)] Aura faded: {SpellID: 25898, Tag: -1}
 [180.00] [Elemental (#1)] Dynamic dep disabled (Strength *= 1.10): {"Strength": -16.000,"AttackPower": -32.000,}
 [180.00] [Elemental (#1)] Dynamic dep disabled (Agility *= 1.10): {"Agility": -8.000,"Armor": -16.000,"PhysicalCritPercent": -0.406,"DodgePercent": -0.406,}

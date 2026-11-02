@@ -255,7 +255,6 @@
 [7.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1741.786 --> 1742.354) of 1871 total.
 [7.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (4309.960 --> 4311.000) of 5353 total.
 [7.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1742.354 --> 1742.922) of 1871 total.
-[7.50] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 7.500000001s.
 [7.50] [Affliction (#1)] Completed cast {SpellID: 25309}
 [7.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25309} (4311.000 --> 3931.000) of 5353 total.
 [7.50] [Affliction (#1)] [Target 1] {SpellID: 25309} Hit for 337.324 damage (SpellSchool: 4). (Threat: 269.859)
@@ -325,7 +324,6 @@
 [9.90] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1755.986 --> 1756.554) of 1871 total.
 [10.00] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (3955.960 --> 3957.000) of 5353 total.
 [10.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1756.554 --> 1757.122) of 1871 total.
-[10.00] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 10.000000001s.
 [10.00] [Affliction (#1)] Completed cast {SpellID: 25307}
 [10.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (3957.000 --> 3577.000) of 5353 total.
 [10.00] [Affliction (#1)] Casting {ItemID: 12662} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 1
@@ -395,7 +393,6 @@
 [12.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1770.186 --> 1770.754) of 1871 total.
 [12.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (4970.626 --> 4971.666) of 5353 total.
 [12.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1770.754 --> 1771.322) of 1871 total.
-[12.50] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 12.500000001s.
 [12.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [12.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (4971.666 --> 4591.666) of 5353 total.
 [12.50] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -468,7 +465,6 @@
 [15.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1624.954 --> 1625.522) of 1871 total.
 [15.00] [Affliction (#1)] [Target 1] {SpellID: 18881} tick Hit for 82.825 damage (SpellSchool: 32). (Threat: 66.260)
 [15.00] [Affliction (#1)] Gained 82.825 health from {SpellID: 18881} (2886.970 --> 2969.795) of 3454 total.
-[15.00] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 15.000000001s.
 [15.00] [Affliction (#1)] Completed cast {SpellID: 25307}
 [15.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (4617.666 --> 4237.666) of 5353 total.
 [15.00] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -529,7 +525,6 @@
 [17.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1638.586 --> 1639.154) of 1871 total.
 [17.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (4262.626 --> 4263.666) of 5353 total.
 [17.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1639.154 --> 1639.722) of 1871 total.
-[17.50] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 17.500000001s.
 [17.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [17.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (4263.666 --> 3883.666) of 5353 total.
 [17.50] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -597,7 +592,6 @@
 [20.00] [Affliction (#1)] {SpellID: 1291101} stacks: 1 --> 0
 [20.00] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (3908.626 --> 3909.666) of 5353 total.
 [20.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1653.354 --> 1653.922) of 1871 total.
-[20.00] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 20.000000001s.
 [20.00] [Affliction (#1)] Completed cast {SpellID: 25307}
 [20.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (3909.666 --> 3529.666) of 5353 total.
 [20.00] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -663,7 +657,6 @@
 [22.50] [Affliction (#1)] [Target 1] {SpellID: 25309} tick Hit for 152.908 damage (SpellSchool: 4). (Threat: 122.326)
 [22.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (3554.626 --> 3555.666) of 5353 total.
 [22.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1667.554 --> 1668.122) of 1871 total.
-[22.50] [Affliction (#1)] Queueing up {SpellID: 25311} to cast at 22.500000001s.
 [22.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [22.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (3555.666 --> 3175.666) of 5353 total.
 [22.50] [Affliction (#1)] Casting {SpellID: 25311} (Cost = 340.000, Cast Time = 800ms, GCD = 1.5s, Effective Time = 1.5s) APL: priority 5
@@ -791,7 +784,6 @@
 [27.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1533.114 --> 1533.682) of 1871 total.
 [27.00] [Affliction (#1)] [Target 1] {SpellID: 18881} tick Hit for 82.825 damage (SpellSchool: 32). (Threat: 66.260)
 [27.00] [Affliction (#1)] Gained 82.825 health from {SpellID: 18881} (3454.000 --> 3454.000) of 3454 total.
-[27.00] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 27.000000001s.
 [27.00] [Affliction (#1)] Completed cast {SpellID: 25309}
 [27.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25309} (2667.466 --> 2287.466) of 5353 total.
 [27.00] [Affliction (#1)] [Target 1] {SpellID: 25309} Hit for 324.038 damage (SpellSchool: 4). (Threat: 259.230)
@@ -852,7 +844,6 @@
 [29.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1546.746 --> 1547.314) of 1871 total.
 [29.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (2312.426 --> 2313.466) of 5353 total.
 [29.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1547.314 --> 1547.882) of 1871 total.
-[29.50] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 29.500000001s.
 [29.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [29.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (2313.466 --> 1933.466) of 5353 total.
 [29.50] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -919,7 +910,6 @@
 [31.90] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1560.946 --> 1561.514) of 1871 total.
 [32.00] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (1958.426 --> 1959.466) of 5353 total.
 [32.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1561.514 --> 1562.082) of 1871 total.
-[32.00] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 32.000000001s.
 [32.00] [Affliction (#1)] Completed cast {SpellID: 25307}
 [32.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (1959.466 --> 1579.466) of 5353 total.
 [32.00] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -984,7 +974,6 @@
 [34.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1575.146 --> 1575.714) of 1871 total.
 [34.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (1604.426 --> 1605.466) of 5353 total.
 [34.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1575.714 --> 1576.282) of 1871 total.
-[34.50] [Affliction (#1)] Queueing up {SpellID: 18881} to cast at 34.500000001s.
 [34.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [34.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (1605.466 --> 1225.466) of 5353 total.
 [34.50] [Affliction (#1)] Casting {SpellID: 18881} (Cost = 365.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6
@@ -1092,7 +1081,6 @@
 [38.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1437.866 --> 1438.434) of 1871 total.
 [38.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (901.026 --> 902.066) of 5353 total.
 [38.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1438.434 --> 1439.002) of 1871 total.
-[38.50] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 38.500000001s.
 [38.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [38.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (902.066 --> 522.066) of 5353 total.
 [38.50] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -1154,7 +1142,6 @@
 [40.90] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1452.066 --> 1452.634) of 1871 total.
 [41.00] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (547.026 --> 548.066) of 5353 total.
 [41.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1452.634 --> 1453.202) of 1871 total.
-[41.00] [Affliction (#1)] Queueing up {SpellID: 11689} to cast at 41.000000001s.
 [41.00] [Affliction (#1)] Completed cast {SpellID: 25307}
 [41.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (548.066 --> 168.066) of 5353 total.
 [41.00] [Affliction (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -1273,7 +1260,6 @@
 [45.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1477.626 --> 1478.194) of 1871 total.
 [45.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (647.826 --> 648.866) of 5353 total.
 [45.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1478.194 --> 1478.762) of 1871 total.
-[45.50] [Affliction (#1)] Queueing up {SpellID: 11689} to cast at 45.500000001s.
 [45.50] [Affliction (#1)] Completed cast {SpellID: 25309}
 [45.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25309} (648.866 --> 268.866) of 5353 total.
 [45.50] [Affliction (#1)] [Target 1] {SpellID: 25309} Hit for 312.664 damage (SpellSchool: 4). (Threat: 250.131)
@@ -1379,7 +1365,6 @@
 [49.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1500.914 --> 1501.482) of 1871 total.
 [49.50] [Affliction (#1)] [Target 1] {SpellID: 18881} tick Hit for 79.981 damage (SpellSchool: 32). (Threat: 63.985)
 [49.50] [Affliction (#1)] Gained 79.981 health from {SpellID: 18881} (2323.962 --> 2403.943) of 3454 total.
-[49.50] [Affliction (#1)] Queueing up {SpellID: 11713} to cast at 49.500000001s.
 [49.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [49.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (1084.466 --> 704.466) of 5353 total.
 [49.50] [Affliction (#1)] Casting {SpellID: 11713} (Cost = 215.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4
@@ -1485,7 +1470,6 @@
 [53.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1363.066 --> 1363.634) of 1871 total.
 [53.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (530.026 --> 531.066) of 5353 total.
 [53.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1363.634 --> 1364.202) of 1871 total.
-[53.50] [Affliction (#1)] Queueing up {SpellID: 11689} to cast at 53.500000001s.
 [53.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [53.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (531.066 --> 151.066) of 5353 total.
 [53.50] [Affliction (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -1588,7 +1572,6 @@
 [57.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (965.626 --> 966.666) of 5353 total.
 [57.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1386.354 --> 1386.922) of 1871 total.
 [57.50] [Affliction (#1)] [Target 1] {SpellID: 25309} tick Hit for 145.515 damage (SpellSchool: 4). (Threat: 116.412)
-[57.50] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 57.500000001s.
 [57.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [57.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (966.666 --> 586.666) of 5353 total.
 [57.50] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -1655,7 +1638,6 @@
 [59.90] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1399.986 --> 1400.554) of 1871 total.
 [60.00] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (611.626 --> 612.666) of 5353 total.
 [60.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1400.554 --> 1401.122) of 1871 total.
-[60.00] [Affliction (#1)] Queueing up {SpellID: 11689} to cast at 1m0.000000001s.
 [60.00] [Affliction (#1)] Completed cast {SpellID: 25307}
 [60.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (612.666 --> 232.666) of 5353 total.
 [60.00] [Affliction (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -1781,7 +1763,6 @@
 [64.50] [Affliction (#1)] Gained 95.977 health from {SpellID: 18881} (1529.844 --> 1625.821) of 3454 total.
 [64.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (712.426 --> 713.466) of 5353 total.
 [64.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (1266.114 --> 1266.682) of 1871 total.
-[64.50] [Affliction (#1)] Queueing up {SpellID: 1316697} to cast at 1m4.500000001s.
 [64.50] [Affliction (#1)] Completed cast {SpellID: 25309}
 [64.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25309} (713.466 --> 333.466) of 5353 total.
 [64.50] [Affliction (#1)] [Target 1] {SpellID: 25309} Hit for 312.664 damage (SpellSchool: 4). (Threat: 250.131)
@@ -2205,7 +2186,6 @@
 [80.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1196.426 --> 1196.994) of 1871 total.
 [80.50] [Affliction (#1)] Gained 4.428 mana from {OtherID: 2, Tag: 2} (951.188 --> 955.616) of 5353 total.
 [80.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1196.994 --> 1197.562) of 1871 total.
-[80.50] [Affliction (#1)] Queueing up {SpellID: 25311} to cast at 1m20.500000001s.
 [80.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [80.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (955.616 --> 575.616) of 5353 total.
 [80.50] [Affliction (#1)] Casting {SpellID: 25311} (Cost = 340.000, Cast Time = 800ms, GCD = 1.5s, Effective Time = 1.5s) APL: priority 5
@@ -2479,7 +2459,6 @@
 [90.90] [Affliction (#1) - Succubus] Gained 0.114 mana from {OtherID: 2, Tag: 2} (1096.520 --> 1096.634) of 1871 total.
 [91.00] [Affliction (#1)] Gained 4.428 mana from {OtherID: 2, Tag: 2} (1016.013 --> 1020.441) of 5353 total.
 [91.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (1096.634 --> 1097.202) of 1871 total.
-[91.00] [Affliction (#1)] Queueing up {SpellID: 1316697} to cast at 1m31.000000001s.
 [91.00] [Affliction (#1)] Completed cast {SpellID: 25309}
 [91.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25309} (1020.441 --> 640.441) of 5353 total.
 [91.00] [Affliction (#1)] [Target 1] {SpellID: 25309} Hit for 312.664 damage (SpellSchool: 4). (Threat: 250.131)
@@ -3118,7 +3097,6 @@
 [115.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (912.954 --> 913.522) of 1871 total.
 [115.00] [Affliction (#1)] [Target 1] {SpellID: 18881} tick Hit for 79.981 damage (SpellSchool: 32). (Threat: 63.985)
 [115.00] [Affliction (#1)] Gained 79.981 health from {SpellID: 18881} (0.000 --> 79.981) of 3454 total.
-[115.00] [Affliction (#1)] Queueing up {SpellID: 11689} to cast at 1m55.000000001s.
 [115.00] [Affliction (#1)] Completed cast {SpellID: 25309}
 [115.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25309} (573.853 --> 193.853) of 5353 total.
 [115.00] [Affliction (#1)] [Target 1] {SpellID: 25309} Hit for 312.664 damage (SpellSchool: 4). (Threat: 250.131)
@@ -3260,7 +3238,6 @@
 [120.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (943.626 --> 944.194) of 1871 total.
 [120.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (644.013 --> 645.053) of 5353 total.
 [120.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (944.194 --> 944.762) of 1871 total.
-[120.50] [Affliction (#1)] Queueing up {SpellID: 11689} to cast at 2m0.500000001s.
 [120.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [120.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (645.053 --> 265.053) of 5353 total.
 [120.50] [Affliction (#1)] Casting {SpellID: 20572} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 2 > group 1.1
@@ -3546,7 +3523,6 @@
 [130.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (840.426 --> 840.994) of 1871 total.
 [130.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (981.013 --> 982.053) of 5353 total.
 [130.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (840.994 --> 841.562) of 1871 total.
-[130.50] [Affliction (#1)] Queueing up {SpellID: 25309} to cast at 2m10.500000001s.
 [130.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [130.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (982.053 --> 602.053) of 5353 total.
 [130.50] [Affliction (#1)] Casting {ItemID: 12662} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 1
@@ -3593,7 +3569,6 @@
 [131.90] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (848.946 --> 849.514) of 1871 total.
 [132.00] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (1907.426 --> 1908.466) of 5353 total.
 [132.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (849.514 --> 850.082) of 1871 total.
-[132.00] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 2m12.000000001s.
 [132.00] [Affliction (#1)] Completed cast {SpellID: 25309}
 [132.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25309} (1908.466 --> 1528.466) of 5353 total.
 [132.00] [Affliction (#1)] [Target 1] {SpellID: 25309} Hit for 337.324 damage (SpellSchool: 4). (Threat: 269.859)
@@ -3660,7 +3635,6 @@
 [134.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (703.146 --> 703.714) of 1871 total.
 [134.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (1553.426 --> 1554.466) of 5353 total.
 [134.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (703.714 --> 704.282) of 1871 total.
-[134.50] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 2m14.500000001s.
 [134.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [134.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (1554.466 --> 1174.466) of 5353 total.
 [134.50] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -3729,7 +3703,6 @@
 [136.90] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (717.346 --> 717.914) of 1871 total.
 [137.00] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (1199.426 --> 1200.466) of 5353 total.
 [137.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (717.914 --> 718.482) of 1871 total.
-[137.00] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 2m17.000000001s.
 [137.00] [Affliction (#1)] Completed cast {SpellID: 25307}
 [137.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (1200.466 --> 820.466) of 5353 total.
 [137.00] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -3793,7 +3766,6 @@
 [139.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (731.546 --> 732.114) of 1871 total.
 [139.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (845.426 --> 846.466) of 5353 total.
 [139.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (732.114 --> 732.682) of 1871 total.
-[139.50] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 2m19.500000001s.
 [139.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [139.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (846.466 --> 466.466) of 5353 total.
 [139.50] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -3861,7 +3833,6 @@
 [142.00] [Affliction (#1)] Gained 82.825 health from {SpellID: 18881} (334.619 --> 417.444) of 3454 total.
 [142.00] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (491.426 --> 492.466) of 5353 total.
 [142.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (746.314 --> 746.882) of 1871 total.
-[142.00] [Affliction (#1)] Queueing up {SpellID: 11689} to cast at 2m22.000000001s.
 [142.00] [Affliction (#1)] Completed cast {SpellID: 25307}
 [142.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (492.466 --> 112.466) of 5353 total.
 [142.00] [Affliction (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -4371,7 +4342,6 @@
 [161.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (537.074 --> 537.642) of 1871 total.
 [161.50] [Affliction (#1)] [Target 1] {SpellID: 18881} tick Hit for 79.981 damage (SpellSchool: 32). (Threat: 63.985)
 [161.50] [Affliction (#1)] Gained 79.981 health from {SpellID: 18881} (0.000 --> 79.981) of 3454 total.
-[161.50] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 2m41.500000001s.
 [161.50] [Affliction (#1)] Completed cast {SpellID: 25309}
 [161.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25309} (1078.891 --> 698.891) of 5353 total.
 [161.50] [Affliction (#1)] [Target 1] {SpellID: 25309} Hit for 312.664 damage (SpellSchool: 4). (Threat: 250.131)
@@ -4437,7 +4407,6 @@
 [163.90] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (550.706 --> 551.274) of 1871 total.
 [164.00] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (723.851 --> 724.891) of 5353 total.
 [164.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (551.274 --> 551.842) of 1871 total.
-[164.00] [Affliction (#1)] Queueing up {SpellID: 25311} to cast at 2m44.000000001s.
 [164.00] [Affliction (#1)] Completed cast {SpellID: 25307}
 [164.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (724.891 --> 344.891) of 5353 total.
 [164.00] [Affliction (#1)] Casting {SpellID: 25311} (Cost = 340.000, Cast Time = 800ms, GCD = 1.5s, Effective Time = 1.5s) APL: priority 5
@@ -4577,7 +4546,6 @@
 [169.40] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (581.946 --> 582.514) of 1871 total.
 [169.50] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (835.051 --> 836.091) of 5353 total.
 [169.50] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (582.514 --> 583.082) of 1871 total.
-[169.50] [Affliction (#1)] Queueing up {SpellID: 25307} to cast at 2m49.500000001s.
 [169.50] [Affliction (#1)] Completed cast {SpellID: 25307}
 [169.50] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (836.091 --> 456.091) of 5353 total.
 [169.50] [Affliction (#1)] Casting {SpellID: 25307} (Cost = 380.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 10
@@ -4648,7 +4616,6 @@
 [171.90] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (436.146 --> 436.714) of 1871 total.
 [172.00] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (481.051 --> 482.091) of 5353 total.
 [172.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 1} (436.714 --> 437.282) of 1871 total.
-[172.00] [Affliction (#1)] Queueing up {SpellID: 11689} to cast at 2m52.000000001s.
 [172.00] [Affliction (#1)] Completed cast {SpellID: 25307}
 [172.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (482.091 --> 102.091) of 5353 total.
 [172.00] [Affliction (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -4751,7 +4718,6 @@
 [175.90] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (458.866 --> 459.434) of 1871 total.
 [176.00] [Affliction (#1)] Gained 1.040 mana from {OtherID: 2, Tag: 1} (916.651 --> 917.691) of 5353 total.
 [176.00] [Affliction (#1) - Succubus] Gained 0.568 mana from {OtherID: 2, Tag: 2} (459.434 --> 460.002) of 1871 total.
-[176.00] [Affliction (#1)] Queueing up {SpellID: 11713} to cast at 2m56.000000001s.
 [176.00] [Affliction (#1)] Completed cast {SpellID: 25307}
 [176.00] [Affliction (#1)] Spent 380.000 mana from {SpellID: 25307} (917.691 --> 537.691) of 5353 total.
 [176.00] [Affliction (#1)] Casting {SpellID: 11713} (Cost = 215.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4

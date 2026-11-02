@@ -22,6 +22,13 @@ the replays):
   11904, 13001, 13002, 13015, 13022, 13070, 13072, 13077, 13096, 13116, 14332, 14978, 14979, 271928, 271948, 272411,
   272414, 272415, 284716: not in the live client's cache; their procs are upstream's, so Flurry Axe 871 has no extra
   attacks). Drop it when a re-export takes gear the new db has.
+- No cast-end pick (`no-cast-end-pick.patch`): upstream 1435e39a74 (#640) picks a hardcast's next cast at the cast's
+  end, before it lands (its "Queueing up" lines), so our pinned APLs, which lack upstream's later `not(Spell Is
+  Casting)` guards, recast on a proc or stack the landing cast just spent (a second Pyroblast on spent Heating Up).
+  Hekili's next icon is computed with the cast landed, which is the right play. The patch makes the pick, its landed
+  aura reads and its mana-after-cast off (a constant, not a switch). It changes only logs with a hardcast (the casters,
+  Arms' Slam); with it Balance and Destruction replay exactly as at `M.PIN`. Drop it once the packs are re-exported
+  from upstream's guarded APLs.
 
 ## The rules (the user's; binding)
 

@@ -345,7 +345,6 @@
 [58.50] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
 [59.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (28.600 --> 30.100) of 100 total.
 [59.10] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 59.500000002s.
-[59.50] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 59.500000002s.
 [59.50] [Arms (#1)] Completed cast {SpellID: 11605}
 [59.50] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (30.100 --> 15.100) of 100 total.
 [59.50] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 385.392 damage (SpellSchool: 1). (Threat: 308.313)
@@ -427,9 +426,12 @@
 [76.05] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
 [76.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Dodge (SpellSchool: 1). (Threat: 0.000)
 [76.05] [Arms (#1)] Aura gained: {SpellID: 1282733}
+[76.05] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m16.352381953s.
+[76.15] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m16.352381953s.
 [76.35] [Arms (#1)] Completed cast {SpellID: 11605}
 [76.35] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (23.500 --> 8.500) of 100 total.
 [76.35] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 400.715 damage (SpellSchool: 1). (Threat: 320.572)
+[76.35] [Arms (#1)] {SpellID: 11605} failed to cast: still on cooldown for 14.999999999s, curTime = 1m16.352381953s
 [76.95] [Arms (#1)] Queueing up {SpellID: 11585} to cast at 1m17.352381953s.
 [77.05] [Arms (#1)] Queueing up {SpellID: 11585} to cast at 1m17.352381953s.
 [77.15] [Arms (#1)] Queueing up {SpellID: 11585} to cast at 1m17.352381953s.
@@ -581,11 +583,9 @@
 [114.05] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
 [114.06] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (28.100 --> 29.100) of 100 total.
 [115.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (29.100 --> 30.600) of 100 total.
-[115.05] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m55.052381953s.
 [115.05] [Arms (#1)] Completed cast {SpellID: 11605}
 [115.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (30.600 --> 15.600) of 100 total.
 [115.05] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 405.074 damage (SpellSchool: 1). (Threat: 324.059)
-[115.05] [Arms (#1)] {SpellID: 21553} failed to cast: not enough rage (Current Rage = 15.600, Rage Cost = 30.000)
 [116.65] [Arms (#1)] Queueing up {SpellID: 2687} to cast at 1m57.000000002s.
 [116.75] [Arms (#1)] Queueing up {SpellID: 2687} to cast at 1m57.000000002s.
 [116.85] [Target 1] Aura faded: {SpellID: 412609}

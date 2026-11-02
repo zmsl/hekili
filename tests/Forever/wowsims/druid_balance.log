@@ -32,947 +32,928 @@
 [4.50] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
 [5.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Crit for 281.885 damage (SpellSchool: 8). (Threat: 281.885)
 [6.00] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[6.00] [Balance (#1)] Queueing up {SpellID: 9912} to cast at 6.000000001s.
 [6.00] [Balance (#1)] Completed cast {SpellID: 9912}
 [6.00] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (3307.750 --> 3262.750) of 3829 total.
 [6.00] [Balance (#1)] Aura gained: {SpellID: 408255}
 [6.00] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
-[6.00] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[6.00] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
 [7.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
 [7.00] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 464.951 damage (SpellSchool: 8). (Threat: 464.951)
-[7.50] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 7.500000001s.
-[7.50] [Balance (#1)] Completed cast {SpellID: 9912}
-[7.50] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (3262.750 --> 3217.750) of 3829 total.
-[7.50] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[7.50] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 4
-[7.50] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
-[8.50] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 453.932 damage (SpellSchool: 8). (Threat: 453.932)
+[8.50] [Balance (#1)] Completed cast {SpellID: 25298}
+[8.50] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (3262.750 --> 3007.750) of 3829 total.
+[8.50] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1090.161 damage (SpellSchool: 64). (Threat: 1090.161)
+[8.50] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
+[8.50] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
+[8.51] [Balance (#1)] Aura gained: {SpellID: 16870}
 [9.00] [Balance (#1)] [Target 1] {SpellID: 9835} tick Crit for 363.741 damage (SpellSchool: 64). (Threat: 363.741)
 [9.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Crit for 281.885 damage (SpellSchool: 8). (Threat: 281.885)
-[10.00] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 10.000000001s.
-[10.00] [Balance (#1)] Completed cast {SpellID: 25298}
-[10.00] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (3217.750 --> 2962.750) of 3829 total.
-[10.00] [Balance (#1)] [Target 1] {SpellID: 25298} Crit for 2285.575 damage (SpellSchool: 64). (Threat: 2285.575)
-[10.00] [Balance (#1)] {SpellID: 408255} stacks: 4 --> 3
-[10.00] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
-[10.01] [Balance (#1)] Aura gained: {SpellID: 16886}
-[10.01] [Balance (#1)] {SpellID: 1291101} stacks: 1 --> 0
-[10.01] [Balance (#1)] Aura faded: {SpellID: 1291101}
+[11.00] [Balance (#1)] Completed cast {SpellID: 25298}
+[11.00] [Balance (#1)] [Target 1] {SpellID: 25298} Crit for 2285.575 damage (SpellSchool: 64). (Threat: 2285.575)
+[11.00] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
+[11.00] [Balance (#1)] Aura faded: {SpellID: 408255}
+[11.00] [Balance (#1)] Aura faded: {SpellID: 16870}
+[11.00] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
 [11.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[11.01] [Balance (#1)] Aura gained: {SpellID: 16886}
+[11.01] [Balance (#1)] {SpellID: 1291101} stacks: 1 --> 0
+[11.01] [Balance (#1)] Aura faded: {SpellID: 1291101}
 [12.00] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[12.50] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 12.500000001s.
-[12.50] [Balance (#1)] Completed cast {SpellID: 25298}
-[12.50] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (2962.750 --> 2707.750) of 3829 total.
-[12.50] [Balance (#1)] [Target 1] {SpellID: 25298} Miss (SpellSchool: 64). (Threat: 0.000)
-[12.50] [Balance (#1)] {SpellID: 408255} stacks: 3 --> 2
-[12.50] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.273s, GCD = 1.227s, Effective Time = 2.273s) APL: priority 6
+[12.50] [Balance (#1)] Completed cast {SpellID: 9912}
+[12.50] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (3007.750 --> 2962.750) of 3829 total.
+[12.50] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.364s, GCD = 1.227s, Effective Time = 1.364s) APL: priority 7
 [13.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[13.01] [Balance (#1)] Aura faded: {SpellID: 16886}
-[14.77] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 14.773000001s.
-[14.77] [Balance (#1)] Completed cast {SpellID: 25298}
-[14.77] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (2707.750 --> 2452.750) of 3829 total.
-[14.77] [Balance (#1)] [Target 1] {SpellID: 25298} Crit for 2172.628 damage (SpellSchool: 64). (Threat: 2172.628)
-[14.77] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
-[14.77] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
-[14.78] [Balance (#1)] Aura gained: {SpellID: 16886}
-[14.78] [Balance (#1)] Aura gained: {SpellID: 16870}
+[13.50] [Balance (#1)] [Target 1] {SpellID: 9912} Miss (SpellSchool: 8). (Threat: 0.000)
+[13.86] [Balance (#1)] Completed cast {SpellID: 9912}
+[13.86] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (2962.750 --> 2917.750) of 3829 total.
+[13.86] [Balance (#1)] Aura gained: {SpellID: 408255}
+[13.86] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
+[13.86] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.273s, GCD = 1.227s, Effective Time = 2.273s) APL: priority 6
+[14.01] [Balance (#1)] Aura faded: {SpellID: 16886}
+[14.86] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 467.816 damage (SpellSchool: 8). (Threat: 467.816)
 [15.00] [Target 1] Aura faded: {SpellID: 9835}
 [15.00] [Balance (#1)] [Target 1] {SpellID: 9835} tick Crit for 363.741 damage (SpellSchool: 64). (Threat: 363.741)
 [15.00] [Balance (#1)] Aura faded: {SpellID: 1259799}
 [15.00] [Balance (#1)] Lost {"PhysicalCritPercent": 10.000,"SpellCritPercent": 10.000,} from fading {SpellID: 1259799}.
-[15.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[15.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Crit for 281.885 damage (SpellSchool: 8). (Threat: 281.885)
+[16.14] [Balance (#1)] Completed cast {SpellID: 25298}
+[16.14] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (2917.750 --> 2662.750) of 3829 total.
+[16.14] [Balance (#1)] [Target 1] {SpellID: 25298} Crit for 2182.934 damage (SpellSchool: 64). (Threat: 2182.934)
+[16.14] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
+[16.14] [Balance (#1)] Casting {SpellID: 9835} (Cost = 281.250, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 3
+[16.14] [Balance (#1)] Completed cast {SpellID: 9835}
+[16.14] [Balance (#1)] Spent 281.250 mana from {SpellID: 9835} (2662.750 --> 2381.500) of 3829 total.
+[16.14] [Target 1] Aura gained: {SpellID: 9835}
+[16.14] [Balance (#1)] [Target 1] {SpellID: 9835} Hit for 284.426 damage (SpellSchool: 64). (Threat: 284.426)
+[16.15] [Balance (#1)] Aura gained: {SpellID: 16886}
 [17.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[17.27] [Balance (#1)] Queueing up {SpellID: 9835} to cast at 17.273000001s.
-[17.27] [Balance (#1)] Completed cast {SpellID: 25298}
-[17.27] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 973.947 damage (SpellSchool: 64). (Threat: 973.947)
-[17.27] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
-[17.27] [Balance (#1)] Aura faded: {SpellID: 408255}
-[17.27] [Balance (#1)] Aura faded: {SpellID: 16870}
-[17.27] [Balance (#1)] Casting {SpellID: 9835} (Cost = 281.250, Cast Time = 0s, GCD = 1.227s, Effective Time = 1.227s) APL: priority 3
-[17.27] [Balance (#1)] Completed cast {SpellID: 9835}
-[17.27] [Balance (#1)] Spent 281.250 mana from {SpellID: 9835} (2452.750 --> 2171.500) of 3829 total.
-[17.27] [Target 1] Aura gained: {SpellID: 9835}
-[17.27] [Balance (#1)] [Target 1] {SpellID: 9835} Hit for 274.770 damage (SpellSchool: 64). (Threat: 274.770)
-[17.78] [Balance (#1)] Aura faded: {SpellID: 16886}
-[18.50] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[17.64] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.273s, GCD = 1.227s, Effective Time = 2.273s) APL: priority 6
 [19.00] [Target 1] Aura faded: {SpellID: 24977}
 [19.00] [Target 1] Aura faded: {SpellID: 24977}
 [19.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[20.00] [Balance (#1)] Queueing up {SpellID: 24977} to cast at 20.000000001s.
-[20.00] [Balance (#1)] Completed cast {SpellID: 9912}
-[20.00] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (2171.500 --> 2126.500) of 3829 total.
-[20.00] [Balance (#1)] Aura gained: {SpellID: 408255}
-[20.00] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
-[20.00] [Balance (#1)] Casting {ItemID: 272439} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 1
-[20.00] [Balance (#1)] Completed cast {ItemID: 272439}
-[20.00] [Balance (#1)] Aura gained: {ItemID: 272439}
-[20.00] [Balance (#1)] Gained {"Spirit": 72.000,} from {ItemID: 272439}.
-[20.00] [Balance (#1)] Major cooldown used: {ItemID: 272439}
-[20.00] [Balance (#1)] Casting {SpellID: 24977} (Cost = 120.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4
-[20.00] [Balance (#1)] Completed cast {SpellID: 24977}
-[20.00] [Balance (#1)] Spent 120.000 mana from {SpellID: 24977} (2126.500 --> 2006.500) of 3829 total.
-[20.00] [Target 1] Aura gained: {SpellID: 24977}
-[20.00] [Target 1] Aura gained: {SpellID: 24977}
-[20.00] [Balance (#1)] [Target 1] {SpellID: 24977} Hit for 0.000 damage (SpellSchool: 8). (Threat: 0.000)
-[20.27] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[21.00] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 466.487 damage (SpellSchool: 8). (Threat: 466.487)
-[21.50] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
-[22.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[23.27] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[24.00] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 24.000000001s.
-[24.00] [Balance (#1)] Completed cast {SpellID: 25298}
-[24.00] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (2006.500 --> 1751.500) of 3829 total.
-[24.00] [Balance (#1)] [Target 1] {SpellID: 25298} Crit for 2136.506 damage (SpellSchool: 64). (Threat: 2136.506)
-[24.00] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
-[24.00] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
-[24.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[24.01] [Balance (#1)] Aura gained: {SpellID: 16886}
-[26.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Crit for 281.885 damage (SpellSchool: 8). (Threat: 281.885)
-[26.27] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[26.50] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 26.500000001s.
-[26.50] [Balance (#1)] Completed cast {SpellID: 25298}
-[26.50] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (1751.500 --> 1496.500) of 3829 total.
-[26.50] [Balance (#1)] [Target 1] {SpellID: 25298} Miss (SpellSchool: 64). (Threat: 0.000)
-[26.50] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
-[26.50] [Balance (#1)] Aura faded: {SpellID: 408255}
-[26.50] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.727s, GCD = 1.227s, Effective Time = 2.727s) APL: priority 6
-[27.01] [Balance (#1)] Aura faded: {SpellID: 16886}
-[28.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Crit for 281.885 damage (SpellSchool: 8). (Threat: 281.885)
-[29.23] [Balance (#1)] Queueing up {SpellID: 9912} to cast at 29.227000001s.
-[29.23] [Balance (#1)] Completed cast {SpellID: 25298}
-[29.23] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (1496.500 --> 1241.500) of 3829 total.
-[29.23] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1053.805 damage (SpellSchool: 64). (Threat: 1053.805)
-[29.23] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[29.27] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[30.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[30.73] [Balance (#1)] Queueing up {SpellID: 9912} to cast at 30.727000001s.
-[30.73] [Balance (#1)] Completed cast {SpellID: 9912}
-[30.73] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (1241.500 --> 1196.500) of 3829 total.
-[30.73] [Balance (#1)] Aura gained: {SpellID: 408255}
-[30.73] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
-[30.73] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[31.73] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 461.214 damage (SpellSchool: 8). (Threat: 461.214)
-[32.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[32.23] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 32.227000001s.
-[32.23] [Balance (#1)] Completed cast {SpellID: 9912}
-[32.23] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (1196.500 --> 1151.500) of 3829 total.
-[32.23] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[32.23] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 4
-[32.23] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
-[32.27] [Target 1] Aura faded: {SpellID: 9835}
-[32.27] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[33.23] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 468.640 damage (SpellSchool: 8). (Threat: 468.640)
-[34.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[34.73] [Balance (#1)] Queueing up {SpellID: 9835} to cast at 34.727000001s.
-[34.73] [Balance (#1)] Completed cast {SpellID: 25298}
-[34.73] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (1151.500 --> 896.500) of 3829 total.
-[34.73] [Balance (#1)] [Target 1] {SpellID: 25298} Crit for 2126.962 damage (SpellSchool: 64). (Threat: 2126.962)
-[34.73] [Balance (#1)] {SpellID: 408255} stacks: 4 --> 3
-[34.73] [Balance (#1)] Casting {SpellID: 9835} (Cost = 281.250, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 3
-[34.73] [Balance (#1)] Completed cast {SpellID: 9835}
-[34.73] [Balance (#1)] Spent 281.250 mana from {SpellID: 9835} (896.500 --> 615.250) of 3829 total.
-[34.73] [Target 1] Aura gained: {SpellID: 9835}
-[34.73] [Balance (#1)] [Target 1] {SpellID: 9835} Hit for 280.010 damage (SpellSchool: 64). (Threat: 280.010)
-[34.74] [Balance (#1)] Aura gained: {SpellID: 16886}
-[35.00] [Balance (#1)] Aura faded: {ItemID: 272439}
-[35.00] [Balance (#1)] Lost {"Spirit": 72.000,} from fading {ItemID: 272439}.
-[36.00] [Target 1] Aura faded: {SpellID: 24977}
-[36.00] [Target 1] Aura faded: {SpellID: 24977}
-[36.00] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[36.23] [Balance (#1)] Casting {SpellID: 24977} (Cost = 120.000, Cast Time = 0s, GCD = 1.227s, Effective Time = 1.227s) APL: priority 4
-[36.23] [Balance (#1)] Completed cast {SpellID: 24977}
-[36.23] [Balance (#1)] Spent 120.000 mana from {SpellID: 24977} (615.250 --> 495.250) of 3829 total.
-[36.23] [Target 1] Aura gained: {SpellID: 24977}
-[36.23] [Target 1] Aura gained: {SpellID: 24977}
-[36.23] [Balance (#1)] [Target 1] {SpellID: 24977} Hit for 0.000 damage (SpellSchool: 8). (Threat: 0.000)
-[37.45] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.273s, GCD = 1.227s, Effective Time = 2.273s) APL: priority 6
-[37.73] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[37.74] [Balance (#1)] Aura faded: {SpellID: 16886}
-[38.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[39.73] [Balance (#1)] Queueing up {SpellID: 9912} to cast at 39.727000001s.
-[39.73] [Balance (#1)] Completed cast {SpellID: 25298}
-[39.73] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (495.250 --> 240.250) of 3829 total.
-[39.73] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1036.156 damage (SpellSchool: 64). (Threat: 1036.156)
-[39.73] [Balance (#1)] {SpellID: 408255} stacks: 3 --> 2
-[39.73] [Balance (#1)] Casting {SpellID: 29166} (Cost = 62.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 2
-[39.73] [Balance (#1)] Completed cast {SpellID: 29166}
-[39.73] [Balance (#1)] Spent 62.000 mana from {SpellID: 29166} (240.250 --> 178.250) of 3829 total.
-[39.73] [Balance (#1)] Aura gained: {SpellID: 29166}
-[39.80] [Balance (#1)] Gained 8.030 mana from {OtherID: 2, Tag: 1} (178.250 --> 186.280) of 3829 total.
-[39.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (186.280 --> 197.280) of 3829 total.
-[40.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (197.280 --> 208.280) of 3829 total.
-[40.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (208.280 --> 219.280) of 3829 total.
-[40.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (219.280 --> 230.280) of 3829 total.
-[40.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[40.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (230.280 --> 241.280) of 3829 total.
-[40.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (241.280 --> 252.280) of 3829 total.
-[40.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (252.280 --> 263.280) of 3829 total.
-[40.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (263.280 --> 274.280) of 3829 total.
-[40.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (274.280 --> 285.280) of 3829 total.
-[40.73] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[40.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (285.280 --> 296.280) of 3829 total.
-[40.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (296.280 --> 307.280) of 3829 total.
-[41.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (307.280 --> 318.280) of 3829 total.
-[41.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (318.280 --> 329.280) of 3829 total.
-[41.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (329.280 --> 340.280) of 3829 total.
-[41.23] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
-[41.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (340.280 --> 351.280) of 3829 total.
-[41.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (351.280 --> 362.280) of 3829 total.
-[41.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (362.280 --> 373.280) of 3829 total.
-[41.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (373.280 --> 384.280) of 3829 total.
-[41.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (384.280 --> 395.280) of 3829 total.
-[41.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (395.280 --> 406.280) of 3829 total.
-[41.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (406.280 --> 417.280) of 3829 total.
-[42.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (417.280 --> 428.280) of 3829 total.
-[42.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (428.280 --> 439.280) of 3829 total.
-[42.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (439.280 --> 450.280) of 3829 total.
-[42.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[42.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (450.280 --> 461.280) of 3829 total.
-[42.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (461.280 --> 472.280) of 3829 total.
-[42.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (472.280 --> 483.280) of 3829 total.
-[42.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (483.280 --> 494.280) of 3829 total.
-[42.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (494.280 --> 505.280) of 3829 total.
-[42.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (505.280 --> 516.280) of 3829 total.
-[42.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (516.280 --> 527.280) of 3829 total.
-[43.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (527.280 --> 538.280) of 3829 total.
-[43.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (538.280 --> 549.280) of 3829 total.
-[43.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (549.280 --> 560.280) of 3829 total.
-[43.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (560.280 --> 571.280) of 3829 total.
-[43.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (571.280 --> 582.280) of 3829 total.
-[43.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (582.280 --> 593.280) of 3829 total.
-[43.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (593.280 --> 604.280) of 3829 total.
-[43.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (604.280 --> 615.280) of 3829 total.
-[43.73] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[43.73] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 43.727000001s.
-[43.73] [Balance (#1)] Completed cast {SpellID: 25298}
-[43.73] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (615.280 --> 360.280) of 3829 total.
-[43.73] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1078.175 damage (SpellSchool: 64). (Threat: 1078.175)
-[43.73] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
-[43.73] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
-[43.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (360.280 --> 371.280) of 3829 total.
-[43.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (371.280 --> 382.280) of 3829 total.
-[44.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (382.280 --> 393.280) of 3829 total.
-[44.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (393.280 --> 404.280) of 3829 total.
-[44.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (404.280 --> 415.280) of 3829 total.
-[44.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Crit for 281.885 damage (SpellSchool: 8). (Threat: 281.885)
-[44.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (415.280 --> 426.280) of 3829 total.
-[44.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (426.280 --> 437.280) of 3829 total.
-[44.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (437.280 --> 448.280) of 3829 total.
-[44.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (448.280 --> 459.280) of 3829 total.
-[44.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (459.280 --> 470.280) of 3829 total.
-[44.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (470.280 --> 481.280) of 3829 total.
-[44.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (481.280 --> 492.280) of 3829 total.
-[45.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (492.280 --> 503.280) of 3829 total.
-[45.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (503.280 --> 514.280) of 3829 total.
-[45.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (514.280 --> 525.280) of 3829 total.
-[45.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (525.280 --> 536.280) of 3829 total.
-[45.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (536.280 --> 547.280) of 3829 total.
-[45.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (547.280 --> 558.280) of 3829 total.
-[45.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (558.280 --> 569.280) of 3829 total.
-[45.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (569.280 --> 580.280) of 3829 total.
-[45.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (580.280 --> 591.280) of 3829 total.
-[45.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (591.280 --> 602.280) of 3829 total.
-[46.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (602.280 --> 613.280) of 3829 total.
-[46.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (613.280 --> 624.280) of 3829 total.
-[46.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (624.280 --> 635.280) of 3829 total.
-[46.23] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 46.227000001s.
-[46.23] [Balance (#1)] Completed cast {SpellID: 25298}
-[46.23] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (635.280 --> 380.280) of 3829 total.
-[46.23] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1140.064 damage (SpellSchool: 64). (Threat: 1140.064)
-[46.23] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
-[46.23] [Balance (#1)] Aura faded: {SpellID: 408255}
-[46.23] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 3s, GCD = 1.5s, Effective Time = 3s) APL: priority 6
-[46.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[46.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (380.280 --> 391.280) of 3829 total.
-[46.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (391.280 --> 402.280) of 3829 total.
-[46.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (402.280 --> 413.280) of 3829 total.
-[46.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (413.280 --> 424.280) of 3829 total.
-[46.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (424.280 --> 435.280) of 3829 total.
-[46.73] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[46.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (435.280 --> 446.280) of 3829 total.
-[46.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (446.280 --> 457.280) of 3829 total.
-[47.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (457.280 --> 468.280) of 3829 total.
-[47.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (468.280 --> 479.280) of 3829 total.
-[47.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (479.280 --> 490.280) of 3829 total.
-[47.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (490.280 --> 501.280) of 3829 total.
-[47.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (501.280 --> 512.280) of 3829 total.
-[47.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (512.280 --> 523.280) of 3829 total.
-[47.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (523.280 --> 534.280) of 3829 total.
-[47.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (534.280 --> 545.280) of 3829 total.
-[47.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (545.280 --> 556.280) of 3829 total.
-[47.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (556.280 --> 567.280) of 3829 total.
-[48.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (567.280 --> 578.280) of 3829 total.
-[48.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (578.280 --> 589.280) of 3829 total.
-[48.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (589.280 --> 600.280) of 3829 total.
-[48.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[48.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (600.280 --> 611.280) of 3829 total.
-[48.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (611.280 --> 622.280) of 3829 total.
-[48.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (622.280 --> 633.280) of 3829 total.
-[48.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (633.280 --> 644.280) of 3829 total.
-[48.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (644.280 --> 655.280) of 3829 total.
-[48.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (655.280 --> 666.280) of 3829 total.
-[48.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (666.280 --> 677.280) of 3829 total.
-[49.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (677.280 --> 688.280) of 3829 total.
-[49.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (688.280 --> 699.280) of 3829 total.
-[49.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (699.280 --> 710.280) of 3829 total.
-[49.23] [Balance (#1)] Queueing up {SpellID: 9912} to cast at 49.227000001s.
-[49.23] [Balance (#1)] Completed cast {SpellID: 25298}
-[49.23] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (710.280 --> 455.280) of 3829 total.
-[49.23] [Balance (#1)] [Target 1] {SpellID: 25298} Miss (SpellSchool: 64). (Threat: 0.000)
-[49.23] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[49.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (455.280 --> 466.280) of 3829 total.
-[49.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (466.280 --> 477.280) of 3829 total.
-[49.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (477.280 --> 488.280) of 3829 total.
-[49.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (488.280 --> 499.280) of 3829 total.
-[49.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (499.280 --> 510.280) of 3829 total.
-[49.73] [Target 1] Aura faded: {SpellID: 9835}
-[49.73] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[49.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (510.280 --> 521.280) of 3829 total.
-[49.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (521.280 --> 532.280) of 3829 total.
-[50.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (532.280 --> 543.280) of 3829 total.
-[50.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (543.280 --> 554.280) of 3829 total.
-[50.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (554.280 --> 565.280) of 3829 total.
-[50.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[50.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (565.280 --> 576.280) of 3829 total.
-[50.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (576.280 --> 587.280) of 3829 total.
-[50.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (587.280 --> 598.280) of 3829 total.
-[50.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (598.280 --> 609.280) of 3829 total.
-[50.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (609.280 --> 620.280) of 3829 total.
-[50.73] [Balance (#1)] Queueing up {SpellID: 9835} to cast at 50.727000001s.
-[50.73] [Balance (#1)] Completed cast {SpellID: 9912}
-[50.73] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (620.280 --> 575.280) of 3829 total.
-[50.73] [Balance (#1)] Aura gained: {SpellID: 408255}
-[50.73] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
-[50.73] [Balance (#1)] Casting {SpellID: 9835} (Cost = 281.250, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 3
-[50.73] [Balance (#1)] Completed cast {SpellID: 9835}
-[50.73] [Balance (#1)] Spent 281.250 mana from {SpellID: 9835} (575.280 --> 294.030) of 3829 total.
-[50.73] [Target 1] Aura gained: {SpellID: 9835}
-[50.73] [Balance (#1)] [Target 1] {SpellID: 9835} Hit for 281.007 damage (SpellSchool: 64). (Threat: 281.007)
-[50.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (294.030 --> 305.030) of 3829 total.
-[50.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (305.030 --> 316.030) of 3829 total.
-[51.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (316.030 --> 327.030) of 3829 total.
-[51.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (327.030 --> 338.030) of 3829 total.
-[51.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (338.030 --> 349.030) of 3829 total.
-[51.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (349.030 --> 360.030) of 3829 total.
-[51.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (360.030 --> 371.030) of 3829 total.
-[51.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (371.030 --> 382.030) of 3829 total.
-[51.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (382.030 --> 393.030) of 3829 total.
-[51.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (393.030 --> 404.030) of 3829 total.
-[51.73] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 462.637 damage (SpellSchool: 8). (Threat: 462.637)
-[51.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (404.030 --> 415.030) of 3829 total.
-[51.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (415.030 --> 426.030) of 3829 total.
-[52.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (426.030 --> 437.030) of 3829 total.
-[52.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (437.030 --> 448.030) of 3829 total.
-[52.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (448.030 --> 459.030) of 3829 total.
-[52.23] [Target 1] Aura faded: {SpellID: 24977}
-[52.23] [Target 1] Aura faded: {SpellID: 24977}
-[52.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[52.23] [Balance (#1)] Casting {SpellID: 24977} (Cost = 120.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4
-[52.23] [Balance (#1)] Completed cast {SpellID: 24977}
-[52.23] [Balance (#1)] Spent 120.000 mana from {SpellID: 24977} (459.030 --> 339.030) of 3829 total.
-[52.23] [Target 1] Aura gained: {SpellID: 24977}
-[52.23] [Target 1] Aura gained: {SpellID: 24977}
-[52.23] [Balance (#1)] [Target 1] {SpellID: 24977} Hit for 0.000 damage (SpellSchool: 8). (Threat: 0.000)
-[52.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (339.030 --> 350.030) of 3829 total.
-[52.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (350.030 --> 361.030) of 3829 total.
-[52.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (361.030 --> 372.030) of 3829 total.
-[52.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (372.030 --> 383.030) of 3829 total.
-[52.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (383.030 --> 394.030) of 3829 total.
-[52.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (394.030 --> 405.030) of 3829 total.
-[52.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (405.030 --> 416.030) of 3829 total.
-[53.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (416.030 --> 427.030) of 3829 total.
-[53.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (427.030 --> 438.030) of 3829 total.
-[53.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (438.030 --> 449.030) of 3829 total.
-[53.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (449.030 --> 460.030) of 3829 total.
-[53.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (460.030 --> 471.030) of 3829 total.
-[53.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (471.030 --> 482.030) of 3829 total.
-[53.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (482.030 --> 493.030) of 3829 total.
-[53.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (493.030 --> 504.030) of 3829 total.
-[53.73] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[53.73] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
-[53.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (504.030 --> 515.030) of 3829 total.
-[53.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (515.030 --> 526.030) of 3829 total.
-[54.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (526.030 --> 537.030) of 3829 total.
-[54.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (537.030 --> 548.030) of 3829 total.
-[54.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (548.030 --> 559.030) of 3829 total.
-[54.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[54.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (559.030 --> 570.030) of 3829 total.
-[54.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (570.030 --> 581.030) of 3829 total.
-[54.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (581.030 --> 592.030) of 3829 total.
-[54.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (592.030 --> 603.030) of 3829 total.
-[54.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (603.030 --> 614.030) of 3829 total.
-[54.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (614.030 --> 625.030) of 3829 total.
-[54.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (625.030 --> 636.030) of 3829 total.
-[55.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (636.030 --> 647.030) of 3829 total.
-[55.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (647.030 --> 658.030) of 3829 total.
-[55.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (658.030 --> 669.030) of 3829 total.
-[55.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (669.030 --> 680.030) of 3829 total.
-[55.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (680.030 --> 691.030) of 3829 total.
-[55.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (691.030 --> 702.030) of 3829 total.
-[55.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (702.030 --> 713.030) of 3829 total.
-[55.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (713.030 --> 724.030) of 3829 total.
-[55.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (724.030 --> 735.030) of 3829 total.
-[55.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (735.030 --> 746.030) of 3829 total.
-[56.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (746.030 --> 757.030) of 3829 total.
-[56.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (757.030 --> 768.030) of 3829 total.
-[56.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (768.030 --> 779.030) of 3829 total.
-[56.23] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 56.227000001s.
-[56.23] [Balance (#1)] Completed cast {SpellID: 25298}
-[56.23] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (779.030 --> 524.030) of 3829 total.
-[56.23] [Balance (#1)] [Target 1] {SpellID: 25298} Miss (SpellSchool: 64). (Threat: 0.000)
-[56.23] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
-[56.23] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
-[56.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[56.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (524.030 --> 535.030) of 3829 total.
-[56.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (535.030 --> 546.030) of 3829 total.
-[56.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (546.030 --> 557.030) of 3829 total.
-[56.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (557.030 --> 568.030) of 3829 total.
-[56.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (568.030 --> 579.030) of 3829 total.
-[56.73] [Balance (#1)] [Target 1] {SpellID: 9835} tick Crit for 363.741 damage (SpellSchool: 64). (Threat: 363.741)
-[56.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (579.030 --> 590.030) of 3829 total.
-[56.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (590.030 --> 601.030) of 3829 total.
-[57.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (601.030 --> 612.030) of 3829 total.
-[57.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (612.030 --> 623.030) of 3829 total.
-[57.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (623.030 --> 634.030) of 3829 total.
-[57.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (634.030 --> 645.030) of 3829 total.
-[57.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (645.030 --> 656.030) of 3829 total.
-[57.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (656.030 --> 667.030) of 3829 total.
-[57.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (667.030 --> 678.030) of 3829 total.
-[57.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (678.030 --> 689.030) of 3829 total.
-[57.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (689.030 --> 700.030) of 3829 total.
-[57.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (700.030 --> 711.030) of 3829 total.
-[58.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (711.030 --> 722.030) of 3829 total.
-[58.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (722.030 --> 733.030) of 3829 total.
-[58.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (733.030 --> 744.030) of 3829 total.
-[58.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[58.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (744.030 --> 755.030) of 3829 total.
-[58.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (755.030 --> 766.030) of 3829 total.
-[58.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (766.030 --> 777.030) of 3829 total.
-[58.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (777.030 --> 788.030) of 3829 total.
-[58.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (788.030 --> 799.030) of 3829 total.
-[58.73] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 58.727000001s.
-[58.73] [Balance (#1)] Completed cast {SpellID: 25298}
-[58.73] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (799.030 --> 544.030) of 3829 total.
-[58.73] [Balance (#1)] [Target 1] {SpellID: 25298} Miss (SpellSchool: 64). (Threat: 0.000)
-[58.73] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
-[58.73] [Balance (#1)] Aura faded: {SpellID: 408255}
-[58.73] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 3s, GCD = 1.5s, Effective Time = 3s) APL: priority 6
-[58.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (544.030 --> 555.030) of 3829 total.
-[58.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (555.030 --> 566.030) of 3829 total.
-[59.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (566.030 --> 577.030) of 3829 total.
-[59.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (577.030 --> 588.030) of 3829 total.
-[59.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (588.030 --> 599.030) of 3829 total.
-[59.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (599.030 --> 610.030) of 3829 total.
-[59.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (610.030 --> 621.030) of 3829 total.
-[59.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (621.030 --> 632.030) of 3829 total.
-[59.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (632.030 --> 643.030) of 3829 total.
-[59.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (643.030 --> 654.030) of 3829 total.
-[59.73] [Balance (#1)] Aura faded: {SpellID: 29166}
-[59.73] [Balance (#1)] Gained 2.970 mana from {OtherID: 2, Tag: 1} (654.030 --> 657.000) of 3829 total.
-[59.73] [Balance (#1)] [Target 1] {SpellID: 9835} tick Crit for 363.741 damage (SpellSchool: 64). (Threat: 363.741)
-[60.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[61.73] [Balance (#1)] Queueing up {SpellID: 9912} to cast at 1m1.727000001s.
-[61.73] [Balance (#1)] Completed cast {SpellID: 25298}
-[61.73] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (657.000 --> 402.000) of 3829 total.
-[61.73] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1115.919 damage (SpellSchool: 64). (Threat: 1115.919)
-[61.73] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[61.74] [Balance (#1)] Aura gained: {SpellID: 16870}
-[62.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[62.73] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[63.23] [Balance (#1)] Queueing up {SpellID: 9912} to cast at 1m3.227000001s.
-[63.23] [Balance (#1)] Completed cast {SpellID: 9912}
-[63.23] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (402.000 --> 357.000) of 3829 total.
-[63.23] [Balance (#1)] Aura gained: {SpellID: 408255}
-[63.23] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
-[63.23] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[64.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[64.23] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 428.448 damage (SpellSchool: 8). (Threat: 428.448)
-[64.73] [Balance (#1)] Queueing up {SpellID: 25298} to cast at 1m4.727000001s.
-[64.73] [Balance (#1)] Completed cast {SpellID: 9912}
-[64.73] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (357.000 --> 312.000) of 3829 total.
-[64.73] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[64.73] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 4
-[64.73] [Balance (#1)] Casting {SpellID: 25298} (Cost = 0.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
-[65.73] [Target 1] Aura faded: {SpellID: 9835}
-[65.73] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[65.73] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 461.620 damage (SpellSchool: 8). (Threat: 461.620)
-[66.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[67.23] [Balance (#1)] Queueing up {SpellID: 9835} to cast at 1m7.227000001s.
-[67.23] [Balance (#1)] Completed cast {SpellID: 25298}
-[67.23] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 974.606 damage (SpellSchool: 64). (Threat: 974.606)
-[67.23] [Balance (#1)] Aura faded: {SpellID: 16870}
-[67.23] [Balance (#1)] {SpellID: 408255} stacks: 4 --> 3
-[67.23] [Balance (#1)] Casting {SpellID: 9835} (Cost = 281.250, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 3
-[67.23] [Balance (#1)] Completed cast {SpellID: 9835}
-[67.23] [Balance (#1)] Spent 281.250 mana from {SpellID: 9835} (312.000 --> 30.750) of 3829 total.
-[67.23] [Target 1] Aura gained: {SpellID: 9835}
-[67.23] [Balance (#1)] [Target 1] {SpellID: 9835} Hit for 286.608 damage (SpellSchool: 64). (Threat: 286.608)
-[68.23] [Target 1] Aura faded: {SpellID: 24977}
-[68.23] [Target 1] Aura faded: {SpellID: 24977}
-[68.23] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
-[70.23] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[72.30] [Balance (#1)] Gained 1.606 mana from {OtherID: 2, Tag: 2} (30.750 --> 32.356) of 3829 total.
-[72.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (32.356 --> 34.556) of 3829 total.
-[72.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (34.556 --> 36.756) of 3829 total.
-[72.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.756 --> 38.956) of 3829 total.
-[72.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (38.956 --> 41.156) of 3829 total.
-[72.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.156 --> 43.356) of 3829 total.
-[72.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (43.356 --> 45.556) of 3829 total.
-[72.91] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[73.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.556 --> 47.756) of 3829 total.
-[73.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.756 --> 49.956) of 3829 total.
-[73.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.956 --> 52.156) of 3829 total.
-[73.23] [Balance (#1)] [Target 1] {SpellID: 9835} tick Crit for 363.741 damage (SpellSchool: 64). (Threat: 363.741)
-[73.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.156 --> 54.356) of 3829 total.
-[73.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (54.356 --> 56.556) of 3829 total.
-[73.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.556 --> 58.756) of 3829 total.
-[73.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.756 --> 60.956) of 3829 total.
-[73.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.956 --> 63.156) of 3829 total.
-[73.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.156 --> 65.356) of 3829 total.
-[73.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.356 --> 67.556) of 3829 total.
-[74.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.556 --> 69.756) of 3829 total.
-[74.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.756 --> 71.956) of 3829 total.
-[74.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.956 --> 74.156) of 3829 total.
-[74.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.156 --> 76.356) of 3829 total.
-[74.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.356 --> 78.556) of 3829 total.
-[74.41] [Balance (#1)] Completed cast {SpellID: 9912}
-[74.41] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (78.556 --> 78.710) of 3829 total.
-[74.41] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (78.710 --> 33.710) of 3829 total.
-[74.41] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[74.41] [Balance (#1)] {SpellID: 408255} stacks: 3 --> 4
-[75.41] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 440.440 damage (SpellSchool: 8). (Threat: 440.440)
-[76.23] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[79.23] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[79.50] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (33.710 --> 35.756) of 3829 total.
-[79.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (35.756 --> 37.956) of 3829 total.
-[79.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (37.956 --> 40.156) of 3829 total.
-[79.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (40.156 --> 42.356) of 3829 total.
-[79.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (42.356 --> 44.556) of 3829 total.
-[80.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (44.556 --> 46.756) of 3829 total.
+[19.14] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[19.15] [Balance (#1)] Aura faded: {SpellID: 16886}
+[19.91] [Balance (#1)] Completed cast {SpellID: 25298}
+[19.91] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (2381.500 --> 2126.500) of 3829 total.
+[19.91] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1067.014 damage (SpellSchool: 64). (Threat: 1067.014)
+[19.91] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
+[19.91] [Balance (#1)] Aura faded: {SpellID: 408255}
+[19.91] [Balance (#1)] Casting {SpellID: 24977} (Cost = 120.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4
+[19.91] [Balance (#1)] Completed cast {SpellID: 24977}
+[19.91] [Balance (#1)] Spent 120.000 mana from {SpellID: 24977} (2126.500 --> 2006.500) of 3829 total.
+[19.91] [Target 1] Aura gained: {SpellID: 24977}
+[19.91] [Target 1] Aura gained: {SpellID: 24977}
+[19.91] [Balance (#1)] [Target 1] {SpellID: 24977} Hit for 0.000 damage (SpellSchool: 8). (Threat: 0.000)
+[21.41] [Balance (#1)] Casting {ItemID: 272439} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 1
+[21.41] [Balance (#1)] Completed cast {ItemID: 272439}
+[21.41] [Balance (#1)] Aura gained: {ItemID: 272439}
+[21.41] [Balance (#1)] Gained {"Spirit": 72.000,} from {ItemID: 272439}.
+[21.41] [Balance (#1)] Major cooldown used: {ItemID: 272439}
+[21.41] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[21.91] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[22.14] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[22.91] [Balance (#1)] Completed cast {SpellID: 9912}
+[22.91] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (2006.500 --> 1961.500) of 3829 total.
+[22.91] [Balance (#1)] Aura gained: {SpellID: 408255}
+[22.91] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
+[22.91] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
+[23.91] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[23.91] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 458.867 damage (SpellSchool: 8). (Threat: 458.867)
+[25.14] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[25.41] [Balance (#1)] Completed cast {SpellID: 25298}
+[25.41] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (1961.500 --> 1706.500) of 3829 total.
+[25.41] [Balance (#1)] [Target 1] {SpellID: 25298} Miss (SpellSchool: 64). (Threat: 0.000)
+[25.41] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
+[25.41] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
+[25.91] [Balance (#1)] [Target 1] {SpellID: 24977} tick Crit for 281.885 damage (SpellSchool: 8). (Threat: 281.885)
+[27.91] [Balance (#1)] Completed cast {SpellID: 25298}
+[27.91] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (1706.500 --> 1451.500) of 3829 total.
+[27.91] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1053.805 damage (SpellSchool: 64). (Threat: 1053.805)
+[27.91] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
+[27.91] [Balance (#1)] Aura faded: {SpellID: 408255}
+[27.91] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[27.91] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[28.14] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[29.41] [Balance (#1)] Completed cast {SpellID: 9912}
+[29.41] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (1451.500 --> 1406.500) of 3829 total.
+[29.41] [Balance (#1)] Aura gained: {SpellID: 408255}
+[29.41] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
+[29.41] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
+[29.91] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[30.41] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 461.214 damage (SpellSchool: 8). (Threat: 461.214)
+[31.14] [Target 1] Aura faded: {SpellID: 9835}
+[31.14] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[31.91] [Balance (#1)] Completed cast {SpellID: 25298}
+[31.91] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (1406.500 --> 1151.500) of 3829 total.
+[31.91] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1050.811 damage (SpellSchool: 64). (Threat: 1050.811)
+[31.91] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
+[31.91] [Balance (#1)] Casting {SpellID: 9835} (Cost = 281.250, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 3
+[31.91] [Balance (#1)] Completed cast {SpellID: 9835}
+[31.91] [Balance (#1)] Spent 281.250 mana from {SpellID: 9835} (1151.500 --> 870.250) of 3829 total.
+[31.91] [Target 1] Aura gained: {SpellID: 9835}
+[31.91] [Balance (#1)] [Target 1] {SpellID: 9835} Crit for 584.135 damage (SpellSchool: 64). (Threat: 584.135)
+[31.91] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[31.92] [Balance (#1)] Aura gained: {SpellID: 16886}
+[33.41] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.273s, GCD = 1.227s, Effective Time = 2.273s) APL: priority 6
+[33.91] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[34.91] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[34.92] [Balance (#1)] Aura faded: {SpellID: 16886}
+[35.68] [Balance (#1)] Completed cast {SpellID: 25298}
+[35.68] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (870.250 --> 615.250) of 3829 total.
+[35.68] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1085.781 damage (SpellSchool: 64). (Threat: 1085.781)
+[35.68] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
+[35.68] [Balance (#1)] Aura faded: {SpellID: 408255}
+[35.68] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[35.91] [Target 1] Aura faded: {SpellID: 24977}
+[35.91] [Target 1] Aura faded: {SpellID: 24977}
+[35.91] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[36.41] [Balance (#1)] Aura faded: {ItemID: 272439}
+[36.50] [Balance (#1)] Lost {"Spirit": 72.000,} from fading {ItemID: 272439}.
+[37.18] [Balance (#1)] Completed cast {SpellID: 9912}
+[37.18] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (615.250 --> 570.250) of 3829 total.
+[37.18] [Balance (#1)] Aura gained: {SpellID: 408255}
+[37.18] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
+[37.18] [Balance (#1)] Casting {SpellID: 24977} (Cost = 120.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4
+[37.18] [Balance (#1)] Completed cast {SpellID: 24977}
+[37.18] [Balance (#1)] Spent 120.000 mana from {SpellID: 24977} (570.250 --> 450.250) of 3829 total.
+[37.18] [Target 1] Aura gained: {SpellID: 24977}
+[37.18] [Target 1] Aura gained: {SpellID: 24977}
+[37.18] [Balance (#1)] [Target 1] {SpellID: 24977} Hit for 0.000 damage (SpellSchool: 8). (Threat: 0.000)
+[37.91] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[38.18] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 453.157 damage (SpellSchool: 8). (Threat: 453.157)
+[38.68] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
+[39.18] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[40.91] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[41.18] [Balance (#1)] Completed cast {SpellID: 25298}
+[41.18] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (450.250 --> 195.250) of 3829 total.
+[41.18] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1016.814 damage (SpellSchool: 64). (Threat: 1016.814)
+[41.18] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
+[41.18] [Balance (#1)] Casting {SpellID: 29166} (Cost = 62.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 2
+[41.18] [Balance (#1)] Completed cast {SpellID: 29166}
+[41.18] [Balance (#1)] Spent 62.000 mana from {SpellID: 29166} (195.250 --> 133.250) of 3829 total.
+[41.18] [Balance (#1)] Aura gained: {SpellID: 29166}
+[41.18] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[41.20] [Balance (#1)] Gained 1.870 mana from {OtherID: 2, Tag: 1} (133.250 --> 135.120) of 3829 total.
+[41.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (135.120 --> 146.120) of 3829 total.
+[41.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (146.120 --> 157.120) of 3829 total.
+[41.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (157.120 --> 168.120) of 3829 total.
+[41.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (168.120 --> 179.120) of 3829 total.
+[41.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (179.120 --> 190.120) of 3829 total.
+[41.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (190.120 --> 201.120) of 3829 total.
+[41.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (201.120 --> 212.120) of 3829 total.
+[42.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (212.120 --> 223.120) of 3829 total.
+[42.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (223.120 --> 234.120) of 3829 total.
+[42.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (234.120 --> 245.120) of 3829 total.
+[42.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (245.120 --> 256.120) of 3829 total.
+[42.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (256.120 --> 267.120) of 3829 total.
+[42.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (267.120 --> 278.120) of 3829 total.
+[42.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (278.120 --> 289.120) of 3829 total.
+[42.68] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
+[42.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (289.120 --> 300.120) of 3829 total.
+[42.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (300.120 --> 311.120) of 3829 total.
+[42.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (311.120 --> 322.120) of 3829 total.
+[43.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (322.120 --> 333.120) of 3829 total.
+[43.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (333.120 --> 344.120) of 3829 total.
+[43.18] [Balance (#1)] [Target 1] {SpellID: 24977} tick Crit for 281.885 damage (SpellSchool: 8). (Threat: 281.885)
+[43.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (344.120 --> 355.120) of 3829 total.
+[43.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (355.120 --> 366.120) of 3829 total.
+[43.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (366.120 --> 377.120) of 3829 total.
+[43.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (377.120 --> 388.120) of 3829 total.
+[43.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (388.120 --> 399.120) of 3829 total.
+[43.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (399.120 --> 410.120) of 3829 total.
+[43.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (410.120 --> 421.120) of 3829 total.
+[43.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (421.120 --> 432.120) of 3829 total.
+[43.91] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[44.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (432.120 --> 443.120) of 3829 total.
+[44.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (443.120 --> 454.120) of 3829 total.
+[44.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (454.120 --> 465.120) of 3829 total.
+[44.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (465.120 --> 476.120) of 3829 total.
+[44.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (476.120 --> 487.120) of 3829 total.
+[44.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (487.120 --> 498.120) of 3829 total.
+[44.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (498.120 --> 509.120) of 3829 total.
+[44.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (509.120 --> 520.120) of 3829 total.
+[44.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (520.120 --> 531.120) of 3829 total.
+[44.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (531.120 --> 542.120) of 3829 total.
+[45.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (542.120 --> 553.120) of 3829 total.
+[45.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (553.120 --> 564.120) of 3829 total.
+[45.18] [Balance (#1)] Completed cast {SpellID: 25298}
+[45.18] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (564.120 --> 309.120) of 3829 total.
+[45.18] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1053.771 damage (SpellSchool: 64). (Threat: 1053.771)
+[45.18] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
+[45.18] [Balance (#1)] Aura faded: {SpellID: 408255}
+[45.18] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[45.18] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[45.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (309.120 --> 320.120) of 3829 total.
+[45.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (320.120 --> 331.120) of 3829 total.
+[45.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (331.120 --> 342.120) of 3829 total.
+[45.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (342.120 --> 353.120) of 3829 total.
+[45.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (353.120 --> 364.120) of 3829 total.
+[45.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (364.120 --> 375.120) of 3829 total.
+[45.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (375.120 --> 386.120) of 3829 total.
+[45.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (386.120 --> 397.120) of 3829 total.
+[46.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (397.120 --> 408.120) of 3829 total.
+[46.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (408.120 --> 419.120) of 3829 total.
+[46.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (419.120 --> 430.120) of 3829 total.
+[46.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (430.120 --> 441.120) of 3829 total.
+[46.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (441.120 --> 452.120) of 3829 total.
+[46.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (452.120 --> 463.120) of 3829 total.
+[46.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (463.120 --> 474.120) of 3829 total.
+[46.68] [Balance (#1)] Completed cast {SpellID: 9912}
+[46.68] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (474.120 --> 429.120) of 3829 total.
+[46.68] [Balance (#1)] Aura gained: {SpellID: 408255}
+[46.68] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
+[46.68] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
+[46.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (429.120 --> 440.120) of 3829 total.
+[46.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (440.120 --> 451.120) of 3829 total.
+[46.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (451.120 --> 462.120) of 3829 total.
+[46.91] [Target 1] Aura faded: {SpellID: 9835}
+[46.91] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[47.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (462.120 --> 473.120) of 3829 total.
+[47.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (473.120 --> 484.120) of 3829 total.
+[47.18] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[47.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (484.120 --> 495.120) of 3829 total.
+[47.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (495.120 --> 506.120) of 3829 total.
+[47.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (506.120 --> 517.120) of 3829 total.
+[47.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (517.120 --> 528.120) of 3829 total.
+[47.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (528.120 --> 539.120) of 3829 total.
+[47.68] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 439.760 damage (SpellSchool: 8). (Threat: 439.760)
+[47.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (539.120 --> 550.120) of 3829 total.
+[47.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (550.120 --> 561.120) of 3829 total.
+[47.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (561.120 --> 572.120) of 3829 total.
+[48.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (572.120 --> 583.120) of 3829 total.
+[48.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (583.120 --> 594.120) of 3829 total.
+[48.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (594.120 --> 605.120) of 3829 total.
+[48.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (605.120 --> 616.120) of 3829 total.
+[48.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (616.120 --> 627.120) of 3829 total.
+[48.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (627.120 --> 638.120) of 3829 total.
+[48.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (638.120 --> 649.120) of 3829 total.
+[48.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (649.120 --> 660.120) of 3829 total.
+[48.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (660.120 --> 671.120) of 3829 total.
+[48.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (671.120 --> 682.120) of 3829 total.
+[49.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (682.120 --> 693.120) of 3829 total.
+[49.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (693.120 --> 704.120) of 3829 total.
+[49.18] [Balance (#1)] Completed cast {SpellID: 25298}
+[49.18] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (704.120 --> 449.120) of 3829 total.
+[49.18] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1086.164 damage (SpellSchool: 64). (Threat: 1086.164)
+[49.18] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
+[49.18] [Balance (#1)] Casting {SpellID: 9835} (Cost = 281.250, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 3
+[49.18] [Balance (#1)] Completed cast {SpellID: 9835}
+[49.18] [Balance (#1)] Spent 281.250 mana from {SpellID: 9835} (449.120 --> 167.870) of 3829 total.
+[49.18] [Target 1] Aura gained: {SpellID: 9835}
+[49.18] [Balance (#1)] [Target 1] {SpellID: 9835} Crit for 568.320 damage (SpellSchool: 64). (Threat: 568.320)
+[49.18] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[49.19] [Balance (#1)] Aura gained: {SpellID: 16886}
+[49.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (167.870 --> 178.870) of 3829 total.
+[49.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (178.870 --> 189.870) of 3829 total.
+[49.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (189.870 --> 200.870) of 3829 total.
+[49.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (200.870 --> 211.870) of 3829 total.
+[49.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (211.870 --> 222.870) of 3829 total.
+[49.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (222.870 --> 233.870) of 3829 total.
+[49.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (233.870 --> 244.870) of 3829 total.
+[49.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (244.870 --> 255.870) of 3829 total.
+[50.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (255.870 --> 266.870) of 3829 total.
+[50.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (266.870 --> 277.870) of 3829 total.
+[50.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (277.870 --> 288.870) of 3829 total.
+[50.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (288.870 --> 299.870) of 3829 total.
+[50.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (299.870 --> 310.870) of 3829 total.
+[50.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (310.870 --> 321.870) of 3829 total.
+[50.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (321.870 --> 332.870) of 3829 total.
+[50.68] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.273s, GCD = 1.227s, Effective Time = 2.273s) APL: priority 6
+[50.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (332.870 --> 343.870) of 3829 total.
+[50.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (343.870 --> 354.870) of 3829 total.
+[50.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (354.870 --> 365.870) of 3829 total.
+[51.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (365.870 --> 376.870) of 3829 total.
+[51.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (376.870 --> 387.870) of 3829 total.
+[51.18] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[51.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (387.870 --> 398.870) of 3829 total.
+[51.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (398.870 --> 409.870) of 3829 total.
+[51.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (409.870 --> 420.870) of 3829 total.
+[51.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (420.870 --> 431.870) of 3829 total.
+[51.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (431.870 --> 442.870) of 3829 total.
+[51.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (442.870 --> 453.870) of 3829 total.
+[51.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (453.870 --> 464.870) of 3829 total.
+[51.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (464.870 --> 475.870) of 3829 total.
+[52.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (475.870 --> 486.870) of 3829 total.
+[52.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (486.870 --> 497.870) of 3829 total.
+[52.18] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[52.19] [Balance (#1)] Aura faded: {SpellID: 16886}
+[52.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (497.870 --> 508.870) of 3829 total.
+[52.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (508.870 --> 519.870) of 3829 total.
+[52.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (519.870 --> 530.870) of 3829 total.
+[52.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (530.870 --> 541.870) of 3829 total.
+[52.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (541.870 --> 552.870) of 3829 total.
+[52.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (552.870 --> 563.870) of 3829 total.
+[52.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (563.870 --> 574.870) of 3829 total.
+[52.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (574.870 --> 585.870) of 3829 total.
+[52.96] [Balance (#1)] Completed cast {SpellID: 25298}
+[52.96] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (585.870 --> 330.870) of 3829 total.
+[52.96] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1043.654 damage (SpellSchool: 64). (Threat: 1043.654)
+[52.96] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
+[52.96] [Balance (#1)] Aura faded: {SpellID: 408255}
+[52.96] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[53.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (330.870 --> 341.870) of 3829 total.
+[53.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (341.870 --> 352.870) of 3829 total.
+[53.18] [Target 1] Aura faded: {SpellID: 24977}
+[53.18] [Target 1] Aura faded: {SpellID: 24977}
+[53.18] [Balance (#1)] [Target 1] {SpellID: 24977} tick Crit for 281.885 damage (SpellSchool: 8). (Threat: 281.885)
+[53.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (352.870 --> 363.870) of 3829 total.
+[53.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (363.870 --> 374.870) of 3829 total.
+[53.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (374.870 --> 385.870) of 3829 total.
+[53.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (385.870 --> 396.870) of 3829 total.
+[53.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (396.870 --> 407.870) of 3829 total.
+[53.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (407.870 --> 418.870) of 3829 total.
+[53.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (418.870 --> 429.870) of 3829 total.
+[53.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (429.870 --> 440.870) of 3829 total.
+[54.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (440.870 --> 451.870) of 3829 total.
+[54.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (451.870 --> 462.870) of 3829 total.
+[54.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (462.870 --> 473.870) of 3829 total.
+[54.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (473.870 --> 484.870) of 3829 total.
+[54.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (484.870 --> 495.870) of 3829 total.
+[54.46] [Balance (#1)] Completed cast {SpellID: 9912}
+[54.46] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (495.870 --> 450.870) of 3829 total.
+[54.46] [Balance (#1)] Aura gained: {SpellID: 408255}
+[54.46] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
+[54.46] [Balance (#1)] Casting {SpellID: 24977} (Cost = 120.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4
+[54.46] [Balance (#1)] Completed cast {SpellID: 24977}
+[54.46] [Balance (#1)] Spent 120.000 mana from {SpellID: 24977} (450.870 --> 330.870) of 3829 total.
+[54.46] [Target 1] Aura gained: {SpellID: 24977}
+[54.46] [Target 1] Aura gained: {SpellID: 24977}
+[54.46] [Balance (#1)] [Target 1] {SpellID: 24977} Hit for 0.000 damage (SpellSchool: 8). (Threat: 0.000)
+[54.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (330.870 --> 341.870) of 3829 total.
+[54.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (341.870 --> 352.870) of 3829 total.
+[54.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (352.870 --> 363.870) of 3829 total.
+[54.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (363.870 --> 374.870) of 3829 total.
+[54.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (374.870 --> 385.870) of 3829 total.
+[55.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (385.870 --> 396.870) of 3829 total.
+[55.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (396.870 --> 407.870) of 3829 total.
+[55.18] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[55.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (407.870 --> 418.870) of 3829 total.
+[55.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (418.870 --> 429.870) of 3829 total.
+[55.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (429.870 --> 440.870) of 3829 total.
+[55.46] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 462.654 damage (SpellSchool: 8). (Threat: 462.654)
+[55.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (440.870 --> 451.870) of 3829 total.
+[55.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (451.870 --> 462.870) of 3829 total.
+[55.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (462.870 --> 473.870) of 3829 total.
+[55.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (473.870 --> 484.870) of 3829 total.
+[55.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (484.870 --> 495.870) of 3829 total.
+[55.96] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
+[56.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (495.870 --> 506.870) of 3829 total.
+[56.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (506.870 --> 517.870) of 3829 total.
+[56.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (517.870 --> 528.870) of 3829 total.
+[56.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (528.870 --> 539.870) of 3829 total.
+[56.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (539.870 --> 550.870) of 3829 total.
+[56.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[56.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (550.870 --> 561.870) of 3829 total.
+[56.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (561.870 --> 572.870) of 3829 total.
+[56.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (572.870 --> 583.870) of 3829 total.
+[56.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (583.870 --> 594.870) of 3829 total.
+[56.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (594.870 --> 605.870) of 3829 total.
+[57.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (605.870 --> 616.870) of 3829 total.
+[57.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (616.870 --> 627.870) of 3829 total.
+[57.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (627.870 --> 638.870) of 3829 total.
+[57.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (638.870 --> 649.870) of 3829 total.
+[57.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (649.870 --> 660.870) of 3829 total.
+[57.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (660.870 --> 671.870) of 3829 total.
+[57.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (671.870 --> 682.870) of 3829 total.
+[57.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (682.870 --> 693.870) of 3829 total.
+[57.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (693.870 --> 704.870) of 3829 total.
+[57.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (704.870 --> 715.870) of 3829 total.
+[58.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (715.870 --> 726.870) of 3829 total.
+[58.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (726.870 --> 737.870) of 3829 total.
+[58.18] [Balance (#1)] [Target 1] {SpellID: 9835} tick Crit for 363.741 damage (SpellSchool: 64). (Threat: 363.741)
+[58.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (737.870 --> 748.870) of 3829 total.
+[58.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (748.870 --> 759.870) of 3829 total.
+[58.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (759.870 --> 770.870) of 3829 total.
+[58.46] [Balance (#1)] Completed cast {SpellID: 25298}
+[58.46] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (770.870 --> 515.870) of 3829 total.
+[58.46] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1088.620 damage (SpellSchool: 64). (Threat: 1088.620)
+[58.46] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
+[58.46] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
+[58.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[58.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (515.870 --> 526.870) of 3829 total.
+[58.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (526.870 --> 537.870) of 3829 total.
+[58.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (537.870 --> 548.870) of 3829 total.
+[58.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (548.870 --> 559.870) of 3829 total.
+[58.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (559.870 --> 570.870) of 3829 total.
+[59.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (570.870 --> 581.870) of 3829 total.
+[59.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (581.870 --> 592.870) of 3829 total.
+[59.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (592.870 --> 603.870) of 3829 total.
+[59.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (603.870 --> 614.870) of 3829 total.
+[59.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (614.870 --> 625.870) of 3829 total.
+[59.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (625.870 --> 636.870) of 3829 total.
+[59.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (636.870 --> 647.870) of 3829 total.
+[59.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (647.870 --> 658.870) of 3829 total.
+[59.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (658.870 --> 669.870) of 3829 total.
+[59.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (669.870 --> 680.870) of 3829 total.
+[60.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (680.870 --> 691.870) of 3829 total.
+[60.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (691.870 --> 702.870) of 3829 total.
+[60.20] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (702.870 --> 713.870) of 3829 total.
+[60.30] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (713.870 --> 724.870) of 3829 total.
+[60.40] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (724.870 --> 735.870) of 3829 total.
+[60.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[60.50] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (735.870 --> 746.870) of 3829 total.
+[60.60] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (746.870 --> 757.870) of 3829 total.
+[60.70] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (757.870 --> 768.870) of 3829 total.
+[60.80] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (768.870 --> 779.870) of 3829 total.
+[60.90] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (779.870 --> 790.870) of 3829 total.
+[60.96] [Balance (#1)] Completed cast {SpellID: 25298}
+[60.96] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (790.870 --> 535.870) of 3829 total.
+[60.96] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1116.784 damage (SpellSchool: 64). (Threat: 1116.784)
+[60.96] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
+[60.96] [Balance (#1)] Aura faded: {SpellID: 408255}
+[60.96] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[61.00] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (535.870 --> 546.870) of 3829 total.
+[61.10] [Balance (#1)] Gained 11.000 mana from {OtherID: 2, Tag: 1} (546.870 --> 557.870) of 3829 total.
+[61.18] [Balance (#1)] Aura faded: {SpellID: 29166}
+[61.18] [Balance (#1)] Gained 9.130 mana from {OtherID: 2, Tag: 1} (557.870 --> 567.000) of 3829 total.
+[61.18] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[62.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Crit for 281.885 damage (SpellSchool: 8). (Threat: 281.885)
+[62.46] [Balance (#1)] Completed cast {SpellID: 9912}
+[62.46] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (567.000 --> 522.000) of 3829 total.
+[62.46] [Balance (#1)] Aura gained: {SpellID: 408255}
+[62.46] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
+[62.46] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
+[63.46] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 422.528 damage (SpellSchool: 8). (Threat: 422.528)
+[64.18] [Target 1] Aura faded: {SpellID: 9835}
+[64.18] [Balance (#1)] [Target 1] {SpellID: 9835} tick Crit for 363.741 damage (SpellSchool: 64). (Threat: 363.741)
+[64.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[64.96] [Balance (#1)] Completed cast {SpellID: 25298}
+[64.96] [Balance (#1)] Spent 255.000 mana from {SpellID: 25298} (522.000 --> 267.000) of 3829 total.
+[64.96] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 992.025 damage (SpellSchool: 64). (Threat: 992.025)
+[64.96] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
+[64.96] [Balance (#1)] Casting {SpellID: 25298} (Cost = 255.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
+[64.97] [Balance (#1)] Aura gained: {SpellID: 16870}
+[66.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[67.46] [Balance (#1)] Completed cast {SpellID: 25298}
+[67.46] [Balance (#1)] [Target 1] {SpellID: 25298} Hit for 1086.896 damage (SpellSchool: 64). (Threat: 1086.896)
+[67.46] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
+[67.46] [Balance (#1)] Aura faded: {SpellID: 408255}
+[67.46] [Balance (#1)] Aura faded: {SpellID: 16870}
+[67.46] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[68.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[68.96] [Balance (#1)] Completed cast {SpellID: 9912}
+[68.96] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (267.000 --> 222.000) of 3829 total.
+[68.96] [Balance (#1)] Aura gained: {SpellID: 408255}
+[68.96] [Balance (#1)] {SpellID: 408255} stacks: 0 --> 2
+[68.96] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[69.96] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 446.550 damage (SpellSchool: 8). (Threat: 446.550)
+[70.46] [Target 1] Aura faded: {SpellID: 24977}
+[70.46] [Target 1] Aura faded: {SpellID: 24977}
+[70.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[70.46] [Balance (#1)] Completed cast {SpellID: 9912}
+[70.46] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (222.000 --> 177.000) of 3829 total.
+[70.46] [Balance (#1)] Aura refreshed: {SpellID: 408255}
+[70.46] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 4
+[70.46] [Balance (#1)] Casting {SpellID: 24977} (Cost = 120.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4
+[70.46] [Balance (#1)] Completed cast {SpellID: 24977}
+[70.46] [Balance (#1)] Spent 120.000 mana from {SpellID: 24977} (177.000 --> 57.000) of 3829 total.
+[70.46] [Target 1] Aura gained: {SpellID: 24977}
+[70.46] [Target 1] Aura gained: {SpellID: 24977}
+[70.46] [Balance (#1)] [Target 1] {SpellID: 24977} Hit for 0.000 damage (SpellSchool: 8). (Threat: 0.000)
+[71.46] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 456.440 damage (SpellSchool: 8). (Threat: 456.440)
+[71.96] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[72.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[73.46] [Balance (#1)] Completed cast {SpellID: 9912}
+[73.46] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (57.000 --> 12.000) of 3829 total.
+[73.46] [Balance (#1)] Aura refreshed: {SpellID: 408255}
+[74.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Crit for 281.885 damage (SpellSchool: 8). (Threat: 281.885)
+[74.46] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 466.657 damage (SpellSchool: 8). (Threat: 466.657)
+[76.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[78.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[78.50] [Balance (#1)] Gained 0.968 mana from {OtherID: 2, Tag: 2} (12.000 --> 12.968) of 3829 total.
+[78.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (12.968 --> 15.168) of 3829 total.
+[78.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (15.168 --> 17.368) of 3829 total.
+[78.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (17.368 --> 19.568) of 3829 total.
+[78.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (19.568 --> 21.768) of 3829 total.
+[79.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (21.768 --> 23.968) of 3829 total.
+[79.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (23.968 --> 26.168) of 3829 total.
+[79.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (26.168 --> 28.368) of 3829 total.
+[79.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (28.368 --> 30.568) of 3829 total.
+[79.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (30.568 --> 32.768) of 3829 total.
+[79.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (32.768 --> 34.968) of 3829 total.
+[79.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (34.968 --> 37.168) of 3829 total.
+[79.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (37.168 --> 39.368) of 3829 total.
+[79.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (39.368 --> 41.568) of 3829 total.
+[79.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.568 --> 43.768) of 3829 total.
+[80.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (43.768 --> 45.968) of 3829 total.
 [80.01] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[80.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (46.756 --> 48.956) of 3829 total.
-[80.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (48.956 --> 51.156) of 3829 total.
-[80.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (51.156 --> 53.356) of 3829 total.
-[80.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (53.356 --> 55.556) of 3829 total.
-[80.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (55.556 --> 57.756) of 3829 total.
-[80.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (57.756 --> 59.956) of 3829 total.
-[80.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (59.956 --> 62.156) of 3829 total.
-[80.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (62.156 --> 64.356) of 3829 total.
-[80.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (64.356 --> 66.556) of 3829 total.
-[81.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (66.556 --> 68.756) of 3829 total.
-[81.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (68.756 --> 70.956) of 3829 total.
-[81.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.956 --> 73.156) of 3829 total.
-[81.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (73.156 --> 75.356) of 3829 total.
-[81.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (75.356 --> 77.556) of 3829 total.
-[81.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (77.556 --> 79.756) of 3829 total.
+[80.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.968 --> 48.168) of 3829 total.
+[80.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (48.168 --> 50.368) of 3829 total.
+[80.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (50.368 --> 52.568) of 3829 total.
+[80.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.568 --> 54.768) of 3829 total.
+[80.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[80.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (54.768 --> 56.968) of 3829 total.
+[80.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.968 --> 59.168) of 3829 total.
+[80.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (59.168 --> 61.368) of 3829 total.
+[80.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (61.368 --> 63.568) of 3829 total.
+[80.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.568 --> 65.768) of 3829 total.
+[81.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.768 --> 67.968) of 3829 total.
+[81.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.968 --> 70.168) of 3829 total.
+[81.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.168 --> 72.368) of 3829 total.
+[81.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.368 --> 74.568) of 3829 total.
+[81.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.568 --> 76.768) of 3829 total.
+[81.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.768 --> 78.968) of 3829 total.
 [81.51] [Balance (#1)] Completed cast {SpellID: 9912}
-[81.51] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (79.756 --> 79.910) of 3829 total.
-[81.51] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (79.910 --> 34.910) of 3829 total.
+[81.51] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (78.968 --> 79.100) of 3829 total.
+[81.51] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (79.100 --> 34.100) of 3829 total.
 [81.51] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[82.23] [Target 1] Aura faded: {SpellID: 9835}
-[82.23] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[82.51] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 461.345 damage (SpellSchool: 8). (Threat: 461.345)
-[86.60] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (34.910 --> 36.956) of 3829 total.
-[86.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.956 --> 39.156) of 3829 total.
-[86.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (39.156 --> 41.356) of 3829 total.
-[86.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.356 --> 43.556) of 3829 total.
-[87.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (43.556 --> 45.756) of 3829 total.
-[87.01] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[87.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.756 --> 47.956) of 3829 total.
-[87.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.956 --> 50.156) of 3829 total.
-[87.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (50.156 --> 52.356) of 3829 total.
-[87.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.356 --> 54.556) of 3829 total.
-[87.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (54.556 --> 56.756) of 3829 total.
-[87.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.756 --> 58.956) of 3829 total.
-[87.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.956 --> 61.156) of 3829 total.
-[87.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (61.156 --> 63.356) of 3829 total.
-[87.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.356 --> 65.556) of 3829 total.
-[88.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.556 --> 67.756) of 3829 total.
-[88.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.756 --> 69.956) of 3829 total.
-[88.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.956 --> 72.156) of 3829 total.
-[88.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.156 --> 74.356) of 3829 total.
-[88.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.356 --> 76.556) of 3829 total.
-[88.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.556 --> 78.756) of 3829 total.
-[88.51] [Balance (#1)] Completed cast {SpellID: 9912}
-[88.51] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (78.756 --> 78.910) of 3829 total.
-[88.51] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (78.910 --> 33.910) of 3829 total.
-[88.51] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[89.51] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 449.980 damage (SpellSchool: 8). (Threat: 449.980)
+[82.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[82.51] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 446.236 damage (SpellSchool: 8). (Threat: 446.236)
+[84.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[86.46] [Target 1] Aura faded: {SpellID: 24977}
+[86.46] [Balance (#1)] [Target 1] {SpellID: 24977} tick Hit for 140.942 damage (SpellSchool: 8). (Threat: 140.942)
+[86.46] [Target 1] Aura faded: {SpellID: 24977}
+[86.60] [Balance (#1)] Gained 2.068 mana from {OtherID: 2, Tag: 2} (34.100 --> 36.168) of 3829 total.
+[86.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.168 --> 38.368) of 3829 total.
+[86.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (38.368 --> 40.568) of 3829 total.
+[86.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (40.568 --> 42.768) of 3829 total.
+[87.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (42.768 --> 44.968) of 3829 total.
+[87.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (44.968 --> 47.168) of 3829 total.
+[87.11] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[87.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.168 --> 49.368) of 3829 total.
+[87.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.368 --> 51.568) of 3829 total.
+[87.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (51.568 --> 53.768) of 3829 total.
+[87.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (53.768 --> 55.968) of 3829 total.
+[87.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (55.968 --> 58.168) of 3829 total.
+[87.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.168 --> 60.368) of 3829 total.
+[87.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.368 --> 62.568) of 3829 total.
+[87.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (62.568 --> 64.768) of 3829 total.
+[88.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (64.768 --> 66.968) of 3829 total.
+[88.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (66.968 --> 69.168) of 3829 total.
+[88.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.168 --> 71.368) of 3829 total.
+[88.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.368 --> 73.568) of 3829 total.
+[88.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (73.568 --> 75.768) of 3829 total.
+[88.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (75.768 --> 77.968) of 3829 total.
+[88.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (77.968 --> 80.168) of 3829 total.
+[88.61] [Balance (#1)] Completed cast {SpellID: 9912}
+[88.61] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (80.168 --> 80.300) of 3829 total.
+[88.61] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (80.300 --> 35.300) of 3829 total.
+[88.61] [Balance (#1)] Aura refreshed: {SpellID: 408255}
+[89.61] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 469.046 damage (SpellSchool: 8). (Threat: 469.046)
 [90.01] [Balance (#1)] Casting {ItemID: 272438} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 1
 [90.01] [Balance (#1)] Completed cast {ItemID: 272438}
 [90.01] [Balance (#1)] Aura gained: {SpellID: 1291101}
 [90.01] [Balance (#1)] {SpellID: 1291101} stacks: 0 --> 1
 [90.01] [Balance (#1)] Major cooldown used: {ItemID: 272438}
-[93.60] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (33.910 --> 35.956) of 3829 total.
-[93.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (35.956 --> 38.156) of 3829 total.
-[93.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (38.156 --> 40.356) of 3829 total.
-[93.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (40.356 --> 42.556) of 3829 total.
-[94.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (42.556 --> 44.756) of 3829 total.
-[94.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (44.756 --> 46.956) of 3829 total.
+[93.70] [Balance (#1)] Gained 2.068 mana from {OtherID: 2, Tag: 2} (35.300 --> 37.368) of 3829 total.
+[93.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (37.368 --> 39.568) of 3829 total.
+[93.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (39.568 --> 41.768) of 3829 total.
+[94.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.768 --> 43.968) of 3829 total.
+[94.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (43.968 --> 46.168) of 3829 total.
 [94.11] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[94.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (46.956 --> 49.156) of 3829 total.
-[94.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.156 --> 51.356) of 3829 total.
-[94.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (51.356 --> 53.556) of 3829 total.
-[94.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (53.556 --> 55.756) of 3829 total.
-[94.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (55.756 --> 57.956) of 3829 total.
-[94.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (57.956 --> 60.156) of 3829 total.
-[94.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.156 --> 62.356) of 3829 total.
-[94.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (62.356 --> 64.556) of 3829 total.
-[95.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (64.556 --> 66.756) of 3829 total.
-[95.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (66.756 --> 68.956) of 3829 total.
-[95.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (68.956 --> 71.156) of 3829 total.
-[95.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.156 --> 73.356) of 3829 total.
-[95.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (73.356 --> 75.556) of 3829 total.
-[95.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (75.556 --> 77.756) of 3829 total.
-[95.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (77.756 --> 79.956) of 3829 total.
+[94.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (46.168 --> 48.368) of 3829 total.
+[94.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (48.368 --> 50.568) of 3829 total.
+[94.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (50.568 --> 52.768) of 3829 total.
+[94.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.768 --> 54.968) of 3829 total.
+[94.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (54.968 --> 57.168) of 3829 total.
+[94.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (57.168 --> 59.368) of 3829 total.
+[94.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (59.368 --> 61.568) of 3829 total.
+[94.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (61.568 --> 63.768) of 3829 total.
+[95.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.768 --> 65.968) of 3829 total.
+[95.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.968 --> 68.168) of 3829 total.
+[95.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (68.168 --> 70.368) of 3829 total.
+[95.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.368 --> 72.568) of 3829 total.
+[95.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.568 --> 74.768) of 3829 total.
+[95.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.768 --> 76.968) of 3829 total.
+[95.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.968 --> 79.168) of 3829 total.
 [95.61] [Balance (#1)] Completed cast {SpellID: 9912}
-[95.61] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (79.956 --> 80.110) of 3829 total.
-[95.61] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (80.110 --> 35.110) of 3829 total.
+[95.61] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (79.168 --> 79.300) of 3829 total.
+[95.61] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (79.300 --> 34.300) of 3829 total.
 [95.61] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[96.61] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 454.405 damage (SpellSchool: 8). (Threat: 454.405)
-[100.70] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (35.110 --> 37.156) of 3829 total.
-[100.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (37.156 --> 39.356) of 3829 total.
-[100.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (39.356 --> 41.556) of 3829 total.
-[101.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.556 --> 43.756) of 3829 total.
-[101.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (43.756 --> 45.956) of 3829 total.
+[96.61] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 437.185 damage (SpellSchool: 8). (Threat: 437.185)
+[100.70] [Balance (#1)] Gained 2.068 mana from {OtherID: 2, Tag: 2} (34.300 --> 36.368) of 3829 total.
+[100.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.368 --> 38.568) of 3829 total.
+[100.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (38.568 --> 40.768) of 3829 total.
+[101.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (40.768 --> 42.968) of 3829 total.
+[101.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (42.968 --> 45.168) of 3829 total.
 [101.11] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[101.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.956 --> 48.156) of 3829 total.
-[101.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (48.156 --> 50.356) of 3829 total.
-[101.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (50.356 --> 52.556) of 3829 total.
-[101.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.556 --> 54.756) of 3829 total.
-[101.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (54.756 --> 56.956) of 3829 total.
-[101.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.956 --> 59.156) of 3829 total.
-[101.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (59.156 --> 61.356) of 3829 total.
-[101.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (61.356 --> 63.556) of 3829 total.
-[102.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.556 --> 65.756) of 3829 total.
-[102.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.756 --> 67.956) of 3829 total.
-[102.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.956 --> 70.156) of 3829 total.
-[102.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.156 --> 72.356) of 3829 total.
-[102.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.356 --> 74.556) of 3829 total.
-[102.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.556 --> 76.756) of 3829 total.
-[102.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.756 --> 78.956) of 3829 total.
+[101.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.168 --> 47.368) of 3829 total.
+[101.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.368 --> 49.568) of 3829 total.
+[101.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.568 --> 51.768) of 3829 total.
+[101.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (51.768 --> 53.968) of 3829 total.
+[101.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (53.968 --> 56.168) of 3829 total.
+[101.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.168 --> 58.368) of 3829 total.
+[101.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.368 --> 60.568) of 3829 total.
+[101.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.568 --> 62.768) of 3829 total.
+[102.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (62.768 --> 64.968) of 3829 total.
+[102.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (64.968 --> 67.168) of 3829 total.
+[102.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.168 --> 69.368) of 3829 total.
+[102.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.368 --> 71.568) of 3829 total.
+[102.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.568 --> 73.768) of 3829 total.
+[102.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (73.768 --> 75.968) of 3829 total.
+[102.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (75.968 --> 78.168) of 3829 total.
 [102.61] [Balance (#1)] Completed cast {SpellID: 9912}
-[102.61] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (78.956 --> 79.110) of 3829 total.
-[102.61] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (79.110 --> 34.110) of 3829 total.
+[102.61] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (78.168 --> 78.300) of 3829 total.
+[102.61] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (78.300 --> 33.300) of 3829 total.
 [102.61] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[103.61] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 433.208 damage (SpellSchool: 8). (Threat: 433.208)
-[107.70] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (34.110 --> 36.156) of 3829 total.
-[107.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.156 --> 38.356) of 3829 total.
-[107.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (38.356 --> 40.556) of 3829 total.
-[108.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (40.556 --> 42.756) of 3829 total.
-[108.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (42.756 --> 44.956) of 3829 total.
-[108.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (44.956 --> 47.156) of 3829 total.
+[103.61] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 451.155 damage (SpellSchool: 8). (Threat: 451.155)
+[107.70] [Balance (#1)] Gained 2.068 mana from {OtherID: 2, Tag: 2} (33.300 --> 35.368) of 3829 total.
+[107.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (35.368 --> 37.568) of 3829 total.
+[107.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (37.568 --> 39.768) of 3829 total.
+[108.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (39.768 --> 41.968) of 3829 total.
+[108.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.968 --> 44.168) of 3829 total.
+[108.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (44.168 --> 46.368) of 3829 total.
 [108.21] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[108.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.156 --> 49.356) of 3829 total.
-[108.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.356 --> 51.556) of 3829 total.
-[108.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (51.556 --> 53.756) of 3829 total.
-[108.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (53.756 --> 55.956) of 3829 total.
-[108.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (55.956 --> 58.156) of 3829 total.
-[108.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.156 --> 60.356) of 3829 total.
-[108.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.356 --> 62.556) of 3829 total.
-[109.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (62.556 --> 64.756) of 3829 total.
-[109.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (64.756 --> 66.956) of 3829 total.
-[109.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (66.956 --> 69.156) of 3829 total.
-[109.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.156 --> 71.356) of 3829 total.
-[109.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.356 --> 73.556) of 3829 total.
-[109.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (73.556 --> 75.756) of 3829 total.
-[109.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (75.756 --> 77.956) of 3829 total.
-[109.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (77.956 --> 80.156) of 3829 total.
+[108.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (46.368 --> 48.568) of 3829 total.
+[108.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (48.568 --> 50.768) of 3829 total.
+[108.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (50.768 --> 52.968) of 3829 total.
+[108.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.968 --> 55.168) of 3829 total.
+[108.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (55.168 --> 57.368) of 3829 total.
+[108.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (57.368 --> 59.568) of 3829 total.
+[108.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (59.568 --> 61.768) of 3829 total.
+[109.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (61.768 --> 63.968) of 3829 total.
+[109.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.968 --> 66.168) of 3829 total.
+[109.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (66.168 --> 68.368) of 3829 total.
+[109.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (68.368 --> 70.568) of 3829 total.
+[109.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.568 --> 72.768) of 3829 total.
+[109.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.768 --> 74.968) of 3829 total.
+[109.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.968 --> 77.168) of 3829 total.
+[109.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (77.168 --> 79.368) of 3829 total.
 [109.71] [Balance (#1)] Completed cast {SpellID: 9912}
-[109.71] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (80.156 --> 80.310) of 3829 total.
-[109.71] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (80.310 --> 35.310) of 3829 total.
+[109.71] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (79.368 --> 79.500) of 3829 total.
+[109.71] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (79.500 --> 34.500) of 3829 total.
 [109.71] [Balance (#1)] Aura refreshed: {SpellID: 408255}
 [110.01] [Balance (#1)] Aura faded: {SpellID: 1291101}
 [110.01] [Balance (#1)] {SpellID: 1291101} stacks: 1 --> 0
-[110.01] [Balance (#1)] Casting {ItemID: 272439} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 1
-[110.01] [Balance (#1)] Completed cast {ItemID: 272439}
-[110.01] [Balance (#1)] Aura gained: {ItemID: 272439}
-[110.01] [Balance (#1)] Gained {"Spirit": 72.000,} from {ItemID: 272439}.
-[110.01] [Balance (#1)] Major cooldown used: {ItemID: 272439}
-[110.71] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 468.991 damage (SpellSchool: 8). (Threat: 468.991)
-[110.72] [Balance (#1)] Aura gained: {SpellID: 16870}
-[110.72] [Balance (#1)] Casting {SpellID: 9835} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 3
-[110.72] [Balance (#1)] Completed cast {SpellID: 9835}
-[110.72] [Target 1] Aura gained: {SpellID: 9835}
-[110.72] [Balance (#1)] [Target 1] {SpellID: 9835} Hit for 274.207 damage (SpellSchool: 64). (Threat: 274.207)
-[110.72] [Balance (#1)] Aura faded: {SpellID: 16870}
-[113.72] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[114.80] [Balance (#1)] Gained 2.883 mana from {OtherID: 2, Tag: 2} (35.310 --> 38.193) of 3829 total.
-[114.90] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (38.193 --> 41.293) of 3829 total.
-[115.00] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (41.293 --> 44.393) of 3829 total.
-[115.10] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (44.393 --> 47.493) of 3829 total.
+[110.71] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 468.870 damage (SpellSchool: 8). (Threat: 468.870)
+[111.42] [Balance (#1)] Casting {ItemID: 272439} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 1
+[111.42] [Balance (#1)] Completed cast {ItemID: 272439}
+[111.42] [Balance (#1)] Aura gained: {ItemID: 272439}
+[111.42] [Balance (#1)] Gained {"Spirit": 72.000,} from {ItemID: 272439}.
+[111.42] [Balance (#1)] Major cooldown used: {ItemID: 272439}
+[114.80] [Balance (#1)] Gained 2.914 mana from {OtherID: 2, Tag: 2} (34.500 --> 37.414) of 3829 total.
+[114.90] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (37.414 --> 40.514) of 3829 total.
+[115.00] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (40.514 --> 43.614) of 3829 total.
+[115.10] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (43.614 --> 46.714) of 3829 total.
 [115.11] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[115.20] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (47.493 --> 50.593) of 3829 total.
-[115.30] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (50.593 --> 53.693) of 3829 total.
-[115.40] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (53.693 --> 56.793) of 3829 total.
-[115.50] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (56.793 --> 59.893) of 3829 total.
-[115.60] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (59.893 --> 62.993) of 3829 total.
-[115.70] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (62.993 --> 66.093) of 3829 total.
-[115.80] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (66.093 --> 69.193) of 3829 total.
-[115.90] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (69.193 --> 72.293) of 3829 total.
-[116.00] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (72.293 --> 75.393) of 3829 total.
-[116.10] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (75.393 --> 78.493) of 3829 total.
-[116.20] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (78.493 --> 81.593) of 3829 total.
-[116.30] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (81.593 --> 84.693) of 3829 total.
-[116.40] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (84.693 --> 87.793) of 3829 total.
-[116.50] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (87.793 --> 90.893) of 3829 total.
-[116.60] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (90.893 --> 93.993) of 3829 total.
-[116.61] [Balance (#1)] Queueing up {SpellID: 9912} to cast at 1m56.607000001s.
+[115.20] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (46.714 --> 49.814) of 3829 total.
+[115.30] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (49.814 --> 52.914) of 3829 total.
+[115.40] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (52.914 --> 56.014) of 3829 total.
+[115.50] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (56.014 --> 59.114) of 3829 total.
+[115.60] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (59.114 --> 62.214) of 3829 total.
+[115.70] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (62.214 --> 65.314) of 3829 total.
+[115.80] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (65.314 --> 68.414) of 3829 total.
+[115.90] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (68.414 --> 71.514) of 3829 total.
+[116.00] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (71.514 --> 74.614) of 3829 total.
+[116.10] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (74.614 --> 77.714) of 3829 total.
+[116.20] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (77.714 --> 80.814) of 3829 total.
+[116.30] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (80.814 --> 83.914) of 3829 total.
+[116.40] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (83.914 --> 87.014) of 3829 total.
+[116.50] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (87.014 --> 90.114) of 3829 total.
+[116.60] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (90.114 --> 93.214) of 3829 total.
 [116.61] [Balance (#1)] Completed cast {SpellID: 9912}
-[116.61] [Balance (#1)] Gained 0.217 mana from {OtherID: 2, Tag: 2} (93.993 --> 94.210) of 3829 total.
-[116.61] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (94.210 --> 49.210) of 3829 total.
+[116.61] [Balance (#1)] Gained 0.186 mana from {OtherID: 2, Tag: 2} (93.214 --> 93.400) of 3829 total.
+[116.61] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (93.400 --> 48.400) of 3829 total.
+[116.61] [Balance (#1)] Aura refreshed: {SpellID: 408255}
 [116.61] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[116.72] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[117.61] [Balance (#1)] [Target 1] {SpellID: 9912} Miss (SpellSchool: 8). (Threat: 0.000)
+[117.61] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 457.674 damage (SpellSchool: 8). (Threat: 457.674)
 [118.11] [Balance (#1)] Completed cast {SpellID: 9912}
-[118.11] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (49.210 --> 4.210) of 3829 total.
+[118.11] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (48.400 --> 3.400) of 3829 total.
 [118.11] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[119.11] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 432.895 damage (SpellSchool: 8). (Threat: 432.895)
-[119.72] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[122.72] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[123.20] [Balance (#1)] Gained 2.883 mana from {OtherID: 2, Tag: 2} (4.210 --> 7.093) of 3829 total.
-[123.30] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (7.093 --> 10.193) of 3829 total.
-[123.40] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (10.193 --> 13.293) of 3829 total.
-[123.50] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (13.293 --> 16.393) of 3829 total.
-[123.60] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (16.393 --> 19.493) of 3829 total.
-[123.70] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (19.493 --> 22.593) of 3829 total.
-[123.80] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (22.593 --> 25.693) of 3829 total.
-[123.90] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (25.693 --> 28.793) of 3829 total.
-[124.00] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (28.793 --> 31.893) of 3829 total.
-[124.10] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (31.893 --> 34.993) of 3829 total.
-[124.20] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (34.993 --> 38.093) of 3829 total.
-[124.30] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (38.093 --> 41.193) of 3829 total.
-[124.40] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (41.193 --> 44.293) of 3829 total.
-[124.50] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (44.293 --> 47.393) of 3829 total.
+[119.11] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 447.815 damage (SpellSchool: 8). (Threat: 447.815)
+[123.20] [Balance (#1)] Gained 2.914 mana from {OtherID: 2, Tag: 2} (3.400 --> 6.314) of 3829 total.
+[123.30] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (6.314 --> 9.414) of 3829 total.
+[123.40] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (9.414 --> 12.514) of 3829 total.
+[123.50] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (12.514 --> 15.614) of 3829 total.
+[123.60] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (15.614 --> 18.714) of 3829 total.
+[123.70] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (18.714 --> 21.814) of 3829 total.
+[123.80] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (21.814 --> 24.914) of 3829 total.
+[123.90] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (24.914 --> 28.014) of 3829 total.
+[124.00] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (28.014 --> 31.114) of 3829 total.
+[124.10] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (31.114 --> 34.214) of 3829 total.
+[124.20] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (34.214 --> 37.314) of 3829 total.
+[124.30] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (37.314 --> 40.414) of 3829 total.
+[124.40] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (40.414 --> 43.514) of 3829 total.
+[124.50] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (43.514 --> 46.614) of 3829 total.
 [124.51] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[124.60] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (47.393 --> 50.493) of 3829 total.
-[124.70] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (50.493 --> 53.593) of 3829 total.
-[124.80] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (53.593 --> 56.693) of 3829 total.
-[124.90] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (56.693 --> 59.793) of 3829 total.
-[125.00] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (59.793 --> 62.893) of 3829 total.
-[125.01] [Balance (#1)] Aura faded: {ItemID: 272439}
-[125.10] [Balance (#1)] Lost {"Spirit": 72.000,} from fading {ItemID: 272439}.
-[125.10] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (62.893 --> 65.993) of 3829 total.
-[125.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.993 --> 68.193) of 3829 total.
-[125.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (68.193 --> 70.393) of 3829 total.
-[125.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.393 --> 72.593) of 3829 total.
-[125.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.593 --> 74.793) of 3829 total.
-[125.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.793 --> 76.993) of 3829 total.
-[125.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.993 --> 79.193) of 3829 total.
-[125.72] [Target 1] Aura faded: {SpellID: 9835}
-[125.72] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[125.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (79.193 --> 81.393) of 3829 total.
-[125.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (81.393 --> 83.593) of 3829 total.
-[126.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (83.593 --> 85.793) of 3829 total.
+[124.60] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (46.614 --> 49.714) of 3829 total.
+[124.70] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (49.714 --> 52.814) of 3829 total.
+[124.80] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (52.814 --> 55.914) of 3829 total.
+[124.90] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (55.914 --> 59.014) of 3829 total.
+[125.00] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (59.014 --> 62.114) of 3829 total.
+[125.10] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (62.114 --> 65.214) of 3829 total.
+[125.20] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (65.214 --> 68.314) of 3829 total.
+[125.30] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (68.314 --> 71.414) of 3829 total.
+[125.40] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (71.414 --> 74.514) of 3829 total.
+[125.50] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (74.514 --> 77.614) of 3829 total.
+[125.60] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (77.614 --> 80.714) of 3829 total.
+[125.70] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (80.714 --> 83.814) of 3829 total.
+[125.80] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (83.814 --> 86.914) of 3829 total.
+[125.90] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (86.914 --> 90.014) of 3829 total.
+[126.00] [Balance (#1)] Gained 3.100 mana from {OtherID: 2, Tag: 2} (90.014 --> 93.114) of 3829 total.
 [126.01] [Balance (#1)] Completed cast {SpellID: 9912}
-[126.01] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (85.793 --> 85.947) of 3829 total.
-[126.01] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (85.947 --> 40.947) of 3829 total.
+[126.01] [Balance (#1)] Gained 0.186 mana from {OtherID: 2, Tag: 2} (93.114 --> 93.300) of 3829 total.
+[126.01] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (93.300 --> 48.300) of 3829 total.
 [126.01] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[127.01] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 442.625 damage (SpellSchool: 8). (Threat: 442.625)
-[131.10] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (40.947 --> 42.993) of 3829 total.
-[131.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (42.993 --> 45.193) of 3829 total.
-[131.21] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[131.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.193 --> 47.393) of 3829 total.
-[131.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.393 --> 49.593) of 3829 total.
-[131.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.593 --> 51.793) of 3829 total.
-[131.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (51.793 --> 53.993) of 3829 total.
-[131.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (53.993 --> 56.193) of 3829 total.
-[131.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.193 --> 58.393) of 3829 total.
-[131.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.393 --> 60.593) of 3829 total.
-[132.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.593 --> 62.793) of 3829 total.
-[132.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (62.793 --> 64.993) of 3829 total.
-[132.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (64.993 --> 67.193) of 3829 total.
-[132.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.193 --> 69.393) of 3829 total.
-[132.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.393 --> 71.593) of 3829 total.
-[132.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.593 --> 73.793) of 3829 total.
-[132.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (73.793 --> 75.993) of 3829 total.
-[132.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (75.993 --> 78.193) of 3829 total.
-[132.71] [Balance (#1)] Completed cast {SpellID: 9912}
-[132.71] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (78.193 --> 78.347) of 3829 total.
-[132.71] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (78.347 --> 33.347) of 3829 total.
-[132.71] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[133.71] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 436.594 damage (SpellSchool: 8). (Threat: 436.594)
-[137.80] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (33.347 --> 35.393) of 3829 total.
-[137.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (35.393 --> 37.593) of 3829 total.
-[138.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (37.593 --> 39.793) of 3829 total.
-[138.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (39.793 --> 41.993) of 3829 total.
-[138.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.993 --> 44.193) of 3829 total.
-[138.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (44.193 --> 46.393) of 3829 total.
-[138.31] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[138.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (46.393 --> 48.593) of 3829 total.
-[138.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (48.593 --> 50.793) of 3829 total.
-[138.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (50.793 --> 52.993) of 3829 total.
-[138.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.993 --> 55.193) of 3829 total.
-[138.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (55.193 --> 57.393) of 3829 total.
-[138.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (57.393 --> 59.593) of 3829 total.
-[139.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (59.593 --> 61.793) of 3829 total.
-[139.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (61.793 --> 63.993) of 3829 total.
-[139.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.993 --> 66.193) of 3829 total.
-[139.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (66.193 --> 68.393) of 3829 total.
-[139.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (68.393 --> 70.593) of 3829 total.
-[139.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.593 --> 72.793) of 3829 total.
-[139.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.793 --> 74.993) of 3829 total.
-[139.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.993 --> 77.193) of 3829 total.
-[139.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (77.193 --> 79.393) of 3829 total.
-[139.81] [Balance (#1)] Completed cast {SpellID: 9912}
-[139.81] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (79.393 --> 79.547) of 3829 total.
-[139.81] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (79.547 --> 34.547) of 3829 total.
-[139.81] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[140.81] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 422.982 damage (SpellSchool: 8). (Threat: 422.982)
-[144.90] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (34.547 --> 36.593) of 3829 total.
-[145.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.593 --> 38.793) of 3829 total.
-[145.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (38.793 --> 40.993) of 3829 total.
-[145.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (40.993 --> 43.193) of 3829 total.
-[145.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (43.193 --> 45.393) of 3829 total.
-[145.31] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[145.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.393 --> 47.593) of 3829 total.
-[145.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.593 --> 49.793) of 3829 total.
-[145.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.793 --> 51.993) of 3829 total.
-[145.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (51.993 --> 54.193) of 3829 total.
-[145.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (54.193 --> 56.393) of 3829 total.
-[145.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.393 --> 58.593) of 3829 total.
-[146.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.593 --> 60.793) of 3829 total.
-[146.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.793 --> 62.993) of 3829 total.
-[146.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (62.993 --> 65.193) of 3829 total.
-[146.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.193 --> 67.393) of 3829 total.
-[146.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.393 --> 69.593) of 3829 total.
-[146.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.593 --> 71.793) of 3829 total.
-[146.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.793 --> 73.993) of 3829 total.
-[146.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (73.993 --> 76.193) of 3829 total.
-[146.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.193 --> 78.393) of 3829 total.
-[146.81] [Balance (#1)] Completed cast {SpellID: 9912}
-[146.81] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (78.393 --> 78.547) of 3829 total.
-[146.81] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (78.547 --> 33.547) of 3829 total.
-[146.81] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[147.81] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 436.466 damage (SpellSchool: 8). (Threat: 436.466)
-[147.82] [Balance (#1)] Aura gained: {SpellID: 16870}
-[147.82] [Balance (#1)] Casting {SpellID: 9835} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 3
-[147.82] [Balance (#1)] Completed cast {SpellID: 9835}
-[147.82] [Target 1] Aura gained: {SpellID: 9835}
-[147.82] [Balance (#1)] [Target 1] {SpellID: 9835} Hit for 277.579 damage (SpellSchool: 64). (Threat: 277.579)
-[147.82] [Balance (#1)] Aura faded: {SpellID: 16870}
-[150.82] [Balance (#1)] [Target 1] {SpellID: 9835} tick Crit for 363.741 damage (SpellSchool: 64). (Threat: 363.741)
-[151.90] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (33.547 --> 35.593) of 3829 total.
-[152.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (35.593 --> 37.793) of 3829 total.
-[152.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (37.793 --> 39.993) of 3829 total.
-[152.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (39.993 --> 42.193) of 3829 total.
-[152.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (42.193 --> 44.393) of 3829 total.
-[152.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (44.393 --> 46.593) of 3829 total.
-[152.41] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[152.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (46.593 --> 48.793) of 3829 total.
-[152.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (48.793 --> 50.993) of 3829 total.
-[152.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (50.993 --> 53.193) of 3829 total.
-[152.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (53.193 --> 55.393) of 3829 total.
-[152.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (55.393 --> 57.593) of 3829 total.
-[153.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (57.593 --> 59.793) of 3829 total.
-[153.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (59.793 --> 61.993) of 3829 total.
-[153.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (61.993 --> 64.193) of 3829 total.
-[153.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (64.193 --> 66.393) of 3829 total.
-[153.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (66.393 --> 68.593) of 3829 total.
-[153.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (68.593 --> 70.793) of 3829 total.
-[153.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.793 --> 72.993) of 3829 total.
-[153.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.993 --> 75.193) of 3829 total.
-[153.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (75.193 --> 77.393) of 3829 total.
-[153.82] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[153.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (77.393 --> 79.593) of 3829 total.
-[153.91] [Balance (#1)] Completed cast {SpellID: 9912}
-[153.91] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (79.593 --> 79.747) of 3829 total.
-[153.91] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (79.747 --> 34.747) of 3829 total.
-[153.91] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[154.91] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 467.169 damage (SpellSchool: 8). (Threat: 467.169)
-[156.82] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[159.00] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (34.747 --> 36.793) of 3829 total.
-[159.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.793 --> 38.993) of 3829 total.
-[159.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (38.993 --> 41.193) of 3829 total.
-[159.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.193 --> 43.393) of 3829 total.
-[159.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (43.393 --> 45.593) of 3829 total.
-[159.41] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[159.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.593 --> 47.793) of 3829 total.
-[159.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.793 --> 49.993) of 3829 total.
-[159.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.993 --> 52.193) of 3829 total.
-[159.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.193 --> 54.393) of 3829 total.
-[159.82] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[159.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (54.393 --> 56.593) of 3829 total.
-[160.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.593 --> 58.793) of 3829 total.
-[160.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.793 --> 60.993) of 3829 total.
-[160.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.993 --> 63.193) of 3829 total.
-[160.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.193 --> 65.393) of 3829 total.
-[160.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.393 --> 67.593) of 3829 total.
-[160.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.593 --> 69.793) of 3829 total.
-[160.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.793 --> 71.993) of 3829 total.
-[160.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.993 --> 74.193) of 3829 total.
-[160.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.193 --> 76.393) of 3829 total.
-[160.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.393 --> 78.593) of 3829 total.
-[160.91] [Balance (#1)] Completed cast {SpellID: 9912}
-[160.91] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (78.593 --> 78.747) of 3829 total.
-[160.91] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (78.747 --> 33.747) of 3829 total.
-[160.91] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[161.91] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 448.116 damage (SpellSchool: 8). (Threat: 448.116)
-[162.82] [Target 1] Aura faded: {SpellID: 9835}
-[162.82] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
-[166.00] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (33.747 --> 35.793) of 3829 total.
-[166.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (35.793 --> 37.993) of 3829 total.
-[166.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (37.993 --> 40.193) of 3829 total.
-[166.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (40.193 --> 42.393) of 3829 total.
-[166.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (42.393 --> 44.593) of 3829 total.
-[166.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (44.593 --> 46.793) of 3829 total.
-[166.51] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[166.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (46.793 --> 48.993) of 3829 total.
-[166.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (48.993 --> 51.193) of 3829 total.
-[166.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (51.193 --> 53.393) of 3829 total.
-[166.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (53.393 --> 55.593) of 3829 total.
-[167.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (55.593 --> 57.793) of 3829 total.
-[167.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (57.793 --> 59.993) of 3829 total.
-[167.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (59.993 --> 62.193) of 3829 total.
-[167.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (62.193 --> 64.393) of 3829 total.
-[167.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (64.393 --> 66.593) of 3829 total.
-[167.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (66.593 --> 68.793) of 3829 total.
-[167.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (68.793 --> 70.993) of 3829 total.
-[167.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.993 --> 73.193) of 3829 total.
-[167.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (73.193 --> 75.393) of 3829 total.
-[167.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (75.393 --> 77.593) of 3829 total.
-[168.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (77.593 --> 79.793) of 3829 total.
-[168.01] [Balance (#1)] Completed cast {SpellID: 9912}
-[168.01] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (79.793 --> 79.947) of 3829 total.
-[168.01] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (79.947 --> 34.947) of 3829 total.
-[168.01] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[169.01] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 443.024 damage (SpellSchool: 8). (Threat: 443.024)
-[173.10] [Balance (#1)] Gained 2.046 mana from {OtherID: 2, Tag: 2} (34.947 --> 36.993) of 3829 total.
-[173.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.993 --> 39.193) of 3829 total.
-[173.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (39.193 --> 41.393) of 3829 total.
-[173.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.393 --> 43.593) of 3829 total.
-[173.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (43.593 --> 45.793) of 3829 total.
-[173.51] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[173.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.793 --> 47.993) of 3829 total.
-[173.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.993 --> 50.193) of 3829 total.
-[173.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (50.193 --> 52.393) of 3829 total.
-[173.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.393 --> 54.593) of 3829 total.
-[174.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (54.593 --> 56.793) of 3829 total.
-[174.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.793 --> 58.993) of 3829 total.
-[174.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.993 --> 61.193) of 3829 total.
-[174.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (61.193 --> 63.393) of 3829 total.
-[174.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.393 --> 65.593) of 3829 total.
-[174.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.593 --> 67.793) of 3829 total.
-[174.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.793 --> 69.993) of 3829 total.
-[174.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.993 --> 72.193) of 3829 total.
-[174.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.193 --> 74.393) of 3829 total.
-[174.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.393 --> 76.593) of 3829 total.
-[175.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.593 --> 78.793) of 3829 total.
-[175.01] [Balance (#1)] Completed cast {SpellID: 9912}
-[175.01] [Balance (#1)] Gained 0.154 mana from {OtherID: 2, Tag: 2} (78.793 --> 78.947) of 3829 total.
-[175.01] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (78.947 --> 33.947) of 3829 total.
-[175.01] [Balance (#1)] Aura refreshed: {SpellID: 408255}
-[176.01] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 451.072 damage (SpellSchool: 8). (Threat: 451.072)
-[176.02] [Balance (#1)] Aura gained: {SpellID: 16870}
-[176.02] [Balance (#1)] Casting {SpellID: 9835} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 3
-[176.02] [Balance (#1)] Completed cast {SpellID: 9835}
-[176.02] [Target 1] Aura gained: {SpellID: 9835}
-[176.02] [Balance (#1)] [Target 1] {SpellID: 9835} Hit for 306.171 damage (SpellSchool: 64). (Threat: 306.171)
-[176.02] [Balance (#1)] Aura faded: {SpellID: 16870}
-[179.02] [Balance (#1)] [Target 1] {SpellID: 9835} tick Hit for 181.870 damage (SpellSchool: 64). (Threat: 181.870)
+[126.01] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[126.42] [Balance (#1)] Aura faded: {ItemID: 272439}
+[126.50] [Balance (#1)] Lost {"Spirit": 72.000,} from fading {ItemID: 272439}.
+[127.01] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 424.626 damage (SpellSchool: 8). (Threat: 424.626)
+[127.51] [Balance (#1)] Completed cast {SpellID: 9912}
+[127.51] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (48.300 --> 3.300) of 3829 total.
+[128.51] [Balance (#1)] [Target 1] {SpellID: 9912} Miss (SpellSchool: 8). (Threat: 0.000)
+[132.60] [Balance (#1)] Gained 2.068 mana from {OtherID: 2, Tag: 2} (3.300 --> 5.368) of 3829 total.
+[132.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (5.368 --> 7.568) of 3829 total.
+[132.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (7.568 --> 9.768) of 3829 total.
+[132.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (9.768 --> 11.968) of 3829 total.
+[133.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (11.968 --> 14.168) of 3829 total.
+[133.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (14.168 --> 16.368) of 3829 total.
+[133.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (16.368 --> 18.568) of 3829 total.
+[133.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (18.568 --> 20.768) of 3829 total.
+[133.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (20.768 --> 22.968) of 3829 total.
+[133.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (22.968 --> 25.168) of 3829 total.
+[133.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (25.168 --> 27.368) of 3829 total.
+[133.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (27.368 --> 29.568) of 3829 total.
+[133.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (29.568 --> 31.768) of 3829 total.
+[133.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (31.768 --> 33.968) of 3829 total.
+[134.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (33.968 --> 36.168) of 3829 total.
+[134.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.168 --> 38.368) of 3829 total.
+[134.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (38.368 --> 40.568) of 3829 total.
+[134.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (40.568 --> 42.768) of 3829 total.
+[134.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (42.768 --> 44.968) of 3829 total.
+[134.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (44.968 --> 47.168) of 3829 total.
+[134.51] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[134.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.168 --> 49.368) of 3829 total.
+[134.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.368 --> 51.568) of 3829 total.
+[134.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (51.568 --> 53.768) of 3829 total.
+[134.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (53.768 --> 55.968) of 3829 total.
+[135.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (55.968 --> 58.168) of 3829 total.
+[135.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.168 --> 60.368) of 3829 total.
+[135.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.368 --> 62.568) of 3829 total.
+[135.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (62.568 --> 64.768) of 3829 total.
+[135.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (64.768 --> 66.968) of 3829 total.
+[135.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (66.968 --> 69.168) of 3829 total.
+[135.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.168 --> 71.368) of 3829 total.
+[135.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.368 --> 73.568) of 3829 total.
+[135.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (73.568 --> 75.768) of 3829 total.
+[135.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (75.768 --> 77.968) of 3829 total.
+[136.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (77.968 --> 80.168) of 3829 total.
+[136.01] [Balance (#1)] Completed cast {SpellID: 9912}
+[136.01] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (80.168 --> 80.300) of 3829 total.
+[136.01] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (80.300 --> 35.300) of 3829 total.
+[136.01] [Balance (#1)] Aura refreshed: {SpellID: 408255}
+[137.01] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 467.169 damage (SpellSchool: 8). (Threat: 467.169)
+[141.10] [Balance (#1)] Gained 2.068 mana from {OtherID: 2, Tag: 2} (35.300 --> 37.368) of 3829 total.
+[141.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (37.368 --> 39.568) of 3829 total.
+[141.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (39.568 --> 41.768) of 3829 total.
+[141.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.768 --> 43.968) of 3829 total.
+[141.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (43.968 --> 46.168) of 3829 total.
+[141.51] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[141.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (46.168 --> 48.368) of 3829 total.
+[141.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (48.368 --> 50.568) of 3829 total.
+[141.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (50.568 --> 52.768) of 3829 total.
+[141.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.768 --> 54.968) of 3829 total.
+[142.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (54.968 --> 57.168) of 3829 total.
+[142.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (57.168 --> 59.368) of 3829 total.
+[142.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (59.368 --> 61.568) of 3829 total.
+[142.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (61.568 --> 63.768) of 3829 total.
+[142.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.768 --> 65.968) of 3829 total.
+[142.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.968 --> 68.168) of 3829 total.
+[142.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (68.168 --> 70.368) of 3829 total.
+[142.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.368 --> 72.568) of 3829 total.
+[142.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.568 --> 74.768) of 3829 total.
+[142.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.768 --> 76.968) of 3829 total.
+[143.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.968 --> 79.168) of 3829 total.
+[143.01] [Balance (#1)] Completed cast {SpellID: 9912}
+[143.01] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (79.168 --> 79.300) of 3829 total.
+[143.01] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (79.300 --> 34.300) of 3829 total.
+[143.01] [Balance (#1)] Aura refreshed: {SpellID: 408255}
+[144.01] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 436.150 damage (SpellSchool: 8). (Threat: 436.150)
+[148.10] [Balance (#1)] Gained 2.068 mana from {OtherID: 2, Tag: 2} (34.300 --> 36.368) of 3829 total.
+[148.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.368 --> 38.568) of 3829 total.
+[148.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (38.568 --> 40.768) of 3829 total.
+[148.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (40.768 --> 42.968) of 3829 total.
+[148.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (42.968 --> 45.168) of 3829 total.
+[148.51] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[148.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.168 --> 47.368) of 3829 total.
+[148.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.368 --> 49.568) of 3829 total.
+[148.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.568 --> 51.768) of 3829 total.
+[148.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (51.768 --> 53.968) of 3829 total.
+[149.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (53.968 --> 56.168) of 3829 total.
+[149.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.168 --> 58.368) of 3829 total.
+[149.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.368 --> 60.568) of 3829 total.
+[149.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.568 --> 62.768) of 3829 total.
+[149.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (62.768 --> 64.968) of 3829 total.
+[149.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (64.968 --> 67.168) of 3829 total.
+[149.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.168 --> 69.368) of 3829 total.
+[149.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.368 --> 71.568) of 3829 total.
+[149.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.568 --> 73.768) of 3829 total.
+[149.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (73.768 --> 75.968) of 3829 total.
+[150.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (75.968 --> 78.168) of 3829 total.
+[150.01] [Balance (#1)] Completed cast {SpellID: 9912}
+[150.01] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (78.168 --> 78.300) of 3829 total.
+[150.01] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (78.300 --> 33.300) of 3829 total.
+[150.01] [Balance (#1)] Aura refreshed: {SpellID: 408255}
+[151.01] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 427.533 damage (SpellSchool: 8). (Threat: 427.533)
+[155.10] [Balance (#1)] Gained 2.068 mana from {OtherID: 2, Tag: 2} (33.300 --> 35.368) of 3829 total.
+[155.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (35.368 --> 37.568) of 3829 total.
+[155.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (37.568 --> 39.768) of 3829 total.
+[155.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (39.768 --> 41.968) of 3829 total.
+[155.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.968 --> 44.168) of 3829 total.
+[155.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (44.168 --> 46.368) of 3829 total.
+[155.61] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[155.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (46.368 --> 48.568) of 3829 total.
+[155.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (48.568 --> 50.768) of 3829 total.
+[155.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (50.768 --> 52.968) of 3829 total.
+[156.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.968 --> 55.168) of 3829 total.
+[156.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (55.168 --> 57.368) of 3829 total.
+[156.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (57.368 --> 59.568) of 3829 total.
+[156.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (59.568 --> 61.768) of 3829 total.
+[156.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (61.768 --> 63.968) of 3829 total.
+[156.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.968 --> 66.168) of 3829 total.
+[156.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (66.168 --> 68.368) of 3829 total.
+[156.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (68.368 --> 70.568) of 3829 total.
+[156.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.568 --> 72.768) of 3829 total.
+[156.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.768 --> 74.968) of 3829 total.
+[157.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.968 --> 77.168) of 3829 total.
+[157.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (77.168 --> 79.368) of 3829 total.
+[157.11] [Balance (#1)] Completed cast {SpellID: 9912}
+[157.11] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (79.368 --> 79.500) of 3829 total.
+[157.11] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (79.500 --> 34.500) of 3829 total.
+[157.11] [Balance (#1)] Aura refreshed: {SpellID: 408255}
+[158.11] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 463.442 damage (SpellSchool: 8). (Threat: 463.442)
+[162.20] [Balance (#1)] Gained 2.068 mana from {OtherID: 2, Tag: 2} (34.500 --> 36.568) of 3829 total.
+[162.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.568 --> 38.768) of 3829 total.
+[162.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (38.768 --> 40.968) of 3829 total.
+[162.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (40.968 --> 43.168) of 3829 total.
+[162.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (43.168 --> 45.368) of 3829 total.
+[162.61] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[162.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.368 --> 47.568) of 3829 total.
+[162.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.568 --> 49.768) of 3829 total.
+[162.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.768 --> 51.968) of 3829 total.
+[163.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (51.968 --> 54.168) of 3829 total.
+[163.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (54.168 --> 56.368) of 3829 total.
+[163.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.368 --> 58.568) of 3829 total.
+[163.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.568 --> 60.768) of 3829 total.
+[163.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.768 --> 62.968) of 3829 total.
+[163.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (62.968 --> 65.168) of 3829 total.
+[163.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.168 --> 67.368) of 3829 total.
+[163.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.368 --> 69.568) of 3829 total.
+[163.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.568 --> 71.768) of 3829 total.
+[163.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.768 --> 73.968) of 3829 total.
+[164.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (73.968 --> 76.168) of 3829 total.
+[164.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.168 --> 78.368) of 3829 total.
+[164.11] [Balance (#1)] Completed cast {SpellID: 9912}
+[164.11] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (78.368 --> 78.500) of 3829 total.
+[164.11] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (78.500 --> 33.500) of 3829 total.
+[164.11] [Balance (#1)] Aura refreshed: {SpellID: 408255}
+[165.11] [Balance (#1)] [Target 1] {SpellID: 9912} Crit for 896.483 damage (SpellSchool: 8). (Threat: 896.483)
+[165.12] [Balance (#1)] Aura gained: {SpellID: 16886}
+[168.12] [Balance (#1)] Aura faded: {SpellID: 16886}
+[169.20] [Balance (#1)] Gained 2.068 mana from {OtherID: 2, Tag: 2} (33.500 --> 35.568) of 3829 total.
+[169.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (35.568 --> 37.768) of 3829 total.
+[169.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (37.768 --> 39.968) of 3829 total.
+[169.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (39.968 --> 42.168) of 3829 total.
+[169.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (42.168 --> 44.368) of 3829 total.
+[169.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (44.368 --> 46.568) of 3829 total.
+[169.71] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[169.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (46.568 --> 48.768) of 3829 total.
+[169.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (48.768 --> 50.968) of 3829 total.
+[170.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (50.968 --> 53.168) of 3829 total.
+[170.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (53.168 --> 55.368) of 3829 total.
+[170.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (55.368 --> 57.568) of 3829 total.
+[170.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (57.568 --> 59.768) of 3829 total.
+[170.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (59.768 --> 61.968) of 3829 total.
+[170.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (61.968 --> 64.168) of 3829 total.
+[170.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (64.168 --> 66.368) of 3829 total.
+[170.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (66.368 --> 68.568) of 3829 total.
+[170.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (68.568 --> 70.768) of 3829 total.
+[170.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (70.768 --> 72.968) of 3829 total.
+[171.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (72.968 --> 75.168) of 3829 total.
+[171.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (75.168 --> 77.368) of 3829 total.
+[171.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (77.368 --> 79.568) of 3829 total.
+[171.21] [Balance (#1)] Completed cast {SpellID: 9912}
+[171.21] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (79.568 --> 79.700) of 3829 total.
+[171.21] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (79.700 --> 34.700) of 3829 total.
+[171.21] [Balance (#1)] Aura refreshed: {SpellID: 408255}
+[172.21] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 437.522 damage (SpellSchool: 8). (Threat: 437.522)
+[176.30] [Balance (#1)] Gained 2.068 mana from {OtherID: 2, Tag: 2} (34.700 --> 36.768) of 3829 total.
+[176.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (36.768 --> 38.968) of 3829 total.
+[176.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (38.968 --> 41.168) of 3829 total.
+[176.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (41.168 --> 43.368) of 3829 total.
+[176.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (43.368 --> 45.568) of 3829 total.
+[176.71] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[176.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (45.568 --> 47.768) of 3829 total.
+[176.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (47.768 --> 49.968) of 3829 total.
+[177.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (49.968 --> 52.168) of 3829 total.
+[177.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (52.168 --> 54.368) of 3829 total.
+[177.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (54.368 --> 56.568) of 3829 total.
+[177.30] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (56.568 --> 58.768) of 3829 total.
+[177.40] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (58.768 --> 60.968) of 3829 total.
+[177.50] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (60.968 --> 63.168) of 3829 total.
+[177.60] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (63.168 --> 65.368) of 3829 total.
+[177.70] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (65.368 --> 67.568) of 3829 total.
+[177.80] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (67.568 --> 69.768) of 3829 total.
+[177.90] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (69.768 --> 71.968) of 3829 total.
+[178.00] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (71.968 --> 74.168) of 3829 total.
+[178.10] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (74.168 --> 76.368) of 3829 total.
+[178.20] [Balance (#1)] Gained 2.200 mana from {OtherID: 2, Tag: 2} (76.368 --> 78.568) of 3829 total.
+[178.21] [Balance (#1)] Completed cast {SpellID: 9912}
+[178.21] [Balance (#1)] Gained 0.132 mana from {OtherID: 2, Tag: 2} (78.568 --> 78.700) of 3829 total.
+[178.21] [Balance (#1)] Spent 45.000 mana from {SpellID: 9912} (78.700 --> 33.700) of 3829 total.
+[178.21] [Balance (#1)] Aura refreshed: {SpellID: 408255}
+[179.21] [Balance (#1)] [Target 1] {SpellID: 9912} Hit for 437.859 damage (SpellSchool: 8). (Threat: 437.859)
 [180.00] [Balance (#1)] Aura faded: {SpellID: 24858}
 [180.00] [Balance (#1)] Aura faded: {SpellID: 1291061}
 [180.00] [Balance (#1)] Aura faded: {SpellID: 408255}
 [180.00] [Balance (#1)] {SpellID: 408255} stacks: 4 --> 0
 [180.00] [Balance (#1)] Aura faded: {SpellID: 24907, Tag: -1}
-[180.00] [Target 1] Aura faded: {SpellID: 9835}

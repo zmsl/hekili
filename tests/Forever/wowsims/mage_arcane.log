@@ -53,7 +53,6 @@
 [2.00] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (6221.975 --> 6225.000) of 6678 total.
 [2.10] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (6225.000 --> 6228.025) of 6678 total.
 [2.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (6228.025 --> 6231.050) of 6678 total.
-[2.26] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 2.256000001s.
 [2.26] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [2.26] [Arcane (#1)] Spent 235.300 mana from {SpellID: 1239700} (6231.050 --> 5995.750) of 6678 total.
 [2.26] [Arcane (#1)] [Target 1] {SpellID: 1239700} Crit for 1435.544 damage (SpellSchool: 64). (Threat: 1004.881)
@@ -74,7 +73,6 @@
 [3.10] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (6019.950 --> 6022.975) of 6678 total.
 [3.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (6022.975 --> 6026.000) of 6678 total.
 [3.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (6026.000 --> 6029.025) of 6678 total.
-[3.38] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 3.384000001s.
 [3.38] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [3.38] [Arcane (#1)] Spent 470.600 mana from {SpellID: 1239700} (6029.025 --> 5558.425) of 6678 total.
 [3.38] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 548.719 damage (SpellSchool: 64). (Threat: 384.103)
@@ -95,7 +93,6 @@
 [4.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (5585.650 --> 5588.675) of 6678 total.
 [4.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (5588.675 --> 5591.700) of 6678 total.
 [4.50] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (5591.700 --> 5594.725) of 6678 total.
-[4.51] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 4.512000001s.
 [4.51] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [4.51] [Arcane (#1)] Spent 705.900 mana from {SpellID: 1239700} (5594.725 --> 4888.825) of 6678 total.
 [4.51] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 694.853 damage (SpellSchool: 64). (Threat: 486.397)
@@ -187,7 +184,6 @@
 [9.50] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (6080.553 --> 6083.578) of 6678 total.
 [9.60] [Arcane (#1)] Gained 0.363 mana from {OtherID: 2, Tag: 1} (6083.578 --> 6083.941) of 6678 total.
 [9.60] [Arcane (#1)] Gained 2.662 mana from {OtherID: 2, Tag: 2} (6083.941 --> 6086.603) of 6678 total.
-[9.64] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 9.644000001s.
 [9.64] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [9.64] [Arcane (#1)] Gained 1.331 mana from {OtherID: 2, Tag: 2} (6086.603 --> 6087.934) of 6678 total.
 [9.64] [Arcane (#1)] Spent 513.500 mana from {SpellID: 1326082} (6087.934 --> 5574.434) of 6678 total.
@@ -206,7 +202,6 @@
 [10.50] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (5597.303 --> 5600.328) of 6678 total.
 [10.60] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (5600.328 --> 5603.353) of 6678 total.
 [10.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (5603.353 --> 5606.378) of 6678 total.
-[10.77] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 10.772000001s.
 [10.77] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [10.77] [Arcane (#1)] Spent 941.200 mana from {SpellID: 1239700} (5606.378 --> 4665.178) of 6678 total.
 [10.77] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 714.333 damage (SpellSchool: 64). (Threat: 500.033)
@@ -233,7 +228,6 @@
 [12.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4713.578 --> 4716.603) of 6678 total.
 [12.50] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4716.603 --> 4719.628) of 6678 total.
 [12.60] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4719.628 --> 4722.653) of 6678 total.
-[12.65] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 12.652000001s.
 [12.65] [Arcane (#1)] Completed cast {SpellID: 10181}
 [12.65] [Arcane (#1)] Spent 338.000 mana from {SpellID: 10181} (4722.653 --> 4384.653) of 6678 total.
 [12.65] [Arcane (#1)] Casting {SpellID: 10181} (Cost = 338.000, Cast Time = 1.88s, GCD = 1.128s, Effective Time = 1.88s) APL: priority 7
@@ -257,7 +251,6 @@
 [14.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4433.053 --> 4436.078) of 6678 total.
 [14.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4436.078 --> 4439.103) of 6678 total.
 [14.50] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4439.103 --> 4442.128) of 6678 total.
-[14.53] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 14.532000001s.
 [14.53] [Arcane (#1)] Completed cast {SpellID: 10181}
 [14.53] [Arcane (#1)] Spent 338.000 mana from {SpellID: 10181} (4442.128 --> 4104.128) of 6678 total.
 [14.53] [Arcane (#1)] Casting {SpellID: 10181} (Cost = 338.000, Cast Time = 1.88s, GCD = 1.128s, Effective Time = 1.88s) APL: priority 7
@@ -282,7 +275,6 @@
 [16.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4152.528 --> 4155.553) of 6678 total.
 [16.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4155.553 --> 4158.578) of 6678 total.
 [16.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4158.578 --> 4161.603) of 6678 total.
-[16.41] [Arcane (#1)] Queueing up {SpellID: 1326082} to cast at 16.412000001s.
 [16.41] [Arcane (#1)] Completed cast {SpellID: 10181}
 [16.41] [Arcane (#1)] Spent 260.000 mana from {SpellID: 10181} (4161.603 --> 3901.603) of 6678 total.
 [16.41] [Arcane (#1)] Casting {SpellID: 1326082} (Cost = 395.000, Cast Time = 2.632s, GCD = 1.128s, Effective Time = 2.632s) APL: priority 5
@@ -313,7 +305,6 @@
 [18.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3971.178 --> 3974.203) of 6678 total.
 [18.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3974.203 --> 3977.228) of 6678 total.
 [19.00] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3977.228 --> 3980.253) of 6678 total.
-[19.04] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 19.044000001s.
 [19.04] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [19.04] [Arcane (#1)] Spent 395.000 mana from {SpellID: 1326082} (3980.253 --> 3585.253) of 6678 total.
 [19.04] [Arcane (#1)] Casting {SpellID: 10181} (Cost = 260.000, Cast Time = 1.88s, GCD = 1.128s, Effective Time = 1.88s) APL: priority 7
@@ -342,7 +333,6 @@
 [20.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3633.653 --> 3636.678) of 6678 total.
 [20.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3636.678 --> 3639.703) of 6678 total.
 [20.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3639.703 --> 3642.728) of 6678 total.
-[20.92] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 20.924000001s.
 [20.92] [Arcane (#1)] Completed cast {SpellID: 10181}
 [20.92] [Arcane (#1)] Spent 260.000 mana from {SpellID: 10181} (3642.728 --> 3382.728) of 6678 total.
 [20.92] [Arcane (#1)] Casting {SpellID: 1239700} (Cost = 181.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6
@@ -362,7 +352,6 @@
 [22.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3419.028 --> 3422.053) of 6678 total.
 [22.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3422.053 --> 3425.078) of 6678 total.
 [22.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3425.078 --> 3428.103) of 6678 total.
-[22.42] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 22.424000001s.
 [22.42] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [22.42] [Arcane (#1)] Spent 181.000 mana from {SpellID: 1239700} (3428.103 --> 3247.103) of 6678 total.
 [22.42] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 529.111 damage (SpellSchool: 64). (Threat: 370.378)
@@ -386,7 +375,6 @@
 [23.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3283.403 --> 3286.428) of 6678 total.
 [23.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3286.428 --> 3289.453) of 6678 total.
 [23.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3289.453 --> 3292.478) of 6678 total.
-[23.92] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 23.924000001s.
 [23.92] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [23.92] [Arcane (#1)] Spent 362.000 mana from {SpellID: 1239700} (3292.478 --> 2930.478) of 6678 total.
 [23.92] [Arcane (#1)] [Target 1] {SpellID: 1239700} Crit for 870.779 damage (SpellSchool: 64). (Threat: 609.546)
@@ -409,7 +397,6 @@
 [25.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2966.778 --> 2969.803) of 6678 total.
 [25.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2969.803 --> 2972.828) of 6678 total.
 [25.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2972.828 --> 2975.853) of 6678 total.
-[25.42] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 25.424000001s.
 [25.42] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [25.42] [Arcane (#1)] Spent 543.000 mana from {SpellID: 1239700} (2975.853 --> 2432.853) of 6678 total.
 [25.42] [Arcane (#1)] [Target 1] {SpellID: 1239700} Miss (SpellSchool: 64). (Threat: 0.000)
@@ -503,7 +490,6 @@
 [31.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2605.278 --> 2608.303) of 6678 total.
 [31.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2608.303 --> 2611.328) of 6678 total.
 [31.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2611.328 --> 2614.353) of 6678 total.
-[31.42] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 31.424000001s.
 [31.42] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [31.42] [Arcane (#1)] Gained 0.726 mana from {OtherID: 2, Tag: 2} (2614.353 --> 2615.079) of 6678 total.
 [31.42] [Arcane (#1)] Spent 395.000 mana from {SpellID: 1326082} (2615.079 --> 2220.079) of 6678 total.
@@ -537,7 +523,6 @@
 [33.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2285.903 --> 2288.928) of 6678 total.
 [33.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2288.928 --> 2291.953) of 6678 total.
 [33.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2291.953 --> 2294.978) of 6678 total.
-[33.92] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 33.924000001s.
 [33.92] [Arcane (#1)] Completed cast {SpellID: 10181}
 [33.92] [Arcane (#1)] Aura faded: {SpellID: 12536}
 [33.92] [Arcane (#1)] Casting {SpellID: 10212} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4
@@ -618,7 +603,6 @@
 [38.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2437.153 --> 2440.178) of 6678 total.
 [38.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2440.178 --> 2443.203) of 6678 total.
 [38.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2443.203 --> 2446.228) of 6678 total.
-[38.92] [Arcane (#1)] Queueing up {SpellID: 1326082} to cast at 38.924000001s.
 [38.92] [Arcane (#1)] Completed cast {SpellID: 10181}
 [38.92] [Arcane (#1)] Gained 0.726 mana from {OtherID: 2, Tag: 2} (2446.228 --> 2446.954) of 6678 total.
 [38.92] [Arcane (#1)] Spent 260.000 mana from {SpellID: 10181} (2446.954 --> 2186.954) of 6678 total.
@@ -664,7 +648,6 @@
 [42.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2283.028 --> 2286.053) of 6678 total.
 [42.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2286.053 --> 2289.078) of 6678 total.
 [42.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2289.078 --> 2292.103) of 6678 total.
-[42.42] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 42.424000001s.
 [42.42] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [42.42] [Arcane (#1)] Spent 395.000 mana from {SpellID: 1326082} (2292.103 --> 1897.103) of 6678 total.
 [42.42] [Arcane (#1)] Casting {SpellID: 1239700} (Cost = 181.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6
@@ -685,7 +668,6 @@
 [43.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1933.403 --> 1936.428) of 6678 total.
 [43.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1936.428 --> 1939.453) of 6678 total.
 [43.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1939.453 --> 1942.478) of 6678 total.
-[43.92] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 43.924000001s.
 [43.92] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [43.92] [Arcane (#1)] Spent 181.000 mana from {SpellID: 1239700} (1942.478 --> 1761.478) of 6678 total.
 [43.92] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 441.182 damage (SpellSchool: 64). (Threat: 308.827)
@@ -709,7 +691,6 @@
 [45.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1797.778 --> 1800.803) of 6678 total.
 [45.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1800.803 --> 1803.828) of 6678 total.
 [45.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1803.828 --> 1806.853) of 6678 total.
-[45.42] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 45.424000001s.
 [45.42] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [45.42] [Arcane (#1)] Spent 362.000 mana from {SpellID: 1239700} (1806.853 --> 1444.853) of 6678 total.
 [45.42] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 417.704 damage (SpellSchool: 64). (Threat: 292.393)
@@ -731,7 +712,6 @@
 [46.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1481.153 --> 1484.178) of 6678 total.
 [46.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1484.178 --> 1487.203) of 6678 total.
 [46.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1487.203 --> 1490.228) of 6678 total.
-[46.92] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 46.924000001s.
 [46.92] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [46.92] [Arcane (#1)] Spent 543.000 mana from {SpellID: 1239700} (1490.228 --> 947.228) of 6678 total.
 [46.92] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 574.200 damage (SpellSchool: 64). (Threat: 401.940)
@@ -763,7 +743,6 @@
 [49.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1013.778 --> 1016.803) of 6678 total.
 [49.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1016.803 --> 1019.828) of 6678 total.
 [49.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1019.828 --> 1022.853) of 6678 total.
-[49.42] [Arcane (#1)] Queueing up {SpellID: 1326082} to cast at 49.424000001s.
 [49.42] [Arcane (#1)] Completed cast {SpellID: 10181}
 [49.42] [Arcane (#1)] Spent 260.000 mana from {SpellID: 10181} (1022.853 --> 762.853) of 6678 total.
 [49.42] [Arcane (#1)] Casting {SpellID: 1326082} (Cost = 395.000, Cast Time = 3.5s, GCD = 1.5s, Effective Time = 3.5s) APL: priority 5
@@ -803,7 +782,6 @@
 [52.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (859.653 --> 862.678) of 6678 total.
 [52.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (862.678 --> 865.703) of 6678 total.
 [52.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (865.703 --> 868.728) of 6678 total.
-[52.92] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 52.924000001s.
 [52.92] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [52.92] [Arcane (#1)] Spent 395.000 mana from {SpellID: 1326082} (868.728 --> 473.728) of 6678 total.
 [52.92] [Arcane (#1)] Casting {SpellID: 12051} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 1 > group 1.2
@@ -934,7 +912,6 @@
 [64.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (4442.528 --> 4445.553) of 6678 total.
 [64.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (4445.553 --> 4448.578) of 6678 total.
 [64.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (4448.578 --> 4451.603) of 6678 total.
-[64.42] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 1m4.424000001s.
 [64.42] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [64.42] [Arcane (#1)] Gained 0.726 mana from {OtherID: 2, Tag: 2} (4451.603 --> 4452.329) of 6678 total.
 [64.42] [Arcane (#1)] Spent 395.000 mana from {SpellID: 1326082} (4452.329 --> 4057.329) of 6678 total.
@@ -955,7 +932,6 @@
 [65.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4092.903 --> 4095.928) of 6678 total.
 [65.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4095.928 --> 4098.953) of 6678 total.
 [65.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (4098.953 --> 4101.978) of 6678 total.
-[65.92] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 1m5.924000001s.
 [65.92] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [65.92] [Arcane (#1)] Spent 181.000 mana from {SpellID: 1239700} (4101.978 --> 3920.978) of 6678 total.
 [65.92] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 399.287 damage (SpellSchool: 64). (Threat: 279.501)
@@ -979,7 +955,6 @@
 [67.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3957.278 --> 3960.303) of 6678 total.
 [67.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3960.303 --> 3963.328) of 6678 total.
 [67.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3963.328 --> 3966.353) of 6678 total.
-[67.42] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 1m7.424000001s.
 [67.42] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [67.42] [Arcane (#1)] Spent 362.000 mana from {SpellID: 1239700} (3966.353 --> 3604.353) of 6678 total.
 [67.42] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 433.167 damage (SpellSchool: 64). (Threat: 303.217)
@@ -1001,7 +976,6 @@
 [68.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3640.653 --> 3643.678) of 6678 total.
 [68.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3643.678 --> 3646.703) of 6678 total.
 [68.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3646.703 --> 3649.728) of 6678 total.
-[68.92] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 1m8.924000001s.
 [68.92] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [68.92] [Arcane (#1)] Spent 543.000 mana from {SpellID: 1239700} (3649.728 --> 3106.728) of 6678 total.
 [68.92] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 589.066 damage (SpellSchool: 64). (Threat: 412.346)
@@ -1034,7 +1008,6 @@
 [71.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3173.278 --> 3176.303) of 6678 total.
 [71.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3176.303 --> 3179.328) of 6678 total.
 [71.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (3179.328 --> 3182.353) of 6678 total.
-[71.42] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 1m11.424000001s.
 [71.42] [Arcane (#1)] Completed cast {SpellID: 10181}
 [71.42] [Arcane (#1)] Spent 260.000 mana from {SpellID: 10181} (3182.353 --> 2922.353) of 6678 total.
 [71.42] [Arcane (#1)] Casting {SpellID: 10212} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4
@@ -1127,7 +1100,6 @@
 [77.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (3094.778 --> 3097.803) of 6678 total.
 [77.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (3097.803 --> 3100.828) of 6678 total.
 [77.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (3100.828 --> 3103.853) of 6678 total.
-[77.42] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 1m17.424000001s.
 [77.42] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [77.42] [Arcane (#1)] Gained 0.726 mana from {OtherID: 2, Tag: 2} (3103.853 --> 3104.579) of 6678 total.
 [77.42] [Arcane (#1)] Spent 395.000 mana from {SpellID: 1326082} (3104.579 --> 2709.579) of 6678 total.
@@ -1159,7 +1131,6 @@
 [79.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2775.403 --> 2778.428) of 6678 total.
 [79.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2778.428 --> 2781.453) of 6678 total.
 [79.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2781.453 --> 2784.478) of 6678 total.
-[79.92] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 1m19.924000001s.
 [79.92] [Arcane (#1)] Completed cast {SpellID: 10181}
 [79.92] [Arcane (#1)] Spent 260.000 mana from {SpellID: 10181} (2784.478 --> 2524.478) of 6678 total.
 [79.92] [Arcane (#1)] Aura refreshed: {SpellID: 400589}
@@ -1248,7 +1219,6 @@
 [84.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2666.653 --> 2669.678) of 6678 total.
 [84.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2669.678 --> 2672.703) of 6678 total.
 [84.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2672.703 --> 2675.728) of 6678 total.
-[84.92] [Arcane (#1)] Queueing up {SpellID: 1326082} to cast at 1m24.924000001s.
 [84.92] [Arcane (#1)] Completed cast {SpellID: 10181}
 [84.92] [Arcane (#1)] Spent 260.000 mana from {SpellID: 10181} (2675.728 --> 2415.728) of 6678 total.
 [84.92] [Arcane (#1)] Aura gained: {SpellID: 400589}
@@ -1289,7 +1259,6 @@
 [88.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2512.528 --> 2515.553) of 6678 total.
 [88.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2515.553 --> 2518.578) of 6678 total.
 [88.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2518.578 --> 2521.603) of 6678 total.
-[88.42] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 1m28.424000001s.
 [88.42] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [88.42] [Arcane (#1)] Spent 395.000 mana from {SpellID: 1326082} (2521.603 --> 2126.603) of 6678 total.
 [88.42] [Arcane (#1)] Casting {SpellID: 10212} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4
@@ -1362,7 +1331,6 @@
 [92.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2238.528 --> 2241.553) of 6678 total.
 [92.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2241.553 --> 2244.578) of 6678 total.
 [92.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (2244.578 --> 2247.603) of 6678 total.
-[92.42] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 1m32.424000001s.
 [92.42] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [92.42] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 424.793 damage (SpellSchool: 64). (Threat: 297.355)
 [92.42] [Arcane (#1)] Aura gained: {SpellID: 400573}
@@ -1389,7 +1357,6 @@
 [93.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2283.903 --> 2286.928) of 6678 total.
 [93.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2286.928 --> 2289.953) of 6678 total.
 [93.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2289.953 --> 2292.978) of 6678 total.
-[93.92] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 1m33.924000001s.
 [93.92] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [93.92] [Arcane (#1)] Gained 0.726 mana from {OtherID: 2, Tag: 2} (2292.978 --> 2293.704) of 6678 total.
 [93.92] [Arcane (#1)] Spent 362.000 mana from {SpellID: 1239700} (2293.704 --> 1931.704) of 6678 total.
@@ -1482,7 +1449,6 @@
 [99.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2103.403 --> 2106.428) of 6678 total.
 [99.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2106.428 --> 2109.453) of 6678 total.
 [99.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (2109.453 --> 2112.478) of 6678 total.
-[99.92] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 1m39.924000001s.
 [99.92] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [99.92] [Arcane (#1)] Gained 0.726 mana from {OtherID: 2, Tag: 2} (2112.478 --> 2113.204) of 6678 total.
 [99.92] [Arcane (#1)] Spent 395.000 mana from {SpellID: 1326082} (2113.204 --> 1718.204) of 6678 total.
@@ -1517,7 +1483,6 @@
 [102.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1784.028 --> 1787.053) of 6678 total.
 [102.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1787.053 --> 1790.078) of 6678 total.
 [102.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1790.078 --> 1793.103) of 6678 total.
-[102.42] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 1m42.424000001s.
 [102.42] [Arcane (#1)] Completed cast {SpellID: 10181}
 [102.42] [Arcane (#1)] Spent 260.000 mana from {SpellID: 10181} (1793.103 --> 1533.103) of 6678 total.
 [102.42] [Arcane (#1)] Casting {SpellID: 10212} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 4
@@ -1596,7 +1561,6 @@
 [107.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1675.278 --> 1678.303) of 6678 total.
 [107.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1678.303 --> 1681.328) of 6678 total.
 [107.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1681.328 --> 1684.353) of 6678 total.
-[107.42] [Arcane (#1)] Queueing up {SpellID: 1326082} to cast at 1m47.424000001s.
 [107.42] [Arcane (#1)] Completed cast {SpellID: 10181}
 [107.42] [Arcane (#1)] Spent 260.000 mana from {SpellID: 10181} (1684.353 --> 1424.353) of 6678 total.
 [107.42] [Arcane (#1)] Casting {SpellID: 1326082} (Cost = 395.000, Cast Time = 3.5s, GCD = 1.5s, Effective Time = 3.5s) APL: priority 5
@@ -1642,7 +1606,6 @@
 [110.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1521.153 --> 1524.178) of 6678 total.
 [110.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1524.178 --> 1527.203) of 6678 total.
 [110.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1527.203 --> 1530.228) of 6678 total.
-[110.92] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 1m50.924000001s.
 [110.92] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [110.92] [Arcane (#1)] Spent 395.000 mana from {SpellID: 1326082} (1530.228 --> 1135.228) of 6678 total.
 [110.92] [Arcane (#1)] Casting {SpellID: 1239700} (Cost = 181.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6
@@ -1664,7 +1627,6 @@
 [112.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1171.528 --> 1174.553) of 6678 total.
 [112.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1174.553 --> 1177.578) of 6678 total.
 [112.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1177.578 --> 1180.603) of 6678 total.
-[112.42] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 1m52.424000001s.
 [112.42] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [112.42] [Arcane (#1)] Spent 181.000 mana from {SpellID: 1239700} (1180.603 --> 999.603) of 6678 total.
 [112.42] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 412.872 damage (SpellSchool: 64). (Threat: 289.010)
@@ -1690,7 +1652,6 @@
 [113.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1035.903 --> 1038.928) of 6678 total.
 [113.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1038.928 --> 1041.953) of 6678 total.
 [113.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1041.953 --> 1044.978) of 6678 total.
-[113.92] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 1m53.924000001s.
 [113.92] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [113.92] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 533.199 damage (SpellSchool: 64). (Threat: 373.239)
 [113.92] [Target 1] Aura faded: {SpellID: 28772}
@@ -1715,7 +1676,6 @@
 [115.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1081.278 --> 1084.303) of 6678 total.
 [115.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1084.303 --> 1087.328) of 6678 total.
 [115.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1087.328 --> 1090.353) of 6678 total.
-[115.42] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 1m55.424000001s.
 [115.42] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [115.42] [Arcane (#1)] Spent 543.000 mana from {SpellID: 1239700} (1090.353 --> 547.353) of 6678 total.
 [115.42] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 468.822 damage (SpellSchool: 64). (Threat: 0.000)
@@ -1808,7 +1768,6 @@
 [121.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (719.778 --> 722.803) of 6678 total.
 [121.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (722.803 --> 725.828) of 6678 total.
 [121.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (725.828 --> 728.853) of 6678 total.
-[121.42] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 2m1.424000001s.
 [121.42] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [121.42] [Arcane (#1)] Aura gained: {SpellID: 400589}
 [121.42] [Arcane (#1)] Aura faded: {SpellID: 12536}
@@ -1839,7 +1798,6 @@
 [123.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (795.403 --> 798.428) of 6678 total.
 [123.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (798.428 --> 801.453) of 6678 total.
 [123.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (801.453 --> 804.478) of 6678 total.
-[123.92] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 2m3.924000001s.
 [123.92] [Arcane (#1)] Completed cast {SpellID: 10181}
 [123.92] [Arcane (#1)] Gained 0.726 mana from {OtherID: 2, Tag: 2} (804.478 --> 805.204) of 6678 total.
 [123.92] [Arcane (#1)] Spent 260.000 mana from {SpellID: 10181} (805.204 --> 545.204) of 6678 total.
@@ -1927,7 +1885,6 @@
 [128.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1535.857 --> 1538.882) of 6678 total.
 [128.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1538.882 --> 1541.907) of 6678 total.
 [128.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1541.907 --> 1544.932) of 6678 total.
-[128.92] [Arcane (#1)] Queueing up {SpellID: 1326082} to cast at 2m8.924000001s.
 [128.92] [Arcane (#1)] Completed cast {SpellID: 10181}
 [128.92] [Arcane (#1)] Spent 260.000 mana from {SpellID: 10181} (1544.932 --> 1284.932) of 6678 total.
 [128.92] [Arcane (#1)] Casting {SpellID: 1326082} (Cost = 395.000, Cast Time = 3.5s, GCD = 1.5s, Effective Time = 3.5s) APL: priority 5
@@ -1972,7 +1929,6 @@
 [132.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1381.732 --> 1384.757) of 6678 total.
 [132.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1384.757 --> 1387.782) of 6678 total.
 [132.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1387.782 --> 1390.807) of 6678 total.
-[132.42] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 2m12.424000001s.
 [132.42] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [132.42] [Arcane (#1)] Spent 395.000 mana from {SpellID: 1326082} (1390.807 --> 995.807) of 6678 total.
 [132.42] [Arcane (#1)] Aura gained: {SpellID: 400589}
@@ -1993,7 +1949,6 @@
 [133.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1032.107 --> 1035.132) of 6678 total.
 [133.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1035.132 --> 1038.157) of 6678 total.
 [133.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (1038.157 --> 1041.182) of 6678 total.
-[133.92] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 2m13.924000001s.
 [133.92] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [133.92] [Arcane (#1)] Spent 181.000 mana from {SpellID: 1239700} (1041.182 --> 860.182) of 6678 total.
 [133.92] [Arcane (#1)] [Target 1] {SpellID: 1239700} Hit for 439.978 damage (SpellSchool: 64). (Threat: 307.985)
@@ -2070,7 +2025,6 @@
 [137.70] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (972.107 --> 975.132) of 6678 total.
 [137.80] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (975.132 --> 978.157) of 6678 total.
 [137.90] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (978.157 --> 981.182) of 6678 total.
-[137.92] [Arcane (#1)] Queueing up {SpellID: 1239700} to cast at 2m17.924000001s.
 [137.92] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [137.92] [Arcane (#1)] Spent 362.000 mana from {SpellID: 1239700} (981.182 --> 619.182) of 6678 total.
 [137.92] [Arcane (#1)] [Target 1] {SpellID: 1239700} Miss (SpellSchool: 64). (Threat: 0.000)
@@ -2093,7 +2047,6 @@
 [139.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (655.482 --> 658.507) of 6678 total.
 [139.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (658.507 --> 661.532) of 6678 total.
 [139.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 1} (661.532 --> 664.557) of 6678 total.
-[139.42] [Arcane (#1)] Queueing up {SpellID: 10212} to cast at 2m19.424000001s.
 [139.42] [Arcane (#1)] Completed cast {SpellID: 1239700}
 [139.42] [Arcane (#1)] Spent 543.000 mana from {SpellID: 1239700} (664.557 --> 121.557) of 6678 total.
 [139.42] [Arcane (#1)] [Target 1] {SpellID: 1239700} Crit for 940.677 damage (SpellSchool: 64). (Threat: 658.474)
@@ -2189,7 +2142,6 @@
 [145.20] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (293.982 --> 297.007) of 6678 total.
 [145.30] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (297.007 --> 300.032) of 6678 total.
 [145.40] [Arcane (#1)] Gained 3.025 mana from {OtherID: 2, Tag: 2} (300.032 --> 303.057) of 6678 total.
-[145.42] [Arcane (#1)] Queueing up {SpellID: 10181} to cast at 2m25.424000001s.
 [145.42] [Arcane (#1)] Completed cast {SpellID: 1326082}
 [145.42] [Arcane (#1)] Aura faded: {SpellID: 12536}
 [145.42] [Arcane (#1)] Casting {SpellID: 10181} (Cost = 260.000, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 7
