@@ -342,6 +342,7 @@ do
                     damageMeter = false, -- experimental (providers spec decision 82): the meter as the Outcomes provider
                     cooldownViewer = false, -- experimental: the Cooldown Manager as the presence leaf (providers Task 7)
                     auraForceOrdinary = true, -- perf 2.1a: aura events no longer shorten the 0.2 s wait (Events.lua)
+                    idleGate = true, -- perf 2.4: the unforced wait is 1.5 s with nothing to fight (Driver.lua)
                 },
                 toggles = {
                     pause = {
@@ -4257,6 +4258,18 @@ found = true end
                                     get = function() return Hekili.DB.profile.performance.auraForceOrdinary == true end,
                                     set = function( _, v ) Hekili.DB.profile.performance.auraForceOrdinary = v end,
                                     order = 24,
+                                    width = "full",
+                                },
+                                idleGate = {
+                                    type = "toggle",
+                                    name = L["Experimental: slow updates when there is nothing to fight"],
+                                    desc = L["Out of combat with no hostile target, the icons refresh every 1.5 s instead of every 0.5 s. "
+                                        .. "Changing target, casting and entering combat still refresh them at once.\n\n"
+                                        .. "Applies at once to every specialization.\n\n"
+                                        .. "|cFFFF7F00Experimental|r: on by default; turn it off if the icons seem slow out of combat."],
+                                    get = function() return Hekili.DB.profile.performance.idleGate == true end,
+                                    set = function( _, v ) Hekili.DB.profile.performance.idleGate = v end,
+                                    order = 25,
                                     width = "full",
                                 },
                             }

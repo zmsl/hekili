@@ -6,6 +6,7 @@ local _, ns = ...
 local Facade = ns.Facade
 local CreateFrame = Facade.CreateFrame
 local GetFramerate, GetTime, InCombatLockdown = Facade.GetFramerate, Facade.GetTime, Facade.InCombatLockdown
+local UnitCanAttack, issecretvalue = Facade.UnitCanAttack, Facade.issecretvalue
 local format = string.format
 
 -- FPS smoothing system for stable budget calculations
@@ -69,6 +70,19 @@ local function calculateFrameBudget()
     --     frameBudget, rawFPS, smoothedFPS, frameTime, userBudget))
 
     return userBudget
+end
+
+-- The unforced wait after an update (perf 2.4). With nothing to fight it stretches to 1.5 s; a force (a target change,
+-- a cast, combat) still gets the 0.2 s wait, and the update it brings reads this again. A secret answer counts as hostile.
+local function restRate()
+    local perf = Hekili.Engine.settings.performance
+    if perf and perf.idleGate and not InCombatLockdown() then
+        local hostile = UnitCanAttack("player", "target")
+        if not issecretvalue(hostile) and not hostile then
+            return 1.5
+        end
+    end
+    return 0.5
 end
 
 -- Separate the recommendations engine from each display.
@@ -248,7 +262,7 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
                 self.activeThread = nil
                 parked = err == DONE
 
-                self.refreshRate = 0.5
+                self.refreshRate = restRate()
                 self.combatRate = 0.2
 
                 if ok then

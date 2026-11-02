@@ -81,14 +81,82 @@ describe("the Driver's update rate", function()
         end)
     end)
 
-    it("the option writes the profile, on by default", function()
+    describe("2.4, the idle gate", function()
+        local SECRET = require("Game.State.helpers.fake_api").SECRET
+
+        -- The rate at rest, after the first update has seen the conditions.
+        local function rest()
+            rate(2)
+            return rate(30)
+        end
+
+        before_each(function()
+            H.ctl.friendly.target = true -- what UnitCanAttack answers with no target, or a friendly one
+        end)
+
+        it("on (the default), out of combat with no hostile target: one update each 1.5 s", function()
+            assert.is_true(perf.idleGate)
+            local r = rest()
+            assert.is_true(r > 0.6 and r <= 2 / 3, "idle rate: " .. r)
+        end)
+
+        it("off: every 0.5 s, as before the switch", function()
+            perf.idleGate = false
+            local r = rest()
+            assert.is_true(r > 1.8 and r <= 2, "rest rate: " .. r)
+        end)
+
+        it("a hostile target, combat, or a secret answer each keep the 0.5 s rest rate", function()
+            H.ctl.friendly.target = nil
+            local hostile = rest()
+            assert.is_true(hostile > 1.8 and hostile <= 2, "with a hostile target: " .. hostile)
+            H.ctl.friendly.target = true
+            H.ctl.combat = true
+            assert.are.equal(hostile, rest())
+            H.ctl.combat = false
+            H.ctl.friendly.target = SECRET
+            assert.are.equal(hostile, rest())
+        end)
+
+        it("a target change wakes it within the 0.2 s wait, and the rest rate follows the new target", function()
+            rest()
+            f.refreshTimer = 0
+            H.ctl.friendly.target = nil
+            H.Fire("PLAYER_TARGET_CHANGED")
+            assert.are.equal(1, rate(0.25) * 0.25)
+            local r = rate(30)
+            assert.is_true(r > 1.8 and r <= 2, "after the wake: " .. r)
+        end)
+
+        it("a cast wakes it within the 0.2 s wait, and it goes back to idle", function()
+            rest()
+            f.refreshTimer = 0
+            H.Fire("UNIT_SPELLCAST_SENT", "player", "nobody", "cast-1", ww.IDS.battle_shout[1])
+            assert.are.equal(1, rate(0.25) * 0.25)
+            assert.are.equal(0, rate(1))
+        end)
+
+        it("entering combat wakes it within the 0.2 s wait", function()
+            rest()
+            f.refreshTimer = 0
+            H.ctl.combat = true
+            H.Fire("PLAYER_REGEN_DISABLED")
+            assert.are.equal(1, rate(0.25) * 0.25)
+            local r = rate(30)
+            assert.is_true(r > 1.8 and r <= 2, "in combat: " .. r)
+        end)
+    end)
+
+    it("each option writes the profile, on by default", function()
         H.Hekili:EmbedSpecOptions()
         H.Hekili:EmbedPackOptions()
         local key = H.Hekili.State.spec.key
         local args = H.Hekili.Options.args.packs.plugins.specializations[key].args.performance.args
-        assert.is_true(args.auraForceOrdinary.get())
-        args.auraForceOrdinary.set(nil, false)
-        assert.is_false(perf.auraForceOrdinary)
-        assert.is_false(args.auraForceOrdinary.get())
+        for _, name in ipairs({ "auraForceOrdinary", "idleGate" }) do
+            assert.is_true(args[name].get())
+            args[name].set(nil, false)
+            assert.is_false(perf[name])
+            assert.is_false(args[name].get())
+        end
     end)
 end)

@@ -140,6 +140,9 @@ function M.new()
         return ctl.dead[unit] == true
     end
     function api.UnitCanAttack(_, unit)
+        if ctl.friendly[unit] == SECRET then
+            return SECRET
+        end
         return ctl.friendly[unit] ~= true
     end
     function api.CheckInteractDistance(unit) -- LibRangeCheck's interact checkers: within reach when in range
