@@ -829,6 +829,7 @@ L["Unable to deserialized decompressed string: %s"] = "无法反序列化已解�
 L["Unable to restore Priority from the provided string."] = "无法从提供的字符串还原优先级。"
 L["Attempted to serialize an invalid display (%s)"] = "尝试序列化无效的显示框（%s）"
 L["No displays selected to export."] = "未选择要导出的显示框。"
+-- L["Unable to restore Style from the provided string."] = ""
 L["Line %s: Converted '%s' to '%s' (%sx)."] = "第 %s 行：已将“%s”转换为“%s”（%sx）。"
 L["Line %s: Converted '%s' to '%s'."] = "第 %s 行：已将“%s”转换为“%s”。"
 L["Line %s: Converted operations in '%s' to '%s'."] = "第 %s 行：已将“%s”中的运算转换为“%s”。"

@@ -820,6 +820,7 @@ L["Unable to deserialized decompressed string: %s"] = true
 L["Unable to restore Priority from the provided string."] = true
 L["Attempted to serialize an invalid display (%s)"] = true
 L["No displays selected to export."] = true
+L["Unable to restore Style from the provided string."] = true
 L["Line %s: Converted '%s' to '%s' (%sx)."] = true
 L["Line %s: Converted '%s' to '%s'."] = true
 L["Line %s: Converted operations in '%s' to '%s'."] = true

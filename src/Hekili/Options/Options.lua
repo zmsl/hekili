@@ -8172,8 +8172,9 @@ Hekili.SerializeActionPack = SerializeActionPack
 DeserializeActionPack = function( str )
     local serial = StringToTable( str, true )
 
-    if not serial or type( serial ) == "string" or serial.type ~= "package" then
-        return serial or L["Unable to restore Priority from the provided string."]
+    if type( serial ) ~= "table" or serial.type ~= "package" or type( serial.payload ) ~= "table" then
+        -- StringToTable's failure is its message
+        return nil, type( serial ) == "string" and serial or L["Unable to restore Priority from the provided string."]
     end
 
     serial.payload.builtIn = false
@@ -8205,16 +8206,18 @@ SerializeStyle = function( ... )
     if not hasPayload then return L["No displays selected to export."] end
     return TableToString( serial, true )
 end
+Hekili.SerializeStyle = SerializeStyle
 
 DeserializeStyle = function( str )
     local serial = StringToTable( str, true )
 
-    if not serial or type( serial ) == 'string' or not serial.type == "style" then
-        return nil, serial
+    if type( serial ) ~= "table" or serial.type ~= "style" or type( serial.payload ) ~= "table" then
+        return nil, type( serial ) == "string" and serial or L["Unable to restore Style from the provided string."]
     end
 
     return serial.payload
 end
+Hekili.DeserializeStyle = DeserializeStyle
 
 -- End Import/Export Strings
 
