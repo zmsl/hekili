@@ -62,7 +62,7 @@ local CLAW = { 1082, 3029, 5201, 9849, 9850 }
 local SHRED = { 5221, 6800, 8992, 9829, 9830 }
 local RAKE = { 1822, 1823, 1824, 9904, 1289140 } -- 1289140: Forever's variant
 local RIP = { 1079, 9492, 9493, 9752, 9894, 9896, 1289141 }
-local FEROCIOUS_BITE = { 22568, 22827, 22828, 22829, 31018, 1289142 }
+local FEROCIOUS_BITE = { 1328618, 22568, 22827, 22828, 22829, 31018, 1289142 }
 local RAVAGE = { 6785, 6787, 9866, 9867 }
 local POUNCE = { 9005, 9823, 9827 }
 local POUNCE_BLEED = { 9007, 9824, 9826 }
@@ -79,7 +79,7 @@ local AQUATIC_FORM = { 1066 }
 local MAUL = { 6807, 6808, 6809, 8972, 9745, 9880, 9881 }
 local SWIPE = { 779, 780, 769, 9754, 9908 }
 local PRIMAL_BITE = { 407995, 1238069, 1238070, 1238073 } -- Mangle, renamed
-local LACERATE = { 414644, 1235826, 1235827 }
+local LACERATE = { 1328617, 1328616, 414644, 1235826, 1235827 } -- hotfix 113554: the talent rank 1, rank 2 at 34
 local DEMORALIZING_ROAR = { 99, 1735, 9490, 9747, 9898 }
 local GROWL = { 6795 }
 local BASH = { 5211, 6798, 8983 }
@@ -518,7 +518,7 @@ spec:RegisterAuras({
         max_stack = 1,
     },
     lacerate = {
-        id = 414644,
+        id = 1328617,
         copy = rest(LACERATE),
         duration = 15,
         tick_time = 3,
@@ -643,12 +643,12 @@ spec:RegisterCostMod({
         1822,
         5221,
         1079,
-        22568,
+        1328618,
         9005,
         6785,
         779,
         6807,
-        414644,
+        1328617,
         5211,
         1238122,
         339,
@@ -1067,7 +1067,7 @@ spec:RegisterAbilities({
 
     -- Bite converts all the energy left after its cost (DB2 22568 text), Clearcasting's free Bite too.
     ferocious_bite = {
-        id = 22568,
+        id = 1328618, -- hotfix 113554: rank 1 at 24 (22568 now rank 2)
         copy = rest(FEROCIOUS_BITE),
         cast = 0,
         cooldown = 0,
@@ -1279,7 +1279,7 @@ spec:RegisterAbilities({
     },
 
     lacerate = {
-        id = 414644,
+        id = 1328617,
         copy = rest(LACERATE),
         cast = 0,
         cooldown = 0,
