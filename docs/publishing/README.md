@@ -39,7 +39,7 @@ On a clean tree (`git status --short` empty), run:
 make package-check
 ```
 
-`make package` downloads the BigWigs packager (`release.sh`, once, into `.lua/`) and runs it with `-d`, so nothing is
+`make package` downloads the BigWigs packager, pinned by commit in `PACKAGER_REF` (Makefile) and in release.yml (bump both together), once per pin into `.lua/release-<ref>.sh`, and runs it with `-d`, so nothing is
 uploaded; the zip lands in `.release/`, which is gitignored. `make package-check` then runs `tools/check_package.sh` on
 the newest zip: the four addon folders at the zip root, `Hekili/LICENSE`, no dev paths, and every TOC `## Version`
 equal to the project version (the zip name without its -forever suffix). Neither target is part of `make check` (they
