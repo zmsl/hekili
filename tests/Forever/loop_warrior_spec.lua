@@ -317,8 +317,10 @@ describe("the headless Arms gates, 20 fights #loop", function()
     it("Arms solo, level 60, one mob, 20 fights of up to 3 minutes: the first icon against the oracle's", function()
         local r, line = gate.solo(20) -- the bars: recorded in a provider arm (providers spec §4.1)
         ab.check(r.never <= 0.08, "Arms", line)
-        -- 0.969 (was 0.975): harness corrected to the measured swing timing (2026-10-22)
-        ab.check(r.dps >= 0.965, "Arms", line) -- the old 0.005 margin
+        -- 0.969 (was 0.975): harness corrected to the measured swing timing (2026-10-22); 0.979 -> 0.949 with W1 (the
+        -- world's two-hand white crit doubling the swing's rage, owner ruling 2026-11-02; 0.950 with the kit's old crit
+        -- rule, so the world's richer rage, not the belief's rule, moves it)
+        ab.check(r.dps >= 0.944, "Arms", line) -- the old 0.005 margin
         ab.check(r.idleA <= r.idleB + 0.03, "Arms", line)
         for key, up in pairs(r.upB) do
             if not gate.REPORTED[key] then

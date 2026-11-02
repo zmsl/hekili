@@ -146,8 +146,8 @@ end
 -- the warrior compendium v3.1.0, 2026-10-01, https://ppach-warriorcompendium.share.connect.posit.cloud/rage.html):
 -- the weapon's unhasted speed x a rate by hand, independent of damage, level and haste: 3.46 main hand with a
 -- one-hander, 4.5 with a two-hander, 1.73 off hand. Misses, dodges and parries give none, glancing blows full rage, a
--- white crit one extra base swing (3.46 x speed main hand, two-hander too; yellow crits none): the swing entries'
--- `crit`. Dual Wield Specialization: the tooltip's +10% off-hand rage a rank (unverified on
+-- white crit doubles the swing's rage, the two-hand rate too (owner ruling W1 2026-11-02, wowsims 7c28cfa731 from
+-- Forever combat logs; supersedes the compendium's 3.46 for two-handers; yellow crits none): the swing entries' `crit`. Dual Wield Specialization: the tooltip's +10% off-hand rage a rank (unverified on
 -- Forever). Unbridled Wrath: 1 rage a proc (2 with a two-hander) at a measured ~7.5% a rank (36% at 5/5; the tooltip
 -- says 60%). The two-hander flag is Hekili's gear scan (main_hand.size from C_Item.GetItemInfo's equip location on
 -- PLAYER_EQUIPMENT_CHANGED, and the belief's own read of the same answers; the Forever API data marks neither it nor
@@ -247,7 +247,7 @@ spec:RegisterResource(
             end,
             crit = function()
                 local speed = swingBase(1)
-                return 3.46 * (speed > 0 and speed or mainhand_speed)
+                return (weapon.size == 2 and 4.5 or 3.46) * (speed > 0 and speed or mainhand_speed)
             end,
             -- The belief's rage from a hit on us (kind: "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS"): the
             -- expected gain and its half-width. Run in the belief's `now` context: `buff`, `talent` and `stat` read the belief

@@ -113,14 +113,14 @@ M.WORLD = {
 }
 
 -- True rage per landed white wound: the class file's own model restated (Hekili_Warrior/Warrior.lua, "Rage per white
--- swing": 4.5 x the unhasted speed with a two-hander; a crit one more base swing, 3.46 x speed). Circular on purpose:
+-- swing": 4.5 x the unhasted speed with a two-hander; a crit doubles it, W1). Circular on purpose:
 -- the loop measures recommendations, not the rage model (its own specs measure that). The loop's gain hook: rage is
 -- the character's only power, so `pt` is always rage's.
 function M.gain(_, hand, _, flag)
     if hand ~= 1 then
         return 0
     end
-    return 4.5 * 3.6 + (flag == "CRITICAL" and 3.46 * 3.6 or 0)
+    return 4.5 * 3.6 * (flag == "CRITICAL" and 2 or 1)
 end
 
 -- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's warrior/*.go):
