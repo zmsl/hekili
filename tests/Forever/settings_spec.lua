@@ -7,7 +7,7 @@ local ww = require("Forever.helpers.warrior_world")
 
 local SUBTABLES =
     { "specs", "packs", "toggles", "displays", "performance", "notifications", "specChoice", "specMigrated" }
-local SCALARS = { "enabled", "autoSnapshot", "screenshot" }
+local SCALARS = { "enabled", "screenshot" }
 
 -- A fresh Settings.lua: returns Hekili.Engine.
 local function load()
@@ -19,6 +19,7 @@ local function load()
 end
 
 local function profile()
+    -- autoSnapshot: a key saved profiles may still hold (the option is gone, audit item 18a); the engine ignores it
     local p = { enabled = true, autoSnapshot = true, screenshot = false }
     for _, k in ipairs(SUBTABLES) do
         p[k] = {}
@@ -47,6 +48,7 @@ describe("Engine.Configure (pure)", function()
             for _, k in ipairs(SCALARS) do
                 assert.are.equal(p[k], s[k], k)
             end
+            assert.is_nil(s.autoSnapshot)
         end
     end)
 

@@ -19,7 +19,6 @@ local settings = {
     specMigrated = false,
     -- copied
     enabled = false,
-    autoSnapshot = false,
     screenshot = false,
 }
 Engine.settings = settings
@@ -47,7 +46,6 @@ function Engine.Configure(profile)
     settings.specChoice = profile.specChoice
     settings.specMigrated = profile.specMigrated
     settings.enabled = profile.enabled
-    settings.autoSnapshot = profile.autoSnapshot
     settings.screenshot = profile.screenshot
     settings.version = settings.version + 1
 end

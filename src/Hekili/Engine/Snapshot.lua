@@ -15,13 +15,8 @@ local orderedPairs = ns.orderedPairs
 local format = string.format
 local insert, concat = table.insert, table.concat
 
---- Runs one update with debugging on, so the displays' reports are saved; `isAuto` (the engine's own call) only when
---- the profile's autoSnapshot is on.
+--- Runs one update with debugging on, so the displays' reports are saved; `isAuto` is passed on to the listeners.
 function Hekili.Engine.Snapshot( isAuto )
-    if isAuto and not Hekili.Engine.settings.autoSnapshot then
-        return
-    end
-
     local first = #ns.snapshots + 1
     Hekili.ManualSnapshot = not isAuto
     Hekili.ActiveDebug = true

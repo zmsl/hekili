@@ -332,7 +332,6 @@ do
             profile = {
                 enabled = true,
                 minimapIcon = false,
-                autoSnapshot = true,
                 screenshot = true,
 
                 flashTexture = "Interface\\Cooldown\\star4",
@@ -7620,14 +7619,6 @@ do
                         width = "full",
                         disabled = function() return #ns.snapshots == 0 end,
                     },
-                    autoSnapshot = {
-                        type = "toggle",
-                        name = L["Auto Snapshot"],
-                        desc = L["If checked, the addon will automatically create a snapshot whenever it failed to generate a recommendation.\n\n" ..
-                            "This automatic snapshot can only occur once per episode of combat."],
-                        order = 2,
-                        width = "normal",
-                    },
                     screenshot = {
                         type = "toggle",
                         name = L["Take Screenshot"],
@@ -7648,8 +7639,7 @@ do
                                     "reviewing a snapshot can help identify what factors led to the specific recommendations that you saw.\n\n" ..
                                     "Snapshots only capture a specific point in time, and explain the current recommendation as well as all future recommendations based on icons shown. So if you show 3 icons in the addon, the snapshot will explain the current recommendation and the next 2." ..
                                     "\n\nYou can also freeze the addon's recommendations using the |cffffd100Pause|r binding ( |cffffd100%s|r ).  Doing so will freeze the addon's recommendations, allowing you to mouseover the display " ..
-                                    "and see which conditions were met to display those recommendations.  Press Pause again to unfreeze the addon.\n\n" ..
-                                    "Using the settings at the top of this panel, you can ask the addon to automatically generate a snapshot for you when no recommendations were able to be made.\n\n"], ( Hekili.DB.profile.toggles.pause.key or L["NOT BOUND"] ) )
+                                    "and see which conditions were met to display those recommendations.  Press Pause again to unfreeze the addon.\n\n"], ( Hekili.DB.profile.toggles.pause.key or L["NOT BOUND"] ) )
                                 end,
                                 order = 4,
                                 width = "full",
@@ -7670,10 +7660,9 @@ do
                                 "You should generate the snapshot when the issue is actively happening. If you look at the recommendations and think \"this seems wrong\", that's when you should do it. Most of the time, issues can be recreated at training dummies." ..
                                 "\n\nFor example, if the issue usually happens 20 seconds into your rotation, then an out-of-combat prepull snapshot isn't going to help the Dev or other community members diagnose and fix the issue." ..
                                 "\n\n|cFFFFD100How do I do it|r\n" ..
-                                "You can generate a snapshot one of 3 ways:\n" ..
+                                "You can generate a snapshot one of 2 ways:\n" ..
                                 "• Pressing the snapshot keybind: |cffffd100%s|r" ..
                                 "\n• Pressing the pause keybind: |cffffd100%s|r" ..
-                                "\n• One can be automatically generated if the addon fails to recommend something, if you allow it to via the checkbox at the top of this window (|cFFFFD100Auto Snapshot|r)" ..
                                 "\n\n|cFFFFD100Okay I made one, where is it?|r\n" ..
                                 "The snapshot can be retrieved by picking it from dropdown list near the top of this window, then copying it from the textbox that appears. Be sure to press |cFFFFD100Ctrl + A|r before copying it so that you get the entire thing. It should be very, very long."], ( Hekili.DB.profile.toggles.snapshot.key or L["NOT BOUND"] ), ( Hekili.DB.profile.toggles.pause.key or L["NOT BOUND"] ) )
                                 end,
@@ -7990,7 +7979,7 @@ function Hekili:SetOption( info, input, ... )
 
     elseif category == "snapshots" then
         profile[ option ] = input
-        Hekili.Engine.Configure( profile ) -- the engine copies its scalars (autoSnapshot, screenshot)
+        Hekili.Engine.Configure( profile ) -- the engine copies its scalars (enabled, screenshot)
     end
 
     if Rebuild then

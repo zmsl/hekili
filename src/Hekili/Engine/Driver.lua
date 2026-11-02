@@ -235,7 +235,7 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
             Hekili.activeFrameStart = debugprofilestop()
 
             -- if ns.EngineFrame.threadUpdates then print( 1000 * elapsed, Hekili.maxFrameTime, ns.EngineFrame.threadUpdates.meanWorkTime, ns.EngineFrame.threadUpdates.meanFrames ) end
-            local ok, err, ret = coroutine.resume(thread)
+            local ok, err = coroutine.resume(thread)
 
             if not ok then
                 err = err .. "\n\n" .. debugstack(thread)
@@ -265,18 +265,13 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
                 self.combatRate = 0.2
 
                 if ok then
-                    if self.firstThreadCompleted and not self.DontProfile then
+                    if self.firstThreadCompleted then
                         self:UpdatePerformance()
                     end
                     self.firstThreadCompleted = true
                 end
             end
 
-            if ok and err == DONE and ret == "AutoSnapshot" then
-                self.DontProfile = true
-                Hekili.Engine.Snapshot(true)
-                self.DontProfile = false
-            end
         end
     end
 end)

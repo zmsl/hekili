@@ -5,7 +5,7 @@ local addon, ns = ...
 local L = ns.L
 local Facade = ns.Facade
 local CreateFrame = Facade.CreateFrame
-local GetFrameCPUUsage, GetTime, InCombatLockdown = Facade.GetFrameCPUUsage, Facade.GetTime, Facade.InCombatLockdown
+local GetFrameCPUUsage, GetTime = Facade.GetFrameCPUUsage, Facade.GetTime
 local GetItemInfoInstant, GetSpellTexture = Facade.C_Item.GetItemInfoInstant, Facade.C_Spell.GetSpellTexture
 local UnitPower = Facade.UnitPower
 local Hekili = _G[ addon ]
@@ -1521,7 +1521,6 @@ local function altPasses( dispName, packName, Queue, numFilled, abilityOpts )
     return ran
 end
 
-local hasSnapped
 local lastSnapshot = {}
 
 function Hekili.Update()
@@ -2106,13 +2105,6 @@ function Hekili.Update()
 
                         if resInfo then
                             Hekili:Debug( resInfo )
-                        end
-                    else
-                        if i <= numRecs and not hasSnapped and settings.autoSnapshot and InCombatLockdown() and state.level >= 70 and ( dispName == "Primary" or dispName == "AOE" ) then
-                            Hekili:Print( "Unable to make recommendation for " .. dispName .. " #" .. i .. "; triggering auto-snapshot..." ) -- l10n: verbatim
-                            hasSnapped = dispName
-                            -- Not published (stock did not either): the synchronous snapshot run that follows publishes.
-                            return "AutoSnapshot"
                         end
                     end
                     break
