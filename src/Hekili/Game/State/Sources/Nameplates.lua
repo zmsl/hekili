@@ -1,15 +1,13 @@
 -- Game/State/Sources/Nameplates.lua
--- Nameplate sources (spec §4.5, §6.9): the plate tokens from NAME_PLATE_UNIT_ADDED/REMOVED; poll 5 counts the live,
--- attackable plates (plain UnitExists, UnitIsDead, UnitCanAttack) into `Enemies`; poll 8 counts, per tracked attack
--- (an ability that starts combat), the plates in range of its spell (plain C_Spell.IsSpellInRange) into `Range`.
+-- Nameplate sources (spec §4.5, §6.9): the plate tokens from NAME_PLATE_UNIT_ADDED/REMOVED; poll 5 reports a plate
+-- whose plain UnitIsDead answers true to the unit registry (one death).
 -- Credits: secret-value handling after Catnip's (Durts) research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Nameplates.lua.
 
 local _, ns = ...
-local VS, I = ns.VirtualState, ns.VirtualStateInternal
+local I = ns.VirtualStateInternal
 local S = I.Sources
-local Obs = VS.Obs
-local Plain, Direct = S.Plain, S.Direct
+local Plain = S.Plain
 
 local PLATES = 40
 local token, index, active = {}, {}, {}
@@ -33,41 +31,11 @@ S.On("NAME_PLATE_UNIT_REMOVED", nil, function(api, t, unit)
     end
 end)
 
-local function live(api, unit)
-    return Plain(api, api.UnitExists(unit)) == true
-        and Plain(api, api.UnitIsDead(unit)) == false
-        and Plain(api, api.UnitCanAttack("player", unit)) == true
-end
-
--- Poll 5: the enemy count; a plate whose plain UnitIsDead answers true is reported to the registry (one death).
+-- Poll 5: a plate whose plain UnitIsDead answers true is reported to the registry (one death).
 S.Poll(5, function(api, t)
-    local n = 0
     for k = 1, PLATES do
-        if active[k] then
-            if live(api, token[k]) then
-                n = n + 1
-            elseif Plain(api, api.UnitIsDead(token[k])) == true then
-                I.Units.Dead(I.Units.Uid(k + 2), t) -- nameplateK is the registry's token K + 2
-            end
-        end
-    end
-    Direct(Obs.Enemies, t, 0, n)
-end)
-
--- Poll 8: per tracked attack, the plates in range of its spell.
-S.Poll(8, function(api, t)
-    local A = I.ab
-    for a = 1, A.n do
-        if A.obj[a].startsCombat then
-            local n = 0
-            for k = 1, PLATES do
-                if active[k] and Plain(api, api.C_Spell.IsSpellInRange(A.qid[a], token[k])) == true then
-                    n = n + 1
-                end
-            end
-            if n ~= I.inRange[a] then
-                Direct(Obs.Range, t, a, n)
-            end
+        if active[k] and Plain(api, api.UnitIsDead(token[k])) == true then
+            I.Units.Dead(I.Units.Uid(k + 2), t) -- nameplateK is the registry's token K + 2
         end
     end
 end)

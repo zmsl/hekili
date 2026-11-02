@@ -5,10 +5,9 @@ local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
 
 describe("facts and polls", function()
-    local VS, I, S, Obs, ctl
+    local VS, I, S, Obs, ctl, api
 
     before_each(function()
-        local api
         api, ctl = fake.new()
         local ns = load.module()
         VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -186,19 +185,25 @@ describe("facts and polls", function()
         assert.is_nil(VS.TargetCast(11))
     end)
 
-    it("counts live attackable plates, default 1 without any", function()
-        drain(2)
-        assert.are.equal(1, VS.Count.Enemies(2).est)
-        ctl.exists.nameplate1, ctl.exists.nameplate2, ctl.exists.nameplate3 = true, true, true
+    it("reports a dead plate to the unit registry, and asks no plate's range", function()
+        for k = 1, 5 do
+            local tok = "nameplate" .. k
+            ctl.exists[tok], ctl.guid[tok], ctl.inRange[tok] = true, "Creature-" .. (k + 10), true
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", tok)
+        end
         ctl.dead.nameplate3 = true
-        ctl.inRange.nameplate1 = true
-        ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
-        ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
-        ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate3")
+        local asked, inRange = 0, api.C_Spell.IsSpellInRange
+        api.C_Spell.IsSpellInRange = function(id, unit)
+            if unit ~= "target" then
+                asked = asked + 1
+            end
+            return inRange(id, unit)
+        end
         drain(3)
-        local e = VS.Count.Enemies(3)
-        assert.are.same({ 2, "observed" }, { e.est, e.basis })
-        assert.are.equal(1, VS.Count.InRange(fs.SPENDER_C, 3))
+        api.C_Spell.IsSpellInRange = inRange
+        assert.are.equal(0, asked)
+        assert.is_true(I.Units.IsDead(I.Units.Uid(5))) -- nameplate3 is the registry's token 5
+        assert.is_false(I.Units.IsDead(I.Units.Uid(3)))
     end)
 
     it(
