@@ -65,9 +65,11 @@ M.FLICKER = {
     -- CJ's trace, about 70% of L24's Heroic Strike holds were this artefact; seeds 1-20 / 21-40 / 41-60, was 26 / 30 /
     -- 17 and 909 / 372 / 853, flicker 0.84 / 1.04 / 0.77, retracted 0.06 / 0.03 / 0.03, oracle 0.34 / 0.70 / 0.39,
     -- agreement .930 / .944 / .918, was .941 / .932 / .934): truth no longer runs ahead of the pack's swing, so a
-    -- forecast swing's gain shows a cost-gated ability ready with less overpaid rage behind it (the swing-paid class)
-    -- flickerK 0.6 (this label only, M.FLICKER_K's rule; same change): the oracle's flicker fell 0.66 / 0.61 / 0.41 ->
-    -- 0.34 / 0.70 / 0.39 while ours held, gap 0.52 / 0.38 / 0.59; why the oracle's fell is untraced
+    -- forecast swing's gain shows a cost-gated ability ready with less overpaid rage behind it. The rise is real, mean
+    -- 31 -> 50 over 12 paired seed sets: the overpaid truth was masking the forecast class
+    -- flickerK 0.6 (this label only, M.FLICKER_K's own rule: widest gap 0.59; gaps 0.52 / 0.38 / 0.59): the oracle's
+    -- flicker read 0.66 / 0.61 / 0.41 -> 0.34 / 0.70 / 0.39 here, but over 12 paired seed sets its mean went .545 -> .458,
+    -- paired change -.09 (SD .17), not significant: seed reordering, not a mechanism
     ["Fury L24"] = { flicker = 1.1, flickerK = 0.6, retracted = 0.2, readyShort = 46, heldReady = 337 }, -- 0.86 / 1.08 / 0.98, 0.09 / 0.17 / 0.06; 36 / 38 / 46, 337 / 332 / 313
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by

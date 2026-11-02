@@ -118,7 +118,8 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     local FURY_LIVE60 = 6.8
     -- below Bloodthirst: 7.6 s (L10, in Battle Stance: pooling for Heroic Strike), the recipe's idle before its leveling
     -- Sunder since that Sunder stops at 5 stacks (fix 18) and the gate counts on-GCD presses only (final review fix 3);
-    -- L40 2.4 with the leveling Hamstring in Berserker Stance (8.6 without it); the owner's call
+    -- L40 2.4 with the leveling Hamstring in Berserker Stance (8.6 without it); the owner's call. The world's off hand
+    -- by rank moved L10 from 7.4 s / 44 presses to 7.6 s / 40, on the limit: correct, L10 is rank 0
     local FURY_LIVE_LEVELING = 7.6
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Fury (wowsims.com) stays live at level " .. level, function()
