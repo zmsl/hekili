@@ -334,6 +334,7 @@ local EFFICIENT = {
     serpent_sting = true,
     aimed_shot = true,
     summon_hawk = true,
+    strider_kick = true, -- hotfix 113554 (wowsims: 19416's mask word 2 2105344)
 }
 
 -- The rank instance `H`'s character has in the talent whose spell is `spell` (0: untaken), from its traits.

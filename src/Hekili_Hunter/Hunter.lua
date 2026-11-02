@@ -121,8 +121,9 @@ end
 --   -30 is wowsims/forever's generated spell data (MIT, sim/core/spelldata/spells_auto_gen.go `440529: {{-30, -60}`).
 --   Strider Kick takes it too, as wowsims's log shows (39.6), though its DB2 mask is outside 440529's.
 -- - Efficiency (19416, 5 ranks): 3% a rank off the shots, stings and strikes (DB2 mask: Raptor Strike, Mongoose Bite,
---   Wing Clip, Arcane Shot, Multi-Shot, Serpent Sting, Aimed Shot, Summon Hawk; not the traps, Hunter's Mark, Rapid
---   Fire, the aspects or Strider Kick). The DB2 carries the 5/5 -15; wowsims's data `19416: {{-3, -6, -9, -12, -15}}`.
+--   Wing Clip, Arcane Shot, Multi-Shot, Serpent Sting, Aimed Shot, Summon Hawk, and Strider Kick since hotfix 113554
+--   (wowsims: mask word 2 8192 -> 2105344); not the traps, Hunter's Mark, Rapid Fire or the aspects). The DB2 carries
+--   the 5/5 -15; wowsims's data `19416: {{-3, -6, -9, -12, -15}}`.
 -- wowsims's logs: 2/2 Resourcefulness pays 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap; 2/5
 -- Efficiency 94 Raptor Strike, 75.2 Wing Clip, 178.6 Arcane Shot, 235 Serpent Sting.
 local RESOURCEFUL = { 0.3, 0.6 }
@@ -561,7 +562,7 @@ spec:RegisterAbilities({
         cooldown = 8,
         gcd = "spell",
 
-        spend = discounted(0.0581, true, false),
+        spend = discounted(0.0581, true, true),
         spendType = "mana",
 
         startsCombat = true,

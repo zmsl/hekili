@@ -247,8 +247,9 @@ describe("Forever Hunter", function()
         assert.are.same({ 100, 65, 80, 245, 0.0581, 190, 250, 0.139, 310, 190, 60, 100 }, costs(0, 0))
         assert.are.same({ 70, 45.5, 56, 171.5, 0.04067, 190, 250, 0.139, 310, 190, 60, 100 }, costs(1, 0))
         assert.are.same({ 40, 26, 32, 98, 0.02324, 190, 250, 0.139, 310, 190, 60, 100 }, costs(2, 0))
-        assert.are.same({ 94, 61.1, 75.2, 245, 0.0581, 178.6, 235, 0.13066, 291.4, 178.6, 60, 100 }, costs(0, 2))
-        assert.are.same({ 34, 22.1, 27.2, 98, 0.02324, 178.6, 235, 0.13066, 291.4, 178.6, 60, 100 }, costs(2, 2))
+        -- Efficiency on Strider Kick since hotfix 113554 (19416's mask, wowsims)
+        assert.are.same({ 94, 61.1, 75.2, 245, 0.05461, 178.6, 235, 0.13066, 291.4, 178.6, 60, 100 }, costs(0, 2))
+        assert.are.same({ 34, 22.1, 27.2, 98, 0.01975, 178.6, 235, 0.13066, 291.4, 178.6, 60, 100 }, costs(2, 2))
     end)
 
     -- Improved Arcane Shot (19454, 5 ranks): Arcane Shot's cooldown -0.3 s a rank (wowsims's 19454 curve
