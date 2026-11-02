@@ -329,6 +329,7 @@ spec:RegisterTalents({
     faerie_fire_feral = { 2, 16857, 1 },
     heart_of_the_wild = { 2, 17003, 5 },
     leader_of_the_pack = { 2, 17007, 1 },
+    predatory_discipline = { 2, 1328613, 1 }, -- hotfix 113554: Bite keeps its extra energy
     -- Restoration (15)
     improved_mark_of_the_wild = { 3, 17050, 5 },
     furor = { 3, 17056, 5 },
@@ -1083,13 +1084,18 @@ spec:RegisterAbilities({
             return combo_points.current > 0, "requires combo points"
         end,
 
+        -- Predatory Discipline (hotfix 113554, wowsims ferocious_bite.go): the extra energy stays
         now = function()
-            spend(energy.current, "energy")
+            if not talent.predatory_discipline.enabled then
+                spend(energy.current, "energy")
+            end
         end,
 
         handler = function()
             spend(combo_points.current, "combo_points")
-            spend(energy.lo, "energy") -- the sim's floor (border batch 2)
+            if not talent.predatory_discipline.enabled then
+                spend(energy.lo, "energy") -- the sim's floor (border batch 2)
+            end
         end,
     },
 

@@ -135,6 +135,7 @@ local TALENTS = {
     faerie_fire_feral = { 16857, 1 },
     heart_of_the_wild = { 17003, 5 },
     leader_of_the_pack = { 17007, 1 },
+    predatory_discipline = { 1328613, 1 }, -- hotfix 113554
     improved_mark_of_the_wild = { 17050, 5 },
     furor = { 17056, 5 },
     improved_healing_touch = { 17069, 5 },
@@ -496,7 +497,7 @@ describe("Forever Druid", function()
         for _ in pairs(w.talents) do
             registered = registered + 1
         end
-        assert.are.same({ 49, 49 }, { n, registered })
+        assert.are.same({ 50, 50 }, { n, registered })
     end)
 
     it("reads only registered talent keys, in the class file and every race file", function()
@@ -605,6 +606,15 @@ describe("Forever Druid", function()
             assert.are.same({ { 40, "energy" }, { 10, "rage" } }, e.gained)
             assert.are.same({ { 25, "energy" } }, e.spent)
             assert.are.same({ "enrage" }, e.applied)
+        end)
+
+        it("keeps Bite's extra energy with Predatory Discipline (hotfix 113554, 1328613; wowsims ferocious_bite.go)", function()
+            local e = ld.env(w)
+            e.talent = rank(1)
+            e.energy.current = 25
+            ld.run(w.abilities.ferocious_bite.now, e)
+            ld.run(w.abilities.ferocious_bite.handler, e)
+            assert.are.same({ { 0, "combo_points" } }, e.spent) -- no energy beyond the declared 35
         end)
 
         it("adds the Wolfshead Helm's 5 energy and half Enrage's 10 rage under its aura (DB2 17768)", function()
@@ -936,7 +946,7 @@ describe("Forever Druid", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 2, 16, 16, 15 }, n)
+        assert.are.same({ [0] = 2, 16, 17, 15 }, n)
     end)
 end)
 
