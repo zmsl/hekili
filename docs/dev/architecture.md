@@ -118,6 +118,20 @@ from `Engine.settings`. `Configure` assigns `specs`, `packs`, `toggles`, `displa
 `autoSnapshot` and `screenshot`: a setter that writes one must call `Configure` again. Each call bumps
 `settings.version`. `Options/Profile.lua` calls it at load and on every AceDB profile change (change, copy, reset).
 
+**The rate switches** (perf phase 2; Options > Performance > Experimental, `profile.performance`, profile-wide). Traces
+call `Hekili.Update` directly, so the two Driver-side switches change no trace; `tests/Forever/driver_rate_spec.lua` is
+their proof, through the real engine frame.
+- `auraForceOrdinary`, default on: UNIT_AURA's full-update force no longer pushes the refresh timer on, so aura events
+  stop shortening the 0.2 s wait (`Engine/Sim/Events.lua`).
+- `idleGate`, default on: out of combat with no hostile target the unforced wait is 1.5 s, not 0.5 s, read as each update
+  ends (`Engine/Driver.lua`). A force keeps the 0.2 s wait, so a target change, a cast or combat wakes it. The belief
+  drains at that rate too, so its 256-entry log holds 1.5 s of observations out of combat.
+- `coalesceCooldown`, default off: the event facade holds SPELL_UPDATE_COOLDOWN to its per-frame OnUpdate and runs it once.
+- `narrowUnitAura`, default off: UNIT_AURA is asked for only on `I.auras.token`, applied at a drain out of combat; a
+  general subscriber keeps it general. UNIT_TARGET stays general, because `Game/Events/Attackers.lua` reads the target,
+  the focus and 40 nameplate tokens and the facade registers at most two units.
+The last two reach the belief as fields of `def.providers`, the toggles' existing route (`Hekili:ProvidersChanged`).
+
 **Private, on `ns`**, because only the engine and its tests use them:
 - `ns.Output`: a separate table whose `__index` is `Engine.Output` (so `ns.Output.Primary` reads the display), holding
   the functions. `ns.Output.Begin(name)`, `Publish(name, count)`, `Wanted(name)`: the build side of publish/subscribe.
