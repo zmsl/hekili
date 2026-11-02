@@ -146,7 +146,7 @@ describe("Forever Mage", function()
         end
     )
 
-    it("prices Arcane Blast at 15% of base mana, +175% a charge, and each cast adds a charge", function()
+    it("prices Arcane Blast at 15% of base mana, +100% a charge, and each cast adds a charge", function()
         local ab = w.abilities.arcane_blast
         local out = {}
         for n = 0, 4 do
@@ -154,11 +154,11 @@ describe("Forever Mage", function()
             e.buff = buffs(n > 0 and { arcane_blast = n } or {})
             out[#out + 1] = near(ld.run(ab.spend, e))
         end
-        assert.are.same({ 0.15, 0.4125, 0.675, 0.9375, 1.2 }, out)
-        assert.is_true(ab.spendBase) -- every one a fraction of base, the 1.2 too
-        -- 15 s from the first charge, never refreshed (ruling M9: wowsims's data and log; the DB2 at 70338 says 8 s)
+        assert.are.same({ 0.15, 0.3, 0.45, 0.6, 0.75 }, out) -- +100% a charge (hotfix 113554, wowsims 5508974417)
+        assert.is_true(ab.spendBase) -- every one a fraction of base
+        -- 18 s from the first charge, never refreshed (hotfix 113554, wowsims 5508974417; the DB2 70707 says 15 s)
         assert.are.same(
-            { 400573, 15, 4 },
+            { 400573, 18, 4 },
             { w.auras.arcane_blast.id, w.auras.arcane_blast.duration, w.auras.arcane_blast.max_stack }
         )
         for _, field in ipairs({ "now", "handler" }) do
@@ -426,9 +426,9 @@ describe("Forever Mage through the engine", function()
             S.reset("Primary", true)
             out[#out + 1] = { n, S.buff.arcane_blast.stack, I.CostOf(a), S.action.arcane_blast.cost }
         end
-        -- each the declared fraction x 1213, floored (0.4125, 0.675, 0.9375, 1.2)
+        -- each the declared fraction x 1213, floored (0.3, 0.45, 0.6, 0.75)
         assert.are.same(
-            { { 1, 1, 500, 500 }, { 2, 2, 818, 818 }, { 3, 3, 1137, 1137 }, { 4, 4, 1455, 1455 }, { 4, 4, 1455, 1455 } },
+            { { 1, 1, 363, 363 }, { 2, 2, 545, 545 }, { 3, 3, 727, 727 }, { 4, 4, 909, 909 }, { 4, 4, 909, 909 } },
             out
         )
         assert.are.same({}, H.errors)

@@ -217,10 +217,9 @@ spec:RegisterCostMod({
 })
 
 spec:RegisterAuras({
-    -- Arcane Blast's charges: +175% to its own cost a stack (DB2 400573 aura 108 misc 14), 4 at most, 15 s from the
-    -- first (ruling M9: wowsims's data and log; the DB2's 8 s an in-game check). Nothing else spends them (wowsims
-    -- arcane_charge.go).
-    arcane_blast = { id = 400573, duration = 15, max_stack = 4 },
+    -- Arcane Blast's charges: +100% to its own cost a stack, 4 at most, 18 s from the first (hotfix 113554, wowsims
+    -- 5508974417; the DB2 70707 base file: +175%, 15 s). Nothing else spends them (wowsims arcane_charge.go).
+    arcane_blast = { id = 400573, duration = 18, max_stack = 4 },
     -- The procs (unseen; the player aura walk reads them where plain): the next Arcane Missiles free in half the time;
     -- Pyroblast's cast -25% a stack; the next 2 spells as if the target were Frozen; the next spell free.
     missile_barrage = { id = 400589, duration = 15, max_stack = 1 },
@@ -303,8 +302,8 @@ local function shares(other, aura)
 end
 
 spec:RegisterAbilities({
-    -- 15% of base mana, +175% a charge (0.15, 0.4125, 0.675, 0.9375, 1.2 of base at 0-4 charges): `spendBase` keeps
-    -- the 1.2 a fraction of base (Spec.lua), as the smaller ones.
+    -- 15% of base mana, +100% a charge (0.15, 0.3, 0.45, 0.6, 0.75 of base at 0-4 charges; hotfix 113554):
+    -- `spendBase` prices each a fraction of base (Spec.lua).
     arcane_blast = {
         id = 400574,
         copy = rest(ARCANE_BLAST),
@@ -315,7 +314,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.15 * (1 + 1.75 * buff.arcane_blast.stack)
+            return 0.15 * (1 + buff.arcane_blast.stack)
         end,
         spendType = "mana",
         spendBase = true,

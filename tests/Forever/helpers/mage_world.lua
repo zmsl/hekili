@@ -4,8 +4,8 @@
 -- in the world's generic verbs, the client's usability answers. IDs, costs, cooldowns and aura durations come from the
 -- class file (load_druid's recording load of Mage.lua for the character, the booted oracle's Hekili.Class for the
 -- rest). The world's own, restated from the DB2 and wowsims/forever (so the class file's belief is measured against
--- them): Arcane Blast's 1.5 s cast, its charges (15 s from the first) and their cost (15% of base mana, +175% a
--- charge), Missile Barrage's proc (its talent's 20% / 40% on Arcane Blast, half that on Fireball, Frostbolt, Frostfire
+-- them): Arcane Blast's 1.5 s cast, its charges (18 s from the first) and their cost (15% of base mana, +100% a
+-- charge; hotfix 113554), Missile Barrage's proc (its talent's 20% / 40% on Arcane Blast, half that on Fireball, Frostbolt, Frostfire
 -- Bolt and Arcane Wrath), Heating Up from the Fire casts' crits (Fire Blast one more on any hit) and Pyroblast's faster
 -- cast and spend, Improved Scorch's Fire Vulnerability (33 / 67 / 100%), Fingers of Frost (a Chill's landed hit,
 -- Frostbolt's or Frostfire Bolt's, grants its rank's charges at 15%; every other damage spell cast spends one, a landed
@@ -316,7 +316,7 @@ end
 local function costOf(key, ids, H, up, stacks)
     local c
     if key == "arcane_blast" then
-        c = math.floor(0.15 * (1 + 1.75 * stacks("arcane_blast")) * BASE) -- as the kit's spendBase: floor(fraction x base)
+        c = math.floor(0.15 * (1 + stacks("arcane_blast")) * BASE) -- as the kit's spendBase: floor(fraction x base)
     else
         c = COST[key] or 0
         if type(c) == "table" then
@@ -411,7 +411,7 @@ local MISSILES_TIME = { 3, 4, 5, 5, 5, 5, 5, 5 } -- Arcane Missiles' channel by 
 M.MAP = {
     arcane_blast = spell("arcane_blast", function(W, e, X)
         local a, c = X.aura.arcane_blast, e.auras[X.aura.arcane_blast.id]
-        -- a charge; the run ends 15 s after its first (wowsims arcane_charge.go)
+        -- a charge; the run ends 18 s after its first (wowsims arcane_charge.go)
         W.applyAura(e, a.id, c and c.expires - W.t or a.duration, 1, a.max_stack)
     end),
     arcane_wrath = spell("arcane_wrath"),

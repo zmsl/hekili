@@ -9,7 +9,7 @@
 -- charges ends 15 s after its first (2.26 -> 17.26, 44.67 -> 59.67, 60.17 -> 75.17: a later Blast adds a charge without
 -- refreshing it); the DB2 at 70338 says 2.5 s and 8 s, wowsims's data (build 70450, hotfix 112887) 1.5 s and 15 s. The
 -- kit and the world take wowsims's (Mage.lua's header); the in-game cast bar is the check. The log prices a charge as
--- 181 x (1 + 1.75 n) (497.75, 814.5, 1131.25), the kit's spendBase floor(fraction x 1213) (500, 818, 1137, 1455).
+-- 181 x (1 + n) since hotfix 113554 (was 1 + 1.75 n), the kit's spendBase floor(fraction x 1213) (363, 545, 727, 909).
 -- Disagreements (P7; floor 0.77), decisions on-GCD 0.780 (59) top [arcane_blast -> arcane_missiles 4; arcane_blast ->
 -- frostbolt 3; frostbolt -> arcane_blast 2]:
 --   arcane_blast -> arcane_missiles (log 3.38, 46.17, 58.67, 79.17): translation (rule 5 ignores
