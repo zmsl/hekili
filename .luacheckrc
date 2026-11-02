@@ -10,6 +10,8 @@ exclude_files = {
     "archive/",
     ".claude/",
     ".lua/",
+    ".release/",
+    ".ab/",
     ".luacheckrc",
 }
 
