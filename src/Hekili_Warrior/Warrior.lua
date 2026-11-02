@@ -163,9 +163,9 @@ end
 -- (sim/warrior/berserker_rage.go). A blocked hit lands, so it gives the rage of its unblocked amount. The client
 -- reports the hit after armor, so the pre-armor amount is rebuilt as post / (1 - armor / (armor + 400 + 85 x attacker
 -- level)), the armor the belief's out-of-combat cached armor times the armor buffs it sees on us (ARMOR_BUFFS), the
--- block value the cached one. Defensive Stance's 10% and Shield Wall's reduction come off before the rage too (user
--- ruling 2026-10-16: rage is from the unreduced hit): their factors divide the amount back. Shield Specialization (a
--- 20% chance a rank to gain 5 on a block) and Master of Defense (50% a rank on a dodge or parry with a shield) as their
+-- block value the cached one. Defensive Stance's 10% and Shield Wall's reduction stay off: rage is from the hit after
+-- the defender's multipliers (owner ruling W2 2026-11-02, wowsims b3784e45b6; supersedes 2026-10-16). Shield
+-- Specialization (a 20% chance a rank to gain 5 on a block) and Master of Defense (50% a rank on a dodge or parry with a shield) as their
 -- expected values, the band carrying the spread (tooltips read in game 2026-10-16).
 local TAKEN_RAGE_FACTOR = 2.5
 -- A by the attacker's level: wowsims's measured rows (20% up to 42, 40% from 63), interpolated between two rows.
@@ -179,7 +179,6 @@ local TAKEN_SPREAD = 0.15 -- a stale cached armor or block value, and an unseen 
 -- shows in game.
 local ARMOR_BUFFS = { "inspiration" }
 local ARMOR_BUFF_MULTIPLIER = { 1.25 }
-local DEFENSIVE_STANCE_TAKEN, SHIELD_WALL_TAKEN = 0.9, 0.4
 local PROC_RAGE = 5
 local SHIELD_SPECIALIZATION_CHANCE, MASTER_OF_DEFENSE_CHANCE = 0.2, 0.5 -- a rank
 local unblockedAvg, UNBLOCKED_WEIGHT = 0, 0.2 -- an EMA of the unblocked post-armor amounts (a full block's estimate)
@@ -254,12 +253,6 @@ spec:RegisterResource(
             -- at the hit; the helpers it calls get those values as arguments (their own environment is the file's).
             taken = function(kind, amount, attacker)
                 local reduced = 1
-                if buff.defensive_stance.up then
-                    reduced = reduced * DEFENSIVE_STANCE_TAKEN
-                end
-                if buff.shield_wall.up then
-                    reduced = reduced * SHIELD_WALL_TAKEN
-                end
                 if buff.berserker_rage.up then
                     reduced = reduced / BERSERKER_RAGE_TAKEN -- divides the rage back up: x 2
                 end

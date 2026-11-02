@@ -667,12 +667,12 @@ describe("Forever Warrior", function()
             end
         )
 
-        it("divides back Defensive Stance's 10% and Shield Wall's reduction (rage from the unreduced hit)", function()
+        it("takes the rage from the hit after Defensive Stance's and Shield Wall's reduction (W2, wowsims)", function()
             local open = run("WOUND", 50, 20)
             ctx({ defensive_stance = true }, {})
-            assert.is_true(math.abs(run("WOUND", 50, 20) - open / 0.9) < 1e-9)
+            assert.is_true(math.abs(run("WOUND", 50, 20) - open) < 1e-9)
             ctx({ defensive_stance = true, shield_wall = true }, {})
-            assert.is_true(math.abs(run("WOUND", 50, 20) - open / 0.36) < 1e-9)
+            assert.is_true(math.abs(run("WOUND", 50, 20) - open) < 1e-9)
         end)
 
         it("adds Shield Specialization's 20% a rank of 5 rage on a block, partial or full", function()
