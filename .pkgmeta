@@ -35,7 +35,6 @@ ignore:
     - scripts
     - archive
     - .superpowers
-    - src/ForeverProbe
     - .github
     - .busted
     - .luacheckrc

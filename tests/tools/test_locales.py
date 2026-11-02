@@ -146,7 +146,7 @@ class Sinks(unittest.TestCase):
 
     def test_skipped_files(self):
         for rel in ["src/Hekili/Libs/AceGUI-3.0/x.lua", "src/Hekili/Locales/zhCN.lua", "src/Hekili_Druid/Locales/enUS.lua",
-                    "src/ForeverProbe/Probe.lua", "src/Hekili/Options/DevTools.lua", "src/Hekili/Engine/Snapshot.lua",
+                    "src/Hekili/Options/DevTools.lua", "src/Hekili/Engine/Snapshot.lua",
                     "src/Hekili/Game/State/Snapshot.lua"]:
             self.assertTrue(locales.LINT_SKIP.search(rel), rel)
         self.assertFalse(locales.LINT_SKIP.search("src/Hekili/Options/Options.lua"))

@@ -361,7 +361,7 @@ def code_problems(key, value):
 SINK_FIELDS = {"name", "desc", "text", "label", "tooltipTitle", "tooltipText", "confirmText"}
 SINK_CALLS = {"SetText": 1, "SetFormattedText": 1, "AddLine": 1, "Notify": 1, "Print": 1, "AddDoubleLine": 2}
 LINT_SKIP = re.compile(
-    r"/Libs/|/Locales/|^src/ForeverProbe/|^src/Hekili/Options/DevTools\.lua$|"
+    r"/Libs/|/Locales/|^src/Hekili/Options/DevTools\.lua$|"
     r"^src/Hekili/Engine/Snapshot\.lua$|^src/Hekili/Game/State/Snapshot\.lua$"
 )
 VERBATIM = "-- l10n: verbatim"
