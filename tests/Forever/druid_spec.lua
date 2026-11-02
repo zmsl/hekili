@@ -22,7 +22,7 @@ local KIT = {
     cower = { { 8998, 9000, 9892 }, 20, "energy", 10, "totem" },
     prowl = { { 5215, 6783, 9913 }, 0, nil, 10, "off" },
     dash = { { 1850, 9821 }, 0, nil, 300, "off" },
-    shifting_power = { { 1322605 }, 684, "mana", 16, "totem" },
+    shifting_power = { { 1322605 }, 684, "mana", 8, "totem" }, -- hotfix 113554: 8 s (the DB2 70707 base file: 16)
     berserk = { { 417141 }, 0, nil, 180, "off" },
     cat_form = { { 768 }, 684, "mana", 0, "spell" },
     bear_form = { { 5487, 9634 }, 684, "mana", 0, "spell" },
@@ -100,7 +100,7 @@ local KIT = {
     },
 }
 
--- key = { rank 1's spell, max rank }: the DB2's 47 Classic nodes (`wowdb talents DRUID`), then the three placeholders
+-- key = { rank 1's spell, max rank }: the DB2's 47 Classic nodes (`wowdb talents DRUID`), then the two placeholders
 -- the live export (checkpoint Q1) replaces.
 local TALENTS = {
     improved_wrath = { 16814, 5 },
@@ -150,7 +150,6 @@ local TALENTS = {
     improved_tranquility = { 17123, 2 },
     improved_regrowth = { 17074, 5 },
     swiftmend = { 18562, 1 },
-    improved_shifting_power = { 1322670, 2 },
     natures_splendor = { 1223083, 1 },
     eclipse = { 408248, 3 },
 }
@@ -391,7 +390,7 @@ describe("Forever Druid", function()
         "takes 1 s off Shifting Power's cooldown with the Howling Idol's aura (DB2 1291059 -1000 ms, wowsims's test)",
         function()
             local e = ld.env(w)
-            e.talent = rank(2)
+            e.talent = rank(0) -- hotfix 113554: 8 s untalented (Improved Shifting Power removed)
             assert.are.equal(8, ld.run(w.abilities.shifting_power.cooldown, e))
             e.buff = auras({ howling_idol = { up = true } })
             assert.are.equal(7, ld.run(w.abilities.shifting_power.cooldown, e))
@@ -488,7 +487,7 @@ describe("Forever Druid", function()
         end
     )
 
-    it("registers the DB2's 47 talent nodes and the three placeholders, and no rank aliases", function()
+    it("registers the DB2's 47 talent nodes and two placeholders, and no rank aliases", function()
         local n, registered = 0, 0
         for key, t in pairs(TALENTS) do
             n = n + 1
@@ -497,7 +496,7 @@ describe("Forever Druid", function()
         for _ in pairs(w.talents) do
             registered = registered + 1
         end
-        assert.are.same({ 50, 50 }, { n, registered })
+        assert.are.same({ 49, 49 }, { n, registered })
     end)
 
     it("reads only registered talent keys, in the class file and every race file", function()
@@ -937,7 +936,7 @@ describe("Forever Druid", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 3, 16, 16, 15 }, n)
+        assert.are.same({ [0] = 2, 16, 16, 15 }, n)
     end)
 end)
 

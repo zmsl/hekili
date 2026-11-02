@@ -291,7 +291,7 @@ spec:RegisterResource(
 
 -- Talents: { talent tree (1 Balance, 2 Feral Combat, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
 -- max rank }: the DB2's 47 Classic nodes (16 Balance, 16 Feral Combat, 15 Restoration; the tree is the DB2's
--- Talent.TabID), keys Classic's, until the live export (checkpoint Q1) replaces them. The last three are placeholders
+-- Talent.TabID), keys Classic's, until the live export (checkpoint Q1) replaces them. The last two are placeholders
 -- the export replaces, so no reader names an unregistered key; their tree is 0 until the export places them.
 spec:RegisterTalents({
     -- Balance (16)
@@ -346,7 +346,6 @@ spec:RegisterTalents({
     improved_regrowth = { 3, 17074, 5 },
     swiftmend = { 3, 18562, 1 },
     -- Forever-only placeholders, replaced by the export (checkpoint Q1).
-    improved_shifting_power = { 0, 1322670, 2 },
     natures_splendor = { 0, 1223083, 1 },
     eclipse = { 0, 408248, 3 },
 })
@@ -1638,11 +1637,11 @@ spec:RegisterAbilities({
     shifting_power = {
         id = 1322605,
         cast = 0,
-        -- spec D5; checkpoint Q4. The Howling Idol's equip aura (1291059) takes 1 s off (DB2 -1000 ms;
-        -- wowsims/forever's TestHowlingIdolShortensShiftingPower). Its log's 7.5 s recasts are 7 s plus the
-        -- recipe's 250 ms reaction twice.
+        -- spec D5; checkpoint Q4. 8 s by hotfix 113554 (wowsims 5508974417; Improved Shifting Power removed; the
+        -- DB2 70707 base file still says 16). The Howling Idol's equip aura (1291059) takes 1 s off (DB2 -1000 ms;
+        -- wowsims/forever's TestHowlingIdolShortensShiftingPower).
         cooldown = function()
-            return 16 - 4 * talent.improved_shifting_power.rank - (buff.howling_idol.up and 1 or 0)
+            return buff.howling_idol.up and 7 or 8
         end,
         gcd = "totem",
 
