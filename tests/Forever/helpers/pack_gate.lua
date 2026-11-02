@@ -42,7 +42,8 @@ M.UNMATCHED_BY = {
 -- the truth at a cost crossing (gap BT's lag bias: the client answers a gain late, G7; its capped variant, the short
 -- answer heard a poll ago), Arcane Shot's shared cooldown's last 0.5 s under CD_PROBE and the cost-0 waits; the icon
 -- shows one poll later. Rage: Fury L24 2142 ticks in 746 episodes, 297 of them multi-tick (longest 14), 1104 ticks
--- waiting over 0.5 s; Heroic Strike (1801 ticks: cost 15, lo 30-33, truth 41-45) waits on the APL's own
+-- waiting over 0.5 s (before the world's off hand paid by rank: most of it was that artefact, see Fury L24's row);
+-- Heroic Strike (1801 ticks: cost 15, lo 30-33, truth 41-45) waits on the APL's own
 -- `rage.lo>=40` (Fury (wowsims.com).simc :52), a condition wait on a rage floor 10-35 under truth, not a cost
 -- wait; Arms sunder_armor 2.81 s (8 ticks, lo 30, truth 43.7), 175 ticks over 20 under truth. Mana: Retribution a
 -- 14-tick judgement episode (2.68 s, lo 68, truth 97); Protection 43 multi-tick episodes (lo 25 under); Fire fire_blast
@@ -59,7 +60,15 @@ M.FLICKER = {
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
-    ["Fury L24"] = { flicker = 1.1, retracted = 0.2, readyShort = 41, heldReady = 910 }, -- 0.84 / 1.04 / 0.77, 0.06 / 0.03 / 0.03
+    -- readyShort 41 -> 46, heldReady 910 -> 337 (2026-11-01, the world's off hand pays Dual Wield Specialization by the
+    -- character's rank: 0 at L24, the cut stops short of it, where it paid 5/5, 1.73 x 1.5, over the pack's 1.73; gap
+    -- CJ's trace, about 70% of L24's Heroic Strike holds were this artefact; seeds 1-20 / 21-40 / 41-60, was 26 / 30 /
+    -- 17 and 909 / 372 / 853, flicker 0.84 / 1.04 / 0.77, retracted 0.06 / 0.03 / 0.03, oracle 0.34 / 0.70 / 0.39,
+    -- agreement .930 / .944 / .918, was .941 / .932 / .934): truth no longer runs ahead of the pack's swing, so a
+    -- forecast swing's gain shows a cost-gated ability ready with less overpaid rage behind it (the swing-paid class)
+    -- flickerK 0.6 (this label only, M.FLICKER_K's rule; same change): the oracle's flicker fell 0.66 / 0.61 / 0.41 ->
+    -- 0.34 / 0.70 / 0.39 while ours held, gap 0.52 / 0.38 / 0.59; why the oracle's fell is untraced
+    ["Fury L24"] = { flicker = 1.1, flickerK = 0.6, retracted = 0.2, readyShort = 46, heldReady = 337 }, -- 0.86 / 1.08 / 0.98, 0.09 / 0.17 / 0.06; 36 / 38 / 46, 337 / 332 / 313
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -184,7 +193,8 @@ M.FLICKER = {
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. It tightens the bar when a change lowers the oracle's own flicker. 1.8 -> 0.5 (forever-gap-bd,
--- 2026-10-26, the press rule and gap BD's cast bar; every gated pack, seeds 1-20 / 21-40 / 41-60): the widest gap is
+-- 2026-10-26, the press rule and gap BD's cast bar; every gated pack but a row's own flickerK, seeds 1-20 / 21-40 /
+-- 41-60): the widest gap is
 -- Fury L60 seeds 21-40, 0.70 vs 0.23 (0.466); next Protection seeds 1-20, 0.46 vs 0. Before, Balance seeds 1-20 read
 -- 2.36 vs 1.23 on f09656c8e (gap 1.13: the old comment's oracle 0.65 was stale), all of it gap BD's invisible cast bar.
 M.FLICKER_K = 0.5
@@ -200,7 +210,11 @@ function M.flicker(label, r, line, reported)
         ab.check(r.heldReady <= (fl.heldReady or 0), label, "held-while-ready floor: " .. line)
     end
     if not reported then
-        ab.check(r.flicker <= r.oracleFlicker + M.FLICKER_K, label, "flicker over the oracle's + K: " .. line)
+        ab.check(
+            r.flicker <= r.oracleFlicker + (fl and fl.flickerK or M.FLICKER_K),
+            label,
+            "flicker over the oracle's + K: " .. line
+        )
     end
 end
 

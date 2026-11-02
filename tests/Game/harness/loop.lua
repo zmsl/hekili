@@ -76,9 +76,9 @@ M.STEADY = tonumber(os.getenv("HEKILI_LOOP_STEADY")) -- 0 is off
 M.RAW = { "UnitHealth", "UnitHealthMax", "C_UnitAuras.GetDebuffDataByIndex" }
 
 --- Boots the two instances for `content` (one boot per busted block, §1.3): { content, us, oracle }. `content`:
---- character(), PACK, resolve(key, H), usable(H), gain(pt, hand, amount, flag) (what a landed wound of ours pays in
---- power type `pt`, the character's), WORLD (scenario knobs), uptime(H); optional OBSERVE (observer knobs over the
---- loop's: another power's reads, the forms), SCENARIO (headless.new's `scenario`; default "sim": the settings'
+--- character(), PACK, resolve(key, H), usable(H), gain(pt, hand, amount, flag, character) (what a landed wound of ours
+--- pays in power type `pt`, the character's), WORLD (scenario knobs), uptime(H); optional OBSERVE (observer knobs over
+--- the loop's: another power's reads, the forms), SCENARIO (headless.new's `scenario`; default "sim": the settings'
 --- harness defaults, wowsims's scenario; "game" boots both instances with the in-game ones).
 function M.new(content)
     local L = { content = content }
@@ -86,7 +86,7 @@ function M.new(content)
     L.form, L.power = character.form, character.power
     local pt = L.power.type
     L.gain = function(hand, amount, flag) -- the swing-paid power is the character's (scenarios.world's `pt`)
-        return content.gain(pt, hand, amount, flag)
+        return content.gain(pt, hand, amount, flag, character)
     end
     local scenario = content.SCENARIO or "sim"
     scenario = scenario ~= "game" and scenario or nil

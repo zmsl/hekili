@@ -439,6 +439,7 @@ end
 -- of the first Tag 1 and Tag 2 swing pairs of tests/Forever/wowsims/warrior_fury.log (2.1 s, 1.9 s); damage UNMEASURED.
 -- Mortal Strike is an Arms talent, so the Fury character does not know it.
 local FURY_SPEED = { 2.1, 1.9 }
+local DUAL_WIELD_SPEC = 23584
 M.Fury = setmetatable({
     WORLD = setmetatable(
         { weapons = { { 100, 180, FURY_SPEED[1] }, { 60, 110, FURY_SPEED[2] } } },
@@ -459,10 +460,11 @@ M.Fury = setmetatable({
         c.items = { [16] = { 1, "One-Hander", "INVTYPE_WEAPON" }, [17] = { 2, "Off Hand", "INVTYPE_WEAPON" } }
         return c
     end,
-    -- The class file's rates restated (as M.gain): 3.46 x speed main hand with a one-hander, 1.73 x speed off hand at
-    -- Dual Wield Specialization 5/5 (+50%); a crit one more base swing. Unbridled Wrath's procs are not modelled.
-    gain = function(_, hand, _, flag)
-        local rate = hand == 1 and 3.46 or 1.73 * 1.5
+    -- The class file's rates restated (as M.gain): 3.46 x speed main hand with a one-hander, 1.73 x speed off hand, +10%
+    -- per rank of Dual Wield Specialization the character has (5/5 at 60, 0 at L24: the cut stops short of it); a crit
+    -- one more base swing. Unbridled Wrath's procs are not modelled.
+    gain = function(_, hand, _, flag, character)
+        local rate = hand == 1 and 3.46 or 1.73 * (1 + 0.1 * (character.talents[DUAL_WIELD_SPEC] or 0))
         local base = rate * FURY_SPEED[hand]
         return base + (flag == "CRITICAL" and (hand == 1 and 3.46 or 1.73) * FURY_SPEED[hand] or 0)
     end,
