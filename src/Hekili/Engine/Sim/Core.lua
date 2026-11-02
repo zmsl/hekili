@@ -555,10 +555,6 @@ do
         if not coroutine.running() then return end
         time = time or debugprofilestop()
 
-        if msg then
-            ns.EngineFrame.lastYieldReason = msg
-        end
-
         if self.maxFrameTime > 0 and time - self.activeFrameStart > self.maxFrameTime then
             coroutine.yield()
         end

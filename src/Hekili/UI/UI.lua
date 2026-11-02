@@ -1117,7 +1117,6 @@ do
         d.id = id
         d.alpha = 0
         d.numIcons = conf.numIcons
-        d.firstForce = 0
 
         -- the style's Build sizes the frame
         --[[ d:SetIgnoreParentScale( true )

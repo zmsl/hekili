@@ -99,15 +99,10 @@ local function engineLoop()
     end
 end
 
-local framesUsed = 0
-local framesTimes = 0
-
-function ns.EngineFrame:UpdatePerformance(wasted)
+function ns.EngineFrame:UpdatePerformance()
     -- Only track in combat.
     if not (self.firstThreadCompleted and InCombatLockdown()) then
         self.activeThreadTime = 0
-        framesUsed = 0
-        framesTimes = 0
         return
     end
 
@@ -121,62 +116,36 @@ function ns.EngineFrame:UpdatePerformance(wasted)
             local updates = self.threadUpdates.updates
             local total = updates + 1
 
-            if framesUsed > 0 then
-                local frameCount = (self.threadUpdates.framesWorked or 0) + framesUsed
-                self.threadUpdates.meanFrameTime = (
-                    self.threadUpdates.meanFrameTime * self.threadUpdates.framesWorked + framesTimes
-                ) / frameCount
-                self.threadUpdates.framesWorked = frameCount
+            self.threadUpdates.meanClockTime = (self.threadUpdates.meanClockTime * updates + timeSince) / total
+            self.threadUpdates.meanWorkTime = (self.threadUpdates.meanWorkTime * updates + self.activeThreadTime)
+                / total
+            self.threadUpdates.meanFrames = (self.threadUpdates.meanFrames * updates + self.activeThreadFrames) / total
+
+            if timeSince > self.threadUpdates.peakClockTime then
+                self.threadUpdates.peakClockTime = timeSince
+            end
+            if self.activeThreadTime > self.threadUpdates.peakWorkTime then
+                self.threadUpdates.peakWorkTime = self.activeThreadTime
+            end
+            if self.activeThreadFrames > self.threadUpdates.peakFrames then
+                self.threadUpdates.peakFrames = self.activeThreadFrames
             end
 
-            if wasted then
-                -- Capture thrown away computation time due to forced resets.
-                self.threadUpdates.meanWasted = (self.threadUpdates.meanWasted * updates + self.activeThreadTime)
-                    / total
-                self.threadUpdates.totalWasted = (self.threadUpdates.totalWasted + self.activeThreadTime)
-
-                if self.activeThreadTime > self.threadUpdates.peakWasted then
-                    self.threadUpdates.peakWasted = self.activeThreadTime
-                end
-            else
-                self.threadUpdates.meanClockTime = (self.threadUpdates.meanClockTime * updates + timeSince) / total
-                self.threadUpdates.meanWorkTime = (self.threadUpdates.meanWorkTime * updates + self.activeThreadTime)
-                    / total
-                self.threadUpdates.meanFrames = (self.threadUpdates.meanFrames * updates + self.activeThreadFrames)
-                    / total
-
-                if timeSince > self.threadUpdates.peakClockTime then
-                    self.threadUpdates.peakClockTime = timeSince
-                end
-                if self.activeThreadTime > self.threadUpdates.peakWorkTime then
-                    self.threadUpdates.peakWorkTime = self.activeThreadTime
-                end
-                if self.activeThreadFrames > self.threadUpdates.peakFrames then
-                    self.threadUpdates.peakFrames = self.activeThreadFrames
-                end
-
-                self.threadUpdates.updates = total
-                self.threadUpdates.updatesPerSec = 1000 * total / (now - self.threadUpdates.firstUpdate)
-            end
+            self.threadUpdates.updates = total
+            self.threadUpdates.updatesPerSec = 1000 * total / (now - self.threadUpdates.firstUpdate)
         else
             self.threadUpdates = {
                 meanClockTime = timeSince,
                 meanWorkTime = self.activeThreadTime,
                 meanFrames = self.activeThreadFrames or 1,
-                meanFrameTime = framesTimes > 0 and framesTimes or (1000 / GetFramerate()),
-                meanWasted = 0,
 
                 firstUpdate = now,
                 updates = 1,
-                framesWorked = framesUsed > 0 and framesUsed or 1,
                 updatesPerSec = 1000 / (self.activeThreadTime > 0 and self.activeThreadTime or 1),
 
                 peakClockTime = timeSince,
                 peakWorkTime = self.activeThreadTime,
                 peakFrames = self.activeThreadFrames or 1,
-                peakWasted = 0,
-
-                totalWasted = 0,
             }
         end
     end
@@ -201,13 +170,7 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
             (not thread or coroutine.status(thread) == "dead")
             and self.refreshTimer > (self.criticalUpdate and self.combatRate or self.refreshRate)
         then
-            --[[ if thread and coroutine.status( thread ) == "suspended" then
-                -- We're going to break the thread and start over from the current display in progress.
-                self:UpdatePerformance( true )
-            end ]]
-
             self.criticalUpdate = false
-            self.superUpdate = false
             self.refreshTimer = 0
 
             if not parked then
@@ -228,9 +191,6 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
 
         -- If there's a thread, process for up to user preferred limits.
         if thread and coroutine.status(thread) == "suspended" then
-            framesUsed = framesUsed + 1
-            framesTimes = framesTimes + elapsed * 1000
-
             self.activeThreadFrames = self.activeThreadFrames + 1
             Hekili.activeFrameStart = debugprofilestop()
 
@@ -251,8 +211,6 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
                     Hekili:SaveDebugSnapshot(self.id)
                     Hekili.ActiveDebug = nil
                 end
-
-                pcall(error, err)
             end
 
             self.activeThreadTime = self.activeThreadTime + debugprofilestop() - Hekili.activeFrameStart
@@ -287,9 +245,5 @@ function Hekili:ForceUpdate(event, super)
     engine.criticalUpdate = true
     if super then
         engine.refreshTimer = engine.refreshTimer + 0.1
-    end
-
-    if engine.firstForce == 0 then
-        engine.firstForce = GetTime()
     end
 end
