@@ -223,8 +223,9 @@ end
 -- to the old 10 ms bar on a quiet run, so it did not loosen: 10 ms / the ~7 ms calibration = 1.4. Measured: Arms 20
 -- fights alone 3.96 ms, ratio 0.555 (2026-10-30, under the lock); under a 16-wide `make test` beside it: Feral 3 fights
 -- 4.25 -> 5.82 ms, ratio 0.634 -> 0.494; Arms 3 fights 3.78 -> 5.92 ms, ratio 0.624 -> 0.547 (the calibration slows a
--- little more than the engine, so load lowers the ratio: the safe direction).
-M.CPU_RATIO = 1.4
+-- little more than the engine, so load lowers the ratio: the safe direction). 1.4 -> 1.0 (2026-11-01, the pre-launch perf
+-- work left room: worst of headless probes 0.62, of the 81 rig runs 0.593).
+M.CPU_RATIO = 1.0
 
 --- The engine's health, gated at any fight count: no error, raise, self-check miss, unlisted read or secret, CPU.
 function M.health(m, r, line)
