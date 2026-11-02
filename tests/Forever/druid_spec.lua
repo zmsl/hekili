@@ -609,14 +609,17 @@ describe("Forever Druid", function()
             assert.are.same({ "enrage" }, e.applied)
         end)
 
-        it("keeps Bite's extra energy with Predatory Discipline (hotfix 113554, 1328613; wowsims ferocious_bite.go)", function()
-            local e = ld.env(w)
-            e.talent = rank(1)
-            e.energy.current = 25
-            ld.run(w.abilities.ferocious_bite.now, e)
-            ld.run(w.abilities.ferocious_bite.handler, e)
-            assert.are.same({ { 0, "combo_points" } }, e.spent) -- no energy beyond the declared 35
-        end)
+        it(
+            "keeps Bite's extra energy with Predatory Discipline (hotfix 113554, 1328613; wowsims ferocious_bite.go)",
+            function()
+                local e = ld.env(w)
+                e.talent = rank(1)
+                e.energy.current = 25
+                ld.run(w.abilities.ferocious_bite.now, e)
+                ld.run(w.abilities.ferocious_bite.handler, e)
+                assert.are.same({ { 0, "combo_points" } }, e.spent) -- no energy beyond the declared 35
+            end
+        )
 
         it("adds the Wolfshead Helm's 5 energy and half Enrage's 10 rage under its aura (DB2 17768)", function()
             local e = ld.env(w)

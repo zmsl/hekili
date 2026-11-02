@@ -328,7 +328,6 @@ local function content(name, pack)
         return 0
     end
 
-
     --- The resolved press of `key` from instance `H` (the oracle's: its state is true): the highest known rank's ID
     --- and every known rank's, the cost, the cooldown, GCD and cast time, the mapping's effects. Raises "unmapped key".
     function C.resolve(key, H)

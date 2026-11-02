@@ -125,61 +125,67 @@ describe("Forever Paladin", function()
         assert.is_nil(fsr.share)
     end)
 
-    it("puts one seal up at a time; Unsealed Wrath's Echoes come from hits, not the seal swap (hotfix 113554)", function()
-        for _, field in ipairs({ "now", "handler" }) do
-            local e = ld.env(w)
-            e.buff = buffs({ seal_of_command = true, echo_of_righteousness = true })
-            e.talent = rank(1)
-            ld.run(w.abilities.seal_of_righteousness[field], e)
-            -- the old seal goes; no Echo made or spent by the cast (the aura read holds them)
-            assert.are.same({ { "seal_of_command" }, { "seal_of_righteousness" } }, { e.removed, e.applied }, field)
-            e = ld.env(w)
-            e.buff = buffs({ seal_of_command = true })
-            ld.run(w.abilities.seal_of_fury[field], e)
-            assert.are.same({ { "seal_of_command" }, { "seal_of_fury" } }, { e.removed, e.applied }, field)
-        end
-        assert.is_nil(w.abilities.seal_of_command.ladder) -- mana is a seal's only requirement: its answers are rungs
-        for _, key in ipairs({ "echo_of_command", "echo_of_righteousness", "echo_of_fury" }) do
-            assert.are.same({ 15, 3 }, { w.auras[key].duration, w.auras[key].max_stack }, key) -- DB2 rows (hotfix)
-        end
-        local e = ld.env(w)
-        e.talent = talents({ twist_of_light = 1 })
-        w.game.known[20920] = true
-        assert.are.equal(210, ld.run(w.abilities.seal_of_command.spend, e)) -- Unsealed Wrath: no cost cut
-    end)
-
-    it("judges only under a seal and leaves the seal up; Swift Judgement is a second Judgement (hotfix 113554)", function()
-        local j = w.abilities.judgement
-        local e = ld.env(w)
-        e.seal_up = false
-        assert.is_false((ld.run(j.usable, e)))
-        e.seal_up = true
-        assert.is_true((ld.run(j.usable, e)))
-        assert.is_false(j.ladder)
-        assert.is_nil(w.auras.swift_judgement) -- no charge: its own 60 s cooldown, no reset (wowsims swift_judgement.go)
-        local sj = w.abilities.swift_judgement
-        e = ld.env(w)
-        e.seal_up = false
-        assert.is_false((ld.run(sj.usable, e)))
-        e.seal_up = true
-        assert.is_true((ld.run(sj.usable, e)))
-        for _, a in ipairs({ j, sj }) do
+    it(
+        "puts one seal up at a time; Unsealed Wrath's Echoes come from hits, not the seal swap (hotfix 113554)",
+        function()
             for _, field in ipairs({ "now", "handler" }) do
-                local cds = {}
+                local e = ld.env(w)
+                e.buff = buffs({ seal_of_command = true, echo_of_righteousness = true })
+                e.talent = rank(1)
+                ld.run(w.abilities.seal_of_righteousness[field], e)
+                -- the old seal goes; no Echo made or spent by the cast (the aura read holds them)
+                assert.are.same({ { "seal_of_command" }, { "seal_of_righteousness" } }, { e.removed, e.applied }, field)
                 e = ld.env(w)
-                e.setCooldown = function(k, v)
-                    cds[#cds + 1] = { k, v }
-                end
-                ld.run(a[field], e)
-                assert.are.same({ {}, {}, {} }, { e.removed, e.applied, cds }, field)
+                e.buff = buffs({ seal_of_command = true })
+                ld.run(w.abilities.seal_of_fury[field], e)
+                assert.are.same({ { "seal_of_command" }, { "seal_of_fury" } }, { e.removed, e.applied }, field)
             end
+            assert.is_nil(w.abilities.seal_of_command.ladder) -- mana is a seal's only requirement: its answers are rungs
+            for _, key in ipairs({ "echo_of_command", "echo_of_righteousness", "echo_of_fury" }) do
+                assert.are.same({ 15, 3 }, { w.auras[key].duration, w.auras[key].max_stack }, key) -- DB2 rows (hotfix)
+            end
+            local e = ld.env(w)
+            e.talent = talents({ twist_of_light = 1 })
+            w.game.known[20920] = true
+            assert.are.equal(210, ld.run(w.abilities.seal_of_command.spend, e)) -- Unsealed Wrath: no cost cut
         end
-        local exp = w.exprs.seal_up
-        e = ld.env(w)
-        assert.is_false(ld.run(exp, e))
-        e.buff = buffs({ seal_of_fury = true })
-        assert.is_true(ld.run(exp, e))
-    end)
+    )
+
+    it(
+        "judges only under a seal and leaves the seal up; Swift Judgement is a second Judgement (hotfix 113554)",
+        function()
+            local j = w.abilities.judgement
+            local e = ld.env(w)
+            e.seal_up = false
+            assert.is_false((ld.run(j.usable, e)))
+            e.seal_up = true
+            assert.is_true((ld.run(j.usable, e)))
+            assert.is_false(j.ladder)
+            assert.is_nil(w.auras.swift_judgement) -- no charge: its own 60 s cooldown, no reset (wowsims swift_judgement.go)
+            local sj = w.abilities.swift_judgement
+            e = ld.env(w)
+            e.seal_up = false
+            assert.is_false((ld.run(sj.usable, e)))
+            e.seal_up = true
+            assert.is_true((ld.run(sj.usable, e)))
+            for _, a in ipairs({ j, sj }) do
+                for _, field in ipairs({ "now", "handler" }) do
+                    local cds = {}
+                    e = ld.env(w)
+                    e.setCooldown = function(k, v)
+                        cds[#cds + 1] = { k, v }
+                    end
+                    ld.run(a[field], e)
+                    assert.are.same({ {}, {}, {} }, { e.removed, e.applied, cds }, field)
+                end
+            end
+            local exp = w.exprs.seal_up
+            e = ld.env(w)
+            assert.is_false(ld.run(exp, e))
+            e.buff = buffs({ seal_of_fury = true })
+            assert.is_true(ld.run(exp, e))
+        end
+    )
 
     it(
         "shortens Judgement's cooldown 1 s a rank of Improved Judgement (Forever DB2 25956: misc 11, -1000 ms)",
@@ -248,23 +254,24 @@ describe("Forever Paladin", function()
         assert.is_nil(ld.run(x.usable_on, ld.env(w)))
     end)
 
-    it("gates Hammer of Wrath on the target's health, its cast 0.2 s shorter a rank of Champion of the Light", function()
-        local h = w.abilities.hammer_of_wrath
-        assert.are.equal(0.2, h.healthGate)
-        local e = ld.env(w)
-        assert.are.same({ 1, false }, { ld.run(h.cast, e), (ld.run(h.usable, e)) })
-        w.game.known[24239] = true
-        w.game.usable[24239] = { false, true } -- short only of mana: in the window
-        e.talent = rank(1)
-        assert.is_true(math.abs(ld.run(h.cast, e) - 0.8) < 1e-9) -- hotfix 113554: 1311084, 5 ranks
-        assert.is_true((ld.run(h.usable, e)))
-        e.talent = rank(5)
-        assert.are.equal(0, ld.run(h.cast, e))
-        assert.are.same({ 3, 1311084, 5 }, w.talents.champion_of_the_light)
-        assert.is_nil(w.talents.instrument_of_law)
-    end)
-
-
+    it(
+        "gates Hammer of Wrath on the target's health, its cast 0.2 s shorter a rank of Champion of the Light",
+        function()
+            local h = w.abilities.hammer_of_wrath
+            assert.are.equal(0.2, h.healthGate)
+            local e = ld.env(w)
+            assert.are.same({ 1, false }, { ld.run(h.cast, e), (ld.run(h.usable, e)) })
+            w.game.known[24239] = true
+            w.game.usable[24239] = { false, true } -- short only of mana: in the window
+            e.talent = rank(1)
+            assert.is_true(math.abs(ld.run(h.cast, e) - 0.8) < 1e-9) -- hotfix 113554: 1311084, 5 ranks
+            assert.is_true((ld.run(h.usable, e)))
+            e.talent = rank(5)
+            assert.are.equal(0, ld.run(h.cast, e))
+            assert.are.same({ 3, 1311084, 5 }, w.talents.champion_of_the_light)
+            assert.is_nil(w.talents.instrument_of_law)
+        end
+    )
 
     it("cuts Holy Strike's cooldown to 6 s with Shieldsworn (hotfix 113554, 1328544)", function()
         local e = ld.env(w)
