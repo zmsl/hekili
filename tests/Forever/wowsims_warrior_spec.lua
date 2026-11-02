@@ -49,8 +49,8 @@ local FURY = { kit = { "berserker_rage" }, requires = ARMS.requires }
 -- IsCurrentSpell): hidden.
 local FURY_REPLAY = { hidden = { [1282733] = true, [25286] = true }, procs = { ["1680:2"] = true }, speed = 2.1 }
 
--- Protection: wowsims's Revenge window is an aura it logs under Revenge's own ID (25288; the DB2's Defensive State 5302,
--- 5 s, from a block, dodge or parry of the target's swing). The replay does not replay the target's swings, so the
+-- Protection: wowsims's Revenge window is an aura it logged under Revenge's own ID (25288) before e2842f0a78, and logs
+-- as the DB2's Defensive State 5302 since (5 s, from a block, dodge or parry of the target's swing). The replay does not replay the target's swings, so the
 -- window stays in the truth (`hidden`) and answers Revenge's usability; the live world's mob swings at us, so there
 -- Revenge keeps the world's own requirement. The Heroic Strike queue (25286 Tag 1) as Fury's. Shield Slam is the talent's
 -- rank 1 plus its trained ranks (the log casts rank 4, 23925).
@@ -59,11 +59,11 @@ local PROT = {
     kit = PROT_KIT,
     requires = {
         revenge = function(_, e)
-            return e.auras[25288] ~= nil and e.form == 2, "no window"
+            return (e.auras[5302] ~= nil or e.auras[25288] ~= nil) and e.form == 2, "no window"
         end,
     },
 }
-local PROT_REPLAY = { hidden = { [25288] = true, [25286] = true }, procs = {}, speed = 2.35 }
+local PROT_REPLAY = { hidden = { [5302] = true, [25288] = true, [25286] = true }, procs = {}, speed = 2.35 }
 
 describe("the Warrior wowsims.com packs #slow #wowsims", function()
     it("Arms (wowsims.com) follows wowsims's casts", function()
