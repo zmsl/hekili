@@ -29,6 +29,11 @@ the replays):
   aura reads and its mana-after-cast off (a constant, not a switch). It changes only logs with a hardcast (the casters,
   Arms' Slam); with it Balance and Destruction replay exactly as at `M.PIN`. Drop it once the packs are re-exported
   from upstream's guarded APLs.
+- Darkmantle set ID (`darkmantle-set-512.patch`): upstream dba41b7ac3 (#677) re-registered the Darkmantle Armor
+  reissue under set 1676 (sim/common/forever/items_sets.go), but its db gives the six pieces (22003-22009) setId 512,
+  so a rogue wearing them got no 2/4/6-piece bonus (Rogue Armor Energize 27788 and the 14049 / 18679 procs gone).
+  Likely an upstream bug (report it); the patch registers it as 512, as at `M.PIN`. Changes only the three rogue
+  logs. Drop it when upstream's set and db IDs agree.
 
 ## The rules (the user's; binding)
 
