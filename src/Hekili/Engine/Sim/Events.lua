@@ -1284,7 +1284,9 @@ do
             ForEachAura( unit, "HARMFUL", nil, StoreInstanceInfo, true )
 
             state[ unit ].updated = true
-            Hekili:ForceUpdate( "UNIT_AURA_FULL", true )
+            -- Perf 2.1a: an aura event waits its turn like any other force; only with the switch off does it shorten the wait.
+            local perf = Hekili.Engine.settings.performance
+            Hekili:ForceUpdate( "UNIT_AURA_FULL", not ( perf and perf.auraForceOrdinary ) )
             return
         end
 

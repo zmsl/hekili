@@ -341,6 +341,7 @@ do
                     forecastWindow = 15, -- Forever E9
                     damageMeter = false, -- experimental (providers spec decision 82): the meter as the Outcomes provider
                     cooldownViewer = false, -- experimental: the Cooldown Manager as the presence leaf (providers Task 7)
+                    auraForceOrdinary = true, -- perf 2.1a: aura events no longer shorten the 0.2 s wait (Events.lua)
                 },
                 toggles = {
                     pause = {
@@ -4244,6 +4245,18 @@ found = true end
                                         Hekili:ProvidersChanged()
                                     end,
                                     order = 23,
+                                    width = "full",
+                                },
+                                auraForceOrdinary = {
+                                    type = "toggle",
+                                    name = L["Experimental: aura changes wait for the next regular update"],
+                                    desc = L["A buff or debuff change refreshes the icons at the next regular update (at most 0.2 s later) "
+                                        .. "instead of bringing that update forward, so fights with many aura changes cost less.\n\n"
+                                        .. "Applies at once to every specialization.\n\n"
+                                        .. "|cFFFF7F00Experimental|r: on by default; turn it off if the icons seem slow to react to your buffs."],
+                                    get = function() return Hekili.DB.profile.performance.auraForceOrdinary == true end,
+                                    set = function( _, v ) Hekili.DB.profile.performance.auraForceOrdinary = v end,
+                                    order = 24,
                                     width = "full",
                                 },
                             }

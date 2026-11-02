@@ -9,6 +9,7 @@
 - Less work per update, mostly for casters: the engine does less setup and bookkeeping each time the icons refresh, and works out an ability's cost once per moment instead of repeatedly. The recommendations are unchanged.
 - Auras on your target no longer trigger extra refreshes in combat, which matters most in raids.
 - Removed three bundled libraries the addon never used, so it no longer wakes up for addon messages in groups.
+- Aura changes no longer bring the next update forward, so busy fights cost less. New on-by-default option under Options > Performance > Experimental to turn this off.
 
 ### Fixed
 - Enemies you kill leave the target count at once, so AoE and cleave lines aren't held by a dead mob for a few seconds.

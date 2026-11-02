@@ -514,6 +514,8 @@ L["When an icon that is still counting down would be replaced by another icon th
 -- L["Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested."] = ""
 -- L["Experimental: use the Cooldown Manager for aura presence"] = ""
 -- L["Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested."] = ""
+-- L["Experimental: aura changes wait for the next regular update"] = ""
+-- L["A buff or debuff change refreshes the icons at the next regular update (at most 0.2 s later) instead of bringing that update forward, so fights with many aura changes cost less.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: on by default; turn it off if the icons seem slow to react to your buffs."] = ""
 L["%s Preferences"] = "%s偏好设置"
 L["No priorities on Forever for %s: Hekili Forever recommends nothing while this specialization is active."] = "Forever 上没有%s的优先级：此专精激活时，Hekili Forever 不会给出任何推荐。"
 L["Priorities"] = "优先级"
