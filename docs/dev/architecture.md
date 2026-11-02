@@ -97,8 +97,8 @@ only when a non-passive subscriber exists. WeakAuras is passive, so it never mak
 `Talents()`, `ClassFile()`. Also `Settings(specID)` (the AceOption entries a spec registered with
 `RegisterSetting`, or nil) and `IsDisabled(key, strict)` (true plus a reason when the profile disables the ability).
 
-**`Engine.Snapshot(isAuto)`** runs one update with debugging on, so the displays' reports are saved. `isAuto` is the
-engine's own call and runs only when `settings.autoSnapshot` is on. It also drops a suspended build thread, so the
+**`Engine.Snapshot(isAuto)`** runs one update with debugging on, so the displays' reports are saved. `isAuto` is only
+passed on to the snapshot listeners and is always false now (the engine's automatic snapshot was removed). It also drops a suspended build thread, so the
 stale thread cannot write into the set it just published.
 
 **`Hekili:RegisterSnapshotListener(fn)`** / **`Hekili:UnregisterSnapshotListener(fn)`** (`Engine/Snapshot.lua`): other
@@ -114,8 +114,8 @@ the snapshot panel whichever display is picked. One engine registry, no AceEvent
 
 **`Engine.Configure(profile)`** and **`Engine.settings`** (`Engine/Settings.lua`). The engine reads configuration only
 from `Engine.settings`. `Configure` assigns `specs`, `packs`, `toggles`, `displays`, `performance` and
-`notifications` by reference: an edit inside them is live with no call. It copies the scalars `enabled`,
-`autoSnapshot` and `screenshot`: a setter that writes one must call `Configure` again. Each call bumps
+`notifications` by reference: an edit inside them is live with no call. It copies the scalars `enabled` and
+`screenshot`: a setter that writes one must call `Configure` again. Each call bumps
 `settings.version`. `Options/Profile.lua` calls it at load and on every AceDB profile change (change, copy, reset).
 
 **The update rate** (perf phase 2, built in, no option). Traces call `Hekili.Update` directly, so neither of these

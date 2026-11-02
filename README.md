@@ -57,9 +57,9 @@ Cooldowns, Minor Cooldowns, Defensives, Interrupts and Potions can each be switc
 Open an issue at https://github.com/zmsl/hekili/issues.
 - **Lua errors:** install BugSack and BugGrabber, reproduce the error, and paste BugSack's text into the issue.
 - **A wrong recommendation:** take a snapshot while it is happening: type `/hek snap` (or press the snapshot keybind,
-  set under `/hekili` > Toggles; or the pause keybind; or tick **Auto Snapshot** to get one when the addon fails to
-  recommend anything). Then open `/hekili` > **Snapshots (Troubleshooting)**, pick the snapshot from the dropdown,
-  click the text box, press Ctrl+A and Ctrl+C, and paste it into the issue (or a paste site, with the link in the issue).
+  set under `/hekili` > Toggles; or the pause keybind). Then open `/hekili` > **Snapshots (Troubleshooting)**, pick
+  the snapshot from the dropdown, click the text box, press Ctrl+A and Ctrl+C, and paste it into the issue (or a paste
+  site, with the link in the issue).
 
 ## Development
 See [DEVELOPMENT.md](https://github.com/zmsl/hekili/blob/forever/DEVELOPMENT.md).

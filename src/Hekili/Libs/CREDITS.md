@@ -8,7 +8,7 @@ Forever = WoW Forever client 1.60.1.70338, `## Interface: 16001`.
 A library's own `.toc` is not loaded (Hekili loads the files through `embeds.xml`), so its `## Interface` line is
 evidence only. "Load gate" is any early return or branch keyed on build, interface or project ID.
 
-The eleven Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development Team) copied into each folder.
+The ten Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development Team) copied into each folder.
 
 | Library | Upstream | Pin | Licence | Author credit | Forever support upstream | Load gate |
 |---|---|---|---|---|---|---|

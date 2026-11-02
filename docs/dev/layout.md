@@ -45,7 +45,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   The profile port (restructure Task 6) edited ~70 upstream lines in `Engine/` (each `Hekili.DB.profile` read became
   `Hekili.Engine.settings`): merge-friction cost on every upstream merge. Contract: `Engine.Configure(profile)` (called by
   `Options/Profile.lua` at load and on each AceDB profile change) hands the engine the profile's subtables by reference
-  and copies its scalars (`enabled`, `autoSnapshot`, `screenshot`), so a setter that writes one of those calls it again.
+  and copies its scalars (`enabled`, `screenshot`), so a setter that writes one of those calls it again.
   The audit's first wave (plan `docs/superpowers/plans/2026-10-17-audit-first-wave.md`) edited these upstream files,
   each a merge-friction point:
   - `Engine/Sim/Core.lua`: checkImports removed; PopStack and GetNextPrediction pool stack entries; the Yield and
