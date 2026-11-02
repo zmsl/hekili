@@ -345,7 +345,7 @@ describe("race packs", function()
         load("Troll", { berserking = zerk, [26297] = zerk })
         local z = all.abilities.berserking
         assert.are.same({ 20554, 180, "off", "cooldowns" }, { z.id, z.cooldown, z.gcd, z.toggle })
-        assert.are.same({ 20554, 10 }, { all.auras.berserking.id, all.auras.berserking.duration })
+        assert.are.same({ 20554, 15 }, { all.auras.berserking.id, all.auras.berserking.duration }) -- dev notes 27 Oct
         local rr = all.abilities.rapid_regeneration
         assert.are.same({ 1260270, 180, "off", "defensives" }, { rr.id, rr.cooldown, rr.gcd, rr.toggle })
         assert.are.same({ true, 6, true }, { rr.channeled, rr.cast, rr.fixedCast }) -- a 6 s self-channel (DB2)

@@ -1,7 +1,8 @@
 -- Hekili_Shared/Races/Troll.lua
 -- `all` (Engine/Schema/Spec.lua) no longer registers this racial: the stock entry named below is what it used to register.
 -- The Troll's Forever racials (DB2 1.60.1.70338), for every class: Berserking (20554: +10% attack and casting speed
--- for 10 s, one flat value, no health scaling; 180 s, off the GCD), which replaces `all`'s stock entry and aura
+-- for 15 s since the 27 Oct dev notes (wowsims racials.go; the DB2's 10 s), one flat value, no health scaling; 180 s,
+-- off the GCD), which replaces `all`'s stock entry and aura
 -- (26297, absent on Forever), and Rapid Regeneration (1260270: heals 50% of maximum health over 6 s; a self-channel,
 -- SPELL_ATTR1_IS_SELF_CHANNELLED, broken by movement, action or damage; 180 s, off the GCD), registered as a 6 s
 -- channel so the simulation does not recommend breaking it. The haste itself is the game's (Hekili reads haste); a
@@ -29,7 +30,7 @@ race:RegisterAbility("berserking", {
 
 race:RegisterAura("berserking", {
     id = 20554,
-    duration = 10,
+    duration = 15,
     max_stack = 1,
 })
 
