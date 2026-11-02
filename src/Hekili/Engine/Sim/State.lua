@@ -2385,8 +2385,8 @@ do
 
             if k ~= "scriptID" and not ( logged_state_errors[ t.scriptID ] and logged_state_errors[ t.scriptID ][ k ] ) then
                 Hekili:Error( "Unknown key '" .. k .. "' in emulated environment for [ " .. t.scriptID .. " : " .. t.this_action .. " ].\n\n" .. debugstack() )
-                logged_state_errors[ t.script ] = logged_state_errors[ t.script ] or {}
-                logged_state_errors[ t.script ][ k ] = true
+                logged_state_errors[ t.scriptID ] = logged_state_errors[ t.scriptID ] or {}
+                logged_state_errors[ t.scriptID ][ k ] = true
             end
         end,
         __newindex = function( t, k, v )
