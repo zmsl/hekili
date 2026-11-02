@@ -1,3 +1,3 @@
 -- tools/check_api_reads.sh must fail this file on line 3 (spaced _G single-quoted key)
 local _, ns = ...
-local b = _G["UnitHealth"]
+local b = _G[ 'UnitHealth' ]

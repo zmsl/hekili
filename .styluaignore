@@ -12,3 +12,7 @@ archive/
 # The language files are written by tools/locales.py (one L[...] line per key, however long); Locales.lua is ours.
 src/Hekili/Locales/[a-z][a-z][A-Z][A-Z].lua
 src/Hekili_*/Locales/[a-z][a-z][A-Z][A-Z].lua
+# The grep-check fixtures hold the exact spacing and quotes the checks must catch.
+tests/Game/API/fixtures/border/spaced.lua
+tests/Game/API/fixtures/g_spaced_double.lua
+tests/Game/API/fixtures/g_spaced_single.lua
