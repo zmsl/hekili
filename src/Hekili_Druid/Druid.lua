@@ -126,12 +126,12 @@ local REJUVENATION_COST = { 25, 40, 75, 105, 135, 160, 195, 235, 280, 335, 360 }
 local FORMS = { "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }
 
 -- Shifting Power's energy (DB2 1322605 effect 30, base 40) and bear rage per white swing (spec §2.3, D4): the
--- two-hand rate (4.5 a second) x the form's unhasted 2.5 s swing, 11.25 a swing, and a crit one more swing at the base
--- rate (3.46 x 2.5 = 8.65), as wowsims/forever's bear (its combat log's 11.25 and 19.9), until checkpoint Q8.
+-- two-hand rate (4.5 a second) x the form's unhasted 2.5 s swing, 11.25 a swing, and a crit doubles it (22.5: wowsims
+-- 7c28cfa731 core/rage.go, from Forever combat logs; owner ruling W1 2026-11-02), until checkpoint Q8.
 -- The swing is the form's fixed period, not the belief's out-of-combat base read, which holds the pull's form (1.0 s
 -- after a Cat pull) through an in-combat shift (GCD kinds design D4; checkpoint G6 reads both forms' speeds).
 local SHIFTING_POWER_ENERGY = 40
-local BEAR_RAGE_RATE, BEAR_CRIT_RATE = 4.5, 3.46
+local BEAR_RAGE_RATE = 4.5
 local BEAR_SWING = 2.5
 -- Primal Fury ("Blood Frenzy" on Forever, DB2 16958; wowsims/forever talents_feral_combat.go): a melee crit of ours in
 -- Bear Form gives 16959's 5 rage, always at 2/2 and half the time at 1/2 (wowsims's ladder): its expected rage. The
@@ -222,7 +222,7 @@ spec:RegisterResource(
                 return BEAR_RAGE_RATE * BEAR_SWING
             end,
             crit = function()
-                return BEAR_CRIT_RATE * BEAR_SWING + primalFury(talent.primal_fury.rank)
+                return BEAR_RAGE_RATE * BEAR_SWING + primalFury(talent.primal_fury.rank)
             end,
         },
 

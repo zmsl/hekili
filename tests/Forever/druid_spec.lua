@@ -743,12 +743,12 @@ describe("Forever Druid", function()
             near(2.5 * 4.5, models.mainhand.value()) -- before a plain base read
             w.game.base = { 1.0, 0 } -- a Cat pull's base, stale after the shift (D4: the form's period, not the read)
             near(11.25, models.mainhand.value())
-            near(8.65, setfenv(models.mainhand.crit, w.state)()) -- a white crit: one more base swing, without the two-hand factor
+            near(11.25, setfenv(models.mainhand.crit, w.state)()) -- a white crit doubles the swing's rage (W1: 22.5)
             local talent = w.state.talent
             w.state.talent = rank(2) -- Primal Fury ("Blood Frenzy", DB2 16958): 16959's 5 rage at 2/2
-            near(13.65, setfenv(models.mainhand.crit, w.state)())
+            near(16.25, setfenv(models.mainhand.crit, w.state)())
             w.state.talent = rank(1) -- 50% at 1/2 (wowsims's ladder): its expected 2.5
-            near(11.15, setfenv(models.mainhand.crit, w.state)())
+            near(13.75, setfenv(models.mainhand.crit, w.state)())
             w.state.talent = talent
             assert.are.same({ "enrage", 1, 2 }, { models.enrage.aura, models.enrage.interval, models.enrage.value })
             assert.is_nil(models.enrage.pausesDecay) -- unverified (checkpoint Q9)
