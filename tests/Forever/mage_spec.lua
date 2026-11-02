@@ -204,6 +204,7 @@ describe("Forever Mage", function()
             e.talent.improved_fireball = { rank = 5 }
             e.talent.improved_frostbolt = { rank = 3 }
             assert.are.same({ 3, 2.7 }, { near(ld.run(A.fireball.cast, e)), near(ld.run(A.frostbolt.cast, e)) })
+            assert.are.equal(3, near(ld.run(A.arcane_wrath.cast, e))) -- Accelerant on Arcane Wrath too (wowsims)
             e.haste = 0.8
             assert.are.equal(2.4, near(ld.run(A.fireball.cast, e)))
             e.buff = buffs({ presence_of_mind = 1 })

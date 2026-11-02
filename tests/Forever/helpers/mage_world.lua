@@ -350,7 +350,7 @@ local function castOf(key, H, up, stacks)
     end
     if key == "pyroblast" then
         c = c * (1 - 0.25 * stacks("heating_up"))
-    elseif key == "fireball" or key == "frostfire_bolt" then -- Improved Fireball's mask names both (DB2 11069)
+    elseif key == "fireball" or key == "frostfire_bolt" or key == "arcane_wrath" then -- Accelerant (11069; wowsims)
         c = c - 0.1 * talentRank(H, T.improved_fireball)
     elseif key == "frostbolt" then
         c = c - 0.1 * talentRank(H, T.improved_frostbolt)

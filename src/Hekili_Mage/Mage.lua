@@ -355,7 +355,8 @@ spec:RegisterAbilities({
         id = 1326079,
         copy = rest(ARCANE_WRATH),
         cast = function()
-            return buff.presence_of_mind.up and 0 or 3.5 * haste
+            -- Accelerant (Improved Fireball's 11069 node; wowsims): 0.1 s off a rank
+            return buff.presence_of_mind.up and 0 or (3.5 - 0.1 * talent.improved_fireball.rank) * haste
         end,
         cooldown = 6,
         gcd = "spell",
