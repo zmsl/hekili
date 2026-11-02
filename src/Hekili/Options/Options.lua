@@ -8085,7 +8085,6 @@ SerializeStyle = function( ... )
     if not hasPayload then return L["No displays selected to export."] end
     return TableToString( serial, true )
 end
-Hekili.SerializeStyle = SerializeStyle
 
 DeserializeStyle = function( str )
     local serial = StringToTable( str, true )
@@ -8096,7 +8095,6 @@ DeserializeStyle = function( str )
 
     return serial.payload
 end
-Hekili.DeserializeStyle = DeserializeStyle
 
 -- End Import/Export Strings
 
