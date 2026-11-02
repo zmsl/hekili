@@ -4253,7 +4253,7 @@ found = true end
                                 auraForceOrdinary = {
                                     type = "toggle",
                                     name = L["Experimental: aura changes wait for the next regular update"],
-                                    desc = L["A buff or debuff change refreshes the icons at the next regular update (at most 0.2 s later) "
+                                    desc = L["A buff or debuff change refreshes the icons at the next regular update (usually within 0.2 s) "
                                         .. "instead of bringing that update forward, so fights with many aura changes cost less.\n\n"
                                         .. "Applies at once to every specialization.\n\n"
                                         .. "|cFFFF7F00Experimental|r: on by default; turn it off if the icons seem slow to react to your buffs."],
