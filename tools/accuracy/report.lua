@@ -38,7 +38,9 @@ for name in p:lines() do
     for line in io.lines(dir .. "/raw/" .. name) do
         local what, f = parse.classify(line)
         if what == "loop" then
-            spec(class, f[1]).loop[tonumber(f[2])] = parse.loop(f[3])
+            local r = parse.loop(f[3])
+            r.agreement = parse.ratio(f[4]) or r.agreement
+            spec(class, f[1]).loop[tonumber(f[2])] = r
         elseif what == "crowd" then
             spec(class, f[1]).crowd = parse.loop(f[3])
             spec(class, f[1]).crowdRatio = tonumber(f[4])

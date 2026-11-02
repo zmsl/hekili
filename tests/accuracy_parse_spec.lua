@@ -27,11 +27,13 @@ describe("tools/accuracy/parse.lua", function()
             r.unmatched,
         })
         assert.are.equal(0, parse.loop((LOOP:gsub("%[cooldown.-%], episodes", "[], episodes"))).cost)
+        assert.are.equal(42291 / 45678, parse.ratio("42291/45678")) -- wrap.lua's unrounded agreement field
+        assert.is_nil(parse.ratio(nil))
     end)
     it("reads the wowsims lines", function()
-        assert.are.equal(
-            0.955,
-            parse.replay("fights=1 agreement 0.9 (9 ticks); decisions on-GCD 0.955 (150) top [a 1]").agreement
+        assert.are.equal( -- unrounded: the matched count is the only one that prints as 0.953 of 150
+            143 / 150,
+            parse.replay("fights=1 agreement 0.9 (9 ticks); decisions on-GCD 0.953 (150) top [a 1]").agreement
         )
         local t = parse.ready(
             "ready on-GCD 83 timed 83 never 3 scope 2; |b| median 0.000 p90 0.100; early 17 late 0; real 11 (early 6 late 5) median 0.700; absorbed []"

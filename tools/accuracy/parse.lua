@@ -39,9 +39,17 @@ function M.loop(line)
     return r
 end
 
---- A wowsims replay line: decisions on-GCD, the share of wowsims's decisions our first icon matched.
+--- A wowsims replay line: decisions on-GCD, the share of wowsims's decisions our first icon matched, unrounded: the
+--- matched count is the one that prints as the 3-decimal share of the printed total (unique below 500 decisions).
 function M.replay(line)
-    return { agreement = need(line, "decisions on%-GCD ([%d.]+) %(", "decisions on-GCD") }
+    local share, n = need(line, "decisions on%-GCD ([%d.]+) %((%d+)%)", "decisions on-GCD")
+    return { agreement = n > 0 and n < 500 and math.floor(share * n + 0.5) / n or share }
+end
+
+--- wrap.lua's unrounded loop agreement field "<agreed>/<ticks>" as a number; nil for nil.
+function M.ratio(s)
+    local a, b = (s or ""):match("^(%d+)/(%d+)$")
+    return a and tonumber(a) / math.max(1, tonumber(b)) or nil
 end
 
 --- A wowsims ready-time line: the real (cost-window-free) median in seconds and the decisions never ready.

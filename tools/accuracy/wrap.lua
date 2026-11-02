@@ -1,7 +1,7 @@
 -- tools/accuracy/wrap.lua: a busted --helper for `make accuracy` (tools/accuracy/run.sh). It changes no gate: it
 -- wraps the helpers the existing specs call so one run of them prints the structured ACC lines the report reads.
 --   pack_gate.solo, 20+ fights: the spec's own call becomes three seed sets (seeds 1-20, 21-40, 41-60), one
---     "ACC loop\t<label>\t<set>\t<loop line>" each; the first set is returned to the spec.
+--     "ACC loop\t<label>\t<set>\t<loop line>\t<agreed>/<ticks>" each; the first set is returned to the spec.
 --   wowsims.gate / wowsims.ready: print the replay floor and the ready-time floor beside the lines they print.
 local pack_gate = require("Forever.helpers.pack_gate")
 local loop = require("Game.harness.loop")
@@ -16,7 +16,7 @@ function pack_gate.solo(label, world, n, seed0, ...)
     for set = 0, 2 do
         local m = loop.tally(loop.new(world), n, { seed0 = (seed0 or 0) + n * set })
         local line = loop.line(m)
-        print(("\nACC loop\t%s\t%d\t%s"):format(label, set + 1, line))
+        print(("\nACC loop\t%s\t%d\t%s\t%d/%d"):format(label, set + 1, line, m.agree, m.both)) -- unrounded agreement
         if set == 0 then
             r1, line1, m1 = loop.summary(m), line, m
         end
