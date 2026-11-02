@@ -271,7 +271,6 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
                     self.firstThreadCompleted = true
                 end
             end
-
         end
     end
 end)
