@@ -31,7 +31,8 @@ describe("headless Hekili", function()
         assert.are.same({}, headless.unexpected(H, "login"))
         -- Perf 1.5: gone from embeds.xml, and nothing loaded asked for them.
         local LibStub = rawget(H.env, "LibStub")
-        for _, name in ipairs({ "AceComm-3.0", "AceTimer-3.0", "LibChatAnims" }) do
+        -- Audit item 19: LibCompress (legacy import strings) and AceEvent-3.0 (never called) removed too.
+        for _, name in ipairs({ "AceComm-3.0", "AceTimer-3.0", "LibChatAnims", "LibCompress", "AceEvent-3.0" }) do
             assert.is_nil(LibStub:GetLibrary(name, true))
         end
         assert.is_nil(rawget(H.env, "ChatThrottleLib"))

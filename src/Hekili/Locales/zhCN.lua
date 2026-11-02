@@ -824,7 +824,6 @@ L["Click here and press CTRL+A, CTRL+C to copy the snapshot.\n\nPaste in a text 
 L["|cFF00CCFFClick the textbox above and press |cFFFFD100CTRL+A|r to select ALL text and |cFFFFD100CTRL+C|r to copy it to the clipboard.\n\nWhen pasted to a text file or Pastebin.org, the snapshot should be hundreds or thousands of lines long."] = "|cFF00CCFF点击上方文本框，按 |cFFFFD100CTRL+A|r 选择全部文本，再按 |cFFFFD100CTRL+C|r 复制到剪贴板。\n\n粘贴到文本文件或 Pastebin.org 后，快照应有成百上千行。"
 L["Unable to decode."] = "无法解码。"
 L["Unable to decompress decoded string."] = "无法解压已解码的字符串。"
-L["Unable to decompress decoded string: %s"] = "无法解压已解码的字符串：%s"
 L["Unable to deserialized decompressed string: %s"] = "无法反序列化已解压的字符串：%s"
 L["Unable to restore Priority from the provided string."] = "无法从提供的字符串还原优先级。"
 L["Attempted to serialize an invalid display (%s)"] = "尝试序列化无效的显示框（%s）"
@@ -1028,3 +1027,6 @@ L["The lane's time axis, the ruler and the focus zone."] = "轨道的时间轴�
 -- Hekili/Engine/Sim/Core.lua
 L["Open Hekili Forever Options"] = "打开 Hekili Forever 选项"
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000警告|r：此版本的 Hekili Forever 适用于更新的 WoW Forever 客户端；你应重新安装适用于 %s 的版本。"
+
+-- No longer used (the English changed or went away): reuse or delete
+L["Unable to decompress decoded string: %s"] = "无法解压已解码的字符串：%s"

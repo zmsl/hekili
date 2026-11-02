@@ -815,7 +815,6 @@ L["Click here and press CTRL+A, CTRL+C to copy the snapshot.\n\nPaste in a text 
 L["|cFF00CCFFClick the textbox above and press |cFFFFD100CTRL+A|r to select ALL text and |cFFFFD100CTRL+C|r to copy it to the clipboard.\n\nWhen pasted to a text file or Pastebin.org, the snapshot should be hundreds or thousands of lines long."] = true
 L["Unable to decode."] = true
 L["Unable to decompress decoded string."] = true
-L["Unable to decompress decoded string: %s"] = true
 L["Unable to deserialized decompressed string: %s"] = true
 L["Unable to restore Priority from the provided string."] = true
 L["Attempted to serialize an invalid display (%s)"] = true

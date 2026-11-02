@@ -27,7 +27,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   `Client`, and `Hekili:GetLocale` for its text; `tests/boundary_spec.lua`). Every TOC's `## Version` is `@project-version@`; the packager stamps the release tag into every one (one zip, one version); the core's ContentAPI
   (`CONTENT_API` in `Engine/Content.lua`, matched against each content TOC's `## X-Hekili-ContentAPI`) bumps only when
   the Schema or the content surface changes. The core's modules:
-  - root: `Hekili.toc`, `Hekili.lua` (the addon object), `Bindings.xml`, `embeds.xml`;
+  - root: `Hekili.toc`, `Hekili.lua` (the addon object), `embeds.xml`;
   - `Engine/Sim/`: upstream's simulation (`Core`, `State`, `Scripts`, `Events`, `Targets`, `Constants`, `Utils`);
   - `Engine/Schema/`: the class/race/shared registration API (`Spec`, `Races`, `Shared`, `Threat`), the engine core the
     boundary spec scans;

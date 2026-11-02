@@ -20,7 +20,6 @@ The eleven Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development 
 | AceLocale-3.0 | Ace3 (`AceLocale-3.0/`) | Ace3 `Release-r1403`, d295b12 (MINOR 6; fetched 2026-10-25 from raw.githubusercontent.com/WoWUIDev/Ace3/d295b12f8b889a30e86e0e901c5494df4b149c49) | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None (reads the client's `GetLocale()` once at load, and `GAME_LOCALE`, a translator's override, when set; enGB maps to enUS) |
 | AceConfig-3.0 (Registry, Cmd, Dialog) | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
 | AceSerializer-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
-| AceEvent-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
 | AceDB-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
 | AceDBOptions-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
 | LibSharedMedia-3.0 | https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0 | MINOR 12000004 (wowace trunk mirrored 2026-10-14) | LGPL v2.1 (file header; quoted in `LICENSE-NOTE.md`) | Elkano | No | None found |
@@ -28,7 +27,6 @@ The eleven Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development 
 | AceGUI-3.0_SFX-Widgets | https://github.com/SFX-WoW/AceGUI-3.0_SFX-Widgets | commit 450c923 (2026-10-05) | Custom permissive-with-conditions, `LICENSE.txt` (Copyright StormFX) | StormFX | Yes: TOC `## Interface: 11509, 16001, ...`; CHANGELOG "Forever: 16001" | None |
 | LibSpellRange-1.0 | https://github.com/ascott18/LibSpellRange-1.0 | commit 49da263 (2024-08-19), TOC version 1.0.17 | None upstream (no licence file or header) | Cybeloras of Aerie Peak (ascott18) | No (TOC 100001) | Feature branch, not build-keyed: uses `C_Spell.IsSpellInRange` when present, else spellbook fallbacks |
 | LibRangeCheck-3.0 | https://github.com/WeakAuras/LibRangeCheck-3.0 | commit 95a6313 (2026-09-29, "Add checks for Forever on all isEra checks") | MIT, `LICENSE` | The WoWUIDev Community | Yes: `isForever = interfaceVersion >= 16000 and < 20000` (main file line 60), Forever shares the Era range tables | Branches on `GetBuildInfo` and `WOW_PROJECT_ID` (Era/Forever, TBC, Wrath, Cata, Mists, Midnight); no early return. Main file moved up from the repo's nested `LibRangeCheck-3.0/` folder (upstream `.pkgmeta` `move-folders`) |
-| LibCompress | https://repos.wowace.com/wow/libcompress/trunk (returns 401); taken from Hekili release v11.2.5-1.0.0 | Hekili release v11.2.5-1.0.0 (TOC `r86-release`, header `$Revision: 83 $`) | GPL v2 (file header; quoted in `LICENSE-NOTE.md`) | jjsheets, Galmok | No (TOC 90002) | None |
 | LibDeflate | https://github.com/SafeteeWoW/LibDeflate | commit afc3b78 (2021-05-05) | zlib, `LICENSE.txt` | Haoqian He (Safetyy) | No (TOC 80300) | None |
 | LibDataBroker-1.1 | https://github.com/tekkub/libdatabroker-1-1 | commit 1a63ede (2008-07-31), MINOR 4 | None upstream (no licence file or header) | tekkub | No | None |
 | LibDBIcon-1.0 | https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0 | MINOR 57 (wowace trunk mirrored 2026-10-14) | None stated upstream (no file, no header) | wowace project libdbicon-1-0 (no author named in source) | No | None found |
@@ -55,7 +53,6 @@ listed.
 
 | Library | Issue |
 |---|---|
-| LibCompress | GPL version 2 with no "or later" in its header (v2-only cannot combine with v3 or later): licence conflict, replace or remove before v0.1.0 if still bundled |
 | LibDualSpec-1.0 | BSD-style plus a no-standalone-redistribution clause: licence conflict, replace or remove before v0.1.0 if still bundled |
 | AceGUI-3.0_SFX-Widgets | custom licence, check terms |
 | AceGUI-3.0-SharedMediaWidgets | licence unstated, ask or replace |

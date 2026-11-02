@@ -32,6 +32,11 @@ describe("the import boxes", function()
         end
     end)
 
+    it("a string without the Hekili: prefix (the removed legacy format): the decode message", function()
+        assert.are.same({ nil, "Unable to decode." }, { H.Hekili.DeserializeActionPack(packString:sub(8)) })
+        assert.are.same({ nil, "Unable to decode." }, { H.Hekili.DeserializeStyle(styleString:sub(8)) })
+    end)
+
     it("a style string in the priority box: nil plus a message", function()
         local a, b = H.Hekili.DeserializeActionPack(styleString)
         assert.is_nil(a)
