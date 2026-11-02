@@ -120,12 +120,6 @@ local function Button_OnMouseUp( self, btn )
         if mover.Moving then
             stopScreenMovement(mover)
         end
-        local mouseInteract = Hekili.Pause or Hekili.Config
-        for i = 1, #ns.UI.Buttons do
-            for j = 1, #ns.UI.Buttons[i] do
-                ns.UI.Buttons[i][j]:EnableMouse(mouseInteract)
-            end
-        end
         ns.UI.Notification:EnableMouse( Hekili.Config )
         -- Hekili:SetOption( { "locked" }, true )
         GameTooltip:Hide()
@@ -382,17 +376,6 @@ function ns.StopConfiguration()
     -- StartConfiguration makes the Mover: absent when /hekili lock comes before any unlock.
     if HekiliNotification.Mover then HekiliNotification.Mover:Hide() end
     -- HekiliNotification.Mover.Header:Hide()
-end
-
-local function MasqueUpdate( Addon, Group, SkinID, Gloss, Backdrop, Colors, Disabled )
-    if Disabled then
-        for dispID, display in ipairs( ns.UI.Buttons ) do
-            for btnID, button in ipairs( display ) do
-                button.__MSQ_NormalTexture:Hide()
-                button.Texture:SetAllPoints( button )
-            end
-        end
-    end
 end
 
 
@@ -1443,7 +1426,6 @@ function Hekili:BuildUI()
         Masque = LibStub( "Masque", true )
 
         if Masque then
-            Masque:Register( addon, MasqueUpdate, self )
             MasqueGroup = Masque:Group( addon )
             ns.UI.MasqueGroup = MasqueGroup -- classic's Build adds its buttons
         end
@@ -1493,15 +1475,6 @@ function Hekili:BuildUI()
     --if Hekili.Config then ns.StartConfiguration() end
     if MasqueGroup then
         MasqueGroup:ReSkin()
-    end
-
-    -- Check for a display that has been removed.
-    for display, buttons in ipairs(ns.UI.Buttons) do
-        if not Hekili.DB.profile.displays[display] then
-            for i, _ in ipairs(buttons) do
-                buttons[i]:Hide()
-            end
-        end
     end
 
     if Hekili.Config then

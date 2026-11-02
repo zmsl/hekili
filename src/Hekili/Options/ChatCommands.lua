@@ -564,12 +564,6 @@ function Hekili:HandleEnableDisableCommand( args )
     self.DB.profile.enabled = enable
     Hekili.Engine.Configure( self.DB.profile )
 
-    for _, buttons in ipairs( ns.UI.Buttons ) do
-        for _, button in ipairs( buttons ) do
-            if enable then button:Show() else button:Hide() end
-        end
-    end
-
     if enable then
         self:Print( L["Addon enabled."] )
         self:Enable()
