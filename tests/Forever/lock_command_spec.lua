@@ -1,0 +1,21 @@
+-- tests/Forever/lock_command_spec.lua (audit item 6): /hekili lock before any unlock does nothing harmful.
+-- The notification Mover is made only by StartConfiguration, so the first lock of a session must not index it.
+local headless = require("Game.harness.headless")
+local ww = require("Forever.helpers.warrior_world")
+
+describe("/hekili lock", function()
+    it("runs before any unlock without error, and unlock then lock still works", function()
+        local H = headless.new({ character = ww.character(), pack = ww.PACK })
+        assert.are.same({}, H.loadErrors)
+        H.Hekili:BuildUI()
+        assert.has_no.errors(function()
+            H.Hekili:CmdLine("lock")
+        end)
+        assert.is_false(H.Hekili.Config)
+        assert.has_no.errors(function()
+            H.Hekili:CmdLine("unlock")
+            H.Hekili:CmdLine("lock")
+        end)
+        assert.is_false(H.Hekili.Config)
+    end)
+end)

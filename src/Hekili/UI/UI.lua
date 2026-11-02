@@ -379,7 +379,8 @@ function ns.StopConfiguration()
 
     HekiliNotification:EnableMouse( false )
     HekiliNotification:SetMovable( false )
-    HekiliNotification.Mover:Hide()
+    -- StartConfiguration makes the Mover: absent when /hekili lock comes before any unlock.
+    if HekiliNotification.Mover then HekiliNotification.Mover:Hide() end
     -- HekiliNotification.Mover.Header:Hide()
 end
 
