@@ -25,8 +25,8 @@ end
 -- the live world's draws moved, git bisect on the L60 line) }
 -- Assassination 0.98 -> 0.96 (0.963, 52 of 54; base 0.982, R2 window 0.037) on the oracle refresh (logs from wowsims
 -- e2842f0a78): one more Venom fade inside wowsims's reaction window (126.51: the buff gone 0.08 s before, ours shows Venom)
--- Mutilate's per-hand hits are GCD-0 Casting lines {SpellID: 1241584, Tag: 1/2}: procs, neither decisions nor casts.
-local MUTILATE_HANDS = { procs = { ["1241584:1"] = true, ["1241584:2"] = true } }
+-- Mutilate's per-hand hits are GCD-0 Casting lines {SpellID: 1241584, Tag: 14/15}: procs, neither decisions nor casts.
+local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true } }
 local PACKS = {
     { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.96, 5.0, MUTILATE_HANDS },
     { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.95, 4.0 },

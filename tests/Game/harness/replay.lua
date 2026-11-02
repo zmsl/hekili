@@ -137,7 +137,7 @@ local function ours(rest)
             return {
                 kind = "hit",
                 what = what,
-                hand = tag == 2 and 2 or 1,
+                hand = (tag == 2 or tag == 15) and 2 or 1, -- 15: the off hand's item slot (upstream 8402d10fdf)
                 id = id,
                 act = o[1],
                 flag = o[2],

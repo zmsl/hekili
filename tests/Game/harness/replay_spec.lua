@@ -75,6 +75,15 @@ describe("the wowsims log parser", function()
         assert.are.same({ 900030, 20 }, { tick.id, tick.amount })
     end)
 
+    it("reads a swing's hand from its tag: 1 or 14 (main hand's item slot) main, 2 or 15 off", function()
+        local hands = {}
+        for i, tag in ipairs({ 1, 14, 2, 15 }) do
+            local line = "[1.00] [Tester (#1)] [Target 1] {OtherID: 3, Tag: %d} Hit for 10.000 damage (SpellSchool: 1)."
+            hands[i] = replay.parse(line:format(tag) .. "\n").ev[1].hand
+        end
+        assert.are.same({ 1, 1, 2, 2 }, hands)
+    end)
+
     it("reads the target's Parry, Dodge and Block on us as `taken`, a partial block a BLOCK_REDUCED wound", function()
         local q = replay.parse(table.concat({
             "[4.03] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Parry (SpellSchool: 1). (Threat: 0.000)",

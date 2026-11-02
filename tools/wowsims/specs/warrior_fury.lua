@@ -26,7 +26,7 @@
 -- Overpower and Thunder Clap cannot go, so the GCD idled pooling rage for Heroic Strike (L40 8.6 s, L30 over 20 s in
 -- scratch runs) -> L40 2.4 s. Below 30 (Battle Stance) it stays silent, so the level 24 loop does not move; at 60 too.
 -- The stance test reads Battle Stance in the leveling check's guard form (a known-guard that drops the term).
--- Replay knobs (tests/Forever/wowsims_warrior_spec.lua): Whirlwind's off-hand hit (1680 Tag 2) is a hit, not a cast;
+-- Replay knobs (tests/Forever/wowsims_warrior_spec.lua): Whirlwind's off-hand hit (1680 Tag 15) is a hit, not a cast;
 -- the Heroic Strike queue (25286 Tag 1) is an aura the client never shows; the main hand's 2.1 s period (the log's
 -- first two main-hand swings are 4.2 s apart: Heroic Strike replaced one).
 -- Automatic cooldowns (rule 13): cd_trinkets's castAllStatBuffCooldowns cast nothing in the log: no lines.
