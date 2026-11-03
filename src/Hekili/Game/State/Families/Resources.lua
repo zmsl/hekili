@@ -1288,7 +1288,13 @@ I.On(Obs.Usable, function(o, t, lag)
             end
         else
             local e1, e2 = c > lo + f + I.EPS, c > lo + m + I.EPS
-            lift = lo + (e1 and m or 0) + (e2 and f or 0) -- each shown hand gave more than none: it landed
+            -- each shown hand gave more than none (it landed), but only where the yes contradicts the estimate: one the
+            -- estimate already reached may follow an avoided swing (lifting there put the floor above the truth).
+            -- shortcut: est0 is no bound (truth may sit above it before a dodge); the sound test, c > hi0 + the other
+            -- hand's high step, never fires (hi0 sits at the top: Fury L60 0.91/min, 2026-11-03)
+            if R.est0[r] < c then
+                lift = lo + (e1 and m or 0) + (e2 and f or 0)
+            end
             if not e1 and not e2 then
                 e1 = VS.SwingPending(1) <= VS.SwingPending(2)
                 e2 = not e1
