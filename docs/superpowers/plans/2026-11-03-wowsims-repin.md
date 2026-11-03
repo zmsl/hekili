@@ -104,7 +104,8 @@ Project rules:
    re-recommended, and the pick after the swing is made without it. Pinned in Task 8b.
 8. Retribution's opener mid-fight (decision 10): after the first main-hand swing, out of Crusader Strike's range (a
    knockback), no `move_to_melee` line returns; before it, at the pull out of range, they show. Pinned in Tasks 7 and 17.
-9. Window edges (Task 8a): a condition held true across Drains opens once and never refreshes; a refresh counts once
+9. Window edges and steps (Task 8a): a step advances only on an observed cast of the due (or a later) step, a forecast
+   step advance is discarded at the next update, and a stalled sequence ends at its duration. Edges: a condition held true across Drains opens once and never refreshes; a refresh counts once
    per new edge; a close on a closed window does nothing; combat end closes every window and a condition held through
    it waits for a new edge; nothing allocated in Drain; a secret usability answer keeps the last plain one.
 10. Statelessness (Task 8a): a forecast `open_window`/`handler()` change never survives to the next update; the next
@@ -543,9 +544,11 @@ walks the upvalues. An evaluator takes exactly this path.
 
 **Interfaces:**
 - Produces: `spec:RegisterWindow(name, { evaluator = fn, duration = s, refresh = bool, max_duration = s?,
-  max_refresh = n?, close_on_false = bool? })`. Both caps optional; refresh with no cap allowed. A second registration
+  max_refresh = n?, close_on_false = bool?, steps = { "<ability key>", ... }?, loop = bool? })` (`steps` and `loop`:
+  stepped windows, decision 11's amendment, spec §3a; a step key the spec has not registered raises at load). Both caps optional; refresh with no cap allowed. A second registration
   of a name raises at load.
-- Produces: `def.windows[i] = { key, evaluator, duration, refresh, max_duration, max_refresh, close_on_false }`
+- Produces: `def.windows[i] = { key, evaluator, duration, refresh, max_duration, max_refresh, close_on_false, steps,
+  loop }` (`steps` as ability indexes, resolved at Build)
   (plain, `recordOf`'s rules; the evaluator a function the belief runs, never the core).
 - Produces (belief): after Drain's fold, each evaluator runs once in the `now` context, extended with `lastSwing(hand)`
   (`VS.LastSwing`), `nextSwing(hand)` (`VS.Swing(hand, now).est`) and `usable.<key>` (the last plain
@@ -556,17 +559,27 @@ walks the upvalues. An evaluator takes exactly this path.
   (Obs.CombatEnd) closes all and keeps the last evaluations. A raising evaluator is counted in `I.nowErrors` and reads
   false. `openWindow(name)`/`closeWindow(name)` are `now` verbs with the same rules (`live` only, as the other verbs).
   Preallocated per window at Build; nothing allocated in Drain.
-- Produces (facade): `Facade.Window(name) -> up, openedAt, expiresAt, refreshes` (booleans and plain numbers; `false,
-  0, 0, 0` for a closed or unknown name). Belief-only, like `Facade.KnownRank`; not an aura row and not in the aura copy.
+  Steps (belief): a stepped window's `step` (1..n) advances on the observed own CastSuccess of the due step's ability
+  (generic, by ability index, in the family's own `I.On(Obs.CastSuccess)`; no per-ability `now()`). After the last
+  step it closes, or with `loop` returns to step 1. An observed cast of a later step skips to the step after it. The
+  duration and closers still end a stalled sequence. An open sets `step = 1`.
+- Produces (facade): `Facade.Window(name) -> up, openedAt, expiresAt, refreshes, step` (booleans and plain numbers;
+  `false, 0, 0, 0, 0` for a closed or unknown name; `step` 0 for an unstepped window). Belief-only, like `Facade.KnownRank`; not an aura row and not in the aura copy.
 - Produces (core): `state.window.<name>` with `.up`, `.remains` (0 when down) and `.elapsed` (since the open; 0 when
-  down: read it behind `.up`), answered at `query_time`, one preallocated table per window built at
+  down: read it behind `.up`), `.step`, and `.next.<ability key>` (true when that ability is the due step of an up
+  window), answered at `query_time`, one preallocated table per window built at
   SpecializationChanged. `reset` copies every window from `Facade.Window` (no allocation) and nothing survives the
   cycle. In the cycle, `open_window,name=<w>,if=<c>[,refresh=1][,duration=<s>]` opens a closed window when `<c>` holds
   (with `refresh=1`, restarts an open one; caps apply; `duration=` overrides the registered one for this open),
   `close_window,name=<w>,if=<c>` closes an open one; both are list-order entries with no icon, like `variable`; an
   unregistered name fails `ParseActionList` with the line. Within one cycle each `open_window` line remembers its last
   result (a preallocated slot), so a held-true condition does not refresh twice (the belief's edge rule). `handler()`
-  reaches the same `openWindow`/`closeWindow` on `state`.
+  reaches the same `openWindow`/`closeWindow` on `state`. Steps (forecast): the cycle starts from the copied step; a
+  simulated cast of the due step's ability advances it (after the last: close, or step 1 with `loop`) in that cycle's
+  core state only, never written back.
+- Not here: translating wowsims `sequence`s to stepped windows (spec §3a's mapping: `sequenceIsComplete` ->
+  `!window.<name>.up`, `resetSequence` -> `loop`, the condition as evaluator only when it is belief-expressible, else
+  omitted as a deviation). Those land in Task 17 (Retribution) and Task 19 (Hunters), gated.
 - Produces (recheck): an `open_window` line's condition goes through `scripts:BuildRecheck` like any entry's, so "true
   in t" becomes the countdown. R6 (the `>`/`>=` wrap branch for a decreasing clock) stays: see Step 3's note.
 - Border: `tools/check_border.sh` needs no new pattern (the core already may not name `VS`, `ns.VirtualState` or
@@ -585,12 +598,19 @@ walks the upvalues. An evaluator takes exactly this path.
   - No allocation: `collectgarbage("count")` unchanged across 1000 Drains with two windows (the pattern the perf
     specs use).
   - Secrets: a secret `IsSpellUsable` answer leaves `usable.<key>` at its last plain value and raises nothing.
-  - Facade: `Facade.Window` returns the belief's open, expiry and refreshes; an unknown name answers `false, 0, 0, 0`.
+  - Steps (belief, a three-step test window): an observed cast of the due step's ability advances `step`; a cast of
+    another ability does not; a cast of step 3 while on step 1 skips forward (to the end: close); after the last step
+    it closes, and with `loop` returns to step 1; a stalled sequence (no due cast) ends at its duration.
+  - Facade: `Facade.Window` returns the belief's open, expiry, refreshes and step; an unknown name answers
+    `false, 0, 0, 0, 0`.
   - Core (`tests/Forever/windows_spec.lua`): `state.window.<w>` mirrors the copy at reset, and a cycle's change is
     gone at the next reset; `open_window` with a held condition opens once; `refresh=1` restarts; `duration=`
     overrides; `close_window` closes; an unregistered name fails `ParseActionList` with the line; order matters (a
     line above an `open_window` reads the window down); `window.<w>.up/.remains/.elapsed` at an advanced
     `query_time`; a handler's `openWindow` opens it in the forecast only.
+  - Steps (core): `window.<w>.next.<key>` is true for the copied due step; a simulated cast of it advances the step in
+    the cycle, so the next line's `next` read sees step 2; the next reset discards that advance and reads the
+    belief's step again.
   - Recheck: a line gated `window.<w>.up` behind an `open_window` whose condition is `mainhand_remains<0.5` (swing
     1.2 s ahead) is recommended with a 0.7 s delay.
   - `plain_records_spec.lua`: every registered evaluator captures no `state`, `Hekili` or `class`.

@@ -103,6 +103,12 @@ against the trees at both commits is the source of every omit count below. Ledge
      flip (`IsSpellUsable` going true) may open a window when no aura tracks it; that window closes when usable flips
      back, when the ability is cast, or at its duration.
    - The hunter weave is the first user (§3a). Migrating hand-rolled spans, and new windows elsewhere, are follow-ups.
+   - Stepped windows (owner "yes", 2026-11-03): a window may carry `steps` (ability keys in order) and `loop`. The
+     belief advances the step on the observed real cast of the due step's ability; the core's forecast advances it
+     in that cycle only ("the apl would be able to 'persist' the fact that the player already used one of the
+     sequence and it recommends the next, which would mark it in the core Hekili state as used only"), never written
+     back. A wowsims `sequence` translates to one (§3a); the actual sequences are translated in the Retribution and
+     Hunter lanes, gated.
 
 The standing constraints apply unchanged (the border's one new read is decision 11's):
 - The core stays class-neutral. The Movement toggle is a generic setting that packs opt into.
@@ -273,6 +279,28 @@ Windows only where no aura fits (decision 11). Where the client has an aura, eve
 State (5302) when it is readable, the aura stays. An observed usability flip may open a window when no aura tracks it:
 its evaluator reads `usable.<key>`, it sets `close_on_false`, and the ability's `now()` closes it, so it ends when
 usable flips back, at the cast, or at the duration.
+
+Stepped windows (decision 11's amendment). `RegisterWindow` takes two more optional fields: `steps = { "<ability
+key>", ... }` and `loop = true|false` (default false). A stepped window's state adds `step` (1..n).
+- Reads: `window.<name>.step`, and `window.<name>.next.<ability key>`, true when that ability is the due step (and
+  the window is up).
+- Belief (truth): the step advances when the belief observes the real cast of the due step's ability. This is generic
+  (by ability index, from the cast the belief already folds), with no per-ability `now()`. After the last step the
+  window closes, or with `loop` goes back to step 1 (wowsims's `resetSequence`). An observed cast of a later step
+  skips forward to the step after it: the player went out of order, and the sequence never sticks. The duration and
+  the close conditions still end a stalled sequence.
+- Core (forecast): the cycle starts from the copied step. A simulated cast of the due step advances it in that
+  cycle's core state only, so the list recommends the next step; it is never written back, and the next update starts
+  from the belief's copy again.
+- Translation (the translator's mapping, recorded in `apl.lua`'s header when the lanes build it):
+  - `sequence { a1..an }` with a condition becomes a stepped window whose steps are the cast members. The condition
+    becomes the evaluator only when it is expressible in belief reads (talents, settings, clocks, range); otherwise the
+    sequence is omitted and listed as a deviation.
+  - `sequenceIsComplete(<name>)` becomes `!window.<name>.up`.
+  - `resetSequence` becomes `loop`.
+  - `strictSequence` stays out of scope (rule 14's chain, unchanged) until a shipped spec needs it as a window.
+  - The actual sequences (Retribution's `move1`-`move3`, the Hunters' if any) are translated in their lanes, gated;
+    the windows core only provides the mechanism.
 
 The hunter weave. The first window, built with the ranged clock (§3) in the same task:
 - `weave`: the evaluator opens it on an observed Auto Shot with the main-hand swing ready; Raptor Strike's `now()`
