@@ -344,7 +344,7 @@ I.On(Obs.Cooldown, function(o, t)
 end)
 
 -- The standing flags at `now` (TDF constrain): ready pulls a later ready time back to now (and restores a charge);
--- not ready pushes one believed ready by now to now + CD_PROBE (a later modelled end the flag agrees with stays).
+-- not ready pushes an earlier one to at least now + CD_PROBE.
 I.OnSettle(function(now)
     for a = 1, A.n do
         local flag = A.flag[a]
@@ -363,7 +363,7 @@ I.OnSettle(function(now)
                 if A.next0[a] < probe then
                     A.next0[a] = probe
                 end
-            elseif A.ready0[a] <= now then
+            elseif A.ready0[a] < probe then
                 A.ready0[a] = probe
                 I.Sample(A.cd[a], "pinned", probe, now, Obs.Cooldown)
             end
