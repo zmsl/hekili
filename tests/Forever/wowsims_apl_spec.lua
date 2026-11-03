@@ -989,6 +989,7 @@ describe("the wowsims APL translator", function()
                 castAssigned = {
                     setting = "pick",
                     option = "pickOption",
+                    zero = "One",
                     candidates = { One = "dot", Two = "big_hit", Off = false },
                     active = "assignedIsActive",
                     is = "isAssigned",
@@ -1038,32 +1039,36 @@ describe("the wowsims APL translator", function()
         assert.are.same({
             "# Setting pick (choice of pickOption: off, one, two), default two in game and in the harness.",
         }, header)
-        -- the option's zero value (protojson omits it) and an unknown candidate are unsupported (rule 2)
-        local _, omitted = apl.translate({
+        -- no field is the option's zero value (protojson omits it); an unknown candidate is unsupported (rule 2)
+        local zeroText, omitted = apl.translate({
             priorityList = {
                 { action = { castAssigned = {} } },
                 cast(100, { isAssigned = {} }),
                 cast(100, { isAssigned = { pickType = "Three" } }),
             },
         }, ctx(r, player))
-        assert.are.same({ "default #2: isAssigned of no candidate", "default #3: isAssigned of Three" }, omitted)
+        assert.are.equal(
+            "actions=dot,if=settings.pick='one'\nactions+=/big_hit,if=settings.pick='two'\nactions+=/strike,if=settings.pick='one'",
+            zeroText
+        )
+        assert.are.same({ "default #3: isAssigned of Three" }, omitted)
         assert.has_error(function()
             apl.translate({ priorityList = { cast(100) } }, ctx(r, player))
         end, "select: castAssigned is not in the APL")
-        -- a build without the option has no select (re-pin: 4 of 5 warlock builds dropped curseOptions): its action
-        -- and values are unsupported (rule 2), never an error
-        local _, none = apl.translate({
-            priorityList = {
-                { action = { castAssigned = {} } },
-                cast(100, isActive),
-                cast(100, { isAssigned = { pickType = "Off" } }),
-            },
-        }, ctx(r, { warrior = { options = {} } }))
+        -- a build without the option holds its zero value (re-pin: 4 of 5 warlock builds omit curseOptions)
+        local _, _, _, zeroHeader = apl.translate(
+            { priorityList = { { action = { castAssigned = {} } } } },
+            ctx(r, {
+                warrior = { options = {} },
+            })
+        )
         assert.are.same({
-            "default #1: castAssigned",
-            "default #2: assignedIsActive",
-            "default #3: isAssigned",
-        }, none)
+            "# Setting pick (choice of pickOption: off, one, two), default one in game and in the harness.",
+        }, zeroHeader)
+        r.select.castAssigned.zero = nil
+        assert.has_error(function()
+            ctx(r, player)
+        end, "select: castAssigned declares no zero candidate")
     end)
 
     it("rule 17's multidot: the DoT's cast on the current target while its DoT has at most maxOverlap left", function()
@@ -1602,6 +1607,10 @@ describe("the wowsims APL translator's casting, range, curse and cast-time pre-p
         assert.are.same({ "default #1: dropped the unresolved spell 999 (its branch only)" }, omitted)
     end)
 
+    it("totemRemainingTime with no totemType (TypeUnknownTotem, protojson's zero) is wowsims's nil node", function()
+        assert.are.equal("actions=strike", (one(cmp("OpGt", { totemRemainingTime = {} }, const("1")))))
+    end)
+
     it("spellInRange is the ability's in_range, guarded while unlearned", function()
         assert.are.equal("actions=strike,if=action.strike.in_range", (one(spell("spellInRange", 100))))
         assert.are.equal(
@@ -1647,46 +1656,47 @@ describe("the wowsims APL translator's casting, range, curse and cast-time pre-p
     end)
 
     it(
-        "the curse reads go through rule 16's select, on the current target; without one they are unsupported",
+        "a build without curseOptions plays the zero value's curse (Elements); the all-targets reads are this target's",
         function()
             local r = {
                 select = {
                     castAssigned = {
                         setting = "pick",
                         option = "pickOption",
-                        candidates = { One = "dot", Off = false },
+                        zero = "Elements",
+                        candidates = { Elements = "dot", NoCurse = false },
                         active = "assignedIsActive",
                         activeAll = "assignedIsActiveOnAllTargets",
                         is = "isAssigned",
                     },
                 },
             }
-            local player = { warrior = { options = { classOptions = { pickOption = "One" } } } }
             local entries = {
                 { action = { castAssigned = {} } },
-                cast(100, { isAssigned = { curseType = "Off" } }),
+                cast(100, { isAssigned = { curseType = "NoCurse" } }),
                 cast(100, { assignedIsActiveOnAllTargets = {} }),
                 cast(100, spell("dotIsActiveOnAllTargets", 400)),
             }
-            local text, omitted, _, header = apl.translate({ priorityList = entries }, ctx(r, player))
+            local text, omitted, _, header =
+                apl.translate({ priorityList = entries }, ctx(r, { warlock = { options = { classOptions = {} } } }))
             local dev = 'an "on all targets" read is the current target\'s only.'
             assert.are.equal(
                 table.concat({
-                    "actions=dot,if=settings.pick='one'",
-                    "actions+=/strike,if=settings.pick='off'",
-                    "actions+=/strike,if=((action.dot.known&settings.pick='one'&debuff.dot.up))", -- rule 16's OR, of one
+                    "actions=dot,if=settings.pick='elements'",
+                    "actions+=/strike,if=settings.pick='nocurse'",
+                    "actions+=/strike,if=((action.dot.known&settings.pick='elements'&debuff.dot.up))", -- rule 16's OR, of one
                     "actions+=/strike,if=(!action.dot.known|debuff.dot.up)",
                 }, "\n"),
                 text
             )
             assert.are.same({}, omitted)
             assert.are.same({
-                "# Setting pick (choice of pickOption: off, one), default one in game and in the harness.",
+                "# Setting pick (choice of pickOption: elements, nocurse), default elements in game and in the harness.",
                 "# Deviation: default #3: " .. dev,
                 "# Deviation: default #4: " .. dev,
             }, header)
-            -- no select (the build sets no option, or the recipe has none): each read is unsupported; the Banes have none
-            local _, none = apl.translate({ priorityList = entries }, ctx(r, { warrior = { options = {} } }))
+            -- a recipe with no select: each select read is unsupported; the Banes have no recipe hook
+            local _, none = apl.translate({ priorityList = entries }, ctx({}))
             assert.are.same({
                 "default #1: castAssigned",
                 "default #2: isAssigned",

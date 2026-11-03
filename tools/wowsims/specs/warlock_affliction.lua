@@ -39,6 +39,7 @@ return {
         castWarlockAssignedCurse = {
             setting = "assigned_curse",
             option = "curseOptions",
+            zero = "Elements", -- proto/warlock.proto CurseOptions: Elements = 0 (protojson omits it)
             candidates = {
                 Elements = "curse_of_the_elements",
                 Recklessness = "curse_of_recklessness",

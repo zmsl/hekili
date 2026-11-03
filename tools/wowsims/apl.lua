@@ -165,13 +165,14 @@
 --    `false` candidate is selected (wowsims's IsActive with no spell, sim/warlock/apl_values.go); each
 --    candidate's term but the line's own carries its known test first, `(action.<key>.known&<term>)`, so an unlearned
 --    candidate reads down, as wowsims's missing spell does, in the guard form tools/check_pack_levels.lua checks. The value `is`
---    (its one field names an option value) is that value's setting term; with no field (protojson's zero value) or an
---    unknown value it is unsupported. The build's value (the request's `<spec>.options.classOptions.<option>` or
---    `.options.<option>`) is the setting's default in game and in the harness (`sim`), which the class registers as an
---    AceConfig `select`; the header lists it. An entry the APL never uses, or a build value with no candidate, is an
---    error. A build without the option (protojson omits it; re-pin: 4 of 5 warlock builds) has no select: its action
---    and values are unsupported (rule 2), as with no recipe `select`. The value `activeAll` (the selected spell on every
---    target) is `active` on the current target, with rule 17's `# Deviation:` line.
+--    (its one field names an option value) is that value's setting term; with no field it is the recipe's `zero`
+--    (protojson omits an enum's zero value), an unknown value is unsupported. The build's value (the request's
+--    `<spec>.options.classOptions.<option>` or `.options.<option>`) is the setting's default in game and in the harness
+--    (`sim`), which the class registers as an AceConfig `select`; the header lists it. A build without the option holds
+--    the enum's zero value (protojson omits it; re-pin: 4 of 5 warlock builds): the recipe's `zero`, the option value
+--    numbered 0 in the pinned proto (each recipe cites it). An entry the APL never uses, a select with no `zero`, or a
+--    build value with no candidate is an error. The value `activeAll` (the selected spell on every target) is `active`
+--    on the current target, with rule 17's `# Deviation:` line.
 -- 17. `multidot` (wowsims: the DoT cast on up to `maxDots` targets whose DoT has at most `maxOverlap` left) is the
 --    cast's line under the entry's condition and `debuff.<key>.remains<=<maxOverlap>` (0 when absent), its aura read as
 --    `dotRemainingTime` (rules 5, 6, 12; `rank` ignored, rule 5). Deviation, a `# Deviation:` header line by entry:
@@ -192,6 +193,11 @@
 --    `spellInRange` is `action.<key>.in_range` (both rule 6 guarded, rule 12 dropped); `dotIsActiveOnAllTargets` is
 --    `dotIsActive` on the current target, with rule 17's `# Deviation:` line. `spellExpectedDpet` stays unsupported, as
 --    does a class's own "on all targets" read with no recipe `select` field (rule 16's `activeAll`).
+-- Absent enum fields (protojson omits a zero value; zeros from the pinned proto/*.proto): rule 16's option is its
+-- recipe `zero`; every other enum read here has an "unknown" zero that wowsims rejects, so an absent one is
+-- unsupported (`op`, math `op`: OpUnknown; `threshold`: ExecutePhaseThreshold Unknown; `autoType`: UnknownAuto, SwingType
+-- Unknown) or wowsims's nil node (`totemType`: TypeUnknownTotem), and a unit reference's (UnitReference Unknown) is
+-- its default unit, as sim/core/apl_helpers.go getUnit.
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -381,24 +387,26 @@ function M.context(set, r, log, player)
                 choice = choice or (type(o.classOptions) == "table" and o.classOptions[x.option]) or o[x.option]
             end
         end
-        if choice ~= nil and x.candidates[choice] == nil then
+        if x.zero == nil or x.candidates[x.zero] == nil then
+            error(("select: %s declares no zero candidate"):format(action), 0)
+        end
+        choice = choice == nil and x.zero or choice -- protojson omits the enum's zero value
+        if x.candidates[choice] == nil then
             error(("select: %s has no candidate %s"):format(x.option, tostring(choice)), 0)
         end
-        if choice ~= nil then -- a build without the option has no select: its action and values are unsupported
-            local values = {}
-            for v in pairs(x.candidates) do
-                values[#values + 1] = v
-            end
-            table.sort(values)
-            local sel = { action = action, x = x, values = values, choice = choice, term = {} }
-            for _, v in ipairs(values) do
-                sel.term[v] = "settings." .. x.setting .. "='" .. M.snake(v) .. "'"
-            end
-            c.select[action] = sel
-            for _, kind in ipairs({ "active", "activeAll", "is" }) do
-                if x[kind] then
-                    c.selectValue[x[kind]] = { kind, sel }
-                end
+        local values = {}
+        for v in pairs(x.candidates) do
+            values[#values + 1] = v
+        end
+        table.sort(values)
+        local sel = { action = action, x = x, values = values, choice = choice, term = {} }
+        for _, v in ipairs(values) do
+            sel.term[v] = "settings." .. x.setting .. "='" .. M.snake(v) .. "'"
+        end
+        c.select[action] = sel
+        for _, kind in ipairs({ "active", "activeAll", "is" }) do
+            if x[kind] then
+                c.selectValue[x[kind]] = { kind, sel }
             end
         end
     end
@@ -800,6 +808,9 @@ local function value(c, n, pct)
     elseif k == "autoTimeSinceLast" and v.autoType == "MainHandAuto" then
         return "(mainhand_speed-mainhand_remains)", false
     elseif k == "totemRemainingTime" then
+        if v.totemType == nil then -- TypeUnknownTotem (0, proto/shaman.proto): wowsims's nil node
+            return nil, true
+        end
         return "totem." .. M.snake(tostring(v.totemType)):gsub("^totem_", "") .. ".remains", false
     end
     unsupported(tostring(k))
@@ -1008,9 +1019,7 @@ local function bool(c, n)
         sel.used = true
         if kind == "is" then
             local _, val = next(v)
-            if val == nil then
-                unsupported(k .. " of no candidate")
-            end
+            val = val == nil and sel.x.zero or val -- protojson omits the enum's zero value
             return sel.term[val] or unsupported(k .. " of " .. tostring(val)), nil, false
         end
         if kind == "activeAll" then -- rule 17's precedent: the current target only
