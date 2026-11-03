@@ -11,6 +11,7 @@ import unittest
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SCRIPT = os.path.join(ROOT, "scripts", "check_stamp.sh")
 SKIP_LINE = "check: skipped, inputs unchanged since the last green check; FULL=1 runs it"
+DOCS_LINE = "check: skipped, only docs no test reads changed since the last green check: %s; FULL=1 runs it"
 
 
 def env_vars():
@@ -207,6 +208,89 @@ class Stamp(unittest.TestCase):
         self.assertTrue(self.skips())
         self.assertFalse(self.skips(cwd=wt))
 
+    # Task 3: the docs-only skip (ruling S5)
+    def test_unread_doc_edit_skips(self):
+        self.stamp()
+        self.write("docs/dev/notes.md", "more\n", "a")
+        self.write("DEVELOPMENT.md", "more\n", "a")
+        self.assertTrue(self.skips())
+        self.assertEqual(self.last.stdout, DOCS_LINE % "DEVELOPMENT.md (+1 more)" + "\n")
+
+    def test_one_doc_edit_names_it_alone(self):
+        self.stamp()
+        self.write("docs/dev/notes.md", "more\n", "a")
+        self.assertTrue(self.skips())
+        self.assertEqual(self.last.stdout, DOCS_LINE % "docs/dev/notes.md" + "\n")
+
+    def test_new_and_deleted_unread_docs_skip(self):
+        self.stamp()
+        self.write("docs/dev/new.md", "new\n")
+        os.remove(self.path("docs/dev/notes.md"))
+        self.assertTrue(self.skips())
+
+    def test_staged_doc_skips(self):  # the I line changes too; still a doc
+        self.stamp()
+        self.write("docs/dev/notes.md", "more\n", "a")
+        self.git("add", "docs/dev/notes.md")
+        self.assertTrue(self.skips())
+
+    def test_docs_skip_keeps_the_stamp(self):
+        self.stamp()
+        with open(self.stamp_path(), "rb") as f:
+            before = f.read()
+        self.write("docs/dev/notes.md", "more\n", "a")
+        self.assertTrue(self.skips())
+        with open(self.stamp_path(), "rb") as f:
+            self.assertEqual(f.read(), before)
+
+    def test_read_docs_run(self):
+        for rel in ("README.md", "CHANGELOG.md", "docs/publishing/README.md"):
+            with self.subTest(rel=rel):
+                self.stamp()
+                self.write(rel, "more\n", "a")
+                self.assertFalse(self.skips())
+                self.assertEqual(self.last.stdout, "")
+                self.git("checkout", "--", rel)
+
+    def test_docs_in_code_dirs_run(self):
+        for rel in ("tests/notes.md", "tools/notes.md", "src/Hekili/Libs/CREDITS.md"):
+            with self.subTest(rel=rel):
+                self.stamp()
+                self.write(rel, "notes\n")
+                self.assertFalse(self.skips())
+                os.remove(self.path(rel))
+
+    def test_non_md_under_docs_runs(self):  # ruling S5: only *.md counts as docs
+        for rel in ("docs/dev/x.lua", "docs/dev/data.json", "docs/dev/notes.MD"):
+            with self.subTest(rel=rel):
+                self.stamp()
+                self.write(rel, "x\n")
+                self.assertFalse(self.skips())
+                os.remove(self.path(rel))
+
+    def test_doc_and_code_runs(self):
+        self.stamp()
+        self.write("docs/dev/notes.md", "more\n", "a")
+        self.write("src/Hekili/a.lua", "local b = 2\n", "a")
+        self.assertFalse(self.skips())
+
+    def test_doc_and_env_runs(self):
+        self.stamp()
+        self.write("docs/dev/notes.md", "more\n", "a")
+        self.assertFalse(self.skips({"TIMING": "record"}))
+
+    def test_doc_and_toolchain_runs(self):
+        self.stamp()
+        self.write("docs/dev/notes.md", "more\n", "a")
+        self.write(".lua/bin/busted", "v2")
+        self.assertFalse(self.skips())
+
+    def stamp_path(self):
+        out = subprocess.run(
+            ["git", "rev-parse", "--absolute-git-dir"], cwd=self.repo, env=self.env(), capture_output=True, text=True
+        )
+        return os.path.join(out.stdout.strip(), "hekili-check-stamp")
+
 
 def repo_files(*exts):
     out = subprocess.run(
@@ -331,6 +415,52 @@ class Repository(unittest.TestCase):
                     self.assertEqual(out != "[]", off, (args, target, out))
         finally:
             shutil.rmtree(tmp)
+
+    def test_docs_read_by_tests_are_never_docs_only(self):  # ruling S5's guard
+        literal = re.compile(r"""["']([^"' ]*\.md|docs/[^"' ]*)["']""")
+        tracked = set(
+            subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split("\n")
+        )
+        named = set()
+        for rel in repo_files(".lua", ".py", ".sh"):
+            if rel == "tests/tools/test_check_stamp.py":
+                continue  # its literals name the temp repo's fixture files, not the real tree's
+            comment = "--" if rel.endswith(".lua") else "#"
+            for line in read(rel).split("\n"):
+                code = line.split(comment, 1)[0]
+                if not code.strip():
+                    continue
+                for m in literal.finditer(code):
+                    path = m.group(1).rsplit(":", 1)[-1]  # "v0.2.0:CHANGELOG.md" names CHANGELOG.md
+                    if path in tracked:
+                        named.add(path)
+        self.assertTrue(
+            {"README.md", "CHANGELOG.md", "docs/publishing/README.md", "src/Hekili/Libs/CREDITS.md"} <= named, named
+        )
+        docs_only = []
+        for path in sorted(named):
+            r = subprocess.run(["bash", SCRIPT, "classify", path], cwd=ROOT, capture_output=True, text=True)
+            if r.returncode != 1:
+                docs_only.append("%s: exit %d %s" % (path, r.returncode, r.stderr))
+        self.assertEqual(docs_only, [])
+
+    def test_classify(self):
+        for path, code in [
+            ("docs/dev/gaps.md", 0),
+            ("docs/superpowers/plans/x.md", 0),
+            ("DEVELOPMENT.md", 0),
+            ("README.md", 1),
+            ("CHANGELOG.md", 1),
+            ("docs/publishing/README.md", 1),
+            ("docs/publishing/x.md", 1),
+            ("docs/dev/x.png", 1),
+            ("docs", 1),
+            ("src/Hekili/Libs/CREDITS.md", 1),
+            ("tests/x.md", 1),
+            ('"docs/dev/\\303\\251.md"', 1),
+        ]:
+            r = subprocess.run(["bash", SCRIPT, "classify", path], cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(r.returncode, code, path)
 
 
 if __name__ == "__main__":

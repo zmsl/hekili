@@ -105,6 +105,7 @@ loop_warrior 178.4 (#loop Arms 140, #party Arms 38), detect_more 111.6 (K16 45; 
 | task | metric | before | after | results identical | rig identical | kept |
 |---|---|---|---|---|---|---|
 | 2 stamped check | `make check` wall s, inputs unchanged | 195.3-200.8 (full) | 0.19 / 0.20 (skip) | yes (both FULL=1 logs) | n/a (no rig input) | yes |
+| 3 docs-only skip | `make check` wall s, only an unread doc changed | 195.3-200.8 (full) | 0.24 (skip) | yes (FULL=1 log) | n/a (no rig input) | yes |
 
 ### Task 2: the stamped check
 
@@ -121,3 +122,14 @@ Raw logs `~/src/hekili-speed-runs/task2/` (`step6.out`, `full1.log`, `full2.log`
 - `make gate` (12:08, load 8.55 at start, `pgrep -c busted` 0): rc 0, no skip line (check-full ran: 2817 / 0 / 0 / 0,
   gate tier 42 / 0), wall 824.1 s on the loaded machine (not a timing); `results.sh gate.log` diffed against
   `base2/base.results`: no output. The gate's check-full stamped, so a plain `make check` after it skips.
+
+### Task 3: the docs-only skip
+
+Raw logs `~/src/hekili-speed-runs/task3/` (`full1.log`, `docs.log`, `readme.log`), one `/tmp/hekili-gate.lock` hold,
+2026-11-03 12:31-12:40; start load 4.88 (not a quiet machine: the full run is proof, not a timing).
+- `make check FULL=1`: rc 0, wrote the stamp; `results.sh full1.log` diffed against `base2/base-check.results`: no
+  output (619 lines).
+- A line appended to `docs/dev/gaps.md`, `make check`: `check: skipped, only docs no test reads changed since the last
+  green check: docs/dev/gaps.md; FULL=1 runs it`, wall 0.24 s; then `git checkout docs/dev/gaps.md`.
+- A line appended to `README.md`, `make check`: no skip line, check-full ran (lint, fmt-check, typecheck, then
+  `busted_parallel.sh` started), killed by process group (rc 143); then `git checkout README.md`.

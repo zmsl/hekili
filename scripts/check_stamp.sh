@@ -4,7 +4,9 @@
 #   manifest      the inputs, one per line, sorted
 #   begin START   writes the manifest to START (before the check's parts run)
 #   write START   stamps START when the inputs still match it (after every part passed); removes START
-#   test          exit 0 with one line when the stamp matches the inputs, else exit 1 silently
+#   test          exit 0 with one line when the stamp matches the inputs, or when they differ only in docs no test reads
+#                 (same T and E lines; every changed I or W path classifies docs only); else exit 1 silently
+#   classify PATH exit 0 when PATH is a doc no check part reads, else 1 (ruling S5; the guard test greps the readers)
 # The stamp is in the worktree's own git dir. A file edited and reverted during a run is not seen (DEVELOPMENT.md).
 set -euo pipefail
 
@@ -86,6 +88,18 @@ toolchain_lines() {
     done <"$LIST"
 }
 
+# docs/**/*.md and root *.md, minus the docs the tests read (tests/tools/test_check_stamp.py guards the list).
+# A git-quoted path (non-ASCII or control bytes) is never docs.
+docs_only() {
+    case "$1" in
+    README.md | CHANGELOG.md | docs/publishing/*) return 1 ;;
+    docs/*.md) return 0 ;;
+    */* | \"*) return 1 ;;
+    *.md) return 0 ;;
+    esac
+    return 1
+}
+
 manifest() {
     {
         git ls-files -s | sed 's/^/I /'
@@ -107,15 +121,33 @@ write)
     fi
     rm -f "$2"
     ;;
+classify)
+    docs_only "$2"
+    ;;
 test)
-    if [ -f "$STAMP" ] && manifest | cmp -s - "$STAMP"; then
+    [ -f "$STAMP" ] || exit 1
+    manifest >"$TMP/now" || exit 1
+    if cmp -s "$TMP/now" "$STAMP"; then
         echo "check: skipped, inputs unchanged since the last green check; FULL=1 runs it"
         exit 0
     fi
-    exit 1
+    # Docs only: everything but the I and W lines equal, and every I or W line on one side only names a doc.
+    awk '!/^[IW] /' "$TMP/now" >"$TMP/now.rest"
+    awk '!/^[IW] /' "$STAMP" >"$TMP/stamp.rest"
+    cmp -s "$TMP/now.rest" "$TMP/stamp.rest" || exit 1
+    comm -3 <(awk '/^[IW] /' "$STAMP") <(awk '/^[IW] /' "$TMP/now") | sed 's/^\t//' | cut -f2- | sort -u >"$TMP/paths"
+    [ -s "$TMP/paths" ] || exit 1
+    while IFS= read -r p; do
+        docs_only "$p" || exit 1
+    done <"$TMP/paths"
+    n=$(($(wc -l <"$TMP/paths") - 1))
+    more=""
+    [ "$n" -eq 0 ] || more=" (+$n more)"
+    echo "check: skipped, only docs no test reads changed since the last green check: $(head -n 1 "$TMP/paths")$more; FULL=1 runs it"
+    exit 0
     ;;
 *)
-    echo "usage: $0 manifest | begin START | write START | test" >&2
+    echo "usage: $0 manifest | begin START | write START | test | classify PATH" >&2
     exit 2
     ;;
 esac
