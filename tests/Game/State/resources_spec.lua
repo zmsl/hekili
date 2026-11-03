@@ -645,11 +645,12 @@ describe("resources", function()
         end)
 
         it("names a swing pending until an answer that can show its rage, its credit or a spend (GAP AK)", function()
-            local A = I.ab.bySpell[fs.SPENDER_A]
+            local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
+            R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 5 -- floor 5 + the swing's low step reaches spender_a's 10
             obs(Obs.Swing, 10, 1, 2.6, 4) -- PLAYER_SWING: the game paid it, the floor does not hold it yet
             I.Fold(10, false)
             assert.are.equal(10, VS.SwingPending(1))
-            assert.are.equal(0, VS.Power(fs.RAGE, 10).lo)
+            assert.are.equal(5, VS.Power(fs.RAGE, 10).lo)
             obs(Obs.Usable, 10.05, A, 0, 1) -- too soon to show it: still pending
             I.Fold(10.05, false)
             assert.are.equal(10, VS.SwingPending(1))
@@ -663,6 +664,20 @@ describe("resources", function()
             obs(Obs.Swing, 15.2, 1, 2.6, 4)
             I.Fold(15.2, false)
             I.ResourceShift(1, -5, 15.25, Obs.CastSuccess) -- a spend: its cast's rung holds what the game had
+            assert.are.equal(0, VS.SwingPending(1))
+        end)
+
+        it("keeps a swing pending past a short answer its gain would not have reached (it proves nothing)", function()
+            -- floor 0 + the 9-rage swing's low step is under spender_a's 10: short is what a paid swing answers too, so
+            -- the forecast keeps its gain until the credit (Fury flicker 1.20 -> traced to this, 2026-11-03)
+            local A = I.ab.bySpell[fs.SPENDER_A]
+            obs(Obs.Swing, 10, 1, 2.6, 4)
+            I.Fold(10, false)
+            obs(Obs.Usable, 10.1, A, 0, 1)
+            I.Fold(10.1, false)
+            assert.are.equal(10, VS.SwingPending(1))
+            obs(Obs.Usable, 10.3, A, 1, 0) -- a yes above the floor shows it: no longer pending
+            I.Fold(10.3, false)
             assert.are.equal(0, VS.SwingPending(1))
         end)
 

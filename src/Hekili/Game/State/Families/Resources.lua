@@ -1185,6 +1185,18 @@ I.OnSettle(function()
     end
 end)
 
+-- The low steps of slot r's swings still pending (VS.SwingPending), at their swings. Allocates nothing.
+local function pendingStep(r)
+    local s = 0
+    for hand = 1, 2 do
+        local p = VS.SwingPending(hand)
+        if p > 0 then
+            s = s + I.SwingValue(r, hand, p) * (R.scale[r] - R.spread[r])
+        end
+    end
+    return s
+end
+
 -- Whether ability a's `usable` holds at t, read in the `now` context (the belief's names; I.Eval, Families/Casts.lua).
 -- One that raises (a name the context lacks; counted) holds from then on. Allocates nothing once it has raised.
 local function usableHolds(a, t)
@@ -1253,8 +1265,10 @@ I.On(Obs.Usable, function(o, t, lag)
     usable[a], ansT[a] = now, o.t
     local c = r ~= 0 and I.CostOf(a) or 0
     local rung = r ~= 0 and now ~= NOT and not R.readable[r] and not I.ab.multiCost[a] and pre[a]
-    if rung and c > 0 and c > R.lo0[r] then
-        heardT = o.t -- only a rung above the floor can show a pending swing's gain (an answer below it proves nothing)
+    -- only a rung above the floor can show a pending swing's gain (an answer below it proves nothing); a short one only
+    -- where the pending swings' low steps would have reached it (above, a paid swing answers short too)
+    if rung and c > 0 and c > R.lo0[r] and (now == YES or c <= R.lo0[r] + pendingStep(r) + I.EPS) then
+        heardT = o.t
     end
     local explained = I.CreditVerdict and judge(a, now, t, r, c, was, wasT)
     keepFloor = keepFloor and rung and c > 0 -- no rung, no kept floor: a later read must not inherit it
