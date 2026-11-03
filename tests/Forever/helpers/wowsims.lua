@@ -286,12 +286,18 @@ M.FIXTURES = "tests/Forever/fixtures/"
 -- of the real (outside-tolerance) on-GCD decisions, rounded up to 0.01 s; their count }, from the first clean run
 -- (forever-readytime, 2026-10-21), only ever lowered. Balance's, Feral's, Warrior Protection's and Combat's medians rose
 -- in review round 1 from the metric alone (the cost class from the crossing; the on-GCD-only walk); behaviour unchanged.
+-- Oracle refresh (sim pin e2842f0a78 + documented patches, 2026-11-02, R12): Feral, Paladin Protection and
+-- Retribution, Assassination, Combat, Enhancement, Demonology, Destruction, Fury and Warrior Protection re-set to their
+-- measured { median, real }; with the lane's belief commits (4bd02bde0, 68dee8fa5) reverted every line is the same
+-- (Warrior Protection real 11), so the move is the oracle's. Was: Feral { 0.43, 4 }, Paladin Protection { 0.54, 12 },
+-- Retribution { 0, 0 }, Assassination { 0.16, 15 }, Combat { 0.22, 11 }, Enhancement { 0.96, 3 }, Demonology
+-- { 0.20, 1 }, Destruction { 0.40, 17 }, Fury { 0.44, 35 }, Warrior Protection { 0.50, 5 }.
 M.READY = {
     druid_balance = { 0.71, 17 },
     -- 0.26 -> 0.43: 0.26 rested on the Innervate miscalibration that ran the mana belief ~31 high before the 107.74 s
     -- Shifting Power; with regen correct the floor (lo) reaches the cost ~0.4 s after the truth (gap BQ); owner ruling
     -- 2026-10-26
-    druid_feral = { 0.43, 4 },
+    druid_feral = { 0.25, 6 },
     druid_guardian = { 0.54, 41 }, -- 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     hunter_beast_mastery = { 0.32, 5 },
     hunter_marksmanship = { 0.15, 7 }, -- was { 0.15, 10 } (b8d673eb8 raised it to 0.18 for gap BW, reverted with BW's fix): measured real 8 median 0.15 once the replay seeds the casting rate from unboosted ticks (168.28 strider_kick back to never); real 7 since gap CE's fractional read
@@ -309,8 +315,8 @@ M.READY = {
     mage_arcane = { 0.47, 21 }, -- 0.470, 21 (Mage lane, ruling M13; first clean run on 0ce5d1a4)
     mage_fire = { 0.37, 31 }, -- 0.370, 31
     mage_frostfire = { 0.38, 31 }, -- 0.380, 31 (Task FFB, ruling M13; first clean run on 3e104ce9)
-    paladin_protection = { 0.54, 12 },
-    paladin_retribution = { 0, 0 },
+    paladin_protection = { 0.86, 7 },
+    paladin_retribution = { 0.29, 10 },
     -- 1.500, 36 (Priest lane, Task 14; first clean run on 30e92574+): Mind Flay's 3 s channel, the next icon ready at
     -- the GCD's end inside it (Arcane's Missiles likewise, about 0.9 s)
     priest_shadow = { 1.50, 36 },
@@ -325,10 +331,10 @@ M.READY = {
     -- fractional read) -> 0.16, 15 (gap CE; one fight, the log's seed; owner standing approval 2026-10-30): a poll whose
     -- short answer stands on the crossing now waits a whole energy, 0.10 s, the old read's wait: never ready before the
     -- client says so
-    rogue_assassination = { 0.16, 15 },
-    rogue_combat = { 0.22, 11 },
+    rogue_assassination = { 0.23, 18 },
+    rogue_combat = { 0.20, 18 },
     rogue_subtlety = { 0.17, 40 }, -- 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
-    shaman_enhancement = { 0.96, 3 },
+    shaman_enhancement = { 0.21, 7 },
     shaman_elemental = { 0.48, 54 }, -- 0.480, 54 (Elemental lane, Task 14; first clean run on a21329fc)
     -- 1.000, 18 (Warlock lane, Task 13; first clean run on 5d62f44c+): Shadow Bolt's 2.5 s cast, the next icon ready
     -- at the GCD's end inside it (Shadow's Mind Flay likewise). Count 18 -> 21 on fix 31 (06eec227): G4 keeps
@@ -339,8 +345,8 @@ M.READY = {
     -- Searing Pain's 1.5 s cast equals the GCD, so nearly every decision is absorbed at the grain. 0.10, 3 -> 0.20, 1,
     -- owner ruling 2026-10-26: gap BD's cast-bar fix removed the small misses; decision by decision none worse and
     -- none new; the median of the rest rose (the one left: life_tap 0.2 s early)
-    warlock_demonology = { 0.20, 1 },
-    warlock_destruction = { 0.40, 17 }, -- 0.400, 17: Incinerate's 2.0 s cast, likewise
+    warlock_demonology = { 0.30, 1 },
+    warlock_destruction = { 0.50, 5 }, -- 0.400, 17: Incinerate's 2.0 s cast, likewise
     warlock_shadow_brand = { 0.90, 16 }, -- 0.900, 16: Shadow Bolt's, likewise
     warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
     -- 0.880, 5 (was 0.80, 6): the world's parry haste (decision 63); the tie hand-back moves 177.88 sunder late -> never
@@ -348,8 +354,8 @@ M.READY = {
     warrior_arms = { 0.68, 6 },
     -- 0.51, 35 (was 0.48, 32): harness corrected to the measured swing timing (2026-10-22); 0.44 (fix 40): Whirlwind at
     -- 57.09 and 117.06 late -> early 0.09 and 0.06
-    warrior_fury = { 0.44, 35 },
-    warrior_protection = { 0.50, 5 },
+    warrior_fury = { 0.52, 26 },
+    warrior_protection = { 0.38, 10 },
 }
 
 --- The ready-time check of replay `R` (timing.lua) on spec `spec` after its run: prints "<label> wowsims timing:
