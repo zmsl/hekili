@@ -104,7 +104,8 @@ against the trees at both commits is the source of every omit count below. Ledge
      back, when the ability is cast, or at its duration.
    - The hunter weave is the first user (§3a). Migrating hand-rolled spans, and new windows elsewhere, are follow-ups.
    - Stepped windows (owner "yes", 2026-11-03): a window may carry `steps` (ability keys in order), `loop` and
-     `on_deviation` ("stay", the default and wowsims-true; "skip"; "end"). The
+     `on_deviation` ("stay", the default and wowsims-true; "skip"; "end") and `strict` (default false: any other on-GCD
+     cast ends it; a wowsims `strictSequence`). The
      belief advances the step on the observed real cast of the due step's ability; the core's forecast advances it
      in that cycle only ("the apl would be able to 'persist' the fact that the player already used one of the
      sequence and it recommends the next, which would mark it in the core Hekili state as used only"), never written
@@ -282,7 +283,7 @@ its evaluator reads `usable.<key>`, it sets `close_on_false`, and the ability's 
 usable flips back, at the cast, or at the duration.
 
 Stepped windows (decision 11's amendment). `RegisterWindow` takes two more optional fields: `steps = { "<ability
-key>", ... }`, `loop = true|false` (default false) and `on_deviation = "stay" | "skip" | "end"` (default "stay"). A stepped window's state adds `step` (1..n).
+key>", ... }`, `loop = true|false` (default false) and `on_deviation = "stay" | "skip" | "end"` (default "stay") and `strict = true|false` (default false). A stepped window's state adds `step` (1..n).
 - Reads: `window.<name>.step`, and `window.<name>.next.<ability key>`, true when that ability is the due step (and
   the window is up).
 - Belief (truth): the step advances when the belief observes the real cast of the due step's ability. This is generic
@@ -296,6 +297,14 @@ key>", ... }`, `loop = true|false` (default false) and `on_deviation = "stay" | 
   We cannot tell which APL line a player's cast belonged to, so an observed cast of the due step's ability always
   advances it. The duration and the close conditions still end a stalled sequence (with "stay", the only way out of
   a deviation).
+- Strict (owner "yes", 2026-11-03): with `strict`, any observed (belief) or simulated (core) on-GCD cast that is not
+  the due step's ability ends the window. Off-GCD casts (no GCD triggered: trinkets, Blood Fury, Rapid Fire) never
+  spoil it (a controller ruling, flippable). A later step's cast still follows `on_deviation`. A non-strict window
+  ignores unrelated casts.
+- One per-cast hook in each layer, generic: in the belief, the cast fold (`Families/Now.lua`'s `run`, on every own
+  CastSuccess, with the ability index and its `A.gcdKind`); in the core, `state:RunHandler` (`Engine/Sim/State.lua`),
+  which every simulated cast passes. Each window precomputes at Build an ability-index -> step lookup (0 for an
+  ability not in it), so a cast costs one array read per stepped window and allocates nothing.
 - Core (forecast): the cycle starts from the copied step. A simulated cast of the due step advances it in that
   cycle's core state only, so the list recommends the next step; it is never written back, and the next update starts
   from the belief's copy again.
@@ -305,7 +314,10 @@ key>", ... }`, `loop = true|false` (default false) and `on_deviation = "stay" | 
     sequence is omitted and listed as a deviation.
   - `sequenceIsComplete(<name>)` becomes `!window.<name>.up`.
   - `resetSequence` becomes `loop`.
-  - `strictSequence` stays out of scope (rule 14's chain, unchanged) until a shipped spec needs it as a window.
+  - `strictSequence` becomes a strict stepped window. Its start rule (wowsims: every step castable at once) becomes
+    the evaluator: each step's cooldown readiness read from the belief, and the sequence's own condition. A part not
+    readable in the belief (a secret resource, say) is omitted and listed as a deviation. Where rule 14's chain
+    already translates a shipped `strictSequence` (the Warrior stance swaps), it stays until its lane moves it, gated.
   - The actual sequences (Retribution's `move1`-`move3`, the Hunters' if any) are translated in their lanes, gated;
     the windows core only provides the mechanism.
 

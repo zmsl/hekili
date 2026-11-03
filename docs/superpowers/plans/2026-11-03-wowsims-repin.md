@@ -106,7 +106,8 @@ Project rules:
    knockback), no `move_to_melee` line returns; before it, at the pull out of range, they show. Pinned in Tasks 7 and 17.
 9. Window edges and steps (Task 8a): a step advances only on an observed cast of the due (or a later) step, a forecast
    step advance is discarded at the next update, a later-step cast follows `on_deviation` (default "stay" does
-   nothing), and a stalled sequence ends at its duration. Edges: a condition held true across Drains opens once and never refreshes; a refresh counts once
+   nothing), a strict window ends on an unrelated on-GCD cast and never on an off-GCD one, and a stalled sequence
+   ends at its duration. Edges: a condition held true across Drains opens once and never refreshes; a refresh counts once
    per new edge; a close on a closed window does nothing; combat end closes every window and a condition held through
    it waits for a new edge; nothing allocated in Drain; a secret usability answer keeps the last plain one.
 10. Statelessness (Task 8a): a forecast `open_window`/`handler()` change never survives to the next update; the next
@@ -545,12 +546,13 @@ walks the upvalues. An evaluator takes exactly this path.
 
 **Interfaces:**
 - Produces: `spec:RegisterWindow(name, { evaluator = fn, duration = s, refresh = bool, max_duration = s?,
-  max_refresh = n?, close_on_false = bool?, steps = { "<ability key>", ... }?, loop = bool?, on_deviation = "stay"|"skip"|"end"? })` (`steps`, `loop`,
-  `on_deviation`, default "stay":
+  max_refresh = n?, close_on_false = bool?, steps = { "<ability key>", ... }?, loop = bool?, on_deviation = "stay"|"skip"|"end"?, strict = bool? })` (`steps`, `loop`,
+  `on_deviation`, default "stay", `strict`, default false:
   stepped windows, decision 11's amendment, spec §3a; a step key the spec has not registered raises at load). Both caps optional; refresh with no cap allowed. A second registration
   of a name raises at load.
 - Produces: `def.windows[i] = { key, evaluator, duration, refresh, max_duration, max_refresh, close_on_false, steps,
-  loop, on_deviation }` (`steps` as ability indexes, resolved at Build)
+  loop, on_deviation, strict }` (`steps` as ability indexes, resolved at Build; the belief and the core each build a
+  preallocated ability-index -> step lookup per stepped window, 0 for an ability not in it)
   (plain, `recordOf`'s rules; the evaluator a function the belief runs, never the core).
 - Produces (belief): after Drain's fold, each evaluator runs once in the `now` context, extended with `lastSwing(hand)`
   (`VS.LastSwing`), `nextSwing(hand)` (`VS.Swing(hand, now).est`) and `usable.<key>` (the last plain
@@ -567,6 +569,11 @@ walks the upvalues. An evaluator takes exactly this path.
   does nothing (wowsims-true), "skip" jumps to the step after it, "end" closes the window. A cast of the due step's
   ability always advances (the belief cannot tell which APL line a cast belonged to). The duration and closers still
   end a stalled sequence. An open sets `step = 1`. The forecast applies the same `on_deviation` to simulated casts.
+  Strict: an on-GCD cast (`A.gcdKind[a] > 0`) that is not the due step's ability ends a strict window; an off-GCD
+  cast never does (controller ruling, flippable); a later step's cast follows `on_deviation`; a non-strict window
+  ignores unrelated casts. The one hook per layer: the belief's cast fold (`Families/Now.lua` `run`, every own
+  CastSuccess), the core's `state:RunHandler` (`Engine/Sim/State.lua`, every simulated cast). One lookup read per
+  stepped window per cast; no allocation.
 - Produces (facade): `Facade.Window(name) -> up, openedAt, expiresAt, refreshes, step` (booleans and plain numbers;
   `false, 0, 0, 0, 0` for a closed or unknown name; `step` 0 for an unstepped window). Belief-only, like `Facade.KnownRank`; not an aura row and not in the aura copy.
 - Produces (core): `state.window.<name>` with `.up`, `.remains` (0 when down) and `.elapsed` (since the open; 0 when
@@ -607,6 +614,8 @@ walks the upvalues. An evaluator takes exactly this path.
     `on_deviation` mode, a cast of step 2 while on step 1 of a three-step window: "stay" leaves step 1; "skip" moves
     to step 3; "end" closes it, and it reopens only on the evaluator's next false->true edge. And "stay" with a
     stalled sequence (the deviation, then no due cast) ends at its duration.
+  - Strict: an unrelated on-GCD cast ends a strict window (belief, and a simulated one in the core cycle); an
+    off-GCD cast (`gcd = "off"`) does not; a non-strict window ignores both.
   - Facade: `Facade.Window` returns the belief's open, expiry, refreshes and step; an unknown name answers
     `false, 0, 0, 0, 0`.
   - Core (`tests/Forever/windows_spec.lua`): `state.window.<w>` mirrors the copy at reset, and a cycle's change is
