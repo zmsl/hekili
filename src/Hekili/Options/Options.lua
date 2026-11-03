@@ -353,6 +353,11 @@ do
                         override = false,
                     },
 
+                    movement = { -- a spec opts in (NewClass `movement`); ON: its priority's moves to reach an ability count
+                        key = "",
+                        value = true,
+                    },
+
                     interrupts = {
                         key = "ALT-SHIFT-I",
                         value = true,
@@ -6740,6 +6745,31 @@ do
                     },
                 },
 
+                movement = {
+                    type = "group",
+                    name = L["Movement"],
+                    desc = L["Toggle whether priorities that move to reach the next ability show it out of range."],
+                    order = 5,
+                    hidden = function() return not Registry.MovementSpec( Status.specID ) end,
+                    args = {
+                        key = {
+                            type = "keybinding",
+                            name = L["Movement"],
+                            desc = L["Set a key to toggle Movement on or off."],
+                            order = 1,
+                        },
+
+                        value = {
+                            type = "toggle",
+                            name = L["Enable Movement"],
+                            desc = L["If checked, a priority that moves to reach its next ability shows that ability while you are out of range, "
+                                .. "tinted as out of range. If unchecked, the ability is hidden until you are in range."],
+                            width = 2,
+                            order = 2,
+                        },
+                    },
+                },
+
                 interrupts = {
                     type = "group",
                     name = L["Interrupts and Defensives"],
@@ -8535,6 +8565,7 @@ do
 
     local toggleNames = {
         potions = L["Potions"],
+        movement = L["Movement"],
         interrupts = L["Interrupts"],
         defensives = L["Defensives"],
     }

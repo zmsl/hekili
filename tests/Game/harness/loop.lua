@@ -326,6 +326,8 @@ function M.run(L, seed, o, drivers)
             sp.steadyIcons = steady and not d.plain -- the oracle shadow never holds
             sp.steadyHold = type(steady) == "number" and steady or 1
         end
+        -- Movement ON in a replay (wowsims's rotation moves: tested as it runs), OFF in a loop and ws.live
+        d.H.Hekili.DB.profile.toggles.movement.value = (R ~= nil)
         -- the A/B arm's experimental toggles (providers decision 82), applied out of combat as the option does
         local perf = d.H.Hekili.DB.profile.performance
         perf.damageMeter, perf.cooldownViewer = arm.outcomes == "meter", arm.viewer

@@ -21331,6 +21331,12 @@ options.toggles.interrupts.separate	desc	If checked, abilities that require the 
 options.toggles.interrupts.separate	name	Show in Separate voicechat-icon-speaker-mute Interrupts Display
 options.toggles.interrupts.value	desc	If checked, abilities that require the |cFFFFD100Interrupts|r toggle can be recommended
 options.toggles.interrupts.value	name	Enable Interrupts
+options.toggles.movement	desc	Toggle whether priorities that move to reach the next ability show it out of range.
+options.toggles.movement	name	Movement
+options.toggles.movement.key	desc	Set a key to toggle Movement on or off.
+options.toggles.movement.key	name	Movement
+options.toggles.movement.value	desc	If checked, a priority that moves to reach its next ability shows that ability while you are out of range, tinted as out of range. If unchecked, the ability is hidden until you are in range.
+options.toggles.movement.value	name	Enable Movement
 options.toggles.troubleshooting	desc	These keybindings help provide critical information when troubleshooting or reporting issues.
 options.toggles.troubleshooting	name	Troubleshooting
 options.toggles.troubleshooting.pause.key	desc	Set a key to pause processing of your action lists. Your current display(s) will freeze, and you can mouseover each icon to see information about the displayed action.\n\nThis will also create a Snapshot that can be used for troubleshooting and error reporting.
@@ -21348,6 +21354,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili fix toggles	Interrupts: ON
 ~message	/hekili fix toggles	Major Cooldowns: ON
 ~message	/hekili fix toggles	Minor Cooldowns: ON
+~message	/hekili fix toggles	Movement: ON
 ~message	/hekili fix toggles	Potions: ON
 ~message	/hekili help	Display Mode Control (currently |cFFFFD100automatic|r):\n - Toggle Mode: |cFFFFD100/hek set mode|r\n - Set specific mode:\n   - |cFFFFD100/hek set mode automatic|r\n   - |cFFFFD100/hek set mode single|r\n   - |cFFFFD100/hek set mode aoe|r\n   - |cFFFFD100/hek set mode dual|r\n   - |cFFFFD100/hek set mode reactive|r\n\n
 ~message	/hekili help	Other available commands:\n - |cFFFFD100/hekili priority|r - View or change priority settings\n - |cFFFFD100/hekili profile|r - View or change profiles\n - |cFFFFD100/hekili move|r - Unlock or lock the UI for positioning\n - |cFFFFD100/hekili enable|r or |cFFFFD100/hekili disable|r - Enable or disable the addon\n
@@ -21361,7 +21368,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili help	Specialization Settings for Elemental:\n\n
 ~message	/hekili help	Specialization Settings for Protection:\n\n
 ~message	/hekili help	Target Swap Setting:\n - Toggle Target Swap: |cFFFFD100/hek set cycle|r\n - Set minimum time to die for target swaps: |cFFFFD100/hek set cycle #|r (0-20)\n - Enable: |cFFFFD100/hek set cycle on|r\n - Disable: |cFFFFD100/hek set cycle off|r\n\n
-~message	/hekili help	Toggle Options:\n - |cFFFFD100cooldowns|r, |cFFFFD100potions|r, |cFFFFD100interrupts|r, etc.\n - Example commands:\n   - Enable Cooldowns: |cFFFFD100/hek set cooldowns on|r\n   - Disable Interrupts: |cFFFFD100/hek set interrupts off|r\n   - Toggle Defensives: |cFFFFD100/hek set defensives|r\n\n
+~message	/hekili help	Toggle Options:\n - |cFFFFD100cooldowns|r, |cFFFFD100potions|r, |cFFFFD100interrupts|r, |cFFFFD100movement|r, etc.\n - Example commands:\n   - Enable Cooldowns: |cFFFFD100/hek set cooldowns on|r\n   - Disable Interrupts: |cFFFFD100/hek set interrupts off|r\n   - Toggle Defensives: |cFFFFD100/hek set defensives|r\n\n
 ~message	/hekili help	Use |cFFFFD100/hekili set|r to adjust toggles, display modes, and specialization settings via chat commands or macros.\n\n
 ~message	/hekili lock	UI locked.
 ~message	/hekili priority	Use |cFFFFD100/hekili priority name|r to change your current specialization's priority via command-line or macro.\nValid priority |cFFFFD100name|rs are:\n - |cFFFFD100Affliction (wowsims.com)|r |cFF00FF00(current)|r\n - |cFFFFD100SM Ruin (wowsims.com)|r \n\nTo create a new priority, see |cFFFFD100/hekili|r > |cFFFFD100Priorities|r.
@@ -21389,7 +21396,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili set	Specialization Settings for Elemental:\n\n
 ~message	/hekili set	Specialization Settings for Protection:\n\n
 ~message	/hekili set	Target Swap Setting:\n - Toggle Target Swap: |cFFFFD100/hek set cycle|r\n - Set minimum time to die for target swaps: |cFFFFD100/hek set cycle #|r (0-20)\n - Enable: |cFFFFD100/hek set cycle on|r\n - Disable: |cFFFFD100/hek set cycle off|r\n\n
-~message	/hekili set	Toggle Options:\n - |cFFFFD100cooldowns|r, |cFFFFD100potions|r, |cFFFFD100interrupts|r, etc.\n - Example commands:\n   - Enable Cooldowns: |cFFFFD100/hek set cooldowns on|r\n   - Disable Interrupts: |cFFFFD100/hek set interrupts off|r\n   - Toggle Defensives: |cFFFFD100/hek set defensives|r\n\n
+~message	/hekili set	Toggle Options:\n - |cFFFFD100cooldowns|r, |cFFFFD100potions|r, |cFFFFD100interrupts|r, |cFFFFD100movement|r, etc.\n - Example commands:\n   - Enable Cooldowns: |cFFFFD100/hek set cooldowns on|r\n   - Disable Interrupts: |cFFFFD100/hek set interrupts off|r\n   - Toggle Defensives: |cFFFFD100/hek set defensives|r\n\n
 ~message	/hekili set	Use |cFFFFD100/hekili set|r to adjust toggles, display modes, and specialization settings via chat commands or macros.\n\n
 ~message	/hekili set cooldowns	Major Cooldowns: OFF
 ~message	/hekili set cooldowns	|cFFFFD100cooldowns|r is now |cFFFF0000OFF|r.

@@ -52,6 +52,12 @@ function Registry.Settings(specID)
     return spec and spec.settings
 end
 
+--- True when spec `specID` opted into the Movement toggle (its NewClass entry's `movement = true`), else false.
+function Registry.MovementSpec(specID)
+    local spec = class.specs[specID]
+    return spec ~= nil and spec.options ~= nil and spec.options.movement == true
+end
+
 --- True (and a reason) when ability `key` is disabled by the profile (strict: by the user's own choice only).
 function Registry.IsDisabled(key, strict)
     Hekili:ResetSpellCaches() -- the options panel reads between predictions: never a cached answer

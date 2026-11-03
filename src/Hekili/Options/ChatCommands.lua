@@ -404,7 +404,7 @@ function Hekili:DisplayChatCommandList( list )
     -- Toggle Options Section
     local function getTogglesChunk()
         return L["Toggle Options:\n" ..
-            " - |cFFFFD100cooldowns|r, |cFFFFD100potions|r, |cFFFFD100interrupts|r, etc.\n" ..
+            " - |cFFFFD100cooldowns|r, |cFFFFD100potions|r, |cFFFFD100interrupts|r, |cFFFFD100movement|r, etc.\n" ..
             " - Example commands:\n" ..
             "   - Enable Cooldowns: |cFFFFD100/hek set cooldowns on|r\n" ..
             "   - Disable Interrupts: |cFFFFD100/hek set interrupts off|r\n" ..

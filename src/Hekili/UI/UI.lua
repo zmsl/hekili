@@ -500,6 +500,13 @@ do
             text = L["Potions"],
             func = function() Hekili:FireToggle( "potions" ); ns.UI.Minimap:RefreshDataText() end,
             checked = function () return Hekili.DB.profile.toggles.potions.value end,
+        },
+
+        {
+            text = L["Movement"],
+            func = function() Hekili:FireToggle( "movement" ); ns.UI.Minimap:RefreshDataText() end,
+            checked = function () return Hekili.DB.profile.toggles.movement.value end,
+            hidden = function () return not Registry.MovementSpec( Status.specID ) end,
         }
     }
 

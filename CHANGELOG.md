@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- A Movement toggle for priorities that move to reach the next ability: on, they show it out of range; off, they hide it until you are in range.
 
 ### Changed
 - Less memory churn in big pulls: the engine no longer builds its nameplate debug text on every update, only when you take a snapshot.
