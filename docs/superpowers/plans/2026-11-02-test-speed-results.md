@@ -109,6 +109,7 @@ loop_warrior 178.4 (#loop Arms 140, #party Arms 38), detect_more 111.6 (K16 45; 
 | 4 split files | `make check FULL=1` wall s, base/split interleaved x3 | 240.9 / 230.3 / 266.3 | 217.9 / 217.3 / 258.1 | yes (result lines; new files add empty lines) | not run | yes |
 | 4 split files | `make gate` wall s, interleaved x3 (loaded machine) | 801.8 / 898.1 / 867.4 | 1013.5 / 816.1 / 710.8 | yes (result lines) | not run | yes (by the bound file, see below) |
 | 5 boot cache | `headless.new` CPU s / file CPU s, 4 heavy files | 0.45/151.7, 0.45/199.3, 0/184.9, 0/93.8 (<= 0.3 %) | n/a | n/a | n/a | dropped: boot is 0.3 % |
+| 5 belief-load cache | file CPU s (os.clock), druid_harness_gates_b / detect_more, load ~7 | 170.4 / 73.0 | 163.2 / 61.2 | yes (result lines; +4 new tests, see below) | yes | yes |
 
 ### Task 2: the stamped check
 
@@ -190,3 +191,30 @@ CPU (`os.clock`), which load moves far less than wall time.
 belief through their own loaders (`helpers/load_druid.lua`, `Game/harness/detect.lua`), not profiled here.
 Dropped: boot is 0.3 % (below 5 % in every profiled file); no cache, no `headless_spec.lua` test, gate and rig not rerun
 (nothing under test changed).
+
+Follow-up (controller): the druid and detect_more files boot through `drive.boot` (`Game/harness/drive.lua`), which
+loads the belief with `load.module()` (`Game/State/helpers/load.lua`: `loadfile` of every `Game/` file, per fight).
+Scratch helper `boot/boot_profile2.lua` wraps `_G.loadfile`, `drive.boot`, `load.module`, `load_druid.load`,
+`detect.boot` and `headless.new` (CPU, `os.clock`). Raw: `boot/loaders/` (before), `boot/loaders-after/` (after).
+Waited 17:17-17:37 for load < 3 (not reached); ran at load 6.5-7.5, one lock hold, files run one after another.
+
+| file | `drive.boot` s (calls) | `load.module` s | `loadfile` s (calls) | file CPU s |
+|---|---|---|---|---|
+| druid_harness_gates_b, before | 39.46 (500), 23 % | 5.72 | 5.61 (25002) | 170.39 |
+| druid_harness_gates_b, after | 36.61 | 1.24 | 0.70 (1050) | 163.24 |
+| detect_more, before | 50.14 (740), 69 % | 10.15 | 8.75 (35567) | 72.96 |
+| detect_more, after | 38.96 | 1.02 | 0.02 (95) | 61.15 |
+
+(`load_druid.load`: 501 calls, 0.54 s; `detect.boot` 740 calls, 0.49 s: left alone.) Boot is at least 5 % in both, so
+`load.module` compiles each file once per process (`CHUNKS[path]`; chunks run in `_G`, no `setfenv`, so a re-run makes
+fresh closures and state; a load error raises before it is cached). Safety test: `drive_spec.lua` "two boots in one
+process keep their own state and envs" (passes before and after). Gain: detect_more -11.8 s CPU (-16 %),
+druid_harness_gates_b -7.2 s (-4 %). The rest of `drive.boot` (~37-39 s per file, outside the loader) is the next
+target and is not touched here.
+
+Identical (raw `boot/identical/`): `make check FULL=1` (17:47, load 8.6) rc 0, wall 287.6 s, user+sys 2993 s;
+`make gate` (17:52, load 13.4, `pgrep -c busted` 0) rc 0, wall 1034.9 s, user+sys 8394 s (a loaded machine: not a
+timing; Task 1's 599 s / 7573 s quiet). `results.sh` against `base2`, ignoring blank lines (the base was made before
+`results.sh` dropped them): only `all files:` differs, 2821 against 2817, the four tests added since (three in
+`detect_floors_spec.lua`, bf07cbf45; this task's one). Rig `speed-boot` (18:09, load 2.3, `pgrep -c busted` 0): rc 0,
+wall 1077 s, `diff` against `base2/rig.txt`: no output.

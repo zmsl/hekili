@@ -29,11 +29,17 @@ function M.school()
     return school
 end
 
+-- Each file compiled once per process: a chunk run again makes fresh locals and closures (env _G either way), so every
+-- module() still gets its own state. A load error raises before it is cached.
+local CHUNKS = {}
+
 --- A fresh ns with every VirtualState file loaded.
 function M.module()
     local ns = {}
     for _, path in ipairs(M.files()) do
-        assert(loadfile(path))("Hekili", ns)
+        local f = CHUNKS[path] or assert(loadfile(path))
+        CHUNKS[path] = f
+        f("Hekili", ns)
     end
     return ns
 end

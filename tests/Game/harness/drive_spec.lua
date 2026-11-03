@@ -44,4 +44,23 @@ describe("the drive's ticket captures", function()
         assert.are.equal(c.I.Expect.FLIGHT, c.payKind[row])
         assert.are.equal(success, c.payAt[row])
     end)
+
+    it("two boots in one process keep their own state and envs", function()
+        local load = require("Game.State.helpers.load")
+        local ns1, ns2 = load.module(), load.module()
+        assert.are_not.equal(ns1, ns2)
+        assert.are_not.equal(ns1.VirtualState, ns2.VirtualState)
+        assert.are_not.equal(ns1.VirtualStateInternal, ns2.VirtualStateInternal)
+        local n = 0
+        for _, pair in ipairs({ { ns1, ns2 }, { ns2, ns1 } }) do
+            for k, fn in pairs(pair[1].VirtualState) do
+                if type(fn) == "function" then
+                    assert.are.equal(_G, getfenv(fn))
+                    assert.are_not.equal(pair[2].VirtualState[k], fn) -- its own closure, so its own upvalues
+                    n = n + 1
+                end
+            end
+        end
+        assert.is_true(n > 0)
+    end)
 end)
