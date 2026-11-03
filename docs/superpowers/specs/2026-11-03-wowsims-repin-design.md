@@ -1,7 +1,8 @@
 # Full wowsims re-pin and the Movement toggle (design, 2026-11-03)
 
 Status: APPROVED for planning, revised the same day to the owner's movement ruling (decision 6) and the builder
-check's rulings (decision 8), then to the owner's waits ruling (decision 9) and the Retribution opener ruling (decision 10). A design, not a plan:
+check's rulings (decision 8), then to the owner's waits ruling (decision 9), the Retribution opener ruling (decision 10)
+and the rotation windows design (decision 11, §3a). A design, not a plan:
 intent, goals, decisions and what is left to the builder. Branch `forever-repin` from `origin/forever` 0d98cb02c.
 Paths are under `src/Hekili/` unless they start with `tests/`, `tools/` or `docs/`.
 
@@ -82,10 +83,30 @@ against the trees at both commits is the source of every omit count below. Ledge
      returns mid-fight, even out of melee after a knockback.
    - No movement cue or movement icon is ever shown to the player. "Shown out of range" means only the ability's own
      icon with Hekili's normal out-of-range tint.
+11. (2026-11-03, the owner's rotation windows design: "WINDOW DESIGN APPROVED"; it supersedes the core-persisted
+   version. Binding; §3a holds the detail, and where it meets §3's weave text, §3a wins.)
+   - A window is a first-class span, not a buff: `spec:RegisterWindow(name, { evaluator, duration, refresh,
+     max_duration?, max_refresh? })`, handed to the belief through `Build(def)` the way an ability's `now()` is. Both
+     caps are optional; a refresh with no cap is allowed.
+   - The belief owns the real windows: inside `Drain`, after the fold, it runs each evaluator and applies edge
+     semantics, the duration and the caps; it clears them at combat end. `now()` on a real cast may open or close one.
+   - The core reads them through a new, dedicated window facade read (owner "yes"; explicitly not the aura copy). This
+     is the one new crossing this design adds.
+   - The core stays stateless: each cycle starts from the copy. `open_window` / `close_window` APL lines and `handler()`
+     change windows only in that cycle's forecast; the recheck forecast gives an `open_window` line's countdown.
+   - Guard (owner "ok"): a harness replay check that every open the forecast predicts is opened by the belief's
+     evaluator within one poll (drift is flicker).
+   - Windows only where no aura fits (owner, 2026-11-03: "I don't want windows to be used in places where auras
+     naturally fit. However, when a real 'is usable' for Mongoose Bite, Revenge, etc. flips, it could open a window if
+     there is no buff to track."). A window is only for a span with no real aura behind it. Where the client has an
+     aura, even a hidden one such as Defensive State (5302) when it is readable, the aura stays. An observed usability
+     flip (`IsSpellUsable` going true) may open a window when no aura tracks it; that window closes when usable flips
+     back, when the ability is cast, or at its duration.
+   - The hunter weave is the first user (§3a). Migrating hand-rolled spans, and new windows elsewhere, are follow-ups.
 
-The standing constraints apply unchanged:
+The standing constraints apply unchanged (the border's one new read is decision 11's):
 - The core stays class-neutral. The Movement toggle is a generic setting that packs opt into.
-- The belief/core border holds: this design needs no new crossing.
+- The belief/core border holds: the only new crossing is decision 11's window facade read (owner "yes").
 - Secrets are guarded with `issecretvalue`.
 - Recurring paths do no allocation.
 - The addon is display only.
@@ -175,7 +196,8 @@ engine's recheck forecast (`Engine/Sim/Core.lua`: `script.Recheck`, `state.reche
 recheck parser (`Engine/Sim/Scripts.lua`, `ConvertTimeComparison`) finds a comparison on a term ending `remains` (the
 `decreases` table), which is how `mainhand_remains<x` already forecasts.
 
-- The weave's timing variables are translated as variables on the clocks. "Just shot" (time since the last Auto Shot
+- (Where §3a's weave window covers a timing variable, §3a wins: "Just shot" is read from the window.) The weave's
+  timing variables are translated as variables on the clocks. "Just shot" (time since the last Auto Shot
   under the input delay), "Windup close", "Weave fits" (next shot plus the allowed delay against the weave's end) and
   "Wait at melee" read `ranged_remains`, `ranged_speed`, `mainhand_remains` and `mainhand_speed`. Their walk-time
   terms ("Time to walk in", `unitMovementSpeed`) drop (decision 8), and the rest of each condition decides.
@@ -200,6 +222,76 @@ open until launch. Until they are answered, the in-game ON display rests on a mo
 the log.
 
 `startAttack` and `petAttack` stay omitted.
+
+## 3a. Windows
+
+A window is a rotation span the client shows no aura for: "since the last Auto Shot, while the main hand was ready,
+until the weave's strike". Decision 11 makes it first-class. It is not a buff and is never read as one.
+
+Registration. `spec:RegisterWindow(name, { evaluator, duration, refresh, max_duration?, max_refresh?, close_on_false? })`
+in the class file. `evaluator` is a function of the belief's reads returning a boolean; `duration` (seconds) is how
+long an open lasts; `refresh` (boolean) lets a new open edge while open restart the duration; `max_duration` caps the
+span from the first open, `max_refresh` the count of refreshes (both optional, either alone, neither allowed: then
+a closer ends it, or the duration). `close_on_false` (default false) closes the window on the evaluator's true→false
+edge: the form a usability-flip window takes (below). It reaches the belief as a plain record in `Build(def)`
+(`def.windows`), exactly as an ability's `now` does today: `Engine/Schema/Tracked.lua`'s `recordOf` copies a
+registration's raw fields and flattens `funcs` beside them, so a function field crosses as the function itself; the
+belief rebinds it with `setfenv` into its own context (`Game/State/Families/Now.lua`, `A.now[a] = setfenv(f, ctx)`) and
+never runs it under `state`. An evaluator crosses the same way, into the same context, with the same rules (it captures
+no `state`, `Hekili` or `class`; `tests/Forever/plain_records_spec.lua` walks its upvalues).
+
+The belief (real windows). Inside `Drain`, after the fold, the belief runs each evaluator once, in order:
+- reads only: the `now` context's reads (resources, `buff`/`debuff`, `talent`, the swing clocks, `now`, `combat`) plus
+  the swing reads a weave needs (the last observed swing and the next projected one, per hand) and `usable.<key>` (the
+  last plain `IsSpellUsable` answer). Every read is `issecretvalue`-guarded where it can be secret; no allocation.
+- edges: each window remembers its last evaluation. false→true opens a closed window, or, with `refresh`, restarts an
+  open one's duration (one refresh per new edge, counted against `max_refresh`, bounded by `max_duration`). A
+  condition held true does nothing. true→false closes it only with `close_on_false`. A close acts only on an open
+  window.
+- expiry: an open window closes at its duration (or its `max_duration` cap).
+- `now()` on a real cast may open or close a window (`openWindow(name)`, `closeWindow(name)`, verbs of the `now`
+  context; the same rules: a close only if open).
+- combat end closes every window. The last evaluations are kept, so a condition held through the edge needs a new edge.
+
+The facade read. A new, dedicated read copies the belief's windows to the core at each update (owner "yes"). It is
+not the aura copy: an aura row carries the client's shape and its secrecy rules, a window has neither. It is a
+belief-only facade function, like `Facade.KnownRank`, and the only window path the border allows.
+
+The core (forecast only). Each cycle starts from that copy and keeps nothing between updates (the stateless rule,
+unchanged). Within a cycle:
+- `actions+=/open_window,name=<w>,if=...[,refresh=1][,duration=<s>]` and `actions+=/close_window,name=<w>,if=...`
+  are APL lines like `variable`: no icon, order matters, and a name the spec has not registered fails at load.
+- `handler()` may call `openWindow(name)` / `closeWindow(name)`, the same verbs as `now()`'s.
+- reads: `window.<name>.up`, `.remains`, `.elapsed` (own tables, not `buff`).
+- an `open_window` line whose condition becomes true in t is the recheck forecast's countdown (§3's mechanism).
+
+The guard. A harness replay check: every open the forecast predicts (an `open_window` line or a `handler()` open, at
+its predicted time) is matched by the belief's evaluator opening the same window within one poll. A miss is drift, and
+drift is flicker; the check lists each with its log time.
+
+Windows only where no aura fits (decision 11). Where the client has an aura, even a hidden one such as Defensive
+State (5302) when it is readable, the aura stays. An observed usability flip may open a window when no aura tracks it:
+its evaluator reads `usable.<key>`, it sets `close_on_false`, and the ability's `now()` closes it, so it ends when
+usable flips back, at the cast, or at the duration.
+
+The hunter weave. The first window, built with the ranged clock (§3) in the same task:
+- `weave`: the evaluator opens it on an observed Auto Shot with the main-hand swing ready; Raptor Strike's `now()`
+  (real cast) and `handler()` (forecast) close it.
+- "Just shot" reads the window. The other timing variables that do not conflict ("Windup close", "Weave fits", "Wait
+  at melee") stay clock conditions (§3). Walk-time terms stay dropped (decision 8), and no wait is ever translated
+  (decision 9).
+- The forecast's open is a recipe `extra` line, `open_window,name=weave,if=<the shot fires with the swing ready>`, on
+  the ranged clock, so the recheck gives it a countdown.
+- Raptor Strike's queued aura stays (§3: it ends at the next main-hand swing): that span has a real client answer
+  (`IsCurrentSpell`), so it is not a window.
+
+Out of scope now (follow-ups, not tasks):
+- Migrating hand-rolled spans to windows in their class lanes, optional and gated. Each is checked first for a real
+  aura (keep the aura) against none (a window candidate): Hunter Mongoose Bite's `biteAt` (Defensive State 5302, an
+  aura when readable), Warrior Revenge's `defensive_state` aura, Rogue Cutthroat (proc 462707), the Retribution
+  opener's `mainhand_swung`. The weave and the Retribution opener have no aura, so they qualify.
+- New windows elsewhere (Heroic Strike queue timing, proc reaction windows, seal twisting, the five-second rule),
+  priced after the re-pin.
 
 ## 4. The translator's new kinds
 
@@ -264,11 +356,13 @@ Doom). Rule 16's `select` raises "the build sets no curseOptions" on them.
 
 ## 6. The border, secrets, allocation
 
-- No new crossing, and the engine and the belief change nothing for movement. The rewrite reads a setting and the
+- One new crossing: decision 11's window facade read (owner "yes", §3a). Otherwise the engine and the belief change
+  nothing for movement. The rewrite reads a setting and the
   existing range bracket. The ranged clock arrives through the existing `UnitRangedDamage` tail; the recheck forecast
   it feeds is the engine's existing one.
-- If the builder finds anything needing a new belief function or facade read, it stops and asks the owner.
-- The new translated reads are simulation values or existing belief answers, so no new secret handling is needed.
+- If the builder finds anything needing a further belief function or facade read, it stops and asks the owner.
+- The new translated reads are simulation values or existing belief answers. The window evaluators' reads are
+  `issecretvalue`-guarded in the belief (§3a); the window copy itself carries only plain times and counts.
 - No closures or per-update tables are added on the walk.
 
 ## 7. Gates, the test world and accuracy
@@ -319,8 +413,8 @@ Each phase ends green (`make check`, and `make gate` where packs move).
 1. Plumbing (first: the e2842f0a78 CLI answers `siml`): the CLI with `siml`, the SIML step, the recipe paths, `M.ENCOUNTER`. Gate: one request exports, and the
    dry-run omit counts match the research.
 2. Translator kinds (§4). Gate: unit tests, and the omit counts falling on the low-change specs.
-3. The Movement setting, the range-gate rewrite with carried move conditions, and the ranged-hand expression (§2,
-   §3). Gate: the toggle tests, and today's hunter packs regenerated at the old pin, whose weave already moves and
+3. The Movement setting, the range-gate rewrite with carried move conditions, the windows core, and the ranged-hand
+   expression with the weave window (§2, §3, §3a). Gate: the toggle tests, and today's hunter packs regenerated at the old pin, whose weave already moves and
    waits, replayed with ON (the waits as decision 9: clock conditions and the forecast).
 4. Low-change specs: re-export, gate, re-floor.
 5. Rogue x3, then Warrior x3.
@@ -337,6 +431,7 @@ Phases 4-8 run in parallel by class once phases 1-3 are on the branch.
 - Builder: the opt-in form and the keybind (§2.1); folding the pin names (§5); classifying the non-distance
   `waitUntil` entries and Warrior's cd-usage nodes (§3, §4).
 - Resolved by decision 9: waits are never translated; the clocks and the recheck forecast replace them.
+- Resolved by decision 11: rotation windows (§3a); the migrations and new windows are follow-ups.
 - Resolved by decision 8: run speed and "is moving" are dropped, not constants (the owner's "ok").
 - Resolved by decision 7: the ON form, the replay scoring ON, the fresh floors, and the pre-pull moves.
 - In game after launch: C7's H2-H5 (the weave's timing reads the ranged clock), and the tint during a walk with Movement ON (a ledger row

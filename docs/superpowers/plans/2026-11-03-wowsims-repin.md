@@ -7,14 +7,15 @@ the translator handles every new kind the client lets us show, and the specs who
 Movement toggle, with accuracy held close and every moved floor traced.
 
 **Architecture:** Tools first (pins, the SIML step, recipe paths), then the translator's new kinds, then the Movement
-toggle (core UI, one translator rewrite, the Hunter kit's ranged clock, the harness hook), then one lane per class
+toggle (core UI, one translator rewrite, the harness hook), the rotation windows core and the Hunter kit's ranged
+clock with the weave window, then one lane per class
 that re-exports, regenerates, gates and re-floors its specs, and last the oracle patches and the docs. Nothing in the
-engine or the belief changes for movement.
+engine or the belief changes for movement; windows (decision 11) add one belief family and one facade read.
 
 **Tech Stack:** Lua 5.1 (the WoW client's), busted, luacheck, StyLua, the combat harness (`tests/Game/harness/`), the
 wowsims/forever Go CLI built at the pin (`tools/wowsims/sim-pin/build.sh`), `wowdb` (the Forever DB2) for IDs and ranges.
 
-**Spec:** `docs/superpowers/specs/2026-11-03-wowsims-repin-design.md` (binding, decisions 1-10). Cited as "spec §N" and
+**Spec:** `docs/superpowers/specs/2026-11-03-wowsims-repin-design.md` (binding, decisions 1-11). Cited as "spec §N" and
 "decision N". The research it rests on: the audit's `followups/repin-research.md` (cited as "the research"). The owner
 ledger is the open-questions file, from "2026-11-03 — full wowsims re-pin started".
 
@@ -22,7 +23,7 @@ ledger is the open-questions file, from "2026-11-03 — full wowsims re-pin star
 
 From the spec (verbatim):
 - The core stays class-neutral. The Movement toggle is a generic setting that packs opt into.
-- The belief/core border holds: this design needs no new crossing.
+- The belief/core border holds: the only new crossing is decision 11's window facade read (owner "yes").
 - Secrets are guarded with `issecretvalue`.
 - Recurring paths do no allocation.
 - The addon is display only.
@@ -46,6 +47,14 @@ From the spec (verbatim):
 - Retribution's opener (decision 10): wowsims runs each "Move to melee" sequence once per fight, at the pull; the
   translation matches that with a pull-only gate (S3). No movement cue or movement icon is ever shown: "shown out of
   range" is the ability's own icon with Hekili's normal out-of-range tint.
+- Windows (decision 11, owner "WINDOW DESIGN APPROVED"): `spec:RegisterWindow(name, { evaluator, duration, refresh,
+  max_duration?, max_refresh? })` via `Build(def)`; the belief owns the real windows (evaluators after Drain's fold,
+  edges, caps, cleared at combat end; `now()` may open/close); the core copies them through the dedicated
+  `Facade.Window` read (not the aura copy) and changes them only in the cycle's forecast (`open_window`/`close_window`
+  lines, `handler()`). Guard: every forecast-predicted open is matched by the belief within one poll. A window only
+  where no aura fits (owner 2026-11-03): where the client has an aura, even a hidden one such as Defensive State 5302
+  when readable, keep the aura; an observed usability flip may open a window when no aura tracks it, closing when
+  usable flips back, at the cast, or at its duration.
 
 Project rules:
 - Gate lock: `make gate`, `make gate-ab`, `make accuracy` and the rig's `run.sh` take `/tmp/hekili-gate.lock`
@@ -53,7 +62,8 @@ Project rules:
   `.lua/bin/busted <file>`) runs under `flock /tmp/hekili-gate.lock ...`.
 - Belief/core border (`src/Hekili/Game/` vs `src/Hekili/Engine/`): the belief never touches Hekili state; Hekili
   reads it only through facades; `tools/check_border.sh` enforces the names. No new crossing without the owner's
-  explicit yes: if a task seems to need one (a new belief function or facade read), stop and report it.
+  explicit yes: if a task seems to need one (a new belief function or facade read), stop and report it. The one yes
+  this plan holds: `Facade.Window` (Task 8a).
 - Secrets: never compare or compute on a possibly secret value without `issecretvalue()`; never `a and b or c` on one.
 - No allocation in recurring paths (per update, per event, per poll): no tables, closures or strings built there.
 - Core is class-neutral: nothing under `src/Hekili/` names a class, spec, spell, aura, talent or form
@@ -85,14 +95,22 @@ Project rules:
 4. A move-reached entry whose own condition fails while its move condition holds: it stays hidden with Movement ON
    (ON relaxes only the range gate). Pinned in Task 7.
 5. A ranged swing speed of 0 (no ranged weapon, or no read yet): `ranged_remains` answers 0 without dividing by zero.
-   Pinned in Task 8.
+   Pinned in Task 8b.
 6. No wait in any pack (decision 9): no generated pack has a `wait` line, and a condition on a clock gets its countdown
    from the recheck forecast, not a hold. Check that the "time since the last swing" rows are written as `remains`
-   comparisons (the parser does not see `(x_speed-x_remains)` as a clock), so "Just shot" forecasts. Pinned in Task 8.
+   comparisons (the parser does not see `(x_speed-x_remains)` as a clock) and that R6's wrap branch forecasts them and
+   the weave's `open_window` line. Pinned in Task 8b.
 7. A queued Raptor Strike expires at the next main-hand swing, not a full swing later: while queued it is not
-   re-recommended, and the pick after the swing is made without it. Pinned in Task 8.
+   re-recommended, and the pick after the swing is made without it. Pinned in Task 8b.
 8. Retribution's opener mid-fight (decision 10): after the first main-hand swing, out of Crusader Strike's range (a
    knockback), no `move_to_melee` line returns; before it, at the pull out of range, they show. Pinned in Tasks 7 and 17.
+9. Window edges (Task 8a): a condition held true across Drains opens once and never refreshes; a refresh counts once
+   per new edge; a close on a closed window does nothing; combat end closes every window and a condition held through
+   it waits for a new edge; nothing allocated in Drain; a secret usability answer keeps the last plain one.
+10. Statelessness (Task 8a): a forecast `open_window`/`handler()` change never survives to the next update; the next
+   cycle starts from `Facade.Window`'s copy only. An unregistered window name fails at load.
+11. The guard (Task 8b): a forecast-predicted weave open the belief does not match within one poll fails the replay
+   test, so drift (flicker) cannot hide in a floor.
 
 ---
 
@@ -197,7 +215,7 @@ extends rule 14 as rule 14b):
 | 0 Baseline | 0 | the baseline report committed |
 | 1 Plumbing | 1, 2 | `make check`; one spec exports; the dry-run omit counts match the research |
 | 2 Translator kinds | 3, 4, 5 | `make check`; the omit counts fall on the low-change specs (dry run) |
-| 3 Movement | 6, 7, 8, 9 | `make gate`; the toggle tests; the hunter packs at the old pin replayed ON (no wait lines) |
+| 3 Movement | 6, 7, 8a, 8b, 9 | `make gate`; the toggle tests; the hunter packs at the old pin replayed ON (no wait lines) |
 | 4 Low-change | 10, 11, 12 | `make gate` per task |
 | 5 Rogue, Warrior | 13, 14 | `make gate` per task |
 | 6 Enh, Warlock, Ret | 15, 16, 17 | `make gate` per task |
@@ -205,7 +223,7 @@ extends rule 14 as rule 14b):
 | 8 Hunters | 19 | `make gate` |
 | 9 Oracle, docs | 20, 21 | `make gate`; `packs-check`; every request re-exported |
 
-Phases 0-3 run in order. In Tasks 3-8, a checked-in pack whose text changes is regenerated and committed in the
+Phases 0-3 run in order. In Tasks 3-8b, a checked-in pack whose text changes is regenerated and committed in the
 same task (`packs-check`), and a replay line that moves follows R5/R6 naming that task as its cause. Expected: only
 the hunter packs change, because their old-pin weave carries moves, waits and walk terms. Task 9 is their full measurement. Tasks 10-19 need only Phases 1-3 on the branch and may run in parallel lanes (one
 worktree each, merged back in phase order). The gate lock serialises their gates. Phase 9 runs after every lane.
@@ -405,7 +423,7 @@ Its top three are classified first, and it ships only when every remaining top d
 
 - [ ] **Step 1: Write the failing tests.** `and(cmp(timeToWalkIn <= 0s), cmp(autoTimeToNext RangedAuto > 0.5s))`,
   with "Time to walk in" a `math` over `unitDistance` and `unitMovementSpeed`, keeps only the timing term (written
-  once Task 8 maps RangedAuto; until then assert the movement term is gone and the entry is listed).
+  once Task 8b maps RangedAuto; until then assert the movement term is gone and the entry is listed).
   `unitIsMoving` alone as a condition gives a line with no condition (nil is true). `not(unitDistance > 5)` gives
   `target.within5`, and `not(unitDistance < 8)` gives `target.outside8`. `unitDistance OpNe max(a, b)` drops.
 - [ ] **Step 2: Run** the APL spec under the lock. Expected: FAIL.
@@ -496,47 +514,160 @@ Its top three are classified first, and it ships only when every remaining top d
   lines. Then `flock /tmp/hekili-gate.lock make check`. Expected: green.
 - [ ] **Step 7: Commit** `feat(wowsims): a move's reached entries take the Movement toggle or their range gate`.
 
-### Task 8: The ranged auto-shot clock, its forecast, and the queued Raptor Strike (Phase 3, spec §3, decision 9)
+### Task 8a: Rotation windows core (Phase 3, spec §3a, decision 11)
+
+Windows are a span the client shows no aura for (decision 11's rule: never where an aura fits). This task builds the
+mechanism only; no pack uses it until Task 8b.
+
+**Verified before writing this task (the `now()` path a window's evaluator copies):** `Engine/Schema/Tracked.lua`'s
+`recordOf` makes each registration's plain record from its raw fields and flattens Spec.lua's `funcs` beside them, so
+a declared function crosses `Build(def)` as the function itself (no wrapper, no `state`). The belief rebinds it in
+`Game/State/Families/Now.lua` (`A.now[a] = setfenv(f, ctx)`, with the context's reads and verbs in `NAMES`, and an
+assignment raising into `I.nowErrors`) and runs it there, never under `state`. `tests/Forever/plain_records_spec.lua`
+walks the upvalues. An evaluator takes exactly this path.
 
 **Files:**
-- Modify: `src/Hekili_Hunter/Hunter.lua` (state expressions beside `mainhand_remains`; the `raptor_strike` aura's duration)
-- Modify: `tools/wowsims/apl.lua` (`autoTimeToNext`/`autoTimeSinceLast` `RangedAuto`; since-last rows in `remains` form)
-- Test: `tests/Forever/hunter_spec.lua`, `tests/Forever/wowsims_apl_spec.lua`
+- Modify: `src/Hekili/Engine/Schema/Spec.lua` (`RegisterWindow` beside `RegisterAbility`)
+- Modify: `src/Hekili/Engine/Schema/Tracked.lua` (`def.windows`: one plain record per window, `recordOf`'s rules)
+- Create: `src/Hekili/Game/State/Families/Windows.lua` (the belief family; `Hekili.toc` after `Now.lua`)
+- Modify: `src/Hekili/Game/State/Families/Now.lua` (`openWindow`/`closeWindow` verbs; the evaluator reads; the shared context)
+- Modify: `src/Hekili/Game/State/VirtualState.lua` (Drain: the windows step after the fold)
+- Modify: `src/Hekili/Game/API/Facade.lua` (`Facade.Window`, the dedicated read)
+- Modify: `src/Hekili/Engine/Sim/State.lua` (`state.window`, the copy in `reset`, `openWindow`/`closeWindow` for handlers)
+- Modify: `src/Hekili/Engine/Sim/Scripts.lua`, `src/Hekili/Engine/Sim/Core.lua`, `src/Hekili/Engine/Registry.lua`
+  (the `open_window`/`close_window` actions, beside `variable`)
+- Modify: `tools/check_border.sh` (header comment and `ok:` line), `docs/dev/architecture.md` §1 (the border paragraph:
+  the window read is the owner-approved crossing beside the three calls) and §2's content surface (`RegisterWindow`)
+- Test: `tests/Game/State/windows_spec.lua` (new: the belief's edges), `tests/Forever/windows_spec.lua` (new: the
+  core copy, the APL actions, the forecast), `tests/Forever/plain_records_spec.lua`, `tests/Game/API/border_check_spec.lua`
 
 **Interfaces:**
+- Produces: `spec:RegisterWindow(name, { evaluator = fn, duration = s, refresh = bool, max_duration = s?,
+  max_refresh = n?, close_on_false = bool? })`. Both caps optional; refresh with no cap allowed. A second registration
+  of a name raises at load.
+- Produces: `def.windows[i] = { key, evaluator, duration, refresh, max_duration, max_refresh, close_on_false }`
+  (plain, `recordOf`'s rules; the evaluator a function the belief runs, never the core).
+- Produces (belief): after Drain's fold, each evaluator runs once in the `now` context, extended with `lastSwing(hand)`
+  (`VS.LastSwing`), `nextSwing(hand)` (`VS.Swing(hand, now).est`) and `usable.<key>` (the last plain
+  `IsSpellUsable` answer; a secret answer keeps the last plain one). Edges: per window the last evaluation is kept;
+  false→true opens a closed window, or with `refresh` restarts an open one (counted once per edge against
+  `max_refresh`, the span bounded by `max_duration` from the first open); held true does nothing; true→false closes
+  only with `close_on_false`; a close acts only on an open window; expiry at the duration; `PLAYER_REGEN_ENABLED`
+  (Obs.CombatEnd) closes all and keeps the last evaluations. A raising evaluator is counted in `I.nowErrors` and reads
+  false. `openWindow(name)`/`closeWindow(name)` are `now` verbs with the same rules (`live` only, as the other verbs).
+  Preallocated per window at Build; nothing allocated in Drain.
+- Produces (facade): `Facade.Window(name) -> up, openedAt, expiresAt, refreshes` (booleans and plain numbers; `false,
+  0, 0, 0` for a closed or unknown name). Belief-only, like `Facade.KnownRank`; not an aura row and not in the aura copy.
+- Produces (core): `state.window.<name>` with `.up`, `.remains` (0 when down) and `.elapsed` (since the open; 0 when
+  down: read it behind `.up`), answered at `query_time`, one preallocated table per window built at
+  SpecializationChanged. `reset` copies every window from `Facade.Window` (no allocation) and nothing survives the
+  cycle. In the cycle, `open_window,name=<w>,if=<c>[,refresh=1][,duration=<s>]` opens a closed window when `<c>` holds
+  (with `refresh=1`, restarts an open one; caps apply; `duration=` overrides the registered one for this open),
+  `close_window,name=<w>,if=<c>` closes an open one; both are list-order entries with no icon, like `variable`; an
+  unregistered name fails `ParseActionList` with the line. Within one cycle each `open_window` line remembers its last
+  result (a preallocated slot), so a held-true condition does not refresh twice (the belief's edge rule). `handler()`
+  reaches the same `openWindow`/`closeWindow` on `state`.
+- Produces (recheck): an `open_window` line's condition goes through `scripts:BuildRecheck` like any entry's, so "true
+  in t" becomes the countdown. R6 (the `>`/`>=` wrap branch for a decreasing clock) stays: see Step 3's note.
+- Border: `tools/check_border.sh` needs no new pattern (the core already may not name `VS`, `ns.VirtualState` or
+  `VirtualStateInternal` beyond the three calls, and `ns.Facade` is the allowed path); its header comment and its `ok:`
+  line name `Facade.Window` as the window read, and `border_check_spec.lua`'s "passes the real tree" asserts the `ok:`
+  line names it.
+
+- [ ] **Step 1: Write the failing tests.**
+  - Belief edges (`tests/Game/State/windows_spec.lua`, a test window with a settable evaluator): false→true opens;
+    held true for three Drains stays one open with `refreshes == 0`; with `refresh`, a true→false→true edge restarts
+    the duration and counts one refresh; `max_refresh = 1` refuses the second; `max_duration` bounds the span; no cap
+    with `refresh` keeps refreshing; expiry at the duration; `close_on_false` closes on true→false, and without it the
+    window stays to its duration; `closeWindow` on a closed window is a no-op; combat end closes all and a condition
+    held through it does not reopen until a new edge; a raising evaluator counts in `I.nowErrors` and reads false; a
+    `now()` calling `openWindow` on a real cast opens it.
+  - No allocation: `collectgarbage("count")` unchanged across 1000 Drains with two windows (the pattern the perf
+    specs use).
+  - Secrets: a secret `IsSpellUsable` answer leaves `usable.<key>` at its last plain value and raises nothing.
+  - Facade: `Facade.Window` returns the belief's open, expiry and refreshes; an unknown name answers `false, 0, 0, 0`.
+  - Core (`tests/Forever/windows_spec.lua`): `state.window.<w>` mirrors the copy at reset, and a cycle's change is
+    gone at the next reset; `open_window` with a held condition opens once; `refresh=1` restarts; `duration=`
+    overrides; `close_window` closes; an unregistered name fails `ParseActionList` with the line; order matters (a
+    line above an `open_window` reads the window down); `window.<w>.up/.remains/.elapsed` at an advanced
+    `query_time`; a handler's `openWindow` opens it in the forecast only.
+  - Recheck: a line gated `window.<w>.up` behind an `open_window` whose condition is `mainhand_remains<0.5` (swing
+    1.2 s ahead) is recommended with a 0.7 s delay.
+  - `plain_records_spec.lua`: every registered evaluator captures no `state`, `Hekili` or `class`.
+  - `border_check_spec.lua`: the `ok:` line names `Facade.Window`.
+- [ ] **Step 2: Run** each new spec under the lock. Expected: FAIL.
+- [ ] **Step 3: Implement** the registration, the record, the family and its Drain step, the verbs, the facade read,
+  the core copy, the actions and the border text. R6 note (keep it, in Task 8b's recheck work): windows do not remove
+  the need. The weave's forecast open is "the next Auto Shot fires", the wrap of a decreasing clock; the existing
+  `lessOrEqual` branch never sees `ranged_remains<=0` hold, because the clock reads `ranged_speed`, not 0, at the
+  shot. Only the wrap branch (`ranged_remains>ranged_speed-x` is false now and true at the wrap) times it. So R6 is
+  what gives the `open_window` line its countdown. Write it in `architecture.md` and the `check_border.sh` comment as
+  above.
+- [ ] **Step 4: Run** the specs, then `flock /tmp/hekili-gate.lock make check`, then `make gate`. Expected: PASS,
+  green, no pack or replay line moves (no pack registers a window yet).
+- [ ] **Step 5: Commit** `feat: rotation windows (belief evaluators, Facade.Window, stateless core forecast)`.
+
+### Task 8b: The ranged auto-shot clock, the weave window, and the queued Raptor Strike (Phase 3, spec §3, §3a, decisions 9 and 11)
+
+**Files:**
+- Modify: `src/Hekili_Hunter/Hunter.lua` (state expressions beside `mainhand_remains`; `RegisterWindow("weave", ...)`;
+  `raptor_strike`'s `now()` and `handler()` close it; the `raptor_strike` aura's duration)
+- Modify: `src/Hekili/Engine/Sim/Scripts.lua` (R6: the `>`/`>=` wrap branch for a decreasing clock)
+- Modify: `tools/wowsims/apl.lua` (`autoTimeToNext`/`autoTimeSinceLast` `RangedAuto`; since-last rows in `remains`
+  form; "Just shot" from the window)
+- Modify: `tools/wowsims/specs/hunter_*.lua` (the `extra` `open_window` line)
+- Test: `tests/Forever/hunter_spec.lua`, `tests/Forever/wowsims_apl_spec.lua`, `tests/Game/harness/replay_spec.lua`
+  (the guard)
+
+**Interfaces:**
+- Consumes: Task 8a's windows.
 - Produces: `ranged_remains` (seconds to the next Auto Shot, from `swings.ranged_projected`, with the same
   now/query_time anchoring as `mainhand_remains`) and `ranged_speed` (`swings.ranged_speed`), both Hunter kit state
-  expressions. The translator maps `autoTimeToNext RangedAuto` -> `ranged_remains`. A comparison on
-  `autoTimeSinceLast` (either hand) is written in `remains` form: `since<x` -> `ranged_remains>ranged_speed-x`
-  (`mainhand_*` for the main hand; today's `(mainhand_speed-mainhand_remains)` row changes with it), so the recheck
-  parser (`Engine/Sim/Scripts.lua` `ConvertTimeComparison`, the `decreases` table's `remains$`) forecasts it the way
-  it already forecasts `mainhand_remains<x`. No core change: the clock reaches the engine through the existing
-  `UnitRangedDamage` tail, and the forecast is the engine's existing one (`Engine/Sim/Core.lua` `script.Recheck`,
-  `state.recheck`).
-- Produces: the weave's timing variables ("Just shot", "Windup close", "Weave fits", "Wait at melee", the rest) as APL
-  variables on the clocks, walk-time terms dropped (decision 8). Never a `wait` line (decision 9).
-- Produces: the `raptor_strike` queued aura's duration is `mainhand_remains` (the time to the next main-hand swing),
-  not `mainhand_speed`, like the Warrior's `onNextSwing` abilities.
+  expressions: the ranged clock, built here. The translator maps `autoTimeToNext RangedAuto` -> `ranged_remains`. A
+  comparison on `autoTimeSinceLast` (either hand) is written in `remains` form: `since<x` -> `ranged_remains>ranged_speed-x`
+  (`mainhand_*` for the main hand; today's `(mainhand_speed-mainhand_remains)` row changes with it). R6 adds the wrap
+  branch so that form forecasts; the Retribution and Arms recheck moves it causes are traced and gated here.
+- Produces: the `weave` window (the Hunter kit, all three specs). Evaluator: true while the last observed Auto Shot
+  (`lastSwing(3)`) is within the weave's shot window and the main-hand swing was ready at it (`nextSwing(1)` not after
+  the shot); `duration` the weave's span from the build; no refresh. `raptor_strike`'s `now()` (real cast) and
+  `handler()` (forecast) call `closeWindow("weave")`. Each recipe's `extra` carries
+  `open_window,name=weave,if=<the shot fires with the main hand ready, on ranged_remains/mainhand_remains>`, which
+  R6 forecasts. This replaces Task 8's former "weave timing variables as conditions" where they conflict: "Just shot"
+  reads `window.weave.up&window.weave.elapsed<x`; "Windup close", "Weave fits", "Wait at melee" stay clock conditions.
+  Walk-time terms stay dropped (decision 8); never a `wait` line (decision 9).
+- Produces: the `raptor_strike` queued aura's duration is `mainhand_remains` (R13: `mainhand_speed` when
+  `mainhand_remains` is 0, out of combat), like the Warrior's `onNextSwing` abilities. It stays an aura (decision 11:
+  the client answers it, `IsCurrentSpell`).
+- Produces: the guard (owner "ok"): in `replay_spec.lua`, over each hunter replay (Movement ON), every forecast-predicted
+  `weave` open (the `open_window` line's or a handler's, at its predicted time) is matched by the belief evaluator's
+  open within one poll; each miss is listed with its log time and fails the test.
 
 - [ ] **Step 1: Write the failing tests.** With a projected shot 1.2 s ahead, `ranged_remains` is 1.2 at now and 0.7
   after advancing 0.5. Past a due shot it is `ranged_speed - (elapsed % ranged_speed)`. Review Focus 5: with
   `ranged_speed` 0 it returns 0 and raises nothing (the client's `x%0` raise). The translator test gives `ranged_remains>0.5`.
   Also:
-  - Translator: the converted weave build (`bm_weave`) translates "Just shot", "Windup close" and "Weave fits" to
-    variables on `ranged_remains` / `ranged_speed` with no walk term, and `autoTimeSinceLast RangedAuto < 0.1`
-    gives `ranged_remains>ranged_speed-0.1`. A `wait` and a `waitUntil` give no pack line.
-  - Forecast (Review Focus 6): first verify, and note in the test, how `mainhand_remains<x` reaches `script.Recheck`
-    (`scripts:BuildRecheck`), then mirror it. Through `scripts:BuildRecheck`, `ranged_remains<0.5` and the since-last
-    form each yield a recheck time; and in the Hunter world, a line gated `ranged_remains<0.5` with the next shot
-    1.2 s ahead is recommended with a 0.7 s delay, not dropped.
+  - Translator: the converted weave build (`bm_weave`) translates "Windup close" and "Weave fits" to variables on
+    `ranged_remains` / `ranged_speed` with no walk term, "Just shot" to the window read, and
+    `autoTimeSinceLast RangedAuto < 0.1` elsewhere gives `ranged_remains>ranged_speed-0.1`. A `wait` and a `waitUntil`
+    give no pack line.
+  - Forecast (Review Focus 6; R6): first verify, and note in the test, how `mainhand_remains<x` reaches
+    `script.Recheck` (`scripts:BuildRecheck`), then mirror it. Through `scripts:BuildRecheck`, `ranged_remains<0.5`
+    yields 0.7 and `ranged_remains>ranged_speed-0.1` (currently false) yields the wrap time: assert the value, not just
+    presence. In the Hunter world, a line gated `window.weave.up` with the next shot 1.2 s ahead and the main hand
+    ready is recommended with the delay to the shot, not dropped.
+  - Weave window: an observed Auto Shot with the main hand ready opens it in the belief; one with the swing not ready
+    does not; a real Raptor Strike closes it (`now()`); in the forecast, `raptor_strike`'s handler closes it, so the
+    pick after the strike is made with it down.
   - Raptor Strike (Review Focus 7): queued 0.8 s before a 2.6 s swing, the `raptor_strike` aura's remains is 0.8, the
     strike is not re-recommended while queued, and after advancing past the swing the next pick is computed without it.
+  - The guard, on today's hunter replay (Movement ON): it runs, and a deliberately shifted evaluator fails it.
 - [ ] **Step 2: Run** under the lock. Expected: FAIL.
-- [ ] **Step 3: Implement** both expressions, the translator rows (the since-last rows in `remains` form), and the
-  aura's duration. Guard the speed before the modulo. Today's hunter, Warrior and Paladin packs whose since-last text
-  changes are regenerated (`packs-check`) and their replay lines followed under the Task order note.
-- [ ] **Step 4: Run** the tests, then `flock /tmp/hekili-gate.lock make check`. Expected: PASS, green.
-- [ ] **Step 5: Commit** `feat(hunter): ranged_remains and its forecast, the weave's timing on clocks; Raptor Strike's queue ends at the swing`.
+- [ ] **Step 3: Implement** both expressions, R6's branch, the window and its closers, the translator rows (the
+  since-last rows in `remains` form, "Just shot" from the window), the recipes' `extra` line and the aura's duration.
+  Guard the speed before the modulo. Today's hunter, Warrior and Paladin packs whose text changes are regenerated
+  (`packs-check`), and their replay lines (the R6 recheck moves included) followed under the Task order note.
+- [ ] **Step 4: Run** the tests, then `flock /tmp/hekili-gate.lock make check`, then `make gate`. Expected: PASS, green.
+- [ ] **Step 5: Commit** `feat(hunter): ranged clock and its forecast, the weave window; Raptor Strike's queue ends at the swing`.
 
 ### Task 9: The old-pin hunter ON replay and the range pin (Phase 3)
 
@@ -547,14 +678,14 @@ Its top three are classified first, and it ships only when every remaining top d
 - Test: `tests/Game/harness/replay_spec.lua`
 
 **Interfaces:**
-- Consumes: Tasks 6-8 (the harness hook, the rewrite, the clock; the Hunter opt-in).
+- Consumes: Tasks 6-8b (the harness hook, the rewrite, the windows, the clock and the weave window; the Hunter opt-in).
 - Produces: the hunters' old-pin ON floors, the comparison point for Task 19.
 
 - [ ] **Step 1: Write the failing harness test** in `replay_spec.lua` (S2's unknown-bracket pin): in a replay world
   at distance 20, `VS.TargetRange` is known at the pull, and a melee ability's `action.<key>.in_range` is false there.
 - [ ] **Step 2: Run** it under the lock. Expected: passes or fails on the real path (a failure is a harness fix here).
 - [ ] **Step 3: Measure at the old pin.** `make wowsims-packs && make packs`, which regenerates the hunter packs from
-  today's d3393 requests through Tasks 3-8 (no `wait` line in any: decision 9). Run the hunter replay with Movement ON
+  today's d3393 requests through Tasks 3-8b (no `wait` line in any: decision 9). Run the hunter replay with Movement ON
   at floor 0. Record each line (decisions, n, top, flicker) per spec in the commit message, and classify the top
   disagreements: one traced to a former wait the forecast cannot time is listed per entry.
 - [ ] **Step 4: Re-floor the hunters on this measurement** (R5/R6 against the baseline; the cause is "Movement
@@ -609,6 +740,7 @@ requests, logs and packs; `src/Hekili_Druid/Druid.lua`, `src/Hekili_Mage/Mage.lu
 - [ ] **Step 1:** Run R1-R7 for the three specs. Specifics: the `affords(builder)` definition and the energy-pooling
   group. The pooling `waitUntil` is omitted and classified as in Task 12, and the risk the spec names is measured. `darkmantle-set-512.patch`
   stays: check the log shows Rogue Armor Energize 27788.
+- Follow-up, optional and gated (decision 11; not a step of this task): Cutthroat (proc 462707, today an aura from Ambush's usability flip) may move to a window only if no real aura tracks it; check for a readable client aura first and keep it if there is one. A migration is its own commit with the lane's `make gate`, and its replay and flicker lines must not fall.
 - [ ] **Step 2:** R9; `make gate`.
 
 ### Task 14: Lane: Warrior x3 (Phase 5)
@@ -624,6 +756,7 @@ requests, logs and packs; `src/Hekili_Druid/Druid.lua`, `src/Hekili_Mage/Mage.lu
   - Whirlwind's tag 14 and the Berserker Rage `requires` stay.
   - `FURY_LIVE_LEVELING` follows R7's rule.
   - Measured rage is wowsims's (the 11-02 catch-up ruling).
+- Follow-up, optional and gated (decision 11; not a step of this task): Revenge's `defensive_state` aura (Defensive State 5302, when readable, stays an aura) may move to a window only if no real aura tracks it; check for a readable client aura first and keep it if there is one. A migration is its own commit with the lane's `make gate`, and its replay and flicker lines must not fall.
 - [ ] **Step 2:** R9; `make gate`.
 
 ### Task 15: Lane: Enhancement (Phase 6)
@@ -673,6 +806,7 @@ requests, logs and packs; `src/Hekili_Druid/Druid.lua`, `src/Hekili_Mage/Mage.lu
   line is picked; after a main-hand swing, the target moved back to 20 yd, no `move_to_melee` line is picked.
 - [ ] **Step 3:** R4-R7 as a fresh floor. A disagreement traced to the pre-pull move or the move-in placement is a
   defect to fix (spec §2.3), never a floor cost.
+- Follow-up, optional and gated (decision 11; not a step of this task): The opener's `mainhand_swung` (no aura behind it, so it qualifies) may move to a window only if no real aura tracks it; check for a readable client aura first and keep it if there is one. A migration is its own commit with the lane's `make gate`, and its replay and flicker lines must not fall.
 - [ ] **Step 4:** R9; `make gate`.
 
 ### Task 18: Lane: Feral and Guardian (Phase 7, fresh floors)
@@ -704,12 +838,14 @@ requests, logs and packs; `src/Hekili_Druid/Druid.lua`, `src/Hekili_Mage/Mage.lu
 
 - [ ] **Step 1:** Run R1-R3 for the three weave builds. Specifics: Sniper Shot and the trainer rank IDs in the kit;
   BM's pet Raptor; `startAttack`, `petAttack` and `recheckWhileMoving` are omitted; the dropped yard arithmetic is
-  listed per entry; no `wait` line (decision 9), the weave's timing variables on the clocks (Task 8).
+  listed per entry; no `wait` line (decision 9), the weave's timing on the clocks and the `weave` window (Task 8b); the
+  guard (Task 8b) holds on the new logs.
 - [ ] **Step 2: R8** (the opt-in exists since Task 7). Add the OFF tests on Raptor Strike (hidden outside 5 yd) and on
   a shot after the move back (hidden inside 5 yd).
 - [ ] **Step 3:** R4-R7 as fresh floors. The old floors (1.00 / 0.92 / 0.97) are not comparable (spec §7); Task 9's
   old-pin ON measurement is the comparison point for the rewrite. A disagreement traced to the pre-pull "pull range"
   move is a defect (spec §2.3).
+- Follow-up, optional and gated (decision 11; not a step of this task): Mongoose Bite's `biteAt` (Defensive State 5302 when readable stays an aura; otherwise a usability-flip window with `close_on_false`) may move to a window only if no real aura tracks it; check for a readable client aura first and keep it if there is one. A migration is its own commit with the lane's `make gate`, and its replay and flicker lines must not fall.
 - [ ] **Step 4: Delete `M.OLD_SIM`** and its pin-spec branch: every log is now at `M.SIM_PIN`. Run the pin spec. Expected: PASS.
 - [ ] **Step 5:** R9; `make gate`.
 
@@ -752,11 +888,12 @@ equal, rules 2, 11, 14b, 18, 19, the Movement toggle, "Oracle patches", the requ
 - Spec coverage: §0 decisions -> Global Constraints, S1-S4; §1 goals -> Tasks 1-21; §2.1 -> Task 6, S1; §2.2 ->
   Tasks 5, 7, S2, S3; §2.3 -> Tasks 9, 16-19 (R8); §3 and decision 9 -> Tasks 8, 9, 12, 13; §4 -> Tasks 3-5, 14, 16; §5 -> Tasks
   1, 2, 20, R3; §6 -> Global Constraints (no core change outside Options/UI/Registry); §7 -> R4-R8, Tasks 0, 9, 21;
-  §8 -> the task order; §9 -> S4, Task 8 (the clocks and forecast replace waits), Tasks 12-14 (classifications), Task 7 (ledger row).
+  §8 -> the task order; §3a and decision 11 -> Tasks 8a, 8b (follow-ups in Tasks 13, 14, 17, 19); §9 -> S4, Task 8b (the clocks and forecast replace waits), Tasks 12-14 (classifications), Task 7 (ledger row).
 - Ordering: the harness hook (Task 6) lands before any pack reads `toggle.movement` (Task 7 at the earliest), and the
   Hunter opt-in lands in the task whose packs first read it, so the packs test holds on every commit.
 - Phase 3's spec gate ("today's hunter packs regenerated at the old pin, replayed with ON") is Task 9 Steps 3-4.
-- Interfaces: `Registry.MovementSpec`, `toggle.movement`, `ranged_remains`/`ranged_speed` (and the since-last
+- Interfaces: `Registry.MovementSpec`, `toggle.movement`, `RegisterWindow`/`def.windows`/`Facade.Window`/
+  `window.<name>`/`open_window`/`close_window`, `ranged_remains`/`ranged_speed` (and the since-last
   `remains` form), `druid_bleed_active`,
   `dry.lua`, `M.OLD_SIM`'s shape and `WOWSIMS_OUT` are each defined once and used under the same names.
 - Floors: none pre-set. Every floor is R6's measured value with its traced cause.
