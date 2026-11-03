@@ -94,6 +94,10 @@ Request (export):
   `distanceFromTarget`. Or `build`: a preset build file whose `player` is taken whole (Feral), with `gear` (a gear-set
   JSON path) replacing its equipment; a build file with no equipment (Warlock's) needs `gear`, or the export stops
   (wowsimcli crashes on a player without equipment).
+- Or `siml`: a .siml build path in the checkout (the Hunters' `builds/*_weave.siml`), an export path key like `apl`
+  and `build`. `export.lua siml <spec>` converts it to the checked-in `tests/Forever/wowsims/<spec>.build.json`, whose
+  `player` (talents, gear, options, rotation) is taken whole; no `player`, `build` or `apl` beside it.
+- `apl` is optional when the build carries the rotation (Enhancement's `testing.build.json`, every `siml` build).
 - `tank = true` and `healingModel = { hps, cadenceSeconds, ... }` for a tank spec: the player becomes the raid's tank
   and gets the preset's incoming healing, as wowsims's UI does (apply_defaults.ts). Without them the target swings at
   no one (GAP AE: the first Protection and Guardian floors were set on fights with no incoming melee).

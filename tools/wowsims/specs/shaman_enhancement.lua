@@ -2,7 +2,8 @@
 -- wowsims/forever request and translation.
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/shaman/enhancement/presets.ts:14-23 (DefaultGear: the Testing build's
 -- gear; StandardTalents 053503102-053030031005112251, the build's own talentsString) and builds/testing.build.json at
--- the pin; the rotation is apls/default.apl.json (the presets' default), which replaces the build's.
+-- d33930d040, where the rotation was apls/default.apl.json (the presets' default), replacing the build's. The re-pin
+-- (e2842f0a78) deletes apls/: the rotation is the build's own (builds/testing.build.json's player.rotation).
 -- Disagreements worked (P7, decisions on-GCD 0.807 of 88; first clean run 0.557):
 -- 1. "* -> flame_shock" (was 19 of 35): content gap, fixed in the kit. Call of Flame: wowsims spell data, absent from
 --    DB2 (wowdb effects 16038 has none): +3 s a rank on Flame Shock (21 s at 3/3, the log's). IN-GAME CHECK: Flame
@@ -30,7 +31,6 @@ return {
     name = "Enhancement",
     talentTree = "shaman",
     build = "ui/specs/shaman/enhancement/builds/testing.build.json",
-    apl = "ui/specs/shaman/enhancement/apls/default.apl.json",
     map = { OtherActionResourcePotion = "major_mana_potion" }, -- the build's resourcePotId 13444, Major Mana Potion
     focus = { -- by role (docs/dev/wowsims-packs.md); the totems none (the user, 2026-10-21)
         fire_nova = { 1, false }, -- on Clearcasting; the mana filler none

@@ -180,6 +180,7 @@ local function checkout()
     end
     return root, head
 end
+M.checkout = checkout -- tools/wowsims/dry.lua
 
 --- Converts spec `spec`'s `siml` build (a .siml path in the checkout at M.PIN) to M.OUT/<spec>.build.json with the
 --- CLI's `siml parse -json` (see the header).

@@ -1,6 +1,10 @@
 -- tools/wowsims/specs/hunter_marksmanship.lua (wowsims packs plan, Task 11): Marksmanship (wowsims.com)'s wowsims/forever request and translation.
--- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the MM Weave talents,
--- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1).
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/hunter/dps/presets.ts:68-89,128-134 (the MM Weave talents,
+-- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1) at
+-- d33930d040. The re-pin (e2842f0a78) deletes those JSON files: the request is the SIML build
+-- ui/specs/hunter/dps/builds/mm_weave.siml (MM Weave: talents :3, gear ../gear_sets/p1.gear.siml :4, rotation
+-- ../apls/default_mm.apl.siml :5, settings :7-14; no pet (:7, Lone Wolf)), converted by `make wowsims-siml`
+-- (tests/Forever/wowsims/hunter_marksmanship.build.json). petAggression and cobraReflexes are no longer set.
 -- Disagreements worked (P7, after central fixes 6 and 11), decisions on-GCD 0.881 (42) top [strider_kick -> wing_clip
 -- 5]:
 --   strider_kick -> wing_clip: shared gap (percent-of-base costs priced on the maximum): Strider Kick's 5.81% of base
@@ -25,28 +29,7 @@ return {
     spec = "marksmanship",
     name = "Marksmanship",
     talentTree = "hunter",
-    apl = "ui/specs/hunter/dps/apls/default.apl.json",
-    player = {
-        race = "RaceOrc",
-        class = "ClassHunter",
-        gear = "ui/specs/hunter/dps/gear_sets/p1.gear.json",
-        talentsString = "-205305031150001-5502000300502201",
-        specKey = "hunter",
-        options = {
-            classOptions = {
-                ammo = "ThoriumHeadedArrow",
-                quiverBonus = "AncientSinewWrappedLamina",
-                petUptime = 1,
-                petAttackSpeed = "FasterAttackII",
-                cobraReflexes = true,
-                petAggression = 5,
-                petType = "PetNone",
-            },
-        },
-        profession1 = "Engineering",
-        profession2 = "Blacksmithing",
-        distanceFromTarget = 11,
-    },
+    siml = "ui/specs/hunter/dps/builds/mm_weave.siml",
     map = {},
     -- by role (docs/dev/wowsims-packs.md); the melee-weave strikes rotational, Serpent Sting 1 (the user, 2026-10-21)
     focus = { raptor_strike = 1, hunters_mark = 2, serpent_sting = 1 },

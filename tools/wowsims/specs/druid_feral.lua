@@ -1,7 +1,9 @@
 -- tools/wowsims/specs/druid_feral.lua (wowsims packs plan, Task 7): Feral (wowsims.com)'s wowsims/forever request
 -- and translation.
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/druid/feralcat/presets.ts:19
--- (DefaultOptions), :31-37 (OtherDefaults), :109 (CatTalents, "Monocat") at the pin.
+-- (DefaultOptions), :31-37 (OtherDefaults), :109 (CatTalents, "Monocat") at d33930d040; the re-pin (e2842f0a78) moves the
+-- APL to apls/adaptive.apl.json (presets.ts:9, :65-68 JVMES_APL "Adaptive Cat", spec.ts:79 the default rotation;
+-- 2250 lines); the gear stays gear_sets/pre_raid.gear.json (presets.ts:11, spec.ts:65).
 -- Replay (P7): decisions on-GCD 0.898 (n 88; 0.909 before the lane fix round's Howling Idol -1 s), after central fix 6
 -- gave the replay the log's mana pool and regen.
 -- Temporary workaround for shared GAP U (Now.lua's context has no `level`): the kit's `ofBaseMana` caches the
@@ -43,7 +45,7 @@ return {
     spec = "feral",
     name = "Feral",
     talentTree = "druid",
-    apl = "ui/specs/druid/feralcat/apls/default.apl.json",
+    apl = "ui/specs/druid/feralcat/apls/adaptive.apl.json",
     player = {
         race = "RaceNightElf",
         class = "ClassDruid",

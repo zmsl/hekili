@@ -1606,9 +1606,11 @@ function M.write(spec, ex)
         ("# %s: the wowsims/forever default APL for %s (%s), translated to this addon's keys."):format(
             r.pack,
             r.name,
-            r.apl or r.build
+            r.apl or r.siml or r.build
         ),
-        "# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at " .. ex.PIN:sub(1, 12) .. ".",
+        "# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at "
+            .. (ex.OLD_SIM[spec] or ex.PIN):sub(1, 12)
+            .. ".",
     }
     for _, n in ipairs(r.notes or {}) do -- the recipe's player-facing notes: more of the in-game description
         out[#out + 1] = "# " .. n

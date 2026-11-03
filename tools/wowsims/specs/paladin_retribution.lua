@@ -2,7 +2,9 @@
 -- request and translation.
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/paladin/retribution/presets.ts:32-34
 -- (DefaultOptions), :37 (TwistOfLightTalents), :144-151 (OtherDefaults) at the pin; the APL and gear spec.ts's default
--- (Twist of Light).
+-- (Twist of Light), at d33930d040. The re-pin (e2842f0a78) deletes the Twist of Light files: the APL moves to
+-- apls/default.apl.json (presets.ts:17, :24 DefaultAplPreset, spec.ts:105; 1091 lines) and the gear to
+-- gear_sets/default.gear.json (presets.ts:19, :37 DefaultGearPreset, spec.ts:81).
 -- Disagreements worked (P7, resume 3: after central fixes 6/8/C and 9/9b): replay 0.579 (57; 0.456 before them).
 -- seal_of_righteousness -> seal_of_command 13 and consecration -> seal_of_command 3: replay limit (central GAP N,
 -- tests/Game/harness/replay.lua): an aura the log removes early (a seal replaced, an Echo spent) is shown expiring at
@@ -26,11 +28,11 @@ return {
     spec = "retribution",
     name = "Retribution",
     talentTree = "paladin",
-    apl = "ui/specs/paladin/retribution/apls/twist_of_light.apl.json",
+    apl = "ui/specs/paladin/retribution/apls/default.apl.json",
     player = {
         race = "RaceHuman",
         class = "ClassPaladin",
-        gear = "ui/specs/paladin/retribution/gear_sets/twist_of_light.gear.json",
+        gear = "ui/specs/paladin/retribution/gear_sets/default.gear.json",
         talentsString = "55003003--05225331101330321",
         specKey = "retributionPaladin",
         -- PaladinOptions is an empty message: an object, not dkjson's default empty array

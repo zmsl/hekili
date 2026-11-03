@@ -1,7 +1,9 @@
 -- tools/wowsims/specs/druid_guardian.lua (wowsims packs plan, Task 7): Guardian (wowsims.com)'s wowsims/forever
 -- request and translation.
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/druid/feralbear/presets.ts:16-19
--- (BearTalents), :116-119 (DefaultOptions), :130-135 (OtherDefaults) at the pin.
+-- (BearTalents), :116-119 (DefaultOptions), :130-135 (OtherDefaults) at d33930d040; the re-pin (e2842f0a78) moves the
+-- APL to apls/adaptive.apl.json (presets.ts:10, :12 ROTATION_ADAPTIVE "Adaptive Bear", spec.ts:90 the default
+-- rotation; 998 lines); the gear stays gear_sets/default.gear.json (presets.ts:11, spec.ts:75).
 -- Replay (P7): decisions on-GCD 0.782 (n 78; 0.718 held in Task 7b, 0.782 after central fixes 12-15), with the replay
 -- knob procs { ["9881:0"] = true } (Maul's untagged Casting lines are wowsims's queue at each swing, not casts).
 -- Worked (Task 7g): the bear's 11.25 rage a white swing and a crit's 8.65 more (the log's 11.25 and 19.9); Primal
@@ -26,7 +28,7 @@ return {
     spec = "guardian",
     name = "Guardian",
     talentTree = "druid",
-    apl = "ui/specs/druid/feralbear/apls/default.apl.json",
+    apl = "ui/specs/druid/feralbear/apls/adaptive.apl.json",
     player = {
         race = "RaceNightElf",
         class = "ClassDruid",
