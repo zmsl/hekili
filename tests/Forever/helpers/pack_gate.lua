@@ -56,7 +56,9 @@ M.UNMATCHED_BY = {
 -- presses hiding under another first icon or an oracle wait).
 M.FLICKER = {
     ["Arms"] = { flicker = 0.3, retracted = 0.1, readyShort = 173, heldReady = 340 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
-    ["Fury L60"] = { flicker = 0.9, retracted = 0.2, readyShort = 116, heldReady = 226 }, -- 0.75 / 0.70 / 0.87, 0.07 / 0.17 / 0.03
+    -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
+    -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
+    ["Fury L60"] = { flicker = 0.9, flickerK = 0.6, retracted = 0.2, readyShort = 116, heldReady = 226 }, -- 0.75 / 0.70 / 0.87, 0.07 / 0.17 / 0.03
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
