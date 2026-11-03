@@ -47,10 +47,13 @@ local REPLAY = {
 -- the modelled (unreadable) target debuff, a candidate not yet measured as flicker.
 -- Frostfire (Task FFB): 0.891 (49 of 55), floor 0.89 (mage_frostfire.lua's header); LIVE60 10.8: as Fire's, its mana
 -- spent out by about 80 s, it waits on Frostfire Bolt's 314.5 and Fire Blast's 340 (Evocation on its cooldown).
+-- LIVE60 10.8 -> 11.6 from 4bd02bde0 (a not-ready flag keeps a later modelled ready time): at 30.2 Fire Blast shows
+-- its true 0.2 s wait where the old probe push picked Frostfire Bolt, the fight shifts 0.2 s and its mana-out
+-- tail's wait for Frostfire Bolt grows (92.2-103.6 s); no cast or cooldown mis-timed (P-report P-f R11).
 local PACKS = {
     { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.81, 0 },
     { "mage_fire", "Fire", "Fire (wowsims.com)", 0.82, 12.6 },
-    { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.89, 10.8 },
+    { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.89, 11.6 },
 }
 
 describe("the Mage wowsims.com packs #slow #wowsims", function()
