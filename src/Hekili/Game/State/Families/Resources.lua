@@ -1196,6 +1196,18 @@ local function pendingStep(r, hand, t)
     return I.SwingValue(r, hand, p) * (R.scale[r] - R.spread[r])
 end
 
+-- Slot r's floor raised to v (a yes that showed a pending swing landed: its low step), within the believed top, the
+-- estimate with it. Allocates nothing.
+local function liftTo(r, v)
+    if v > R.lo0[r] then
+        v = v < R.hi0[r] and v or R.hi0[r]
+        R.lo0[r] = v
+        if R.est0[r] < v then
+            R.est0[r] = v
+        end
+    end
+end
+
 -- Whether ability a's `usable` holds at t, read in the `now` context (the belief's names; I.Eval, Families/Casts.lua).
 -- One that raises (a name the context lacks; counted) holds from then on. Allocates nothing once it has raised.
 local function usableHolds(a, t)
@@ -1267,6 +1279,7 @@ I.On(Obs.Usable, function(o, t, lag)
     -- only a rung above the floor can show a pending swing's gain (an answer below it proves nothing); a short one only
     -- where the pending swings' low steps would have reached it (above, a paid swing answers short too); a yes shows a
     -- hand's gain only where the other hand's alone could not reach it (neither: the earlier swing's)
+    local lift = 0 -- a yes's floor: the shown hands' landed low steps over the floor before it
     if rung and c > 0 and c > R.lo0[r] then
         local lo, m, f = R.lo0[r], pendingStep(r, 1, o.t), pendingStep(r, 2, o.t)
         if now == SHORT then
@@ -1275,6 +1288,7 @@ I.On(Obs.Usable, function(o, t, lag)
             end
         else
             local e1, e2 = c > lo + f + I.EPS, c > lo + m + I.EPS
+            lift = lo + (e1 and m or 0) + (e2 and f or 0) -- each shown hand gave more than none: it landed
             if not e1 and not e2 then
                 e1 = VS.SwingPending(1) <= VS.SwingPending(2)
                 e2 = not e1
@@ -1333,6 +1347,7 @@ I.On(Obs.Usable, function(o, t, lag)
         if ladder(r, c, now == YES, t, lag) then
             I.Sample(R.power[r], "pinned", R.est0[r], t, Obs.Usable)
         end
+        liftTo(r, lift)
         owe(r, e, lo, hi, o.t)
     end
     if now == SHORT then

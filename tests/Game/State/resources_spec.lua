@@ -701,6 +701,23 @@ describe("resources", function()
             end
         )
 
+        it("lifts the floor to the shown swing's low step past a yes under it, and its credit pays no more", function()
+            -- floor 5, the 9-rage swing at 10: a yes at spender_a's 10 shows the swing landed, so the floor holds its low
+            -- step (5 + 8.1), not just the cost (Fury flicker: the rest of the gain was lost until the credit)
+            local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
+            R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 20
+            obs(Obs.Swing, 10, 1, 2.6, 4)
+            I.Fold(10, false)
+            obs(Obs.Usable, 10.1, A, 1, 0)
+            I.Fold(10.1, false)
+            assert.are.equal(0, VS.SwingPending(1))
+            within(5 + 9 * (1 - I.REGEN_SPREAD), VS.Power(fs.RAGE, 10.1).lo)
+            obs(Obs.Swing, 10, 1, 0, 1) -- its credit, folded late
+            I.Fold(10.47, false)
+            I.Settle(10.47)
+            within(5 + 9 * (1 - I.REGEN_SPREAD), VS.Power(fs.RAGE, 10.47).lo)
+        end)
+
         it("keeps a swing pending past answers under the floor (they cannot show it) to its credit", function()
             local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
             R.est0[1], R.lo0[1], R.hi0[1] = 22, 20, 30 -- spender_a's 10 is under the floor: proves nothing
@@ -1011,13 +1028,14 @@ describe("resources", function()
             end)
 
             it("nets a usable answer's lift in the swing's window against its late wound", function()
-                -- 9 believed; the swing at 5 makes 18; spender_a (10) answers usable at 5.1, before the wound: the
-                -- rung lifts 9 to 10 on the swing's rage, so the wound at 5.47 adds 9 - 1: 18, not 19
+                -- 9 believed (floor 8.1); the swing at 5 makes 18; spender_a (10) answers usable at 5.1, before the
+                -- wound: the rung shows the swing landed and lifts the floor by its low step (8.1 + 8.1), so the wound at
+                -- 5.47 adds only the rest of its 9: 18, not 18 + 9
                 obs(Obs.Swing, 2.4, 1, 0, 1)
                 obs(Obs.Swing, 5, 1, 2.6, 4)
                 obs(Obs.Usable, 5.1, 1, 1, 0)
                 I.Fold(5.1, false)
-                within(10, VS.Power(fs.RAGE, 5.1).est)
+                within(2 * 9 * (1 - I.REGEN_SPREAD), VS.Power(fs.RAGE, 5.1).est)
                 I.Settle(5.47)
                 obs(Obs.Swing, 5, 1, 0, 1)
                 I.Fold(5.47, false)
