@@ -77,12 +77,15 @@ M.FLICKER = {
     -- agreement 0.925 / 0.929 / 0.926, unmatched cost 1.0 / 0.6 / 0.6, cooldown 0): the swing-paid rage class
     -- (sunder_armor <-> shield_block, shield_slam <-> thunder_clap, shield_block <-> rend near-ties on a forecast swing's
     -- rage)
-    ["Warrior Protection"] = { flicker = 0.8, retracted = 0.1, readyShort = 203, heldReady = 378 }, -- 0.74 / 0.57 / 0.57, 0 / 0.03 / 0.02
+    -- heldReady 378 -> 383 (seeds 1-20; 377 with f1f5cf772 reversed): Blood Fury's 2 min cooldown (owner, live 2026-11-02)
+    ["Warrior Protection"] = { flicker = 0.8, retracted = 0.1, readyShort = 203, heldReady = 383 }, -- 0.74 / 0.57 / 0.57, 0 / 0.03 / 0.02
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
     -- seed set; owner standing approval 2026-10-30
-    ["Feral"] = { flicker = 1.3, retracted = 0, heldReady = 383 }, -- 1.20 / 1.24 / 1.10, 0
+    -- heldReady 383 -> 393 (seeds 1-20; 347 with Druid.lua and druid_world as of its parent): Shifting Power's 8 s
+    -- cooldown (hotfix 113554, 8b07b2d58)
+    ["Feral"] = { flicker = 1.3, retracted = 0, heldReady = 393 }, -- 1.20 / 1.24 / 1.10, 0
     ["Balance"] = { flicker = 0.1, retracted = 0, heldReady = 140 }, -- 0.03 / 0.05 / 0.07, 0
     -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
     -- 0.37 / 0.21): the swing-paid rage class (a forecast swing's gain shows Lacerate or Primal Bite ready; retracted
@@ -153,7 +156,9 @@ M.FLICKER = {
     -- player's remedy.
     -- 0.8 -> 0.2 (gap CE, the facade's whole-number read gone): most of the flicker the two notes above blame on gap AB
     -- was that read; gap AB's agreement cost stands
-    ["Protection"] = { flicker = 0.2, retracted = 0, heldReady = 252 }, -- 0.10 / 0.17 / 0.12, 0 (oracle 0.07 / 0 / 0.07)
+    -- heldReady 252 -> 326 (seeds 1-20; 243 with Paladin.lua and paladin_world as of its parent): Swift Judgement as a
+    -- second Judgement on its own 60 s cooldown (hotfix 113554, 66573cf37)
+    ["Protection"] = { flicker = 0.2, retracted = 0, heldReady = 326 }, -- 0.10 / 0.17 / 0.12, 0 (oracle 0.07 / 0 / 0.07)
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was
