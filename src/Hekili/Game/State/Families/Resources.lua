@@ -1601,8 +1601,10 @@ end)
 --- (about ORACLE_MIN later: a rung, so a cost above the floor) or at its wound row's credit (a landing lag later).
 --- Hekili's swing forecast counts that swing as past meanwhile, so for a poll every rage-gated line ranked as
 --- unaffordable (Arms flicker 4.1/min); Engine/Sim/State.lua forecasts its gain instead, one poll after the answers can
---- show it (no press before). Not pending once an answer above the floor since that point was heard (it showed the
---- gain, or the swing gave none; one under it proves nothing), once its swing ticket closes (credited, or no credit
+--- show it (no press before). Not pending once an answer above the floor since that point ended it, per hand: a short
+--- one only within the floor + the visible pending swings' low steps (above, a paid swing answers short too); a yes
+--- only for the hand whose gain it could show (one the other hand's low step alone could not reach; neither: the
+--- earlier swing); one under the floor proves nothing. Also not once its swing ticket closes (credited, or no credit
 --- within its pending window: Events/Tickets.lua's T.SwingPending), after a spend from the slot (its cast's rung holds
 --- what the game had), or for a slot read plain. Allocates nothing.
 function VS.SwingPending(hand)
