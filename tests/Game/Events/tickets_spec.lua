@@ -629,6 +629,28 @@ describe("the ticket pool", function()
             assert.are.equal(0, count(VS.Obs.Avoided)) -- the tie gives the dodge to the swing
         end)
 
+        -- a wound read in another form than UnitDamage's (unknown class) is never remembered: no reversed credit
+        it("remembers no refused wound whose amount class is unknown (another form)", function()
+            local h = fs.new(9, false, false, true)
+            h.Class.abilities.spender_m.school = "physical"
+            I.Build(fs.def(h), 1)
+            ctl.now = 70
+            ctl.damage = { 40, 50, 0, 0 }
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.form = 1 -- UnitDamage was read in form 0
+            I.Log.bg[8] = 6 -- the background's unknown-class white rate: LR between 1 and theta
+            ctl.now = 74.74
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local sw = T.lastSwing[1]
+            ctl.now = 75.214
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 87.036, 1)
+            assert.are.same({ T.OPEN, 1 }, { T.state[sw], T.foreign })
+            ctl.now = 75.24
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.are.equal(0, count(VS.Obs.Swing, 1)) -- no credit from an unknown-class wound
+        end)
+
         it("stages a held crit once the narrow band passes with no replacement, and teaches then", function()
             I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
             T.Learn("Creature-1", 20, 1.5, 9)

@@ -606,7 +606,9 @@ local function route(t, g, uid, act, flag, amount, school)
         paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
         return
     elseif not credited then
-        if refused > 0 then -- in its core band and amount classes: the swing's own if a cast's own avoid follows
+        -- in its core band and amount classes, the swing's own if a cast's own avoid follows; never an unknown-class
+        -- wound (form mismatch): the credit would teach from it
+        if refused > 0 and not unknown then
             local h = T.x[refused]
             local cls = M.classOf(h, amount, flag)
             if math.abs(t - T.at[refused] - L.med[h]) <= 2 * L.spr[h] and cls > 0 then
