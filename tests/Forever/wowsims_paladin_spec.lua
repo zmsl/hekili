@@ -103,7 +103,10 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- instance's current state: L60 11.8 -> 10.4, L40 11.0 -> 9.4, L10 8.6, measured with the gate counting only on-GCD
     -- presses, final review fix 3); 17.8 before (the untanked fight's)
     -- 11.0 at L40 with the world's parry haste (decision 63: every seeded fight reordered; L60 8.4)
-    local PROT_LIVE60 = 11.0
+    -- 12.6 at L60 from Swift Judgement as a second Judgement (hotfix 113554, 66573cf37: no Judgement reset, no free
+    -- Judgement charge; wowsims swift_judgement.go): a mana wait for Holy Strike, Retribution Aura the only usable
+    -- on-GCD press (L10 8.6, L40 8.4)
+    local PROT_LIVE60 = 12.6
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()
             local C = content("paladin_protection", PROT_LIVE, "Protection (wowsims.com)", level)
