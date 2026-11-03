@@ -104,6 +104,14 @@ Run `make check` before every commit. CI runs the same steps on every push, exce
 - The packs check: regenerating every priority pack leaves the source tree unchanged.
 - The offline tests of the release tools.
 
+### Editor IntelliSense (VS Code)
+
+Install the `ketho.wow-api` extension (it carries WoW's API annotations and the Lua language server). `.luarc.json` is the single
+LuaLS config: VS Code, `make typecheck` and agents all read it, so change settings there, not in your user settings. Its
+`workspace.library` points at the extension's `Annotations/Core` and `Annotations/FrameXML` folders (under
+`~/.local/share/vscode-wow-api/` on this setup; edit the paths if your extension lives elsewhere) plus the bundled busted and luassert
+annotations for the specs. The extension supplies WoW's stdlib, so `runtime.builtin` is disabled.
+
 For a fast edit loop, `make test-fast` skips the long harness gates. To run one spec file:
 
 ```sh

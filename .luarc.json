@@ -1,9 +1,34 @@
 {
   "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
   "runtime.version": "Lua 5.1",
-  "workspace.library": ["/home/zack/.local/share/vscode-wow-api/Annotations/Core"],
+  "runtime.builtin": {
+    "basic": "disable",
+    "debug": "disable",
+    "io": "disable",
+    "math": "disable",
+    "os": "disable",
+    "package": "disable",
+    "string": "disable",
+    "table": "disable",
+    "utf8": "disable"
+  },
+  "workspace.library": [
+    "/home/zack/.local/share/vscode-wow-api/Annotations/Core",
+    "/home/zack/.local/share/vscode-wow-api/Annotations/FrameXML",
+    "${3rd}/busted/library",
+    "${3rd}/luassert/library"
+  ],
   "workspace.ignoreDir": ["src/Hekili/Libs", "archive", ".claude", ".git", ".lua"],
   "workspace.checkThirdParty": false,
-  "diagnostics.globals": ["LibStub", "Hekili", "ns"],
+  "diagnostics.globals": [
+    "LibStub", "Hekili", "ns",
+    "INVTYPE_WEAPONMAINHAND", "LOCALIZED_CLASS_NAMES_FEMALE", "LOCALIZED_CLASS_NAMES_MALE", "AddonCompartmentFrame",
+    "ToggleDropDownMenu", "INVSLOT_LAST_EQUIPPED", "COMBATLOG_OBJECT_REACTION_FRIENDLY", "DEFAULT_CHAT_FRAME",
+    "ITEM_SPELL_TRIGGER_ONEQUIP", "SlashCmdList", "PET_ACTION_ATTACK", "PET_ACTION_FOLLOW", "PET_ACTION_WAIT",
+    "PET_ACTION_MOVE_TO", "PET_MODE_ASSIST", "PET_MODE_AGGRESSIVE", "PET_MODE_DEFENSIVE", "PET_MODE_PASSIVE",
+    "NUM_PET_ACTION_SLOTS", "StanceButton1", "PetActionButton1", "ActionButton1", "OverrideActionBarButton1", "ACCEPT",
+    "PET_TYPE_DEMON", "BATTLE_PET_NAME_4", "CR_CRIT_MELEE", "CR_HASTE_MELEE", "CR_MASTERY", "CR_VERSATILITY_DAMAGE_DONE",
+    "CR_VERSATILITY_DAMAGE_TAKEN", "INVSLOT_NECK", "ClassTalentImportExportMixin", "ExportUtil", "PlayerUtil"
+  ],
   "diagnostics.disable": ["lowercase-global", "undefined-field", "need-check-nil", "cast-local-type", "assign-type-mismatch", "param-type-mismatch", "redundant-parameter", "missing-parameter", "inject-field", "duplicate-set-field", "undefined-global"]
 }
