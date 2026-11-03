@@ -346,7 +346,7 @@ M.READY = {
     -- owner ruling 2026-10-26: gap BD's cast-bar fix removed the small misses; decision by decision none worse and
     -- none new; the median of the rest rose (the one left: life_tap 0.2 s early)
     warlock_demonology = { 0.30, 1 },
-    warlock_destruction = { 0.50, 5 }, -- 0.400, 17: Incinerate's 2.0 s cast, likewise
+    warlock_destruction = { 0.50, 5 }, -- 0.500, 5: Incinerate's 2.0 s cast, likewise
     warlock_shadow_brand = { 0.90, 16 }, -- 0.900, 16: Shadow Bolt's, likewise
     warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
     -- 0.880, 5 (was 0.80, 6): the world's parry haste (decision 63); the tie hand-back moves 177.88 sunder late -> never

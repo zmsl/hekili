@@ -215,7 +215,6 @@ local function classData(H, C)
         end
     end
     local talent = H.Hekili.State.talent
-    X.twist = (talent.twist_of_light.rank or 0) > 0
     -- Sanctified Judgement's refund, as the class file believes it (only at 3/3, a sure one): the seals' cost multiplier
     X.S, X.sanctified = H.Hekili.State, (talent.sanctified_judgement.rank or 0) >= 3
     X.mult = 1 - 0.02 * (talent.benediction.rank or 0)
