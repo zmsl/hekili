@@ -105,14 +105,14 @@ function M.boot(o)
         return provisional(i, lri, act)
     end
     -- its reversed order: a swing credited at a cast's own avoid with the wound the LR refused earlier (that foreign
-    -- row's time) belongs to the wound's row; the last 8 foreign rows (a ring, preallocated)
+    -- row's time) belongs to the wound's row; the last T.CAP foreign rows (a ring, preallocated; one per swing ticket)
     c.forRow, c.forT, c.forN, c.late = {}, {}, 0, 0
-    for j = 1, 8 do
+    for j = 1, T.CAP do
         c.forRow[j], c.forT[j] = 0, -1
     end
     local foreignRow = T.Foreign
     T.Foreign = function(u, sch, t)
-        c.forN = c.forN % 8 + 1
+        c.forN = c.forN % T.CAP + 1
         c.forRow[c.forN], c.forT[c.forN] = c.cur, t
         return foreignRow(u, sch, t)
     end
@@ -124,9 +124,11 @@ function M.boot(o)
                     k = c.provRow[j]
                 end
             end
-            for j = 1, 8 do
-                if c.forT[j] == t and c.forRow[j] > 0 then
-                    k = c.forRow[j]
+            for j = 0, T.CAP - 1 do -- newest first: an equal-time tie goes to the latest foreign row
+                local q = (c.forN - j - 1) % T.CAP + 1
+                if c.forT[q] == t and c.forRow[q] > 0 then
+                    k = c.forRow[q]
+                    break
                 end
             end
         end
@@ -277,7 +279,7 @@ function M.boot(o)
     end)
     S.Stage = function(kind, t, a, b, cc)
         if kind == Swing and (cc == 1 or cc == 3 or cc == 7) then -- c = 7: an assumption confirmed, the row's credit
-            local i = c.late > 0 and c.late or c.cur
+            local i = c.late > 0 and c.late or c.cur -- a late credit's staging books to its wound's row (onPay)
             if cc == 3 then
                 c.crits[a] = c.crits[a] + 1
                 if i > 0 then
@@ -550,7 +552,7 @@ function M.run(c, s, offset)
     for j = 1, #c.provT do
         c.provRow[j], c.provT[j] = 0, -1
     end
-    for j = 1, 8 do
+    for j = 1, #c.forT do
         c.forRow[j], c.forT[j] = 0, -1
     end
     c.late = 0
