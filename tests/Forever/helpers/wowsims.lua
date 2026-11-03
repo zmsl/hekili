@@ -288,8 +288,8 @@ M.FIXTURES = "tests/Forever/fixtures/"
 -- in review round 1 from the metric alone (the cost class from the crossing; the on-GCD-only walk); behaviour unchanged.
 -- Oracle refresh (sim pin e2842f0a78 + documented patches, 2026-11-02, R12): Feral, Paladin Protection and
 -- Retribution, Assassination, Combat, Enhancement, Demonology, Destruction, Fury and Warrior Protection re-set to their
--- measured { median, real }; with the lane's belief commits (4bd02bde0, 68dee8fa5) reverted every line is the same
--- (Warrior Protection real 11), so the move is the oracle's. Was: Feral { 0.43, 4 }, Paladin Protection { 0.54, 12 },
+-- measured { median, real } (4bd02bde0 reverted; with 68dee8fa5 reverted too every line is the same), so the move is
+-- the oracle's. Was: Feral { 0.43, 4 }, Paladin Protection { 0.54, 12 },
 -- Retribution { 0, 0 }, Assassination { 0.16, 15 }, Combat { 0.22, 11 }, Enhancement { 0.96, 3 }, Demonology
 -- { 0.20, 1 }, Destruction { 0.40, 17 }, Fury { 0.44, 35 }, Warrior Protection { 0.50, 5 }.
 M.READY = {
@@ -297,7 +297,7 @@ M.READY = {
     -- 0.26 -> 0.43: 0.26 rested on the Innervate miscalibration that ran the mana belief ~31 high before the 107.74 s
     -- Shifting Power; with regen correct the floor (lo) reaches the cost ~0.4 s after the truth (gap BQ); owner ruling
     -- 2026-10-26
-    druid_feral = { 0.25, 6 },
+    druid_feral = { 0.25, 7 },
     druid_guardian = { 0.54, 41 }, -- 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     hunter_beast_mastery = { 0.32, 5 },
     hunter_marksmanship = { 0.15, 7 }, -- was { 0.15, 10 } (b8d673eb8 raised it to 0.18 for gap BW, reverted with BW's fix): measured real 8 median 0.15 once the replay seeds the casting rate from unboosted ticks (168.28 strider_kick back to never); real 7 since gap CE's fractional read
@@ -355,7 +355,7 @@ M.READY = {
     -- 0.51, 35 (was 0.48, 32): harness corrected to the measured swing timing (2026-10-22); 0.44 (fix 40): Whirlwind at
     -- 57.09 and 117.06 late -> early 0.09 and 0.06
     warrior_fury = { 0.52, 26 },
-    warrior_protection = { 0.38, 10 },
+    warrior_protection = { 0.38, 11 },
 }
 
 --- The ready-time check of replay `R` (timing.lua) on spec `spec` after its run: prints "<label> wowsims timing:
