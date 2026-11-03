@@ -218,7 +218,7 @@ extends rule 14 as rule 14b):
 | 0 Baseline | 0 | the baseline report committed |
 | 1 Plumbing | 1, 2 | `make check`; one spec exports; the dry-run omit counts match the research |
 | 2 Translator kinds | 3, 4, 5 | `make check`; the omit counts fall on the low-change specs (dry run) |
-| 3 Movement | 6, 7, 8a, 8b, 9 | `make gate`; the toggle tests; the hunter packs at the old pin replayed ON (no wait lines) |
+| 3 Movement | 6, 8a, 7, 8b, 9 (8a before 7: owner 2026-11-03) | `make gate`; the toggle tests; the hunter packs at the old pin replayed ON (no wait lines) |
 | 4 Low-change | 10, 11, 12 | `make gate` per task |
 | 5 Rogue, Warrior | 13, 14 | `make gate` per task |
 | 6 Enh, Warlock, Ret | 15, 16, 17 | `make gate` per task |
@@ -471,6 +471,8 @@ Its top three are classified first, and it ships only when every remaining top d
 - [ ] **Step 5: Commit** `feat: Movement toggle, a generic setting packs opt into`.
 
 ### Task 7: The move rewrite in the translator (Phase 3, spec §2.2, S3)
+
+**Order (owner 2026-11-03):** runs after Task 8a, so it writes onto windows once. Rule 14b (a `sequence` as a chain) is replaced by §3a's stepped windows: a wowsims `sequence` / `strictSequence` / `resetSequence` translates to a stepped window (`steps`, `loop`, `strict`, `on_deviation`) with its condition as the evaluator where the belief can read it (else omitted and listed); the Retribution opener's sequences and the hunter weave's step-in use 8a's windows here, so Tasks 8b, 17 and 19 do not rewrite this output.
 
 **Files:**
 - Modify: `tools/wowsims/apl.lua` (rule 19: the move rewrite; rule 14b: a `sequence` as a chain; the header's `# Movement:` block)
