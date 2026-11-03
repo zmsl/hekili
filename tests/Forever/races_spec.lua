@@ -232,7 +232,7 @@ describe("race packs", function()
         assert.are.same({ maxMods = {}, costMods = {}, regenMods = {} }, ns.raceMods) -- no resource or cost modifier
         load("Tauren")
         local stomp = all.abilities.war_stomp
-        assert.are.same({ 20549, 0.5, 120, "off" }, { stomp.id, stomp.cast, stomp.cooldown, stomp.gcd })
+        assert.are.same({ 20549, 0.5, 90, "off" }, { stomp.id, stomp.cast, stomp.cooldown, stomp.gcd })
         assert.are.same({ 20549, 2 }, { all.auras.war_stomp.id, all.auras.war_stomp.duration })
         assert.is_false(all.abilities.elunes_light.known)
         for _, a in ipairs({ light, stomp }) do
