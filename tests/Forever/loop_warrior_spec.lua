@@ -330,13 +330,3 @@ describe("the headless Arms gates, 20 fights #loop", function()
         assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
     end)
 end)
-
--- The party report (§5.2): reported, engine health gated; `make test-party`, not `make check` (D2).
-describe("the headless Arms party report #party", function()
-    it("Arms in a party of 5, a melee and a caster on our target, 10 fights: reported", function()
-        local m = loop.tally(loop.new(ww), 10, { others = { "melee", "caster" } })
-        print("\nArms party: " .. loop.line(m))
-        assert.are.same({ 0, 0, 0 }, { m.errors, m.raises, m.selfCheck })
-        assert.are.same({}, m.misses)
-    end)
-end)

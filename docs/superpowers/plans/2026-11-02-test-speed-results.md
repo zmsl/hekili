@@ -106,6 +106,8 @@ loop_warrior 178.4 (#loop Arms 140, #party Arms 38), detect_more 111.6 (K16 45; 
 |---|---|---|---|---|---|---|
 | 2 stamped check | `make check` wall s, inputs unchanged | 195.3-200.8 (full) | 0.19 / 0.20 (skip) | yes (both FULL=1 logs) | n/a (no rig input) | yes |
 | 3 docs-only skip | `make check` wall s, only an unread doc changed | 195.3-200.8 (full) | 0.24 (skip) | yes (FULL=1 log) | n/a (no rig input) | yes |
+| 4 split files | `make check FULL=1` wall s, base/split interleaved x3 | 240.9 / 230.3 / 266.3 | 217.9 / 217.3 / 258.1 | yes (result lines; new files add empty lines) | not run | yes |
+| 4 split files | `make gate` wall s, interleaved x3 (loaded machine) | 801.8 / 898.1 / 867.4 | 1013.5 / 816.1 / 710.8 | yes (result lines) | not run | yes (by the bound file, see below) |
 
 ### Task 2: the stamped check
 
@@ -133,3 +135,36 @@ Raw logs `~/src/hekili-speed-runs/task3/` (`full1.log`, `docs.log`, `readme.log`
   green check: docs/dev/gaps.md; FULL=1 runs it`, wall 0.24 s; then `git checkout docs/dev/gaps.md`.
 - A line appended to `README.md`, `make check`: no skip line, check-full ran (lint, fmt-check, typecheck, then
   `busted_parallel.sh` started), killed by process group (rc 143); then `git checkout README.md`.
+
+### Task 4: the split files
+
+Raw logs `~/src/hekili-speed-runs/split/` (`check-batch.out`, `gate-batch.out`, `check-{base,split}{0..3}.log`,
+`gate-{base,split}{0..3}.log`, `.time` beside each, `names-*.{before,after}`, `top.sh` for per-file seconds). The base
+arm is the same worktree with the split stashed (`git stash -u`), interleaved base, split; warm-ups 0 discarded;
+`XDG_CACHE_HOME` per arm. 2026-11-03: check batch 14:17-14:49 under one lock hold (load 3.76 at start); gate batch
+14:50-16:37, `pgrep -c busted` 0 before each.
+
+Splits (single-process seconds from `its.tsv`): `druid_harness_gates_a_spec.lua` bear, reload, decay (139.4) /
+`_b_spec.lua` cat, regenAfter, shift, furor (146.8), the gates in `helpers/druid_harness_gates.lua`;
+`loop_shaman_enhancement_spec.lua` / `loop_shaman_elemental_spec.lua`; `loop_warrior_party_spec.lua`; detect_more:
+K10-K18 stay (61.1), `detect_more_b_spec.lua` K19, K21, K16, K17 (56.1; K21 is not in `its.tsv`, measured alone at
+5.56 s), each cell in `detect_more_cells.lua`. Names before/after: identical (both tiers).
+
+- Check: every pair lower (-23.0 / -13.1 / -8.2 s), mean 245.8 -> 231.1 s, above Task 1's 5.4 s spread: kept. Top 5
+  (split1): loop_druid 167.2, alts_seed3 151.3, wowsims_druid 141.0, group 131.3, solo 121.5 (detect_more gone from
+  the top; base1 had it at 220.1).
+- Gate: the machine was loaded (gate walls 711-1062 s against Task 1's 599; the check part's per-file sum 3195-7188 s
+  against Task 1's ~2700), so the walls do not decide: the pairs went +212 / -82 / -157 s. The bound file did move:
+  the gate tier's slowest file was druid_harness 522 / 471 / 442 s (then loop_shaman 483 / 427 / 411) on base, and
+  loop_druid_feral 344 / 392 / 342 s on split (druid_harness_gates_a/b 242-316, Shaman packs <= 216). Kept, with a
+  quiet-machine gate re-time owed. Top 5 gate tier (split3): loop_druid_feral 342.1, loop_warrior_protection 296.2,
+  loop_warrior 266.4, druid_harness_gates_b 260.2, loop_warlock_demonology 247.0.
+- Left whole (one gate-tier `it` each; the Warlock files also hold one #slow `it`; base2 gate1 s): loop_druid_feral 287.7, loop_warrior_protection 248.4,
+  loop_warlock_demonology 203.5, loop_warlock_sm_ruin 189.4, loop_warlock_shadow_brand 188.5,
+  loop_warlock_destruction 184.1, loop_priest_shadow 182.5, loop_warlock_affliction 182.1, loop_warrior_fury 151.0;
+  alts_seed3 (check tier) 131.2.
+- Results: `results.sh` of every split log against `base2`: the result lines are identical (`all files:` 2817 / 0 / 0 / 0
+  and 42 / 0 / 0 / 0); the only difference is empty lines (check 1, gate 3): a new file whose first output is
+  `print("\n...")` starts its log section with an empty line. A strip of empty lines in `results.sh` would close it.
+- The split warm-up gate (split0, discarded) failed in its check part: `loop_warlock_destruction_spec.lua` (unchanged)
+  ended with no output and a non-zero rc (2816 successes); no OOM line found. The three timed split gates passed.
