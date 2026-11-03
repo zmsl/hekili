@@ -38,6 +38,34 @@ local recNext = 0
 
 local lastMain, lastW0, fresh = 0, -1, false
 
+-- Gap AS (owner ruling 2026-11-02): per swing ticket, the spell ticket whose own frame an avoid the swing took by the
+-- MELEE tie arrived in (0 none), that ticket's and the swing's anchors (the slots' identities) and the avoid's time.
+-- The swing's own wound in its core band later gives the avoid back to that cast.
+local tieP, tieAt, tieSw, tieT = {}, {}, {}, {}
+for k = 1, T.CAP do
+    tieP[k], tieAt[k], tieSw[k], tieT[k] = 0, 0, 0, 0
+end
+
+-- The PROV swing on `g` holding a tied avoid whose core band holds a white wound at t (its own: it landed), or nil.
+-- Allocates nothing.
+local function tieHolder(t, g, amount, flag)
+    for i = 1, T.CAP do
+        local h = T.x[i]
+        if
+            tieP[i] > 0
+            and T.state[i] == T.PROV
+            and T.kind[i] == MELEE
+            and T.at[i] == tieSw[i]
+            and T.guid[i] == g
+            and math.abs(t - T.at[i] - L.med[h]) <= 2 * L.spr[h]
+            and M.classOf(h, amount, flag) > 0
+        then
+            return i
+        end
+    end
+    return nil
+end
+
 local MISSES = {
     DODGE = true,
     PARRY = true,
@@ -237,7 +265,12 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
     end
     if T.avoid[credited] ~= "" then
         L.avoidsBack = L.avoidsBack + 1 -- the avoid it held was someone else's after all
+        local q = tieP[credited]
+        if q > 0 and T.at[credited] == tieSw[credited] and T.state[q] == T.OPEN and T.at[q] == tieAt[credited] then
+            paySpell(q, 1, 1, tieT[credited], T.avoid[credited], "", 0, 1, true, false) -- the cast's, by the tie (AS)
+        end
     end
+    tieP[credited] = 0
     -- a credit outside the hand's core band is provisional and never teaches the median (decision 48)
     local dc = ref == 3 and t - T.ref[credited] or lag -- the scoring reference's lag (an off hand's main reference)
     local core = T.first[credited] or lag <= SAME_FRAME or math.abs(dc - L.med[ref]) <= 2 * L.spr[ref]
@@ -434,6 +467,7 @@ local function route(t, g, uid, act, flag, amount, school)
     local crit = not avoid and flag == "CRITICAL"
     local tied = false -- the MELEE tie took the row from a spell: pass (d) never hands it back
     local tiedP, tiedN = 0, 0 -- the spell ticket the tie took it from in its own frame (re-offered if the swing refuses)
+    local frameSw, frameP = 0, 0 -- the swing the tie gave an avoid in a cast's own frame, and that cast's ticket (AS)
     local p, n = T.Pick(t, g, 1, act, flag, amount, school, avoid)
     local pass = 1
     local replacing = 0
@@ -466,6 +500,9 @@ local function route(t, g, uid, act, flag, amount, school)
                 -- not its core band): the spell's again if the swing refuses it
                 if pass == 1 and not T.first[sw] and lag <= SAME_FRAME then
                     tiedP, tiedN = p, n
+                end
+                if pass == 1 and t - T.at[p] <= SAME_FRAME then -- the cast's own frame: its again if the swing lands
+                    frameSw, frameP = sw, p
                 end
                 p, tied = 0, true -- the swing's (MELEE wins the tie): the LR below takes it, the spell keeps its effects
             else
@@ -504,6 +541,15 @@ local function route(t, g, uid, act, flag, amount, school)
             local rr = (rf > 0 and math.abs(lag - L.med[h]) > 2 * L.spr[h]) and 3 or h
             credited, lr, ref, second = r, math.huge, rr, 0
             k = M.thetaIndex(h, (avoid or unknown) and 4 or M.classOf(h, amount, flag), rr, rr == 3 and t - rf or lag)
+        end
+    end
+    if p == 0 and not credited and white and not avoid then
+        local i = tieHolder(t, g, amount, flag)
+        if i then -- its own wound: the avoid it held by the tie was the cast's
+            local h = T.x[i]
+            lag = t - T.at[i]
+            credited, lr, ref, second = i, math.huge, h, 0
+            k = M.thetaIndex(h, M.classOf(h, amount, flag), h, lag)
         end
     end
     if p == 0 and not credited and not avoid then
@@ -545,6 +591,9 @@ local function route(t, g, uid, act, flag, amount, school)
     elseif not credited then
         foreign(uid, t, act, flag, amount, white, avoid, unknown, school)
         return
+    end
+    if avoid and credited == frameSw then
+        tieP[credited], tieAt[credited], tieSw[credited], tieT[credited] = frameP, T.at[frameP], T.at[credited], t
     end
     creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
 end

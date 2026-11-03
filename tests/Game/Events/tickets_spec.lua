@@ -541,6 +541,26 @@ describe("the ticket pool", function()
             assert.are.equal(T.OPEN, T.state[sw])
         end)
 
+        -- gap AS (wowsims Protection replay, Rend 163.54): the dodge comes in the frame of the strike's own success
+        -- while the 163.13 swing is in flight (its core band); the swing's own wound lands at 163.604
+        it("gives a strike's same-frame avoid back from a swing in flight once the swing's own wound lands", function()
+            local h = fs.new(9, false, false, true)
+            h.Class.abilities.spender_m.school = "physical"
+            I.Build(fs.def(h), 1)
+            ctl.now = 163.13
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local sw = T.lastSwing[1]
+            ctl.now = 163.54
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.are.same({ T.PROV, 0 }, { T.state[sw], count(VS.Obs.Avoided) }) -- MELEE wins the tie, for now
+            ctl.now = 163.604
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(1, count(VS.Obs.Swing, 1)) -- the swing's own wound: landed
+            assert.are.equal(1, count(VS.Obs.Avoided)) -- the dodge was the strike's: its debuff undone
+            assert.are.equal(0, T.paid[X.FRAME] - 1) -- the strike's ticket closed on the dodge, not the wound
+        end)
+
         it("stages a held crit once the narrow band passes with no replacement, and teaches then", function()
             I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
             T.Learn("Creature-1", 20, 1.5, 9)
