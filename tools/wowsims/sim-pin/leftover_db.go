@@ -98,4 +98,7 @@ func main() {
 		panic(err)
 	}
 	fmt.Println("added items:", added)
+	if added < 28 { // docs/dev/wowsims-packs.md lists 28
+		os.Exit(1)
+	}
 }

@@ -4,8 +4,10 @@
 # applied and leftover_db.go's items put back in the db. The checkout's files are restored after, built or not.
 set -e
 here=$(cd "$(dirname "$0")" && pwd)
+pin=$(sed -n 's/^M.SIM_PIN = "\([0-9a-f]*\)".*/\1/p' "$here/../export.lua")
+[ -n "$pin" ] || { echo "no M.SIM_PIN in export.lua" >&2; exit 1; }
 cd "$1"
-[ "$(git rev-parse HEAD)" = e2842f0a784d2f329dde0bc682a6b84202a780f2 ] || { echo "$1 is not at M.SIM_PIN" >&2; exit 1; }
+[ "$(git rev-parse HEAD)" = "$pin" ] || { echo "$1 is not at M.SIM_PIN" >&2; exit 1; }
 git diff --quiet || { echo "$1 has local changes" >&2; exit 1; }
 tmp=$(mktemp -d)
 trap 'git checkout -q -- . && rm -rf tools/hekilidb "$tmp"' EXIT
