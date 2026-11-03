@@ -104,6 +104,18 @@ function M.boot(o)
         c.provRow[i], c.provT[i] = c.cur, c.ctl.now
         return provisional(i, lri, act)
     end
+    -- its reversed order: a swing credited at a cast's own avoid with the wound the LR refused earlier (that foreign
+    -- row's time) belongs to the wound's row; the last 8 foreign rows (a ring, preallocated)
+    c.forRow, c.forT, c.forN, c.late = {}, {}, 0, 0
+    for j = 1, 8 do
+        c.forRow[j], c.forT[j] = 0, -1
+    end
+    local foreignRow = T.Foreign
+    T.Foreign = function(u, sch, t)
+        c.forN = c.forN % 8 + 1
+        c.forRow[c.forN], c.forT[c.forN] = c.cur, t
+        return foreignRow(u, sch, t)
+    end
     T.onPay = function(i, t, pass)
         local k = c.cur
         if t ~= c.ctl.now then
@@ -112,7 +124,13 @@ function M.boot(o)
                     k = c.provRow[j]
                 end
             end
+            for j = 1, 8 do
+                if c.forT[j] == t and c.forRow[j] > 0 then
+                    k = c.forRow[j]
+                end
+            end
         end
+        c.late = k ~= c.cur and k or 0 -- the credit's Swing staging that follows books to that row too
         c.tIdx[i] = k
         if k > 0 then
             c.payAt[k], c.payKind[k], c.payPass[k], c.payN[k] = T.at[i], T.kind[i], pass, c.payN[k] + 1
@@ -259,7 +277,7 @@ function M.boot(o)
     end)
     S.Stage = function(kind, t, a, b, cc)
         if kind == Swing and (cc == 1 or cc == 3 or cc == 7) then -- c = 7: an assumption confirmed, the row's credit
-            local i = c.cur
+            local i = c.late > 0 and c.late or c.cur
             if cc == 3 then
                 c.crits[a] = c.crits[a] + 1
                 if i > 0 then
@@ -532,6 +550,10 @@ function M.run(c, s, offset)
     for j = 1, #c.provT do
         c.provRow[j], c.provT[j] = 0, -1
     end
+    for j = 1, 8 do
+        c.forRow[j], c.forT[j] = 0, -1
+    end
+    c.late = 0
     for _, r in pairs(c.trk) do
         r.n = 0
     end

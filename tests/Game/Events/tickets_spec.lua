@@ -561,6 +561,33 @@ describe("the ticket pool", function()
             assert.are.equal(0, T.paid[X.FRAME] - 1) -- the strike's ticket closed on the dodge, not the wound
         end)
 
+        -- the replay's Feral 75.24 (gap AS, reversed order): the 74.74 swing's own wound (87.036, above the stale
+        -- UnitDamage range) came first and the LR refused it; Rake's own DODGE 26 ms later is the cast's, not the swing's
+        it(
+            "gives a strike's same-frame avoid to the strike when the swing's own wound came first and was refused",
+            function()
+                local h = fs.new(9, false, false, true)
+                h.Class.abilities.spender_m.school = "physical"
+                I.Build(fs.def(h), 1)
+                ctl.now = 70
+                ctl.damage = { 40, 50, 0, 0 } -- 87.036 is class 3 (above 1.1 x 50): q 0.02
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                I.Log.bg[3] = 0.1 -- the background's white "above" rate (the replay's bleed ticks): LR under theta
+                ctl.now = 74.74
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                local sw = T.lastSwing[1]
+                ctl.now = 75.214
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 87.036, 1)
+                assert.are.same({ T.OPEN, 1 }, { T.state[sw], T.foreign }) -- refused: foreign, the swing still open
+                ctl.now = 75.24
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                assert.are.equal(1, count(VS.Obs.Avoided)) -- the strike's dodge: its debuff undone
+                assert.are.equal(1, count(VS.Obs.Swing, 1)) -- the swing landed: its refused wound was its own
+                assert.are.equal(1, T.paid[X.FRAME])
+            end
+        )
+
         it("stages a held crit once the narrow band passes with no replacement, and teaches then", function()
             I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
             T.Learn("Creature-1", 20, 1.5, 9)

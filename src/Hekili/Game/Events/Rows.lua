@@ -42,8 +42,12 @@ local lastMain, lastW0, fresh = 0, -1, false
 -- MELEE tie arrived in (0 none), that ticket's and the swing's anchors (the slots' identities) and the avoid's time.
 -- The swing's own wound in its core band later gives the avoid back to that cast.
 local tieP, tieAt, tieSw, tieT = {}, {}, {}, {}
+-- The reversed order: per swing ticket, the white wound in its core band the LR refused (time, amount, flag; wAt the
+-- swing's anchor, 0 none). An avoid in a cast's own frame then finds the swing landed: the avoid is the cast's.
+local wT, wAmt, wFlag, wAt = {}, {}, {}, {}
 for k = 1, T.CAP do
     tieP[k], tieAt[k], tieSw[k], tieT[k] = 0, 0, 0, 0
+    wT[k], wAmt[k], wFlag[k], wAt[k] = 0, 0, "", 0
 end
 
 -- The PROV swing on `g` holding a tied avoid whose core band holds a white wound at t (its own: it landed), or nil.
@@ -501,10 +505,18 @@ local function route(t, g, uid, act, flag, amount, school)
                 if pass == 1 and not T.first[sw] and lag <= SAME_FRAME then
                     tiedP, tiedN = p, n
                 end
-                if pass == 1 and t - T.at[p] <= SAME_FRAME then -- the cast's own frame: its again if the swing lands
-                    frameSw, frameP = sw, p
+                local own = pass == 1 and t - T.at[p] <= SAME_FRAME
+                if own and wAt[sw] == T.at[sw] then -- the swing's own wound came first: it landed, the avoid is the cast's
+                    local h, wl = T.x[sw], wT[sw] - T.at[sw]
+                    local wk = M.thetaIndex(h, M.classOf(h, wAmt[sw], wFlag[sw]), h, wl)
+                    creditSwing(sw, wT[sw], "WOUND", wFlag[sw], wAmt[sw], false, false, math.huge, h, wl, 0, wk)
+                    wAt[sw] = 0
+                else
+                    if own then -- the cast's own frame: its again if the swing lands
+                        frameSw, frameP = sw, p
+                    end
+                    p, tied = 0, true -- the swing's (MELEE wins the tie): the LR below takes it, the spell keeps its effects
                 end
-                p, tied = 0, true -- the swing's (MELEE wins the tie): the LR below takes it, the spell keeps its effects
             else
                 crit = false
             end
@@ -512,6 +524,7 @@ local function route(t, g, uid, act, flag, amount, school)
     end
     local credited, lr, ref, lag, second, k = nil, 0, 0, 0, 0, 1
     local unknown = false
+    local refused = 0 -- the swing the LR refused this wound for (AS's reversed order)
     if p == 0 and white and (AVOIDS[act] or not avoid) and not (not avoid and t - lastW0 <= SAME_FRAME) then
         if not avoid then
             local _, maxMain = VS.Stat("UnitDamage")
@@ -520,6 +533,7 @@ local function route(t, g, uid, act, flag, amount, school)
         end
         credited, lr, ref, lag, second, k = M.score(t, g, amount, flag, avoid, unknown)
         if credited and lr < (avoid and L.THETA or L.theta[k]) then
+            refused = (not avoid and lr >= 1) and credited or 0 -- still more likely ours than the background's
             credited = nil
         elseif credited and not avoid and I.Missed and I.Missed(T.x[credited], T.at[credited]) then
             -- the veto: that swing gave no rage (its usability answers since it showed), so this wound is another's
@@ -589,6 +603,12 @@ local function route(t, g, uid, act, flag, amount, school)
         paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
         return
     elseif not credited then
+        if refused > 0 then -- in its core band and amount classes: the swing's own if a cast's own avoid follows
+            local h = T.x[refused]
+            if math.abs(t - T.at[refused] - L.med[h]) <= 2 * L.spr[h] and M.classOf(h, amount, flag) > 0 then
+                wT[refused], wAmt[refused], wFlag[refused], wAt[refused] = t, amount, flag, T.at[refused]
+            end
+        end
         foreign(uid, t, act, flag, amount, white, avoid, unknown, school)
         return
     end

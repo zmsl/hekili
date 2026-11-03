@@ -297,7 +297,9 @@ M.READY = {
     -- 0.26 -> 0.43: 0.26 rested on the Innervate miscalibration that ran the mana belief ~31 high before the 107.74 s
     -- Shifting Power; with regen correct the floor (lo) reaches the cost ~0.4 s after the truth (gap BQ); owner ruling
     -- 2026-10-26
-    druid_feral = { 0.25, 7 },
+    -- { 0.25, 7 } -> { 0.50, 5 }: gap AS's reversed order (Rake dodged at 75.24 now undoes Rake): 76.24 timed, and
+    -- the 91.74 / 95.24 late rows (0.22 / 0.25 s) fall inside the cost absorption; the five left have the larger median
+    druid_feral = { 0.50, 5 },
     druid_guardian = { 0.54, 41 }, -- 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     hunter_beast_mastery = { 0.32, 5 },
     hunter_marksmanship = { 0.15, 7 }, -- was { 0.15, 10 } (b8d673eb8 raised it to 0.18 for gap BW, reverted with BW's fix): measured real 8 median 0.15 once the replay seeds the casting rate from unboosted ticks (168.28 strider_kick back to never); real 7 since gap CE's fractional read
