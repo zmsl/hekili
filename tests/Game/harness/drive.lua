@@ -92,8 +92,19 @@ function M.boot(o)
     for i = 1, CAP do
         c.replacedAt[i] = 0
     end
+    -- gap AS's give-back: a cast paid at a swing's own wound for the avoid that swing held (T.Provisional's row, the
+    -- payment at that row's time) belongs to the avoid's row
+    c.provAt = {}
+    local provisional = T.Provisional
+    T.Provisional = function(i, lri, act)
+        c.provAt[c.ctl.now] = c.cur
+        return provisional(i, lri, act)
+    end
     T.onPay = function(i, t, pass)
         local k = c.cur
+        if t ~= c.ctl.now and c.provAt[t] then
+            k = c.provAt[t]
+        end
         c.tIdx[i] = k
         if k > 0 then
             c.payAt[k], c.payKind[k], c.payPass[k], c.payN[k] = T.at[i], T.kind[i], pass, c.payN[k] + 1
@@ -509,7 +520,7 @@ function M.run(c, s, offset)
         c.payAt[i], c.payKind[i], c.payPass[i], c.staged[i] = 0, 0, 0, 0
         c.payN[i], c.disp[i], c.replacedAt[i], c.verdictT[i] = 0, 0, 0, 0
     end
-    c.crossGUID, c.tickShift = 0, 0
+    c.crossGUID, c.tickShift, c.provAt = 0, 0, {}
     for _, r in pairs(c.trk) do
         r.n = 0
     end
