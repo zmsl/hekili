@@ -94,16 +94,24 @@ function M.boot(o)
     end
     -- gap AS's give-back: a cast paid at a swing's own wound for the avoid that swing held (T.Provisional's row, the
     -- payment at that row's time) belongs to the avoid's row
-    c.provAt = {}
+    -- (per swing ticket, preallocated: the drive allocates nothing)
+    c.provRow, c.provT = {}, {}
+    for i = 1, T.CAP do
+        c.provRow[i], c.provT[i] = 0, -1
+    end
     local provisional = T.Provisional
     T.Provisional = function(i, lri, act)
-        c.provAt[c.ctl.now] = c.cur
+        c.provRow[i], c.provT[i] = c.cur, c.ctl.now
         return provisional(i, lri, act)
     end
     T.onPay = function(i, t, pass)
         local k = c.cur
-        if t ~= c.ctl.now and c.provAt[t] then
-            k = c.provAt[t]
+        if t ~= c.ctl.now then
+            for j = 1, T.CAP do
+                if c.provT[j] == t and c.provRow[j] > 0 then
+                    k = c.provRow[j]
+                end
+            end
         end
         c.tIdx[i] = k
         if k > 0 then
@@ -520,7 +528,10 @@ function M.run(c, s, offset)
         c.payAt[i], c.payKind[i], c.payPass[i], c.staged[i] = 0, 0, 0, 0
         c.payN[i], c.disp[i], c.replacedAt[i], c.verdictT[i] = 0, 0, 0, 0
     end
-    c.crossGUID, c.tickShift, c.provAt = 0, 0, {}
+    c.crossGUID, c.tickShift = 0, 0
+    for j = 1, #c.provT do
+        c.provRow[j], c.provT[j] = 0, -1
+    end
     for _, r in pairs(c.trk) do
         r.n = 0
     end
