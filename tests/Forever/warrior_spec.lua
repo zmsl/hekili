@@ -364,6 +364,15 @@ describe("Forever Warrior", function()
         assert.are.same({ 20 }, e.gained)
     end)
 
+    it("spends the rest of the rage after Execute's cost in the belief, as the sim's handler and wowsims do", function()
+        -- gaps.md "Execute floor": the belief kept lo above the truth after an Execute (Fury flicker, 2026-11-03)
+        local e = lw.env(w)
+        e.rage.current = 7 -- what the belief holds after the cost came off
+        assert.is_function(w.abilities.execute.now)
+        lw.run(w.abilities.execute.now, e)
+        assert.are.same({ 7 }, e.spent)
+    end)
+
     describe("the reactive windows from the combat log (event-facade spec §6)", function()
         local ME, MOB = "Player-1", "Creature-1"
 

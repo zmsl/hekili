@@ -1230,6 +1230,12 @@ spec:RegisterAbilities({
             return reactive(EXECUTE), "requires target health under 20 percent"
         end,
 
+        -- the belief's side of the handler: the rest after the cost goes into the strike (wowsims execute.go; gaps.md
+        -- "Execute floor": with the cost alone the floor stayed above the truth)
+        now = function()
+            spend(rage.current, "rage")
+        end,
+
         handler = function()
             spend(rage.lo, "rage") -- the rest of the rage goes into the strike (the sim's floor, border batch 2)
         end,
