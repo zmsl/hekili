@@ -40,7 +40,7 @@ for f in "${files[@]}"; do
     log="$OUT/${f//\//_}"
     rc=$(cat "$log.rc" 2>/dev/null)
     [ "$rc" = 0 ] && grep -q '^0 successes / 0 failures / 0 errors / 0 pending' "$log" && continue
-    echo "== $f"
+    echo "== $f (rc=$rc)"
     cat "$log"
     [ "$rc" = 0 ] || failed+=("$f")
 done
