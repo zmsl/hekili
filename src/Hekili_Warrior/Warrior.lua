@@ -313,10 +313,10 @@ spec:RegisterResource(
                 return 1.73 * speed * (1 + 0.1 * talent.dual_wield_specialization.rank)
                     + wrathRage(talent.unbridled_wrath.rank, weapon.size == 2)
             end,
-            -- shortcut: the off hand's crit bonus is unmeasured (issue 3); assumed its own base, 1.73 x speed.
+            -- A crit doubles the off hand's rage, Dual Wield Specialization included (W1, wowsims core/rage.go).
             crit = function()
                 local speed = swingBase(2)
-                return 1.73 * (speed > 0 and speed or offhand_speed)
+                return 1.73 * (speed > 0 and speed or offhand_speed) * (1 + 0.1 * talent.dual_wield_specialization.rank)
             end,
         },
 

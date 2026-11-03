@@ -573,7 +573,10 @@ describe("Forever Warrior", function()
         near(4.5 * 3.3, lw.run(models.mainhand.crit, w.state)) -- a white crit doubles the swing's rage, two-hander too (W1)
         w.state.main_hand.size, w.game.base = 1, { 2.2, 2.5 }
         near(3.46 * 2.2, lw.run(models.mainhand.crit, w.state))
-        near(1.73 * 2.5, lw.run(models.offhand.crit, w.state)) -- the off hand's own base (unmeasured on Forever)
+        -- an off-hand crit doubles its whole rage, Dual Wield Specialization included (wowsims core/rage.go, W1)
+        near(1.73 * 2.5 * 1.3, lw.run(models.offhand.crit, w.state))
+        w.state.talent.dual_wield_specialization.rank = 0
+        near(1.73 * 2.5, lw.run(models.offhand.crit, w.state))
         assert.are.same({ "offhand", "offhand_speed" }, { models.offhand.swing, models.offhand.interval })
     end)
 

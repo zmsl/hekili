@@ -462,11 +462,10 @@ M.Fury = setmetatable({
     end,
     -- The class file's rates restated (as M.gain): 3.46 x speed main hand with a one-hander, 1.73 x speed off hand, +10%
     -- per rank of Dual Wield Specialization the character has (5/5 at 60, 0 at L24: the cut stops short of it); a crit
-    -- one more base swing. Unbridled Wrath's procs are not modelled.
+    -- doubles the swing's rage (W1). Unbridled Wrath's procs are not modelled.
     gain = function(_, hand, _, flag, character)
         local rate = hand == 1 and 3.46 or 1.73 * (1 + 0.1 * (character.talents[DUAL_WIELD_SPEC] or 0))
-        local base = rate * FURY_SPEED[hand]
-        return base + (flag == "CRITICAL" and (hand == 1 and 3.46 or 1.73) * FURY_SPEED[hand] or 0)
+        return rate * FURY_SPEED[hand] * (flag == "CRITICAL" and 2 or 1)
     end,
 }, { __index = M })
 
