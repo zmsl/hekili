@@ -1,7 +1,7 @@
 -- Hekili_Shared/Races/HighOrderSkyborne.lua
 -- The High Order Skyborne (Alliance; ChrRaces 95: wowsims tools/database/dbc/util.go:44-52, ui/sim/proto/utils.ts:62),
 -- one of Forever's two Skyborne races (skill line 2980; the Windshaper, Horde, 96, has no file: its Skysight is a
--- movement utility). Its Forever racial (DB2 1.60.1.70338, SkillLineAbility 55323: RaceMasks_1 bit 32 only): Read Ley
+-- movement utility). Its Forever racial (DB2 build 70707 for the skill line; Read Ley Line and Energized values from wowsims racials.go dev notes, SkillLineAbility 55323: RaceMasks_1 bit 32 only): Read Ley
 -- Line (1259705: 0.5 s cast since wowsims #800 (the DB2's 2 s), on the GCD, 120 s), which grants Energized (1270842):
 -- on a mana user wowsims multiplies the whole mana regen, mp5 and spirit, by 1.5 for 15 s since the 26 Oct dev notes
 -- (sim/core/racials.go; x 2 if Attuned, unreadable: ignored; ends under Innervate, unmodelled).
