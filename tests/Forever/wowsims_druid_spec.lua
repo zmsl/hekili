@@ -7,8 +7,11 @@ local replay = require("Game.harness.replay")
 local headless = require("Game.harness.headless")
 
 -- Berserk (417141) is a talent's spell with no trainer level: known through its talent's points only, not the
--- worlds' kit list (which a missing level would teach at 1).
-local LEARN = setmetatable({ [417141] = math.huge }, { __index = ws.learn("DRUID") })
+-- worlds' kit list (which a missing level would teach at 1). Lacerate's hotfix ranks (113554) are not in the DB2:
+-- its rank 1 (1328617) is now such a talent's, its rank 2 (1328616) the class file's level 34.
+local LEARN = setmetatable({ [417141] = math.huge, [1328617] = math.huge, [1328616] = 34 }, {
+    __index = ws.learn("DRUID"),
+})
 
 local function content(spec, base, pack, level, extra)
     local o = {
