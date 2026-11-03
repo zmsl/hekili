@@ -1,6 +1,7 @@
 # Full wowsims re-pin and the Movement toggle (design, 2026-11-03)
 
-Status: DRAFT for the owner, revised the same day to the owner's movement ruling (decision 6). A design, not a plan:
+Status: APPROVED for planning, revised the same day to the owner's movement ruling (decision 6) and the builder
+check's rulings (decision 8). A design, not a plan:
 intent, goals, decisions and what is left to the builder. Branch `forever-repin` from `origin/forever` 0d98cb02c.
 Paths are under `src/Hekili/` unless they start with `tests/`, `tools/` or `docs/`.
 
@@ -38,6 +39,28 @@ against the trees at both commits is the source of every omit count below. Ledge
      are classified first, and the re-pin is named as the cause.
    - Pre-pull moves: "as long as it matches wowsims". They stay omitted from the display. A replay disagreement traced
      to one is a defect to fix, not a floor cost (§2.3).
+
+8. (2026-11-03, the builder check's rulings. Binding; where they meet older text below, they win.)
+   - Fresh-floor rule (owner "yes"): a fresh floor (Retribution, Feral, Guardian, the Hunters) ships only if every
+     remaining top disagreement is classified unfixable: API-forced, or a gap already in `docs/dev/gaps.md`. Any
+     fixable cause (kit, world, translator, engine) blocks the merge until it is fixed.
+   - Movement terms (owner "ok"): every movement term is dropped from translated conditions: run speed
+     (`unitMovementSpeed`), "is moving" (`unitIsMoving`, any unit) and arithmetic on yards (`unitDistance` inside
+     `math`, `min`/`max`, or compared with anything but a whole-number constant). The rest of the condition decides.
+     A dropped term reads as wowsims's nil (rule 6): it leaves its `and`/`or`, and a comparison or `math` over it is
+     nil too. This supersedes every "falls to false", "reads false" and "constant run speed" text. Hekili holds only
+     the Movement toggle, the client's range gate (rule 11's bracket, `spellInRange`) and the rotation's timing terms.
+     The ranged auto-shot clock (C7) stays, as a belief timer, because the timing part of the weave's move
+     condition reads it.
+   - ON flicker is measured: the replay runs ON (decision 7), so each opted-in spec's replay gate line carries an
+     ON flicker figure with a ceiling. The no-jitter rule applies to the default, which is ON.
+   - Phase 0: a baseline `make accuracy` run on `forever` 0d98cb02c before any change (it takes the gate lock
+     itself). The floors' baseline in §7 is that run.
+   - Phase 1 first verifies that the CLI built at e2842f0a78 has the `siml` subcommand.
+   - Settled in the plan (`docs/superpowers/plans/2026-11-03-wowsims-repin.md`): the Movement toggle's core UI
+     (options row, minimap menu, chat command, keybind, profile default; class-neutral), how the replay answers range
+     brackets and `spellInRange` at wowsims's logged distances (the real client path, the unknown bracket
+     included), and how Retribution's "Move to melee" group translates (a group of `sequence`s, rule 14's chain).
 
 The standing constraints apply unchanged:
 - The core stays class-neutral. The Movement toggle is a generic setting that packs opt into.
@@ -92,13 +115,10 @@ is its own entry's condition, translated by the usual rules and including its di
 - OFF: the real range bracket decides, so the entry is hidden until the player is in range (decision 5).
 
 The move conditions read three kinds of term:
-- The ranged clock (the weave's "more than 0.5 s to the next shot"): see §3.
-- Run speed (`unitMovementSpeed`): translated only inside a carried move condition, as wowsims's base run speed, a
-  constant. It is a number in a condition, not a model: no speed buffs (decision 3), no client read. This is the one
-  place the design touches decision 6, and the owner may veto it (§9).
-- Distance in arithmetic (a walk time computed from yards): rule 11 cannot translate it, because the client gives a
-  bracket, not yards. Such a term drops from the carried condition as an unresolvable read does (rule 12), and is
-  listed in the recipe header.
+- The ranged clock (the weave's "more than 0.5 s to the next shot"): see §3. Kept: a timing term.
+- Range brackets (rule 11's whole-yard comparisons, `spellInRange`): kept, the client's range gate.
+- Movement terms (run speed, "is moving", arithmetic on yards such as a walk time): dropped, as decision 8 rules,
+  wherever they appear (not only in carried move conditions). Each dropped term is listed in the recipe header.
 
 Nothing in the engine or the belief changes. The rewrite reads only a setting and the range bracket that exists
 today. An unknown bracket (no plain range answer yet) still answers both sides (rule 11), so OFF can show a
@@ -156,11 +176,12 @@ From the research's census. "Needed" means translated. "Omit" means rule 2, list
 | `talentIsKnown`, `talentRank` | 9 specs; Feral | Needed: `talent.<key>.enabled` / `.rank` (rule 4's mechanism) |
 | `spellIsCasting` | Balance, Fire, Frostfire, Arms, Demonology x2 | Needed: the engine's casting read of that spell; a precondition for dropping `no-cast-end-pick.patch` |
 | `spellInRange` | Retribution, hunter weave | Needed: the ability's range read; §2's rewrite where a move reaches it |
-| `unitDistance` beyond rule 11 (`OpNe` of a `max`) | hunter default #16 | Omit, as today |
+| `unitDistance` beyond rule 11 (`OpNe` of a `max`) | hunter default #16 | A movement term (arithmetic on yards): dropped (decision 8) |
 | `move`, distance-only `waitUntil` | §2 | Omit; their range gate goes to the reached entries |
 | `wait`, other `waitUntil` | §3 | Omit by default; translated only as §3 allows |
-| `unitMovementSpeed` | hunter walk variables | Inside a carried move condition only: wowsims's base run speed, a constant (§2.2). Elsewhere omitted with what reads it |
-| `unitIsMoving` (target) | Demonology's move condition | Reads false: the engine does not track target movement, and a stationary target is what the replay's boss is. Recorded as a deviation |
+| `unitMovementSpeed` | hunter walk variables | A movement term: dropped (decision 8) |
+| `unitIsMoving` (any unit) | Demonology's move condition | A movement term: dropped (decision 8) |
+| `sequence` whose members are casts, moves, waits and `waitUntil`s | Retribution's "Move to melee" | Rule 14's chain over its cast members; moves and waits as §2.2 and §3; its own `not sequenceIsComplete` dropped (the plan's ruling) |
 | `startAttack`, `petAttack`, `changeTarget`, `newTarget`, `itemSwap`, `recheckWhileMoving` | hunters, Warlocks, Enhancement | Omit: display-impossible or no Hekili equivalent |
 | `spellFullCooldown`, `gcdIsReady`, `spellGcdHastedDuration`, `currentHealth`, `auraDuration`, `dotBaseDuration`, `spellTravelTime` | various | Needed: one-line reads |
 | `hpPercentForDefensives` | Feral, Guardian | Needed as the build's constant; health is hidden in combat (Protection's precedent) |
@@ -240,7 +261,10 @@ Floors (decision 4): the baseline is the pre-re-pin `make accuracy`.
   beside the number.
 - Flicker and LIVE60 follow the same rule.
 - Fresh floors for Retribution, Feral, Guardian and the Hunters are approved (decision 7). Each takes the re-pin as
-  its named cause, and its top three disagreements are classified first.
+  its named cause, and its top three disagreements are classified first. It ships only if every remaining top
+  disagreement is unfixable (decision 8's fresh-floor rule).
+- ON flicker: each opted-in spec's replay line (Movement ON) carries a flicker ceiling, set measured-then-held like
+  any flicker floor (decision 8).
 
 | Spec | Change | Expected |
 | --- | --- | --- |
@@ -257,7 +281,8 @@ Floors (decision 4): the baseline is the pre-re-pin `make accuracy`.
 
 Each phase ends green (`make check`, and `make gate` where packs move).
 
-1. Plumbing: the CLI with `siml`, the SIML step, the recipe paths, `M.ENCOUNTER`. Gate: one request exports, and the
+0. Baseline: `make accuracy` on `forever` 0d98cb02c, the report kept beside the plan (decision 8).
+1. Plumbing (first: the e2842f0a78 CLI answers `siml`): the CLI with `siml`, the SIML step, the recipe paths, `M.ENCOUNTER`. Gate: one request exports, and the
    dry-run omit counts match the research.
 2. Translator kinds (§4). Gate: unit tests, and the omit counts falling on the low-change specs.
 3. The Movement setting, the range-gate rewrite with carried move conditions, and the ranged-hand expression (§2,
@@ -278,8 +303,7 @@ Phases 4-8 run in parallel by class once phases 1-3 are on the branch.
 - Builder: the opt-in form and the keybind (§2.1); folding the pin names (§5); classifying the non-distance
   `waitUntil` entries and Warrior's cd-usage nodes (§3, §4).
 - Builder: whether waits are translated, decided on phase 3's measurement (§3).
-- Owner veto: the base run speed constant inside a carried move condition (§2.2), and the target's "is moving" read
-  as false (§4).
+- Resolved by decision 8: run speed and "is moving" are dropped, not constants (the owner's "ok").
 - Resolved by decision 7: the ON form, the replay scoring ON, the fresh floors, and the pre-pull moves.
 - In game after launch: C7's H2-H5 if the waits are kept, and the tint during a walk with Movement ON (a ledger row
   added in phase 3).
