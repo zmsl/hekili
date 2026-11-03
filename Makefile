@@ -7,7 +7,7 @@ LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
 .PHONY: accuracy gate gate-ab bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check cdv-coverage syntax api-check \
-	packs-check tools-test check packs package package-check wowsims-cli wowsims-sim-cli wowsims-export wowsims-learn wowsims-packs test-wowsims
+	packs-check tools-test check check-full packs package package-check wowsims-cli wowsims-sim-cli wowsims-export wowsims-learn wowsims-packs test-wowsims
 
 bootstrap:
 	scripts/bootstrap.sh
@@ -52,7 +52,7 @@ GATE_LOCK ?= /tmp/hekili-gate.lock
 # HEKILI_AB is never passed through from the shell (tests/Game/harness/ab.lua reads it per call, so a leaked one would
 # turn a plain gate or check into a record-only provider arm): only gate-ab sets it, per arm, through AB_ARM.
 unexport HEKILI_AB
-gate: check
+gate: check-full
 	flock $(GATE_LOCK) env $(if $(AB_ARM),HEKILI_AB=$(AB_ARM)) BUSTED=$(BUSTED) BUSTED_JOBS=$$(($$(nproc) > 3 ? $$(nproc) - 2 : 1)) scripts/busted_parallel.sh --tags=$(GATE_TAGS)
 
 # The per-spec accuracy table (.accuracy/report.{json,md}, gitignored): every loop and wowsims spec file once, three
@@ -133,10 +133,22 @@ packs-check: wowsims-packs packs
 tools-test:
 	python3 -m unittest discover -s tests/tools -t tests/tools
 
-# The four long checks at once (-Otarget keeps each one's output whole), then the short serial tail; one exit code.
+# `make check` skips (one line) when every input matches the last green run (scripts/check_stamp.sh); FULL=1 runs it.
+# check-full: the four long checks at once (-Otarget keeps each one's output whole), then the short serial tail; one
+# exit code. The begin and write lines hold no $(MAKE), so `make -n` never runs them; make stops at the first failing
+# line, so write (the stamp) runs only after both stages pass. A command-line override other than FULL (a subset or
+# another tool) or -i/-e (errors ignored, environment over the Makefile) never skips and never stamps.
+# shortcut: a failed or killed run leaves its start manifest in /tmp; harmless, write is the only reader.
+STAMP_START := $(shell mktemp -u /tmp/hekili-check-start.XXXXXX)
+STAMP_OFF := $(strip $(filter-out FULL=%,$(MAKEOVERRIDES)) $(findstring i,$(firstword -$(MAKEFLAGS))) $(findstring e,$(firstword -$(MAKEFLAGS))))
 check:
+	@if [ -z "$(FULL)$(STAMP_OFF)" ] && scripts/check_stamp.sh test; then :; else $(MAKE) check-full; fi
+
+check-full:
+	@$(if $(STAMP_OFF),echo "check: command-line overrides or -i/-e; this run leaves no stamp",scripts/check_stamp.sh begin $(STAMP_START))
 	$(MAKE) -j4 -Otarget lint fmt-check typecheck test
 	$(MAKE) syntax api-check packs-check tools-test
+	@$(if $(STAMP_OFF),:,scripts/check_stamp.sh write $(STAMP_START))
 
 # Rewrites each class file's RegisterPack blocks from its APLs/ (tools/make_pack.lua write), re-dating a class (today,
 # or PACK_DATE=YYYYMMDD) only when its blocks change; not part of `check`.

@@ -104,3 +104,20 @@ loop_warrior 178.4 (#loop Arms 140, #party Arms 38), detect_more 111.6 (K16 45; 
 
 | task | metric | before | after | results identical | rig identical | kept |
 |---|---|---|---|---|---|---|
+| 2 stamped check | `make check` wall s, inputs unchanged | 195.3-200.8 (full) | 0.19 / 0.20 (skip) | yes (both FULL=1 logs) | n/a (no rig input) | yes |
+
+### Task 2: the stamped check
+
+Raw logs `~/src/hekili-speed-runs/task2/` (`step6.out`, `full1.log`, `full2.log`, `skip1.log`, `skip2.log`,
+`detect.log`), one `/tmp/hekili-gate.lock` hold, `XDG_CACHE_HOME=task2/cache`, 2026-11-03 11:58-12:07; start loads
+7.55 and 5.04 (not a quiet machine: the full-run walls 285.7 s and 234.5 s are not timings, only proof).
+- `make check FULL=1`: rc 0, wrote the stamp (`<worktree git dir>/hekili-check-stamp`).
+- `make check`: the skip line, wall 0.19 s (user 0.06, sys 0.06) and 0.20 s, against Task 1's full check 195.3-200.8 s.
+- `make check FULL=1` again: rc 0, no skip line, the stages ran (159 busted summary lines), stamp rewritten.
+- `DETECT_WRITE=0 make check`: started check-full (`DETECT_WRITE` is in the key), killed by process group once
+  `luacheck -q` ran; rc 143, `pgrep -c busted` 0 after, stamp unchanged (same md5), its start file left in /tmp.
+- `make check` again: the skip line (the stamp is the last green one).
+- `results.sh` of `full1.log` and `full2.log` diffed against `base2/base-check.results`: no output (619 lines each).
+- `make gate` (12:08, load 8.55 at start, `pgrep -c busted` 0): rc 0, no skip line (check-full ran: 2817 / 0 / 0 / 0,
+  gate tier 42 / 0), wall 824.1 s on the loaded machine (not a timing); `results.sh gate.log` diffed against
+  `base2/base.results`: no output. The gate's check-full stamped, so a plain `make check` after it skips.
