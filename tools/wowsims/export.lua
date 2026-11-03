@@ -3,40 +3,47 @@
 --   .lua/bin/lua tools/wowsims/export.lua export <spec>  the request tests/Forever/wowsims/<spec>.json from the recipe
 --       tools/wowsims/specs/<spec>.lua and the wowsims checkout's preset files, wowsimcli run on it, and
 --       tests/Forever/wowsims/<spec>.log: the debug log (noise lines dropped) under a header (the pin, the spec, the
---       seed, the duration, the target level, the build's talents). Needs the checkout at M.PIN and its CLI.
+--       seed, the duration, the target level, the build's talents). Needs the checkout at M.PIN and its oracle CLI
+--       (`make wowsims-sim-cli`). A recipe with `siml` runs the siml step first.
+--   .lua/bin/lua tools/wowsims/export.lua siml <spec>    tests/Forever/wowsims/<spec>.build.json: the recipe's `siml`
+--       build (a .siml path in the checkout) as protojson, from the CLI's `siml parse -json`; request() reads it as
+--       the recipe's `build`
 --   .lua/bin/lua tools/wowsims/export.lua rerun <spec>   the log only: the checked-in request, unchanged, on the
---       oracle CLI (`make wowsims-sim-cli`) of a checkout at M.SIM_PIN (the oracle moves with the sim while the
---       requests stay at M.PIN)
+--       oracle CLI (`make wowsims-sim-cli`) of a checkout at M.SIM_PIN
 --   .lua/bin/lua tools/wowsims/export.lua learn <CLASS>  tests/Forever/wowsims/learn_<class>.lua: the DB2 learn level
 --       of every rank of every ability in the class's ability set: kit, shared content, racials (wowdb)
 --   .lua/bin/lua tools/wowsims/export.lua pack <spec>    the spec's pack .simc from its checked-in request (Task 4;
 --       CI-safe: no checkout needed)
 -- Loaded with loadfile(...)() it returns M. Env: WOWSIMS (the checkout [~/src/wowsims-forever]), WOWSIMS_CLI
--- [$WOWSIMS/wowsimcli-amd64-linux], WOWDB [~/.local/share/wow-db2/bin/wowdb]. Credit: the request shape, the presets,
+-- [$WOWSIMS/wowsimcli-sim-pin], WOWSIMS_OUT (M.OUT [tests/Forever/wowsims/]), WOWDB [~/.local/share/wow-db2/bin/wowdb]. Credit: the request shape, the presets,
 -- the talent trees and the APLs are wowsims/forever's (MIT, https://github.com/wowsims/forever); no code copied.
 package.path = "./src/Hekili/?.lua;./tests/?.lua;./?.lua;" .. package.path
 local json = require("dkjson")
 
 local M = {}
 
---- The wowsims/forever commit every checked-in request (its APL, gear, talents) and recipe comes from.
-M.PIN = "d33930d04030c3f556582f31949f1f22c17da0e4"
+--- The wowsims/forever commit every request (its APL, gear, talents) and recipe comes from. Equal to M.SIM_PIN since
+--- the re-pin (docs/superpowers/plans/2026-11-03-wowsims-repin.md): requests and oracle come from one commit.
+M.PIN = "e2842f0a784d2f329dde0bc682a6b84202a780f2"
 --- The wowsims/forever commit whose CLI made every checked-in log (`rerun`; tests/Forever/wowsims_pin_spec.lua).
-M.SIM_PIN = "e2842f0a784d2f329dde0bc682a6b84202a780f2"
---- The specs whose logs stay at M.PIN: their old rotation does nothing on M.SIM_PIN's CLI (the hunter weave APLs: no
---- auto shot or swing, dps 0), so a rerun would need a rotation change (a re-export).
-M.OLD_SIM = { hunter_beast_mastery = true, hunter_marksmanship = true, hunter_survival = true }
-M.OUT = "tests/Forever/wowsims/"
+M.SIM_PIN = M.PIN
+--- The specs whose checked-in logs were made at another commit, and that commit. The hunter weave APLs of
+--- d33930d040 do nothing on M.SIM_PIN's CLI (no auto shot or swing, dps 0), so their logs stay there until the
+--- re-pin's Task 19 re-exports the hunters on the pin's own APLs; then this table goes.
+M.OLD_SIM = {
+    hunter_beast_mastery = "d33930d04030c3f556582f31949f1f22c17da0e4",
+    hunter_marksmanship = "d33930d04030c3f556582f31949f1f22c17da0e4",
+    hunter_survival = "d33930d04030c3f556582f31949f1f22c17da0e4",
+}
+M.OUT = os.getenv("WOWSIMS_OUT") or "tests/Forever/wowsims/"
 M.SEED, M.DURATION, M.TARGET_LEVEL = 101, 180, 63
 
--- The encounter of every export (the spike's: wowsims's default target, one, 180 s, execute at 20%).
+-- The encounter of every export (the spike's: wowsims's default target, one, 180 s, execute at 20%; the pin's sim
+-- reads only the 20% and 35% phases).
 M.ENCOUNTER = {
     duration = M.DURATION,
     executeProportion20 = 0.2,
-    executeProportion25 = 0.25,
     executeProportion35 = 0.35,
-    executeProportion45 = 0.45,
-    executeProportion90 = 0.9,
     targets = {
         {
             level = M.TARGET_LEVEL,
@@ -115,19 +122,21 @@ function M.talents(str, trees)
     return out
 end
 
---- The RaidSimRequest of recipe `r`, its files read under the wowsims checkout `root` ("" : paths as given). A `build`
+--- The RaidSimRequest of recipe `r` (spec `spec`), its files read under the wowsims checkout `root` ("" : paths as
+--- given). A `siml` recipe's build is M.OUT/<spec>.build.json (the siml step's output, in this repo). A `build`
 --- recipe's `gear` (a gear-set JSON path) replaces the build's equipment; a build with none needs it. A tank
 --- recipe (`r.tank`) makes the player the raid's tank and `r.healingModel` its incoming healing, as wowsims's UI does
 --- for a tank spec (ui/features/settings/model/apply_defaults.ts:108-122: `setHealingModel` from the spec's
 --- OtherDefaults, `setTanks([player])`): without a tank the target swings at no one.
-function M.request(r, root)
+function M.request(r, root, spec)
     local p
-    if r.build then
-        p = decode(slurp(join(root, r.build)), r.build).player
+    local build = r.siml and M.OUT .. spec .. ".build.json" or r.build and join(root, r.build)
+    if build then
+        p = decode(slurp(build), build).player
         if r.gear then -- a build file may carry no gear (Warlock's): wowsimcli crashes on a player without equipment
             p.equipment = decode(slurp(join(root, r.gear)), r.gear)
         elseif not p.equipment then
-            error(r.build .. " has no equipment: set the recipe's `gear` (a gear-set JSON path)", 0)
+            error(build .. " has no equipment: set the recipe's `gear` (a gear-set JSON path)", 0)
         end
     else
         local pl = r.player
@@ -156,9 +165,8 @@ function M.request(r, root)
     }
 end
 
---- Exports spec `spec`: its request and log under M.OUT (see the header).
-function M.export(spec)
-    local r = M.recipe(spec)
+--- The wowsims checkout (WOWSIMS) and its HEAD, which must be M.PIN.
+local function checkout()
     local root = env("WOWSIMS", "~/src/wowsims-forever")
     local head = capture("git -C '" .. root .. "' rev-parse HEAD"):gsub("%s+$", "")
     if head ~= M.PIN then
@@ -170,7 +178,31 @@ function M.export(spec)
             0
         )
     end
-    local req = M.request(r, root)
+    return root, head
+end
+
+--- Converts spec `spec`'s `siml` build (a .siml path in the checkout at M.PIN) to M.OUT/<spec>.build.json with the
+--- CLI's `siml parse -json` (see the header).
+function M.siml(spec)
+    local r = M.recipe(spec)
+    local root = checkout()
+    local src = assert(r.siml, spec .. ": the recipe has no `siml`")
+    local cli = env("WOWSIMS_CLI", root .. "/wowsimcli-sim-pin")
+    local s = capture(("'%s' siml parse -json '%s'"):format(cli, join(root, src)))
+    if type(decode(s, src).player) ~= "table" then
+        error(src .. ": `siml parse -json` gave no top-level player", 0)
+    end
+    spit(M.OUT .. spec .. ".build.json", s)
+end
+
+--- Exports spec `spec`: its request and log under M.OUT (see the header).
+function M.export(spec)
+    local r = M.recipe(spec)
+    local root, head = checkout()
+    if r.siml then
+        M.siml(spec)
+    end
+    local req = M.request(r, root, spec)
     local reqPath = M.OUT .. spec .. ".json"
     spit(reqPath, json.encode(req, { indent = true }) .. "\n")
     M.run(spec, root, head)
@@ -183,7 +215,7 @@ function M.run(spec, root, head, cli)
     local reqPath = M.OUT .. spec .. ".json"
     local req = decode(slurp(reqPath), reqPath)
     local resPath = os.tmpname()
-    cli = cli or env("WOWSIMS_CLI", root .. "/wowsimcli-amd64-linux")
+    cli = cli or env("WOWSIMS_CLI", root .. "/wowsimcli-sim-pin")
     if os.execute(("'%s' sim --infile '%s' --outfile '%s'"):format(cli, reqPath, resPath)) ~= 0 then
         error("wowsimcli failed on " .. reqPath, 0)
     end
@@ -288,6 +320,8 @@ end
 local mode, arg = ...
 if mode == "export" then
     M.export(assert(arg, "usage: export <spec>"))
+elseif mode == "siml" then
+    M.siml(assert(arg, "usage: siml <spec>"))
 elseif mode == "rerun" then
     M.rerun(assert(arg, "usage: rerun <spec>"))
 elseif mode == "learn" then

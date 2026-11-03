@@ -29,13 +29,50 @@ describe("check_wowsims_pin", function()
                 local f = assert(io.open(ex.OUT .. spec .. ".log", "rb"), spec)
                 local first = f:read("*l")
                 f:close()
-                assert.are.equal(ex.OLD_SIM[spec] and ex.PIN or ex.SIM_PIN, first:match("^# wowsims (%x+) "), spec)
+                assert.are.equal(ex.OLD_SIM[spec] or ex.SIM_PIN, first:match("^# wowsims (%x+) "), spec)
                 assert.are.equal(spec, first:match("^# wowsims %x+ (%S+) "), spec)
             end
         end
         pipe:close()
         assert.are.equal(40, #ex.PIN)
         assert.are.equal(40, #ex.SIM_PIN)
+        assert.are.equal(ex.SIM_PIN, ex.PIN) -- the requests and the oracle CLI come from one wowsims commit
+    end)
+
+    it("asks for no execute phase the pin's sim no longer reads (25, 45, 90 gone; 20 and 35 kept)", function()
+        assert.is_nil(ex.ENCOUNTER.executeProportion25)
+        assert.is_nil(ex.ENCOUNTER.executeProportion45)
+        assert.is_nil(ex.ENCOUNTER.executeProportion90)
+        assert.are.equal(0.2, ex.ENCOUNTER.executeProportion20)
+        assert.are.equal(0.35, ex.ENCOUNTER.executeProportion35)
+    end)
+
+    it("reads a siml recipe's build from the converted <spec>.build.json under M.OUT, not the checkout", function()
+        local out = os.tmpname() .. "_" -- M.OUT is a path prefix
+        local path = out .. "some_spec.build.json"
+        local f = assert(io.open(path, "wb"))
+        f:write('{"player":{"class":"ClassHunter","talentsString":"5","equipment":{"items":[{"id":9}]}}}')
+        f:close()
+        local saved = ex.OUT
+        ex.OUT = out
+        local ok, req = pcall(ex.request, { name = "Siml", siml = "x" }, "/no/such/checkout", "some_spec")
+        ex.OUT = saved
+        os.remove(path)
+        assert.is_true(ok, tostring(req))
+        local p = req.raid.parties[1].players[1]
+        assert.are.same({ "Siml", "5", 9 }, { p.name, p.talentsString, p.equipment.items[1].id })
+    end)
+
+    it("takes M.OUT from WOWSIMS_OUT", function()
+        local lua = io.open(".lua/bin/lua", "rb") and ".lua/bin/lua" or "lua5.1"
+        local pipe = assert(
+            io.popen(
+                "WOWSIMS_OUT=/tmp/elsewhere/ " .. lua .. [[ -e 'print(loadfile("tools/wowsims/export.lua")().OUT)']]
+            )
+        )
+        local got = pipe:read("*l")
+        pipe:close()
+        assert.are.equal("/tmp/elsewhere/", got)
     end)
 
     it("decodes a talent string in its tree file's order: { spell, rank, tree }", function()

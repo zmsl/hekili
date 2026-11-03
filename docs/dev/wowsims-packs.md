@@ -7,10 +7,13 @@ step-by-step procedure the lanes ran is the plan's "per-spec procedure" (P1-P10,
 `docs/superpowers/plans/2026-10-19-wowsims-packs.md`). This page is what a pack author needs to know beside them.
 What only the game can answer (the in-game checkpoints and the long-term items) is in `docs/dev/ingame-ledger.md`.
 
-Two pins (`tools/wowsims/export.lua`): `M.PIN` names the recipes, requests and APLs; `M.SIM_PIN` the CLI that made the
-logs, except the specs in `M.OLD_SIM` (the hunters), whose logs stay at `M.PIN` (`tests/Forever/wowsims_pin_spec.lua`).
-`export.lua rerun <spec>` runs a checked-in request on the oracle CLI of a checkout at `M.SIM_PIN`
-(`make wowsims-sim-cli WOWSIMS=<checkout>`): the oracle gains new mechanics, the translated rotation stays.
+Two pins (`tools/wowsims/export.lua`), equal since the re-pin (e2842f0a78): `M.PIN` names the recipes, requests and
+APLs; `M.SIM_PIN` the CLI that made the logs, except the specs in `M.OLD_SIM` (the hunters, each mapped to the commit
+its log was made at, d33930d040), which lasts until the re-pin's Task 19 re-exports them
+(`tests/Forever/wowsims_pin_spec.lua`). `export.lua export <spec>` and `rerun <spec>` use the oracle CLI of a checkout
+at the pin (`make wowsims-sim-cli WOWSIMS=<checkout>`). A recipe's `siml` (a .siml build in the checkout) is converted
+first by `export.lua siml <spec>` (`make wowsims-siml SPEC=<spec>`) to `tests/Forever/wowsims/<spec>.build.json`, which
+the request reads as its build.
 
 Request edits the new sim needed (2026-11-02), none changing what an APL entry does:
 - `greaterBlessingOfWisdom` / `greaterBlessingOfMight` `true` -> `2` (upstream made them a rank state; 2 = the old top
@@ -22,7 +25,8 @@ Request edits the new sim needed (2026-11-02), none changing what an APL entry d
   Fury 4 refs, Arms 2).
 - Guardian: Lacerate (now a talent, 1328617) gets 1 point, taken from removed Berserk (417141); Primal Bite rank 4
   1238073 (removed upstream) -> 1238070, the new top rank.
-- Left as they are: hunter `petAggression`, the encounter's `executeProportion25/45/90` and Shadow's hidden
+- Left as they are: hunter `petAggression`, the encounter's `executeProportion25/45/90` (dropped from `M.ENCOUNTER` at
+  the re-pin; the checked-in requests keep them until re-exported) and Shadow's hidden
   `dotExpectedDps` entry, which the proto silently drops without changing the sim.
 
 ### Oracle patches

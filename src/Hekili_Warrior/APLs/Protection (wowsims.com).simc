@@ -1,5 +1,5 @@
 # Protection (wowsims.com): the wowsims/forever default APL for Protection (ui/specs/warrior/protection/apls/default.apl.json), translated to this addon's keys.
-# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at d33930d04030.
+# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at e2842f0a784d.
 # Cooldowns toggle hides: Death Wish, Sweeping Strikes and the racials (Blood Fury, Berserking, Eureka, Elune's Light).
 # Defensives toggle hides: Shield Wall, Last Stand, Healthstone and the racials Stoneform and Shatter Curse. No line here sits under the Potions toggle.
 # Last Stand, Shield Wall, Stoneform, Shatter Curse and Healthstone wait for low health, and the game hides your health from addons in combat, so they never show there: use them by hand.

@@ -1,5 +1,5 @@
 # Demonology (wowsims.com): the wowsims/forever default APL for Demonology (ui/specs/warlock/dps/builds/demo_fire_brand.build.json), translated to this addon's keys.
-# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at d33930d04030.
+# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at e2842f0a784d.
 # Below level 18 (before Searing Pain) this priority has no filler and shows Life Tap between its DoTs, as wowsims's own list would at that level.
 # Before the Demonic Brand talent, Searing Pain leads the list (its brand is never up), as wowsims's own list would.
 
