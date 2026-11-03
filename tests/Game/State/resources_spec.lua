@@ -681,6 +681,26 @@ describe("resources", function()
             assert.are.equal(0, VS.SwingPending(1))
         end)
 
+        it(
+            "ends only the hand whose gain a yes shows: the other hand's could not reach its cost (GAP AK, dual wield)",
+            function()
+                -- floor 5; off hand (4.5) at 4.8, main (9) at 5.1. spender_a's 10 is past 5 + the off hand's low step, not
+                -- past 5 + the main hand's: the yes shows the main hand's gain, the off hand's still pends (Fury flicker)
+                local def = fs.def(fs.new(9))
+                def.resources[1].swingOff = 4.5
+                boot(def)
+                local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
+                R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 20
+                obs(Obs.Swing, 4.8, 2, 1.8, 4)
+                obs(Obs.Swing, 5.1, 1, 2.6, 4)
+                I.Fold(5.1, false)
+                assert.are.same({ 5.1, 4.8 }, { VS.SwingPending(1), VS.SwingPending(2) })
+                obs(Obs.Usable, 5.3, A, 1, 0)
+                I.Fold(5.3, false)
+                assert.are.same({ 0, 4.8 }, { VS.SwingPending(1), VS.SwingPending(2) })
+            end
+        )
+
         it("keeps a swing pending past answers under the floor (they cannot show it) to its credit", function()
             local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
             R.est0[1], R.lo0[1], R.hi0[1] = 22, 20, 30 -- spender_a's 10 is under the floor: proves nothing

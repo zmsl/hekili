@@ -225,7 +225,8 @@ local usable, ansT, shortCost, shortT, shortGain, shortCast, shortEst = {}, {}, 
 -- Per hand (1 main, 2 off): the swing-paid slot's estimate and floor at its latest PLAYER_SWING, that swing's time,
 -- the lowest top a short answer set from ORACLE_MIN after it (math.huge: none) and the slot's spend count then (I.Missed).
 local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, math.huge }, { 0, 0 }
-local heardT = 0 -- the latest usability answer's time that set a rung above its slot's floor
+-- Per hand: the latest usability answer's time that set a rung above its slot's floor and could show that hand's gain
+local heardT = { 0, 0 }
 -- By ability index: its ladder precondition (C9): false for `ladder = false` (its answers are no rungs), its `usable`
 -- function (a short answer while it fails names another requirement, such as a finisher's combo points), or true.
 local pre = {}
@@ -1185,16 +1186,14 @@ I.OnSettle(function()
     end
 end)
 
--- The low steps of slot r's swings still pending (VS.SwingPending), at their swings. Allocates nothing.
-local function pendingStep(r)
-    local s = 0
-    for hand = 1, 2 do
-        local p = VS.SwingPending(hand)
-        if p > 0 then
-            s = s + I.SwingValue(r, hand, p) * (R.scale[r] - R.spread[r])
-        end
+-- The low step of `hand`'s swing still pending (VS.SwingPending) for slot r, at its swing, if an answer at t can show
+-- it (ORACLE_MIN after it); else 0. Allocates nothing.
+local function pendingStep(r, hand, t)
+    local p = VS.SwingPending(hand)
+    if p == 0 or t <= p + I.Log.ORACLE_MIN - 1e-6 then
+        return 0
     end
-    return s
+    return I.SwingValue(r, hand, p) * (R.scale[r] - R.spread[r])
 end
 
 -- Whether ability a's `usable` holds at t, read in the `now` context (the belief's names; I.Eval, Families/Casts.lua).
@@ -1266,9 +1265,27 @@ I.On(Obs.Usable, function(o, t, lag)
     local c = r ~= 0 and I.CostOf(a) or 0
     local rung = r ~= 0 and now ~= NOT and not R.readable[r] and not I.ab.multiCost[a] and pre[a]
     -- only a rung above the floor can show a pending swing's gain (an answer below it proves nothing); a short one only
-    -- where the pending swings' low steps would have reached it (above, a paid swing answers short too)
-    if rung and c > 0 and c > R.lo0[r] and (now == YES or c <= R.lo0[r] + pendingStep(r) + I.EPS) then
-        heardT = o.t
+    -- where the pending swings' low steps would have reached it (above, a paid swing answers short too); a yes shows a
+    -- hand's gain only where the other hand's alone could not reach it (neither: the earlier swing's)
+    if rung and c > 0 and c > R.lo0[r] then
+        local lo, m, f = R.lo0[r], pendingStep(r, 1, o.t), pendingStep(r, 2, o.t)
+        if now == SHORT then
+            if c <= lo + m + f + I.EPS then
+                heardT[1], heardT[2] = o.t, o.t
+            end
+        else
+            local e1, e2 = c > lo + f + I.EPS, c > lo + m + I.EPS
+            if not e1 and not e2 then
+                e1 = VS.SwingPending(1) <= VS.SwingPending(2)
+                e2 = not e1
+            end
+            if e1 then
+                heardT[1] = o.t
+            end
+            if e2 then
+                heardT[2] = o.t
+            end
+        end
     end
     local explained = I.CreditVerdict and judge(a, now, t, r, c, was, wasT)
     keepFloor = keepFloor and rung and c > 0 -- no rung, no kept floor: a later read must not inherit it
@@ -1570,7 +1587,7 @@ end)
 function VS.SwingPending(hand)
     local p = I.Tickets.SwingPending(hand, I.clock) -- the swing ticket owns it (open, uncredited, in its window)
     -- `not I.built`: no slot pays before a build (the harness's stub world ticks swings unbuilt; ORACLE_MIN arrives in it)
-    if p == 0 or not I.built or heardT > p + I.Log.ORACLE_MIN - 1e-6 then
+    if p == 0 or not I.built or heardT[hand] > p + I.Log.ORACLE_MIN - 1e-6 then
         return 0 -- shown, credited, or no credit one landing lag on: avoided
     end
     local paid = false
