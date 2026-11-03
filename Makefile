@@ -92,8 +92,9 @@ cdv-coverage:
 	$(LUA) tools/check_cooldown_viewer.lua
 
 # The wowsims/forever packs (docs/superpowers/plans/2026-10-19-wowsims-packs.md). Dev-only, outside `make check`:
-# wowsims-cli builds the CLI in the checkout (Go, protoc and protoc-gen-go on PATH), wowsims-export SPEC=<spec>
-# exports one recipe's request and log, wowsims-learn CLASS=<TOKEN> the class's learn levels. wowsims-packs (CI-safe)
+# wowsims-cli builds the upstream CLI in the checkout (Go, protoc and protoc-gen-go on PATH; the export uses
+# wowsims-sim-cli's wowsimcli-sim-pin), wowsims-export SPEC=<spec> exports one recipe's request and log,
+# wowsims-learn CLASS=<TOKEN> the class's learn levels. wowsims-packs (CI-safe)
 # rewrites every wowsims pack's .simc from the checked-in requests.
 WOWSIMS ?= $(HOME)/src/wowsims-forever
 wowsims-cli:

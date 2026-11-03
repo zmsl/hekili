@@ -48,7 +48,8 @@ describe("check_wowsims_pin", function()
     end)
 
     it("reads a siml recipe's build from the converted <spec>.build.json under M.OUT, not the checkout", function()
-        local out = os.tmpname() .. "_" -- M.OUT is a path prefix
+        local base = os.tmpname() -- creates an empty file: removed below with the build
+        local out = base .. "_" -- M.OUT is a path prefix
         local path = out .. "some_spec.build.json"
         local f = assert(io.open(path, "wb"))
         f:write('{"player":{"class":"ClassHunter","talentsString":"5","equipment":{"items":[{"id":9}]}}}')
@@ -58,6 +59,7 @@ describe("check_wowsims_pin", function()
         local ok, req = pcall(ex.request, { name = "Siml", siml = "x" }, "/no/such/checkout", "some_spec")
         ex.OUT = saved
         os.remove(path)
+        os.remove(base)
         assert.is_true(ok, tostring(req))
         local p = req.raid.parties[1].players[1]
         assert.are.same({ "Siml", "5", 9 }, { p.name, p.talentsString, p.equipment.items[1].id })
