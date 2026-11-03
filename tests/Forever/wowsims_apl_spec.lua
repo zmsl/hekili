@@ -9,6 +9,15 @@ local function ctx(r, player)
             big_hit = { key = "big_hit", id = 200, gcd = "spell" },
             roar = { key = "roar", id = 300, gcd = "off" },
             dot = { key = "dot", id = 400, gcd = "spell" },
+            starfire = { key = "starfire", id = 500, cast = 3, gcd = "spell" },
+            pyroblast = {
+                key = "pyroblast",
+                id = 600,
+                gcd = "spell",
+                cast = function()
+                    return 6
+                end,
+            },
             trinket = { key = "trinket", id = -1, item = 555, gcd = "off" },
             stone = { key = "stone", id = -2, items = { 556, 557 }, gcd = "off" },
         },
@@ -1041,9 +1050,20 @@ describe("the wowsims APL translator", function()
         assert.has_error(function()
             apl.translate({ priorityList = { cast(100) } }, ctx(r, player))
         end, "select: castAssigned is not in the APL")
-        assert.has_error(function()
-            ctx(r, { warrior = { options = {} } })
-        end, "select: the build sets no pickOption")
+        -- a build without the option has no select (re-pin: 4 of 5 warlock builds dropped curseOptions): its action
+        -- and values are unsupported (rule 2), never an error
+        local _, none = apl.translate({
+            priorityList = {
+                { action = { castAssigned = {} } },
+                cast(100, isActive),
+                cast(100, { isAssigned = { pickType = "Off" } }),
+            },
+        }, ctx(r, { warrior = { options = {} } }))
+        assert.are.same({
+            "default #1: castAssigned",
+            "default #2: assignedIsActive",
+            "default #3: isAssigned",
+        }, none)
     end)
 
     it("rule 17's multidot: the DoT's cast on the current target while its DoT has at most maxOverlap left", function()
@@ -1552,6 +1572,130 @@ describe("the wowsims APL translator's re-pin reads", function()
                 .. " this line is for the current target only.",
         }, header)
     end)
+end)
+
+describe("the wowsims APL translator's casting, range, curse and cast-time pre-pull reads", function()
+    local function one(cond)
+        return apl.translate({ priorityList = { cast(100, cond) } }, ctx({}))
+    end
+    local function spell(k, id)
+        return { [k] = { spellId = { spellId = id } } }
+    end
+    local function mul(x, k)
+        return { math = { op = "OpMul", lhs = x, rhs = const(k) } }
+    end
+
+    it("spellIsCasting is the ability's executing with a cast time, false for an instant", function()
+        local text = apl.translate({ priorityList = { cast(500, NOT(spell("spellIsCasting", 500))) } }, ctx({}))
+        assert.are.equal("actions=starfire,if=!action.starfire.executing", text)
+        assert.are.equal("actions=strike", (one(NOT(spell("spellIsCasting", 100))))) -- the not of false folds true
+        assert.are.equal(
+            "actions=strike,if=(!action.starfire.known|!action.starfire.executing)",
+            (one(NOT(spell("spellIsCasting", 500))))
+        )
+        assert.are.equal( -- a cast-time function, read under the stand-in state
+            "actions=strike,if=(!action.pyroblast.known|action.pyroblast.executing)",
+            (one(spell("spellIsCasting", 600)))
+        )
+        local text2, omitted = one(spell("spellIsCasting", 999))
+        assert.are.equal("actions=strike", text2)
+        assert.are.same({ "default #1: dropped the unresolved spell 999 (its branch only)" }, omitted)
+    end)
+
+    it("spellInRange is the ability's in_range, guarded while unlearned", function()
+        assert.are.equal("actions=strike,if=action.strike.in_range", (one(spell("spellInRange", 100))))
+        assert.are.equal(
+            "actions=strike,if=(!action.big_hit.known|action.big_hit.in_range)",
+            (one(spell("spellInRange", 200)))
+        )
+    end)
+
+    it("a doAtValue that folds from the kit's cast time orders its pre-pull line by that constant", function()
+        local function at(id, v)
+            local e = cast(id)
+            e.doAtValue = type(v) == "table" and v or const(v)
+            return e
+        end
+        local castTime = function(id)
+            return spell("spellCastTime", id)
+        end
+        local text, omitted = apl.translate({
+            prepullActions = {
+                at(100, "-1.5s"),
+                at(600, mul(castTime(600), "-1")), -- Pyroblast: -6
+                at(300, "-10s"),
+                at(200, mul({ math = { op = "OpAdd", lhs = castTime(500), rhs = castTime(600) } }, "-1")), -- -9
+                at(400, mul(castTime(100), "-1")), -- an instant: at the pull
+                at(500, mul(spell("spellTravelTime", 600), "-1")), -- no kit constant
+                at(500, mul(castTime(999), "-1")), -- an unresolved spell
+            },
+        }, ctx())
+        assert.are.equal(
+            table.concat({
+                "actions.precombat=roar,use_off_gcd=1",
+                "actions.precombat+=/big_hit",
+                "actions.precombat+=/pyroblast",
+                "actions.precombat+=/strike",
+                "actions.precombat+=/dot",
+            }, "\n"),
+            text
+        )
+        assert.are.same({
+            "precombat #6: doAtValue not a constant",
+            "precombat #7: doAtValue not a constant",
+        }, omitted)
+    end)
+
+    it(
+        "the curse reads go through rule 16's select, on the current target; without one they are unsupported",
+        function()
+            local r = {
+                select = {
+                    castAssigned = {
+                        setting = "pick",
+                        option = "pickOption",
+                        candidates = { One = "dot", Off = false },
+                        active = "assignedIsActive",
+                        activeAll = "assignedIsActiveOnAllTargets",
+                        is = "isAssigned",
+                    },
+                },
+            }
+            local player = { warrior = { options = { classOptions = { pickOption = "One" } } } }
+            local entries = {
+                { action = { castAssigned = {} } },
+                cast(100, { isAssigned = { curseType = "Off" } }),
+                cast(100, { assignedIsActiveOnAllTargets = {} }),
+                cast(100, spell("dotIsActiveOnAllTargets", 400)),
+            }
+            local text, omitted, _, header = apl.translate({ priorityList = entries }, ctx(r, player))
+            local dev = 'an "on all targets" read is the current target\'s only.'
+            assert.are.equal(
+                table.concat({
+                    "actions=dot,if=settings.pick='one'",
+                    "actions+=/strike,if=settings.pick='off'",
+                    "actions+=/strike,if=((action.dot.known&settings.pick='one'&debuff.dot.up))", -- rule 16's OR, of one
+                    "actions+=/strike,if=(!action.dot.known|debuff.dot.up)",
+                }, "\n"),
+                text
+            )
+            assert.are.same({}, omitted)
+            assert.are.same({
+                "# Setting pick (choice of pickOption: off, one), default one in game and in the harness.",
+                "# Deviation: default #3: " .. dev,
+                "# Deviation: default #4: " .. dev,
+            }, header)
+            -- no select (the build sets no option, or the recipe has none): each read is unsupported; the Banes have none
+            local _, none = apl.translate({ priorityList = entries }, ctx(r, { warrior = { options = {} } }))
+            assert.are.same({
+                "default #1: castAssigned",
+                "default #2: isAssigned",
+                "default #3: assignedIsActiveOnAllTargets",
+            }, none)
+            local _, bane = one({ warlockBaneIsActiveOnAllTargets = {} })
+            assert.are.same({ "default #1: warlockBaneIsActiveOnAllTargets" }, bane)
+        end
+    )
 end)
 
 -- Central fix 11: wowsims's OpDiv is division; the engine's script language takes `/` for division and `%` for modulo.

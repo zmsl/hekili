@@ -5,7 +5,9 @@
 -- The translation rules (the plan's Task 4):
 -- 1. One `.simc` line per APL entry, in order: `prepullActions` -> `actions.precombat` (wowsims's order: by a
 --    constant `doAtValue`, earliest first, ties in the APL's order; an entry with no `doAtValue` or one after the pull
---    is omitted, as wowsims ignores it, and one with a non-constant `doAtValue` too), `priorityList` -> `actions`,
+--    is omitted, as wowsims ignores it, and one whose `doAtValue` does not fold to a constant too: it folds from
+--    constants, `math` and `spellCastTime`, the kit ability's `cast` (a function read in the kit's stub state, as the
+--    pre-pull guard below; re-pin plan Task 4), so `-spellCastTime(X)` is `-<X's cast>`), `priorityList` -> `actions`,
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
 --    order as first called; `valueVariables` are inlined where referenced.
 --    The pre-pull guard (owner ruling 2026-10-21: a guard against recasting, the player decides when to press): each
@@ -166,7 +168,10 @@
 --    (its one field names an option value) is that value's setting term; with no field (protojson's zero value) or an
 --    unknown value it is unsupported. The build's value (the request's `<spec>.options.classOptions.<option>` or
 --    `.options.<option>`) is the setting's default in game and in the harness (`sim`), which the class registers as an
---    AceConfig `select`; the header lists it. An entry the APL never uses, or a build without the option, is an error.
+--    AceConfig `select`; the header lists it. An entry the APL never uses, or a build value with no candidate, is an
+--    error. A build without the option (protojson omits it; re-pin: 4 of 5 warlock builds) has no select: its action
+--    and values are unsupported (rule 2), as with no recipe `select`. The value `activeAll` (the selected spell on every
+--    target) is `active` on the current target, with rule 17's `# Deviation:` line.
 -- 17. `multidot` (wowsims: the DoT cast on up to `maxDots` targets whose DoT has at most `maxOverlap` left) is the
 --    cast's line under the entry's condition and `debuff.<key>.remains<=<maxOverlap>` (0 when absent), its aura read as
 --    `dotRemainingTime` (rules 5, 6, 12; `rank` ignored, rule 5). Deviation, a `# Deviation:` header line by entry:
@@ -182,7 +187,11 @@
 --    rules 6, 12); `gcdIsReady` `gcd.remains<=0` (wowsims also counts the queue window); `currentHealth`
 --    `health.current` (Self only); `auraDuration` `<unit>.<key>.duration` (as `auraRemainingTime`) and
 --    `dotBaseDuration` `debuff.<key>.duration` (as `dotRemainingTime`); `druidBleedIsActive` (the target's only)
---    the Druid kit's state expression `druid_bleed_active`.
+--    the Druid kit's state expression `druid_bleed_active`. Re-pin plan Task 4: `spellIsCasting` is
+--    `action.<key>.executing` when the kit ability has a cast time (its `cast` above 0 or unreadable), else false;
+--    `spellInRange` is `action.<key>.in_range` (both rule 6 guarded, rule 12 dropped); `dotIsActiveOnAllTargets` is
+--    `dotIsActive` on the current target, with rule 17's `# Deviation:` line. `spellExpectedDpet` stays unsupported, as
+--    does a class's own "on all targets" read with no recipe `select` field (rule 16's `activeAll`).
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -372,24 +381,25 @@ function M.context(set, r, log, player)
                 choice = choice or (type(o.classOptions) == "table" and o.classOptions[x.option]) or o[x.option]
             end
         end
-        if choice == nil or x.candidates[choice] == nil then
-            error(("select: the build sets no %s"):format(x.option), 0)
+        if choice ~= nil and x.candidates[choice] == nil then
+            error(("select: %s has no candidate %s"):format(x.option, tostring(choice)), 0)
         end
-        local values = {}
-        for v in pairs(x.candidates) do
-            values[#values + 1] = v
-        end
-        table.sort(values)
-        local sel = { action = action, x = x, values = values, choice = choice, term = {} }
-        for _, v in ipairs(values) do
-            sel.term[v] = "settings." .. x.setting .. "='" .. M.snake(v) .. "'"
-        end
-        c.select[action] = sel
-        if x.active then
-            c.selectValue[x.active] = { "active", sel }
-        end
-        if x.is then
-            c.selectValue[x.is] = { "is", sel }
+        if choice ~= nil then -- a build without the option has no select: its action and values are unsupported
+            local values = {}
+            for v in pairs(x.candidates) do
+                values[#values + 1] = v
+            end
+            table.sort(values)
+            local sel = { action = action, x = x, values = values, choice = choice, term = {} }
+            for _, v in ipairs(values) do
+                sel.term[v] = "settings." .. x.setting .. "='" .. M.snake(v) .. "'"
+            end
+            c.select[action] = sel
+            for _, kind in ipairs({ "active", "activeAll", "is" }) do
+                if x[kind] then
+                    c.selectValue[x[kind]] = { kind, sel }
+                end
+            end
         end
     end
     local keys = {}
@@ -642,6 +652,60 @@ local SPELL_FIELD = {
     spellTravelTime = "action.%s.travel_time",
     spellGcdHastedDuration = "gcd.execute",
 }
+
+-- A spell test's text by its key (rule 6 guards each).
+local SPELL_TEST = {
+    spellIsReady = "cooldown.%s.ready",
+    spellCanCast = "action.%s.ready",
+    spellInRange = "action.%s.in_range",
+}
+
+-- The kit ability's cast time in seconds (a function read under the context's state: the harness's stand-in), or nil.
+local function castTime(c, key)
+    local t = (c.set.abilities[key] or {}).cast or 0
+    if type(t) == "function" then
+        local ok, n = pcall(t)
+        t = ok and n
+    end
+    return type(t) == "number" and t or nil
+end
+
+-- A doAtValue's seconds when it folds to a constant (constants, `math` and the kit's cast time), else nil (rule 1).
+local function folded(c, n)
+    local k, v = next(n)
+    if k == "const" then
+        return tonumber((const(v.val)))
+    elseif k == "variableRef" then
+        return c.vars[v.name] and folded(c, c.vars[v.name])
+    elseif k == "spellCastTime" then
+        local x = spellLookup(c, v.spellId)
+        return x and castTime(c, x)
+    elseif k == "math" then
+        local l, r = folded(c, v.lhs or {}), folded(c, v.rhs or {})
+        if not (l and r) then
+            return nil
+        elseif v.op == "OpAdd" then
+            return l + r
+        elseif v.op == "OpSub" then
+            return l - r
+        elseif v.op == "OpMul" then
+            return l * r
+        elseif v.op == "OpDiv" and r ~= 0 then
+            return l / r
+        end
+    end
+end
+
+-- Records deviation `d` for the entry once (rule 17).
+local function deviate(c, d)
+    for _, x in ipairs(c.deviations) do
+        if x == d then
+            return
+        end
+    end
+    c.deviations[#c.deviations + 1] = d
+end
+local ALL_TARGETS = 'an "on all targets" read is the current target\'s only.'
 
 -- A talent ID's key (a kit talent's spell, or a recipe `map` to a talent's key), or nil.
 local function talentOf(c, id)
@@ -913,18 +977,17 @@ local function bool(c, n)
             return nil, nil, true
         end
         return "debuff." .. a .. ".up", nil, reads(c, a)
-    elseif k == "spellIsReady" then
+    elseif k == "dotIsActiveOnAllTargets" then -- rule 17's precedent: the current target only
+        deviate(c, ALL_TARGETS)
+        return bool(c, { dotIsActive = v })
+    elseif SPELL_TEST[k] or k == "spellIsCasting" then
         local x = readSpell(c, v.spellId)
         if not x then
             return nil, nil, true
+        elseif k == "spellIsCasting" and castTime(c, x) == 0 then
+            return nil, false, false -- an instant is never mid-cast
         end
-        return "cooldown." .. x .. ".ready", nil, reads(c, x)
-    elseif k == "spellCanCast" then
-        local x = readSpell(c, v.spellId)
-        if not x then
-            return nil, nil, true
-        end
-        return "action." .. x .. ".ready", nil, reads(c, x)
+        return (SPELL_TEST[k] or "action.%s.executing"):format(x), nil, reads(c, x)
     elseif k == "spellIsKnown" then -- wowsims: a constant, false for a spell it lacks; ours for an ID nothing resolves
         local x = spellLookup(c, v.spellId)
         if not x then
@@ -949,6 +1012,9 @@ local function bool(c, n)
                 unsupported(k .. " of no candidate")
             end
             return sel.term[val] or unsupported(k .. " of " .. tostring(val)), nil, false
+        end
+        if kind == "activeAll" then -- rule 17's precedent: the current target only
+            deviate(c, ALL_TARGETS)
         end
         local parts = {}
         for _, val in ipairs(sel.values) do
@@ -1493,8 +1559,8 @@ function M.translate(rotation, c)
     -- at the pull itself
     local prepull, at = rotation.prepullActions or {}, {}
     for i, e in ipairs(prepull) do
-        local ok, n = pcall(value, c, e.doAtValue or {})
-        n = ok and tonumber(n)
+        local ok, n = pcall(folded, c, e.doAtValue or {})
+        n = ok and n
         if not e.doAtValue or next(e.doAtValue) == nil then
             at[i] = "no doAtValue"
         elseif not n then
