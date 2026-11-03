@@ -2278,13 +2278,13 @@ options.abilities.feral_charge.toggle	values.interrupts	Interrupts
 options.abilities.feral_charge.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.feral_charge.toggle	values.none	None
 options.abilities.feral_charge.toggle	values.potions	Potions
-options.abilities.ferocious_bite	name	Spell 22568
-options.abilities.ferocious_bite.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 22568 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 22568 can be recommended in any type of fight.
+options.abilities.ferocious_bite	name	Spell 1328618
+options.abilities.ferocious_bite.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1328618 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1328618 can be recommended in any type of fight.
 options.abilities.ferocious_bite.boss	name	Boss Encounter Only
-options.abilities.ferocious_bite.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 22568 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.ferocious_bite.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1328618 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
 options.abilities.ferocious_bite.clash	name	Clash
-options.abilities.ferocious_bite.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 22568.
-options.abilities.ferocious_bite.disabled	name	Disable |T136000:0|t Spell 22568
+options.abilities.ferocious_bite.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1328618.
+options.abilities.ferocious_bite.disabled	name	Disable |T136000:0|t Spell 1328618
 options.abilities.ferocious_bite.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
 options.abilities.ferocious_bite.dotCap	name	Maximum Applications
 options.abilities.ferocious_bite.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
@@ -2296,9 +2296,9 @@ options.abilities.ferocious_bite.noFeignedCooldown	desc	If checked |cFFFFD100and
 options.abilities.ferocious_bite.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
 options.abilities.ferocious_bite.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
 options.abilities.ferocious_bite.noIcon	name	Icon Replacement
-options.abilities.ferocious_bite.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 22568 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ferocious_bite.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1328618 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
 options.abilities.ferocious_bite.targetMax	name	Maximum Targets
-options.abilities.ferocious_bite.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 22568 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ferocious_bite.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1328618 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
 options.abilities.ferocious_bite.targetMin	name	Minimum Targets
 options.abilities.ferocious_bite.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
 options.abilities.ferocious_bite.toggle	name	Require Toggle
@@ -3598,13 +3598,13 @@ options.abilities.kick.toggle	values.interrupts	Interrupts
 options.abilities.kick.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.kick.toggle	values.none	None
 options.abilities.kick.toggle	values.potions	Potions
-options.abilities.lacerate	name	Spell 414644
-options.abilities.lacerate.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 414644 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 414644 can be recommended in any type of fight.
+options.abilities.lacerate	name	Spell 1328617
+options.abilities.lacerate.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1328617 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1328617 can be recommended in any type of fight.
 options.abilities.lacerate.boss	name	Boss Encounter Only
-options.abilities.lacerate.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 414644 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.lacerate.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1328617 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
 options.abilities.lacerate.clash	name	Clash
-options.abilities.lacerate.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 414644.
-options.abilities.lacerate.disabled	name	Disable |T136000:0|t Spell 414644
+options.abilities.lacerate.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1328617.
+options.abilities.lacerate.disabled	name	Disable |T136000:0|t Spell 1328617
 options.abilities.lacerate.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
 options.abilities.lacerate.dotCap	name	Maximum Applications
 options.abilities.lacerate.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
@@ -3616,9 +3616,9 @@ options.abilities.lacerate.noFeignedCooldown	desc	If checked |cFFFFD100and|r Coo
 options.abilities.lacerate.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
 options.abilities.lacerate.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
 options.abilities.lacerate.noIcon	name	Icon Replacement
-options.abilities.lacerate.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 414644 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.lacerate.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1328617 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
 options.abilities.lacerate.targetMax	name	Maximum Targets
-options.abilities.lacerate.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 414644 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.lacerate.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1328617 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
 options.abilities.lacerate.targetMin	name	Minimum Targets
 options.abilities.lacerate.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
 options.abilities.lacerate.toggle	name	Require Toggle
@@ -14930,7 +14930,7 @@ options.packs.balance.Balance (wowsims.com).lists.action	values.enrage	|T136000:
 options.packs.balance.Balance (wowsims.com).lists.action	values.entangling_roots	|T136000:0|t Spell 339
 options.packs.balance.Balance (wowsims.com).lists.action	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.balance.Balance (wowsims.com).lists.action	values.feral_charge	|T136000:0|t Spell 1238122
-options.packs.balance.Balance (wowsims.com).lists.action	values.ferocious_bite	|T136000:0|t Spell 22568
+options.packs.balance.Balance (wowsims.com).lists.action	values.ferocious_bite	|T136000:0|t Spell 1328618
 options.packs.balance.Balance (wowsims.com).lists.action	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.balance.Balance (wowsims.com).lists.action	values.gift_of_the_wild	|T136000:0|t Spell 21849
 options.packs.balance.Balance (wowsims.com).lists.action	values.growl	|T136000:0|t Spell 6795
@@ -14939,7 +14939,7 @@ options.packs.balance.Balance (wowsims.com).lists.action	values.healthstone	|T53
 options.packs.balance.Balance (wowsims.com).lists.action	values.hurricane	|T136000:0|t Spell 16914
 options.packs.balance.Balance (wowsims.com).lists.action	values.innervate	|T136000:0|t Spell 29166
 options.packs.balance.Balance (wowsims.com).lists.action	values.insect_swarm	|T136000:0|t Spell 5570
-options.packs.balance.Balance (wowsims.com).lists.action	values.lacerate	|T136000:0|t Spell 414644
+options.packs.balance.Balance (wowsims.com).lists.action	values.lacerate	|T136000:0|t Spell 1328617
 options.packs.balance.Balance (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.balance.Balance (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.balance.Balance (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -15003,7 +15003,7 @@ options.packs.balance.Balance (wowsims.com).lists.action_name	values.enrage	|T13
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.entangling_roots	|T136000:0|t Spell 339
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.feral_charge	|T136000:0|t Spell 1238122
-options.packs.balance.Balance (wowsims.com).lists.action_name	values.ferocious_bite	|T136000:0|t Spell 22568
+options.packs.balance.Balance (wowsims.com).lists.action_name	values.ferocious_bite	|T136000:0|t Spell 1328618
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.gift_of_the_wild	|T136000:0|t Spell 21849
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.growl	|T136000:0|t Spell 6795
@@ -15012,7 +15012,7 @@ options.packs.balance.Balance (wowsims.com).lists.action_name	values.healthstone
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.hurricane	|T136000:0|t Spell 16914
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.innervate	|T136000:0|t Spell 29166
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.insect_swarm	|T136000:0|t Spell 5570
-options.packs.balance.Balance (wowsims.com).lists.action_name	values.lacerate	|T136000:0|t Spell 414644
+options.packs.balance.Balance (wowsims.com).lists.action_name	values.lacerate	|T136000:0|t Spell 1328617
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -15063,7 +15063,7 @@ options.packs.balance.Balance (wowsims.com).lists.buff_name	values.growl	|T13600
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.howling_idol	|T136000:0|t Spell 1291059
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.innervate	|T136000:0|t Spell 29166
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.insect_swarm	|T136000:0|t Spell 5570
-options.packs.balance.Balance (wowsims.com).lists.buff_name	values.lacerate	|T136000:0|t Spell 414644
+options.packs.balance.Balance (wowsims.com).lists.buff_name	values.lacerate	|T136000:0|t Spell 1328617
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
@@ -17674,7 +17674,7 @@ options.packs.feral.Feral (wowsims.com).lists.action	values.enrage	|T136000:0|t 
 options.packs.feral.Feral (wowsims.com).lists.action	values.entangling_roots	|T136000:0|t Spell 339
 options.packs.feral.Feral (wowsims.com).lists.action	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.feral.Feral (wowsims.com).lists.action	values.feral_charge	|T136000:0|t Spell 1238122
-options.packs.feral.Feral (wowsims.com).lists.action	values.ferocious_bite	|T136000:0|t Spell 22568
+options.packs.feral.Feral (wowsims.com).lists.action	values.ferocious_bite	|T136000:0|t Spell 1328618
 options.packs.feral.Feral (wowsims.com).lists.action	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.feral.Feral (wowsims.com).lists.action	values.gift_of_the_wild	|T136000:0|t Spell 21849
 options.packs.feral.Feral (wowsims.com).lists.action	values.growl	|T136000:0|t Spell 6795
@@ -17683,7 +17683,7 @@ options.packs.feral.Feral (wowsims.com).lists.action	values.healthstone	|T538745
 options.packs.feral.Feral (wowsims.com).lists.action	values.hurricane	|T136000:0|t Spell 16914
 options.packs.feral.Feral (wowsims.com).lists.action	values.innervate	|T136000:0|t Spell 29166
 options.packs.feral.Feral (wowsims.com).lists.action	values.insect_swarm	|T136000:0|t Spell 5570
-options.packs.feral.Feral (wowsims.com).lists.action	values.lacerate	|T136000:0|t Spell 414644
+options.packs.feral.Feral (wowsims.com).lists.action	values.lacerate	|T136000:0|t Spell 1328617
 options.packs.feral.Feral (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.feral.Feral (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.feral.Feral (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -17724,7 +17724,7 @@ options.packs.feral.Feral (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 5221 - |cFFFFD100|cffffd100((!action.cat_form.known||buff.cat_form.up)&buff.clearcasting.up)|r|r
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1082 - |cFFFFD100|cffffd100(((!action.cat_form.known||buff.cat_form.up)&buff.clearcasting.up)&(!action.shred.known||!action.shred.ready))|r|r
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffbleeds|r|r
-options.packs.feral.Feral (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 22568 - |cFFFFD100|cffffd100((combo_points.current>=5&!(fight_remains>=10))||(combo_points.current>=3&fight_remains<3))|r|r
+options.packs.feral.Feral (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1328618 - |cFFFFD100|cffffd100((combo_points.current>=5&!(fight_remains>=10))||(combo_points.current>=3&fight_remains<3))|r|r
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1322605 - |cFFFFD100|cffffd100((action.shifting_power.ready&((buff.clearcasting.up&energy.lo<40)||(!buff.clearcasting.up&energy.lo<50)))||(((combo_points.current>=5&(!action.rip.known||debuff.rip.up)&fight_remains>=10&(!action.rip.known||debuff.rip.remains>0)&(!action.rip.known||debuff.rip.remains<=2)&(!action.rip.known||(!action.shred.known||((energy.lo-action.shred.cost)+10)<action.rip.cost)))||((!action.rake.known||debuff.rake.up)&fight_remains>=9&(!action.rake.known||debuff.rake.remains>0)&(!action.rake.known||debuff.rake.remains<=1)&(!action.rake.known||(!action.shred.known||((energy.lo-action.shred.cost)+10)<action.rake.cost))))&action.shifting_power.ready))|r|r
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffbuilders|r|r
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 29166 - |cFFFFD100|cffffd100((!action.cat_form.known||buff.cat_form.up)&(mana.lo<1400&mana.lo<(fight_remains*50))&energy.lo<=30&!buff.clearcasting.up&(!action.berserk.known||!buff.berserk.up)&fight_remains>=15)|r|r
@@ -17750,7 +17750,7 @@ options.packs.feral.Feral (wowsims.com).lists.action_name	values.enrage	|T136000
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.entangling_roots	|T136000:0|t Spell 339
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.feral_charge	|T136000:0|t Spell 1238122
-options.packs.feral.Feral (wowsims.com).lists.action_name	values.ferocious_bite	|T136000:0|t Spell 22568
+options.packs.feral.Feral (wowsims.com).lists.action_name	values.ferocious_bite	|T136000:0|t Spell 1328618
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.gift_of_the_wild	|T136000:0|t Spell 21849
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.growl	|T136000:0|t Spell 6795
@@ -17759,7 +17759,7 @@ options.packs.feral.Feral (wowsims.com).lists.action_name	values.healthstone	|T5
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.hurricane	|T136000:0|t Spell 16914
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.innervate	|T136000:0|t Spell 29166
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.insect_swarm	|T136000:0|t Spell 5570
-options.packs.feral.Feral (wowsims.com).lists.action_name	values.lacerate	|T136000:0|t Spell 414644
+options.packs.feral.Feral (wowsims.com).lists.action_name	values.lacerate	|T136000:0|t Spell 1328617
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -17810,7 +17810,7 @@ options.packs.feral.Feral (wowsims.com).lists.buff_name	values.growl	|T136000:0|
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.howling_idol	|T136000:0|t Spell 1291059
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.innervate	|T136000:0|t Spell 29166
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.insect_swarm	|T136000:0|t Spell 5570
-options.packs.feral.Feral (wowsims.com).lists.buff_name	values.lacerate	|T136000:0|t Spell 414644
+options.packs.feral.Feral (wowsims.com).lists.buff_name	values.lacerate	|T136000:0|t Spell 1328617
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
@@ -18902,7 +18902,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action	values.enrage	|T13600
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.entangling_roots	|T136000:0|t Spell 339
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.feral_charge	|T136000:0|t Spell 1238122
-options.packs.guardian.Guardian (wowsims.com).lists.action	values.ferocious_bite	|T136000:0|t Spell 22568
+options.packs.guardian.Guardian (wowsims.com).lists.action	values.ferocious_bite	|T136000:0|t Spell 1328618
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.gift_of_the_wild	|T136000:0|t Spell 21849
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.growl	|T136000:0|t Spell 6795
@@ -18911,7 +18911,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action	values.healthstone	|T
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.hurricane	|T136000:0|t Spell 16914
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.innervate	|T136000:0|t Spell 29166
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.insect_swarm	|T136000:0|t Spell 5570
-options.packs.guardian.Guardian (wowsims.com).lists.action	values.lacerate	|T136000:0|t Spell 414644
+options.packs.guardian.Guardian (wowsims.com).lists.action	values.lacerate	|T136000:0|t Spell 1328617
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -18976,7 +18976,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.enrage	|T
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.entangling_roots	|T136000:0|t Spell 339
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.feral_charge	|T136000:0|t Spell 1238122
-options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.ferocious_bite	|T136000:0|t Spell 22568
+options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.ferocious_bite	|T136000:0|t Spell 1328618
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.gift_of_the_wild	|T136000:0|t Spell 21849
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.growl	|T136000:0|t Spell 6795
@@ -18985,7 +18985,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.healthsto
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.hurricane	|T136000:0|t Spell 16914
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.innervate	|T136000:0|t Spell 29166
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.insect_swarm	|T136000:0|t Spell 5570
-options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.lacerate	|T136000:0|t Spell 414644
+options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.lacerate	|T136000:0|t Spell 1328617
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -19036,7 +19036,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.growl	|T136
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.howling_idol	|T136000:0|t Spell 1291059
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.innervate	|T136000:0|t Spell 29166
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.insect_swarm	|T136000:0|t Spell 5570
-options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.lacerate	|T136000:0|t Spell 414644
+options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.lacerate	|T136000:0|t Spell 1328617
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
@@ -19783,7 +19783,6 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.shield_
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.shield_wall	|T136000:0|t Spell 871
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.sunder_armor	|T136000:0|t Spell 7386
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.sweeping_strikes	|T136000:0|t Spell 12292
-options.packs.protection.Protection (wowsims.com).lists.buff_name	values.swift_judgement	|T136000:0|t Spell 1310994
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.taunt	|T136000:0|t Spell 355
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.thunder_clap	|T136000:0|t Spell 6343
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.victorious	|T136000:0|t Spell 402975
@@ -20087,7 +20086,6 @@ options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_fury	|T136000:0|t Spell 1311649
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_righteousness	|T136000:0|t Spell 20154
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_the_crusader	|T136000:0|t Spell 21082
-options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.swift_judgement	|T136000:0|t Spell 1310994
 options.packs.retribution.Retribution (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.retribution.Retribution (wowsims.com).lists.caption	name	Caption
 options.packs.retribution.Retribution (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
