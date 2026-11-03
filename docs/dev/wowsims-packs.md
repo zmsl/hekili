@@ -8,9 +8,22 @@ step-by-step procedure the lanes ran is the plan's "per-spec procedure" (P1-P10,
 What only the game can answer (the in-game checkpoints and the long-term items) is in `docs/dev/ingame-ledger.md`.
 
 Two pins (`tools/wowsims/export.lua`): `M.PIN` names the recipes, requests and APLs; `M.SIM_PIN` the CLI that made the
-logs, but `M.OLD_SIM`'s (`tests/Forever/wowsims_pin_spec.lua`). `export.lua rerun <spec>` runs a checked-in request on
-the oracle CLI of a checkout at `M.SIM_PIN` (`make wowsims-sim-cli WOWSIMS=<checkout>`): the oracle gains new mechanics,
-the translated rotation stays. The request edits are in the 2026-11-02 lane P report.
+logs, except the specs in `M.OLD_SIM` (the hunters), whose logs stay at `M.PIN` (`tests/Forever/wowsims_pin_spec.lua`).
+`export.lua rerun <spec>` runs a checked-in request on the oracle CLI of a checkout at `M.SIM_PIN`
+(`make wowsims-sim-cli WOWSIMS=<checkout>`): the oracle gains new mechanics, the translated rotation stays.
+
+Request edits the new sim needed (2026-11-02), none changing what an APL entry does:
+- `greaterBlessingOfWisdom` / `greaterBlessingOfMight` `true` -> `2` (upstream made them a rank state; 2 = the old top
+  rank), in the 9 requests that set them.
+- Talent strings re-encoded by spell ID on the new trees (7 requests: Feral, Guardian, Arcane, Fire, Frostfire,
+  Protection and Retribution Paladin): ranks clamped to the new maximum points, talents removed upstream dropped, no
+  point reassigned (Fire's Critical Mass 5 -> 3).
+- Warrior Fury and Arms: Whirlwind's `{spellId 1680, tag 1}` -> `tag 14` (upstream tags hand-split spells by item slot;
+  Fury 4 refs, Arms 2).
+- Guardian: Lacerate (now a talent, 1328617) gets 1 point, taken from removed Berserk (417141); Primal Bite rank 4
+  1238073 (removed upstream) -> 1238070, the new top rank.
+- Left as they are: hunter `petAggression`, the encounter's `executeProportion25/45/90` and Shadow's hidden
+  `dotExpectedDps` entry, which the proto silently drops without changing the sim.
 
 ### Oracle patches
 

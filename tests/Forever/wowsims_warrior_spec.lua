@@ -197,7 +197,7 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- measured 0.904 (94); 0.979 once the replay ends a cooldown at its log timestamp (ready-time ruling), held with
             -- partial blocks replayed as BLOCK_REDUCED wounds (gap AH); 0.97 -> 0.93 (0.938, 91 of 97, after gap AS's
             -- Rend give-back): W2's fight exposes exact-1.5 s Shield Slam ties (sim artifact; reverting upstream #755
-            -- alone gives 0.989: wowsims-delta/accuracy-research-melee.md)
+            -- alone gives 0.989)
             0.93,
             PROT_REPLAY
         )
