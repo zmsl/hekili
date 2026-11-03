@@ -299,6 +299,7 @@ M.READY = {
     -- 2026-10-26
     -- { 0.25, 7 } -> { 0.50, 5 }: gap AS's reversed order (Rake dodged at 75.24 now undoes Rake): 76.24 timed, and
     -- the 91.74 / 95.24 late rows (0.22 / 0.25 s) fall inside the cost absorption; the five left have the larger median
+    -- (controller ruling 2026-11-03 overnight, pending owner review)
     druid_feral = { 0.50, 5 },
     druid_guardian = { 0.54, 41 }, -- 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     hunter_beast_mastery = { 0.32, 5 },
