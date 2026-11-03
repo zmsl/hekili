@@ -22,8 +22,9 @@ ENV_LINES=$(env_lines) # before LC_ALL is pinned below
 cd "$(git rev-parse --show-toplevel)"
 STAMP="$(git rev-parse --absolute-git-dir)/hekili-check-stamp"
 export LC_ALL=C
-LIST=$(mktemp)
-trap 'rm -f "$LIST"' EXIT
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+LIST=$TMP/list
 
 # Raw bytes and mode of every file present: tracked, untracked unignored, and ignored *.lua/*.toc/*.xml outside .lua/
 # (luacheck, stylua and the test finders walk the tree, not the index).
@@ -32,8 +33,28 @@ worktree_lines() {
         git -c core.quotePath=false ls-files -co --exclude-standard
         git -c core.quotePath=false ls-files -oi --exclude-standard -- '*.lua' '*.toc' '*.xml' ':!:.lua/'
     } | sort -u | comm -23 - <(git -c core.quotePath=false ls-files -d | sort -u) >"$LIST"
-    [ -s "$LIST" ] || return 0
-    paste <(tr '\n' '\0' <"$LIST" | xargs -0 stat -c '%A') <(git hash-object --no-filters --stdin-paths <"$LIST") "$LIST" |
+    local p
+    : >"$TMP/files"
+    while IFS= read -r p; do # only files go to hash-object: a directory (a nested repo, `dir/`) stops it
+        if [ -f "$p" ]; then
+            printf '%s\n' "$p" >>"$TMP/files"
+        elif [ -d "$p" ]; then
+            printf 'W dir %s\t%s\n' "$(find "$p/" -type f -printf '%P %s %T@ %m\n' | sort | md5sum | cut -d' ' -f1)" "$p"
+        else
+            printf 'W other %s\t%s\n' "$(readlink "$p" || echo -)" "$p"
+        fi
+    done <"$LIST"
+    [ -s "$TMP/files" ] || return 0
+    # Fail closed: a path that can't be hashed (unreadable) is an error, never a shorter list.
+    tr '\n' '\0' <"$TMP/files" | xargs -0 stat -c '%A' >"$TMP/modes"
+    git hash-object --no-filters --stdin-paths <"$TMP/files" >"$TMP/hashes"
+    local n
+    n=$(wc -l <"$TMP/files")
+    if [ "$(wc -l <"$TMP/modes")" != "$n" ] || [ "$(wc -l <"$TMP/hashes")" != "$n" ]; then
+        echo "check_stamp: cannot read every working-tree file" >&2
+        return 1
+    fi
+    paste "$TMP/modes" "$TMP/hashes" "$TMP/files" |
         awk -F'\t' '{ m = substr($1, 1, 1) == "l" ? "120000" : (substr($1, 4, 1) ~ /[xs]/ ? "100755" : "100644")
             print "W " m " " $2 "\t" $3 }'
 }
@@ -68,7 +89,7 @@ toolchain_lines() {
 manifest() {
     {
         git ls-files -s | sed 's/^/I /'
-        worktree_lines
+        worktree_lines || exit 1 # explicit: errexit is off when manifest runs inside an `if`
         toolchain_lines
         printf '%s\n' "$ENV_LINES"
     } | sort

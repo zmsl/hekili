@@ -131,6 +131,29 @@ class Stamp(unittest.TestCase):
         self.write(".ab/x.lua", "local x = 1\n")
         self.assertFalse(self.skips())
 
+    def test_nested_repo_never_hides_a_later_edit(self):  # fix round 1: a dir entry once cut every later hash
+        self.write("src/Hekili/c.lua", "local c = 3\n")
+        self.git("add", "src/Hekili/c.lua")
+        self.write("src/Hekili/b/inner.lua", "local i = 1\n")
+        self.git("init", "-q", cwd=self.path("src/Hekili/b"))
+        self.stamp()
+        self.assertTrue(self.skips())
+        self.write("src/Hekili/c.lua", "local d = 4\n", "a")
+        self.assertFalse(self.skips())
+        self.write("src/Hekili/c.lua", "local c = 3\n")
+        self.assertTrue(self.skips())
+        self.write("src/Hekili/b/inner.lua", "local j = 2\n", "a")
+        self.assertFalse(self.skips())
+
+    @unittest.skipIf(os.geteuid() == 0, "root reads a mode-000 file")
+    def test_unreadable_file_runs(self):
+        self.stamp()
+        self.write("src/Hekili/z.lua", "local z = 1\n")
+        os.chmod(self.path("src/Hekili/z.lua"), 0)
+        self.assertFalse(self.skips())
+        self.assertEqual(self.last.stdout, "")
+        self.assertNotEqual(self.run_script("manifest").returncode, 0)
+
     def test_deleted_file_runs(self):
         self.stamp()
         os.remove(self.path("src/Hekili/a.lua"))
