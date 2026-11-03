@@ -103,7 +103,8 @@ against the trees at both commits is the source of every omit count below. Ledge
      flip (`IsSpellUsable` going true) may open a window when no aura tracks it; that window closes when usable flips
      back, when the ability is cast, or at its duration.
    - The hunter weave is the first user (§3a). Migrating hand-rolled spans, and new windows elsewhere, are follow-ups.
-   - Stepped windows (owner "yes", 2026-11-03): a window may carry `steps` (ability keys in order) and `loop`. The
+   - Stepped windows (owner "yes", 2026-11-03): a window may carry `steps` (ability keys in order), `loop` and
+     `on_deviation` ("stay", the default and wowsims-true; "skip"; "end"). The
      belief advances the step on the observed real cast of the due step's ability; the core's forecast advances it
      in that cycle only ("the apl would be able to 'persist' the fact that the player already used one of the
      sequence and it recommends the next, which would mark it in the core Hekili state as used only"), never written
@@ -281,14 +282,20 @@ its evaluator reads `usable.<key>`, it sets `close_on_false`, and the ability's 
 usable flips back, at the cast, or at the duration.
 
 Stepped windows (decision 11's amendment). `RegisterWindow` takes two more optional fields: `steps = { "<ability
-key>", ... }` and `loop = true|false` (default false). A stepped window's state adds `step` (1..n).
+key>", ... }`, `loop = true|false` (default false) and `on_deviation = "stay" | "skip" | "end"` (default "stay"). A stepped window's state adds `step` (1..n).
 - Reads: `window.<name>.step`, and `window.<name>.next.<ability key>`, true when that ability is the due step (and
   the window is up).
 - Belief (truth): the step advances when the belief observes the real cast of the due step's ability. This is generic
   (by ability index, from the cast the belief already folds), with no per-ability `now()`. After the last step the
   window closes, or with `loop` goes back to step 1 (wowsims's `resetSequence`). An observed cast of a later step
-  skips forward to the step after it: the player went out of order, and the sequence never sticks. The duration and
-  the close conditions still end a stalled sequence.
+  (the player went out of order) follows `on_deviation`:
+  - "stay" (default, wowsims-true: a sequence advances only on its due step): nothing happens.
+  - "skip": the step jumps to the one after that later step (after the last: close, or step 1 with `loop`).
+  - "end": the window closes; a fresh one needs the evaluator's next edge (or `loop`'s step 1 does not apply: a
+    deviation ends it).
+  We cannot tell which APL line a player's cast belonged to, so an observed cast of the due step's ability always
+  advances it. The duration and the close conditions still end a stalled sequence (with "stay", the only way out of
+  a deviation).
 - Core (forecast): the cycle starts from the copied step. A simulated cast of the due step advances it in that
   cycle's core state only, so the list recommends the next step; it is never written back, and the next update starts
   from the belief's copy again.
