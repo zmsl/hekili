@@ -8,6 +8,10 @@ cd "$(dirname "$0")/.."
 export BUSTED=${BUSTED:-.lua/bin/busted}
 OUT=$(mktemp -d)
 export OUT
+if [ -n "${DETECT_WRITE:-}" ]; then # the floors file is read-modify-written by every writer: no parallel runs
+    BUSTED_JOBS=1
+    echo "DETECT_WRITE set: running the spec files serially (BUSTED_JOBS=1)"
+fi
 trap 'rm -rf "$OUT"' EXIT
 
 run_one() {

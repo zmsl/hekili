@@ -224,8 +224,22 @@ end
 local FILE = "tests/Game/harness/detect_floors.lua"
 
 function M.floors()
-    local f = loadfile(FILE)
-    return f and f() or {}
+    return M.readFloors(FILE)
+end
+
+--- A floors file that is missing is empty; one that is unreadable or half-written errors (a parallel writer's torn file).
+function M.readFloors(path)
+    local fh = io.open(path, "r")
+    if not fh then
+        return {}
+    end
+    fh:close()
+    local f, err = loadfile(path)
+    local t = f and f()
+    if type(t) ~= "table" then
+        error("detect floors file unreadable: " .. path .. " (" .. tostring(err) .. ")", 0)
+    end
+    return t
 end
 
 -- The measured cell as a floor: recall and staged down to 0.01, the ceilings up to 0.1.
