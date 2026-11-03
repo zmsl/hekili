@@ -1149,28 +1149,32 @@ describe("the wowsims APL translator", function()
         assert.are.equal("demonic_rune", c.itemKey[12662])
     end)
 
-    it("reads unitDistance against a whole number as the target's within/outside, else omits the line", function()
-        local d = { unitDistance = { sourceUnit = { type = "Self" } } }
-        local text, omitted = apl.translate({
-            priorityList = {
-                cast(100, cmp("OpLe", d, { variableRef = { name = "Melee range" } })),
-                cast(200, cmp("OpGt", d, const("8"))),
-                cast(300, cmp("OpGe", const("11.00"), d)), -- N >= d: within
-                cast(400, cmp("OpEq", d, const("5"))),
-                cast(400, cmp("OpLe", d, const("5.5"))),
-            },
-            valueVariables = { { name = "Melee range", value = const("5.00") } },
-        }, ctx())
-        assert.are.equal(
-            table.concat({
-                "actions=strike,focus=1,if=target.within5",
-                "actions+=/big_hit,if=target.outside8",
-                "actions+=/roar,use_off_gcd=1,if=target.within11",
-            }, "\n"),
-            text
-        )
-        assert.are.same({ "default #4: unitDistance OpEq 5", "default #5: unitDistance OpLe 5.5" }, omitted)
-    end)
+    it(
+        "reads unitDistance against a whole number as the target's within/outside, OpEq omitted, else dropped",
+        function()
+            local d = { unitDistance = { sourceUnit = { type = "Self" } } }
+            local text, omitted = apl.translate({
+                priorityList = {
+                    cast(100, cmp("OpLe", d, { variableRef = { name = "Melee range" } })),
+                    cast(200, cmp("OpGt", d, const("8"))),
+                    cast(300, cmp("OpGe", const("11.00"), d)), -- N >= d: within
+                    cast(400, cmp("OpEq", d, const("5"))),
+                    cast(400, cmp("OpLe", d, const("5.5"))), -- a non-integer: a movement term (rule 18), dropped
+                },
+                valueVariables = { { name = "Melee range", value = const("5.00") } },
+            }, ctx())
+            assert.are.equal(
+                table.concat({
+                    "actions=strike,focus=1,if=target.within5",
+                    "actions+=/big_hit,if=target.outside8",
+                    "actions+=/roar,use_off_gcd=1,if=target.within11",
+                    "actions+=/dot",
+                }, "\n"),
+                text
+            )
+            assert.are.same({ "default #4: unitDistance OpEq 5" }, omitted)
+        end
+    )
 
     it("drops a call to a group whose entries were all omitted", function()
         local text, omitted = apl.translate({
@@ -1706,6 +1710,86 @@ describe("the wowsims APL translator's casting, range, curse and cast-time pre-p
             assert.are.same({ "default #1: warlockBaneIsActiveOnAllTargets" }, bane)
         end
     )
+end)
+
+-- Re-pin plan Task 5 (rule 18, decision 8): movement terms are wowsims's nil; a negated bracket is the opposite one.
+describe("the wowsims APL translator's movement terms", function()
+    local d = { unitDistance = { sourceUnit = { type = "Self" } } }
+    local speed = { unitMovementSpeed = { sourceUnit = { type = "Self" } } }
+    local function run(entries, vars)
+        return apl.translate({ priorityList = entries, valueVariables = vars }, ctx({}))
+    end
+
+    it("drops a walk time (math over yards and run speed) and keeps the timing term", function()
+        local walk =
+            { math = { op = "OpDiv", lhs = { math = { op = "OpSub", lhs = d, rhs = const("5") } }, rhs = speed } }
+        local mh = { autoTimeToNext = { autoType = "MainHandAuto" } }
+        local text, omitted, _, header = run({
+            cast(
+                100,
+                AND(
+                    cmp("OpLe", { variableRef = { name = "Time to walk in" } }, const("0s")),
+                    cmp("OpGt", mh, const("0.5s"))
+                )
+            ),
+        }, { { name = "Time to walk in", value = walk } })
+        assert.are.equal("actions=strike,if=mainhand_remains>0.5", text)
+        assert.are.same({}, omitted)
+        assert.are.same({
+            "# Dropped (movement): default #1: unitDistance",
+            "# Dropped (movement): default #1: unitMovementSpeed",
+        }, header)
+    end)
+
+    it("unitIsMoving (any unit) alone is a line with no condition", function()
+        local text, omitted, _, header =
+            run({ cast(100, { unitIsMoving = { sourceUnit = { type = "CurrentTarget" } } }) })
+        assert.are.equal("actions=strike", text)
+        assert.are.same({}, omitted)
+        assert.are.same({ "# Dropped (movement): default #1: unitIsMoving" }, header)
+    end)
+
+    it("a negated bracket is the opposite bracket; yards against a max() drop", function()
+        local text, omitted, _, header = run({
+            cast(100, NOT(cmp("OpGt", d, const("5")))),
+            cast(200, NOT(cmp("OpLt", d, const("8")))),
+            cast(300, cmp("OpNe", d, { max = { vals = { const("11"), const("13") } } })),
+        })
+        assert.are.equal(
+            table.concat({
+                "actions=strike,if=target.within5",
+                "actions+=/big_hit,if=target.outside8",
+                "actions+=/roar,use_off_gcd=1",
+            }, "\n"),
+            text
+        )
+        assert.are.same({}, omitted)
+        assert.are.same({ "# Dropped (movement): default #3: unitDistance" }, header)
+    end)
+
+    it("a call of an empty group lists no dropped term", function()
+        local text, _, _, header = apl.translate({
+            priorityList = {
+                { action = { groupReference = { groupName = "Walk" }, condition = { unitIsMoving = {} } } },
+                cast(100),
+            },
+            groups = { { name = "Walk", actions = { { action = { move = {} } } } } },
+        }, ctx({}))
+        assert.are.equal("actions=strike", text)
+        assert.are.same({}, header)
+    end)
+
+    it("a pre-pull time folded from the kit's cast time is a deviation (wowsims folds the hasted cast)", function()
+        local e = cast(500)
+        e.doAtValue =
+            { math = { op = "OpMul", lhs = { spellCastTime = { spellId = { spellId = 500 } } }, rhs = const("-1") } }
+        local e2 = cast(100)
+        e2.doAtValue = const("-1s")
+        local _, _, _, header = apl.translate({ prepullActions = { e, e2 } }, ctx({}))
+        assert.are.same({
+            "# Deviation: precombat #1: the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast.",
+        }, header)
+    end)
 end)
 
 -- Central fix 11: wowsims's OpDiv is division; the engine's script language takes `/` for division and `%` for modulo.

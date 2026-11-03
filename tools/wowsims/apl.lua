@@ -7,7 +7,8 @@
 --    constant `doAtValue`, earliest first, ties in the APL's order; an entry with no `doAtValue` or one after the pull
 --    is omitted, as wowsims ignores it, and one whose `doAtValue` does not fold to a constant too: it folds from
 --    constants, `math` and `spellCastTime`, the kit ability's `cast` (a function read in the kit's stub state, as the
---    pre-pull guard below; re-pin plan Task 4), so `-spellCastTime(X)` is `-<X's cast>`), `priorityList` -> `actions`,
+--    pre-pull guard below; re-pin plan Task 4), so `-spellCastTime(X)` is `-<X's cast>`: a `# Deviation:` line, as
+--    wowsims folds the hasted cast), `priorityList` -> `actions`,
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
 --    order as first called; `valueVariables` are inlined where referenced.
 --    The pre-pull guard (owner ruling 2026-10-21: a guard against recasting, the player decides when to press): each
@@ -24,7 +25,7 @@
 --    gives no guard and a header note.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
 --    false; entries whose action or condition uses a node the fork lacks (`sequence`,
---    `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `unitDistance` outside rule 11, `sequenceIsComplete`,
+--    `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `sequenceIsComplete`,
 --    `activeItemSwapSet`, `selectedConjured`), or whose own action is an unmapped spell, item or other ID (an unmapped
 --    read drops only its branch: rule 12); a call of a group whose every entry was omitted. Also listed: rule 12's
 --    dropped reads and rule 13's unmapped cooldowns, by entry.
@@ -96,7 +97,9 @@
 --    `remainingTime` is `fight_remains`, which answers "unknown" (3600 s) on Forever: an API-forced deviation.
 -- 11. `unitDistance` (wowsims's yards from the APL's unit to its target; the source unit is ignored, as wowsims does)
 --    compared with a whole number N: `<=`/`<` N as `target.within<N>`, `>=`/`>` N as `target.outside<N>` (either
---    side; any other comparison or a non-integer N is unsupported). API-forced deviation: the client gives no yards,
+--    side; `=`/`!=` N is unsupported, anything but a whole number N is rule 18's movement term); `not` of one is the
+--    opposite bracket (`!(d>N)` is `target.within<N>`, `!(d<N)` `target.outside<N>`), as `!` of a bracket would read
+--    false for an unknown distance. API-forced deviation: the client gives no yards,
 --    only per-spell range checks (C_Spell.IsSpellInRange, plain in combat: probe W PR7), so the engine brackets the
 --    distance between the tracked abilities' own ranges (src/Hekili/Game/State/Families/Enemies.lua VS.TargetRange)
 --    and `within`/`outside` test the bracket's bounds (`maxR <= N`, `minR >= N`; `<` reads as `<=` and `>` as `>=`): a
@@ -107,7 +110,7 @@
 --    nil, so rule 6 drops that branch (a nil condition is true) and the entry stays; `spellIsKnown` of one is false
 --    (wowsims's constant). A deviation when wowsims has the aura or spell and the fork does not (a branch wowsims
 --    keeps is dropped); the header lists every such ID, once an entry. Only an entry whose own action is unmapped is
---    omitted whole (rule 2).
+--    omitted whole (rule 2). A movement term (rule 18) is the same nil, from the node rather than an ID.
 -- 13. wowsims's automatic cooldowns, read from the spec's exported log (the context's `log`; M.autocasts): the action
 --    `autocastOtherCooldowns` (sim/core/apl_actions_casting.go: the first ready major cooldown, registered with
 --    AddMajorCooldown in sim/core/major_cooldown.go and not cast by the APL itself, ready-at then priority first, cast
@@ -179,7 +182,15 @@
 --    the current target only (`maxDots` unused). No `cycle_targets=1`: the engine's target cycling (State.lua SetupCycle) needs
 --    other targets' DoTs (`active_dot`), which Forever does not give plainly (gap AO / AP), and the replay is one target.
 --    `strictMultidot` (wowsims: the same targets, each cast re-checking the entry's condition) is the same line.
--- 18. One-line reads (re-pin plan, docs/superpowers/plans/2026-11-03-wowsims-repin.md, Task 3; wowsims sim/core
+-- 18. Movement terms (re-pin plan Task 5; the design's decision 8, owner "ok"): every movement term is dropped from
+--    translated conditions: run speed (`unitMovementSpeed`), "is moving" (`unitIsMoving`, any unit) and arithmetic
+--    on yards (`unitDistance` inside `math`, `min`/`max`, or compared with anything but a whole-number constant). The
+--    rest of the condition decides. A dropped term reads as wowsims's nil (rule 6): it leaves its `and`/`or`, and a
+--    comparison or `math` over it is nil too. This supersedes every "falls to false", "reads false" and "constant run
+--    speed" text. Hekili holds only the Movement toggle, the client's range gate (rule 11's bracket, `spellInRange`)
+--    and the rotation's timing terms. Each dropped term is a header line by entry,
+--    `# Dropped (movement): <list> #<n>: <node>`, once an entry.
+-- One-line reads (re-pin plan, docs/superpowers/plans/2026-11-03-wowsims-repin.md, Task 3; wowsims sim/core
 --    apl_values_*.go): `talentIsKnown` (wowsims's constant: the build holds that rank or a higher one) of an ID that
 --    resolves to a talent (a kit talent's spell, or a recipe `map` to a talent's key, as rule 4) is
 --    `talent.<key>.enabled` (a `rank` above 1: `talent.<key>.rank>=<rank>`), else false; `talentRank` is
@@ -545,6 +556,7 @@ end
 
 local UNIT = { Self = "buff", CurrentTarget = "debuff", Target = "debuff" }
 local FLIP = { OpLe = "OpGe", OpLt = "OpGt", OpGe = "OpLe", OpGt = "OpLt", OpEq = "OpEq", OpNe = "OpNe" } -- N op d
+local NEGATE = { OpLe = "OpGt", OpLt = "OpGe", OpGe = "OpLt", OpGt = "OpLe" } -- not (d op N), rule 11
 local function unit(v)
     local u = v.sourceUnit and v.sourceUnit.type or "Self"
     return UNIT[u] or unsupported("unit " .. tostring(u))
@@ -687,6 +699,7 @@ local function folded(c, n)
         return c.vars[v.name] and folded(c, c.vars[v.name])
     elseif k == "spellCastTime" then
         local x = spellLookup(c, v.spellId)
+        c.castFolded = true -- rule 1's deviation: the kit's base cast, where wowsims folds the hasted one
         return x and castTime(c, x)
     elseif k == "math" then
         local l, r = folded(c, v.lhs or {}), folded(c, v.rhs or {})
@@ -714,6 +727,18 @@ local function deviate(c, d)
     c.deviations[#c.deviations + 1] = d
 end
 local ALL_TARGETS = 'an "on all targets" read is the current target\'s only.'
+local PREPULL_CAST = "the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast."
+
+-- Rule 18: a movement term of kind `kind`, recorded once an entry; returns wowsims's nil.
+local function moved(c, kind)
+    for _, x in ipairs(c.moves) do
+        if x == kind then
+            return nil, true
+        end
+    end
+    c.moves[#c.moves + 1] = kind
+    return nil, true
+end
 
 -- A talent ID's key (a kit talent's spell, or a recipe `map` to a talent's key), or nil.
 local function talentOf(c, id)
@@ -744,6 +769,8 @@ local function value(c, n, pct)
         return M.VALUES[k], false
     elseif k == "variableRef" then
         return value(c, c.vars[v.name] or unsupported("variable " .. v.name), pct)
+    elseif k == "unitMovementSpeed" or k == "unitDistance" then -- rule 18 (rule 11 compares yards in bool())
+        return moved(c, k)
     elseif k == "math" then
         if percentRead(c, v.lhs) or percentRead(c, v.rhs) then -- its 0-100 against wowsims's 0-1 leaks (rule 8)
             unsupported("a percent read in math")
@@ -874,6 +901,19 @@ local function bool(c, n)
         local s = #parts == 1 and parts[1] or ("(" .. table.concat(parts, k == "and" and "&" or "|") .. ")")
         return s, nil, (not identity) and nilAnd(us)
     elseif k == "not" then
+        local r = v.val
+        while r and r.variableRef and c.vars[r.variableRef.name] do
+            r = c.vars[r.variableRef.name]
+        end
+        if
+            r
+            and r.cmp
+            and NEGATE[r.cmp.op]
+            and (r.cmp.lhs and r.cmp.lhs.unitDistance or r.cmp.rhs and r.cmp.rhs.unitDistance)
+        then
+            -- rule 11: the opposite bracket (an unknown distance answers both, so `!` of one would block the line)
+            return bool(c, { cmp = { op = NEGATE[r.cmp.op], lhs = r.cmp.lhs, rhs = r.cmp.rhs } })
+        end
         local s, b, u = bool(c, v.val)
         if u == true then
             return nil, nil, true
@@ -892,7 +932,10 @@ local function bool(c, n)
         local n = value(c, flip and v.lhs or v.rhs)
         local op = flip and FLIP[v.op] or v.op
         local side = (op == "OpLe" or op == "OpLt") and "within" or ((op == "OpGe" or op == "OpGt") and "outside")
-        if not side or not (n and n:match("^%d+$")) then
+        if not (n and n:match("^%d+$")) then
+            moved(c, "unitDistance") -- rule 18: yards against anything but a whole number
+            return nil, nil, true
+        elseif not side then
             unsupported("unitDistance " .. tostring(v.op) .. " " .. tostring(n))
         end
         return "target." .. side .. n, nil, false
@@ -940,6 +983,9 @@ local function bool(c, n)
         return rank > 1 and ("talent." .. t .. ".rank>=" .. rank) or ("talent." .. t .. ".enabled"), nil, false
     elseif k == "gcdIsReady" then
         return "gcd.remains<=0", nil, false
+    elseif k == "unitIsMoving" then -- rule 18, any unit
+        moved(c, k)
+        return nil, nil, true
     elseif k == "druidBleedIsActive" then -- the Druid kit's state expression (its bleeds on the target)
         local u = v.targetUnit and v.targetUnit.type or "CurrentTarget"
         if UNIT[u] ~= "debuff" then
@@ -1459,7 +1505,7 @@ end
 --- ON/OFF groups in its order, then the recipe's `settings` by key).
 function M.translate(rotation, c)
     c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
-    c.callers, c.deviated, c.deviations = {}, {}, {}
+    c.callers, c.deviated, c.deviations, c.moves, c.movedAll = {}, {}, {}, {}, {}
     -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13)
     local lists = { rotation.prepullActions or {}, rotation.priorityList or {} }
     for _, g in ipairs(rotation.groups or {}) do
@@ -1509,6 +1555,7 @@ function M.translate(rotation, c)
     local omitted, lists, byName = {}, {}, {}
     local origin = {} -- [list name][line] = its APL entry's index (for rule 1's notes)
     local skip, skipped = {}, {} -- rule 7: the recipe's prepullSkip actions, and those it omitted
+    local castAt = {} -- rule 1: the pre-pull entries whose time folds a cast time
     for _, x in ipairs(c.prepullSkip) do
         skip[x] = true
     end
@@ -1533,7 +1580,10 @@ function M.translate(rotation, c)
             elseif type(when) == "string" then
                 omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, when)
             else
-                c.notes, c.dropped, c.deviations = {}, {}, {}
+                c.notes, c.dropped, c.deviations, c.moves = {}, {}, {}, {}
+                if at and castAt[i] then
+                    deviate(c, PREPULL_CAST)
+                end
                 local ok, body, why = pcall(entry, c, e)
                 if not ok then
                     if type(body) ~= "table" then
@@ -1557,6 +1607,11 @@ function M.translate(rotation, c)
                     for _, d in ipairs(c.deviations) do -- an emitted line that differs from wowsims (rule 17)
                         c.deviated[#c.deviated + 1] = ("# Deviation: %s #%d: %s"):format(name, i, d)
                     end
+                    local called = type(body) == "string" and body:match("^call_action_list,name=([%w_]+)")
+                    for _, m in ipairs(c.moves) do -- rule 18 (not for a call that turns out empty)
+                        c.movedAll[#c.movedAll + 1] =
+                            { ("# Dropped (movement): %s #%d: %s"):format(name, i, m), called }
+                    end
                 elseif why ~= "toggle" then
                     omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, why)
                 end
@@ -1568,8 +1623,10 @@ function M.translate(rotation, c)
     -- at the pull itself
     local prepull, at = rotation.prepullActions or {}, {}
     for i, e in ipairs(prepull) do
+        c.castFolded = false
         local ok, n = pcall(folded, c, e.doAtValue or {})
         n = ok and n
+        castAt[i] = c.castFolded
         if not e.doAtValue or next(e.doAtValue) == nil then
             at[i] = "no doAtValue"
         elseif not n then
@@ -1698,6 +1755,11 @@ function M.translate(rotation, c)
     end
     for _, d in ipairs(c.deviated) do
         header[#header + 1] = d
+    end
+    for _, m in ipairs(c.movedAll) do
+        if not (m[2] and #(byName[m[2]] or {}) == 0) then
+            header[#header + 1] = m[1]
+        end
     end
     return text, omitted, read, header
 end
