@@ -1445,6 +1445,115 @@ describe("the wowsims APL translator", function()
     end)
 end)
 
+-- Re-pin Phase 2 (docs/superpowers/plans/2026-11-03-wowsims-repin.md, Task 3): the reads e2842f0a78's APLs add.
+describe("the wowsims APL translator's re-pin reads", function()
+    local function one(cond, r)
+        return apl.translate({ priorityList = { cast(100, cond) } }, ctx(r or {}))
+    end
+    local function lines(cond, r)
+        return (one(cond, r))
+    end
+    local function spell(k, id)
+        return { [k] = { spellId = { spellId = id } } }
+    end
+
+    it("talentIsKnown is the talent's enabled test (rank > 1: its rank); an ID no talent has is false", function()
+        local function known(id, rank)
+            return { talentIsKnown = { talentId = { spellId = id, rank = rank } } }
+        end
+        assert.are.equal("actions=strike,if=talent.cuts.enabled", lines(known(950, 1)))
+        assert.are.equal("actions=strike,if=talent.cuts.enabled", lines(known(950)))
+        assert.are.equal("actions=strike,if=talent.cuts.rank>=3", lines(known(950, 3)))
+        assert.are.equal("actions=strike,if=talent.cuts.enabled", lines(known(951), { map = { [951] = "cuts" } }))
+        local text, omitted = one(known(999, 1)) -- wowsims's constant false: the talent is not held
+        assert.are.equal("", text)
+        assert.are.same({ "default #1: never" }, omitted)
+    end)
+
+    it("talentRank is the talent's rank; an ID no talent has reads 0", function()
+        local function rank(id)
+            return cmp("OpGe", { talentRank = { talentId = { spellId = id } } }, const("2"))
+        end
+        assert.are.equal("actions=strike,if=talent.cuts.rank>=2", lines(rank(950)))
+        assert.are.equal("actions=strike,if=0>=2", lines(rank(999)))
+    end)
+
+    it("spellFullCooldown is the ability's cooldown duration, guarded while unlearned", function()
+        local full = function(id)
+            return cmp("OpGt", spell("spellFullCooldown", id), const("10s"))
+        end
+        assert.are.equal("actions=strike,if=(!action.big_hit.known|cooldown.big_hit.duration>10)", lines(full(200)))
+        assert.are.equal("actions=strike,if=cooldown.strike.duration>10", lines(full(100)))
+        local text, omitted = one(full(999))
+        assert.are.equal("actions=strike", text)
+        assert.are.same({ "default #1: dropped the unresolved spell 999 (its branch only)" }, omitted)
+    end)
+
+    it("gcdIsReady is gcd.remains<=0", function()
+        assert.are.equal("actions=strike,if=gcd.remains<=0", lines({ gcdIsReady = {} }))
+    end)
+
+    it("spellGcdHastedDuration is gcd.execute, guarded while the ability is unlearned", function()
+        local g = function(id)
+            return cmp("OpLt", spell("spellGcdHastedDuration", id), const("1.5s"))
+        end
+        assert.are.equal("actions=strike,if=(!action.big_hit.known|gcd.execute<1.5)", lines(g(200)))
+        assert.are.equal("actions=strike,if=gcd.execute<1.5", lines(g(100)))
+    end)
+
+    it("currentHealth is health.current; another unit's is unsupported", function()
+        assert.are.equal(
+            "actions=strike,if=health.current>1000",
+            lines(cmp("OpGt", { currentHealth = {} }, const("1000")))
+        )
+        local pet = cmp("OpGt", { currentHealth = { sourceUnit = { type = "Pet" } } }, const("1000"))
+        local text, omitted = one(pet)
+        assert.are.equal("", text)
+        assert.are.same({ "default #1: currentHealth of Pet" }, omitted)
+    end)
+
+    it("auraDuration is the aura's duration on its unit, guarded; another player's is dropped", function()
+        local function dur(id, u, tag)
+            local v = { auraId = { spellId = id, tag = tag }, sourceUnit = u and { type = u } or nil }
+            return cmp("OpGt", { auraDuration = v }, const("5s"))
+        end
+        assert.are.equal("actions=strike,if=(!talent.furious.enabled|buff.fury.duration>5)", lines(dur(900)))
+        assert.are.equal(
+            "actions=strike,if=(!action.dot.known|debuff.dot.duration>5)",
+            lines(dur(400, "CurrentTarget"))
+        )
+        assert.are.equal("actions=strike", lines(dur(910, nil, -1)))
+    end)
+
+    it("dotBaseDuration is the DoT's duration on the target, guarded while unlearned", function()
+        local d = cmp("OpGt", spell("dotBaseDuration", 400), const("10s"))
+        assert.are.equal("actions=strike,if=(!action.dot.known|debuff.dot.duration>10)", lines(d))
+    end)
+
+    it("spellTravelTime is the ability's travel_time, guarded while unlearned", function()
+        local t = cmp("OpLt", spell("spellTravelTime", 200), const("1s"))
+        assert.are.equal("actions=strike,if=(!action.big_hit.known|action.big_hit.travel_time<1)", lines(t))
+    end)
+
+    it("druidBleedIsActive is the kit's druid_bleed_active", function()
+        assert.are.equal("actions=strike,if=druid_bleed_active", lines({ druidBleedIsActive = {} }))
+        assert.are.equal("actions=strike,if=!druid_bleed_active", lines(NOT({ druidBleedIsActive = {} })))
+    end)
+
+    it("strictMultidot is rule 17's current-target multidot line, with its deviation", function()
+        local m = { spellId = { spellId = 400 }, maxDots = 2, maxOverlap = const("1s") }
+        local text, omitted, _, header = apl.translate({
+            priorityList = { { action = { strictMultidot = m } } },
+        }, ctx({}))
+        assert.are.equal("actions=dot,if=debuff.dot.remains<=1", text)
+        assert.are.same({}, omitted)
+        assert.are.same({
+            "# Deviation: default #1: multidot keeps the DoT on up to 2 targets in wowsims;"
+                .. " this line is for the current target only.",
+        }, header)
+    end)
+end)
+
 -- Central fix 11: wowsims's OpDiv is division; the engine's script language takes `/` for division and `%` for modulo.
 describe("a wowsims division", function()
     local div = cmp("OpGt", { math = { op = "OpDiv", lhs = const("7"), rhs = const("2") } }, const("3"))

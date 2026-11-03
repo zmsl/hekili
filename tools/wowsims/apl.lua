@@ -172,6 +172,17 @@
 --    `dotRemainingTime` (rules 5, 6, 12; `rank` ignored, rule 5). Deviation, a `# Deviation:` header line by entry:
 --    the current target only (`maxDots` unused). No `cycle_targets=1`: the engine's target cycling (State.lua SetupCycle) needs
 --    other targets' DoTs (`active_dot`), which Forever does not give plainly (gap AO / AP), and the replay is one target.
+--    `strictMultidot` (wowsims: the same targets, each cast re-checking the entry's condition) is the same line.
+-- 18. One-line reads (re-pin plan, docs/superpowers/plans/2026-11-03-wowsims-repin.md, Task 3; wowsims sim/core
+--    apl_values_*.go): `talentIsKnown` (wowsims's constant: the build holds that rank or a higher one) of an ID that
+--    resolves to a talent (a kit talent's spell, or a recipe `map` to a talent's key, as rule 4) is
+--    `talent.<key>.enabled` (a `rank` above 1: `talent.<key>.rank>=<rank>`), else false; `talentRank` is
+--    `talent.<key>.rank`, else 0; `spellFullCooldown` `cooldown.<key>.duration`, `spellTravelTime`
+--    `action.<key>.travel_time` and `spellGcdHastedDuration` `gcd.execute` (each nil while the spell is unknown:
+--    rules 6, 12); `gcdIsReady` `gcd.remains<=0` (wowsims also counts the queue window); `currentHealth`
+--    `health.current` (Self only); `auraDuration` `<unit>.<key>.duration` (as `auraRemainingTime`) and
+--    `dotBaseDuration` `debuff.<key>.duration` (as `dotRemainingTime`); `druidBleedIsActive` (the target's only)
+--    the Druid kit's state expression `druid_bleed_active`.
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -201,6 +212,7 @@ M.VALUES = {
     currentManaRegen = "mana.regen",
     currentComboPoints = "combo_points.current",
     currentHealthPercent = "health.pct",
+    currentHealth = "health.current",
     currentTime = "time",
     remainingTime = "fight_remains", -- API-forced: wowsims knows its fight length; ours answers "unknown" (3600 s)
     gcdTimeToReady = "gcd.remains",
@@ -621,6 +633,23 @@ local function percentRead(c, n)
     return M.PERCENT[k] == true
 end
 
+-- A spell read's text by its key (rule 6 guards each: wowsims's nil while the spell is unknown).
+local SPELL_FIELD = {
+    spellTimeToReady = "cooldown.%s.remains",
+    spellFullCooldown = "cooldown.%s.duration",
+    spellCastTime = "action.%s.cast",
+    spellCurrentCost = "action.%s.cost",
+    spellTravelTime = "action.%s.travel_time",
+    spellGcdHastedDuration = "gcd.execute",
+}
+
+-- A talent ID's key (a kit talent's spell, or a recipe `map` to a talent's key), or nil.
+local function talentOf(c, id)
+    id = id and id.spellId
+    local x = c.talentOf[id] or c.map[id]
+    return (c.talentOf[id] or c.talentKey[x]) and x or nil
+end
+
 -- A value: its text and nil condition (`true`: nil, no text). `pct`: compared directly with a percent read (rule 8).
 local function value(c, n, pct)
     local k, v = next(n)
@@ -675,24 +704,22 @@ local function value(c, n, pct)
             parts[i] = emit(us[i], s, false) -- `(<known>&<term>)`: false while unlearned, which min()/max() skip
         end
         return k .. "(" .. table.concat(parts, ",") .. ")", nilAnd(us)
-    elseif k == "spellTimeToReady" or k == "spellCastTime" or k == "spellCurrentCost" then
+    elseif SPELL_FIELD[k] then
         local x = readSpell(c, v.spellId)
         if not x then
             return nil, true
         end
-        local field = ({
-            spellTimeToReady = "cooldown." .. x .. ".remains",
-            spellCastTime = "action." .. x .. ".cast",
-            spellCurrentCost = "action." .. x .. ".cost",
-        })[k]
-        return field, reads(c, x)
-    elseif k == "dotRemainingTime" then
+        return SPELL_FIELD[k]:format(x), reads(c, x)
+    elseif k == "talentRank" then -- wowsims: the build's rank, 0 without points
+        local t = talentOf(c, v.talentId)
+        return t and ("talent." .. t .. ".rank") or "0", false
+    elseif k == "dotRemainingTime" or k == "dotBaseDuration" then
         local a = readAura(c, v.spellId.spellId)
         if not a then
             return nil, true
         end
-        return "debuff." .. a .. ".remains", reads(c, a)
-    elseif k == "auraRemainingTime" or k == "auraNumStacks" then
+        return "debuff." .. a .. (k == "dotBaseDuration" and ".duration" or ".remains"), reads(c, a)
+    elseif k == "auraRemainingTime" or k == "auraNumStacks" or k == "auraDuration" then
         if v.auraId.tag == -1 then
             return nil, true -- rule 4: another player's aura, never registered
         end
@@ -700,7 +727,8 @@ local function value(c, n, pct)
         if not a then
             return nil, true
         end
-        return unit(v) .. "." .. a .. (k == "auraNumStacks" and ".stack" or ".remains"), reads(c, a)
+        local field = k == "auraNumStacks" and ".stack" or (k == "auraDuration" and ".duration" or ".remains")
+        return unit(v) .. "." .. a .. field, reads(c, a)
     elseif k == "autoSwingTime" and (v.autoType == "MainHand" or v.autoType == "OffHand") then -- rule 10
         return v.autoType == "MainHand" and "mainhand_speed" or "offhand_speed", false
     elseif k == "autoTimeToNext" and v.autoType == "MainHandAuto" then
@@ -828,6 +856,21 @@ local function bool(c, n)
             return nil, true, false
         end
         return test, nil, false
+    elseif k == "talentIsKnown" then -- wowsims: a constant, the build holds the rank or a higher one
+        local t = talentOf(c, v.talentId)
+        if not t then
+            return nil, false, false
+        end
+        local rank = v.talentId.rank or 1
+        return rank > 1 and ("talent." .. t .. ".rank>=" .. rank) or ("talent." .. t .. ".enabled"), nil, false
+    elseif k == "gcdIsReady" then
+        return "gcd.remains<=0", nil, false
+    elseif k == "druidBleedIsActive" then -- the Druid kit's state expression (its bleeds on the target)
+        local u = v.targetUnit and v.targetUnit.type or "CurrentTarget"
+        if UNIT[u] ~= "debuff" then
+            unsupported("druidBleedIsActive of " .. tostring(u))
+        end
+        return "druid_bleed_active", nil, false
     elseif k == "auraShouldRefresh" then -- rule 10
         local id = v.auraId.spellId
         if not c.exclusive[id] then
@@ -1161,8 +1204,8 @@ function entry(c, e)
         local x = spellKey(c, a[kind].spellId)
         c.self, key = x, x
         body = castBody(c, x)
-    elseif kind == "multidot" then -- rule 17: the cast under "its DoT has at most maxOverlap left", this target only
-        local m = a.multidot
+    elseif kind == "multidot" or kind == "strictMultidot" then -- rule 17: the cast under "its DoT has at most maxOverlap left", this target only
+        local m = a[kind]
         c.deviations[#c.deviations + 1] = ("multidot keeps the DoT on up to %d targets in wowsims; this line is for the current target only."):format(
             m.maxDots or 0
         )
