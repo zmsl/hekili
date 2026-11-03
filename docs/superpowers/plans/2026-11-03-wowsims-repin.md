@@ -114,6 +114,11 @@ Project rules:
    cycle starts from `Facade.Window`'s copy only. An unregistered window name fails at load.
 11. The guard (Task 8b): a forecast-predicted weave open the belief does not match within one poll fails the replay
    test, so drift (flicker) cannot hide in a floor.
+12. Reactions (Task 8a): a reaction fires once, only on the settled outcome (a TENT payment at `T.onFinal`, never
+   one displaced at `T.onReplace`; a swing avoid gap AS gives back to a cast fires the cast's, never the swing's);
+   its window counts from the outcome row's time, not the fold; it never moves cast history, `prev_gcd`, a ticket,
+   the GCD, a step or a strict window's deviation; no reaction appears in `def.abilities`, the options UI or the core.
+   Pinned in Task 8a.
 
 ---
 
@@ -532,10 +537,16 @@ assignment raising into `I.nowErrors`) and runs it there, never under `state`. `
 walks the upvalues. An evaluator takes exactly this path.
 
 **Files:**
-- Modify: `src/Hekili/Engine/Schema/Spec.lua` (`RegisterWindow` beside `RegisterAbility`)
-- Modify: `src/Hekili/Engine/Schema/Tracked.lua` (`def.windows`: one plain record per window, `recordOf`'s rules)
+- Modify: `src/Hekili/Engine/Schema/Spec.lua` (`RegisterWindow` and `RegisterReaction` beside `RegisterAbility`)
+- Modify: `src/Hekili/Engine/Schema/Tracked.lua` (`def.windows` and `def.reactions`: one plain record each, `recordOf`'s rules)
 - Create: `src/Hekili/Game/State/Families/Windows.lua` (the belief family; `Hekili.toc` after `Now.lua`)
-- Modify: `src/Hekili/Game/State/Families/Now.lua` (`openWindow`/`closeWindow` verbs; the evaluator reads; the shared context)
+- Modify: `src/Hekili/Game/State/Families/Now.lua` (`openWindow`/`closeWindow` verbs; the evaluator reads; the shared context;
+  the reactions: bound at SpecChanged, fired from its `Obs.PlayerHit`, `Obs.PlayerCrit`, `Obs.Avoided`, `Obs.Crit` and
+  `Obs.SwingAvoided` handlers)
+- Modify: `src/Hekili/Game/State/VirtualState.lua` (`Obs.SwingAvoided = 40`, `Obs.PlayerCrit = 41`)
+- Modify: `src/Hekili/Game/State/Sources/Player.lua` (stage `Obs.PlayerCrit` beside a CRITICAL `PlayerHit`)
+- Modify: `src/Hekili/Game/Events/Tickets.lua` (`T.Provisional` records the avoid row's time, preallocated `T.avoidT`)
+- Modify: `src/Hekili/Game/Events/Rows.lua` (`T.onExpire` stages `Obs.SwingAvoided`; `T.onFinal`'s stages at the row's time)
 - Modify: `src/Hekili/Game/State/VirtualState.lua` (Drain: the windows step after the fold)
 - Modify: `src/Hekili/Game/API/Facade.lua` (`Facade.Window`, the dedicated read)
 - Modify: `src/Hekili/Engine/Sim/State.lua` (`state.window`, the copy in `reset`, `openWindow`/`closeWindow` for handlers)
@@ -543,7 +554,7 @@ walks the upvalues. An evaluator takes exactly this path.
   (the `open_window`/`close_window` actions, beside `variable`)
 - Modify: `tools/check_border.sh` (header comment and `ok:` line), `docs/dev/architecture.md` §1 (the border paragraph:
   the window read is the owner-approved crossing beside the three calls) and §2's content surface (`RegisterWindow`)
-- Test: `tests/Game/State/windows_spec.lua` (new: the belief's edges), `tests/Forever/windows_spec.lua` (new: the
+- Test: `tests/Game/State/windows_spec.lua` (new: the belief's edges), `tests/Game/State/reactions_spec.lua` (new), `tests/Forever/windows_spec.lua` (new: the
   core copy, the APL actions, the forecast), `tests/Forever/plain_records_spec.lua`, `tests/Game/API/border_check_spec.lua`
 
 **Interfaces:**
@@ -593,6 +604,41 @@ walks the upvalues. An evaluator takes exactly this path.
 - Not here: translating wowsims `sequence`s to stepped windows (spec §3a's mapping: `sequenceIsComplete` ->
   `!window.<name>.up`, `resetSequence` -> `loop`, the condition as evaluator only when it is belief-expressible, else
   omitted as a deviation). Those land in Task 17 (Retribution) and Task 19 (Hunters), gated.
+- Produces: `spec:RegisterReaction(name, { who = "player"|"target", outcome = "dodge"|"parry"|"block"|"miss"|"crit",
+  now = fn })` (owner 2026-11-03; spec §3a "Reactions"). `block` covers BLOCK and BLOCKED. Not an ability (never in
+  `class.abilities` or `def.abilities`: no index, no cast history, `prev_gcd`, ticket, GCD, options row); not
+  `RegisterEvent` (the game-event hook). A second name, an unknown `who` or `outcome`, or a non-function `now` raises
+  at load. `def.reactions[i] = { key, who, outcome, now }` through `recordOf` (Tracked.lua: the function crosses as
+  itself); Now.lua binds it as it binds `A.now` (`setfenv(f, ctx)`, the `f == handler` guard included), so
+  `openWindow`/`closeWindow` behave identically; preallocated per outcome kind at SpecChanged (a list of reaction
+  indexes per `who` x outcome), nothing allocated when one fires.
+- Produces (belief, the fold points): each fires through Now.lua's `call` at the outcome's row time (so a window it
+  opens counts its duration from the event, not the fold or the attribution), with `curA = 0` and `journal` off as
+  for `onCrit` (the verbs that log an ability id, `gain`'s Energize and `summonTotem`, read `A.qid[curA] or 0`).
+  - `who = "player"`: Now.lua's own `I.On(Obs.PlayerHit)` (DODGE, PARRY, BLOCK/BLOCKED, MISS by `o.a`) and
+    `I.On(Obs.PlayerCrit)`; both staged by `Sources/Player.lua`'s victim-side `UNIT_COMBAT`, settled at staging.
+    `PlayerHit`'s three slots are taken (kind, amount, level), so a CRITICAL WOUND also stages `Obs.PlayerCrit`
+    (a, b, c 0), which no other family reads.
+  - `who = "target"`, our casts: Now.lua's `I.On(Obs.Avoided)` (c: DODGE, PARRY, MISS) and `I.On(Obs.Crit)`, fired
+    first, before the latest-cast (`undoA`) and `onCrit` checks. Rows.lua stages these only for a settled payment:
+    `paySpell` for a final one, `T.onFinal` for a TENT one (a displaced one, `T.onReplace`, stages nothing), gap AS's
+    give-back through `paySpell`, never a divergent one. `T.onFinal` stages at `T.rowT[i]` (the row), not `now`;
+    `make gate` must not move a line (if it does, keep `now` as the stage time and pass the row time in a
+    preallocated field the handler reads).
+  - `who = "target"`, our white swings: an avoid is provisional (`T.Provisional`) and a later wound can take it back
+    (`creditSwing`'s give-back, gap AS), so it settles only at `T.onExpire` with `T.avoid[i] ~= ""`; Rows stages
+    `Obs.SwingAvoided` there (a: hand, b: the swing's time, c: `I.HitKind`) at the avoid row's time (`T.avoidT[i]`),
+    and Now.lua fires. A swing crit (`Obs.Swing` c = 3) can be retracted (c = 6), so it is not a reaction point; a
+    `crit` reaction on a white swing fires at the credit's final (`T.onFinal` with `T.rowFlag[i] == "CRITICAL"` for a
+    melee TENT ticket, at once for a credit no row can displace; the implementer confirms which and cites it).
+  - Never: Now.lua's `run` (the cast fold) and `state:RunHandler` never see a reaction, so no step advances, no
+    strict window ends, no cooldown, GCD or cast record is written.
+- Produces (core): nothing. Reactions have no forecast (outcomes are random); a reaction's window appears in the next
+  update's `Facade.Window` copy. Task 8b's guard checks forecast opens only. No new crossing.
+- Rule (owner): an aura first; a usability flip where it works; a reaction only where only an outcome reveals the span.
+- Follow-ups (not tasks, optional and gated, in Tasks 14 and 19, each checked aura -> usability flip -> reaction in
+  that order): Overpower (the target dodged), Revenge (we blocked, dodged or parried, if Defensive State is not
+  readable), Mongoose Bite (we dodged, if the usability flip falls short).
 - Produces (recheck): an `open_window` line's condition goes through `scripts:BuildRecheck` like any entry's, so "true
   in t" becomes the countdown. R6 (the `>`/`>=` wrap branch for a decreasing clock) stays: see Step 3's note.
 - Border: `tools/check_border.sh` needs no new pattern (the core already may not name `VS`, `ns.VirtualState` or
@@ -630,7 +676,17 @@ walks the upvalues. An evaluator takes exactly this path.
     belief's step again.
   - Recheck: a line gated `window.<w>.up` behind an `open_window` whose condition is `mainhand_remains<0.5` (swing
     1.2 s ahead) is recommended with a 0.7 s delay.
-  - `plain_records_spec.lua`: every registered evaluator captures no `state`, `Hekili` or `class`.
+  - Reactions (`tests/Game/State/reactions_spec.lua`, a test reaction whose `now` calls `openWindow`): incoming, a
+    staged `UNIT_COMBAT` player PARRY row -> the `who = "player", outcome = "parry"` reaction runs -> its window is
+    up after Drain; outgoing, a spell row DODGE paid final to our cast's ticket -> `who = "target", outcome = "dodge"`
+    runs -> its window opens; a white swing's DODGE fires only at its window's close (`T.onExpire`), not at the row.
+    Settled only: a TENT DODGE fires nothing until `T.onFinal`, then once; displaced at `T.onReplace`, never; an avoid
+    the MELEE tie first gave a swing and gap AS gave back to the cast fires the cast's reaction once and no swing
+    reaction. Event time: an outcome folded 0.4 s after its row opens a 6 s window whose `expiresAt` is the row's time
+    + 6. Isolation: after a reaction, cast history, `prev_gcd`, the tickets, the GCD, a stepped window's step and a
+    strict window are unchanged, and `def.abilities` and the options rows hold no reaction. A second name, a bad `who`
+    or `outcome` raises at load. No allocation across 1000 Drains firing a reaction each.
+  - `plain_records_spec.lua`: every registered evaluator and reaction `now` captures no `state`, `Hekili` or `class`.
   - `border_check_spec.lua`: the `ok:` line names `Facade.Window`.
 - [ ] **Step 2: Run** each new spec under the lock. Expected: FAIL.
 - [ ] **Step 3: Implement** the registration, the record, the family and its Drain step, the verbs, the facade read,
@@ -642,7 +698,8 @@ walks the upvalues. An evaluator takes exactly this path.
   above.
 - [ ] **Step 4: Run** the specs, then `flock /tmp/hekili-gate.lock make check`, then `make gate`. Expected: PASS,
   green, no pack or replay line moves (no pack registers a window yet).
-- [ ] **Step 5: Commit** `feat: rotation windows (belief evaluators, Facade.Window, stateless core forecast)`.
+- [ ] **Step 5: Commit** `feat: rotation windows (belief evaluators, Facade.Window, stateless core forecast)`; the
+  reactions may be their own commit, `feat: reactions (RegisterReaction: outcome-driven now() handlers for windows)`.
 
 ### Task 8b: The ranged auto-shot clock, the weave window, and the queued Raptor Strike (Phase 3, spec §3, §3a, decisions 9 and 11)
 
@@ -793,7 +850,9 @@ requests, logs and packs; `src/Hekili_Druid/Druid.lua`, `src/Hekili_Mage/Mage.lu
   - Whirlwind's tag 14 and the Berserker Rage `requires` stay.
   - `FURY_LIVE_LEVELING` follows R7's rule.
   - Measured rage is wowsims's (the 11-02 catch-up ruling).
-- Follow-up, optional and gated (decision 11; not a step of this task): Revenge's `defensive_state` aura (Defensive State 5302, when readable, stays an aura) may move to a window only if no real aura tracks it; check for a readable client aura first and keep it if there is one. A migration is its own commit with the lane's `make gate`, and its replay and flicker lines must not fall.
+- Follow-up, optional and gated (decision 11; not a step of this task): Overpower (the target dodged) as a Task 8a
+  reaction window, after checking for an aura, then a usability flip.
+- Follow-up, optional and gated (decision 11; not a step of this task): Revenge's `defensive_state` aura (Defensive State 5302, when readable, stays an aura) may move to a window only if no real aura tracks it; check for a readable client aura first and keep it if there is one. A migration is its own commit with the lane's `make gate`, and its replay and flicker lines must not fall. If neither an aura nor a flip reveals it, a Task 8a reaction (we blocked, dodged or parried) is the last resort.
 - [ ] **Step 2:** R9; `make gate`.
 
 ### Task 15: Lane: Enhancement (Phase 6)
@@ -882,7 +941,7 @@ requests, logs and packs; `src/Hekili_Druid/Druid.lua`, `src/Hekili_Mage/Mage.lu
 - [ ] **Step 3:** R4-R7 as fresh floors. The old floors (1.00 / 0.92 / 0.97) are not comparable (spec §7); Task 9's
   old-pin ON measurement is the comparison point for the rewrite. A disagreement traced to the pre-pull "pull range"
   move is a defect (spec §2.3).
-- Follow-up, optional and gated (decision 11; not a step of this task): Mongoose Bite's `biteAt` (Defensive State 5302 when readable stays an aura; otherwise a usability-flip window with `close_on_false`) may move to a window only if no real aura tracks it; check for a readable client aura first and keep it if there is one. A migration is its own commit with the lane's `make gate`, and its replay and flicker lines must not fall.
+- Follow-up, optional and gated (decision 11; not a step of this task): Mongoose Bite's `biteAt` (Defensive State 5302 when readable stays an aura; otherwise a usability-flip window with `close_on_false`) may move to a window only if no real aura tracks it; check for a readable client aura first and keep it if there is one. A migration is its own commit with the lane's `make gate`, and its replay and flicker lines must not fall. If the usability flip falls short, a Task 8a reaction (we dodged) is the last resort.
 - [ ] **Step 4: Delete `M.OLD_SIM`** and its pin-spec branch: every log is now at `M.SIM_PIN`. Run the pin spec. Expected: PASS.
 - [ ] **Step 5:** R9; `make gate`.
 

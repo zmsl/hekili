@@ -111,6 +111,15 @@ against the trees at both commits is the source of every omit count below. Ledge
      sequence and it recommends the next, which would mark it in the core Hekili state as used only"), never written
      back. A wowsims `sequence` translates to one (§3a); the actual sequences are translated in the Retribution and
      Hunter lanes, gated.
+   - Reactions (owner 2026-11-03: "Yes put it in the window work"): `spec:RegisterReaction(name, { who = "player" |
+     "target", outcome = "dodge" | "parry" | "block" | "miss" | "crit" | ..., now = function() ... end })`, a `now()`
+     run by an observed outcome instead of a cast, so a window can open on a span only an outcome reveals. Not a fake
+     ability (it would leak into the ability table, cast history and `prev_gcd`, the tickets, the GCD, strict-window
+     deviation and the options UI); not `RegisterEvent` (that name is the game-event hook). It crosses `Build(def)` as
+     an ability's `now` does; the belief fires it in Drain's fold at the settled outcome. No forecast side (outcomes
+     are random): a reaction's window reaches the core in the next copy through `Facade.Window`. No new crossing.
+     The order of preference (owner): an aura first; a usability flip where it works; a reaction only where only an
+     outcome reveals the span.
 
 The standing constraints apply unchanged (the border's one new read is decision 11's):
 - The core stays class-neutral. The Movement toggle is a generic setting that packs opt into.
@@ -282,6 +291,35 @@ State (5302) when it is readable, the aura stays. An observed usability flip may
 its evaluator reads `usable.<key>`, it sets `close_on_false`, and the ability's `now()` closes it, so it ends when
 usable flips back, at the cast, or at the duration.
 
+Reactions (decision 11, owner 2026-11-03). `spec:RegisterReaction(name, { who, outcome, now })` in the class file:
+`who = "player"` (an outcome of a hit on us: we dodged, parried, blocked, were missed or crit) or `"target"` (our cast
+or white swing on the target was dodged, parried, blocked, missed, or crit); `outcome` one of `I.HitKind`'s names in
+lower case (`block` covers BLOCK and BLOCKED) or `crit`. A second registration of a name, or an unknown `who` or
+`outcome`, raises at load.
+- Crossing: `def.reactions[i] = { key, who, outcome, now }`, built by `Engine/Schema/Tracked.lua`'s `recordOf` (its
+  `now` crosses as the function itself), rebound in `Game/State/Families/Now.lua` exactly as an ability's
+  (`setfenv(f, ctx)`, `A.now`'s rules: the same context, so `openWindow`/`closeWindow` behave identically) and walked
+  by `tests/Forever/plain_records_spec.lua`. A reaction is never in `def.abilities` and has no ability index.
+- Firing, in Drain's fold, at the point the belief settles the outcome (the staged observation's handler):
+  - `who = "player"`: Now.lua's handler on `Obs.PlayerHit` (staged by `Game/State/Sources/Player.lua`'s victim-side
+    `UNIT_COMBAT`, settled at once: no attribution). An incoming crit needs the CRITICAL flag, which `PlayerHit`'s
+    slots do not carry today; the plan settles how it is staged.
+  - `who = "target"`, our casts: Now.lua's handlers on `Obs.Avoided` and `Obs.Crit`, before the latest-cast checks.
+    `Game/Events/Rows.lua` stages these only for a settled payment: at once for a final one (`paySpell`), at
+    `T.onFinal` for a TENT one (dropped at `T.onReplace`), after gap AS's give-back (the avoid a swing held returns
+    to the cast through `paySpell`), never for a divergent one.
+  - `who = "target"`, our white swings: a swing's avoid is provisional (`T.Provisional`) until its window closes, and
+    a later wound can take it back (gap AS); it is settled only at `T.onExpire` with the avoid still held, where Rows
+    stages a new observation for it. A swing crit fires only when its credit can no longer be displaced.
+  - A revised attribution fires nothing twice and nothing early: only the settled outcome runs a reaction.
+- Time: the reaction runs at the outcome row's time (the event), not the fold or the attribution time, so a window
+  it opens counts its duration from the event.
+- Isolation: a reaction never touches cast history, the tickets, the GCD, a stepped window's step or strict-window
+  deviation (it is not a cast: the per-cast hooks never see it); its writes are not an avoid's to undo (as `onCrit`).
+- No forecast: the core has no reactions; the next update's copy shows the window. The guard (above) checks only
+  forecast opens, so a reaction's open is never drift.
+- Rule (owner): an aura first; a usability flip where it works; a reaction only where only an outcome reveals the span.
+
 Stepped windows (decision 11's amendment). `RegisterWindow` takes two more optional fields: `steps = { "<ability
 key>", ... }`, `loop = true|false` (default false) and `on_deviation = "stay" | "skip" | "end"` (default "stay") and `strict = true|false` (default false). A stepped window's state adds `step` (1..n).
 - Reads: `window.<name>.step`, and `window.<name>.next.<ability key>`, true when that ability is the due step (and
@@ -339,6 +377,9 @@ Out of scope now (follow-ups, not tasks):
   opener's `mainhand_swung`. The weave and the Retribution opener have no aura, so they qualify.
 - New windows elsewhere (Heroic Strike queue timing, proc reaction windows, seal twisting, the five-second rule),
   priced after the re-pin.
+- Reaction users, optional and gated, in their lanes (Warrior 14, Hunters 19), each checked aura -> usability flip ->
+  reaction, in that order: Overpower (the target dodged), Revenge (we blocked, dodged or parried, if Defensive State
+  is not readable), Mongoose Bite (we dodged, if the usability flip falls short).
 
 ## 4. The translator's new kinds
 
