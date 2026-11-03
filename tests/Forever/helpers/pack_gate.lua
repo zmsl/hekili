@@ -78,7 +78,9 @@ M.FLICKER = {
     -- (sunder_armor <-> shield_block, shield_slam <-> thunder_clap, shield_block <-> rend near-ties on a forecast swing's
     -- rage)
     -- heldReady 378 -> 383 (seeds 1-20; 377 with f1f5cf772 reversed): Blood Fury's 2 min cooldown (owner, live 2026-11-02)
-    ["Warrior Protection"] = { flicker = 0.8, retracted = 0.1, readyShort = 203, heldReady = 383 }, -- 0.74 / 0.57 / 0.57, 0 / 0.03 / 0.02
+    -- readyShort 203 -> 204 (seeds 1-20; 203 at its parent 165de888f): 498b0d848's floor lift on a yes that shows a
+    -- pending swing landed (GAP AK; controller ruling 2026-11-03)
+    ["Warrior Protection"] = { flicker = 0.8, retracted = 0.1, readyShort = 204, heldReady = 383 }, -- 0.74 / 0.57 / 0.57, 0 / 0.03 / 0.02
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
