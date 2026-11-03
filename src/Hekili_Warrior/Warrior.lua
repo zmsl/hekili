@@ -1231,9 +1231,10 @@ spec:RegisterAbilities({
         end,
 
         -- the belief's side of the handler: the rest after the cost goes into the strike (wowsims execute.go; gaps.md
-        -- "Execute floor": with the cost alone the floor stayed above the truth)
+        -- "Execute floor": with the cost alone the floor stayed above the truth); the band's top, so est, lo and hi
+        -- all reach 0 (each clamps there)
         now = function()
-            spend(rage.current, "rage")
+            spend(rage.hi, "rage")
         end,
 
         handler = function()
