@@ -562,6 +562,20 @@ function M.new(text, H, o)
             end
         end
     end
+    -- o.reacted ({ [auraID] = seconds }: the APL's includeReactionTime reads of our auras, the request's reaction time):
+    -- wowsims cannot see such an aura until it has been up that long while our client shows it at once, so an on-GCD
+    -- decision inside the window after its gain is scored as of just before the gain (`at`: loop.replay's sample time)
+    local reacted = o.reacted or {}
+    for _, g in ipairs(next(reacted) and p.ev or {}) do
+        if g.kind == "aura" and g.unit == "player" and g.verb == "gained" and reacted[g.id] then
+            for _, d in ipairs(R.decisions) do
+                -- less two log grains (0.01 s each, both lines rounded): a cast logged 0.09 s on may have waited 0.1 s
+                if d.gcd and d.t > g.wt and d.t - g.wt < reacted[g.id] - 0.02 then
+                    d.at = math.min(d.at or d.t, g.wt - M.EPS / 2)
+                end
+            end
+        end
+    end
     table.sort(R.decisions, function(x, y)
         return x.t < y.t
     end)

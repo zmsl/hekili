@@ -476,7 +476,7 @@ function M.run(L, seed, o, drivers)
             local d = R.decisions[di]
             di = di + 1
             if d.t > t then
-                step(d.t)
+                step(d.at and d.at > t and d.at or d.t) -- d.at: a reacted aura's window (replay.lua o.reacted)
                 if d.gcd then
                     local n = #run.dec.ours + 1
                     run.dec.ours[n], run.dec.theirs[n] = firstGcd(steps[1].H), d.key

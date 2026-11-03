@@ -236,7 +236,29 @@ function M.replayOptions(C, spec, o)
         creatureType = M.creatureType(spec),
         distance = M.distance(spec),
         shared = C.SHARED,
+        reacted = M.reacted(spec),
     }, { __index = o or {} })
+end
+
+--- replay.new's `reacted` for spec `spec`: { [auraID] = the request's reaction time in s } for every auraIsActive
+--- read of our own aura with includeReactionTime in the request's APL.
+function M.reacted(spec)
+    local req = require("dkjson").decode(slurp(M.DIR .. spec .. ".json"))
+    local player = req.raid.parties[1].players[1]
+    local out, s = {}, (player.reactionTimeMs or 0) / 1000
+    local function walk(t)
+        local v = t.auraIsActive
+        if type(v) == "table" and v.includeReactionTime and not v.sourceUnit and v.auraId and v.auraId.spellId then
+            out[v.auraId.spellId] = s
+        end
+        for _, x in pairs(t) do
+            if type(x) == "table" then
+                walk(x)
+            end
+        end
+    end
+    walk(player.rotation or {})
+    return out
 end
 
 -- The request's first-player knob `name` (milliseconds, at any depth: reactionTimeMs, a class option's queueDelay) in

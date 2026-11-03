@@ -124,6 +124,24 @@ describe("the replay world", function()
         assert.are.equal(3.8, R.speed) -- the first two main-hand swings
     end)
 
+    it("scores a decision inside a reacted aura's reaction window as of just before its gain (o.reacted)", function()
+        local log = table.concat({
+            "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+            "[1.00] [Tester (#1)] Completed cast {SpellID: 900001}",
+            "[1.00] [Tester (#1)] Aura gained: {SpellID: 900040}",
+            "[1.00] [Tester (#1)] Casting {SpellID: 900002} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+            "[2.50] [Tester (#1)] Casting {SpellID: 900001} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        }, "\n")
+        local plain = replay.new(log, H, O)
+        local R = replay.new(log, H, setmetatable({ reacted = { [900040] = 0.1 } }, { __index = O }))
+        local gain = R.pull + 1 + 2 * replay.EPS -- the aura's line, the second of its timestamp
+        assert.is_true(plain.decisions[1].t > gain and plain.decisions[1].at == nil) -- after the gain: the proc seen
+        local at = R.decisions[1].at
+        assert.is_true(at < gain and at > R.pull + 1 + replay.EPS) -- scored before it, after the cast
+        assert.are.equal(plain.decisions[1].t, R.decisions[1].t) -- its cast's time unchanged
+        assert.is_nil(R.decisions[2].at) -- 1.5 s on: outside the window
+    end)
+
     it("the pull: the log's earliest line 0.5 s in (at least 5 s), or o.pull; the world runs from it", function()
         assert.are.equal(5, replay.new(text(), H, O).pull) -- its prepull starts at -2
         local early = text():gsub(
