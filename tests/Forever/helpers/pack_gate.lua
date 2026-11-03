@@ -58,7 +58,7 @@ M.FLICKER = {
     ["Arms"] = { flicker = 0.3, retracted = 0.1, readyShort = 173, heldReady = 340 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
-    ["Fury L60"] = { flicker = 0.9, flickerK = 0.6, retracted = 0.2, readyShort = 116, heldReady = 226 }, -- 0.75 / 0.70 / 0.87, 0.07 / 0.17 / 0.03
+    ["Fury L60"] = { flicker = 0.9, flickerK = 0.6, retracted = 0.2, readyShort = 116, heldReady = 226 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -80,7 +80,7 @@ M.FLICKER = {
     -- (sunder_armor <-> shield_block, shield_slam <-> thunder_clap, shield_block <-> rend near-ties on a forecast swing's
     -- rage)
     -- heldReady 378 -> 383 (seeds 1-20; 377 with f1f5cf772 reversed): Blood Fury's 2 min cooldown (owner, live 2026-11-02)
-    -- readyShort 203 -> 204 (seeds 1-20; 203 at its parent 165de888f): 498b0d848's floor lift on a yes that shows a
+    -- readyShort 203 -> 204 (seeds 1-20; 203 at its parent f9065270a): 79f79d52c's floor lift on a yes that shows a
     -- pending swing landed (GAP AK; controller ruling 2026-11-03)
     ["Warrior Protection"] = { flicker = 0.8, retracted = 0.1, readyShort = 204, heldReady = 383 }, -- 0.74 / 0.57 / 0.57, 0 / 0.03 / 0.02
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):

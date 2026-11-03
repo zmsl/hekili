@@ -10,7 +10,7 @@ describe("the headless Fury gates, 20 fights #loop", function()
         -- 21-40 / 41-60: agreement .930 / .944 / .918, react p90 0 / 1 / 1, unmatched 0.7 / 0.4 / 0.8, flicker 0.86 / 1.08
         -- / 0.98, dps A/B 0.985 / 1.000 / 1.004)
         -- overpower: 76-104 presses over 12 seed sets; a margin for re-timed fights, 0 means the client went dead
-        -- reactP90 0 -> 1 (owner 2026-11-03): 165de888f's per-hand heardT moves one reaction in 688 (seed 3, tick 280,
+        -- reactP90 0 -> 1 (owner 2026-11-03): f9065270a's per-hand heardT moves one reaction in 688 (seed 3, tick 280,
         -- bloodrage) past the p90 edge; traced as correct behaviour (a missed swing's forecast shows for one poll)
         gate.solo(24, { agreement = 0.9, reactP90 = 1, unmatched = 0.9, dps = 0.95, overpower = 60 })
     end)
