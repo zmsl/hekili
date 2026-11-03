@@ -617,6 +617,18 @@ describe("the ticket pool", function()
             assert.is_true(I.Log.theta[5] < th)
         end)
 
+        it("remembers no wound for a swing anchored at 0 that never had one", function()
+            ctl.now = 0
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local sw = T.lastSwing[1]
+            assert.are.equal(0, T.at[sw])
+            ctl.now = 0.474
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.are.equal(0, count(VS.Obs.Swing, 1)) -- no wound credited
+            assert.are.equal(0, count(VS.Obs.Avoided)) -- the tie gives the dodge to the swing
+        end)
+
         it("stages a held crit once the narrow band passes with no replacement, and teaches then", function()
             I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
             T.Learn("Creature-1", 20, 1.5, 9)

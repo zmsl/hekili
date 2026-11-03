@@ -509,7 +509,7 @@ local function route(t, g, uid, act, flag, amount, school)
                 local own = pass == 1 and t - T.at[p] <= SAME_FRAME
                 -- the swing's own wound came first: it landed, the avoid is the cast's (its class as remembered: UnitDamage
                 -- may have been read since)
-                if own and wAt[sw] == T.at[sw] and wCls[sw] > 0 then
+                if own and wAt[sw] > 0 and wAt[sw] == T.at[sw] and wCls[sw] > 0 then -- 0: none remembered
                     local h, wl = T.x[sw], wT[sw] - T.at[sw]
                     local wk = M.thetaIndex(h, wCls[sw], h, wl)
                     creditSwing(sw, wT[sw], "WOUND", wFlag[sw], wAmt[sw], false, false, math.huge, h, wl, 0, wk)
