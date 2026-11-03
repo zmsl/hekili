@@ -36,6 +36,14 @@ describe("casts and cooldowns", function()
         assert.is_nil(VS.Cooldown(424242, 21))
     end)
 
+    it("keeps a modelled ready time a not-ready flag agrees with (never pushed past it by the probe)", function()
+        I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
+        S.Direct(Obs.Cooldown, 39.96, REND, 0) -- 0.04 s before the modelled end: the flag agrees, still cooling
+        I.Fold(39.96, false)
+        I.Settle(39.96)
+        assert.are.equal(40, VS.Cooldown(fs.SPENDER_C, 39.96).est) -- Feral replay 26.99: was 39.96 + CD_PROBE
+    end)
+
     it("learns the real length from the ready edge after our cast", function()
         assert.are.equal(30, VS.CooldownLength(fs.SPENDER_C)) -- the spec's cooldown first
         I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
