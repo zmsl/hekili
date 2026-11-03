@@ -588,6 +588,35 @@ describe("the ticket pool", function()
             end
         )
 
+        -- the reversed credit uses the class the wound had when remembered: UnitDamage read since leaves it unchanged
+        it("credits a remembered wound with its class at memory time when UnitDamage changed since", function()
+            local h = fs.new(9, false, false, true)
+            h.Class.abilities.spender_m.school = "physical"
+            I.Build(fs.def(h), 1)
+            ctl.now = 70
+            ctl.damage = { 40, 50, 0, 0 }
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            I.Log.bg[3] = 0.1
+            ctl.now = 74.74
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 75.214
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 87.036, 1)
+            for i = 1, #I.STATS do
+                if I.STATS[i][1] == "UnitDamage" then
+                    I.statVal[i][1], I.statVal[i][2] = 200, 250 -- 87.036 now classes 0 (under 0.6 x 200)
+                end
+            end
+            ctl.now = 75.24
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.are.equal(1, count(VS.Obs.Swing, 1))
+            local th = I.Log.theta[5] -- main hand, class 3 (above), core band
+            for id = 1, 8 do
+                I.CreditVerdict(id, true, 75.3)
+            end
+            assert.is_true(I.Log.theta[5] < th)
+        end)
+
         it("stages a held crit once the narrow band passes with no replacement, and teaches then", function()
             I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
             T.Learn("Creature-1", 20, 1.5, 9)

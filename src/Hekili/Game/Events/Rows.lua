@@ -42,12 +42,13 @@ local lastMain, lastW0, fresh = 0, -1, false
 -- MELEE tie arrived in (0 none), that ticket's and the swing's anchors (the slots' identities) and the avoid's time.
 -- The swing's own wound in its core band later gives the avoid back to that cast.
 local tieP, tieAt, tieSw, tieT = {}, {}, {}, {}
--- The reversed order: per swing ticket, the white wound in its core band the LR refused (time, amount, flag; wAt the
--- swing's anchor, 0 none). An avoid in a cast's own frame then finds the swing landed: the avoid is the cast's.
-local wT, wAmt, wFlag, wAt = {}, {}, {}, {}
+-- The reversed order: per swing ticket, the white wound in its core band the LR refused (time, amount, flag, amount
+-- class then; wAt the swing's anchor, 0 none). An avoid in a cast's own frame then finds the swing landed: the avoid
+-- is the cast's.
+local wT, wAmt, wFlag, wAt, wCls = {}, {}, {}, {}, {}
 for k = 1, T.CAP do
     tieP[k], tieAt[k], tieSw[k], tieT[k] = 0, 0, 0, 0
-    wT[k], wAmt[k], wFlag[k], wAt[k] = 0, 0, "", 0
+    wT[k], wAmt[k], wFlag[k], wAt[k], wCls[k] = 0, 0, "", 0, 0
 end
 
 -- The PROV swing on `g` holding a tied avoid whose core band holds a white wound at t (its own: it landed), or nil.
@@ -506,9 +507,11 @@ local function route(t, g, uid, act, flag, amount, school)
                     tiedP, tiedN = p, n
                 end
                 local own = pass == 1 and t - T.at[p] <= SAME_FRAME
-                if own and wAt[sw] == T.at[sw] then -- the swing's own wound came first: it landed, the avoid is the cast's
+                -- the swing's own wound came first: it landed, the avoid is the cast's (its class as remembered: UnitDamage
+                -- may have been read since)
+                if own and wAt[sw] == T.at[sw] and wCls[sw] > 0 then
                     local h, wl = T.x[sw], wT[sw] - T.at[sw]
-                    local wk = M.thetaIndex(h, M.classOf(h, wAmt[sw], wFlag[sw]), h, wl)
+                    local wk = M.thetaIndex(h, wCls[sw], h, wl)
                     creditSwing(sw, wT[sw], "WOUND", wFlag[sw], wAmt[sw], false, false, math.huge, h, wl, 0, wk)
                     wAt[sw] = 0
                 else
@@ -605,8 +608,10 @@ local function route(t, g, uid, act, flag, amount, school)
     elseif not credited then
         if refused > 0 then -- in its core band and amount classes: the swing's own if a cast's own avoid follows
             local h = T.x[refused]
-            if math.abs(t - T.at[refused] - L.med[h]) <= 2 * L.spr[h] and M.classOf(h, amount, flag) > 0 then
-                wT[refused], wAmt[refused], wFlag[refused], wAt[refused] = t, amount, flag, T.at[refused]
+            local cls = M.classOf(h, amount, flag)
+            if math.abs(t - T.at[refused] - L.med[h]) <= 2 * L.spr[h] and cls > 0 then
+                wT[refused], wAmt[refused], wFlag[refused], wAt[refused], wCls[refused] =
+                    t, amount, flag, T.at[refused], cls
             end
         end
         foreign(uid, t, act, flag, amount, white, avoid, unknown, school)
