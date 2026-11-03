@@ -45,12 +45,23 @@ describe("the drive's ticket captures", function()
         assert.are.equal(success, c.payAt[row])
     end)
 
-    it("two boots in one process keep their own state and envs", function()
+    it("two boots in one process share no state: a Build through the first leaves the second unbuilt", function()
         local load = require("Game.State.helpers.load")
         local ns1, ns2 = load.module(), load.module()
         assert.are_not.equal(ns1, ns2)
         assert.are_not.equal(ns1.VirtualState, ns2.VirtualState)
         assert.are_not.equal(ns1.VirtualStateInternal, ns2.VirtualStateInternal)
+        local I1, I2 = ns1.VirtualStateInternal, ns2.VirtualStateInternal
+        local def = fs.def(fs.new(9))
+        local clock2 = I2.clock
+        I1.Build(def, 5)
+        assert.is_true(I1.built)
+        assert.are.equal(def, I1.def)
+        assert.are.equal(5, I1.clock)
+        assert.is_falsy(I2.built) -- the second boot saw none of it
+        assert.is_nil(I2.def)
+        assert.are.equal(clock2, I2.clock)
+        assert.are_not.equal(5, clock2)
         local n = 0
         for _, pair in ipairs({ { ns1, ns2 }, { ns2, ns1 } }) do
             for k, fn in pairs(pair[1].VirtualState) do
