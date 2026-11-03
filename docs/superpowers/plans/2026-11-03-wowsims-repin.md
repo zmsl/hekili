@@ -14,7 +14,7 @@ engine or the belief changes for movement.
 **Tech Stack:** Lua 5.1 (the WoW client's), busted, luacheck, StyLua, the combat harness (`tests/Game/harness/`), the
 wowsims/forever Go CLI built at the pin (`tools/wowsims/sim-pin/build.sh`), `wowdb` (the Forever DB2) for IDs and ranges.
 
-**Spec:** `docs/superpowers/specs/2026-11-03-wowsims-repin-design.md` (binding, decisions 1-8). Cited as "spec §N" and
+**Spec:** `docs/superpowers/specs/2026-11-03-wowsims-repin-design.md` (binding, decisions 1-10). Cited as "spec §N" and
 "decision N". The research it rests on: the audit's `followups/repin-research.md` (cited as "the research"). The owner
 ledger is the open-questions file, from "2026-11-03 — full wowsims re-pin started".
 
@@ -38,6 +38,14 @@ From the spec (verbatim):
   rotation's timing terms.
 - The replay gates score with Movement ON for every spec whose APL moves. OFF is covered by the per-spec toggle tests
   only. The loops run with Movement OFF.
+- Waits (decision 9, owner "yes"; modelling waits in Hekili is bad practice, use Hekili's capabilities): wowsims
+  `wait` / `waitUntil` are never translated into packs. The weave's timing variables are APL variables and conditions
+  on the clocks (`mainhand_remains`, the time since the last main-hand swing, the ranged auto-shot clock C7); walk-time
+  terms still drop. The engine's existing recheck forecast turns "true in t" into the icon's countdown. The Hunter
+  replay with Movement ON measures the result; the fresh-floor rule applies.
+- Retribution's opener (decision 10): wowsims runs each "Move to melee" sequence once per fight, at the pull; the
+  translation matches that with a pull-only gate (S3). No movement cue or movement icon is ever shown: "shown out of
+  range" is the ability's own icon with Hekili's normal out-of-range tint.
 
 Project rules:
 - Gate lock: `make gate`, `make gate-ab`, `make accuracy` and the rig's `run.sh` take `/tmp/hekili-gate.lock`
@@ -78,6 +86,13 @@ Project rules:
    (ON relaxes only the range gate). Pinned in Task 7.
 5. A ranged swing speed of 0 (no ranged weapon, or no read yet): `ranged_remains` answers 0 without dividing by zero.
    Pinned in Task 8.
+6. No wait in any pack (decision 9): no generated pack has a `wait` line, and a condition on a clock gets its countdown
+   from the recheck forecast, not a hold. Check that the "time since the last swing" rows are written as `remains`
+   comparisons (the parser does not see `(x_speed-x_remains)` as a clock), so "Just shot" forecasts. Pinned in Task 8.
+7. A queued Raptor Strike expires at the next main-hand swing, not a full swing later: while queued it is not
+   re-recommended, and the pick after the swing is made without it. Pinned in Task 8.
+8. Retribution's opener mid-fight (decision 10): after the first main-hand swing, out of Crusader Strike's range (a
+   knockback), no `move_to_melee` line returns; before it, at the pull out of range, they show. Pinned in Tasks 7 and 17.
 
 ---
 
@@ -144,10 +159,18 @@ extends rule 14 as rule 14b):
   `(toggle.movement&<move condition>|action.crusader_strike.in_range)`, is carried onto every later line of the list
   that calls the group: the main list's lines after the call. This is the same rule as Feral's and Guardian's main-list
   "Finish closing to melee" `waitUntil`, which holds every later line of its own list.
-- The sequence's own `not sequenceIsComplete(<own name>)` is dropped: the stateless chain replaces it (the APL
-  stateless-guards rule). Deviation, written in the header: the chain arms again if the target leaves Crusader Strike's
-  range later in the fight (wowsims runs each sequence once). The replay's boss never moves, so no scored decision
-  changes. Any other `sequenceIsComplete` read stays unsupported (rule 2).
+- The sequence's own `not sequenceIsComplete(<own name>)` becomes a pull-only gate (decision 10: wowsims runs each
+  sequence once per fight, at the pull): `!mainhand_swung`, a Paladin kit state expression that is true once a
+  main-hand swing has landed this combat (`state.nextMH > 0`, which `reset` sets only when `swings.mh_actual` is
+  later than the combat start; `PLAYER_REGEN_ENABLED` clears it). Out of combat it reads false, so the pre-pull
+  evaluation still offers the opener. Why this gate: the sequence completes on its last member, `waitUntil
+  spellInRange(Crusader Strike)`, that is when the player reaches melee, and the first main-hand swing lands on
+  arrival (the auto attack is on from the pull and its timer is ready; the builder checks this in the replay log). So "no swing yet" flips at the moment wowsims's flag
+  flips, with no constant to tune and none that a long or short walk outruns, unlike `time<N`. The residual
+  deviation, written in the header: the gap between arriving and the first swing's event (the builder confirms an
+  avoided swing still counts), during which the group's call condition (`!action.crusader_strike.in_range`) is false anyway. The translator maps `sequenceIsComplete(<own name>)`
+  to `mainhand_swung` only inside a `sequence` that ends in a `waitUntil` on a melee `spellInRange` (a move-to-melee
+  opener, rule 14b); any other `sequenceIsComplete` read stays unsupported (rule 2).
 - A `sequence` with any other member kind stays rule 2.
 
 ### S4. Smaller rulings (the spec's "left to the builder")
@@ -162,8 +185,9 @@ extends rule 14 as rule 14b):
   (wowsims never counts an instant as casting). `spellInRange(X)`: `action.<key>.in_range`.
 - Hunter `unitDistance OpNe max(...)` (default #16): arithmetic on yards, so it is a dropped movement term
   (decision 8). This replaces the spec table's earlier "omit".
-- Waits (§3): Task 9 translates `wait` behind a translator context flag, used only for its measurement. If kept,
-  the flag becomes the default. If not, the flag and its code are deleted.
+- Waits (§3, decision 9): never translated, so there is no translator flag and no waits measurement (the former
+  Task 9 waits path is removed). `wait` and `waitUntil` are omitted; a clock-timed end or a non-distance condition is
+  carried onto the lines it held as a condition (spec §3), so the recheck forecast times them.
 - The CHANGELOG line for the Movement toggle goes in Task 6 (DEVELOPMENT.md §7: in the same commit), not in Phase 9.
 
 ## Task order
@@ -173,7 +197,7 @@ extends rule 14 as rule 14b):
 | 0 Baseline | 0 | the baseline report committed |
 | 1 Plumbing | 1, 2 | `make check`; one spec exports; the dry-run omit counts match the research |
 | 2 Translator kinds | 3, 4, 5 | `make check`; the omit counts fall on the low-change specs (dry run) |
-| 3 Movement | 6, 7, 8, 9 | `make gate`; the toggle tests; the hunter packs at the old pin replayed ON; waits decided |
+| 3 Movement | 6, 7, 8, 9 | `make gate`; the toggle tests; the hunter packs at the old pin replayed ON (no wait lines) |
 | 4 Low-change | 10, 11, 12 | `make gate` per task |
 | 5 Rogue, Warrior | 13, 14 | `make gate` per task |
 | 6 Enh, Warlock, Ret | 15, 16, 17 | `make gate` per task |
@@ -452,7 +476,8 @@ Its top three are classified first, and it ships only when every remaining top d
     `raptor_strike,if=<own>&(toggle.movement&(<timing>&target.outside5)|target.within5)`.
   - Two moves reaching one strike: the `|`-joined form.
   - Retribution-shaped (S3): the group call, the Judgement chain line, the seal behind `prev.1.judgement`, the carried
-    Crusader Strike gate on the main list's later lines, and `sequenceIsComplete` absent from every line.
+    Crusader Strike gate on the main list's later lines, and each sequence's chain carrying `!mainhand_swung` in
+    place of `sequenceIsComplete` (S3).
   - Review Focus 4: a reached entry whose own condition is `buff.x.up` keeps `buff.x.up&` outside the gate.
   - A list with no move gives byte-identical output to today's (no `toggle.movement`).
 - [ ] **Step 2: Write the failing packs test** in `packs_spec.lua`: for every registered spec,
@@ -471,55 +496,71 @@ Its top three are classified first, and it ships only when every remaining top d
   lines. Then `flock /tmp/hekili-gate.lock make check`. Expected: green.
 - [ ] **Step 7: Commit** `feat(wowsims): a move's reached entries take the Movement toggle or their range gate`.
 
-### Task 8: The ranged auto-shot clock (Phase 3, spec §3)
+### Task 8: The ranged auto-shot clock, its forecast, and the queued Raptor Strike (Phase 3, spec §3, decision 9)
 
 **Files:**
-- Modify: `src/Hekili_Hunter/Hunter.lua` (state expressions beside `mainhand_remains`)
-- Modify: `tools/wowsims/apl.lua` (`autoTimeToNext`/`autoTimeSinceLast` `RangedAuto`)
+- Modify: `src/Hekili_Hunter/Hunter.lua` (state expressions beside `mainhand_remains`; the `raptor_strike` aura's duration)
+- Modify: `tools/wowsims/apl.lua` (`autoTimeToNext`/`autoTimeSinceLast` `RangedAuto`; since-last rows in `remains` form)
 - Test: `tests/Forever/hunter_spec.lua`, `tests/Forever/wowsims_apl_spec.lua`
 
 **Interfaces:**
 - Produces: `ranged_remains` (seconds to the next Auto Shot, from `swings.ranged_projected`, with the same
   now/query_time anchoring as `mainhand_remains`) and `ranged_speed` (`swings.ranged_speed`), both Hunter kit state
-  expressions. The translator maps `autoTimeToNext RangedAuto` -> `ranged_remains` and `autoTimeSinceLast RangedAuto` ->
-  `(ranged_speed-ranged_remains)`. No core change: the clock reaches the engine through the existing `UnitRangedDamage` tail.
+  expressions. The translator maps `autoTimeToNext RangedAuto` -> `ranged_remains`. A comparison on
+  `autoTimeSinceLast` (either hand) is written in `remains` form: `since<x` -> `ranged_remains>ranged_speed-x`
+  (`mainhand_*` for the main hand; today's `(mainhand_speed-mainhand_remains)` row changes with it), so the recheck
+  parser (`Engine/Sim/Scripts.lua` `ConvertTimeComparison`, the `decreases` table's `remains$`) forecasts it the way
+  it already forecasts `mainhand_remains<x`. No core change: the clock reaches the engine through the existing
+  `UnitRangedDamage` tail, and the forecast is the engine's existing one (`Engine/Sim/Core.lua` `script.Recheck`,
+  `state.recheck`).
+- Produces: the weave's timing variables ("Just shot", "Windup close", "Weave fits", "Wait at melee", the rest) as APL
+  variables on the clocks, walk-time terms dropped (decision 8). Never a `wait` line (decision 9).
+- Produces: the `raptor_strike` queued aura's duration is `mainhand_remains` (the time to the next main-hand swing),
+  not `mainhand_speed`, like the Warrior's `onNextSwing` abilities.
 
 - [ ] **Step 1: Write the failing tests.** With a projected shot 1.2 s ahead, `ranged_remains` is 1.2 at now and 0.7
   after advancing 0.5. Past a due shot it is `ranged_speed - (elapsed % ranged_speed)`. Review Focus 5: with
   `ranged_speed` 0 it returns 0 and raises nothing (the client's `x%0` raise). The translator test gives `ranged_remains>0.5`.
+  Also:
+  - Translator: the converted weave build (`bm_weave`) translates "Just shot", "Windup close" and "Weave fits" to
+    variables on `ranged_remains` / `ranged_speed` with no walk term, and `autoTimeSinceLast RangedAuto < 0.1`
+    gives `ranged_remains>ranged_speed-0.1`. A `wait` and a `waitUntil` give no pack line.
+  - Forecast (Review Focus 6): first verify, and note in the test, how `mainhand_remains<x` reaches `script.Recheck`
+    (`scripts:BuildRecheck`), then mirror it. Through `scripts:BuildRecheck`, `ranged_remains<0.5` and the since-last
+    form each yield a recheck time; and in the Hunter world, a line gated `ranged_remains<0.5` with the next shot
+    1.2 s ahead is recommended with a 0.7 s delay, not dropped.
+  - Raptor Strike (Review Focus 7): queued 0.8 s before a 2.6 s swing, the `raptor_strike` aura's remains is 0.8, the
+    strike is not re-recommended while queued, and after advancing past the swing the next pick is computed without it.
 - [ ] **Step 2: Run** under the lock. Expected: FAIL.
-- [ ] **Step 3: Implement** both expressions and the two translator rows. Guard the speed before the modulo.
+- [ ] **Step 3: Implement** both expressions, the translator rows (the since-last rows in `remains` form), and the
+  aura's duration. Guard the speed before the modulo. Today's hunter, Warrior and Paladin packs whose since-last text
+  changes are regenerated (`packs-check`) and their replay lines followed under the Task order note.
 - [ ] **Step 4: Run** the tests, then `flock /tmp/hekili-gate.lock make check`. Expected: PASS, green.
-- [ ] **Step 5: Commit** `feat(hunter): ranged_remains, the Auto Shot clock the weave's timing reads`.
+- [ ] **Step 5: Commit** `feat(hunter): ranged_remains and its forecast, the weave's timing on clocks; Raptor Strike's queue ends at the swing`.
 
-### Task 9: The old-pin hunter ON replay, the range pin, and the waits (Phase 3)
+### Task 9: The old-pin hunter ON replay and the range pin (Phase 3)
+
+(The waits path that stood here, a `c.waits` flag measured on and off, is removed by decision 9.)
 
 **Files:**
-- Modify: `tools/wowsims/apl.lua` (`wait` -> `wait,sec=<constant>` behind `c.waits`; S4)
 - Modify: the regenerated hunter packs; `tests/Forever/wowsims_hunter_spec.lua` (floors, flicker ceilings)
 - Test: `tests/Game/harness/replay_spec.lua`
 
 **Interfaces:**
 - Consumes: Tasks 6-8 (the harness hook, the rewrite, the clock; the Hunter opt-in).
-- Produces: the waits decision, recorded in the hunter spec file and in `docs/dev/wowsims-packs.md`'s rule 2 line.
+- Produces: the hunters' old-pin ON floors, the comparison point for Task 19.
 
 - [ ] **Step 1: Write the failing harness test** in `replay_spec.lua` (S2's unknown-bracket pin): in a replay world
   at distance 20, `VS.TargetRange` is known at the pull, and a melee ability's `action.<key>.in_range` is false there.
-  Also add a translator test: with `c.waits` on, a `wait` of a constant `1.5s` gives `wait,sec=1.5`, and one whose
-  duration reads a walk term stays omitted.
-- [ ] **Step 2: Run** both under the lock. Expected: the replay test passes or fails on the real path (a failure
-  is a harness fix here). The translator test fails.
-- [ ] **Step 3: Implement** the `c.waits` flag (off by default).
-- [ ] **Step 4: Measure at the old pin.** `make wowsims-packs && make packs`, which regenerates the hunter packs from
-  today's d3393 requests through Tasks 3-8. Run the hunter replay at floor 0, once with `c.waits` off and once on
-  (`WOWSIMS_WAITS=1`, read by `export.lua pack`). Record both lines (decisions, n, top, flicker) per spec in the commit message.
-- [ ] **Step 5: Decide the waits.** Keep them only if no hunter's decisions on-GCD falls and at least one rises by more
-  than max(0.02, 2/n), with flicker no higher. If kept, `c.waits` becomes the default and the env switch goes. If not,
-  delete the flag and its code.
-- [ ] **Step 6: Re-floor the hunters on this measurement** (R5/R6 against the baseline; the cause is "Movement
-  rewrite + C7 clock at the old pin"), with ON flicker ceilings. Run `flock /tmp/hekili-gate.lock make check`, then
+- [ ] **Step 2: Run** it under the lock. Expected: passes or fails on the real path (a failure is a harness fix here).
+- [ ] **Step 3: Measure at the old pin.** `make wowsims-packs && make packs`, which regenerates the hunter packs from
+  today's d3393 requests through Tasks 3-8 (no `wait` line in any: decision 9). Run the hunter replay with Movement ON
+  at floor 0. Record each line (decisions, n, top, flicker) per spec in the commit message, and classify the top
+  disagreements: one traced to a former wait the forecast cannot time is listed per entry.
+- [ ] **Step 4: Re-floor the hunters on this measurement** (R5/R6 against the baseline; the cause is "Movement
+  rewrite + C7 clock and forecast at the old pin"), with ON flicker ceilings. Run `flock /tmp/hekili-gate.lock make check`, then
   `make gate`. Expected: green.
-- [ ] **Step 7: Commit** `test(wowsims): hunter weave replayed ON at the old pin; waits <kept|omitted>`.
+- [ ] **Step 5: Commit** `test(wowsims): hunter weave replayed ON at the old pin; waits as clock conditions`.
 
 ### Task 10: Lane: Balance and the Mages (Phase 4)
 
@@ -554,8 +595,9 @@ requests, logs and packs; `src/Hekili_Druid/Druid.lua`, `src/Hekili_Mage/Mage.lu
 `tests/Forever/wowsims_paladin_spec.lua`.
 
 - [ ] **Step 1:** Run R1-R7. Specifics: the Righteous Fury pre-pull; `talentIsKnown` and `spellFullCooldown` are now
-  read. The non-distance `waitUntil` entries are classified one by one (spec §3): each becomes `wait,sec=` only when
-  the time to its condition is a read the engine already has, else it is omitted and listed in the header. Keep the
+  read. The non-distance `waitUntil` entries are omitted (decision 9) and classified one by one (spec §3): where the
+  lines it held lack its condition, the condition is carried onto them so the recheck forecast times them; each is
+  listed in the header. Keep the
   tank fields (`tank`, `healingModel`).
 - [ ] **Step 2:** R9; `make gate`.
 
@@ -565,7 +607,7 @@ requests, logs and packs; `src/Hekili_Druid/Druid.lua`, `src/Hekili_Mage/Mage.lu
 `tests/Forever/wowsims_rogue_spec.lua`.
 
 - [ ] **Step 1:** Run R1-R7 for the three specs. Specifics: the `affords(builder)` definition and the energy-pooling
-  group. The pooling `waitUntil` is classified as in Task 12, and the risk the spec names is measured. `darkmantle-set-512.patch`
+  group. The pooling `waitUntil` is omitted and classified as in Task 12, and the risk the spec names is measured. `darkmantle-set-512.patch`
   stays: check the log shows Rogue Armor Energize 27788.
 - [ ] **Step 2:** R9; `make gate`.
 
@@ -625,7 +667,10 @@ requests, logs and packs; `src/Hekili_Druid/Druid.lua`, `src/Hekili_Mage/Mage.lu
   its line still exists (an owner ruling that no longer applies is reported, not silently dropped); the pre-pull
   "Pull range" move is omitted (spec §2.3, decision 7).
 - [ ] **Step 2: R8 first** (opt-in, ranges for Judgement, Crusader Strike, Exorcism, Consecration and the seals, the
-  OFF test on the Judgement chain line and on a held melee line).
+  OFF test on the Judgement chain line and on a held melee line). Add `mainhand_swung` to the kit (S3) with its test
+  in `paladin_spec.lua` (false out of combat and in combat before a swing, true after one, false again after combat
+  ends), and the Review Focus 8 pack test in `wowsims_paladin_spec.lua`: at the pull, 20 yd out, the Judgement chain
+  line is picked; after a main-hand swing, the target moved back to 20 yd, no `move_to_melee` line is picked.
 - [ ] **Step 3:** R4-R7 as a fresh floor. A disagreement traced to the pre-pull move or the move-in placement is a
   defect to fix (spec §2.3), never a floor cost.
 - [ ] **Step 4:** R9; `make gate`.
@@ -659,7 +704,7 @@ requests, logs and packs; `src/Hekili_Druid/Druid.lua`, `src/Hekili_Mage/Mage.lu
 
 - [ ] **Step 1:** Run R1-R3 for the three weave builds. Specifics: Sniper Shot and the trainer rank IDs in the kit;
   BM's pet Raptor; `startAttack`, `petAttack` and `recheckWhileMoving` are omitted; the dropped yard arithmetic is
-  listed per entry; the waits as Task 9 decided.
+  listed per entry; no `wait` line (decision 9), the weave's timing variables on the clocks (Task 8).
 - [ ] **Step 2: R8** (the opt-in exists since Task 7). Add the OFF tests on Raptor Strike (hidden outside 5 yd) and on
   a shot after the move back (hidden inside 5 yd).
 - [ ] **Step 3:** R4-R7 as fresh floors. The old floors (1.00 / 0.92 / 0.97) are not comparable (spec §7); Task 9's
@@ -705,12 +750,13 @@ equal, rules 2, 11, 14b, 18, 19, the Movement toggle, "Oracle patches", the requ
 ## Self-review
 
 - Spec coverage: §0 decisions -> Global Constraints, S1-S4; §1 goals -> Tasks 1-21; §2.1 -> Task 6, S1; §2.2 ->
-  Tasks 5, 7, S2, S3; §2.3 -> Tasks 9, 16-19 (R8); §3 -> Tasks 8, 9, 12, 13; §4 -> Tasks 3-5, 14, 16; §5 -> Tasks
+  Tasks 5, 7, S2, S3; §2.3 -> Tasks 9, 16-19 (R8); §3 and decision 9 -> Tasks 8, 9, 12, 13; §4 -> Tasks 3-5, 14, 16; §5 -> Tasks
   1, 2, 20, R3; §6 -> Global Constraints (no core change outside Options/UI/Registry); §7 -> R4-R8, Tasks 0, 9, 21;
-  §8 -> the task order; §9 -> S4, Task 9 (waits), Tasks 12-14 (classifications), Task 7 (ledger row).
+  §8 -> the task order; §9 -> S4, Task 8 (the clocks and forecast replace waits), Tasks 12-14 (classifications), Task 7 (ledger row).
 - Ordering: the harness hook (Task 6) lands before any pack reads `toggle.movement` (Task 7 at the earliest), and the
   Hunter opt-in lands in the task whose packs first read it, so the packs test holds on every commit.
-- Phase 3's spec gate ("today's hunter packs regenerated at the old pin, replayed with ON") is Task 9 Steps 4-6.
-- Interfaces: `Registry.MovementSpec`, `toggle.movement`, `ranged_remains`/`ranged_speed`, `druid_bleed_active`,
+- Phase 3's spec gate ("today's hunter packs regenerated at the old pin, replayed with ON") is Task 9 Steps 3-4.
+- Interfaces: `Registry.MovementSpec`, `toggle.movement`, `ranged_remains`/`ranged_speed` (and the since-last
+  `remains` form), `druid_bleed_active`,
   `dry.lua`, `M.OLD_SIM`'s shape and `WOWSIMS_OUT` are each defined once and used under the same names.
 - Floors: none pre-set. Every floor is R6's measured value with its traced cause.

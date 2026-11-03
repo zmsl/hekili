@@ -1,7 +1,7 @@
 # Full wowsims re-pin and the Movement toggle (design, 2026-11-03)
 
 Status: APPROVED for planning, revised the same day to the owner's movement ruling (decision 6) and the builder
-check's rulings (decision 8). A design, not a plan:
+check's rulings (decision 8), then to the owner's waits ruling (decision 9) and the Retribution opener ruling (decision 10). A design, not a plan:
 intent, goals, decisions and what is left to the builder. Branch `forever-repin` from `origin/forever` 0d98cb02c.
 Paths are under `src/Hekili/` unless they start with `tests/`, `tools/` or `docs/`.
 
@@ -62,6 +62,27 @@ against the trees at both commits is the source of every omit count below. Ledge
      brackets and `spellInRange` at wowsims's logged distances (the real client path, the unknown bracket
      included), and how Retribution's "Move to melee" group translates (a group of `sequence`s, rule 14's chain).
 
+9. (2026-11-03, the owner's waits ruling: "yes". Modelling waits in Hekili is bad practice; use Hekili's
+   capabilities. Binding; it replaces every "waits translated if phase 3 earns them" text.)
+   - wowsims `wait` and `waitUntil` are never translated into packs. No `wait,sec=` line, no translator flag, no
+     phase-3 measurement of waits.
+   - The weave's timing variables ("Just shot", "Windup close", "Weave fits", "Wait at melee" and the rest) are
+     translated as APL variables and conditions on clocks: the melee swing clock (`mainhand_remains`, and the time
+     since the last main-hand swing) and the ranged auto-shot clock (C7). Walk-time terms still drop (decision 8).
+   - The engine's existing recheck forecast (`Engine/Sim/Core.lua`, `script.Recheck` / `state.recheck`) turns "true
+     in t" into the icon's countdown. That is the replacement for the waits, so the ranged clock's expressions must
+     produce recheck times the way `mainhand_remains` does.
+   - Raptor Strike's queued aura resolves at the next main-hand swing (`mainhand_remains`, not a full
+     `mainhand_speed`), so a queued strike is not re-recommended and the pick after the swing is made without it.
+   - The Hunter replay with Movement ON measures the result; the fresh-floor rule (decision 8) applies.
+10. (2026-11-03, the owner's ruling on Retribution's opener and on what "shown out of range" means. Binding.)
+   - Retribution's "Move to melee" sequences (`move1`-`move3`) must match wowsims, which runs each once per fight, at
+     the pull. Their `not sequenceIsComplete(<own name>)` is not dropped: it becomes a pull-only gate, the closest a
+     stateless list can come (the plan's S3 picks it: no main-hand swing has landed this combat). The opener never
+     returns mid-fight, even out of melee after a knockback.
+   - No movement cue or movement icon is ever shown to the player. "Shown out of range" means only the ability's own
+     icon with Hekili's normal out-of-range tint.
+
 The standing constraints apply unchanged:
 - The core stays class-neutral. The Movement toggle is a generic setting that packs opt into.
 - The belief/core border holds: this design needs no new crossing.
@@ -76,7 +97,8 @@ Goals:
   checked-in request and log is re-exported on one CLI.
 - The translator handles every new kind a shipped APL uses that the client lets us show. Every other kind is an
   omission, listed as rule 2 does today.
-- Movement in Hekili is a toggle and one translator rewrite (§2). Nothing else.
+- Movement in Hekili is a toggle and one translator rewrite (§2). Nothing else. No movement cue or movement icon is
+  ever shown: an ability "shown out of range" is its own icon with Hekili's normal out-of-range tint (decision 10).
 - The oracle patches the re-pin makes unnecessary are dropped: `leftover_db.go`, and `no-cast-end-pick.patch` once
   `spellIsCasting` is translated.
 - Accuracy stays close to the pre-re-pin baseline, and every floor that moves names its traced cause.
@@ -147,23 +169,35 @@ the replay's placement or the translation), never a floor cost.
 ## 3. Waits, and the ranged clock
 
 wowsims's `wait` holds the rotation for a duration, and the weave times several waits from the ranged auto-shot.
-Hekili's engine has a `wait,sec=` action (Core advances the delay and re-walks, so the next pick shows with its
-countdown). Each evaluation stays stateless.
+Under decision 9 no `wait` or `waitUntil` is ever translated into a pack. Hekili's own capability replaces them: each
+evaluation stays stateless, and a line whose condition will be true in t seconds is shown with that countdown by the
+engine's recheck forecast (`Engine/Sim/Core.lua`: `script.Recheck`, `state.recheck`, the `delayMin` it sets). The
+recheck parser (`Engine/Sim/Scripts.lua`, `ConvertTimeComparison`) finds a comparison on a term ending `remains` (the
+`decreases` table), which is how `mainhand_remains<x` already forecasts.
 
-Default: waits stay omitted, as today. A `wait` is translated only if the replay shows it moves agreement with
-wowsims. Phase 3 measures this on today's hunter logs, whose weave already has the waits. Any `wait` or `waitUntil`
-whose duration or condition reads walk terms ("Time to walk in", `unitMovementSpeed`) stays omitted regardless, since
-those are movement (decision 6). Non-distance `waitUntil` entries (Protection Paladin, Rogue pooling) are classified
-by the builder entry by entry. Each becomes `wait,sec=` only when the time to its condition is a read the engine
-already has. Otherwise it is omitted and listed.
+- The weave's timing variables are translated as variables on the clocks. "Just shot" (time since the last Auto Shot
+  under the input delay), "Windup close", "Weave fits" (next shot plus the allowed delay against the weave's end) and
+  "Wait at melee" read `ranged_remains`, `ranged_speed`, `mainhand_remains` and `mainhand_speed`. Their walk-time
+  terms ("Time to walk in", `unitMovementSpeed`) drop (decision 8), and the rest of each condition decides.
+- A `wait` whose end is a clock read becomes no line: the lines it held take its end as a clock condition, so the
+  forecast shows their countdown. A `wait` with any other end is omitted and listed in the recipe header.
+- "Time since the last swing" is written as a `remains` comparison (`autoTimeSinceLast < x` becomes
+  `ranged_remains>ranged_speed-x`, and the same for the main hand), because the parser does not see
+  `(ranged_speed-ranged_remains)` as a clock. This changes today's main-hand row too.
+- Non-distance `waitUntil` entries (Protection Paladin, Rogue pooling) are omitted. Where the lines they held do not
+  already carry the same condition, it is carried onto them as a condition (as §2.2 carries a distance-only one), so
+  the forecast times them. Each is listed in the recipe header.
+- Raptor Strike's queued aura (`Hekili_Hunter/Hunter.lua`, applied in `reset_precast` while `IsCurrentSpell`) lasts
+  until the next main-hand swing (`mainhand_remains`), like the Warrior's `onNextSwing` abilities resolve at the
+  swing, not a full `mainhand_speed`.
 
-The ranged auto-shot clock (class-completion C7) is now needed whatever the waits decide: the weave's move condition
-reads `autoTimeToNext RangedAuto` (§2.2), and the translated waits read it too if phase 3 keeps them. It is a timer
-in the belief, not movement: Auto Shot's swing clock (hand 3, `Game/State/Sources/Swing.lua`), already built and
-merged. It reaches the engine through the existing `UnitRangedDamage` tail (`state.swings.ranged_projected` /
-`ranged_speed`). The only new code is an engine expression twin of `mainhand_remains`. C7's in-game questions
-(layout.md H2-H5) stay open until launch. Until they are answered, the in-game ON display rests on a modelled clock;
-the replay feeds it from the log.
+The ranged auto-shot clock (class-completion C7) is needed: the weave's move condition and its timing variables read
+`autoTimeToNext RangedAuto` (§2.2). It is a timer in the belief, not movement: Auto Shot's swing clock (hand 3,
+`Game/State/Sources/Swing.lua`), already built and merged. It reaches the engine through the existing
+`UnitRangedDamage` tail (`state.swings.ranged_projected` / `ranged_speed`). The only new code is an engine expression
+twin of `mainhand_remains`, named so the recheck parser forecasts it. C7's in-game questions (layout.md H2-H5) stay
+open until launch. Until they are answered, the in-game ON display rests on a modelled clock; the replay feeds it from
+the log.
 
 `startAttack` and `petAttack` stay omitted.
 
@@ -178,10 +212,10 @@ From the research's census. "Needed" means translated. "Omit" means rule 2, list
 | `spellInRange` | Retribution, hunter weave | Needed: the ability's range read; §2's rewrite where a move reaches it |
 | `unitDistance` beyond rule 11 (`OpNe` of a `max`) | hunter default #16 | A movement term (arithmetic on yards): dropped (decision 8) |
 | `move`, distance-only `waitUntil` | §2 | Omit; their range gate goes to the reached entries |
-| `wait`, other `waitUntil` | §3 | Omit by default; translated only as §3 allows |
+| `wait`, other `waitUntil` | §3 | Never translated (decision 9); a clock-timed end or a non-distance condition goes onto the lines it held as a condition (§3) |
 | `unitMovementSpeed` | hunter walk variables | A movement term: dropped (decision 8) |
 | `unitIsMoving` (any unit) | Demonology's move condition | A movement term: dropped (decision 8) |
-| `sequence` whose members are casts, moves, waits and `waitUntil`s | Retribution's "Move to melee" | Rule 14's chain over its cast members; moves and waits as §2.2 and §3; its own `not sequenceIsComplete` dropped (the plan's ruling) |
+| `sequence` whose members are casts, moves, waits and `waitUntil`s | Retribution's "Move to melee" | Rule 14's chain over its cast members; moves and waits as §2.2 and §3; its own `not sequenceIsComplete` becomes the pull-only gate (decision 10, the plan's S3) |
 | `startAttack`, `petAttack`, `changeTarget`, `newTarget`, `itemSwap`, `recheckWhileMoving` | hunters, Warlocks, Enhancement | Omit: display-impossible or no Hekili equivalent |
 | `spellFullCooldown`, `gcdIsReady`, `spellGcdHastedDuration`, `currentHealth`, `auraDuration`, `dotBaseDuration`, `spellTravelTime` | various | Needed: one-line reads |
 | `hpPercentForDefensives` | Feral, Guardian | Needed as the build's constant; health is hidden in combat (Protection's precedent) |
@@ -231,8 +265,8 @@ Doom). Rule 16's `select` raises "the build sets no curseOptions" on them.
 ## 6. The border, secrets, allocation
 
 - No new crossing, and the engine and the belief change nothing for movement. The rewrite reads a setting and the
-  existing range bracket. If waits are translated, the ranged clock arrives through the existing `UnitRangedDamage`
-  tail.
+  existing range bracket. The ranged clock arrives through the existing `UnitRangedDamage` tail; the recheck forecast
+  it feeds is the engine's existing one.
 - If the builder finds anything needing a new belief function or facade read, it stops and asks the owner.
 - The new translated reads are simulation values or existing belief answers, so no new secret handling is needed.
 - No closures or per-update tables are added on the walk.
@@ -269,13 +303,13 @@ Floors (decision 4): the baseline is the pre-re-pin `make accuracy`.
 | Spec | Change | Expected |
 | --- | --- | --- |
 | Balance, Mage x3, Shadow, Smite, Affliction, Elemental, Prot Paladin, Prot Warrior | APL edits, gear, talents; casters' `spellIsCasting` guards | Hold. Casters may move at the patch drop |
-| Rogue x3 | energy-pooling group, `affords` | Small; the pooling `waitUntil` (omitted or a `wait`) is the risk |
+| Rogue x3 | energy-pooling group, `affords` | Small; the omitted pooling `waitUntil`, its condition carried as a forecast condition, is the risk |
 | Arms, Fury | strict-sequence stance swaps, per-spell GCD compares, cd-usage folds | Likely drop; trace each |
 | Enhancement | rotation inside the build; Skyborne; item swap omitted | Small to medium |
 | Warlock x5 | Banes replace `select`; Sesam's Demonology APLs; `petAttack` / `changeTarget` omitted | Demonology and Destruction likely drop |
 | Retribution | new talent-adaptive APL and gear | Fresh floor. ON replay: the carried `spellInRange` move condition is the risk |
 | Feral, Guardian | adaptive APLs (42 / 15 variables), Berserk gone | Fresh floor. The omitted `waitUntil` is a small risk: wowsims holds where we may show a lower line, but it casts nothing while holding, so few scored decisions |
-| Hunters x3 | SIML weave builds, Sniper Shot, carried move conditions, waits omitted unless §3 earns them | Fresh floor: the old floors (1.00 / 0.92 / 0.97) are not comparable. Risks: the dropped yard arithmetic in the move conditions, the omitted waits, the modelled ranged clock |
+| Hunters x3 | SIML weave builds, Sniper Shot, carried move conditions, waits never translated (decision 9): the timing variables on the clocks and the recheck forecast | Fresh floor: the old floors (1.00 / 0.92 / 0.97) are not comparable. Risks: the dropped yard arithmetic in the move conditions, a wait the forecast cannot time (its end not a clock read), the modelled ranged clock, the queued Raptor Strike's expiry at the swing |
 
 ## 8. Order of work: independently gated phases
 
@@ -287,7 +321,7 @@ Each phase ends green (`make check`, and `make gate` where packs move).
 2. Translator kinds (§4). Gate: unit tests, and the omit counts falling on the low-change specs.
 3. The Movement setting, the range-gate rewrite with carried move conditions, and the ranged-hand expression (§2,
    §3). Gate: the toggle tests, and today's hunter packs regenerated at the old pin, whose weave already moves and
-   waits, replayed with ON. The same run, with and without translated waits, decides whether waits are kept.
+   waits, replayed with ON (the waits as decision 9: clock conditions and the forecast).
 4. Low-change specs: re-export, gate, re-floor.
 5. Rogue x3, then Warrior x3.
 6. Enhancement, Warlock x5 (the `select` fix first), Retribution.
@@ -302,8 +336,8 @@ Phases 4-8 run in parallel by class once phases 1-3 are on the branch.
 
 - Builder: the opt-in form and the keybind (§2.1); folding the pin names (§5); classifying the non-distance
   `waitUntil` entries and Warrior's cd-usage nodes (§3, §4).
-- Builder: whether waits are translated, decided on phase 3's measurement (§3).
+- Resolved by decision 9: waits are never translated; the clocks and the recheck forecast replace them.
 - Resolved by decision 8: run speed and "is moving" are dropped, not constants (the owner's "ok").
 - Resolved by decision 7: the ON form, the replay scoring ON, the fresh floors, and the pre-pull moves.
-- In game after launch: C7's H2-H5 if the waits are kept, and the tint during a walk with Movement ON (a ledger row
+- In game after launch: C7's H2-H5 (the weave's timing reads the ranged clock), and the tint during a walk with Movement ON (a ledger row
   added in phase 3).
