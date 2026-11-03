@@ -108,6 +108,7 @@ loop_warrior 178.4 (#loop Arms 140, #party Arms 38), detect_more 111.6 (K16 45; 
 | 3 docs-only skip | `make check` wall s, only an unread doc changed | 195.3-200.8 (full) | 0.24 (skip) | yes (FULL=1 log) | n/a (no rig input) | yes |
 | 4 split files | `make check FULL=1` wall s, base/split interleaved x3 | 240.9 / 230.3 / 266.3 | 217.9 / 217.3 / 258.1 | yes (result lines; new files add empty lines) | not run | yes |
 | 4 split files | `make gate` wall s, interleaved x3 (loaded machine) | 801.8 / 898.1 / 867.4 | 1013.5 / 816.1 / 710.8 | yes (result lines) | not run | yes (by the bound file, see below) |
+| 5 boot cache | `headless.new` CPU s / file CPU s, 4 heavy files | 0.45/151.7, 0.45/199.3, 0/184.9, 0/93.8 (<= 0.3 %) | n/a | n/a | n/a | dropped: boot is 0.3 % |
 
 ### Task 2: the stamped check
 
@@ -168,3 +169,24 @@ K10-K18 stay (61.1), `detect_more_b_spec.lua` K19, K21, K16, K17 (56.1; K21 is n
   `print("\n...")` starts its log section with an empty line. A strip of empty lines in `results.sh` would close it.
 - The split warm-up gate (split0, discarded) failed in its check part: `loop_warlock_destruction_spec.lua` (unchanged)
   ended with no output and a non-zero rc (2816 successes); no OOM line found. The three timed split gates passed.
+
+### Task 5: boot profile (dropped)
+
+Raw logs `~/src/hekili-speed-runs/boot/` (`before.out`, `before/*.log`; scratch helper `boot_profile.lua` wraps
+`headless.new` with `os.clock()` and prints `boot <calls> <s> total <s>` at busted's exit; `profile.sh` runs the
+files serially). One `/tmp/hekili-gate.lock` hold, 2026-11-03 17:01-17:13, `XDG_CACHE_HOME=boot/before/cache`.
+Loads at each file's start: 3.94, 11.65, 9.12, 9.99 (another worktree's check started mid-batch); the decision uses
+CPU (`os.clock`), which load moves far less than wall time.
+
+| file (tag) | rc | boots | boot CPU s | file CPU s | wall s | boot share |
+|---|---|---|---|---|---|---|
+| `loop_warrior_fury_spec.lua` (#loop) | 0 | 2 | 0.45 | 151.73 | 152.2 | 0.30 % |
+| `loop_warlock_demonology_spec.lua` (#warlock) | 0 | 2 | 0.45 | 199.28 | 202.1 | 0.23 % |
+| `druid_harness_gates_b_spec.lua` (#druid) | 0 | 0 | 0.00 | 184.88 | 185.0 | 0 % |
+| `detect_more_spec.lua` (#slow) | 0 | 0 | 0.00 | 93.80 | 155.9 | 0 % |
+
+`druid_harness_gates_b_spec.lua` (Task 4's heavier druid half, ~147 s single) stands in for `druid_harness_spec.lua`'s
+#druid tier, which Task 4 moved out (S12). The druid and detect_more files never call `headless.new`: they load the
+belief through their own loaders (`helpers/load_druid.lua`, `Game/harness/detect.lua`), not profiled here.
+Dropped: boot is 0.3 % (below 5 % in every profiled file); no cache, no `headless_spec.lua` test, gate and rig not rerun
+(nothing under test changed).
