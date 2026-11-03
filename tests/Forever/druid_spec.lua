@@ -389,13 +389,13 @@ describe("Forever Druid", function()
     )
 
     it(
-        "takes 1 s off Shifting Power's cooldown with the Howling Idol's aura (DB2 1291059 -1000 ms, wowsims's test)",
+        "takes 0.5 s off Shifting Power's cooldown with the Howling Idol's aura (DB2 1291059 -500 ms, wowsims's test)",
         function()
             local e = ld.env(w)
             e.talent = rank(0) -- hotfix 113554: 8 s untalented (Improved Shifting Power removed)
             assert.are.equal(8, ld.run(w.abilities.shifting_power.cooldown, e))
             e.buff = auras({ howling_idol = { up = true } })
-            assert.are.equal(7, ld.run(w.abilities.shifting_power.cooldown, e))
+            assert.are.equal(7.5, ld.run(w.abilities.shifting_power.cooldown, e))
         end
     )
 

@@ -13,8 +13,9 @@
 --   five-second rule (22 a second outside it, none inside: the log's regen lines; 0.920 without it, one decision
 --   more, but the belief then regenerates nothing in combat).
 --   The world's usability now reads the kept mana pool (it said mana-free).
--- - The pre-raid set's Howling Idol (272427): its equip aura 1291059 takes 1 s off Shifting Power (DB2 -1000 ms,
---   wowsims's TestHowlingIdolShortensShiftingPower); the log's 7.5 s recasts are 7 s plus the 250 ms reaction twice.
+-- - The pre-raid set's Howling Idol (272427): its equip aura 1291059 takes 0.5 s off Shifting Power (DB2 1291059
+--   -500 ms, wowsims item_idols.go and TestHowlingIdolShortensShiftingPower at both pins): the log's 7.5 s recasts.
+--   (Lane P corrected the earlier -1 s, which read the recasts as 7 s plus the reaction twice.)
 --   Other cooldown modifiers checked: none. The 1 s costs one decision (lane fix round), a second faerie_fire ->
 --   shred (113.74, log time): Shifting Power, cast at 107.74, is exactly 1.000 s from ready, so wowsims's "Shifting
 --   Power >= 1 s away" holds on the tie; ours reads it just under (a timing tie, not a content error; at -0.5 s the

@@ -1645,10 +1645,10 @@ spec:RegisterAbilities({
         id = 1322605,
         cast = 0,
         -- spec D5; checkpoint Q4. 8 s by hotfix 113554 (wowsims 5508974417; Improved Shifting Power removed; the
-        -- DB2 70707 base file still says 16). The Howling Idol's equip aura (1291059) takes 1 s off (DB2 -1000 ms;
-        -- wowsims/forever's TestHowlingIdolShortensShiftingPower).
+        -- DB2 70707 base file still says 16). The Howling Idol's equip aura (1291059) takes 0.5 s off (DB2 1291059
+        -- effect 1310233 -500 ms; wowsims sim/druid/item_idols.go and TestHowlingIdolShortensShiftingPower, both pins).
         cooldown = function()
-            return buff.howling_idol.up and 7 or 8
+            return buff.howling_idol.up and 7.5 or 8
         end,
         gcd = "totem",
 
