@@ -185,6 +185,7 @@ local PACKS = {
             "evocation",
             "combustion",
             "counterspell",
+            "arcane_blast", -- the e2842f0a78 list's (the build's Arcane Blast talent)
         },
         talents = {
             [11222] = 5, -- Arcane Focus

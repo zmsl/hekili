@@ -174,7 +174,10 @@ M.FLICKER = {
     -- 0.3 -> 0.2 (decision 63's rule, gap CE; most of the Task 11 near-ties above went with the whole-number read)
     ["Enhancement"] = { flicker = 0.2, retracted = 0, heldReady = 230 }, -- 0.13 / 0.13 / 0.13, 0 (oracle 0.03 / 0 / 0.02)
     ["Arcane"] = { flicker = 0.1, retracted = 0, heldReady = 134 }, -- 0.02 / 0 / 0, 0
-    ["Fire"] = { flicker = 0.3, retracted = 0, heldReady = 116 }, -- 0.22 / 0.13 / 0.12, 0
+    -- heldReady 116 -> 175 (re-pin e2842f0a78, seeds 1-20 only): the new list runs dry onto the Scorch filler; 174 of
+    -- the 175 ticks are Scorch at its 150 cost crossing, one tick an episode, lo 141-150 against the truth's 150-152
+    -- (gap BQ)
+    ["Fire"] = { flicker = 0.3, retracted = 0, heldReady = 175 }, -- 0.22 / 0.13 / 0.12, 0
     -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits
     -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
     -- after its Evocation, more fights reach the existing frostfire_bolt <-> scorch pooling edge (gap BS); isolated by

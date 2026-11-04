@@ -51,9 +51,10 @@ local REPLAY = {
 -- Arcane 0.81 -> 0.96 (0.966, 56 of 58; both misses the mana gem's restore not believed), LIVE60 0 -> 10.0 (the Deep
 -- Arcane list has no cheap filler: mana dry by about 90 s, waiting on Fire Blast's 340; wowsims's own fight idles
 -- 96.40 -> 114.40).
+-- Fire 0.82 -> 0.97 (0.974, 76 of 78; both misses equality edges at the log's instant), LIVE60 12.6 -> 6.0 (measured).
 local PACKS = {
     { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0 },
-    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.82, 12.6 },
+    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.97, 6.0 },
     { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.89, 10.8 },
 }
 

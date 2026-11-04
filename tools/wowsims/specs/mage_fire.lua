@@ -28,8 +28,17 @@
 -- Deviation (Evocation's clip): wowsims clips Evocation at >= 99% mana (its channelSpell interruptIf); the translator
 -- drops channelSpell.interruptIf (tools/wowsims/apl.lua; a shared gap, reported), so the pack's line has no clip
 -- condition; the world clips by wowsims's rule (mage_world.lua: any press while the belief channels it at 99%).
--- autocastOtherCooldowns (rule 13): the Mind Quickening Gem (19339, `use_items`), Combustion and the mana gem, off the
+-- autocastOtherCooldowns (rule 13): the trinket (`use_items`; 18820 since the re-pin, was 19339), Combustion and the mana gem, off the
 -- GCD. Rule 12 drops Read Ley Line (mage_arcane.lua); Ignite (412538) and the missiles' 10274 are procs no key maps.
+-- Re-pin e2842f0a78 (Task 10): the build's talents (presets.ts FireTalents 0502052001001-55500001230133031-003), the
+-- new list (pre-pull Pyroblast, an Arcane Blast line), the gear's trinket the Talisman of Ephemeral Power (18820).
+-- Omitted 1 -> 0 (the trinket, mapped).
+-- Disagreements (P7; floor 0.97), decisions on-GCD 0.974 (78) top [fireball -> arcane_blast 1; fireball -> scorch 1]:
+-- both equality edges at the log's instant (a replay limit): 70.50, Fire Blast's believed cooldown 3.000 against
+-- Fireball's 3 s cast (`cooldown.fire_blast.remains>=action.fireball.cast` false for ours, so the Scorch filler);
+-- 87.00, the Arcane Blast aura (400573, 70.50 -> 88.50, the kit's 18 s) 1.5 s left against its 1.5 s cast (`<`).
+-- Worked (world): the kit list gains arcane_blast (mage_world.lua).
+-- LIVE L10 0.0, L40 0.2, L60 6.0 s (was 12.6: the new list's Arcane Blast line).
 return {
     class = "MAGE",
     pack = "Fire (wowsims.com)",
@@ -41,7 +50,7 @@ return {
         race = "RaceHuman",
         class = "ClassMage",
         gear = "ui/specs/mage/dps/gear_sets/p1Arcane.gear.json",
-        talentsString = "0502205-23550000130135031-005",
+        talentsString = "0502052001001-55500001230133031-003",
         specKey = "mage",
         options = { classOptions = { defaultMageArmor = "MageArmorMageArmor" } },
         profession1 = "Engineering",
@@ -49,7 +58,9 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 20,
     },
-    map = { ["item:19339"] = "use_items" }, -- the Mind Quickening Gem (ItemSparse 19339: a trinket, InventoryType 12)
+    -- the Talisman of Ephemeral Power (ItemSparse 18820: a trinket, InventoryType 12; the re-pin gear, was the Mind
+    -- Quickening Gem 19339)
+    map = { ["item:18820"] = "use_items" },
     focus = { pyroblast = 1, scorch = 2, arcane_missiles = 1 }, -- by role (docs/dev/wowsims-packs.md)
     leveling = {},
 }

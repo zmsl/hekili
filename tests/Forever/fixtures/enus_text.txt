@@ -18152,16 +18152,17 @@ options.packs.fire.Fire (wowsims.com).lists.action	values.variable	|T136243:0|t 
 options.packs.fire.Fire (wowsims.com).lists.action	values.wait	|T136243:0|t |cff00ccff[Wait]|r
 options.packs.fire.Fire (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.fire.Fire (wowsims.com).lists.actionID	name	Entry
-options.packs.fire.Fire (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffevocation|r, if |cffffd100mana.pct_lo<=10|r|r
-options.packs.fire.Fire (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1259705 - |cFFFFD100|cffffd100action.read_ley_line.known|r|r
-options.packs.fire.Fire (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 2948 - |cFFFFD100|cffffd100(debuff.fire_vulnerability.stack<5||debuff.fire_vulnerability.remains<5)|r|r
-options.packs.fire.Fire (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Use Items]|r
-options.packs.fire.Fire (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 11129
-options.packs.fire.Fire (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 5514]
-options.packs.fire.Fire (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 11366 - |cFFFFD100|cffffd100buff.heating_up.stack=3|r|r
-options.packs.fire.Fire (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 2136
+options.packs.fire.Fire (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffevocation|r, if |cffffd100(!action.pyroblast.known||mana.lo<action.pyroblast.cost)|r|r
+options.packs.fire.Fire (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 11366 - |cFFFFD100|cffffd100(buff.heating_up.stack=3&!action.pyroblast.executing)|r|r
+options.packs.fire.Fire (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 2136
+options.packs.fire.Fire (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 2948 - |cFFFFD100|cffffd100((debuff.fire_vulnerability.stack<5||debuff.fire_vulnerability.remains<5)&(debuff.fire_vulnerability.stack<4||!action.scorch.executing))|r|r
+options.packs.fire.Fire (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Use Items]|r - |cFFFFD100|cffffd100debuff.fire_vulnerability.stack=5|r|r
+options.packs.fire.Fire (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 11129 - |cFFFFD100|cffffd100debuff.fire_vulnerability.stack=5|r|r
+options.packs.fire.Fire (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r [Item 5514] - |cFFFFD100|cffffd100debuff.fire_vulnerability.stack=5|r|r
+options.packs.fire.Fire (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 400574 - |cFFFFD100|cffffd100((!buff.arcane_blast.up||buff.arcane_blast.remains<action.arcane_blast.cast)&!action.arcane_blast.executing)|r|r
 options.packs.fire.Fire (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 5143 - |cFFFFD100|cffffd100buff.missile_barrage.up|r|r
-options.packs.fire.Fire (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 133
+options.packs.fire.Fire (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 133 - |cFFFFD100|cffffd100(!action.fire_blast.known||cooldown.fire_blast.remains>=action.fireball.cast)|r|r
+options.packs.fire.Fire (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 2948
 options.packs.fire.Fire (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.fire.Fire (wowsims.com).lists.action_name	name	Action Name
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.arcane_blast	|T136000:0|t Spell 400574
@@ -18222,8 +18223,10 @@ options.packs.fire.Fire (wowsims.com).lists.listName	desc	Select the action list
 options.packs.fire.Fire (wowsims.com).lists.listName	name	Action List
 options.packs.fire.Fire (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
 options.packs.fire.Fire (wowsims.com).lists.listName	values.evocation	evocation
+options.packs.fire.Fire (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.fire.Fire (wowsims.com).lists.list_name	name	Action List
 options.packs.fire.Fire (wowsims.com).lists.list_name	values.evocation	evocation
+options.packs.fire.Fire (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.fire.Fire (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.fire.Fire (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.fire.Fire (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
@@ -18253,7 +18256,7 @@ options.packs.fire.Fire (wowsims.com).lists.modMoving.moving	values.1	Moving
 options.packs.fire.Fire (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.fire.Fire (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.fire.Fire (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.fire.Fire (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 1259705)
+options.packs.fire.Fire (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 11366)
 options.packs.fire.Fire (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.fire.Fire (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.fire.Fire (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry

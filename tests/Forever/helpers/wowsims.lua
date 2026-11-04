@@ -326,7 +326,8 @@ M.READY = {
     -- { 0.47, 21 } -> { 0.76, 9 } re-pin e2842f0a78 (the new log): the 9 real rows late, cost class (gap BQ: lo reaches
     -- a cost after the truth), fire_blast 7 (max 0.76: the dry-mana waits on its 340)
     mage_arcane = { 0.76, 9 }, -- 0.760, 9 (Mage lane, ruling M13; first clean run on 0ce5d1a4)
-    mage_fire = { 0.37, 31 }, -- 0.370, 31
+    -- { 0.37, 31 } -> { 0.45, 10 } re-pin e2842f0a78: cost class (gap BQ), scorch 10 (max 2.23)
+    mage_fire = { 0.45, 10 }, -- 0.450, 10
     mage_frostfire = { 0.38, 31 }, -- 0.380, 31 (Task FFB, ruling M13; first clean run on 3e104ce9)
     paladin_protection = { 0.86, 7 },
     paladin_retribution = { 0.29, 10 },
