@@ -44,6 +44,12 @@ local function recorder()
         spellTent = 0,
         spellReplaced = 0,
         swingTent = 0,
+        reopenAvoids = 0,
+        heldMain = 0,
+        heldMainStale = 0,
+        heldMainZero = 0,
+        heldMaxHold = 0,
+        heldMaxTrue = 0,
     }
 end
 
@@ -53,11 +59,18 @@ local function attach(rec, ns)
     local E, S, T, L = I.Events, I.Sources, I.Tickets, I.Log
     local MELEE = I.Expect.MELEE
     local via, seen, settledKey = "-", {}, {}
+    -- R24: the core's main-hand swing clock as Engine/Sim/Events.lua's swing branch keeps it from the rows (mh_actual,
+    -- the speed the hand's PLAYER_SWING carries)
+    local mhActual, mhSpeed = 0, 0
     local f = E.frame
     local onEvent, onUpdate = f:GetScript("OnEvent"), f:GetScript("OnUpdate")
     f:SetScript("OnEvent", function(fr, ev, ...)
         local prev = via
         via = ev
+        local d, st = ...
+        if ev == "PLAYER_SWING" and st == 0 and type(d) == "number" then
+            mhSpeed = d
+        end
         onEvent(fr, ev, ...)
         via = prev
     end)
@@ -78,11 +91,19 @@ local function attach(rec, ns)
         rec.lines[#rec.lines + 1] = table.concat(parts, " ")
         local ev = r[2]
         rec.sub[ev] = (rec.sub[ev] or 0) + 1
+        local off = (ev == "SWING_DAMAGE" and r[21]) or (ev == "SWING_MISSED" and r[13])
+        if (ev == "SWING_DAMAGE" or ev == "SWING_MISSED") and r[4] == L.player and not off and r[1] > mhActual then
+            mhActual = r[1]
+        end
     end)
     sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    -- R23: a retraction's re-open closing on a real avoid settles again, by ruling: counted apart, not as a double
+    local reopen = false
     local stage = S.Stage
     S.Stage = function(kind, t, a, b, c)
-        if kind == VS.Obs.SwingSettled then
+        if kind == VS.Obs.SwingSettled and reopen then
+            rec.settled = rec.settled + 1
+        elseif kind == VS.Obs.SwingSettled then
             local key = a .. "/" .. ("%.4f"):format(b)
             rec.settled = rec.settled + 1
             if settledKey[key] then
@@ -95,7 +116,7 @@ local function attach(rec, ns)
     -- duplicates: two own swing rows emitted for one swing (hand and anchor), keyed on the swing the emitting hook
     -- names (a row's stamp may be re-stamped to its hand's newer row, Rows.lua emit, so the stamp cannot key it)
     local ctxHand, ctxAt, recHand, recAt = 0, 0, {}, {}
-    local function swingRow(src)
+    local function swingRow(src, miss)
         if src ~= L.player then
             return -- a hit on us (Attackers.lua's onus rows)
         end
@@ -104,7 +125,9 @@ local function attach(rec, ns)
             return
         end
         local key = ctxHand .. "/" .. ("%.4f"):format(ctxAt)
-        if seen[key] then
+        if reopen and miss then
+            rec.reopenAvoids = rec.reopenAvoids + 1
+        elseif seen[key] then
             rec.dup = rec.dup + 1
         end
         seen[key], ctxHand = true, 0
@@ -116,7 +139,7 @@ local function attach(rec, ns)
     end
     L.Miss = function(t, family, src, srcFlags, dst, dstFlags, spellID, ...)
         if spellID == nil then
-            swingRow(src)
+            swingRow(src, true)
         end
         return miss(t, family, src, srcFlags, dst, dstFlags, spellID, ...)
     end
@@ -139,6 +162,12 @@ local function attach(rec, ns)
         return 0, 0
     end
     around(T, "onExpire", ticket)
+    local onExpire = T.onExpire
+    T.onExpire = function(i, ...)
+        reopen = T.kind[i] == MELEE and T.retry[i] and T.avoid[i] ~= "" and T.state[i] == T.PROV
+        onExpire(i, ...)
+        reopen = false
+    end
     around(T, "onFinal", ticket)
     around(I, "CreditVerdict", function(id)
         return recHand[id] or 0, recAt[id] or 0
@@ -155,6 +184,16 @@ local function attach(rec, ns)
             rec.spellTent = rec.spellTent + (held and 1 or 0)
         elseif held then
             rec.swingTent = rec.swingTent + 1
+            if T.x[i] == 1 and mhSpeed > 0 then -- R24: the core's mainhand_remains while this row is held
+                local now = F.GetTime()
+                local core, truth = mhActual + mhSpeed - now, T.at[i] + mhSpeed - now
+                rec.heldMain = rec.heldMain + 1
+                -- stale: the clock still runs from an older swing; zero: it reads 0 (no swing yet, or past it)
+                rec.heldMainStale = rec.heldMainStale + (mhActual < T.at[i] and 1 or 0)
+                rec.heldMainZero = rec.heldMainZero + ((mhActual == 0 or core <= 0) and 1 or 0)
+                rec.heldMaxHold = math.max(rec.heldMaxHold, T.fin[i] - now)
+                rec.heldMaxTrue = math.max(rec.heldMaxTrue, truth)
+            end
         end
         return held
     end
@@ -181,7 +220,8 @@ local function summary(name, rec)
     local tentPct = rec.spellPays > 0 and 100 * rec.spellTent / rec.spellPays or 0
     return (
         "[row feed %s] rows=%d | replaced=%d retracted=%d duplicates=%d unanchored=%d settled=%d settledTwice=%d | spell pays=%d "
-        .. "tent=%d (%.2f%%) tentReplaced=%d swingTent=%d | %s"
+        .. "tent=%d (%.2f%%) tentReplaced=%d swingTent=%d reopenAvoids=%d | held main=%d stale=%d zero=%d maxHold=%.3f "
+        .. "maxTrue=%.3f | %s"
     ):format(
         name,
         #rec.lines,
@@ -196,6 +236,12 @@ local function summary(name, rec)
         tentPct,
         rec.spellReplaced,
         rec.swingTent,
+        rec.reopenAvoids,
+        rec.heldMain,
+        rec.heldMainStale,
+        rec.heldMainZero,
+        rec.heldMaxHold,
+        rec.heldMaxTrue,
         table.concat(subs, " ")
     )
 end
@@ -218,6 +264,8 @@ end
 -- Compares `rec` with baseline `name` (ROWFEED=record writes it) and prints the summary.
 local function check(name, rec)
     print("\n" .. summary(name, rec))
+    -- one row and one settle per swing (8a-6 review M5); a re-open's real avoid is its own fact (R23, reopenAvoids)
+    assert.are.same({ 0, 0 }, { rec.dup, rec.twice }, name .. ": duplicates, settledTwice")
     os.execute("mkdir -p " .. OUT)
     write(OUT .. name .. ".txt", rec.lines)
     local path = BASE .. name .. ".txt"
@@ -280,7 +328,14 @@ describe("the row feed #slow", function()
         check("solo", drives(scenarios.oracle({})))
     end)
     it("party", function()
-        check("party", drives(scenarios.oracle({ others = { "melee", "caster" } })))
+        local rec = drives(scenarios.oracle({ others = { "melee", "caster" } }))
+        check("party", rec)
+        -- R24 (owner 2026-11-04, gaps.md CS): while a TENT main-hand swing's row is held (to T.fin), the core's swing
+        -- clock still runs from the previous swing, so mainhand_remains reads 0 (or that older swing's remains, after a
+        -- short swing) though the true clock is running. This pins the stale window as it stands; one-event-feed Step 2
+        -- feeds the clock at the swing's time and flips it (stale 0)
+        assert.is_true(rec.heldMain > 0, "party: no held main-hand swing")
+        assert.are.equal(rec.heldMain, rec.heldMainStale)
     end)
     it("busy", function()
         local others = { "melee", "melee", "melee", "caster", "caster", "pet", "pet" }
@@ -296,7 +351,10 @@ describe("the row feed #slow", function()
         check("log2", rec)
     end)
 
-    -- the wowsims replays, as their gates build them (tests/Forever/wowsims_<class>_spec.lua)
+    -- the wowsims replays, as their gates build them; copied (the gate specs keep them local), keep in step:
+    -- warrior_arms = tests/Forever/wowsims_warrior_spec.lua ARMS, ARMS_REPLAY, ARMS_CHAR (:25-42); mage_fire =
+    -- tests/Forever/wowsims_mage_spec.lua REPLAY.fire (:23-24); warrior_protection = wowsims_warrior_spec.lua
+    -- PROT, PROT_REPLAY (:57-66)
     local ws = require("Forever.helpers.wowsims")
     local loop = require("Game.harness.loop")
     local replay = require("Game.harness.replay")

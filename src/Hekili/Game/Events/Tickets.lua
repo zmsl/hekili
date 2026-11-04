@@ -814,16 +814,19 @@ function T.Expire(now)
     end
 end
 
---- Combat end (spec §3.6): every ticket closes, emitting nothing, counted `ended`. An open swing still inside its land
---- window keeps its expectation (T.onLost's, decision 51): its row lands after PLAYER_REGEN_ENABLED, its rage came at
---- the swing.
+--- Combat end (spec §3.6): every ticket closes, emitting nothing, counted `ended`; a TENT one is final first (T.Final,
+--- closed paid: its held row and observation go out, so a killing blow's row reaches the core; 8a-6 review M3). An
+--- open swing still inside its land window keeps its expectation (T.onLost's, decision 51): its row lands after
+--- PLAYER_REGEN_ENABLED, its rage came at the swing.
 function T.EndCombat(t)
     for i = 1, CAP do
-        if state[i] == OPEN and kind[i] == MELEE and t - at[i] <= T.PendingWindow(x[i]) and T.onLost then
+        if state[i] == T.TENT then
+            T.Final(i, t)
+        elseif state[i] == OPEN and kind[i] == MELEE and t - at[i] <= T.PendingWindow(x[i]) and T.onLost then
             T.onLost(i)
         end
         close(i, t, "ended")
-        T.held[i] = 0 -- a provisional payment's held observation is dropped (decision 48)
+        T.held[i] = 0
     end
     strikeWait = 0
     T.lastSwingT[1], T.lastSwingT[2] = 0, 0

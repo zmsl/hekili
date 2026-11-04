@@ -860,6 +860,109 @@ describe("the ticket pool", function()
             assert.are.same({ 1, 1, 1, 1 }, { swingRows(1), swingRows(2), settled(1), settled(2) })
         end)
 
+        local function rowsOf(sub, act)
+            local n = 0
+            for _, r in ipairs(got) do
+                n = n + ((r[2] == sub and (act == nil or r[12] == act)) and 1 or 0)
+            end
+            return n
+        end
+        local function settledAs(kind)
+            local n = 0
+            for _, s in ipairs(staged) do
+                n = n + ((s[1] == VS.Obs.SwingSettled and s[3] == kind) and 1 or 0)
+            end
+            return n
+        end
+
+        -- R23 (owner 2026-11-04): a re-open's real avoid is a new settled fact, not the retracted credit; the dodge row
+        -- from us is what a pack's dodge window reads (source our GUID, SWING_MISSED, DODGE)
+        it(
+            "emits a retracted swing's re-open closing on a real avoid: one SWING_MISSED and one settle (R23)",
+            function()
+                ctl.now = 10
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                ctl.now = 10.36 -- the core band: final
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+                assert.is_true(I.CreditVerdict(recordOf(1), false, 10.4, true)) -- retracted: the swing re-opened
+                ctl.now = 10.55
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- the re-open's real avoid
+                ctl.Tick(13)
+                ctl.Tick(14)
+                assert.are.same({ 1, 1 }, { rowsOf("SWING_MISSED", "DODGE"), settledAs(I.HitKind.DODGE) })
+                assert.are.same({ 2, 2 }, { swingRows(), settled() }) -- the wound's row and settle stay (one each)
+                local r = got[#got]
+                assert.are.same({ "SWING_MISSED", I.Log.player, "DODGE" }, { r[2], r[4], r[12] })
+            end
+        )
+
+        it("closes a retracted swing's re-open with no row and no settle when nothing avoids it", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.36
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.is_true(I.CreditVerdict(recordOf(1), false, 10.4, true))
+            ctl.Tick(13)
+            assert.are.same({ 1, 1 }, { swingRows(), settled() })
+        end)
+
+        -- M3 (8a-6 review): a TENT ticket open at combat end is final there, so a killing blow gets its row
+        it("emits a TENT swing's row at combat end", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.2 -- before the core band: TENT
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(0, swingRows())
+            ctl.now = 10.25
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            assert.are.same({ 1, 1 }, { swingRows(), settled() })
+            assert.are.same({ "SWING_DAMAGE", 10, 30 }, { got[#got][2], got[#got][1], got[#got][12] })
+            assert.are.equal(0, (counted()))
+        end)
+
+        it("emits a TENT spell's row at combat end", function()
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+            T.Learn("Creature-1", 20, 1.5, 9) -- narrow band [11.35, 11.65] for the 10 s cast
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+            ctl.now = 10.6 -- the widened band: TENT
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 8)
+            assert.are.equal(0, rowsOf("SPELL_DAMAGE"))
+            ctl.now = 10.7
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            assert.are.equal(1, rowsOf("SPELL_DAMAGE"))
+        end)
+
+        -- M4 (8a-6 review): T.onFinal's held spell row, and the quiet divergent avoid
+        it("emits a TENT spell wound's row once, at its final, at the cast", function()
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+            T.Learn("Creature-1", 20, 1.5, 9)
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+            ctl.now = 10.6
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 8)
+            assert.are.same({ 1, 0 }, { (counted()), rowsOf("SPELL_DAMAGE") })
+            ctl.Tick(11.7) -- final
+            assert.are.equal(1, rowsOf("SPELL_DAMAGE"))
+            assert.are.same({ 10, 30 }, { got[#got][1], got[#got][15] })
+            ctl.Tick(13)
+            assert.are.equal(1, rowsOf("SPELL_DAMAGE"))
+        end)
+
+        it("emits no SPELL_MISSED for a TENT divergent avoid, at its final either", function()
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+            T.Learn("Creature-1", 20, 1.5, 9)
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+            ctl.now = 10.1
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_P)
+            ctl.now = 10.6
+            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            assert.are.same({ 1, 1 }, { T.divergent, (counted()) })
+            ctl.Tick(13)
+            assert.are.same({ 0, 0 }, { rowsOf("SPELL_MISSED"), (counted()) })
+        end)
+
         it("pays a pass (a) row final at once: no TENT", function()
             ctl.now = 10
             ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)
