@@ -12,6 +12,7 @@ exclude_files = {
     ".lua/",
     ".release/",
     ".ab/",
+    ".superpowers/", -- the plans' git-ignored scratch (briefs, reports, agents' throwaway scripts)
     ".luacheckrc",
 }
 
