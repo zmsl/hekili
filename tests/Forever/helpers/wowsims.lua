@@ -328,7 +328,8 @@ M.READY = {
     mage_arcane = { 0.76, 9 }, -- 0.760, 9 (Mage lane, ruling M13; first clean run on 0ce5d1a4)
     -- { 0.37, 31 } -> { 0.45, 10 } re-pin e2842f0a78: cost class (gap BQ), scorch 10 (max 2.23)
     mage_fire = { 0.45, 10 }, -- 0.450, 10
-    mage_frostfire = { 0.38, 31 }, -- 0.380, 31 (Task FFB, ruling M13; first clean run on 3e104ce9)
+    -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
+    mage_frostfire = { 0.42, 9 }, -- 0.420, 9 (Task FFB, ruling M13; first clean run on 3e104ce9)
     paladin_protection = { 0.86, 7 },
     paladin_retribution = { 0.29, 10 },
     -- 1.500, 36 (Priest lane, Task 14; first clean run on 30e92574+): Mind Flay's 3 s channel, the next icon ready at

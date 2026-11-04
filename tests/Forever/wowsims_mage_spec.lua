@@ -52,10 +52,13 @@ local REPLAY = {
 -- Arcane list has no cheap filler: mana dry by about 90 s, waiting on Fire Blast's 340; wowsims's own fight idles
 -- 96.40 -> 114.40).
 -- Fire 0.82 -> 0.97 (0.974, 76 of 78; both misses equality edges at the log's instant), LIVE60 12.6 -> 6.0 (measured).
+-- Frostfire 0.89 -> 0.96 (0.965, 55 of 57; the mana gem, Fire Vulnerability's `remains<5` edge: gap BS), LIVE60
+-- 10.8 -> 11.8 (mana dry from about 87 s, waiting on Frostfire Bolt's 314.5 and Scorch's 150; wowsims's own fight
+-- idles about 10 s at 91.6).
 local PACKS = {
     { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0 },
     { "mage_fire", "Fire", "Fire (wowsims.com)", 0.97, 6.0 },
-    { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.89, 10.8 },
+    { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8 },
 }
 
 describe("the Mage wowsims.com packs #slow #wowsims", function()

@@ -21,8 +21,8 @@
 -- {1237313 / 18809, Tag: 1}). The log's pool and regen are the Fire build's (6168; 29.13 a second, half while casting).
 -- Deviations: Evocation's clip (the translator drops channelSpell.interruptIf; mage_fire.lua); rule 12 drops Read Ley
 -- Line (mage_arcane.lua); Ignite (412538) is a proc no key maps; includeReactionTime on the Fingers of Frost read is
--- ignored (rule 5), and no decision here turns on it. autocastOtherCooldowns (rule 13): the Mind Quickening Gem
--- (`use_items`) and the mana gem, off the GCD (this build has no Combustion).
+-- ignored (rule 5), and no decision here turns on it. autocastOtherCooldowns (rule 13): the trinket
+-- (`use_items`; 18820 since the re-pin, was 19339) and the mana gem, off the GCD (this build has no Combustion).
 -- Focus (M5): Pyroblast on Hot Streak and Fire Blast (unless two Fingers of Frost charges are up) tier 1, Scorch and
 -- Evocation tier 2.
 -- Loops (20 fights, 0.958; frostfire_bolt -> scorch 680): measured (Task FFB fix round 1) as the believed mana a few
@@ -31,6 +31,15 @@
 -- Vulnerability matched the world's to the tick (no early end). The uptime 0.96 (ours driving) against 0.99 (the
 -- oracle) is Evocation at a carried fight's start: the believed lower bound reads mana.pct<=10 where the truth is
 -- 16-19% (shared gap).
+-- Re-pin e2842f0a78 (Task 10): the build's talents (presets.ts FFBTalents -5550000123011303-2035010311013002), the
+-- new list's pre-pull Pyroblast, the gear's trinket the Talisman of Ephemeral Power (18820). Omitted 1 -> 0 (the
+-- trinket, mapped).
+-- Disagreements (P7; floor 0.96), decisions on-GCD 0.965 (57) top [fire_blast -> frostfire_bolt 1; fire_blast ->
+-- scorch 1]: 148.90, the Citrine's +791 at the instant not believed (lo 54, truth 845: mage_arcane.lua's shared gap);
+-- 88.50, the Scorch line's `debuff.fire_vulnerability.remains<5` edge (refreshed 63.50, 5.0 left: the modelled
+-- target debuff, gap BS).
+-- LIVE L10 6.6, L40 0.2, L60 11.8 s (was 10.8): mana dry from about 87 s, waiting on Frostfire Bolt's 314.5 and
+-- Scorch's 150 (Evocation on its cooldown counts usable); wowsims's own fight idles about 10 s at 91.6 -> 102.4.
 return {
     class = "MAGE",
     pack = "Frostfire (wowsims.com)",
@@ -42,7 +51,7 @@ return {
         race = "RaceHuman",
         class = "ClassMage",
         gear = "ui/specs/mage/dps/gear_sets/p1Arcane.gear.json",
-        talentsString = "-2355000013011503-00550003310003002",
+        talentsString = "-5550000123011303-2035010311013002",
         specKey = "mage",
         options = { classOptions = { defaultMageArmor = "MageArmorMageArmor" } },
         profession1 = "Engineering",
@@ -50,7 +59,9 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 20,
     },
-    map = { ["item:19339"] = "use_items" }, -- the Mind Quickening Gem (ItemSparse 19339: a trinket, InventoryType 12)
+    -- the Talisman of Ephemeral Power (ItemSparse 18820: a trinket, InventoryType 12; the re-pin gear, was the Mind
+    -- Quickening Gem 19339)
+    map = { ["item:18820"] = "use_items" },
     focus = { pyroblast = 1, scorch = 2, evocation = 2, fire_blast = 1, counterspell = 1 },
     leveling = {},
 }
