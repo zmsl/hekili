@@ -1268,6 +1268,11 @@ local HekiliSpecMixin = {
     RegisterWindow = function( self, name, data )
         assert( type( name ) == "string" and type( data ) == "table", "RegisterWindow: needs a name and a table" )
         assert( self.windows[ name ] == nil, "RegisterWindow: " .. name .. " is already registered" )
+        -- spec 0's windows merge beside every spec's (SpecializationChanged): one name in both would be lost
+        for id, s in pairs( class.specs ) do
+            assert( ( id == 0 ) == ( self.id == 0 ) or rawget( s, "windows" ) == nil or s.windows[ name ] == nil,
+                "RegisterWindow: " .. name .. " is already registered in another spec" )
+        end
         local ev, dur = data.evaluator, data.duration
         assert( ev == nil or type( ev ) == "function", "RegisterWindow: " .. name .. "'s evaluator is not a function" )
         assert( type( dur ) == "number" and dur > 0, "RegisterWindow: " .. name .. " needs a positive duration" )

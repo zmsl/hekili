@@ -215,7 +215,8 @@ describe("rotation windows (belief)", function()
             start()
             local e = I.nowErrors
             drain(3)
-            assert.are.equal(e + 1, I.nowErrors)
+            drain(4)
+            assert.are.equal(e + 1, I.nowErrors) -- counted once, not every Drain
             assert.is_false(W("w")[1])
         end)
 
@@ -243,6 +244,24 @@ describe("rotation windows (belief)", function()
                 assert.are.equal(0, I.nowErrors)
             end
         )
+
+        it("a cast after the expiry but before its close opens it afresh", function()
+            window("w", { duration = 6, refresh = true })
+            register("w_opener", {
+                id = OPENER,
+                now = function()
+                    openWindow("w")
+                end,
+            })
+            start()
+            cast(OPENER, 3)
+            assert.are.same({ true, 3, 9, 0, 0 }, W("w"))
+            ctl.now = 9.1
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", OPENER)
+            ctl.Tick(9.15)
+            VS.Drain(9.2)
+            assert.are.same({ true, 9.1, 15.1, 0, 0 }, W("w"))
+        end)
 
         it("are inert outside a cast", function()
             window("w", { duration = 6 })

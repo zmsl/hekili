@@ -523,16 +523,20 @@ local function automatic(a, t, kind, o)
 end
 
 --- Runs a window's bound evaluator f in the shared context at belief time t, reads only (the verbs stay inert): true
---- only for a plain `true` answer; a raise is counted and reads false. Allocates nothing.
-function I.NowEval(f, t)
+--- only for a plain `true` answer, and whether it ran clean. A raise is counted and reads false; `raised` (it raised
+--- before) skips the call. Allocates nothing.
+function I.NowEval(f, t, raised)
+    if raised then
+        return false, false
+    end
     I.NowAt(t)
     local ok, v = pcall(f)
     if not ok then
         I.nowErrors, I.nowError = I.nowErrors + 1, v
-        return false
+        return false, false
     end
     local api = I.api
-    return not (api and api.issecretvalue(v)) and v == true
+    return not (api and api.issecretvalue(v)) and v == true, true
 end
 
 -- Runs ability a's bound function f in the shared context at belief time t; an error is counted, never raised.
@@ -558,7 +562,7 @@ local function run(o, t)
     automatic(a, t, o.kind, o)
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
     I.castsRun = I.castsRun + 1
-    I.WindowCast(a) -- the stepped and strict windows' one per-cast hook (Families/Windows.lua), before the `now`
+    I.WindowCast(a, t) -- the stepped and strict windows' one per-cast hook (Families/Windows.lua), before the `now`
     if A.now[a] then
         call(A.now[a], a, t)
     end

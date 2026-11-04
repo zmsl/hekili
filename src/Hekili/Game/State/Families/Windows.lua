@@ -40,6 +40,7 @@ local W = {
     refreshes = {},
     step = {},
     last = {}, -- the last evaluation
+    raised = {}, -- the evaluator raised: it reads false and is not run again (counted once, as I.Eval)
 }
 I.win = W
 
@@ -49,6 +50,9 @@ end
 
 -- The edge rules' open: a closed window opens at t; an open one restarts with `refresh` within its caps.
 local function open(w, t)
+    if W.up[w] and W.expiresAt[w] <= t then
+        close(w) -- expired, not yet closed (expiry is applied after the fold): a fresh open, not a refresh
+    end
     local e = t + W.dur[w]
     if not W.up[w] then
         W.up[w], W.openedAt[w], W.refreshes[w] = true, t, 0
@@ -90,8 +94,11 @@ end
 --- Our cast of ability a (Families/Now.lua's cast fold, every own CastSuccess): each up stepped window's due step
 --- advances; a later step's cast follows `on_deviation`; a strict window ends at any other on-GCD cast. One lookup read
 --- per stepped window. Allocates nothing.
-function I.WindowCast(a)
+function I.WindowCast(a, t)
     for w = 1, W.n do
+        if W.up[w] and W.expiresAt[w] <= t then
+            close(w)
+        end
         local steps = W.steps[w]
         if steps and W.up[w] then
             local due = W.step[w]
@@ -130,7 +137,8 @@ function I.RunWindows(t)
         end
         local f = W.eval[w]
         if f then
-            local v = I.NowEval(f, t)
+            local v, ok = I.NowEval(f, t, W.raised[w])
+            W.raised[w] = not ok
             local was = W.last[w]
             W.last[w] = v
             if v and not was then
@@ -189,7 +197,7 @@ I.OnBuild(function(def)
         W.loop[w] = d.loop == true
         W.dev[w] = DEV[d.on_deviation] or STAY
         W.strict[w] = d.strict == true
-        W.last[w] = false
+        W.last[w], W.raised[w] = false, false
         close(w)
     end
 end)

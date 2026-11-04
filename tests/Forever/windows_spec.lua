@@ -64,5 +64,8 @@ describe("RegisterWindow", function()
         assert.has_error(function()
             kit:RegisterWindow("bad_step", { duration = 6, steps = { "no_such_ability" } })
         end)
+        assert.has_error(function() -- spec 0's windows merge beside the spec's
+            H.Hekili.Class.specs[0]:RegisterWindow("twice", { duration = 6 })
+        end)
     end)
 end)
