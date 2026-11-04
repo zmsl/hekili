@@ -245,6 +245,173 @@ describe("reactions", function()
         end)
     end)
 
+    -- Task 8a-4 (owner 2026-11-04): outcome "swing" (every white swing of ours at its settled outcome, optional hand),
+    -- and "deflect" / "evade" through the same settled-only paths
+    describe('outcome "swing" (who = "target")', function()
+        local function hand(key, which)
+            local r = reaction(key, "target", "swing")
+            r.hand = which
+            return r
+        end
+
+        it("runs once per settled swing: final, provisional at its final, avoided at its close", function()
+            build({ reaction("swung", "target", "swing"), reaction("critted", "target", "crit") })
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.47 -- the core band: final at once
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 30, 1)
+            drain(10.5)
+            assert.are.same({ 1, 1 }, { runs.swung, runs.critted })
+            assert.are.equal(10.47, W("swung")[2])
+            ctl.now = 20
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            ctl.now = 20.2 -- before the core band: provisional (TENT)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            drain(20.25)
+            assert.are.same({ T.TENT, 1 }, { T.state[i], runs.swung })
+            drain(22)
+            drain(22.1)
+            assert.are.equal(2, runs.swung)
+            assert.are.equal(20.2, W("swung")[2])
+            ctl.now = 30
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 30.47
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1)
+            drain(30.5)
+            assert.are.equal(2, runs.swung) -- provisional: a later wound could give it back
+            drain(32)
+            drain(32.1)
+            assert.are.same({ 3, 1 }, { runs.swung, runs.critted })
+            assert.are.equal(30.47, W("swung")[2])
+            assert.are.equal(0, I.nowErrors)
+        end)
+
+        it("hand filters by the hand the belief attributed the swing to (Obs.SwingSettled's a)", function()
+            build({ hand("main_sw", "main"), hand("off_sw", "off"), reaction("any_sw", "target", "swing") })
+            local S, Obs, K = I.Sources, VS.Obs, I.HitKind
+            S.Direct(Obs.SwingSettled, 5, 1, 4.9, K.WOUND)
+            VS.Drain(5.1)
+            assert.are.same({ 1, 0, 1 }, { runs.main_sw, runs.off_sw, runs.any_sw })
+            S.Direct(Obs.SwingSettled, 6, 2, 5.9, K.DODGE)
+            VS.Drain(6.1)
+            assert.are.same({ 1, 1, 2 }, { runs.main_sw, runs.off_sw, runs.any_sw })
+            assert.are.equal(6, W("off_sw")[2])
+        end)
+
+        -- gap AS (the Rend 163.54 case above): the swing's tied dodge goes back to the cast; the swing landed
+        it("never runs on a provisional avoid later given back; the swing runs once, at its own wound", function()
+            build({ reaction("swung", "target", "swing"), reaction("dodged", "target", "dodge") })
+            ctl.now = 163.13
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 163.54
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            drain(163.56)
+            assert.are.same({ 0, 0 }, { runs.swung, runs.dodged })
+            ctl.now = 163.604
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            drain(163.62)
+            drain(166)
+            drain(166.1)
+            assert.are.same({ 1, 1 }, { runs.swung, runs.dodged })
+            assert.are.equal(163.604, W("swung")[2])
+        end)
+
+        it("touches no cast history, ticket, GCD, step or strict window", function()
+            local on = false
+            build({ reaction("swung", "target", "swing") }, {
+                window("stepped", {
+                    steps = { 1, 2 },
+                    evaluator = function()
+                        return on
+                    end,
+                }),
+                window("strict", {
+                    steps = { 1, 2 },
+                    strict = true,
+                    evaluator = function()
+                        return on
+                    end,
+                }),
+            })
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            drain(5.1)
+            on = true
+            drain(5.2)
+            ctl.now = 5.3
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local casts, lastT, opened, gcd = I.castsRun, I.lastCastT, T.opened, VS.Gcd(5.9).est
+            local owner, kind, cd = I.gcdOwner, I.gcdKindLast, VS.Cooldown(fs.SPENDER_C, 5.9).est
+            local stepped, strict = W("stepped"), W("strict")
+            ctl.now = 5.77
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            drain(5.8)
+            assert.are.equal(1, runs.swung)
+            assert.are.same({ casts, lastT, opened, gcd }, { I.castsRun, I.lastCastT, T.opened, VS.Gcd(5.9).est })
+            assert.are.same({ owner, kind, cd }, { I.gcdOwner, I.gcdKindLast, VS.Cooldown(fs.SPENDER_C, 5.9).est })
+            assert.are.same(stepped, W("stepped"))
+            assert.are.same(strict, W("strict"))
+        end)
+
+        it("allocates nothing across 1000 Drains settling a swing each", function()
+            build({ hand("main_sw", "main"), reaction("any_sw", "target", "swing") })
+            local t = 5
+            local bytes = alloc.bytes(function()
+                t = t + 3
+                ctl.now = t
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                ctl.now = t + 0.47
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+                drain(t + 0.5)
+            end, 1000)
+            assert.are.equal(0, bytes)
+            assert.are.equal(0, I.nowErrors)
+            assert.is_true(runs.main_sw >= 500 and runs.any_sw == runs.main_sw, tostring(runs.main_sw))
+        end)
+    end)
+
+    describe('outcomes "deflect" and "evade"', function()
+        it("on us (victim-side UNIT_COMBAT): each runs its own reaction", function()
+            build({ reaction("deflected", "player", "deflect"), reaction("evaded", "player", "evade") })
+            ctl.now = 5
+            ctl.Fire("UNIT_COMBAT", "player", "DEFLECT", "", 0, 1)
+            drain(5.1)
+            assert.are.same({ 1, 0 }, { runs.deflected, runs.evaded })
+            ctl.now = 6
+            ctl.Fire("UNIT_COMBAT", "player", "EVADE", "", 0, 1)
+            drain(6.1)
+            assert.are.same({ 1, 1 }, { runs.deflected, runs.evaded })
+            assert.are.equal(6, W("evaded")[2])
+        end)
+
+        it("our cast deflected runs the reaction at the row; no undo or refund (not an avoid that refuses)", function()
+            build({ reaction("deflected", "target", "deflect"), reaction("dodged", "target", "dodge") })
+            local avoids = I.avoidsRun
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "DEFLECT", "", 0, 1)
+            drain(5.4)
+            assert.are.same({ 1, 0, avoids }, { runs.deflected, runs.dodged, I.avoidsRun })
+            assert.are.equal(5, W("deflected")[2])
+        end)
+
+        it("our swing evaded runs only at its window's close, with the swing reaction", function()
+            build({ reaction("evaded", "target", "evade"), reaction("swung", "target", "swing") })
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.47
+            ctl.Fire("UNIT_COMBAT", "target", "EVADE", "", 0, 1)
+            drain(10.5)
+            assert.are.same({ 0, 0 }, { runs.evaded, runs.swung })
+            drain(12)
+            drain(12.1)
+            assert.are.same({ 1, 1 }, { runs.evaded, runs.swung })
+            assert.are.equal(10.47, W("evaded")[2])
+        end)
+    end)
+
     it("touches no cast history, ticket, GCD, step or strict window", function()
         local on = false
         build({ reaction("parried", "player", "parry") }, {

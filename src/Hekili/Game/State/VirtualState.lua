@@ -59,15 +59,17 @@ VS.Obs = {
     -- the target (Events/Rows.lua's pairing in its landing window, GAP AX); Families/Now.lua undoes and refunds it
     Crit = 39, -- a: ability index; b: its cast's time: our cast's own CRITICAL wound on the target (the same pairing);
     -- Families/Now.lua runs the ability's `onCrit` (GAP T); a 0: our white swing's crit, once its credit is final
-    SwingAvoided = 40, -- a: hand; b: the swing's time; c: I.HitKind: our white swing's avoid, settled at its window's
-    -- close (Events/Rows.lua T.onExpire, staged at the avoid row's time); Families/Now.lua's reactions only
+    SwingSettled = 40, -- a: hand (1 main, 2 off); b: the swing's time; c: I.HitKind (WOUND: landed): our white swing's
+    -- settled outcome, at its row's time (Events/Rows.lua: a final credit, T.onFinal, an avoid at T.onExpire);
+    -- Families/Now.lua's reactions only
     PlayerCrit = 41, -- a CRITICAL wound on the player (UNIT_COMBAT, beside its PlayerHit); Families/Now.lua's reactions
 }
 
 --- What a `PlayerHit` observation reports (its `a`), and each kind's name (the `taken` and `consumedBy` keys): a WOUND
---- flagged BLOCK or BLOCK_REDUCED is BLOCKED (part of it blocked), the BLOCK action a full block.
-I.HitKind = { WOUND = 1, BLOCKED = 2, BLOCK = 3, DODGE = 4, PARRY = 5, MISS = 6, HEAL = 7 }
-I.HitName = { "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS", "HEAL" }
+--- flagged BLOCK or BLOCK_REDUCED is BLOCKED (part of it blocked), the BLOCK action a full block. DEFLECT and EVADE
+--- (UNIT_COMBAT actions, Blizzard's CombatFeedback) feed reactions only: the other PlayerHit readers key on their kinds.
+I.HitKind = { WOUND = 1, BLOCKED = 2, BLOCK = 3, DODGE = 4, PARRY = 5, MISS = 6, HEAL = 7, DEFLECT = 8, EVADE = 9 }
+I.HitName = { "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS", "HEAL", "DEFLECT", "EVADE" }
 
 --- What a `Read` observation read (its `c`): TDF's Enum.ReadOf integers (5 and 7-9 reserved), plus Health = 10 and
 --- RegenSpirit = 11 (an `fsr` slot's spirit part: the not-casting rate less the casting one), VirtualState kinds past

@@ -83,6 +83,7 @@ local MISSES = {
     ABSORB = true,
 }
 local REFUSED = { DODGE = true, PARRY = true, MISS = true } -- the avoids that refuse the whole ability (Obs.Avoided)
+local REACTED = { DEFLECT = true, EVADE = true } -- staged as Obs.Avoided for reactions only (Families/Now.lua: no undo)
 
 -- One row from an own action of kind `k` and its outcome at `t` (school mask `sch` for a spell), through CombatLog's
 -- builders (Task 5b). None without a destination: Hekili's handler would count a "" GUID as an enemy
@@ -117,20 +118,20 @@ end
 -- ticket's anchor (the refund belongs there).
 local function avoided(i, t, act)
     local a = T.ab[i]
-    if REFUSED[act] and a > 0 then
+    if (REFUSED[act] or REACTED[act]) and a > 0 then
         S.Stage(Obs.Avoided, t, a, T.at[i], I.HitKind[act])
     end
 end
 
 -- A swing closing unpaid: SWING_MISSED for a provisional avoid, else SWING_DAMAGE 0 (the swing timer reads it). The
 -- avoid it still holds is settled now (no wound can take it back): staged at its row's time (Families/Now.lua's
--- reactions).
+-- reactions). A swing closing with no row stages nothing: no outcome was observed.
 T.onExpire = function(i)
     if T.kind[i] == MELEE then
         local held = T.avoid[i] ~= ""
         emit(MELEE, T.x[i], T.guid[i], held and T.avoid[i] or "WOUND", "", 0, T.at[i], 1)
         if held and T.state[i] == T.PROV then -- only a ticket still provisional (T.Provisional) settles its avoid here
-            S.Stage(Obs.SwingAvoided, T.avoidT[i], T.x[i], T.at[i], I.HitKind[T.avoid[i]] or 0)
+            S.Stage(Obs.SwingSettled, T.avoidT[i], T.x[i], T.at[i], I.HitKind[T.avoid[i]] or 0)
         end
     end
 end
@@ -321,6 +322,9 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
             S.Stage(Obs.Crit, t, 0, at0, 0)
         end
     end
+    if not tent then -- the landed swing settled, at its row (reactions; a TENT one at T.onFinal)
+        S.Stage(Obs.SwingSettled, t, xx, at0, I.HitKind.WOUND)
+    end
 end
 
 -- The row TENT ticket i was paid by, displaced at `now` by a narrow-band row (attribution-recovery decision 48 as
@@ -395,15 +399,18 @@ T.onLost = function(i)
 end
 
 -- A TENT ticket final: what it held is staged now (attribution-recovery decision 48), at its row's time (the outcome's:
--- a reaction's window counts from it). A swing's crit credit is settled here too (its Obs.Swing c = 3 came at the row).
+-- a reaction's window counts from it). A swing's credit (and crit) is settled here too (its Obs.Swing came at the row).
 T.onFinal = function(i)
     local t = T.rowT[i]
     if T.held[i] == 2 then
         avoided(i, t, T.rowAct[i])
     elseif T.held[i] == 1 then
         S.Stage(Obs.Crit, t, T.ab[i], T.at[i], 0)
-    elseif T.kind[i] == MELEE and T.rowFlag[i] == "CRITICAL" then
-        S.Stage(Obs.Crit, t, 0, T.at[i], 0)
+    elseif T.kind[i] == MELEE then -- a landed swing (an avoid is PROV, never TENT): settled now
+        if T.rowFlag[i] == "CRITICAL" then
+            S.Stage(Obs.Crit, t, 0, T.at[i], 0)
+        end
+        S.Stage(Obs.SwingSettled, t, T.x[i], T.at[i], I.HitKind.WOUND)
     end
 end
 

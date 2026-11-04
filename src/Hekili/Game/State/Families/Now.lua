@@ -397,11 +397,12 @@ end
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Reactions (RegisterReaction, re-pin design §3a): `now` functions run by a settled outcome, never by a cast. By `who`
--- (1 player, 2 target) x outcome (OUTCOME): the bound functions, a list each, preallocated at the build.
+-- (1 player, 2 target) x outcome (OUTCOME): the bound functions, a list each, and each one's hand (0 any, 1 main,
+-- 2 off: a "swing" reaction's filter), preallocated at load, refilled at the build.
 
-local WHO = { player = 1, target = 2 }
-local OUTCOME = { dodge = 1, parry = 2, block = 3, miss = 4, crit = 5 }
-local CRIT = OUTCOME.crit
+local WHO, HAND = { player = 1, target = 2 }, { main = 1, off = 2 }
+local OUTCOME = { dodge = 1, parry = 2, block = 3, miss = 4, deflect = 5, evade = 6, crit = 7, swing = 8 }
+local CRIT, SWING = OUTCOME.crit, OUTCOME.swing
 local OUTCOME_OF = {} -- by I.HitKind: the outcome slot (0: no reaction outcome)
 for name, kind in pairs(I.HitKind) do
     local o = OUTCOME[name:lower()]
@@ -411,18 +412,18 @@ OUTCOME_OF[I.HitKind.BLOCKED] = OUTCOME.block -- `block` covers BLOCK and BLOCKE
 local NO_REACTIONS = {}
 local react = { {}, {} } -- react[who][outcome] = { n = count, bound functions... }
 for w = 1, 2 do
-    for o = 1, CRIT do
-        react[w][o] = { n = 0 }
+    for o = 1, SWING do
+        react[w][o] = { n = 0, hand = {} }
     end
 end
 I.reactionsRun = 0
 
 local function bindReactions(list)
     for w = 1, 2 do
-        for o = 1, CRIT do
+        for o = 1, SWING do
             local l = react[w][o]
             for k = 1, l.n do
-                l[k] = nil
+                l[k], l.hand[k] = nil, nil
             end
             l.n = 0
         end
@@ -433,7 +434,7 @@ local function bindReactions(list)
         if w and o and type(f) == "function" then
             local l = react[w][o]
             l.n = l.n + 1
-            l[l.n] = setfenv(f, ctx)
+            l[l.n], l.hand[l.n] = setfenv(f, ctx), HAND[d.hand] or 0
         end
     end
 end
@@ -598,16 +599,20 @@ local function call(f, a, t)
 end
 
 -- Runs who's reactions to outcome slot o at the outcome's time t: no ability (curA 0), its writes no avoid's to undo
--- (journal off, as an `onCrit`). Never through `run`: no cast, step, strict end, cooldown or GCD. Allocates nothing.
-local function fire(w, o, t)
+-- (journal off, as an `onCrit`). Never through `run`: no cast, step, strict end, cooldown or GCD. `hand` (a swing's,
+-- 1 or 2; nil elsewhere) passes a reaction whose hand is 0 or equal. Allocates nothing.
+local function fire(w, o, t, hand)
     local l = o > 0 and react[w][o]
     if not l or l.n == 0 then
         return
     end
     journal = false
     for k = 1, l.n do
-        call(l[k], 0, t)
-        I.reactionsRun = I.reactionsRun + 1
+        local hk = l.hand[k]
+        if hk == 0 or hk == hand then
+            call(l[k], 0, t)
+            I.reactionsRun = I.reactionsRun + 1
+        end
     end
     journal = true
 end
@@ -647,9 +652,12 @@ end)
 -- the cost it paid; both `modelled` at the outcome. Any other cast's avoid changes nothing (its effects are no longer
 -- the latest's to undo). The cooldown,
 -- the GCD and the player auras stay (an avoided ability still triggers them). Allocates nothing.
+local DEFLECT, EVADE = I.HitKind.DEFLECT, I.HitKind.EVADE
 I.On(Obs.Avoided, function(o, t)
     fire(2, OUTCOME_OF[o.c] or 0, o.t) -- first: the target's reactions, at the outcome's row
-    if o.a ~= undoA or o.b ~= undoT then
+    if o.c == DEFLECT or o.c == EVADE then -- staged for reactions only (Events/Rows.lua REACTED): no undo, no refund
+        return
+    elseif o.a ~= undoA or o.b ~= undoT then
         return
     end
     undoA = 0
@@ -667,11 +675,12 @@ I.On(Obs.Avoided, function(o, t)
     I.avoidsRun = I.avoidsRun + 1
 end)
 
--- The other settled outcomes reactions run on (re-pin design §3a): our white swing's avoid at its window's close
--- (Obs.SwingAvoided, Events/Rows.lua), a hit on us (Obs.PlayerHit, Obs.PlayerCrit: victim-side UNIT_COMBAT,
--- Sources/Player.lua), each at its row's time. Allocates nothing.
-I.On(Obs.SwingAvoided, function(o)
+-- The other settled outcomes reactions run on (re-pin design §3a): our white swing's (Obs.SwingSettled, Events/Rows.lua:
+-- its avoid's own outcome, then every "swing" reaction of its hand), a hit on us (Obs.PlayerHit, Obs.PlayerCrit:
+-- victim-side UNIT_COMBAT, Sources/Player.lua), each at its row's time. Allocates nothing.
+I.On(Obs.SwingSettled, function(o)
     fire(2, OUTCOME_OF[o.c] or 0, o.t)
+    fire(2, SWING, o.t, o.a)
 end)
 I.On(Obs.PlayerHit, function(o)
     fire(1, OUTCOME_OF[o.a] or 0, o.t)

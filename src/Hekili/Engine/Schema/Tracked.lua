@@ -38,7 +38,7 @@ local def = {
     providers = {}, -- outcomes, presence, viewer, coalesceCooldown, narrowUnitAura: the experimental toggles (providersOf)
     settings = {}, -- the spec's settings as plain values (Families/Now.lua's `settings`; refreshed by Hekili:SettingsChanged)
     windows = {}, -- the rotation windows (RegisterWindow's records; `steps` as ability indexes): Families/Windows.lua
-    reactions = {}, -- RegisterReaction's records { key, who, outcome, now }: Families/Now.lua (no ability index)
+    reactions = {}, -- RegisterReaction's records { key, who, outcome, hand, now }: Families/Now.lua (no ability index)
 }
 local LISTS = {
     "abilities",

@@ -1308,9 +1308,12 @@ local HekiliSpecMixin = {
     -- (re-pin design §3a, decision 11; owner 2026-11-03) A reaction: a `now` function run by an observed outcome instead
     -- of a cast, so a window can open on a span only an outcome reveals (never where an aura or a usability flip fits).
     -- `who` "player" (a hit on us) or "target" (our cast or white swing); `outcome` "dodge", "parry", "block" (BLOCK and
-    -- BLOCKED), "miss" or "crit"; DEFLECT and EVADE map to no outcome (they fire nothing), and a spell of ours blocked
-    -- fires nothing (Game/Events/Rows.lua stages DODGE, PARRY and MISS only; docs/dev/gaps.md). Not an ability: no
-    -- index, cast history, ticket, GCD or options row. The belief runs it in the `now` context at the settled outcome's time (Game/State/Families/Now.lua); the sim never sees it.
+    -- BLOCKED), "miss", "deflect", "evade" or "crit"; a spell of ours blocked fires nothing (Game/Events/Rows.lua stages
+    -- DODGE, PARRY, MISS, DEFLECT and EVADE only; docs/dev/gaps.md). Outcome "swing" (who "target" only: a hit on us
+    -- tells no white swing from a special) runs once per white swing of ours at its settled outcome, whatever it is;
+    -- optional `hand` "main" or "off" (the hand the belief paired the swing to) filters it. Not an ability: no index,
+    -- cast history, ticket, GCD or options row. The belief runs it in the `now` context at the settled outcome's time
+    -- (Game/State/Families/Now.lua); the sim never sees it.
     RegisterReaction = function( self, name, data )
         assert( type( name ) == "string" and type( data ) == "table", "RegisterReaction: needs a name and a table" )
         assert( self.reactions[ name ] == nil, "RegisterReaction: " .. name .. " is already registered" )
@@ -1320,9 +1323,12 @@ local HekiliSpecMixin = {
         end
         assert( data.who == "player" or data.who == "target", "RegisterReaction: " .. name .. "'s who" )
         local o = data.outcome
-        assert( o == "dodge" or o == "parry" or o == "block" or o == "miss" or o == "crit", "RegisterReaction: " .. name .. "'s outcome" )
+        assert( o == "dodge" or o == "parry" or o == "block" or o == "miss" or o == "deflect" or o == "evade" or o == "crit"
+            or ( o == "swing" and data.who == "target" ), "RegisterReaction: " .. name .. "'s outcome" )
+        assert( data.hand == nil or o == "swing" and ( data.hand == "main" or data.hand == "off" ),
+            "RegisterReaction: " .. name .. "'s hand (a target swing's: main or off)" )
         assert( type( data.now ) == "function", "RegisterReaction: " .. name .. "'s now is not a function" )
-        self.reactions[ name ] = { key = name, who = data.who, outcome = o, now = data.now }
+        self.reactions[ name ] = { key = name, who = data.who, outcome = o, hand = data.hand, now = data.now }
     end,
 
     RegisterPack = function( self, name, version, import )
