@@ -246,3 +246,20 @@ interleaved stock / (1000, 200) x 3 after a warm-up, 20:35-20:58 (load 3.4 at th
 the previous run's own 16 jobs): user+sys 2657.7 / 2558.2 / 2504.4 (mean 2573.4) against 2623.2 / 2573.0 / 2549.4
 (mean 2581.9); wall 198.8 / 190.0 / 186.5 against 192.8 / 190.4 / 188.5. No gain there either. Dropped: helper and
 `run_one` change reverted, nothing under test changed, so the Step 4 results/bytes diffs and the gate were not rerun.
+
+### Task 7: `--no-auto-insulate` (dropped: no gain)
+
+Raw logs `~/src/hekili-speed-runs/insulate/` (`leaks.lua`, `run.sh`, `t/batch.sh`). Leak helper subscribed to file
+start/end, printing new `_G` / `package.loaded` keys. One-process runs (stock vs `--no-auto-insulate`), check tier and
+gate tier: no name in the flag runs that the base runs lack (0 new in both). The check-tier flag run exits 1, as
+expected when files share state in one process (the runner's per-file processes don't).
+Flag applied to `run_one` (no `--helper`: Task 6 dropped), one `make check FULL=1` (under the lock) then `make gate`,
+00:05-00:21 on 2026-11-04, `pgrep -c busted` 0 before the gate; load at start 10.5 (check), 9.2 (gate).
+`results.sh` diffs against `base2` check1 / gate1: only `all files:` 2821 against 2817 (the four tests added since).
+| | wall s | user+sys CPU s | base2 CPU s (3 runs) |
+|---|---|---|---|
+| check | 203.5 | 2525.1 | 2677 / 2687 / 2776 |
+| gate | 634.2 | 7441.1 | 7501 / 7573 / 7559 |
+Base2's spread is ~100 s (check) and ~70 s (gate); the flag run sits 150 / 100 s under base2's best, but Tasks 4-5 landed
+since base2 and the runs were not interleaved with a flag-off control, so the difference cannot be attributed to the
+flag. No clear gain beyond the spread: flag reverted.
