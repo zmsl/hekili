@@ -616,6 +616,62 @@ describe("Forever Hunter through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- Task 8a-5 (owner 2026-11-04): the weave lasts 1.2 x the ranged shot time, read at each open in its own layer: the
+    -- belief's stat("UnitRangedDamage") (the evaluator's read), the forecast's ranged_speed.
+    it("times the weave at 1.2 x the shot time at each open, in the belief and in the forecast", function()
+        local S, F = weaveWorld(11)
+        local VS = H.ns.VirtualState
+        local t = H.ctl.now
+        shoot(t)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        local rs = VS.Stat("UnitRangedDamage")
+        local up, _, exp = F.Window("weave")
+        assert.is_true(up)
+        assert.is_true(math.abs(exp - (t + 1.2 * rs)) < 1e-6, tostring(exp))
+        H.ctl.now, H.ctl.combat = t + 0.5, false -- out of combat, a faster bow (the stats are read out of combat)
+        H.ctl.ranged[1] = 2.5
+        H.Fire("PLAYER_REGEN_ENABLED")
+        H.ctl.now, H.ctl.combat = t + 1, true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        assert.are.equal(2.5, (VS.Stat("UnitRangedDamage")))
+        shoot(t + 1.5)
+        assert.is_true(headless.cycle(H, t + 1.6))
+        up, _, exp = F.Window("weave")
+        assert.is_true(up)
+        assert.is_true(math.abs(exp - (t + 1.5 + 3)) < 1e-6, tostring(exp)) -- the next open follows it
+        -- the forecast's own open (the packs' open_window line), nothing closing it: down at 1.2 x ranged_speed
+        S.reset("Primary", true)
+        S.closeWindow("weave")
+        local speed = S.ranged_speed
+        assert.is_true(speed > 0, tostring(speed))
+        S.openWindow("weave")
+        assert.is_true(math.abs(S.window.weave.remains - 1.2 * speed) < 1e-6, tostring(S.window.weave.remains))
+        S.advance(1.2 * speed - 0.01)
+        assert.is_true(S.window.weave.up)
+        S.advance(0.02)
+        assert.is_false(S.window.weave.up)
+        S.reset("Primary", true)
+        S.closeWindow("weave")
+        S.swings.ranged_speed = 2 -- a changed shot time: the next forecast open follows it
+        S.openWindow("weave")
+        assert.is_true(math.abs(S.window.weave.remains - 2.4) < 1e-6, tostring(S.window.weave.remains))
+        assert.are.same({}, H.errors)
+    end)
+
+    it('keeps Beast Mastery\'s hha open for the fight ("combat"), closed at combat end', function()
+        local _, F = weaveWorld(11)
+        assert.are.equal("combat", H.Hekili.Class.windows.hha.duration)
+        local t = H.ctl.now
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_true((F.Window("hha")))
+        assert.is_true(headless.cycle(H, t + 4000))
+        assert.is_true((F.Window("hha")))
+        H.ctl.combat = false
+        H.Fire("PLAYER_REGEN_ENABLED")
+        assert.is_true(headless.cycle(H, t + 4000.1))
+        assert.is_false((F.Window("hha")))
+    end)
+
     it("forecasts no weave open at the pull, before any shot", function()
         local S, F = weaveWorld(11)
         lines(

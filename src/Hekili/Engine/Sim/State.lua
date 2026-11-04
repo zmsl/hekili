@@ -1602,16 +1602,23 @@ do
         WIN.up[ w ], WIN.openedAt[ w ], WIN.expiresAt[ w ], WIN.refreshes[ w ], WIN.step[ w ] = false, 0, 0, 0, 0
     end
 
+    -- `dur`: a line's duration=, else nil for the registered length (seconds, math.huge for "combat", or its function
+    -- run under state now, at this open or counted refresh; a non-positive or non-number answer opens nothing).
     local function open( w, t, dur, refresh )
         if WIN.up[ w ] and WIN.expiresAt[ w ] <= t then close( w ) end -- expired: a fresh open
+        local fresh = not WIN.up[ w ]
+        if not fresh and not ( refresh and ( WIN.maxRef[ w ] < 0 or WIN.refreshes[ w ] < WIN.maxRef[ w ] ) ) then return end
+        if not dur then
+            dur = WIN.dur[ w ]
+            if type( dur ) == "function" then dur = dur() end
+            if type( dur ) ~= "number" or not ( dur > 0 ) then return end
+        end
         local e = t + dur
-        if not WIN.up[ w ] then
+        if fresh then
             WIN.up[ w ], WIN.openedAt[ w ], WIN.refreshes[ w ] = true, t, 0
             WIN.step[ w ] = WIN.nSteps[ w ] > 0 and 1 or 0
-        elseif refresh and ( WIN.maxRef[ w ] < 0 or WIN.refreshes[ w ] < WIN.maxRef[ w ] ) then
-            WIN.refreshes[ w ] = WIN.refreshes[ w ] + 1
         else
-            return
+            WIN.refreshes[ w ] = WIN.refreshes[ w ] + 1
         end
         local cap = WIN.maxDur[ w ] > 0 and WIN.openedAt[ w ] + WIN.maxDur[ w ] or e
         WIN.expiresAt[ w ] = e < cap and e or cap
@@ -1652,7 +1659,7 @@ do
             local t = WIN.tables[ n ] or setmetatable( { next = setmetatable( {}, mtNext ) }, mtWindow )
             WIN.tables[ n ], WIN.of[ t ], WIN.of[ t.next ] = t, n, n
             state.window[ name ] = t
-            WIN.dur[ n ], WIN.refresh[ n ] = d.duration, d.refresh == true
+            WIN.dur[ n ], WIN.refresh[ n ] = d.duration == "combat" and math.huge or d.duration, d.refresh == true
             WIN.maxDur[ n ], WIN.maxRef[ n ] = d.max_duration or 0, d.max_refresh or -1
             WIN.steps[ n ], WIN.nSteps[ n ] = d.steps or false, d.steps and #d.steps or 0
             local lastAt = {} -- ability key -> its last step position
@@ -1680,7 +1687,7 @@ do
         local w = WIN.byKey[ name ]
         if not w then return end
         if refresh == nil then refresh = WIN.refresh[ w ] end
-        open( w, state.query_time, type( duration ) == "number" and duration > 0 and duration or WIN.dur[ w ], refresh )
+        open( w, state.query_time, type( duration ) == "number" and duration > 0 and duration or nil, refresh )
     end
 
     function state.closeWindow( name )

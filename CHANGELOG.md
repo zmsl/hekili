@@ -7,7 +7,7 @@
 - The engine supports rotation windows (spans the game shows no buff for), and the priority editor can add their Open Window and Close Window lines. No built-in priority uses them yet.
 
 ### Changed
-- Hunters: the melee weave's strikes can show at range with the Movement toggle on, from an Auto Shot whose next melee swing comes before your next shot until that swing (the weave window), and an open weave closes when you Raptor Strike. Multi-Shot no longer shows in these packs (its only timing term was a walk time). With it off, they show only in melee as before.
+- Hunters: the melee weave's strikes can show at range with the Movement toggle on, from an Auto Shot whose next melee swing comes before your next shot until that swing (the weave window), and an open weave closes when you Raptor Strike. With it off, they show only in melee as before.
 - Less memory churn in big pulls: the engine no longer builds its nameplate debug text on every update, only when you take a snapshot.
 - Less work per update, mostly for casters: the engine does less setup and bookkeeping each time the icons refresh, and works out an ability's cost once per moment instead of repeatedly. The recommendations are unchanged.
 - Auras on your target no longer trigger extra refreshes in combat, which matters most in raids.

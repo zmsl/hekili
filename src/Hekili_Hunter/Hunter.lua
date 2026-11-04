@@ -368,12 +368,19 @@ end)
 -- evaluator answers what the shot's now() decided (`weaveShot`), so a window the shot opened has a true evaluation
 -- before its close edge and one it did not open gets no edge. The ranged speed is UnitRangedDamage's (the belief's
 -- stat read; the now context has no ranged clock speed). A due main-hand swing (none comes out of melee) counts as
--- before the shot. `duration` is a constant, so it is only a cap: the forecast's window (each pack's open_window line,
--- tools/wowsims/specs/hunter_*.lua `extra`) ends at Raptor Strike's handler or that cap; the forecast looks a GCD or
--- two ahead, inside one shot cycle. (Both functions run in the belief's now context: the test is written in each.)
+-- before the shot. Its length (owner 2026-11-04) is 1.2 x the ranged shot time at each open, a liberal cap since the
+-- window mostly closes on its own: in the belief the evaluator's read (`now_duration`), in the forecast ranged_speed's
+-- (`duration`, under state), each written in its own layer as now() and handler() are. The forecast's window (each
+-- pack's open_window line, tools/wowsims/specs/hunter_*.lua `extra`) ends at Raptor Strike's handler or that length.
+-- (The evaluator and the shot's now() run in the belief's now context: the test is written in each.)
 local weaveShot = 0 -- the shot's now(): 1 it opened the window, 2 it did not; the evaluator reads it once (an upvalue)
+local weaveCombat = 0 -- the evaluator's last `combat`: its fall to 0 (combat end) clears a weaveShot left unread
 spec:RegisterWindow("weave", {
     evaluator = function()
+        if combat == 0 and weaveCombat > 0 then
+            weaveShot = 0
+        end
+        weaveCombat = combat
         if weaveShot > 0 then
             local opened = weaveShot == 1
             weaveShot = 0
@@ -388,7 +395,12 @@ spec:RegisterWindow("weave", {
             and last + mainhand_speed <= shot + rs
     end,
     close_on_false = true,
-    duration = 3600,
+    duration = function()
+        return 1.2 * swings.ranged_speed -- ranged_speed's read
+    end,
+    now_duration = function()
+        return 1.2 * stat("UnitRangedDamage")
+    end,
 })
 
 spec:RegisterAbilities({
@@ -742,14 +754,15 @@ spec:RegisterTalents({
 
 -- Beast Mastery's HHA (re-pin ruling R15; wowsims bm_weave's default_hawks APL at e2842f0a78: a sequence of Summon
 -- Hawk, Summon Hawk, Arcane Shot under "Use Summon Hawk" and "Use Arcane Shot", reset when complete): a stepped window
--- that loops, open for the fight. Its evaluator is the fight (`combat`), not a constant: a held true opens once ever,
--- since combat end closes every window and keeps the last evaluation. On the kit: a tree's own registration would
--- land in the kit's table anyway (a tree reads its fields through the kit), and only Beast Mastery's pack reads it.
+-- that loops, open for the fight ("combat": no timer). Its evaluator is the fight (`combat`), not a constant: a held
+-- true opens once ever, since combat end closes every window and keeps the last evaluation. On the kit: a tree's own
+-- registration would land in the kit's table anyway (a tree reads its fields through the kit), and only Beast
+-- Mastery's pack reads it.
 spec:RegisterWindow("hha", {
     evaluator = function()
         return combat > 0
     end,
-    duration = 3600,
+    duration = "combat",
     steps = { "summon_hawk", "summon_hawk", "arcane_shot" },
     loop = true,
 })

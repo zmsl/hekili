@@ -67,6 +67,41 @@ describe("RegisterWindow", function()
         assert.has_error(function() -- spec 0's windows merge beside the spec's
             H.Hekili.Class.specs[0]:RegisterWindow("twice", { duration = 6 })
         end)
+        -- Task 8a-5: a duration is a positive number, "combat", or the forecast's function beside the belief's
+        local f = function()
+            return 2
+        end
+        for name, data in pairs({
+            zero = { duration = 0 },
+            word = { duration = "fight" },
+            flag = { duration = true },
+            fn_alone = { duration = f }, -- a function needs the belief's own (`now_duration`)
+            now_alone = { duration = 6, now_duration = f },
+            now_bad = { duration = f, now_duration = 2 },
+        }) do
+            assert.has_error(function()
+                kit:RegisterWindow("bad_" .. name, data)
+            end, nil, name)
+        end
+    end)
+
+    it('takes "combat" and a function duration with its now_duration; the record carries both', function()
+        local f, g = function()
+            return 2
+        end, function()
+            return 3
+        end
+        kit:RegisterWindow("fight_window", { duration = "combat" })
+        kit:RegisterWindow("fn_window", { duration = f, now_duration = g })
+        H.Hekili:SpecializationChanged()
+        local def = H.ns.VirtualStateInternal.def
+        local got = {}
+        for w = 1, #def.windows do
+            got[def.windows[w].key] = def.windows[w]
+        end
+        assert.are.equal("combat", got.fight_window.duration)
+        assert.are.equal(g, got.fn_window.now_duration)
+        assert.are.equal("function", type(got.fn_window.duration))
     end)
 end)
 
@@ -148,11 +183,14 @@ describe("the core's windows", function()
 
     -- Boots, registers `windows` (name -> RegisterWindow data) and a test clock (seconds to a swing 1.2 s ahead of
     -- `now`, as mainhand_remains reads a projected swing), targets a mob and runs one cycle.
-    local function core(windows)
+    local function core(windows, exprs)
         H = boot()
         local kit = H.Hekili.Class.kit
         for name, data in pairs(windows) do
             kit:RegisterWindow(name, data)
+        end
+        for name, f in pairs(exprs or {}) do
+            kit:RegisterStateExpr(name, f)
         end
         kit:RegisterStateExpr("test_swing_remains", function()
             local v = 1.2 - (query_time - now) -- luacheck: ignore 113 (state's fields: the expression runs under state)
@@ -237,6 +275,66 @@ describe("the core's windows", function()
         S.closeWindow("d")
         S.closeWindow("d") -- a close acts only on an open window
         assert.is_false(S.window.d.up)
+    end)
+
+    -- Task 8a-5: a function duration runs under state at each open and counted refresh; "combat" has no timer
+    it("evaluates a function duration under state at each open and each counted refresh", function()
+        local len, calls = 2, 0
+        core({
+            w = {
+                duration = function()
+                    calls = calls + 1
+                    return test_len -- luacheck: ignore 113 (state's field: the duration runs under state)
+                end,
+                now_duration = function()
+                    return 1
+                end,
+                max_refresh = 1,
+            },
+        }, {
+            test_len = function()
+                return len
+            end,
+        })
+        S.reset("Primary")
+        S.openWindow("w")
+        near(2, S.window.w.remains)
+        S.closeWindow("w")
+        len = 3
+        S.reset("Primary")
+        S.openWindow("w")
+        near(3, S.window.w.remains) -- follows the changed value
+        len = 5
+        S.reset("Primary")
+        calls = 0
+        S.openWindow("w")
+        S.advance(1)
+        S.openWindow("w", nil, true) -- a counted refresh re-evaluates it
+        near(5, S.window.w.remains)
+        assert.are.equal(2, calls)
+        calls = 0
+        S.openWindow("w") -- no refresh: nothing happens, nothing is evaluated
+        S.openWindow("w", nil, true) -- max_refresh = 1: refused, not evaluated
+        assert.are.equal(0, calls)
+        S.openWindow("w", 1.5, true) -- an open_window line's duration= still overrides it
+        near(5, S.window.w.remains)
+        S.closeWindow("w")
+        S.openWindow("w", 1.5)
+        near(1.5, S.window.w.remains)
+        assert.are.equal(0, calls)
+        len = 0 -- no positive length: no open
+        S.reset("Primary")
+        S.openWindow("w")
+        assert.is_false(S.window.w.up)
+    end)
+
+    it('never times out a "combat" window in the forecast', function()
+        core({ w = { duration = "combat" } })
+        S.reset("Primary")
+        S.openWindow("w")
+        S.advance(3000)
+        assert.is_true(S.window.w.up)
+        near(3000, S.window.w.elapsed)
     end)
 
     it("opens from a handler in the forecast only, never in the belief", function()

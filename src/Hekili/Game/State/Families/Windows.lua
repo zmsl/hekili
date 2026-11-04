@@ -3,7 +3,9 @@
 -- window's evaluator (RegisterWindow, Engine/Schema/Spec.lua; `def.windows`) is bound into the `now` context
 -- (Families/Now.lua) and runs once per Drain after the fold (I.RunWindows). Edges: false->true opens a closed window, or
 -- with `refresh` restarts an open one (counted once per edge against `max_refresh`, bounded by `max_duration` from the
--- first open); a condition held true does nothing; true->false closes only with `close_on_false`; a close acts only on
+-- first open; the length is the declaration's seconds, none for "combat", or its `now_duration` run in the `now`
+-- context at that open or refresh, a raise counted and a non-positive, secret or non-number answer opening nothing); a
+-- condition held true does nothing; true->false closes only with `close_on_false`; a close acts only on
 -- an open window; an open ends at its expiry and at combat end (the last evaluations kept, so a held condition needs a
 -- new edge). A stepped window advances on our observed cast of its due step's ability (I.WindowCast, from the cast
 -- fold); a later step's cast follows `on_deviation`; with `strict`, any other on-GCD cast ends it. The core reads it
@@ -23,7 +25,8 @@ local W = {
     n = 0,
     byKey = {},
     eval = {}, -- the evaluator bound to the `now` context, or false
-    dur = {},
+    dur = {}, -- seconds (math.huge: "combat")
+    durFn = {}, -- `now_duration` bound to the `now` context, or false
     refresh = {},
     maxDur = {}, -- 0: no cap
     maxRef = {}, -- -1: no cap
@@ -48,19 +51,44 @@ local function close(w)
     W.up[w], W.openedAt[w], W.expiresAt[w], W.refreshes[w], W.step[w] = false, 0, 0, 0, 0
 end
 
+-- Window w's length for an open at t: its seconds, or its `now_duration`'s plain positive answer (0: none).
+local function length(w, t)
+    local f = W.durFn[w]
+    if not f then
+        return W.dur[w]
+    end
+    I.NowAt(t)
+    local ok, v = pcall(f)
+    if not ok then
+        I.nowErrors, I.nowError = I.nowErrors + 1, v
+        return 0
+    end
+    local api = I.api
+    if api and api.issecretvalue(v) or type(v) ~= "number" or not (v > 0) then
+        return 0
+    end
+    return v
+end
+
 -- The edge rules' open: a closed window opens at t; an open one restarts with `refresh` within its caps.
 local function open(w, t)
     if W.up[w] and W.expiresAt[w] <= t then
         close(w) -- expired, not yet closed (expiry is applied after the fold): a fresh open, not a refresh
     end
-    local e = t + W.dur[w]
-    if not W.up[w] then
+    local fresh = not W.up[w]
+    if not fresh and not (W.refresh[w] and (W.maxRef[w] < 0 or W.refreshes[w] < W.maxRef[w])) then
+        return
+    end
+    local d = length(w, t)
+    if d <= 0 then
+        return
+    end
+    local e = t + d
+    if fresh then
         W.up[w], W.openedAt[w], W.refreshes[w] = true, t, 0
         W.step[w] = W.nSteps[w] > 0 and 1 or 0
-    elseif W.refresh[w] and (W.maxRef[w] < 0 or W.refreshes[w] < W.maxRef[w]) then
-        W.refreshes[w] = W.refreshes[w] + 1
     else
-        return
+        W.refreshes[w] = W.refreshes[w] + 1
     end
     local cap = W.maxDur[w] > 0 and W.openedAt[w] + W.maxDur[w] or e
     W.expiresAt[w] = e < cap and e or cap
@@ -177,7 +205,9 @@ I.OnBuild(function(def)
         W.byKey[d.key] = w
         local f = d.evaluator
         W.eval[w] = type(f) == "function" and setfenv(f, I.nowCtx) or false
-        W.dur[w] = type(d.duration) == "number" and d.duration or 0
+        W.dur[w] = d.duration == "combat" and math.huge or type(d.duration) == "number" and d.duration or 0
+        local nd = d.now_duration
+        W.durFn[w] = type(nd) == "function" and setfenv(nd, I.nowCtx) or false
         W.refresh[w] = d.refresh == true
         W.maxDur[w] = type(d.max_duration) == "number" and d.max_duration or 0
         W.maxRef[w] = type(d.max_refresh) == "number" and d.max_refresh or -1

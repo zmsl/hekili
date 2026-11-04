@@ -205,6 +205,83 @@ describe("rotation windows (belief)", function()
             assert.are.same({ true, 7, 13, 0, 0 }, W("w"))
         end)
 
+        -- Task 8a-5: a function duration's belief side (`now_duration`) runs in the now context at each open and counted
+        -- refresh; the forecast's `duration` function is never run here
+        it("evaluates now_duration at each open and counted refresh, in the now context", function()
+            local len = 2
+            flagged("w", {
+                refresh = true,
+                duration = function()
+                    error("the forecast's, never the belief's")
+                end,
+                now_duration = function()
+                    return now > 0 and len or 0 -- luacheck: ignore 113 (the now context)
+                end,
+            })
+            start()
+            on = true
+            drain(3)
+            assert.are.same({ true, 3, 5, 0, 0 }, W("w"))
+            on = false
+            drain(4)
+            len = 4
+            on = true
+            drain(4.5) -- a counted refresh: the new value
+            assert.are.same({ true, 3, 8.5, 1, 0 }, W("w"))
+            drain(8.5) -- expired
+            on = false
+            drain(9)
+            len = 1
+            on = true
+            drain(10) -- a fresh open follows the changed value
+            assert.are.same({ true, 10, 11, 0, 0 }, W("w"))
+            assert.are.equal(0, I.nowErrors)
+        end)
+
+        it("a now_duration that raises or gives no positive number opens nothing; a raise is counted", function()
+            local v = "x"
+            flagged("w", {
+                duration = function()
+                    return 1
+                end,
+                now_duration = function()
+                    if v == "x" then
+                        error("boom")
+                    end
+                    return v
+                end,
+            })
+            start()
+            local e = I.nowErrors
+            on = true
+            drain(3)
+            assert.are.equal(e + 1, I.nowErrors)
+            assert.is_false(W("w")[1])
+            for k, bad in ipairs({ 0, -1, "2", false }) do
+                v = bad
+                on = false
+                drain(3 + k)
+                on = true
+                drain(3.5 + k)
+                assert.is_false(W("w")[1], tostring(bad))
+            end
+            assert.are.equal(e + 1, I.nowErrors)
+        end)
+
+        it('"combat" never times out and closes at combat end', function()
+            flagged("w", { duration = "combat" })
+            start()
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            on = true
+            drain(3)
+            drain(100000)
+            assert.is_true(W("w")[1])
+            ctl.now = 100001
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            drain(100001.1)
+            assert.is_false(W("w")[1])
+        end)
+
         it("a raising evaluator counts in I.nowErrors and reads false", function()
             window("w", {
                 duration = 6,
@@ -442,7 +519,12 @@ describe("rotation windows (belief)", function()
     it("allocates nothing across 1000 Drains with two windows", function()
         local on = false
         window("a", {
-            duration = 0.5,
+            duration = function()
+                return 0.5
+            end,
+            now_duration = function()
+                return now > 0 and 0.5 or 0 -- luacheck: ignore 113 (the now context)
+            end,
             refresh = true,
             evaluator = function()
                 return on and usable.spender_c and nextSwing(1) >= 0
