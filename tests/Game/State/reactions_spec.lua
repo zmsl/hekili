@@ -287,6 +287,33 @@ describe("reactions", function()
             assert.are.equal(0, I.nowErrors)
         end)
 
+        -- one-event-feed plan Step 1 (Task 8a-6): the verdict's retraction re-opens the swing for the rage model only;
+        -- the re-open's row paid again settles nothing twice
+        it("runs once across a verdict's retraction and its re-open paid again", function()
+            build({ reaction("swung", "target", "swing") })
+            local id
+            local S, stage = I.Sources, I.Sources.Stage
+            S.Stage = function(kind, t, a, b, c)
+                if kind == VS.Obs.Swing and c == 1 then
+                    id = b
+                end
+                return stage(kind, t, a, b, c)
+            end
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.36 -- the core band: final
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            drain(10.38)
+            assert.are.equal(1, runs.swung)
+            assert.is_true(I.CreditVerdict(id, false, 10.4, true))
+            ctl.now = 10.55
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 31, 1)
+            drain(10.6)
+            drain(13)
+            S.Stage = stage
+            assert.are.equal(1, runs.swung)
+        end)
+
         it("hand filters by the hand the belief attributed the swing to (Obs.SwingSettled's a)", function()
             build({ hand("main_sw", "main"), hand("off_sw", "off"), reaction("any_sw", "target", "swing") })
             local S, Obs, K = I.Sources, VS.Obs, I.HitKind

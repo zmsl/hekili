@@ -3216,13 +3216,16 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         assert.are.same({ { "SWING_DAMAGE", 45, 10 } }, rows)
     end)
 
-    it("closes a retracted swing past its window as SWING_MISSED (two rows for that swing, decision D9)", function()
+    -- one-event-feed plan Step 1 (owner 2026-11-04): the retraction is the belief's; the core keeps its one row (was
+    -- a second SWING_MISSED, decision D9)
+    it("retracts a swing past its window with no second row", function()
         setup(8)
         answer(9.95, SPENDER_A, false)
         ctl.usable[SPENDER_A] = NOT_KNOWN -- the landing poll: no rung, the record stays open
         credit(10, 45, 1.2)
         answer(11.6, SPENDER_A, false) -- 0.4 s after the wound, 1.6 s after the swing: past its 1.5 s window
-        assert.are.same({ { "SWING_DAMAGE", 45, 10 }, { "SWING_MISSED", "MISS", 10 } }, rows)
+        assert.are.equal(1, L.oracle.retracted)
+        assert.are.same({ { "SWING_DAMAGE", 45, 10 } }, rows)
     end)
 
     it("retracts a credited crit with its swing: lo back at its pre-credit value", function()

@@ -762,6 +762,104 @@ describe("the ticket pool", function()
             assert.are.equal(0, (counted()))
         end)
 
+        -- one-event-feed plan Step 1 (Task 8a-6): a row reaches the core only once its outcome is settled, once per
+        -- swing; the belief's provisional credits and the verdict's retraction stay belief-only
+        local function swingRows(hand)
+            local n = 0
+            for _, r in ipairs(got) do
+                local off = (r[2] == "SWING_DAMAGE" and r[21]) or (r[2] == "SWING_MISSED" and r[13])
+                if (r[2] == "SWING_DAMAGE" or r[2] == "SWING_MISSED") and (hand == nil or hand == (off and 2 or 1)) then
+                    n = n + 1
+                end
+            end
+            return n
+        end
+        local function settled(hand)
+            local n = 0
+            for _, s in ipairs(staged) do
+                n = n + ((s[1] == VS.Obs.SwingSettled and (hand == nil or s[4] == hand)) and 1 or 0)
+            end
+            return n
+        end
+        local function recordOf(c)
+            for k = #staged, 1, -1 do
+                if staged[k][1] == VS.Obs.Swing and staged[k][3] == c then
+                    return staged[k][2]
+                end
+            end
+        end
+
+        it("emits no row for a TENT swing credit its own avoid replaces; the avoid's row at the close", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.2 -- before the core band: TENT
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(0, swingRows())
+            ctl.now = 10.47
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- replaced
+            ctl.Tick(13)
+            assert.are.equal(1, swingRows())
+            assert.are.same({ "SWING_MISSED", 10, "DODGE" }, { got[#got][2], got[#got][1], got[#got][12] })
+        end)
+
+        it("emits a TENT swing's row once, at its final, back-dated to the swing", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            ctl.now = 10.2
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 30, 1)
+            assert.are.same({ T.TENT, 0, 0 }, { T.state[i], swingRows(), settled() })
+            ctl.Tick(12)
+            assert.are.same({ 1, 1 }, { swingRows(), settled() })
+            assert.are.same(
+                { "SWING_DAMAGE", 10, 30, true },
+                { got[#got][2], got[#got][1], got[#got][12], got[#got][18] }
+            )
+            ctl.Tick(13)
+            assert.are.equal(1, swingRows())
+        end)
+
+        it("emits no second row when the verdict retracts a settled swing past its window", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 0.5, 0) -- its window ends at 10.5
+            ctl.now = 10.47 -- the core band: final
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(1, swingRows())
+            assert.is_true(I.CreditVerdict(recordOf(1), false, 10.6, true)) -- short and firm: retracted
+            assert.are.equal(1, I.Log.oracle.retracted)
+            ctl.Tick(10.7)
+            ctl.Tick(13)
+            assert.are.same({ 1, 1 }, { swingRows(), settled() })
+        end)
+
+        it("settles a retracted swing's re-open paid again never twice: no second row; its rage again", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.36 -- the core band: final
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.is_true(I.CreditVerdict(recordOf(1), false, 10.4, true)) -- retracted: the swing re-opened
+            ctl.now = 10.55 -- still its core band: the re-open's own row
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 31, 1)
+            ctl.Tick(13)
+            assert.are.equal(2, count(VS.Obs.Swing, 1)) -- the belief's rage model credits it again
+            assert.are.same({ 1, 1 }, { swingRows(), settled() })
+        end)
+
+        it("settles twin hands swung in one ms each once: the guard is per hand (K14)", function()
+            ctl.now = 7
+            ctl.damage = { 28, 32, 28, 32 }
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.Fire("PLAYER_SWING", 2.6, 1)
+            ctl.now = 10.474 -- the main hand's median lag
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            ctl.now = 10.703 -- the off hand's
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 29, 1)
+            ctl.Tick(13)
+            assert.are.same({ 1, 1, 1, 1 }, { swingRows(1), swingRows(2), settled(1), settled(2) })
+        end)
+
         it("pays a pass (a) row final at once: no TENT", function()
             ctl.now = 10
             ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)

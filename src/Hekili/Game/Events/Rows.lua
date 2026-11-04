@@ -114,6 +114,20 @@ local function emit(k, xx, dst, action, flag, amount, t, sch)
     end
 end
 
+-- (one-event-feed plan Step 1) Per hand, the anchor of its latest settled swing: a swing's row and its
+-- Obs.SwingSettled (and a white crit's Obs.Crit) go out once. A verdict's re-open paid again (I.CreditVerdict) or
+-- closing unpaid settles nothing twice; the belief's rage (Obs.Swing) still follows it. Per hand, so twin hands swung
+-- in one ms each settle (K14). shortcut: only the latest anchor, so a hand's older swing settling after a newer one
+-- lets the newer one's re-open settle again; keep more anchors if the row feed counts one.
+local settledAt = { 0, 0 }
+local function settle(hand, at)
+    if settledAt[hand] == at then
+        return false
+    end
+    settledAt[hand] = at
+    return true
+end
+
 -- Our cast's own avoid for the belief (Families/Now.lua): an action that refuses the whole ability, staged at the
 -- ticket's anchor (the refund belongs there).
 local function avoided(i, t, act)
@@ -127,7 +141,7 @@ end
 -- avoid it still holds is settled now (no wound can take it back): staged at its row's time (Families/Now.lua's
 -- reactions). A swing closing with no row stages nothing: no outcome was observed.
 T.onExpire = function(i)
-    if T.kind[i] == MELEE then
+    if T.kind[i] == MELEE and settle(T.x[i], T.at[i]) then
         local held = T.avoid[i] ~= ""
         emit(MELEE, T.x[i], T.guid[i], held and T.avoid[i] or "WOUND", "", 0, T.at[i], 1)
         if held and T.state[i] == T.PROV then -- only a ticket still provisional (T.Provisional) settles its avoid here
@@ -231,12 +245,19 @@ end)
 -- A spell row paid to ticket p at pass `pass` with n candidates at that pass: staged unless another candidate implies
 -- a different state (divergent, T.Divergent: it stages nothing, spec §4.2), then emitted. A divergent avoid emits no
 -- SPELL_MISSED (Hekili's `missable` would drop the other cast's debuff on it). A provisional payment (TENT,
--- attribution-recovery decision 48) holds its Crit or Avoided until it is final (T.onFinal) or replaced.
+-- attribution-recovery decision 48) holds its Crit or Avoided and its row until it is final (T.onFinal) or replaced.
 local rerouting = false -- a displaced row re-offered (decision 48 as amended): it never teaches
+local quiet = {} -- per ticket: its held payment is a divergent avoid (no row at T.onFinal either)
+for k = 1, T.CAP do
+    quiet[k] = false
+end
 local function paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
     local divergent = (avoid or crit) and n > 1 and T.Divergent(p, t, pass, act, flag, amount, school, avoid)
     local kk, xx, dst, at0, sch = T.kind[p], T.x[p], T.guid[p], T.at[p], T.school[p]
     local held = T.PayTentative(p, t, avoid, amount, flag, n == 1 and not rerouting, pass, act, school)
+    if held then
+        quiet[p] = divergent and avoid
+    end
     if divergent then
         T.divergent = T.divergent + 1
     elseif held then
@@ -248,7 +269,7 @@ local function paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
     end
     L.credited[3] = L.credited[3] + 1
     L.fight.paid = L.fight.paid + amount
-    if not (divergent and avoid) then
+    if not held and not (divergent and avoid) then
         emit(kk, xx, dst, act, flag, amount, (kk == TICKS or kk == CHANNEL) and t or at0, sch > 0 and sch or school)
     end
 end
@@ -314,15 +335,17 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
         T.PayTentative(credited, t, false, amount, flag, second < L.THETA, (core and not rerouting) and 1 or 2, act, 1)
     L.credited[xx] = L.credited[xx] + 1
     f.paid = f.paid + amount
-    emit(MELEE, xx, dst, act, flag, amount, at0, 1)
     S.Stage(Obs.Swing, at0, xx, id, confirm and 7 or 1) -- landed (or confirmed), at the swing's time: its rage
     if flag == "CRITICAL" then
         S.Stage(Obs.Swing, t, xx, id, 3) -- the same record: a retraction takes the crit back too
-        if not tent then -- final (pass 1: T.PayTentative): no row can displace it, so the crit is settled (reactions)
+    end
+    -- final (pass 1: T.PayTentative): no row can displace it, so the swing is settled: its row, its crit and
+    -- SwingSettled (reactions), once per swing; a TENT one at T.onFinal
+    if not tent and settle(xx, at0) then
+        emit(MELEE, xx, dst, act, flag, amount, at0, 1)
+        if flag == "CRITICAL" then
             S.Stage(Obs.Crit, t, 0, at0, 0)
         end
-    end
-    if not tent then -- the landed swing settled, at its row (reactions; a TENT one at T.onFinal)
         S.Stage(Obs.SwingSettled, t, xx, at0, I.HitKind.WOUND)
     end
 end
@@ -399,24 +422,43 @@ T.onLost = function(i)
 end
 
 -- A TENT ticket final: what it held is staged now (attribution-recovery decision 48), at its row's time (the outcome's:
--- a reaction's window counts from it). A swing's credit (and crit) is settled here too (its Obs.Swing came at the row).
+-- a reaction's window counts from it), and its row emitted (one-event-feed plan Step 1: at the ticket's anchor, a tick
+-- at its own time). A swing's credit (and crit) is settled here too (its Obs.Swing came at the row).
 T.onFinal = function(i)
-    local t = T.rowT[i]
+    local t, k = T.rowT[i], T.kind[i]
+    if k == MELEE then -- a landed swing (an avoid is PROV, never TENT): settled now
+        if settle(T.x[i], T.at[i]) then
+            emit(MELEE, T.x[i], T.guid[i], T.rowAct[i], T.rowFlag[i], T.rowAmt[i], T.at[i], 1)
+            if T.rowFlag[i] == "CRITICAL" then
+                S.Stage(Obs.Crit, t, 0, T.at[i], 0)
+            end
+            S.Stage(Obs.SwingSettled, t, T.x[i], T.at[i], I.HitKind.WOUND)
+        end
+        return
+    end
     if T.held[i] == 2 then
         avoided(i, t, T.rowAct[i])
     elseif T.held[i] == 1 then
         S.Stage(Obs.Crit, t, T.ab[i], T.at[i], 0)
-    elseif T.kind[i] == MELEE then -- a landed swing (an avoid is PROV, never TENT): settled now
-        if T.rowFlag[i] == "CRITICAL" then
-            S.Stage(Obs.Crit, t, 0, T.at[i], 0)
-        end
-        S.Stage(Obs.SwingSettled, t, T.x[i], T.at[i], I.HitKind.WOUND)
+    end
+    if not quiet[i] then
+        local sch = T.school[i]
+        emit(
+            k,
+            T.x[i],
+            T.guid[i],
+            T.rowAct[i],
+            T.rowFlag[i],
+            T.rowAmt[i],
+            (k == TICKS or k == CHANNEL) and t or T.at[i],
+            sch > 0 and sch or T.rowSch[i]
+        )
     end
 end
 
 -- A TENT ticket's first row displaced: its swing credit taken back (the record's verdict closed, Resources retracts
--- with its hold), a spell's held observation dropped (Tickets clears T.held); its emitted row stays. The row is then
--- re-offered (reroute); true when one of our tickets took it (else Tickets labels it foreign).
+-- with its hold), a spell's held observation dropped (Tickets clears T.held); it emitted no row (held to T.onFinal).
+-- The row is then re-offered (reroute); true when one of our tickets took it (else Tickets labels it foreign).
 T.onReplace = function(i, t)
     if T.kind[i] == MELEE then
         if T.rec[i] > 0 then
@@ -711,10 +753,11 @@ end)
 --- (harness design §2.2) The verdict on credit record `id` from a usability answer at t (`ok`: usable, false: short,
 --- nil: not usable for another reason; `firm`: the credit's floor reached the cost), asked by Families/Resources.lua:
 --- nil before ORACLE_MIN after the swing or on a nil `ok` (no verdict yet), false once one landing lag (the hand's
---- learned median) has passed since the wound or when the record is closed, true when judged. Usable confirms it (theta of its class / 1.1). Short and firm retracts it
---- (theta x 1.5): its swing is pending again inside its window on a unit still held, else closed as SWING_MISSED
---- (the SWING_DAMAGE row already went out: two rows for that swing, decision D9), and its wound counts as
---- background. Short and soft labels it at half weight (x 1.22). Allocates nothing.
+--- learned median) has passed since the wound or when the record is closed, true when judged. Usable confirms it (theta
+--- of its class / 1.1). Short and firm retracts it (theta x 1.5): its swing is pending again inside its window on a
+--- unit still held (the belief's rage model only: the re-open settles nothing twice, `settle`), and its wound counts
+--- as background. No row: the core keeps the landed SWING_DAMAGE (one-event-feed plan §2.4, owner 2026-11-04; was a
+--- second SWING_MISSED, decision D9). Short and soft labels it at half weight (x 1.22). Allocates nothing.
 function I.CreditVerdict(id, ok, t, firm)
     if not recOpen[id] then
         return false
@@ -740,8 +783,6 @@ function I.CreditVerdict(id, ok, t, firm)
         local hand, at = recHand[id], recAt[id]
         if t - at <= recW[id] and U.Find(recDst[id]) > 0 then
             T.OpenSwing(at, hand, recDst[id], recW[id], recRef[id], false, true)
-        else
-            emit(MELEE, hand, recDst[id], "MISS", "", 0, at, 1)
         end
         L.background = L.background + 1
     else
