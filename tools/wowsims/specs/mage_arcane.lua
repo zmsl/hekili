@@ -46,7 +46,9 @@
 -- the instant (lo 93, truth 963). Worked (world): the kit list gains fire_blast (mage_world.lua).
 -- Flicker (replay 0.67 -> 1.33/min): the belief's cooldown probe push (CD_PROBE, Families/Casts.lua) freezes a
 -- cooldown's believed wait at 0.50 at its end, so the filler shows one poll (arcane_wrath 0.50, 0.50 -> arcane_blast
--- at 17.8 and 59.4; fire_blast -> arcane_blast at 142.4): central, gaps.md CQ, fixed by Task 10b (ruling R21).
+-- at 17.8 and 59.4; fire_blast -> arcane_blast at 142.4): central, gaps.md CQ, Task 10b (ruling R21). At the fix's
+-- base (2007a9567) the replay's four flips were 121.0, 142.4 / 142.6 and 182.8, none of them Arcane Wrath's; the fix
+-- leaves all four (142.4: Fire Blast's end 0.1 s past the GCD's, outside the fix's cover), 1.33/min, ceiling 1.4.
 -- LIVE L10 4.8, L40 6.4, L60 10.0 s: the list has no cheap filler, so mana runs dry by about 90 s and it waits on Fire
 -- Blast's 340 (Evocation on its cooldown counts usable); wowsims's own fight idles 96.40 -> 104.70 -> 114.40.
 -- Leveling (ruling R22: L10/L40 keep the 6 s bar): L40's 6.4 s is 108.8-116.8, mana dry (60-230), Frostbolt
