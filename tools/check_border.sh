@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # The belief/core border (border batch 3; docs/dev/architecture.md §1, §5): Game/ (the belief) imports nothing from
 # the core, and the core reaches the belief only through ns.VirtualState.Drain, .Build and .SetLog (the owner's three
-# approved calls) and the facade. Comments are stripped before matching (`--` to the line's end; a string holding `--`
+# approved calls) and the facade, whose Facade.Window is the window read (re-pin decision 11, the owner's one new
+# crossing beside the three calls; no new pattern: ns.Facade is the allowed path). Comments are stripped before matching (`--` to the line's end; a string holding `--`
 # is cut short, never a miss); the approved calls are blanked before the core-side match.
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -22,5 +23,5 @@ for f in $(find src/Hekili/Engine src/Hekili/UI src/Hekili/Options src/Hekili/In
         grep -nE '\bVS\b|ns\.VirtualState|VirtualStateInternal' | sed "s|^|$f:|")
     [ -n "$hits" ] && { echo "$hits"; fail=1; }
 done
-[ $fail -eq 0 ] && echo "ok: Game/ names nothing of the core; the core names the belief only through Drain, Build and SetLog"
+[ $fail -eq 0 ] && echo "ok: Game/ names nothing of the core; the core names the belief only through Drain, Build and SetLog, and reads windows only through Facade.Window"
 exit $fail

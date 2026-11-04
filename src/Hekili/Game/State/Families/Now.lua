@@ -4,8 +4,10 @@
 -- fields (its cost, its cooldown or charge, the GCD), then runs the ability's `now` function, if the class file
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
 -- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
--- `summonPet`, `dismissPet`) and reads (`talent`, `buff`, `debuff`, the resources by key, `knownRank`, `stat`, `swingBase`,
--- `mainhand_speed`, `offhand_speed`, `weapon`, `equipped`, `healthMax`, `now`, `combat`, `level`) with belief meanings. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
+-- `summonPet`, `dismissPet`, `openWindow`, `closeWindow`) and reads (`talent`, `buff`, `debuff`, the resources by key,
+-- `knownRank`, `stat`, `swingBase`, `mainhand_speed`, `offhand_speed`, `weapon`, `equipped`, `healthMax`, `now`, `combat`,
+-- `level`, `lastSwing`, `nextSwing`, `usable`) with belief meanings. A window's evaluator (Families/Windows.lua) runs in
+-- the same context, reads only. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
 
@@ -221,6 +223,26 @@ NAMES.knownRank = VS.KnownRank
 -- handler cannot read.
 NAMES.stat, NAMES.swingBase, NAMES.healthMax = VS.Stat, VS.SwingBase, VS.HealthMax
 
+-- The swing reads a window's evaluator needs (re-pin design §3a): lastSwing(hand), the time of the last observed swing
+-- (0 none); nextSwing(hand), the next projected one at the context's time (0 unknown). Hands 1 main, 2 off, 3 ranged.
+NAMES.lastSwing = VS.LastSwing
+function NAMES.nextSwing(hand)
+    return VS.Swing(hand, T).est
+end
+
+-- usable.<key>: the last plain IsSpellUsable answer for a tracked ability (Sources/Power.lua's poll: spenders only; a
+-- secret answer is no observation there, so the last plain one stays); false before one and for an untracked key.
+local usableAns = {} -- by ability index
+NAMES.usable = setmetatable({}, {
+    __index = function(_, key)
+        local a = abByKey[key]
+        return a ~= nil and usableAns[a] == true
+    end,
+})
+I.On(Obs.Usable, function(o)
+    usableAns[o.a] = o.b == 1
+end)
+
 --- The known rank's spell ID for any rank ID of a tracked ability with a known rank, else `spellID` unchanged (nil,
 --- untracked or unknown). The client answers range only for a known rank: the facade's C_Spell.IsSpellInRange asks
 --- by it (Game/API/Facade.lua). Allocates nothing.
@@ -359,6 +381,19 @@ function NAMES.dismissPet(key)
     end
 end
 
+--- openWindow(name) / closeWindow(name): a rotation window's verbs (Families/Windows.lua), at the cast's time; the
+--- evaluator's edge rules (a close acts only on an open window). An unregistered name writes nothing.
+function NAMES.openWindow(name)
+    if live then
+        I.WindowOpen(name, T)
+    end
+end
+function NAMES.closeWindow(name)
+    if live then
+        I.WindowClose(name)
+    end
+end
+
 ----------------------------------------------------------------------------------------------------------------------
 -- The tracked set: keys to indices, proxies, and each ability's `now` bound to the context.
 
@@ -384,6 +419,7 @@ I.OnBuild(function(def)
     end
     for a = 1, A.n do
         abByKey[A.key[a]] = a
+        usableAns[a] = false
         A.known[a] = A.known[a] or false
         A.extra[a] = type(A.key[a]) == "string" and A.key[a]:sub(1, 6) == "track_"
         local obj = def.abilities[a]
@@ -486,6 +522,19 @@ local function automatic(a, t, kind, o)
     end
 end
 
+--- Runs a window's bound evaluator f in the shared context at belief time t, reads only (the verbs stay inert): true
+--- only for a plain `true` answer; a raise is counted and reads false. Allocates nothing.
+function I.NowEval(f, t)
+    I.NowAt(t)
+    local ok, v = pcall(f)
+    if not ok then
+        I.nowErrors, I.nowError = I.nowErrors + 1, v
+        return false
+    end
+    local api = I.api
+    return not (api and api.issecretvalue(v)) and v == true
+end
+
 -- Runs ability a's bound function f in the shared context at belief time t; an error is counted, never raised.
 local function call(f, a, t)
     curA = a
@@ -509,6 +558,7 @@ local function run(o, t)
     automatic(a, t, o.kind, o)
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
     I.castsRun = I.castsRun + 1
+    I.WindowCast(a) -- the stepped and strict windows' one per-cast hook (Families/Windows.lua), before the `now`
     if A.now[a] then
         call(A.now[a], a, t)
     end

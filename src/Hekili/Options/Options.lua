@@ -353,7 +353,7 @@ do
                         override = false,
                     },
 
-                    movement = { -- a spec opts in (NewClass `movement`); ON: its priority's moves to reach an ability count
+                    movement = { -- a spec opts in (NewClass `movement`); ON: moves toward an out-of-range ability are shown
                         key = "",
                         value = true,
                     },

@@ -1280,6 +1280,13 @@ function Facade.ForgetKnownRanks()
     end
 end
 
+--- (re-pin design §3a, decision 11) Rotation window `name` as the belief holds it (Families/Windows.lua): up, the
+--- open's time, its expiry, its refreshes and its step (0 unstepped); false, 0, 0, 0, 0 for a closed or unknown name.
+--- Belief-only, like KnownRank: the core's one window read (owner "yes"), never the aura copy. Allocates nothing.
+function Facade.Window(name)
+    return VS.Window(name)
+end
+
 Facade.Display = {}
 local function display(name, reason)
     local nsName, key = split(name)

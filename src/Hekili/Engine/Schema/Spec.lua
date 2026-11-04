@@ -1258,6 +1258,48 @@ local HekiliSpecMixin = {
         end
     end,
 
+    -- (re-pin design §3a, decision 11) A rotation window: a span the client shows no aura for (never where an aura fits).
+    -- `evaluator` (optional) is a function of the belief's reads, run once per update in the `now` context
+    -- (Game/State/Families/Windows.lua): its false->true edge opens the window. `duration` (s) is an open's length;
+    -- `refresh` lets a new edge restart an open one; `max_duration` (s, from the first open) and `max_refresh` cap that,
+    -- either, both or neither. `close_on_false`: the true->false edge closes it. `steps` (ability keys, registered
+    -- before the window), `loop`, `on_deviation` ("stay", "skip", "end"; default "stay") and `strict` (any other on-GCD
+    -- cast ends it) make it a stepped window. A plain record (Engine/Schema/Tracked.lua hands it to the belief).
+    RegisterWindow = function( self, name, data )
+        assert( type( name ) == "string" and type( data ) == "table", "RegisterWindow: needs a name and a table" )
+        assert( self.windows[ name ] == nil, "RegisterWindow: " .. name .. " is already registered" )
+        local ev, dur = data.evaluator, data.duration
+        assert( ev == nil or type( ev ) == "function", "RegisterWindow: " .. name .. "'s evaluator is not a function" )
+        assert( type( dur ) == "number" and dur > 0, "RegisterWindow: " .. name .. " needs a positive duration" )
+        local maxD, maxR = data.max_duration, data.max_refresh
+        assert( maxD == nil or type( maxD ) == "number" and maxD > 0, "RegisterWindow: " .. name .. "'s max_duration" )
+        assert( maxR == nil or type( maxR ) == "number" and maxR >= 0, "RegisterWindow: " .. name .. "'s max_refresh" )
+        local dev = data.on_deviation or "stay"
+        assert( dev == "stay" or dev == "skip" or dev == "end", "RegisterWindow: " .. name .. "'s on_deviation" )
+        local steps
+        if data.steps ~= nil then
+            assert( type( data.steps ) == "table" and #data.steps > 0, "RegisterWindow: " .. name .. "'s steps" )
+            steps = {}
+            for i, key in ipairs( data.steps ) do
+                assert( self.abilities[ key ], "RegisterWindow: " .. name .. "'s step " .. tostring( key ) .. " is no registered ability" )
+                steps[ i ] = key
+            end
+        end
+        self.windows[ name ] = {
+            key = name,
+            evaluator = ev,
+            duration = dur,
+            refresh = data.refresh == true,
+            max_duration = maxD,
+            max_refresh = maxR,
+            close_on_false = data.close_on_false == true,
+            steps = steps,
+            loop = data.loop == true,
+            on_deviation = dev,
+            strict = data.strict == true,
+        }
+    end,
+
     RegisterPack = function( self, name, version, import )
         self.packs[ name ] = {
             version = tonumber( version ),
@@ -1731,6 +1773,7 @@ local function buildSpec( id, key, name, texture, role, pClass, melee )
 
         pets = {},
         totems = {},
+        windows = {}, -- RegisterWindow's records by name
 
         potions = {},
 
@@ -2295,6 +2338,7 @@ function Hekili:SpecializationChanged()
     wipe( class.resourceAuras )
 
     wipe( class.pets )
+    wipe( class.windows )
 
     local specs = { currentID, 0 }
 
@@ -2434,6 +2478,10 @@ function Hekili:SpecializationChanged()
 
             for k, v in pairs( spec.pets ) do
                 if not class.pets[ k ] then class.pets[ k ] = v end
+            end
+
+            for k, v in pairs( spec.windows ) do
+                if not class.windows[ k ] then class.windows[ k ] = v end
             end
 
             for k, v in pairs( spec.totems ) do

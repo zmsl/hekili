@@ -206,8 +206,8 @@ end
 local debugprofilestop = debugprofilestop
 
 --- The fold, the core's one per-update call into the belief (Engine/Sim/Core.lua, after its guards): this frame's
---- staged observations, the polls, the fold to the cut-off, the settle, and the believed aura deltas as UNIT_AURA
---- (the core's own handler marks the rescan, G1; the drain writes nothing of the core's). Allocates nothing.
+--- staged observations, the polls, the fold to the cut-off, the settle, the windows, and the believed aura deltas as
+--- UNIT_AURA (the core's own handler marks the rescan, G1; the drain writes nothing of the core's). Allocates nothing.
 ---@param cutoff number GetTime() at the drain's entry
 function VS.Drain(cutoff)
     if not I.built then
@@ -229,6 +229,7 @@ function VS.Drain(cutoff)
     S.RunPolls(cutoff)
     I.Fold(cutoff)
     I.Settle(cutoff)
+    I.RunWindows(cutoff) -- after the fold: each window's evaluator once (Families/Windows.lua)
     I.DeliverAuraDeltas(cutoff)
     I.drainMs, I.drainCasts = debugprofilestop() - t0, I.castsRun - casts
 end

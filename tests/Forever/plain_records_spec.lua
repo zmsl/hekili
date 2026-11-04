@@ -19,12 +19,18 @@ local ABILITY = { "cooldown", "spend", "gcdTime", "usable", "now", "onCrit" }
 local AURA = { "duration", "tick_time", "base_tick_time" }
 local RESOURCE = { "max", "decay", "decayInterval", "swingValue", "swingOff", "swingCrit", "swingOffCrit", "taken" }
 local ENTRY = { "spirit", "mp5", "share", "value", "mult", "when" }
+local WINDOW = { "evaluator" } -- a window's (Families/Windows.lua), run once per Drain in the same context
 
 -- Every field the belief evaluates, by `visit(rec, field, path)`.
 local function eachField(def, visit)
     for a = 1, #def.abilities do
         for _, field in ipairs(ABILITY) do
             visit(def.abilities[a], field, tostring(def.abilities[a].key))
+        end
+    end
+    for w = 1, #def.windows do
+        for _, field in ipairs(WINDOW) do
+            visit(def.windows[w], field, "window " .. tostring(def.windows[w].key))
         end
     end
     for j = 1, #def.auras do

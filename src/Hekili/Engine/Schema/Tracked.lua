@@ -7,8 +7,8 @@
 -- fields, and the belief never runs auraRegen's `last`/`stop` or the flattened `handler`, `cast`, `known`. A function field may carry a static value the core computes under `state` once the talents are known
 -- (ns.TrackedStatics, after ns.updateTalents): the belief's order is the function in its context, then the static only
 -- if it raised (a working function's nil is its answer), then 0. Nothing in `def` runs under `state` at runtime: the
--- belief swaps a function's environment for the call (I.Eval, Game/State/Families/Casts.lua; `now`, `onCrit` and `taken`
--- are bound to the context), and no function it evaluates captures `state`, `Hekili` or `class`
+-- belief swaps a function's environment for the call (I.Eval, Game/State/Families/Casts.lua; `now`, `onCrit`, `taken` and
+-- a window's `evaluator` are bound to the context), and no function it evaluates captures `state`, `Hekili` or `class`
 -- (tests/Forever/plain_records_spec.lua). What only the core knows arrives as a number (`fsrOf`). Allocates;
 -- SpecializationChanged only.
 
@@ -37,11 +37,13 @@ local def = {
     pets = {}, -- the guardians: { key, cap, duration, slot } of each pet registered with a `cap` (Families/Pets.lua)
     providers = {}, -- outcomes, presence, viewer, coalesceCooldown, narrowUnitAura: the experimental toggles (providersOf)
     settings = {}, -- the spec's settings as plain values (Families/Now.lua's `settings`; refreshed by Hekili:SettingsChanged)
+    windows = {}, -- the rotation windows (RegisterWindow's records; `steps` as ability indexes): Families/Windows.lua
 }
-local LISTS = { "abilities", "abilityIds", "abilitySlot", "resources", "auras", "auraIds", "talents", "units", "pets" }
+local LISTS =
+    { "abilities", "abilityIds", "abilitySlot", "resources", "auras", "auraIds", "talents", "units", "pets", "windows" }
 
 local HANDS = { mainhand = 1, offhand = 2 }
-local NO_PETS = {} -- a test's stand-in class may have no `pets`
+local NO_PETS, NO_WINDOWS = {}, {} -- a test's stand-in class may have no `pets` or `windows`
 -- The sim's own generated entries (Spec.lua RegisterResource: the stepped decay and the hits taken), reserved names
 -- the walk below skips: they are no regen entries of the belief.
 local DECAY, TAKEN = "__decay", "__taken"
@@ -331,6 +333,18 @@ local function buildDef()
         if p.token == k and type(p.cap) == "number" and p.cap >= 1 then -- its token's entry, not an alias's
             insert(def.pets, { key = k, cap = floor(p.cap), duration = p.duration, slot = p.slot })
         end
+    end
+    -- the windows, a step's key resolved to its ability index (0: an ability the belief does not track, never due)
+    local indexOf = {}
+    for i = 1, #def.abilities do
+        indexOf[def.abilities[i].key] = i
+    end
+    for _, k in ipairs(sortedKeys(class.windows or NO_WINDOWS)) do
+        local rec = recordOf(class.windows[k])
+        for i = 1, rec.steps and #rec.steps or 0 do
+            rec.steps[i] = indexOf[rec.steps[i]] or 0
+        end
+        insert(def.windows, rec)
     end
     def.units[1], def.units[2] = "player", "target"
     settingsOf()

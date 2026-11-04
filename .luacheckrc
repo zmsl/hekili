@@ -102,6 +102,7 @@ local nowEnv = {
     "talent",
     "buff", "debuff", "knownRank", "stat", "swingBase", "healthMax", "now", "combat", "rage", "energy", "mana", "focus",
     "runic_power", "totem", "action", "settings", "haste",
+    "openWindow", "closeWindow", "lastSwing", "nextSwing", "usable", -- the windows (Families/Windows.lua)
 }
 files["tests/Game/State/"] = { std = "+busted", read_globals = nowEnv }
 files["tests/Game/Events/"] = { std = "+busted", read_globals = nowEnv }
