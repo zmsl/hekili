@@ -5,7 +5,7 @@
 -- default, spec.ts:82) and ui/features/settings/model/apply_defaults.ts:68,97 (spec.ts names no race: the class's
 -- first, Human, ui/sim/player/classes/capabilities_auto_gen.ts:65; the reaction time the UI defaults to, 100 ms) at
 -- the pin.
--- Ruling M9 (Arcane Blast): the log casts it in 1.5 s unhasted (1.128 s under the Mind Quickening Gem) and each run of
+-- Ruling M9 (Arcane Blast): the log casts it in 1.5 s unhasted (1.128 s under the Mind Quickening Gem, the old gear's trinket) and each run of
 -- charges ends 15 s after its first (2.26 -> 17.26, 44.67 -> 59.67, 60.17 -> 75.17: a later Blast adds a charge without
 -- refreshing it); the DB2 at 70338 says 2.5 s and 8 s, wowsims's data (build 70450, hotfix 112887) 1.5 s and 15 s. The
 -- kit and the world take wowsims's (Mage.lua's header); the in-game cast bar is the check. The log prices a charge as
@@ -29,13 +29,22 @@
 -- Frostbolt rank 10, Arcane Missiles rank 7); the world's pools and regen the logs' (6678; 29.13 a second, all of it
 -- while casting under Arcane Meditation 3/3). Evocation is never clipped in this fight (mana never reaches 99% inside
 -- the channel), so the belief keeping its aura after a clip does not show here.
--- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): the Mind Quickening Gem (19339, `use_items`),
+-- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): the trinket (`use_items`; 18820 since the re-pin, was 19339),
 -- Presence of Mind, Arcane Power and the mana gem, off the GCD, at the top of the list.
 -- Deviation (Evocation's clip): wowsims clips Evocation at >= 99% mana (its channelSpell interruptIf); the translator
 -- drops channelSpell.interruptIf (tools/wowsims/apl.lua; a shared gap, reported), so the pack's line has no clip
 -- condition; the world clips by wowsims's rule (mage_world.lua: any press while the belief channels it at 99%).
 -- Read Ley Line (1259705) and its Energized (1270842) resolve to the High Order Skyborne race file; the Human the UI
 -- defaults to never knows it. Innervate (29166, another player's) reads false (rule 4).
+-- Re-pin e2842f0a78 (Task 10): the build's talents (presets.ts ArcaneTalents 050205223101311531-5500003-003, "Deep
+-- Arcane" upstream; the pack name kept), the new list (pre-pull Read Ley Line and Arcane Wrath, Fire Blast, no
+-- Frostbolt), the gear's trinket the Talisman of Ephemeral Power (18820). Omitted 1 -> 0 (the trinket, mapped).
+-- Disagreements (P7; floor 0.96), decisions on-GCD 0.966 (58) top [arcane_wrath -> evocation 1; arcane_wrath ->
+-- fire_blast 1]: both the mana gem's restore not believed (the shared gap above): 34.50, lo 595 against the truth's
+-- 836 (8.6% against 12.1%, the 10% Evocation line; the Mana Ruby's +1040 at 13.00); 133.00, the Citrine's +843 at
+-- the instant (lo 93, truth 963). Worked (world): the kit list gains fire_blast (mage_world.lua).
+-- LIVE L10 4.8, L40 6.4, L60 10.0 s: the list has no cheap filler, so mana runs dry by about 90 s and it waits on Fire
+-- Blast's 340 (Evocation on its cooldown counts usable); wowsims's own fight idles 96.40 -> 104.70 -> 114.40.
 return {
     class = "MAGE",
     pack = "Arcane (wowsims.com)",
@@ -47,7 +56,7 @@ return {
         race = "RaceHuman",
         class = "ClassMage",
         gear = "ui/specs/mage/dps/gear_sets/p1Arcane.gear.json",
-        talentsString = "0552205003100311531-03-0515",
+        talentsString = "050205223101311531-5500003-003",
         specKey = "mage",
         options = { classOptions = { defaultMageArmor = "MageArmorMageArmor" } },
         profession1 = "Engineering",
@@ -55,7 +64,9 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 20,
     },
-    map = { ["item:19339"] = "use_items" }, -- the Mind Quickening Gem (ItemSparse 19339: a trinket, InventoryType 12)
+    -- the Talisman of Ephemeral Power (ItemSparse 18820: a trinket, InventoryType 12; the re-pin gear, was the Mind
+    -- Quickening Gem 19339)
+    map = { ["item:18820"] = "use_items" },
     focus = { arcane_missiles = 1 }, -- by role (docs/dev/wowsims-packs.md)
     leveling = {},
 }

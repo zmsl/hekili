@@ -147,6 +147,7 @@ local PACKS = {
             "arcane_power",
             "presence_of_mind",
             "counterspell",
+            "fire_blast", -- the e2842f0a78 list's (Deep Arcane)
         },
         talents = {
             [11222] = 5, -- Arcane Focus

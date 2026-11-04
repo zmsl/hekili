@@ -13989,15 +13989,15 @@ options.packs.arcane.Arcane (wowsims.com).lists.action	values.wait	|T136243:0|t 
 options.packs.arcane.Arcane (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.arcane.Arcane (wowsims.com).lists.actionID	name	Entry
 options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffevocation|r, if |cffffd100mana.pct_lo<=10|r|r
-options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1259705 - |cFFFFD100|cffffd100action.read_ley_line.known|r|r
-options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Use Items]|r
-options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 12043
-options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 12042
-options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 5514]
-options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 5143 - |cFFFFD100|cffffd100buff.missile_barrage.up|r|r
+options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r |cff00ccff[Use Items]|r - |cFFFFD100|cffffd100(buff.missile_barrage.up||(action.arcane_wrath.known&cooldown.arcane_wrath.ready))|r|r
+options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 12042 - |cFFFFD100|cffffd100(buff.missile_barrage.up||(action.arcane_wrath.known&cooldown.arcane_wrath.ready))|r|r
+options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r [Item 5514] - |cFFFFD100|cffffd100(buff.missile_barrage.up||(action.arcane_wrath.known&cooldown.arcane_wrath.ready))|r|r
+options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 5143 - |cFFFFD100|cffffd100buff.missile_barrage.up|r|r
+options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 12043 - |cFFFFD100|cffffd100(!action.arcane_wrath.known||cooldown.arcane_wrath.ready)|r|r
+options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1326079 - |cFFFFD100|cffffd100((action.presence_of_mind.known&prev.1.presence_of_mind)||(!action.presence_of_mind.known&(!action.arcane_wrath.known||cooldown.arcane_wrath.ready)))&(!action.arcane_wrath.known||cooldown.arcane_wrath.ready)|r|r
 options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1326079
-options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 400574 - |cFFFFD100|cffffd100(buff.arcane_blast.remains<action.arcane_blast.cast||(buff.arcane_blast.stack<4&mana.lo>=5000)||(buff.arcane_blast.stack<3&mana.lo>=4000)||buff.arcane_blast.stack<2)|r|r
-options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 116
+options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2136
+options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 400574
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	name	Action Name
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.arcane_blast	|T136000:0|t Spell 400574
@@ -14058,8 +14058,10 @@ options.packs.arcane.Arcane (wowsims.com).lists.listName	desc	Select the action 
 options.packs.arcane.Arcane (wowsims.com).lists.listName	name	Action List
 options.packs.arcane.Arcane (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
 options.packs.arcane.Arcane (wowsims.com).lists.listName	values.evocation	evocation
+options.packs.arcane.Arcane (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.arcane.Arcane (wowsims.com).lists.list_name	name	Action List
 options.packs.arcane.Arcane (wowsims.com).lists.list_name	values.evocation	evocation
+options.packs.arcane.Arcane (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.arcane.Arcane (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.arcane.Arcane (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.arcane.Arcane (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
@@ -14089,7 +14091,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.modMoving.moving	values.1	Moving
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.arcane.Arcane (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 1259705)
+options.packs.arcane.Arcane (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Use Items)
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.arcane.Arcane (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry

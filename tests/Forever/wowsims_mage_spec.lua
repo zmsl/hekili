@@ -47,8 +47,12 @@ local REPLAY = {
 -- the modelled (unreadable) target debuff, a candidate not yet measured as flicker.
 -- Frostfire (Task FFB): 0.891 (49 of 55), floor 0.89 (mage_frostfire.lua's header); LIVE60 10.8: as Fire's, its mana
 -- spent out by about 80 s, it waits on Frostfire Bolt's 314.5 and Fire Blast's 340 (Evocation on its cooldown).
+-- Re-pin e2842f0a78 (Task 10; the misses traced in each recipe's header):
+-- Arcane 0.81 -> 0.96 (0.966, 56 of 58; both misses the mana gem's restore not believed), LIVE60 0 -> 10.0 (the Deep
+-- Arcane list has no cheap filler: mana dry by about 90 s, waiting on Fire Blast's 340; wowsims's own fight idles
+-- 96.40 -> 114.40).
 local PACKS = {
-    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.81, 0 },
+    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0 },
     { "mage_fire", "Fire", "Fire (wowsims.com)", 0.82, 12.6 },
     { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.89, 10.8 },
 }

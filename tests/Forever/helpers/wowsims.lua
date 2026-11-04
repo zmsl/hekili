@@ -323,7 +323,9 @@ M.READY = {
     -- gone, Hunter's Mark leaves the real set (late 0.19 -> in the cost window), so the median of the 5 left is their 0.20
     -- { 0.20, 5 } -> { 0.63, 11 } (re-pin 8b-2, the weave cause above): six strike rows early (-0.39 to -1.59)
     hunter_survival = { 0.63, 11 },
-    mage_arcane = { 0.47, 21 }, -- 0.470, 21 (Mage lane, ruling M13; first clean run on 0ce5d1a4)
+    -- { 0.47, 21 } -> { 0.76, 9 } re-pin e2842f0a78 (the new log): the 9 real rows late, cost class (gap BQ: lo reaches
+    -- a cost after the truth), fire_blast 7 (max 0.76: the dry-mana waits on its 340)
+    mage_arcane = { 0.76, 9 }, -- 0.760, 9 (Mage lane, ruling M13; first clean run on 0ce5d1a4)
     mage_fire = { 0.37, 31 }, -- 0.370, 31
     mage_frostfire = { 0.38, 31 }, -- 0.380, 31 (Task FFB, ruling M13; first clean run on 3e104ce9)
     paladin_protection = { 0.86, 7 },
