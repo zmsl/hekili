@@ -40,7 +40,7 @@ test-serial:
 test-fast:
 	$(BUSTED) --exclude-tags=slow,party,loop,druid,rogue,paladin,shaman,hunter,mage,priest,warlock,bench
 
-# The merge gate: check, then every 20-fight loop tag in one scripts/busted_parallel.sh run (one busted process per
+# The merge gate: check-full (never skips), then every 20-fight loop tag in one scripts/busted_parallel.sh run (one busted process per
 # spec file, nproc - 2 at a time for the whole gate, at least 1). `make test-<tag>` runs one tag the same way, nproc
 # at a time.
 comma := ,

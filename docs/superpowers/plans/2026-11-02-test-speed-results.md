@@ -209,7 +209,7 @@ Waited 17:17-17:37 for load < 3 (not reached); ran at load 6.5-7.5, one lock hol
 (`load_druid.load`: 501 calls, 0.54 s; `detect.boot` 740 calls, 0.49 s: left alone.) Boot is at least 5 % in both, so
 `load.module` compiles each file once per process (`CHUNKS[path]`; chunks run in `_G`, no `setfenv`, so a re-run makes
 fresh closures and state; a load error raises before it is cached). Safety test: `drive_spec.lua` "two boots in one
-process keep their own state and envs" (passes before and after). Gain: detect_more -11.8 s CPU (-16 %),
+process share no state: a Build through the first leaves the second unbuilt" (passes before and after). Gain: detect_more -11.8 s CPU (-16 %),
 druid_harness_gates_b -7.2 s (-4 %). The rest of `drive.boot` (~37-39 s per file, outside the loader) is the next
 target and is not touched here.
 
@@ -285,3 +285,49 @@ The machine was loaded by other work (load 4-25); gate-on's wall includes about 
 another worktree's accuracy run (CPU is unaffected). Off1 was the first run after a discarded warm-up that failed the
 env-list test (a LAZY_FLAG env var, since reverted); the two off runs differ by 126 s CPU, and on1/on2 (2606 / 2604)
 sit inside that spread, equal to off2 (2600). Gate: on is 102 s above off. No gain beyond the spread: dropped.
+
+### Task 9: final verification, the `--no-auto-insulate` A/B and the summary
+
+Raw logs `~/src/hekili-speed-runs/final/` (`batch.sh`, `batch.out`, `nai` wrapper, `*.log`, `*.time`, `rig.txt`).
+2026-11-04 03:16-04:12 (batch) and the rig after; every busted run under one lock hold (check) or its own (gate);
+`pgrep -c busted` 0 before each. The machine was never quiet: load at the starts 1.8 (verify), 9.0 (gate off; the
+previous run's own jobs, it did not fall below 3 between runs, so the gate was run anyway), 4.1, 6.7, 11.9, 25.4 (another
+worktree started work during the check A/B). Gate walls below are therefore "loaded".
+
+**Verification.** `make check FULL=1` rc 0, wall 201.8 s, CPU 2484.5 s, 2821 / 0 / 0 / 0. `make gate` rc 0, wall 641.5 s,
+CPU 7470.3 s (loaded), 2821 / 0 / 0 / 0 and gate tier 42 / 0 / 0 / 0. `results.sh` diffs against `base2/base-check.results`
+and `base2/base.results`: result lines identical; only `all files:` differs (2821 against 2817: the +4 tests, 3
+`detect_floors` + 1 `drive_spec`) and the base's blank lines (base2 predates the blank-line strip). Rig `speed-final`
+(`~/src/hekili-rig/run.sh`): 81 `RESULT` lines, `diff` against `base2/rig.txt`: no output. Then `make check`:
+`check: skipped, inputs unchanged since the last green check; FULL=1 runs it`.
+
+**Task 7's flag, interleaved A/B** (`--no-auto-insulate` through `make BUSTED=<wrapper>`; run order gate off, gate on,
+check off, check on, check off). Result lines identical on/off (only the echoed `BUSTED=` line and make's "overrides" note
+differ; `all files:` 2821 / 42).
+
+| run | wall s | user+sys CPU s | load at start |
+|---|---|---|---|
+| gate off | 641.5 | 7470.3 | 9.0 |
+| gate on | 1566.8 (waited on the lock behind another worktree) | 7558.1 | 4.1 |
+| check off | 190.3 | 2588.7 | 6.7 |
+| check on | 549.6 (lock wait) | 2741.7 | 11.9 |
+| check off 2 | 188.5 | 2606.4 | 25.4 |
+
+The earlier ~5 % signal does not hold: the flag is +1.2 % CPU on the gate and +5.7 % over the mean of the two check-off
+runs (the two offs differ by 0.7 %). It is not kept. For the owner: a separate decision, with no evidence for it.
+
+**Summary** (base = Task 1 `base2`: check wall 195.3 / 195.6 / 200.8 s, CPU 2677 / 2687 / 2776 s; gate wall 598.9 / 598.9
+/ 601.2 s, CPU 7573 / 7561 / 7557 s; final runs above, loaded machine):
+
+| part | decision | effect | reason |
+|---|---|---|---|
+| 2 stamped check | kept | `make check` with unchanged inputs 0.19 s (from ~197 s) | skips only on a proven-equal key; `FULL=1` forces |
+| 3 docs-only skip | kept | docs-only edit 0.24 s | same; README / CHANGELOG / publishing never count |
+| 4 split files | kept | check 245.8 to 231.1 s mean (interleaved, loaded); gate bound file moved from druid_harness (402 s) to loop_druid_feral (~342 s) | beats the 5.4 s spread; gate wall gain unproven on a loaded machine |
+| 5 belief loader chunk cache | kept | detect_more -11.8 s CPU (-16 %), druid gates_b -7.2 s (-4 %) | boot cache itself dropped (boot is 0.3 % of a file) |
+| infra fixes (results.sh blank lines, DETECT_WRITE serial + floors file, runner `== f (rc=N)`) | kept | none (correctness) | |
+| 6 collector tuning | dropped | 1.0 % CPU best, inside a 53.6 s spread | needs 2-3.5x RSS for nothing |
+| 7 `--no-auto-insulate` | dropped | +1.2 % gate / +5.7 % check CPU in the A/B | no gain beyond the spread |
+| 8 `--lazy` | dropped | none (interleaved) | no gain |
+| final, `make check FULL=1` | | wall 201.8 / 190.3 / 188.5 s, CPU 2484 / 2589 / 2606 s against 195-201 s, 2677-2776 s | about -3 % wall, -6 % CPU, near the spread |
+| final, `make gate` | | wall 641.5 s, CPU 7470 s against 599-601 s, 7557-7573 s (loaded) | CPU -1.3 %; wall not shown better: no gate-wall gain is claimed |
