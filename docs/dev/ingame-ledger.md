@@ -105,6 +105,7 @@ ends 2026-10-22). Each row: what to look for, why it matters, its status. Answer
 | AX4 | Warrior | after launch, Sunder Armor at 5 stacks on a mob: does a refresh fire UNIT_AURA `target`? | "no event means it didn't land" needs every landing to fire one | open |
 | AX5 | Warrior | after launch, Sunder Armor on a mob: does UNIT_COMBAT fire any row for a landed, no-damage cast (amount 0)? | a connect row would close the ticket as a wound does, the best signal if it exists | open |
 | AX6 | Core | after launch, in combat: `pcall(C_UnitAuras.GetUnitAuraInstanceIDs, "target", "HARMFUL\|PLAYER")`. | never tried; it requires the aura access the target walk lacks, so it likely raises; if it works it reads our debuffs directly | open |
+| MV1 | Every opted-in spec | With Movement ON, walk toward a mob from 20 yd: the move-reached line (the Hunter weave strike, the Feral or Guardian damage lines, Retribution's held melee lines) shows with its own icon tinted out of range (Classic and Timeline), then untinted once in range; with Movement OFF it is absent until in range. Also right after a target swap: it shows either way until the first range answer | the rewrite `(toggle.movement&<move condition>\|<range gate>)` (rule 19) relies on the client's range read for the tint and on the unknown bracket never blocking; no movement icon is ever shown | open |
 
 ## Findings (unit registry and tickets, 2026-10-22)
 

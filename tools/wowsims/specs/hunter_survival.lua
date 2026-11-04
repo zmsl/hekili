@@ -35,5 +35,8 @@ return {
     map = {},
     -- by role (docs/dev/wowsims-packs.md); the melee-weave strikes rotational, Serpent Sting 1 (the user, 2026-10-21)
     focus = { raptor_strike = 1, hunters_mark = 2, serpent_sting = 1 },
+    -- rule 19 (R4): the DB2's range (SpellMisc.RangeIndex -> SpellRange: Combat Range 0-5) of the one weave strike
+    -- the APL gives no bracket, so the weave's melee move reaches it
+    ranges = { raptor_strike = { 0, 5 } },
     leveling = {},
 }

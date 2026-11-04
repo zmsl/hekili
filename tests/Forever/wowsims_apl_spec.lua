@@ -1792,6 +1792,229 @@ describe("the wowsims APL translator's movement terms", function()
     end)
 end)
 
+-- Re-pin plan Task 7 (design §2.2, §3a; rulings R4, R7): rule 19, a move's reached entries take
+-- `(toggle.movement&<move condition>|<range gate>)`; rule 14b, a wowsims `sequence` is a stepped window.
+describe("the wowsims APL translator's move rewrite and sequences as windows", function()
+    local d = { unitDistance = {} }
+    local mh = { autoTimeToNext = { autoType = "MainHandAuto" } }
+    local stance = { auraIsActive = { auraId = { spellId = 910 } } }
+    local function move(yd, cond)
+        return { action = { move = { rangeFromTarget = const(yd) }, condition = cond } }
+    end
+    local function waitUntil(gate, cond)
+        return { action = { waitUntil = { condition = gate }, condition = cond } }
+    end
+    local function inRange(id)
+        return { spellInRange = { spellId = { spellId = id } } }
+    end
+    local function lines(t)
+        return table.concat(t, "\n")
+    end
+
+    it("Feral-shaped: the omitted waitUntil's gate is carried, and the move before it reaches it", function()
+        local text, omitted, _, header = apl.translate({
+            priorityList = {
+                move("5", cmp("OpGt", d, const("5"))),
+                waitUntil(NOT(cmp("OpGt", d, const("5"))), cmp("OpGt", d, const("5"))),
+                cast(100, stance), -- Review Focus 4: the line's own condition stays outside the gate
+            },
+        }, ctx({}))
+        assert.are.equal("actions=strike,if=buff.stance.up&(toggle.movement&target.outside5|target.within5)", text)
+        assert.are.same({ "default #1: move", "default #2: waitUntil" }, omitted)
+        assert.are.same({ "# Movement: default #1 reaches default: strike" }, header)
+    end)
+
+    it("weave-shaped: a melee move under a timing condition reaches the strike's bracket", function()
+        local text, omitted = apl.translate({
+            priorityList = {
+                move("5", AND(cmp("OpGt", mh, const("0.5s")), cmp("OpGt", d, const("5")))),
+                cast(100, cmp("OpLe", d, const("5"))),
+            },
+        }, ctx({}))
+        assert.are.equal(
+            "actions=strike,if=(toggle.movement&(mainhand_remains>0.5&target.outside5)|target.within5)",
+            text
+        )
+        assert.are.same({ "default #1: move" }, omitted)
+    end)
+
+    it("R4: a group's move reaches the calling list's entries before the call, by bracket or kit range", function()
+        local text, omitted, _, header = apl.translate({
+            priorityList = {
+                cast(100, cmp("OpLe", d, const("5"))),
+                cast(200), -- no bracket: the recipe's DB2 range (0-5)
+                { action = { groupReference = { groupName = "Weave" }, condition = E } },
+            },
+            groups = { { name = "Weave", actions = { move("5", cmp("OpGt", mh, const("0.5s"))), cast(400) } } },
+        }, ctx({ executePhase = "execute_phase", ranges = { big_hit = { 0, 5 } } }))
+        assert.are.equal(
+            lines({
+                "actions=strike,if=(toggle.movement&(execute_phase&mainhand_remains>0.5)|target.within5)",
+                "actions+=/big_hit,if=(toggle.movement&(execute_phase&mainhand_remains>0.5)|target.within5)",
+                "actions+=/call_action_list,name=weave,if=execute_phase",
+                "actions.weave=dot",
+            }),
+            text
+        )
+        assert.are.same({ "weave #1: move" }, omitted)
+        assert.are.same({ "# Movement: weave #1 reaches default: strike, big_hit" }, header)
+    end)
+
+    it("two moves reaching one strike join their conditions with | in one toggle term", function()
+        local text, _, _, header = apl.translate({
+            priorityList = {
+                move("5", cmp("OpGt", mh, const("0.5s"))),
+                move("5", E),
+                cast(100, cmp("OpLe", d, const("5"))),
+            },
+        }, ctx({ executePhase = "execute_phase" }))
+        assert.are.equal(
+            "actions=strike,if=(toggle.movement&(mainhand_remains>0.5|execute_phase)|target.within5)",
+            text
+        )
+        assert.are.same({
+            "# Movement: default #1 reaches default: strike",
+            "# Movement: default #2 reaches default: strike",
+        }, header)
+    end)
+
+    it("a move to another range reaches nothing, and a list with no move is unchanged", function()
+        local text, _, _, header = apl.translate({
+            priorityList = { move("11", cmp("OpGt", mh, const("0.5s"))), cast(100, cmp("OpLe", d, const("5"))) },
+        }, ctx({}))
+        assert.are.equal("actions=strike,if=target.within5", text)
+        assert.are.same({}, header)
+        assert.are.equal(
+            "actions=strike,if=target.within5",
+            (apl.translate({ priorityList = { cast(100, cmp("OpLe", d, const("5"))) } }, ctx({})))
+        )
+    end)
+
+    it("Retribution-shaped (S3): each sequence is a stepped window, its trailing gate held while it is up", function()
+        local text, omitted, _, header = apl.translate({
+            priorityList = {
+                { action = { groupReference = { groupName = "Move to melee" }, condition = NOT(inRange(100)) } },
+                cast(200),
+                cast(100),
+            },
+            groups = {
+                {
+                    name = "Move to melee",
+                    actions = {
+                        {
+                            action = {
+                                condition = AND(
+                                    { talentIsKnown = { talentId = { spellId = 900 } } },
+                                    NOT({ sequenceIsComplete = { sequenceName = "move1" } })
+                                ),
+                                sequence = {
+                                    name = "move1",
+                                    actions = {
+                                        { move = { rangeFromTarget = const("5") } },
+                                        { waitUntil = { condition = inRange(200) } },
+                                        { castSpell = { spellId = { spellId = 200 } } },
+                                        { wait = { duration = { inputDelay = {} } } },
+                                        { castSpell = { spellId = { spellId = 400 } } },
+                                        { waitUntil = { condition = inRange(100) } },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        }, ctx({}))
+        local held = "(toggle.movement&window.move1.up|(!action.strike.known|action.strike.in_range)|!window.move1.up)"
+        assert.are.equal(
+            lines({
+                "actions=call_action_list,name=move_to_melee,if=(!action.strike.known|!action.strike.in_range)",
+                "actions+=/big_hit,if=" .. held,
+                "actions+=/strike,if=" .. held,
+                "actions.move_to_melee=big_hit,if=window.move1.next.big_hit"
+                    .. "&(toggle.movement&window.move1.up|action.big_hit.in_range)",
+                "actions.move_to_melee+=/dot,if=window.move1.next.dot",
+            }),
+            text
+        )
+        assert.are.same({}, omitted)
+        assert.are.same({
+            "# Window: move1: steps big_hit, dot; on_deviation stay; evaluator talent.furious.enabled (the class registers it).",
+            "# Movement: move_to_melee #1 reaches move_to_melee: big_hit; default: big_hit, strike",
+        }, header)
+    end)
+
+    it("resetSequence is the window's loop; sequenceIsComplete elsewhere reads the window down", function()
+        local seq = {
+            action = {
+                condition = { talentIsKnown = { talentId = { spellId = 950 } } },
+                sequence = {
+                    name = "HHA",
+                    actions = {
+                        { castSpell = { spellId = { spellId = 100 } } },
+                        { castSpell = { spellId = { spellId = 100 } } },
+                        { castSpell = { spellId = { spellId = 200 } } },
+                    },
+                },
+            },
+        }
+        local done = { sequenceIsComplete = { sequenceName = "HHA" } }
+        local text, omitted, _, header = apl.translate({
+            priorityList = {
+                { action = { resetSequence = { sequenceName = "HHA" }, condition = done } },
+                seq,
+                cast(400, done),
+            },
+        }, ctx({}))
+        assert.are.equal(
+            lines({
+                "actions=strike,if=window.hha.next.strike",
+                "actions+=/big_hit,if=window.hha.next.big_hit",
+                "actions+=/dot,if=!window.hha.up",
+            }),
+            text
+        )
+        assert.are.same({ "default #1: resetSequence" }, omitted)
+        assert.are.same({
+            "# Window: hha: steps strike, strike, big_hit; loop; on_deviation stay; evaluator talent.cuts.enabled (the class registers it).",
+        }, header)
+    end)
+
+    it("a sequence whose condition the belief cannot read is omitted, and so are its window's readers", function()
+        local seq = {
+            action = {
+                condition = E,
+                sequence = { name = "S", actions = { { castSpell = { spellId = { spellId = 100 } } } } },
+            },
+        }
+        local text, omitted = apl.translate({
+            priorityList = { seq, cast(400, { sequenceIsComplete = { sequenceName = "S" } }), cast(200) },
+        }, ctx({ executePhase = "execute_phase" }))
+        assert.are.equal("actions=big_hit", text)
+        assert.are.same({
+            "default #1: sequence s: its condition is not readable by the belief (execute_phase)",
+            "default #2: reads window s, whose sequence was omitted",
+        }, omitted)
+    end)
+
+    it("a double not over a bracket is the bracket; a not over and/or with one pushes inside (De Morgan)", function()
+        local text = apl.translate({
+            priorityList = {
+                cast(100, NOT(NOT(cmp("OpGt", d, const("5"))))),
+                cast(200, NOT(AND(cmp("OpGt", d, const("5")), stance))),
+                cast(300, NOT(OR(cmp("OpLt", d, const("8")), stance))),
+            },
+        }, ctx({}))
+        assert.are.equal(
+            lines({
+                "actions=strike,if=target.outside5",
+                "actions+=/big_hit,if=(target.within5|!buff.stance.up)",
+                "actions+=/roar,use_off_gcd=1,if=(target.outside8&!buff.stance.up)",
+            }),
+            text
+        )
+    end)
+end)
+
 -- Central fix 11: wowsims's OpDiv is division; the engine's script language takes `/` for division and `%` for modulo.
 describe("a wowsims division", function()
     local div = cmp("OpGt", { math = { op = "OpDiv", lhs = const("7"), rhs = const("2") } }, const("3"))

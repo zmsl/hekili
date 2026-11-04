@@ -24,8 +24,7 @@
 --    later lines by their own: the first is cast only when none is up, the later replaces it. A handler that raises
 --    gives no guard and a header note.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
---    false; entries whose action or condition uses a node the fork lacks (`sequence`,
---    `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `sequenceIsComplete`,
+--    false; entries whose action or condition uses a node the fork lacks (`schedule`, `itemSwap`, `wait`,
 --    `activeItemSwapSet`, `selectedConjured`), or whose own action is an unmapped spell, item or other ID (an unmapped
 --    read drops only its branch: rule 12); a call of a group whose every entry was omitted. Also listed: rule 12's
 --    dropped reads and rule 13's unmapped cooldowns, by entry.
@@ -190,6 +189,35 @@
 --    speed" text. Hekili holds only the Movement toggle, the client's range gate (rule 11's bracket, `spellInRange`)
 --    and the rotation's timing terms. Each dropped term is a header line by entry,
 --    `# Dropped (movement): <list> #<n>: <node>`, once an entry.
+-- 19. Moves (re-pin plan Task 7; design §2.2, decisions 2, 5, 7; ruling R4): a `move` entry and a distance-only
+--    `waitUntil` (its condition a rule 11 bracket, its `not`, or a spellInRange) give no line (rule 2's listing; a move
+--    whose condition is unsupported says so and reaches nothing). A waitUntil's condition is held: carried, as one
+--    `&` term, onto every later APL line of its list, or, when none follows (it ends its group or sequence), onto the
+--    later lines of each calling list (one level; its own entry condition and a group call's are not carried).
+--    A move to D yards reaches: the held gates after it in its list; and every APL line of its list and its callers'
+--    lists (before or after it) whose ability cannot be cast beyond D: a top-level `target.within<D>`, a
+--    spellInRange of an ability whose recipe `ranges` ({ [key] = { min, max } }, the DB2's SpellRange) maximum is D,
+--    or, on a line with no range read, its own ability's recipe range 0-D, as a new `target.within<D>` term. A move to
+--    any other range reaches nothing. Each reached gate becomes `(toggle.movement&<move condition>|<gate>)`: the move's
+--    condition translated by the usual rules (rule 18 drops its walk-time terms; a caller's line puts the call's
+--    condition before it), several moves `|`-joined in one term, none for an unconditional move. ON shows the line
+--    where wowsims would walk to it (the client's out-of-range tint marks it); OFF leaves the bracket, so the line
+--    waits for the range. An unknown bracket (no plain answer yet) still answers both sides (rule 11). Pre-pull lists
+--    are never rewritten (decision 7). The header lists `# Movement: <list> #<n> reaches <list>: <actions>; ...`
+--    per move that reaches a line; a spec opts into the Movement toggle (its NewClass entry's `movement = true`)
+--    exactly when its pack reads `toggle.movement` (tests/Forever/packs_spec.lua). No movement icon, no wait (decision 9).
+-- 14b. A `sequence` (wowsims: its members in order, each once, once per reset; design §3a) is a stepped window `<w>`
+--    (the snake of its name) whose steps are its cast members: one line a cast, `<key>,if=window.<w>.next.<key>`, its
+--    own condition after, consecutive equal lines once. A distance-only waitUntil member is the next cast's range gate,
+--    `(toggle.movement&window.<w>.up|<gate>)` after a move member (the window is up while wowsims runs it); a trailing
+--    one is held (rule 19) as `(toggle.movement&window.<w>.up|<gate>|!window.<w>.up)`, sequences sharing a gate in
+--    one term; `move` and `wait` members give no line; any other member is unsupported. The sequence's condition is
+--    the window's evaluator, written in the header (`# Window: <w>: steps ...; [loop;] on_deviation stay; evaluator
+--    <condition>`) for the class to register (spec:RegisterWindow), only when the belief can read it (talents,
+--    settings, clocks, range, known tests), else the sequence is omitted, as is every line reading its window. Its own
+--    `sequenceIsComplete` is dropped there (the window opens on the evaluator's edge: once); elsewhere one is
+--    `!window.<w>.up`. `resetSequence` is the window's `loop`. A strictSequence stays rule 14's chain until its lane
+--    moves it (§3a).
 -- One-line reads (re-pin plan, docs/superpowers/plans/2026-11-03-wowsims-repin.md, Task 3; wowsims sim/core
 --    apl_values_*.go): `talentIsKnown` (wowsims's constant: the build holds that rank or a higher one) of an ID that
 --    resolves to a talent (a kit talent's spell, or a recipe `map` to a talent's key, as rule 4) is
@@ -381,6 +409,7 @@ function M.context(set, r, log, player)
         exclusive = r.exclusive or {},
         requires = r.requires or {},
         guard = r.guard or {},
+        ranges = r.ranges or {}, -- rule 19: { [action key] = { min, max } yards }, the DB2's, where the APL gives none
         maintenance = {}, -- rule 15: { { action key, setting key } }, by action key
     }
     for key, setting in pairs(r.maintenance or {}) do
@@ -859,6 +888,23 @@ local function grouped(s)
     return false
 end
 
+-- Whether node `n` reads a unitDistance (variables followed).
+local function hasDistance(c, n)
+    if type(n) ~= "table" then
+        return false
+    elseif n.unitDistance then
+        return true
+    elseif n.variableRef and c.vars[n.variableRef.name] then
+        return hasDistance(c, c.vars[n.variableRef.name])
+    end
+    for _, x in pairs(n) do
+        if hasDistance(c, x) then
+            return true
+        end
+    end
+    return false
+end
+
 -- A condition: its text, constant (when it folds) and nil condition, as wowsims builds it (sim/core
 -- apl_values_operators.go): a nil child of `and`/`or` is dropped and one whose every child is nil is nil; `not`,
 -- `cmp` and `math` of a nil are nil; a constant `false` in an `and` (`true` in an `or`) decides it.
@@ -913,6 +959,17 @@ local function bool(c, n)
         then
             -- rule 11: the opposite bracket (an unknown distance answers both, so `!` of one would block the line)
             return bool(c, { cmp = { op = NEGATE[r.cmp.op], lhs = r.cmp.lhs, rhs = r.cmp.rhs } })
+        elseif r and (r["not"] or r["and"] or r["or"]) and hasDistance(c, r) then
+            -- rule 11 through a `not`: a double `not` is its operand, a `not` of and/or goes inside (De Morgan), so
+            -- each bracket is negated as above (wowsims's nil rules agree: `not` of nil is nil)
+            if r["not"] then
+                return bool(c, r["not"].val)
+            end
+            local vals = {}
+            for i, x in ipairs((r["and"] or r["or"]).vals or {}) do
+                vals[i] = { ["not"] = { val = x } }
+            end
+            return bool(c, { [r["and"] and "or" or "and"] = { vals = vals } })
         end
         local s, b, u = bool(c, v.val)
         if u == true then
@@ -983,6 +1040,12 @@ local function bool(c, n)
         return rank > 1 and ("talent." .. t .. ".rank>=" .. rank) or ("talent." .. t .. ".enabled"), nil, false
     elseif k == "gcdIsReady" then
         return "gcd.remains<=0", nil, false
+    elseif k == "sequenceIsComplete" then -- rule 14b: the sequence's window down; in its own condition, the edge's once
+        local w = M.snake(v.sequenceName or "")
+        if w == c.ownSeq then
+            return nil, nil, true
+        end
+        return "!window." .. w .. ".up", nil, false
     elseif k == "unitIsMoving" then -- rule 18, any unit
         moved(c, k)
         return nil, nil, true
@@ -1308,6 +1371,116 @@ local function sequence(c, members, cond, node)
     return out
 end
 
+-- Rule 19: whether condition node `n` tests only the target's range (a rule 11 bracket, its `not`, a spellInRange;
+-- variables followed): a distance-only waitUntil.
+local function rangeOnly(c, n)
+    while n and n.variableRef and c.vars[n.variableRef.name] do
+        n = c.vars[n.variableRef.name]
+    end
+    if not n then
+        return false
+    elseif n["not"] then
+        return rangeOnly(c, n["not"].val)
+    elseif n.cmp then
+        return (n.cmp.lhs and n.cmp.lhs.unitDistance or n.cmp.rhs and n.cmp.rhs.unitDistance) ~= nil
+    end
+    return n.spellInRange ~= nil
+end
+
+-- Rule 14b: the reads a window's evaluator can make in the belief (talents, settings, clocks, range).
+local BELIEF = {
+    "^talent%.",
+    "^settings%.",
+    "^target%.within%d+$",
+    "^target%.outside%d+$",
+    "^action%.[%w_]+%.in_range$",
+    "^action%.[%w_]+%.known$",
+    "^mainhand_",
+    "^offhand_",
+    "^time$",
+    "^min$",
+    "^max$",
+}
+local function unreadable(s)
+    local bad = {}
+    for tok in s:gmatch("[%a_][%w_.]*") do
+        local ok = false
+        for _, p in ipairs(BELIEF) do
+            ok = ok or tok:find(p) ~= nil
+        end
+        bad[#bad + 1] = not ok and tok or nil
+    end
+    return #bad > 0 and table.concat(bad, ", ")
+end
+
+-- Rule 14b: a wowsims `sequence` (`a`: its action) as a stepped window, its cast members the steps: one line a cast,
+-- `<key>,if=window.<w>.next.<key>[&<own>][&<gate>]`, consecutive equal lines once. A distance-only `waitUntil`
+-- member is the next cast's range gate, `(toggle.movement&window.<w>.up|<gate>)` after a `move` member (the window is
+-- up exactly while wowsims runs the sequence), as is; a trailing one is held (c.held: rule 19 carries it); `move` and
+-- `wait` members give no line (rule 19, decision 9). The condition is the window's evaluator (the class registers it
+-- from the header line), only when the belief can read it; its own `sequenceIsComplete` is dropped there (the window
+-- opens on the evaluator's edge, so once).
+local function windowed(c, a)
+    local s = a.sequence
+    local w = M.snake(s.name or "")
+    c.ownSeq = w
+    local cond = a.condition and condition(c, a.condition)
+    c.ownSeq = nil
+    if cond == false then
+        return nil, "never"
+    end
+    local bad = cond and unreadable(cond)
+    if bad then
+        unsupported(("sequence %s: its condition is not readable by the belief (%s)"):format(w, bad))
+    end
+    local out, steps, pending, moved = {}, {}, nil, false
+    for _, m in ipairs(s.actions or {}) do
+        local mk
+        for k in pairs(m) do
+            mk = k ~= "condition" and k or mk
+        end
+        if mk == "move" then
+            moved = true
+        elseif mk == "waitUntil" then
+            if not rangeOnly(c, m.waitUntil.condition) then
+                unsupported(("sequence %s: a waitUntil not on range"):format(w))
+            end
+            pending = m.waitUntil.condition
+        elseif mk == "castSpell" or mk == "channelSpell" then
+            local body, why = entry(c, { action = m })
+            if not body then
+                unsupported(("sequence %s member %d: %s"):format(w, #steps + 1, why))
+            end
+            local base, own = body:match("^(.-),if=(.*)$")
+            local parts = { "window." .. w .. ".next." .. c.self }
+            parts[#parts + 1] = own and paren(own) or nil
+            local g = pending and condition(c, pending) -- the cast is the line's own: its range read unguarded
+            if g then
+                parts[#parts + 1] = moved and ("(toggle.movement&window." .. w .. ".up|" .. g .. ")") or paren(g)
+            end
+            pending = nil
+            local line = (base or body) .. ",if=" .. table.concat(parts, "&")
+            out[#out + 1] = line ~= out[#out] and line or nil
+            steps[#steps + 1] = c.self
+        elseif mk ~= "wait" then
+            unsupported(("sequence %s of %s"):format(w, tostring(mk)))
+        end
+    end
+    if #steps == 0 then
+        unsupported(("sequence %s casts nothing"):format(w))
+    end
+    c.self = nil
+    local g = pending and condition(c, pending)
+    if g then
+        c.held[#c.held + 1] = { list = c.listName, n = c.entryNo, gate = g, window = w, moved = moved }
+    end
+    c.windows[#c.windows + 1] = { name = w, steps = steps, cond = cond, list = c.listName, n = c.entryNo }
+    if moved then -- rule 19: the sequence's move, reaching its steps' gates and its held one
+        c.moving[#c.moving + 1] = { list = c.listName, n = c.entryNo, seq = w, reach = {} }
+    end
+    return out
+end
+
 -- One entry as a line body (a list of them for rules 13 and 14), or nil and why it folds away.
 function entry(c, e)
     local a = e.action or {}
@@ -1371,6 +1544,9 @@ function entry(c, e)
     elseif kind == "cancelAura" then -- rule 10
         c.self = nil
         body = "cancel_buff,buff_name=" .. auraKey(c, a.cancelAura.auraId.spellId)
+    elseif kind == "sequence" then -- rule 14b
+        c.self = nil
+        return windowed(c, a)
     elseif kind == "strictSequence" then -- rule 14: its condition's reads all guarded (no member is the line's own)
         c.self, seq = nil, a.strictSequence.actions or {}
     elseif kind == "autocastOtherCooldowns" or kind == "castAllStatBuffCooldowns" then
@@ -1500,12 +1676,285 @@ function guard(c, name, out, origin, omitted)
     end
 end
 
+-- Rules 19 and 14b: a `move`, `waitUntil` or `resetSequence` entry gives no line. A resetSequence is its window's
+-- loop; a distance-only waitUntil is held (its condition the gate rule 19 carries); a move is recorded with its
+-- target range and condition for the rewrite. Returns the entry's omitted text.
+local function motion(c, a)
+    c.self = nil
+    if a.resetSequence then
+        c.loops[M.snake(a.resetSequence.sequenceName or "")] = true
+        return "resetSequence"
+    elseif a.waitUntil then
+        if rangeOnly(c, a.waitUntil.condition) then
+            local ok, g = pcall(condition, c, a.waitUntil.condition)
+            if not ok and type(g) ~= "table" then
+                error(g, 0)
+            end
+            if ok and g then
+                c.held[#c.held + 1] = { list = c.listName, n = c.entryNo, gate = g }
+            end
+        end
+        return "waitUntil"
+    end
+    local okD, yd = pcall(value, c, a.move.rangeFromTarget or {})
+    local ok, cond = pcall(condition, c, a.condition or {})
+    for _, r in ipairs({ { okD, yd }, { ok, cond } }) do
+        if not r[1] and type(r[2]) ~= "table" then
+            error(r[2], 0)
+        end
+    end
+    if not ok then
+        return "move (reaches nothing: its condition reads " .. tostring(cond.unsupported) .. ")"
+    end
+    local D = okD and tonumber(yd)
+    if cond ~= false and D then
+        local dropped = {}
+        for k, x in ipairs(c.moves) do
+            dropped[k] = x
+        end
+        c.moving[#c.moving + 1] =
+            { list = c.listName, n = c.entryNo, D = D, cond = cond, dropped = dropped, reach = {} }
+    end
+    return "move"
+end
+
+-- The top-level `&` terms of condition text `s` (the whole as one term when it has a top-level `|`).
+local function terms(s)
+    local out, depth, from = {}, 0, 1
+    for i = 1, #s do
+        local ch = s:sub(i, i)
+        depth = depth + (ch == "(" and 1 or ch == ")" and -1 or 0)
+        if depth == 0 and ch == "|" then
+            return { s }
+        elseif depth == 0 and ch == "&" then
+            out[#out + 1], from = s:sub(from, i - 1), i + 1
+        end
+    end
+    out[#out + 1] = s:sub(from)
+    return out
+end
+
+-- Rule 19's `&<move condition>` after `toggle.movement`: none when a move is unconditional (`true`), several `|`-joined.
+local function moveTerm(conds)
+    local parts, seen = {}, {}
+    for _, x in ipairs(conds) do
+        if x == true then
+            return ""
+        elseif not seen[x] then
+            seen[x], parts[#parts + 1] = true, (grouped(x) or not x:find("[&|]")) and x or ("(" .. x .. ")")
+        end
+    end
+    return "&" .. (#parts == 1 and parts[1] or ("(" .. table.concat(parts, "|") .. ")"))
+end
+
+-- Rule 19 over the translated lists (`lists`, `byName`; `origin`: each line's APL entry, false for a recipe line;
+-- `pre`: the pre-pull lists, which no move reaches): lines reading a window no sequence made are dropped, the held
+-- gates carried, each move's reached lines rewritten. Returns the header's window and movement lines.
+local function rewrite(c, lists, byName, origin, pre, omitted)
+    local made = {}
+    for _, w in ipairs(c.windows) do
+        made[w.name] = true
+    end
+    for _, l in ipairs(lists) do
+        local L, j = l[1], 1
+        while j <= #l[2] do
+            local w = l[2][j]:match("window%.([%w_]+)%.")
+            if w and not made[w] then
+                omitted[#omitted + 1] = ("%s #%d: reads window %s, whose sequence was omitted"):format(
+                    L,
+                    tonumber(origin[L][j]) or 0,
+                    w
+                )
+                table.remove(l[2], j)
+                table.remove(origin[L], j)
+            else
+                j = j + 1
+            end
+        end
+    end
+    local calls = {} -- [called list] = { { caller, line, its APL entry, its condition or nil } }
+    for _, l in ipairs(lists) do
+        for j, b in ipairs(l[2]) do
+            local x, rest = b:match("^call_action_list,name=([%w_]+)(.*)$")
+            if x and not pre[l[1]] then
+                calls[x] = calls[x] or {}
+                table.insert(calls[x], { l[1], j, tonumber(origin[l[1]][j]) or math.huge, rest:match("^,if=(.*)$") })
+            end
+        end
+    end
+    local function add(m, L, b) -- line `b` of list `L` is reached by move `m` (the header's list)
+        local k = b:match("^call_action_list,name=([%w_]+)") or b:match("^([%w_]+)")
+        m.reach[L] = m.reach[L] or {}
+        for _, x in ipairs(m.reach[L]) do
+            if x == k then
+                return
+            end
+        end
+        table.insert(m.reach[L], k)
+    end
+    local function later(L, after, into) -- the APL lines of `L` after entry `after` that no window's step holds
+        for j, b in ipairs(byName[L]) do
+            if (tonumber(origin[L][j]) or -1) > after and not b:find(",if=window%.[%w_]+%.next%.") then
+                into[#into + 1] = { L, j }
+            end
+        end
+        return into
+    end
+    -- the held gates: onto the later lines of their list, or of its callers' when none follows (a group's or a
+    -- sequence's last); one sequence's gate is held only while its window is up, and sequences sharing a gate merge
+    local merged, order = {}, {}
+    for _, h in ipairs(c.held) do
+        if not pre[h.list] then
+            local key = h.list .. "\0" .. h.gate .. "\0" .. (h.window and "" or tostring(h.n))
+            local m = merged[key]
+            if not m then
+                m = { list = h.list, n = h.n, gate = h.gate, conds = {}, windows = {}, movers = {} }
+                merged[key], order[#order + 1] = m, m
+            end
+            m.n = math.min(m.n, h.n)
+            if h.window then
+                m.windows[#m.windows + 1] = "!window." .. h.window .. ".up"
+                for _, mv in ipairs(h.moved and c.moving or {}) do
+                    if mv.seq == h.window then
+                        m.conds[#m.conds + 1], m.movers[#m.movers + 1] = "window." .. h.window .. ".up", mv
+                    end
+                end
+            else
+                for _, mv in ipairs(c.moving) do
+                    if mv.list == h.list and mv.n < h.n and mv.D then
+                        m.conds[#m.conds + 1], m.movers[#m.movers + 1] = mv.cond or true, mv
+                    end
+                end
+            end
+        end
+    end
+    for _, m in ipairs(order) do
+        local parts = { m.gate }
+        if #m.conds > 0 then
+            table.insert(parts, 1, "toggle.movement" .. moveTerm(m.conds))
+        end
+        parts[#parts + 1] = #m.windows > 0 and table.concat(m.windows, "&") or nil
+        local g = #parts == 1 and paren(m.gate) or ("(" .. table.concat(parts, "|") .. ")")
+        local targets = later(m.list, m.n, {})
+        if #targets == 0 then
+            for _, k in ipairs(calls[m.list] or {}) do
+                later(k[1], k[3], targets)
+            end
+        end
+        for _, t in ipairs(targets) do
+            local b = byName[t[1]][t[2]]
+            byName[t[1]][t[2]] = b:find(",if=", 1, true) and (b .. "&" .. g) or (b .. ",if=" .. g)
+            for _, mv in ipairs(m.movers) do
+                add(mv, t[1], b)
+            end
+        end
+    end
+    for _, mv in ipairs(c.moving) do -- a sequence's move reaches its steps' range gates (rule 14b)
+        for _, b in ipairs(mv.seq and byName[mv.list] or {}) do
+            if
+                b:find("|toggle.movement&window." .. mv.seq .. ".up|", 1, true)
+                or b:find("&(toggle.movement&window." .. mv.seq .. ".up|", 1, true)
+            then
+                add(mv, mv.list, b)
+            end
+        end
+    end
+    -- R4: a move to D yd reaches every line of its list and its callers' (before or after it) that cannot be cast
+    -- beyond D: its bracket `target.within<D>`, or its spellInRange of an ability the recipe's DB2 range gives D, or,
+    -- with no range read at all, its own ability's DB2 range 0-D (a new term); a caller's line takes the call's
+    -- condition before the move's
+    local rewrites = {} -- [list] = { [line] = { [gate term] = { move conditions } } }
+    for _, mv in ipairs(c.moving) do
+        if mv.D and not pre[mv.list] then
+            local seen = {}
+            local function scope(L, prefix)
+                if seen[L] or pre[L] then
+                    return
+                end
+                seen[L] = true
+                local cond = mv.cond or true
+                if prefix then
+                    cond = cond == true and prefix or (paren(prefix) .. "&" .. paren(cond))
+                end
+                for j, b in ipairs(byName[L]) do
+                    local cnd = b:match(",if=(.*)$")
+                    local hit, gated
+                    for _, t in ipairs(origin[L][j] and cnd and terms(cnd) or {}) do
+                        local k = t:match("^action%.([%w_]+)%.in_range$")
+                            or t:match("^%(!action%.([%w_]+)%.known|action%.[%w_]+%.in_range%)$")
+                        local r = k and c.ranges[k]
+                        gated = gated or t:find("target%.within") or t:find("target%.outside") or t:find("in_range")
+                        hit = hit or ((t == "target.within" .. mv.D or (r and r[2] == mv.D)) and t)
+                    end
+                    local r = origin[L][j] and not gated and c.ranges[b:match("^([%w_]+)")]
+                    hit = hit or (r and r[1] == 0 and r[2] == mv.D and ("target.within" .. mv.D))
+                    if hit then
+                        rewrites[L] = rewrites[L] or {}
+                        rewrites[L][j] = rewrites[L][j] or {}
+                        rewrites[L][j][hit] = rewrites[L][j][hit] or {}
+                        table.insert(rewrites[L][j][hit], cond)
+                        add(mv, L, b)
+                    end
+                end
+                for _, k in ipairs(calls[L] or {}) do
+                    scope(k[1], k[4] and (prefix and (paren(k[4]) .. "&" .. paren(prefix)) or k[4]) or prefix)
+                end
+            end
+            scope(mv.list, nil)
+        end
+    end
+    for L, lines in pairs(rewrites) do
+        for j, rw in pairs(lines) do
+            local b = byName[L][j]
+            local head, cnd = b:match("^(.-),if=(.*)$")
+            local ts = cnd and terms(cnd) or {}
+            for i, t in ipairs(ts) do
+                if rw[t] then
+                    ts[i], rw[t] = "(toggle.movement" .. moveTerm(rw[t]) .. "|" .. t .. ")", nil
+                end
+            end
+            for t, conds in pairs(rw) do -- the DB2 range's new term
+                ts[#ts + 1] = "(toggle.movement" .. moveTerm(conds) .. "|" .. t .. ")"
+            end
+            byName[L][j] = (head or b) .. ",if=" .. table.concat(ts, "&")
+        end
+    end
+    local header = {}
+    for _, w in ipairs(c.windows) do
+        if not pre[w.list] then
+            header[#header + 1] = ("# Window: %s: steps %s%s; on_deviation stay; evaluator %s (the class registers it)."):format(
+                w.name,
+                table.concat(w.steps, ", "),
+                c.loops[w.name] and "; loop" or "",
+                w.cond or "true"
+            )
+        end
+    end
+    for _, mv in ipairs(c.moving) do
+        if next(mv.reach) and not pre[mv.list] then
+            local parts = {}
+            for _, l in ipairs({ { mv.list }, unpack(lists) }) do -- its own list first
+                local L = l[1]
+                if mv.reach[L] and (L ~= mv.list or #parts == 0) then
+                    parts[#parts + 1] = L .. ": " .. table.concat(mv.reach[L], ", ")
+                end
+            end
+            header[#header + 1] = ("# Movement: %s #%d reaches %s"):format(mv.list, mv.n, table.concat(parts, "; "))
+            for _, k in ipairs(mv.dropped or {}) do
+                c.movedAll[#c.movedAll + 1] = { ("# Dropped (movement): %s #%d: %s"):format(mv.list, mv.n, k) }
+            end
+        end
+    end
+    return header
+end
+
 --- The SimC text of `rotation` (a wowsims APL table) under context `c`, the omitted entries
 --- ({ "<list> #<n>: <why>" }) and the settings an emitted line reads ({ { setting key, default, source } }: the APL's
 --- ON/OFF groups in its order, then the recipe's `settings` by key).
 function M.translate(rotation, c)
     c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
     c.callers, c.deviated, c.deviations, c.moves, c.movedAll = {}, {}, {}, {}, {}
+    c.held, c.windows, c.loops, c.moving = {}, {}, {}, {} -- rules 14b, 19
     -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13)
     local lists = { rotation.prepullActions or {}, rotation.priorityList or {} }
     for _, g in ipairs(rotation.groups or {}) do
@@ -1581,10 +2030,17 @@ function M.translate(rotation, c)
                 omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, when)
             else
                 c.notes, c.dropped, c.deviations, c.moves = {}, {}, {}, {}
+                c.entryNo, c.ownSeq = i, nil
                 if at and castAt[i] then
                     deviate(c, PREPULL_CAST)
                 end
-                local ok, body, why = pcall(entry, c, e)
+                local a = e.action or {}
+                local ok, body, why = true, nil, "noted"
+                if a.move or a.waitUntil or a.resetSequence then -- rules 19, 14b: no line, but recorded
+                    omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, motion(c, a))
+                else
+                    ok, body, why = pcall(entry, c, e)
+                end
                 if not ok then
                     if type(body) ~= "table" then
                         error(body, 0)
@@ -1612,7 +2068,7 @@ function M.translate(rotation, c)
                         c.movedAll[#c.movedAll + 1] =
                             { ("# Dropped (movement): %s #%d: %s"):format(name, i, m), called }
                     end
-                elseif why ~= "toggle" then
+                elseif why ~= "toggle" and why ~= "noted" then
                     omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, why)
                 end
             end
@@ -1644,11 +2100,13 @@ function M.translate(rotation, c)
         end
     end
     run("default", rotation.priorityList or {})
-    for _, line in ipairs(c.leveling) do
+    for _, line in ipairs(c.leveling) do -- recipe lines: no APL entry (false)
         table.insert(byName.default, line)
+        table.insert(origin.default, false)
     end
     for i, line in ipairs(c.levelingFirst) do
         table.insert(byName.default, i, line)
+        table.insert(origin.default, i, false)
     end
     for _, x in ipairs(c.extra) do
         local at
@@ -1662,6 +2120,7 @@ function M.translate(rotation, c)
             error("extra: no " .. x.before .. " line in actions", 0)
         end
         table.insert(byName.default, at, x.line)
+        table.insert(origin.default, at, false)
     end
     local done = {}
     repeat
@@ -1692,6 +2151,7 @@ function M.translate(rotation, c)
     for _, l in ipairs(lists) do
         pre[l[1]] = isPre(l[1], {})
     end
+    local moving = rewrite(c, lists, byName, origin, pre, omitted) -- rules 19, 14b
     for _, l in ipairs(lists) do
         if pre[l[1]] then
             for i, body in ipairs(l[2]) do -- rule 7: no focus tier on a pre-pull line
@@ -1760,6 +2220,9 @@ function M.translate(rotation, c)
         if not (m[2] and #(byName[m[2]] or {}) == 0) then
             header[#header + 1] = m[1]
         end
+    end
+    for _, h in ipairs(moving) do
+        header[#header + 1] = h
     end
     return text, omitted, read, header
 end

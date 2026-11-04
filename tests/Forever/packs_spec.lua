@@ -87,4 +87,31 @@ describe("Forever priorities", function()
             assert.are.same({}, hits)
         end)
     end
+    -- re-pin plan Task 7 (S1, R12): a spec opts into the Movement toggle (its NewClass entry's `movement = true`, what
+    -- Registry.MovementSpec answers) exactly when one of its packs reads toggle.movement
+    for _, class in ipairs({ "druid", "hunter", "mage", "paladin", "priest", "rogue", "shaman", "warlock", "warrior" }) do
+        it("opts a spec into Movement exactly when its pack reads toggle.movement (" .. class .. ")", function()
+            local Class = class:sub(1, 1):upper() .. class:sub(2)
+            local w = LOADS[class] and LOADS[class]()
+                or require("Forever.helpers.load_druid").load(
+                    nil,
+                    "src/Hekili_" .. Class .. "/" .. Class .. ".lua",
+                    class:upper()
+                )
+            local reads = {}
+            for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", class)) do
+                local key = type(p.spec) == "string" and p.spec:match(":(.+)$")
+                if key and p.simc:find("toggle.movement", 1, true) then
+                    reads[key] = true
+                end
+            end
+            local hits = {}
+            for _, s in ipairs(w.def.specs) do
+                if (s.movement == true) ~= (reads[s.key] == true) then
+                    hits[#hits + 1] = s.key
+                end
+            end
+            assert.are.same({}, hits)
+        end)
+    end
 end)
