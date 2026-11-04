@@ -20,6 +20,22 @@
 -- starfire -> insect_swarm 1; wrath -> starfire 1]; LIVE L10 0.0, L40 0.0, L60 0.0 s. Mana: wowsims dips to 133 at
 -- 41 s (Innervate at 41.18 s) and sits at the floor from ~73 s; ours dips to 57 at 48.4 s and from ~83 s, casting
 -- slower: our world's Starfire is 3.5 s against wowsims's 2.5 s (the kit's Eclipse charge, unmodelled: gaps.md BE).
+-- Re-pin e2842f0a78 (Task 10): the build's talents (presets.ts StandardTalents 5232220115501351--5053: Genesis 5 -> 2,
+-- Reflection 3/3), the APL's pre-pull Wrath, Innervate at `(fight_remains>380&mana<70%)|(mana<40%&fight_remains>30)`,
+-- Starfire rank 6 (9876, in the kit's copy) and its Eclipse/executing guard. Omitted 2 -> 2 (the two trinkets).
+-- Disagreements (P7; floor 0.86), decisions on-GCD 0.861 (79) top [starfire -> innervate 3; wrath -> innervate 3;
+-- wrath -> insect_swarm 2]:
+--   * -> innervate (log 10.45-22.59: 8 of the 11 misses, the top's 6 and 2 more; with them 76/79 = 0.962, over the
+--     0.909 base, so the drop is this line's alone): API-forced, gap AN: fight_remains reads
+--     3600, so the `fight_remains>380&mana.pct_lo<70` branch holds once mana dips under 70% (the truth from 11.82 s;
+--     10.45 s at 74% truth, our lo bound under 70%); wowsims casts it at 24.86 s on the 40% branch.
+--   wrath -> insect_swarm (36.73, 52.73): Insect Swarm lasts 16 s in wowsims's log (21.09 -> 37.09, 38.23 -> 54.23;
+--     the old log's too) against the kit's 14 s (the DB2's 12 s + Nature's Splendor's 2000 ms effect, mask 2097152 =
+--     Insect Swarm's; wowsims's own spell data says the same, so its 16 s is a sim-side extension): our belief shows
+--     the refresh 2 s early (already in the base's top, wrath -> insect_swarm 3). Kept on the DB2 until an in-game
+--     check (owner).
+--   Next (1): wrath -> starfire 55.73: the kit's Wrath grants Eclipse at its cast end; the 52.73 Wrath missed (no proc).
+--   LIVE L10 0.2, L40 0.2, L60 0.2 s.
 local object = { __jsontype = "object" } -- dkjson: an empty table as {} (UnitReference.create(), the default unit)
 return {
     class = "DRUID",
@@ -32,7 +48,7 @@ return {
         race = "RaceNightElf",
         class = "ClassDruid",
         gear = "ui/specs/druid/balance/gear_sets/prebis.gear.json",
-        talentsString = "5532220115501351--505",
+        talentsString = "5232220115501351--5053",
         specKey = "balanceDruid",
         options = { classOptions = { innervateTarget = setmetatable({}, object) } },
         profession1 = "Enchanting",

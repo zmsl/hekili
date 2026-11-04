@@ -15008,11 +15008,11 @@ options.packs.balance.Balance (wowsims.com).lists.actionID	desc	Select the entry
 options.packs.balance.Balance (wowsims.com).lists.actionID	name	Entry
 options.packs.balance.Balance (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 24858 - |cFFFFD100|cffffd100!buff.moonkin_form.up|r|r
 options.packs.balance.Balance (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1259799
-options.packs.balance.Balance (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 29166 - |cFFFFD100|cffffd100mana.pct_lo<10|r|r
+options.packs.balance.Balance (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 29166 - |cFFFFD100|cffffd100((fight_remains>380&mana.pct_lo<70)||(mana.pct_lo<40&fight_remains>30))|r|r
 options.packs.balance.Balance (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 8921 - |cFFFFD100|cffffd100!debuff.moonfire.up|r|r
 options.packs.balance.Balance (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 5570 - |cFFFFD100|cffffd100!debuff.insect_swarm.up|r|r
 options.packs.balance.Balance (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 16914 - |cFFFFD100|cffffd100active_enemies>=4|r|r
-options.packs.balance.Balance (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 2912 - |cFFFFD100|cffffd100buff.eclipse.up|r|r
+options.packs.balance.Balance (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 2912 - |cFFFFD100|cffffd100(buff.eclipse.up&(buff.eclipse.stack>1||!action.starfire.executing))|r|r
 options.packs.balance.Balance (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 5176
 options.packs.balance.Balance (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.balance.Balance (wowsims.com).lists.action_name	name	Action Name
@@ -15118,7 +15118,9 @@ options.packs.balance.Balance (wowsims.com).lists.enabled	name	Enabled
 options.packs.balance.Balance (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.balance.Balance (wowsims.com).lists.listName	name	Action List
 options.packs.balance.Balance (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
+options.packs.balance.Balance (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.balance.Balance (wowsims.com).lists.list_name	name	Action List
+options.packs.balance.Balance (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.balance.Balance (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.balance.Balance (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.balance.Balance (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.

@@ -62,6 +62,7 @@
 -- 7. `focus` from the recipe (the tier by the line's role, docs/dev/wowsims-packs.md; none on a pre-pull line),
 --    `use_off_gcd=1` on an ability whose `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions`
 --    and its `levelingFirst` lines put before them (a form the sim starts in, which the APL's own lines would never let a trailing line reach):
+--    the `levelingFirst` lines lead a non-empty precombat list too (its pre-pull cast would show before the form):
 --    `leveling` lines are silent at 60, `levelingFirst` lines whenever their form is up. Each recipe `extra`
 --    ({ before = action, line = text }, content outside wowsims's model) goes just before the first `actions` line of
 --    `before` (an error when there is none). The recipe's `settings` ({ [key] = { default = bool, desc = text } }) are
@@ -1782,7 +1783,14 @@ function guard(c, name, out, origin, omitted)
     local eff, keys = {}, {}
     for i, b in ipairs(out) do
         local x = b:match("^([%w_]+)")
-        if x ~= "call_action_list" and x ~= "run_action_list" and x ~= "cancel_buff" and c.ability[x] then
+        -- a recipe line (origin false: levelingFirst) carries its own condition
+        if
+            x ~= "call_action_list"
+            and x ~= "run_action_list"
+            and x ~= "cancel_buff"
+            and origin[i] ~= false
+            and c.ability[x]
+        then
             local r, err = effect(c, x)
             if err then
                 omitted[#omitted + 1] = ("%s #%d: no guard: %s's handler raised: %s"):format(name, origin[i], x, err)
@@ -2293,6 +2301,10 @@ function M.translate(rotation, c)
     for i, line in ipairs(c.levelingFirst) do
         table.insert(byName.default, i, line)
         table.insert(origin.default, i, false)
+        if #byName.precombat > 0 then -- a pre-pull line would show before the form out of combat
+            table.insert(byName.precombat, i, line)
+            table.insert(origin.precombat, i, false)
+        end
     end
     for _, x in ipairs(c.extra) do
         local at

@@ -293,7 +293,9 @@ M.FIXTURES = "tests/Forever/fixtures/"
 -- Retribution { 0, 0 }, Assassination { 0.16, 15 }, Combat { 0.22, 11 }, Enhancement { 0.96, 3 }, Demonology
 -- { 0.20, 1 }, Destruction { 0.40, 17 }, Fury { 0.44, 35 }, Warrior Protection { 0.50, 5 }.
 M.READY = {
-    druid_balance = { 0.71, 17 },
+    -- 17 -> 22 re-pin e2842f0a78: the new log's 79 decisions (42 Wraths, was 28 of 55); 17 of the 22 Wrath, cost class
+    -- (the mana floor); median 0.260
+    druid_balance = { 0.71, 22 },
     -- 0.26 -> 0.43: 0.26 rested on the Innervate miscalibration that ran the mana belief ~31 high before the 107.74 s
     -- Shifting Power; with regen correct the floor (lo) reaches the cost ~0.4 s after the truth (gap BQ); owner ruling
     -- 2026-10-26

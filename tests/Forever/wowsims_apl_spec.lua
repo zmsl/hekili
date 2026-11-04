@@ -115,6 +115,24 @@ describe("the wowsims APL translator", function()
         )
     end)
 
+    it("puts the recipe's levelingFirst lines before a pre-pull list's own too", function()
+        local pre = cast(100)
+        pre.doAtValue = const("-1.5s")
+        local text = apl.translate(
+            { prepullActions = { pre }, priorityList = { cast(200) } },
+            ctx({ levelingFirst = { "dot,if=!buff.dot.up" } })
+        )
+        assert.are.equal(
+            table.concat({
+                "actions.precombat=dot,if=!buff.dot.up",
+                "actions.precombat+=/strike",
+                "actions=dot,if=!buff.dot.up",
+                "actions+=/big_hit",
+            }, "\n"),
+            text
+        )
+    end)
+
     it(
         "omits the recipe's prepullSkip actions from the precombat list only, listed, and refuses an unused one",
         function()

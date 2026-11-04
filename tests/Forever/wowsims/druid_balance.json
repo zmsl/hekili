@@ -1,9 +1,6 @@
 {
   "encounter":{
-    "executeProportion20":0.2,
-    "executeProportion25":0.25,
     "executeProportion35":0.35,
-    "executeProportion90":0.9,
     "duration":180,
     "targets":[{
         "minBaseDamage":2601,
@@ -15,7 +12,7 @@
         "parryHaste":true,
         "mobType":"MobTypeMechanical"
       }],
-    "executeProportion45":0.45
+    "executeProportion20":0.2
   },
   "raid":{
     "parties":[{
@@ -32,20 +29,20 @@
                   "id":22149,
                   "enchant":8218
                 },{
-                  "id":10253,
+                  "id":10210,
                   "randomSuffix":12734
                 },{
-                  "id":272411
+                  "id":272413
                 },{
-                  "id":10246,
+                  "id":10143,
                   "randomSuffix":12734,
                   "enchant":8492
                 },{
-                  "id":10136,
+                  "id":10248,
                   "randomSuffix":12734,
                   "enchant":7665
                 },{
-                  "id":10251,
+                  "id":10140,
                   "randomSuffix":12734,
                   "enchant":7647
                 },{
@@ -54,8 +51,7 @@
                   "id":252486,
                   "enchant":2544
                 },{
-                  "id":10247,
-                  "randomSuffix":12734,
+                  "id":254129,
                   "enchant":8492
                 },{
                   "id":272407
@@ -75,9 +71,38 @@
             },
             "race":"RaceNightElf",
             "name":"Balance",
-            "talentsString":"5532220115501351--505",
+            "talentsString":"5232220115501351--5053",
             "profession2":"Tailoring",
             "rotation":{
+              "type":"TypeAPL",
+              "prepullActions":[{
+                  "action":{
+                    "condition":{
+                      "cmp":{
+                        "op":"OpLt",
+                        "rhs":{
+                          "const":{
+                            "val":"4"
+                          }
+                        },
+                        "lhs":{
+                          "numberTargets":{
+                          }
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":9912
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-1.5s"
+                    }
+                  }
+                }],
               "priorityList":[{
                   "action":{
                     "autocastOtherCooldowns":{
@@ -86,17 +111,68 @@
                 },{
                   "action":{
                     "condition":{
-                      "cmp":{
-                        "op":"OpLt",
-                        "rhs":{
-                          "const":{
-                            "val":"10%"
-                          }
-                        },
-                        "lhs":{
-                          "currentManaPercent":{
-                          }
-                        }
+                      "or":{
+                        "vals":[{
+                            "and":{
+                              "vals":[{
+                                  "cmp":{
+                                    "op":"OpGt",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"380s"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "remainingTime":{
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "cmp":{
+                                    "op":"OpLt",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"70%"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentManaPercent":{
+                                      }
+                                    }
+                                  }
+                                }]
+                            }
+                          },{
+                            "and":{
+                              "vals":[{
+                                  "cmp":{
+                                    "op":"OpLt",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"40%"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentManaPercent":{
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "cmp":{
+                                    "op":"OpGt",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"30s"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "remainingTime":{
+                                      }
+                                    }
+                                  }
+                                }]
+                            }
+                          }]
                       }
                     },
                     "castSpell":{
@@ -168,15 +244,49 @@
                 },{
                   "action":{
                     "condition":{
-                      "auraIsActive":{
-                        "auraId":{
-                          "spellId":408255
-                        }
+                      "and":{
+                        "vals":[{
+                            "auraIsActive":{
+                              "auraId":{
+                                "spellId":408255
+                              }
+                            }
+                          },{
+                            "or":{
+                              "vals":[{
+                                  "cmp":{
+                                    "op":"OpGt",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"1"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "auraNumStacks":{
+                                        "auraId":{
+                                          "spellId":408255
+                                        }
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "not":{
+                                    "val":{
+                                      "spellIsCasting":{
+                                        "spellId":{
+                                          "spellId":9876
+                                        }
+                                      }
+                                    }
+                                  }
+                                }]
+                            }
+                          }]
                       }
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":25298
+                        "spellId":9876
                       }
                     }
                   }
@@ -188,8 +298,7 @@
                       }
                     }
                   }
-                }],
-              "type":"TypeAPL"
+                }]
             },
             "balanceDruid":{
               "options":{

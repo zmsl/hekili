@@ -152,7 +152,8 @@ Translation:
 - `executePhase` (the key the kit's execute read answers, `"execute_phase"`): wowsims's `isExecutePhase` E20.
 - `leveling` (lines appended to `actions`): the fillers a lower level needs, each silent at 60 (below).
 - `levelingFirst` (lines put first in `actions`): a form the sim starts in and the APL never casts (Balance's Moonkin
-  Form), which a trailing line would never reach; silent while the form is up.
+  Form), which a trailing line would never reach; silent while the form is up. They lead a non-empty precombat list
+  too, so a pre-pull cast never shows before the form.
 - `extra` (`{ { before = "<action>", line = "<simc line>" } }`): a line put just before the first `actions` line of
   `before` (the translator errors when there is none). Only for content wowsims cannot model, never to tune a
   wowsims line, and each use names its reason in the recipe comment. The user's ruling (2026-10-21), for Warrior's

@@ -45,7 +45,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
                 end
             end,
         })
-        assert.is_true(up > 30 and down < 24, up .. " vs " .. down) -- Tag 2's 31 and 22 a second
+        -- re-pin e2842f0a78: the log's regen is 12.6 a second and 17.1 inside Serenity Field (112.21-127.21 s), all
+        -- Tag 1 (Reflection 3/3 in the new build); was Tag 2's 31 and 22 (up > 30, down < 24)
+        assert.is_true(up > 16 and down < 13, up .. " vs " .. down)
     end)
 
     it("Feral's replay world reports the energy rate the client reads", function()
@@ -192,9 +194,12 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "Balance (wowsims.com)",
             content("druid_balance", W.Balance, "Balance (wowsims.com)", 60),
             "druid_balance",
-            -- 0.909 (50/55) on central fix 22 (cast bars: the DoT-refresh replay limit gone); 0.855 (47/55) on central
-            -- fixes 14-15 (Task 7g); 0.836 on central fix 13 over fix 12; 0.818 on central fix 12 (GAP R), from 0.56
-            0.90
+            -- 0.90 -> 0.86 (0.861, 68/79) re-pin e2842f0a78: the new Innervate line's `fight_remains>380&mana<70%`
+            -- branch holds for us from the first mana dip (fight_remains reads 3600: gap AN, API-forced), 8 of the 11
+            -- misses (with them 76/79 = 0.962, over the 0.909 base); Insect Swarm's 16 s in wowsims's log against the
+            -- kit's DB2 14 s, 2, already in the base's top (the recipe's header). 0.909 (50/55) on central fix 22 (cast bars: the DoT-refresh replay limit gone); 0.855 (47/55) on
+            -- central fixes 14-15 (Task 7g); 0.836 on central fix 13 over fix 12; 0.818 on central fix 12 (GAP R), from 0.56
+            0.86
         )
     end)
     -- wowsims's sim starts in Moonkin Form (its list never casts it); the recipe's `moonkin_form` line does, once
@@ -220,7 +225,8 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- casts; the live world's presses now resolve from the driving instance, so a Clearcasting free cast is free in the
     -- world too: the 10.8 s measured before that was the world refusing Moonfire for cost under Clearcasting, read
     -- from the never-stepped oracle); 1.4 (L10 1.6, L40 1.4: Task 7g, after shared gap R's fix; 8.6 before it)
-    local BALANCE60 = 0.0
+    -- 0.0 -> 0.2 measured on the re-pin e2842f0a78 (L10 0.2, L40 0.2, L60 0.2; not traced: under the 6 s limit)
+    local BALANCE60 = 0.2
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Balance (wowsims.com) stays live at level " .. level, function()
             ws.live(
