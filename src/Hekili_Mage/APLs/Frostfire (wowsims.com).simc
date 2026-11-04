@@ -12,6 +12,7 @@ actions+=/mana_gem,use_off_gcd=1,if=debuff.fire_vulnerability.stack=5
 actions+=/pyroblast,focus=1,if=(buff.heating_up.stack=3&!action.pyroblast.executing)
 actions+=/fire_blast,focus=1,if=buff.fingers_of_frost.stack<2
 actions+=/frostfire_bolt
+actions+=/fireball,if=!action.frostfire_bolt.known
 actions.evocation=read_ley_line,if=(!buff.energized.up&action.read_ley_line.known)
 actions.evocation+=/evocation,focus=2,if=((action.read_ley_line.known&prev.1.read_ley_line)|(!action.read_ley_line.known&(!buff.energized.up&action.read_ley_line.known)))&!buff.energized.up
 actions.evocation+=/evocation,focus=2,if=(!action.read_ley_line.known|(action.read_ley_line.known&!cooldown.read_ley_line.ready)|buff.energized.up)

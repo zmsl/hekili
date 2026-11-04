@@ -25,9 +25,9 @@ local REPLAY = {
     frostfire = { procs = { ["1237313:1"] = true, ["18809:1"] = true } },
 }
 
--- recipe, world content, pack, the replay floor (the first clean run's, never lowered except with a named cause: fix 26,
--- Fire 0.84 -> 0.82, see the floor's comment), LIVE60: the pack's own worst
--- idle at 60, rounded up to 0.1 s (P8).
+-- recipe, world content, pack, the replay floor (never lowered except with a named cause, written below), LIVE60:
+-- the pack's own worst idle at 60, rounded up to 0.1 s (P8; the L10/L40 brackets keep 6 s, ruling R22).
+-- History (before the re-pin):
 -- Floors: Arcane 0.780 (46 of 59), Fire 0.794 (50 of 63), truncated; the classification in each recipe's header.
 -- Fire raised 0.79 -> 0.84 on 0ce5d1a4 (0.841, 53 of 63): the replay's cooldown end is the log's timestamp, so Fire
 -- Blast's three decisions at its cooldown's end agree (the CD_PROBE disagreement in mage_fire.lua's header).
@@ -36,9 +36,8 @@ local REPLAY = {
 -- slice that showed a 440-mana cast ready at any mana, so ours now shows Scorch waiting on its 150.
 -- Arcane 0.77 -> 0.81 on the same fix (0.814, 48 of 59): wowsims's Frostbolts at the log's 93.87 and 132.37, never
 -- shown before (the stale slice showed Arcane Blast ready), now shown; the Arcane Blast at 155.07 no longer early.
--- LIVE60: Arcane never idles at 60; Fire spends its mana out by 85 s of the 120 s fight and then waits on Fire Blast's
--- 340 (Scorch's line holds while the five stacks last), as wowsims's own fight runs dry (its Evocation then on its
--- 8-minute cooldown, which the gate counts as a usable free ability).
+-- LIVE60 (then): Arcane 0; Fire 12.6, its mana out by 85 s and waiting on Fire Blast's 340, as wowsims's own fight
+-- runs dry (its Evocation then on its 8-minute cooldown, which the gate counts as a usable free ability).
 -- The loops' flicker (pack_gate FLICKER; 20 fights: Arcane 1.43/min, oracle 1.41; Fire 1.21/min, oracle 0.40). Fire's
 -- excess is measured, not fixed: in 3 fights (seeds 1-3), 7 of its 10 first-icon A-B-A flickers are fire_blast >
 -- fireball > fire_blast at Fire Blast's cooldown end (the not-ready flag pushes the believed ready time to now +
@@ -51,10 +50,14 @@ local REPLAY = {
 -- Arcane 0.81 -> 0.96 (0.966, 56 of 58; both misses the mana gem's restore not believed), LIVE60 0 -> 10.0 (the Deep
 -- Arcane list has no cheap filler: mana dry by about 90 s, waiting on Fire Blast's 340; wowsims's own fight idles
 -- 96.40 -> 114.40).
--- Fire 0.82 -> 0.97 (0.974, 76 of 78; both misses equality edges at the log's instant), LIVE60 12.6 -> 6.0 (measured).
--- Frostfire 0.89 -> 0.96 (0.965, 55 of 57; the mana gem, Fire Vulnerability's `remains<5` edge: gap BS), LIVE60
--- 10.8 -> 11.8 (mana dry from about 87 s, waiting on Frostfire Bolt's 314.5 and Scorch's 150; wowsims's own fight
--- idles about 10 s at 91.6).
+-- Fire 0.82 -> 0.97 (0.974, 76 of 78; 70.50 a replay limit (line position), 87.00 untraced), LIVE60 12.6 -> 6.0
+-- (measured).
+-- Frostfire 0.89 -> 0.96 (0.965, 55 of 57; the mana gem, the `remains<5` line-position edge), LIVE60 10.8 -> 11.8
+-- (mana dry from about 87 s, waiting on Frostfire Bolt's 314.5 and Scorch's 150; wowsims's own fight idles about 10 s
+-- at 91.6).
+-- The replay's flicker rose (Fire 0 -> 2.66/min, Arcane 0.67 -> 1.33): the belief's cooldown probe push (CD_PROBE)
+-- shows the filler one poll at each cooldown end, central (gaps.md CQ), fixed by Task 10b (ruling R21).
+-- Leveling (R22): Arcane L40 6.4 s and Frostfire L10 6.6 s took recipe `leveling` fillers (the recipes' headers).
 local PACKS = {
     { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0 },
     { "mage_fire", "Fire", "Fire (wowsims.com)", 0.97, 6.0 },
@@ -62,9 +65,7 @@ local PACKS = {
 }
 
 describe("the Mage wowsims.com packs #slow #wowsims", function()
-    -- one block per pack: the replay floor (measured on the first clean run, never lowered except with a named cause:
-    -- fix 26, Fire 0.84 -> 0.82, see the floor's comment), the pack's own worst
-    -- idle at 60 (LIVE60, measured), and the brackets
+    -- one block per pack: the replay floor, the brackets (6 s; L60 the pack's own LIVE60 when higher)
     for _, p in ipairs(PACKS) do
         local spec, world, pack, FLOOR, LIVE60 = p[1], W[p[2]], p[3], p[4], p[5]
         it(pack .. " follows wowsims's casts", function()
@@ -72,7 +73,7 @@ describe("the Mage wowsims.com packs #slow #wowsims", function()
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()
-                ws.live(pack, content(spec, world, pack, level), math.max(6, LIVE60))
+                ws.live(pack, content(spec, world, pack, level), level == 60 and math.max(6, LIVE60) or 6)
             end)
         end
     end

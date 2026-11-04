@@ -325,11 +325,13 @@ M.READY = {
     hunter_survival = { 0.63, 11 },
     -- { 0.47, 21 } -> { 0.76, 9 } re-pin e2842f0a78 (the new log): the 9 real rows late, cost class (gap BQ: lo reaches
     -- a cost after the truth), fire_blast 7 (max 0.76: the dry-mana waits on its 340)
-    mage_arcane = { 0.76, 9 }, -- 0.760, 9 (Mage lane, ruling M13; first clean run on 0ce5d1a4)
-    -- { 0.37, 31 } -> { 0.45, 10 } re-pin e2842f0a78: cost class (gap BQ), scorch 10 (max 2.23)
+    mage_arcane = { 0.76, 9 }, -- 0.760, 9 (ruling M13)
+    -- { 0.37, 31 } -> { 0.45, 10 } re-pin e2842f0a78: cost class, scorch 10; the median is gap BQ's size, but the
+    -- max 2.23 s rows sit about 50 mana under the truth, past BQ's ~0.4 s (untraced: an unseen Master of Elements
+    -- refund is the candidate)
     mage_fire = { 0.45, 10 }, -- 0.450, 10
     -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
-    mage_frostfire = { 0.42, 9 }, -- 0.420, 9 (Task FFB, ruling M13; first clean run on 3e104ce9)
+    mage_frostfire = { 0.42, 9 }, -- 0.420, 9 (Task FFB, ruling M13)
     paladin_protection = { 0.86, 7 },
     paladin_retribution = { 0.29, 10 },
     -- 1.500, 36 (Priest lane, Task 14; first clean run on 30e92574+): Mind Flay's 3 s channel, the next icon ready at

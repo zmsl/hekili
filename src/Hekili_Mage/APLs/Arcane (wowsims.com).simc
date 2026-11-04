@@ -17,6 +17,7 @@ actions+=/arcane_wrath,if=((action.presence_of_mind.known&prev.1.presence_of_min
 actions+=/arcane_wrath
 actions+=/fire_blast
 actions+=/arcane_blast
+actions+=/frostbolt,if=!talent.arcane_instability.enabled
 actions.evocation=read_ley_line,if=(!buff.energized.up&action.read_ley_line.known)
 actions.evocation+=/evocation,if=((action.read_ley_line.known&prev.1.read_ley_line)|(!action.read_ley_line.known&(!buff.energized.up&action.read_ley_line.known)))&!buff.energized.up
 actions.evocation+=/evocation,if=(!action.read_ley_line.known|(action.read_ley_line.known&!cooldown.read_ley_line.ready)|buff.energized.up)

@@ -52,8 +52,8 @@ local PACKS = {
     ["Druid/APLs/Feral"] = { "shred=1", "claw=1", "rake=2", "rip=2", "rake=2" },
     ["Druid/APLs/Guardian"] = { "maul=1", "maul=2", "lacerate=2", "demoralizing_roar=2", "lacerate=2" },
     ["Mage/APLs/Arcane"] = { "arcane_missiles=1" },
-    -- re-pin e2842f0a78: the list closes with a second Scorch line (the filler)
-    ["Mage/APLs/Fire"] = { "pyroblast=1", "scorch=2", "arcane_missiles=1", "scorch=2" },
+    -- re-pin e2842f0a78: the closing second Scorch line is the filler, untiered (`scorch = { 2, false }`)
+    ["Mage/APLs/Fire"] = { "pyroblast=1", "scorch=2", "arcane_missiles=1" },
     -- the DoTs, Banes, curses and Searing Pain's Demonic Brand upkeep at 2; Shadow Bolt on Shadow Trance and Soul Fire on
     -- Decimation at 1; Affliction's first Shadow Bolt keeps Shadow Vulnerability up (2); Amplify Curse a cooldown (none)
     ["Warlock/APLs/Affliction"] = {

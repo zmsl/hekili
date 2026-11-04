@@ -35,11 +35,15 @@
 -- new list's pre-pull Pyroblast, the gear's trinket the Talisman of Ephemeral Power (18820). Omitted 1 -> 0 (the
 -- trinket, mapped).
 -- Disagreements (P7; floor 0.96), decisions on-GCD 0.965 (57) top [fire_blast -> frostfire_bolt 1; fire_blast ->
--- scorch 1]: 148.90, the Citrine's +791 at the instant not believed (lo 54, truth 845: mage_arcane.lua's shared gap);
--- 88.50, the Scorch line's `debuff.fire_vulnerability.remains<5` edge (refreshed 63.50, 5.0 left: the modelled
--- target debuff, gap BS).
+-- scorch 1]: 148.90, the Citrine's +791 at the instant not believed (lo 54, truth 845: gaps.md CR);
+-- 88.50, a replay limit (line position, as mage_fire.lua's 70.50): the Scorch line's
+-- `debuff.fire_vulnerability.remains<5` with the debuff refreshed at 63.50 + 30, exactly 5.0 left at the log's
+-- instant, read a hair under 5 at the decision's line offset (not gap BS).
 -- LIVE L10 6.6, L40 0.2, L60 11.8 s (was 10.8): mana dry from about 87 s, waiting on Frostfire Bolt's 314.5 and
 -- Scorch's 150 (Evocation on its cooldown counts usable); wowsims's own fight idles about 10 s at 91.6 -> 102.4.
+-- Leveling (ruling R22: L10/L40 keep the 6 s bar): L10's 6.6 s is full mana with Fire Blast the only listed
+-- castable line (Frostfire Bolt unlearned until L40), Fireball affordable and unlisted: the filler Fireball until
+-- Frostfire Bolt.
 return {
     class = "MAGE",
     pack = "Frostfire (wowsims.com)",
@@ -63,5 +67,5 @@ return {
     -- Quickening Gem 19339)
     map = { ["item:18820"] = "use_items" },
     focus = { pyroblast = 1, scorch = 2, evocation = 2, fire_blast = 1, counterspell = 1 },
-    leveling = {},
+    leveling = { "fireball,if=!action.frostfire_bolt.known" },
 }

@@ -13998,6 +13998,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0007	|cFFFFD1007
 options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1326079
 options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2136
 options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 400574
+options.packs.arcane.Arcane (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 116 - |cFFFFD100|cffffd100!talent.arcane_instability.enabled|r|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	name	Action Name
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.arcane_blast	|T136000:0|t Spell 400574
@@ -18372,6 +18373,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.actionID	values.0004	|cFFFFD100
 options.packs.fire.Frostfire (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 11366 - |cFFFFD100|cffffd100(buff.heating_up.stack=3&!action.pyroblast.executing)|r|r
 options.packs.fire.Frostfire (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 2136 - |cFFFFD100|cffffd100buff.fingers_of_frost.stack<2|r|r
 options.packs.fire.Frostfire (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 401502
+options.packs.fire.Frostfire (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 133 - |cFFFFD100|cffffd100!action.frostfire_bolt.known|r|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	name	Action Name
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.arcane_blast	|T136000:0|t Spell 400574
