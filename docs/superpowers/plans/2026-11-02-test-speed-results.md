@@ -110,6 +110,7 @@ loop_warrior 178.4 (#loop Arms 140, #party Arms 38), detect_more 111.6 (K16 45; 
 | 4 split files | `make gate` wall s, interleaved x3 (loaded machine) | 801.8 / 898.1 / 867.4 | 1013.5 / 816.1 / 710.8 | yes (result lines) | not run | yes (by the bound file, see below) |
 | 5 boot cache | `headless.new` CPU s / file CPU s, 4 heavy files | 0.45/151.7, 0.45/199.3, 0/184.9, 0/93.8 (<= 0.3 %) | n/a | n/a | n/a | dropped: boot is 0.3 % |
 | 5 belief-load cache | file CPU s (os.clock), druid_harness_gates_b / detect_more, load ~7 | 170.4 / 73.0 | 163.2 / 61.2 | yes (result lines; +4 new tests, see below) | yes | yes |
+| 6 collector tuning | `make test-druid` + `test-warlock` user+sys s, mean of 3 | 1520.2 (stock 200/200, spread 53.6) | 1505.6 best (1000/200) | n/a (reverted) | n/a | dropped: inside the spread |
 
 ### Task 2: the stamped check
 
@@ -218,3 +219,30 @@ timing; Task 1's 599 s / 7573 s quiet). `results.sh` against `base2`, ignoring b
 `results.sh` dropped them): only `all files:` differs, 2821 against 2817, the four tests added since (three in
 `detect_floors_spec.lua`, bf07cbf45; this task's one). Rig `speed-boot` (18:09, load 2.3, `pgrep -c busted` 0): rc 0,
 wall 1077 s, `diff` against `base2/rig.txt`: no output.
+
+### Task 6: collector tuning (dropped)
+
+Raw logs `~/src/hekili-speed-runs/task6/` (`trial-batch.sh`/`.out`, `test-batch.sh`/`.out`). Trial helper (reverted):
+`tests/helpers/gc.lua` set `setpause`/`setstepmul` from env; `run_one` passed it as `--helper` to every file not
+matching `collectgarbage|helpers[./]alloc|harness[./]loop|(pack|arms|fury)_gate|Forever[./]helpers[./](alts|wowsims)`
+(the brief's grep widened by ruling S6: loop and gate files carry the CPU-ratio bar). Under S6 every #warlock file is
+exempt (a control), and in #druid only `druid_harness_spec`, `druid_harness_gates_a`/`_b` take the helper.
+One lock hold, 2026-11-03 18:46-20:35, `XDG_CACHE_HOME` per run, warm-up discarded, config order rotated per round;
+loads at each start 1.3-3.9 (6.8 at the warm-up). The decision uses user+sys CPU, which load moves less than wall.
+Peak RSS on `druid_harness_gates_b_spec.lua` alone (Task 4 moved the brief's `druid_harness_spec.lua` #druid gates
+there). All runs rc 0.
+
+| (pause, stepmul) | druid+warlock CPU s r1 / r2 / r3 | mean | gates_b alone CPU s | peak RSS KB (x 14) |
+|---|---|---|---|---|
+| (200, 200) stock | 1494.6 / 1517.9 / 1548.2 | 1520.2 | 145.84 / 145.86 / 145.86 | 152 956 (2.0 GB) |
+| (400, 200) | 1484.2 / 1538.7 / 1520.7 | 1514.5 | 143.10 / 143.60 / 141.65 | 249 484 (3.3 GB) |
+| (1000, 200) | 1506.4 / 1511.3 / 1499.1 | 1505.6 | 141.50 / 142.47 / 142.92 | 539 520 (7.2 GB) |
+| (400, 400) | 1502.2 / 1522.6 / 1508.0 | 1510.9 | 142.19 / 144.98 / 145.64 | 249 400 (3.3 GB) |
+
+The best mean is 14.6 s (1.0 %) under stock against stock's own 53.6 s spread; the warlock control, which no helper
+reaches, swings 733-770 s between identical runs. One file alone shows the real effect, -2.4 % (gates_b 145.85 ->
+~142.3 s), too small for the tag sums to resolve. Extra check, the check tier (`make test`, most helper-taking files),
+interleaved stock / (1000, 200) x 3 after a warm-up, 20:35-20:58 (load 3.4 at the warm-up, ~10.5 at the later starts:
+the previous run's own 16 jobs): user+sys 2657.7 / 2558.2 / 2504.4 (mean 2573.4) against 2623.2 / 2573.0 / 2549.4
+(mean 2581.9); wall 198.8 / 190.0 / 186.5 against 192.8 / 190.4 / 188.5. No gain there either. Dropped: helper and
+`run_one` change reverted, nothing under test changed, so the Step 4 results/bytes diffs and the gate were not rerun.
