@@ -208,6 +208,21 @@ describe("reactions", function()
             assert.are.same({ true, 10.47, 16.47, 0, 0 }, W("dodged"))
         end)
 
+        it("a held avoid stages nothing at T.onExpire unless its ticket is still provisional", function()
+            build({ reaction("dodged", "target", "dodge") })
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            ctl.now = 10.47
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            drain(10.5)
+            assert.are.equal(T.PROV, T.state[i])
+            T.state[i] = T.TENT -- no longer provisional, its avoid field still set
+            T.onExpire(i, 10.6)
+            drain(10.7)
+            assert.are.equal(0, runs.dodged)
+        end)
+
         it("a swing's crit credited final runs the crit reaction once; a provisional one only at its final", function()
             build({ reaction("critted", "target", "crit") })
             ctl.now = 10
@@ -253,6 +268,9 @@ describe("reactions", function()
         on = true
         drain(5.2)
         local casts, lastT, opened, gcd = I.castsRun, I.lastCastT, T.opened, VS.Gcd(5.3).est
+        -- the belief's prev_gcd (the GCD's owner and kind: the core's prev_gcd is its own, from its events) and a cooldown
+        local owner, kind, cd = I.gcdOwner, I.gcdKindLast, VS.Cooldown(fs.SPENDER_C, 5.3).est
+        assert.is_true(owner > 0)
         local stepped, strict = W("stepped"), W("strict")
         assert.are.same({ true, 1 }, { stepped[1], stepped[5] })
         ctl.now = 5.3
@@ -260,6 +278,7 @@ describe("reactions", function()
         drain(5.4)
         assert.are.equal(1, runs.parried)
         assert.are.same({ casts, lastT, opened, gcd }, { I.castsRun, I.lastCastT, T.opened, VS.Gcd(5.3).est })
+        assert.are.same({ owner, kind, cd }, { I.gcdOwner, I.gcdKindLast, VS.Cooldown(fs.SPENDER_C, 5.3).est })
         assert.are.same(stepped, W("stepped"))
         assert.are.same(strict, W("strict"))
         for a = 1, I.ab.n do
@@ -283,5 +302,20 @@ describe("reactions", function()
         assert.are.equal(0, bytes)
         assert.are.equal(0, I.nowErrors)
         assert.is_true(runs.parried >= 500 and runs.critted >= 500)
+    end)
+
+    it("allocates nothing across 1000 Drains firing a target-side reaction each (our cast dodged)", function()
+        build({ reaction("dodged", "target", "dodge") })
+        local t = 5
+        local bytes = alloc.bytes(function()
+            t = t + 2
+            ctl.now = t
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            drain(t + 0.4)
+        end, 1000)
+        assert.are.equal(0, bytes)
+        assert.are.equal(0, I.nowErrors)
+        assert.is_true(runs.dodged >= 500, tostring(runs.dodged))
     end)
 end)

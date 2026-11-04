@@ -828,6 +828,7 @@ L["Line %s: Converted operations in '%s' to '%s'."] = true
 L["Line %s: Removed unnecessary expel_harm cooldown check from action entry for jab (%sx)."] = true
 L["Line %s: Removed unnecessary energy cap check from action entry for fists_of_fury (%sx)."] = true
 L["Line %s: Unsupported action '%s'."] = true
+L["Line %s: Unknown window '%s'; entry disabled."] = true
 L["Line %s: focus=%s is not a tier (a whole number, 1 highest); ignored."] = true
 L["Line %s: Unsupported use_item action [ %s]; entry disabled."] = true
 L["Line %s: Unable to convert wait_for_cooldown,name=X to wait,sec=cooldown.X.remains; entry disabled."] = true

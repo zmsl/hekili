@@ -1576,6 +1576,168 @@ state.spend = spend
 state.rawSpend = rawSpend
 
 
+-- Rotation windows, the core's side (re-pin design §3a, decision 11): the forecast only. `state.window.<name>` answers
+-- `.up`, `.remains` and `.elapsed` (0 when down), `.step` and `.next.<ability key>` (the due step of an up window) at
+-- query_time. Every reset copies the belief's windows from Facade.Window (CopyWindows) and clears the per-line memory,
+-- so nothing a cycle changes (an `open_window`/`close_window` line, Core.lua; a handler's `openWindow`/`closeWindow`; a
+-- simulated cast's step, WindowCast from RunHandler) survives it or reaches the belief. The edge and step rules are the
+-- belief's (Game/State/Families/Windows.lua), written again here: never one shared function. Built at
+-- SpecializationChanged (BuildWindows); nothing allocated per cycle.
+local WIN = {
+    n = 0, byKey = {}, tables = {}, of = {}, -- of: a window's table (or its `next` table) -> its index
+    dur = {}, maxDur = {}, maxRef = {}, refresh = {}, steps = {}, nSteps = {}, lastAt = {}, loop = {}, dev = {}, strict = {},
+    up = {}, openedAt = {}, expiresAt = {}, refreshes = {}, step = {},
+    lineLast = {}, -- by an open_window line's script ID: its last result in this cycle (a held condition opens once)
+}
+
+do
+    local STAY, SKIP, END = 1, 2, 3
+    local DEV = { stay = STAY, skip = SKIP, ["end"] = END }
+
+    local function upAt( w, t )
+        return WIN.up[ w ] and WIN.openedAt[ w ] <= t and t < WIN.expiresAt[ w ]
+    end
+
+    local function close( w )
+        WIN.up[ w ], WIN.openedAt[ w ], WIN.expiresAt[ w ], WIN.refreshes[ w ], WIN.step[ w ] = false, 0, 0, 0, 0
+    end
+
+    local function open( w, t, dur, refresh )
+        if WIN.up[ w ] and WIN.expiresAt[ w ] <= t then close( w ) end -- expired: a fresh open
+        local e = t + dur
+        if not WIN.up[ w ] then
+            WIN.up[ w ], WIN.openedAt[ w ], WIN.refreshes[ w ] = true, t, 0
+            WIN.step[ w ] = WIN.nSteps[ w ] > 0 and 1 or 0
+        elseif refresh and ( WIN.maxRef[ w ] < 0 or WIN.refreshes[ w ] < WIN.maxRef[ w ] ) then
+            WIN.refreshes[ w ] = WIN.refreshes[ w ] + 1
+        else
+            return
+        end
+        local cap = WIN.maxDur[ w ] > 0 and WIN.openedAt[ w ] + WIN.maxDur[ w ] or e
+        WIN.expiresAt[ w ] = e < cap and e or cap
+    end
+
+    local function advance( w, s )
+        if s < WIN.nSteps[ w ] then WIN.step[ w ] = s + 1
+        elseif WIN.loop[ w ] then WIN.step[ w ] = 1
+        else close( w ) end
+    end
+
+    local mtWindow = { __index = function( t, k )
+        local w, q = WIN.of[ t ], state.query_time
+        local up = upAt( w, q )
+        if k == "up" then return up
+        elseif k == "down" then return not up
+        elseif k == "remains" then return up and WIN.expiresAt[ w ] - q or 0
+        elseif k == "elapsed" then return up and q - WIN.openedAt[ w ] or 0
+        elseif k == "step" then return up and WIN.step[ w ] or 0 end
+    end }
+
+    local mtNext = { __index = function( t, key )
+        local w = WIN.of[ t ]
+        local steps = WIN.steps[ w ]
+        return steps and upAt( w, state.query_time ) and steps[ WIN.step[ w ] ] == key or false
+    end }
+
+    state.window = {}
+
+    --- SpecializationChanged: one table per registered window (class.windows), reused by index. Not per cycle.
+    function state:BuildWindows()
+        wipe( WIN.byKey )
+        wipe( state.window )
+        local n = 0
+        for name, d in pairs( class.windows ) do
+            n = n + 1
+            WIN.byKey[ name ] = n
+            local t = WIN.tables[ n ] or setmetatable( { next = setmetatable( {}, mtNext ) }, mtWindow )
+            WIN.tables[ n ], WIN.of[ t ], WIN.of[ t.next ] = t, n, n
+            state.window[ name ] = t
+            WIN.dur[ n ], WIN.refresh[ n ] = d.duration, d.refresh == true
+            WIN.maxDur[ n ], WIN.maxRef[ n ] = d.max_duration or 0, d.max_refresh or -1
+            WIN.steps[ n ], WIN.nSteps[ n ] = d.steps or false, d.steps and #d.steps or 0
+            local lastAt = {} -- ability key -> its last step position
+            for k = 1, WIN.nSteps[ n ] do lastAt[ d.steps[ k ] ] = k end
+            WIN.lastAt[ n ], WIN.loop[ n ] = lastAt, d.loop == true
+            WIN.dev[ n ], WIN.strict[ n ] = DEV[ d.on_deviation ] or STAY, d.strict == true
+            close( n )
+        end
+        WIN.n = n
+        wipe( WIN.lineLast )
+    end
+
+    --- Every reset: the belief's windows (Facade.Window, the one window read), and each line's memory cleared.
+    function state.CopyWindows()
+        for name, w in pairs( WIN.byKey ) do
+            WIN.up[ w ], WIN.openedAt[ w ], WIN.expiresAt[ w ], WIN.refreshes[ w ], WIN.step[ w ] = Facade.Window( name )
+        end
+        for id in pairs( WIN.lineLast ) do WIN.lineLast[ id ] = false end
+    end
+
+    --- The verbs (handlers, and Core.lua's lines): open or close window `name` at query_time. `duration` (an
+    --- `open_window` line's duration=) overrides the registered one; `refresh` (its refresh=1), else the registered
+    --- `refresh`, lets an open window restart, within its caps. A close acts only on an open window.
+    function state.openWindow( name, duration, refresh )
+        local w = WIN.byKey[ name ]
+        if not w then return end
+        if refresh == nil then refresh = WIN.refresh[ w ] end
+        open( w, state.query_time, type( duration ) == "number" and duration > 0 and duration or WIN.dur[ w ], refresh )
+    end
+
+    function state.closeWindow( name )
+        local w = WIN.byKey[ name ]
+        if w and upAt( w, state.query_time ) then close( w ) end
+    end
+
+    --- Core.lua's `open_window` line: its last result in this cycle (false after the reset); records the new one.
+    function state.WindowLine( scriptID, pass )
+        local was = WIN.lineLast[ scriptID ]
+        WIN.lineLast[ scriptID ] = pass
+        return was
+    end
+
+    --- A window-reading line's recheck times (state.recheck): each up window's forecast open still ahead (a hair past
+    --- it, the clock's rounding), and its expiry.
+    function state.WindowRecheck( add, times )
+        local q = state.query_time
+        for w = 1, WIN.n do
+            if WIN.up[ w ] then
+                if WIN.openedAt[ w ] > q then add( times, WIN.openedAt[ w ] - q + 1e-6 ) end
+                if WIN.expiresAt[ w ] > q then add( times, WIN.expiresAt[ w ] - q ) end
+            end
+        end
+    end
+
+    --- RunHandler's hook, every simulated cast of `key`: the belief's step rules on the forecast's copy (the due step
+    --- advances; a later step follows on_deviation; a strict window ends at another on-GCD cast). Allocates nothing.
+    function state.WindowCast( key, ability )
+        local q = state.query_time
+        for w = 1, WIN.n do
+            local steps = WIN.steps[ w ]
+            if steps and upAt( w, q ) then
+                local due = WIN.step[ w ]
+                if steps[ due ] == key then
+                    advance( w, due )
+                else
+                    local later = 0
+                    if ( WIN.lastAt[ w ][ key ] or 0 ) > due then
+                        for k = WIN.nSteps[ w ], due + 1, -1 do
+                            if steps[ k ] == key then later = k end -- ends at the first of its steps after the due one
+                        end
+                    end
+                    if later > 0 then
+                        local d = WIN.dev[ w ]
+                        if d == SKIP then advance( w, later )
+                        elseif d == END then close( w ) end
+                    elseif WIN.strict[ w ] and ability.gcd ~= "off" then
+                        close( w )
+                    end
+                end
+            end
+        end
+    end
+end
+
+
 do
     -- Rechecking System
     -- Setup on a per-ability basis, this gives the prediction engine a head's up that the ability may become ready in a short time.
@@ -1645,6 +1807,8 @@ do
                     recheckHelper( workTable, func() )
                 end
             end
+
+            if script.ReadsWindow then state.WindowRecheck( recheckHelper, workTable ) end
         end
 
         -- if Hekili.ActiveDebug then table.insert( steps, debugprofilestop() ) end
@@ -6297,6 +6461,8 @@ function state:RunHandler( key, noStart )
         self.channelSpell( key, self.query_time, ability.cast, ability.id )
     elseif ability.handler then ability.handler() end
 
+    if WIN.n > 0 then state.WindowCast( key, ability ) end -- a stepped window's forecast step
+
     self.prev.last = key
     self[ ability.gcd == "off" and "prev_off_gcd" or "prev_gcd" ].last = key
 
@@ -6347,6 +6513,7 @@ do
 
         state.ClearCycle()
         state:ResetVariables()
+        state.CopyWindows() -- the cycle starts from the belief's windows (Facade.Window)
         -- This will be our comprehensive resetter.
         state:ResetQueues()
 

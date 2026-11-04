@@ -1308,8 +1308,9 @@ local HekiliSpecMixin = {
     -- (re-pin design §3a, decision 11; owner 2026-11-03) A reaction: a `now` function run by an observed outcome instead
     -- of a cast, so a window can open on a span only an outcome reveals (never where an aura or a usability flip fits).
     -- `who` "player" (a hit on us) or "target" (our cast or white swing); `outcome` "dodge", "parry", "block" (BLOCK and
-    -- BLOCKED), "miss" or "crit". Not an ability: no index, cast history, ticket, GCD or options row. The belief runs it
-    -- in the `now` context at the settled outcome's time (Game/State/Families/Now.lua); the sim never sees it.
+    -- BLOCKED), "miss" or "crit"; DEFLECT and EVADE map to no outcome (they fire nothing), and a spell of ours blocked
+    -- fires nothing (Game/Events/Rows.lua stages DODGE, PARRY and MISS only; docs/dev/gaps.md). Not an ability: no
+    -- index, cast history, ticket, GCD or options row. The belief runs it in the `now` context at the settled outcome's time (Game/State/Families/Now.lua); the sim never sees it.
     RegisterReaction = function( self, name, data )
         assert( type( name ) == "string" and type( data ) == "table", "RegisterReaction: needs a name and a table" )
         assert( self.reactions[ name ] == nil, "RegisterReaction: " .. name .. " is already registered" )
@@ -2102,6 +2103,25 @@ all:RegisterAbilities( {
         essential = true,
     },
 
+    -- (re-pin design §3a) the rotation window lines: list-order entries with no icon, like `variable` (Engine/Sim/Core.lua)
+    open_window = {
+        name = "|cff00ccff[Open Window]|r", -- l10n: verbatim
+        listName = '|T136243:0|t |cff00ccff[Open Window]|r',
+        cast = 0,
+        cooldown = 0,
+        gcd = "off",
+        essential = true,
+    },
+
+    close_window = {
+        name = "|cff00ccff[Close Window]|r", -- l10n: verbatim
+        listName = '|T136243:0|t |cff00ccff[Close Window]|r',
+        cast = 0,
+        cooldown = 0,
+        gcd = "off",
+        essential = true,
+    },
+
     cancel_buff = {
         name = "|cff00ccff[Cancel Buff]|r", -- l10n: verbatim
         listName = '|T136243:0|t |cff00ccff[Cancel Buff]|r',
@@ -2593,6 +2613,7 @@ function Hekili:SpecializationChanged()
     -- the belief tracks what this spec registered (Engine/Schema/Tracked.lua); its talent walk runs here, before
     -- ns.updateTalents reads the ranks.
     ns.BuildTracked()
+    state:BuildWindows() -- the core's window tables (Engine/Sim/State.lua), from class.windows
 
     ns.updateTalents()
     ns.TrackedStatics() -- the records' static values, under `state` with this spec's talent ranks (Tracked.lua)

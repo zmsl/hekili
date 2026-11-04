@@ -129,7 +129,7 @@ T.onExpire = function(i)
     if T.kind[i] == MELEE then
         local held = T.avoid[i] ~= ""
         emit(MELEE, T.x[i], T.guid[i], held and T.avoid[i] or "WOUND", "", 0, T.at[i], 1)
-        if held then
+        if held and T.state[i] == T.PROV then -- only a ticket still provisional (T.Provisional) settles its avoid here
             S.Stage(Obs.SwingAvoided, T.avoidT[i], T.x[i], T.at[i], I.HitKind[T.avoid[i]] or 0)
         end
     end

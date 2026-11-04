@@ -13370,6 +13370,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action	values.bane_of_do
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.affliction.Affliction (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.conflagrate	|T136000:0|t Spell 1293817
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.corruption	|T136000:0|t Spell 172
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
@@ -13388,6 +13389,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action	values.life_tap	|
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.affliction.Affliction (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.rain_of_fire	|T136000:0|t Spell 5740
@@ -13436,6 +13438,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.bane_
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.conflagrate	|T136000:0|t Spell 1293817
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.corruption	|T136000:0|t Spell 172
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
@@ -13454,6 +13457,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.life_
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.rain_of_fire	|T136000:0|t Spell 5740
@@ -13618,6 +13622,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.bane_of_doom	
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.conflagrate	|T136000:0|t Spell 1293817
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.corruption	|T136000:0|t Spell 172
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
@@ -13636,6 +13641,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.life_tap	|T13
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.rain_of_fire	|T136000:0|t Spell 5740
@@ -13682,6 +13688,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.bane_of_
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.conflagrate	|T136000:0|t Spell 1293817
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.corruption	|T136000:0|t Spell 172
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
@@ -13700,6 +13707,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.life_tap
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.rain_of_fire	|T136000:0|t Spell 5740
@@ -13948,6 +13956,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.action	values.arcane_wrath	|T136
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.combustion	|T136000:0|t Spell 11129
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.counterspell	|T136000:0|t Spell 2139
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -13960,6 +13969,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.action	values.healthstone	|T5387
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.presence_of_mind	|T136000:0|t Spell 12043
@@ -13993,6 +14003,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.arcane_wrath	
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.combustion	|T136000:0|t Spell 11129
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.counterspell	|T136000:0|t Spell 2139
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -14005,6 +14016,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.healthstone	|
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.presence_of_mind	|T136000:0|t Spell 12043
@@ -14231,6 +14243,7 @@ options.packs.arms.Arms (wowsims.com).lists.action	values.cancel_buff	|T136243:0
 options.packs.arms.Arms (wowsims.com).lists.action	values.challenging_shout	|T136000:0|t Spell 1161
 options.packs.arms.Arms (wowsims.com).lists.action	values.charge	|T136000:0|t Spell 100
 options.packs.arms.Arms (wowsims.com).lists.action	values.cleave	|T136000:0|t Spell 845
+options.packs.arms.Arms (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.arms.Arms (wowsims.com).lists.action	values.concussion_blow	|T136000:0|t Spell 12809
 options.packs.arms.Arms (wowsims.com).lists.action	values.death_wish	|T136000:0|t Spell 12328
 options.packs.arms.Arms (wowsims.com).lists.action	values.defensive_stance	|T136000:0|t Spell 71
@@ -14249,6 +14262,7 @@ options.packs.arms.Arms (wowsims.com).lists.action	values.major_mana_potion	|T0:
 options.packs.arms.Arms (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.arms.Arms (wowsims.com).lists.action	values.mocking_blow	|T136000:0|t Spell 694
 options.packs.arms.Arms (wowsims.com).lists.action	values.mortal_strike	|T136000:0|t Spell 12294
+options.packs.arms.Arms (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.arms.Arms (wowsims.com).lists.action	values.overpower	|T136000:0|t Spell 7384
 options.packs.arms.Arms (wowsims.com).lists.action	values.piercing_howl	|T136000:0|t Spell 12323
 options.packs.arms.Arms (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
@@ -14319,6 +14333,7 @@ options.packs.arms.Arms (wowsims.com).lists.action_name	values.cancel_buff	|T136
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.challenging_shout	|T136000:0|t Spell 1161
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.charge	|T136000:0|t Spell 100
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.cleave	|T136000:0|t Spell 845
+options.packs.arms.Arms (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.concussion_blow	|T136000:0|t Spell 12809
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.death_wish	|T136000:0|t Spell 12328
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.defensive_stance	|T136000:0|t Spell 71
@@ -14337,6 +14352,7 @@ options.packs.arms.Arms (wowsims.com).lists.action_name	values.major_mana_potion
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.mocking_blow	|T136000:0|t Spell 694
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.mortal_strike	|T136000:0|t Spell 12294
+options.packs.arms.Arms (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.overpower	|T136000:0|t Spell 7384
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.piercing_howl	|T136000:0|t Spell 12323
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
@@ -14610,6 +14626,7 @@ options.packs.assassination.Assassination (wowsims.com).lists.action	values.blad
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -14625,6 +14642,7 @@ options.packs.assassination.Assassination (wowsims.com).lists.action	values.main
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.mutilate	|T136000:0|t Spell 1310707
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.premeditation	|T136000:0|t Spell 14183
@@ -14674,6 +14692,7 @@ options.packs.assassination.Assassination (wowsims.com).lists.action_name	values
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -14689,6 +14708,7 @@ options.packs.assassination.Assassination (wowsims.com).lists.action_name	values
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.mutilate	|T136000:0|t Spell 1310707
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.premeditation	|T136000:0|t Spell 14183
@@ -14922,6 +14942,7 @@ options.packs.balance.Balance (wowsims.com).lists.action	values.cancel_buff	|T13
 options.packs.balance.Balance (wowsims.com).lists.action	values.cat_form	|T136000:0|t Spell 768
 options.packs.balance.Balance (wowsims.com).lists.action	values.challenging_roar	|T136000:0|t Spell 5209
 options.packs.balance.Balance (wowsims.com).lists.action	values.claw	|T136000:0|t Spell 1082
+options.packs.balance.Balance (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.balance.Balance (wowsims.com).lists.action	values.cower	|T136000:0|t Spell 8998
 options.packs.balance.Balance (wowsims.com).lists.action	values.dash	|T136000:0|t Spell 1850
 options.packs.balance.Balance (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -14948,6 +14969,7 @@ options.packs.balance.Balance (wowsims.com).lists.action	values.maul	|T136000:0|
 options.packs.balance.Balance (wowsims.com).lists.action	values.moonfire	|T136000:0|t Spell 8921
 options.packs.balance.Balance (wowsims.com).lists.action	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.balance.Balance (wowsims.com).lists.action	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.balance.Balance (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.balance.Balance (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.balance.Balance (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.balance.Balance (wowsims.com).lists.action	values.pounce	|T136000:0|t Spell 9005
@@ -14995,6 +15017,7 @@ options.packs.balance.Balance (wowsims.com).lists.action_name	values.cancel_buff
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.cat_form	|T136000:0|t Spell 768
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.challenging_roar	|T136000:0|t Spell 5209
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.claw	|T136000:0|t Spell 1082
+options.packs.balance.Balance (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.cower	|T136000:0|t Spell 8998
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.dash	|T136000:0|t Spell 1850
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -15021,6 +15044,7 @@ options.packs.balance.Balance (wowsims.com).lists.action_name	values.maul	|T1360
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.balance.Balance (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.pounce	|T136000:0|t Spell 9005
@@ -15273,6 +15297,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.auto
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.hunters_mark	|T136000:0|t Spell 1130
@@ -15282,6 +15307,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.majo
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.mongoose_bite	|T136000:0|t Spell 1495
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
@@ -15321,6 +15347,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.hunters_mark	|T136000:0|t Spell 1130
@@ -15330,6 +15357,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.mongoose_bite	|T136000:0|t Spell 1495
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
@@ -15554,6 +15582,7 @@ options.packs.combat.Combat (wowsims.com).lists.action	values.blade_flurry	|T136
 options.packs.combat.Combat (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.combat.Combat (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.combat.Combat (wowsims.com).lists.action	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.combat.Combat (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -15569,6 +15598,7 @@ options.packs.combat.Combat (wowsims.com).lists.action	values.main_hand	|T136243
 options.packs.combat.Combat (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.combat.Combat (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.combat.Combat (wowsims.com).lists.action	values.mutilate	|T136000:0|t Spell 1310707
+options.packs.combat.Combat (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.premeditation	|T136000:0|t Spell 14183
@@ -15618,6 +15648,7 @@ options.packs.combat.Combat (wowsims.com).lists.action_name	values.blade_flurry	
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -15633,6 +15664,7 @@ options.packs.combat.Combat (wowsims.com).lists.action_name	values.main_hand	|T1
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.mutilate	|T136000:0|t Spell 1310707
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.premeditation	|T136000:0|t Spell 14183
@@ -15862,6 +15894,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action	values.bane_of_do
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.demonology.Demonology (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.conflagrate	|T136000:0|t Spell 1293817
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.corruption	|T136000:0|t Spell 172
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
@@ -15880,6 +15913,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action	values.life_tap	|
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.demonology.Demonology (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.rain_of_fire	|T136000:0|t Spell 5740
@@ -15928,6 +15962,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.bane_
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.conflagrate	|T136000:0|t Spell 1293817
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.corruption	|T136000:0|t Spell 172
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
@@ -15946,6 +15981,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.life_
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.rain_of_fire	|T136000:0|t Spell 5740
@@ -16112,6 +16148,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.bane_of_
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.conflagrate	|T136000:0|t Spell 1293817
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.corruption	|T136000:0|t Spell 172
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
@@ -16130,6 +16167,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.life_tap
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.rain_of_fire	|T136000:0|t Spell 5740
@@ -16178,6 +16216,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.ban
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.conflagrate	|T136000:0|t Spell 1293817
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.corruption	|T136000:0|t Spell 172
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
@@ -16196,6 +16235,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.lif
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.rain_of_fire	|T136000:0|t Spell 5740
@@ -16445,6 +16485,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action	values.bane_of_
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.destruction.Destruction (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.conflagrate	|T136000:0|t Spell 1293817
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.corruption	|T136000:0|t Spell 172
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
@@ -16463,6 +16504,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action	values.life_tap
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.destruction.Destruction (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.rain_of_fire	|T136000:0|t Spell 5740
@@ -16508,6 +16550,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.ban
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.conflagrate	|T136000:0|t Spell 1293817
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.corruption	|T136000:0|t Spell 172
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
@@ -16526,6 +16569,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.lif
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.rain_of_fire	|T136000:0|t Spell 5740
@@ -16769,6 +16813,7 @@ options.packs.discipline.Smite (wowsims.com).lists.action	name	Action
 options.packs.discipline.Smite (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.discipline.Smite (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.discipline.Smite (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.discipline.Smite (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.discipline.Smite (wowsims.com).lists.action	values.dark_sacrifice	|T136000:0|t Spell 1277324
 options.packs.discipline.Smite (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.discipline.Smite (wowsims.com).lists.action	values.devouring_plague	|T136000:0|t Spell 2944
@@ -16782,6 +16827,7 @@ options.packs.discipline.Smite (wowsims.com).lists.action	values.major_mana_poti
 options.packs.discipline.Smite (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.discipline.Smite (wowsims.com).lists.action	values.mind_blast	|T136000:0|t Spell 8092
 options.packs.discipline.Smite (wowsims.com).lists.action	values.mind_flay	|T136000:0|t Spell 15407
+options.packs.discipline.Smite (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.discipline.Smite (wowsims.com).lists.action	values.penance	|T136000:0|t Spell 402174
 options.packs.discipline.Smite (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.discipline.Smite (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
@@ -16817,6 +16863,7 @@ options.packs.discipline.Smite (wowsims.com).lists.action_name	name	Action Name
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.discipline.Smite (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.dark_sacrifice	|T136000:0|t Spell 1277324
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.devouring_plague	|T136000:0|t Spell 2944
@@ -16830,6 +16877,7 @@ options.packs.discipline.Smite (wowsims.com).lists.action_name	values.major_mana
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.mind_blast	|T136000:0|t Spell 8092
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.mind_flay	|T136000:0|t Spell 15407
+options.packs.discipline.Smite (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.penance	|T136000:0|t Spell 402174
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
@@ -17060,6 +17108,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.action	values.call_action_
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.chain_lightning	|T136000:0|t Spell 421
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.earth_shock	|T136000:0|t Spell 8042
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.elemental_mastery	|T136000:0|t Spell 16166
@@ -17079,6 +17128,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.action	values.major_mana_p
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.mana_spring_totem	|T136000:0|t Spell 5675
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.mana_tide_totem	|T136000:0|t Spell 16190
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.rage_of_the_farseer	|T136000:0|t Spell 425336
@@ -17118,6 +17168,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.call_ac
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.chain_lightning	|T136000:0|t Spell 421
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.earth_shock	|T136000:0|t Spell 8042
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.elemental_mastery	|T136000:0|t Spell 16166
@@ -17137,6 +17188,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.major_m
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.mana_spring_totem	|T136000:0|t Spell 5675
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.mana_tide_totem	|T136000:0|t Spell 16190
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
@@ -17359,6 +17411,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.call_act
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.chain_lightning	|T136000:0|t Spell 421
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.earth_shock	|T136000:0|t Spell 8042
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.elemental_mastery	|T136000:0|t Spell 16166
@@ -17378,6 +17431,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.major_ma
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.mana_spring_totem	|T136000:0|t Spell 5675
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.mana_tide_totem	|T136000:0|t Spell 16190
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.rage_of_the_farseer	|T136000:0|t Spell 425336
@@ -17418,6 +17472,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.cal
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.chain_lightning	|T136000:0|t Spell 421
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.earth_shock	|T136000:0|t Spell 8042
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.elemental_mastery	|T136000:0|t Spell 16166
@@ -17437,6 +17492,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.maj
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.mana_spring_totem	|T136000:0|t Spell 5675
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.mana_tide_totem	|T136000:0|t Spell 16190
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
@@ -17666,6 +17722,7 @@ options.packs.feral.Feral (wowsims.com).lists.action	values.cancel_buff	|T136243
 options.packs.feral.Feral (wowsims.com).lists.action	values.cat_form	|T136000:0|t Spell 768
 options.packs.feral.Feral (wowsims.com).lists.action	values.challenging_roar	|T136000:0|t Spell 5209
 options.packs.feral.Feral (wowsims.com).lists.action	values.claw	|T136000:0|t Spell 1082
+options.packs.feral.Feral (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.feral.Feral (wowsims.com).lists.action	values.cower	|T136000:0|t Spell 8998
 options.packs.feral.Feral (wowsims.com).lists.action	values.dash	|T136000:0|t Spell 1850
 options.packs.feral.Feral (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -17692,6 +17749,7 @@ options.packs.feral.Feral (wowsims.com).lists.action	values.maul	|T136000:0|t Sp
 options.packs.feral.Feral (wowsims.com).lists.action	values.moonfire	|T136000:0|t Spell 8921
 options.packs.feral.Feral (wowsims.com).lists.action	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.feral.Feral (wowsims.com).lists.action	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.feral.Feral (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.feral.Feral (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.feral.Feral (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.feral.Feral (wowsims.com).lists.action	values.pounce	|T136000:0|t Spell 9005
@@ -17742,6 +17800,7 @@ options.packs.feral.Feral (wowsims.com).lists.action_name	values.cancel_buff	|T1
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.cat_form	|T136000:0|t Spell 768
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.challenging_roar	|T136000:0|t Spell 5209
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.claw	|T136000:0|t Spell 1082
+options.packs.feral.Feral (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.cower	|T136000:0|t Spell 8998
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.dash	|T136000:0|t Spell 1850
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -17768,6 +17827,7 @@ options.packs.feral.Feral (wowsims.com).lists.action_name	values.maul	|T136000:0
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.feral.Feral (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.pounce	|T136000:0|t Spell 9005
@@ -18027,6 +18087,7 @@ options.packs.fire.Fire (wowsims.com).lists.action	values.arcane_wrath	|T136000:
 options.packs.fire.Fire (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.fire.Fire (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.combustion	|T136000:0|t Spell 11129
 options.packs.fire.Fire (wowsims.com).lists.action	values.counterspell	|T136000:0|t Spell 2139
 options.packs.fire.Fire (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -18039,6 +18100,7 @@ options.packs.fire.Fire (wowsims.com).lists.action	values.healthstone	|T538745:0
 options.packs.fire.Fire (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Fire (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.fire.Fire (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.presence_of_mind	|T136000:0|t Spell 12043
@@ -18072,6 +18134,7 @@ options.packs.fire.Fire (wowsims.com).lists.action_name	values.arcane_wrath	|T13
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.combustion	|T136000:0|t Spell 11129
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.counterspell	|T136000:0|t Spell 2139
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -18084,6 +18147,7 @@ options.packs.fire.Fire (wowsims.com).lists.action_name	values.healthstone	|T538
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.presence_of_mind	|T136000:0|t Spell 12043
@@ -18231,6 +18295,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.action	values.arcane_wrath	|T13
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.combustion	|T136000:0|t Spell 11129
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.counterspell	|T136000:0|t Spell 2139
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -18243,6 +18308,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.action	values.healthstone	|T538
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.presence_of_mind	|T136000:0|t Spell 12043
@@ -18274,6 +18340,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.arcane_wrath
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.combustion	|T136000:0|t Spell 11129
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.counterspell	|T136000:0|t Spell 2139
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -18286,6 +18353,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.healthstone	
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.presence_of_mind	|T136000:0|t Spell 12043
@@ -18519,6 +18587,7 @@ options.packs.fury.Fury (wowsims.com).lists.action	values.cancel_buff	|T136243:0
 options.packs.fury.Fury (wowsims.com).lists.action	values.challenging_shout	|T136000:0|t Spell 1161
 options.packs.fury.Fury (wowsims.com).lists.action	values.charge	|T136000:0|t Spell 100
 options.packs.fury.Fury (wowsims.com).lists.action	values.cleave	|T136000:0|t Spell 845
+options.packs.fury.Fury (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.fury.Fury (wowsims.com).lists.action	values.concussion_blow	|T136000:0|t Spell 12809
 options.packs.fury.Fury (wowsims.com).lists.action	values.death_wish	|T136000:0|t Spell 12328
 options.packs.fury.Fury (wowsims.com).lists.action	values.defensive_stance	|T136000:0|t Spell 71
@@ -18537,6 +18606,7 @@ options.packs.fury.Fury (wowsims.com).lists.action	values.major_mana_potion	|T0:
 options.packs.fury.Fury (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.fury.Fury (wowsims.com).lists.action	values.mocking_blow	|T136000:0|t Spell 694
 options.packs.fury.Fury (wowsims.com).lists.action	values.mortal_strike	|T136000:0|t Spell 12294
+options.packs.fury.Fury (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.fury.Fury (wowsims.com).lists.action	values.overpower	|T136000:0|t Spell 7384
 options.packs.fury.Fury (wowsims.com).lists.action	values.piercing_howl	|T136000:0|t Spell 12323
 options.packs.fury.Fury (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
@@ -18601,6 +18671,7 @@ options.packs.fury.Fury (wowsims.com).lists.action_name	values.cancel_buff	|T136
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.challenging_shout	|T136000:0|t Spell 1161
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.charge	|T136000:0|t Spell 100
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.cleave	|T136000:0|t Spell 845
+options.packs.fury.Fury (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.concussion_blow	|T136000:0|t Spell 12809
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.death_wish	|T136000:0|t Spell 12328
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.defensive_stance	|T136000:0|t Spell 71
@@ -18619,6 +18690,7 @@ options.packs.fury.Fury (wowsims.com).lists.action_name	values.major_mana_potion
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.mocking_blow	|T136000:0|t Spell 694
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.mortal_strike	|T136000:0|t Spell 12294
+options.packs.fury.Fury (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.overpower	|T136000:0|t Spell 7384
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.piercing_howl	|T136000:0|t Spell 12323
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
@@ -18894,6 +18966,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action	values.cancel_buff	|T
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.cat_form	|T136000:0|t Spell 768
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.challenging_roar	|T136000:0|t Spell 5209
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.claw	|T136000:0|t Spell 1082
+options.packs.guardian.Guardian (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.cower	|T136000:0|t Spell 8998
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.dash	|T136000:0|t Spell 1850
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -18920,6 +18993,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action	values.maul	|T136000:
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.moonfire	|T136000:0|t Spell 8921
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.guardian.Guardian (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.pounce	|T136000:0|t Spell 9005
@@ -18968,6 +19042,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.cancel_bu
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.cat_form	|T136000:0|t Spell 768
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.challenging_roar	|T136000:0|t Spell 5209
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.claw	|T136000:0|t Spell 1082
+options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.cower	|T136000:0|t Spell 8998
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.dash	|T136000:0|t Spell 1850
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -18994,6 +19069,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.maul	|T13
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.pounce	|T136000:0|t Spell 9005
@@ -19260,6 +19336,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.auto_s
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.hunters_mark	|T136000:0|t Spell 1130
@@ -19269,6 +19346,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.major_
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.mongoose_bite	|T136000:0|t Spell 1495
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
@@ -19308,6 +19386,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.a
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.hunters_mark	|T136000:0|t Spell 1130
@@ -19317,6 +19396,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.m
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.mongoose_bite	|T136000:0|t Spell 1495
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
@@ -19575,6 +19655,7 @@ options.packs.protection.Protection (wowsims.com).lists.action	values.cancel_buf
 options.packs.protection.Protection (wowsims.com).lists.action	values.challenging_shout	|T136000:0|t Spell 1161
 options.packs.protection.Protection (wowsims.com).lists.action	values.charge	|T136000:0|t Spell 100
 options.packs.protection.Protection (wowsims.com).lists.action	values.cleave	|T136000:0|t Spell 845
+options.packs.protection.Protection (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.protection.Protection (wowsims.com).lists.action	values.concussion_blow	|T136000:0|t Spell 12809
 options.packs.protection.Protection (wowsims.com).lists.action	values.consecration	|T136000:0|t Spell 26573
 options.packs.protection.Protection (wowsims.com).lists.action	values.death_wish	|T136000:0|t Spell 12328
@@ -19601,6 +19682,7 @@ options.packs.protection.Protection (wowsims.com).lists.action	values.major_mana
 options.packs.protection.Protection (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.protection.Protection (wowsims.com).lists.action	values.mocking_blow	|T136000:0|t Spell 694
 options.packs.protection.Protection (wowsims.com).lists.action	values.mortal_strike	|T136000:0|t Spell 12294
+options.packs.protection.Protection (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.protection.Protection (wowsims.com).lists.action	values.overpower	|T136000:0|t Spell 7384
 options.packs.protection.Protection (wowsims.com).lists.action	values.piercing_howl	|T136000:0|t Spell 12323
 options.packs.protection.Protection (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
@@ -19684,6 +19766,7 @@ options.packs.protection.Protection (wowsims.com).lists.action_name	values.cance
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.challenging_shout	|T136000:0|t Spell 1161
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.charge	|T136000:0|t Spell 100
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.cleave	|T136000:0|t Spell 845
+options.packs.protection.Protection (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.concussion_blow	|T136000:0|t Spell 12809
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.consecration	|T136000:0|t Spell 26573
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.death_wish	|T136000:0|t Spell 12328
@@ -19710,6 +19793,7 @@ options.packs.protection.Protection (wowsims.com).lists.action_name	values.major
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.mocking_blow	|T136000:0|t Spell 694
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.mortal_strike	|T136000:0|t Spell 12294
+options.packs.protection.Protection (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.overpower	|T136000:0|t Spell 7384
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.piercing_howl	|T136000:0|t Spell 12323
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
@@ -19999,6 +20083,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.action	name	Action
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.retribution.Retribution (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.consecration	|T136000:0|t Spell 26573
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.divine_favor	|T136000:0|t Spell 20216
@@ -20012,6 +20097,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.action	values.judgemen
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.retribution.Retribution (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.retribution_aura	|T136000:0|t Spell 7294
@@ -20045,6 +20131,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.action_name	name	Actio
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.consecration	|T136000:0|t Spell 26573
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.divine_favor	|T136000:0|t Spell 20216
@@ -20058,6 +20145,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.jud
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.retribution_aura	|T136000:0|t Spell 7294
@@ -20283,6 +20371,7 @@ options.packs.shadow.Shadow (wowsims.com).lists.action	name	Action
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.shadow.Shadow (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.dark_sacrifice	|T136000:0|t Spell 1277324
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.devouring_plague	|T136000:0|t Spell 2944
@@ -20296,6 +20385,7 @@ options.packs.shadow.Shadow (wowsims.com).lists.action	values.major_mana_potion	
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.mind_blast	|T136000:0|t Spell 8092
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.mind_flay	|T136000:0|t Spell 15407
+options.packs.shadow.Shadow (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.penance	|T136000:0|t Spell 402174
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
@@ -20338,6 +20428,7 @@ options.packs.shadow.Shadow (wowsims.com).lists.action_name	name	Action Name
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.dark_sacrifice	|T136000:0|t Spell 1277324
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.devouring_plague	|T136000:0|t Spell 2944
@@ -20351,6 +20442,7 @@ options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.major_mana_po
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.mind_blast	|T136000:0|t Spell 8092
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.mind_flay	|T136000:0|t Spell 15407
+options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.penance	|T136000:0|t Spell 402174
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
@@ -20633,6 +20725,7 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.blade_flurry	|
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -20648,6 +20741,7 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.main_hand	|T13
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.mutilate	|T136000:0|t Spell 1310707
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.premeditation	|T136000:0|t Spell 14183
@@ -20697,6 +20791,7 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.blade_flu
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -20712,6 +20807,7 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.main_hand
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.mutilate	|T136000:0|t Spell 1310707
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.premeditation	|T136000:0|t Spell 14183
@@ -20942,6 +21038,7 @@ options.packs.survival.Survival (wowsims.com).lists.action	values.auto_shot	|T13
 options.packs.survival.Survival (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.survival.Survival (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.survival.Survival (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.hunters_mark	|T136000:0|t Spell 1130
@@ -20951,6 +21048,7 @@ options.packs.survival.Survival (wowsims.com).lists.action	values.major_mana_pot
 options.packs.survival.Survival (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.survival.Survival (wowsims.com).lists.action	values.mongoose_bite	|T136000:0|t Spell 1495
 options.packs.survival.Survival (wowsims.com).lists.action	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.survival.Survival (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
@@ -20990,6 +21088,7 @@ options.packs.survival.Survival (wowsims.com).lists.action_name	values.auto_shot
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.survival.Survival (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.hunters_mark	|T136000:0|t Spell 1130
@@ -20999,6 +21098,7 @@ options.packs.survival.Survival (wowsims.com).lists.action_name	values.major_man
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.mongoose_bite	|T136000:0|t Spell 1495
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.survival.Survival (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045

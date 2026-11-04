@@ -8297,8 +8297,19 @@ do
         variable = "var_name",
         cancel_action = "action_name",
         cancel_buff = "buff_name",
+        open_window = "window_name",
+        close_window = "window_name",
         op = "op",
     }
+
+    -- (re-pin design §3a) a window line's name: one any spec of the loaded class registered (RegisterWindow)
+    local function knownWindow( name )
+        for _, s in pairs( Registry.Specs() ) do
+            local w = rawget( s, "windows" )
+            if w and name and w[ name ] then return true end
+        end
+        return false
+    end
 
     function Hekili:ParseActionList( list )
         local line, times = 0, 0
@@ -8412,6 +8423,11 @@ do
             if nameMap[ result.action ] then
                 result[ nameMap[ result.action ] ] = result.name
                 result.name = nil
+            end
+
+            if ( result.action == "open_window" or result.action == "close_window" ) and not knownWindow( result.window_name ) then
+                insert( warnings, format( L["Line %s: Unknown window '%s'; entry disabled."], line, tostring( result.window_name ) ) )
+                result.enabled = false
             end
 
             if result.target_if then result.target_if = result.target_if:gsub( "min:", "" ):gsub( "max:", "" ) end

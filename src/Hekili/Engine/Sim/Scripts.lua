@@ -1362,6 +1362,11 @@ local newModifiers = {
     list_name = 'string',
     op = 'string',
     var_name = 'string',
+
+    -- the rotation window lines (re-pin design §3a): open_window/close_window,name=<w>[,refresh=1][,duration=<s>]
+    window_name = 'string',
+    refresh = 'raw',
+    duration = 'raw',
 }
 
 
@@ -1988,6 +1993,7 @@ function Hekili:LoadScript( pack, list, id )
 
     script.action = data.action
     local lua = script.Lua
+    script.ReadsWindow = lua ~= nil and lua:find( "window%." ) ~= nil -- its recheck adds the windows' times (State.lua)
 
     if lua then
         for aura in lua:gmatch( "d?e?buff%.([a-z_0-9]+)" ) do

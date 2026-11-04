@@ -49,7 +49,11 @@ approved exceptions (`tools/check_border.sh` allows these and nothing else):
 - `ns.VirtualState.SetLog(logger)` (`Hekili.lua`, at load): the snapshot trace writes into the core's debug log,
   which only the core can open (`{ active(), write(fmt, ...) }`; the belief fills `onOpen`, which `Hekili:SetupDebug`
   calls as each display's log opens). `SetLog` also fills `logger.debug` (§4).
-Those three are all the core names; the gate allows nothing else. `def` carries plain records (batch 4, the owner's
+Those three are all the core names; the gate allows nothing else. The one belief read beside them is the window read
+(re-pin decision 11, owner "yes"): `ns.Facade.Window(name)` -> `up, openedAt, expiresAt, refreshes, step` (plain
+values; `false, 0, 0, 0, 0` closed or unknown), a belief-only facade function like `Facade.KnownRank`, never the aura
+copy; the core's `state.reset` copies every registered window through it (`Engine/Sim/State.lua` `CopyWindows`) and
+writes nothing back. `def` carries plain records (batch 4, the owner's
 design 2026-11-01): no metatable, never a live Hekili table. Each field is a value, a function the belief runs in its own
 `now` context (`Families/Casts.lua` `I.Eval`: a raise is counted in `I.nowErrors` and fails
 `tests/Forever/plain_records_spec.lua`), or absent; a function field may carry a static value the core computes under
@@ -192,6 +196,30 @@ Two environments have them:
 
 A file-level helper keeps its file's environment, so these names do not resolve there: a pack function passes what it
 read. A file's `state.knownRank` local is the facade's function, safe in a helper on either side.
+
+**Rotation windows** (re-pin design §3a, decision 11: only for a span the client shows no aura for).
+`spec:RegisterWindow(name, { evaluator, duration, refresh, max_duration?, max_refresh?, close_on_false?, steps?, loop?,
+on_deviation?, strict? })` (`Engine/Schema/Spec.lua`) crosses `Build(def)` as `def.windows` (plain records, `steps` as
+ability indexes). The belief owns the real windows (`Game/State/Families/Windows.lua`): each evaluator runs in the `now`
+context once per `Drain` after the fold (its edges open, refresh or close), a real cast's `now()` may call
+`openWindow(name)`/`closeWindow(name)`, a stepped window advances on our observed cast of its due step, and combat end
+closes all. The core is stateless: every reset copies the windows from `Facade.Window`, and within a cycle
+`actions+=/open_window,name=<w>,if=<c>[,refresh=1][,duration=<s>]` and `actions+=/close_window,name=<w>,if=<c>` (list
+order, no icon, like `variable`; an unregistered name is a `ParseActionList` warning with its line and the entry
+disabled), a `handler()`'s `openWindow`/`closeWindow` (the same verbs as `now()`'s, written separately in
+`Engine/Sim/State.lua`) and a simulated cast's step change only that cycle's copy. Reads: `window.<name>.up`,
+`.remains`, `.elapsed` (0 when down), `.step`, `.next.<ability key>`, at `query_time`. An `open_window` line whose
+condition fails now is rechecked like any entry, so "true in t" opens the window at t, and a later line reading
+`window.<name>` gets that time as a recheck (its countdown). The decreasing-clock `<`/`<=` direction works today; the
+weave's "the next Auto Shot fires" is the wrap of a decreasing clock (`ranged_remains>ranged_speed-x`), which only
+ruling R6's `>`/`>=` wrap branch (Task 8b, `Engine/Sim/Scripts.lua`) times.
+`spec:RegisterReaction(name, { who = "player"|"target", outcome = "dodge"|"parry"|"block"|"miss"|"crit", now = fn })`
+crosses as `def.reactions`: a `now` function the belief runs at a settled outcome's row time
+(`Game/State/Families/Now.lua`; incoming from victim-side `UNIT_COMBAT`, ours from `Game/Events/Rows.lua`'s settled
+payments and a white swing's avoid at its window's close), never an ability (no index, cast history, `prev_gcd`,
+ticket, GCD or options row) and with no forecast: its window reaches the core in the next copy. DEFLECT and EVADE fire
+nothing, and a spell of ours blocked fires nothing (`docs/dev/gaps.md` CO). The owner's order: an aura first, a
+usability flip where it works, a reaction only where only an outcome reveals the span.
 
 `RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec.lua`) is a spell the spellbook knows and the
 player never casts. The belief tracks its known rank (the `now` context's `knownRank` reads it; the sim's asks the

@@ -576,6 +576,40 @@ local invalidActionWarnings = {}
 -- line out of combat, its guard against recasting written into the line (tools/wowsims/apl.lua rule 1).
 local inPrecombat = false
 
+-- (re-pin design §3a) An `open_window`/`close_window` line, in list order like `variable` (no icon): it changes the
+-- cycle's forecast copy only (State.lua's windows). An open line whose condition fails now is rechecked like any entry
+-- (its BuildRecheck times), so "true in t" opens the window at t and a later line reading it waits for t (State.lua
+-- state.WindowRecheck). Each open line remembers its last result in the cycle: a held condition opens (or, with
+-- refresh=1, restarts) once. A close line acts at the line's time only. Task 8b: R6 (the `>`/`>=` wrap branch of a
+-- decreasing clock, Scripts.lua) is what times the weave's open; here the `<`/`<=` direction.
+local function windowLine( self, scriptID, script, isOpen, debug )
+    local name = state.args.window_name
+    local base = state.delay
+    local pass = scripts:CheckScript( scriptID )
+
+    if isOpen and not pass and script.Recheck then
+        state.recheck( "open_window", script, Stack, Block )
+        local times = state.recheckTimes
+        for i = 1, #times do
+            state.delay = base + times[ i ]
+            if self:CheckStack() and scripts:CheckScript( scriptID ) then
+                pass = true
+                break
+            end
+        end
+    end
+
+    if debug then self:Debug( " - %s %s: %s at +%.2f.", isOpen and "open_window" or "close_window", tostring( name ), pass and "PASS" or "FAIL", state.delay ) end
+
+    if not isOpen then
+        if pass then state.closeWindow( name ) end
+    elseif not state.WindowLine( scriptID, pass ) and pass then
+        state.openWindow( name, state.args.duration, state.args.refresh == 1 )
+    end
+
+    state.delay = base
+end
+
 function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth, caller )
     local specID = state.spec.id
     local spec = rawget( Hekili.Engine.settings.specs, specID )
@@ -889,6 +923,9 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                     else
                                         if debug then self:Debug( " - variable name not provided, skipping." ) end
                                     end
+
+                                elseif action == "open_window" or action == "close_window" then
+                                    windowLine( self, scriptID, script, action == "open_window", debug )
 
                                 else
                                     -- Target Cycling.
