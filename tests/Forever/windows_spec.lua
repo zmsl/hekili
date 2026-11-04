@@ -289,6 +289,52 @@ describe("the core's windows", function()
         near(0.7, recs[1].wait)
     end)
 
+    it("does not forecast an open beyond the Maximum Forecasting Time", function()
+        core({ w = { duration = 6 } })
+        rawget(H.Hekili.Engine.settings.specs, H.Hekili.State.spec.id).throttleForecastingTime = 0.5
+        local recs = run("actions+=/open_window,name=w,if=test_swing_remains<0.5\nactions+=/bloodrage,if=window.w.up")
+        assert.is_nil(recs[1] and recs[1].actionName)
+    end)
+
+    it(
+        "the priority editor's window_name lists the spec's windows, shows for window lines only, and writes name=",
+        function()
+            core({ w = { duration = 6 } })
+            H.Hekili:EmbedPackOptions()
+            local function find(t, seen)
+                if type(t) ~= "table" or seen[t] then
+                    return
+                end
+                seen[t] = true
+                if type(t.window_name) == "table" and t.window_name.type == "select" then
+                    return t.window_name
+                end
+                for _, v in pairs(t) do
+                    local r = find(v, seen)
+                    if r then
+                        return r
+                    end
+                end
+            end
+            local field = find(H.Hekili.Options.args, {})
+            assert.truthy(field)
+            assert.are.same({ w = "w" }, field.values())
+            local entry = { action = "open_window", enabled = true }
+            for _, p in pairs(H.Hekili.DB.profile.packs) do
+                p.lists = { precombat = {}, default = { entry } } -- whichever pack's editor `find` met
+            end
+            assert.is_false(field.hidden())
+            entry.action = "close_window"
+            assert.is_false(field.hidden())
+            entry.action = "bloodrage"
+            assert.is_true(field.hidden())
+            entry.action = "open_window"
+            H.Hekili:SetActionOption({ "packs", ww.PACK, "lists", "entry", "x", "window_name" }, "w")
+            assert.are.equal("w", entry.window_name) -- the import and export read it as name=w
+            assert.are.equal("w", H.Hekili:GetActionOption({ "packs", ww.PACK, "lists", "entry", "x", "window_name" }))
+        end
+    )
+
     describe("steps (forecast)", function()
         local function stepped(data, step)
             data.duration, data.steps = 6, data.steps or { "bloodrage", "berserker_stance", "battle_stance" }

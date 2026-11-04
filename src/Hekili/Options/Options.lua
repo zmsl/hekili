@@ -4354,6 +4354,8 @@ found = true end
         call_action_list = "list_name",
         run_action_list = "list_name",
         variable = "var_name",
+        open_window = "window_name",
+        close_window = "window_name",
         op = "op"
     }
 
@@ -5788,6 +5790,23 @@ packControl.actionID = format( "%04d", id ) end
                                     hidden = function ()
                                         local e = GetListEntry( pack )
                                         return e.action ~= "cancel_buff"
+                                    end,
+                                },
+
+                                window_name = {
+                                    type = "select",
+                                    name = L["Window Name"],
+                                    order = 3.2,
+                                    width = 1.5,
+                                    desc = L["Specify the rotation window to open or close."],
+                                    values = function ()
+                                        local v = {}
+                                        for k in pairs( Registry.Windows() ) do v[ k ] = k end
+                                        return v
+                                    end,
+                                    hidden = function ()
+                                        local e = GetListEntry( pack )
+                                        return e.action ~= "open_window" and e.action ~= "close_window"
                                     end,
                                 },
 

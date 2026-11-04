@@ -13577,6 +13577,8 @@ options.packs.affliction.Affliction (wowsims.com).lists.value_else	desc	Provide 
 options.packs.affliction.Affliction (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.affliction.Affliction (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.affliction.Affliction (wowsims.com).lists.var_name	name	Variable Name
+options.packs.affliction.Affliction (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.affliction.Affliction (wowsims.com).lists.window_name	name	Window Name
 options.packs.affliction.Affliction (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.affliction.Affliction (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.affliction.Affliction (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -13827,6 +13829,8 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.value_else	desc	Provide the
 options.packs.affliction.SM Ruin (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.affliction.SM Ruin (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.affliction.SM Ruin (wowsims.com).lists.var_name	name	Variable Name
+options.packs.affliction.SM Ruin (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.affliction.SM Ruin (wowsims.com).lists.window_name	name	Window Name
 options.packs.affliction.SM Ruin (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.affliction.SM Ruin (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.affliction.SM Ruin (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -14119,6 +14123,8 @@ options.packs.arcane.Arcane (wowsims.com).lists.value_else	desc	Provide the valu
 options.packs.arcane.Arcane (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.arcane.Arcane (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.arcane.Arcane (wowsims.com).lists.var_name	name	Variable Name
+options.packs.arcane.Arcane (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.arcane.Arcane (wowsims.com).lists.window_name	name	Window Name
 options.packs.arcane.Arcane (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.arcane.Arcane (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.arcane.Arcane (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -14498,6 +14504,8 @@ options.packs.arms.Arms (wowsims.com).lists.value_else	desc	Provide the value to
 options.packs.arms.Arms (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.arms.Arms (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.arms.Arms (wowsims.com).lists.var_name	name	Variable Name
+options.packs.arms.Arms (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.arms.Arms (wowsims.com).lists.window_name	name	Window Name
 options.packs.arms.Arms (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.arms.Arms (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.arms.Arms (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -14818,6 +14826,8 @@ options.packs.assassination.Assassination (wowsims.com).lists.value_else	desc	Pr
 options.packs.assassination.Assassination (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.assassination.Assassination (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.assassination.Assassination (wowsims.com).lists.var_name	name	Variable Name
+options.packs.assassination.Assassination (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.assassination.Assassination (wowsims.com).lists.window_name	name	Window Name
 options.packs.assassination.Assassination (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.assassination.Assassination (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.assassination.Assassination (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -15172,6 +15182,8 @@ options.packs.balance.Balance (wowsims.com).lists.value_else	desc	Provide the va
 options.packs.balance.Balance (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.balance.Balance (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.balance.Balance (wowsims.com).lists.var_name	name	Variable Name
+options.packs.balance.Balance (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.balance.Balance (wowsims.com).lists.window_name	name	Window Name
 options.packs.balance.Balance (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.balance.Balance (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.balance.Balance (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -15462,6 +15474,8 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.value_else	desc	Pr
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.var_name	name	Variable Name
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.window_name	name	Window Name
 options.packs.beast_mastery.Beast Mastery (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.beast_mastery.Beast Mastery (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -15774,6 +15788,8 @@ options.packs.combat.Combat (wowsims.com).lists.value_else	desc	Provide the valu
 options.packs.combat.Combat (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.combat.Combat (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.combat.Combat (wowsims.com).lists.var_name	name	Variable Name
+options.packs.combat.Combat (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.combat.Combat (wowsims.com).lists.window_name	name	Window Name
 options.packs.combat.Combat (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.combat.Combat (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.combat.Combat (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -16103,6 +16119,8 @@ options.packs.demonology.Demonology (wowsims.com).lists.value_else	desc	Provide 
 options.packs.demonology.Demonology (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.demonology.Demonology (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.demonology.Demonology (wowsims.com).lists.var_name	name	Variable Name
+options.packs.demonology.Demonology (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.demonology.Demonology (wowsims.com).lists.window_name	name	Window Name
 options.packs.demonology.Demonology (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.demonology.Demonology (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.demonology.Demonology (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -16357,6 +16375,8 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.value_else	desc	Provid
 options.packs.demonology.Shadow Brand (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.demonology.Shadow Brand (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.var_name	name	Variable Name
+options.packs.demonology.Shadow Brand (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.demonology.Shadow Brand (wowsims.com).lists.window_name	name	Window Name
 options.packs.demonology.Shadow Brand (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.demonology.Shadow Brand (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.demonology.Shadow Brand (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -16689,6 +16709,8 @@ options.packs.destruction.Destruction (wowsims.com).lists.value_else	desc	Provid
 options.packs.destruction.Destruction (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.destruction.Destruction (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.destruction.Destruction (wowsims.com).lists.var_name	name	Variable Name
+options.packs.destruction.Destruction (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.destruction.Destruction (wowsims.com).lists.window_name	name	Window Name
 options.packs.destruction.Destruction (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.destruction.Destruction (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.destruction.Destruction (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -16992,6 +17014,8 @@ options.packs.discipline.Smite (wowsims.com).lists.value_else	desc	Provide the v
 options.packs.discipline.Smite (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.discipline.Smite (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.discipline.Smite (wowsims.com).lists.var_name	name	Variable Name
+options.packs.discipline.Smite (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.discipline.Smite (wowsims.com).lists.window_name	name	Window Name
 options.packs.discipline.Smite (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.discipline.Smite (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.discipline.Smite (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -17295,6 +17319,8 @@ options.packs.elemental.Elemental (wowsims.com).lists.value_else	desc	Provide th
 options.packs.elemental.Elemental (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.elemental.Elemental (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.elemental.Elemental (wowsims.com).lists.var_name	name	Variable Name
+options.packs.elemental.Elemental (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.elemental.Elemental (wowsims.com).lists.window_name	name	Window Name
 options.packs.elemental.Elemental (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.elemental.Elemental (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.elemental.Elemental (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -17599,6 +17625,8 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.value_else	desc	Provid
 options.packs.enhancement.Enhancement (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.enhancement.Enhancement (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.enhancement.Enhancement (wowsims.com).lists.var_name	name	Variable Name
+options.packs.enhancement.Enhancement (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.enhancement.Enhancement (wowsims.com).lists.window_name	name	Window Name
 options.packs.enhancement.Enhancement (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.enhancement.Enhancement (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.enhancement.Enhancement (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -17963,6 +17991,8 @@ options.packs.feral.Feral (wowsims.com).lists.value_else	desc	Provide the value 
 options.packs.feral.Feral (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.feral.Feral (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.feral.Feral (wowsims.com).lists.var_name	name	Variable Name
+options.packs.feral.Feral (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.feral.Feral (wowsims.com).lists.window_name	name	Window Name
 options.packs.feral.Feral (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.feral.Feral (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.feral.Feral (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -18250,6 +18280,8 @@ options.packs.fire.Fire (wowsims.com).lists.value_else	desc	Provide the value to
 options.packs.fire.Fire (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.fire.Fire (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.fire.Fire (wowsims.com).lists.var_name	name	Variable Name
+options.packs.fire.Fire (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.fire.Fire (wowsims.com).lists.window_name	name	Window Name
 options.packs.fire.Fire (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.fire.Fire (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.fire.Fire (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -18456,6 +18488,8 @@ options.packs.fire.Frostfire (wowsims.com).lists.value_else	desc	Provide the val
 options.packs.fire.Frostfire (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.fire.Frostfire (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.fire.Frostfire (wowsims.com).lists.var_name	name	Variable Name
+options.packs.fire.Frostfire (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.fire.Frostfire (wowsims.com).lists.window_name	name	Window Name
 options.packs.fire.Frostfire (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.fire.Frostfire (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.fire.Frostfire (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -18836,6 +18870,8 @@ options.packs.fury.Fury (wowsims.com).lists.value_else	desc	Provide the value to
 options.packs.fury.Fury (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.fury.Fury (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.fury.Fury (wowsims.com).lists.var_name	name	Variable Name
+options.packs.fury.Fury (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.fury.Fury (wowsims.com).lists.window_name	name	Window Name
 options.packs.fury.Fury (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.fury.Fury (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.fury.Fury (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -19203,6 +19239,8 @@ options.packs.guardian.Guardian (wowsims.com).lists.value_else	desc	Provide the 
 options.packs.guardian.Guardian (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.guardian.Guardian (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.guardian.Guardian (wowsims.com).lists.var_name	name	Variable Name
+options.packs.guardian.Guardian (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.guardian.Guardian (wowsims.com).lists.window_name	name	Window Name
 options.packs.guardian.Guardian (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.guardian.Guardian (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.guardian.Guardian (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -19501,6 +19539,8 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.value_else	desc	Prov
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.var_name	name	Variable Name
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.window_name	name	Window Name
 options.packs.marksmanship.Marksmanship (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.marksmanship.Marksmanship (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.marksmanship.Marksmanship (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -19951,6 +19991,8 @@ options.packs.protection.Protection (wowsims.com).lists.value_else	desc	Provide 
 options.packs.protection.Protection (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.protection.Protection (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.protection.Protection (wowsims.com).lists.var_name	name	Variable Name
+options.packs.protection.Protection (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.protection.Protection (wowsims.com).lists.window_name	name	Window Name
 options.packs.protection.Protection (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.protection.Protection (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.protection.Protection (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -20256,6 +20298,8 @@ options.packs.retribution.Retribution (wowsims.com).lists.value_else	desc	Provid
 options.packs.retribution.Retribution (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.retribution.Retribution (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.retribution.Retribution (wowsims.com).lists.var_name	name	Variable Name
+options.packs.retribution.Retribution (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.retribution.Retribution (wowsims.com).lists.window_name	name	Window Name
 options.packs.retribution.Retribution (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.retribution.Retribution (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.retribution.Retribution (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -20557,6 +20601,8 @@ options.packs.shadow.Shadow (wowsims.com).lists.value_else	desc	Provide the valu
 options.packs.shadow.Shadow (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.shadow.Shadow (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.shadow.Shadow (wowsims.com).lists.var_name	name	Variable Name
+options.packs.shadow.Shadow (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.shadow.Shadow (wowsims.com).lists.window_name	name	Window Name
 options.packs.shadow.Shadow (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.shadow.Shadow (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.shadow.Shadow (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -20917,6 +20963,8 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.value_else	desc	Provide the 
 options.packs.subtlety.Subtlety (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.subtlety.Subtlety (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.subtlety.Subtlety (wowsims.com).lists.var_name	name	Variable Name
+options.packs.subtlety.Subtlety (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.subtlety.Subtlety (wowsims.com).lists.window_name	name	Window Name
 options.packs.subtlety.Subtlety (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.subtlety.Subtlety (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.subtlety.Subtlety (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -21203,6 +21251,8 @@ options.packs.survival.Survival (wowsims.com).lists.value_else	desc	Provide the 
 options.packs.survival.Survival (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
 options.packs.survival.Survival (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
 options.packs.survival.Survival (wowsims.com).lists.var_name	name	Variable Name
+options.packs.survival.Survival (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.survival.Survival (wowsims.com).lists.window_name	name	Window Name
 options.packs.survival.Survival (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.survival.Survival (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.survival.Survival (wowsims.com).pack.deletePack	desc	Delete Priority

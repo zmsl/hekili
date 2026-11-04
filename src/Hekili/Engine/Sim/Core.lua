@@ -582,7 +582,7 @@ local inPrecombat = false
 -- state.WindowRecheck). Each open line remembers its last result in the cycle: a held condition opens (or, with
 -- refresh=1, restarts) once. A close line acts at the line's time only. Task 8b: R6 (the `>`/`>=` wrap branch of a
 -- decreasing clock, Scripts.lua) is what times the weave's open; here the `<`/`<=` direction.
-local function windowLine( self, scriptID, script, isOpen, debug )
+local function windowLine( self, scriptID, script, isOpen, debug, rWait, cap )
     local name = state.args.window_name
     local base = state.delay
     local pass = scripts:CheckScript( scriptID )
@@ -591,6 +591,8 @@ local function windowLine( self, scriptID, script, isOpen, debug )
         state.recheck( "open_window", script, Stack, Block )
         local times = state.recheckTimes
         for i = 1, #times do
+            -- the same caps as a call_action_list's recheck: the forecast cap, the wait so far, the max delay
+            if ( cap > 0 and times[ i ] > cap ) or times[ i ] > rWait or times[ i ] > state.delayMax then break end
             state.delay = base + times[ i ]
             if self:CheckStack() and scripts:CheckScript( scriptID ) then
                 pass = true
@@ -925,7 +927,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                     end
 
                                 elseif action == "open_window" or action == "close_window" then
-                                    windowLine( self, scriptID, script, action == "open_window", debug )
+                                    windowLine( self, scriptID, script, action == "open_window", debug, rWait, spec.throttleForecastingTime or 0 )
 
                                 else
                                     -- Target Cycling.

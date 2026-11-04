@@ -4,7 +4,7 @@
 
 ### New
 - A Movement toggle for priorities that move to reach the next ability: on, they show it out of range; off, they hide it until you are in range.
-- Priorities can open and close rotation windows (spans the game shows no buff for) with Open Window and Close Window lines, listed in the priority editor beside Variable. No built-in priority uses them yet.
+- The engine supports rotation windows (spans the game shows no buff for), and the priority editor can add their Open Window and Close Window lines. No built-in priority uses them yet.
 
 ### Changed
 - Less memory churn in big pulls: the engine no longer builds its nameplate debug text on every update, only when you take a snapshot.

@@ -17,6 +17,7 @@ function Registry.Abilities() return class.abilities end
 function Registry.AbilityList() return class.abilityList end
 function Registry.ItemList() return class.itemList end
 function Registry.Auras() return class.auras end
+function Registry.Windows() return class.windows end
 function Registry.AuraList() return class.auraList end
 function Registry.Potions() return class.potions end
 function Registry.PotionList() return class.potionList end
