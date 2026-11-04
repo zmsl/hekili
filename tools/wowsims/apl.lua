@@ -195,10 +195,14 @@
 --    `&` term, onto every later APL line of its list, or, when none follows (it ends its group or sequence), onto the
 --    later lines of each calling list (one level; its own entry condition and a group call's are not carried).
 --    A move to D yards reaches: the held gates after it in its list; and every APL line of its list and its callers'
---    lists (before or after it) whose ability cannot be cast beyond D: a top-level `target.within<D>`, a
---    spellInRange of an ability whose recipe `ranges` ({ [key] = { min, max } }, the DB2's SpellRange) maximum is D,
---    or, on a line with no range read, its own ability's recipe range 0-D, as a new `target.within<D>` term. A move to
---    any other range reaches nothing. Each reached gate becomes `(toggle.movement&<move condition>|<gate>)`: the move's
+--    lists (before or after it) whose ability cannot be cast beyond D (D a constant, or a min()/max() of constants,
+--    rounded up to whole yards here): a `target.within<D>` term (one of the line's `&` terms, or of a parenthesised
+--    conjunction among them), a spellInRange of an ability whose recipe `ranges` ({ [key] = { min, max } }, the
+--    DB2's SpellRange) maximum is D, or, on a line with no range read, its own ability's recipe range 0-D, as a new
+--    `target.within<D>` term; and, a move away, every such line that cannot be cast inside D: a `target.outside<N>`
+--    with N < D, a spellInRange of an ability whose recipe minimum is below D and maximum at least D, or, on a line
+--    with no range read, that recipe range as a new `target.outside<min>` term (the hunters' shots after the move
+--    back to the shoot spot). Any other line is not reached. Each reached gate becomes `(toggle.movement&<move condition>|<gate>)`: the move's
 --    condition translated by the usual rules (rule 18 drops its walk-time terms; a caller's line puts the call's
 --    condition before it), several moves `|`-joined in one term, none for an unconditional move. ON shows the line
 --    where wowsims would walk to it (the client's out-of-range tint marks it); OFF leaves the bracket, so the line
@@ -1691,6 +1695,9 @@ local function motion(c, a)
                 error(g, 0)
             end
             if ok and g then
+                -- shortcut: the waitUntil's own entry condition (a.condition) is not carried with its gate, so a
+                -- later line is held even where wowsims would skip the wait; at the pin it is the gate's own
+                -- distance term (Feral, Guardian). Upgrade when a pin's waitUntil has another condition.
                 c.held[#c.held + 1] = { list = c.listName, n = c.entryNo, gate = g }
             end
         end
@@ -1707,6 +1714,10 @@ local function motion(c, a)
         return "move (reaches nothing: its condition reads " .. tostring(cond.unsupported) .. ")"
     end
     local D = okD and tonumber(yd)
+    local f, args = tostring(yd):match("^(m[ai][nx])%(([%d.,]+)%)$") -- a min()/max() of constants (the hunters' spots)
+    for x in (okD and not D and f and args or ""):gmatch("[^,]+") do
+        D = tonumber(x) and math[f](D or tonumber(x), tonumber(x))
+    end
     if cond ~= false and D then
         local dropped = {}
         for k, x in ipairs(c.moves) do
@@ -1718,19 +1729,27 @@ local function motion(c, a)
     return "move"
 end
 
--- The top-level `&` terms of condition text `s` (the whole as one term when it has a top-level `|`).
+-- The `&` terms of condition text `s` (the whole as one term when it has a top-level `|`), a parenthesised
+-- conjunction's own terms in its place (`(a&b)&c` is a, b, c; `(a|b)` stays one term).
 local function terms(s)
-    local out, depth, from = {}, 0, 1
+    local parts, depth, from = {}, 0, 1
     for i = 1, #s do
         local ch = s:sub(i, i)
         depth = depth + (ch == "(" and 1 or ch == ")" and -1 or 0)
         if depth == 0 and ch == "|" then
             return { s }
         elseif depth == 0 and ch == "&" then
-            out[#out + 1], from = s:sub(from, i - 1), i + 1
+            parts[#parts + 1], from = s:sub(from, i - 1), i + 1
         end
     end
-    out[#out + 1] = s:sub(from)
+    parts[#parts + 1] = s:sub(from)
+    local out = {}
+    for _, t in ipairs(parts) do
+        local inner = grouped(t) and terms(t:sub(2, -2)) or {}
+        for _, x in ipairs(#inner > 1 and inner or { t }) do
+            out[#out + 1] = x
+        end
+    end
     return out
 end
 
@@ -1837,6 +1856,9 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
         local g = #parts == 1 and paren(m.gate) or ("(" .. table.concat(parts, "|") .. ")")
         local targets = later(m.list, m.n, {})
         if #targets == 0 then
+            -- shortcut: a held gate is carried one calling list up only (not to the caller's callers, and without
+            -- the call's own condition); every held gate at the pin ends a list called from the main one. Upgrade
+            -- when a pin nests the holding group deeper.
             for _, k in ipairs(calls[m.list] or {}) do
                 later(k[1], k[3], targets)
             end
@@ -1876,6 +1898,13 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
                 if prefix then
                     cond = cond == true and prefix or (paren(prefix) .. "&" .. paren(cond))
                 end
+                -- shortcut: inward reach is on equal range only: a move to D never reaches a shorter-range gate
+                -- (correct: it stops at D) nor a longer one (passed on the walk in); every inward move at the pin is
+                -- to 5 yd. Upgrade when a pin moves to another range with longer-range lines behind it.
+                local N = math.ceil(mv.D) -- the whole-yard bracket D is inside (the hunters' 4.99 is within5)
+                local function out(m) -- whether standing at D is beyond minimum range m
+                    return m and m > 0 and m < mv.D
+                end
                 for j, b in ipairs(byName[L]) do
                     local cnd = b:match(",if=(.*)$")
                     local hit, gated
@@ -1884,10 +1913,14 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
                             or t:match("^%(!action%.([%w_]+)%.known|action%.[%w_]+%.in_range%)$")
                         local r = k and c.ranges[k]
                         gated = gated or t:find("target%.within") or t:find("target%.outside") or t:find("in_range")
-                        hit = hit or ((t == "target.within" .. mv.D or (r and r[2] == mv.D)) and t)
+                        local away = out(tonumber(t:match("^target%.outside(%d+)$")))
+                            or (r and out(r[1]) and mv.D <= r[2])
+                        hit = hit or ((t == "target.within" .. N or (r and r[2] == N) or away) and t)
                     end
                     local r = origin[L][j] and not gated and c.ranges[b:match("^([%w_]+)")]
-                    hit = hit or (r and r[1] == 0 and r[2] == mv.D and ("target.within" .. mv.D))
+                    hit = hit
+                        or (r and r[1] == 0 and r[2] == N and ("target.within" .. N))
+                        or (r and out(r[1]) and mv.D <= r[2] and ("target.outside" .. r[1]))
                     if hit then
                         rewrites[L] = rewrites[L] or {}
                         rewrites[L][j] = rewrites[L][j] or {}

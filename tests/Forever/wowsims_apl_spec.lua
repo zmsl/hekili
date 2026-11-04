@@ -2013,6 +2013,61 @@ describe("the wowsims APL translator's move rewrite and sequences as windows", f
             text
         )
     end)
+
+    it("Demonology-shaped: a bracket inside one grouped conjunction is reached; one inside an or is not", function()
+        local text, _, _, header = apl.translate({
+            priorityList = {
+                move("5", AND(E, cmp("OpGt", d, const("5")))),
+                cast(200, AND(E, cmp("OpLe", d, const("5")))),
+                cast(400, OR(AND(E, cmp("OpLe", d, const("5"))), up)),
+            },
+        }, ctx({ executePhase = "execute_phase" }))
+        assert.are.equal(
+            lines({
+                "actions=big_hit,if=execute_phase&(toggle.movement&(execute_phase&target.outside5)|target.within5)",
+                "actions+=/dot,if=((execute_phase&target.within5)|buff.dot.up)",
+            }),
+            text
+        )
+        assert.are.same({ "# Movement: default #1 reaches default: big_hit" }, header)
+    end)
+
+    it("weave-shaped: the move back to the shoot spot reaches the shots (outside5 or a DB2 minimum range)", function()
+        local spot = { max = { vals = { const("13.19"), const("11.67") } } } -- the hunters' "Shoot spot"
+        local text, omitted, _, header = apl.translate({
+            priorityList = {
+                cast(100, cmp("OpLe", d, const("5"))),
+                cast(500, cmp("OpGt", d, const("5"))),
+                cast(400), -- no bracket: the recipe's DB2 range (5-35)
+                { action = { groupReference = { groupName = "Weave" }, condition = E } },
+            },
+            groups = {
+                {
+                    name = "Weave",
+                    actions = {
+                        move("5", AND(cmp("OpGt", mh, const("0.5s")), cmp("OpGt", d, const("5")))),
+                        { action = { move = { rangeFromTarget = spot } } },
+                        cast(200),
+                    },
+                },
+            },
+        }, ctx({ executePhase = "execute_phase", ranges = { dot = { 5, 35 } } }))
+        assert.are.equal(
+            lines({
+                "actions=strike,if=(toggle.movement&(execute_phase&(mainhand_remains>0.5&target.outside5))|target.within5)",
+                "actions+=/starfire,if=(toggle.movement&execute_phase|target.outside5)",
+                "actions+=/dot,if=(toggle.movement&execute_phase|target.outside5)",
+                "actions+=/call_action_list,name=weave,if=execute_phase",
+                "actions.weave=big_hit",
+            }),
+            text
+        )
+        assert.are.same({ "weave #1: move", "weave #2: move" }, omitted)
+        assert.are.same({
+            "# Movement: weave #1 reaches default: strike",
+            "# Movement: weave #2 reaches default: starfire, dot",
+        }, header)
+    end)
 end)
 
 -- Central fix 11: wowsims's OpDiv is division; the engine's script language takes `/` for division and `%` for modulo.
