@@ -263,3 +263,25 @@ Flag applied to `run_one` (no `--helper`: Task 6 dropped), one `make check FULL=
 Base2's spread is ~100 s (check) and ~70 s (gate); the flag run sits 150 / 100 s under base2's best, but Tasks 4-5 landed
 since base2 and the runs were not interleaved with a flag-off control, so the difference cannot be attributed to the
 flag. No clear gain beyond the spread: flag reverted.
+
+### Task 8: `--lazy` (dropped: no gain)
+
+Raw logs `~/src/hekili-speed-runs/lazy/` (and `insulate/leaks*.lazy`). Step 1: one-process leak runs with `--lazy`
+(check tier, gate tier): no leaked name that the base runs lack. Step 2: `--list --lazy` against Task 4's `.after` name
+files: only the four tests added since (3 `detect.readFloors`, 1 drive_spec two-boots). Results: `results.sh` of the
+check and gate logs identical between flag-off and flag-on runs (the only diffs are the echoed `BUSTED=` command line
+and make's "command-line overrides" note: the flag was injected as `BUSTED=<wrapper that adds --lazy>`, because a new
+env var fails the env-list test); `all files:` 2821 throughout.
+Timing, interleaved against a flag-off control on the same tree, under one lock hold (check) / `make gate` takes its own:
+| run | wall s | user+sys CPU s | load at start |
+|---|---|---|---|
+| check off1 | 355.4 | 2726.5 | 11.2 |
+| check on1 | 185.1 | 2606.4 | 25.0 |
+| check off2 | 182.6 | 2600.4 | 13.0 |
+| check on2 | 182.6 | 2604.1 | 12.5 |
+| gate off | 1031.6 | 7583.1 | 12.6 |
+| gate on | 2469.2 | 7685.4 | 3.8 |
+The machine was loaded by other work (load 4-25); gate-on's wall includes about 22 minutes waiting for the lock behind
+another worktree's accuracy run (CPU is unaffected). Off1 was the first run after a discarded warm-up that failed the
+env-list test (a LAZY_FLAG env var, since reverted); the two off runs differ by 126 s CPU, and on1/on2 (2606 / 2604)
+sit inside that spread, equal to off2 (2600). Gate: on is 102 s above off. No gain beyond the spread: dropped.
