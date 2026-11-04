@@ -173,9 +173,9 @@ M.FLICKER = {
     -- owner-approved standing named-cause policy, 2026-10-30 (controller ruling (b), task-4c-report.md)
     -- 0.3 -> 0.2 (decision 63's rule, gap CE; most of the Task 11 near-ties above went with the whole-number read)
     ["Enhancement"] = { flicker = 0.2, retracted = 0, heldReady = 230 }, -- 0.13 / 0.13 / 0.13, 0 (oracle 0.03 / 0 / 0.02)
-    -- heldReady 134 -> 105 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 104 / 98 / 105)
-    ["Arcane"] = { flicker = 0.1, retracted = 0, heldReady = 105 }, -- 0.02 / 0 / 0.02, 0
-    -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 172, the fix round): the new
+    -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
+    ["Arcane"] = { flicker = 0.1, retracted = 0, heldReady = 100 }, -- 0.03 / 0.05 / 0, 0
+    -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new
     -- list runs dry onto the Scorch filler; 174 of the 175 ticks (seeds 1-20) are Scorch at its 150 cost crossing, one
     -- tick an episode, lo 141-150 against the truth's 150-152 (gap BQ)
     -- flicker 0.3 -> 0.1 (the same sweep: 0 / 0 / 0; the loops do not show gap CQ's replay flash)
@@ -185,8 +185,8 @@ M.FLICKER = {
     -- after its Evocation, more fights reach the existing frostfire_bolt <-> scorch pooling edge (gap BS); isolated by
     -- swapping pack and world; controller ruling 2026-10-30 while the owner was away
     -- 0.2 -> 0.1 (decision 63's rule, gap CE, a short answer's cap reads a whole unit under)
-    -- heldReady 124 -> 112 (re-pin e2842f0a78, the Mage fix round: 112 / 110 / 97)
-    ["Frostfire"] = { flicker = 0.1, retracted = 0, heldReady = 112 }, -- 0.02 / 0.03 / 0.03, 0 (oracle 0.03 / 0.02 / 0.07)
+    -- heldReady 124 -> 106 (re-pin e2842f0a78, the Mage fix round: 96 / 100 / 106)
+    ["Frostfire"] = { flicker = 0.1, retracted = 0, heldReady = 106 }, -- 0.08 / 0.05 / 0.07, 0 (oracle 0.05 / 0.03 / 0.68)
     ["Shadow"] = { flicker = 0.1, retracted = 0, heldReady = 405 }, -- 0.03 / 0.02 / 0.02, 0
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     ["Smite"] = { flicker = 0.1, retracted = 0, heldReady = 0 }, -- 0.03 / 0.02 / 0.03, 0
