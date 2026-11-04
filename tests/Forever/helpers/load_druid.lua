@@ -151,6 +151,10 @@ function M.load(vs, file, class)
     w.packs = reg.RegisterPack or {}
     w.retired = reg.RetirePacks and reg.RetirePacks[1][1]
     w.options = reg.RegisterOptions and reg.RegisterOptions[1][1]
+    w.windows = {} -- RegisterWindow's records by name
+    for _, call in ipairs(reg.RegisterWindow or {}) do
+        w.windows[call[1]] = call[2]
+    end
     return w
 end
 
@@ -231,6 +235,13 @@ function M.env(w)
     end
     function e.gain(n, resource)
         table.insert(e.gained, { n, resource })
+    end
+    e.opened, e.closed = {}, {} -- the window verbs (openWindow / closeWindow), by name in call order
+    function e.openWindow(name)
+        table.insert(e.opened, name)
+    end
+    function e.closeWindow(name)
+        table.insert(e.closed, name)
     end
     for k, f in pairs(w.funcs) do
         e[k] = setfenv(f, e)

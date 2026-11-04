@@ -585,13 +585,11 @@ describe("the wowsims APL translator", function()
                     "actions+=/strike,focus=1,if=(!action.dot.known|buff.dot.remains<=0)",
                     "actions+=/cancel_buff,buff_name=stance",
                     "actions+=/strike,focus=1,if=offhand_speed>0",
+                    "actions+=/strike,focus=1,if=ranged_speed>0",
                 }, "\n"),
                 text
             )
-            assert.are.same(
-                { "default #6: autoSwingTime", "default #7: auraShouldRefresh 910 (no exclusive effect declared)" },
-                omitted
-            )
+            assert.are.same({ "default #7: auraShouldRefresh 910 (no exclusive effect declared)" }, omitted)
         end
     )
 
@@ -2137,5 +2135,81 @@ describe("the wowsims APL translator's auto-attack clocks", function()
             cast(100, cmp("OpGt", { math = { op = "OpAdd", lhs = rngSince, rhs = const("1s") } }, const("2s"))),
         })
         assert.are.equal("actions=strike,if=((ranged_speed-ranged_remains)+1)>2", text)
+    end)
+
+    local rngNext = { autoTimeToNext = { autoType = "RangedAuto" } }
+    it("reads the next Auto Shot as ranged_remains and the ranged swing time as ranged_speed", function()
+        local text, omitted = run({
+            cast(100, cmp("OpGt", rngNext, const("0.5s"))),
+            cast(200, cmp("OpGe", rngNext, { autoSwingTime = { autoType = "Ranged" } })),
+        })
+        assert.are.equal(
+            "actions=strike,if=ranged_remains>0.5\nactions+=/big_hit,if=ranged_remains>=ranged_speed",
+            text
+        )
+        assert.are.same({}, omitted)
+    end)
+
+    -- spec §3a: a variable the recipe's `windowVars` names reads its window: the time since is the window's elapsed
+    it(
+        "reads a recipe windowVars variable's time since from its window, the same comparison elsewhere on the clock",
+        function()
+            local rotation = {
+                valueVariables = { { name = "Just shot", value = cmp("OpLt", rngSince, const("0.1s")) } },
+                priorityList = {
+                    cast(100, { variableRef = { name = "Just shot" } }),
+                    cast(200, cmp("OpLt", rngSince, const("0.1s"))),
+                },
+            }
+            local r = { focus = {}, windowVars = { ["Just shot"] = "weave" } }
+            local text, omitted = apl.translate(rotation, ctx(r))
+            assert.are.equal(
+                "actions=strike,if=(window.weave.up&window.weave.elapsed<0.1)\n"
+                    .. "actions+=/big_hit,if=ranged_remains>ranged_speed-0.1",
+                text
+            )
+            assert.are.same({}, omitted)
+        end
+    )
+
+    -- The converted weave build (re-pin e2842f0a78's bm_weave.siml, Task 19's request), its timing variables read by
+    -- a line each: "Windup close" on the ranged clock (the time since inside math as speed - remains), "Just shot"
+    -- from the weave window (the recipe's windowVars), and "Weave fits" nil: its "Weave done" adds the walk times
+    -- (unitDistance arithmetic over the run speed), dropped as wowsims's nil (decision 8), so the comparison is nil
+    -- and leaves the condition. No walk term reaches the text; the build's waits and waitUntils give no line
+    -- (decision 9).
+    it("translates bm_weave's timing variables on the clocks and the window, no walk term, no wait line", function()
+        local json = require("dkjson")
+        local f = assert(io.open("tests/Forever/wowsims/hunter_beast_mastery.build.json", "rb"))
+        local player = json.decode(f:read("*a")).player
+        f:close()
+        local r = dofile("tools/wowsims/specs/hunter_beast_mastery.lua")
+        local set = require("Forever.helpers.engine").abilitySet(r.class)
+        local rotation = { valueVariables = player.rotation.valueVariables, priorityList = {} }
+        for _, name in ipairs({ "Windup close", "Just shot", "Weave fits" }) do
+            rotation.priorityList[#rotation.priorityList + 1] = {
+                action = {
+                    castSpell = { spellId = { spellId = 14287 } },
+                    condition = { variableRef = { name = name } },
+                },
+            }
+        end
+        local lines = setmetatable({ extra = {} }, { __index = r }) -- the recipe's open line wants its raptor_strike
+        local text = apl.translate(rotation, apl.context(set, lines, nil, player))
+        assert.are.equal(
+            table.concat({
+                "actions=arcane_shot,if=(ranged_remains<=0|ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))",
+                "actions+=/arcane_shot,if=(window.weave.up&window.weave.elapsed<0)",
+                "actions+=/arcane_shot",
+            }, "\n"),
+            text
+        )
+        local full, omitted = apl.translate(player.rotation, apl.context(set, r, nil, player))
+        assert.is_falsy(full:find("wait", 1, true), full)
+        local waits = 0
+        for _, o in ipairs(omitted) do
+            waits = waits + ((o:find(": wait$") or o:find(": waitUntil$")) and 1 or 0)
+        end
+        assert.is_true(waits > 0)
     end)
 end)

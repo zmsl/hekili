@@ -5,6 +5,7 @@
 -- (headless.lua): every `now` in VirtualState's context, the hawks counted in the belief and the simulation, the
 -- ranged clock after a modelled Auto Shot. What Hekili does with the rest is verified in game (docs/dev/layout.md).
 local ld = require("Forever.helpers.load_druid")
+local ws = require("Forever.helpers.wowsims")
 local headless = require("Game.harness.headless")
 
 local FILE = "src/Hekili_Hunter/Hunter.lua"
@@ -199,6 +200,11 @@ describe("Forever Hunter", function()
         assert.is_true((ld.run(r.usable, e)))
         ld.run(r.handler, e)
         assert.are.same({ "raptor_strike" }, e.applied)
+        assert.are.same({ "weave" }, e.closed) -- the weave's strike ends its window in the forecast
+        e = ld.env(w)
+        ld.run(r.now, e)
+        assert.are.same({ { "weave" }, {} }, { e.closed, e.applied }) -- and in the belief, at the real cast
+        e = ld.env(w)
         e.buff = buffs({ raptor_strike = true })
         assert.is_false((ld.run(r.usable, e)))
         -- reset_precast: the queued rank answers IsCurrentSpell
@@ -390,10 +396,15 @@ describe("Forever Hunter priorities", function()
             for list, entries in pairs(p.lists) do
                 for i, e in ipairs(entries) do
                     local where = name .. " " .. list .. " " .. i
+                    local window = e.action == "open_window" or e.action == "close_window"
                     assert.is_true(
-                        e.action == "call_action_list" or cls.abilities[e.action] ~= nil or racials[e.action],
+                        e.action == "call_action_list" or window or cls.abilities[e.action] ~= nil or racials[e.action],
                         where
                     )
+                    assert.is_true(not window or cls.windows[e.window_name or e.list_name] ~= nil, where)
+                    for key in (e.criteria or ""):gmatch("window%.([%w_]+)") do
+                        assert.is_true(cls.windows[key] ~= nil, where .. ": window " .. key)
+                    end
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
                             assert.is_true(kinds[kind][key] ~= nil, where .. ": " .. key)
@@ -518,6 +529,152 @@ describe("Forever Hunter through the engine", function()
         near(0.41, at("mainhand_remains>mainhand_speed-0.2")) -- Retribution's hammer_of_wrath, in remains form
         env.fight_remains = 3600
         near(0.01 + 3600 - 10, at("fight_remains>=10")) -- no clock: no wrap, the fallback as before
+    end)
+
+    -- The weave window (spec §3a): the belief opens it on an observed Auto Shot with the main hand due, a real Raptor
+    -- Strike closes it (now()); the forecast's open is the packs' open_window line, its countdown R6's wrap.
+    local function weaveWorld(distance)
+        local c = character()
+        c.speed = { 2.6 }
+        H = headless.new({ character = c, pack = "Beast Mastery (wowsims.com)" })
+        H.ctl.level.target, H.ctl.distance.target = 60, distance
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.now = H.ctl.now + 1
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        return H.Hekili.State, H.ns.Facade
+    end
+    local function shoot(t)
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. t, 75)
+    end
+    local function lines(apl)
+        local parsed = H.Hekili:ParseActionList(apl)
+        for _, l in ipairs(parsed) do
+            l.enabled = true
+        end
+        H.Hekili.DB.profile.packs["Beast Mastery (wowsims.com)"].lists = { precombat = {}, default = parsed }
+        H.Hekili:LoadScripts()
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+    end
+
+    it(
+        "opens the weave window on an Auto Shot with the main hand due, not with it swinging; Raptor Strike closes it",
+        function()
+            local _, F = weaveWorld(11)
+            local t = H.ctl.now
+            shoot(t) -- no main-hand swing yet: due
+            assert.is_true(headless.cycle(H, t + 0.1))
+            assert.is_true((F.Window("weave")))
+            H.ctl.now = t + 0.5
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-r", 14266) -- a real Raptor Strike
+            assert.is_true(headless.cycle(H, t + 0.6))
+            assert.is_false((F.Window("weave")))
+            H.ctl.now = t + 4
+            H.Fire("PLAYER_SWING", 2.6, 0) -- the main hand swings: due again at t + 6.6
+            shoot(t + 5) -- before it is due
+            assert.is_true(headless.cycle(H, t + 5.1))
+            assert.is_false((F.Window("weave")))
+            shoot(t + 7) -- after it
+            assert.is_true(headless.cycle(H, t + 7.1))
+            assert.is_true((F.Window("weave")))
+            assert.are.same({}, H.errors)
+        end
+    )
+
+    it("recommends a line gated window.weave.up with the delay to the next shot, the main hand due", function()
+        local S = weaveWorld(11)
+        lines(
+            "actions+=/open_window,name=weave,if=ranged_remains>ranged_speed-0.1&mainhand_remains<=0\n"
+                .. "actions+=/arcane_shot,if=window.weave.up"
+        )
+        local t = H.ctl.now
+        shoot(t)
+        assert.is_true(headless.cycle(H, t + 0.6)) -- past the evaluator's shot window: the belief opened nothing
+        S.reset("Primary", true)
+        local speed = S.ranged_speed
+        assert.is_true(speed - 1.2 > 0.6, tostring(speed))
+        H.ctl.now = t + speed - 1.2 -- the next shot 1.2 s ahead
+        assert.is_true(headless.cycle(H, H.ctl.now))
+        local recs = H.Hekili.Engine.Output.Primary.recs
+        assert.are.equal("arcane_shot", recs[1] and recs[1].actionName)
+        assert.is_true(math.abs(recs[1].wait - 1.21) < 0.02, tostring(recs[1].wait))
+        assert.are.same({}, H.errors)
+    end)
+
+    it(
+        "closes the weave window in the forecast at Raptor Strike's handler: the next pick is made with it down",
+        function()
+            local S, F = weaveWorld(3)
+            lines(
+                "actions+=/raptor_strike,if=window.weave.up\n"
+                    .. "actions+=/arcane_shot,if=window.weave.up\n"
+                    .. "actions+=/serpent_sting"
+            )
+            local t = H.ctl.now
+            shoot(t)
+            assert.is_true(headless.cycle(H, t + 0.1))
+            assert.is_true((F.Window("weave")))
+            local recs = H.Hekili.Engine.Output.Primary.recs
+            assert.are.same(
+                { "raptor_strike", "serpent_sting" },
+                { recs[1].actionName, recs[2] and recs[2].actionName }
+            )
+            S.reset("Primary", true)
+            assert.is_true(S.window.weave.up)
+            S:RunHandler("raptor_strike")
+            assert.is_false(S.window.weave.up)
+            assert.is_true((F.Window("weave"))) -- the belief's own window is untouched
+            assert.are.same({}, H.errors)
+        end
+    )
+
+    -- The drift guard (spec §3a, owner "ok"; tests/Forever/helpers/wowsims.lua windowGuard, run by every replay gate):
+    -- Auto Shots every ranged speed with the main hand due, polled at 5 Hz. The checked-in (d33930d040) hunter logs carry no
+    -- Auto Shot, so over the replays the weave never opens on either side: the guard runs there and finds nothing; here
+    -- the forecast's opens (the open line's countdown to each shot) are each matched by the belief's within a poll, and
+    -- an evaluator shifted 0.4 s late fails it, each miss listed with its time.
+    local function guarded(shift)
+        weaveWorld(11)
+        lines(
+            "actions+=/open_window,name=weave,if=ranged_remains>ranged_speed-0.1&mainhand_remains<=(1*((11-5)/7))\n"
+                .. "actions+=/arcane_shot,if=window.weave.up"
+        )
+        local I = H.ns.VirtualStateInternal
+        if shift then -- the belief's own evaluator (Families/Windows.lua), opened `shift` s after the shot
+            I.win.eval[I.win.byKey.weave] = setfenv(function()
+                local since = now - lastSwing(3) -- luacheck: ignore 113 (the belief's now context)
+                return lastSwing(3) > 0 and since >= shift and since < shift + 0.5 -- luacheck: ignore 113
+            end, I.nowCtx)
+        end
+        local tick, misses, predicted, believed = ws.windowGuard(H, 0.2)
+        local t0 = H.ctl.now
+        local shot = t0
+        for k = 0, 50 do
+            local t = t0 + 0.2 * k
+            if t >= shot then -- a shot every ranged speed (the client's 3.1 s), off the poll grid
+                H.ctl.now = shot
+                H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. k, 75)
+                shot = shot + H.ns.VirtualState.SwingSpeed(3, shot).est
+            end
+            H.ctl.now = t
+            assert.is_true(headless.cycle(H, t))
+            tick(t0)
+        end
+        assert.are.same({}, H.errors)
+        return misses(), predicted, believed
+    end
+
+    it("guards the weave's forecast opens: each matched by the belief's within a poll", function()
+        local missed, predicted, believed = guarded()
+        assert.is_true(#predicted >= 2 and #believed >= 3, #predicted .. " " .. #believed)
+        assert.are.same({}, missed)
+    end)
+
+    it("fails the guard with an evaluator shifted late, listing each miss with its time", function()
+        local missed = guarded(0.4)
+        assert.is_true(#missed >= 2, table.concat(missed, "; "))
+        assert.is_truthy(missed[1]:match("^weave at %d+%.%d%d s$"), missed[1])
     end)
 
     -- Review Focus 7 (R13): the queued strike lasts until the swing that takes it (`mainhand_remains`).

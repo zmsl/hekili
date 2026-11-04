@@ -132,6 +132,8 @@ local function newState(class, race)
         "summonTotem",
         "summonPet",
         "dismissPet",
+        "openWindow", -- the window verbs (re-pin design §3a): State.lua's, a handler's and a `now`'s
+        "closeWindow",
     }) do
         s[verb] = noop
     end

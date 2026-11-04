@@ -73,7 +73,8 @@
 --    an `and`/`or` writes a repeated term once): an APL written for a talent build (wowsims picks it by that
 --    talent, e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
 --    The recipe's `guard` ({ [action key or group's snake name] = SimC expression }) appends `&(<expression>)` to the
---    condition of each such entry (rule 13's automatic lines too), in every list (after a required talent): a
+--    condition of each such entry (rule 13's automatic lines too), in every list (after a required talent); keyed
+--    "<list> #<n>", to a move entry's condition, which its reached lines carry (rule 19, the ON variant): a
 --    documented deviation from wowsims, each
 --    with its reason in the recipe and docs/dev/wowsims-packs.md.
 -- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N when
@@ -93,9 +94,12 @@
 --    `<unit>.<key>.remains<=<maxOverlap>` (0 by default; the target's by default, as wowsims's GetTargetUnit),
 --    `|...stack<max_stack` for a stacking aura, guarded (rule 6); `cancelAura` is the action
 --    `cancel_buff,buff_name=<key>`; `autoSwingTime` MainHand / OffHand is `mainhand_speed` / `offhand_speed`;
---    `autoTimeToNext` MainHandAuto is `mainhand_remains` (RangedAuto waits for the weave window, re-pin Task 8b), and a
---    comparison on `autoTimeSinceLast` (since = speed - remains) is written on the clock: `since<x` is
---    `<hand>_remains><hand>_speed-x` (the recheck parser forecasts a clock's `<` and its `>` wrap).
+--    `autoSwingTime` Ranged is `ranged_speed`; `autoTimeToNext` MainHandAuto / RangedAuto is `mainhand_remains` /
+--    `ranged_remains` (the kits' clocks), and a comparison on `autoTimeSinceLast` (since = speed - remains) is written
+--    on the clock: `since<x` is `<hand>_remains><hand>_speed-x` (the recheck parser forecasts a clock's `<` and its `>`
+--    wrap). A variable the recipe's `windowVars` ({ [variable name] = window }) names reads that window instead (§3a:
+--    a span the kit registers, `RegisterWindow`): its comparison on a time since is `window.<w>.up&window.<w>.elapsed
+--    <op> x` (the hunters' "Just shot" from the `weave` window).
 --    `remainingTime` is `fight_remains`, which answers "unknown" (3600 s) on Forever: an API-forced deviation.
 -- 11. `unitDistance` (wowsims's yards from the APL's unit to its target; the source unit is ignored, as wowsims does)
 --    compared with a whole number N: `<=`/`<` N as `target.within<N>`, `>=`/`>` N as `target.outside<N>` (either
@@ -416,6 +420,7 @@ function M.context(set, r, log, player)
         exclusive = r.exclusive or {},
         requires = r.requires or {},
         guard = r.guard or {},
+        windowVars = r.windowVars or {}, -- rule 10: { [variable name] = window }, a time since read from the window
         ranges = r.ranges or {}, -- rule 19: { [action key] = { min, max } yards }, the DB2's, where the APL gives none
         maintenance = {}, -- rule 15: { { action key, setting key } }, by action key
     }
@@ -785,6 +790,8 @@ end
 
 -- The clock prefix of an `autoTimeSinceLast` hand.
 local SINCE = { MainHandAuto = "mainhand", RangedAuto = "ranged" }
+-- The clock prefix of an `autoSwingTime` hand.
+local SWING = { MainHand = "mainhand", OffHand = "offhand", Ranged = "ranged" }
 
 -- The clock prefix when node `n` is a time since the last swing or shot (variables followed), else nil.
 local function sinceHand(c, n)
@@ -877,10 +884,12 @@ local function value(c, n, pct)
         end
         local field = k == "auraNumStacks" and ".stack" or (k == "auraDuration" and ".duration" or ".remains")
         return unit(v) .. "." .. a .. field, reads(c, a)
-    elseif k == "autoSwingTime" and (v.autoType == "MainHand" or v.autoType == "OffHand") then -- rule 10
-        return v.autoType == "MainHand" and "mainhand_speed" or "offhand_speed", false
+    elseif k == "autoSwingTime" and SWING[v.autoType] then -- rule 10
+        return SWING[v.autoType] .. "_speed", false
     elseif k == "autoTimeToNext" and v.autoType == "MainHandAuto" then
         return "mainhand_remains", false
+    elseif k == "autoTimeToNext" and v.autoType == "RangedAuto" then -- the ranged auto-shot clock (C7)
+        return "ranged_remains", false
     elseif k == "autoTimeSinceLast" and SINCE[v.autoType] then -- inside math; compared, cmp's remains form
         return "(" .. SINCE[v.autoType] .. "_speed-" .. SINCE[v.autoType] .. "_remains)", false
     elseif k == "totemRemainingTime" then
@@ -1155,6 +1164,21 @@ local function bool(c, n)
         unsupported("isExecutePhase " .. tostring(v.threshold))
     elseif k == "actionGroupUsed" then
         return "settings." .. (c.toggles[v.name] or unsupported("actionGroupUsed " .. tostring(v.name))), nil, false
+    elseif k == "variableRef" and c.windowVars[v.name] then -- rule 10: a time since read from the recipe's window
+        local w, cm = c.windowVars[v.name], c.vars[v.name] and c.vars[v.name].cmp
+        local left = cm and sinceHand(c, cm.lhs) ~= nil
+        if not (cm and (left or sinceHand(c, cm.rhs))) then
+            unsupported("windowVars " .. v.name .. ": no comparison on a time since")
+        end
+        local x, u = value(c, left and cm.rhs or cm.lhs)
+        if u == true then
+            return nil, nil, true
+        end
+        local op = M.OPS[left and cm.op or FLIP[cm.op]] or unsupported("op " .. tostring(cm.op))
+        if not (x:match("^[%w_.]+$") or grouped(x)) then
+            x = "(" .. x .. ")"
+        end
+        return "(window." .. w .. ".up&window." .. w .. ".elapsed" .. op .. x .. ")", nil, u
     elseif k == "variableRef" then
         return bool(c, c.vars[v.name] or unsupported("variable " .. v.name))
     elseif c.selectValue[k] then -- rule 16
@@ -1743,6 +1767,10 @@ local function motion(c, a)
     if not ok then
         return "move (reaches nothing: its condition reads " .. tostring(cond.unsupported) .. ")"
     end
+    local g = c.guard[c.listName .. " #" .. c.entryNo] -- rule 7's guard of a move: its reached lines carry it
+    if g and cond ~= false then
+        cond = cond and (paren(cond) .. "&" .. paren(g)) or g
+    end
     local D = okD and tonumber(yd)
     local f, args = tostring(yd):match("^(m[ai][nx])%(([%d.,]+)%)$") -- a min()/max() of constants (the hunters' spots)
     for x in (okD and not D and f and args or ""):gmatch("[^,]+") do
@@ -1803,6 +1831,9 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
     local made = {}
     for _, w in ipairs(c.windows) do
         made[w.name] = true
+    end
+    for _, w in pairs(c.windowVars) do -- a recipe window (the kit registers it)
+        made[w] = true
     end
     for _, l in ipairs(lists) do
         local L, j = l[1], 1
@@ -1933,6 +1964,9 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
                 -- to 5 yd. Upgrade when a pin moves to another range with longer-range lines behind it.
                 local N = math.ceil(mv.D) -- the whole-yard bracket D is inside (the hunters' 4.99 is within5)
                 local function out(m) -- whether standing at D is beyond minimum range m
+                    -- shortcut: the move's direction is not checked, so a melee move (to D) would reach an
+                    -- outside<N> gate with N < D too; no pin has one (gaps.md "Move reach ignores direction").
+                    -- Upgrade when a pin moves in to a D above a line's minimum range.
                     return m and m > 0 and m < mv.D
                 end
                 for j, b in ipairs(byName[L]) do

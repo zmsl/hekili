@@ -417,14 +417,84 @@ end
 --- request's target creature type, its distance (M.distance), the content's shared category cooldowns (C.SHARED) and
 --- the content WORLD's regen and fsr; the character's pool the log's (M.logged); then the ready-time check (M.ready).
 --- Returns the summary and the line.
+--- (re-pin design §3a, decision 11) The windows' drift guard on headless instance `H`, polled every `poll` seconds
+--- [0.2: the loop's 5 Hz]: every open the forecast predicts (an `open_window` line's or a handler's, through
+--- state.openWindow, at the open's query_time) from an update a poll or less before it (plus the recheck's 0.01 pad)
+--- is matched by the belief's
+--- open of that window (Facade.Window's openedAt, read at each `tick`) within one poll; drift is flicker. A prediction
+--- made further ahead is made again by the updates after it, so only the freshest counts. The forecast clears an
+--- open_window line's last result at every reset (State.lua CopyWindows), so a line held true opens again at each
+--- update while the window is down: an up window ignores it (no refresh: no new open, nothing recorded), and a down
+--- one (closed by a cast the belief also saw) is a fresh open, held to the belief like any, so a held line is never a
+--- false miss while the belief's window is up. `tick(base)` reads the belief (`base`: the run clock's zero, for the
+--- times listed); `misses()` lists each unmatched predicted open as "<window> at <time> s", in time order; also
+--- returned: the predicted and believed opens ({ name, time }).
+function M.windowGuard(H, poll)
+    poll = poll or 0.2
+    local S, F = H.Hekili.State, H.ns.Facade
+    local predicted, believed, lastAt, zero = {}, {}, {}, 0
+    local open = S.openWindow
+    S.openWindow = function(name, ...)
+        local w = S.window[name]
+        local was = w and w.up and w.elapsed == 0
+        open(name, ...)
+        -- one poll ahead at most, plus the recheck's pad past a clock's crossing (Scripts.lua: 0.01)
+        if w and w.up and w.elapsed == 0 and not was and S.query_time - S.now <= poll + 0.02 then
+            predicted[#predicted + 1] = { name, S.query_time }
+        end
+    end
+    local function tick(base)
+        zero = base or 0
+        for name in pairs(H.Hekili.Class.windows) do
+            local up, at = F.Window(name)
+            if up and at ~= lastAt[name] then
+                lastAt[name] = at
+                believed[#believed + 1] = { name, at }
+            end
+        end
+    end
+    local function misses()
+        local out, seen = {}, {}
+        for _, p in ipairs(predicted) do
+            local key = p[1] .. ("%.3f"):format(p[2])
+            local hit = false
+            for _, b in ipairs(seen[key] and {} or believed) do
+                hit = hit or (b[1] == p[1] and math.abs(b[2] - p[2]) <= poll + 1e-6)
+            end
+            if not seen[key] and not hit then
+                out[#out + 1] = ("%s at %.2f s"):format(p[1], p[2] - zero)
+            end
+            seen[key] = true
+        end
+        return out
+    end
+    return tick, misses, predicted, believed
+end
+
 function M.gate(label, C, spec, floor, o)
     C = M.logged(C, spec)
     local L = loop.new(C)
     local R = replay.new(M.log(spec), L.oracle, M.replayOptions(C, spec, o))
-    local m = loop.replay(L, R)
+    local tick, misses, predicted, believed = M.windowGuard(L.us)
+    local m = loop.replay(L, R, {
+        on = function(_, steps)
+            tick(steps[1].base)
+        end,
+    })
     local r, line = loop.summary(m), loop.line(m)
     print("\n" .. label .. " wowsims: " .. line)
+    local missed = misses()
+    print(
+        ("%s windows: %d forecast opens, %d belief opens, drift %d [%s]"):format(
+            label,
+            #predicted,
+            #believed,
+            #missed,
+            table.concat(missed, "; ")
+        )
+    )
     pack_gate.health(m, r, line)
+    assert.are.same({}, missed, label .. ": a forecast window open the belief did not make within one poll")
     ab.check(r.decisions >= floor, label, line) -- a bar: recorded in a provider arm (providers spec §4.1)
     M.ready(label, spec, R)
     return r, line

@@ -707,6 +707,10 @@ do
             -- We are looking at a mathematic comparison.
             -- Forever R6: a hand's swing clock counts down and wraps back to its speed at the swing, so `>`/`>=` turns
             -- true just past the wrap (EmulateSyntax may have wrapped the term in safenum).
+            -- shortcut: 0.01 past the wrap the clock reads speed - 0.01, so `clock>speed-x` with x <= 0.01 is still
+            -- false there and its forecast is missed; no pack compares that close. Upgrade if one does.
+            -- shortcut: the clock is recognised on the left only (`speed-x<clock` falls to the generic fallback); the
+            -- translator writes it there (tools/wowsims/apl.lua rule 10). Upgrade when a pack puts it right.
             if comp == ">" or comp == ">=" then
                 local clock = lhs:match( "^safenum%(([%w_]+)%)$" ) or lhs
                 if wraps[ clock ] then

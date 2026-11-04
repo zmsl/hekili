@@ -39,4 +39,18 @@ return {
     -- the APL gives no bracket, so the weave's melee move reaches it
     ranges = { raptor_strike = { 0, 5 } },
     leveling = {},
+    -- the weave window (re-pin design §3a; the kit's RegisterWindow "weave"): the forecast opens it just past an Auto
+    -- Shot fired with the main hand ready by the walk in (the belief's evaluator, Hunter.lua: the move's own
+    -- `mainhand_remains<=Move duration`); "Just shot" reads it (windowVars)
+    extra = {
+        {
+            before = "raptor_strike",
+            line = "open_window,name=weave,if=ranged_remains>ranged_speed-0.1&mainhand_remains<=(1*((11-5)/7))",
+        },
+    },
+    windowVars = { ["Just shot"] = "weave" },
+    -- weave #3's move (R4: it reaches the strikes) carries the open weave: wowsims walks in at the first poll its
+    -- condition holds after a shot (the main hand ready by the walk in), an edge the stateless condition cannot tell
+    -- (it holds for most of each shot cycle out of melee); in melee the strikes stay as wowsims's
+    guard = { ["weave #3"] = "window.weave.up" },
 }
