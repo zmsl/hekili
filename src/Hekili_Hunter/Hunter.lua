@@ -342,10 +342,7 @@ end)
 spec:RegisterStateExpr("ranged_remains", function()
     local r = swings.ranged_projected
     if r == 0 then
-        -- no shot believed yet: anchor it at this evaluation, as mainhand_remains does out of combat
-        -- shortcut: so with no shot believed the clock reads 0 at now and a whole speed later in the forecast, never
-        -- the real first shot; upgrade if a pre-shot pick (the pull) shows a weave line early
-        r = now
+        return 0 -- no shot believed yet: no clock, and no wrap (a wrap would forecast a weave open before any shot)
     end
     if now == query_time then
         local real = r - now
@@ -361,26 +358,37 @@ spec:RegisterStateExpr("ranged_remains", function()
     return speed - (query_time - r) % speed
 end)
 
--- The weave window (re-pin design §3a, decision 11): from an Auto Shot fired with the main-hand swing ready, the span
--- wowsims's Melee Weave walks in, strikes and walks out (no aura shows it). Its numbers from the build (wowsims/forever
--- default.apl.json at d33930d040, the hunter recipes' request): Move duration (11 - 5) / 7 s each way and Wait at melee
--- max(input delay, 200 ms). "Ready" is wowsims's own walk-in test, its move's `autoTimeToNext MainHandAuto <= Move
--- duration`: the next main-hand swing (a speed after its last observed one; due counts) comes by the time the walk in
--- lands, read at the shot. The evaluator is true for WEAVE_SHOT after each observed shot (a few polls: the first Drain
--- after the shot sees it; under any ranged speed, so each shot is a new edge). No refresh; Raptor Strike's now() and
--- handler() close it. The forecast's open is each pack's open_window line (tools/wowsims/specs/hunter_*.lua `extra`),
--- the same test on the clocks just past the shot.
-local WEAVE_MOVE = (11 - 5) / 7
-local WEAVE_SPAN, WEAVE_SHOT = 2 * WEAVE_MOVE + 0.2, 0.5
+-- The weave window (re-pin design §3a, decision 11; R17: timing only, no walk time): from an Auto Shot whose next
+-- main-hand swing comes before the next shot, until that swing or the next shot, whichever comes first (controller
+-- ruling, 8b-2 fix round 2): the span a strike can be queued for the swing between two shots (no aura shows it).
+-- Opens: the shot's own now() (its observed cast success closes the last shot's span and opens this one when it fits)
+-- and the evaluator's false->true edge (the same test). Closes: the evaluator, true from the shot while the main hand
+-- has not swung since it and for one ranged speed at most, turns false at the swing or a speed after the shot
+-- (`close_on_false`); the next shot's now(); Raptor Strike's now() and handler(). On the shot's own Drain the
+-- evaluator answers what the shot's now() decided (`weaveShot`), so a window the shot opened has a true evaluation
+-- before its close edge and one it did not open gets no edge. The ranged speed is UnitRangedDamage's (the belief's
+-- stat read; the now context has no ranged clock speed). A due main-hand swing (none comes out of melee) counts as
+-- before the shot. `duration` is a constant, so it is only a cap: the forecast's window (each pack's open_window line,
+-- tools/wowsims/specs/hunter_*.lua `extra`) ends at Raptor Strike's handler or that cap; the forecast looks a GCD or
+-- two ahead, inside one shot cycle. (Both functions run in the belief's now context: the test is written in each.)
+local weaveShot = 0 -- the shot's now(): 1 it opened the window, 2 it did not; the evaluator reads it once (an upvalue)
 spec:RegisterWindow("weave", {
     evaluator = function()
-        local shot = lastSwing(3)
+        if weaveShot > 0 then
+            local opened = weaveShot == 1
+            weaveShot = 0
+            return opened
+        end
+        local shot, last, rs = lastSwing(3), lastSwing(1), stat("UnitRangedDamage")
         return shot > 0
-            and now - shot < WEAVE_SHOT
+            and rs > 0
             and mainhand_speed > 0
-            and lastSwing(1) + mainhand_speed <= shot + WEAVE_MOVE
+            and now - shot < rs
+            and last < shot
+            and last + mainhand_speed <= shot + rs
     end,
-    duration = WEAVE_SPAN,
+    close_on_false = true,
+    duration = 3600,
 })
 
 spec:RegisterAbilities({
@@ -398,6 +406,17 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows({ 75 }),
+
+        -- the shot ends the last shot's weave and opens its own when it fits (the weave window above)
+        now = function()
+            closeWindow("weave")
+            local last, rs = lastSwing(1), stat("UnitRangedDamage")
+            weaveShot = 2
+            if rs > 0 and mainhand_speed > 0 and last < now and last + mainhand_speed <= now + rs then
+                openWindow("weave")
+                weaveShot = 1
+            end
+        end,
     },
 
     hunters_mark = {
@@ -740,18 +759,18 @@ spec:RegisterWindow("hha", {
 -- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/hunter_*.lua).
 spec:RegisterPack(
     "Beast Mastery (wowsims.com)",
-    20261104001,
-    [[Hekili:nF17poQnq0)w6x2cDZXpsU9UERooPEQTQ3PURQkB)QbdEaScGr2Mnnsv83EhdzjaBs3vTsv5ljG94NFZ4zEJH4tEGeYOAGC)AV1VZ337TEE(Kq9(gGe2qt3sZXhQPv4VFgOkDx8D4VGCFxS1oXofVs5KkQSnwVVuqzgetA5L6Vutsoj4QgiLe(l)X9p8t)(TjgqJQgWKewWzmyyHGk9f2ZB7I1fqx8HXCZes4rq2fZGmABjUUF43(1UyC4U4Nbul31qeLBrBnoKlRr5A4nd)RkAhqFeCqulTxH7IKwRkrpHHplm7kx1ftzmr93IpSf2RC6I)rQME7jyJ1DF5beKcTUrDRRBoxx0MyCa3fMAJyICKTzZh24XWO1gphmUkfz8sm(tt1CrTYPrc4ItO6GbQRWWNC7kEwW3WGK2SmNPJ702091NT0RdCPg3xhjYIWGyubD3ae9a885MctqsPqWIYAL7x1Qa0SSO8uwGVbanVc(uWnJgJ7KK2WrZ5s4vzUObQJ2XRzIDRmzEb9hggJXJHCGfjHkkVw9PdVICfyVXZX)kZWf06rl(yGL)3zz57)MBSDFVT9csPfYiLwY3UKxzI0w1a)S0I88sWPs8iub16RSSEPD5Qf0mWA(8xxr)tlVvEoRTrJhCuNHeU2g7)stL5G2zhMMWRVzgNNDEpqY1VMZDCPvI6CHa9YeUgU4CmZPadKrB5PBV4ihVQsGf)4BrOqqZfh)qBZJsl5xEmtbsSwwJfzifNwv9uc7mdwKXsLP0Aisvi0ZsKrHDE)O9U7Weohh1jfL4VEUhy)XGLbHUVscrjxfU4fTNk5kTQVV4qxe8X777tc10KsGr(mjCICHzYdsZyJVrHrsyQeR0KCk2nDqJJOXD6vc0rjZZa0MfaD0O)RIKhjXeH4HWs0Wfb6p7nK4TNLe))NgUmpKe2NV1hv)hIYh7byCOBoRdDgj2JynDIX9ETb03Ta0NwXmj5lSGhs73FgApvR(YJ1F)zy9cr8lpI)HZq8r19lpk779ILllf4NKgnDMjfRgCxk3(0AM0sO3ULQPJvwJDdMf0(32RGy2TWX7oFQgcNwf4LLporlHrN9z3bFgGN)E690fjmTvxiK4xAbB5LC87q(5dFMr)0K)o]]
+    20261104003,
+    [[Hekili:1AvuVTjsq4Fl3l5Sv9by7M0MOqKUQRvTrTrvhPVUWc7aSYalA3L4ZsN43ENfCWyIPXsv8Inm7mFZhZm73UKLKhjEmQgipSYz1vlx68whN1ep9UsG4vsJ2qtWhkO54VFaOkDDW3WFb5U6GzBfBv8CLvKiFUX7DzckZGyyfpt)Lcs4jbxvcreVp)JhE8J)7nHgq9ZBXK4LYzmOnqqf9k58M6aDkuhS3MDSqcpbY6agetRYW4(7V)16a0CDWlaQIBBiIYoTQanzZkv2gEZW)Y93c0Nale1S5lWSiPfQm8lHHplmzLRQdOmMO4pXh2a7uw1b)dvtV5eSz23(YJiiPADP6gB7eUoTk08bypW15iMihzRxF9AhgwTw7yH1vPiMNH1FAKMlkuwLsadoKQDBPUclFYnl4XU)bdcRIJT6B3QQS((xe6BCTPMpFTVi2hlI(P0TTq0aWlxRpmUHzcbZpUsUBrLcq3I9tIyUlnaO55WDUx25mMjjTKJUZLWz5UOek83YlyITlmtEUnndJZyBiby(siNYlu3T)vKRa7VCSwEHXCkTOZJBpoGbCslK(kTKVziTIfrvQw6ntlssYaRCXtqouOVy2ao4Mt)VzolCSwn)IwoB1o7uvo))1uzcOT2IDCEXLZ7N)JADTjC150cXqZffjcbY4qUgMusAQomq6VHhTzsteppxG7VW38X9ALtAUqFt8JY4tBwuGehJ14agMU(tup3GpYHbDyQmIwa(QuH(OgpQPXBSAaQ1U1bJwrO42TUd3euFpXdfxuOZdeIZ4kTQ5eGw9s8XhAorakOHzaJ8bIxVDgMf3lcHs8DsaeVijoik5u8CJ2DZenMPZeOdIdJa06baDWPFt5GdCONItBvXV9eVMoTHdVDuo87nanCcI41mP0uG(ffSdkxgYD5OKBeXKdy1FHUCVYa6vda95ios8zcleifE3iuOVQ00YG3pcdgixnTK46rirNo20M(LoV641qPSETQ(R0B42G7qLMNJPN4xJFdfs6Me7e(6ZPZvvKya3R7(qNs670BsE9DxNq8R7B7f3R6iah)Uxn0fjmTsNkK4TNHn8moE3YpT)QJnlt(5]]
 )
 spec:RegisterPack(
     "Marksmanship (wowsims.com)",
-    20261104001,
-    [[Hekili:nF17VrQnq0)w6xsHM94h7E5UErhNuRAR6DQxuvj9Rg8IhaRfWiBt2gPk(BVJHewGSKe1kvXxwXAp(nVz8mVbi(KBjHmQgi3S1B77899ERNNpjuFFnqcRPjhOz4dv0s83VsLhuL0kvoVUn26O4OIxQCseL2gBVVqqzg823Wl0FUIS)SqRQHes4V(N3C7p)hxxocssyoNXG(ZbQKN1Hx3gRZH24hwZnviH7azBmdsPnf624F43)T2yC524zW0WDnCq5M3uPbPlRw5AOmt5wwgDeO3boiMf2BqFiXJvGbbdFwy8jx1gtzmr13IpCaUx50g)tun96ZWfRV(5BrqY16A11UUzCDEZEd9DNzQnIjsz2UDFyNhdtu78CWuQuKYlWepnrZfvkNAjGhEpvh0tDvKj)THNg8nmyFtAQZ41DAQB)Yto6LbUut4RJePrykmkNEShIoaE6EJHjyFHqWIsBK3VPrbOzPrzjSaFdaAEj8PGRgmg9KKwZrZ5s4vzUOgQIoYRyIJBmLCbDxggJXRHmGfjHskVs9Ph(lYvG9gph)lmlNtRgS4Jbw(FNLLV)BUY29922ZiLwiJuAj)WCELksAu98ZslYYkaNsXDqjuPVWY6L8YfZOzG109VSK(xwEB8C2AJg3hOo9fCn12)TMkZaTZrSmHxD1eop5(UNKBFn374rlfvzcbgL75Ay1fyMBbgiJoWtoS6ihVSuGn)4)IqHG6vh)qBZIsk4RpMPaj2lRXMmKIJ7QESGDIbZQyPYeAfePYf6jfYOSoVB1UWTFdNtR6Kqv6lNgb2FmyEsO9lKquYvHhE2KPcUsR6gi2pdbF8MUbKqfDFbWi)ijCKCHzZhKMXzEdcJKWej2Pj5uCmAVghrJE6vc0jjZfaA3mGoz0)vrYtKyKqCFAjQ)na6U7nK4TlsI))ldNxhsc7Q36YQptw(0mataD1Ib0csSNWA8gd(ERb03nd0hpXej5vwYdP97xG2J1QxFS(7xG1ZeXxFe)dlq8b191hL99EX2L5c8JkJgVZOMvdUZLBF8mJgj0z3C10HoRHPbtsA)BNvqmElC4DNp3aHZRc8YYhNzKWqW(K3bFcGl)E6D0fjmTrNlK4hzbh4fC87q(Lh(mJUTj)Zd]]
+    20261104003,
+    [[Hekili:1AvxVnkou0FlZlDs0Mfijt7SnQuPD1SR2wTt1QHoVAWGVawbWiBtZePr8BFUgAjeAOTsv8sKJ99EUhF)4Gjlj3t8yunqUBLZQlwU05tooRjE69LaXRKgTLMGlkO54VFLk3QYPfQuEzDWSDIDkEUYksKp3y7(mbLzWlSINPVPGeEsOvLqeX7F)(D3)3FBtEpijEPCgdA9durVya3uhOtH6Gh3ZowiHhazDadIPvz66G)8))V6aC76GbWuXTnCqzNwvObPnRuzBOmtzNN7VdOpawiMzZxGXqIULHxcgUwyIjxvhqzmrXhXfBH9kR6GVq10nNGlZ(6n3JGKQ1LQn22jCDAvOH(2dmDoIjsz261xU2HHjQ1owykvkI5zyINgP5IcLvPeqNdPA3wQR8n5Vf8y3pWGWQ4yR(7BvvwF7ZC93CTPMRV2xe7JPq)u6UwiAa45N1hg3WmHG5hxj3VOsbOzX(jrm3Lga08C4A3Z7mgJKKwYrZ5s4nzUOek83XlyIDlmTCUnfdJXyziby(siNYlux)4FrUcSF3XA5zMTtPfDwC1XomGtAH0xPL8TdPvSiQs1sVzArssgyLlEaYHc9zZgWb3C6pM5SWXA18ZA5SvBVtv58FQPYeqBTdR48IZN3p(hv6Ad4Q3sjeDnxuKieiJd5AysjPj7WaP)wE02jnq88CboFH)ZhN1kN0yH2M4hLXN2OOaj2gRXgmmC97OEQaFKbdQWuzeTa8vPc9rfEurJ3SRbO29ToSPvevPVYD4qq9TepuCrHgpqdoJR0QgP)w1sC5DnFkakOHzaJ8xeVEtgMdFuecv37KaiErsSruYP4hmANMjAmsVrGoiomcqRha0bJENYbh4qpfN2SIF7N6AQ0go8Pr5W7RbAyheXRPtPjb9cjSdkxgYD(OKBeXKdy1)GUyVYa6fda9jpos8zcteif(8iuOVQ00YG)yegmqUAAjXLJqIoDSPn8lDE12RHsz9kv9pPxZTb3Hknp5tpXVg7gkK01j2j81NtVvvrIbCVU3dDkPVtpK86txNq8R7U9S3vDeGJ)2Rg6IeMwPtfs8HZWwEghFB5)84thBoM8Rp]]
 )
 spec:RegisterPack(
     "Survival (wowsims.com)",
-    20261104001,
-    [[Hekili:nF17poQnq0)w6x2cDZXpsUCxVvhNuRAR6DQDvvz7xn4GhaRayKTjPRuf)T3XqwcWg6UQvQkFjIyp(nVz8mVbi(KhiHmQgi3V2B97899ERNNpju)ynqcRPj7Pz4dv0s83Wg5b(bArBS1rXrfVu5KikTn29yHGYmyTRHxO)Cfz3fHvvdjKWF(pU)HF83VtDcosyoNXG(ZaQKfD0DTX6COn(0AUPcjCaKTXmiL2uOBJ)UF7xAJXLBJhbrd314xLBEtLgKUSALRHMmLR6q0rGEaCq8kSxH4lPvQcK4m8zHXFCvBmLXevFn(WE4rLtB8pq107UapS(1p)acsUwxRUZ1nJRZB2zOU7mtTrmr6Y2S5dB8yyYzJNdMgLIuEbMOPjAUOs5ulb8W7O6GEQRIkPY9R4PbFfd21KM6mEDNM62V8SJEBGl1e(6irAeM(IYPh7HOdGNV3yyc2vieSO0g5JRAuaAwAuwclW3aGMxcFky7GXONK0AoAoxcVkZf1qv0rEftCCLPelO7YWymEnKbSijus5vQpD6Vixb2B8C8VXSCoTAWIpgy5)nww((VzRT77TTNrkTqgP0s((58kvK0O65NLwKLvaoLIdqjuPVXY6L8YnZOzG109VTK(NwER8CwBJg3hOo9fCn12)LMkZaTZrSmHxTDcNNCF3tY1VM7D8OLIQmHaJYDCnC1fyMBbgiJ2Zt2F1roEzPaB(X)fHcb1xD8dTnlkPGF9XmfiXEzn2KHuCCx1tfStmywflvMqRGivUqpPqgL05DR2fU9B4CEvNeQsF70iW(JbZtcTFHeIsUk8WZMgvWvAv3aW(5h4J33nqeQO7kag57jHJKlmBEsAgNZnimsctKyNMKtXXM9ACen6PxjqNLmxaOnZa6Sr)xfjptIrcX9PLO(j(D39gs82fjX))LHZRdjHD1BDz1)HS85zaMaA7Ib0csSNXA8gd(ETb03nd0NoXej5RSKhs73VaThRvF9X6VDbwpte)6J4FybIpOUF9rzFVxSDzUa)OYOX7mQz1G7C52NoZOrcD2nxnDOZAyAWKK2)2zfeJ3chE35lnq4YQaVS8XfgjmeSp7DWNa4YVNEhDrctB05cj(HvWEEbh)oKF60Nz0Tn5Vd]]
+    20261104003,
+    [[Hekili:1AvxpUjou0Fl7lZMOnlqsMz2TrLrQR2w1PQDu1YSVAWGVawbWiBtYgPv8BVxdzieMqBKQ4fKX(Ep3d3poyYsYZepgvdKNw5S6(LlDU1XznXtFOeiEL0OT0eCrbnhF6vj3X3rZQdMTxSxXZvwrI85g7oKjOmdwHv8m9JfKWlcRQeIiEF8FF653)pBuhHJ4LYzmO1hqfnAG2uhOtH6GJ7zhlKWoqwhWGyAvMUo4DF9Z1b421b9GOIBBIRYoTQqdsBwPY2qtMYwTZFpq3bwiEzZxG4lPfQmK4mCTWepUQoGYyIIFfxSfoOSQd(BQMU5c8y2xE8zeKuTUuTX2oHRtRcnu3EGPZrmr6YwV(nRDyyYzTJfMgLIyEgMOPrAUOqzvkb05qQ2TL6k)CQC7cES7VWGWQ4yR(7Bvvw)Px56V5AtnF(AFrSpM(8tP7BHObGxFwFyCdZecMFCL8WIkfGMf7NeXCxAaqZZHhCVRZymssAjhnNlHRYCrju4VNxWe7xyAXCBkggJXYqcW8LqoLxOE44Rixb2V7yT8gZ2P0IolE75omGtAH0xPL8TdPvSiQs1sVzArssgyLl2b5qH(Mzd4GBo9)M5SWXA18BA5SvBVtv58)xtLjG2ApwX5f3nVF8pR01gWvxtjeDnxuKieiJd5AysjPj7WaP)wE02jnq88CboFHV5JZALtASqBt8JY4tBuuGeBJ1ydggU(DuVuGpZGbvyQmIwa(QuH(ScpQMXB21au7(wN20kIQ0V1D4qq9NiEO4IcnEGUBgxPvns9TkL4YNAK(HcAygWi)fXR3KH5WJIqOIENeaXlsInIsof)br70mrJr6kb6K4WiaTEaqNm6Nuo4eh6P40Mv8B)1wtL2WHBhLd)Cnqd7GiEnDknjOVtc7KYLHC3nk5grm5ew9pOl2RmGE)aqFXJZeFMWebsH)yek0xvAAzWFocdgixnTK4nJqIoDSPn8lD(HTxdLY6vQ6FsVMBdUdvAEXNEIFn2nuiPRtSt4RpNUwvrIbCVU7dDjPVlpK8JNUUG4x332RUx1zao(DVAOlsyALoviXlldB5zC8ULF44vhBoM8Tp]]
 )
 
 -- The hand-built lists the wowsims.com packs replaced: a saved choice of one falls back to the spec's default.

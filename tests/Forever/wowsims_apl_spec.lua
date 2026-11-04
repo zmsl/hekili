@@ -1736,6 +1736,78 @@ describe("the wowsims APL translator's movement terms", function()
         assert.are.same({
             "# Dropped (movement): default #1: unitDistance",
             "# Dropped (movement): default #1: unitMovementSpeed",
+            '# Dropped (movement): default #1: variable "Time to walk in"', -- R17: each variable it drops
+        }, header)
+    end)
+
+    -- R17: yards are a type. A move's rangeFromTarget and a unitDistance comparison make their variables yards (and
+    -- what feeds them); math over yards (the old pin's walk time, a yard difference over a run-speed constant) is a
+    -- movement term, and so is every variable that depends on it, each listed.
+    it("drops math over yards (a yard difference over a speed constant) and every variable that reads it", function()
+        local mh = { autoTimeToNext = { autoType = "MainHandAuto" } }
+        local rng = { autoTimeToNext = { autoType = "RangedAuto" } }
+        local function var(name)
+            return { variableRef = { name = name } }
+        end
+        local yd = { math = { op = "OpSub", lhs = var("Ranged range"), rhs = var("Melee range") } }
+        local vars = {
+            { name = "Melee range", value = const("5.00") },
+            { name = "Ranged range", value = const("11.00") },
+            { name = "Start", value = var("Ranged range") },
+            {
+                name = "Move duration",
+                value = {
+                    math = {
+                        op = "OpMul",
+                        lhs = const("1s"),
+                        rhs = { math = { op = "OpDiv", lhs = yd, rhs = const("7") } },
+                    },
+                },
+            },
+            {
+                name = "Auto Shot wait",
+                value = { math = { op = "OpAdd", lhs = var("Move duration"), rhs = const("0.2s") } },
+            },
+        }
+        local text, omitted, _, header = run({
+            { action = { move = { rangeFromTarget = var("Start") } } },
+            cast(100, AND(cmp("OpLe", mh, var("Move duration")), cmp("OpGe", rng, var("Auto Shot wait")))),
+            cast(200, cmp("OpLe", d, var("Melee range"))),
+            cast(300, cmp("OpGt", mh, const("0.5s"))),
+            -- R17 refined: the old pin's Multi-Shot shape keeps its timing addend; a factor still drops the whole term
+            cast(
+                100,
+                cmp("OpLe", {
+                    math = {
+                        op = "OpAdd",
+                        lhs = { spellCastTime = { spellId = { spellId = 100 } } },
+                        rhs = var("Move duration"),
+                    },
+                }, mh)
+            ),
+            cast(
+                200,
+                AND(cmp("OpLe", { math = { op = "OpMul", lhs = const("2"), rhs = var("Move duration") } }, mh), up)
+            ),
+        }, vars)
+        assert.are.equal(
+            table.concat({
+                "actions=strike,if=ranged_remains>=0.2",
+                "actions+=/big_hit,if=target.within5",
+                "actions+=/roar,use_off_gcd=1,if=mainhand_remains>0.5",
+                "actions+=/strike,if=action.strike.cast<=mainhand_remains",
+                "actions+=/big_hit,if=(!action.dot.known|buff.dot.up)",
+            }, "\n"),
+            text
+        )
+        assert.are.same({ "default #1: move" }, omitted)
+        assert.are.same({
+            "# Dropped (movement): default #2: yards math",
+            '# Dropped (movement): default #2: variable "Move duration"',
+            "# Dropped (movement): default #5: yards math",
+            '# Dropped (movement): default #5: variable "Move duration"',
+            "# Dropped (movement): default #6: yards math",
+            '# Dropped (movement): default #6: variable "Move duration"',
         }, header)
     end)
 
@@ -2169,15 +2241,20 @@ describe("the wowsims APL translator's auto-attack clocks", function()
                 text
             )
             assert.are.same({}, omitted)
+            -- a threshold of 0 (wowsims's input delay, 0 here) is `elapsed<0`: never true, folded false
+            rotation.valueVariables[1].value = cmp("OpLt", rngSince, { inputDelay = {} })
+            rotation.priorityList[2] = cast(200, OR({ variableRef = { name = "Just shot" } }, ready))
+            text, omitted = apl.translate(rotation, ctx(r))
+            assert.are.equal("actions=big_hit,if=cooldown.big_hit.ready", text)
+            assert.are.same({ "default #1: never" }, omitted)
         end
     )
 
     -- The converted weave build (re-pin e2842f0a78's bm_weave.siml, Task 19's request), its timing variables read by
     -- a line each: "Windup close" on the ranged clock (the time since inside math as speed - remains), "Just shot"
-    -- from the weave window (the recipe's windowVars), and "Weave fits" nil: its "Weave done" adds the walk times
-    -- (unitDistance arithmetic over the run speed), dropped as wowsims's nil (decision 8), so the comparison is nil
-    -- and leaves the condition. No walk term reaches the text; the build's waits and waitUntils give no line
-    -- (decision 9).
+    -- from the weave window (the recipe's windowVars; folded false at input delay 0), and "Weave fits" on the clocks:
+    -- its "Weave done" keeps its timing addends, the walk times (yards over the run speed) drop alone (R17 refined).
+    -- No walk term reaches the text; the build's waits and waitUntils give no line -- (decision 9).
     it("translates bm_weave's timing variables on the clocks and the window, no walk term, no wait line", function()
         local json = require("dkjson")
         local f = assert(io.open("tests/Forever/wowsims/hunter_beast_mastery.build.json", "rb"))
@@ -2199,11 +2276,12 @@ describe("the wowsims APL translator's auto-attack clocks", function()
         assert.are.equal(
             table.concat({
                 "actions=arcane_shot,if=(ranged_remains<=0|ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))",
-                "actions+=/arcane_shot,if=(window.weave.up&window.weave.elapsed<0)",
-                "actions+=/arcane_shot",
+                -- "Weave fits" (R17 refined): "Weave done" keeps its timing addends, the walk times drop alone
+                "actions+=/arcane_shot,if=(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))",
             }, "\n"),
             text
         )
+        -- "Just shot" at input delay 0 is `elapsed<0`, never true: folded false, so its line is omitted (never)
         local full, omitted = apl.translate(player.rotation, apl.context(set, r, nil, player))
         assert.is_falsy(full:find("wait", 1, true), full)
         local waits = 0

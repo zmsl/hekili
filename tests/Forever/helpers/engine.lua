@@ -137,6 +137,13 @@ local function newState(class, race)
     }) do
         s[verb] = noop
     end
+    -- the belief's now-context reads a `now` may make (Families/Now.lua): no swing yet, no stat read
+    s.lastSwing = function()
+        return 0
+    end
+    s.stat = function()
+        return 0
+    end
     return setmetatable(s, {
         __index = function(_, k)
             if class.stateExprs[k] then

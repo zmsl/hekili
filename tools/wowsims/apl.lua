@@ -192,7 +192,12 @@
 --    translated conditions: run speed (`unitMovementSpeed`), "is moving" (`unitIsMoving`, any unit) and arithmetic
 --    on yards (`unitDistance` inside `math`, `min`/`max`, or compared with anything but a whole-number constant). The
 --    rest of the condition decides. A dropped term reads as wowsims's nil (rule 6): it leaves its `and`/`or`, and a
---    comparison or `math` over it is nil too. This supersedes every "falls to false", "reads false" and "constant run
+--    comparison or `math` over it is nil too, except that a movement addend of a sum (or the subtracted side of a
+--    difference) drops alone and the rest stays (R17 refined: `cast + walk <= mainhand_remains` is
+--    `action.<x>.cast<=mainhand_remains`); as a factor, a divisor or a whole side it takes the term with it. Yards are
+--    a type (R17): a move's rangeFromTarget, either side of a `unitDistance` comparison and every variable feeding them
+--    (transitively) are yards, and `math` over yards (a yard difference, a yard count over a speed) is a movement
+--    term ("yards math"), as is each variable whose value it empties (`variable "<name>"`). This supersedes every "falls to false", "reads false" and "constant run
 --    speed" text. Hekili holds only the Movement toggle, the client's range gate (rule 11's bracket, `spellInRange`)
 --    and the rotation's timing terms. Each dropped term is a header line by entry,
 --    `# Dropped (movement): <list> #<n>: <node>`, once an entry.
@@ -772,6 +777,7 @@ local PREPULL_CAST = "the pre-pull time uses the kit's base cast time; wowsims u
 
 -- Rule 18: a movement term of kind `kind`, recorded once an entry; returns wowsims's nil.
 local function moved(c, kind)
+    c.movedN = (c.movedN or 0) + 1 -- every drop, a repeat too: a variable's read tells a movement nil by it
     for _, x in ipairs(c.moves) do
         if x == kind then
             return nil, true
@@ -779,6 +785,67 @@ local function moved(c, kind)
     end
     c.moves[#c.moves + 1] = kind
     return nil, true
+end
+
+-- Rule 18 (R17): whether value node `n` is yards: a yards variable (c.yards: what a move's rangeFromTarget or a
+-- unitDistance comparison reads, transitively), or a min()/max()/math of one. unitDistance itself is its own term.
+local function isYards(c, n)
+    if type(n) ~= "table" then
+        return false
+    elseif n.variableRef then
+        return c.yards[n.variableRef.name] == true
+    end
+    local m = n.min or n.max
+    if m then
+        for _, x in ipairs(m.vals or {}) do
+            if isYards(c, x) then
+                return true
+            end
+        end
+        return false
+    end
+    return n.math ~= nil and (isYards(c, n.math.lhs) or isYards(c, n.math.rhs))
+end
+
+-- Rule 18 (R17): every variable node `n` reads (through variables) is yards.
+local function markYards(c, n)
+    if type(n) ~= "table" then
+        return
+    elseif n.variableRef then
+        local name = n.variableRef.name
+        if name and not c.yards[name] then
+            c.yards[name] = true
+            markYards(c, c.vars[name])
+        end
+        return
+    end
+    for _, x in pairs(n) do
+        markYards(c, x)
+    end
+end
+
+-- Rule 18 (R17): marks the yards variables under node `n`: a move's rangeFromTarget, either side of a unitDistance cmp.
+local function findYards(c, n)
+    if type(n) ~= "table" then
+        return
+    end
+    if n.move and n.move.rangeFromTarget then
+        markYards(c, n.move.rangeFromTarget)
+    end
+    if n.cmp and (n.cmp.lhs and n.cmp.lhs.unitDistance or n.cmp.rhs and n.cmp.rhs.unitDistance) then
+        markYards(c, n.cmp.lhs)
+        markYards(c, n.cmp.rhs)
+    end
+    for _, x in pairs(n) do
+        findYards(c, x)
+    end
+end
+
+-- Rule 18 (R17): variable `name`'s read came out nil from a movement term (c.movedN grew past n0): it is one too.
+local function movedVar(c, name, n0, u)
+    if u == true and (c.movedN or 0) > n0 then
+        moved(c, ('variable "%s"'):format(name))
+    end
 end
 
 -- A talent ID's key (a kit talent's spell, or a recipe `map` to a talent's key), or nil.
@@ -824,16 +891,30 @@ local function value(c, n, pct)
         end
         return M.VALUES[k], false
     elseif k == "variableRef" then
-        return value(c, c.vars[v.name] or unsupported("variable " .. v.name), pct)
+        local n0 = c.movedN or 0
+        local s, u = value(c, c.vars[v.name] or unsupported("variable " .. v.name), pct)
+        movedVar(c, v.name, n0, u)
+        return s, u
     elseif k == "unitMovementSpeed" or k == "unitDistance" then -- rule 18 (rule 11 compares yards in bool())
         return moved(c, k)
+    elseif k == "math" and (isYards(c, v.lhs) or isYards(c, v.rhs)) then -- rule 18 (R17): a walk time is one
+        return moved(c, "yards math")
     elseif k == "math" then
         if percentRead(c, v.lhs) or percentRead(c, v.rhs) then -- its 0-100 against wowsims's 0-1 leaks (rule 8)
             unsupported("a percent read in math")
         end
+        local n0 = c.movedN or 0
         local l, lu = value(c, v.lhs)
+        local n1 = c.movedN or 0
         local r, ru = value(c, v.rhs)
         local op = M.MATH[v.op] or unsupported("math " .. tostring(v.op))
+        -- rule 18 (R17 refined): a movement addend drops alone, the rest of the sum stays (`cast + walk` is `cast`);
+        -- as a factor or divisor, or a difference's left side, it takes the whole term with it
+        if ru == true and lu ~= true and (c.movedN or 0) > n1 and (v.op == "OpAdd" or v.op == "OpSub") then
+            return l, lu
+        elseif lu == true and ru ~= true and n1 > n0 and v.op == "OpAdd" then
+            return r, ru
+        end
         local u = nilOr(lu, ru)
         if u == true then
             return nil, true
@@ -1175,12 +1256,18 @@ local function bool(c, n)
             return nil, nil, true
         end
         local op = M.OPS[left and cm.op or FLIP[cm.op]] or unsupported("op " .. tostring(cm.op))
+        if op == "<" and x == "0" then
+            return nil, false, false -- elapsed<0 is never true (wowsims's input delay, 0 here): folded false
+        end
         if not (x:match("^[%w_.]+$") or grouped(x)) then
             x = "(" .. x .. ")"
         end
         return "(window." .. w .. ".up&window." .. w .. ".elapsed" .. op .. x .. ")", nil, u
     elseif k == "variableRef" then
-        return bool(c, c.vars[v.name] or unsupported("variable " .. v.name))
+        local n0 = c.movedN or 0
+        local s, b, u = bool(c, c.vars[v.name] or unsupported("variable " .. v.name))
+        movedVar(c, v.name, n0, u)
+        return s, b, u
     elseif c.selectValue[k] then -- rule 16
         local kind, sel = c.selectValue[k][1], c.selectValue[k][2]
         sel.used = true
@@ -2073,6 +2160,8 @@ function M.translate(rotation, c)
     for _, v in ipairs(rotation.valueVariables or {}) do
         c.vars[v.name] = v.value
     end
+    c.yards = {} -- rule 18 (R17)
+    findYards(c, rotation)
     local toggles, shown = {}, {}
     for _, e in ipairs(rotation.priorityList or {}) do
         local g = e.action and e.action.groupReference

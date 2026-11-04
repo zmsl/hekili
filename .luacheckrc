@@ -150,7 +150,7 @@ for _, k in ipairs(stateEnv) do
 end
 files["src/Hekili_Shaman/Shaman.lua"] = { globals = shamanEnv }
 -- The Hunter's further `state` names.
-local hunterEnv = { "summonPet", "combat", "nextMH", "mainhand_speed", "swings", "closeWindow", "lastSwing" }
+local hunterEnv = { "summonPet", "combat", "nextMH", "mainhand_speed", "swings", "closeWindow", "lastSwing", "stat", "openWindow", "now" }
 for _, k in ipairs(stateEnv) do
     hunterEnv[#hunterEnv + 1] = k
 end

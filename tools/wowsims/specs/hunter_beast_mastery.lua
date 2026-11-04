@@ -37,13 +37,13 @@ return {
     -- the APL gives no bracket, so the weave's melee move reaches it
     ranges = { raptor_strike = { 0, 5 } },
     leveling = {},
-    -- the weave window (re-pin design §3a; the kit's RegisterWindow "weave"): the forecast opens it just past an Auto
-    -- Shot fired with the main hand ready by the walk in (the belief's evaluator, Hunter.lua: the move's own
-    -- `mainhand_remains<=Move duration`); "Just shot" reads it (windowVars)
+    -- the weave window (re-pin design §3a; the kit's RegisterWindow "weave"; R17: timing only): the forecast opens it
+    -- just past an Auto Shot whose next main-hand swing comes before the next shot (the belief's evaluator,
+    -- Hunter.lua); "Just shot" reads it (windowVars)
     extra = {
         {
             before = "raptor_strike",
-            line = "open_window,name=weave,if=ranged_remains>ranged_speed-0.1&mainhand_remains<=(1*((11-5)/7))",
+            line = "open_window,name=weave,if=ranged_remains>ranged_speed-0.1&mainhand_remains<ranged_remains",
         },
     },
     windowVars = { ["Just shot"] = "weave" },

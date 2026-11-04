@@ -947,3 +947,40 @@ describe("the replay's avoided casts", function()
         assert.are.same({ "cast:nil", "swing:MISS", "land:MISS" }, kinds)
     end)
 end)
+
+-- R18: wowsims's OtherActionShoot (OtherID 4, proto/common.proto: the ranged auto attack) is the client's ranged auto attack: the
+-- cast success of the content's `rangedSwing` ability at each completed shot, and UnitRangedDamage's speed the log's
+-- usual gap between shots.
+describe("the replay's ranged auto attack", function()
+    local LOG = table.concat({
+        "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+        "[0.00] [Tester (#1)] Casting {OtherID: 4} (Cost = 0.000, Cast Time = 500ms, GCD = 0s, Effective Time = 500ms)",
+        "[0.50] [Tester (#1)] Completed cast {OtherID: 4}",
+        "[3.28] [Tester (#1)] Completed cast {OtherID: 4}",
+        "[6.48] [Tester (#1)] Completed cast {OtherID: 4}",
+        "[9.68] [Tester (#1)] Completed cast {OtherID: 4}",
+    }, "\n")
+
+    it("emits each completed shot as the rangedSwing ability's cast, its speed the usual gap", function()
+        local abilities = { volley = { key = "volley", id = 900070, gcd = "off", rangedSwing = true } }
+        for k, a in pairs(H.Hekili.Class.abilities) do
+            abilities[k] = a
+        end
+        local Hs = { Hekili = { Class = { abilities = abilities, auras = H.Hekili.Class.auras } } }
+        local R = replay.new(LOG, Hs, O)
+        local W = at(R.world(WO, 1), R.pull + 10)
+        local shots = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "cast" then
+                shots[#shots + 1] = ("%d@%.2f"):format(ev.spell, ev.t - R.pull)
+            end
+        end
+        assert.are.same({ "900070@0.50", "900070@3.28", "900070@6.48", "900070@9.68" }, shots)
+        assert.are.equal(3.2, W.ents[1].ranged[3])
+        -- without a rangedSwing ability nothing is emitted (another class's log)
+        local W2 = at(replay.new(LOG, H, O).world(WO, 1), R.pull + 10)
+        for _, ev in ipairs(W2.truth) do
+            assert.are_not.equal("cast", ev.kind)
+        end
+    end)
+end)

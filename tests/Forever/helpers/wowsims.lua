@@ -302,8 +302,13 @@ M.READY = {
     -- (controller ruling 2026-11-03 overnight, pending owner review)
     druid_feral = { 0.50, 5 },
     druid_guardian = { 0.54, 41 }, -- 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
-    hunter_beast_mastery = { 0.32, 5 },
-    hunter_marksmanship = { 0.15, 7 }, -- was { 0.15, 10 } (b8d673eb8 raised it to 0.18 for gap BW, reverted with BW's fix): measured real 8 median 0.15 once the replay seeds the casting rate from unboosted ticks (168.28 strider_kick back to never); real 7 since gap CE's fractional read
+    -- re-pin 8b-2 (controller ruling, round 3): move-reached weave strikes show at the decision to walk (the Auto Shot that
+    -- opens the weave window); wowsims logs the cast at arrival; the offset is the walk time, which Hekili does not model
+    -- (owner rule: no movement in Hekili or the belief) and which is the lead a player needs to start walking. Every new
+    -- real row is a weave strike shown early (the replay now feeds wowsims's OtherID 4 Auto Shots, so the weave runs).
+    hunter_beast_mastery = { 0.36, 7 }, -- was { 0.32, 5 }: wing_clip 27.49 / 115.64 early (-1.59 / -0.74)
+    -- { 0.15, 7 } -> { 0.38, 13 } (re-pin 8b-2, the weave cause above): six strike rows early, strider_kick 11.40 -0.10 -> -0.70
+    hunter_marksmanship = { 0.38, 13 }, -- was { 0.15, 10 } (b8d673eb8 raised it to 0.18 for gap BW, reverted with BW's fix): measured real 8 median 0.15 once the replay seeds the casting rate from unboosted ticks (168.28 strider_kick back to never); real 7 since gap CE's fractional read
     -- { 0.14, 9 } -> { 0.14, 10 } (Task 5): row 91.49 mongoose_bite now late 0.14 s, a cost decision with the belief's
     -- lo 1.9 mana under truth (the lo lag, gaps BQ/BT, G7); the base row rested on the replay artifact (belief 5.5
     -- mana over truth); owner-approved 2026-10-30.
@@ -314,7 +319,8 @@ M.READY = {
     -- smaller set (the rows above gone), not slower recommendations: p90 fell 0.36 -> 0.19, on-GCD .976 -> 1.000
     -- 0.19, 6 -> 0.20, 5 (gap CE; one fight, the log's seed; owner standing approval 2026-10-30): the whole-number read
     -- gone, Hunter's Mark leaves the real set (late 0.19 -> in the cost window), so the median of the 5 left is their 0.20
-    hunter_survival = { 0.20, 5 },
+    -- { 0.20, 5 } -> { 0.63, 11 } (re-pin 8b-2, the weave cause above): six strike rows early (-0.39 to -1.59)
+    hunter_survival = { 0.63, 11 },
     mage_arcane = { 0.47, 21 }, -- 0.470, 21 (Mage lane, ruling M13; first clean run on 0ce5d1a4)
     mage_fire = { 0.37, 31 }, -- 0.370, 31
     mage_frostfire = { 0.38, 31 }, -- 0.380, 31 (Task FFB, ruling M13; first clean run on 3e104ce9)

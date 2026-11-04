@@ -45,6 +45,12 @@ M.MANA_TICK, M.MANA_REGEN = 0.1, 2
 -- shortcut: its success only, no cast bar for a cast-time item; add the START when a gate needs it.
 M.UNMAPPED_SPELL = 0
 
+-- R18: wowsims's OtherActionShoot (proto/common.proto), the ranged auto attack: each completed one is the client's
+-- cast success of the content's `rangedSwing` ability (the live client's ranged clock source, Families/Swing.lua), and
+-- UnitRangedDamage's speed (the out-of-combat read) is the log's most common gap between two (a speed buff or a
+-- delayed shot is the exception), to the 10 ms.
+-- shortcut: the cast success only, no swingType 2 PLAYER_SWING (UNMEASURED on Forever; W.startRanged's default too).
+M.RANGED_AUTO = 4
 M.MOVE = 20 -- wowsims's OtherActionMove: the Movement aura (sim/core/movement.go), its stacks the distance in yards
 -- (max(int(d), 1): truncated, so the replay's position can be up to 1 yd short of wowsims's)
 
@@ -592,6 +598,26 @@ function M.new(text, H, o)
         end
     end
     R.speed = o.speed or R.speed
+    -- R18: the ranged hand, when the content has a ranged auto attack and the log shoots it
+    for _, a in pairs(H.Hekili.Class.abilities) do
+        if a.rangedSwing then
+            R.shootSpell = a.id
+        end
+    end
+    local gaps, prev, best = {}, nil, nil
+    for _, e in ipairs(p.ev) do
+        if e.kind == "completed" and e.other == M.RANGED_AUTO then
+            if prev then
+                local g = math.floor((e.t - prev) * 100 + 0.5) / 100
+                gaps[g] = (gaps[g] or 0) + 1
+                if not best or gaps[g] > gaps[best] or gaps[g] == gaps[best] and g > best then
+                    best = g
+                end
+            end
+            prev = e.t
+        end
+    end
+    R.rangedSpeed = R.shootSpell and best or nil
     -- the mob: health crosses 20% exactly at the execute phase's start (the damage before it is 80%)
     local before, start = 0, R.pull + (1 - M.TAIL) * R.duration
     for _, e in ipairs(p.ev) do
@@ -647,6 +673,7 @@ function M.new(text, H, o)
             bags = wo.bags,
             pet = wo.pet,
             stats = wo.stats,
+            ranged = R.rangedSpeed and { 1, 2, R.rangedSpeed } or nil, -- R18: UnitRangedDamage's speed
         }))
         us.power = start0[us.pt] or wo.power or 0
         us.power0 = us.power
@@ -724,6 +751,8 @@ function M.new(text, H, o)
                 if cd[key] > 0 then
                     us.cdUntil[key] = T + cdk
                 end
+            elseif e.kind == "completed" and e.other == M.RANGED_AUTO and R.rangedSpeed then -- R18: the ranged auto attack
+                W.emit({ kind = "cast", src = us, dst = mob, spell = R.shootSpell })
             elseif not key and e.kind == "completed" and e.item then -- an unmapped item's use: still our cast
                 W.emit({ kind = "cast", src = us, dst = mob, spell = M.UNMAPPED_SPELL })
             elseif key and e.kind == "casting" then -- a hard cast's start: its cast bar, the GCD from now

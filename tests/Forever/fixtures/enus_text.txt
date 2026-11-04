@@ -15340,16 +15340,16 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	desc	Sele
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	name	Entry
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Open Window]|r - |cFFFFD100|cffffd100ranged_remains>ranged_speed-0.1&mainhand_remains<=(1*((11-5)/7))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 2973 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Open Window]|r - |cFFFFD100|cffffd100ranged_remains>ranged_speed-0.1&mainhand_remains<ranged_remains|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 2973 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1495 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1317257 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 13795 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2974 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1495 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1317257 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 13795 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2974 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 3044
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2643 - |cFFFFD100|cffffd100(action.multi_shot.cast+(1*((11-5)/7)))<=mainhand_remains|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2643 - |cFFFFD100|cffffd100action.multi_shot.cast<=mainhand_remains|r|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	name	Action Name
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -19408,16 +19408,16 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	desc	Select
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	name	Entry
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Open Window]|r - |cFFFFD100|cffffd100ranged_remains>ranged_speed-0.1&mainhand_remains<=(1*((11-5)/7))|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 2973 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Open Window]|r - |cFFFFD100|cffffd100ranged_remains>ranged_speed-0.1&mainhand_remains<ranged_remains|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 2973 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1495 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1317257 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 13795 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2974 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1495 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1317257 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 13795 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2974 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 3044
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2643 - |cFFFFD100|cffffd100(action.multi_shot.cast+(1*((11-5)/7)))<=mainhand_remains|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2643 - |cFFFFD100|cffffd100action.multi_shot.cast<=mainhand_remains|r|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	name	Action Name
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -21123,16 +21123,16 @@ options.packs.survival.Survival (wowsims.com).lists.actionID	desc	Select the ent
 options.packs.survival.Survival (wowsims.com).lists.actionID	name	Entry
 options.packs.survival.Survival (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
 options.packs.survival.Survival (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Open Window]|r - |cFFFFD100|cffffd100ranged_remains>ranged_speed-0.1&mainhand_remains<=(1*((11-5)/7))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 2973 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Open Window]|r - |cFFFFD100|cffffd100ranged_remains>ranged_speed-0.1&mainhand_remains<ranged_remains|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 2973 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
 options.packs.survival.Survival (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1495 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1317257 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 13795 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2974 - |cFFFFD100|cffffd100(toggle.movement&((mainhand_remains<=(1*((11-5)/7))&ranged_remains>=((1*((11-5)/7))+max(0,0.2)))&window.weave.up)||target.within5)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1495 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1317257 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 13795 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2974 - |cFFFFD100|cffffd100(toggle.movement&(ranged_remains>=max(0,0.2)&window.weave.up)||target.within5)|r|r
 options.packs.survival.Survival (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
 options.packs.survival.Survival (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 3044
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2643 - |cFFFFD100|cffffd100(action.multi_shot.cast+(1*((11-5)/7)))<=mainhand_remains|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2643 - |cFFFFD100|cffffd100action.multi_shot.cast<=mainhand_remains|r|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.survival.Survival (wowsims.com).lists.action_name	name	Action Name
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
