@@ -8,6 +8,7 @@
 
 ### Changed
 - Hunters: the melee weave's strikes can show at range with the Movement toggle on, from an Auto Shot whose next melee swing comes before your next shot until that swing (the weave window), and an open weave closes when you Raptor Strike. With it off, they show only in melee as before.
+- Balance Druids: the built-in priority follows the latest wowsims.com rotation. Out of combat it shows Wrath to open after Moonkin Form, and Innervate shows only when your mana is under 40%.
 - Less memory churn in big pulls: the engine no longer builds its nameplate debug text on every update, only when you take a snapshot.
 - Less work per update, mostly for casters: the engine does less setup and bookkeeping each time the icons refresh, and works out an ability's cost once per moment instead of repeatedly. The recommendations are unchanged.
 - Auras on your target no longer trigger extra refreshes in combat, which matters most in raids.

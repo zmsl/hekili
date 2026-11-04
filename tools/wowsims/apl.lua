@@ -78,6 +78,9 @@
 --    "<list> #<n>", to a move entry's condition, which its reached lines carry (rule 19, the ON variant): a
 --    documented deviation from wowsims, each
 --    with its reason in the recipe and docs/dev/wowsims-packs.md.
+--    The recipe's `condition` ({ [action key] = SimC expression }) replaces the APL's condition of each cast line of
+--    that action, in every list (before `requires` and `guard`; an error when no line casts it): an owner-approved
+--    deviation from wowsims, with its reason in the recipe header.
 -- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N when
 --    it is a direct operand (a variable followed) of a comparison with a percent read (M.PERCENT: `mana.pct`,
 --    `health.pct`, which run 0-100 where wowsims's run 0-1), else N/100 as wowsims reads it (inside `math`, or
@@ -397,7 +400,7 @@ end
 
 --- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
 --- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, levelingFirst, extra,
---- settings, exclusive, requires, guard, maintenance, select, auras), the spec's exported log text `log` (rule 13; nil: the
+--- settings, exclusive, requires, guard, condition, maintenance, select, auras), the spec's exported log text `log` (rule 13; nil: the
 --- automatic actions are unsupported) and the request's player `player` (rule 16's option values).
 function M.context(set, r, log, player)
     local c = {
@@ -426,6 +429,7 @@ function M.context(set, r, log, player)
         exclusive = r.exclusive or {},
         requires = r.requires or {},
         guard = r.guard or {},
+        condition = r.condition or {}, -- rule 7: { [action key] = SimC expression }, an owner deviation's condition
         windowVars = r.windowVars or {}, -- rule 10: { [variable name] = window }, a time since read from the window
         ranges = r.ranges or {}, -- rule 19: { [action key] = { min, max } yards }, the DB2's, where the APL gives none
         maintenance = {}, -- rule 15: { { action key, setting key } }, by action key
@@ -1721,6 +1725,9 @@ function entry(c, e)
         end
         return out
     end
+    if c.condition[key] then -- rule 7: the recipe's condition replaces the APL's
+        cond, c.conditioned[key] = c.condition[key], true
+    end
     cond = guarded(c, key, required(c, key, cond))
     return cond and (body .. ",if=" .. cond) or body
 end
@@ -2147,6 +2154,7 @@ function M.translate(rotation, c)
     c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
     c.callers, c.deviated, c.deviations, c.moves, c.movedAll = {}, {}, {}, {}, {}
     c.held, c.windows, c.loops, c.moving = {}, {}, {}, {} -- rules 14b, 19
+    c.conditioned = {} -- rule 7: the recipe's condition keys a line took
     -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13)
     local lists = { rotation.prepullActions or {}, rotation.priorityList or {} }
     for _, g in ipairs(rotation.groups or {}) do
@@ -2319,6 +2327,11 @@ function M.translate(rotation, c)
         end
         table.insert(byName.default, at, x.line)
         table.insert(origin.default, at, false)
+    end
+    for x in pairs(c.condition) do
+        if not c.conditioned[x] then
+            error("condition: no " .. x .. " cast line", 0)
+        end
     end
     local done = {}
     repeat

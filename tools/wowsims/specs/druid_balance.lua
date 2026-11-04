@@ -28,14 +28,25 @@
 --   * -> innervate (log 10.45-22.59: 8 of the 11 misses, the top's 6 and 2 more; with them 76/79 = 0.962, over the
 --     0.909 base, so the drop is this line's alone): API-forced, gap AN: fight_remains reads
 --     3600, so the `fight_remains>380&mana.pct_lo<70` branch holds once mana dips under 70% (the truth from 11.82 s;
---     10.45 s at 74% truth, our lo bound under 70%); wowsims casts it at 24.86 s on the 40% branch.
+--     10.45 s at 67.9% truth after Starfire's cost, 2756 -> 2520 of 3709); wowsims casts it at 24.86 s on the 40% branch.
 --   wrath -> insect_swarm (36.73, 52.73): Insect Swarm lasts 16 s in wowsims's log (21.09 -> 37.09, 38.23 -> 54.23;
 --     the old log's too) against the kit's 14 s (the DB2's 12 s + Nature's Splendor's 2000 ms effect, mask 2097152 =
 --     Insect Swarm's; wowsims's own spell data says the same, so its 16 s is a sim-side extension): our belief shows
 --     the refresh 2 s early (already in the base's top, wrath -> insect_swarm 3). Kept on the DB2 until an in-game
 --     check (owner).
 --   Next (1): wrath -> starfire 55.73: the kit's Wrath grants Eclipse at its cast end; the 52.73 Wrath missed (no proc).
---   LIVE L10 0.2, L40 0.2, L60 0.2 s.
+--   LIVE L10 0.2, L40 0.2, L60 0.2 s. The ready-time row (tests/Forever/helpers/wowsims.lua M.READY) 17 -> 22 real:
+--   the new log's 79 decisions (42 Wraths, was 28 of 55), 17 of the 22 a Wrath at the mana floor (cost class).
+-- Owner deviation R20a (2026-11-04): Innervate keeps only wowsims's low-mana branch, `condition = { innervate =
+-- "mana.pct_lo<40&fight_remains>30" }` (apl.lua rule 7): the fight's length is unknown in game (gap AN), so "fight >
+-- 380 s" can't be known, and the long-fight branch showed Innervate under 70% mana in every fight.
+-- Disagreements (P7; floor 0.93), decisions on-GCD 0.937 (79) top [wrath -> insect_swarm 3; wrath -> starfire 2]
+-- (the 8 Innervate misses gone; the rest were behind them):
+--   wrath -> insect_swarm (19.59, 36.73, 52.73): Insect Swarm's 16 s (4.23 -> 20.23 in the log too), above.
+--   wrath -> starfire (11.82, 55.73): wowsims's Wrath that missed (the 10.45 cast, Miss at 12.82; the 52.73 cast, Miss
+--     at 55.23) grants no Eclipse; the kit grants it at every Wrath's cast end, so we show Starfire. The hit roll can't
+--     be forecast: a replay limit.
+--   LIVE L10 0.2, L40 0.2, L60 0.2 s; ready-time median 0.260 (22 real), the M.READY ceiling 0.71 -> 0.26.
 local object = { __jsontype = "object" } -- dkjson: an empty table as {} (UnitReference.create(), the default unit)
 return {
     class = "DRUID",
@@ -60,4 +71,6 @@ return {
     focus = { moonfire = 2, insect_swarm = 2, starfire = 1 }, -- by role (docs/dev/wowsims-packs.md); Starfire on Eclipse 1
     -- wowsims's sim starts in Moonkin Form (its list never casts it): the form first, once known (a talent, 40)
     levelingFirst = { "moonkin_form,if=!buff.moonkin_form.up" },
+    -- owner R20a: wowsims's low-mana branch only (the fight's length is unknown in game, gap AN)
+    condition = { innervate = "mana.pct_lo<40&fight_remains>30" },
 }

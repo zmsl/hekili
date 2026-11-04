@@ -128,6 +128,9 @@ Translation:
 - `guard` (`{ [action or group snake name] = SimC expression }`): one `&(<expression>)` term appended to each such
   entry's condition, in every list. A deviation from wowsims, so only on the user's ruling, named in the recipe and
   under "Deviations by ruling" below.
+- `condition` (`{ [action] = SimC expression }`): replaces the APL's condition of each cast line of that action, in
+  every list (`requires` and `guard` still apply; an error when no line casts it). A deviation from wowsims, so only on
+  the user's ruling, named in the recipe and under "Deviations by ruling" below (Balance's Innervate, R20a).
 - `notes` (`{ "<sentence>", ... }`): player-facing lines added to the pack's in-game description (what the toggles
   hide, what a player gates by hand).
 - `maintenance` (`{ [action] = setting key }`, rule 15): a raid debuff kept up (Protection's Demoralizing Shout, Arms's
@@ -204,8 +207,8 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 8. Constants: Go durations in seconds; `"N%"` as N against a percent read (`mana.pct`, `health.pct` run 0-100), N/100
    anywhere else (in `math`, against any other read), as wowsims reads it; a percent read inside `math`, `min` or
    `max` is unsupported (its 0-100 scale would leak).
-7. `focus`, `use_off_gcd=1` for an off-GCD ability, `leveling` and `extra` lines, `prepullSkip`, `requires`, `guard`;
-   an `and`/`or` writes a repeated term once.
+7. `focus`, `use_off_gcd=1` for an off-GCD ability, `leveling` and `extra` lines, `prepullSkip`, `requires`, `guard`,
+   `condition`; an `and`/`or` writes a repeated term once.
 9. `auraIcdIsReady`: `buff.<key>.icd_ready` for an aura declaring `icd`; else unsupported.
 10. `auraShouldRefresh` only for `exclusive` auras; `cancelAura`; `autoSwingTime`; `remainingTime` as
     `fight_remains` (API-forced: unknown, 3600 s, on Forever).
@@ -244,6 +247,10 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   "!action.overpower.known|(stance_rage_kept>=action.overpower.cost&cooldown.overpower.remains<buff.overpower_ready.remains)" }`
   (`stance_rage_kept`: the kit's state expression for the rage a swap keeps; Tactical Mastery is a passive no priority
   reads).
+- Druid Balance, Innervate (owner R20a, 2026-11-04): wowsims's `(fight_remains>380&mana<70%)|(mana<40%&fight_remains>30)`
+  keeps only its low-mana branch: the fight's length is unknown in game (gap AN: `fight_remains` reads 3600), so
+  "fight > 380 s" cannot be known and the long-fight branch would fire under 70% mana in every fight.
+  `condition = { innervate = "mana.pct_lo<40&fight_remains>30" }`.
 
 ## Pack notes
 

@@ -249,7 +249,7 @@ describe("the wowsims APL translator", function()
         local function h(f)
             return setfenv(f, env)
         end
-        local function guardCtx()
+        local function guardCtx(r)
             local kit = {
                 abilities = {
                     shout = {
@@ -355,7 +355,7 @@ describe("the wowsims APL translator", function()
                 },
                 talents = {},
             }
-            return apl.context(kit, { executePhase = "execute_phase" })
+            return apl.context(kit, r or { executePhase = "execute_phase" })
         end
         local function at(id, v, cond)
             local e = cast(id, cond)
@@ -392,6 +392,18 @@ describe("the wowsims APL translator", function()
             assert.are.equal(1, #omitted)
             assert.matches("^precombat #7: no guard: boom's handler raised", omitted[1])
         end)
+
+        it(
+            "leaves a recipe's levelingFirst line in a pre-pull list unguarded (it carries its own condition)",
+            function()
+                local text =
+                    apl.translate({ prepullActions = { at(1010, "-2s") } }, guardCtx({ levelingFirst = { "shout" } }))
+                assert.are.equal(
+                    table.concat({ "actions.precombat=shout", "actions.precombat+=/plain", "actions=shout" }, "\n"),
+                    text
+                )
+            end
+        )
 
         it("guards a mutually exclusive group's first line by every member's aura, later ones by their own", function()
             local text = apl.translate({
@@ -1149,6 +1161,28 @@ describe("the wowsims APL translator", function()
             text
         )
     end)
+
+    it(
+        "replaces each line's condition of a recipe's condition action, before its guard, and refuses an unused one",
+        function()
+            local rage = cmp("OpGt", { currentRage = {} }, const("10"))
+            local text = apl.translate(
+                { priorityList = { cast(200, OR(rage, ready)), cast(100, rage), cast(200) } },
+                ctx({ condition = { big_hit = "rage.lo>40" }, guard = { big_hit = "buff.fury.up" } })
+            )
+            assert.are.equal(
+                table.concat({
+                    "actions=big_hit,if=rage.lo>40&buff.fury.up",
+                    "actions+=/strike,if=rage.lo>10",
+                    "actions+=/big_hit,if=rage.lo>40&buff.fury.up",
+                }, "\n"),
+                text
+            )
+            assert.has_error(function()
+                apl.translate({ priorityList = { cast(100) } }, ctx({ condition = { big_hit = "rage.lo>40" } }))
+            end, "condition: no big_hit cast line")
+        end
+    )
 
     it("takes the character's ability set: a shared racial is mapped and off the GCD", function()
         local set = require("Forever.helpers.engine").abilitySet("WARRIOR")
