@@ -9,7 +9,7 @@
 ### Changed
 - Hunters: the melee weave's strikes can show at range with the Movement toggle on, from an Auto Shot whose next melee swing comes before your next shot until that swing (the weave window), and an open weave closes when you Raptor Strike. With it off, they show only in melee as before.
 - Balance Druids: the built-in priority follows the latest wowsims.com rotation. Out of combat it shows Wrath to open after Moonkin Form, and Innervate shows only when your mana is under 40%.
-- Mages: the built-in priorities follow the latest wowsims.com rotations. Arcane drops Frostbolt at level 60 (it stays as a filler while leveling) and adds Fire Blast, with Arcane Wrath to open and its cooldowns lined up with Missile Barrage or Arcane Wrath. Fire keeps Arcane Blast up, uses Scorch as a filler while Fire Blast is nearly ready, and opens with Pyroblast, as Frostfire does. Frostfire shows Fireball while leveling, until Frostfire Bolt.
+- Mages: the built-in priorities follow the latest wowsims.com rotations. Arcane uses Frostbolt as a filler only without the Arcane Instability talent, at any level, and adds Fire Blast, with Arcane Wrath to open and its cooldowns lined up with Missile Barrage or Arcane Wrath. Fire keeps Arcane Blast up, uses Scorch as a filler while Fire Blast is nearly ready, and opens with Pyroblast, as Frostfire does. Frostfire shows Fireball while leveling, until Frostfire Bolt.
 - Less memory churn in big pulls: the engine no longer builds its nameplate debug text on every update, only when you take a snapshot.
 - Less work per update, mostly for casters: the engine does less setup and bookkeeping each time the icons refresh, and works out an ability's cost once per moment instead of repeatedly. The recommendations are unchanged.
 - Auras on your target no longer trigger extra refreshes in combat, which matters most in raids.
@@ -19,6 +19,7 @@
 - The experimental options to use the damage meter for swing outcomes and the Cooldown Manager for aura presence are gone from normal builds, and both are now off even if you had turned them on.
 
 ### Fixed
+- Fewer one-moment flashes of a filler as a cooldown comes back: the icon now counts down to the cooldown's real end instead of stalling for its last half second.
 - Enemies you kill leave the target count at once, so AoE and cleave lines aren't held by a dead mob for a few seconds.
 - Elemental Shamans: Mana Spring Totem counts at your real rank from the first fight of a session.
 - Warriors: in Battle Stance, Overpower no longer shows on another player's dodge; it waits for the game to say the spell is usable.

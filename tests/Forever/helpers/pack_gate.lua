@@ -82,7 +82,9 @@ M.FLICKER = {
     -- heldReady 378 -> 383 (seeds 1-20; 377 with f1f5cf772 reversed): Blood Fury's 2 min cooldown (owner, live 2026-11-02)
     -- readyShort 203 -> 204 (seeds 1-20; 203 at its parent f9065270a): 79f79d52c's floor lift on a yes that shows a
     -- pending swing landed (GAP AK; controller ruling 2026-11-03)
-    ["Warrior Protection"] = { flicker = 0.8, retracted = 0.1, readyShort = 204, heldReady = 383 }, -- 0.74 / 0.57 / 0.57, 0 / 0.03 / 0.02
+    -- flicker 0.8 -> 0.7 (Task 10b, gap CQ: the not-ready flag keeps a modelled end the GCD covers; seeds 1-20 / 21-40 /
+    -- 41-60 0.62 / 0.64 / 0.54, was 0.68 / 0.64 / 0.54)
+    ["Warrior Protection"] = { flicker = 0.7, retracted = 0.1, readyShort = 204, heldReady = 383 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
@@ -205,8 +207,10 @@ M.FLICKER = {
     ["Demonology"] = { flicker = 0.1, retracted = 0, heldReady = 4 }, -- 0.02 / 0.05 / 0, 0
     ["Shadow Brand"] = { flicker = 0.1, retracted = 0, heldReady = 3 }, -- 0.03 / 0.02 / 0.02, 0
     -- the excess over the oracle (0 / 0 / 0) is at Conflagrate's and Shadowburn's cooldown ends, as Fire's Fire Blast
-    -- (the not-ready flag's CD_PROBE, central)
-    ["Destruction"] = { flicker = 0.4, retracted = 0, heldReady = 8 }, -- 0.23 / 0.3991 / 0.25, 0
+    -- (the not-ready flag's CD_PROBE, central). 0.4 -> 0.2 (Task 10b, gap CQ: the flag keeps a modelled end the GCD or a
+    -- hard cast covers; 0.13 / 0.17 / 0.07, was 0.23 / 0.40 / 0.25; agreement .995 / .992 / .996); the rest is the probe
+    -- on a free GCD, where the loops' grid puts the world's end a ulp after the tick
+    ["Destruction"] = { flicker = 0.2, retracted = 0, heldReady = 8 }, -- 0.13 / 0.17 / 0.07, 0
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. It tightens the bar when a change lowers the oracle's own flicker. 1.8 -> 0.5 (forever-gap-bd,

@@ -72,7 +72,8 @@ local function cause(f, p, c, a, b, tick)
     end
     for _, x in ipairs({ a, b }) do
         local cp, cc = x and f.cd[p][x], x and f.cd[c][x]
-        if cp and cc and math.abs(cc - math.max(0, cp - tick)) > tick + EPS then
+        -- half a poll: a stall of one poll at a cooldown's end (0.5 held where 0.3 was due) is off by one tick
+        if cp and cc and math.abs(cc - math.max(0, cp - tick)) > tick / 2 + EPS then
             return "cooldown"
         end
     end

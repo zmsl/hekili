@@ -50,8 +50,9 @@
 -- LIVE L10 4.8, L40 6.4, L60 10.0 s: the list has no cheap filler, so mana runs dry by about 90 s and it waits on Fire
 -- Blast's 340 (Evocation on its cooldown counts usable); wowsims's own fight idles 96.40 -> 104.70 -> 114.40.
 -- Leveling (ruling R22: L10/L40 keep the 6 s bar): L40's 6.4 s is 108.8-116.8, mana dry (60-230), Frostbolt
--- affordable and unlisted. The filler Frostbolt (the old list's) runs until the 31-point talent cut reaches Arcane
--- Instability: every kit ability is known at 40 and at 60, so the guard is a talent's, as Retribution's.
+-- affordable and unlisted. The filler Frostbolt (the old list's, simc line `frostbolt,if=!talent.arcane_instability.
+-- enabled`) is keyed to the talent, not the level: it shows whenever Arcane Instability is not taken, at 60 too (every
+-- kit ability is known at 40 and at 60, so the guard is a talent's, as Retribution's); wowsims's build takes it.
 return {
     class = "MAGE",
     pack = "Arcane (wowsims.com)",

@@ -136,6 +136,23 @@ describe("the flicker ledger", function()
         )
     end)
 
+    it("reads a cooldown stalled one poll at its end (the not-ready flag's probe) as the flash's cause", function()
+        local function cause(cds)
+            return kinds(flicker.ledger(
+                build({
+                    { s = { { "x", 0.5 } }, cd = { x = cds[1] } },
+                    { s = { { "x", 0.5 } }, cd = { x = cds[2] } },
+                    { s = { { "y", 0.1 } }, cd = { x = cds[3] } },
+                    { s = { { "x", 0 } }, cd = { x = 0 } },
+                    { s = { { "x", 0 } }, cd = { x = 0 } },
+                }),
+                O
+            ))
+        end
+        assert.are.same({ "dip x>y cooldown 1" }, cause({ 0.5, 0.5, 0.5 })) -- 0.5 held where 0.3 was due: one tick off
+        assert.are.same({ "dip x>y unknown 1" }, cause({ 0.5, 0.3, 0.1 })) -- a true countdown is no cooldown cause
+    end)
+
     it("records an icon appearing in an empty slot and leaving as a flash, not a dip of the empty slot", function()
         local f = build({
             { s = { { "a", 0 } } },

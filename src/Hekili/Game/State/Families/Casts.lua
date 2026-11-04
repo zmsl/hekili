@@ -344,8 +344,19 @@ I.On(Obs.Cooldown, function(o, t)
 end)
 
 -- The standing flags at `now` (TDF constrain): ready pulls a later ready time back to now (and restores a charge);
--- not ready pushes an earlier one to at least now + CD_PROBE.
+-- not ready pushes an earlier one to at least now + CD_PROBE, but keeps a modelled end the flag agrees with while the
+-- GCD's or a hard cast's end (`busy`) covers it (gap CQ: the push froze the wait at 0.5 for a cooldown's last polls, so
+-- a filler showed for the poll the GCD or cast ended on). No press lands before `busy`, and the flag is read again
+-- there; only for an ability on the GCD (an off-GCD or on-next-swing one presses during it). Uncovered, the probe
+-- stands as before: a free GCD (the loops' grid ends a ulp after the tick), a modelled end
+-- already past (the model may be short), or one within READY with `busy` within READY too (a press would meet the
+-- client's no, 4bd02bde0). A probe already pushed is no modelled end: re-pushed, not counted down.
 I.OnSettle(function(now)
+    local busy = I.gcdStart > 0 and I.gcdStart + I.gcdDur or 0 -- the end no press lands before (0: none)
+    if I.castAb > 0 and not I.channel and I.castEnd > busy then
+        busy = I.castEnd
+    end
+    local held = busy > now + I.CAP_WAIT -- no press this poll
     for a = 1, A.n do
         local flag = A.flag[a]
         if flag == YES then
@@ -363,7 +374,17 @@ I.OnSettle(function(now)
                 if A.next0[a] < probe then
                     A.next0[a] = probe
                 end
-            elseif A.ready0[a] < probe then
+            elseif
+                A.ready0[a] < probe
+                and (
+                    A.cd[a].basis ~= "modelled"
+                    or A.gcdKind[a] == 0
+                    or A.obj[a].onNextSwing
+                    or A.ready0[a] <= now - I.EPS
+                    or A.ready0[a] > busy + I.EPS
+                    or (A.ready0[a] <= now + I.CAP_WAIT and not held)
+                )
+            then
                 A.ready0[a] = probe
                 I.Sample(A.cd[a], "pinned", probe, now, Obs.Cooldown)
             end

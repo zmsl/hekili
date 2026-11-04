@@ -36,6 +36,66 @@ describe("casts and cooldowns", function()
         assert.is_nil(VS.Cooldown(424242, 21))
     end)
 
+    -- gap CQ: pushing a modelled end the flag agrees with to now + CD_PROBE froze the wait at 0.5 for its last polls, so
+    -- a filler ranked first for one poll at each cooldown end, the poll the GCD ended on
+    it("keeps a modelled end the GCD covers under a not-ready flag; probes one at or within READY of now", function()
+        I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
+        S.Direct(Obs.Cooldown, 10.1, REND, 0)
+        I.gcdStart, I.gcdDur = 38.5, 1.5 -- the GCD ends with the cooldown
+        for _, now in ipairs({ 39.6, 39.8, 39.9 }) do -- the flag agrees: the countdown runs to the model's end
+            I.Fold(now, false)
+            I.Settle(now)
+            assert.are.equal(40, VS.Cooldown(fs.SPENDER_C, now).est)
+        end
+        -- within READY (0.05) of the model's end the flag still says no: shown ready, a press would be refused (the
+        -- loop's cooldown ends land a ulp after the tick, 4bd02bde0): probed
+        I.Fold(39.98, false)
+        I.Settle(39.98)
+        assert.are.equal(39.98 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 39.98).est)
+        -- a probe is no modelled end: still not ready a poll later, it is pushed again, not counted down
+        I.Fold(40.18, false)
+        I.Settle(40.18)
+        assert.are.equal(40.18 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 40.18).est)
+    end)
+
+    it(
+        "probes a modelled end past the GCD's end (a press could land before it; the loops' grid ends a ulp late)",
+        function()
+            I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
+            S.Direct(Obs.Cooldown, 10.1, REND, 0)
+            I.gcdStart, I.gcdDur = 38.2, 1.5 -- ends at 39.7, before the cooldown
+            I.Fold(39.6, false)
+            I.Settle(39.6)
+            assert.are.equal(39.6 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 39.6).est)
+        end
+    )
+
+    it("keeps a modelled end within READY while the GCD runs on past it (no press before the GCD's end)", function()
+        I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
+        S.Direct(Obs.Cooldown, 10.1, REND, 0)
+        I.gcdStart, I.gcdDur = 38.6, 1.5 -- ends at 40.1: the end a ulp late on the poll before it is no flash
+        I.Fold(39.98, false)
+        I.Settle(39.98)
+        assert.are.equal(40, VS.Cooldown(fs.SPENDER_C, 39.98).est)
+        -- a modelled end already past while the flag says no: the model may be short, probed
+        I.Fold(40.05, false)
+        I.Settle(40.05)
+        assert.are.equal(40.05 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 40.05).est)
+    end)
+
+    it("lets a hard cast's end cover a modelled end as the GCD's does; not a channel's (a press clips it)", function()
+        I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
+        S.Direct(Obs.Cooldown, 10.1, REND, 0)
+        I.castAb, I.castEnd, I.channel = REND, 40, false
+        I.Fold(39.6, false)
+        I.Settle(39.6)
+        assert.are.equal(40, VS.Cooldown(fs.SPENDER_C, 39.6).est)
+        I.channel = true
+        I.Fold(39.7, false)
+        I.Settle(39.7)
+        assert.are.equal(39.7 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 39.7).est)
+    end)
+
     it("learns the real length from the ready edge after our cast", function()
         assert.are.equal(30, VS.CooldownLength(fs.SPENDER_C)) -- the spec's cooldown first
         I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)

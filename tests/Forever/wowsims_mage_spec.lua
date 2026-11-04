@@ -56,20 +56,26 @@ local REPLAY = {
 -- (mana dry from about 87 s, waiting on Frostfire Bolt's 314.5 and Scorch's 150; wowsims's own fight idles about 10 s
 -- at 91.6).
 -- The replay's flicker rose (Fire 0 -> 2.66/min, Arcane 0.67 -> 1.33): the belief's cooldown probe push (CD_PROBE)
--- shows the filler one poll at each cooldown end, central (gaps.md CQ), fixed by Task 10b (ruling R21).
+-- shows the filler one poll at each cooldown end, central (gaps.md CQ), fixed by Task 10b (ruling R21): the replay's
+-- flicker ceiling (per minute, the last column) guards it, Fire 2.66 -> 0.67; Arcane 1.33 -> 1.33 (Arcane Wrath's
+-- flashes at 17.8 and 59.4 gone; Fire Blast's at 142.4 stays, its end 0.1 s past the GCD's, which the fix does not
+-- cover). The 20-fight loops cannot guard it: their presses land on the 0.2 s poll grid, so a 1.5 s GCD ends half a
+-- poll off Fire Blast's end and at the frozen polls the GCD has 0.3 s or more left, where the engine keeps the frozen
+-- pick; wowsims's casts line the GCD's end up with the cooldown's, 0.1 s after the last frozen poll.
 -- Leveling (R22): Arcane L40 6.4 s and Frostfire L10 6.6 s took recipe `leveling` fillers (the recipes' headers).
 local PACKS = {
-    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0 },
-    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.97, 6.0 },
-    { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8 },
+    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0, 1.4 },
+    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.97, 6.0, 0.7 },
+    { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8, 0 },
 }
 
 describe("the Mage wowsims.com packs #slow #wowsims", function()
     -- one block per pack: the replay floor, the brackets (6 s; L60 the pack's own LIVE60 when higher)
     for _, p in ipairs(PACKS) do
-        local spec, world, pack, FLOOR, LIVE60 = p[1], W[p[2]], p[3], p[4], p[5]
+        local spec, world, pack, FLOOR, LIVE60, FLICKER = p[1], W[p[2]], p[3], p[4], p[5], p[6]
         it(pack .. " follows wowsims's casts", function()
-            ws.gate(pack, content(spec, world, pack, 60), spec, FLOOR, REPLAY[p[2]:lower()])
+            local r, line = ws.gate(pack, content(spec, world, pack, 60), spec, FLOOR, REPLAY[p[2]:lower()])
+            assert.is_true(r.flicker <= FLICKER, line)
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()
