@@ -213,6 +213,9 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
         level = Plain(api, api.UnitLevel("player")) or 0
     end
     Stage(Obs.PlayerHit, t, kind, type(amount) == "number" and amount or 0, level)
+    if kind == HIT.WOUND and flag == "CRITICAL" then -- PlayerHit's slots are taken: the crit is its own (reactions)
+        Stage(Obs.PlayerCrit, t)
+    end
 end)
 
 S.On("PLAYER_STARTED_MOVING", nil, function(api, t)

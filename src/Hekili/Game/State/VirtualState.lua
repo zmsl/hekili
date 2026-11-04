@@ -58,7 +58,10 @@ VS.Obs = {
     Avoided = 38, -- a: ability index; b: its cast's time; c: I.HitKind (DODGE, PARRY, MISS): our cast's own outcome on
     -- the target (Events/Rows.lua's pairing in its landing window, GAP AX); Families/Now.lua undoes and refunds it
     Crit = 39, -- a: ability index; b: its cast's time: our cast's own CRITICAL wound on the target (the same pairing);
-    -- Families/Now.lua runs the ability's `onCrit` (GAP T)
+    -- Families/Now.lua runs the ability's `onCrit` (GAP T); a 0: our white swing's crit, once its credit is final
+    SwingAvoided = 40, -- a: hand; b: the swing's time; c: I.HitKind: our white swing's avoid, settled at its window's
+    -- close (Events/Rows.lua T.onExpire, staged at the avoid row's time); Families/Now.lua's reactions only
+    PlayerCrit = 41, -- a CRITICAL wound on the player (UNIT_COMBAT, beside its PlayerHit); Families/Now.lua's reactions
 }
 
 --- What a `PlayerHit` observation reports (its `a`), and each kind's name (the `taken` and `consumedBy` keys): a WOUND

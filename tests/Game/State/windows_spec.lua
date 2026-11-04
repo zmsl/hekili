@@ -263,6 +263,23 @@ describe("rotation windows (belief)", function()
             assert.are.same({ true, 9.1, 15.1, 0, 0 }, W("w"))
         end)
 
+        it("a cast after the expiry but before its close opens it afresh, without refresh too", function()
+            window("w", { duration = 6 })
+            register("w_opener", {
+                id = OPENER,
+                now = function()
+                    openWindow("w")
+                end,
+            })
+            start()
+            cast(OPENER, 3)
+            ctl.now = 9.1 -- the window expired at 9; the fold has not closed it yet
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", OPENER)
+            ctl.Tick(9.15)
+            VS.Drain(9.2)
+            assert.are.same({ true, 9.1, 15.1, 0, 0 }, W("w"))
+        end)
+
         it("are inert outside a cast", function()
             window("w", { duration = 6 })
             start()

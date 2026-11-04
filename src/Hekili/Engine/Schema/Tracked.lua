@@ -38,12 +38,24 @@ local def = {
     providers = {}, -- outcomes, presence, viewer, coalesceCooldown, narrowUnitAura: the experimental toggles (providersOf)
     settings = {}, -- the spec's settings as plain values (Families/Now.lua's `settings`; refreshed by Hekili:SettingsChanged)
     windows = {}, -- the rotation windows (RegisterWindow's records; `steps` as ability indexes): Families/Windows.lua
+    reactions = {}, -- RegisterReaction's records { key, who, outcome, now }: Families/Now.lua (no ability index)
 }
-local LISTS =
-    { "abilities", "abilityIds", "abilitySlot", "resources", "auras", "auraIds", "talents", "units", "pets", "windows" }
+local LISTS = {
+    "abilities",
+    "abilityIds",
+    "abilitySlot",
+    "resources",
+    "auras",
+    "auraIds",
+    "talents",
+    "units",
+    "pets",
+    "windows",
+    "reactions",
+}
 
 local HANDS = { mainhand = 1, offhand = 2 }
-local NO_PETS, NO_WINDOWS = {}, {} -- a test's stand-in class may have no `pets` or `windows`
+local NO_PETS, NO_WINDOWS = {}, {} -- a test's stand-in class may have no `pets`, `windows` or `reactions`
 -- The sim's own generated entries (Spec.lua RegisterResource: the stepped decay and the hits taken), reserved names
 -- the walk below skips: they are no regen entries of the belief.
 local DECAY, TAKEN = "__decay", "__taken"
@@ -345,6 +357,9 @@ local function buildDef()
             rec.steps[i] = indexOf[rec.steps[i]] or 0
         end
         insert(def.windows, rec)
+    end
+    for _, k in ipairs(sortedKeys(class.reactions or NO_WINDOWS)) do
+        insert(def.reactions, recordOf(class.reactions[k])) -- its `now` crosses as the function itself
     end
     def.units[1], def.units[2] = "player", "target"
     settingsOf()

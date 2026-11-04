@@ -1,5 +1,5 @@
--- tests/Forever/windows_spec.lua (re-pin design §3a, decision 11; plan Task 8a): RegisterWindow's checks at load and
--- its plain record in Build(def) (Engine/Schema/Spec.lua, Tracked.lua). The belief's edges: tests/Game/State/windows_spec.lua.
+-- tests/Forever/windows_spec.lua (re-pin design §3a, decision 11; plan Task 8a): RegisterWindow's and RegisterReaction's
+-- checks at load and their plain records in Build(def) (Engine/Schema/Spec.lua, Tracked.lua). The belief's edges: tests/Game/State/windows_spec.lua.
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
@@ -66,6 +66,58 @@ describe("RegisterWindow", function()
         end)
         assert.has_error(function() -- spec 0's windows merge beside the spec's
             H.Hekili.Class.specs[0]:RegisterWindow("twice", { duration = 6 })
+        end)
+    end)
+end)
+
+describe("RegisterReaction", function()
+    local H, kit
+    before_each(function()
+        H = boot()
+        kit = H.Hekili.Class.kit
+    end)
+
+    it("hands a plain record to Build(def), never an ability (no index, no options row)", function()
+        local f = function()
+            openWindow("w") -- luacheck: ignore 113 (the `now` context's verb)
+        end
+        kit:RegisterReaction("test_reaction", { who = "target", outcome = "dodge", now = f })
+        H.Hekili:SpecializationChanged()
+        local def = H.ns.VirtualStateInternal.def
+        local rec
+        for k = 1, #def.reactions do
+            if def.reactions[k].key == "test_reaction" then
+                rec = def.reactions[k]
+            end
+        end
+        assert.is_truthy(rec)
+        assert.are.same({ "target", "dodge" }, { rec.who, rec.outcome })
+        assert.are.equal("function", type(rec.now))
+        assert.is_nil(getmetatable(rec))
+        for a = 1, #def.abilities do
+            assert.are_not.equal("test_reaction", def.abilities[a].key)
+        end
+        assert.is_nil(H.Hekili.Class.abilities.test_reaction)
+        assert.is_truthy(H.Hekili.Class.reactions.test_reaction)
+    end)
+
+    it("raises at load on a second name, a bad who or outcome, or a now that is no function", function()
+        local f = function() end
+        kit:RegisterReaction("twice", { who = "player", outcome = "parry", now = f })
+        assert.has_error(function()
+            kit:RegisterReaction("twice", { who = "player", outcome = "parry", now = f })
+        end)
+        assert.has_error(function()
+            kit:RegisterReaction("bad_who", { who = "pet", outcome = "parry", now = f })
+        end)
+        assert.has_error(function()
+            kit:RegisterReaction("bad_outcome", { who = "player", outcome = "glance", now = f })
+        end)
+        assert.has_error(function()
+            kit:RegisterReaction("bad_now", { who = "player", outcome = "parry" })
+        end)
+        assert.has_error(function() -- spec 0's reactions merge beside the spec's
+            H.Hekili.Class.specs[0]:RegisterReaction("twice", { who = "player", outcome = "parry", now = f })
         end)
     end)
 end)

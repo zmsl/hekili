@@ -100,9 +100,9 @@ function M.boot(o)
         c.provRow[i], c.provT[i] = 0, -1
     end
     local provisional = T.Provisional
-    T.Provisional = function(i, lri, act)
+    T.Provisional = function(i, lri, act, t)
         c.provRow[i], c.provT[i] = c.cur, c.ctl.now
-        return provisional(i, lri, act)
+        return provisional(i, lri, act, t)
     end
     -- its reversed order: a swing credited at a cast's own avoid with the wound the LR refused earlier (that foreign
     -- row's time) belongs to the wound's row; the last T.CAP foreign rows (a ring, preallocated; one per swing ticket)

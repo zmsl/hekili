@@ -20,6 +20,7 @@ local AURA = { "duration", "tick_time", "base_tick_time" }
 local RESOURCE = { "max", "decay", "decayInterval", "swingValue", "swingOff", "swingCrit", "swingOffCrit", "taken" }
 local ENTRY = { "spirit", "mp5", "share", "value", "mult", "when" }
 local WINDOW = { "evaluator" } -- a window's (Families/Windows.lua), run once per Drain in the same context
+local REACTION = { "now" } -- a reaction's (RegisterReaction, Families/Now.lua), run at a settled outcome
 
 -- Every field the belief evaluates, by `visit(rec, field, path)`.
 local function eachField(def, visit)
@@ -31,6 +32,11 @@ local function eachField(def, visit)
     for w = 1, #def.windows do
         for _, field in ipairs(WINDOW) do
             visit(def.windows[w], field, "window " .. tostring(def.windows[w].key))
+        end
+    end
+    for k = 1, #(def.reactions or {}) do
+        for _, field in ipairs(REACTION) do
+            visit(def.reactions[k], field, "reaction " .. tostring(def.reactions[k].key))
         end
     end
     for j = 1, #def.auras do

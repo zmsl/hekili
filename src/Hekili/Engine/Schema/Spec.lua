@@ -1305,6 +1305,25 @@ local HekiliSpecMixin = {
         }
     end,
 
+    -- (re-pin design §3a, decision 11; owner 2026-11-03) A reaction: a `now` function run by an observed outcome instead
+    -- of a cast, so a window can open on a span only an outcome reveals (never where an aura or a usability flip fits).
+    -- `who` "player" (a hit on us) or "target" (our cast or white swing); `outcome` "dodge", "parry", "block" (BLOCK and
+    -- BLOCKED), "miss" or "crit". Not an ability: no index, cast history, ticket, GCD or options row. The belief runs it
+    -- in the `now` context at the settled outcome's time (Game/State/Families/Now.lua); the sim never sees it.
+    RegisterReaction = function( self, name, data )
+        assert( type( name ) == "string" and type( data ) == "table", "RegisterReaction: needs a name and a table" )
+        assert( self.reactions[ name ] == nil, "RegisterReaction: " .. name .. " is already registered" )
+        for id, s in pairs( class.specs ) do -- spec 0's reactions merge beside every spec's, as the windows
+            assert( ( id == 0 ) == ( self.id == 0 ) or rawget( s, "reactions" ) == nil or s.reactions[ name ] == nil,
+                "RegisterReaction: " .. name .. " is already registered in another spec" )
+        end
+        assert( data.who == "player" or data.who == "target", "RegisterReaction: " .. name .. "'s who" )
+        local o = data.outcome
+        assert( o == "dodge" or o == "parry" or o == "block" or o == "miss" or o == "crit", "RegisterReaction: " .. name .. "'s outcome" )
+        assert( type( data.now ) == "function", "RegisterReaction: " .. name .. "'s now is not a function" )
+        self.reactions[ name ] = { key = name, who = data.who, outcome = o, now = data.now }
+    end,
+
     RegisterPack = function( self, name, version, import )
         self.packs[ name ] = {
             version = tonumber( version ),
@@ -1779,6 +1798,7 @@ local function buildSpec( id, key, name, texture, role, pClass, melee )
         pets = {},
         totems = {},
         windows = {}, -- RegisterWindow's records by name
+        reactions = {}, -- RegisterReaction's records by name
 
         potions = {},
 
@@ -2344,6 +2364,7 @@ function Hekili:SpecializationChanged()
 
     wipe( class.pets )
     wipe( class.windows )
+    wipe( class.reactions )
 
     local specs = { currentID, 0 }
 
@@ -2487,6 +2508,10 @@ function Hekili:SpecializationChanged()
 
             for k, v in pairs( spec.windows ) do
                 if not class.windows[ k ] then class.windows[ k ] = v end
+            end
+
+            for k, v in pairs( spec.reactions ) do
+                if not class.reactions[ k ] then class.reactions[ k ] = v end
             end
 
             for k, v in pairs( spec.totems ) do

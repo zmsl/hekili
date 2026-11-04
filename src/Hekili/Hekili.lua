@@ -128,6 +128,7 @@ Hekili.Class = {
     pets = {},
     totems = {},
     windows = {}, -- the active spec's rotation windows by name (RegisterWindow, Engine/Schema/Spec.lua)
+    reactions = {}, -- the active spec's reactions by name (RegisterReaction, Engine/Schema/Spec.lua)
 
     potions = {},
     potionList = {},

@@ -9,6 +9,7 @@
 -- `level`, `lastSwing`, `nextSwing`, `usable`) with belief meanings. A window's evaluator (Families/Windows.lua) runs in
 -- the same context, reads only. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
+-- A reaction (RegisterReaction) runs in the same context at a settled outcome's row time, never through the cast fold.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
 
 local _, ns = ...
@@ -270,7 +271,7 @@ local function shift(n, resource)
     end
     I.ResourceShift(r, n, T, CAST)
     if n > 0 then
-        I.Log.Energize(A.qid[curA], n, I.res.type[r], I.res.max[r], T)
+        I.Log.Energize(A.qid[curA] or 0, n, I.res.type[r], I.res.max[r], T) -- a reaction's: no ability (curA 0)
     end
 end
 function NAMES.gain(amount, resource)
@@ -360,7 +361,7 @@ end
 function NAMES.summonTotem(name, elem, duration)
     local slot = TOTEM_SLOT[elem]
     if live and slot and type(duration) == "number" then
-        I.TotemModel(slot, T + duration, A.qid[curA], type(name) == "string" and name or "", T, CAST)
+        I.TotemModel(slot, T + duration, A.qid[curA] or 0, type(name) == "string" and name or "", T, CAST)
     end
 end
 
@@ -391,6 +392,49 @@ end
 function NAMES.closeWindow(name)
     if live then
         I.WindowClose(name)
+    end
+end
+
+----------------------------------------------------------------------------------------------------------------------
+-- Reactions (RegisterReaction, re-pin design §3a): `now` functions run by a settled outcome, never by a cast. By `who`
+-- (1 player, 2 target) x outcome (OUTCOME): the bound functions, a list each, preallocated at the build.
+
+local WHO = { player = 1, target = 2 }
+local OUTCOME = { dodge = 1, parry = 2, block = 3, miss = 4, crit = 5 }
+local CRIT = OUTCOME.crit
+local OUTCOME_OF = {} -- by I.HitKind: the outcome slot (0: no reaction outcome)
+for name, kind in pairs(I.HitKind) do
+    local o = OUTCOME[name:lower()]
+    OUTCOME_OF[kind] = o or 0
+end
+OUTCOME_OF[I.HitKind.BLOCKED] = OUTCOME.block -- `block` covers BLOCK and BLOCKED
+local NO_REACTIONS = {}
+local react = { {}, {} } -- react[who][outcome] = { n = count, bound functions... }
+for w = 1, 2 do
+    for o = 1, CRIT do
+        react[w][o] = { n = 0 }
+    end
+end
+I.reactionsRun = 0
+
+local function bindReactions(list)
+    for w = 1, 2 do
+        for o = 1, CRIT do
+            local l = react[w][o]
+            for k = 1, l.n do
+                l[k] = nil
+            end
+            l.n = 0
+        end
+    end
+    for k = 1, #list do
+        local d = list[k]
+        local w, o, f = WHO[d.who], OUTCOME[d.outcome], d.now
+        if w and o and type(f) == "function" then
+            local l = react[w][o]
+            l.n = l.n + 1
+            l[l.n] = setfenv(f, ctx)
+        end
     end
 end
 
@@ -435,6 +479,7 @@ I.OnBuild(function(def)
         rawset(NAMES.action, A.key[a], setmetatable({ a = a }, actionMeta))
     end
     rawset(NAMES, "settings", def.settings or NO_SETTINGS) -- the spec's settings as plain values, the core's copy
+    bindReactions(def.reactions or NO_REACTIONS)
     for r = 1, #def.resources do
         local f = def.resources[r].refundOnAvoid
         refund[r] = type(f) == "number" and f > 0 and f <= 1 and f or 0
@@ -552,6 +597,21 @@ local function call(f, a, t)
     end
 end
 
+-- Runs who's reactions to outcome slot o at the outcome's time t: no ability (curA 0), its writes no avoid's to undo
+-- (journal off, as an `onCrit`). Never through `run`: no cast, step, strict end, cooldown or GCD. Allocates nothing.
+local function fire(w, o, t)
+    local l = o > 0 and react[w][o]
+    if not l or l.n == 0 then
+        return
+    end
+    journal = false
+    for k = 1, l.n do
+        call(l[k], 0, t)
+        I.reactionsRun = I.reactionsRun + 1
+    end
+    journal = true
+end
+
 local function run(o, t)
     local a = o.a
     if not A.obj[a] or not A.key[a] or A.extra[a] then
@@ -573,6 +633,7 @@ I.On(Obs.CastSuccess, run)
 -- Our cast's own crit (Events/Rows.lua, GAP T): the ability's `onCrit` runs in the same context, its writes `modelled` at
 -- the crit's row (what a crit gives, as Primal Fury's rage, is the class file's to declare). Allocates nothing.
 I.On(Obs.Crit, function(o)
+    fire(2, CRIT, o.t) -- first: the target's crit reactions (a 0: our white swing's, Rows stages it once final)
     local a = o.a
     if A.onCrit[a] and A.key[a] and not A.extra[a] then
         journal = false
@@ -587,6 +648,7 @@ end)
 -- the latest's to undo). The cooldown,
 -- the GCD and the player auras stay (an avoided ability still triggers them). Allocates nothing.
 I.On(Obs.Avoided, function(o, t)
+    fire(2, OUTCOME_OF[o.c] or 0, o.t) -- first: the target's reactions, at the outcome's row
     if o.a ~= undoA or o.b ~= undoT then
         return
     end
@@ -603,4 +665,17 @@ I.On(Obs.Avoided, function(o, t)
         I.Refund(r, paid * A.refund[o.a], t) -- at the fold; the answers since the cast's spend already saw it
     end
     I.avoidsRun = I.avoidsRun + 1
+end)
+
+-- The other settled outcomes reactions run on (re-pin design §3a): our white swing's avoid at its window's close
+-- (Obs.SwingAvoided, Events/Rows.lua), a hit on us (Obs.PlayerHit, Obs.PlayerCrit: victim-side UNIT_COMBAT,
+-- Sources/Player.lua), each at its row's time. Allocates nothing.
+I.On(Obs.SwingAvoided, function(o)
+    fire(2, OUTCOME_OF[o.c] or 0, o.t)
+end)
+I.On(Obs.PlayerHit, function(o)
+    fire(1, OUTCOME_OF[o.a] or 0, o.t)
+end)
+I.On(Obs.PlayerCrit, function(o)
+    fire(1, CRIT, o.t)
 end)

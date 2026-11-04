@@ -67,6 +67,12 @@ T.told = {}
 for i = 1, CAP do
     T.told[i] = 0
 end
+-- Per swing ticket: the time of the avoid row it holds provisionally (T.Provisional; Rows stages its settled avoid at
+-- that time at the window's close, T.onExpire).
+T.avoidT = {}
+for i = 1, CAP do
+    T.avoidT[i] = 0
+end
 T.onAssume, T.onLost = nil, nil
 T.replaced = 0 -- every replacement of a provisional payment by a narrow-band row, re-offered or not (not a close)
 T.onFinal, T.onReplace = nil, nil -- Rows' hooks: a TENT ticket final, a TENT ticket's row replaced
@@ -656,10 +662,11 @@ function T.Replace(i, t)
     owed[i], done[i], T.held[i] = owed[i] + 1, done[i] - 1, 0
 end
 
---- A swing ticket holds an avoid provisionally (spec §3.7): it is emitted at its close unless a wound overtakes it.
-function T.Provisional(i, lri, act)
+--- A swing ticket holds an avoid provisionally (spec §3.7), the row's at t: it is emitted at its close unless a wound
+--- overtakes it.
+function T.Provisional(i, lri, act, t)
     move(i, PROV)
-    lr[i], avoid[i] = lri, act
+    lr[i], avoid[i], T.avoidT[i] = lri, act, t
 end
 
 --- Whether an UNMAPPED ticket's window holds t.

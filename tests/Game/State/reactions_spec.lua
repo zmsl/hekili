@@ -1,0 +1,287 @@
+-- tests/Game/State/reactions_spec.lua (re-pin design §3a "Reactions", decision 11; plan Task 8a): RegisterReaction's
+-- `now` functions, run by a settled outcome in the `now` context (Families/Now.lua) at the outcome row's time, never
+-- by the cast fold. Incoming (victim-side UNIT_COMBAT), our casts (paySpell, T.onFinal), our white swings (T.onExpire
+-- while the provisional avoid is held). The registration's load checks: tests/Forever/windows_spec.lua.
+local load = require("Game.State.helpers.load")
+local fake = require("Game.State.helpers.fake_api")
+local fs = require("Game.State.helpers.fake_spec")
+local alloc = require("Game.State.helpers.alloc")
+
+describe("reactions", function()
+    local api, ctl, ns, VS, I, T, X, h, saved, runs
+
+    -- the record Spec.lua's RegisterReaction stores (Engine/Schema/Spec.lua); each counts its runs in runs[key] and
+    -- opens the window of its own name
+    local function reaction(key, who, outcome)
+        runs[key] = 0
+        return {
+            key = key,
+            who = who,
+            outcome = outcome,
+            now = function()
+                runs[key] = runs[key] + 1
+                openWindow(key)
+            end,
+        }
+    end
+
+    local function window(key, t)
+        t = t or {}
+        t.key, t.duration, t.on_deviation = key, t.duration or 6, t.on_deviation or "stay"
+        return t
+    end
+
+    -- the tracked set (fs.def, as tickets_spec) with reactions and their windows, one per reaction name
+    local function build(reactions, windows)
+        local def = fs.def(h)
+        def.reactions, def.windows = reactions, windows or {}
+        for _, r in ipairs(reactions) do
+            def.windows[#def.windows + 1] = window(r.key)
+        end
+        I.Build(def, 1)
+        I.nowErrors = 0 -- the fixture's malformed spender_q (`expects = "bogus"`) counts one at the build
+        VS.Start(api)
+        I.ObsLog.Clear(I.log)
+    end
+
+    local function W(name)
+        return { ns.Facade.Window(name) }
+    end
+
+    local function drain(t)
+        ctl.Tick(t)
+        VS.Drain(t)
+    end
+
+    before_each(function()
+        api, ctl = fake.new()
+        ctl.now = 1
+        saved = {}
+        for _, k in ipairs({ "GetTime", "UnitGUID", "CreateFrame", "issecretvalue", "debugprofilestop" }) do
+            saved[k] = rawget(_G, k) or false
+        end
+        _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue =
+            api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
+        _G.debugprofilestop = function()
+            return 0
+        end
+        ns = load.module()
+        VS, I = ns.VirtualState, ns.VirtualStateInternal
+        T, X = I.Tickets, I.Expect
+        h = fs.new(9, false, false, true)
+        h.Class.abilities.spender_m.school = "physical"
+        runs = {}
+    end)
+
+    after_each(function()
+        for k, v in pairs(saved) do
+            _G[k] = v or nil
+        end
+    end)
+
+    describe('who = "player" (victim-side UNIT_COMBAT)', function()
+        it("a PARRY on us runs the parry reaction; its window counts from the row, folded 0.4 s later", function()
+            build({ reaction("parried", "player", "parry"), reaction("dodged", "player", "dodge") })
+            ctl.now = 5
+            ctl.Fire("UNIT_COMBAT", "player", "PARRY", "", 0, 1)
+            drain(5.4)
+            assert.are.same({ 1, 0 }, { runs.parried, runs.dodged })
+            assert.are.same({ true, 5, 11, 0, 0 }, W("parried"))
+            assert.is_false(W("dodged")[1])
+        end)
+
+        it(
+            "block covers BLOCK and BLOCKED; a CRITICAL wound runs the crit reaction; a plain wound runs none",
+            function()
+                build({ reaction("blocked", "player", "block"), reaction("critted", "player", "crit") })
+                ctl.now = 5
+                ctl.Fire("UNIT_COMBAT", "player", "BLOCK", "", 0, 1)
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", "BLOCK_REDUCED", 40, 1)
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 40, 1)
+                drain(5.1)
+                assert.are.same({ 2, 0 }, { runs.blocked, runs.critted })
+                ctl.now = 6
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", "CRITICAL", 80, 1)
+                drain(6.1)
+                assert.are.same({ 2, 1 }, { runs.blocked, runs.critted })
+                assert.are.same({ true, 6, 12, 0, 0 }, W("critted"))
+                assert.are.equal(0, I.nowErrors)
+            end
+        )
+    end)
+
+    describe('who = "target", our casts', function()
+        it("a DODGE paid final to our cast's ticket runs the dodge reaction at the row", function()
+            build({ reaction("dodged", "target", "dodge"), reaction("missed", "target", "miss") })
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            drain(5.4)
+            assert.are.same({ 1, 0 }, { runs.dodged, runs.missed })
+            assert.are.same({ true, 5, 11, 0, 0 }, W("dodged"))
+        end)
+
+        it("a crit paid final to our cast runs the target's crit reaction before the ability's onCrit", function()
+            build({ reaction("critted", "target", "crit") })
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 100, 1)
+            drain(5.1)
+            assert.are.equal(1, runs.critted)
+        end)
+
+        it("a TENT avoid runs nothing until T.onFinal, then once, at the row's time", function()
+            build({ reaction("missed", "target", "miss") })
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+            T.Learn("Creature-1", 20, 1.5, 9) -- narrow band [11.35, 11.65] for the 10 s cast
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+            ctl.now = 10.6 -- the widened band, before the narrow one: provisional
+            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 8)
+            drain(10.7)
+            assert.are.equal(1, T.nTent)
+            assert.are.equal(0, runs.missed)
+            drain(11.7) -- past the narrow band's end (11.65): final
+            drain(11.8)
+            assert.are.equal(1, runs.missed)
+            assert.are.same({ true, 10.6, 16.6, 0, 0 }, W("missed"))
+        end)
+
+        it("a TENT crit displaced at T.onReplace never runs; the avoid that replaced it runs once", function()
+            build({ reaction("critted", "target", "crit"), reaction("missed", "target", "miss") })
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+            T.Learn("Creature-1", 20, 1.5, 9)
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+            ctl.now = 10.6
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 30, 8)
+            drain(10.7)
+            ctl.now = 11.5
+            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            assert.are.same({ 1, 1 }, { T.replaced, T.foreign })
+            drain(11.6)
+            drain(14)
+            assert.are.same({ 0, 1 }, { runs.critted, runs.missed })
+            assert.are.equal(11.5, W("missed")[2])
+        end)
+
+        -- gap AS (tickets_spec's Rend 163.54 case): the MELEE tie first gives the dodge to the swing in flight, the
+        -- swing's own wound gives it back to the cast through paySpell
+        it(
+            "an avoid the MELEE tie gave a swing and gap AS gave back runs the cast's reaction once, no swing's",
+            function()
+                build({ reaction("dodged", "target", "dodge") })
+                ctl.now = 163.13
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                local sw = T.lastSwing[1]
+                ctl.now = 163.54
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                assert.are.equal(T.PROV, T.state[sw]) -- MELEE wins the tie, for now
+                drain(163.56)
+                assert.are.equal(0, runs.dodged)
+                ctl.now = 163.604
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+                drain(163.62)
+                assert.are.equal(1, runs.dodged)
+                assert.are.equal(163.54, W("dodged")[2])
+                drain(166) -- every window closed: the swing's close holds no avoid
+                drain(166.1)
+                assert.are.equal(1, runs.dodged)
+            end
+        )
+    end)
+
+    describe('who = "target", our white swings', function()
+        it("a swing's DODGE runs only at its window's close (T.onExpire), at the row's time", function()
+            build({ reaction("dodged", "target", "dodge") })
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            ctl.now = 10.47 -- in the core band
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            drain(10.5)
+            assert.are.same({ T.PROV, 0 }, { T.state[i], runs.dodged })
+            drain(12) -- past the swing's window
+            drain(12.1)
+            assert.are.same({ 0, 1 }, { T.state[i], runs.dodged })
+            assert.are.same({ true, 10.47, 16.47, 0, 0 }, W("dodged"))
+        end)
+
+        it("a swing's crit credited final runs the crit reaction once; a provisional one only at its final", function()
+            build({ reaction("critted", "target", "crit") })
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.47 -- the core band: final at once
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 30, 1)
+            drain(10.5)
+            assert.are.equal(1, runs.critted)
+            ctl.now = 20
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            ctl.now = 20.2 -- before the core band: provisional (TENT)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 30, 1)
+            drain(20.25)
+            assert.are.same({ T.TENT, 1 }, { T.state[i], runs.critted })
+            drain(22)
+            drain(22.1)
+            assert.are.equal(2, runs.critted)
+            assert.are.equal(20.2, W("critted")[2])
+        end)
+    end)
+
+    it("touches no cast history, ticket, GCD, step or strict window", function()
+        local on = false
+        build({ reaction("parried", "player", "parry") }, {
+            window("stepped", {
+                steps = { 1, 2 },
+                evaluator = function()
+                    return on
+                end,
+            }),
+            window("strict", {
+                steps = { 1, 2 },
+                strict = true,
+                evaluator = function()
+                    return on
+                end,
+            }),
+        })
+        ctl.now = 5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+        drain(5.1)
+        on = true
+        drain(5.2)
+        local casts, lastT, opened, gcd = I.castsRun, I.lastCastT, T.opened, VS.Gcd(5.3).est
+        local stepped, strict = W("stepped"), W("strict")
+        assert.are.same({ true, 1 }, { stepped[1], stepped[5] })
+        ctl.now = 5.3
+        ctl.Fire("UNIT_COMBAT", "player", "PARRY", "", 0, 1)
+        drain(5.4)
+        assert.are.equal(1, runs.parried)
+        assert.are.same({ casts, lastT, opened, gcd }, { I.castsRun, I.lastCastT, T.opened, VS.Gcd(5.3).est })
+        assert.are.same(stepped, W("stepped"))
+        assert.are.same(strict, W("strict"))
+        for a = 1, I.ab.n do
+            assert.are_not.equal("parried", I.ab.key[a])
+        end
+    end)
+
+    it("allocates nothing across 1000 Drains firing a reaction each", function()
+        build({ reaction("parried", "player", "parry"), reaction("critted", "player", "crit") })
+        local t = 5
+        local bytes = alloc.bytes(function(i)
+            t = t + 0.3
+            ctl.now = t
+            if i % 2 == 0 then
+                ctl.Fire("UNIT_COMBAT", "player", "PARRY", "", 0, 1)
+            else
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", "CRITICAL", 50, 1)
+            end
+            drain(t + 0.01)
+        end, 1000)
+        assert.are.equal(0, bytes)
+        assert.are.equal(0, I.nowErrors)
+        assert.is_true(runs.parried >= 500 and runs.critted >= 500)
+    end)
+end)

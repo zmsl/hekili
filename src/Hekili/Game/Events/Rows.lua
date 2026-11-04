@@ -122,10 +122,16 @@ local function avoided(i, t, act)
     end
 end
 
--- A swing closing unpaid: SWING_MISSED for a provisional avoid, else SWING_DAMAGE 0 (the swing timer reads it).
+-- A swing closing unpaid: SWING_MISSED for a provisional avoid, else SWING_DAMAGE 0 (the swing timer reads it). The
+-- avoid it still holds is settled now (no wound can take it back): staged at its row's time (Families/Now.lua's
+-- reactions).
 T.onExpire = function(i)
     if T.kind[i] == MELEE then
-        emit(MELEE, T.x[i], T.guid[i], T.avoid[i] ~= "" and T.avoid[i] or "WOUND", "", 0, T.at[i], 1)
+        local held = T.avoid[i] ~= ""
+        emit(MELEE, T.x[i], T.guid[i], held and T.avoid[i] or "WOUND", "", 0, T.at[i], 1)
+        if held then
+            S.Stage(Obs.SwingAvoided, T.avoidT[i], T.x[i], T.at[i], I.HitKind[T.avoid[i]] or 0)
+        end
     end
 end
 
@@ -263,7 +269,7 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
             recOpen[T.rec[credited]] = false
             S.Stage(Obs.Swing, t, xx, T.rec[credited], 6)
         end
-        T.Provisional(credited, lr, act) -- emitted when the window closes
+        T.Provisional(credited, lr, act, t) -- emitted when the window closes
         L.avoids, L.avoidX, L.avoidT, L.avoidRowT = L.avoids + 1, xx, at0, t
         L.avoidRowG = act == "PARRY" and T.guid[credited] or ""
         return
@@ -303,13 +309,17 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
         T.guid[credited], T.w[credited], T.ref[credited], k, lr, true
     local dst = T.guid[credited]
     T.rec[credited] = id
-    T.PayTentative(credited, t, false, amount, flag, second < L.THETA, (core and not rerouting) and 1 or 2, act, 1)
+    local tent =
+        T.PayTentative(credited, t, false, amount, flag, second < L.THETA, (core and not rerouting) and 1 or 2, act, 1)
     L.credited[xx] = L.credited[xx] + 1
     f.paid = f.paid + amount
     emit(MELEE, xx, dst, act, flag, amount, at0, 1)
     S.Stage(Obs.Swing, at0, xx, id, confirm and 7 or 1) -- landed (or confirmed), at the swing's time: its rage
     if flag == "CRITICAL" then
         S.Stage(Obs.Swing, t, xx, id, 3) -- the same record: a retraction takes the crit back too
+        if not tent then -- final (pass 1: T.PayTentative): no row can displace it, so the crit is settled (reactions)
+            S.Stage(Obs.Crit, t, 0, at0, 0)
+        end
     end
 end
 
@@ -384,12 +394,16 @@ T.onLost = function(i)
     end
 end
 
--- A TENT ticket final: what it held is staged now (attribution-recovery decision 48).
-T.onFinal = function(i, now)
+-- A TENT ticket final: what it held is staged now (attribution-recovery decision 48), at its row's time (the outcome's:
+-- a reaction's window counts from it). A swing's crit credit is settled here too (its Obs.Swing c = 3 came at the row).
+T.onFinal = function(i)
+    local t = T.rowT[i]
     if T.held[i] == 2 then
-        avoided(i, now, T.rowAct[i])
+        avoided(i, t, T.rowAct[i])
     elseif T.held[i] == 1 then
-        S.Stage(Obs.Crit, now, T.ab[i], T.at[i], 0)
+        S.Stage(Obs.Crit, t, T.ab[i], T.at[i], 0)
+    elseif T.kind[i] == MELEE and T.rowFlag[i] == "CRITICAL" then
+        S.Stage(Obs.Crit, t, 0, T.at[i], 0)
     end
 end
 
