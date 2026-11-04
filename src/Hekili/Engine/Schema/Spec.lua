@@ -1260,14 +1260,15 @@ local HekiliSpecMixin = {
 
     -- (re-pin design §3a, decision 11) A rotation window: a span the client shows no aura for (never where an aura fits).
     -- `evaluator` (optional) is a function of the belief's reads, run once per update in the `now` context
-    -- (Game/State/Families/Windows.lua): its false->true edge opens the window. `duration` is an open's length: seconds,
-    -- "combat" (no timer: only combat end, a close, close_on_false or its steps end it), or a function of the forecast's
-    -- reads (run under state at each forecast open and counted refresh); a function needs `now_duration`, the belief's
-    -- own (run in the `now` context at each belief open and counted refresh): one function can't serve both, as an
-    -- ability's now() and handler(). A function's non-positive answer opens nothing. `refresh` lets a new edge restart an open one; `max_duration` (s, from the first open) and `max_refresh` cap that,
-    -- either, both or neither. `close_on_false`: the true->false edge closes it. `steps` (ability keys, registered
-    -- before the window), `loop`, `on_deviation` ("stay", "skip", "end"; default "stay") and `strict` (any other on-GCD
-    -- cast ends it) make it a stepped window. A plain record (Engine/Schema/Tracked.lua hands it to the belief).
+    -- (Game/State/Families/Windows.lua): its false->true edge opens the window. `duration` is an open's length:
+    -- seconds, "combat" (no timer: only combat end, a close, close_on_false or its steps end it), or a function of the
+    -- forecast's reads (run under state at each forecast open and counted refresh); a function needs `now_duration`,
+    -- the belief's own (run in the `now` context at each belief open and counted refresh): one function can't serve
+    -- both, as an ability's now() and handler(). A function's non-positive answer opens nothing. `refresh` lets a new
+    -- edge restart an open one; `max_duration` (s, from the first open) and `max_refresh` cap that, either, both or
+    -- neither. `close_on_false`: the true->false edge closes it. `steps` (ability keys, registered before the window),
+    -- `loop`, `on_deviation` ("stay", "skip", "end"; default "stay") and `strict` (any other on-GCD cast ends it) make
+    -- it a stepped window. A plain record (Engine/Schema/Tracked.lua hands it to the belief).
     RegisterWindow = function( self, name, data )
         assert( type( name ) == "string" and type( data ) == "table", "RegisterWindow: needs a name and a table" )
         assert( self.windows[ name ] == nil, "RegisterWindow: " .. name .. " is already registered" )
@@ -1281,7 +1282,8 @@ local HekiliSpecMixin = {
         local nowDur = data.now_duration
         assert( type( dur ) == "number" and dur > 0 or dur == "combat" or type( dur ) == "function",
             "RegisterWindow: " .. name .. " needs a positive duration, \"combat\" or a function" )
-        assert( ( type( dur ) == "function" ) == ( type( nowDur ) == "function" ) and ( nowDur == nil or type( nowDur ) == "function" ),
+        assert( ( type( dur ) == "function" ) == ( type( nowDur ) == "function" )
+            and ( nowDur == nil or type( nowDur ) == "function" ),
             "RegisterWindow: " .. name .. ": a function duration and a now_duration function go together" )
         if type( dur ) == "function" then setfenv( dur, state ) end
         local maxD, maxR = data.max_duration, data.max_refresh

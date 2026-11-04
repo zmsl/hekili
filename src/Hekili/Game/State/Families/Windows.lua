@@ -64,7 +64,10 @@ local function length(w, t)
         return 0
     end
     local api = I.api
-    if api and api.issecretvalue(v) or type(v) ~= "number" or not (v > 0) then
+    if api and api.issecretvalue(v) then
+        return 0 -- secret: never compared
+    end
+    if type(v) ~= "number" or not (v > 0) then
         return 0
     end
     return v

@@ -198,9 +198,15 @@ A file-level helper keeps its file's environment, so these names do not resolve 
 read. A file's `state.knownRank` local is the facade's function, safe in a helper on either side.
 
 **Rotation windows** (re-pin design §3a, decision 11: only for a span the client shows no aura for).
-`spec:RegisterWindow(name, { evaluator, duration, refresh, max_duration?, max_refresh?, close_on_false?, steps?, loop?,
-on_deviation?, strict? })` (`Engine/Schema/Spec.lua`) crosses `Build(def)` as `def.windows` (plain records, `steps` as
-ability indexes). The belief owns the real windows (`Game/State/Families/Windows.lua`): each evaluator runs in the `now`
+`spec:RegisterWindow(name, { evaluator, duration, now_duration?, refresh, max_duration?, max_refresh?, close_on_false?,
+steps?, loop?, on_deviation?, strict? })` (`Engine/Schema/Spec.lua`) crosses `Build(def)` as `def.windows` (plain
+records, `steps` as ability indexes). `duration` is seconds, `"combat"` or a function. A function is the forecast's: it
+runs under `state` at each forecast open and each counted refresh. Its per-layer twin `now_duration` (required with a
+function `duration`, and only then) is the belief's, run in the `now` context at each belief open and each counted
+refresh: one function cannot run in both environments, the same rule as an ability's `now()` and `handler()`. A refused
+refresh evaluates nothing; a raise, a secret or a non-positive answer opens nothing. `"combat"` has no timer: its
+expiry (`Facade.Window`'s, `window.<name>.remains`) reads `math.huge`, and only combat end, a close, `close_on_false` or
+its steps end it. The belief owns the real windows (`Game/State/Families/Windows.lua`): each evaluator runs in the `now`
 context once per `Drain` after the fold (its edges open, refresh or close), a real cast's `now()` may call
 `openWindow(name)`/`closeWindow(name)`, a stepped window advances on our observed cast of its due step, and combat end
 closes all. The core is stateless: every reset copies the windows from `Facade.Window`, and within a cycle
