@@ -14313,7 +14313,7 @@ options.packs.arms.Arms (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1310222 - |cFFFFD100|cffffd100(!execute_phase&(!action.battle_stance.known||buff.battle_stance.up))|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 2458 - |cFFFFD100|cffffd100(settings.wowsims_stance_dance&(!action.battle_stance.known||buff.battle_stance.up)&!buff.overpower_ready.up&(execute_phase||(action.rend.known&debuff.rend.remains>1.5)))|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1240193 - |cFFFFD100|cffffd100(!execute_phase&action.slam.cast<1.5)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1240193 - |cFFFFD100|cffffd100(!execute_phase&action.slam.cast>=1.5&(mainhand_speed-mainhand_remains)<=(0+0.3))|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1240193 - |cFFFFD100|cffffd100(!execute_phase&action.slam.cast>=1.5&mainhand_remains>=mainhand_speed-(0+0.3))|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1680 - |cFFFFD100|cffffd100settings.wowsims_stance_dance|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 5308 - |cFFFFD100|cffffd100execute_phase|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 2457 - |cFFFFD100|cffffd100(settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(buff.overpower_ready.up||(action.rend.known&debuff.rend.remains<=1.5)))|r|r
@@ -20160,7 +20160,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.actionID	desc	Select t
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	name	Entry
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Use Items]|r
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20271
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 24275 - |cFFFFD100|cffffd100(action.hammer_of_wrath.cast=0||(mainhand_speed-mainhand_remains)<0.2)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 24275 - |cFFFFD100|cffffd100(action.hammer_of_wrath.cast=0||mainhand_remains>mainhand_speed-0.2)|r|r
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 679 - |cFFFFD100|cffffd100time>0.5|r|r
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20375 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&(!buff.echo_of_command.up&!buff.seal_of_command.up)|r|r
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 20154 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&(!buff.echo_of_righteousness.up&!buff.seal_of_righteousness.up)|r|r

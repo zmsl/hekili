@@ -255,8 +255,9 @@ spec:RegisterAuras({
     defensive_state = { id = 5302, duration = 5, max_stack = 1 },
     -- Raptor Strike queued on the next main-hand swing (C_Spell.IsCurrentSpell, applied in reset_precast).
     raptor_strike = {
-        duration = function()
-            return state.mainhand_speed
+        duration = function() -- until the swing that takes it (R13); out of combat no swing runs: a whole one
+            local r = state.mainhand_remains
+            return r > 0 and r or state.mainhand_speed
         end,
         max_stack = 1,
     },
@@ -325,6 +326,31 @@ spec:RegisterStateExpr("mainhand_remains", function()
         return 0
     end -- no swing speed read yet
     return mainhand_speed - (query_time - mh) % mainhand_speed
+end)
+
+-- The ranged auto-shot clock (C7): the next Auto Shot and the ranged speed, from the belief's hand 3 (Engine/Sim/
+-- State.lua's swings.ranged_*), anchored like mainhand_remains; shots fire from range, so a due one repeats.
+spec:RegisterStateExpr("ranged_speed", function()
+    return swings.ranged_speed
+end)
+
+spec:RegisterStateExpr("ranged_remains", function()
+    local r = swings.ranged_projected
+    if r == 0 then
+        r = now -- no shot believed yet: anchor it at this evaluation, as mainhand_remains does out of combat
+    end
+    if now == query_time then
+        local real = r - now
+        return real > 0 and real or 0
+    end
+    if query_time <= r then
+        return r - query_time
+    end
+    local speed = swings.ranged_speed
+    if speed <= 0 then
+        return 0
+    end -- no ranged speed read yet (the client raises on x % 0)
+    return speed - (query_time - r) % speed
 end)
 
 spec:RegisterAbilities({

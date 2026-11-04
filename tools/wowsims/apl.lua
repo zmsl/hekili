@@ -92,7 +92,10 @@
 --    code and spelldata/parse_effects_exclusive.go); any other is unsupported (rule 2). Then
 --    `<unit>.<key>.remains<=<maxOverlap>` (0 by default; the target's by default, as wowsims's GetTargetUnit),
 --    `|...stack<max_stack` for a stacking aura, guarded (rule 6); `cancelAura` is the action
---    `cancel_buff,buff_name=<key>`; `autoSwingTime` MainHand / OffHand is `mainhand_speed` / `offhand_speed`.
+--    `cancel_buff,buff_name=<key>`; `autoSwingTime` MainHand / OffHand is `mainhand_speed` / `offhand_speed`;
+--    `autoTimeToNext` MainHandAuto is `mainhand_remains` (RangedAuto waits for the weave window, re-pin Task 8b), and a
+--    comparison on `autoTimeSinceLast` (since = speed - remains) is written on the clock: `since<x` is
+--    `<hand>_remains><hand>_speed-x` (the recheck parser forecasts a clock's `<` and its `>` wrap).
 --    `remainingTime` is `fight_remains`, which answers "unknown" (3600 s) on Forever: an API-forced deviation.
 -- 11. `unitDistance` (wowsims's yards from the APL's unit to its target; the source unit is ignored, as wowsims does)
 --    compared with a whole number N: `<=`/`<` N as `target.within<N>`, `>=`/`>` N as `target.outside<N>` (either
@@ -780,6 +783,19 @@ local function talentOf(c, id)
     return (c.talentOf[id] or c.talentKey[x]) and x or nil
 end
 
+-- The clock prefix of an `autoTimeSinceLast` hand.
+local SINCE = { MainHandAuto = "mainhand", RangedAuto = "ranged" }
+
+-- The clock prefix when node `n` is a time since the last swing or shot (variables followed), else nil.
+local function sinceHand(c, n)
+    if type(n) ~= "table" then
+        return nil
+    elseif n.variableRef then
+        return sinceHand(c, c.vars[n.variableRef.name])
+    end
+    return n.autoTimeSinceLast and SINCE[n.autoTimeSinceLast.autoType]
+end
+
 -- A value: its text and nil condition (`true`: nil, no text). `pct`: compared directly with a percent read (rule 8).
 local function value(c, n, pct)
     local k, v = next(n)
@@ -865,8 +881,8 @@ local function value(c, n, pct)
         return v.autoType == "MainHand" and "mainhand_speed" or "offhand_speed", false
     elseif k == "autoTimeToNext" and v.autoType == "MainHandAuto" then
         return "mainhand_remains", false
-    elseif k == "autoTimeSinceLast" and v.autoType == "MainHandAuto" then
-        return "(mainhand_speed-mainhand_remains)", false
+    elseif k == "autoTimeSinceLast" and SINCE[v.autoType] then -- inside math; compared, cmp's remains form
+        return "(" .. SINCE[v.autoType] .. "_speed-" .. SINCE[v.autoType] .. "_remains)", false
     elseif k == "totemRemainingTime" then
         if v.totemType == nil then -- TypeUnknownTotem (0, proto/shaman.proto): wowsims's nil node
             return nil, true
@@ -1000,6 +1016,20 @@ local function bool(c, n)
             unsupported("unitDistance " .. tostring(v.op) .. " " .. tostring(n))
         end
         return "target." .. side .. n, nil, false
+    elseif k == "cmp" and (sinceHand(c, v.lhs) or sinceHand(c, v.rhs)) then
+        -- the time since in remains form, since = speed - remains, so the recheck's clock branches forecast it (R6):
+        -- `since op x` is `remains FLIP(op) speed-x`, `x op since` is `remains op speed-x`
+        local left = sinceHand(c, v.lhs) ~= nil
+        local h = sinceHand(c, left and v.lhs or v.rhs)
+        local x, u = value(c, left and v.rhs or v.lhs)
+        if u == true then
+            return nil, nil, true
+        end
+        local op = M.OPS[left and FLIP[v.op] or v.op] or unsupported("op " .. tostring(v.op))
+        if not (x:match("^[%w_.]+$") or grouped(x)) then
+            x = "(" .. x .. ")"
+        end
+        return h .. "_remains" .. op .. h .. "_speed-" .. x, nil, u
     elseif k == "cmp" then
         local l, lu = value(c, v.lhs, percentRead(c, v.rhs))
         local r, ru = value(c, v.rhs, percentRead(c, v.lhs))

@@ -602,6 +602,13 @@ do
         -- ["deficit$"] = true,
     }
 
+    -- Clocks that tick down and wrap back to their period (the hands' swing clocks the class kits declare).
+    local wraps = {
+        mainhand_remains = true,
+        offhand_remains = true,
+        ranged_remains = true,
+    }
+
     -- Things that tick up.
     local increases = {
         ["^time$"] = true,
@@ -698,6 +705,15 @@ do
 
         if lhs and comp and rhs then
             -- We are looking at a mathematic comparison.
+            -- Forever R6: a hand's swing clock counts down and wraps back to its speed at the swing, so `>`/`>=` turns
+            -- true just past the wrap (EmulateSyntax may have wrapped the term in safenum).
+            if comp == ">" or comp == ">=" then
+                local clock = lhs:match( "^safenum%(([%w_]+)%)$" ) or lhs
+                if wraps[ clock ] then
+                    return true, lhs .. " + 0.01"
+                end
+            end
+
             for key in pairs( decreases ) do
                 if lhs:match( key ) then
                     if comp == "<" then

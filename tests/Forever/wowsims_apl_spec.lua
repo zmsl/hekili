@@ -2100,3 +2100,42 @@ describe("a wowsims division", function()
         assert.are.equal("berserker_stance", out.recs[1] and out.recs[1].actionName)
     end)
 end)
+
+-- Re-pin plan Task 8b (spec §3, §3a; rulings R6, R14): the ranged auto-shot clock (C7) and the time since the last
+-- swing or shot in `remains` form, so the recheck parser's decreasing-clock branches (Engine/Sim/Scripts.lua)
+-- forecast it.
+describe("the wowsims APL translator's auto-attack clocks", function()
+    local rngSince = { autoTimeSinceLast = { autoType = "RangedAuto" } }
+    local mhSince = { autoTimeSinceLast = { autoType = "MainHandAuto" } }
+    local function run(entries)
+        return apl.translate({ priorityList = entries }, ctx({}))
+    end
+
+    it("writes a comparison on the time since the last swing or shot in remains form, either side", function()
+        local text, omitted = run({
+            cast(100, cmp("OpLt", rngSince, const("0.1s"))),
+            cast(200, cmp("OpLt", mhSince, const("0.2s"))),
+            cast(300, cmp("OpLe", mhSince, { math = { op = "OpAdd", lhs = const("0s"), rhs = const("0.3s") } })),
+            cast(400, cmp("OpGt", const("0.2s"), mhSince)),
+            cast(500, cmp("OpGe", rngSince, const("1s"))),
+        })
+        assert.are.equal(
+            table.concat({
+                "actions=strike,if=ranged_remains>ranged_speed-0.1",
+                "actions+=/big_hit,if=mainhand_remains>mainhand_speed-0.2",
+                "actions+=/roar,use_off_gcd=1,if=mainhand_remains>=mainhand_speed-(0+0.3)",
+                "actions+=/dot,if=mainhand_remains>mainhand_speed-0.2",
+                "actions+=/starfire,if=ranged_remains<=ranged_speed-1",
+            }, "\n"),
+            text
+        )
+        assert.are.same({}, omitted)
+    end)
+
+    it("keeps the time since as a difference inside math", function()
+        local text = run({
+            cast(100, cmp("OpGt", { math = { op = "OpAdd", lhs = rngSince, rhs = const("1s") } }, const("2s"))),
+        })
+        assert.are.equal("actions=strike,if=((ranged_speed-ranged_remains)+1)>2", text)
+    end)
+end)

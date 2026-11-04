@@ -8,7 +8,7 @@ actions.precombat=retribution_aura,if=!buff.retribution_aura.up
 actions.precombat+=/seal_of_the_crusader,if=!buff.seal_of_the_crusader.up
 actions=use_items,use_off_gcd=1
 actions+=/judgement,use_off_gcd=1
-actions+=/hammer_of_wrath,focus=1,if=(action.hammer_of_wrath.cast=0|(mainhand_speed-mainhand_remains)<0.2)
+actions+=/hammer_of_wrath,focus=1,if=(action.hammer_of_wrath.cast=0|mainhand_remains>mainhand_speed-0.2)
 actions+=/holy_strike,if=time>0.5
 actions+=/seal_of_command,focus=1,if=talent.twist_of_light.enabled&(!buff.echo_of_command.up&!buff.seal_of_command.up)
 actions+=/seal_of_righteousness,focus=1,if=talent.twist_of_light.enabled&(!buff.echo_of_righteousness.up&!buff.seal_of_righteousness.up)

@@ -283,6 +283,37 @@ describe("Forever Hunter", function()
         assert.are.equal(0, ld.run(f, e))
     end)
 
+    it(
+        "answers ranged_remains and ranged_speed, the ranged auto-shot clock (C7), anchored like mainhand_remains",
+        function()
+            local f = assert(w.exprs.ranged_remains, "no ranged_remains")
+            local sp = assert(w.exprs.ranged_speed, "no ranged_speed")
+            local function near(want, got)
+                assert.is_true(math.abs(want - got) < 1e-9, tostring(got))
+            end
+            local e = ld.env(w)
+            e.combat = 1
+            e.swings = { ranged_projected = 11.2, ranged_speed = 2.9 }
+            e.now, e.query_time = 10, 10
+            near(1.2, ld.run(f, e))
+            e.query_time = 10.5
+            near(0.7, ld.run(f, e))
+            e.query_time = 12 -- 0.8 s past a due shot: ranged_speed - (elapsed % ranged_speed); shots fire from range
+            near(2.1, ld.run(f, e))
+            e.query_time = 11.2 + 2 * 2.9 + 0.4
+            near(2.5, ld.run(f, e))
+            assert.are.equal(2.9, ld.run(sp, e))
+            e.swings.ranged_speed = 0 -- Review Focus 5: no speed read yet; the client raises on x % 0
+            assert.are.equal(0, ld.run(f, e))
+            assert.are.equal(0, ld.run(sp, e))
+            e.swings = { ranged_projected = 0, ranged_speed = 2.9 } -- no shot believed: anchored at this evaluation
+            e.combat, e.query_time = 0, 10
+            assert.are.equal(0, ld.run(f, e))
+            e.query_time = 10.5
+            near(2.4, ld.run(f, e))
+        end
+    )
+
     it("opens Mongoose Bite's window from the usability flip, 5 s from the flip, and the bite spends it", function()
         local b = w.abilities.mongoose_bite
         local e = ld.env(w)
@@ -457,6 +488,62 @@ describe("Forever Hunter through the engine", function()
         assert.is_true(next > S.now)
         assert.are.equal(next, S.swings.ranged_projected)
         assert.is_true(math.abs(S.swing.ranged.remains - (next - S.now)) < 1e-9)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- Review Focus 6 (R6). How `mainhand_remains<x` reaches script.Recheck (verified by printing BuildRecheck's
+    -- output): scripts:BuildRecheck runs EmulateSyntax first, which wraps a term whose state value is not a number at
+    -- compile time in `safenum(...)`; then ConvertTimeComparison: a bare `X_remains` matches its `decreases` table
+    -- ("remains$") and `<` compiles to `(lhs+0.01)-(rhs)`, a wrapped `safenum(X_remains)` falls to the generic
+    -- `0.01+lhs-rhs`: either way the time until it holds (0.01 past, for the strict `<`). `ranged_remains` takes the
+    -- same paths. A `>`/`>=` on a decreasing clock fell to that fallback, negative while false; the wrap branch answers
+    -- the time to the clock's wrap (0.01 past it), when the clock jumps back to its speed.
+    it("forecasts the ranged clock through scripts:BuildRecheck: a `<` its time to x, a `>` its wrap", function()
+        local Sc = H.Hekili.Scripts
+        local env = { ranged_remains = 1.2, ranged_speed = 2.9, mainhand_remains = 0.4, mainhand_speed = 2.6 }
+        env.safenum = function(x)
+            return type(x) == "number" and x or 0
+        end
+        local function at(cond)
+            local rs = assert(Sc:BuildRecheck(cond), cond)
+            return setfenv(assert(loadstring("return " .. rs)), env)()
+        end
+        local function near(want, got)
+            assert.is_true(math.abs(want - got) < 1e-9, tostring(got))
+        end
+        near(0.71, at("ranged_remains<0.5")) -- 1.2 - 0.5 = 0.7, plus the strict comparison's 0.01
+        assert.is_false(env.ranged_remains > env.ranged_speed - 0.1) -- currently false: true just past the wrap
+        near(1.21, at("ranged_remains>ranged_speed-0.1"))
+        near(1.21, at("ranged_remains>=ranged_speed-0.1"))
+        near(0.41, at("mainhand_remains>mainhand_speed-0.2")) -- Retribution's hammer_of_wrath, in remains form
+        env.fight_remains = 3600
+        near(0.01 + 3600 - 10, at("fight_remains>=10")) -- no clock: no wrap, the fallback as before
+    end)
+
+    -- Review Focus 7 (R13): the queued strike lasts until the swing that takes it (`mainhand_remains`).
+    it("ends the queued Raptor Strike at the next swing, and the pick after the swing is made without it", function()
+        local c, w = character()
+        c.speed = { 2.6 }
+        H = headless.new({ character = c, pack = "Beast Mastery (wowsims.com)" })
+        local S = H.Hekili.State
+        local ids = idsOf(w.abilities.raptor_strike)
+        H.ctl.level.target, H.ctl.distance.target = 60, 3 -- in melee
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 1
+        H.ctl.now = t
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        H.Fire("PLAYER_SWING", 2.6, 0)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        H.ctl.now = t + 1.8 -- queued 0.8 s before the 2.6 s swing
+        H.ctl.current[ids[#ids]] = true
+        assert.is_true(headless.cycle(H, t + 1.8))
+        S.reset("Primary", true)
+        assert.is_true(math.abs(S.buff.raptor_strike.remains - 0.8) < 1e-6, tostring(S.buff.raptor_strike.remains))
+        assert.are.same({ false, "a strike is already queued" }, { S:IsUsable("raptor_strike") }) -- not re-recommended
+        S.advance(0.9)
+        assert.is_true(S.buff.raptor_strike.down)
+        assert.are.same({ true }, { S:IsUsable("raptor_strike") })
         assert.are.same({}, H.errors)
     end)
 end)
