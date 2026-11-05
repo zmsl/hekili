@@ -215,7 +215,9 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
    `condition`; an `and`/`or` writes a repeated term once.
 9. `auraIcdIsReady`: `buff.<key>.icd_ready` for an aura declaring `icd`; else unsupported.
 10. `auraShouldRefresh` only for `exclusive` auras; `cancelAura`; `autoSwingTime`; `remainingTime` as
-    `fight_remains` (API-forced: unknown, 3600 s, on Forever).
+    `fight_remains` (API-forced: unknown, 3600 s, on Forever; the replay world answers the log's time to its end,
+    R42, a replay-world assumption: loops and live keep the game's unknown); `multipleCdUsages` without a base spell
+    as wowsims's test on it (`alignCdEnd`: `fight_remains<=D|fight_remains>CD+D/2`, D the spell's buff), else true.
 11. `unitDistance` against a whole number as `target.within<N>`/`outside<N>` (API-forced: a bracket from range
     checks, never yards; unknown never blocks).
 12. An unresolvable read drops only its branch (a deviation when wowsims has the aura or spell and the fork does not;

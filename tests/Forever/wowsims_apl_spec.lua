@@ -209,6 +209,32 @@ describe("the wowsims APL translator", function()
         assert.are.same({ "default #1: actionGroupUsed Nowhere" }, unknown)
     end)
 
+    it(
+        "multipleCdUsages without a base spell: wowsims's fight-length test as fight_remains (R42), else true",
+        function()
+            local function mcu(o)
+                o.targetSpellId = { spellId = 400 }
+                o.offset = const("0ms")
+                return { multipleCdUsages = o }
+            end
+            local text, omitted = apl.translate({
+                priorityList = {
+                    cast(400, mcu({ alignCdEnd = true })),
+                    cast(100, mcu({})),
+                    cast(200, mcu({ alignCdEnd = true, baseSpellId = { spellId = 200 } })),
+                },
+            }, ctx())
+            assert.are.equal(
+                table.concat({
+                    "actions=dot,if=(fight_remains<=buff.dot.duration|fight_remains>(cooldown.dot.duration+(buff.dot.duration/2)))",
+                    "actions+=/strike,focus=1",
+                }, "\n"),
+                text
+            )
+            assert.are.same({ "default #3: multipleCdUsages with a base spell" }, omitted)
+        end
+    )
+
     it("lists a recipe setting a line reads after the APL's own toggles, with its description", function()
         local r = {
             leveling = { "roar,if=settings.roar_filler&!action.big_hit.known" },

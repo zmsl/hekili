@@ -474,6 +474,50 @@ describe("the headless loop's replay injection (o.replay)", function()
         t = loop.tally(L, 1, { duration = 6, steady = 3 })
         assert.is_truthy(loop.line(t):find("; steady icons on %(hold 3%)$"))
     end)
+
+    it("answers fight_remains from the log's length in a replay only (R42), the game's unknown elsewhere", function()
+        local stub = {
+            character = function()
+                return { level = 60, power = { type = 1, token = "RAGE", max = 100 } }
+            end,
+            resolve = function()
+                error("no press in a replay")
+            end,
+            usable = function()
+                return {}
+            end,
+            uptime = function()
+                return {}
+            end,
+            gain = function()
+                return 0
+            end,
+            WORLD = { level = 60, max = 100, mobHealth = 1e9 },
+        }
+        local L = loop.new(stub)
+        local hk = L.us.Hekili
+        local seen = {}
+        local R = {
+            pull = 3,
+            duration = 6,
+            decisions = { { t = 3.3, key = "a", gcd = true }, { t = 7.1, key = "b", gcd = true } },
+        }
+        function R.world(wo, seed)
+            return scenarios.world(wo, seed)
+        end
+        function R.next(t) -- world time `t`: the log's t - 3; wowsims's remaining time 6 - (t - 3)
+            seen[#seen + 1] = { t, hk:GetGreatestTTD() }
+            return false
+        end
+        local before = hk:GetGreatestTTD()
+        loop.replay(L, R)
+        assert.is_true(#seen > 0)
+        for _, s in ipairs(seen) do
+            assert.is_near(9 - s[1], s[2], 1e-6)
+        end
+        assert.are.equal(before, hk:GetGreatestTTD()) -- restored: the game's unknown
+        assert.are.equal(3600, before)
+    end)
 end)
 
 describe("the headless loop's bags, pet and stats (central fix 27)", function()

@@ -106,7 +106,11 @@
 --    wrap). A variable the recipe's `windowVars` ({ [variable name] = window }) names reads that window instead (§3a:
 --    a span the kit registers, `RegisterWindow`): its comparison on a time since is `window.<w>.up&window.<w>.elapsed
 --    <op> x` (the hunters' "Just shot" from the `weave` window).
---    `remainingTime` is `fight_remains`, which answers "unknown" (3600 s) on Forever: an API-forced deviation.
+--    `remainingTime` is `fight_remains`, which answers "unknown" (3600 s) on Forever: an API-forced deviation (the
+--    replay world answers the log's time to its end: R42, tests/Game/harness/loop.lua). `multipleCdUsages` without a
+--    base spell is wowsims's GetBool on it: `alignCdEnd` `(fight_remains<=D|fight_remains>(CD+(D/2)))`, D the
+--    spell's buff's duration (`buff.<key>.duration`), CD `cooldown.<key>.duration`; without `alignCdEnd` true; with a
+--    base spell unsupported.
 -- 11. `unitDistance` (wowsims's yards from the APL's unit to its target; the source unit is ignored, as wowsims does)
 --    compared with a whole number N: `<=`/`<` N as `target.within<N>`, `>=`/`>` N as `target.outside<N>` (either
 --    side; `=`/`!=` N is unsupported, anything but a whole number N is rule 18's movement term); `not` of one is the
@@ -1169,6 +1173,29 @@ local function bool(c, n)
         end
         local rank = v.talentId.rank or 1
         return rank > 1 and ("talent." .. t .. ".rank>=" .. rank) or ("talent." .. t .. ".enabled"), nil, false
+    elseif k == "multipleCdUsages" then -- R42: wowsims's GetBool without a base spell (apl_values_misc.go:69-86)
+        if v.baseSpellId and next(v.baseSpellId) then
+            unsupported("multipleCdUsages with a base spell")
+        end
+        if not v.alignCdEnd then
+            return nil, true, false
+        end
+        local id = v.targetSpellId and v.targetSpellId.spellId
+        if not id then
+            unsupported("multipleCdUsages of " .. tostring(next(v.targetSpellId or {})))
+        end
+        -- remaining <= D | remaining > CD + D/2 (D: the spell's own buff), on rule 10's `fight_remains`
+        local left, d = { remainingTime = {} }, { auraDuration = { auraId = { spellId = id } } }
+        local half = { math = { op = "OpDiv", lhs = d, rhs = { const = { val = "2" } } } }
+        local cd = { math = { op = "OpAdd", lhs = { spellFullCooldown = { spellId = { spellId = id } } }, rhs = half } }
+        return bool(c, {
+            ["or"] = {
+                vals = {
+                    { cmp = { op = "OpLe", lhs = left, rhs = d } },
+                    { cmp = { op = "OpGt", lhs = left, rhs = cd } },
+                },
+            },
+        })
     elseif k == "gcdIsReady" then
         return "gcd.remains<=0", nil, false
     elseif k == "sequenceIsComplete" then -- rule 14b: the sequence's window down; in its own condition, the edge's once

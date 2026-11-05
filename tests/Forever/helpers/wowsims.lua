@@ -354,10 +354,15 @@ M.READY = {
     -- (b 0.16-0.33 s, gap BQ/CE: lo reaches the cost after the truth), 7 -> 15 of them with more decisions at the cost:
     -- both logs have the same build and 10 energizes; the gear changed (off hand Black Amnesty 19166 for 5267, two
     -- Darkmantle pieces swapped out, 4 remain), which moves the energy cadence (named, not traced row by row)
-    rogue_assassination = { 0.23, 29 }, -- 0.230, 29
+    -- { 0.23, 29 } -> { 0.23, 31 } R42 (the replay answers fight_remains from the log): only rows that were
+    -- "never" moved, now timed
+    -- (174.06 eviscerate in:reaction, 178.66 mutilate and 179.66 eviscerate late 0.16/0.20 s: the fight's last 6 s)
+    rogue_assassination = { 0.23, 31 }, -- 0.230, 31
     -- { 0.20, 18 } -> { 0.24, 20 } re-pin e2842f0a78: cost class; 6 of the 7 large rows follow a 27788 energize (6 in
     -- the new log, 2 in the old: 21.18, 56.26, 64.69, 65.49, 69.00, 83.96), the rest the floor's lag (gap BQ/CE)
-    rogue_combat = { 0.24, 20 }, -- 0.240, 20
+    -- { 0.24, 20 } -> { 0.24, 21 } R42 (the replay answers fight_remains from the log): only rows that were
+    -- "never" moved, now timed (176.62 eviscerate late 0.19 s)
+    rogue_combat = { 0.24, 21 }, -- 0.240, 21
     rogue_subtlety = { 0.17, 40 }, -- 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
     shaman_enhancement = { 0.21, 7 },
     shaman_elemental = { 0.48, 54 }, -- 0.480, 54 (Elemental lane, Task 14; first clean run on a21329fc)
@@ -370,8 +375,14 @@ M.READY = {
     -- Searing Pain's 1.5 s cast equals the GCD, so nearly every decision is absorbed at the grain. 0.10, 3 -> 0.20, 1,
     -- owner ruling 2026-10-26: gap BD's cast-bar fix removed the small misses; decision by decision none worse and
     -- none new; the median of the rest rose (the one left: life_tap 0.2 s early)
-    warlock_demonology = { 0.30, 1 },
-    warlock_destruction = { 0.50, 5 }, -- 0.500, 5: Incinerate's 2.0 s cast, likewise
+    -- { 0.30, 1 } -> { 0.30, 10 } R42 (the replay answers fight_remains from the log): only rows that were
+    -- "never" moved, now timed
+    -- (never 25 -> 2; 9 of them 0.2-0.3 s early, the Searing Pain grain as above); median 0.20
+    warlock_demonology = { 0.30, 10 },
+    -- 0.500, 5: Incinerate's 2.0 s cast, likewise. { 0.50, 5 } -> { 0.50, 16 } R42 (the replay answers
+    -- fight_remains from the log): only rows that were "never" moved, now timed
+    -- (never 28 -> 0; 12 of them early at the cast's grain); median 0.40
+    warlock_destruction = { 0.50, 16 },
     warlock_shadow_brand = { 0.90, 16 }, -- 0.900, 16: Shadow Bolt's, likewise
     warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
     -- 0.880, 5 (was 0.80, 6): the world's parry haste (decision 63); the tie hand-back moves 177.88 sunder late -> never
