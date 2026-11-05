@@ -447,7 +447,7 @@ describe("now handlers", function()
             start()
         end
         local function idolDuration()
-            return 10 + 2 * set_bonus.idol -- luacheck: ignore 113 (the `now` context's read)
+            return 10 + 2 * set_bonus.idol
         end
         local function wearIdol()
             ctl.inventory[18] = IDOL

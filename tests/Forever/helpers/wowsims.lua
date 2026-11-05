@@ -90,13 +90,43 @@ local function rankIDs(token, key)
     return out
 end
 
+-- wowsims's ItemSlot order (proto/common.proto: Head 0 ... Ranged 16) as client inventory slots; 0 not equipped here:
+-- the trinkets and weapons (the world owns weapon facts; no trinket effect is modelled yet)
+M.SLOT = { 1, 2, 3, 15, 5, 9, 10, 6, 7, 8, 11, 12, 0, 0, 0, 0, 18 }
+
+--- The request's gear of spec `spec` as headless `items` ({ [slot] = { itemID } }: no name, an uncached item), minus
+--- the pieces of each set in `skips` ({ [set key] = { piece IDs } }; default the recipe's `oracleSkips`, R35: sets the
+--- oracle's pin silently skipped, so the replay world matches its log; loops and live worlds never read it).
+function M.gear(spec, skips)
+    if skips == nil then
+        local ok, recipe = pcall(dofile, "tools/wowsims/specs/" .. spec .. ".lua")
+        skips = ok and recipe.oracleSkips or {}
+    end
+    local drop = {}
+    for _, ids in pairs(skips) do
+        for _, id in ipairs(ids) do
+            drop[id] = true
+        end
+    end
+    local req = require("dkjson").decode(slurp(M.DIR .. spec .. ".json"))
+    local out = {}
+    for i, it in ipairs(req.raid.parties[1].players[1].equipment.items) do
+        local slot = M.SLOT[i]
+        if slot and slot > 0 and type(it.id) == "number" and not drop[it.id] then
+            out[slot] = { it.id }
+        end
+    end
+    return out
+end
+
 --- Content `base` (a class world's: character, usable, resolve, uptime, gain, WORLD, OBSERVE) as pack `o.pack`'s at
 --- `o.level` [60]. `o.talents` ({ { id, rank, tree } }: the build's; default the world's) are cut to the level's points
 --- (one a level from 10), the dominant tree first, each talent's spell known; `o.learn` ({ [spellID] = level }) drops
 --- ranks above the level (an ID it lacks counts as level 1); `o.kit` adds abilities the world's kit lacks (usable on
 --- cost); `o.requires` ({ [key] = fn(W, e) -> ok, why }) replaces an ability's requirement in the usability answers
 --- (it then owns the stance check too); `o.race` (a race token: `M.race(spec)`) boots the character as that race, its
---- racials known from their learn level (like `o.kit`'s). The world's mob is the character's level.
+--- racials known from their learn level (like `o.kit`'s). The world's mob is the character's level. `o.gear` (`M.gear`'s: { [slot] = { itemID } }) is worn
+--- besides the world's own items (its weapons win a slot).
 function M.content(base, o)
     local level = o.level or 60
     if o.race then
@@ -121,6 +151,16 @@ function M.content(base, o)
             c[k] = v
         end
         c.level, c.race = level, o.race or c.race
+        if o.gear then
+            local items = {}
+            for slot, item in pairs(c.items or {}) do
+                items[slot] = item
+            end
+            for slot, item in pairs(o.gear) do
+                items[slot] = items[slot] or item -- the world's own (its weapons) first
+            end
+            c.items = items
+        end
         local known = {}
         for _, id in ipairs(c.known) do
             if learned(id) then
