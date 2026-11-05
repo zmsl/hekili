@@ -20,15 +20,17 @@ end
 local REPLAY = {}
 
 -- recipe, world content, pack, the replay floor (the first clean run's, never lowered), LIVE60: the pack's own worst
--- idle at 60, rounded up to 0.1 s (P8).
+-- idle at 60, rounded up to 0.1 s (P8; the L10/L40 brackets keep 6 s, ruling R22).
+-- Re-pin e2842f0a78 (Task 11): Shadow 1.00 -> 1.00 (1.000, 85 of 85; the new log's gear and Greater Blessing of Wisdom
+-- rank 1 move no decision), replay flicker 0.67/min before and after, LIVE60 1.8 -> 1.8 (measured).
 local PACKS = {
     { "priest_shadow", "Shadow", "Shadow (wowsims.com)", 1.00, 1.8 },
     { "priest_smite", "Smite", "Smite (wowsims.com)", 0.93, 0.2 },
 }
 
 describe("the Priest wowsims.com packs #slow #wowsims", function()
-    -- one block per pack: the replay floor (measured on the first clean run, never lowered), the pack's own worst
-    -- idle at 60 (LIVE60, measured), and the brackets
+    -- one block per pack: the replay floor (measured on the first clean run, never lowered), the brackets (6 s; L60
+    -- the pack's own LIVE60 when higher)
     for _, p in ipairs(PACKS) do
         local spec, world, pack, FLOOR, LIVE60 = p[1], W[p[2]], p[3], p[4], p[5]
         it(pack .. " follows wowsims's casts", function()
@@ -36,7 +38,7 @@ describe("the Priest wowsims.com packs #slow #wowsims", function()
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()
-                ws.live(pack, content(spec, world, pack, level), math.max(6, LIVE60))
+                ws.live(pack, content(spec, world, pack, level), level == 60 and math.max(6, LIVE60) or 6)
             end)
         end
     end

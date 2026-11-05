@@ -1,9 +1,6 @@
 {
   "encounter":{
-    "executeProportion20":0.2,
-    "executeProportion25":0.25,
     "executeProportion35":0.35,
-    "executeProportion90":0.9,
     "duration":180,
     "targets":[{
         "minBaseDamage":2601,
@@ -15,7 +12,7 @@
         "parryHaste":true,
         "mobType":"MobTypeMechanical"
       }],
-    "executeProportion45":0.45
+    "executeProportion20":0.2
   },
   "raid":{
     "parties":[{
@@ -75,14 +72,14 @@
             "reactionTimeMs":100,
             "equipment":{
               "items":[{
-                  "id":14332,
+                  "id":10250,
                   "randomSuffix":12761
                 },{
                   "id":23125
                 },{
                   "id":14112
                 },{
-                  "id":272411
+                  "id":279269
                 },{
                   "id":14136,
                   "enchant":8492
@@ -94,15 +91,13 @@
                   "id":18407,
                   "enchant":8492
                 },{
-                  "id":10255,
-                  "randomSuffix":12761
+                  "id":18405
                 },{
                   "id":10252,
                   "randomSuffix":12761,
                   "enchant":8492
                 },{
-                  "id":10247,
-                  "randomSuffix":12761,
+                  "id":254129,
                   "enchant":8492
                 },{
                   "id":272407
@@ -128,7 +123,7 @@
             "talentsString":"00530320103--50052201251302051",
             "profession2":"Tailoring",
             "buffs":{
-              "greaterBlessingOfWisdom":2,
+              "greaterBlessingOfWisdom":1,
               "greaterBlessingOfKings":true
             },
             "cooldowns":{
@@ -279,7 +274,7 @@
                             "cmp":{
                               "op":"OpGt",
                               "rhs":{
-                                "dotExpectedDps":{
+                                "spellExpectedDpet":{
                                   "spellId":{
                                     "spellId":18807,
                                     "rank":6
@@ -287,7 +282,7 @@
                                 }
                               },
                               "lhs":{
-                                "dotExpectedDps":{
+                                "spellExpectedDpet":{
                                   "spellId":{
                                     "spellId":19305,
                                     "rank":7

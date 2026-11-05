@@ -305,8 +305,9 @@ taken in dominant-tree order) and fails on an error, a raise, an unlisted read, 
 combat, the GCD free, a known on-GCD ability the world would accept, no on-GCD press: an off-GCD press such as Heroic
 Strike or Maul does not end it) longer than the limit.
 - Brackets: 10, 40 and 60 (Feral 20, 40, 60: Cat Form at 20).
-- The limit is `max(6 s, LIVE60)`, LIVE60 the pack's own worst idle at 60 rounded up to 0.1 s. wowsims is the oracle:
-  its idle at 60 (pooling, running out of mana) is correct and never "fixed".
+- The limit is 6 s at the lower brackets (10, 20, 40) and `max(6 s, LIVE60)` at 60 (re-pin ruling R22), LIVE60 the
+  pack's own worst idle at 60 rounded up to 0.1 s. wowsims is the oracle: its idle at 60 (pooling, running out of mana)
+  is correct and never "fixed"; a lower bracket never borrows it.
 - A lower bracket over the limit gets a recipe `leveling` filler, silent at 60 (`!action.<a level-60 ability>.known`),
   never a higher limit; the 60 line and the floor must not move. The recorded exception: Fury below Bloodthirst
   (`FURY_LIVE_LEVELING = 7.6` in `tests/Forever/wowsims_warrior_spec.lua`, the owner's call): its leveling Sunder

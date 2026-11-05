@@ -11,6 +11,9 @@
 --   79.5) and Shadow Word: Death 18.3 s apart at the least (wowsims casts Mind Flay at log 39.7, 16.8 s after the 22.9
 --   one, where our 15 s read it ready). Fixed in Priest.lua (the Mage lane's ruling M9 precedent: wowsims's newer data
 --   where its log casts it; in-game checks): decisions on-GCD 1.000 (85), no disagreement left.
+-- Re-pin e2842f0a78 (Task 11): decisions on-GCD 1.000 (85) before and after, no disagreement. The build moves four gear
+-- slots and Greater Blessing of Wisdom to `1` (wowsims applies rank 1, 25894, not the top rank 25918: rankStates.at);
+-- the hidden Starshards line now compares spellExpectedDpet (still hidden, omitted). Omitted 4 -> 4.
 -- Worked (P8): Smite fills below Mind Flay (a talent: the L10 bracket idled 8.0 s on Mind Blast's cooldown); the world's
 -- Shadow character knows Smite (P9.4), silent at 60.
 -- Deviations: Mind Flay's channelSpell.interruptIf (MF3: clip at its third tick) is dropped by the translator (the
