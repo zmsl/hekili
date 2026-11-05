@@ -1,5 +1,14 @@
 -- tests/Forever/gear_lint_spec.lua (gear-aware spec §3, §10.6): a pack reads only gear it declared, as a number.
 -- shortcut: line-level patterns over the pack sources (comments stripped); a split expression needs review.
+-- the forbidden reads, each with a sample line it must catch (the self-check below)
+local PATTERNS = {
+    { "set_bonus%[", "set_bonus[900001]" },
+    { "set_bonus%.[%w_]+%s+and%s", "set_bonus.x and 1" },
+    { "set_bonus%.[%w_]+%s+or%s", "set_bonus.x or 0" },
+    { "set_bonus%.[%w_]+%s+then", "if set_bonus.x then" },
+    { "not%s+set_bonus", "not set_bonus.x" },
+    { "pairs%(%s*set_bonus", "pairs(set_bonus)" },
+}
 local function files()
     local out, p = {}, assert(io.popen("find src -path 'src/Hekili_*' -name '*.lua' | sort"))
     for path in p:lines() do
@@ -44,16 +53,9 @@ describe("the packs' gear reads", function()
     it("never indexes by item ID, tests bare truthiness or iterates", function()
         local bad = {}
         for _, f in ipairs(all) do
-            for _, pat in ipairs({
-                "set_bonus%[",
-                "set_bonus%.[%w_]+%s+and%s",
-                "set_bonus%.[%w_]+%s+or%s",
-                "set_bonus%.[%w_]+%s+then",
-                "not%s+set_bonus",
-                "pairs%(%s*set_bonus",
-            }) do
-                if f.s:find(pat) then
-                    bad[#bad + 1] = f.path .. ": " .. pat
+            for _, p in ipairs(PATTERNS) do
+                if f.s:find(p[1]) then
+                    bad[#bad + 1] = f.path .. ": " .. p[1]
                 end
             end
         end
@@ -72,18 +74,9 @@ describe("the packs' gear reads", function()
         end
         assert.are.same({}, bad)
     end)
-    it("catches what it is meant to catch", function() -- the patterns are not vacuous
-        for _, s in ipairs({ "set_bonus[272430]", "set_bonus.x and 1", "not set_bonus.x", "pairs(set_bonus)" }) do
-            local hit = false
-            for _, pat in ipairs({
-                "set_bonus%[",
-                "set_bonus%.[%w_]+%s+and%s",
-                "not%s+set_bonus",
-                "pairs%(%s*set_bonus",
-            }) do
-                hit = hit or s:find(pat) ~= nil
-            end
-            assert.is_true(hit, s)
+    it("catches what it is meant to catch", function() -- each pattern hits its own sample: none is vacuous
+        for _, p in ipairs(PATTERNS) do
+            assert.is_truthy(p[2]:find(p[1]), p[1] .. " misses " .. p[2])
         end
     end)
 end)

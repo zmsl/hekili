@@ -1,10 +1,9 @@
 -- tests/Forever/fixtures/gear_coverage.lua (gear-aware spec §14.4): every row of
 -- .superpowers/sdd/2026-11-03-wowsims-repin/r33-gear-effects.md (section 0, section 1 per class, section 2 as class
--- "ANY"), one entry each: { id, class, item, effect, status, keys?, why?, pending? }.
+-- "ANY"), one entry each: { id, class, item, effect, status, keys?, why? }.
 -- status: "modelled" (every key is registered in the class's pack), "dropped" or "unshipped" (a `why` is required),
 -- "todo" (not yet triaged; allowed only while the class is not in `done`).
 -- A class task flips its rows, adds the class to `done` and its row ids to `expected` (the report's id list).
--- `pending = true` (plan 1 only) skips the pack-registration check until Task 7 registers the keys.
 return {
     done = {},
     expected = {},

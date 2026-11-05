@@ -51,7 +51,7 @@ describe("the gear coverage fixture", function()
     it("registers a modelled row's keys in the class's pack", function()
         local bad, src = {}, {}
         for _, r in ipairs(fx.rows) do
-            if r.status == "modelled" and not r.pending then
+            if r.status == "modelled" then
                 src[r.class] = src[r.class] or packSource(r.class)
                 assert.is_true(type(r.keys) == "table" and #r.keys > 0, r.id .. " has no keys")
                 for _, k in ipairs(r.keys) do
@@ -74,7 +74,6 @@ describe("the gear coverage fixture", function()
             for _, r in ipairs(fx.rows) do
                 if r.class == class then
                     assert.is_true(r.status ~= "todo", r.id .. " is still todo")
-                    assert.is_nil(r.pending, r.id .. " is still pending")
                     have[#have + 1] = r.id
                 end
             end
