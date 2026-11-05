@@ -16,7 +16,7 @@ describe("the facade trace", function()
             CreateFrame = api.CreateFrame,
             issecretvalue = api.issecretvalue,
             GetTime = api.GetTime,
-            UnitName = function(unit)
+            UnitClass = function(unit)
                 if unit == "target" then
                     return fake.SECRET
                 end
@@ -87,25 +87,25 @@ describe("the facade trace", function()
     end)
 
     it("writes nothing while Hekili is not debugging", function()
-        Facade.UnitName("player")
+        Facade.UnitClass("player")
         ctl.Fire("PLAYER_TARGET_CHANGED")
         assert.are.same({}, lines)
     end)
 
     it("writes one line per read naming the class, with a secret shown as S and counted", function()
         hekili.ActiveDebug = true
-        Facade.UnitName("player")
-        Facade.UnitName("target")
+        Facade.UnitClass("player")
+        Facade.UnitClass("target")
         Facade.GetHaste()
         Facade.UnitPower("target", 1)
         Facade.GetTime()
         assert.are.same({
-            "[vs] passthrough UnitName(player, nil) -> Me, nil, nil, nil #1",
-            "[vs] passthrough UnitName(target, nil) -> S, nil, nil, nil #1",
+            "[vs] passthrough UnitClass(player, nil) -> Me, nil, nil, nil #1",
+            "[vs] passthrough UnitClass(target, nil) -> S, nil, nil, nil #1",
             "[vs] hybrid:model GetHaste(nil, nil) -> 0, nil, nil, nil #1",
             "[vs] hybrid:model UnitPower(target, 1) -> 0, nil, nil, nil #1",
         }, lines) -- GetTime is quiet: counted, not written
-        assert.are.equal(1, Facade.secrets.UnitName)
+        assert.are.equal(1, Facade.secrets.UnitClass)
         assert.are.equal(1, Facade.counts.GetTime)
     end)
 
@@ -129,11 +129,11 @@ describe("the facade trace", function()
             error("boom")
         end
         assert.has_no.errors(function()
-            Facade.UnitName("player")
+            Facade.UnitClass("player")
         end)
         hekili.Debug = debug
-        Facade.UnitName("player")
-        assert.are.equal("[vs] passthrough UnitName(player, nil) -> Me, nil, nil, nil #1", lines[#lines])
+        Facade.UnitClass("player")
+        assert.are.equal("[vs] passthrough UnitClass(player, nil) -> Me, nil, nil, nil #1", lines[#lines])
     end)
 
     it("writes a line per event the layer receives", function()
@@ -147,7 +147,7 @@ describe("the facade trace", function()
 
     it("allocates nothing per read while tracing is off", function()
         local bytes = alloc.bytes(function()
-            Facade.UnitName("player")
+            Facade.UnitClass("player")
             Facade.GetHaste()
             Facade.UnitPower("player", 1)
         end, 10000)

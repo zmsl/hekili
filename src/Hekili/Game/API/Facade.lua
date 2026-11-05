@@ -861,6 +861,22 @@ end, "unprobed (Rogue Q9); the slot's `weaponEnchant` pseudo-aura when any field
 -- first observation (Families/Pets.lua, VS.Pet), and so does the belief's last observation when one is secret. Every
 -- other unit gets the raw answer, as the passthrough did.
 hybrid("UnitCreatureFamily", nothing, "SecretWhenUnitIdentityRestricted (API docs); unprobed (C1); nothing")
+-- Unit identity: plain in combat [W PR14; gate spike], but secret under the Map addon restriction (the owner's FR-1
+-- run, 2026-11-05: UnitGUID ooc and in combat, UnitIsUnit in combat; UnitName with them, as the SENT target name is).
+-- A secret identity is unknown, so the core gets nil: never a secret key, compare or truth test.
+local IDENTITY = "plain in combat [W PR14; gate spike]; secret under the Map restriction (FR-1 2026-11-05)"
+hybrid("UnitGUID", nothing, IDENTITY .. "; nothing")
+hybrid("UnitIsUnit", function(a, b)
+    if a == b then -- a token is itself (the aura scans' caster "player" or "pet"); any other pair is unknown
+        return true
+    end
+end, IDENTITY .. "; true for a token and itself, else nothing")
+hybrid("UnitName", nothing, IDENTITY .. "; nothing")
+hybrid(
+    "UnitTokenFromGUID",
+    nothing,
+    "plain [W sweep 2026-10-16]; an identity read, unprobed under the Map restriction; nothing"
+)
 
 local realUnitExists = resolve("UnitExists")
 kept("UnitExists", "hybrid", function(unit)
@@ -1225,7 +1241,6 @@ local PASSTHROUGH = {
     { "UnitCreatureType", "plain in combat [W PR14; gate spike]" },
     { "UnitEffectiveLevel", "plain [W sweep 2026-10-16]" },
     { "UnitFactionGroup", "plain [W sweep 2026-10-16]" },
-    { "UnitGUID", "plain in combat [W PR14; gate spike]" },
     { "UnitHasVehicleUI", "plain [W sweep 2026-10-16]" },
     { "UnitInParty", "plain [W sweep 2026-10-16]" },
     { "UnitInRaid", "plain [W sweep 2026-10-16]" },
@@ -1236,15 +1251,12 @@ local PASSTHROUGH = {
     { "UnitIsPVP", "plain [W sweep 2026-10-16]" },
     { "UnitIsPlayer", "plain in combat [W PR14; gate spike]" },
     { "UnitIsTrivial", "plain [W sweep 2026-10-16]" },
-    { "UnitIsUnit", "plain in combat [W PR14; gate spike]" },
     { "UnitLevel", "plain in combat [W PR14; gate spike]" },
-    { "UnitName", "plain in combat [W PR14; gate spike]" },
     { "UnitOnTaxi", "plain [W sweep 2026-10-16]" },
     { "UnitPhaseReason", "plain [W sweep 2026-10-16]" },
     { "UnitPowerType", "plain [W PR16]" },
     { "UnitRace", "plain [W sweep 2026-10-16]" },
     { "UnitSex", "plain [W sweep 2026-10-16]" },
-    { "UnitTokenFromGUID", "plain [W sweep 2026-10-16]" },
 }
 for i = 1, #PASSTHROUGH do
     passthrough(PASSTHROUGH[i][1], PASSTHROUGH[i][2])

@@ -18,6 +18,7 @@
 - Elemental Shamans: Mana Spring Totem counts at your real rank from the first fight of a session.
 - Warriors: in Battle Stance, Overpower no longer shows on another player's dodge; it waits for the game to say the spell is usable.
 - A free-cast proc raised by the cast that just landed is no longer counted as spent at low frame rates, so your mana estimate stays right.
+- No more Lua errors from nameplates and unit changes where the game hides who a unit is (likely in dungeons and raids). There, hits on a target the addon can't identify are no longer counted against your previous target.
 
 ### Known issues
 

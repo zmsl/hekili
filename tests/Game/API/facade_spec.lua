@@ -117,7 +117,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 123, hybrid = 38, virtual = 26, display = 1 }, count)
+        assert.are.same({ passthrough = 119, hybrid = 42, virtual = 26, display = 1 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -421,7 +421,7 @@ describe("ns.Facade", function()
         assert.are.same({ "Map", "party", 1, "Normal", 5, 0, false, 33, 5 }, { Facade.GetInstanceInfo("x", 2) })
         assert.are.same({ "x", 2 }, got)
         assert.are.equal(9, select("#", Facade.GetInstanceInfo()))
-        assert.are.equal(fake.SECRET, Facade.UnitName("target")) -- transparent: a secret is the trace's to count
+        assert.are.equal(fake.SECRET, Facade.UnitClass("target")) -- transparent: a secret is the trace's to count
     end)
 
     it("answers a hybrid's raw value while it is plain and the policy's once it is secret", function()
@@ -570,6 +570,30 @@ describe("ns.Facade", function()
         assert.are.same({ "Family", 1 }, { Facade.UnitCreatureFamily("pet") })
         answers.UnitCreatureFamily = nil
         assert.is_nil(Facade.UnitCreatureFamily("pet")) -- never the secret
+    end)
+
+    -- The Map addon restriction (the owner's FR-1 run, 2026-11-05) hides unit identity: a secret is unknown (nil).
+    it("answers UnitGUID, UnitIsUnit and UnitName raw while plain and nothing once secret (Map restriction)", function()
+        answers.UnitGUID = function()
+            return "Creature-1"
+        end
+        answers.UnitIsUnit = function()
+            return false
+        end
+        answers.UnitName = function()
+            return "Mob", "Realm"
+        end
+        assert.are.equal("Creature-1", Facade.UnitGUID("target"))
+        assert.is_false(Facade.UnitIsUnit("targettarget", "player"))
+        assert.are.same({ "Mob", "Realm" }, { Facade.UnitName("target") })
+        answers.UnitGUID, answers.UnitIsUnit, answers.UnitName = nil, nil, nil -- secret
+        assert.is_nil(Facade.UnitGUID("target"))
+        assert.is_nil(Facade.UnitIsUnit("targettarget", "player"))
+        assert.is_true(Facade.UnitIsUnit("player", "player")) -- a token is itself, secret or not
+        assert.is_nil(Facade.UnitName("target"))
+        for _, n in ipairs({ "UnitGUID", "UnitIsUnit", "UnitName" }) do
+            assert.are.equal("hybrid", Facade.Status(n))
+        end
     end)
 
     it("answers UnitExists raw for any unit but the pet, and the belief's for a secret pet read (C1)", function()

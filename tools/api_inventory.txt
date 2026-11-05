@@ -153,7 +153,7 @@ UnitDamage	hybrid
 UnitEffectiveLevel	passthrough
 UnitExists	hybrid
 UnitFactionGroup	passthrough
-UnitGUID	passthrough
+UnitGUID	hybrid
 UnitGetTotalAbsorbs	virtual
 UnitHasVehicleUI	passthrough
 UnitHealth	virtual
@@ -169,9 +169,9 @@ UnitIsFriend	passthrough
 UnitIsPVP	passthrough
 UnitIsPlayer	passthrough
 UnitIsTrivial	passthrough
-UnitIsUnit	passthrough
+UnitIsUnit	hybrid
 UnitLevel	passthrough
-UnitName	passthrough
+UnitName	hybrid
 UnitOnTaxi	passthrough
 UnitPartialPower	virtual
 UnitPhaseReason	passthrough
@@ -184,5 +184,5 @@ UnitSex	passthrough
 UnitSpellHaste	hybrid
 UnitStat	hybrid
 UnitThreatSituation	hybrid
-UnitTokenFromGUID	passthrough
+UnitTokenFromGUID	hybrid
 UnitWeaponAttackPower	hybrid
