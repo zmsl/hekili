@@ -10,7 +10,7 @@
 - Hunters: the melee weave's strikes can show at range with the Movement toggle on, from an Auto Shot whose next melee swing comes before your next shot until that swing (the weave window), and an open weave closes when you Raptor Strike. With it off, they show only in melee as before.
 - Balance Druids: the built-in priority follows the latest wowsims.com rotation. Out of combat it shows Wrath to open after Moonkin Form, and Innervate shows only when your mana is under 40%.
 - Mages: the built-in priorities follow the latest wowsims.com rotations. Arcane uses Frostbolt as a filler only without the Arcane Instability talent, at any level, and adds Fire Blast, with Arcane Wrath to open and its cooldowns lined up with Missile Barrage or Arcane Wrath. Fire keeps Arcane Blast up, uses Scorch as a filler while Fire Blast is nearly ready, and opens with Pyroblast, as Frostfire does. Frostfire shows Fireball while leveling, until Frostfire Bolt.
-- Protection Paladins: the built-in priority follows the latest wowsims.com rotation. Before the pull it shows Righteous Fury, Holy Shock waits for Consecration's mark when you have the Consecrated Ground talent, and while leveling, before Holy Shield and Shieldsworn, it refreshes Seal of Fury while Holy Strike cools down.
+- Protection Paladins: the built-in priority follows the latest wowsims.com rotation. Before the pull it shows Righteous Fury, and Holy Shock waits for Consecration's mark when you have the Consecrated Ground talent.
 - Protection Paladins: Holy Shield's top rank costs 195 mana, as in the game, not 240, so it shows ready sooner.
 - Less memory churn in big pulls: the engine no longer builds its nameplate debug text on every update, only when you take a snapshot.
 - Less work per update, mostly for casters: the engine does less setup and bookkeeping each time the icons refresh, and works out an ability's cost once per moment instead of repeatedly. The recommendations are unchanged.
@@ -21,6 +21,7 @@
 - The experimental options to use the damage meter for swing outcomes and the Cooldown Manager for aura presence are gone from normal builds, and both are now off even if you had turned them on.
 
 ### Fixed
+- Low-level Paladins are no longer told to re-cast a seal that still has time left: Retribution shows Seal of Righteousness again only when it is down or about to run out (under two global cooldowns left), Protection only when Seal of Fury is down, and the icon may stay empty while Holy Strike and Judgement cool down.
 - Fewer one-moment flashes of a filler as a cooldown comes back: while a GCD or cast covers the cooldown's end, the icon now counts down to the believed end instead of stalling for its last half second.
 - Enemies you kill leave the target count at once, so AoE and cleave lines aren't held by a dead mob for a few seconds.
 - Elemental Shamans: Mana Spring Totem counts at your real rank from the first fight of a session.

@@ -36,7 +36,7 @@ local PACKS = {
     ["Hunter/APLs/Beast Mastery"] = HUNTER,
     ["Hunter/APLs/Marksmanship"] = HUNTER,
     ["Hunter/APLs/Survival"] = HUNTER,
-    ["Paladin/APLs/Protection"] = { "seal_of_fury=2", "holy_shield=2", "seal_of_fury=2" }, -- the last: the leveling refresh (R28)
+    ["Paladin/APLs/Protection"] = { "seal_of_fury=2", "holy_shield=2" }, -- R41: the leveling refresh (R28) is gone
     -- the Twist of Light seals (1): open
     ["Paladin/APLs/Retribution"] = {
         "hammer_of_wrath=1",

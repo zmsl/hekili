@@ -80,11 +80,17 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Retribution is out of mana from 60 s
     -- of its log), so its longest wait is for mana. 4.4 before central fix 8, while
     -- the collapsed mana lower bound kept Consecration's and Exorcism's `mana.pct>=10` from passing.
-    local RET_LIVE60 = 8.4
+    -- 8.4 -> 5.2 (R41 task, measured at the base and after: the old 8.4 had not been re-measured since the re-pin)
+    local RET_LIVE60 = 5.2
+    -- R41 (owner policy: no filler for filling's sake): the old `remains<24` Seal of Righteousness refresh held L10 at
+    -- 4.4; it re-seals now only under two GCDs left. Nothing useful to cast: Holy Strike and Judgement cooling, Seal of
+    -- Righteousness up (L10-L15 8.6, t 5.2-13.6). L40 keeps the 6 s bar (5.2); only L60 follows LIVE60 (R22)
+    local RET_LIVE10 = 8.6
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Retribution (wowsims.com) stays live at level " .. level, function()
             local C = content("paladin_retribution", RET_LIVE, "Retribution (wowsims.com)", level)
-            ws.live("Retribution (wowsims.com)", C, math.max(6, RET_LIVE60))
+            local limit = level == 60 and math.max(6, RET_LIVE60) or level == 10 and RET_LIVE10 or 6
+            ws.live("Retribution (wowsims.com)", C, limit)
         end)
     end
 
@@ -128,12 +134,22 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- mana-dry), idle over 6 s either way (L32 11.0, L35-L40 8.4); gated at L40 only; no other bracket got a higher limit
     -- 4.6 -> 4.4 (R31: Holy Shield rank 3 costs 195, not 240; the price is the only change, L10 4.4 and L40 8.4 hold,
     -- rank 3 is learned at 60 only)
+    -- R41 (owner policy, supersedes R28's L10 filler and R28a's guard): the Seal of Fury refresh (`remains<24`) is gone;
+    -- wowsims's own line re-seals when the seal is down. L10 4.4 -> 8.6, its measured limit: nothing useful to cast:
+    -- Holy Strike and Judgement cooling, Seal of Fury and Righteous Fury up (L10-L15 8.6, t 6.6-15.0; L20-L25 6.4,
+    -- ungated, not classified). L40 8.4 keeps R28's cause: out of mana (86), nothing castable; the band L32 11.0
+    -- (mana 13), L35-L40 8.4
+    -- is the same cause, gated at L40 only; L41 and up 4.4 (Shieldsworn)
     local PROT_LIVE60 = 4.4
     local PROT_LIVE40 = 8.4
+    local PROT_LIVE10 = 8.6
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()
             local C = content("paladin_protection", PROT_LIVE, "Protection (wowsims.com)", level)
-            local limit = level == 60 and math.max(6, PROT_LIVE60) or level == 40 and PROT_LIVE40 or 6
+            local limit = level == 60 and math.max(6, PROT_LIVE60)
+                or level == 40 and PROT_LIVE40
+                or level == 10 and PROT_LIVE10
+                or 6
             ws.live("Protection (wowsims.com)", C, limit)
         end)
     end

@@ -17,11 +17,23 @@
 -- cooldown restart) took it to 0.87, the spec's gate (tests/Forever/wowsims_paladin_spec.lua).
 -- Under-belief of about 120 mana a Judgement: GAP H, an API-forced deviation: the class model prices its 6% on the
 -- maximum (3737), wowsims on base mana (81 = 6% of 1500 x 0.9), which the client does not expose.
--- Idle at 60 (LIVE60 8.4 s, owner ruling): wowsims is the oracle; its own Retribution is out of mana from 60 s, and the
+-- Idle at 60 (LIVE60 8.4 s, owner ruling; 5.2 measured at the R41 task, the limit is max(6, 5.2)): wowsims is the
+-- oracle; its own Retribution is out of mana from 60 s, and the
 -- pack, run faithfully, spends itself dry the same way (4.4 s before central fix 8 kept the 10% lines from passing).
 -- The Everlook Pathcarver (item 274759, a trinket wowsims's autocastOtherCooldowns uses at the pull) is `use_items`.
--- Leveling: the Seal of Righteousness refresh fills Holy Strike's cooldown before Seal of Command (L10 8.6 -> 4.4 s);
--- Seal of Command is kept up below Twist of Light (L40 6.4 s, under LIVE60's 8.4).
+-- Leveling (R41, owner policy: no filler for filling's sake; a line is a real ability cast for a genuine need).
+-- Seal of Righteousness: not wowsims; need-based (R41): keep a seal up, recast when it is down or has less than two
+-- GCDs left. Both lines are not wowsims (its default Retribution plays no seal line without Twist of Light: its
+-- 'Prep Seal' groups are
+-- gated on `Has assigned judgement`, a constant true; the twist lines are ours); need-based: keep a seal up. Seal of
+-- Command is recast below Twist of Light when it is down; Seal of Righteousness, before Seal of Command, when it is
+-- down or has less than two GCDs left (`remains<gcd.max*2`: one competing GCD, Holy Strike, Consecration or Exorcism,
+-- plus about half a second of reaction; Judgement is off the GCD). The kit's Judgement does not consume the seal
+-- (judgementCast only refunds mana, Paladin.lua), so the 30 s seal persists and this threshold alone decides the recast.
+-- The old `remains<24` refresh recast a seal with 24 s left only to fill the live gate's idle window (L10 8.6 -> 4.4;
+-- a player report, R40). L10 idles 8.6 s now, a measured limit: nothing useful to cast: Holy Strike and Judgement
+-- cooling, Seal of Righteousness up. L20-L35 6.8 s: ungated, not classified (Consecration off cooldown at the window's
+-- end; not traced).
 return {
     class = "PALADIN",
     pack = "Retribution (wowsims.com)",
@@ -53,6 +65,6 @@ return {
     prepullSkip = { "seal_of_command" },
     leveling = {
         "seal_of_command,focus=2,if=!talent.twist_of_light.enabled&!buff.seal_of_command.up",
-        "seal_of_righteousness,focus=2,if=!action.seal_of_command.known&buff.seal_of_righteousness.remains<24",
+        "seal_of_righteousness,focus=2,if=!action.seal_of_command.known&buff.seal_of_righteousness.remains<gcd.max*2",
     },
 }

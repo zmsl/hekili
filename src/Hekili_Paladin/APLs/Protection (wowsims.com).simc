@@ -16,4 +16,3 @@ actions+=/holy_shock,if=(!talent.consecrated_ground.enabled|debuff.consecrated_g
 actions+=/holy_shield,focus=2
 actions+=/holy_strike
 actions+=/exorcism
-actions+=/seal_of_fury,focus=2,if=!talent.shieldsworn.enabled&!talent.holy_shield.enabled&buff.seal_of_fury.remains<24

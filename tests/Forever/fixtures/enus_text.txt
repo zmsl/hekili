@@ -19801,7 +19801,6 @@ options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cF
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 2565 - |cFFFFD100|cffffd100(rage.lo>=40||(!buff.revenge_usable.up&(!action.revenge.known||cooldown.revenge.remains<=1.5)))|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 879
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 12292 - |cFFFFD100|cffffd100active_enemies>1|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1311649 - |cFFFFD100|cffffd100!talent.shieldsworn.enabled&!talent.holy_shield.enabled&buff.seal_of_fury.remains<24|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>2|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 23922
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 402927
@@ -20193,7 +20192,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0006	|
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffconsecration|r|r
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffexorcism|r|r
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 20375 - |cFFFFD100|cffffd100!talent.twist_of_light.enabled&!buff.seal_of_command.up|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 20154 - |cFFFFD100|cffffd100!action.seal_of_command.known&buff.seal_of_righteousness.remains<24|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 20154 - |cFFFFD100|cffffd100!action.seal_of_command.known&buff.seal_of_righteousness.remains<gcd.max*2|r|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	name	Action Name
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
