@@ -55,13 +55,13 @@ local function read(api, t, itemsOnly)
     if changed then
         I.GearPublish()
     end
-    Note("gear reads", secret and "secret" or "readable")
+    Note("gear set reads", secret and "secret" or "readable")
 end
 
 -- Unprobed in game, and it runs inside Build: a raise costs the gear values, never a build.
 local function safeRead(api, t, itemsOnly)
     if not pcall(read, api, t, itemsOnly) then
-        Note("gear reads", "error")
+        Note("gear set reads", "error")
         I.GearPublish()
     end
 end

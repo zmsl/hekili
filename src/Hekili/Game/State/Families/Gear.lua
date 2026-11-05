@@ -10,13 +10,9 @@
 local _, ns = ...
 local I = ns.VirtualStateInternal
 
--- The `_<n>pc` forms the core derives (State.lua's suffix): every n (owner Q1). Without Q1: only 2 and 4.
-local ANY_PC = true
-
 local G =
     { n = 0, key = {}, items = {}, aura = {}, value = {}, nPc = 0, pcKey = {}, pcOf = {}, pcNeed = {}, pcBonus = {} }
 I.gear = G
-I.gearGen = 0
 -- the raw keys: the declared ones and their `_<n>pc` forms; any other key answers 0, as the core's
 local SB = setmetatable({}, {
     __index = function()
@@ -37,11 +33,10 @@ function I.GearPublish()
     end
 end
 
---- Sets gear k's value (Sources/Gear.lua, which publishes); bumps I.gearGen. True when it changed.
+--- Sets gear k's value (Sources/Gear.lua, which publishes). True when it changed.
 function I.SetGear(k, v)
     if G.value[k] ~= v then
         G.value[k] = v
-        I.gearGen = I.gearGen + 1
         return true
     end
     return false
@@ -65,14 +60,12 @@ I.OnBuild(function(def)
         byKey[d.key] = k
     end
     for k = 1, G.n do
-        for n = 1, #G.items[k] do
-            if ANY_PC or n == 2 or n == 4 then
-                local p = G.nPc + 1
-                G.nPc = p
-                G.pcKey[p], G.pcOf[p], G.pcNeed[p] = G.key[k] .. "_" .. n .. "pc", k, n
-                local b = byKey[G.pcKey[p]]
-                G.pcBonus[p] = (b and G.aura[b] > 0) and b or 0
-            end
+        for n = 1, #G.items[k] do -- every `_<n>pc` form the core derives (State.lua's suffix; owner Q1)
+            local p = G.nPc + 1
+            G.nPc = p
+            G.pcKey[p], G.pcOf[p], G.pcNeed[p] = G.key[k] .. "_" .. n .. "pc", k, n
+            local b = byKey[G.pcKey[p]]
+            G.pcBonus[p] = (b and G.aura[b] > 0) and b or 0
         end
     end
     I.GearPublish()

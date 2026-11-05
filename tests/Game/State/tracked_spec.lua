@@ -93,16 +93,16 @@ describe("the tracked set", function()
             return build(def, t)
         end
         h.Class.gear = {
-            swarming_idol = { 272430, [272430] = true }, -- RegisterGear's shape (Spec.lua:792-796)
-            grovekeeper_eclipse = { 273884, 273885, [273884] = true, [273885] = true },
+            idol = { 900001, [900001] = true }, -- RegisterGear's shape (Spec.lua:792-796)
+            set = { 900011, 900012, [900011] = true, [900012] = true },
         }
-        h.Class.setBonuses = { grovekeeper_eclipse_5pc = 1301242 }
+        h.Class.setBonuses = { set_5pc = 900021 }
         ns.BuildTracked()
         I.Build = build
         assert.are.same({
-            { key = "grovekeeper_eclipse", items = { 273884, 273885 } },
-            { key = "swarming_idol", items = { 272430 } },
-            { key = "grovekeeper_eclipse_5pc", aura = 1301242 },
+            { key = "idol", items = { 900001 } },
+            { key = "set", items = { 900011, 900012 } },
+            { key = "set_5pc", aura = 900021 },
         }, got.gear)
         h.Class.gear, h.Class.setBonuses = nil, nil
         ns.BuildTracked()
