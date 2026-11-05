@@ -47,7 +47,15 @@ local FURY = { kit = { "berserker_rage" }, requires = ARMS.requires }
 -- Whirlwind's off-hand hit (1680 Tag 15, the off hand's item slot) is logged as its own Casting line: a hit of the one cast, not a decision.
 -- wowsims logs the Heroic Strike queue (25286 Tag 1) as an aura the client never shows (the client sees
 -- IsCurrentSpell): hidden.
-local FURY_REPLAY = { hidden = { [1282733] = true, [25286] = true }, procs = { ["1680:15"] = true }, speed = 2.1 }
+-- Every rank's queue, so a build casting a lower rank (R30) hides it too.
+local HEROIC_STRIKE_RANKS = { 78, 284, 285, 1608, 11564, 11565, 11566, 11567, 25286 }
+local function hideQueue(hidden)
+    for _, id in ipairs(HEROIC_STRIKE_RANKS) do
+        hidden[id] = true
+    end
+    return hidden
+end
+local FURY_REPLAY = { hidden = hideQueue({ [1282733] = true }), procs = { ["1680:15"] = true }, speed = 2.1 }
 
 -- Protection: wowsims's Revenge window is an aura it logged under Revenge's own ID (25288) before e2842f0a78, and logs
 -- as the DB2's Defensive State 5302 since (5 s, from a block, dodge or parry of the target's swing). The replay does not replay the target's swings, so the
@@ -63,7 +71,7 @@ local PROT = {
         end,
     },
 }
-local PROT_REPLAY = { hidden = { [5302] = true, [25288] = true, [25286] = true }, procs = {}, speed = 2.35 }
+local PROT_REPLAY = { hidden = hideQueue({ [5302] = true, [25288] = true }), procs = {}, speed = 2.35 }
 
 describe("the Warrior wowsims.com packs #slow #wowsims", function()
     it("Arms (wowsims.com) follows wowsims's casts", function()
@@ -168,6 +176,78 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             assert.are.same({}, at5)
         end)
     end
+    -- R30 (owner, 2026-11-05): every rank of an ability is that ability in the replay's comparison, whatever rank
+    -- wowsims casts (its builds may remap Heroic Strike 25286 -> 11567 and Battle Shout 25289 -> 11551: an era choice,
+    -- not ours; no spell-id remap). The rank lists are the Forever DB2's (wowdb 70707 `spell <name>`, the WARRIOR rows;
+    -- Execute's 20647 is its triggered damage spell, learned at no level, so not a rank).
+    local RANKS = {
+        battle_shout = { 6673, 5242, 6192, 11549, 11550, 11551, 25289 },
+        bloodthirst = { 23881, 23892, 23893, 23894 },
+        charge = { 100, 6178, 11578 },
+        cleave = { 845, 7369, 11608, 11609, 20569 },
+        demoralizing_shout = { 1160, 6190, 11554, 11555, 11556 },
+        execute = { 5308, 20658, 20660, 20661, 20662 },
+        hamstring = { 1715, 7372, 7373 },
+        heroic_strike = HEROIC_STRIKE_RANKS,
+        intercept = { 20252, 20616, 20617 },
+        mocking_blow = { 694, 7400, 7402, 20559, 20560 },
+        mortal_strike = { 12294, 21551, 21552, 21553 },
+        overpower = { 7384, 7887, 11584, 11585 },
+        pummel = { 6552, 6554 },
+        rend = { 772, 6546, 6547, 6548, 11572, 11573, 11574 },
+        revenge = { 6572, 6574, 7379, 11600, 11601, 25288 },
+        shield_bash = { 72, 1671, 1672 },
+        shield_slam = { 23922, 23923, 23924, 23925 },
+        slam = { 1240193, 1464, 8820, 11604, 11605 },
+        sunder_armor = { 7386, 7405, 8380, 11596, 11597 },
+        thunder_clap = { 6343, 8198, 8204, 8205, 11580, 11581 },
+    }
+    local HEAD = "# wowsims e2842f0a784d2f329dde0bc682a6b84202a780f2 warrior_protection seed 1 180 s target 63\n"
+    local CAST = "[%.2f] [Protection (#1)] Casting {SpellID: %d} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, "
+        .. "Effective Time = 1.5s) APL: priority 1\n[%.2f] [Protection (#1)] Completed cast {SpellID: %d}\n"
+    it("scores every rank of a Warrior ability as that ability (R30)", function()
+        local C = content("warrior_protection", ww.Protection, "Protection (wowsims.com)", 60, PROT)
+        local L = loop.new(C)
+        local keys, want, text = {}, {}, { HEAD }
+        for key in pairs(RANKS) do
+            keys[#keys + 1] = key
+        end
+        table.sort(keys)
+        for _, key in ipairs(keys) do
+            for _, id in ipairs(RANKS[key]) do
+                local t = 2 * #want
+                text[#text + 1] = CAST:format(t, id, t, id)
+                want[#want + 1] = key .. " " .. id
+            end
+        end
+        local R = replay.new(table.concat(text), L.oracle, ws.replayOptions(C, "warrior_protection", PROT_REPLAY))
+        local got = {}
+        for i, d in ipairs(R.decisions) do
+            got[i] = d.key .. " " .. want[i]:match("%d+$")
+        end
+        assert.are.same(want, got)
+    end)
+    -- and the feed: the Fury log with wowsims's build ranks (25286 -> 11567, 25289 -> 11551 in every line) gives the
+    -- same decisions, keyed the same; the replay knobs list every rank (hideQueue: the Heroic Strike queue aura)
+    it("replays the Fury log the same with the build's lower ranks (R30)", function()
+        local C = content("warrior_fury", ww.Fury, "Fury (wowsims.com)", 60, FURY)
+        local L = loop.new(C)
+        local o = ws.replayOptions(C, "warrior_fury", FURY_REPLAY)
+        local text = ws.log("warrior_fury")
+        local low = text:gsub("SpellID: 25286([,}])", "SpellID: 11567%1")
+            :gsub("SpellID: 25289([,}])", "SpellID: 11551%1")
+        assert.are_not.equal(text, low)
+        local a, b = replay.new(text, L.oracle, o), replay.new(low, L.oracle, o)
+        local function keys(R)
+            local out = {}
+            for i, d in ipairs(R.decisions) do
+                out[i] = ("%.3f %s"):format(d.t, d.key)
+            end
+            return out
+        end
+        assert.are.same(keys(a), keys(b))
+        assert.is_true(#a.decisions > 40)
+    end)
     it("Protection (wowsims.com) follows wowsims's casts", function()
         ws.gate(
             "Protection (wowsims.com)",
