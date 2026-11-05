@@ -80,6 +80,7 @@ describe("resource modifiers", function()
     it(
         "takes 10% off spender_b while mod_aura_a is up and spends a charge a cast; spender_c, out of scope, neither",
         function()
+            VS.Drain(1.5) -- the build's player walk first: the client lists no mod_aura_a, the model below is the fixture
             local spender_b, spender_c = I.ab.bySpell[fs.SPENDER_B], I.ab.bySpell[fs.SPENDER_C]
             assert.are.equal(15, I.CostOf(spender_b))
             local j = I.auras.bySpell[MOD_AURA]

@@ -5,9 +5,9 @@
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
 -- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
 -- `summonPet`, `dismissPet`, `openWindow`, `closeWindow`) and reads (`talent`, `buff`, `debuff`, the resources by key,
--- `knownRank`, `stat`, `swingBase`, `mainhand_speed`, `offhand_speed`, `weapon`, `equipped`, `healthMax`, `now`, `combat`,
--- `level`, `lastSwing`, `nextSwing`, `usable`) with belief meanings. A window's evaluator (Families/Windows.lua) runs in
--- the same context, reads only. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
+-- `knownRank`, `stat`, `swingBase`, `mainhand_speed`, `offhand_speed`, `weapon`, `equipped`, `set_bonus`, `healthMax`,
+-- `now`, `combat`, `level`, `lastSwing`, `nextSwing`, `usable`) with belief meanings. A window's evaluator
+-- (Families/Windows.lua) runs in the same context, reads only. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
 -- A reaction (RegisterReaction) runs in the same context at a settled outcome's row time, never through the cast fold.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
@@ -44,8 +44,16 @@ local NAMES = {
     offhand_speed = 0,
     weapon = { size = 0 }, -- the gear (Sources/Player.lua): the main hand's size, 2 a two-hander, as the sim's `weapon`
     equipped = { shield = false }, -- and its `equipped.shield`
+    set_bonus = I.setBonus, -- the declared gear's values (Families/Gear.lua), the core's state.set_bonus semantics
 }
 I.weapon, I.equipped = NAMES.weapon, NAMES.equipped
+-- equipped.<key>: the core's mt_equipped (Engine/Sim/State.lua:4848), set_bonus.<key> > 0; the raw `shield` stays
+-- Sources/Player.lua's
+setmetatable(NAMES.equipped, {
+    __index = function(_, k)
+        return I.setBonus[k] > 0
+    end,
+})
 -- The environment itself stays empty, so every assignment from a `now` raises (a counted error) instead of
 -- shadowing a verb for every later cast.
 local ctx = setmetatable({}, {
