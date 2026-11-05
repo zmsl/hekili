@@ -12,7 +12,8 @@
 --    rate outside the rule (a scratch edit), 0.818.
 -- 2. wrath -> insect_swarm 4, 3. starfire -> moonfire 2: a DoT refresh decided a fraction of a second before the debuff
 --    ends (Insect Swarm's 16 s with the build's Swarming Idol, Moonfire's 15 s, the log's): wowsims casts the filler
---    and refreshes after, our first icon is the refresh (the replay's casts land at their completion: no cast bars; replay limit).
+--    and refreshes after, our first icon is the refresh (the replay's casts land at their completion: no cast bars;
+--    replay limit).
 -- Since central fixes 12-15 (gap R closed): 0.855 (n 55), top [wrath -> insect_swarm 4; starfire -> moonfire 2;
 -- starfire -> insect_swarm 1], all the DoT-refresh replay limit (2. above); LIVE L10 1.6, L40 1.4, L60 1.4 s (8.6 at
 -- 60 before gap R's fix).
@@ -30,9 +31,10 @@
 --     3600, so the `fight_remains>380&mana.pct_lo<70` branch holds once mana dips under 70% (the truth from 11.82 s;
 --     10.45 s at 67.9% truth after Starfire's cost, 2756 -> 2520 of 3709); wowsims casts it at 24.86 s on the 40% branch.
 --   wrath -> insect_swarm (36.73, 52.73): Insect Swarm lasts 16 s in wowsims's log (21.09 -> 37.09, 38.23 -> 54.23;
---     the old log's too) against the kit's 14 s (the DB2's 12 s + Nature's Splendor's 2000 ms effect, mask 2097152 =
---     Insect Swarm's): the other 2 s are the build's Swarming Idol (272430, +2 s; R32), now modelled (gear-aware,
---     task #3); before that our belief showed the refresh 2 s early (wrath -> insect_swarm 3 in the base's top).
+--     the old log's too) against the kit's 14 s at the time (the DB2's 12 s + Nature's Splendor's 2000 ms effect,
+--     mask 2097152 = Insect Swarm's): the other 2 s are the build's Swarming Idol (272430, +2 s; R32), now modelled
+--     (gear-aware, task #3); before that our belief showed the refresh 2 s early (wrath -> insect_swarm 3 in the
+--     base's top).
 --   Next (1): wrath -> starfire 55.73: the kit's Wrath grants Eclipse at its cast end; the 52.73 Wrath missed (no proc).
 --   LIVE L10 0.2, L40 0.2, L60 0.2 s. The ready-time row (tests/Forever/helpers/wowsims.lua M.READY) 17 -> 22 real:
 --   the new log's 79 decisions (42 Wraths, was 28 of 55), 17 of the 22 a Wrath at the mana floor (cost class).

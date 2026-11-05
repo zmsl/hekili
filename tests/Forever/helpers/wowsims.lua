@@ -335,7 +335,8 @@ M.FIXTURES = "tests/Forever/fixtures/"
 M.READY = {
     -- 17 -> 22 re-pin e2842f0a78: the new log's 79 decisions (42 Wraths, was 28 of 55); 17 of the 22 Wrath, cost class
     -- (the mana floor); median 0.260, the same after owner R20a (Innervate low-mana only), so 0.71 -> 0.26 (R6);
-    -- kept on task #3 (gear-aware): median 0.260, 22 real (the three Insect Swarm rows were never, not real)
+    -- kept on task #3 (gear-aware): median 0.260, 22 real (the three moved Wrath rows, the wrath -> insect_swarm
+    -- misses, were never, not real)
     druid_balance = { 0.26, 22 },
     -- 0.26 -> 0.43: 0.26 rested on the Innervate miscalibration that ran the mana belief ~31 high before the 107.74 s
     -- Shifting Power; with regen correct the floor (lo) reaches the cost ~0.4 s after the truth (gap BQ); owner ruling
