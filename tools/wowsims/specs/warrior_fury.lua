@@ -1,6 +1,16 @@
 -- tools/wowsims/specs/warrior_fury.lua (wowsims packs plan, Task 6): Fury (wowsims.com)'s wowsims/forever request and
 -- translation. Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warrior/dps/presets.ts
 -- (FuryTalents :73, DefaultOptions :143-152, OtherDefaults :169-175) at the pin; gear p1_fury (a level 60 dual-wield set).
+-- Re-pin e2842f0a78 (lane 14): talents 30305213002-15053105102210501 (presets.ts), hasBsT2 false. Replay assumption
+-- (R42): the replay world answers `fight_remains` from the log's known length (the game reads 3600, gap AN), so the
+-- translated multipleCdUsages lines (Death Wish, Recklessness, the racials) follow wowsims's 180 s fight there and fire
+-- on cooldown in game. Floor 0.85, on-GCD 0.851 (87; base 0.922), owner ruling R46: the new Overpower Weaving group
+-- (kept by the actionGroupUsed fix) swaps to Battle Stance on our dodge row alone, and the belief holds an avoid on our
+-- own swing provisional until the swing ticket closes (1.5 s main hand, 2.0 s off hand), so the row reaches the kit
+-- 1.57-2.17 s after the dodge while wowsims swaps and casts 0.1-1.1 s after it: overpower -> bloodthirst / whirlwind /
+-- execute (3, 3, 2). In game the swap shows about 2 s late. Omitted: Bloodrage #26 (`autoTimeToNext` MeleeAuto, no
+-- translator rule; R42 item 2). The loop world's off hand (warrior_world.lua FURY_SPEED 1.9 s) is not refreshed to the
+-- build's 2.4 s (17016); the replay reads the log's swings.
 -- Since the user's Berserker Rage ruling (2026-10-21; recipe `requires`): floor 0.91, on-GCD 0.917 (60): the build has no
 -- Improved Berserker Rage, so the pre-pull Berserker Rage wowsims casts at -4.5 is gated off (berserker_rage ->
 -- battle_shout at -4.50, a ruled deviation). Before it:
@@ -40,7 +50,7 @@ return {
         race = "RaceOrc",
         class = "ClassWarrior",
         gear = "ui/specs/warrior/dps/gear_sets/p1_fury.gear.json",
-        talentsString = "30305013002-25053005052010501",
+        talentsString = "30305213002-15053105102210501",
         specKey = "dpsWarrior",
         options = {
             classOptions = {
@@ -48,7 +58,7 @@ return {
                 startingRage = 50,
                 useBattleShout = true,
                 defaultStance = "WarriorStanceBerserker",
-                hasBsT2 = true,
+                hasBsT2 = false,
                 stanceSnapshot = true,
             },
         },

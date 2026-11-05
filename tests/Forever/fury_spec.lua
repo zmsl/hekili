@@ -72,15 +72,22 @@ describe("the Fury kit", function()
             end
             return names
         end
-        local closed = first()
-        assert.are.equal("bloodthirst", closed[1], table.concat(closed, " "))
-        for _, n in ipairs(closed) do
-            assert.are_not.equal("victory_rush", n)
+        local function pos(names, n)
+            for i, v in ipairs(names) do
+                if v == n then
+                    return i
+                end
+            end
         end
+        -- re-pin e2842f0a78: wowsims's plain Whirlwind now leads Bloodthirst, so the line sits below it
+        local closed = first()
+        assert.is_not_nil(pos(closed, "bloodthirst"), table.concat(closed, " "))
+        assert.is_nil(pos(closed, "victory_rush"), table.concat(closed, " "))
         H.ctl.usable[402927] = { true, false } -- a kill with XP: the client's usability flips
         H.Fire("SPELL_UPDATE_USABLE")
         local open = first()
-        assert.are.equal("victory_rush", open[1], table.concat(open, " "))
+        local v, b = pos(open, "victory_rush"), pos(open, "bloodthirst")
+        assert.is_true(v ~= nil and (b == nil or v < b), table.concat(open, " "))
     end)
 end)
 

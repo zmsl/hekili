@@ -72,7 +72,18 @@ M.FLICKER = {
     -- flickerK 0.6 (this label only, M.FLICKER_K's own rule: widest gap 0.59; gaps 0.52 / 0.38 / 0.59): the oracle's
     -- flicker read 0.66 / 0.61 / 0.41 -> 0.34 / 0.70 / 0.39 here, but over 12 paired seed sets its mean went .545 -> .458,
     -- paired change -.09 (SD .17), not significant: seed reordering, not a mechanism
-    ["Fury L24"] = { flicker = 1.1, flickerK = 0.6, retracted = 0.2, readyShort = 46, heldReady = 337 }, -- 0.86 / 1.08 / 0.98, 0.09 / 0.17 / 0.06; 36 / 38 / 46, 337 / 332 / 313
+    -- readyShort 46 -> 53, heldReady 337 -> 406 (re-pin e2842f0a78, lane 14, R6; seeds 1-20 / 21-40 / 41-60: 53 / 47 /
+    -- 47 and 406 / 328 / 260, agreement .942 / .914 / .940, dps A/B .996 / 1.032 / .989, flicker 0.46 / 0.52 / 1.25,
+    -- oracle 0.31 / 0.49 / 1.04, retracted 0.06 / 0.06 / 0.16): (1) wowsims's new order puts Heroic Strike above Rend
+    -- and the Sunder fallback, so its `rage.lo>=40` wait is the first icon more often (held 120 -> 207 at seeds 1-20,
+    -- 198 of them with the truth at 40-60: lo under the truth at the threshold, gap CJ's class); (2) wowsims's Rend line
+    -- reads `!debuff.rend.up` (was remains<=3): a Rend MISS that lands while a main-hand swing is in flight is credited
+    -- to that swing (Events/Rows.lua route; UNIT_COMBAT carries no spell id), so the avoid's undo never runs and the
+    -- belief keeps Rend up its full 15 s while the oracle shows it ready (51 held ticks, seeds 7 and 20; 17 and 1 in the
+    -- other sets): central, exposed not caused. readyShort: Sunder / Rend / Execute pressed 0.05 s before a main-hand
+    -- swing pays (the forecast class above, traced at seed 1; 44 of 53 before the swing). Flicker kept at 1.1: seeds 41-60 read 1.25
+    -- (not the gated set)
+    ["Fury L24"] = { flicker = 1.1, flickerK = 0.6, retracted = 0.2, readyShort = 53, heldReady = 406 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;

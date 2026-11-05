@@ -399,8 +399,8 @@ M.READY = {
     -- 0.51, 35 (was 0.48, 32): harness corrected to the measured swing timing (2026-10-22); 0.44 (fix 40): Whirlwind at
     -- 57.09 and 117.06 late -> early 0.09 and 0.06
     -- { 0.52, 26 } -> { 0.90, 19 } (lane 14, replay world fix, as druid_guardian's): 6 early GCD-chain rows in grain,
-    -- the 19 left all late
-    warrior_fury = { 0.90, 19 },
+    -- the 19 left all late; -> { 0.42, 13 } re-pin e2842f0a78 (R6: the new log's 87 decisions, 13 real, all late)
+    warrior_fury = { 0.42, 13 },
     warrior_protection = { 0.38, 11 },
 }
 

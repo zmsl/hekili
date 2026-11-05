@@ -18698,23 +18698,24 @@ options.packs.fury.Fury (wowsims.com).lists.actionID	desc	Select the entry to mo
 options.packs.fury.Fury (wowsims.com).lists.actionID	name	Entry
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsunder_armor|r, if |cffffd100active_enemies=1|r|r
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcd_racials|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 12328
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1719 - |cFFFFD100|cffffd100settings.wowsims_recklessness|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 12328 - |cFFFFD100|cffffd100(fight_remains<=buff.death_wish.duration||fight_remains>(cooldown.death_wish.duration+(buff.death_wish.duration/2)))|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1719 - |cFFFFD100|cffffd100(settings.wowsims_recklessness&(fight_remains<=buff.recklessness.duration||fight_remains>(cooldown.recklessness.duration+(buff.recklessness.duration/2))))|r|r
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 12292 - |cFFFFD100|cffffd100active_enemies>1|r|r
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1680 - |cFFFFD100|cffffd100active_enemies>1|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 402927
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 23881
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1680 - |cFFFFD100|cffffd100(!action.bloodthirst.known||cooldown.bloodthirst.remains>=1.5)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 5308 - |cFFFFD100|cffffd100execute_phase|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 845 - |cFFFFD100|cffffd100(active_enemies>1&rage.lo>=40)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffoverpower_weaving|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 2458 - |cFFFFD100|cffffd100(!buff.berserker_stance.up&(!(action.bloodthirst.known||action.whirlwind.known)||((action.bloodthirst.known&cooldown.bloodthirst.remains<=0)||(action.whirlwind.known&cooldown.whirlwind.remains<=0))))|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 78 - |cFFFFD100|cffffd100(active_enemies=1&!execute_phase&rage.lo>=40)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 78 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known||cooldown.whirlwind.remains>=1.5)))&rage.lo>60)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 2687 - |cFFFFD100|cffffd100rage.lo<90|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 18499 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known||cooldown.whirlwind.remains>=1.5)))&talent.improved_berserker_rage.enabled)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 6673 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known||cooldown.whirlwind.remains>=1.5)))&buff.battle_shout.remains<=10)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 7386 - |cFFFFD100|cffffd100!action.bloodthirst.known&debuff.sunder_armor.stack<5|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffoverpower_weaving|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 5308 - |cFFFFD100|cffffd100execute_phase|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1680
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 402927
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 23881
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 78 - |cFFFFD100|cffffd100((active_enemies=1&!execute_phase&rage.lo>=40)||((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&rage.lo>60))|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 845 - |cFFFFD100|cffffd100(active_enemies>1&rage.lo>=40)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 2457 - |cFFFFD100|cffffd100((settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&(!action.overpower.known||(stance_rage_kept>=action.overpower.cost&cooldown.overpower.remains<buff.overpower_ready.remains))|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 772 - |cFFFFD100|cffffd100((action.battle_stance.known&prev.1.battle_stance)||(!action.battle_stance.known&((settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))))&(settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 772 - |cFFFFD100|cffffd100(settings.wowsims_rend_weave&!execute_phase&!debuff.rend.up&rage.lo>=10)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 2458 - |cFFFFD100|cffffd100((!action.battle_stance.known||buff.battle_stance.up)&!((buff.overpower_ready.up&rage.lo>=5&rage.lo<=73&(!action.overpower.known||cooldown.overpower.ready))||(settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)))|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 18499 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&talent.improved_berserker_rage.enabled)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 6673 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&buff.battle_shout.remains<=10)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 7386 - |cFFFFD100|cffffd100!action.bloodthirst.known&debuff.sunder_armor.stack<5|r|r
 options.packs.fury.Fury (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.fury.Fury (wowsims.com).lists.action_name	name	Action Name
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.battle_shout	|T136000:0|t Spell 6673

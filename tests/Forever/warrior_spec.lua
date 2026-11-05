@@ -954,11 +954,11 @@ describe("Forever Warrior", function()
             ["Arms (wowsims.com) heroic_strike"] = { 2, 2 },
             ["Arms (wowsims.com) cleave"] = { 2 },
             ["Arms (wowsims.com) victory_rush"] = { 1 },
-            ["Fury (wowsims.com) overpower"] = { 1 },
-            ["Fury (wowsims.com) heroic_strike"] = { 2, 2 },
+            ["Fury (wowsims.com) overpower"] = { 1, 1 }, -- re-pin: Overpower Weaving's swap line and the plain one
+            ["Fury (wowsims.com) heroic_strike"] = { 2 }, -- re-pin: wowsims's two Heroic Strike entries are one
             ["Fury (wowsims.com) cleave"] = { 2 },
-            ["Fury (wowsims.com) rend"] = { 2 },
-            ["Fury (wowsims.com) battle_stance"] = { 1 },
+            ["Fury (wowsims.com) rend"] = { 2, 2 },
+            ["Fury (wowsims.com) battle_stance"] = { 1, 1 },
             ["Fury (wowsims.com) victory_rush"] = { 1 },
             ["Protection (wowsims.com) revenge"] = { 1 },
             ["Protection (wowsims.com) heroic_strike"] = { 2 },

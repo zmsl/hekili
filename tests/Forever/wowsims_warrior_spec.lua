@@ -124,8 +124,12 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- Rage the user's ruling (2026-10-21) gates on Improved Berserker Rage, which the build lacks (1 of 60);
             -- 0.897 (61 of 68) after the harness corrected to the measured swing timing (2026-10-22): the log's swings
             -- take health at the swing, so the execute phase opens a landing lag earlier than the rows show it; 0.926 (68)
-            -- with the world's parry haste (decision 63)
-            0.92,
+            -- with the world's parry haste (decision 63). Re-pin e2842f0a78 (lane 14, R6): 0.851 (74 of 87; base 0.922):
+            -- owner R46 accepts it: the belief holds an avoid on our own swing provisional until the swing ticket closes
+            -- (1.5 s main hand, 2.0 s off hand: Events/Rows.lua, Events/Melee.lua L.PAIR_WINDOW_MS), so the dodge row the
+            -- Overpower Weaving swap reads (enemy_dodged) reaches the kit 1.57-2.17 s late, after wowsims has swapped and
+            -- cast (0.1-1.1 s after the dodge): the top misses are overpower -> bloodthirst / whirlwind / execute (3, 3, 2)
+            0.85,
             FURY_REPLAY
         )
     end)
@@ -134,7 +138,11 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- up, the rage pooling for the off-GCD Heroic Strike; the world's off hand by rank moved it from 7.4); L40 8.4 since
     -- R41 removed the leveling Hamstring (2.4 with it): Berserker Stance (no Rend or Overpower), Whirlwind cooling, five
     -- Sunders up, the rage going to Heroic Strike
-    local FURY_LIVE = { [10] = 7.6, [40] = 8.4, [60] = 6.8 } -- 7.6 / 8.4 / 6.8
+    -- Re-pin e2842f0a78 (lane 14, R41 measured limits; the build's new talents): L10 10.4 (28.4-38.8 s: Rend up, its
+    -- refresh 10 -> 0.8 s out, five Sunders up, Battle Shout up, the rage to the off-GCD Heroic Strike); L60 8.6 (24.0-32.4 s:
+    -- Bloodthirst 3.9 s and Whirlwind 8.4 s cooling, Death Wish not in the queue, five Sunders up, rage 3-28 pooling
+    -- for Bloodthirst: wowsims's pooling). L40 8.4 unchanged.
+    local FURY_LIVE = { [10] = 10.4, [40] = 8.4, [60] = 8.6 } -- 10.4 / 8.4 / 8.6
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Fury (wowsims.com) stays live at level " .. level, function()
             ws.live(
