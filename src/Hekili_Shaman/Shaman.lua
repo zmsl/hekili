@@ -314,12 +314,13 @@ local function shock(other, ids, costs, debuffKey)
 end
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace, as wowsims's logs measure them at 60: shaman_elemental 29.75 a second while casting
--- (Mana Spring Totem, Mindfulness 3/3's 15% share and gear) and 42.5 outside the rule, so spirit 12.75 (the outside
--- rate less the casting one) and mp5 29.75; shaman_enhancement 9.8 / 38.42, so spirit 28.62 and mp5 9.8. Forever's
+-- the in-combat calibration replace, as wowsims's logs measure them at 60: shaman_elemental 31.13 a second while casting
+-- (Mana Spring Totem, Mindfulness 3/3's 15% share and gear) and 45.25 outside the rule, so spirit 14.12 (the outside
+-- rate less the casting one) and mp5 31.13 (the e2842f0a78 log, Windshaper Skyborne; was 29.75 / 42.5 as a Troll);
+-- shaman_enhancement 9.8 / 38.42, so spirit 28.62 and mp5 9.8. Forever's
 -- Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76), not Classic's formula.
--- The seeds' mp5 is the rate without the totem's buff (the logs' casting rate a tick before it: 2.475 a tick in
--- shaman_elemental.log before -2.0 s, 0.480 in shaman_enhancement.log before -5.0 s), so 24.75 and 4.8; the totem's
+-- The seeds' mp5 is the rate without the totem's buff (the logs' casting rate a tick before it: 2.613 a tick in
+-- shaman_elemental.log before -2.0 s, 0.480 in shaman_enhancement.log before -5.0 s), so 26.13 and 4.8; the totem's
 -- own entry (below) adds its mp5 while the buff is up, as wowsims models it (totems.go:105-109).
 -- Improved Stormstrike (1238931, DB2 aura 134 = 50): +50% of Spirit regen while casting for 15 s.
 -- Mana Spring (DB2 aura 24, 4/6/8/10 every 2 s by rank, +5% a rank of Restorative Totems 16187): mp5 = value / 2.
@@ -342,10 +343,10 @@ spec:RegisterResource(
     {
         fsr = {
             spirit = function()
-                return state.spec.elemental and 12.75 or 28.62
+                return state.spec.elemental and 14.12 or 28.62
             end,
             mp5 = function()
-                return state.spec.elemental and 24.75 or 4.8
+                return state.spec.elemental and 26.13 or 4.8
             end,
             share = function()
                 return state.spec.elemental and 0.15 or 0
@@ -693,8 +694,8 @@ spec:RegisterTalents({
 -- it, never this block (tests/Forever/shaman_spec.lua checks it matches).
 spec:RegisterPack(
     "Elemental (wowsims.com)",
-    20261103000,
-    [[Hekili:DAzyVnkoqy4Fl7x2RrxfqY2UTx1MtQNU70URUT6Ky)Sbhyi4nGnY20OiDIF73yNwWqWnrRQuLdM3Nz8aVddzj57K4CQgipTkA1hxUm6drrrKy9HgGe3qZ2r3Il40A8))vfudCnTQl9Q9I9kwTkituVWCJhQe0CdSnTSk9x4KnZYv1azK44p)43E8PhGx5rIlz55WrrGkZFOEOlvxcDPVCTWcHeEgKDP5qbTTs3L(4)(pDP4L7sDz0YcnHwfQkP1uEyFOdn5BUkudknJVnW(ZGFOe8fxJXss5Qk8yKJRfMyZuDP08Cb)xWf7GdQGU0)KQPpmtoD13(Y3riLADJ6HWWTmDz7gZXiCYTUazIPoS6(BwverV7(BYdWIQuuWQW6ontZeCvqJeqXBO617XusMOkzqv(1SI1VBtBrrG7vdAB6(6jc)11HkTe4B1LjIIeGkXfAHgQTuSRcSx1R(9mEErR8WjYOmPxryjNMOAKyf(eD2S2F6IzZCQkysaf9EJMNHeGd1mqTEPV4VTMEHm(9bgRRP)qitSzFJWCPRBvaw5ks2MLVEPHLzZGMmDsL4t3h1lfdAoul4SSezlhEBD3ns3gqQa5o8upwL79ytjnlhgouUaVDeWtQHxnTQ9ENcIeQPmU6tRJwmoIJkHxnTODbim7LWfptna8w0XBmReLNuX2wQ5MYWzU9k6Z0KnTsL2MzV74obfvyxl0oiY2fSJl2Z)VCW6tC3OTzCkoS11fISw16vgMZiC4m6Q)OJYvV9HTvTXQJ9smPMZB7grV2mcFttHMHd(FU3xts2iQ0tFSVkY)929vsm2QrHBoPNCftPv2VdCShkU8j73faoDtfKt(dsStcz28LwsK4tmiK4mjdpdmQztxRbrJX9cX6AD8r8olXpCHehmvgv3mr1WXzKTYxOV1g6B9azKDZfXLA7mW)O3mS3g(gO9AhnOVZd6E7Pl4PCnaU3dGj22ZH538GzWop6e63w7XxBIXYOjbza4B6PDQkd7J)WyPnVgBqp1JmG(u7(apNoe98SLJLxQ54K2fw1tnc9vZrDb89g9k7B0l95lMaX8xC)3xNRFXRcDhjXn2ZoWYCDi6nvZp2YiMJhFzUUd9P1OHyMbYXHzoBRc3rAMHYRJ28t1T4md68t0K4mJ9qE5blTvxkKK4pd7yvmCm2)(LPuTBt()]]
+    20261104000,
+    [[Hekili:TEzuVTTnqC8pl9LmhmdjzVKMSG6bKHUH2I1GbO(SKPepzXAjsbsQyyGb9zFhLJLOKfJnAdcqafjVF3Xt8(RZrlI(wuiLOHONwgS89lweCtqqquOEFfefwrs3s2Gd4Ks8))vbucCnPOz9SDIDkwPYlvuETzJ7leeQbwsnRq)zEuYKCvvqAuy4NE8Rp(0dWrErH5mkfoyeOsD7QhAwRZHM1VmNFMqcpdYM1uiJuxOBw)4)(pnRXPBwBZOM5BCTYxLtkjC)ox7BIxQYxdknJVXR9rVVRe8RNJ(ss4Qc8yqXXcJVzQM1ekvW)fCWwyVYRz9hjAYdtetZ(6N)gcjxRRup47VHPZRtmhd)rB9AKjg6WY7Vzzwa5U7VH6HjvPiJvG5DsQMj4kVkjGgNq0R2HHKmwLZGc6Cw2Q3LuNL5zpRxDvZxoXWFDLVslb(gDESilgisCGwOHYwkTJ8AN1P97yCAwTC)jMrysNgHPCsSQsIz4tSRnQDhUy0mLvzmjGgDLXMNHyGdLmqTAHl)VPKCHm(JEgRkjFxiJBJ(kHzQ51kaZCzXBsPRwyyzw0Rkvhxi(W9bDMIoLcLcolnwwZHx3U7gyNzRmm(udnYElTrKMrH(ZKnVBhW7Ku4SXjTRSYhsOKW4QpSk46HECqgC24C2fGWSwmx8mXaWzoh3yxXjM5v4LJ9NM9M9UdB3lRaLMW78I0TEB5ID8)JcTfd2luxniqskecAS5s8BnyqQa5wmz)gdonhtOXfSn5AUH(zsGfKNjXj1sL(N2ZwlnptKwRwT0WCcd7FRp4DzReJT9TzJwRnAFO4Qj0Sk)nX)XdACIOqp(29Ya37T5lrHOGQcxC0xEkykTQ9RDh(sbo8P2V(bCssbqJ(ZOqRxAMfFr4nk8ezGOWujwIkzeZI2carA0VxiwBbcxeVRL4VDHe7KomgDZiJ6pndepC55BB98ToGmquXgXLkUyG)ENryNyZRG2POJb9Doq3jczdEmxdG7VWu(jIvdIy3LEoQ9mU(3Vqx3RJ9Z7ZfbxQt704EdC64cWJozKE35ExTyCf3ro9cHVbb74IWEGVQAO1DV(1XhmIHgTcd6XLQ9OpvO06QxV2AhVd5dxvTdflDv5VSTYFHRQZrqm)f21S1uYQhn0U)uBFpz3RtjK2j(mDpSdyoSx2Per7cRbD0obKdD2Ewjv7(BNGYX(C)HuvptxV)aIPNPh4OxEXsQ15czu4NGTScg(BA(7x(jlTlh9)p]]
 )
 spec:RegisterPack(
     "Enhancement (wowsims.com)",

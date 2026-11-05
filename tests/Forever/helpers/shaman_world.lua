@@ -247,7 +247,8 @@ M.MAP = {
             aura(W, X, e, "rage_of_the_farseer")
         end,
     },
-    -- The Troll racial (Elemental's build): its buff on us; its haste on the casts is not modelled.
+    -- The Troll racial (Elemental's build before the re-pin, now Windshaper Skyborne: unused): its buff on us; its haste
+    -- on the casts is not modelled.
     berserking = {
         effect = function(W, e, _, X)
             aura(W, X, e, "berserking")
@@ -335,10 +336,11 @@ local PACKS = {
             [1223033] = 3, -- Mindfulness (wowsims's tree; not in the DB2's Talent table)
         },
         weapon = { 40, 70, 3.0 },
-        -- wowsims's log (shaman_elemental.log): 5590 mana, 29.75 a second while casting (OtherID 2 Tag 1, Mana Spring
-        -- Totem and Mindfulness's share included: 24.75 without the totem's 5) and 42.5 outside the five-second rule
-        mana = 5590,
-        fsr = { 12.75, 24.75, share = 0.15, auras = { [10494] = { mp5 = 5 } } },
+        -- wowsims's log (shaman_elemental.log, re-pin e2842f0a78: Windshaper Skyborne, was 5590 / 29.75 / 42.5 as a
+        -- Troll): 5650 mana, 31.13 a second while casting (OtherID 2 Tag 1, Mana Spring Totem and Mindfulness's share
+        -- included: 26.13 without the totem's 5) and 45.25 outside the five-second rule (Tag 2)
+        mana = 5650,
+        fsr = { 14.12, 26.13, share = 0.15, auras = { [10494] = { mp5 = 5 } } },
         distance = 20, -- the build's distanceFromTarget: the shocks reach 20 yd
         uptime = { "flame_shock" },
     },

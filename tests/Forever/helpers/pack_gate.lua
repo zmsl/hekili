@@ -197,7 +197,13 @@ M.FLICKER = {
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
     -- mp5 as its own entry): 0.13 / 0.17 / 0.08, oracle 0.05 / 0.07 / 0.05, floor kept
     -- 0.2 -> 0.1 (decision 63's rule, gap CE, the whole-number read gone)
-    ["Elemental"] = { flicker = 0.1, retracted = 0, heldReady = 301 }, -- 0.02 / 0.03 / 0.10, 0 (oracle 0.05 / 0.07 / 0.05)
+    -- re-pin e2842f0a78 (Task 11; the world's regen from the Windshaper log, 5650 / 31.13 / 45.25, was 5590 / 29.75 /
+    -- 42.5): heldReady 301 -> 302 (302 / 299 / 302); readyShort 0 -> 1 (ruling R27), the one traced event: seed set
+    -- 1-20, t 183.20 (the fight's last tick), Lava Burst shown ready at cost 238.5 with the truth at 103.2 and our
+    -- engine's mana 198.1 (belief over the truth by ~95, still under the cost: the icon priced it lower, a believed
+    -- Clearcasting the world's auras did not hold); belief-side, gaps.md CT. With the old world regen 0. Flicker
+    -- 0.00 / 0.00 / 0.00 (oracle 0.05 / 0.05 / 0.07): ceiling 0.1 kept
+    ["Elemental"] = { flicker = 0.1, retracted = 0, heldReady = 302, readyShort = 1 }, -- 0.02 / 0.03 / 0.10, 0 (oracle 0.05 / 0.07 / 0.05)
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996

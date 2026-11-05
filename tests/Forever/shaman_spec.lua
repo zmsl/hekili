@@ -122,7 +122,7 @@ describe("Forever Shaman", function()
             w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
-        assert.are.same({ 12.75, 24.75, 0.15 }, seed("elemental")) -- Mindfulness 3/3: 15% while casting; no totem
+        assert.are.same({ 14.12, 26.13, 0.15 }, seed("elemental")) -- Mindfulness 3/3: 15% while casting; no totem; re-pin log
         assert.are.same({ 28.62, 4.8, 0 }, seed("enhancement"))
         assert.are.same({ aura = "improved_stormstrike", share = 0.5 }, r.models.improved_stormstrike)
         assert.are.same({ 2, 1223031, 2 }, w.talents.improved_stormstrike)

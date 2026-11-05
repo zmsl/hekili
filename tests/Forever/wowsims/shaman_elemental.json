@@ -1,9 +1,6 @@
 {
   "encounter":{
-    "executeProportion20":0.2,
-    "executeProportion25":0.25,
     "executeProportion35":0.35,
-    "executeProportion90":0.9,
     "duration":180,
     "targets":[{
         "minBaseDamage":2601,
@@ -15,7 +12,7 @@
         "parryHaste":true,
         "mobType":"MobTypeMechanical"
       }],
-    "executeProportion45":0.45
+    "executeProportion20":0.2
   },
   "raid":{
     "parties":[{
@@ -57,10 +54,10 @@
               "mhImbueId":20749,
               "foodId":13935,
               "resourcePotId":13444,
-              "elixirIds":[250343,9155,250338,250341,250351,13452,250337],
+              "elixirIds":[250343,9155,250338,250341,250337],
               "extraIds":[8423]
             },
-            "race":"RaceTroll",
+            "race":"RaceWindshaperSkyborne",
             "apiVersion":2,
             "elementalShaman":{
               "options":{
@@ -80,10 +77,10 @@
                 },{
                   "id":19050
                 },{
-                  "id":272411,
+                  "id":279270,
                   "enchant":2621
                 },{
-                  "id":10246,
+                  "id":10143,
                   "randomSuffix":12734,
                   "enchant":1893
                 },{
@@ -99,13 +96,12 @@
                   "id":252486,
                   "enchant":1509
                 },{
-                  "id":10247,
-                  "randomSuffix":12734,
+                  "id":254129,
                   "enchant":8492
                 },{
                   "id":272407
                 },{
-                  "id":13001
+                  "id":19147
                 },{
                   "id":272438
                 },{
@@ -114,7 +110,7 @@
                   "id":22688,
                   "enchant":8217
                 },{
-                  "id":11904
+                  "id":15968
                 },{
                   "id":23199
                 }]
@@ -146,7 +142,8 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":25361
+                        "spellId":10442,
+                        "rank":4
                       }
                     }
                   },
@@ -412,6 +409,54 @@
                 },{
                   "action":{
                     "condition":{
+                      "dotIsActive":{
+                        "spellId":{
+                          "spellId":10448,
+                          "rank":5
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":16166
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "dotIsActive":{
+                        "spellId":{
+                          "spellId":10448,
+                          "rank":5
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":20572
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "dotIsActive":{
+                        "spellId":{
+                          "spellId":10448,
+                          "rank":5
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":20554
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
                       "cmp":{
                         "op":"OpGt",
                         "rhs":{
@@ -486,14 +531,6 @@
                       "spellId":{
                         "spellId":10414,
                         "rank":7
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":16166
                       }
                     }
                   }

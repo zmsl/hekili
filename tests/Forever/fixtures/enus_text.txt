@@ -17182,18 +17182,20 @@ options.packs.elemental.Elemental (wowsims.com).lists.actionID	desc	Select the e
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	name	Entry
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r [Item 13444] - |cFFFFD100|cffffd100mana.pct_lo<80|r|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r [Item 12662] - |cFFFFD100|cffffd100mana.pct_lo<70|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20554
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Use Items]|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 16190 - |cFFFFD100|cffffd100mana.pct_lo<50|r|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 3599 - |cFFFFD100|cffffd100(active_enemies=1&totem.fire.remains<=0)|r|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 8190 - |cFFFFD100|cffffd100(active_enemies>1&totem.fire.remains<=0)|r|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 408341 - |cFFFFD100|cffffd100active_enemies>1|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 421 - |cFFFFD100|cffffd100active_enemies>1|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 408490 - |cFFFFD100|cffffd100(!action.flame_shock.known||debuff.flame_shock.up)|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 8050 - |cFFFFD100|cffffd100debuff.flame_shock.remains<=0|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 8042 - |cFFFFD100|cffffd100buff.revelation.up|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 16166
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 403 - |cFFFFD100|cffffd100mana.pct_lo<20|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 403
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 16166 - |cFFFFD100|cffffd100(!action.flame_shock.known||debuff.flame_shock.up)|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 20572 - |cFFFFD100|cffffd100(!action.flame_shock.known||debuff.flame_shock.up)|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 20554 - |cFFFFD100|cffffd100(!action.flame_shock.known||debuff.flame_shock.up)|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 421 - |cFFFFD100|cffffd100active_enemies>1|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 408490 - |cFFFFD100|cffffd100(!action.flame_shock.known||debuff.flame_shock.up)|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 8050 - |cFFFFD100|cffffd100debuff.flame_shock.remains<=0|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 8042 - |cFFFFD100|cffffd100buff.revelation.up|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 403 - |cFFFFD100|cffffd100mana.pct_lo<20|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 403
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	name	Action Name
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r

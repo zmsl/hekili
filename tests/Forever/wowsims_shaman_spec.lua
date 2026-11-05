@@ -61,22 +61,33 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     local LIVE60 = 8.2 -- 8.0 before the world's parry haste (decision 63: every seeded fight reordered)
     for _, level in ipairs({ 10, 40, 60 }) do
         it(PACK .. " stays live at level " .. level, function()
-            ws.live(PACK, content("shaman_enhancement", sw.Enhancement, PACK, level), math.max(6, LIVE60))
+            ws.live(
+                PACK,
+                content("shaman_enhancement", sw.Enhancement, PACK, level),
+                level == 60 and math.max(6, LIVE60) or 6
+            )
         end)
     end
 
     local ELE = "Elemental (wowsims.com)"
     -- the replay floor, measured (0.853 before the translator's multidot, central fix 28; 0.937 of 95 first clean
-    -- run), never lowered; the misses are shared gaps (tools/wowsims/specs/shaman_elemental.lua's header)
+    -- run), never lowered; the misses are shared gaps (tools/wowsims/specs/shaman_elemental.lua's header). 0.93 -> 0.92
+    -- re-pin e2842f0a78 (Task 11, ruling R26): 0.928 (97), was 0.957 (92); the central gaps.md "Travel time" row (3 of
+    -- the 7 misses, Revelation spent at Lava Burst's cast end; 0.959 without them) plus gap BL; flicker 0.00/min
     it(ELE .. " follows wowsims's casts", function()
-        ws.gate(ELE, content("shaman_elemental", sw.Elemental, ELE, 60), "shaman_elemental", 0.93, ELE_REPLAY)
+        ws.gate(ELE, content("shaman_elemental", sw.Elemental, ELE, 60), "shaman_elemental", 0.92, ELE_REPLAY)
     end)
     -- the pack's own worst idle at 60, seconds rounded up to 0.1: wowsims runs its mana out (its log sits under 200 of
-    -- 5590 from ~110 s, Lightning Bolt 3-6.7 s apart), so the priority waits for mana
+    -- 5590 from ~110 s, Lightning Bolt 3-6.7 s apart), so the priority waits for mana. 5.0 -> 5.0 at the re-pin (5650
+    -- mana); L10/L40 keep the 6 s bar, only L60 may follow LIVE60 (R22, both packs)
     local ELE_LIVE60 = 5.0
     for _, level in ipairs({ 10, 40, 60 }) do
         it(ELE .. " stays live at level " .. level, function()
-            ws.live(ELE, content("shaman_elemental", sw.Elemental, ELE, level), math.max(6, ELE_LIVE60))
+            ws.live(
+                ELE,
+                content("shaman_elemental", sw.Elemental, ELE, level),
+                level == 60 and math.max(6, ELE_LIVE60) or 6
+            )
         end)
     end
 end)
