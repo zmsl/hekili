@@ -330,9 +330,9 @@ describe("the replay character's pools (wowsims.logged)", function()
         local ws = require("Forever.helpers.wowsims")
         local pw = require("Forever.helpers.paladin_world")
         local c0 = pw.Protection.character()
-        assert.are_not.equal(2597, c0.power.max) -- the class world's sheet
-        local c = ws.logged(pw.Protection, "paladin_protection").character() -- "of 2597 total"
-        assert.are.same({ c0.power.type, c0.power.token, 2597 }, { c.power.type, c.power.token, c.power.max })
-        assert.are_not.equal(2597, pw.Protection.character().power.max) -- the base's table untouched
+        assert.are_not.equal(2627, c0.power.max) -- the class world's sheet
+        local c = ws.logged(pw.Protection, "paladin_protection").character() -- "of 2627 total" (re-pin e2842f0a78; was 2597)
+        assert.are.same({ c0.power.type, c0.power.token, 2627 }, { c.power.type, c.power.token, c.power.max })
+        assert.are_not.equal(2627, pw.Protection.character().power.max) -- the base's table untouched
     end)
 end)

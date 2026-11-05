@@ -189,7 +189,7 @@ local PACKS = {
             "righteous_fury",
             "retribution_aura",
         },
-        talents = { [1310994] = 1, [20925] = 1, [20473] = 1 },
+        talents = { [1310994] = 1, [20925] = 1, [20473] = 1, [1328544] = 1 }, -- Shieldsworn: the pin's preset (R28)
         weapon = { 70, 130, 2.7 },
         fsr = { 17.38, 0 },
         uptime = { "consecrated_ground" },

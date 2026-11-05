@@ -110,7 +110,7 @@ describe("Forever Paladin", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 4, 14, 16, 16 }, n)
+        assert.are.same({ [0] = 5, 14, 16, 16 }, n)
     end)
 
     it("declares mana under the five-second rule", function()
@@ -388,6 +388,15 @@ describe("Forever Paladin priorities", function()
         local _, sof = line("Protection (wowsims.com)", "default", "seal_of_fury")
         local _, hs = line("Protection (wowsims.com)", "default", "holy_shield")
         assert.are.same({ 2, 2 }, { sof.focus, hs.focus })
+    end)
+
+    it("Protection (wowsims.com): Holy Shock reads the Consecrated Ground talent (talentIsKnown 1310905)", function()
+        line(
+            "Protection (wowsims.com)",
+            "default",
+            "holy_shock",
+            "(!talent.consecrated_ground.enabled||debuff.consecrated_ground.up)"
+        )
     end)
 end)
 

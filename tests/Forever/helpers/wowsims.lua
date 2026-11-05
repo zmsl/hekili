@@ -332,7 +332,8 @@ M.READY = {
     mage_fire = { 0.45, 10 }, -- 0.450, 10
     -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
     mage_frostfire = { 0.42, 9 }, -- 0.420, 9 (Task FFB, ruling M13)
-    paladin_protection = { 0.86, 7 },
+    -- { 0.86, 7 } -> { 0.00, 0 } re-pin e2842f0a78: real 0 once Holy Shield's block hits are procs (PROT_REPLAY)
+    paladin_protection = { 0.00, 0 }, -- 0.000, 0
     paladin_retribution = { 0.29, 10 },
     -- 1.500, 36 (Priest lane, Task 14; first clean run on 30e92574+): Mind Flay's 3 s channel, the next icon ready at
     -- the GCD's end inside it (Arcane's Missiles likewise, about 0.9 s)

@@ -275,6 +275,8 @@ spec:RegisterTalents({
     swift_judgement = { 0, 1310994, 1 },
     holy_conduit = { 0, 1237268, 2 },
     sanctified_judgement = { 0, 1311074, 3 },
+    -- Consecrated Ground (wowsims talents_holy.go: Holy, 2 points; DB2 spell only): the talent, not the target's mark
+    consecrated_ground = { 0, 1310905, 2 },
 })
 
 spec:RegisterAuras({
@@ -575,8 +577,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Protection (wowsims.com)",
-    20261103000,
-    [[Hekili:LsvtVPnqq0Fl5sBqfzdK0Miu5qQIQAIsrrY58ApE3X4nS41A)OPCX)27SoaXyGOi1lMLzEZ7n(n7y2y2tSeb4q28jJM8TXJhDXOrJyjU11ilPg4lHf0Hkyf98rJ2HCNux1KD(l6xSYv2iUE1GaY1knicSL7Lk3DvS8JsSTg5et38Wn3E38P17yKLukfc81Yql)DuBAtMReBY2elUqBW)GMMmbwaELRj7MhFOjJc3KThjEzCqEBCnOaHSk(n5JHALnEdbr0FIE2QRgmKKYavwf9IiOZ6G0sBtgie6QpthwIRTrnz3coy6rAPZ)9DprKu6C12PXXlKUsFE4TiUh0beNuNJtU(YjfJGRU(srezRgDHurwp02L2OAdsfNdUzg0zK5(q4uWBGHYIzNL7lkI6NjYx3C)be8LzXweuP6IuYnt5gVfeO5nAow2Uun7zVybUcRCd9wKqwKUGlMnEhGGcVilCPFeGBeRWBwpSqZ92ztcTY571kHS0R3kqwz)E4zjujs3e4tNDiwF9GUQWPFqUbAVp0jEPwTo1wQ5lpsujQeBBPdttw9sSBy8VAdxAx1CplHMR2WD79xbusRZ2U3961n64829qScYvOG9dwshJkKCZ8NLSZkzoI1pyr9McHsVOxPCJ0HgjWs()D8oc3jdlP1ddDnP)L90FBfDNqbCF9e4EBIfq9T3hvycUV8x9Uf0otdWU(eW2oJzbVmz3k1XgKBlP)szxl)KRThBi33B7UEEiPNyjUTXPwh8Usnv2VWLsLK(C1p381O20S)b]]
+    20261105006,
+    [[Hekili:1w1BVPTpq4pl9nDGwxcWO)zOXl4NQMwR6QQu6RDIj(cXfJDK)ZyivLp7ZoKqtcj8Rsv7nbJVh)8C3578HgJEgfqWAa94KrtUA84rxoA0vOa9UmafKHJxJxzxWXBSFFsk0qSMk45rd2k2QOBuEXIndDi3XeyIJTLgktFhhTStIvzqSLPfpS427ECw2bgrbPucb2FmqfFc1MLhPtH8OY98tes43GmpIajydtNhT4PhYJSBNh1Ged13jVYpdZWek3)n59XzmLFjbE2)49IsWhEHvkjMRy2aHyxlCstv5rycrW)KDXAyNYlp6wSgpRdxAWVU7zljPADMAMV)kQo1S0ff(TGo0YP1ZHj3mDsYi813mL4ztRsrcLzt94cVu5Ljb7HxI1ZL0vPAqyuHjg5UlOjZpBPjjXR5(EMS87p6WFEUVe0s6sJZqi2iX1iOLLEPqbywOij0EzeglnkmbKVrtxwRt18xmKvWgGRVWOalYKWvXK5JpaWPWwAIoShGoPgC2EWEhW4TMl2YFnwiye7IAgKWgmLR((8bDyKyduhrFz0WHn8GYOOihNiInQ5tkeUrmwKPR439nfZjHLBC(zhJ1K1qLy7pq8EpO((Pc2UqvQiE9(GvJzoN9aCGeUskmCIhWXlza5vcuiwhiAjzj1uGrQIRJnBlewd13g(JqgtvBEpPOkVDViQTcjVYnpVYwnV4GT(ZStMMFpkW2SOCpy08DfgvPvfpMTVh2U8XIh3kPf9FOGALpoJLnvOGdLbiTL135HAvBIcILuniPyuqVvLFOYsNZ91woxnn)WfK1cTAwqbfxPU8Iv)PT0V6e1lGD4UShCVvq3mF9)xyF6kBNMxDAnD1yndMRp5bkQ9DWUPhyv9comFR37L)fDbVJBkTB2r5t1D1kurqZPfnC8UNM0vlYbYAn5Od6oE2sxL1TdV6ZqoM0EM0uKfS5bSrNkSh7NWAkJAhj)JYjUfMr)n]]
 )
 
 -- The hand-built lists the wowsims.com priorities replaced: a saved choice of one falls back to its spec's default.

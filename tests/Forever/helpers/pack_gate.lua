@@ -164,7 +164,11 @@ M.FLICKER = {
     -- was that read; gap AB's agreement cost stands
     -- heldReady 252 -> 326 (seeds 1-20; 243 with Paladin.lua and paladin_world as of its parent): Swift Judgement as a
     -- second Judgement on its own 60 s cooldown (hotfix 113554, 66573cf37)
-    ["Protection"] = { flicker = 0.2, retracted = 0, heldReady = 326 }, -- 0.10 / 0.17 / 0.12, 0 (oracle 0.07 / 0 / 0.07)
+    -- re-pin e2842f0a78 (Task 12; the world's Protection takes the preset's Shieldsworn, R28: Holy Strike every 6 s):
+    -- agreement 0.916 / 0.897 / 0.901 -> 1.000 / 1.000 / 1.000 (gap AB's Judgement vs Holy Strike near-tie gone with the
+    -- cadence); flicker 0.2 -> 0.1 (0.02 / 0.02 / 0.02, oracle 0.00 / 0.05 / 0.03); heldReady 326 -> 296 (296 / 284 /
+    -- 293, was 326 / 285 / 310)
+    ["Protection"] = { flicker = 0.1, retracted = 0, heldReady = 296 }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.00 / 0.05 / 0.03)
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was

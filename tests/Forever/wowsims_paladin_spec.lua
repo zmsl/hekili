@@ -49,13 +49,17 @@ local EXORCISM_ANY = { 415068, 415069, 415070, 415071, 415072, 415073 }
 -- The seals' hits (Seal of Command 20424, Seal of Righteousness 25713, Seal of Fury 20418, Vindication 440667) log
 -- under their own IDs, never a seal's: no kit key, nothing to list in `procs`.
 local REPLAY = {}
+-- Protection's GCD-0 Casting lines under a kit ID are the procs' hits, not presses: Holy Shield's block damage
+-- {SpellID: 20928, Tag: 2} and a Shieldsworn Holy Strike's {20928, Tag: 1328544} (each restarted the believed 10 s
+-- cooldown: holy_shield -> holy_strike, re-pin e2842f0a78) and Retribution Aura's {10301, Tag: 2}
+local PROT_REPLAY = { procs = { ["20928:2"] = true, ["20928:1328544"] = true, ["10301:2"] = true } }
 
 describe("the Paladin wowsims.com packs #slow #wowsims", function()
     pw.Retribution.character() -- fills IDS
     pw.Protection.character()
 
     -- Mana: its regen per second, { from 5 s after the last spend, inside the five-second rule }
-    -- (Retribution: 2.19 and 0.825 each 0.1 s; Protection: 1.738 and none).
+    -- (Retribution: 2.19 and 0.825 each 0.1 s; Protection: 1.73 and 0.08 in the e2842f0a78 log, was 1.738 and none).
     local RET = wowsims(pw.Retribution, set(EXORCISM_ANY), { fsr = { [0] = { 21.9, 8.25 } } })
     local RET_LIVE = wowsims(pw.Retribution, set(EXORCISM_ANY), {})
 
@@ -86,7 +90,7 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
 
     -- The build takes no Holy Shock.
     local PROT_DROP = set(pw.Protection.IDS.holy_shock, EXORCISM_ANY)
-    local PROT = wowsims(pw.Protection, PROT_DROP, { fsr = { [0] = { 17.38, 0 } } })
+    local PROT = wowsims(pw.Protection, PROT_DROP, { fsr = { [0] = { 17.3, 0.8 } } })
     local PROT_LIVE = wowsims(pw.Protection, PROT_DROP, {})
 
     -- the replay floor: 0.750 (28) was measured on a fight the target never swung in (the export set no tank, GAP AE);
@@ -96,7 +100,11 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     it("Protection (wowsims.com) follows wowsims's casts", function()
         local C = content("paladin_protection", PROT, "Protection (wowsims.com)", 60)
         -- 0.964 on central fix 12 (GAP R) was the untanked fight's; the tanked one's floor is 0.62 (30/48)
-        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.62, REPLAY)
+        -- 0.62 -> 0.84 re-pin e2842f0a78: 0.846 (52) top [holy_shield -> holy_strike 6; seal_of_fury -> holy_strike 2]
+        -- (0.788 before PROT_REPLAY's procs: Holy Shield's block hits restarted its believed cooldown); the 8 left are
+        -- each cast right after a Shield Specialization return (1310925, 105 mana on a block, unseen) with the belief
+        -- under the truth; 2 of them also Holy Shield's price, ours 240 (DB2) vs wowsims's 195
+        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.84, PROT_REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Protection is out of mana from 24 s),
     -- so its longest wait is for mana. 10.4 on central fix 22 rebased (the live world's presses resolve from the driving
@@ -106,11 +114,17 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- 12.6 at L60 from Swift Judgement as a second Judgement (hotfix 113554, 66573cf37: no Judgement reset, no free
     -- Judgement charge; wowsims swift_judgement.go): a mana wait for Holy Strike, Retribution Aura the only usable
     -- on-GCD press (L10 8.6, L40 8.4)
-    local PROT_LIVE60 = 12.6
+    -- 12.6 -> 4.6 re-pin e2842f0a78 (the new build's Shieldsworn: Holy Strike every 6 s); L10/L40 keep the 6 s bar,
+    -- only L60 may follow LIVE60 (R22): L10 8.6 -> 4.4 with the recipe's Seal of Fury refresh (R28); L40 8.4, its own
+    -- measured limit (R28, a one-bracket exception to R7): out of mana, nothing castable; a filler would spend mana the
+    -- character lacks (10.6 s with the refresh, so the refresh stops at Holy Shield)
+    local PROT_LIVE60 = 4.6
+    local PROT_LIVE40 = 8.4
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()
             local C = content("paladin_protection", PROT_LIVE, "Protection (wowsims.com)", level)
-            ws.live("Protection (wowsims.com)", C, math.max(6, PROT_LIVE60))
+            local limit = level == 60 and math.max(6, PROT_LIVE60) or level == 40 and PROT_LIVE40 or 6
+            ws.live("Protection (wowsims.com)", C, limit)
         end)
     end
 end)

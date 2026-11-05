@@ -19780,13 +19780,13 @@ options.packs.protection.Protection (wowsims.com).lists.actionID	desc	Select the
 options.packs.protection.Protection (wowsims.com).lists.actionID	name	Entry
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 12975 - |cFFFFD100|cffffd100(!(buff.last_stand.up||(action.shield_wall.known&buff.shield_wall.up))&health.pct<=40)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 20271
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1310994
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1310994 - |cFFFFD100|cffffd100(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0))|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 871 - |cFFFFD100|cffffd100(health.pct<=35&!((action.last_stand.known&buff.last_stand.up)||buff.shield_wall.up))|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 1311649 - |cFFFFD100|cffffd100(buff.seal_of_fury.remains<mainhand_remains&!buff.seal_of_fury.up)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20594 - |cFFFFD100|cffffd100((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=50)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1299026 - |cFFFFD100|cffffd100((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=50)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 26573
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1311606
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1311606 - |cFFFFD100|cffffd100(!talent.consecrated_ground.enabled||debuff.consecrated_ground.up)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.pct<=30|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 12328
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 20925
@@ -19795,6 +19795,7 @@ options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cF
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 2565 - |cFFFFD100|cffffd100(rage.lo>=40||(!buff.revenge_usable.up&(!action.revenge.known||cooldown.revenge.remains<=1.5)))|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 879
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 12292 - |cFFFFD100|cffffd100active_enemies>1|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1311649 - |cFFFFD100|cffffd100!talent.shieldsworn.enabled&!talent.holy_shield.enabled&buff.seal_of_fury.remains<24|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>2|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 23922
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 402927
@@ -19916,6 +19917,7 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.rend	|T
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.retaliation	|T136000:0|t Spell 20230
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.retribution_aura	|T136000:0|t Spell 7294
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.revenge_stun	|T136000:0|t Spell 12798
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.righteous_fury	|T136000:0|t Spell 25780
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_fury	|T136000:0|t Spell 1311649
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_righteousness	|T136000:0|t Spell 20154
@@ -20230,6 +20232,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.echo_
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.echo_of_fury	|T136000:0|t Spell 1311701
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.echo_of_righteousness	|T136000:0|t Spell 1311704
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.retribution_aura	|T136000:0|t Spell 7294
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.righteous_fury	|T136000:0|t Spell 25780
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_fury	|T136000:0|t Spell 1311649
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_righteousness	|T136000:0|t Spell 20154
