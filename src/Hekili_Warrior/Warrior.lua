@@ -1957,7 +1957,7 @@ spec:RegisterSetting("maintain_demoralizing_shout", false, {
 spec:RegisterSetting("maintain_thunder_clap", false, {
     type = "toggle",
     name = L["Maintain Thunder Clap"],
-    desc = L["Keep Thunder Clap's slow on the target (the leveling filler before Mortal Strike). Off: the priority never " .. "shows Thunder Clap."],
+    desc = L["Keep Thunder Clap's slow on the target, recasting it only when it is missing (that includes the levels before Mortal Strike). Off: the priority never " .. "shows Thunder Clap."],
     width = "full",
     sim = true,
 }, "arms")

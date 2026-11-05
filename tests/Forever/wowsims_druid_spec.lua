@@ -110,26 +110,30 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- (rule 15; user, 2026-10-21; off in game, on in the harness): off, a level 10 bear in Bear Form with the rage for it and the Roar already on the
     -- target is shown something else
     it("Guardian (wowsims.com)'s Demoralizing Roar filler is skipped with its setting off", function()
-        local function first(on)
-            local c = content("druid_guardian", W.Guardian, "Guardian (wowsims.com)", 10).character()
+        local function first(on, up, level, aura, name, rage)
+            level, aura, name = level or 10, aura or "demoralizing_roar", name or "Demoralizing Roar"
+            local c =
+                content("druid_guardian", W.Guardian, "Guardian (wowsims.com)", level, rage and { talents = {} }).character()
             local p = c.power
-            c.power = { type = p.type, token = p.token, max = p.max, value = 30 } -- Roar's 10 (a copy: the world's own is shared)
+            c.power = { type = p.type, token = p.token, max = p.max, value = rage or 30 } -- Roar's 10 (a copy: the world's own is shared)
             local H = headless.new({ character = c, pack = "Guardian (wowsims.com)" })
             assert.are.same({}, H.loadErrors)
             local hk = H.Hekili
             local settings = hk.DB.profile.specs[hk.State.spec.id].settings
             assert.is_false(settings.maintain_demoralizing_roar) -- the in-game default (a direct boot is in game)
             settings.maintain_demoralizing_roar = on
-            H.ctl.inRange.target, H.ctl.level.target = true, 10
+            H.ctl.inRange.target, H.ctl.level.target = true, level
             H.Fire("PLAYER_TARGET_CHANGED")
-            H.ctl.auras.target.HARMFUL[1] = { -- the Roar up: keep_up's own Roar line stands aside
-                name = "Demoralizing Roar",
-                spellId = hk.Class.auras.demoralizing_roar.id,
-                expirationTime = H.ctl.now + 30,
-                duration = 30,
-                applications = 1,
-                sourceUnit = "player",
-            }
+            if up then -- the debuff on the target: the leveling line (R45) and keep_up both stand aside
+                H.ctl.auras.target.HARMFUL[1] = {
+                    name = name,
+                    spellId = hk.Class.auras[aura].id,
+                    expirationTime = H.ctl.now + 30,
+                    duration = 30,
+                    applications = 1,
+                    sourceUnit = "player",
+                }
+            end
             H.Fire("UNIT_AURA", "target")
             assert.is_true(hk.Engine.Subscribe("Primary", function() end))
             assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
@@ -145,11 +149,16 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         f:close()
         assert.matches("\n# Setting maintain_demoralizing_roar %(", simc)
         assert.matches(
-            "\nactions%+=/demoralizing_roar,if=settings%.maintain_demoralizing_roar&%(!action%.lacerate%.known",
+            "\nactions%+=/demoralizing_roar,if=settings%.maintain_demoralizing_roar&%(!debuff%.demoralizing_roar%.up&!action%.lacerate%.known",
             simc
         )
-        assert.matches("demoralizing_roar", first(true))
-        assert.not_matches("demoralizing_roar", first(false))
+        assert.matches("demoralizing_roar", first(true, false))
+        assert.not_matches("demoralizing_roar", first(true, true)) -- R45: only while the debuff is down
+        assert.not_matches("demoralizing_roar", first(false, false))
+        -- Faerie Fire likewise (no talents: Lacerate silences the line), at 5 rage so only it is affordable
+        local ff = "faerie_fire"
+        assert.matches(ff, first(false, false, 30, ff, "Faerie Fire (Feral)", 5))
+        assert.not_matches(ff, first(false, true, 30, ff, "Faerie Fire (Feral)", 5))
     end)
     -- The pack's own worst idle at L10 and L40, seconds, limit 6.0: L10 presses the recipe's leveling Maul (wowsims's
     -- list has nothing else before Primal Bite at 25: 11.8 s idle without it); before Lacerate (42) its leveling
@@ -184,7 +193,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
                 end
                 ws.live("Guardian (wowsims.com)", C, 6.0, 30, "median")
             else
-                ws.live("Guardian (wowsims.com)", C, 6.0)
+                -- R45 (R41): the L10 bear's Roar line fires only with the debuff down, so with Roar up (30 s) the bar
+                -- idles: nothing useful to cast (Roar up, Maul off the GCD, Faerie Fire not learned before 30): 0.2 -> 10.2 s
+                ws.live("Guardian (wowsims.com)", C, level == 10 and 10.2 or 6.0)
             end
         end)
     end
