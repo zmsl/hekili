@@ -1392,14 +1392,17 @@ describe("the wowsims APL translator", function()
             "\nactions%+=/blood_fury,use_off_gcd=1,if=([^\n]*)\nactions%+=/adrenaline_rush,if=([^\n]*)\n"
         )
         assert.is_truthy(bf and bf:find("cooldown.adrenaline_rush.ready", 1, true)) -- the sequence's condition
-        local at, rest = ar:match("^(.-%)%))&(.*)$")
-        assert.are.equal("((action.blood_fury.known&prev.1.blood_fury)|(!action.blood_fury.known&" .. bf .. "))", at)
+        -- split at the first term's known end (the pin's sequence condition nests `))&` inside bf, re-pin e2842f0a78)
+        local at = "((action.blood_fury.known&prev.1.blood_fury)|(!action.blood_fury.known&" .. bf .. "))"
+        assert.are.equal(at .. "&", ar:sub(1, #at + 1))
+        local rest = ar:sub(#at + 2)
         -- the rest of its sequence's condition: Slice and Dice up and Adrenaline Rush ready, not Blood Fury's readiness
         assert.is_truthy(
             rest:find("buff.slice_and_dice.up", 1, true) and rest:find("cooldown.adrenaline_rush.ready", 1, true)
         )
         assert.is_falsy(rest:find("blood_fury", 1, true))
-        assert.is_falsy(simc:find("strictSequence", 1, true)) -- no longer omitted
+        -- no longer omitted (the pin's Gnome-gated pooling group omits its own strictSequence of a waitUntil)
+        assert.is_falsy(simc:find("# Omitted: default #%d+: strictSequence"))
     end)
 
     it("runs prev.1 through the engine: a member is recommended right after its predecessor's prediction", function()

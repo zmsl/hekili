@@ -30,10 +30,11 @@ local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true 
 -- Re-pin e2842f0a78 (Task 13, ruling R29: the recipes' `vars` play the builds' Use Backstab = false): Assassination
 -- 0.98 -> 0.93 (0.932 of 59; 3 of the 4 misses are the fight's last 6 s, "Fight About to End" never fires: remainingTime
 -- reads 3600, gap AN, API; 1 an unseen Rogue Armor Energize 27788 at log 79.25 (venom at 80.69, belief lo 13.1 vs truth 25);
--- without the 3 fight-end misses 0.949, within max(0.02, 2/59) of base 0.982); LIVE60 5.0 measured.
+-- without the 3 fight-end misses 0.949, within max(0.02, 2/59) of base 0.982); LIVE60 5.0 measured. Combat 0.95 -> 0.97
+-- (0.973 of 73; LIVE60 4.0 -> 4.4 measured).
 local PACKS = {
     { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.93, 5.0, MUTILATE_HANDS },
-    { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.95, 4.0 },
+    { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.97, 4.4 },
     { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.96, 4.2 },
 }
 

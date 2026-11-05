@@ -1,9 +1,6 @@
 {
   "encounter":{
-    "executeProportion20":0.2,
-    "executeProportion25":0.25,
     "executeProportion35":0.35,
-    "executeProportion90":0.9,
     "duration":180,
     "targets":[{
         "minBaseDamage":2601,
@@ -15,7 +12,7 @@
         "parryHaste":true,
         "mobType":"MobTypeMechanical"
       }],
-    "executeProportion45":0.45
+    "executeProportion20":0.2
   },
   "raid":{
     "parties":[{
@@ -47,7 +44,7 @@
                   "id":22004,
                   "enchant":7656
                 },{
-                  "id":22006,
+                  "id":21278,
                   "enchant":8206
                 },{
                   "id":272395
@@ -55,7 +52,7 @@
                   "id":22007,
                   "enchant":1508
                 },{
-                  "id":22003,
+                  "id":18506,
                   "enchant":911
                 },{
                   "id":19325
@@ -69,7 +66,7 @@
                   "id":22384,
                   "enchant":1900
                 },{
-                  "id":871,
+                  "id":17016,
                   "enchant":2564
                 },{
                   "id":22347
@@ -93,6 +90,37 @@
                           "spellId":{
                             "spellId":11198
                           }
+                        }
+                      }
+                    }]
+                },{
+                  "name":"Energy Pooling Checks",
+                  "actions":[{
+                      "action":{
+                        "condition":{
+                          "variableRef":{
+                            "name":"Gnome Eureka - Should Cast"
+                          }
+                        },
+                        "strictSequence":{
+                          "actions":[{
+                              "waitUntil":{
+                                "condition":{
+                                  "cmp":{
+                                    "op":"OpGe",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"90"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentEnergy":{
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }]
                         }
                       }
                     }]
@@ -330,6 +358,12 @@
                   }
                 },{
                   "action":{
+                    "groupReference":{
+                      "groupName":"Energy Pooling Checks"
+                    }
+                  }
+                },{
+                  "action":{
                     "condition":{
                       "and":{
                         "vals":[{
@@ -357,6 +391,16 @@
                               "val":{
                                 "spellIsKnown":{
                                   "spellId":{
+                                    "spellId":1259799
+                                  }
+                                }
+                              }
+                            }
+                          },{
+                            "not":{
+                              "val":{
+                                "spellIsKnown":{
+                                  "spellId":{
                                     "spellId":20572
                                   }
                                 }
@@ -374,31 +418,6 @@
                 },{
                   "action":{
                     "condition":{
-                      "cmp":{
-                        "op":"OpGe",
-                        "rhs":{
-                          "const":{
-                            "val":"2m"
-                          }
-                        },
-                        "lhs":{
-                          "spellTimeToReady":{
-                            "spellId":{
-                              "spellId":13750
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":20572
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
                       "and":{
                         "vals":[{
                             "spellIsReady":{
@@ -407,10 +426,36 @@
                               }
                             }
                           },{
-                            "spellIsReady":{
-                              "spellId":{
-                                "spellId":20572
-                              }
+                            "and":{
+                              "vals":[{
+                                  "spellIsKnown":{
+                                    "spellId":{
+                                      "spellId":20572
+                                    }
+                                  }
+                                },{
+                                  "spellIsReady":{
+                                    "spellId":{
+                                      "spellId":20572
+                                    }
+                                  }
+                                }]
+                            }
+                          },{
+                            "and":{
+                              "vals":[{
+                                  "spellIsKnown":{
+                                    "spellId":{
+                                      "spellId":1259799
+                                    }
+                                  }
+                                },{
+                                  "spellIsReady":{
+                                    "spellId":{
+                                      "spellId":1259799
+                                    }
+                                  }
+                                }]
                             }
                           },{
                             "auraIsActive":{
@@ -436,6 +481,111 @@
                             }
                           }
                         }]
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "spellIsReady":{
+                              "spellId":{
+                                "spellId":13750
+                              }
+                            }
+                          },{
+                            "spellIsReady":{
+                              "spellId":{
+                                "spellId":1259799
+                              }
+                            }
+                          },{
+                            "auraIsActive":{
+                              "includeReactionTime":true,
+                              "auraId":{
+                                "spellId":6774
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "strictSequence":{
+                      "actions":[{
+                          "castSpell":{
+                            "spellId":{
+                              "spellId":1259799
+                            }
+                          }
+                        },{
+                          "castSpell":{
+                            "spellId":{
+                              "spellId":13750
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "cmp":{
+                        "op":"OpGe",
+                        "rhs":{
+                          "const":{
+                            "val":"1.9m"
+                          }
+                        },
+                        "lhs":{
+                          "spellTimeToReady":{
+                            "spellId":{
+                              "spellId":13750
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":20572
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "cmp":{
+                        "op":"OpGe",
+                        "rhs":{
+                          "const":{
+                            "val":"1.9m"
+                          }
+                        },
+                        "lhs":{
+                          "spellTimeToReady":{
+                            "spellId":{
+                              "spellId":13750
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":1259799
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Gnome Eureka - Should Cast"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":1259812
+                      }
                     }
                   }
                 },{
@@ -471,36 +621,6 @@
                 },{
                   "action":{
                     "condition":{
-                      "or":{
-                        "vals":[{
-                            "not":{
-                              "val":{
-                                "spellIsKnown":{
-                                  "spellId":{
-                                    "spellId":13877
-                                  }
-                                }
-                              }
-                            }
-                          },{
-                            "auraIsActive":{
-                              "includeReactionTime":true,
-                              "auraId":{
-                                "spellId":13877
-                              }
-                            }
-                          }]
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":1259812
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
                       "and":{
                         "vals":[{
                             "or":{
@@ -520,11 +640,17 @@
                                 },{
                                   "and":{
                                     "vals":[{
+                                        "spellIsKnown":{
+                                          "spellId":{
+                                            "spellId":1259812
+                                          }
+                                        }
+                                      },{
                                         "cmp":{
                                           "op":"OpLe",
                                           "rhs":{
                                             "const":{
-                                              "val":"20"
+                                              "val":"25"
                                             }
                                           },
                                           "lhs":{
@@ -542,12 +668,6 @@
                                       }]
                                   }
                                 }]
-                            }
-                          },{
-                            "spellCanCast":{
-                              "spellId":{
-                                "itemId":7676
-                              }
                             }
                           },{
                             "or":{
@@ -811,7 +931,7 @@
                               "rhs":{
                                 "spellCurrentCost":{
                                   "spellId":{
-                                    "spellId":31016
+                                    "spellId":11300
                                   }
                                 }
                               },
@@ -825,6 +945,17 @@
                               "val":{
                                 "variableRef":{
                                   "name":"Expose - Prevent Other Finishers"
+                                }
+                              }
+                            }
+                          },{
+                            "not":{
+                              "val":{
+                                "auraIsActive":{
+                                  "includeReactionTime":true,
+                                  "auraId":{
+                                    "spellId":1259799
+                                  }
                                 }
                               }
                             }
@@ -949,9 +1080,10 @@
                               "vals":[{
                                   "not":{
                                     "val":{
-                                      "auraIsKnown":{
-                                        "auraId":{
-                                          "spellId":1310721
+                                      "talentIsKnown":{
+                                        "talentId":{
+                                          "spellId":1310721,
+                                          "rank":1
                                         }
                                       }
                                     }
@@ -1137,6 +1269,10 @@
                                   }
                                 }]
                             }
+                          },{
+                            "variableRef":{
+                              "name":"Gnome Eureka - Active or Not Ready"
+                            }
                           }]
                       }
                     },
@@ -1220,6 +1356,10 @@
                                     "name":"Expose - Low Duration"
                                   }
                                 }]
+                            }
+                          },{
+                            "variableRef":{
+                              "name":"Gnome Eureka - Active or Not Ready"
                             }
                           }]
                       }
@@ -1313,6 +1453,10 @@
                                     "name":"Expose - Low Duration"
                                   }
                                 }]
+                            }
+                          },{
+                            "variableRef":{
+                              "name":"Gnome Eureka - Active or Not Ready"
                             }
                           }]
                       }
@@ -1426,6 +1570,10 @@
                                     "name":"Expose - Low Duration"
                                   }
                                 }]
+                            }
+                          },{
+                            "variableRef":{
+                              "name":"Gnome Eureka - Active or Not Ready"
                             }
                           }]
                       }
@@ -1706,6 +1854,141 @@
                         },{
                           "variableRef":{
                             "name":"Expose - Low Duration"
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Gnome Eureka - Active or Not Ready",
+                  "value":{
+                    "or":{
+                      "vals":[{
+                          "not":{
+                            "val":{
+                              "spellIsKnown":{
+                                "spellId":{
+                                  "spellId":1259812
+                                }
+                              }
+                            }
+                          }
+                        },{
+                          "auraIsActive":{
+                            "includeReactionTime":true,
+                            "auraId":{
+                              "spellId":1259812
+                            }
+                          }
+                        },{
+                          "not":{
+                            "val":{
+                              "spellIsReady":{
+                                "spellId":{
+                                  "spellId":1259812
+                                }
+                              }
+                            }
+                          }
+                        },{
+                          "and":{
+                            "vals":[{
+                                "spellIsReady":{
+                                  "spellId":{
+                                    "spellId":1259812
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpLe",
+                                  "rhs":{
+                                    "spellFullCooldown":{
+                                      "spellId":{
+                                        "spellId":1259812
+                                      }
+                                    }
+                                  },
+                                  "lhs":{
+                                    "spellTimeToReady":{
+                                      "spellId":{
+                                        "spellId":13750
+                                      }
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Gnome Eureka - Should Cast",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "spellId":1259812
+                            }
+                          }
+                        },{
+                          "spellIsReady":{
+                            "spellId":{
+                              "spellId":1259812
+                            }
+                          }
+                        },{
+                          "or":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "spellIsKnown":{
+                                      "spellId":{
+                                        "spellId":13750
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "auraIsActive":{
+                                  "includeReactionTime":true,
+                                  "auraId":{
+                                    "spellId":13750
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGt",
+                                  "rhs":{
+                                    "spellFullCooldown":{
+                                      "spellId":{
+                                        "spellId":1259812
+                                      }
+                                    }
+                                  },
+                                  "lhs":{
+                                    "spellTimeToReady":{
+                                      "spellId":{
+                                        "spellId":13750
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpLt",
+                                  "rhs":{
+                                    "spellTimeToReady":{
+                                      "spellId":{
+                                        "spellId":13750
+                                      }
+                                    }
+                                  },
+                                  "lhs":{
+                                    "remainingTime":{
+                                    }
+                                  }
+                                }
+                              }]
                           }
                         }]
                     }
