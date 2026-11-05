@@ -157,13 +157,13 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         assert.not_matches("demoralizing_roar", first(false, false))
         -- Faerie Fire likewise (no talents: Lacerate silences the line), at 5 rage so only it is affordable
         local ff = "faerie_fire"
-        assert.matches(ff, first(false, false, 30, ff, "Faerie Fire (Feral)", 5))
-        assert.not_matches(ff, first(false, true, 30, ff, "Faerie Fire (Feral)", 5))
+        assert.matches(ff, first(false, false, 30, ff, "Faerie Fire", 5))
+        assert.not_matches(ff, first(false, true, 30, ff, "Faerie Fire", 5))
     end)
-    -- The pack's own worst idle at L10 and L40, seconds, limit 6.0: L10 presses the recipe's leveling Maul (wowsims's
-    -- list has nothing else before Primal Bite at 25: 11.8 s idle without it); before Lacerate (42) its leveling
-    -- Demoralizing Roar fills a GCD at 10 rage and Faerie Fire (Feral) below it, at most every 6 s (the kit's cooldown
-    -- in a form): Demoralizing Roar took L10 to 0.2 s and L40 to 8.4 s, Faerie Fire L40 from 8.4 to 2.6 s.
+    -- The pack's own worst idle at L10 and L40, seconds: L10 presses the recipe's leveling Maul (wowsims's list has
+    -- nothing else before Primal Bite at 25: 11.8 s idle without it). Before Lacerate (42) its leveling Demoralizing
+    -- Roar and Faerie Fire (free in a form, a 6 s cooldown) are cast only while their debuff is down (R45): L10 idles up
+    -- to 10.2 s (limit 10.2, nothing useful to cast: see the comment below), L40 stays at the 6.0 s limit.
     -- L60's bar (owner ruling 2026-10-25): the MEDIAN of the per-seed worst idle over seeds 1-30, each a fresh boot
     -- (its own first fight), limit 6.0 s. One seed's worst is noise: with the parry fix the single seed 1 measured 8.4
     -- (rage below Primal Bite's 15 from two white misses in a row). On these tables: median 4.4, worst 11.0, 4 of 30
@@ -194,7 +194,7 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
                 ws.live("Guardian (wowsims.com)", C, 6.0, 30, "median")
             else
                 -- R45 (R41): the L10 bear's Roar line fires only with the debuff down, so with Roar up (30 s) the bar
-                -- idles: nothing useful to cast (Roar up, Maul off the GCD, Faerie Fire not learned before 30): 0.2 -> 10.2 s
+                -- idles: nothing useful to cast (Roar up, Maul off the GCD, Faerie Fire not known at L10, learned at 18): 0.2 -> 10.2 s
                 ws.live("Guardian (wowsims.com)", C, level == 10 and 10.2 or 6.0)
             end
         end)

@@ -49,7 +49,7 @@ return {
     -- Before Primal Bite (25) Maul is the only rage sink: queued whenever affordable instead of at wowsims's 20, which
     -- pools for the on-GCD strikes a level 10 bear lacks (ruling L18; silent at 60). Before Lacerate (42), wowsims's
     -- 13-rage filler between Primal Bites, the bear waits for Primal Bite (L40 9.6 s, L10 7.2 s on central fix 22):
-    -- Demoralizing Roar fills the GCD with 10 rage, Faerie Fire (Feral, free; learned at 30) below it, after a run of
+    -- Demoralizing Roar fills the GCD with 10 rage, Faerie Fire (free in a form; learned at 18) below it, after a run of
     -- avoided swings (both silent at 60: Lacerate is known).
     -- Rule 15: the raid debuff, a setting off in game and on in the harness (the user's ruling, 2026-10-21); it governs
     -- the leveling Roar filler below too, and Berserk's wait for the Roar reads "up or disabled"
