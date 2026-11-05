@@ -349,7 +349,10 @@ M.READY = {
     -- fractional read) -> 0.16, 15 (gap CE; one fight, the log's seed; owner standing approval 2026-10-30): a poll whose
     -- short answer stands on the crossing now waits a whole energy, 0.10 s, the old read's wait: never ready before the
     -- client says so
-    rogue_assassination = { 0.23, 18 },
+    -- { 0.23, 18 } -> { 0.23, 29 } re-pin e2842f0a78 (R29's Mutilate log): cost class; 5 rows 0.45 s or less after an
+    -- unseen Rogue Armor Energize 27788 (lo 9-20 under the truth, b ~1 s), the rest the floor 0.4-2.5 under the truth
+    -- (b 0.16-0.33 s, gap BQ/CE: lo reaches the cost after the truth), 7 -> 15 of them with more decisions at the cost
+    rogue_assassination = { 0.23, 29 }, -- 0.230, 29
     rogue_combat = { 0.20, 18 },
     rogue_subtlety = { 0.17, 40 }, -- 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
     shaman_enhancement = { 0.21, 7 },

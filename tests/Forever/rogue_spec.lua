@@ -280,7 +280,7 @@ describe("Forever Rogue priorities", function()
     it("names only registered abilities, auras, talents and settings", function()
         local w = ld.load(nil, FILE, "ROGUE")
         -- the shared kit's (Hekili_Shared: an item and the races' racials), not the class file's
-        local shared = { thistle_tea = true, blood_fury = true, eureka = true }
+        local shared = { thistle_tea = true, blood_fury = true, eureka = true, elunes_light = true }
         local kinds =
             { buff = w.auras, debuff = w.auras, talent = w.talents, settings = w.settings, action = w.abilities }
         for name, p in pairs(packs) do

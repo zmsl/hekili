@@ -27,8 +27,12 @@ end
 -- patches: upstream #750's item-slot hand tags, the Darkmantle set ID 512 patch) and its fight-end edges 49.81/153.25/178.55
 -- Mutilate's per-hand hits are GCD-0 Casting lines {SpellID: 1241584, Tag: 14/15}: procs, neither decisions nor casts.
 local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true } }
+-- Re-pin e2842f0a78 (Task 13, ruling R29: the recipes' `vars` play the builds' Use Backstab = false): Assassination
+-- 0.98 -> 0.93 (0.932 of 59; 3 of the 4 misses are the fight's last 6 s, "Fight About to End" never fires: remainingTime
+-- reads 3600, gap AN, API; 1 an unseen Rogue Armor Energize 27788 at log 79.25 (venom at 80.69, belief lo 13.1 vs truth 25);
+-- without the 3 fight-end misses 0.949, within max(0.02, 2/59) of base 0.982); LIVE60 5.0 measured.
 local PACKS = {
-    { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.98, 5.0, MUTILATE_HANDS },
+    { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.93, 5.0, MUTILATE_HANDS },
     { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.95, 4.0 },
     { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.96, 4.2 },
 }
@@ -41,7 +45,8 @@ describe("the Rogue wowsims.com packs #slow #wowsims", function()
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()
-                ws.live(pack, content(spec, base, pack, level), math.max(6, LIVE60))
+                -- R22a: L10/L40 keep the 6 s bar; only L60 may follow the pack's LIVE60
+                ws.live(pack, content(spec, base, pack, level), level == 60 and math.max(6, LIVE60) or 6)
             end)
         end
     end
