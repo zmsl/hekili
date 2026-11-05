@@ -1,9 +1,6 @@
 {
   "encounter":{
-    "executeProportion20":0.2,
-    "executeProportion25":0.25,
     "executeProportion35":0.35,
-    "executeProportion90":0.9,
     "duration":180,
     "targets":[{
         "minBaseDamage":2601,
@@ -15,7 +12,7 @@
         "parryHaste":true,
         "mobType":"MobTypeMechanical"
       }],
-    "executeProportion45":0.45
+    "executeProportion20":0.2
   },
   "raid":{
     "parties":[{
@@ -27,7 +24,7 @@
             "dpsWarrior":{
               "options":{
                 "classOptions":{
-                  "hasBsT2":true,
+                  "hasBsT2":false,
                   "queueDelay":250,
                   "startingRage":50,
                   "defaultStance":"WarriorStanceBerserker",
@@ -40,7 +37,7 @@
               "items":[{
                   "id":12620
                 },{
-                  "id":13002
+                  "id":18404
                 },{
                   "id":12625
                 },{
@@ -50,15 +47,15 @@
                 },{
                   "id":16735
                 },{
-                  "id":13072
+                  "id":21998
                 },{
-                  "id":13077
+                  "id":21994
                 },{
                   "id":12619
                 },{
-                  "id":13070
+                  "id":21995
                 },{
-                  "id":13096
+                  "id":18821
                 },{
                   "id":15855
                 },{
@@ -69,7 +66,7 @@
                   "id":12784
                 },{
                 },{
-                  "id":13022
+                  "id":16996
                 }]
             },
             "race":"RaceOrc",
@@ -182,6 +179,19 @@
                   "name":"CD: Racials",
                   "actions":[{
                       "action":{
+                        "condition":{
+                          "multipleCdUsages":{
+                            "offset":{
+                              "const":{
+                                "val":"0ms"
+                              }
+                            },
+                            "targetSpellId":{
+                              "spellId":20572
+                            },
+                            "alignCdEnd":true
+                          }
+                        },
                         "castSpell":{
                           "spellId":{
                             "spellId":20572
@@ -190,6 +200,19 @@
                       }
                     },{
                       "action":{
+                        "condition":{
+                          "multipleCdUsages":{
+                            "offset":{
+                              "const":{
+                                "val":"0ms"
+                              }
+                            },
+                            "targetSpellId":{
+                              "spellId":20554
+                            },
+                            "alignCdEnd":true
+                          }
+                        },
                         "castSpell":{
                           "spellId":{
                             "spellId":20554
@@ -198,6 +221,19 @@
                       }
                     },{
                       "action":{
+                        "condition":{
+                          "multipleCdUsages":{
+                            "offset":{
+                              "const":{
+                                "val":"0ms"
+                              }
+                            },
+                            "targetSpellId":{
+                              "spellId":1259813
+                            },
+                            "alignCdEnd":true
+                          }
+                        },
                         "castSpell":{
                           "spellId":{
                             "spellId":1259813
@@ -206,6 +242,97 @@
                       }
                     },{
                       "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "variableRef":{
+                                      "name":"Recklessness: Used"
+                                    }
+                                  }
+                                }
+                              },{
+                                "multipleCdUsages":{
+                                  "offset":{
+                                    "const":{
+                                      "val":"0ms"
+                                    }
+                                  },
+                                  "targetSpellId":{
+                                    "spellId":1259799
+                                  },
+                                  "alignCdEnd":true
+                                }
+                              }]
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":1259799
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "variableRef":{
+                                  "name":"Recklessness: Used"
+                                }
+                              },{
+                                "auraIsInactive":{
+                                  "auraId":{
+                                    "spellId":1719
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGt",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"15s"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "remainingTime":{
+                                    }
+                                  }
+                                }
+                              },{
+                                "or":{
+                                  "vals":[{
+                                      "cmp":{
+                                        "op":"OpGt",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"195s"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "remainingTime":{
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "cmp":{
+                                        "op":"OpLe",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"30s"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "remainingTime":{
+                                          }
+                                        }
+                                      }
+                                    }]
+                                }
+                              }]
+                          }
+                        },
                         "castSpell":{
                           "spellId":{
                             "spellId":1259799
@@ -427,6 +554,31 @@
                   "hide":true
                 },{
                   "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "not":{
+                              "val":{
+                                "variableRef":{
+                                  "name":"Offensive Potion: Rage"
+                                }
+                              }
+                            }
+                          },{
+                            "multipleCdUsages":{
+                              "offset":{
+                                "const":{
+                                  "val":"0ms"
+                                }
+                              },
+                              "targetSpellId":{
+                                "otherId":"OtherActionOffensivePotion"
+                              },
+                              "alignCdEnd":true
+                            }
+                          }]
+                      }
+                    },
                     "castSpell":{
                       "spellId":{
                         "otherId":"OtherActionOffensivePotion"
@@ -435,9 +587,65 @@
                   }
                 },{
                   "action":{
+                    "condition":{
+                      "or":{
+                        "vals":[{
+                            "not":{
+                              "val":{
+                                "variableRef":{
+                                  "name":"Resource Potion: Rage"
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpLe",
+                              "rhs":{
+                                "const":{
+                                  "val":"15"
+                                }
+                              },
+                              "lhs":{
+                                "currentRage":{
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    },
                     "castSpell":{
                       "spellId":{
                         "otherId":"OtherActionResourcePotion"
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "variableRef":{
+                              "name":"Offensive Potion: Rage"
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpLe",
+                              "rhs":{
+                                "const":{
+                                  "val":"15"
+                                }
+                              },
+                              "lhs":{
+                                "currentRage":{
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "otherId":"OtherActionOffensivePotion"
                       }
                     }
                   }
@@ -449,6 +657,19 @@
                   }
                 },{
                   "action":{
+                    "condition":{
+                      "multipleCdUsages":{
+                        "offset":{
+                          "const":{
+                            "val":"0ms"
+                          }
+                        },
+                        "targetSpellId":{
+                          "spellId":12328
+                        },
+                        "alignCdEnd":true
+                      }
+                    },
                     "castSpell":{
                       "spellId":{
                         "spellId":12328
@@ -460,8 +681,20 @@
                     "condition":{
                       "and":{
                         "vals":[{
-                            "actionGroupUsed":{
-                              "name":"Recklessness ON/OFF"
+                            "variableRef":{
+                              "name":"Recklessness: Used"
+                            }
+                          },{
+                            "multipleCdUsages":{
+                              "offset":{
+                                "const":{
+                                  "val":"0ms"
+                                }
+                              },
+                              "targetSpellId":{
+                                "spellId":1719
+                              },
+                              "alignCdEnd":true
                             }
                           }]
                       }
@@ -540,6 +773,311 @@
                   }
                 },{
                   "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "variableRef":{
+                              "name":"Battle Stance: Swap Ready"
+                            }
+                          },{
+                            "auraIsActive":{
+                              "includeReactionTime":true,
+                              "auraId":{
+                                "spellId":1282733
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGt",
+                              "rhs":{
+                                "gcdTimeToReady":{
+                                }
+                              },
+                              "lhs":{
+                                "auraRemainingTime":{
+                                  "auraId":{
+                                    "spellId":1282733
+                                  }
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"5"
+                                }
+                              },
+                              "lhs":{
+                                "currentRage":{
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpLe",
+                              "rhs":{
+                                "const":{
+                                  "val":"0s"
+                                }
+                              },
+                              "lhs":{
+                                "spellTimeToReady":{
+                                  "spellId":{
+                                    "spellId":11585
+                                  }
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "strictSequence":{
+                      "actions":[{
+                          "castSpell":{
+                            "spellId":{
+                              "spellId":2457
+                            }
+                          }
+                        },{
+                          "castSpell":{
+                            "spellId":{
+                              "spellId":11585
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":11585
+                      }
+                    },
+                    "condition":{
+                      "auraIsActive":{
+                        "auraId":{
+                          "spellId":2457
+                        }
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "not":{
+                              "val":{
+                                "actionGroupUsed":{
+                                  "name":"Stance Dance ON/OFF"
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"3"
+                                }
+                              },
+                              "lhs":{
+                                "numberTargets":{
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"25"
+                                }
+                              },
+                              "lhs":{
+                                "currentRage":{
+                                }
+                              }
+                            }
+                          },{
+                            "gcdIsReady":{
+                            }
+                          },{
+                            "auraIsInactive":{
+                              "auraId":{
+                                "spellId":2458
+                              }
+                            }
+                          },{
+                            "spellIsReady":{
+                              "spellId":{
+                                "spellId":1680,
+                                "tag":14
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":2458
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "not":{
+                              "val":{
+                                "actionGroupUsed":{
+                                  "name":"Stance Dance ON/OFF"
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"3"
+                                }
+                              },
+                              "lhs":{
+                                "numberTargets":{
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":1680,
+                        "tag":14
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":21553
+                      }
+                    },
+                    "condition":{
+                      "not":{
+                        "val":{
+                          "actionGroupUsed":{
+                            "name":"Stance Dance ON/OFF"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":11605
+                      }
+                    },
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "not":{
+                              "val":{
+                                "isExecutePhase":{
+                                  "threshold":"E20"
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpLt",
+                              "rhs":{
+                                "spellGcdHastedDuration":{
+                                  "spellId":{
+                                    "spellId":21553
+                                  }
+                                }
+                              },
+                              "lhs":{
+                                "spellCastTime":{
+                                  "spellId":{
+                                    "spellId":11605
+                                  }
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "variableRef":{
+                              "name":"Battle Stance: Swap Ready"
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpLe",
+                              "rhs":{
+                                "spellGcdHastedDuration":{
+                                  "spellId":{
+                                    "spellId":11574
+                                  }
+                                }
+                              },
+                              "lhs":{
+                                "dotRemainingTime":{
+                                  "spellId":{
+                                    "spellId":11574
+                                  }
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"10"
+                                }
+                              },
+                              "lhs":{
+                                "currentRage":{
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "strictSequence":{
+                      "actions":[{
+                          "castSpell":{
+                            "spellId":{
+                              "spellId":2457
+                            }
+                          }
+                        },{
+                          "castSpell":{
+                            "spellId":{
+                              "spellId":11574
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "action":{
                     "castSpell":{
                       "spellId":{
                         "spellId":11574
@@ -565,8 +1103,10 @@
                             "cmp":{
                               "op":"OpLe",
                               "rhs":{
-                                "const":{
-                                  "val":"1.5s"
+                                "spellGcdHastedDuration":{
+                                  "spellId":{
+                                    "spellId":11574
+                                  }
                                 }
                               },
                               "lhs":{
@@ -585,31 +1125,61 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":11585
+                        "spellId":11605
                       }
                     },
                     "condition":{
-                      "auraIsActive":{
-                        "auraId":{
-                          "spellId":2457
-                        }
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":21553
-                      }
-                    },
-                    "condition":{
-                      "not":{
-                        "val":{
-                          "actionGroupUsed":{
-                            "name":"Stance Dance ON/OFF"
-                          }
-                        }
+                      "and":{
+                        "vals":[{
+                            "not":{
+                              "val":{
+                                "isExecutePhase":{
+                                  "threshold":"E20"
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "spellGcdHastedDuration":{
+                                  "spellId":{
+                                    "spellId":21553
+                                  }
+                                }
+                              },
+                              "lhs":{
+                                "spellCastTime":{
+                                  "spellId":{
+                                    "spellId":11605
+                                  }
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpLe",
+                              "rhs":{
+                                "math":{
+                                  "op":"OpAdd",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"300ms"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "inputDelay":{
+                                    }
+                                  }
+                                }
+                              },
+                              "lhs":{
+                                "autoTimeSinceLast":{
+                                  "autoType":"MainHandAuto"
+                                }
+                              }
+                            }
+                          }]
                       }
                     }
                   }
@@ -675,8 +1245,10 @@
                                   "cmp":{
                                     "op":"OpGt",
                                     "rhs":{
-                                      "const":{
-                                        "val":"1.5s"
+                                      "spellGcdHastedDuration":{
+                                        "spellId":{
+                                          "spellId":11574
+                                        }
                                       }
                                     },
                                     "lhs":{
@@ -688,103 +1260,6 @@
                                     }
                                   }
                                 }]
-                            }
-                          }]
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":11605
-                      }
-                    },
-                    "condition":{
-                      "and":{
-                        "vals":[{
-                            "not":{
-                              "val":{
-                                "isExecutePhase":{
-                                  "threshold":"E20"
-                                }
-                              }
-                            }
-                          },{
-                            "cmp":{
-                              "op":"OpLt",
-                              "rhs":{
-                                "const":{
-                                  "val":"1.5s"
-                                }
-                              },
-                              "lhs":{
-                                "spellCastTime":{
-                                  "spellId":{
-                                    "spellId":11605
-                                  }
-                                }
-                              }
-                            }
-                          }]
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":11605
-                      }
-                    },
-                    "condition":{
-                      "and":{
-                        "vals":[{
-                            "not":{
-                              "val":{
-                                "isExecutePhase":{
-                                  "threshold":"E20"
-                                }
-                              }
-                            }
-                          },{
-                            "cmp":{
-                              "op":"OpGe",
-                              "rhs":{
-                                "const":{
-                                  "val":"1.5s"
-                                }
-                              },
-                              "lhs":{
-                                "spellCastTime":{
-                                  "spellId":{
-                                    "spellId":11605
-                                  }
-                                }
-                              }
-                            }
-                          },{
-                            "cmp":{
-                              "op":"OpLe",
-                              "rhs":{
-                                "math":{
-                                  "op":"OpAdd",
-                                  "rhs":{
-                                    "const":{
-                                      "val":"300ms"
-                                    }
-                                  },
-                                  "lhs":{
-                                    "inputDelay":{
-                                    }
-                                  }
-                                }
-                              },
-                              "lhs":{
-                                "autoTimeSinceLast":{
-                                  "autoType":"MainHandAuto"
-                                }
-                              }
                             }
                           }]
                       }
@@ -839,6 +1314,16 @@
                                 "tag":-1
                               }
                             }
+                          },{
+                            "not":{
+                              "val":{
+                                "spellIsCasting":{
+                                  "spellId":{
+                                    "spellId":11605
+                                  }
+                                }
+                              }
+                            }
                           }]
                       }
                     }
@@ -853,64 +1338,6 @@
                     "condition":{
                       "isExecutePhase":{
                         "threshold":"E20"
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":2457
-                      }
-                    },
-                    "condition":{
-                      "and":{
-                        "vals":[{
-                            "actionGroupUsed":{
-                              "name":"Stance Dance ON/OFF"
-                            }
-                          },{
-                            "not":{
-                              "val":{
-                                "isExecutePhase":{
-                                  "threshold":"E20"
-                                }
-                              }
-                            }
-                          },{
-                            "auraIsActive":{
-                              "auraId":{
-                                "spellId":2458
-                              }
-                            }
-                          },{
-                            "or":{
-                              "vals":[{
-                                  "auraIsActive":{
-                                    "includeReactionTime":true,
-                                    "auraId":{
-                                      "spellId":1282733
-                                    }
-                                  }
-                                },{
-                                  "cmp":{
-                                    "op":"OpLe",
-                                    "rhs":{
-                                      "const":{
-                                        "val":"1.5s"
-                                      }
-                                    },
-                                    "lhs":{
-                                      "dotRemainingTime":{
-                                        "spellId":{
-                                          "spellId":11574
-                                        }
-                                      }
-                                    }
-                                  }
-                                }]
-                            }
-                          }]
                       }
                     }
                   }
@@ -960,12 +1387,6 @@
                   }
                 },{
                   "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":25286,
-                        "tag":1
-                      }
-                    },
                     "condition":{
                       "and":{
                         "vals":[{
@@ -989,7 +1410,24 @@
                                 }
                               }
                             }
+                          },{
+                            "not":{
+                              "val":{
+                                "talentIsKnown":{
+                                  "talentId":{
+                                    "spellId":12862,
+                                    "rank":1
+                                  }
+                                }
+                              }
+                            }
                           }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":25286,
+                        "tag":1
                       }
                     }
                   }
@@ -1024,16 +1462,8 @@
                               "name":"Delay Check"
                             }
                           },{
-                            "not":{
-                              "val":{
-                                "auraIsKnown":{
-                                  "auraId":{
-                                    "rank":7,
-                                    "spellId":25289,
-                                    "tag":-1
-                                  }
-                                }
-                              }
+                            "variableRef":{
+                              "name":"Battle Shout: No Raid Buff"
                             }
                           },{
                             "cmp":{
@@ -1166,6 +1596,31 @@
                   }
                 }],
               "valueVariables":[{
+                  "name":"Battle Shout: No Raid Buff",
+                  "value":{
+                    "not":{
+                      "val":{
+                        "or":{
+                          "vals":[{
+                              "auraIsKnown":{
+                                "auraId":{
+                                  "spellId":11551,
+                                  "tag":-1
+                                }
+                              }
+                            },{
+                              "auraIsKnown":{
+                                "auraId":{
+                                  "spellId":25289,
+                                  "tag":-1
+                                }
+                              }
+                            }]
+                        }
+                      }
+                    }
+                  }
+                },{
                   "name":"Delay Check",
                   "value":{
                     "and":{
@@ -1173,8 +1628,10 @@
                           "cmp":{
                             "op":"OpGe",
                             "rhs":{
-                              "const":{
-                                "val":"1.5s"
+                              "spellGcdHastedDuration":{
+                                "spellId":{
+                                  "spellId":21553
+                                }
                               }
                             },
                             "lhs":{
@@ -1199,8 +1656,11 @@
                                 "cmp":{
                                   "op":"OpGe",
                                   "rhs":{
-                                    "const":{
-                                      "val":"1.5s"
+                                    "spellGcdHastedDuration":{
+                                      "spellId":{
+                                        "spellId":1680,
+                                        "tag":14
+                                      }
                                     }
                                   },
                                   "lhs":{
@@ -1213,6 +1673,118 @@
                                   }
                                 }
                               }]
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Battle Stance: Swap Ready",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "actionGroupUsed":{
+                            "name":"Stance Dance ON/OFF"
+                          }
+                        },{
+                          "not":{
+                            "val":{
+                              "isExecutePhase":{
+                                "threshold":"E20"
+                              }
+                            }
+                          }
+                        },{
+                          "auraIsActive":{
+                            "auraId":{
+                              "spellId":2458
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpLe",
+                            "rhs":{
+                              "const":{
+                                "val":"0s"
+                              }
+                            },
+                            "lhs":{
+                              "spellTimeToReady":{
+                                "spellId":{
+                                  "spellId":2457
+                                }
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Recklessness: Used",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "actionGroupUsed":{
+                            "name":"Recklessness ON/OFF"
+                          }
+                        },{
+                          "actionGroupUsed":{
+                            "name":"Stance Dance ON/OFF"
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Resource Potion: Rage",
+                  "value":{
+                    "or":{
+                      "vals":[{
+                          "selectedPotion":{
+                            "potionId":{
+                              "itemId":5631
+                            },
+                            "slot":"OtherActionResourcePotion"
+                          }
+                        },{
+                          "selectedPotion":{
+                            "potionId":{
+                              "itemId":5633
+                            },
+                            "slot":"OtherActionResourcePotion"
+                          }
+                        },{
+                          "selectedPotion":{
+                            "potionId":{
+                              "itemId":13442
+                            },
+                            "slot":"OtherActionResourcePotion"
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Offensive Potion: Rage",
+                  "value":{
+                    "or":{
+                      "vals":[{
+                          "selectedPotion":{
+                            "potionId":{
+                              "itemId":5631
+                            },
+                            "slot":"OtherActionOffensivePotion"
+                          }
+                        },{
+                          "selectedPotion":{
+                            "potionId":{
+                              "itemId":5633
+                            },
+                            "slot":"OtherActionOffensivePotion"
+                          }
+                        },{
+                          "selectedPotion":{
+                            "potionId":{
+                              "itemId":13442
+                            },
+                            "slot":"OtherActionOffensivePotion"
                           }
                         }]
                     }

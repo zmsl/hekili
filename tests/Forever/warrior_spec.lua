@@ -949,8 +949,8 @@ describe("Forever Warrior", function()
             end
         end
         assert.are.same({
-            ["Arms (wowsims.com) rend"] = { 2 },
-            ["Arms (wowsims.com) overpower"] = { 1 },
+            ["Arms (wowsims.com) rend"] = { 2, 2 }, -- re-pin e2842f0a78: the stance-dance swap's line and the plain one
+            ["Arms (wowsims.com) overpower"] = { 1, 1 },
             ["Arms (wowsims.com) heroic_strike"] = { 2, 2 },
             ["Arms (wowsims.com) cleave"] = { 2 },
             ["Arms (wowsims.com) victory_rush"] = { 1 },
@@ -1049,7 +1049,9 @@ describe("Forever Warrior", function()
                     local c = e.criteria or ""
                     for kind, key in c:gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
-                            assert.is_not_nil(kinds[kind][key], where .. ": no " .. kind .. " " .. key)
+                            -- a racial's aura (multipleCdUsages's buff.<racial>.duration, R42): the race pack's
+                            local racialAura = (kind == "buff" and racial[key]) and set.auras[key]
+                            assert.is_not_nil(kinds[kind][key] or racialAura, where .. ": no " .. kind .. " " .. key)
                         end
                     end
                     assert.is_nil(secretToken(c), where) -- no health or time to die: secret on Forever (Task 9b)

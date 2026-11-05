@@ -2,6 +2,18 @@
 -- translation. Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warrior/dps/presets.ts
 -- (ArmsTalents :102, DefaultOptions :143-152, OtherDefaults :169-175) at the pin; gear p1_arms (the spike's, a level
 -- 60 set; the presets' default is the Fury build).
+-- Re-pin e2842f0a78 (lane 14): hasBsT2 false (the pin's DefaultOptions; +30 AP only). Replay assumption (R42): the
+-- replay world answers `fight_remains` from the log's known length (the game reads 3600, gap AN), so the translated
+-- multipleCdUsages lines (Death Wish, Recklessness, the racials) follow wowsims's 180 s fight there and fire on
+-- cooldown in game. Floor 0.91, on-GCD 0.917 (72; base 0.943) after the spellGcdHastedDuration fix (Slam's
+-- `action.mortal_strike.gcd` read; 0.875 before) and the replay's GCD fix (a late-line GCD end cleared the client's
+-- flag; the belief learned a 1.3 s GCD at 78.85). Disagreements, wowsims -> ours:
+-- 1. berserker_rage -> battle_shout (-4.50): the ruled pre-pull gate (below).
+-- 2. overpower -> execute (155.85): wowsims casts Overpower on a white swing's rage logged at the same instant (3.0 ->
+--    20.1); the replay lands the swing one landing lag later and Overpower's window line reads the client's usability
+--    now (short at 3.0), so ours shows Execute: replay limit (landing lag; item 2 below).
+-- 3. execute -> sunder_armor (159.65): Sunder's five stacks fade on the cast's own timestamp, logged after the cast;
+--    wowsims decides before the fade, ours sees the fade due: a same-instant tie.
 -- Since the user's Berserker Rage ruling (2026-10-21; recipe `requires`): floor 0.89, on-GCD 0.896 (67): the build has no
 -- Improved Berserker Rage, so the pre-pull Berserker Rage wowsims casts at -4.5 is gated off (berserker_rage ->
 -- battle_shout at -4.50, a ruled deviation). Before it:
@@ -50,7 +62,7 @@ return {
                 startingRage = 50,
                 useBattleShout = true,
                 defaultStance = "WarriorStanceBerserker",
-                hasBsT2 = true,
+                hasBsT2 = false,
                 stanceSnapshot = true,
             },
         },
@@ -74,8 +86,8 @@ return {
     -- ruling, 2026-10-22)
     focus = { overpower = 1, heroic_strike = 2, cleave = 2, rend = 2 },
     -- Rule 15: Thunder Clap, a setting off in game and on in the harness (the user's ruling, 2026-10-21); its only
-    -- line is the leveling filler below. Fury casts no Thunder Clap, so its recipe names none (rule 15 errors on a key
-    -- with no cast line) and the setting is registered for Arms only.
+    -- line is the leveling line below (the slow missing: a need, R41). Fury casts no Thunder Clap, so its recipe names
+    -- none (rule 15 errors on a key with no cast line) and the setting is registered for Arms only.
     maintenance = { thunder_clap = "maintain_thunder_clap" },
     -- leveling: before Mortal Strike's talent (the brackets' L40 has 31 points, short of it) Arms has only cooldown
     -- strikes (Slam 18 s, Spearing Strike 20 s), Rend, Thunder Clap and five Sunders; the rest goes to the off-GCD Heroic

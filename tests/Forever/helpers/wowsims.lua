@@ -390,7 +390,12 @@ M.READY = {
     warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
     -- 0.880, 5 (was 0.80, 6): the world's parry haste (decision 63); the tie hand-back moves 177.88 sunder late -> never
     -- 0.680, 6 (fix 40): a short answer read before our own gain shows is no rung, so 177.88 sunder never -> early 0.68
-    warrior_arms = { 0.68, 6 },
+    -- { 0.68, 6 } -> { 1.21, 4 } (re-pin e2842f0a78, lane 14, R6): after the replay's GCD fix every early row is in
+    -- grain; the four left are late, each a cost wait on a same-instant gain wowsims casts on: 102.65 Mortal Strike
+    -- (3.80: a white crit's 34.2 rage logged at the cast, heard one landing lag later, so the queue waits a swing),
+    -- 40.05 / 90.05 Sunder and 110.05 Mortal Strike (1.81 / 1.21 / 0.21: an Anger Management tick crosses the cost
+    -- 0.05 s before the cast; the belief's lo sits 1.5-6.9 under the truth)
+    warrior_arms = { 1.21, 4 },
     -- 0.51, 35 (was 0.48, 32): harness corrected to the measured swing timing (2026-10-22); 0.44 (fix 40): Whirlwind at
     -- 57.09 and 117.06 late -> early 0.09 and 0.06
     -- { 0.52, 26 } -> { 0.90, 19 } (lane 14, replay world fix, as druid_guardian's): 6 early GCD-chain rows in grain,

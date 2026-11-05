@@ -82,8 +82,10 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- measured 0.896: 0.910 after central fixes 7, 13 and 16 (was 0.86, provisional), less the pre-pull Berserker
             -- Rage wowsims casts at -4.5 without Improved Berserker Rage (the build has none), which the user's ruling
             -- (2026-10-21) gates on that talent (berserker_rage -> battle_shout, 1 of 67); 0.881 (59 of 67) with the world's
-            -- parry haste (decision 63): the same-frame Bloodrage gap (gaps.md, fix 40); 0.896 (60 of 67) with fix 40
-            0.89,
+            -- parry haste (decision 63): the same-frame Bloodrage gap (gaps.md, fix 40); 0.896 (60 of 67) with fix 40.
+            -- Re-pin e2842f0a78 (lane 14, R6): 0.917 (66 of 72; base 0.943, inside max(0.02, 2/72)); the recipe header
+            -- names each disagreement
+            0.91,
             ARMS_REPLAY
         )
     end)
@@ -102,7 +104,8 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- lifted L10 and L40 to 9.2 before). L10 7.4 and L40 12.8 since R41 removed the leveling Hamstring (5.6 / 5.6 with
     -- it; 9.0 / 11.2 before it): nothing useful to cast before Mortal Strike's talent: L10 Rend, Thunder Clap and five
     -- Sunders up, the rage going to the off-GCD Heroic Strike; L40 the same with Slam and Spearing Strike cooling.
-    local ARMS_LIVE = { [10] = 7.4, [40] = 12.8, [60] = 6 } -- 7.4 / 12.8 / 5.0
+    -- Re-pin e2842f0a78 (lane 14): 7.4 / 8.6 / 5.6 measured; the limits stay (only ever lowered: L40's 12.8 is the traced window)
+    local ARMS_LIVE = { [10] = 7.4, [40] = 12.8, [60] = 6 } -- 7.4 / 8.6 / 5.6
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Arms (wowsims.com) stays live at level " .. level, function()
             ws.live(
@@ -141,7 +144,7 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             )
         end)
     end
-    -- Central fix 18 (in game, level 30 beta: no Mortal Strike or Bloodthirst before 40): the leveling filler Sunder
+    -- Central fix 18 (in game, level 30 beta: no Mortal Strike or Bloodthirst before 40): the leveling Sunder line
     -- fired at 5 stacks. Below 40, with ours driving on the secret client (target auras raise in combat), the first
     -- icon is never Sunder while the target's true 5 stacks have more than 15 s left (past any wait the queue shows)
     -- and the fifth is older than one tick (the cast's frame, before its success folds in).

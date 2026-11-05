@@ -13,10 +13,11 @@
 # Omitted: default #7: hidden
 # Omitted: default #8: other OtherActionOffensivePotion
 # Omitted: default #9: other OtherActionResourcePotion
-# Omitted: default #24: never
-# Omitted: default #31: hidden
-# Omitted: default #32: hidden
-# Omitted: default #33: hidden
+# Omitted: default #10: other OtherActionOffensivePotion
+# Omitted: default #29: never
+# Omitted: default #35: hidden
+# Omitted: default #36: hidden
+# Omitted: default #37: hidden
 # Omitted: engineering #1: item 10646
 # Omitted: engineering #2: item 11566
 # Omitted: engineering #3: item 18588
@@ -38,34 +39,40 @@ actions.precombat+=/battle_shout,if=!buff.battle_shout.up
 actions.precombat+=/call_action_list,name=pre_pull_move
 actions=call_action_list,name=sunder_armor,if=active_enemies=1
 actions+=/call_action_list,name=cd_racials
-actions+=/death_wish
-actions+=/recklessness,if=settings.wowsims_recklessness
+actions+=/death_wish,if=(fight_remains<=buff.death_wish.duration|fight_remains>(cooldown.death_wish.duration+(buff.death_wish.duration/2)))
+actions+=/recklessness,if=((settings.wowsims_recklessness&settings.wowsims_stance_dance)&(fight_remains<=buff.recklessness.duration|fight_remains>(cooldown.recklessness.duration+(buff.recklessness.duration/2))))
 actions+=/sweeping_strikes,use_off_gcd=1,if=active_enemies>1
 actions+=/battle_stance,use_off_gcd=1,if=(!settings.wowsims_stance_dance&!buff.battle_stance.up)
 actions+=/victory_rush,focus=1
 actions+=/mortal_strike,if=settings.wowsims_stance_dance
-actions+=/rend,focus=2,if=(!execute_phase&(!action.battle_stance.known|buff.battle_stance.up)&debuff.rend.remains<=1.5)
+actions+=/battle_stance,use_off_gcd=1,if=((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(!action.battle_stance.known|cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known|cooldown.overpower.remains<=0))
+actions+=/overpower,focus=1,if=((action.battle_stance.known&prev.1.battle_stance)|(!action.battle_stance.known&((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(!action.battle_stance.known|cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known|cooldown.overpower.remains<=0))))&(buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known|cooldown.overpower.remains<=0))
 actions+=/overpower,focus=1,if=(!action.battle_stance.known|buff.battle_stance.up)
+actions+=/berserker_stance,use_off_gcd=1,if=(!settings.wowsims_stance_dance&active_enemies>=3&rage.lo>=25&gcd.remains<=0&!buff.berserker_stance.up&(!action.whirlwind.known|cooldown.whirlwind.ready))
+actions+=/whirlwind,if=(!settings.wowsims_stance_dance&active_enemies>=3)
 actions+=/mortal_strike,if=!settings.wowsims_stance_dance
+actions+=/slam,if=(!execute_phase&(!action.mortal_strike.known|action.slam.cast<action.mortal_strike.gcd))
+actions+=/battle_stance,use_off_gcd=1,if=((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(!action.battle_stance.known|cooldown.battle_stance.remains<=0))&(!action.rend.known|debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)
+actions+=/rend,focus=2,if=((action.battle_stance.known&prev.1.battle_stance)|(!action.battle_stance.known&((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(!action.battle_stance.known|cooldown.battle_stance.remains<=0))&(!action.rend.known|debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)))&((!action.rend.known|debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)
+actions+=/rend,focus=2,if=(!execute_phase&(!action.battle_stance.known|buff.battle_stance.up)&debuff.rend.remains<=action.rend.gcd)
+actions+=/slam,if=(!execute_phase&(!action.mortal_strike.known|action.slam.cast>=action.mortal_strike.gcd)&mainhand_remains>=mainhand_speed-(0+0.3))
 actions+=/spearing_strike,if=(!execute_phase&(!action.battle_stance.known|buff.battle_stance.up))
-actions+=/berserker_stance,use_off_gcd=1,if=(settings.wowsims_stance_dance&(!action.battle_stance.known|buff.battle_stance.up)&!buff.overpower_ready.up&(execute_phase|(action.rend.known&debuff.rend.remains>1.5)))
-actions+=/slam,if=(!execute_phase&action.slam.cast<1.5)
-actions+=/slam,if=(!execute_phase&action.slam.cast>=1.5&mainhand_remains>=mainhand_speed-(0+0.3))
+actions+=/berserker_stance,use_off_gcd=1,if=(settings.wowsims_stance_dance&(!action.battle_stance.known|buff.battle_stance.up)&!buff.overpower_ready.up&(execute_phase|(action.rend.known&debuff.rend.remains>action.rend.gcd)))
 actions+=/whirlwind,if=settings.wowsims_stance_dance
 actions+=/execute,if=execute_phase
-actions+=/battle_stance,use_off_gcd=1,if=(settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(buff.overpower_ready.up|(action.rend.known&debuff.rend.remains<=1.5)))
 actions+=/cleave,use_off_gcd=1,focus=2,if=(active_enemies>1&rage.lo>=40)
-actions+=/heroic_strike,use_off_gcd=1,focus=2,if=(!execute_phase&rage.lo>=90)
+actions+=/heroic_strike,use_off_gcd=1,focus=2,if=(!execute_phase&rage.lo>=90&!talent.improved_slam.enabled)
 actions+=/bloodrage,use_off_gcd=1,if=rage.lo<90
-actions+=/battle_shout,if=(((!action.mortal_strike.known|cooldown.mortal_strike.remains>=1.5)&(!settings.wowsims_stance_dance|(action.whirlwind.known&cooldown.whirlwind.remains>=1.5)))&buff.battle_shout.remains<=10)
+actions+=/battle_shout,if=(((!action.mortal_strike.known|cooldown.mortal_strike.remains>=action.mortal_strike.gcd)&(!settings.wowsims_stance_dance|(action.whirlwind.known&cooldown.whirlwind.remains>=action.whirlwind.gcd)))&buff.battle_shout.remains<=10)
 actions+=/heroic_strike,use_off_gcd=1,focus=2,if=!action.mortal_strike.known&rage.lo>=30
 actions+=/thunder_clap,if=settings.maintain_thunder_clap&!action.mortal_strike.known&!debuff.thunder_clap.up
 actions+=/sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5
 actions.pre_pull_stance=battle_stance,use_off_gcd=1,if=!buff.battle_stance.up&!settings.wowsims_stance_dance
 actions.pre_pull_move=charge,use_off_gcd=1,if=(!action.battle_stance.known|buff.battle_stance.up)
 actions.pre_pull_move+=/intercept,use_off_gcd=1,if=(!action.berserker_stance.known|buff.berserker_stance.up)
-actions.cd_racials=blood_fury,use_off_gcd=1
-actions.cd_racials+=/berserking,use_off_gcd=1
-actions.cd_racials+=/eureka,use_off_gcd=1
-actions.cd_racials+=/elunes_light,use_off_gcd=1
+actions.cd_racials=blood_fury,use_off_gcd=1,if=(fight_remains<=buff.blood_fury.duration|fight_remains>(cooldown.blood_fury.duration+(buff.blood_fury.duration/2)))
+actions.cd_racials+=/berserking,use_off_gcd=1,if=(fight_remains<=buff.berserking.duration|fight_remains>(cooldown.berserking.duration+(buff.berserking.duration/2)))
+actions.cd_racials+=/eureka,use_off_gcd=1,if=(fight_remains<=buff.eureka.duration|fight_remains>(cooldown.eureka.duration+(buff.eureka.duration/2)))
+actions.cd_racials+=/elunes_light,use_off_gcd=1,if=(!(settings.wowsims_recklessness&settings.wowsims_stance_dance)&(fight_remains<=buff.elunes_light.duration|fight_remains>(cooldown.elunes_light.duration+(buff.elunes_light.duration/2))))
+actions.cd_racials+=/elunes_light,use_off_gcd=1,if=((settings.wowsims_recklessness&settings.wowsims_stance_dance)&(!action.recklessness.known|!buff.recklessness.up)&fight_remains>15&(fight_remains>195|fight_remains<=30))
 actions.sunder_armor=sunder_armor,if=debuff.sunder_armor.stack<5
