@@ -12,14 +12,10 @@ local sameKeys = require("Forever.helpers.gear_keys")
 
 local IDOL, SET, FAKE, BONUS = 272430, { 273884, 273885, 273886, 273887 }, { 990001, 990002 }, 1301242
 
--- Test-only registration on the kit, until the Druid pack declares it (Task 7 keeps only the fake ids here).
+-- The Druid pack declares the idol, the four shipped pieces (db.json setId 2114) and the 5-piece aura; the test adds
+-- two fake ids for the head and chest (not in the game files; test only), appended to the pack's set.
 local function declare(H)
-    local kit = H.Hekili.Class.kit
-    kit:RegisterGear("swarming_idol", IDOL)
-    -- the 4 shipped pieces (db.json setId 2114) + 2 fake ids (the head and chest are not in the game files; test only)
-    kit:RegisterGear("grovekeeper_eclipse", SET[1], SET[2], SET[3], SET[4], FAKE[1], FAKE[2])
-    kit:RegisterSetBonus("grovekeeper_eclipse_5pc", BONUS)
-    kit:RegisterAuras({ grovekeeper_eclipse_5pc = { id = BONUS, duration = 3600, max_stack = 1 } })
+    H.Hekili.Class.kit:RegisterGear("grovekeeper_eclipse", FAKE[1], FAKE[2])
     H.Hekili:SpecializationChanged() -- class.gear, def.gear, the belief rebuilt
 end
 
@@ -99,24 +95,27 @@ local function bonusAura(H, up)
     assert.is_true(headless.cycle(H, H.ctl.now))
 end
 
-local function boot(items)
+-- `login`: no test registration and no rebuild, only the login path's own read (scenario 8).
+local function boot(items, login)
     local c = W.Balance.character()
     c.items = items
     c.talents[1223083] = 1 -- Nature's Splendor rank 1: the duration's talent term in both
     local H = headless.new({ character = c, pack = W.Balance.PACK })
-    declare(H)
+    if not login then
+        declare(H)
+    end
     settle(H)
     return H
 end
 
--- Nature's Splendor rank 1 in the Balance character: 12 + 2 = 14 s (no gear term yet: Task 7 adds it).
+-- Nature's Splendor rank 1 in the Balance character: 12 + 2 = 14 s; the idol +2 s, the 5-piece +3 s (R32).
 local DUR = 14
 -- (idol, set, 2pc, 4pc, 5pc, 6pc, undeclared, eq.idol, eq.set, eq.undeclared, insect_swarm duration)
 local NONE = { 0, 0, 0, 0, 0, 0, 0, false, false, false, DUR }
-local IDOL_ROW = { 1, 0, 0, 0, 0, 0, 0, true, false, false, DUR }
+local IDOL_ROW = { 1, 0, 0, 0, 0, 0, 0, true, false, false, DUR + 2 }
 local FOUR = { 0, 4, 1, 1, 0, 0, 0, false, true, false, DUR }
-local SIX = { 0, 6, 1, 1, 1, 1, 0, false, true, false, DUR }
-local BONUS_ROW = { 0, 0, 0, 0, 1, 0, 0, false, false, false, DUR }
+local SIX = { 0, 6, 1, 1, 1, 1, 0, false, true, false, DUR + 3 }
+local BONUS_ROW = { 0, 0, 0, 0, 1, 0, 0, false, false, false, DUR + 3 }
 
 local FOUR_ITEMS = { [3] = SET[1], [7] = SET[2], [8] = SET[3], [10] = SET[4] }
 
@@ -154,11 +153,13 @@ describe("gear parity between the core and the belief #slow", function()
         expect(H, FOUR)
     end)
 
-    it("4. the four plus the two fake ids, then 6. unequip everything", function()
+    it("4. the four plus the two fake ids, then the idol too, then 6. unequip everything", function()
         local H = boot(nil)
         wear(H, FOUR_ITEMS)
         wear(H, { [1] = FAKE[1], [5] = FAKE[2] })
         expect(H, SIX)
+        wear(H, { [18] = IDOL }) -- the idol and the 5-piece together: 12 + 2 + 2 + 3
+        expect(H, { 1, 6, 1, 1, 1, 1, 0, true, true, false, DUR + 5 })
         strip(H)
         expect(H, NONE)
     end)
@@ -195,7 +196,7 @@ describe("gear parity between the core and the belief #slow", function()
     end)
 
     it("8. login before the item cache: the four pieces read with no name and no event", function()
-        local H = boot({ [3] = { SET[1] }, [7] = { SET[2] }, [8] = { SET[3] }, [10] = { SET[4] } })
+        local H = boot({ [3] = { SET[1] }, [7] = { SET[2] }, [8] = { SET[3] }, [10] = { SET[4] } }, true)
         for _, id in ipairs(SET) do
             assert.is_nil(H.ctl.items[id][1]) -- not cached: no name
         end

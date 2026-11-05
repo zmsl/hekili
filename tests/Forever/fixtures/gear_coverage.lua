@@ -16,8 +16,6 @@ return {
             effect = "Insect Swarm +2 s (1291061)",
             status = "modelled",
             keys = { "swarming_idol" },
-            pending = true,
-            why = "Task 7",
         },
         {
             id = "D0b",
@@ -26,8 +24,6 @@ return {
             effect = "Insect Swarm +3 s (1301242); 4 of 6 pieces ship",
             status = "modelled",
             keys = { "grovekeeper_eclipse", "grovekeeper_eclipse_5pc" },
-            pending = true,
-            why = "Task 7",
         },
         {
             id = "D0c",
