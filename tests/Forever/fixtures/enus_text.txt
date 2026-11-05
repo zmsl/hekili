@@ -1816,6 +1816,39 @@ options.abilities.disarm.toggle	values.interrupts	Interrupts
 options.abilities.disarm.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.disarm.toggle	values.none	None
 options.abilities.disarm.toggle	values.potions	Potions
+options.abilities.disease_cleansing_totem	name	Spell 8170
+options.abilities.disease_cleansing_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8170 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8170 can be recommended in any type of fight.
+options.abilities.disease_cleansing_totem.boss	name	Boss Encounter Only
+options.abilities.disease_cleansing_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 8170 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.disease_cleansing_totem.clash	name	Clash
+options.abilities.disease_cleansing_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 8170.
+options.abilities.disease_cleansing_totem.disabled	name	Disable |T136000:0|t Spell 8170
+options.abilities.disease_cleansing_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.disease_cleansing_totem.dotCap	name	Maximum Applications
+options.abilities.disease_cleansing_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.disease_cleansing_totem.hasIcon	name	Icon Replacement
+options.abilities.disease_cleansing_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.disease_cleansing_totem.keybind	name	Override Keybind Text
+options.abilities.disease_cleansing_totem.lineBreak1	name	\032
+options.abilities.disease_cleansing_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.disease_cleansing_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.disease_cleansing_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.disease_cleansing_totem.noIcon	name	Icon Replacement
+options.abilities.disease_cleansing_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8170 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.disease_cleansing_totem.targetMax	name	Maximum Targets
+options.abilities.disease_cleansing_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8170 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.disease_cleansing_totem.targetMin	name	Minimum Targets
+options.abilities.disease_cleansing_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.disease_cleansing_totem.toggle	name	Require Toggle
+options.abilities.disease_cleansing_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.disease_cleansing_totem.toggle	values.custom1	Custom 1
+options.abilities.disease_cleansing_totem.toggle	values.custom2	Custom 2
+options.abilities.disease_cleansing_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.disease_cleansing_totem.toggle	values.defensives	Defensives
+options.abilities.disease_cleansing_totem.toggle	values.interrupts	Interrupts
+options.abilities.disease_cleansing_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.disease_cleansing_totem.toggle	values.none	None
+options.abilities.disease_cleansing_totem.toggle	values.potions	Potions
 options.abilities.divine_favor	name	Spell 20216
 options.abilities.divine_favor.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 20216 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 20216 can be recommended in any type of fight.
 options.abilities.divine_favor.boss	name	Boss Encounter Only
@@ -1948,6 +1981,39 @@ options.abilities.earth_shock.toggle	values.interrupts	Interrupts
 options.abilities.earth_shock.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.earth_shock.toggle	values.none	None
 options.abilities.earth_shock.toggle	values.potions	Potions
+options.abilities.earthbind_totem	name	Spell 2484
+options.abilities.earthbind_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 2484 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 2484 can be recommended in any type of fight.
+options.abilities.earthbind_totem.boss	name	Boss Encounter Only
+options.abilities.earthbind_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 2484 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.earthbind_totem.clash	name	Clash
+options.abilities.earthbind_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 2484.
+options.abilities.earthbind_totem.disabled	name	Disable |T136000:0|t Spell 2484
+options.abilities.earthbind_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.earthbind_totem.dotCap	name	Maximum Applications
+options.abilities.earthbind_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.earthbind_totem.hasIcon	name	Icon Replacement
+options.abilities.earthbind_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.earthbind_totem.keybind	name	Override Keybind Text
+options.abilities.earthbind_totem.lineBreak1	name	\032
+options.abilities.earthbind_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.earthbind_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.earthbind_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.earthbind_totem.noIcon	name	Icon Replacement
+options.abilities.earthbind_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 2484 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.earthbind_totem.targetMax	name	Maximum Targets
+options.abilities.earthbind_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 2484 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.earthbind_totem.targetMin	name	Minimum Targets
+options.abilities.earthbind_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.earthbind_totem.toggle	name	Require Toggle
+options.abilities.earthbind_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.earthbind_totem.toggle	values.custom1	Custom 1
+options.abilities.earthbind_totem.toggle	values.custom2	Custom 2
+options.abilities.earthbind_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.earthbind_totem.toggle	values.defensives	Defensives
+options.abilities.earthbind_totem.toggle	values.interrupts	Interrupts
+options.abilities.earthbind_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.earthbind_totem.toggle	values.none	None
+options.abilities.earthbind_totem.toggle	values.potions	Potions
 options.abilities.elemental_mastery	name	Spell 16166
 options.abilities.elemental_mastery.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 16166 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 16166 can be recommended in any type of fight.
 options.abilities.elemental_mastery.boss	name	Boss Encounter Only
@@ -2377,6 +2443,39 @@ options.abilities.fire_nova.toggle	values.interrupts	Interrupts
 options.abilities.fire_nova.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.fire_nova.toggle	values.none	None
 options.abilities.fire_nova.toggle	values.potions	Potions
+options.abilities.fire_resistance_totem	name	Spell 8184
+options.abilities.fire_resistance_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8184 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8184 can be recommended in any type of fight.
+options.abilities.fire_resistance_totem.boss	name	Boss Encounter Only
+options.abilities.fire_resistance_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 8184 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.fire_resistance_totem.clash	name	Clash
+options.abilities.fire_resistance_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 8184.
+options.abilities.fire_resistance_totem.disabled	name	Disable |T136000:0|t Spell 8184
+options.abilities.fire_resistance_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.fire_resistance_totem.dotCap	name	Maximum Applications
+options.abilities.fire_resistance_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.fire_resistance_totem.hasIcon	name	Icon Replacement
+options.abilities.fire_resistance_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.fire_resistance_totem.keybind	name	Override Keybind Text
+options.abilities.fire_resistance_totem.lineBreak1	name	\032
+options.abilities.fire_resistance_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.fire_resistance_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.fire_resistance_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.fire_resistance_totem.noIcon	name	Icon Replacement
+options.abilities.fire_resistance_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8184 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.fire_resistance_totem.targetMax	name	Maximum Targets
+options.abilities.fire_resistance_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8184 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.fire_resistance_totem.targetMin	name	Minimum Targets
+options.abilities.fire_resistance_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.fire_resistance_totem.toggle	name	Require Toggle
+options.abilities.fire_resistance_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.fire_resistance_totem.toggle	values.custom1	Custom 1
+options.abilities.fire_resistance_totem.toggle	values.custom2	Custom 2
+options.abilities.fire_resistance_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.fire_resistance_totem.toggle	values.defensives	Defensives
+options.abilities.fire_resistance_totem.toggle	values.interrupts	Interrupts
+options.abilities.fire_resistance_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.fire_resistance_totem.toggle	values.none	None
+options.abilities.fire_resistance_totem.toggle	values.potions	Potions
 options.abilities.fireball	name	Spell 133
 options.abilities.fireball.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 133 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 133 can be recommended in any type of fight.
 options.abilities.fireball.boss	name	Boss Encounter Only
@@ -2542,6 +2641,39 @@ options.abilities.frenzied_regeneration.toggle	values.interrupts	Interrupts
 options.abilities.frenzied_regeneration.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.frenzied_regeneration.toggle	values.none	None
 options.abilities.frenzied_regeneration.toggle	values.potions	Potions
+options.abilities.frost_resistance_totem	name	Spell 8181
+options.abilities.frost_resistance_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8181 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8181 can be recommended in any type of fight.
+options.abilities.frost_resistance_totem.boss	name	Boss Encounter Only
+options.abilities.frost_resistance_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 8181 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.frost_resistance_totem.clash	name	Clash
+options.abilities.frost_resistance_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 8181.
+options.abilities.frost_resistance_totem.disabled	name	Disable |T136000:0|t Spell 8181
+options.abilities.frost_resistance_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.frost_resistance_totem.dotCap	name	Maximum Applications
+options.abilities.frost_resistance_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.frost_resistance_totem.hasIcon	name	Icon Replacement
+options.abilities.frost_resistance_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.frost_resistance_totem.keybind	name	Override Keybind Text
+options.abilities.frost_resistance_totem.lineBreak1	name	\032
+options.abilities.frost_resistance_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.frost_resistance_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.frost_resistance_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.frost_resistance_totem.noIcon	name	Icon Replacement
+options.abilities.frost_resistance_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8181 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.frost_resistance_totem.targetMax	name	Maximum Targets
+options.abilities.frost_resistance_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8181 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.frost_resistance_totem.targetMin	name	Minimum Targets
+options.abilities.frost_resistance_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.frost_resistance_totem.toggle	name	Require Toggle
+options.abilities.frost_resistance_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.frost_resistance_totem.toggle	values.custom1	Custom 1
+options.abilities.frost_resistance_totem.toggle	values.custom2	Custom 2
+options.abilities.frost_resistance_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.frost_resistance_totem.toggle	values.defensives	Defensives
+options.abilities.frost_resistance_totem.toggle	values.interrupts	Interrupts
+options.abilities.frost_resistance_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.frost_resistance_totem.toggle	values.none	None
+options.abilities.frost_resistance_totem.toggle	values.potions	Potions
 options.abilities.frostbolt	name	Spell 116
 options.abilities.frostbolt.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 116 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 116 can be recommended in any type of fight.
 options.abilities.frostbolt.boss	name	Boss Encounter Only
@@ -2773,6 +2905,39 @@ options.abilities.grace_of_air_totem.toggle	values.interrupts	Interrupts
 options.abilities.grace_of_air_totem.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.grace_of_air_totem.toggle	values.none	None
 options.abilities.grace_of_air_totem.toggle	values.potions	Potions
+options.abilities.grounding_totem	name	Spell 8177
+options.abilities.grounding_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8177 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8177 can be recommended in any type of fight.
+options.abilities.grounding_totem.boss	name	Boss Encounter Only
+options.abilities.grounding_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 8177 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.grounding_totem.clash	name	Clash
+options.abilities.grounding_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 8177.
+options.abilities.grounding_totem.disabled	name	Disable |T136000:0|t Spell 8177
+options.abilities.grounding_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.grounding_totem.dotCap	name	Maximum Applications
+options.abilities.grounding_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.grounding_totem.hasIcon	name	Icon Replacement
+options.abilities.grounding_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.grounding_totem.keybind	name	Override Keybind Text
+options.abilities.grounding_totem.lineBreak1	name	\032
+options.abilities.grounding_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.grounding_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.grounding_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.grounding_totem.noIcon	name	Icon Replacement
+options.abilities.grounding_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8177 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.grounding_totem.targetMax	name	Maximum Targets
+options.abilities.grounding_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8177 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.grounding_totem.targetMin	name	Minimum Targets
+options.abilities.grounding_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.grounding_totem.toggle	name	Require Toggle
+options.abilities.grounding_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.grounding_totem.toggle	values.custom1	Custom 1
+options.abilities.grounding_totem.toggle	values.custom2	Custom 2
+options.abilities.grounding_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.grounding_totem.toggle	values.defensives	Defensives
+options.abilities.grounding_totem.toggle	values.interrupts	Interrupts
+options.abilities.grounding_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.grounding_totem.toggle	values.none	None
+options.abilities.grounding_totem.toggle	values.potions	Potions
 options.abilities.growl	name	Spell 6795
 options.abilities.growl.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 6795 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 6795 can be recommended in any type of fight.
 options.abilities.growl.boss	name	Boss Encounter Only
@@ -2872,6 +3037,39 @@ options.abilities.hamstring.toggle	values.interrupts	Interrupts
 options.abilities.hamstring.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.hamstring.toggle	values.none	None
 options.abilities.hamstring.toggle	values.potions	Potions
+options.abilities.healing_stream_totem	name	Spell 5394
+options.abilities.healing_stream_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 5394 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 5394 can be recommended in any type of fight.
+options.abilities.healing_stream_totem.boss	name	Boss Encounter Only
+options.abilities.healing_stream_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 5394 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.healing_stream_totem.clash	name	Clash
+options.abilities.healing_stream_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 5394.
+options.abilities.healing_stream_totem.disabled	name	Disable |T136000:0|t Spell 5394
+options.abilities.healing_stream_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.healing_stream_totem.dotCap	name	Maximum Applications
+options.abilities.healing_stream_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.healing_stream_totem.hasIcon	name	Icon Replacement
+options.abilities.healing_stream_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.healing_stream_totem.keybind	name	Override Keybind Text
+options.abilities.healing_stream_totem.lineBreak1	name	\032
+options.abilities.healing_stream_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.healing_stream_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.healing_stream_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.healing_stream_totem.noIcon	name	Icon Replacement
+options.abilities.healing_stream_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 5394 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.healing_stream_totem.targetMax	name	Maximum Targets
+options.abilities.healing_stream_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 5394 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.healing_stream_totem.targetMin	name	Minimum Targets
+options.abilities.healing_stream_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.healing_stream_totem.toggle	name	Require Toggle
+options.abilities.healing_stream_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.healing_stream_totem.toggle	values.custom1	Custom 1
+options.abilities.healing_stream_totem.toggle	values.custom2	Custom 2
+options.abilities.healing_stream_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.healing_stream_totem.toggle	values.defensives	Defensives
+options.abilities.healing_stream_totem.toggle	values.interrupts	Interrupts
+options.abilities.healing_stream_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.healing_stream_totem.toggle	values.none	None
+options.abilities.healing_stream_totem.toggle	values.potions	Potions
 options.abilities.healing_touch	name	Spell 5185
 options.abilities.healing_touch.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 5185 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 5185 can be recommended in any type of fight.
 options.abilities.healing_touch.boss	name	Boss Encounter Only
@@ -4258,6 +4456,39 @@ options.abilities.mutilate.toggle	values.interrupts	Interrupts
 options.abilities.mutilate.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.mutilate.toggle	values.none	None
 options.abilities.mutilate.toggle	values.potions	Potions
+options.abilities.nature_resistance_totem	name	Spell 10595
+options.abilities.nature_resistance_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 10595 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 10595 can be recommended in any type of fight.
+options.abilities.nature_resistance_totem.boss	name	Boss Encounter Only
+options.abilities.nature_resistance_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 10595 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.nature_resistance_totem.clash	name	Clash
+options.abilities.nature_resistance_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 10595.
+options.abilities.nature_resistance_totem.disabled	name	Disable |T136000:0|t Spell 10595
+options.abilities.nature_resistance_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.nature_resistance_totem.dotCap	name	Maximum Applications
+options.abilities.nature_resistance_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.nature_resistance_totem.hasIcon	name	Icon Replacement
+options.abilities.nature_resistance_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.nature_resistance_totem.keybind	name	Override Keybind Text
+options.abilities.nature_resistance_totem.lineBreak1	name	\032
+options.abilities.nature_resistance_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.nature_resistance_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.nature_resistance_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.nature_resistance_totem.noIcon	name	Icon Replacement
+options.abilities.nature_resistance_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 10595 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.nature_resistance_totem.targetMax	name	Maximum Targets
+options.abilities.nature_resistance_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 10595 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.nature_resistance_totem.targetMin	name	Minimum Targets
+options.abilities.nature_resistance_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.nature_resistance_totem.toggle	name	Require Toggle
+options.abilities.nature_resistance_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.nature_resistance_totem.toggle	values.custom1	Custom 1
+options.abilities.nature_resistance_totem.toggle	values.custom2	Custom 2
+options.abilities.nature_resistance_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.nature_resistance_totem.toggle	values.defensives	Defensives
+options.abilities.nature_resistance_totem.toggle	values.interrupts	Interrupts
+options.abilities.nature_resistance_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.nature_resistance_totem.toggle	values.none	None
+options.abilities.nature_resistance_totem.toggle	values.potions	Potions
 options.abilities.natures_grasp	name	Spell 16689
 options.abilities.natures_grasp.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 16689 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 16689 can be recommended in any type of fight.
 options.abilities.natures_grasp.boss	name	Boss Encounter Only
@@ -4390,6 +4621,39 @@ options.abilities.piercing_howl.toggle	values.interrupts	Interrupts
 options.abilities.piercing_howl.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.piercing_howl.toggle	values.none	None
 options.abilities.piercing_howl.toggle	values.potions	Potions
+options.abilities.poison_cleansing_totem	name	Spell 8166
+options.abilities.poison_cleansing_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8166 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8166 can be recommended in any type of fight.
+options.abilities.poison_cleansing_totem.boss	name	Boss Encounter Only
+options.abilities.poison_cleansing_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 8166 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.poison_cleansing_totem.clash	name	Clash
+options.abilities.poison_cleansing_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 8166.
+options.abilities.poison_cleansing_totem.disabled	name	Disable |T136000:0|t Spell 8166
+options.abilities.poison_cleansing_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.poison_cleansing_totem.dotCap	name	Maximum Applications
+options.abilities.poison_cleansing_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.poison_cleansing_totem.hasIcon	name	Icon Replacement
+options.abilities.poison_cleansing_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.poison_cleansing_totem.keybind	name	Override Keybind Text
+options.abilities.poison_cleansing_totem.lineBreak1	name	\032
+options.abilities.poison_cleansing_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.poison_cleansing_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.poison_cleansing_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.poison_cleansing_totem.noIcon	name	Icon Replacement
+options.abilities.poison_cleansing_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8166 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.poison_cleansing_totem.targetMax	name	Maximum Targets
+options.abilities.poison_cleansing_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8166 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.poison_cleansing_totem.targetMin	name	Minimum Targets
+options.abilities.poison_cleansing_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.poison_cleansing_totem.toggle	name	Require Toggle
+options.abilities.poison_cleansing_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.poison_cleansing_totem.toggle	values.custom1	Custom 1
+options.abilities.poison_cleansing_totem.toggle	values.custom2	Custom 2
+options.abilities.poison_cleansing_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.poison_cleansing_totem.toggle	values.defensives	Defensives
+options.abilities.poison_cleansing_totem.toggle	values.interrupts	Interrupts
+options.abilities.poison_cleansing_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.poison_cleansing_totem.toggle	values.none	None
+options.abilities.poison_cleansing_totem.toggle	values.potions	Potions
 options.abilities.potion	name	|cff00ccff[Potion]|r
 options.abilities.potion.boss	desc	If checked, the addon will not recommend |T136243:0|t |cff00ccff[Potion]|r unless you are in a boss fight (or encounter).  If left unchecked, |T136243:0|t |cff00ccff[Potion]|r can be recommended in any type of fight.
 options.abilities.potion.boss	name	Boss Encounter Only
@@ -5545,6 +5809,39 @@ options.abilities.searing_totem.toggle	values.interrupts	Interrupts
 options.abilities.searing_totem.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.searing_totem.toggle	values.none	None
 options.abilities.searing_totem.toggle	values.potions	Potions
+options.abilities.sentry_totem	name	Spell 6495
+options.abilities.sentry_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 6495 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 6495 can be recommended in any type of fight.
+options.abilities.sentry_totem.boss	name	Boss Encounter Only
+options.abilities.sentry_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 6495 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.sentry_totem.clash	name	Clash
+options.abilities.sentry_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 6495.
+options.abilities.sentry_totem.disabled	name	Disable |T136000:0|t Spell 6495
+options.abilities.sentry_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.sentry_totem.dotCap	name	Maximum Applications
+options.abilities.sentry_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.sentry_totem.hasIcon	name	Icon Replacement
+options.abilities.sentry_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.sentry_totem.keybind	name	Override Keybind Text
+options.abilities.sentry_totem.lineBreak1	name	\032
+options.abilities.sentry_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.sentry_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.sentry_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.sentry_totem.noIcon	name	Icon Replacement
+options.abilities.sentry_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 6495 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.sentry_totem.targetMax	name	Maximum Targets
+options.abilities.sentry_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 6495 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.sentry_totem.targetMin	name	Minimum Targets
+options.abilities.sentry_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.sentry_totem.toggle	name	Require Toggle
+options.abilities.sentry_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.sentry_totem.toggle	values.custom1	Custom 1
+options.abilities.sentry_totem.toggle	values.custom2	Custom 2
+options.abilities.sentry_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.sentry_totem.toggle	values.defensives	Defensives
+options.abilities.sentry_totem.toggle	values.interrupts	Interrupts
+options.abilities.sentry_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.sentry_totem.toggle	values.none	None
+options.abilities.sentry_totem.toggle	values.potions	Potions
 options.abilities.serpent_sting	name	Spell 1978
 options.abilities.serpent_sting.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1978 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1978 can be recommended in any type of fight.
 options.abilities.serpent_sting.boss	name	Boss Encounter Only
@@ -6395,6 +6692,72 @@ options.abilities.stealth.toggle	values.interrupts	Interrupts
 options.abilities.stealth.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.stealth.toggle	values.none	None
 options.abilities.stealth.toggle	values.potions	Potions
+options.abilities.stoneclaw_totem	name	Spell 5730
+options.abilities.stoneclaw_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 5730 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 5730 can be recommended in any type of fight.
+options.abilities.stoneclaw_totem.boss	name	Boss Encounter Only
+options.abilities.stoneclaw_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 5730 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.stoneclaw_totem.clash	name	Clash
+options.abilities.stoneclaw_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 5730.
+options.abilities.stoneclaw_totem.disabled	name	Disable |T136000:0|t Spell 5730
+options.abilities.stoneclaw_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.stoneclaw_totem.dotCap	name	Maximum Applications
+options.abilities.stoneclaw_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.stoneclaw_totem.hasIcon	name	Icon Replacement
+options.abilities.stoneclaw_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.stoneclaw_totem.keybind	name	Override Keybind Text
+options.abilities.stoneclaw_totem.lineBreak1	name	\032
+options.abilities.stoneclaw_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.stoneclaw_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.stoneclaw_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.stoneclaw_totem.noIcon	name	Icon Replacement
+options.abilities.stoneclaw_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 5730 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.stoneclaw_totem.targetMax	name	Maximum Targets
+options.abilities.stoneclaw_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 5730 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.stoneclaw_totem.targetMin	name	Minimum Targets
+options.abilities.stoneclaw_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.stoneclaw_totem.toggle	name	Require Toggle
+options.abilities.stoneclaw_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.stoneclaw_totem.toggle	values.custom1	Custom 1
+options.abilities.stoneclaw_totem.toggle	values.custom2	Custom 2
+options.abilities.stoneclaw_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.stoneclaw_totem.toggle	values.defensives	Defensives
+options.abilities.stoneclaw_totem.toggle	values.interrupts	Interrupts
+options.abilities.stoneclaw_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.stoneclaw_totem.toggle	values.none	None
+options.abilities.stoneclaw_totem.toggle	values.potions	Potions
+options.abilities.stoneskin_totem	name	Spell 8071
+options.abilities.stoneskin_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8071 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8071 can be recommended in any type of fight.
+options.abilities.stoneskin_totem.boss	name	Boss Encounter Only
+options.abilities.stoneskin_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 8071 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.stoneskin_totem.clash	name	Clash
+options.abilities.stoneskin_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 8071.
+options.abilities.stoneskin_totem.disabled	name	Disable |T136000:0|t Spell 8071
+options.abilities.stoneskin_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.stoneskin_totem.dotCap	name	Maximum Applications
+options.abilities.stoneskin_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.stoneskin_totem.hasIcon	name	Icon Replacement
+options.abilities.stoneskin_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.stoneskin_totem.keybind	name	Override Keybind Text
+options.abilities.stoneskin_totem.lineBreak1	name	\032
+options.abilities.stoneskin_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.stoneskin_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.stoneskin_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.stoneskin_totem.noIcon	name	Icon Replacement
+options.abilities.stoneskin_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8071 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.stoneskin_totem.targetMax	name	Maximum Targets
+options.abilities.stoneskin_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8071 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.stoneskin_totem.targetMin	name	Minimum Targets
+options.abilities.stoneskin_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.stoneskin_totem.toggle	name	Require Toggle
+options.abilities.stoneskin_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.stoneskin_totem.toggle	values.custom1	Custom 1
+options.abilities.stoneskin_totem.toggle	values.custom2	Custom 2
+options.abilities.stoneskin_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.stoneskin_totem.toggle	values.defensives	Defensives
+options.abilities.stoneskin_totem.toggle	values.interrupts	Interrupts
+options.abilities.stoneskin_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.stoneskin_totem.toggle	values.none	None
+options.abilities.stoneskin_totem.toggle	values.potions	Potions
 options.abilities.stormstrike	name	Spell 17364
 options.abilities.stormstrike.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 17364 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 17364 can be recommended in any type of fight.
 options.abilities.stormstrike.boss	name	Boss Encounter Only
@@ -6956,6 +7319,39 @@ options.abilities.travel_form.toggle	values.interrupts	Interrupts
 options.abilities.travel_form.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.travel_form.toggle	values.none	None
 options.abilities.travel_form.toggle	values.potions	Potions
+options.abilities.tremor_totem	name	Spell 8143
+options.abilities.tremor_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8143 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8143 can be recommended in any type of fight.
+options.abilities.tremor_totem.boss	name	Boss Encounter Only
+options.abilities.tremor_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 8143 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.tremor_totem.clash	name	Clash
+options.abilities.tremor_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 8143.
+options.abilities.tremor_totem.disabled	name	Disable |T136000:0|t Spell 8143
+options.abilities.tremor_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.tremor_totem.dotCap	name	Maximum Applications
+options.abilities.tremor_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.tremor_totem.hasIcon	name	Icon Replacement
+options.abilities.tremor_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.tremor_totem.keybind	name	Override Keybind Text
+options.abilities.tremor_totem.lineBreak1	name	\032
+options.abilities.tremor_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.tremor_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.tremor_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.tremor_totem.noIcon	name	Icon Replacement
+options.abilities.tremor_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8143 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.tremor_totem.targetMax	name	Maximum Targets
+options.abilities.tremor_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8143 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.tremor_totem.targetMin	name	Minimum Targets
+options.abilities.tremor_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.tremor_totem.toggle	name	Require Toggle
+options.abilities.tremor_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.tremor_totem.toggle	values.custom1	Custom 1
+options.abilities.tremor_totem.toggle	values.custom2	Custom 2
+options.abilities.tremor_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.tremor_totem.toggle	values.defensives	Defensives
+options.abilities.tremor_totem.toggle	values.interrupts	Interrupts
+options.abilities.tremor_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.tremor_totem.toggle	values.none	None
+options.abilities.tremor_totem.toggle	values.potions	Potions
 options.abilities.vampiric_embrace	name	Spell 15286
 options.abilities.vampiric_embrace.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 15286 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 15286 can be recommended in any type of fight.
 options.abilities.vampiric_embrace.boss	name	Boss Encounter Only
@@ -7220,6 +7616,39 @@ options.abilities.windfury_weapon.toggle	values.interrupts	Interrupts
 options.abilities.windfury_weapon.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.windfury_weapon.toggle	values.none	None
 options.abilities.windfury_weapon.toggle	values.potions	Potions
+options.abilities.windwall_totem	name	Spell 15107
+options.abilities.windwall_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 15107 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 15107 can be recommended in any type of fight.
+options.abilities.windwall_totem.boss	name	Boss Encounter Only
+options.abilities.windwall_totem.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 15107 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.windwall_totem.clash	name	Clash
+options.abilities.windwall_totem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 15107.
+options.abilities.windwall_totem.disabled	name	Disable |T136000:0|t Spell 15107
+options.abilities.windwall_totem.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.windwall_totem.dotCap	name	Maximum Applications
+options.abilities.windwall_totem.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.windwall_totem.hasIcon	name	Icon Replacement
+options.abilities.windwall_totem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.windwall_totem.keybind	name	Override Keybind Text
+options.abilities.windwall_totem.lineBreak1	name	\032
+options.abilities.windwall_totem.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.windwall_totem.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.windwall_totem.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.windwall_totem.noIcon	name	Icon Replacement
+options.abilities.windwall_totem.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 15107 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.windwall_totem.targetMax	name	Maximum Targets
+options.abilities.windwall_totem.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 15107 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.windwall_totem.targetMin	name	Minimum Targets
+options.abilities.windwall_totem.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.windwall_totem.toggle	name	Require Toggle
+options.abilities.windwall_totem.toggle	values.cooldowns	Cooldowns
+options.abilities.windwall_totem.toggle	values.custom1	Custom 1
+options.abilities.windwall_totem.toggle	values.custom2	Custom 2
+options.abilities.windwall_totem.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.windwall_totem.toggle	values.defensives	Defensives
+options.abilities.windwall_totem.toggle	values.interrupts	Interrupts
+options.abilities.windwall_totem.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.windwall_totem.toggle	values.none	None
+options.abilities.windwall_totem.toggle	values.potions	Potions
 options.abilities.wing_clip	name	Spell 2974
 options.abilities.wing_clip.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 2974 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 2974 can be recommended in any type of fight.
 options.abilities.wing_clip.boss	name	Boss Encounter Only
@@ -17147,14 +17576,20 @@ options.packs.elemental.Elemental (wowsims.com).lists.action	values.cancel_buff	
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.chain_lightning	|T136000:0|t Spell 421
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.disease_cleansing_totem	|T136000:0|t Spell 8170
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.earth_shock	|T136000:0|t Spell 8042
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.earthbind_totem	|T136000:0|t Spell 2484
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.fire_nova	|T136000:0|t Spell 408341
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.fire_resistance_totem	|T136000:0|t Spell 8184
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.flame_shock	|T136000:0|t Spell 8050
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.flametongue_totem	|T136000:0|t Spell 8227
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.flametongue_weapon	|T136000:0|t Spell 8024
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.frost_resistance_totem	|T136000:0|t Spell 8181
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.frostbrand_weapon	|T136000:0|t Spell 8033
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.grace_of_air_totem	|T136000:0|t Spell 8835
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.grounding_totem	|T136000:0|t Spell 8177
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.healing_stream_totem	|T136000:0|t Spell 5394
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.lava_burst	|T136000:0|t Spell 408490
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.lightning_bolt	|T136000:0|t Spell 403
@@ -17165,16 +17600,22 @@ options.packs.elemental.Elemental (wowsims.com).lists.action	values.major_mana_p
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.mana_spring_totem	|T136000:0|t Spell 5675
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.mana_tide_totem	|T136000:0|t Spell 16190
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.nature_resistance_totem	|T136000:0|t Spell 10595
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.poison_cleansing_totem	|T136000:0|t Spell 8166
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.rockbiter_weapon	|T136000:0|t Spell 8017
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.searing_totem	|T136000:0|t Spell 3599
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.sentry_totem	|T136000:0|t Spell 6495
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.stoneclaw_totem	|T136000:0|t Spell 5730
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.stoneskin_totem	|T136000:0|t Spell 8071
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.stormstrike	|T136000:0|t Spell 17364
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.strength_of_earth_totem	|T136000:0|t Spell 8075
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.tremor_totem	|T136000:0|t Spell 8143
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
@@ -17183,6 +17624,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.action	values.wait	|T13624
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.water_shield	|T136000:0|t Spell 408510
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.windfury_totem	|T136000:0|t Spell 8512
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.windfury_weapon	|T136000:0|t Spell 8232
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.windwall_totem	|T136000:0|t Spell 15107
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	name	Entry
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r [Item 13444] - |cFFFFD100|cffffd100mana.pct_lo<80|r|r
@@ -17209,14 +17651,20 @@ options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.cancel_
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.chain_lightning	|T136000:0|t Spell 421
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.disease_cleansing_totem	|T136000:0|t Spell 8170
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.earth_shock	|T136000:0|t Spell 8042
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.earthbind_totem	|T136000:0|t Spell 2484
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.fire_nova	|T136000:0|t Spell 408341
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.fire_resistance_totem	|T136000:0|t Spell 8184
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.flame_shock	|T136000:0|t Spell 8050
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.flametongue_totem	|T136000:0|t Spell 8227
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.flametongue_weapon	|T136000:0|t Spell 8024
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.frost_resistance_totem	|T136000:0|t Spell 8181
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.frostbrand_weapon	|T136000:0|t Spell 8033
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.grace_of_air_totem	|T136000:0|t Spell 8835
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.grounding_totem	|T136000:0|t Spell 8177
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.healing_stream_totem	|T136000:0|t Spell 5394
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.lava_burst	|T136000:0|t Spell 408490
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.lightning_bolt	|T136000:0|t Spell 403
@@ -17227,16 +17675,22 @@ options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.major_m
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.mana_spring_totem	|T136000:0|t Spell 5675
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.mana_tide_totem	|T136000:0|t Spell 16190
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.nature_resistance_totem	|T136000:0|t Spell 10595
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.poison_cleansing_totem	|T136000:0|t Spell 8166
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.rockbiter_weapon	|T136000:0|t Spell 8017
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.searing_totem	|T136000:0|t Spell 3599
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.sentry_totem	|T136000:0|t Spell 6495
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.stoneclaw_totem	|T136000:0|t Spell 5730
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.stoneskin_totem	|T136000:0|t Spell 8071
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.stormstrike	|T136000:0|t Spell 17364
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.strength_of_earth_totem	|T136000:0|t Spell 8075
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.tremor_totem	|T136000:0|t Spell 8143
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
@@ -17245,6 +17699,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.wait	|T
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.water_shield	|T136000:0|t Spell 408510
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.windfury_totem	|T136000:0|t Spell 8512
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.windfury_weapon	|T136000:0|t Spell 8232
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.windwall_totem	|T136000:0|t Spell 15107
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.clearcasting	|T136000:0|t Spell 16246
@@ -17454,14 +17909,20 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.cancel_b
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.chain_lightning	|T136000:0|t Spell 421
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.disease_cleansing_totem	|T136000:0|t Spell 8170
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.earth_shock	|T136000:0|t Spell 8042
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.earthbind_totem	|T136000:0|t Spell 2484
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.fire_nova	|T136000:0|t Spell 408341
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.fire_resistance_totem	|T136000:0|t Spell 8184
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.flame_shock	|T136000:0|t Spell 8050
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.flametongue_totem	|T136000:0|t Spell 8227
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.flametongue_weapon	|T136000:0|t Spell 8024
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.frost_resistance_totem	|T136000:0|t Spell 8181
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.frostbrand_weapon	|T136000:0|t Spell 8033
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.grace_of_air_totem	|T136000:0|t Spell 8835
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.grounding_totem	|T136000:0|t Spell 8177
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.healing_stream_totem	|T136000:0|t Spell 5394
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.lava_burst	|T136000:0|t Spell 408490
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.lightning_bolt	|T136000:0|t Spell 403
@@ -17472,16 +17933,22 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.major_ma
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.mana_spring_totem	|T136000:0|t Spell 5675
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.mana_tide_totem	|T136000:0|t Spell 16190
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.nature_resistance_totem	|T136000:0|t Spell 10595
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.poison_cleansing_totem	|T136000:0|t Spell 8166
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.rockbiter_weapon	|T136000:0|t Spell 8017
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.searing_totem	|T136000:0|t Spell 3599
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.sentry_totem	|T136000:0|t Spell 6495
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.stoneclaw_totem	|T136000:0|t Spell 5730
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.stoneskin_totem	|T136000:0|t Spell 8071
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.stormstrike	|T136000:0|t Spell 17364
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.strength_of_earth_totem	|T136000:0|t Spell 8075
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.tremor_totem	|T136000:0|t Spell 8143
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
@@ -17490,6 +17957,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.wait	|T1
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.water_shield	|T136000:0|t Spell 408510
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.windfury_totem	|T136000:0|t Spell 8512
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.windfury_weapon	|T136000:0|t Spell 8232
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.windwall_totem	|T136000:0|t Spell 15107
 options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	name	Entry
 options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r [Item 13444] - |cFFFFD100|cffffd100mana.pct_lo<80|r|r
@@ -17515,14 +17983,20 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.can
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.chain_lightning	|T136000:0|t Spell 421
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.disease_cleansing_totem	|T136000:0|t Spell 8170
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.earth_shock	|T136000:0|t Spell 8042
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.earthbind_totem	|T136000:0|t Spell 2484
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.fire_nova	|T136000:0|t Spell 408341
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.fire_resistance_totem	|T136000:0|t Spell 8184
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.flame_shock	|T136000:0|t Spell 8050
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.flametongue_totem	|T136000:0|t Spell 8227
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.flametongue_weapon	|T136000:0|t Spell 8024
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.frost_resistance_totem	|T136000:0|t Spell 8181
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.frostbrand_weapon	|T136000:0|t Spell 8033
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.grace_of_air_totem	|T136000:0|t Spell 8835
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.grounding_totem	|T136000:0|t Spell 8177
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.healing_stream_totem	|T136000:0|t Spell 5394
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.lava_burst	|T136000:0|t Spell 408490
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.lightning_bolt	|T136000:0|t Spell 403
@@ -17533,16 +18007,22 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.maj
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.mana_spring_totem	|T136000:0|t Spell 5675
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.mana_tide_totem	|T136000:0|t Spell 16190
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.nature_resistance_totem	|T136000:0|t Spell 10595
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.poison_cleansing_totem	|T136000:0|t Spell 8166
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.rockbiter_weapon	|T136000:0|t Spell 8017
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.searing_totem	|T136000:0|t Spell 3599
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.sentry_totem	|T136000:0|t Spell 6495
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.stoneclaw_totem	|T136000:0|t Spell 5730
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.stoneskin_totem	|T136000:0|t Spell 8071
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.stormstrike	|T136000:0|t Spell 17364
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.strength_of_earth_totem	|T136000:0|t Spell 8075
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.tremor_totem	|T136000:0|t Spell 8143
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
@@ -17551,6 +18031,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.wai
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.water_shield	|T136000:0|t Spell 408510
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.windfury_totem	|T136000:0|t Spell 8512
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.windfury_weapon	|T136000:0|t Spell 8232
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.windwall_totem	|T136000:0|t Spell 15107
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.clearcasting	|T136000:0|t Spell 16246

@@ -155,6 +155,62 @@ local TOTEMS = {
         duration = { 13, 13, 13, 13 },
         cooldown = 300,
     },
+    -- The totems below are prompted by no pack; they exist for the player's own priorities. Ids, costs, levels and
+    -- durations are wowsims e2842f0a78's (levels agree with the DB2 SpellLevels). Elements are the classic slots; the
+    -- client's own (SummonProperties) was unreadable here -- note: IN-GAME CHECK each element, Fire/Frost/Nature
+    -- Resistance first (wowsims puts only Frost Resistance, in the fire slot).
+    stoneskin_totem = {
+        element = "earth",
+        ids = { 8071, 8154, 8155, 10406, 10407, 10408 },
+        cost = { 30, 60, 90, 115, 160, 210 },
+        duration = { 300, 300, 300, 300, 300, 300 },
+    },
+    healing_stream_totem = {
+        element = "water",
+        ids = { 5394, 6375, 6377, 10462, 10463 },
+        cost = { 40, 50, 60, 70, 80 },
+        duration = { 300, 300, 300, 300, 300 },
+    },
+    fire_resistance_totem = {
+        element = "water",
+        ids = { 8184, 10537, 10538 },
+        cost = { 75, 120, 180 },
+        duration = { 300, 300, 300 },
+    },
+    frost_resistance_totem = {
+        element = "fire",
+        ids = { 8181, 10478, 10479 },
+        cost = { 75, 120, 180 },
+        duration = { 300, 300, 300 },
+    },
+    nature_resistance_totem = {
+        element = "air",
+        ids = { 10595, 10600, 10601 },
+        cost = { 75, 120, 180 },
+        duration = { 300, 300, 300 },
+    },
+    windwall_totem = {
+        element = "air",
+        ids = { 15107, 15111, 15112 },
+        cost = { 115, 170, 225 },
+        duration = { 300, 300, 300 },
+    },
+    tremor_totem = { element = "earth", ids = { 8143 }, cost = { 60 }, duration = { 300 } },
+    -- 10% of base mana (wowsims's CostPct; Stormstrike's convention: base 1520, whole mana)
+    poison_cleansing_totem = { element = "water", ids = { 8166 }, cost = { 152 }, duration = { 300 } },
+    disease_cleansing_totem = { element = "water", ids = { 8170 }, cost = { 152 }, duration = { 300 } },
+    sentry_totem = { element = "air", ids = { 6495 }, cost = { 65 }, duration = { 300 } },
+    -- 6% of base mana, 45 s, 15 s cooldown
+    earthbind_totem = { element = "earth", ids = { 2484 }, cost = { 91 }, duration = { 45 }, cooldown = 15 },
+    stoneclaw_totem = {
+        element = "earth",
+        ids = { 5730, 6390, 6391, 6392, 10427, 10428 },
+        cost = { 15, 30, 55, 75, 105, 140 },
+        duration = { 15, 15, 15, 15, 15, 15 },
+        cooldown = 30,
+    },
+    -- 6% of base mana, 45 s, 15 s cooldown
+    grounding_totem = { element = "air", ids = { 8177 }, cost = { 91 }, duration = { 45 }, cooldown = 15 },
 }
 
 -- Mana Spring's buff on us (DB2 aura 24), mana every 2 s by totem rank.
@@ -384,8 +440,58 @@ spec:RegisterAuras({
     maelstrom_weapon = { id = 408505, duration = 30, max_stack = 5 },
     -- Improved Stormstrike (DB2 1238931): Stormstrike's 15 s buff, +50% Spirit regen while casting (the mana entry).
     improved_stormstrike = { id = 1238931, duration = 15, max_stack = 1 },
-    -- Mana Spring Totem's buff on us (ranks 1-4: 5677, 10491, 10493, 10494), up while its water totem stands (the mana entry).
-    mana_spring = { id = 10494, copy = { 5677, 10491, 10493 }, duration = 300, max_stack = 1 },
+    -- The totems' buffs on us (wowsims e2842f0a78's ids, ranks 1..n; copy leads with the `<name>_totem` alias), read like
+    -- any aura: observed out of combat, not applied by the summon. Mana Spring's is up while its water totem stands
+    -- (the mana entry). Tremor, the cleansers, Sentry, Earthbind, Stoneclaw, Grounding, Searing and Magma leave none.
+    mana_spring = { id = 10494, copy = { "mana_spring_totem", 5677, 10491, 10493 }, duration = 300, max_stack = 1 },
+    stoneskin = {
+        id = 10405,
+        copy = { "stoneskin_totem", 8072, 8156, 8157, 10403, 10404 },
+        duration = 300,
+        max_stack = 1,
+    },
+    strength_of_earth = {
+        id = 25362,
+        copy = { "strength_of_earth_totem", 8076, 8162, 8163, 10441 },
+        duration = 300,
+        max_stack = 1,
+    },
+    grace_of_air = { id = 25360, copy = { "grace_of_air_totem", 8836, 10626 }, duration = 300, max_stack = 1 },
+    -- Mana Tide's 13 s buff (rank 4, 1325257, is Forever's)
+    mana_tide = { id = 1325257, copy = { "mana_tide_totem", 16191, 17355, 17360 }, duration = 13, max_stack = 1 },
+    healing_stream = {
+        id = 10461,
+        copy = { "healing_stream_totem", 5672, 6371, 6372, 10460 },
+        duration = 300,
+        max_stack = 1,
+    },
+    fire_resistance = {
+        id = 10535,
+        copy = { "fire_resistance_totem", 8185, 10534 },
+        duration = 300,
+        max_stack = 1,
+    },
+    frost_resistance = {
+        id = 10477,
+        copy = { "frost_resistance_totem", 8182, 10476 },
+        duration = 300,
+        max_stack = 1,
+    },
+    nature_resistance = {
+        id = 10599,
+        copy = { "nature_resistance_totem", 10596, 10598 },
+        duration = 300,
+        max_stack = 1,
+    },
+    windwall = { id = 15110, copy = { "windwall_totem", 15108, 15109 }, duration = 300, max_stack = 1 },
+    -- the party's proc-trigger auras (the 1 s attack-power buff Windfury's proc applies is not declared)
+    flametongue = {
+        id = 15036,
+        copy = { "flametongue_totem", 8230, 8250, 10521 },
+        duration = 300,
+        max_stack = 1,
+    },
+    windfury = { id = 10612, copy = { "windfury_totem", 8515, 10609 }, duration = 300, max_stack = 1 },
     -- Elemental Focus's Clearcasting (16246): the next elemental damage spell costs nothing (1 charge, 15 s).
     clearcasting = { id = 16246, duration = 15, max_stack = 1 },
     -- The target's DoT, modelled from our cast (target auras are unreadable in combat).
@@ -604,6 +710,19 @@ spec:RegisterAbilities({
     magma_totem = totemAbility("magma_totem"),
     windfury_totem = totemAbility("windfury_totem"),
     mana_tide_totem = totemAbility("mana_tide_totem"),
+    stoneskin_totem = totemAbility("stoneskin_totem"),
+    healing_stream_totem = totemAbility("healing_stream_totem"),
+    fire_resistance_totem = totemAbility("fire_resistance_totem"),
+    frost_resistance_totem = totemAbility("frost_resistance_totem"),
+    nature_resistance_totem = totemAbility("nature_resistance_totem"),
+    windwall_totem = totemAbility("windwall_totem"),
+    tremor_totem = totemAbility("tremor_totem"),
+    poison_cleansing_totem = totemAbility("poison_cleansing_totem"),
+    disease_cleansing_totem = totemAbility("disease_cleansing_totem"),
+    sentry_totem = totemAbility("sentry_totem"),
+    earthbind_totem = totemAbility("earthbind_totem"),
+    stoneclaw_totem = totemAbility("stoneclaw_totem"),
+    grounding_totem = totemAbility("grounding_totem"),
 
     -- A Forever talent (DB2: no cost, off the GCD, 180 s); wowsims/forever casts it as a DPS major cooldown.
     rage_of_the_farseer = {
