@@ -102,6 +102,9 @@ Request (export):
 - `tank = true` and `healingModel = { hps, cadenceSeconds, ... }` for a tank spec: the player becomes the raid's tank
   and gets the preset's incoming healing, as wowsims's UI does (apply_defaults.ts). Without them the target swings at
   no one (GAP AE: the first Protection and Guardian floors were set on fights with no incoming melee).
+- `vars` (`{ [variable name] = "<const>" }`): the APL `valueVariables` a build's simple rotation writes over the raw
+  APL (upstream's `simpleRotation`, e.g. the Rogues' `'Use Backstab': String(simple.useBackstab)`, spec.ts:195;
+  ruling R29). The request carries them, so the pack follows. Only the named variables change.
 
 Translation:
 - `map` (`{ [spell ID or "item:<id>"] = key }`): a wowsims ID the kit holds under another ID (an effect ID, a rank the

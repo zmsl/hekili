@@ -165,6 +165,22 @@ describe("check_wowsims_pin", function()
         assert.are.same({ greaterBlessingOfWisdom = 0, greaterBlessingOfMight = 2 }, b)
     end)
 
+    it("writes a recipe's vars into the APL's valueVariables, as a build's simple rotation does (R29)", function()
+        local apl = tmp(
+            '{"valueVariables":[{"name":"Use A","value":{"const":{"val":"true"}}},'
+                .. '{"name":"Keep","value":{"cmp":{"op":"OpLt"}}}]}'
+        )
+        local r = { name = "V", apl = apl, player = { gear = apl, specKey = "rogue" } }
+        r.vars = { ["Use A"] = "false" }
+        local vv = ex.request(r, "").raid.parties[1].players[1].rotation.valueVariables
+        r.vars = nil
+        local plain = ex.request(r, "").raid.parties[1].players[1].rotation.valueVariables
+        os.remove(apl)
+        assert.are.same({ const = { val = "false" } }, vv[1].value)
+        assert.are.same({ cmp = { op = "OpLt" } }, vv[2].value) -- a variable the recipe does not name is untouched
+        assert.are.same({ const = { val = "true" } }, plain[1].value) -- no vars: the APL as it is
+    end)
+
     it("makes a tank recipe's player the raid's tank, healed by its healing model (the UI's tank defaults)", function()
         local gear = tmp('{"items":[]}')
         local model = { hps = 2200, cadenceSeconds = 0.4 }

@@ -155,6 +155,13 @@ function M.request(r, root, spec)
     if r.apl then
         p.rotation = decode(slurp(join(root, r.apl)), r.apl)
     end
+    -- `vars` (name -> const string) sets the APL variables a build's simple rotation writes (upstream's
+    -- `simpleRotation`, e.g. ui/specs/rogue/dps/spec.ts:195; ruling R29); every other variable stays as the APL has it
+    for _, v in ipairs(r.vars and p.rotation.valueVariables or {}) do
+        if r.vars[v.name] ~= nil then
+            v.value = { const = { val = r.vars[v.name] } }
+        end
+    end
     -- a greater blessing is a rank state (sim/core/buffs/meta.go rankStates.at): the builds' 1 is rank 1, so send the
     -- top rank, 2 (ruling R25); Kings and the other boolean buffs pass as they are
     for k, v in pairs(p.buffs or {}) do
