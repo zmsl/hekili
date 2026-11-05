@@ -490,3 +490,51 @@ describe("Forever Paladin through the engine", function()
         assert.are.same({}, H.errors)
     end)
 end)
+
+-- R41 (owner, 2026-11-05): a low-level Retribution (Seal of Righteousness only, no Seal of Command) re-seals when the
+-- seal has under two GCDs left (gcd.max 1.5: 3 s), never earlier (the old `remains<24` refresh filled idle windows).
+describe("Retribution (wowsims.com) below Seal of Command", function()
+    -- shown now (wait 0) at `before` s left, not at `after`; `haste` the client's UnitSpellHaste percent
+    local function probe(haste, gcdMax, after, before)
+        local H = headless.new({
+            character = {
+                class = "PALADIN",
+                classID = 2,
+                specID = 1486,
+                level = 10,
+                known = { 20154 },
+                power = { type = 0, token = "MANA", max = 5000 },
+                speed = { 3.6 },
+            },
+            pack = "Retribution (wowsims.com)",
+        })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.spellHaste = haste
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        H.ctl.inRange.target, H.ctl.level.target = true, 10
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local t0 = H.ctl.now + 1
+        H.ctl.now = t0
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 20154)
+        assert.is_true(headless.cycle(H, t0 + 0.1))
+        assert.is_true(headless.cycle(H, t0 + 30 - after))
+        local gm = H.Hekili.State.gcd.max
+        assert.is_true(math.abs(gm - gcdMax) < 1e-6 or error("gcd.max " .. tostring(gm)))
+        local r = out.recs[1]
+        assert.is_false(r ~= nil and r.actionName == "seal_of_righteousness" and (r.wait or 0) == 0)
+        assert.is_true(headless.cycle(H, t0 + 30 - before))
+        r = out.recs[1]
+        assert.are.same({ "seal_of_righteousness", 0 }, { r and r.actionName, r and r.wait or 0 })
+        assert.are.same({}, H.errors)
+    end
+
+    it("shows Seal of Righteousness at 2.9 s left, not at 3.1 s (remains<gcd.max*2, gcd.max 1.5)", function()
+        probe(0, 1.5, 3.1, 2.9)
+    end)
+
+    it("scales with haste: at gcd.max 1.0 (50% spell haste) shown at 1.9 s left, not at 2.1 s", function()
+        probe(50, 1.0, 2.1, 1.9)
+    end)
+end)

@@ -157,7 +157,9 @@ Translation:
 - `exclusive` (`{ [spell ID] = true }`): the auras wowsims gives an exclusive effect (rule 10's
   `auraShouldRefresh`); neither the DB2 nor the APL says which, so the recipe lists them from wowsims's class code.
 - `executePhase` (the key the kit's execute read answers, `"execute_phase"`): wowsims's `isExecutePhase` E20.
-- `leveling` (lines appended to `actions`): the fillers a lower level needs, each silent at 60 (below).
+- `leveling` (lines appended to `actions`): a real rotation ability a lower level casts for a genuine need (its buff
+  or seal down or about to expire, a debuff missing, a stack low, a resource to spend), each silent at 60; never a
+  recast of a still-active buff to fill an idle window (owner policy R41, below).
 - `levelingFirst` (lines put first in `actions`): a form the sim starts in and the APL never casts (Balance's Moonkin
   Form), which a trailing line would never reach; silent while the form is up. They lead a non-empty precombat list
   too, so a pre-pull cast never shows before the form.
@@ -314,8 +316,15 @@ Strike or Maul does not end it) longer than the limit.
 - The limit is 6 s at the lower brackets (10, 20, 40) and `max(6 s, LIVE60)` at 60 (re-pin ruling R22), LIVE60 the
   pack's own worst idle at 60 rounded up to 0.1 s. wowsims is the oracle: its idle at 60 (pooling, running out of mana)
   is correct and never "fixed"; a lower bracket never borrows it.
-- A lower bracket over the limit gets a recipe `leveling` filler, silent at 60 (`!action.<a level-60 ability>.known`),
-  never a higher limit; the 60 line and the floor must not move. The recorded exception: Fury below Bloodthirst
+- Fillers are never added for filling's sake (owner policy R41, 2026-11-05; it replaces "a lower bracket over the
+  limit gets a recipe `leveling` filler, never a higher limit"). A `leveling` or `extra` line is a real ability a
+  player normally uses in that rotation, cast for a genuine need, silent at 60 (`!action.<a level-60 ability>.known`);
+  a recast of a still-active buff or seal to occupy an idle window is forbidden, and no line is added to pass this
+  gate. An idle window with nothing useful to cast is correct: that bracket gets a measured per-bracket limit with the
+  named cause `nothing useful to cast: <what is cooling / what is up>` in the spec comment (owner FYI), never where a
+  real rotation ability was castable. Paladin: Retribution and Protection L10 8.6 s (Holy Strike and Judgement
+  cooling, the seal up), Protection L40 8.4 s (out of mana). The 60 line and the floor must not move.
+- Recorded exceptions from before R41. Fury below Bloodthirst
   (`FURY_LIVE[10] = 7.6` in `tests/Forever/wowsims_warrior_spec.lua`, the owner's call): its leveling Sunder
   Armor filler stops at five stacks since central fix 18, so the recipe's own idle at L10 (in Battle Stance, pooling
   for Heroic Strike) returns; it was 2.6 s while Sunder at five stacks filled the gaps.

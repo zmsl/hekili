@@ -44,12 +44,16 @@
 --   PROT_REPLAY procs).
 -- Regen: Paladin.lua's seeds and tests/Forever/helpers/paladin_world.lua's `fsr = { 17.38, 0 }` were not refreshed to this
 -- log's 17.3 / 0.8 (within tolerance; lanes 10/11 precedent).
--- Leveling (R28): the Seal of Fury refresh fills Holy Strike's 10 s cooldown below Shieldsworn and Holy Shield (L10
--- 8.6 -> 4.4 s; the loop world's Protection has the preset's Shieldsworn, so it is silent at 60). L40 idles 8.4 s out
--- of mana (79): nothing castable, and a filler would spend mana the character lacks (10.6 s with the refresh, hence
--- its Holy Shield guard); a measured per-bracket limit, owner FYI. R28a ratifies that guard `!talent.holy_shield.enabled`:
--- the exception is a band, L32-L40 (Holy Shield learned, Shieldsworn not, mana-dry), all idle over 6 s either way (L32
--- 11.0, L35-L40 8.4); gated at L40 only, and no other bracket got a higher limit.
+-- Leveling (R41, owner policy, supersedes R28's L10 filler and R28a's `!talent.holy_shield.enabled` guard): no leveling
+-- line. The old Seal of Fury refresh (`remains<24`) recast a seal with 24 s left only to fill Holy Strike's cooldown
+-- for the live gate (L10 8.6 -> 4.4; a player report, R40); wowsims's own Seal of Fury line re-seals when the seal is
+-- down. Live idle, measured limits with the named cause: L10 8.6 s, nothing useful to cast: Holy Strike and Judgement
+-- cooling, Seal of Fury and Righteous Fury up (L15 the same). L20-L25 6.4 s, nothing useful to cast: Holy Strike (10 s)
+-- and Consecration (8 s) cooling, the seal up, Judgement off the GCD, Exorcism (879 ranks) unusable off Undead/Demon
+-- (the kit refuses; the harness world's missing creature-type check, paladin_world.lua:132, made it look castable);
+-- mana 70-92%, no gap-AB effect; reported, never gated (the gates sample L10/L40/L60). L40 8.4 s (R28): out of mana
+-- (86), nothing castable; the band L32 11.0, L35-L40 8.4 has the same cause, gated at L40 only; L41 on 4.4
+-- (Shieldsworn's Holy Strike every 6 s).
 return {
     class = "PALADIN",
     pack = "Protection (wowsims.com)",
@@ -81,7 +85,5 @@ return {
     },
     map = { [25903] = "holy_shock" }, -- Holy Shock rank 4's hostile spell (wowdb: 25903, range 40); the kit's 20930
     focus = { seal_of_fury = 2, holy_shield = 2 },
-    leveling = {
-        "seal_of_fury,focus=2,if=!talent.shieldsworn.enabled&!talent.holy_shield.enabled&buff.seal_of_fury.remains<24",
-    },
+    leveling = {},
 }
