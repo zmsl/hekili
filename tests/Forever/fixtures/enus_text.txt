@@ -14327,7 +14327,6 @@ options.packs.arms.Arms (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 78 - |cFFFFD100|cffffd100!action.mortal_strike.known&rage.lo>=30|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 6343 - |cFFFFD100|cffffd100settings.maintain_thunder_clap&!action.mortal_strike.known&!debuff.thunder_clap.up|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 7386 - |cFFFFD100|cffffd100!action.mortal_strike.known&debuff.sunder_armor.stack<5|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 1715 - |cFFFFD100|cffffd100!action.mortal_strike.known|r|r
 options.packs.arms.Arms (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.arms.Arms (wowsims.com).lists.action_name	name	Action Name
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.battle_shout	|T136000:0|t Spell 6673
@@ -18711,7 +18710,6 @@ options.packs.fury.Fury (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 18499 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known||cooldown.whirlwind.remains>=1.5)))&talent.improved_berserker_rage.enabled)|r|r
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 6673 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known||cooldown.whirlwind.remains>=1.5)))&buff.battle_shout.remains<=10)|r|r
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 7386 - |cFFFFD100|cffffd100!action.bloodthirst.known&debuff.sunder_armor.stack<5|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 1715 - |cFFFFD100|cffffd100!action.bloodthirst.known&(!action.battle_stance.known||!buff.battle_stance.up)|r|r
 options.packs.fury.Fury (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.fury.Fury (wowsims.com).lists.action_name	name	Action Name
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.battle_shout	|T136000:0|t Spell 6673

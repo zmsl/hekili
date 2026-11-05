@@ -314,13 +314,14 @@ Strike or Maul does not end it) longer than the limit.
   is correct and never "fixed"; a lower bracket never borrows it.
 - A lower bracket over the limit gets a recipe `leveling` filler, silent at 60 (`!action.<a level-60 ability>.known`),
   never a higher limit; the 60 line and the floor must not move. The recorded exception: Fury below Bloodthirst
-  (`FURY_LIVE_LEVELING = 7.6` in `tests/Forever/wowsims_warrior_spec.lua`, the owner's call): its leveling Sunder
+  (`FURY_LIVE[10] = 7.6` in `tests/Forever/wowsims_warrior_spec.lua`, the owner's call): its leveling Sunder
   Armor filler stops at five stacks since central fix 18, so the recipe's own idle at L10 (in Battle Stance, pooling
   for Heroic Strike) returns; it was 2.6 s while Sunder at five stacks filled the gaps.
 - The second recorded exception (final review fix 3, the owner's call): the gate counted every press as ending an idle
   stretch until then, so an off-GCD press (Heroic Strike, Bloodrage, Maul) hid the on-GCD idle around it. Counting
   on-GCD presses only, Guardian's LIVE60 became 10.0 (its L10), a lower bracket's measurement above its own L60. Arms
-  (L40 11.2) and Fury (L40 8.6) took a leveling Hamstring instead (2026-10-21).
+  (L40 11.2) and Fury (L40 8.6) took a leveling Hamstring instead (2026-10-21), removed by R41 (2026-11-05: not a
+  rotation ability, no need): their L10/L40 idles are measured limits with the named cause, `ARMS_LIVE` / `FURY_LIVE`.
 - Limits of the check: one seed, no buffs; the talent order approximates how a player levels; an ID the DB2 lacks
   counts as learned at 1; levels between the brackets are not sampled (Guardian 25-41).
 
