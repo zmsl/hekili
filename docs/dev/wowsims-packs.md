@@ -104,7 +104,7 @@ Request (export):
   no one (GAP AE: the first Protection and Guardian floors were set on fights with no incoming melee).
 - `vars` (`{ [variable name] = "<const>" }`): the APL `valueVariables` a build's simple rotation writes over the raw
   APL (upstream's `simpleRotation`, e.g. the Rogues' `'Use Backstab': String(simple.useBackstab)`, spec.ts:195;
-  ruling R29). The request carries them, so the pack follows. Only the named variables change.
+  ruling R29). The request carries them, so the pack follows. Only the named variables change; a name the APL lacks raises.
 
 Translation:
 - `map` (`{ [spell ID or "item:<id>"] = key }`): a wowsims ID the kit holds under another ID (an effect ID, a rank the

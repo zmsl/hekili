@@ -284,7 +284,7 @@ M.FIXTURES = "tests/Forever/fixtures/"
 
 -- The ready-time floors per spec (docs/superpowers/specs/2026-10-16-headless-recommendation-loop.md §12): { median |b|
 -- of the real (outside-tolerance) on-GCD decisions, rounded up to 0.01 s; their count }, from the first clean run
--- (forever-readytime, 2026-10-21), only ever lowered. Balance's, Feral's, Warrior Protection's and Combat's medians rose
+-- (forever-readytime, 2026-10-21), only ever lowered, except that re-pins re-set to the measurement (R6). Balance's, Feral's, Warrior Protection's and Combat's medians rose
 -- in review round 1 from the metric alone (the cost class from the crossing; the on-GCD-only walk); behaviour unchanged.
 -- Oracle refresh (sim pin e2842f0a78 + documented patches, 2026-11-02, R12): Feral, Paladin Protection and
 -- Retribution, Assassination, Combat, Enhancement, Demonology, Destruction, Fury and Warrior Protection re-set to their
@@ -351,7 +351,9 @@ M.READY = {
     -- client says so
     -- { 0.23, 18 } -> { 0.23, 29 } re-pin e2842f0a78 (R29's Mutilate log): cost class; 5 rows 0.45 s or less after an
     -- unseen Rogue Armor Energize 27788 (lo 9-20 under the truth, b ~1 s), the rest the floor 0.4-2.5 under the truth
-    -- (b 0.16-0.33 s, gap BQ/CE: lo reaches the cost after the truth), 7 -> 15 of them with more decisions at the cost
+    -- (b 0.16-0.33 s, gap BQ/CE: lo reaches the cost after the truth), 7 -> 15 of them with more decisions at the cost:
+    -- both logs have the same build and 10 energizes; the gear changed (off hand Black Amnesty 19166 for 5267, two
+    -- Darkmantle pieces swapped out, 4 remain), which moves the energy cadence (named, not traced row by row)
     rogue_assassination = { 0.23, 29 }, -- 0.230, 29
     -- { 0.20, 18 } -> { 0.24, 20 } re-pin e2842f0a78: cost class; 6 of the 7 large rows follow a 27788 energize (6 in
     -- the new log, 2 in the old: 21.18, 56.26, 64.69, 65.49, 69.00, 83.96), the rest the floor's lag (gap BQ/CE)

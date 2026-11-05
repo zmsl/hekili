@@ -5,9 +5,9 @@
 -- ui/features/settings/model/apply_defaults.ts:68,87-95 (the race, the professions and the reaction time the UI
 -- defaults to: the class's first race, Engineering, 100 ms) at the pin. One APL for the three builds
 -- (ui/specs/rogue/dps/apls/default.apl.json, "Direct APL"), played as the build plays it: the build is TypeSimple
--- (spec.ts:82) with SIMPLE_ROTATION (presets.ts:57, useBackstab and useExposeArmor false), whose simpleRotation writes
+-- (spec.ts:82) with presets.ts:57 DEFAULT_SIMPLE_ROTATION (:58 SIMPLE_ROTATION; useBackstab and useExposeArmor false), whose simpleRotation writes
 -- those two variables over the raw APL (spec.ts:186-204); the recipe's `vars` does the same (ruling R29: the raw APL
--- has Use Backstab true since upstream 0dbe35317d, a Backstab rotation unlike the build). The talents pick the lines.
+-- has Use Backstab true since upstream 0dbe35317d, a Backstab rotation unlike the build). The talents and the build's `vars` pick the lines.
 -- Translation: the APL's "Use X" variables are constants (inlined and folded, rule 1); omitted (rule 2): Maintain
 -- Expose (its call folds to never: "Use Expose Armor" false; its strictSequence, RL3, never reached), autocastOtherCooldowns
 -- (#7: rule 13, no "Major cooldown used" in the log), the potion; Thousand Cuts's buff (1310723) resolves from the kit's aura, so
@@ -45,7 +45,7 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 5,
     },
-    -- the build's simple rotation (presets.ts:57 SIMPLE_ROTATION) writes these over the raw APL (spec.ts:195-196;
+    -- the build's simple rotation (presets.ts:57 DEFAULT_SIMPLE_ROTATION (:58 SIMPLE_ROTATION)) writes these over the raw APL (spec.ts:195-196;
     -- ruling R29): Use Backstab is `true` raw, Use Expose Armor already `false`
     vars = { ["Use Backstab"] = "false", ["Use Expose Armor"] = "false" },
     map = {},

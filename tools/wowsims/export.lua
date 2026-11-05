@@ -156,10 +156,20 @@ function M.request(r, root, spec)
         p.rotation = decode(slurp(join(root, r.apl)), r.apl)
     end
     -- `vars` (name -> const string) sets the APL variables a build's simple rotation writes (upstream's
-    -- `simpleRotation`, e.g. ui/specs/rogue/dps/spec.ts:195; ruling R29); every other variable stays as the APL has it
-    for _, v in ipairs(r.vars and p.rotation.valueVariables or {}) do
-        if r.vars[v.name] ~= nil then
-            v.value = { const = { val = r.vars[v.name] } }
+    -- `simpleRotation`, e.g. ui/specs/rogue/dps/spec.ts:195; ruling R29); every other variable stays as the APL has it;
+    -- a name the APL lacks raises (an upstream rename would otherwise play the raw APL again)
+    if r.vars then
+        local seen = {}
+        for _, v in ipairs(p.rotation.valueVariables or {}) do
+            if r.vars[v.name] ~= nil then
+                v.value = { const = { val = r.vars[v.name] } }
+                seen[v.name] = true
+            end
+        end
+        for name in pairs(r.vars) do
+            if not seen[name] then
+                error(r.name .. ': vars names "' .. name .. '", which the APL lacks')
+            end
         end
     end
     -- a greater blessing is a rank state (sim/core/buffs/meta.go rankStates.at): the builds' 1 is rank 1, so send the
