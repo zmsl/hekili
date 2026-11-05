@@ -144,3 +144,65 @@ describe("the engine's identity reads under a secret identity", function()
         assert.is_truthy(tostring(H.Hekili.TargetDebug):find("nameplate1", 1, true))
     end)
 end)
+
+-- The owner's dungeon symptom (Ragefire Chasm, 2026-11-05: Map restriction, target GUID and name secret, in combat):
+-- Hekili seemed broken and took no snapshot. The update loop and the snapshot run through with every identity read
+-- secret: the target, its target, the plates, their names, and UnitIsUnit between tokens.
+describe("Update and a snapshot in combat with every unit identity secret", function()
+    local ww = require("Forever.helpers.warrior_world")
+    local H
+
+    setup(function()
+        local new = fake.new
+        fake.new = function(...)
+            local api, ctl = new(...)
+            api.GetCVar = function() -- nameplates on, so the plate count runs
+                return "1"
+            end
+            return api, ctl
+        end
+        local ok, h = pcall(headless.new, { character = ww.character(), pack = ww.PACK })
+        fake.new = new
+        assert(ok, h)
+        H = h
+        assert.are.same({}, H.loadErrors)
+        H.Hekili.Engine.settings.screenshot = false -- the harness has no Screenshot()
+        fake.strictKeys(H.Hekili.npUnits)
+        fake.strictKeys(H.Hekili.npGUIDs)
+    end)
+
+    it("raises nothing and stores a non-empty snapshot", function()
+        local ctl = H.ctl
+        ctl.inRange.target, ctl.level.target = true, 60
+        for _, u in ipairs({ "target", "targettarget", "focus", "softenemy", "softinteract" }) do
+            ctl.guid[u], ctl.names[u], ctl.unitIs[u] = SECRET, SECRET, SECRET
+        end
+        ctl.exists.targettarget = true
+        for i = 1, 4 do
+            local u = "nameplate" .. i
+            ctl.guid[u], ctl.names[u], ctl.unitIs[u], ctl.exists[u] = SECRET, SECRET, SECRET, true
+            ctl.unitIs[u .. "target"] = SECRET
+            H.Fire("NAME_PLATE_UNIT_ADDED", u)
+        end
+        H.Fire("PLAYER_TARGET_CHANGED")
+        ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        H.Fire("PLAYER_ENTER_COMBAT")
+        local t = ctl.now
+        for k = 1, 20 do
+            local ok, err = headless.cycle(H, t + 0.2 * k)
+            assert(ok, err)
+            H.Fire("UNIT_COMBAT", "target", "WOUND", "", SECRET, 1)
+            H.Fire("UNIT_COMBAT", "player", "WOUND", "", SECRET, 1)
+            H.Fire("UNIT_TARGET", "nameplate1")
+            H.Fire("UNIT_FLAGS", "nameplate2")
+        end
+        local before = #H.ns.snapshots
+        H.Hekili:MakeSnapshot()
+        assert.are.same({}, H.errors)
+        assert.is_true(#H.ns.snapshots > before, "no snapshot stored")
+        local log = H.ns.snapshots[#H.ns.snapshots].log
+        assert.is_true(type(log) == "string" and #log > 100, "empty snapshot")
+        assert.are.equal(0, fake.secretsIn(H.Hekili.npUnits) + fake.secretsIn(H.Hekili.npGUIDs))
+    end)
+end)
