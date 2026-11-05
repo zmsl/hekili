@@ -17,7 +17,8 @@ the request reads as its build.
 
 Request edits the new sim needed (2026-11-02), none changing what an APL entry does:
 - `greaterBlessingOfWisdom` / `greaterBlessingOfMight` `true` -> `2` (upstream made them a rank state; 2 = the old top
-  rank), in the 9 requests that set them.
+  rank), in the 9 requests that set them. At the re-pin the builds carry `1`, which is rank 1 (25894 / 25782), so
+  `M.request` sends any greater blessing a build sets as `2`, the top rank (ruling R25).
 - Talent strings re-encoded by spell ID on the new trees (7 requests: Feral, Guardian, Arcane, Fire, Frostfire,
   Protection and Retribution Paladin): ranks clamped to the new maximum points, talents removed upstream dropped, no
   point reassigned (Fire's Critical Mass 5 -> 3).

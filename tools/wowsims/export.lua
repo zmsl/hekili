@@ -155,6 +155,13 @@ function M.request(r, root, spec)
     if r.apl then
         p.rotation = decode(slurp(join(root, r.apl)), r.apl)
     end
+    -- a greater blessing is a rank state (sim/core/buffs/meta.go rankStates.at): the builds' 1 is rank 1, so send the
+    -- top rank, 2 (ruling R25); Kings and the other boolean buffs pass as they are
+    for k, v in pairs(p.buffs or {}) do
+        if type(v) == "number" and v > 0 and k:find("^greaterBlessingOf") then
+            p.buffs[k] = 2
+        end
+    end
     p.name = r.name
     p.healingModel = r.healingModel
     return {

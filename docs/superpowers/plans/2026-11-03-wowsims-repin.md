@@ -247,7 +247,7 @@ Each lane task names its specs and the spec-specific items. For each spec, in th
   kit ability's `copy` (or the recipe's `map`), checked with `wowdb`, then repeat R2. `tools/wowsims/dry.lua <spec>`
   (Task 2) prints the count. Record the before and after counts in the recipe header.
 - **R3 Request fields.** Confirm in the request what spec §5 says moves with the build: race (and its racial and
-  autocast lines), greater blessings `1` applied at the top rank in the log, talents re-encoded by spell ID against the
+  autocast lines), greater blessings sent as `2`, the top rank (the builder raises the builds' `1`, rank 1; ruling R25), applied in the log, talents re-encoded by spell ID against the
   e2842f0a78 trees, and no `executeProportion25/45/90`.
 - **R4 Replay, floor at 0.** Set the spec's replay floor to 0 in `tests/Forever/wowsims_<class>_spec.lua`, then run
   `flock /tmp/hekili-gate.lock .lua/bin/busted tests/Forever/wowsims_<class>_spec.lua`. Read the `wowsims:` line:
@@ -862,7 +862,7 @@ requests, logs and packs; `src/Hekili_Druid/Druid.lua`, `src/Hekili_Mage/Mage.lu
 
 - [ ] **Step 1:** Run R1-R7. Specifics: the rotation comes from the build (`testing.build.json`); Windshaper Skyborne;
   the `itemSwap` item 250617 and `enableItemSwap` are omitted (`itemSwap` is rule 2); the build's Wisdom and Might
-  blessings at `1`; the unmapped ID is mapped or listed.
+  blessings sent at `2`, the top rank (R25); the unmapped ID is mapped or listed.
 - [ ] **Step 2:** R9; `make gate`.
 
 ### Task 16: Lane: Warlock x5 (Phase 6)

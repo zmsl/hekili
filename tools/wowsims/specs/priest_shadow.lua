@@ -12,7 +12,7 @@
 --   one, where our 15 s read it ready). Fixed in Priest.lua (the Mage lane's ruling M9 precedent: wowsims's newer data
 --   where its log casts it; in-game checks): decisions on-GCD 1.000 (85), no disagreement left.
 -- Re-pin e2842f0a78 (Task 11): decisions on-GCD 1.000 (85) before and after, no disagreement. The build moves four gear
--- slots and Greater Blessing of Wisdom to `1` (wowsims applies rank 1, 25894, not the top rank 25918: rankStates.at);
+-- slots; its Greater Blessing of Wisdom `1` is rank 1 (25894), so the request sends `2`, the top rank 25918 (R25);
 -- the hidden Starshards line now compares spellExpectedDpet (still hidden, omitted). Omitted 4 -> 4.
 -- Worked (P8): Smite fills below Mind Flay (a talent: the L10 bracket idled 8.0 s on Mind Blast's cooldown); the world's
 -- Shadow character knows Smite (P9.4), silent at 60.

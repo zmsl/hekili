@@ -432,8 +432,8 @@ Doom). Rule 16's `select` raises "the build sets no curseOptions" on them.
   - Talents come from the new builds, re-encoded by spell ID against the new trees.
   - Races follow the builds: Elemental and Enhancement become Windshaper Skyborne, the four warlock builds Human. The
     racial and autocast lines change with them.
-  - Greater blessings carry the build's `1` (upstream's on, at the top rank), replacing our `2`. The builder checks
-    the log applies the top rank.
+  - Greater blessings are sent as `2`, the top rank: the builds' `1` is rank 1 at e2842f0a78 (a rank state,
+    `rankStates.at`), so the builder raises it (ruling R25). The builder checks the log applies the top rank.
   - `executeProportion25/45/90` leave `M.ENCOUNTER`.
   - `conjuredItems` and the item swap are taken as the builds carry them; their nodes are already omitted.
 - Oracle patches:

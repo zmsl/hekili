@@ -21,8 +21,8 @@ local REPLAY = {}
 
 -- recipe, world content, pack, the replay floor (the first clean run's, never lowered), LIVE60: the pack's own worst
 -- idle at 60, rounded up to 0.1 s (P8; the L10/L40 brackets keep 6 s, ruling R22).
--- Re-pin e2842f0a78 (Task 11): Shadow 1.00 -> 1.00 (1.000, 85 of 85; the new log's gear and Greater Blessing of Wisdom
--- rank 1 move no decision), replay flicker 0.67/min before and after, LIVE60 1.8 -> 1.8 (measured).
+-- Re-pin e2842f0a78 (Task 11): Shadow 1.00 -> 1.00 (1.000, 85 of 85; the new log's gear moves no decision, with Greater
+-- Blessing of Wisdom at rank 1 or at the top rank, R25), replay flicker 0.67/min before and after, LIVE60 1.8 -> 1.8.
 local PACKS = {
     { "priest_shadow", "Shadow", "Shadow (wowsims.com)", 1.00, 1.8 },
     { "priest_smite", "Smite", "Smite (wowsims.com)", 0.93, 0.2 },
