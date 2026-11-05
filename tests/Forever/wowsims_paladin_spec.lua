@@ -101,9 +101,10 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         local C = content("paladin_protection", PROT, "Protection (wowsims.com)", 60)
         -- 0.964 on central fix 12 (GAP R) was the untanked fight's; the tanked one's floor is 0.62 (30/48)
         -- 0.62 -> 0.84 re-pin e2842f0a78: 0.846 (52) top [holy_shield -> holy_strike 6; seal_of_fury -> holy_strike 2]
-        -- (0.788 before PROT_REPLAY's procs: Holy Shield's block hits restarted its believed cooldown); the 8 left are
-        -- each cast right after a Shield Specialization return (1310925, 105 mana on a block, unseen) with the belief
-        -- under the truth; 2 of them also Holy Shield's price, ours 240 (DB2) vs wowsims's 195
+        -- (0.788 before PROT_REPLAY's procs: Holy Shield's block hits restarted its believed cooldown); the 8 left have
+        -- the belief under the truth: wowsims returns 105.08 mana on every landed Shieldsworn Holy Strike (the kit does
+        -- not model it, gaps.md CU; 45.00, 103.90, 163.00 follow one) and Holy Shield's price, ours 240 (DB2) vs
+        -- wowsims's 195, is a necessary cause in 5 of the 8 (the log's mana before Holy Shield: 196-275, five under 240)
         ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.84, PROT_REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Protection is out of mana from 24 s),
@@ -117,7 +118,9 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- 12.6 -> 4.6 re-pin e2842f0a78 (the new build's Shieldsworn: Holy Strike every 6 s); L10/L40 keep the 6 s bar,
     -- only L60 may follow LIVE60 (R22): L10 8.6 -> 4.4 with the recipe's Seal of Fury refresh (R28); L40 8.4, its own
     -- measured limit (R28, a one-bracket exception to R7): out of mana, nothing castable; a filler would spend mana the
-    -- character lacks (10.6 s with the refresh, so the refresh stops at Holy Shield)
+    -- character lacks (10.6 s with the refresh, so the refresh stops at Holy Shield). R28a ratifies that guard
+    -- (`!talent.holy_shield.enabled`): the exception is a band, L32-L40 (Holy Shield learned, Shieldsworn not,
+    -- mana-dry), idle over 6 s either way (L32 11.0, L35-L40 8.4); gated at L40 only; no other bracket got a higher limit
     local PROT_LIVE60 = 4.6
     local PROT_LIVE40 = 8.4
     for _, level in ipairs({ 10, 40, 60 }) do
