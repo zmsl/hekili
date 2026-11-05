@@ -173,6 +173,42 @@ describe("the wowsims APL translator", function()
         end, "extra: no big_hit line in actions")
     end)
 
+    it("actionGroupUsed of a group with actions is wowsims's constant: a shown reference to it exists", function()
+        local function used(name)
+            return { actionGroupUsed = { name = name } }
+        end
+        local text, omitted = apl.translate({
+            priorityList = {
+                { action = { groupReference = { groupName = "Weave" } } },
+                { hide = true, action = { groupReference = { groupName = "Hidden" } } },
+                cast(100, used("Weave")),
+                cast(200, used("Hidden")),
+                cast(300, used("Nested")),
+                cast(400, used("Unreferenced")),
+            },
+            groups = {
+                { name = "Weave", actions = { cast(400), { action = { groupReference = { groupName = "Nested" } } } } },
+                { name = "Hidden", actions = { cast(400) } },
+                { name = "Nested", actions = { cast(400) } },
+                { name = "Unreferenced", actions = { cast(400) } },
+            },
+        }, ctx())
+        assert.are.equal(
+            table.concat({
+                "actions=call_action_list,name=weave",
+                "actions+=/strike,focus=1",
+                "actions+=/roar,use_off_gcd=1",
+                "actions.weave=dot",
+                "actions.weave+=/call_action_list,name=nested",
+                "actions.nested=dot",
+            }, "\n"),
+            text
+        )
+        assert.are.same({ "default #2: hidden", "default #4: never", "default #6: never" }, omitted)
+        local _, unknown = apl.translate({ priorityList = { cast(100, used("Nowhere")) } }, ctx())
+        assert.are.same({ "default #1: actionGroupUsed Nowhere" }, unknown)
+    end)
+
     it("lists a recipe setting a line reads after the APL's own toggles, with its description", function()
         local r = {
             leveling = { "roar,if=settings.roar_filler&!action.big_hit.known" },

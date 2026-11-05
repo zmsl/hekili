@@ -32,6 +32,8 @@
 --    `settings.wowsims_<snake of the name without " ON/OFF">`, its default on exactly when the APL's reference to it is
 --    not hidden; the class registers that setting for the spec (named "<Group> (wowsims.com)"). The header lists a
 --    setting only when an emitted line reads it (ruling L14): a group whose readers were all omitted is no setting.
+--    `actionGroupUsed` of a group with actions is wowsims's constant (apl_action_group_reference.go Finalize): true
+--    when a shown entry anywhere (the lists, a group's actions) references the group, else false.
 -- 4. `auraIsKnown` (wowsims: the aura is registered on its source unit, Self by default): on Self or the target, an
 --    ID that resolves (rule 5, or a kit talent's spell) to a talent's key or aura is `talent.<key>.enabled`, to an
 --    ability's key `action.<key>.known`, to any other aura `true`; an ID nothing resolves, or another unit, is false.
@@ -1249,7 +1251,13 @@ local function bool(c, n)
         end
         unsupported("isExecutePhase " .. tostring(v.threshold))
     elseif k == "actionGroupUsed" then
-        return "settings." .. (c.toggles[v.name] or unsupported("actionGroupUsed " .. tostring(v.name))), nil, false
+        if c.toggles[v.name] then
+            return "settings." .. c.toggles[v.name], nil, false
+        end
+        if c.groupUsed[v.name] == nil then
+            unsupported("actionGroupUsed " .. tostring(v.name))
+        end
+        return nil, c.groupUsed[v.name], false -- rule 3: wowsims's constant, a shown reference to the group exists
     elseif k == "variableRef" and c.windowVars[v.name] then -- rule 10: a time since read from the recipe's window
         local w, cm = c.windowVars[v.name], c.vars[v.name] and c.vars[v.name].cmp
         local left = cm and sinceHand(c, cm.lhs) ~= nil
@@ -2184,6 +2192,29 @@ function M.translate(rotation, c)
         if g and not e.hide then
             shown[g.groupName] = true
         end
+    end
+    -- rule 3: a group is used when any shown entry references it (wowsims's Finalize: `referencedBy`, set by the
+    -- references in the prepull and priority lists and in the groups' own actions, sequences included; a hidden entry
+    -- is never built)
+    c.groupUsed = {}
+    local function refs(x)
+        if type(x) ~= "table" or x.hide then
+            return
+        end
+        if type(x.groupReference) == "table" and x.groupReference.groupName then
+            c.groupUsed[x.groupReference.groupName] = true
+        end
+        for _, y in pairs(x) do
+            refs(y)
+        end
+    end
+    for _, g in ipairs(rotation.groups or {}) do
+        c.groupUsed[g.name] = false
+    end
+    refs(rotation.priorityList)
+    refs(rotation.prepullActions)
+    for _, g in ipairs(rotation.groups or {}) do
+        refs(g.actions)
     end
     for _, g in ipairs(rotation.groups or {}) do
         local empty = true
