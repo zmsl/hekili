@@ -303,7 +303,10 @@ M.READY = {
     -- the 91.74 / 95.24 late rows (0.22 / 0.25 s) fall inside the cost absorption; the five left have the larger median
     -- (controller ruling 2026-11-03 overnight, pending owner review)
     druid_feral = { 0.50, 5 },
-    druid_guardian = { 0.54, 41 }, -- 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
+    -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
+    -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
+    -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone
+    druid_guardian = { 2.50, 10 }, -- was 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     -- re-pin 8b-2 (controller ruling, round 3): move-reached weave strikes show at the decision to walk (the Auto Shot that
     -- opens the weave window); wowsims logs the cast at arrival; the offset is the walk time, which Hekili does not model
     -- (owner rule: no movement in Hekili or the belief) and which is the lead a player needs to start walking. Every new
@@ -390,7 +393,9 @@ M.READY = {
     warrior_arms = { 0.68, 6 },
     -- 0.51, 35 (was 0.48, 32): harness corrected to the measured swing timing (2026-10-22); 0.44 (fix 40): Whirlwind at
     -- 57.09 and 117.06 late -> early 0.09 and 0.06
-    warrior_fury = { 0.52, 26 },
+    -- { 0.52, 26 } -> { 0.90, 19 } (lane 14, replay world fix, as druid_guardian's): 6 early GCD-chain rows in grain,
+    -- the 19 left all late
+    warrior_fury = { 0.90, 19 },
     warrior_protection = { 0.38, 11 },
 }
 

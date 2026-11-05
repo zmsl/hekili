@@ -2,6 +2,7 @@
 -- the fixture (fixtures/wowsims_test.log, invented IDs), each of the plan's Review Focus lies pinned. The class
 -- data is a stand-in H (replay.new reads only H.Hekili.Class).
 local replay = require("Game.harness.replay")
+local observer = require("Game.harness.observer")
 
 local function text()
     local f = assert(io.open("tests/Game/harness/fixtures/wowsims_test.log", "rb"))
@@ -122,6 +123,31 @@ describe("the replay world", function()
         assert.are.equal("strike", R.next(R.pull + 1.5))
         assert.is_false(R.next(R.pull + 9))
         assert.are.equal(3.8, R.speed) -- the first two main-hand swings
+    end)
+
+    it("ends a GCD at its cast's log time plus the GCD, whatever the cast's line in its timestamp", function()
+        -- the shout completes as line 4 of 1.00, the strike as line 2 of 2.50: the shout's GCD end must not land after the
+        -- strike's GCD rise and clear the client's GCD flag inside the strike's GCD
+        local log = table.concat({
+            "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+            "[1.00] [Tester (#1)] Completed cast {OtherID: 3, Tag: 1}",
+            "[1.00] [Tester (#1)] [Target 1] {OtherID: 3, Tag: 1} Hit for 100.000 damage (SpellSchool: 1).",
+            "[1.00] [Tester (#1)] Casting {SpellID: 900002} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+            "[1.00] [Tester (#1)] Completed cast {SpellID: 900002}",
+            "[2.50] [Tester (#1)] Casting {SpellID: 900001} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+            "[2.50] [Tester (#1)] Completed cast {SpellID: 900001}",
+        }, "\n")
+        local R = replay.new(log, H, O)
+        local W = at(R.world(setmetatable({ tag = "-gcd" }, { __index = WO }), 1), R.pull + 5)
+        local GCD = 900
+        local s = observer.observe(W, setmetatable({ gcdSpell = GCD }, { __index = observer.DEFAULTS }))
+        local flag -- the GCD flag just after the strike: up (a rise's start) or down (an end's nil)
+        for i = 1, s.n do
+            if s.ev[i] == "@cooldown" and s.a1[i] == GCD and s.t[i] <= R.pull + 2.6 then
+                flag = s.a2[i] ~= nil
+            end
+        end
+        assert.is_true(flag)
     end)
 
     it("scores a decision inside a reacted aura's reaction window as of just before its gain (o.reacted)", function()

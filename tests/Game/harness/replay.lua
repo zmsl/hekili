@@ -747,6 +747,9 @@ function M.new(text, H, o)
             -- within the timestamp (M.EPS each): else the next cast's decision, line 1 of its timestamp, still reads it
             -- running (the ready-time ruling, timing.lua)
             local cdk = key and cd[key] > 0 and cd[key] - (T - (R.pull + e.t)) or 0
+            -- the GCD likewise: else a GCD cast on a late line of its timestamp ends after the next cast's GCD rise (an
+            -- earlier line of its own timestamp) and clears the client's GCD flag inside that GCD
+            local gcdk = (e.gcd or 0) > 0 and e.gcd - (T - (R.pull + e.t)) or nil
             if key and not e.id then -- an item: its cooldown only
                 if cd[key] > 0 then
                     us.cdUntil[key] = T + cdk
@@ -761,7 +764,7 @@ function M.new(text, H, o)
                     src = us,
                     spell = e.id,
                     ends = T + e.cast,
-                    gcd = e.gcd > 0 and e.gcd or nil,
+                    gcd = gcdk,
                 })
             elseif key and e.kind == "completed" and class.abilities[key].onNextSwing and e.paid == 0 then
                 -- wowsims's free cast of an on-next-swing strike is its queueing press (the Tag varies by spell: Heroic
@@ -779,7 +782,7 @@ function M.new(text, H, o)
                     spell = e.id,
                     ids = sh and sh.ids or rankIDs[key],
                     cd = cdk,
-                    gcd = (e.cast or 0) == 0 and (e.gcd or 0) > 0 and e.gcd or nil,
+                    gcd = (e.cast or 0) == 0 and gcdk or nil,
                     order = 1,
                     hard = (e.cast or 0) > 0 or nil,
                     chanEnds = e.chanEnd,
