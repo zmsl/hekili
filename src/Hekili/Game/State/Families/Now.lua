@@ -8,6 +8,8 @@
 -- `knownRank`, `stat`, `swingBase`, `mainhand_speed`, `offhand_speed`, `weapon`, `equipped`, `set_bonus`, `healthMax`,
 -- `now`, `combat`, `level`, `lastSwing`, `nextSwing`, `usable`) with belief meanings. A window's evaluator
 -- (Families/Windows.lua) runs in the same context, reads only. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
+-- An `applyBuff`/`applyDebuff` with no duration writes the aura's registered one: its number, or its function evaluated
+-- in this context (gear-aware spec §5), so a pack writes a duration once.
 -- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
 -- A reaction (RegisterReaction) runs in the same context at a settled outcome's row time, never through the cast fold.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
@@ -100,7 +102,7 @@ function I.Haste(t)
     local h = VS.SpellHaste and VS.SpellHaste(t).est or 0
     return 1 / (1 + h / 100)
 end
-local abByKey, auraByKey, auraSpell, auraDur, auraMax, resByKey = {}, {}, {}, {}, {}, {}
+local abByKey, auraByKey, auraSpell, auraDur, auraFn, auraMax, resByKey = {}, {}, {}, {}, {}, {}, {}
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Reads: proxies built at SpecChanged, answered from the belief at the cast's time.
@@ -298,9 +300,15 @@ local function aura(u, key, duration, stacks)
     local before = rec and rec.est or 0
     local after = 0
     if duration ~= 0 then
-        local d = duration or auraDur[j]
+        local d = duration
+        if d == nil then
+            d = auraDur[j]
+            if not d and auraFn[j] then
+                d = I.Eval(auraFn[j], T) -- the aura's registered duration in this context (gear-aware spec §5)
+            end
+        end
         if type(d) ~= "number" then
-            return -- the aura's registered duration is a function (Hekili's state): the `now` must pass one
+            return -- no number: a raising duration (counted by I.Eval) writes nothing
         end
         after = T + d
     end
@@ -507,6 +515,7 @@ I.OnBuild(function(def)
         auraSpell[j] = def.auraIds[j][1]
         local d = rawget(def.auras[j], "duration")
         auraDur[j] = type(d) == "number" and d or false
+        auraFn[j] = type(d) == "function" and d or false
         local m = rawget(def.auras[j], "max_stack")
         auraMax[j] = type(m) == "number" and m or 1
         if key then

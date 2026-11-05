@@ -432,6 +432,68 @@ describe("now handlers", function()
         assert.are.equal(est, VS.Power(fs.RAGE, 22.1).est)
     end)
 
+    describe("a debuff applied with no duration (gear-aware spec §5)", function()
+        local IDOL = 900001
+        -- spender_c's aura takes a function duration: 10 s, 12 s with the idol worn; dur_test applies it bare
+        local function setup(duration)
+            h.Class.auras.spender_c.duration = duration
+            h.Class.gear = { idol = { IDOL } }
+            register("dur_test", {
+                id = 2688,
+                now = function()
+                    applyDebuff("target", "spender_c")
+                end,
+            })
+            start()
+        end
+        local function idolDuration()
+            return 10 + 2 * set_bonus.idol -- luacheck: ignore 113 (the `now` context's read)
+        end
+        local function wearIdol()
+            ctl.inventory[18] = IDOL
+            ctl.now = 40
+            ctl.Fire("PLAYER_EQUIPMENT_CHANGED", 18, false)
+            ctl.Tick(41.5) -- past the gear source's 1 s re-read
+            VS.Drain(41.5)
+        end
+
+        it("writes the aura's own duration function's answer in the `now` context", function()
+            setup(idolDuration)
+            cast(2688, 20)
+            assert.are.equal(30, VS.Aura("target", fs.SPENDER_C, 20.1).est)
+            wearIdol()
+            assert.are.equal(1, I.nowCtx.set_bonus.idol)
+            cast(2688, 50)
+            assert.are.equal(62, VS.Aura("target", fs.SPENDER_C, 50.1).est)
+            assert.are.equal(0, I.nowErrors)
+        end)
+
+        it("counts a raising duration function once and writes nothing", function()
+            setup(function()
+                error("duration raised")
+            end)
+            cast(2688, 20)
+            cast(2688, 30)
+            assert.are.equal(1, I.nowErrors)
+            assert.is_truthy(tostring(I.nowError):find("duration raised", 1, true))
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 30.1))
+        end)
+
+        it("allocates nothing across 1000 casts evaluating the duration", function()
+            setup(idolDuration)
+            wearIdol()
+            function h:ForceUpdate() end
+            cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+            local t = 50
+            local bytes = alloc.bytes(function()
+                t = t + 1
+                cast(2688, t)
+            end, 1000)
+            assert.are.equal(0, bytes)
+            assert.are.equal(t + 12, VS.Aura("target", fs.SPENDER_C, t + 0.1).est)
+        end)
+    end)
+
     it("writes nothing when a `now` runs outside a cast (RunStressTest, an APL reading action.x.now)", function()
         start()
         local a = I.ab.bySpell[fs.SPENDER_C]
