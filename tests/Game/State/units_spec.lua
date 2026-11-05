@@ -209,6 +209,19 @@ describe("the unit registry", function()
         assert.are.equal(1, U.unresolved)
     end)
 
+    it("pays no row after a secret-GUID target clears to the unit held before it", function()
+        U.Hold(U.Uid(1)) -- Creature-1 held (a ticket)
+        ctl.now = 20
+        ctl.guid.target = fake.SECRET
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        ctl.guid.target = nil
+        ctl.now = 20.01
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        ctl.now = 20.04
+        combat("target", "WOUND", 16, 8)
+        assert.are.equal(0, #rows)
+    end)
+
     it("takes a switch to a secret-GUID target for no kill tell", function()
         boot({ "UNIT_DIED", "PLAYER_TARGET_DIED" })
         local uid = U.Uid(1)

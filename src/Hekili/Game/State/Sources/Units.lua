@@ -212,6 +212,9 @@ local function rebind(api, i, t)
         bind(i, g, t)
     else
         unbind(i, t)
+        if secret then -- an unknown unit took the token: a later clear must not fall back to the one before it
+            tokPrev[i] = 0
+        end
     end
     return secret
 end
