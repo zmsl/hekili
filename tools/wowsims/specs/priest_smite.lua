@@ -10,6 +10,10 @@
 --   rank); with rank 8's DoT still up the rank-5 casts land without a DoT, so it casts three in a row. The translator
 --   ignores `rank` (rule 5): the line reads `holy_fire` and its top-rank DoT, up, so ours falls to Smite. Deviation:
 --   the down-ranked Holy Fire and Smite (1004, rank 5) lines are translated at the top rank.
+-- Re-pin e2842f0a78 (Task 11; floor 0.93 -> 0.93): decisions on-GCD 0.932 (44) before and after, the same class. The
+-- request drops executeProportion25/45/90 and keeps Greater Blessing of Wisdom at 2, the top rank 25918 (R25; the
+-- build's `1` is rank 1 and costs 0.844: the fight sits under the 20% and 10% mana lines longer); the log is
+-- byte-equal to the one checked in, so the world's and kit's regen stand. Omitted 3 -> 3.
 -- Deviations: the wand's Shoot (`shoot,if=mana.pct<=10`) is the kit's one-shot channel of a wand speed (wowsims's
 -- core/wand.go; owner ruling 2: an in-game check); the log's tagged shots (5019 Tag 1) stay casts in the replay (as
 -- procs the tick agreement fell 0.784 -> 0.753). Mana lines read the belief on the secret pool (`mana.pct`). Holy Nova

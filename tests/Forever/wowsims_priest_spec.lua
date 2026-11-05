@@ -23,6 +23,8 @@ local REPLAY = {}
 -- idle at 60, rounded up to 0.1 s (P8; the L10/L40 brackets keep 6 s, ruling R22).
 -- Re-pin e2842f0a78 (Task 11): Shadow 1.00 -> 1.00 (1.000, 85 of 85; the new log's gear moves no decision, with Greater
 -- Blessing of Wisdom at rank 1 or at the top rank, R25), replay flicker 0.67/min before and after, LIVE60 1.8 -> 1.8.
+-- Smite 0.93 -> 0.93 (0.932, 41 of 44 before and after; the log is unchanged, R25's top-rank blessing), replay flicker
+-- 1.00/min before and after, LIVE60 0.2 -> 0.2.
 local PACKS = {
     { "priest_shadow", "Shadow", "Shadow (wowsims.com)", 1.00, 1.8 },
     { "priest_smite", "Smite", "Smite (wowsims.com)", 0.93, 0.2 },
