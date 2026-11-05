@@ -1847,7 +1847,7 @@ spec:RegisterSetting("behind", false, {
 spec:RegisterSetting("maintain_demoralizing_roar", false, {
     type = "toggle",
     name = L["Maintain Demoralizing Roar"],
-    desc = L["Keep Demoralizing Roar on the target, as a raid tank does (and use it as the leveling filler before " .. "Lacerate). Off: the priority never shows it, and Berserk no longer waits for it."],
+    desc = L["Keep Demoralizing Roar on the target, as a raid tank does, and recast it only when it is missing (that includes the levels before " .. "Lacerate). Off: the priority never shows it, and Berserk no longer waits for it."],
     width = "full",
     sim = true,
 }, "guardian")
@@ -1867,8 +1867,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Guardian (wowsims.com)",
-    20261103001,
-    [[Hekili:LFvBpkUnq4Fl8LTGkkb427UTR2SsTAvB3tTNQAU(1KyINaU4ehz7CB5ek)27ysamGdqPv31Q(HDHypV8mpZlziAC0hIcPene9(jJM8MXJh9QrJghfQxwcrHLK0fKz4xki54))HkIKYif1j9Fr8IILR8sf5dmYTKliuJTMwX46NlIM60SQsink8PF93E(P7N1ATOW5mkfAubuPD6N7Rt0ZH6K2Z8Zes4JGSoHczKkUUo5B)LFQobpUoXYevmFJBv(uzfJ6NbscFkqK(KsUYNqjLA2hbp8jVFxjkgmeDJKuO4i8P43fg3Yu1jekvu8v4xwalvE1jpr0K7DaN()8ZFanYCTUuDVV)mMEE1ute4FGOdqBIOgMC3TtYgrE7D3s9qYukYyCKUjPAMOqfKs484MhI5mLEOjBeKkeCQ4Lcv97Af8Rd8ZKqXNyanwcZGcmsnxmKLfmhiC9CVYu9dtgzRHBJVaGY4QYZliLKJfi2YLJPIHvkiwKLfplLgmEyMiTsHFI4qIs7XfpgSpk6uPjgL61iOxPKLt4XtzAWBrbg72MGc5cmZY(eRywSuqKgnvGwJpR8YjScn(x8rIDt)nMNtsnmwRT3D(rUD1gUFVRKGXjQhr4JU7pw1gQp4WkPcLEWG9sCeqYG4mMeSJ4pZqYgrMwKySqnFnEMwLL5T9ipRsdVTfIbtbPcKloirIQ3V1HTc0gnBH8MJLaHUCxqEuQQnuPWA0C81vLR6Dbz8bxnpgCRvwBxGJSfWRkaf2ymBU2r87MaAj1MJQkhSQNlXS8yBBzWMYc7MK(973smBlAQkV5WJuACK(JbVEWr30gJpem2dVTNBe33jcx5oto4F7PYJzwNZrSi5las307eb1oh2m4mWcAhEhIfx55)xKzQFxui(csfQ(bBqyE1JYSOX2Up8H3VEngOGmLd0OVlk0Qd0Cz7RsXTtAybuBj6sjJef(p7SPtYB)9jUZZCrAKWUq2WEO1EuYfoUQJ5vie0MT)mfXUsoBCVvi4c17WZFTs(RVM)lFYBl3SPZpkCDRVHDAy1MvDpfTE4IAn9mXnRWVRRXbJVXco3I0oHS32Kgl9QRblTZCn6F71OFBfgQ(R7S0XAFZTu54U7im7HAm4B6UwSR0RvM6SM)TDeUhvpz75lO87A2L9Y2C8SRoUEWZDDvqTB7wxC5NDWAW630bw3UK7Ei9O9FBAh3uc7OD0EC6xUnZ(p8WWZnn8eVW4ca3jxt7KDK7nqgRbiv65c88FewW4m8N))9T)6(1xh9N]]
+    20261105000,
+    [[Hekili:LJvBVnQrq4Fl(lPGQfy7MCxAuisTkQT5u7PQY1VcSMDWERxyr7UCP5Kf)27SgS9ABW21nsPv9djb2DE5zEMxyuIgh9POqkrdrFCYOjVB84r3mA0OOq9lLquyjjDbzg(qbjh)9pwrKugPOoX5zXZkwUYlvK7AK7fUGqn2AAfJRFQiAANMvvcPrHp(B)(tpE3SwRffoNrPqJkGkTx)CxDIEouN0EMFMqcFgK1juiJuX11jF3V(Z1j4X1jwMOI5BCRYNkRyu)mqs4tbI0NuYv(ekPuZ(m4HV59hkrH7q0nssHIJWNIplmULPQtiuQO4RWhwaVO8QtEKOj31bCC(LN(eAK5ADP6oF)zm98QPMiWFprDrBIOgMC71tYgrE)Txt9qYukYyCKUjPAMOqfKs484MxI5mLEOjBeKkeCQ45cv9hAf8Rd8ZKqXxyanwcZGcmsnxmKLfmhiC9CVYu99tgzRr3gFbaLXvLNwqkjhlqSLlhtfdRuqSillEwkny8WmrALc)lIdjkThx8qWUOOxLMyuAqJGELswoHhpLPbVffySBBckKlWml7lSIzXsbrA0ubAn(UYlNWk04pXhi2vodOW0QSmVdUYRQ8Q1(Mtsn0zRJrL6dtlxNy25kjyqG6bm2qS8NlB5H77WkPcL21DNSkbKmioJjHv0rlETo(neP2a10wfJf35RG5kqU5ipRYjVnfVbtbPcKl2l5JQ706WwbAJMnqE9XsGqFzBqEyoSjupskE5GZOkX9I5XGRTsMBdCKTaEvbOWMPzZ1De)DtaTKAZrvLUlh0LywESTvoyDzHDJLJJtlXSPOblK2)iLg)mWdb34EWnTX49bJ9WBh0nID6eHl7ot6(V9u5HmBNZESi5ZasxDSrqBDyZW2alOT)Diw6kp))Imt9hIcXpQQq13BRdZNRuMLt209HV8XvR(afKPCGg99rHwDGMlB)8lUrtdlGAlrxkzKOWx3zthL3(NtCNM5I0iHDMSH9qRDOKZCCvpZRqiOnBmAkI7k5S29wHqxOElE(7vYF518V9jVnCZ6o)OWvT(g2PHvBwp(y06(l310Ze3S2)2UMoy81wOZnpTti7SbQXsFZLGL2zUg9V(s0VTcdv)MElDS2rDdvoU)ocZURgd(U(Rf7l9ALPoP5FFpH7b1t2E(mk)E13)98wR8K7vUAQ0T9vTTD13Di6xRnJFLIbti8T9ecBwmENa4GDMBAHxx23rlS9i43UT5(p8a0tnb9iFK5ma3rxT7ODX7mehRbiv65c88FcwW4S6eNFO9)IWQRJ(R]]
 )
 
 -- The hand-built lists the wowsims.com packs replace (wowsims packs plan, P9): a saved choice of one falls back to the

@@ -27,7 +27,7 @@ L["The wowsims.com priority's Rend Weave ON/OFF switch (its default in wowsims's
 L["Maintain Demoralizing Shout"] = "保持挫志怒吼"
 L["Keep Demoralizing Shout on the target, as a raid tank does. Off: the priority never shows it."] = "像团队坦克那样在目标身上保持挫志怒吼。关闭时：优先级永不显示它。"
 L["Maintain Thunder Clap"] = "保持雷霆一击"
-L["Keep Thunder Clap's slow on the target (the leveling filler before Mortal Strike). Off: the priority never shows Thunder Clap."] = "在目标身上保持雷霆一击的减速效果（在学会致死打击之前作为练级填充技能）。关闭时：优先级永不显示雷霆一击。"
+L["Keep Thunder Clap's slow on the target, recasting it only when it is missing (that includes the levels before Mortal Strike). Off: the priority never shows Thunder Clap."] = "在目标身上保持雷霆一击的减速效果，仅在其消失时重新施放（包括学会致死打击之前的等级）。关闭时：优先级永不显示雷霆一击。"
 -- L["Protection (wowsims.com)"] = ""
 -- L["Fury (wowsims.com)"] = ""
 -- L["Arms (wowsims.com)"] = ""

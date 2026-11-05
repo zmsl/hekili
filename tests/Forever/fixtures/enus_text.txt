@@ -14980,7 +14980,7 @@ options.packs.arms.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.arms.core.disableSpacer	name	\032
 options.packs.arms.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.arms.core.enabled	name	Disable Arms
-options.packs.arms.core.maintain_thunder_clap	desc	Keep Thunder Clap's slow on the target (the leveling filler before Mortal Strike). Off: the priority never shows Thunder Clap.\n\nThe wowsims gate runs this as on.
+options.packs.arms.core.maintain_thunder_clap	desc	Keep Thunder Clap's slow on the target, recasting it only when it is missing (that includes the levels before Mortal Strike). Off: the priority never shows Thunder Clap.\n\nThe wowsims gate runs this as on.
 options.packs.arms.core.maintain_thunder_clap	name	Maintain Thunder Clap
 options.packs.arms.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.arms.core.package	desc	The addon will use the selected package when making its priority recommendations.
@@ -15530,6 +15530,7 @@ options.packs.balance.Balance (wowsims.com).lists.buff_name	values.clearcasting	
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.demoralizing_roar	|T136000:0|t Spell 99
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.eclipse	|T136000:0|t Spell 408255
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.enrage	|T136000:0|t Spell 25503
+options.packs.balance.Balance (wowsims.com).lists.buff_name	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.feral_charge_effect	|T136000:0|t Spell 19675
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.growl	|T136000:0|t Spell 6795
@@ -18393,6 +18394,7 @@ options.packs.feral.Feral (wowsims.com).lists.buff_name	values.clearcasting	|T13
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.demoralizing_roar	|T136000:0|t Spell 99
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.eclipse	|T136000:0|t Spell 408255
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.enrage	|T136000:0|t Spell 25503
+options.packs.feral.Feral (wowsims.com).lists.buff_name	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.feral_charge_effect	|T136000:0|t Spell 19675
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.growl	|T136000:0|t Spell 6795
@@ -19568,8 +19570,8 @@ options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0003	|cFFFFD
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffdamage|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 6807 - |cFFFFD100|cffffd100rage.lo>=20|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 6807 - |cFFFFD100|cffffd100!action.primal_bite.known|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 99 - |cFFFFD100|cffffd100settings.maintain_demoralizing_roar&(!action.lacerate.known&(!action.primal_bite.known||cooldown.primal_bite.remains>gcd.max||rage.lo<action.primal_bite.cost))|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 770 - |cFFFFD100|cffffd100!action.lacerate.known&(!action.primal_bite.known||cooldown.primal_bite.remains>gcd.max||rage.lo<action.primal_bite.cost)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 99 - |cFFFFD100|cffffd100settings.maintain_demoralizing_roar&(!debuff.demoralizing_roar.up&!action.lacerate.known&(!action.primal_bite.known||cooldown.primal_bite.remains>gcd.max||rage.lo<action.primal_bite.cost))|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 770 - |cFFFFD100|cffffd100!debuff.faerie_fire.up&!action.lacerate.known&(!action.primal_bite.known||cooldown.primal_bite.remains>gcd.max||rage.lo<action.primal_bite.cost)|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 5487 - |cFFFFD100|cffffd100!buff.bear_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	name	Action Name
@@ -19648,6 +19650,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.clearcastin
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.demoralizing_roar	|T136000:0|t Spell 99
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.eclipse	|T136000:0|t Spell 408255
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.enrage	|T136000:0|t Spell 25503
+options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.feral_charge_effect	|T136000:0|t Spell 19675
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.growl	|T136000:0|t Spell 6795
@@ -19787,7 +19790,7 @@ options.packs.guardian.core.behind	name	Always Behind
 options.packs.guardian.core.disableSpacer	name	\032
 options.packs.guardian.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.guardian.core.enabled	name	Disable Guardian
-options.packs.guardian.core.maintain_demoralizing_roar	desc	Keep Demoralizing Roar on the target, as a raid tank does (and use it as the leveling filler before Lacerate). Off: the priority never shows it, and Berserk no longer waits for it.\n\nThe wowsims gate runs this as on.
+options.packs.guardian.core.maintain_demoralizing_roar	desc	Keep Demoralizing Roar on the target, as a raid tank does, and recast it only when it is missing (that includes the levels before Lacerate). Off: the priority never shows it, and Berserk no longer waits for it.\n\nThe wowsims gate runs this as on.
 options.packs.guardian.core.maintain_demoralizing_roar	name	Maintain Demoralizing Roar
 options.packs.guardian.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.guardian.core.package	desc	The addon will use the selected package when making its priority recommendations.
