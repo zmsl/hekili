@@ -96,6 +96,22 @@ describe("casts and cooldowns", function()
         assert.are.equal(39.7 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 39.7).est)
     end)
 
+    it("probes a covered modelled end for an off-GCD or on-next-swing ability (it presses during the GCD)", function()
+        I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
+        S.Direct(Obs.Cooldown, 10.1, REND, 0)
+        I.gcdStart, I.gcdDur = 38.5, 1.5 -- covers the end, as in the keep case above
+        local kind = I.ab.gcdKind[REND]
+        I.ab.gcdKind[REND] = 0 -- off the GCD
+        I.Fold(39.6, false)
+        I.Settle(39.6)
+        assert.are.equal(39.6 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 39.6).est)
+        I.CooldownModel(REND, 40, 30, 39.65, Obs.CastSuccess) -- modelled again, after the probe's sample
+        I.ab.gcdKind[REND], I.ab.obj[REND].onNextSwing = kind, true -- on the GCD, but on the next swing
+        I.Fold(39.7, false)
+        I.Settle(39.7)
+        assert.are.equal(39.7 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 39.7).est)
+    end)
+
     it("learns the real length from the ready edge after our cast", function()
         assert.are.equal(30, VS.CooldownLength(fs.SPENDER_C)) -- the spec's cooldown first
         I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
