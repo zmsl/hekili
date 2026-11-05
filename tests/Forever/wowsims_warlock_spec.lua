@@ -25,9 +25,11 @@ end
 -- (0.776), G5 (the replay's pet mana: the `pet.mana<115` Life Tap). The rest is mostly API-forced (`fight_remains`
 -- 3600 s: wowsims's last-minute Bane of Agony) and G6 (Shadow Bolt's travel, central fix 32).
 -- LIVE60 0.2 in every pack: each list ends in an unconditional Life Tap, so no bracket idles (worst 0.2 s at 10, 40
--- and 60); no low-level filler (owner ruling 2026-10-21).
+-- and 60); no low-level filler (owner ruling 2026-10-21). The L10/L40 brackets keep 6 s, only L60 may follow LIVE60 (R22).
+-- Re-pin e2842f0a78 (Task 11): Affliction 0.87 -> 0.98 (0.988, 84; was 0.989, 87), replay flicker 0.00/min before and
+-- after, LIVE60 0.2 -> 0.2.
 local PACKS = {
-    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.87, 0.2 },
+    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.98, 0.2 },
     { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.70, 0.2 },
     { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.77, 0.2 },
     { "warlock_shadow_brand", "ShadowBrand", "Shadow Brand (wowsims.com)", 0.73, 0.2 },
@@ -43,7 +45,7 @@ describe("the Warlock wowsims.com packs #slow #wowsims", function()
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()
-                ws.live(pack, content(spec, world, pack, level), math.max(6, LIVE60))
+                ws.live(pack, content(spec, world, pack, level), level == 60 and math.max(6, LIVE60) or 6)
             end)
         end
     end

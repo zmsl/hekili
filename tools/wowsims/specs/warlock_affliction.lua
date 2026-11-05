@@ -16,6 +16,11 @@
 --   1 s later): Shadow Bolt's `onCrit` is a recorded known deviation until fix 32's travel time.
 --   wrack -> shadow_bolt / immolate (106.5, 112.5): the same (Shadow Vulnerability believed or not, API-forced: the
 --   target's aura is unreadable).
+-- Re-pin e2842f0a78 (Task 11; floor 0.87 -> 0.98): decisions on-GCD 0.988 (84) top [wrack -> shadow_bolt 1 (log
+-- 142.5)]: the wrack -> shadow_bolt pair of the Shadow Vulnerability class above, not traced at this time (was
+-- 0.989, 87: within tolerance). The build is still Orc and still carries
+-- `curseOptions: Elements`, so `select` stays (no Bane rule); the request drops executeProportion25/45/90 and sends
+-- Greater Blessing of Wisdom at 2, the top rank (R25; the build's rank 1 measured 0.977). Omitted 2 -> 2.
 -- Fix 31 (G4: an outcome past an unmapped cast's frame is nobody's) took the dynamite's two misses off Corruption:
 -- 0.728 -> 0.877.
 -- Worked (P6): Corruption's `now` passes its rank's duration (the belief wrote nothing for a function duration);
