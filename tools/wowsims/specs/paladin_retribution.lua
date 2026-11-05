@@ -23,17 +23,18 @@
 -- The Everlook Pathcarver (item 274759, a trinket wowsims's autocastOtherCooldowns uses at the pull) is `use_items`.
 -- Leveling (R41, owner policy: no filler for filling's sake; a line is a real ability cast for a genuine need).
 -- Seal of Righteousness: not wowsims; need-based (R41): keep a seal up, recast when it is down or has less than two
--- GCDs left. Both lines are not wowsims (its default Retribution plays no seal line without Twist of Light: its
--- 'Prep Seal' groups are
--- gated on `Has assigned judgement`, a constant true; the twist lines are ours); need-based: keep a seal up. Seal of
--- Command is recast below Twist of Light when it is down; Seal of Righteousness, before Seal of Command, when it is
+-- GCDs left. Seal of Command's line is not wowsims either (its default Retribution plays no seal line without Twist of
+-- Light: its 'Prep Seal' groups are gated on `Has assigned judgement`, a constant true; the twist lines are ours). Seal
+-- of Command is recast below Twist of Light when it is down; Seal of Righteousness, before Seal of Command, when it is
 -- down or has less than two GCDs left (`remains<gcd.max*2`: one competing GCD, Holy Strike, Consecration or Exorcism,
 -- plus about half a second of reaction; Judgement is off the GCD). The kit's Judgement does not consume the seal
 -- (judgementCast only refunds mana, Paladin.lua), so the 30 s seal persists and this threshold alone decides the recast.
 -- The old `remains<24` refresh recast a seal with 24 s left only to fill the live gate's idle window (L10 8.6 -> 4.4;
 -- a player report, R40). L10 idles 8.6 s now, a measured limit: nothing useful to cast: Holy Strike and Judgement
--- cooling, Seal of Righteousness up. L20-L35 6.8 s: ungated, not classified (Consecration off cooldown at the window's
--- end; not traced).
+-- cooling, Seal of Righteousness up. L20-L35 6.8 s, nothing useful to cast:
+-- Holy Strike (10 s) and Consecration (8 s) cooling, the seal up, Judgement off the GCD, Exorcism (879 ranks) unusable
+-- off Undead/Demon (the kit refuses; the harness world's missing creature-type check, paladin_world.lua:132, made it
+-- look castable); mana 70-92%, no gap-AB effect; reported, never gated (the gates sample L10/L40/L60).
 return {
     class = "PALADIN",
     pack = "Retribution (wowsims.com)",

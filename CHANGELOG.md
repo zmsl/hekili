@@ -21,7 +21,7 @@
 - The experimental options to use the damage meter for swing outcomes and the Cooldown Manager for aura presence are gone from normal builds, and both are now off even if you had turned them on.
 
 ### Fixed
-- Low-level Paladins are no longer told to re-cast a seal that still has time left: Retribution shows Seal of Righteousness again only when it is down or about to run out (under two global cooldowns left), Protection only when Seal of Fury is down, and the icon may stay empty while Holy Strike and Judgement cool down.
+- Low-level Paladins are no longer told to re-cast a seal that still has time left: Retribution shows Seal of Righteousness again only when it is down or about to run out (under two global cooldowns left), Protection only when Seal of Fury is down, and in between it shows Holy Strike or Judgement counting down.
 - Fewer one-moment flashes of a filler as a cooldown comes back: while a GCD or cast covers the cooldown's end, the icon now counts down to the believed end instead of stalling for its last half second.
 - Enemies you kill leave the target count at once, so AoE and cleave lines aren't held by a dead mob for a few seconds.
 - Elemental Shamans: Mana Spring Totem counts at your real rank from the first fight of a session.

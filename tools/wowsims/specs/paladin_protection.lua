@@ -44,13 +44,15 @@
 --   PROT_REPLAY procs).
 -- Regen: Paladin.lua's seeds and tests/Forever/helpers/paladin_world.lua's `fsr = { 17.38, 0 }` were not refreshed to this
 -- log's 17.3 / 0.8 (within tolerance; lanes 10/11 precedent).
--- Leveling (R41, owner policy, supersedes R28's L10 filler and R28a's `!talent.holy_shield.enabled` guard): no
--- leveling line. The old Seal of Fury refresh (`remains<24`) recast a seal with 24 s left only to fill Holy Strike's
--- cooldown for the live gate (L10 8.6 -> 4.4; a player report, R40); wowsims's own Seal of Fury line re-seals when the
--- seal is down. Live idle, measured limits with the named cause: L10 8.6 s, nothing useful to cast: Holy Strike and
--- Judgement cooling, Seal of Fury and Righteous Fury up (L15 the same; L20-L25 6.4: ungated, not
--- classified). L40 8.4 s (R28): out of
--- mana (86), nothing castable; the band L32 11.0, L35-L40 8.4 has the same cause, gated at L40 only; L41 on 4.4
+-- Leveling (R41, owner policy, supersedes R28's L10 filler and R28a's `!talent.holy_shield.enabled` guard): no leveling
+-- line. The old Seal of Fury refresh (`remains<24`) recast a seal with 24 s left only to fill Holy Strike's cooldown
+-- for the live gate (L10 8.6 -> 4.4; a player report, R40); wowsims's own Seal of Fury line re-seals when the seal is
+-- down. Live idle, measured limits with the named cause: L10 8.6 s, nothing useful to cast: Holy Strike and Judgement
+-- cooling, Seal of Fury and Righteous Fury up (L15 the same). L20-L25 6.4 s, nothing useful to cast: Holy Strike (10 s)
+-- and Consecration (8 s) cooling, the seal up, Judgement off the GCD, Exorcism (879 ranks) unusable off Undead/Demon
+-- (the kit refuses; the harness world's missing creature-type check, paladin_world.lua:132, made it look castable);
+-- mana 70-92%, no gap-AB effect; reported, never gated (the gates sample L10/L40/L60). L40 8.4 s (R28): out of mana
+-- (86), nothing castable; the band L32 11.0, L35-L40 8.4 has the same cause, gated at L40 only; L41 on 4.4
 -- (Shieldsworn's Holy Strike every 6 s).
 return {
     class = "PALADIN",

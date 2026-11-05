@@ -549,9 +549,11 @@ the author's guide, the user's binding rules and the translator's rules: `docs/d
   static check: every read of another ability sits inside a guard that drops it while that ability is unlearned).
 - **Floors** are the measured `decisions on-GCD`, truncated to two decimals, from the first clean run; raised when
   content improves, never lowered except with a named cause recorded beside the number.
-- **The leveling rule** (user, 2026-10-19): wowsims is the oracle, so the pack's own idle at 60 (LIVE60) is correct;
-  every bracket's limit is `max(6 s, LIVE60)`, and a lower bracket over it gets a recipe `leveling` filler that is
-  silent at 60, never a higher limit.
+- **The leveling rule** (user, 2026-10-19; re-pin R22; owner policy R41, 2026-11-05): wowsims is the oracle, so the
+  pack's own idle at 60 (LIVE60) is correct and L60's limit is `max(6 s, LIVE60)`; the lower brackets keep the 6 s bar.
+  A recipe `leveling` or `extra` line is only a real rotation ability cast for a genuine need, never a filler to pass
+  the bar. An idle window with nothing useful to cast is correct: that bracket gets a measured per-bracket limit with
+  the named cause `nothing useful to cast: <what is cooling / what is up>`.
 - **The replay's limits** (`tests/Game/harness/replay.lua`): no cast bars (casts at their completion, zero lag), no
   regen ticks (powers are the log's after-values), the target's swings not replayed (the tank exports log them since
   central fix 13; GAP AH), a white swing's outcome one landing lag after its swing (its rage at the swing), the execute
