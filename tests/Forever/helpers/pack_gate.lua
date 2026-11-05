@@ -168,7 +168,10 @@ M.FLICKER = {
     -- agreement 0.916 / 0.897 / 0.901 -> 1.000 / 1.000 / 1.000 (gap AB's Judgement vs Holy Strike near-tie gone with the
     -- cadence); flicker 0.2 -> 0.1 (0.02 / 0.02 / 0.02, oracle 0.00 / 0.05 / 0.03); heldReady 326 -> 296 (296 / 284 /
     -- 293, was 326 / 285 / 310)
-    ["Protection"] = { flicker = 0.1, retracted = 0, heldReady = 296 }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.00 / 0.05 / 0.03)
+    -- heldReady 296 -> 289 (R31, Holy Shield rank 3 costs 195, not 240: 253 / 289 / 275); agreement 1.000 / 1.000 /
+    -- 1.000 -> 0.981 / 1.000 / 0.986, top judgement -> holy_strike: lo 60-83 with hi 110-133 at Judgement's 90, truth
+    -- 90-115 before the press, casting regen 0; gap AB family at a 50-wide band (R39)
+    ["Protection"] = { flicker = 0.1, retracted = 0, heldReady = 289 }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was

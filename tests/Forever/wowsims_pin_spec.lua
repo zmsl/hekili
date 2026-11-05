@@ -181,6 +181,16 @@ describe("check_wowsims_pin", function()
         assert.are.same({ const = { val = "true" } }, plain[1].value) -- no vars: the APL as it is
     end)
 
+    it("raises on a recipe vars name the APL lacks (an upstream rename must not fall back to the raw APL)", function()
+        local apl = tmp('{"valueVariables":[{"name":"Use A","value":{"const":{"val":"true"}}}]}')
+        local r = { name = "V", apl = apl, player = { gear = apl, specKey = "rogue" } }
+        r.vars = { ["Use A"] = "false", ["Use Gone"] = "false" }
+        local ok, err = pcall(ex.request, r, "")
+        os.remove(apl)
+        assert.is_false(ok)
+        assert.matches("Use Gone", tostring(err), 1, true)
+    end)
+
     it("makes a tank recipe's player the raid's tank, healed by its healing model (the UI's tank defaults)", function()
         local gear = tmp('{"items":[]}')
         local model = { hps = 2200, cadenceSeconds = 0.4 }
