@@ -80,10 +80,11 @@ M.FLICKER = {
     -- reads `!debuff.rend.up` (was remains<=3): a Rend MISS that lands while a main-hand swing is in flight is credited
     -- to that swing (Events/Rows.lua route; UNIT_COMBAT carries no spell id), so the avoid's undo never runs and the
     -- belief keeps Rend up its full 15 s while the oracle shows it ready (51 held ticks, seeds 7 and 20; 17 and 1 in the
-    -- other sets): central, exposed not caused. readyShort: Sunder / Rend / Execute pressed 0.05 s before a main-hand
-    -- swing pays (the forecast class above, traced at seed 1; 44 of 53 before the swing). Flicker kept at 1.1: seeds 41-60 read 1.25
-    -- (not the gated set)
-    ["Fury L24"] = { flicker = 1.1, flickerK = 0.6, retracted = 0.2, readyShort = 53, heldReady = 406 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
+    -- other sets): central, exposed not caused. readyShort: 44 of 53 with no swing in flight; the three traced (seed 1:
+    -- Sunder, Rend, Execute) pressed 0.049 s before a main-hand swing pays (the forecast class above). Flicker 1.1 -> 1.3:
+    -- seeds 41-60 read 1.25 with the oracle's own 0.39 -> 1.04 (ours over the oracle 0.21, inside flickerK): the new
+    -- order re-times the fights (seed reordering, as the note above)
+    ["Fury L24"] = { flicker = 1.3, flickerK = 0.6, retracted = 0.2, readyShort = 53, heldReady = 406 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;

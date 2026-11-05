@@ -33,7 +33,8 @@
 -- Thunder Clap's and Demoralizing Shout's `debuff.X.remains<=6` are wowsims's own refresh lines, kept as wowsims has
 -- them (R47, owner 2026-11-05: a refresh in the debuff's last 6 s is a maintenance need, not a filler).
 -- Measured after 5049ede22 (the replay's GCD end): 0.990 (98); ready-time real 3, all early (wowsims's queued Shield
--- Block holds the GCD; wowsims.lua M.READY); live 6.0 / 17.2 / 17.2 (limits kept: the seeds 1-20 sweep's).
+-- Block holds the GCD; wowsims.lua M.READY); live 6.0 / 17.2 / 17.2 (was 10.2 / 14.6 at L40 / L60; rage-starved, gap
+-- CK; L60 at its limit; the seeds 1-20 sweep behind the limits predates this export).
 return {
     class = "WARRIOR",
     pack = "Protection (wowsims.com)",

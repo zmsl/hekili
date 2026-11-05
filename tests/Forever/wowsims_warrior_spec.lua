@@ -283,9 +283,10 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- from damage taken, 20% from white swings) and raises no block for Shield Block (no `us.taking`), so the character
     -- pools at 7-10 rage through runs of avoided swings while the APL waits on Shield Slam (Rend and Sunder gated on its
     -- cooldown). 5.4 was measured while Revenge's window never reached the client (review C1), which held the APL in
-    -- the Shield Block fishing branch. A world fix (gap CK) tightens these again. Re-pin e2842f0a78 (lane 14): this
-    -- check's fight reads 6.0 / 17.2 / 17.2 (the pack's lines unchanged, the new talents); the limits are the seeds 1-20
-    -- sweep's worst, kept (L40's 19.0 is seed-swept, not this fight's)
+    -- the Shield Block fishing branch. A world fix (gap CK) tightens these again. Re-pin e2842f0a78 (lane 14, the new
+    -- talents; the pack's lines unchanged): this check's fight 6.0 / 17.2 / 17.2 (was 6.0 / 10.2 / 14.6), L60 at its
+    -- limit; re-traced (95-112 s): rage 0.9-9.1, Rend, Shield Block and Sunder waiting on rage: rage-starved, gap CK's
+    -- cause. The seeds 1-20 sweep behind 19.0 / 17.2 predates the new export (not re-run)
     local PROT_LIVE = { [10] = 6, [40] = 19.0, [60] = 17.2 }
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()
