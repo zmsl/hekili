@@ -537,6 +537,7 @@ do
         if timer and not timer:IsCancelled() then timer:Cancel() end
         timer = C_Timer.NewTimer( 1, Update )
     end
+    ns.queueGearUpdate = QueueUpdate -- SpecializationChanged's re-read 1 s after a rebuild (gear-aware spec Q2)
 
     function ns.updateGear()
         if not Hekili.PLAYER_ENTERING_WORLD then

@@ -85,6 +85,30 @@ describe("the tracked set", function()
         assert.are.equal(1011, got.talents[1].spell)
     end)
 
+    it("carries the declared gear as plain records: sets and items by piece IDs, bonuses by aura spell", function()
+        local got
+        local build = I.Build
+        I.Build = function(def, t)
+            got = def
+            return build(def, t)
+        end
+        h.Class.gear = {
+            swarming_idol = { 272430, [272430] = true }, -- RegisterGear's shape (Spec.lua:792-796)
+            grovekeeper_eclipse = { 273884, 273885, [273884] = true, [273885] = true },
+        }
+        h.Class.setBonuses = { grovekeeper_eclipse_5pc = 1301242 }
+        ns.BuildTracked()
+        I.Build = build
+        assert.are.same({
+            { key = "grovekeeper_eclipse", items = { 273884, 273885 } },
+            { key = "swarming_idol", items = { 272430 } },
+            { key = "grovekeeper_eclipse_5pc", aura = 1301242 },
+        }, got.gear)
+        h.Class.gear, h.Class.setBonuses = nil, nil
+        ns.BuildTracked()
+        assert.are.same({}, I.def.gear) -- a class without gear: an empty list, wiped each build
+    end)
+
     it("reads each ability's GCD kind and a declared gcdTime from Hekili's ability table as it is", function()
         h.Class.abilities.spender_t = { key = "spender_t", id = fs.SPENDER_T, gcd = "totem", funcs = {} }
         h.Class.abilities.spender_u = { key = "spender_u", id = fs.SPENDER_U, gcdTime = 0.8, funcs = {} }

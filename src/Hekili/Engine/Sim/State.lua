@@ -4831,8 +4831,8 @@ local mt_set_bonuses = {
     __index = function( t, k )
         if type( k ) == "number" then return 0 end
 
-        -- Match specific set bonus effect checks, 2pc/4pc (<set>_2pc)
-        local prefix, pieces = k:match( "^(.+)_([24])pc$" )
+        -- Match specific set bonus effect checks, any piece count (<set>_<n>pc)
+        local prefix, pieces = k:match( "^(.+)_(%d+)pc$" )
         if prefix and pieces then
             pieces = tonumber( pieces )
             return ( rawget( t, prefix ) or 0 ) >= pieces and 1 or 0
