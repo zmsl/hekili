@@ -124,8 +124,10 @@ local function reactive(ids)
     return usable == true or noMana == true
 end
 
--- Usable now by the plain read, not merely short of a cost: Overpower's second cost (a combo point a dodge grants)
--- reads as "short" without a dodge. reset_precast's fallback when no dodge row timed the window (event-facade §6).
+-- Usable now by the plain read, not merely short of a cost. Overpower needs the 5 s window a dodge opens (1282733,
+-- from Offensive State 1282735); the DB2 prices that as a second cost row, 1 point of power type 4, which the window
+-- spell energizes: no resource a Warrior sees. Whether the client reads "short" or unusable outside the window is
+-- unprobed; `== true` holds either way. reset_precast's fallback when no dodge row timed the window (event-facade §6).
 local function usableNow(ids)
     local r = knownRank(ids)
     return r > 0 and IsSpellUsable(ids[r]) == true
