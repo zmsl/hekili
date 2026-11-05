@@ -78,7 +78,9 @@ local EXORCISM_COST = { 85, 135, 180, 235, 285, 345, 85, 135, 180, 235, 285, 345
 local HOLY_SHOCK = { 1311606, 20473, 20929, 20930 } -- rank 1 Forever-only
 local HOLY_SHOCK_COST = { 160, 225, 275, 325 }
 local HOLY_SHIELD = { 20925, 20927, 20928 }
-local HOLY_SHIELD_COST = { 150, 195, 240 }
+-- Rank 3 is 195 (owner R31, wowsims's); DB2 70707's 240 is the Era ladder one rank up. Ranks 1-2 stay the DB2's
+-- (wowsims: 100, 150) until the owner confirms.
+local HOLY_SHIELD_COST = { 150, 195, 195 }
 local RETRIBUTION_AURA = { 7294, 10298, 10299, 10300, 10301 }
 local RIGHTEOUS_FURY = { 25780, 407627 } -- 407627: the rune's (D4: registered, inert unless learned)
 

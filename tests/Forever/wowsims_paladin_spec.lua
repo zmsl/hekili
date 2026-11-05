@@ -105,7 +105,12 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- the belief under the truth: wowsims returns 105.08 mana on every landed Shieldsworn Holy Strike (the kit does
         -- not model it, gaps.md CU; 45.00, 103.90, 163.00 follow one) and Holy Shield's price, ours 240 (DB2) vs
         -- wowsims's 195, is a necessary cause in 5 of the 8 (the log's mana before Holy Shield: 196-275, five under 240)
-        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.84, PROT_REPLAY)
+        -- 0.84 -> 0.88 (R31 owner fact: Holy Shield rank 3 costs 195, the kit's 240 was DB2 70707's Era ladder): 0.885
+        -- (52) top [holy_shield -> holy_strike 4; seal_of_fury -> holy_strike 2]; 45.00 and 163.00 now agree. The 6 left
+        -- (34.04, 88.04, 103.90, 128.04 Holy Shield; 108.04, 172.04 Seal of Fury) all have the truth over the cost and
+        -- the belief's lo under it (lo 119 / 161 / 171 / 22 / 162 / 23 vs truth 225 / 275 / 196 / 214 / 300 / 256): the
+        -- unmodelled Shieldsworn Holy Strike return (gaps.md CU), no longer the price
+        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.88, PROT_REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Protection is out of mana from 24 s),
     -- so its longest wait is for mana. 10.4 on central fix 22 rebased (the live world's presses resolve from the driving
@@ -121,7 +126,9 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- character lacks (10.6 s with the refresh, so the refresh stops at Holy Shield). R28a ratifies that guard
     -- (`!talent.holy_shield.enabled`): the exception is a band, L32-L40 (Holy Shield learned, Shieldsworn not,
     -- mana-dry), idle over 6 s either way (L32 11.0, L35-L40 8.4); gated at L40 only; no other bracket got a higher limit
-    local PROT_LIVE60 = 4.6
+    -- 4.6 -> 4.4 (R31: Holy Shield rank 3 costs 195, not 240; the price is the only change, L10 4.4 and L40 8.4 hold,
+    -- rank 3 is learned at 60 only)
+    local PROT_LIVE60 = 4.4
     local PROT_LIVE40 = 8.4
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()

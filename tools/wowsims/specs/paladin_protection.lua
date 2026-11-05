@@ -30,9 +30,15 @@
 --   Strikes give 105.08 mana tagged 1328544 (none on the miss at 31.50 or the dodges at 80.50, 173.54), unmodelled by the
 --   kit (gaps.md CU). 45.00 (return 43.50), 103.90 (return 98.50, 5.4 s earlier) and 163.00 (return 161.50) follow such a
 --   return, not a block (a block returns on every block, 3 s cooldown: Shield Specialization 1310925, unseen). Holy
---   Shield's price: ours 240 (DB2 70707) vs wowsims's 195 (both pins), kit unchanged; the log's mana just before the six
+--   Shield's price (before R31): ours 240 (DB2 70707) vs wowsims's 195 (both pins), kit unchanged; the log's mana just before the six
 --   Holy Shield misses is 224.67, 223.71, 275.24, 196.22, 213.65, 238.48 (the other two misses are Seal of Fury's), five
 --   of six under 240: the price is a necessary cause in 5 of the 8 (gaps.md CU).
+--   R31 (owner fact): Holy Shield's max rank is 3 and costs 195; DB2 70707 carries the Era ladder one rank up (20925/
+--   20927/20928 at levels 40/50/60, 150/195/240; wowsims 30/40/50, 100/150/195), so the kit's rank 3 is 195 now (ranks
+--   1-2 and the learn levels stay the DB2's, owner item gaps.md CV). Replay 0.846 -> 0.885 (52), floor 0.84 -> 0.88;
+--   45.00 and 163.00 agree. The 6 left (Holy Shield 34.04, 88.04, 103.90, 128.04; Seal of Fury 108.04, 172.04) have
+--   the truth over the cost and the belief's lo under it (lo 119 / 161 / 171 / 22 / 162 / 23 vs truth 225 / 275 /
+--   196 / 214 / 300 / 256): the unmodelled Shieldsworn Holy Strike return (gaps.md CU). Live L60 4.6 -> 4.4.
 --   Fixed: Holy Shield's block hits {20928, Tag 2}, Shieldsworn's {20928, Tag 1328544} and Retribution Aura's {10301,
 --   Tag 2} were replayed as our casts and restarted Holy Shield's believed cooldown (0.788 -> 0.846, wowsims_paladin_spec
 --   PROT_REPLAY procs).
