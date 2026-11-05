@@ -294,9 +294,9 @@ with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever
 Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,
 the forever gate on 51a0b1ac: Fire Nova at the DB2's 520). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's
 own fight (floor 0.98; 0.989 of 88 with Rage of the Farseer, held) and runs the levels 10, 40 and 60 (40 pending: GAP AB, the secret-mana floor's last mana).
-Elemental (wowsims.com) (Task 14) runs the same gates on the Elemental world (20 yd, wowsims's 5590 mana and regen:
-24.75 a second casting without Mana Spring Totem's buff, 29.75 with it, 42.5 more outside the five-second rule):
-replay floor 0.93 (0.937 of 95), live L10 0.0,
+Elemental (wowsims.com) (Task 14) runs the same gates on the Elemental world (20 yd, wowsims's 5650 mana and regen:
+26.13 a second casting without Mana Spring Totem's buff, 31.13 with it, 45.25 outside the five-second rule; re-pin
+e2842f0a78): replay floor 0.92 (0.928 of 97, ruling R26), live L10 0.2,
 L40 0.0, L60 5.0 s (LIVE60 5.0), flicker floor 0.6. The lines:
 
 ```

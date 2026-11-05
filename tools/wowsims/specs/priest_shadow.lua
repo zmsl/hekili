@@ -21,7 +21,8 @@
 -- The Dark Sac variable reads `mana.current<=2000` (absolute, as wowsims): the belief answers its floor on the secret
 -- pool; the line is for an Undead build (Dark Sacrifice is the Undead's), never this Human one. The replay's mana belief
 -- runs about 1000 under the truth after the Demonic Rune and Major Mana Potion (rule 13 lines; the replay emits no cast
--- for an item's use: the Mage lane's shared gap); no decision reads it here.
+-- for an item's use: the Mage lane's shared gap); no decision reads it here. Follow-up: the world's pool was not
+-- refreshed from the re-pin log (priest_world.lua 4711, the log 4846): no decision reads it, lane 10's precedent.
 -- Omitted: the hidden entries (#10 Vampiric Embrace, #11 Starshards on its expected damage, #12 the Inner Focus ->
 -- Starshards sequence); the Major Spellblasting Potion (item 250937, rule 13: no such consumable in Hekili_Shared; a
 -- potion under Potions, off). Race lines: the Troll's pre-pull Shadowguard (`action.shadowguard.known`), the Night Elf's

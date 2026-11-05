@@ -77,9 +77,9 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     it(ELE .. " follows wowsims's casts", function()
         ws.gate(ELE, content("shaman_elemental", sw.Elemental, ELE, 60), "shaman_elemental", 0.92, ELE_REPLAY)
     end)
-    -- the pack's own worst idle at 60, seconds rounded up to 0.1: wowsims runs its mana out (its log sits under 200 of
-    -- 5590 from ~110 s, Lightning Bolt 3-6.7 s apart), so the priority waits for mana. 5.0 -> 5.0 at the re-pin (5650
-    -- mana); L10/L40 keep the 6 s bar, only L60 may follow LIVE60 (R22, both packs)
+    -- the pack's own worst idle at 60, seconds rounded up to 0.1: wowsims runs its mana out (its log of 5650 sits under
+    -- 220 at 100-120 s and from ~170 s, Lightning Bolt 3-6.7 s apart), so the priority waits for mana. 5.0 -> 5.0 at the
+    -- re-pin (5650 mana); L10/L40 keep the 6 s bar, only L60 may follow LIVE60 (R22, both packs)
     local ELE_LIVE60 = 5.0
     for _, level in ipairs({ 10, 40, 60 }) do
         it(ELE .. " stays live at level " .. level, function()

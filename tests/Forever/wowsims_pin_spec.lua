@@ -156,6 +156,15 @@ describe("check_wowsims_pin", function()
         assert.are.same({ greaterBlessingOfWisdom = 2, greaterBlessingOfMight = 2, greaterBlessingOfKings = true }, b)
     end)
 
+    it("keeps a build's greater blessing of 0 at 0 (off stays off)", function()
+        local build = tmp(
+            '{"player":{"equipment":{"items":[]},"buffs":{"greaterBlessingOfWisdom":0,"greaterBlessingOfMight":1}}}'
+        )
+        local b = ex.request({ name = "B", build = build }, "").raid.parties[1].players[1].buffs
+        os.remove(build)
+        assert.are.same({ greaterBlessingOfWisdom = 0, greaterBlessingOfMight = 2 }, b)
+    end)
+
     it("makes a tank recipe's player the raid's tank, healed by its healing model (the UI's tank defaults)", function()
         local gear = tmp('{"items":[]}')
         local model = { hps = 2200, cadenceSeconds = 0.4 }
