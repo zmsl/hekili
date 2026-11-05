@@ -1637,12 +1637,14 @@ describe("the wowsims APL translator's re-pin reads", function()
         assert.are.equal("actions=strike,if=gcd.remains<=0", lines({ gcdIsReady = {} }))
     end)
 
-    it("spellGcdHastedDuration is gcd.execute, guarded while the ability is unlearned", function()
+    -- wowsims reads the named spell's GCD (Arms's Slam line: Slam's 1 s cast against Mortal Strike's 1.5 s GCD), not
+    -- the evaluated line's own (`gcd.execute` would read Slam's 1 s there)
+    it("spellGcdHastedDuration is the named spell's action.<key>.gcd, guarded while it is unlearned", function()
         local g = function(id)
             return cmp("OpLt", spell("spellGcdHastedDuration", id), const("1.5s"))
         end
-        assert.are.equal("actions=strike,if=(!action.big_hit.known|gcd.execute<1.5)", lines(g(200)))
-        assert.are.equal("actions=strike,if=gcd.execute<1.5", lines(g(100)))
+        assert.are.equal("actions=strike,if=(!action.big_hit.known|action.big_hit.gcd<1.5)", lines(g(200)))
+        assert.are.equal("actions=strike,if=action.strike.gcd<1.5", lines(g(100)))
     end)
 
     it("currentHealth is health.current; another unit's is unsupported", function()

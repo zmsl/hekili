@@ -249,7 +249,7 @@
 --    resolves to a talent (a kit talent's spell, or a recipe `map` to a talent's key, as rule 4) is
 --    `talent.<key>.enabled` (a `rank` above 1: `talent.<key>.rank>=<rank>`), else false; `talentRank` is
 --    `talent.<key>.rank`, else 0; `spellFullCooldown` `cooldown.<key>.duration`, `spellTravelTime`
---    `action.<key>.travel_time` and `spellGcdHastedDuration` `gcd.execute` (each nil while the spell is unknown:
+--    `action.<key>.travel_time` and `spellGcdHastedDuration` `action.<key>.gcd` (each nil while the spell is unknown:
 --    rules 6, 12); `gcdIsReady` `gcd.remains<=0` (wowsims also counts the queue window); `currentHealth`
 --    `health.current` (Self only); `auraDuration` `<unit>.<key>.duration` (as `auraRemainingTime`) and
 --    `dotBaseDuration` `debuff.<key>.duration` (as `dotRemainingTime`); `druidBleedIsActive` (the target's only)
@@ -727,7 +727,7 @@ local SPELL_FIELD = {
     spellCastTime = "action.%s.cast",
     spellCurrentCost = "action.%s.cost",
     spellTravelTime = "action.%s.travel_time",
-    spellGcdHastedDuration = "gcd.execute",
+    spellGcdHastedDuration = "action.%s.gcd", -- the named spell's GCD (gcd.execute is the evaluated line's)
 }
 
 -- A spell test's text by its key (rule 6 guards each).
