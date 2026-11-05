@@ -267,8 +267,11 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- measured 0.904 (94); 0.979 once the replay ends a cooldown at its log timestamp (ready-time ruling), held with
             -- partial blocks replayed as BLOCK_REDUCED wounds (gap AH); 0.97 -> 0.93 (0.938, 91 of 97, after gap AS's
             -- Rend give-back): W2's fight exposes exact-1.5 s Shield Slam ties (sim artifact; reverting upstream #755
-            -- alone gives 0.989)
-            0.93,
+            -- alone gives 0.989); 0.93 -> 0.98 (0.9898, 97 of 98) re-pin e2842f0a78 (Task 14): the new talents
+            -- (presets.ts ProtectionTalents) and gear; the Revenge window's id 5302 mapped (recipe `auras`); the one
+            -- miss is shatter_curse -> shield_slam (45.03: the Orc racial at <= 50% health; the replay does not replay our
+            -- health, the old class)
+            0.98,
             PROT_REPLAY
         )
     end)
@@ -278,7 +281,9 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- from damage taken, 20% from white swings) and raises no block for Shield Block (no `us.taking`), so the character
     -- pools at 7-10 rage through runs of avoided swings while the APL waits on Shield Slam (Rend and Sunder gated on its
     -- cooldown). 5.4 was measured while Revenge's window never reached the client (review C1), which held the APL in
-    -- the Shield Block fishing branch. A world fix (gap CK) tightens these again.
+    -- the Shield Block fishing branch. A world fix (gap CK) tightens these again. Re-pin e2842f0a78 (lane 14): this
+    -- check's fight reads 6.0 / 17.2 / 17.2 (the pack's lines unchanged, the new talents); the limits are the seeds 1-20
+    -- sweep's worst, kept (L40's 19.0 is seed-swept, not this fight's)
     local PROT_LIVE = { [10] = 6, [40] = 19.0, [60] = 17.2 }
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()

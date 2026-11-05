@@ -18,8 +18,22 @@
 -- Worked: shield_slam -> thunder_clap (18 at 0.585): the state read a `shared = "target"` aura from the player's
 -- debuffs, so Thunder Clap's debuff always read down (central GAP AJ fixed the read; the kit shares it on the target); the kit's talent costs (Focused Rage 1 a rank, on the shouts too) priced as wowsims logs them.
 -- The replay does not replay the target's swings (replay limit: rage from damage taken reaches the belief only
--- through the truth's after-values); Revenge's window (25288) is a hidden aura in the replay knobs.
+-- through the truth's after-values); Revenge's window (25288, 5302 since e2842f0a78) is a hidden aura in the replay knobs.
 -- Precombat calls no list (fix 16 does not reach this pack). Automatic cooldowns (rule 13): none in the log.
+-- Re-pin e2842f0a78 (Task 14): talents from presets.ts:32 ProtectionTalents (35301003002-03-050530120301011351),
+-- hasBsT2 false (DefaultOptions; battle_shout.go:30-36: +30 attack power only), the APL's 5 changed lines (Revenge's
+-- window read as 5302 in Bloodrage's condition, mapped by `auras`; "Battle Shout: No Raid Buff" folds to true solo),
+-- prebis gear (5 slots; main hand 2.35 s as before). Omitted 23 -> 23 (+1 `dropped the unresolved aura 5302` until
+-- the `auras` entry, then gone); the pack's lines are unchanged. No untagged GCD-0 kit cast in the log (melee OtherID
+-- 3; Deep Wound 412609, unmapped, not fed). The R29 audit's stale request (it lacked the APL's new variable) is
+-- re-exported. Kit and world regen not refreshed (rage from wowsims's own numbers, the
+-- 11-02 catch-up ruling).
+-- Disagreements (P7; floor 0.93 -> 0.98, decisions on-GCD 0.990 (97 of 98), n 98): shatter_curse -> shield_slam 45.03 (the Orc
+-- racial at <= 50% health; the replay does not replay our health: the old class). Nothing else disagrees.
+-- Thunder Clap's and Demoralizing Shout's `debuff.X.remains<=6` are wowsims's own refresh lines, kept as wowsims has
+-- them (R47, owner 2026-11-05: a refresh in the debuff's last 6 s is a maintenance need, not a filler).
+-- Measured after 5049ede22 (the replay's GCD end): 0.990 (98); ready-time real 3, all early (wowsims's queued Shield
+-- Block holds the GCD; wowsims.lua M.READY); live 6.0 / 17.2 / 17.2 (limits kept: the seeds 1-20 sweep's).
 return {
     class = "WARRIOR",
     pack = "Protection (wowsims.com)",
@@ -31,7 +45,7 @@ return {
         race = "RaceOrc",
         class = "ClassWarrior",
         gear = "ui/specs/warrior/protection/gear_sets/prebis.gear.json",
-        talentsString = "35300003-05-050531120300021351",
+        talentsString = "35301003002-03-050530120301011351",
         specKey = "protectionWarrior",
         options = {
             classOptions = {
@@ -39,7 +53,7 @@ return {
                 startingRage = 0,
                 useBattleShout = true,
                 defaultStance = "WarriorStanceDefensive",
-                hasBsT2 = true,
+                hasBsT2 = false,
                 stanceSnapshot = true,
             },
         },
@@ -66,8 +80,9 @@ return {
         burstWindow = 6,
         inspirationUptime = 0.25,
     },
-    -- wowsims names the Revenge window (DB2 5302 Defensive State, 5 s) by Revenge's own ID; the kit's is revenge_usable
-    auras = { [25288] = "revenge_usable" },
+    -- the Revenge window (DB2 5302 Defensive State, 5 s), the kit's revenge_usable; wowsims logged and read it under
+    -- Revenge's own ID (25288) before e2842f0a78, and reads 5302 since (Bloodrage's condition, default #16)
+    auras = { [5302] = "revenge_usable" },
     exclusive = { [11556] = true }, -- Demoralizing Shout bids in wowsims's "Demoralizing" category (an exclusive effect)
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
     -- the user's tiers (2026-10-21): Revenge 1 (its reactive window); Heroic Strike and Cleave always 2 (the owner's

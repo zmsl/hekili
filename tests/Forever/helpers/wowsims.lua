@@ -401,7 +401,10 @@ M.READY = {
     -- { 0.52, 26 } -> { 0.90, 19 } (lane 14, replay world fix, as druid_guardian's): 6 early GCD-chain rows in grain,
     -- the 19 left all late; -> { 0.42, 13 } re-pin e2842f0a78 (R6: the new log's 87 decisions, 13 real, all late)
     warrior_fury = { 0.42, 13 },
-    warrior_protection = { 0.38, 11 },
+    -- { 0.38, 11 } -> { 0.37, 3 } re-pin e2842f0a78 (lane 14, R6; after 5049ede22's GCD fix): 98 decisions, 3 real, all
+    -- early, class aura: Shield Slam 49.84 (0.24), Sunder Armor 71.77 / 143.44 (0.37 / 0.44): wowsims queues Shield Block
+    -- (`Queueing up 2565 to cast at`) and casts the on-GCD ability at that instant, after ours shows it ready
+    warrior_protection = { 0.37, 3 },
 }
 
 --- The ready-time check of replay `R` (timing.lua) on spec `spec` after its run: prints "<label> wowsims timing:

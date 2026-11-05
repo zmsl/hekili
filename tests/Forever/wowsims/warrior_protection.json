@@ -1,9 +1,6 @@
 {
   "encounter":{
-    "executeProportion20":0.2,
-    "executeProportion25":0.25,
     "executeProportion35":0.35,
-    "executeProportion90":0.9,
     "duration":180,
     "targets":[{
         "minBaseDamage":2601,
@@ -15,7 +12,7 @@
         "parryHaste":true,
         "mobType":"MobTypeMechanical"
       }],
-    "executeProportion45":0.45
+    "executeProportion20":0.2
   },
   "raid":{
     "parties":[{
@@ -27,7 +24,7 @@
             "protectionWarrior":{
               "options":{
                 "classOptions":{
-                  "hasBsT2":true,
+                  "hasBsT2":false,
                   "queueDelay":250,
                   "startingRage":0,
                   "defaultStance":"WarriorStanceDefensive",
@@ -46,7 +43,7 @@
             },
             "equipment":{
               "items":[{
-                  "id":14979,
+                  "id":10388,
                   "randomSuffix":12736,
                   "enchant":2543
                 },{
@@ -54,7 +51,7 @@
                 },{
                   "id":275737
                 },{
-                  "id":272414,
+                  "id":18413,
                   "enchant":7667
                 },{
                   "id":252483,
@@ -73,13 +70,13 @@
                   "randomSuffix":12736,
                   "enchant":2543
                 },{
-                  "id":14978,
+                  "id":10376,
                   "randomSuffix":12736,
                   "enchant":1887
                 },{
                   "id":272409
                 },{
-                  "id":284716
+                  "id":15855
                 },{
                   "id":272440
                 },{
@@ -88,8 +85,7 @@
                   "id":12798,
                   "enchant":1900
                 },{
-                  "id":10271,
-                  "randomSuffix":12736,
+                  "id":16998,
                   "enchant":1886
                 },{
                   "id":15289,
@@ -98,7 +94,7 @@
             },
             "race":"RaceOrc",
             "name":"Protection",
-            "talentsString":"35300003-05-050531120300021351",
+            "talentsString":"35301003002-03-050530120301011351",
             "profession2":"Blacksmithing",
             "rotation":{
               "type":"TypeAPL",
@@ -601,7 +597,7 @@
                                   "auraIsInactive":{
                                     "includeReactionTime":true,
                                     "auraId":{
-                                      "spellId":25288
+                                      "spellId":5302
                                     }
                                   }
                                 },{
@@ -825,16 +821,8 @@
                     "condition":{
                       "and":{
                         "vals":[{
-                            "not":{
-                              "val":{
-                                "auraIsKnown":{
-                                  "auraId":{
-                                    "rank":7,
-                                    "spellId":25289,
-                                    "tag":-1
-                                  }
-                                }
-                              }
+                            "variableRef":{
+                              "name":"Battle Shout: No Raid Buff"
                             }
                           },{
                             "cmp":{
@@ -1150,6 +1138,31 @@
                   }
                 }],
               "valueVariables":[{
+                  "name":"Battle Shout: No Raid Buff",
+                  "value":{
+                    "not":{
+                      "val":{
+                        "or":{
+                          "vals":[{
+                              "auraIsKnown":{
+                                "auraId":{
+                                  "spellId":11551,
+                                  "tag":-1
+                                }
+                              }
+                            },{
+                              "auraIsKnown":{
+                                "auraId":{
+                                  "spellId":25289,
+                                  "tag":-1
+                                }
+                              }
+                            }]
+                        }
+                      }
+                    }
+                  }
+                },{
                   "name":"Delay Check",
                   "value":{
                     "and":{
