@@ -612,9 +612,16 @@ describe("Forever Shaman through the engine", function()
                 assert.are.equal(t[2], a.id, t[1])
             end
             assert.is_nil(auras.tremor_totem)
-            assert.is_nil(auras.stoneskin_totem_rank_9)
         end
     )
+
+    it("reads a totem buff through the engine by either name without an error", function()
+        local S = H.Hekili.State
+        for _, k in ipairs({ "stoneskin_totem", "stoneskin", "windfury_totem", "flametongue", "mana_tide_totem" }) do
+            assert.is_false(S.buff[k].up, k)
+        end
+        assert.are.same({}, H.errors)
+    end)
 
     it("answers a Searing Totem summoned in combat from the modelled slot, in the belief and the simulation", function()
         local VS, S = H.ns.VirtualState, H.Hekili.State

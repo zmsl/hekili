@@ -156,9 +156,8 @@ local TOTEMS = {
         cooldown = 300,
     },
     -- The totems below are prompted by no pack; they exist for the player's own priorities. Ids, costs, levels and
-    -- durations are wowsims e2842f0a78's (levels agree with the DB2 SpellLevels). Elements are the classic slots; the
-    -- client's own (SummonProperties) was unreadable here -- note: IN-GAME CHECK each element, Fire/Frost/Nature
-    -- Resistance first (wowsims puts only Frost Resistance, in the fire slot).
+    -- durations are wowsims e2842f0a78's (levels agree with the DB2 SpellLevels). Elements come from the pin's
+    -- SummonProperties slots (the summon effect's Misc2: fire 63, earth 81, water 82, air 83).
     stoneskin_totem = {
         element = "earth",
         ids = { 8071, 8154, 8155, 10406, 10407, 10408 },
@@ -196,11 +195,11 @@ local TOTEMS = {
         duration = { 300, 300, 300 },
     },
     tremor_totem = { element = "earth", ids = { 8143 }, cost = { 60 }, duration = { 300 } },
-    -- 10% of base mana (wowsims's CostPct; Stormstrike's convention: base 1520, whole mana)
+    -- 10% of base mana (wowsims's CostPct). -- shortcut: the flat level-60 value (base mana 1520), less below 60; upgrade when the engine has percent-of-level-base-mana costs or after the launch in-game cost check
     poison_cleansing_totem = { element = "water", ids = { 8166 }, cost = { 152 }, duration = { 300 } },
     disease_cleansing_totem = { element = "water", ids = { 8170 }, cost = { 152 }, duration = { 300 } },
     sentry_totem = { element = "air", ids = { 6495 }, cost = { 65 }, duration = { 300 } },
-    -- 6% of base mana, 45 s, 15 s cooldown
+    -- 6% of base mana, 45 s, 15 s cooldown. -- shortcut: the flat level-60 value (base mana 1520), less below 60; upgrade when the engine has percent-of-level-base-mana costs or after the launch in-game cost check
     earthbind_totem = { element = "earth", ids = { 2484 }, cost = { 91 }, duration = { 45 }, cooldown = 15 },
     stoneclaw_totem = {
         element = "earth",
@@ -209,7 +208,7 @@ local TOTEMS = {
         duration = { 15, 15, 15, 15, 15, 15 },
         cooldown = 30,
     },
-    -- 6% of base mana, 45 s, 15 s cooldown
+    -- 6% of base mana, 45 s, 15 s cooldown. -- shortcut: the flat level-60 value (base mana 1520), less below 60; upgrade when the engine has percent-of-level-base-mana costs or after the launch in-game cost check
     grounding_totem = { element = "air", ids = { 8177 }, cost = { 91 }, duration = { 45 }, cooldown = 15 },
 }
 
