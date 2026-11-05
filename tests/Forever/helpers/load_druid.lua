@@ -206,13 +206,24 @@ function M.env(w)
     e.mana = { current = 1000 }
     e.combo_points = { current = 0 }
     e.combat, e.active_enemies, e.group = 0, 1, false
+    e.set_bonus, e.equipped = default(0), default(false) -- no gear headless (State.lua's)
     e.level = 60 -- Hekili's state.level (UnitLevel), the belief's `level` (Families/Now.lua)
     e.pairs, e.ipairs = pairs, ipairs -- Hekili's state has them (State.lua)
+    -- no duration: the aura's own duration function (the belief's `now` does the same)
+    local function auraDuration(key, duration)
+        local a = w.auras[key]
+        if duration == nil and a and type(a.duration) == "function" then
+            return M.run(a.duration, e)
+        end
+        return duration
+    end
     function e.applyBuff(key, duration)
+        duration = auraDuration(key, duration)
         table.insert(e.applied, key)
         e.durations[key] = duration
     end
     function e.applyDebuff(_, key, duration, stacks)
+        duration = auraDuration(key, duration)
         table.insert(e.applied, key)
         e.durations[key], e.stacks[key] = duration, stacks
     end

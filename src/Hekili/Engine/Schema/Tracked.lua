@@ -9,7 +9,8 @@
 -- if it raised (a working function's nil is its answer), then 0. Nothing in `def` runs under `state` at runtime: the
 -- belief swaps a function's environment for the call (I.Eval, Game/State/Families/Casts.lua; `now`, `onCrit`, `taken` and
 -- a window's `evaluator` are bound to the context), and no function it evaluates captures `state`, `Hekili` or `class`
--- (tests/Forever/plain_records_spec.lua). What only the core knows arrives as a number (`fsrOf`). Allocates;
+-- (tests/Forever/plain_records_spec.lua). What only the core knows arrives as a number (`fsrOf`). The declared gear
+-- crosses as data (`def.gear`: keys and item or aura IDs); the belief reads the equipment itself. Allocates;
 -- SpecializationChanged only.
 
 local addon, ns = ...
@@ -39,6 +40,7 @@ local def = {
     settings = {}, -- the spec's settings as plain values (Families/Now.lua's `settings`; refreshed by Hekili:SettingsChanged)
     windows = {}, -- the rotation windows (RegisterWindow's records; `steps` as ability indexes): Families/Windows.lua
     reactions = {}, -- RegisterReaction's records { key, who, outcome, hand, now }: Families/Now.lua (no ability index)
+    gear = {}, -- the declared gear (spec:RegisterGear's sets and items, spec:RegisterSetBonus's bonuses): Families/Gear.lua
 }
 local LISTS = {
     "abilities",
@@ -52,10 +54,12 @@ local LISTS = {
     "pets",
     "windows",
     "reactions",
+    "gear",
 }
 
 local HANDS = { mainhand = 1, offhand = 2 }
-local NO_PETS, NO_WINDOWS = {}, {} -- a test's stand-in class may have no `pets`, `windows` or `reactions`
+-- a test's stand-in class may have no `pets`, `windows`, `reactions`, `gear` or `setBonuses`
+local NO_PETS, NO_WINDOWS, NO_GEAR = {}, {}, {}
 -- The sim's own generated entries (Spec.lua RegisterResource: the stepped decay and the hits taken), reserved names
 -- the walk below skips: they are no regen entries of the belief.
 local DECAY, TAKEN = "__decay", "__taken"
@@ -338,6 +342,23 @@ local function buildDef()
         if type(v) == "table" and type(v[2]) == "number" and not seen[v[2]] then
             seen[v[2]] = true
             insert(def.talents, { key = k, spell = v[2], max = v[3] or 1 })
+        end
+    end
+    -- the declared gear (gear-aware spec §4): an item's or a set's piece IDs (RegisterGear's array part), a bonus's aura
+    -- spell (RegisterSetBonus); the belief reads the equipment itself (Sources/Gear.lua)
+    for _, k in ipairs(sortedKeys(class.gear or NO_GEAR)) do
+        local items = {}
+        for _, id in ipairs(class.gear[k]) do
+            if type(id) == "number" then
+                items[#items + 1] = id
+            end
+        end
+        insert(def.gear, { key = k, items = items })
+    end
+    for _, k in ipairs(sortedKeys(class.setBonuses or NO_GEAR)) do
+        local spell = class.setBonuses[k]
+        if type(spell) == "number" then
+            insert(def.gear, { key = k, aura = spell })
         end
     end
     for _, k in ipairs(sortedKeys(class.pets or NO_PETS)) do

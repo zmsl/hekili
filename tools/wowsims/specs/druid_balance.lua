@@ -11,8 +11,9 @@
 --    ever affordable and no icon shows. Shared gap R (not worked around): with the forecast reading the not-casting
 --    rate outside the rule (a scratch edit), 0.818.
 -- 2. wrath -> insect_swarm 4, 3. starfire -> moonfire 2: a DoT refresh decided a fraction of a second before the debuff
---    ends (Insect Swarm's 16 s, Moonfire's 15 s, the log's): wowsims casts the filler and refreshes after, our first
---    icon is the refresh (the replay's casts land at their completion: no cast bars; replay limit).
+--    ends (Insect Swarm's 16 s with the build's Swarming Idol, Moonfire's 15 s, the log's): wowsims casts the filler
+--    and refreshes after, our first icon is the refresh (the replay's casts land at their completion: no cast bars;
+--    replay limit).
 -- Since central fixes 12-15 (gap R closed): 0.855 (n 55), top [wrath -> insect_swarm 4; starfire -> moonfire 2;
 -- starfire -> insect_swarm 1], all the DoT-refresh replay limit (2. above); LIVE L10 1.6, L40 1.4, L60 1.4 s (8.6 at
 -- 60 before gap R's fix).
@@ -30,10 +31,10 @@
 --     3600, so the `fight_remains>380&mana.pct_lo<70` branch holds once mana dips under 70% (the truth from 11.82 s;
 --     10.45 s at 67.9% truth after Starfire's cost, 2756 -> 2520 of 3709); wowsims casts it at 24.86 s on the 40% branch.
 --   wrath -> insect_swarm (36.73, 52.73): Insect Swarm lasts 16 s in wowsims's log (21.09 -> 37.09, 38.23 -> 54.23;
---     the old log's too) against the kit's 14 s (the DB2's 12 s + Nature's Splendor's 2000 ms effect, mask 2097152 =
---     Insect Swarm's; wowsims's own spell data says the same, so its 16 s is a sim-side extension): our belief shows
---     the refresh 2 s early (already in the base's top, wrath -> insect_swarm 3). Kept on the DB2 until an in-game
---     check (owner).
+--     the old log's too) against the kit's 14 s at the time (the DB2's 12 s + Nature's Splendor's 2000 ms effect,
+--     mask 2097152 = Insect Swarm's): the other 2 s are the build's Swarming Idol (272430, +2 s; R32), now modelled
+--     (gear-aware, task #3); before that our belief showed the refresh 2 s early (wrath -> insect_swarm 3 in the
+--     base's top).
 --   Next (1): wrath -> starfire 55.73: the kit's Wrath grants Eclipse at its cast end; the 52.73 Wrath missed (no proc).
 --   LIVE L10 0.2, L40 0.2, L60 0.2 s. The ready-time row (tests/Forever/helpers/wowsims.lua M.READY) 17 -> 22 real:
 --   the new log's 79 decisions (42 Wraths, was 28 of 55), 17 of the 22 a Wrath at the mana floor (cost class).
@@ -42,11 +43,15 @@
 -- 380 s" can't be known, and the long-fight branch showed Innervate under 70% mana in every fight.
 -- Disagreements (P7; floor 0.93), decisions on-GCD 0.937 (79) top [wrath -> insect_swarm 3; wrath -> starfire 2]
 -- (the 8 Innervate misses gone; the rest were behind them):
---   wrath -> insect_swarm (19.59, 36.73, 52.73): Insect Swarm's 16 s (4.23 -> 20.23 in the log too), above.
+--   wrath -> insect_swarm (19.59, 36.73, 52.73): Insect Swarm's 16 s (4.23 -> 20.23 in the log too), the idol's,
+--     above (gone since task #3).
 --   wrath -> starfire (11.82, 55.73): wowsims's Wrath that missed (the 10.45 cast, Miss at 12.82; the 52.73 cast, Miss
 --     at 55.23) grants no Eclipse; the kit grants it at every Wrath's cast end, so we show Starfire. The hit roll can't
 --     be forecast: a replay limit.
 --   LIVE L10 0.2, L40 0.2, L60 0.2 s; ready-time median 0.260 (22 real), the M.READY ceiling 0.71 -> 0.26.
+-- Gear-aware (task #3; floor 0.97): the replay wears the request's gear (ws.gear), the Swarming Idol's 16 s Insect
+-- Swarm; decisions on-GCD 0.975 (79) top [wrath -> starfire 2] (the 3 wrath -> insect_swarm gone); LIVE L10 0.2,
+-- L40 0.2, L60 0.2 s; ready-time median 0.260 (22 real, never 5 -> 2), M.READY kept.
 local object = { __jsontype = "object" } -- dkjson: an empty table as {} (UnitReference.create(), the default unit)
 return {
     class = "DRUID",

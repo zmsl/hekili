@@ -197,6 +197,7 @@ describe("Forever Hunter", function()
         local r = w.abilities.raptor_strike
         assert.is_true(r.onNextSwing)
         local e = ld.env(w)
+        w.state.mainhand_remains, w.state.mainhand_speed = 0, 2.6 -- the stand-in now runs the aura's duration function (reads the file's `state`)
         assert.is_true((ld.run(r.usable, e)))
         ld.run(r.handler, e)
         assert.are.same({ "raptor_strike" }, e.applied)

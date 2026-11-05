@@ -8,7 +8,8 @@
 -- docs/superpowers/specs/2026-10-15-forever-druid-pack.md.
 -- Talents: the DB2's 47 Classic nodes plus three placeholders the live export replaces (checkpoint Q1). Only rank 1 of
 -- each talent is in the Forever DB2, so a modifier is rank 1's value x the rank (Classic's convention), floored at 0;
--- no cooldown or duration modifier is modelled but Improved Shifting Power's (spec D5).
+-- no cooldown or duration modifier is modelled but Improved Shifting Power's (spec D5); gear: Insect Swarm's Swarming
+-- Idol and Grovekeeper Eclipse 5-piece (set_bonus, gear-aware spec).
 -- Credits: Hekili (registration API and pack format); the abilities, auras, handlers and `swap_form` are ported from
 -- Hekili's Classic profile (origin/classic:Classic/Druid.lua). Ported from Taco Dog Forever
 -- (src/TacoDogForever_Druid/): the not-behind window (Feral.lua), Enrage's 10 + 2/s and Faerie Fire free in form
@@ -121,6 +122,16 @@ local REGROWTH = { 8936, 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858 }
 local REGROWTH_COST = { 70, 125, 170, 210, 250, 305, 370, 445, 525 }
 local REJUVENATION = { 774, 1058, 1430, 2090, 2091, 3627, 8910, 9839, 9840, 9841, 25299 }
 local REJUVENATION_COST = { 25, 40, 75, 105, 135, 160, 195, 235, 280, 335, 360 }
+
+-- Gear (gear-aware spec §4; r33 section 0): the item and set IDs the pack's set_bonus reads (wowsims/forever at
+-- e2842f0a78, db.json). Registered on the kit: every tree reads the same keys.
+local GEAR = {
+    swarming_idol = 272430, -- 1291061: Insect Swarm +2 s (sim/druid/item_idols.go:72-80)
+    -- Grovekeeper Eclipse (set 2114, sim/druid/item_sets.go:31-52): the 4 pieces the game files ship (Trousers,
+    -- Grips, Shoulderpads, Stompers); the head and chest join when they ship. 5-piece 1301242: Insect Swarm +3 s.
+    grovekeeper_eclipse = { 273884, 273885, 273886, 273887 },
+    grovekeeper_eclipse_5pc = 1301242,
+}
 
 -- The forms, in `buff.form`'s member order (one is up at a time).
 local FORMS = { "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }
@@ -352,6 +363,10 @@ spec:RegisterTalents({
     eclipse = { 0, 408248, 3 },
 })
 
+spec:RegisterGear("swarming_idol", GEAR.swarming_idol)
+spec:RegisterGear("grovekeeper_eclipse", unpack(GEAR.grovekeeper_eclipse))
+spec:RegisterSetBonus("grovekeeper_eclipse_5pc", GEAR.grovekeeper_eclipse_5pc)
+
 spec:RegisterAuras({
     serenity_field = { id = 1291103, duration = 15, max_stack = 1 },
     aquatic_form = {
@@ -386,6 +401,13 @@ spec:RegisterAuras({
     -- The Howling Idol's equip aura (272427): "Reduces the cooldown of your Shifting Power ability" (DB2 1291059).
     howling_idol = {
         id = 1291059,
+        duration = 3600,
+        max_stack = 1,
+    },
+    -- The Grovekeeper Eclipse 5-piece's hidden aura (1301242): tracked so set_bonus.grovekeeper_eclipse_5pc reads it
+    -- (both environments read the belief's record: Facade GetPlayerAuraBySpellID; gear-aware spec §2).
+    grovekeeper_eclipse_5pc = {
+        id = 1301242,
         duration = 3600,
         max_stack = 1,
     },
@@ -511,8 +533,11 @@ spec:RegisterAuras({
     insect_swarm = {
         id = 5570,
         copy = rest(INSECT_SWARM),
-        duration = function()
-            return 12 + 2 * talent.natures_splendor.rank
+        duration = function() -- the one expression both environments evaluate (gear-aware spec §5)
+            return 12
+                + 2 * talent.natures_splendor.rank
+                + (set_bonus.swarming_idol > 0 and 2 or 0)
+                + (set_bonus.grovekeeper_eclipse_5pc > 0 and 3 or 0) -- Q1: the 5-piece aura, or 5 pieces worn
         end,
         tick_time = 2,
         dot = "debuff", -- Insect Swarm's schedule
@@ -1255,7 +1280,7 @@ spec:RegisterAbilities({
     insect_swarm = {
         id = 5570,
         expects = "ticks",
-        school = "nature", -- its debuff dot aura: 2 s ticks over 12 s
+        school = "nature", -- its debuff dot aura: 2 s ticks over its duration (talent and gear)
         copy = rest(INSECT_SWARM),
         cast = 0,
         cooldown = 0,
@@ -1271,7 +1296,7 @@ spec:RegisterAbilities({
         nobuff = "feral_form",
 
         now = function()
-            applyDebuff("target", "insect_swarm", 12 + 2 * talent.natures_splendor.rank)
+            applyDebuff("target", "insect_swarm") -- the aura's own duration (talent and gear)
         end,
 
         handler = function()

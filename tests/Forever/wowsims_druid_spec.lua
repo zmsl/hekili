@@ -20,6 +20,7 @@ local function content(spec, base, pack, level, extra)
         talents = ws.header(spec).talents,
         learn = LEARN,
         race = ws.race(spec),
+        gear = ws.gear(spec), -- the request's gear (Balance's Swarming Idol: Insect Swarm's 16 s, R32)
     }
     for k, v in pairs(extra or {}) do
         o[k] = v
@@ -205,6 +206,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "Balance (wowsims.com)",
             content("druid_balance", W.Balance, "Balance (wowsims.com)", 60),
             "druid_balance",
+            -- 0.93 -> 0.97 (0.975, 77/79) (task #3, gear-aware: the Swarming Idol's 16 s): the replay wears the
+            -- request's gear, so the kit's Insect Swarm is the log's 16 s (R32) and the 3 wrath -> insect_swarm misses
+            -- go; left: the 2 missed Wraths' Eclipse (wrath -> starfire, a replay limit).
             -- 0.86 -> 0.93 (0.937, 74/79) re-pin e2842f0a78, owner R20a: Innervate low-mana only (the recipe's
             -- `condition`), the 8 Innervate misses gone; left: Insect Swarm's 16 s in wowsims's log against the kit's
             -- DB2 14 s (3), and a Wrath that missed grants no Eclipse in wowsims, ours always (2; the recipe's header).
@@ -212,7 +216,7 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             -- branch held for us from the first mana dip (fight_remains reads 3600: gap AN, API-forced), 8 of the 11
             -- misses. 0.909 (50/55) on central fix 22 (cast bars: the DoT-refresh replay limit gone); 0.855 (47/55) on
             -- central fixes 14-15 (Task 7g); 0.836 on central fix 13 over fix 12; 0.818 on central fix 12 (GAP R), from 0.56
-            0.93
+            0.97
         )
     end)
     -- wowsims's sim starts in Moonkin Form (its list never casts it); the recipe's `moonkin_form` line does, once

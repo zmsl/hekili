@@ -15533,6 +15533,7 @@ options.packs.balance.Balance (wowsims.com).lists.buff_name	values.enrage	|T1360
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.feral_charge_effect	|T136000:0|t Spell 19675
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
+options.packs.balance.Balance (wowsims.com).lists.buff_name	values.grovekeeper_eclipse_5pc	|T136000:0|t Spell 1301242
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.growl	|T136000:0|t Spell 6795
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.howling_idol	|T136000:0|t Spell 1291059
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.innervate	|T136000:0|t Spell 29166
@@ -18397,6 +18398,7 @@ options.packs.feral.Feral (wowsims.com).lists.buff_name	values.enrage	|T136000:0
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.feral_charge_effect	|T136000:0|t Spell 19675
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
+options.packs.feral.Feral (wowsims.com).lists.buff_name	values.grovekeeper_eclipse_5pc	|T136000:0|t Spell 1301242
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.growl	|T136000:0|t Spell 6795
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.howling_idol	|T136000:0|t Spell 1291059
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.innervate	|T136000:0|t Spell 29166
@@ -19653,6 +19655,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.enrage	|T13
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.faerie_fire	|T136000:0|t Spell 770
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.feral_charge_effect	|T136000:0|t Spell 19675
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
+options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.grovekeeper_eclipse_5pc	|T136000:0|t Spell 1301242
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.growl	|T136000:0|t Spell 6795
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.howling_idol	|T136000:0|t Spell 1291059
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.innervate	|T136000:0|t Spell 29166

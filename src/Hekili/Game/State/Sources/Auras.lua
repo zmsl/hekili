@@ -69,6 +69,7 @@ I.OnBuild(function(def)
         facts[j], disagree[j], staged[j] = 0, 0, 0
         facts[I.AURA_UNIT + j], disagree[I.AURA_UNIT + j], staged[I.AURA_UNIT + j] = 0, 0, 0
     end
+    pending = true -- a build cleared every record: walk the player at the next out-of-combat poll 10 (gear-aware spec §2)
 end)
 
 -- One unit's walk at t; returns whether it completed. Allocates nothing (the client allocates its aura tables).

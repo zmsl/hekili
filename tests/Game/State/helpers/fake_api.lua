@@ -544,7 +544,14 @@ function M.new()
         GetItemCooldown = function()
             return 0, 0, 1
         end,
-        IsEquippedItem = no,
+        IsEquippedItem = function(id) -- any slot holds it (ctl.inventory); no item cache needed
+            for _, v in pairs(ctl.inventory) do
+                if v == id then
+                    return true
+                end
+            end
+            return false
+        end,
         IsCurrentItem = no,
         GetDetailedItemLevelInfo = none,
         GetItemGem = none,

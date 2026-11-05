@@ -2634,6 +2634,9 @@ function Hekili:SpecializationChanged()
 
     ns.updateTalents()
     ns.TrackedStatics() -- the records' static values, under `state` with this spec's talent ranks (Tracked.lua)
+    -- the core's gear read 1 s later (Engine/Sim/Events.lua): a set-bonus aura reads the belief's records, which this
+    -- build cleared (gear-aware spec §7, Q2); the belief's own full read is at the same time (Sources/Gear.lua)
+    ns.queueGearUpdate() -- Events.lua (before this file in the TOC) sets it at load
     if kit then self:SettleSpecChoice( clientID ) end
     ResetDisabledGearAndSpells()
 

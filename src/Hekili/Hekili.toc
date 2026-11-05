@@ -24,6 +24,7 @@ Game\State\Families\Auras.lua
 Game\State\Families\TargetCast.lua
 Game\State\Families\TargetHealth.lua
 Game\State\Families\Talents.lua
+Game\State\Families\Gear.lua
 Game\State\Families\Totems.lua
 Game\State\Families\Pets.lua
 Game\State\Families\Enemies.lua
@@ -44,6 +45,7 @@ Game\State\Sources\Auras.lua
 Game\State\Sources\Forms.lua
 Game\State\Sources\Target.lua
 Game\State\Sources\Talents.lua
+Game\State\Sources\Gear.lua
 Game\State\Sources\Nameplates.lua
 Game\State\Sources\Totems.lua
 Game\State\Sources\Pets.lua

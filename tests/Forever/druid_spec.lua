@@ -595,6 +595,24 @@ describe("Forever Druid", function()
                 ld.run(w.abilities.moonfire.now, e)
                 ld.run(w.abilities.insect_swarm.now, e)
                 assert.are.same({ 15, 14 }, { e.durations.moonfire, e.durations.insect_swarm }) -- Nature's Splendor
+                -- the gear terms (R32): the Swarming Idol +2 s, the Grovekeeper Eclipse 5-piece +3 s; `now` and the
+                -- aura's own duration give the same answer, and taking the gear off gives 14 s again
+                local function swarm(sb)
+                    local e2 = ld.env(w)
+                    e2.talent = rank(1)
+                    e2.set_bonus = setmetatable(sb, {
+                        __index = function()
+                            return 0
+                        end,
+                    })
+                    ld.run(w.abilities.insect_swarm.now, e2)
+                    return e2.durations.insect_swarm, ld.run(w.auras.insect_swarm.duration, e2)
+                end
+                assert.are.same({ 14, 14 }, { swarm({}) })
+                assert.are.same({ 16, 16 }, { swarm({ swarming_idol = 1 }) })
+                assert.are.same({ 17, 17 }, { swarm({ grovekeeper_eclipse_5pc = 1 }) })
+                assert.are.same({ 19, 19 }, { swarm({ swarming_idol = 1, grovekeeper_eclipse_5pc = 1 }) })
+                assert.are.same({ 14, 14 }, { swarm({}) }) -- unequipped
             end
         )
 
