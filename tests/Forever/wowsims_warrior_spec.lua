@@ -104,8 +104,10 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- lifted L10 and L40 to 9.2 before). L10 7.4 and L40 12.8 since R41 removed the leveling Hamstring (5.6 / 5.6 with
     -- it; 9.0 / 11.2 before it): nothing useful to cast before Mortal Strike's talent: L10 Rend, Thunder Clap and five
     -- Sunders up, the rage going to the off-GCD Heroic Strike; L40 the same with Slam and Spearing Strike cooling.
-    -- Re-pin e2842f0a78 (lane 14): 7.4 / 8.6 / 5.6 measured; the limits stay (only ever lowered: L40's 12.8 is the traced window)
-    local ARMS_LIVE = { [10] = 7.4, [40] = 12.8, [60] = 6 } -- 7.4 / 8.6 / 5.6
+    -- Re-pin e2842f0a78 (lane 14): 7.4 / 8.6 / 5.6 measured; L40 12.8 -> 8.6 (R6, R41: 37.4-45.4 s, Slam 8.5 s and
+    -- Spearing Strike cooling, Rend up 8.1 s, five Sunders up, rage 12-28 pooling to the off-GCD Heroic Strike: nothing
+    -- useful to cast); L10 and L60 stay
+    local ARMS_LIVE = { [10] = 7.4, [40] = 8.6, [60] = 6 } -- 7.4 / 8.6 / 5.6
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Arms (wowsims.com) stays live at level " .. level, function()
             ws.live(
