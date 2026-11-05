@@ -37,6 +37,21 @@ local KIT = {
     windfury_totem = { { 8512, 10613, 10614 }, 250, 0, "totem" },
     mana_tide_totem = { { 16190, 17354, 17359, 1325256 }, 60, 300, "totem" },
     water_shield = { { 408510 }, 0, 0, "spell" },
+    -- the totems with no rotation use (wowsims e2842f0a78; levels agree with the DB2 SpellLevels); a percent cost
+    -- is of base mana 1520 as Stormstrike's (Poison/Disease Cleansing 10%, Earthbind/Grounding 6%)
+    stoneskin_totem = { { 8071, 8154, 8155, 10406, 10407, 10408 }, 210, 0, "totem" },
+    healing_stream_totem = { { 5394, 6375, 6377, 10462, 10463 }, 80, 0, "totem" },
+    fire_resistance_totem = { { 8184, 10537, 10538 }, 180, 0, "totem" },
+    frost_resistance_totem = { { 8181, 10478, 10479 }, 180, 0, "totem" },
+    nature_resistance_totem = { { 10595, 10600, 10601 }, 180, 0, "totem" },
+    windwall_totem = { { 15107, 15111, 15112 }, 225, 0, "totem" },
+    tremor_totem = { { 8143 }, 60, 0, "totem" },
+    poison_cleansing_totem = { { 8166 }, 152, 0, "totem" },
+    disease_cleansing_totem = { { 8170 }, 152, 0, "totem" },
+    sentry_totem = { { 6495 }, 65, 0, "totem" },
+    earthbind_totem = { { 2484 }, 91, 15, "totem" },
+    stoneclaw_totem = { { 5730, 6390, 6391, 6392, 10427, 10428 }, 140, 30, "totem" },
+    grounding_totem = { { 8177 }, 91, 15, "totem" },
 }
 
 -- Each totem's element and its ranks' durations (DB2 duration_ms).
@@ -49,6 +64,36 @@ local TOTEMS = {
     magma_totem = { "fire", { 20, 20, 20, 20 } },
     windfury_totem = { "air", { 300, 300, 300 } },
     mana_tide_totem = { "water", { 13, 13, 13, 13 } },
+    stoneskin_totem = { "earth", { 300, 300, 300, 300, 300, 300 } },
+    healing_stream_totem = { "water", { 300, 300, 300, 300, 300 } },
+    fire_resistance_totem = { "water", { 300, 300, 300 } },
+    frost_resistance_totem = { "fire", { 300, 300, 300 } },
+    nature_resistance_totem = { "air", { 300, 300, 300 } },
+    windwall_totem = { "air", { 300, 300, 300 } },
+    tremor_totem = { "earth", { 300 } },
+    poison_cleansing_totem = { "water", { 300 } },
+    disease_cleansing_totem = { "water", { 300 } },
+    sentry_totem = { "air", { 300 } },
+    earthbind_totem = { "earth", { 45 } },
+    stoneclaw_totem = { "earth", { 15, 15, 15, 15, 15, 15 } },
+    grounding_totem = { "air", { 45 } },
+}
+
+-- Each totem's lasting buff on the party: key, the top rank's aura, the lower ranks', duration. The `<key>_totem`
+-- alias leads the copy list. Tremor, the cleansers, Sentry, Earthbind, Stoneclaw, Grounding, Searing and Magma leave none.
+local TOTEM_AURAS = {
+    { "stoneskin", 10405, { 8072, 8156, 8157, 10403, 10404 }, 300 },
+    { "strength_of_earth", 25362, { 8076, 8162, 8163, 10441 }, 300 },
+    { "grace_of_air", 25360, { 8836, 10626 }, 300 },
+    { "mana_spring", 10494, { 5677, 10491, 10493 }, 300 },
+    { "mana_tide", 1325257, { 16191, 17355, 17360 }, 13 },
+    { "healing_stream", 10461, { 5672, 6371, 6372, 10460 }, 300 },
+    { "fire_resistance", 10535, { 8185, 10534 }, 300 },
+    { "frost_resistance", 10477, { 8182, 10476 }, 300 },
+    { "nature_resistance", 10599, { 10596, 10598 }, 300 },
+    { "windwall", 15110, { 15108, 15109 }, 300 },
+    { "flametongue", 15036, { 8230, 8250, 10521 }, 300 },
+    { "windfury", 10612, { 8515, 10609 }, 300 },
 }
 
 local function idsOf(a)
@@ -95,7 +140,7 @@ describe("Forever Shaman", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(23, n)
+        assert.are.equal(36, n)
         assert.are.equal("SHAMAN", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.elemental_mastery.toggle)
@@ -129,7 +174,10 @@ describe("Forever Shaman", function()
         -- Mana Spring Totem's buff: 10 every 2 s at rank 4 (DB2 aura 24), +5% a rank of Restorative Totems
         local ms = r.models.mana_spring
         assert.are.equal("mana_spring", ms.aura)
-        assert.are.same({ 10494, { 5677, 10491, 10493 } }, { w.auras.mana_spring.id, w.auras.mana_spring.copy })
+        assert.are.same(
+            { 10494, { "mana_spring_totem", 5677, 10491, 10493 } },
+            { w.auras.mana_spring.id, w.auras.mana_spring.copy }
+        )
         for _, id in ipairs({ 5675, 10495, 10496 }) do
             w.game.known[id] = false
         end
@@ -141,6 +189,32 @@ describe("Forever Shaman", function()
         w.game.known[10497], w.game.known[5675] = false, true -- rank 1: 4 every 2 s
         assert.are.equal(2.5, setfenv(ms.mp5, w.state)())
         assert.are.same(1238931, w.auras.improved_stormstrike.id)
+    end)
+
+    it("declares each totem's buff under its name and its _totem alias, and no other totem buff", function()
+        for _, t in ipairs(TOTEM_AURAS) do
+            local key, id, lower, duration = t[1], t[2], t[3], t[4]
+            local copy = { key .. "_totem" }
+            for _, l in ipairs(lower) do
+                copy[#copy + 1] = l
+            end
+            local a = w.auras[key]
+            assert.are.same({ id, copy, duration, 1 }, { a.id, a.copy, a.duration, a.max_stack }, key)
+        end
+        for _, key in ipairs({
+            "tremor",
+            "poison_cleansing",
+            "disease_cleansing",
+            "sentry",
+            "earthbind",
+            "stoneclaw",
+            "grounding",
+            "searing",
+            "magma",
+        }) do
+            assert.is_nil(w.auras[key], key)
+            assert.is_nil(w.auras[key .. "_totem"], key)
+        end
     end)
 
     it("registers each totem with its element and durations, and its summon fills that slot for its rank's", function()
@@ -524,6 +598,28 @@ describe("Forever Shaman through the engine", function()
             end
         end
         assert.are.same({ 0, n }, { I.nowErrors, I.nowRuns - runs0 }, tostring(I.nowError))
+        assert.are.same({}, H.errors)
+    end)
+
+    it(
+        "resolves each totem buff by name and by its _totem alias to one aura, and an unknown totem buff stays unknown",
+        function()
+            local auras = H.Hekili.Class.auras
+            for _, t in ipairs(TOTEM_AURAS) do
+                local a = assert(auras[t[1]], t[1])
+                assert.are.equal(a, auras[t[1] .. "_totem"], t[1])
+                assert.are.equal(a, auras[t[3][1]], t[1])
+                assert.are.equal(t[2], a.id, t[1])
+            end
+            assert.is_nil(auras.tremor_totem)
+        end
+    )
+
+    it("reads a totem buff through the engine by either name without an error", function()
+        local S = H.Hekili.State
+        for _, k in ipairs({ "stoneskin_totem", "stoneskin", "windfury_totem", "flametongue", "mana_tide_totem" }) do
+            assert.is_false(S.buff[k].up, k)
+        end
         assert.are.same({}, H.errors)
     end)
 

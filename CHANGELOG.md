@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- Stoneskin Totem and the other Shaman totems now have their buffs registered, so custom priorities can use buff.stoneskin_totem.up and its siblings (also buff.stoneskin.up). The missing totems (Stoneskin, Healing Stream, the resistance totems, Windwall, Tremor, the cleansing totems, Sentry, Earthbind, Stoneclaw, Grounding) can be cast and tracked too; no built-in priority uses them.
 - A Movement toggle for priorities that move to reach the next ability: on, they show it out of range; off, they hide it until you are in range.
 - The engine supports rotation windows (spans the game shows no buff for), and the priority editor can add their Open Window and Close Window lines. No built-in priority uses them yet.
 
