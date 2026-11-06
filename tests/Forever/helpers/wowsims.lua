@@ -425,7 +425,9 @@ M.READY = {
     -- { 0.30, 1 } -> { 0.30, 10 } R42 (the replay answers fight_remains from the log): only rows that were
     -- "never" moved, now timed
     -- (never 25 -> 2; 9 of them 0.2-0.3 s early, the Searing Pain grain as above); median 0.20
-    warlock_demonology = { 0.30, 10 },
+    -- { 0.30, 10 } -> { 0.00, 0 } re-pin e2842f0a78 (Task 16, R6, L82 M5): 114 decisions, 103 timed all in grain,
+    -- never 11 (A: the refill-blind Life Tap, R50)
+    warlock_demonology = { 0.00, 0 },
     -- 0.500, 5: Incinerate's 2.0 s cast, likewise. { 0.50, 5 } -> { 0.50, 16 } R42 (the replay answers
     -- fight_remains from the log): only rows that were "never" moved, now timed
     -- (never 28 -> 0; 12 of them early at the cast's grain); median 0.40

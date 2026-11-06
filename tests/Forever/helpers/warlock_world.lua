@@ -37,6 +37,10 @@ local GCD = { spell = 1.5, off = 0 }
 -- 1.04 a 0.1 s tick): the spirit part (paused inside it) and the mp5 part. UNMEASURED in game.
 local FSR = { 33.88, 10.4 }
 local SPIRIT = 221 -- the builds' Spirit at 60 (wowsims's logs: Life Tap 774 = (424 + 221) x 1.2)
+-- Re-pin e2842f0a78: the four Human builds (Demonology, Shadow Brand, Destruction, SM Ruin; the new preraid gear) log
+-- 1.52 a 0.1 s tick inside the rule and 5.333 outside it, and Life Tap 679 = 424 + 255 (814.8 x 1.2 at 2/2 Improved
+-- Life Tap); Affliction (still Orc) keeps the values above. A pack's `fsr` / `spirit` override them.
+local FSR_HUMAN, SPIRIT_HUMAN = { 38.13, 15.2 }, 255
 local SOUL_SHARD = 6265 -- the item (ItemSparse); wowsims's builds carry 32 (classOptions.soulShards)
 -- The demons the builds summon: their mana and regen a second at 60 (wowsims's logs, the preraid gear: "Pet stats"
 -- Mana, MP5 / 5), the spell each casts on its own (DB2: Firebolt 11763 115 mana, 2 s cast; Lash of Pain 11780 160
@@ -230,7 +234,9 @@ local PACKS = {
     Demonology = {
         pack = "Demonology (wowsims.com)",
         spec = 100092,
-        max = 6156,
+        max = 6328,
+        fsr = FSR_HUMAN,
+        spirit = SPIRIT_HUMAN,
         demon = "imp",
         sacrificed = "succubus",
         kit = { "demonic_sacrifice" },
