@@ -196,7 +196,9 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 `tools/wowsims/apl.lua`'s header is the authority; one line each here, with what each leaves out:
 
 1. One line per entry; `prepullActions` -> `actions.precombat`, in wowsims's `doAtValue` order (earliest first); groups
-   -> called lists; variables inlined. Omits a prepull entry with no constant `doAtValue` or one after the pull. Each
+   -> called lists; variables inlined. Omits a prepull entry with no constant `doAtValue` or one after the pull (a time folds from
+   constants, `math`, the kit's base cast time and its unhasted GCD, each a `# Deviation:` line; a spell's travel time
+   does not fold yet: blocker note translator-2). Each
    pre-pull cast (precombat and the lists only it calls) gets a guard against recasting, a mechanical derivation from
    its ability's handler (recorded once): its own aura `!buff.<key>.up` / `!debuff.<key>.up` (none when the aura's
    duration is at most the cooldown: Bloodrage), its totem `!totem.<element>.up`, else none (Charge); a mutually
@@ -240,6 +242,10 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
     setting term. Unsupported: an "is" with no field (protojson's zero value) or an unknown option value.
 17. `multidot`: the DoT's cast while its DoT has at most `maxOverlap` left, on the current target only (`maxDots` is
     a `# Deviation:` header line per entry; no `cycle_targets`: other targets' DoTs are not readable on Forever).
+
+Upstream's newer values (CN4): the "on all/any targets" aura and DoT reads are the current target's, each a
+`# Deviation:` line; of the current target, "is active" is true, "time until active" 0 and "time until it dies"
+`fight_remains`; `numActiveAdds`, `remainingCastTime` and another target unit are unsupported.
 
 Any node the translator does not handle is unsupported (rule 2): a new wowsims node omits its entry rather than
 mistranslating it.

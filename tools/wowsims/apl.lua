@@ -8,7 +8,8 @@
 --    is omitted, as wowsims ignores it, and one whose `doAtValue` does not fold to a constant too: it folds from
 --    constants, `math` and `spellCastTime`, the kit ability's `cast` (a function read in the kit's stub state, as the
 --    pre-pull guard below; re-pin plan Task 4), so `-spellCastTime(X)` is `-<X's cast>`: a `# Deviation:` line, as
---    wowsims folds the hasted cast), `priorityList` -> `actions`,
+--    wowsims folds the hasted cast; `spellGcdHastedDuration` folds the kit ability's unhasted GCD, `gcdTime` else 0 off
+--    the GCD, 1 a totem, 1.5 a spell: its own `# Deviation:` line, CN4), `priorityList` -> `actions`,
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
 --    order as first called; `valueVariables` are inlined where referenced.
 --    The pre-pull guard (owner ruling 2026-10-21: a guard against recasting, the player decides when to press): each
@@ -264,6 +265,13 @@
 --    `spellInRange` is `action.<key>.in_range` (both rule 6 guarded, rule 12 dropped); `dotIsActiveOnAllTargets` is
 --    `dotIsActive` on the current target, with rule 17's `# Deviation:` line. `spellExpectedDpet` stays unsupported, as
 --    does a class's own "on all targets" read with no recipe `select` field (rule 16's `activeAll`).
+--    CN4 (upstream's values after the pin): `auraIsActiveOnAllTargets` / `auraIsActiveOnAnyTarget` are the target's
+--    `debuff.<key>.up` and `dotIsActiveOnAnyTarget` is `dotIsActive`, each on the current target with a `# Deviation:`
+--    line (rule 17's precedent; "any" errs the other way: a DoT on another target reads down); of the current target
+--    (wowsims's default unit) `targetIsActive` is true, `timeUntilTargetActive` 0 (a line is read only with the target
+--    up) and `timeUntilTargetDies` `fight_remains` (one target, no despawn schedule: wowsims's fight end, as
+--    `remainingTime`); another target unit is unsupported, for these and `isExecutePhase`. `numActiveAdds` (no boss/add
+--    split in the engine) and `remainingCastTime` (no read mapped; no APL uses it) stay unsupported.
 -- Absent enum fields (protojson omits a zero value; zeros from the pinned proto/*.proto): rule 16's option is its
 -- recipe `zero`; every other enum read here has an "unknown" zero that wowsims rejects, so an absent one is
 -- unsupported (`op`, math `op`: OpUnknown; `threshold`: ExecutePhaseThreshold Unknown; `autoType`: UnknownAuto, SwingType
@@ -764,6 +772,15 @@ local function folded(c, n)
         local x = spellLookup(c, v.spellId)
         c.castFolded = true -- rule 1's deviation: the kit's base cast, where wowsims folds the hasted one
         return x and castTime(c, x)
+    elseif k == "spellGcdHastedDuration" then
+        local a = c.set.abilities[spellLookup(c, v.spellId) or ""]
+        if not a then
+            return nil
+        end
+        c.gcdFolded = true -- rule 1's deviation: the kit's unhasted GCD, where wowsims folds the hasted one
+        -- shortcut: the engine's 1 s GCD of a "spell" press for a one_sec_gcd class (State.lua mt_gcd) reads 1.5 here;
+        -- no pre-pull entry at the pin or upstream times by such a GCD. Upgrade if one does.
+        return type(a.gcdTime) == "number" and a.gcdTime or (a.gcd == "off" and 0) or (a.gcd == "totem" and 1) or 1.5
     elseif k == "math" then
         local l, r = folded(c, v.lhs or {}), folded(c, v.rhs or {})
         if not (l and r) then
@@ -790,7 +807,17 @@ local function deviate(c, d)
     c.deviations[#c.deviations + 1] = d
 end
 local ALL_TARGETS = 'an "on all targets" read is the current target\'s only.'
+local ANY_TARGET = 'an "on any target" read is the current target\'s only.'
+
+-- CN4: a value or test of a target unit (wowsims's default, the current target) reads only the current target here.
+local function currentTarget(k, v)
+    local u = v.targetUnit and v.targetUnit.type or "CurrentTarget"
+    if u ~= "CurrentTarget" then
+        unsupported(k .. " of " .. tostring(u))
+    end
+end
 local PREPULL_CAST = "the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast."
+local PREPULL_GCD = "the pre-pull time uses the kit's base GCD; wowsims uses the hasted GCD."
 
 -- Rule 18: a movement term of kind `kind`, recorded once an entry; returns wowsims's nil.
 local function moved(c, kind)
@@ -990,6 +1017,12 @@ local function value(c, n, pct)
         return "ranged_remains", false
     elseif k == "autoTimeSinceLast" and SINCE[v.autoType] then -- inside math; compared, cmp's remains form
         return "(" .. SINCE[v.autoType] .. "_speed-" .. SINCE[v.autoType] .. "_remains)", false
+    elseif k == "timeUntilTargetActive" then -- CN4: the current target is up while a line reads it
+        currentTarget(k, v)
+        return "0", false
+    elseif k == "timeUntilTargetDies" then -- CN4: one target, no schedule: wowsims's fight end, as remainingTime
+        currentTarget(k, v)
+        return M.VALUES.remainingTime, false
     elseif k == "totemRemainingTime" then
         if v.totemType == nil then -- TypeUnknownTotem (0, proto/shaman.proto): wowsims's nil node
             return nil, true
@@ -1268,6 +1301,18 @@ local function bool(c, n)
     elseif k == "dotIsActiveOnAllTargets" then -- rule 17's precedent: the current target only
         deviate(c, ALL_TARGETS)
         return bool(c, { dotIsActive = v })
+    elseif k == "dotIsActiveOnAnyTarget" or k == "auraIsActiveOnAllTargets" or k == "auraIsActiveOnAnyTarget" then
+        -- CN4, rule 17's precedent: the current target only, noted when the read resolves
+        local n = k == "dotIsActiveOnAnyTarget" and { dotIsActive = v }
+            or { auraIsActive = { auraId = v.auraId, sourceUnit = { type = "CurrentTarget" } } }
+        local s, b, u = bool(c, n)
+        if u ~= true then
+            deviate(c, k == "auraIsActiveOnAllTargets" and ALL_TARGETS or ANY_TARGET)
+        end
+        return s, b, u
+    elseif k == "targetIsActive" then -- CN4: the current target is up while a line reads it
+        currentTarget(k, v)
+        return nil, true, false
     elseif SPELL_TEST[k] or k == "spellIsCasting" then
         local x = readSpell(c, v.spellId)
         if not x then
@@ -1283,6 +1328,7 @@ local function bool(c, n)
         end
         return "action." .. x .. ".known", nil, false
     elseif k == "isExecutePhase" then
+        currentTarget(k, v)
         if v.threshold == "E20" and c.executePhase then
             return c.executePhase, nil, false
         end
@@ -2329,7 +2375,7 @@ function M.translate(rotation, c)
     local omitted, lists, byName = {}, {}, {}
     local origin = {} -- [list name][line] = its APL entry's index (for rule 1's notes)
     local skip, skipped = {}, {} -- rule 7: the recipe's prepullSkip actions, and those it omitted
-    local castAt = {} -- rule 1: the pre-pull entries whose time folds a cast time
+    local castAt, gcdAt = {}, {} -- rule 1: the pre-pull entries whose time folds a cast time, a GCD
     for _, x in ipairs(c.prepullSkip) do
         skip[x] = true
     end
@@ -2358,6 +2404,9 @@ function M.translate(rotation, c)
                 c.entryNo, c.ownSeq = i, nil
                 if at and castAt[i] then
                     deviate(c, PREPULL_CAST)
+                end
+                if at and gcdAt[i] then
+                    deviate(c, PREPULL_GCD)
                 end
                 local a = e.action or {}
                 local ok, body, why = true, nil, "noted"
@@ -2404,10 +2453,10 @@ function M.translate(rotation, c)
     -- at the pull itself
     local prepull, at = rotation.prepullActions or {}, {}
     for i, e in ipairs(prepull) do
-        c.castFolded = false
+        c.castFolded, c.gcdFolded = false, false
         local ok, n = pcall(folded, c, e.doAtValue or {})
         n = ok and n
-        castAt[i] = c.castFolded
+        castAt[i], gcdAt[i] = c.castFolded, c.gcdFolded
         if not e.doAtValue or next(e.doAtValue) == nil then
             at[i] = "no doAtValue"
         elseif not n then

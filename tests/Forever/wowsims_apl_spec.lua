@@ -1733,6 +1733,74 @@ describe("the wowsims APL translator's re-pin reads", function()
         assert.are.equal("actions=strike,if=!druid_bleed_active", lines(NOT({ druidBleedIsActive = {} })))
     end)
 
+    -- CN4: the APL values upstream added after the pin (apl.proto 13813515ea, 39b31a66ee, baf3cc4c10; read at
+    -- upstream/master 4b0030a44b, sim/core apl_values_targets.go, apl_values_aura.go, apl_values_dot.go)
+    it("reads the on-any/all-target auras and DoTs on the current target, each with its deviation", function()
+        local aura = function(k, id)
+            return { [k] = { auraId = { spellId = id }, includeReactionTime = true } }
+        end
+        local text, omitted, _, header = apl.translate({
+            priorityList = {
+                cast(100, aura("auraIsActiveOnAllTargets", 400)),
+                cast(100, aura("auraIsActiveOnAnyTarget", 400)),
+                cast(100, NOT(spell("dotIsActiveOnAnyTarget", 400))),
+                cast(100, aura("auraIsActiveOnAnyTarget", 999)), -- unresolved: wowsims's nil, dropped
+            },
+        }, ctx({}))
+        assert.are.equal(
+            table.concat({
+                "actions=strike,if=(!action.dot.known|debuff.dot.up)",
+                "actions+=/strike,if=(!action.dot.known|debuff.dot.up)",
+                "actions+=/strike,if=(!action.dot.known|!debuff.dot.up)",
+                "actions+=/strike",
+            }, "\n"),
+            text
+        )
+        assert.are.same({ "default #4: dropped the unresolved aura 999 (its branch only)" }, omitted)
+        local all, any =
+            'an "on all targets" read is the current target\'s only.',
+            'an "on any target" read is the current target\'s only.'
+        assert.are.same({
+            "# Deviation: default #1: " .. all,
+            "# Deviation: default #2: " .. any,
+            "# Deviation: default #3: " .. any,
+        }, header)
+    end)
+
+    it("reads the current target as active now and its death at the fight's end; other units unsupported", function()
+        local other = { type = "Target", index = 1 }
+        local text, omitted = apl.translate({
+            priorityList = {
+                cast(100, { targetIsActive = {} }),
+                cast(
+                    200,
+                    cmp("OpLe", { timeUntilTargetActive = { targetUnit = { type = "CurrentTarget" } } }, const("0s"))
+                ),
+                cast(300, cmp("OpGt", { timeUntilTargetDies = {} }, const("20s"))),
+                cast(400, { targetIsActive = { targetUnit = other } }),
+                cast(400, cmp("OpGt", { timeUntilTargetDies = { targetUnit = other } }, const("1s"))),
+                cast(400, cmp("OpGt", { numActiveAdds = {} }, const("0"))),
+                cast(400, cmp("OpGt", { remainingCastTime = {} }, const("0s"))),
+                cast(400, AND(E, { isExecutePhase = { threshold = "E20", targetUnit = other } })),
+            },
+        }, ctx())
+        assert.are.equal(
+            table.concat({
+                "actions=strike,focus=1",
+                "actions+=/big_hit,if=0<=0",
+                "actions+=/roar,use_off_gcd=1,if=fight_remains>20",
+            }, "\n"),
+            text
+        )
+        assert.are.same({
+            "default #4: targetIsActive of Target",
+            "default #5: timeUntilTargetDies of Target",
+            "default #6: numActiveAdds",
+            "default #7: remainingCastTime",
+            "default #8: isExecutePhase of Target",
+        }, omitted)
+    end)
+
     it("strictMultidot is rule 17's current-target multidot line, with its deviation", function()
         local m = { spellId = { spellId = 400 }, maxDots = 2, maxOverlap = const("1s") }
         local text, omitted, _, header = apl.translate({
@@ -1821,6 +1889,47 @@ describe("the wowsims APL translator's casting, range, curse and cast-time pre-p
             "precombat #6: doAtValue not a constant",
             "precombat #7: doAtValue not a constant",
         }, omitted)
+    end)
+
+    -- CN4: upstream 901c5b8cfd times Arcane's Read Ley Line at -(Arcane Wrath's cast + its own GCD)
+    it("a doAtValue that folds a spell's GCD (spellGcdHastedDuration) uses the kit's unhasted GCD, noted", function()
+        local function at(id, v)
+            local e = cast(id)
+            e.doAtValue = v
+            return e
+        end
+        local function neg(x)
+            return mul(x, "-1")
+        end
+        local function add(a, b)
+            return { math = { op = "OpAdd", lhs = a, rhs = b } }
+        end
+        local text, omitted, _, header = apl.translate({
+            prepullActions = {
+                at(500, neg(spell("spellCastTime", 500))), -- -3
+                at(300, neg(add(spell("spellGcdHastedDuration", 300), const("1s")))), -- off the GCD: -1
+                at(200, neg(add(spell("spellCastTime", 500), spell("spellGcdHastedDuration", 200)))), -- -4.5
+                at(400, neg(spell("spellGcdHastedDuration", 999))), -- an unresolved spell
+            },
+        }, ctx({}))
+        assert.are.equal(
+            table.concat({
+                "actions.precombat=big_hit",
+                "actions.precombat+=/starfire",
+                "actions.precombat+=/roar,use_off_gcd=1",
+            }, "\n"),
+            text
+        )
+        assert.are.same({ "precombat #4: doAtValue not a constant" }, omitted)
+        local cast, gcd =
+            "the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast.",
+            "the pre-pull time uses the kit's base GCD; wowsims uses the hasted GCD."
+        assert.are.same({
+            "# Deviation: precombat #3: " .. cast,
+            "# Deviation: precombat #3: " .. gcd,
+            "# Deviation: precombat #1: " .. cast,
+            "# Deviation: precombat #2: " .. gcd,
+        }, header)
     end)
 
     it(
