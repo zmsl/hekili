@@ -534,11 +534,11 @@ the author's guide, the user's binding rules and the translator's rules: `docs/d
   `make wowsims-packs` (every recipe's `src/Hekili_<Class>/APLs/<Pack>.simc` from its checked-in request and log; no
   checkout needed, so `packs-check` runs it) -> `make packs` (the RegisterPack blocks). `make wowsims-learn
   CLASS=<TOKEN>` writes the class's learn levels (`tests/Forever/wowsims/learn_<class>.lua`, from wowdb).
-- **The pin.** `M.PIN` in `tools/wowsims/export.lua` (e2842f0a784d2f329dde0bc682a6b84202a780f2) is the wowsims/forever
-  commit every request comes from; `M.SIM_PIN` (equal to it) the commit whose CLI made the logs (`tests/Forever/wowsims_pin_spec.lua`;
-  `docs/dev/wowsims-packs.md`); the export refuses a checkout at another commit. To move it: check the checkout out at the new commit, bump `M.PIN`, `make wowsims-sim-cli`, re-export
-  every recipe, `make wowsims-packs && make packs`, and re-measure every floor and LIVE60 (each move named in the
-  floor's comment).
+- **The pin.** Per spec: `M.SPEC_PIN` in `tools/wowsims/export.lua` (`M.pin(spec)`) names the wowsims/forever
+  commit each spec's recipe, request and log come from (OLD e2842f0a78 or NEW 4b0030a44b while the 0.7 re-pin moves
+  them; `tests/Forever/wowsims_pin_spec.lua`); the export refuses a checkout at another commit. To move a spec: the
+  flip procedure in `docs/dev/wowsims-packs.md` ("Moving the pin"), then `make wowsims-packs && make packs` and
+  re-measure its floors and LIVE60 (each move named in the floor's comment).
 - **`make wowsims-cli`** builds wowsimcli in the checkout (`WOWSIMS`, default `~/src/wowsims-forever`): Go, `protoc`
   and `protoc-gen-go` on PATH.
 - **The gates** (`tests/Forever/wowsims_<class>_spec.lua`, tagged `#slow #wowsims`): `make check` runs them in its

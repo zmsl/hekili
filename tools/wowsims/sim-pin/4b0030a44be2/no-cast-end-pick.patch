@@ -1,0 +1,59 @@
+diff --git a/sim/core/apl_values_aura.go b/sim/core/apl_values_aura.go
+index 1cb0cbd866aee12690cf06749daf7654e62fca3d..f0c6c0fc1de8f69a1cc2e401883addb1236c33ce 100644
+--- a/sim/core/apl_values_aura.go
++++ b/sim/core/apl_values_aura.go
+@@ -40,7 +40,7 @@ func (unit *Unit) readLanding(sim *Simulation, aura *Aura, duration func() time.
+ 		return auraReading{landing: true, from: sim.CurrentTime}
+ 	}
+ 	hc := &unit.Hardcast
+-	if !unit.hardcastRuns(sim) || hc.IsChanneled || hc.Target != aura.Unit || hc.ActionID.IsEmptyAction() ||
++	if noPickAtCastEnd || !unit.hardcastRuns(sim) || hc.IsChanneled || hc.Target != aura.Unit || hc.ActionID.IsEmptyAction() ||
+ 		!hc.ActionID.SameActionIgnoreTag(aura.ActionID) {
+ 		return auraReading{active: aura.IsActive(), remaining: aura.RemainingDuration(sim), stacks: aura.GetStacks()}
+ 	}
+diff --git a/sim/core/gcd.go b/sim/core/gcd.go
+index b2e59237f89704bfecbb9d5c5966fd74d6b81992..f377e5515140ce5f67cd7fc53b29f46146b416c6 100644
+--- a/sim/core/gcd.go
++++ b/sim/core/gcd.go
+@@ -5,6 +5,10 @@ import (
+ 	"time"
+ )
+ 
++// Hekili oracle patch (tools/wowsims/sim-pin): 1435e39a74's pick at the cast end is off (no pick before the running
++// cast lands, no landed aura reads, no mana-after-cast), so a hardcast's next cast is picked once it has landed.
++const noPickAtCastEnd = true
++
+ // Note that this is only used when the hardcast and GCD actions happen at different times.
+ func (unit *Unit) newHardcastAction(sim *Simulation) {
+ 	if unit.Metrics.isTanking {
+@@ -54,7 +58,7 @@ func (unit *Unit) hardcastRuns(sim *Simulation) bool {
+ // of it; what the rotation would do after it waits for that pass. An interactive sim asks for input instead.
+ func (unit *Unit) pickAtCastEnd(sim *Simulation) {
+ 	rot := unit.Rotation
+-	if rot == nil || rot.inLoop || unit.rotationAction == nil || sim.Options.Interactive ||
++	if noPickAtCastEnd || rot == nil || rot.inLoop || unit.rotationAction == nil || sim.Options.Interactive ||
+ 		(sim.CurrentTime < 0 && !unit.engagedBeforePull) || !unit.RotationTimer.IsReady(sim) {
+ 		return
+ 	}
+@@ -111,7 +115,7 @@ func (unit *Unit) SetGCDTimer(sim *Simulation, gcdReadyAt time.Duration) {
+ // channel, or a pet's or an enemy's cast, it looks once the cast has landed.
+ func (unit *Unit) hardcastHoldsRotation(sim *Simulation) bool {
+ 	hc := &unit.Hardcast
+-	return unit.Type == PlayerUnit && unit.hardcastRuns(sim) && !hc.IsChanneled && unit.GCD.ReadyAt() <= hc.Expires
++	return !noPickAtCastEnd && unit.Type == PlayerUnit && unit.hardcastRuns(sim) && !hc.IsChanneled && unit.GCD.ReadyAt() <= hc.Expires
+ }
+ 
+ func (unit *Unit) SetRotationTimer(sim *Simulation, rotationReadyAt time.Duration) {
+diff --git a/sim/core/mana.go b/sim/core/mana.go
+index dcefd2f9451517b67dde91431ac1e1e1b0d0b3e1..b13c6f39eb29694cd032ddb2d085f232a2410d3e 100644
+--- a/sim/core/mana.go
++++ b/sim/core/mana.go
+@@ -376,7 +376,7 @@ func newManaCost(spell *Spell, options ManaCostOptions) *SpellCost {
+ // A running hardcast pays its cost when it completes; the mana left after that is what counts.
+ func (unit *Unit) manaAfterHardcast(sim *Simulation) float64 {
+ 	mana := unit.CurrentMana()
+-	if unit.hardcastRuns(sim) {
++	if !noPickAtCastEnd && unit.hardcastRuns(sim) {
+ 		mana -= unit.Hardcast.Cost
+ 	}
+ 	return mana

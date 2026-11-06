@@ -1,4 +1,4 @@
--- tools/wowsims/drift.lua (dev-only): how far wowsims/forever has drifted since M.PIN, per wowsims spec, as markdown on
+-- tools/wowsims/drift.lua (dev-only): how far wowsims/forever has drifted since each spec's pin (export.lua M.pin), as markdown on
 -- stdout. Read-only against both wowsims trees. Run from the repository root:
 --   WOWSIMS_NEW_TREE=<checkout at the new rev> [WOWSIMS_NEW_CLI=<its wowsimcli>] \
 --       .lua/bin/lua tools/wowsims/drift.lua all|<spec>... > drift.md   (all: every recipe in tools/wowsims/specs/)
@@ -219,6 +219,8 @@ end
 function M.spec(ctx, spec)
     local ex, apl, json = ctx.ex, ctx.apl, ctx.json
     local r = ex.recipe(spec)
+    local pin = ex.pin(spec) -- each spec drifts from its own pin (export.lua M.SPEC_PIN)
+    local oldStore = ctx.storeAt(pin)
     local cls = r.class:lower()
     emit("\n## %s (%s)\n", spec, r.pack)
 
@@ -231,16 +233,16 @@ function M.spec(ctx, spec)
     local dir = (paths[1] or ""):match("^(ui/specs/[^/]+/[^/]+/)")
     for _, p in ipairs(paths) do
         local gone = git("cat-file -t " .. q(ctx.new .. ":" .. p)) == ""
-        local n = git(("diff --numstat %s %s -- %s"):format(ex.PIN, ctx.new, q(p))):match("^(%d+%s+%d+)")
+        local n = git(("diff --numstat %s %s -- %s"):format(pin, ctx.new, q(p))):match("^(%d+%s+%d+)")
         emit("- `%s`: %s", p, gone and "GONE at new rev" or n and ("changed +/- " .. n:gsub("%s+", "/")) or "same")
     end
     if dir then
         local log =
-            git(("log --no-merges --format='%%h %%ad %%s' --date=short %s..%s -- %s"):format(ex.PIN, ctx.new, q(dir)))
+            git(("log --no-merges --format='%%h %%ad %%s' --date=short %s..%s -- %s"):format(pin, ctx.new, q(dir)))
         emit("- commits under `%s`:", dir)
         fence(log)
         for _, f in ipairs({ "presets.ts", "spec.ts", "defaults.siml" }) do
-            local d = git(("diff -U1 %s %s -- %s | head -80"):format(ex.PIN, ctx.new, q(dir .. f)))
+            local d = git(("diff -U1 %s %s -- %s | head -80"):format(pin, ctx.new, q(dir .. f)))
             if d ~= "" then -- shortcut: capped at 80 lines; run the git diff by hand for the rest
                 emit("- `%s%s` diff:", dir, f)
                 fence(d)
@@ -263,12 +265,12 @@ function M.spec(ctx, spec)
         end
         return table.concat(out, " ")
     end
-    local a, b = decode(ex.PIN), decode(ctx.new)
+    local a, b = decode(pin), decode(ctx.new)
     emit("- string `%s`: %s", tostring(player.talentsString), a == b and "decodes the same" or "DECODES DIFFERENTLY")
     if a ~= b then
         fence("pin: " .. a .. "\nnew: " .. b)
     end
-    local tdiff = git(("diff --numstat %s %s -- %s"):format(ex.PIN, ctx.new, q(tree)))
+    local tdiff = git(("diff --numstat %s %s -- %s"):format(pin, ctx.new, q(tree)))
     emit("- tree `%s`: %s", tree, tdiff == "" and "same" or "changed " .. tdiff:gsub("%s+", " "))
 
     emit("\n### Pack lines (translator on both revs)")
@@ -286,7 +288,7 @@ function M.spec(ctx, spec)
     end
     -- shipped -> pin: the checked-in request against the recipe's request built from the pin's own files (a stale
     -- export, or a request edit the re-pin made by hand); pin -> new: the drift itself
-    local okp, preq = pcall(ex.request, r, ctx.pinTree, spec)
+    local okp, preq = pcall(ex.request, r, ctx.treeAt(pin), spec)
     local notes = {}
     local ok2, nreq = pcall(newRequest, ex, r, spec, ctx.tree, ctx.cli, notes)
     for _, n in ipairs(notes) do
@@ -367,9 +369,9 @@ function M.spec(ctx, spec)
     for _, id in ipairs(ids[1]) do
         local k = tostring(id)
         for _, t in ipairs(STORE_TABLES) do
-            local ch = M.changes(ctx.oldStore[t][k], ctx.newStore[t][k])
+            local ch = M.changes(oldStore[t][k], ctx.newStore[t][k])
             if #ch > 0 then
-                local name = ctx.newStore.Names[k] or ctx.oldStore.Names[k] or "?"
+                local name = ctx.newStore.Names[k] or oldStore.Names[k] or "?"
                 local sub = ctx.newStore.Subtexts[k] or ""
                 lines[#lines + 1] = ("%d %s %s [%s] %s"):format(id, name, sub, t, table.concat(ch, "; "))
             end
@@ -378,11 +380,11 @@ function M.spec(ctx, spec)
     emit("- kit IDs: %d, changed records: %d", #ids[1], #lines)
     fence(table.concat(lines, "\n"))
 
-    if not ctx.classDone[cls] then
-        ctx.classDone[cls] = true
+    if not ctx.classDone[cls .. pin] then
+        ctx.classDone[cls .. pin] = true
         emit("\n### Class `%s` (once per class)", cls)
         local gen = "sim/" .. cls .. "/spell_data_auto_gen.go"
-        local la, lb = M.ladders(show(ex.PIN, gen)), M.ladders(show(ctx.new, gen))
+        local la, lb = M.ladders(show(pin, gen)), M.ladders(show(ctx.new, gen))
         local out = {}
         for _, ch in ipairs(M.changes(la, lb)) do
             local name = ch:match("^([^:]+):")
@@ -419,7 +421,7 @@ function M.spec(ctx, spec)
         emit("- records of IDs new to a ladder:")
         fence(table.concat(recs, "\n"))
         local ra, rb = {}, {}
-        for _, id in ipairs(ctx.oldStore.SpellDataGroupRoots[cls] or {}) do
+        for _, id in ipairs(oldStore.SpellDataGroupRoots[cls] or {}) do
             ra[id] = true
         end
         local added, removed = {}, {}
@@ -435,7 +437,7 @@ function M.spec(ctx, spec)
         end
         for id in pairs(ra) do
             if not rb[id] then
-                removed[#removed + 1] = ("%d %s"):format(id, ctx.oldStore.Names[tostring(id)] or "?")
+                removed[#removed + 1] = ("%d %s"):format(id, oldStore.Names[tostring(id)] or "?")
             end
         end
         table.sort(added)
@@ -443,9 +445,7 @@ function M.spec(ctx, spec)
         emit("- store roots added: %s", #added == 0 and "none" or table.concat(added, ", "))
         emit("- store roots removed: %s", #removed == 0 and "none" or table.concat(removed, ", "))
         emit("- `sim/%s` commits:", cls)
-        fence(
-            git(("log --no-merges --format='%%h %%ad %%s' --date=short %s..%s -- sim/%s"):format(ex.PIN, ctx.new, cls))
-        )
+        fence(git(("log --no-merges --format='%%h %%ad %%s' --date=short %s..%s -- sim/%s"):format(pin, ctx.new, cls)))
     end
 end
 
@@ -462,19 +462,35 @@ function M.main(specs)
             specs[#specs + 1] = f
         end
     end
-    -- the pin's ui/ files in a scratch directory (git archive: the repo's checkout is never touched)
-    local pinTree = os.tmpname()
-    os.remove(pinTree)
-    assert(
-        os.execute(
-            ("mkdir -p %s && git -C %s archive %s ui/specs ui/sim/talents | tar -x -C %s"):format(
-                q(pinTree),
-                q(REPO),
-                ex.PIN,
-                q(pinTree)
+    -- the oldest pin any spec is at (export.lua M.SPEC_PIN): the class-neutral section drifts from it
+    local base = ex.NEW_PIN
+    for _, spec in ipairs(specs) do
+        base = ex.pin(spec) == ex.OLD_PIN and ex.OLD_PIN or base
+    end
+    -- each pin's ui/ files in a scratch directory (git archive: the repo's checkout is never touched), and its store
+    local trees, stores = {}, {}
+    local function treeAt(pin)
+        if not trees[pin] then
+            local dir = os.tmpname()
+            os.remove(dir)
+            assert(
+                os.execute(
+                    ("mkdir -p %s && git -C %s archive %s ui/specs ui/sim/talents | tar -x -C %s"):format(
+                        q(dir),
+                        q(REPO),
+                        pin,
+                        q(dir)
+                    )
+                ) == 0
             )
-        ) == 0
-    )
+            trees[pin] = dir
+        end
+        return trees[pin]
+    end
+    local function storeAt(pin)
+        stores[pin] = stores[pin] or storeOf(pin, json)
+        return stores[pin]
+    end
     local ctx = {
         ex = ex,
         apl = require("tools.wowsims.apl"),
@@ -482,32 +498,32 @@ function M.main(specs)
         new = new,
         tree = tree,
         cli = os.getenv("WOWSIMS_NEW_CLI"),
-        pinTree = pinTree,
-        oldStore = storeOf(ex.PIN, json),
+        treeAt = treeAt,
+        storeAt = storeAt,
         newStore = storeOf(new, json),
         kit = {},
         classDone = {},
     }
     emit(
         "# wowsims drift: pin %s -> %s (%s commits)",
-        ex.PIN:sub(1, 10),
+        base:sub(1, 10),
         new:sub(1, 10),
-        git(("rev-list --count %s..%s"):format(ex.PIN, new)):gsub("%s+", "")
+        git(("rev-list --count %s..%s"):format(base, new)):gsub("%s+", "")
     )
     emit("\n## Class-neutral\n")
-    emit("- store builds: pin %s, new %s", json.encode(ctx.oldStore.Builds), json.encode(ctx.newStore.Builds))
-    emit("- store hotfixes: pin %s, new %s", json.encode(ctx.oldStore.Hotfixes), json.encode(ctx.newStore.Hotfixes))
+    emit("- store builds: pin %s, new %s", json.encode(storeAt(base).Builds), json.encode(ctx.newStore.Builds))
+    emit("- store hotfixes: pin %s, new %s", json.encode(storeAt(base).Hotfixes), json.encode(ctx.newStore.Hotfixes))
     emit("- `sim/core` + `sim/common` commits:")
-    fence(
-        git(("log --no-merges --format='%%h %%ad %%s' --date=short %s..%s -- sim/core sim/common"):format(ex.PIN, new))
-    )
+    fence(git(("log --no-merges --format='%%h %%ad %%s' --date=short %s..%s -- sim/core sim/common"):format(base, new)))
     for _, spec in ipairs(specs) do
         local ok, err = pcall(M.spec, ctx, spec)
         if not ok then
             emit("- %s: drift error %s", spec, tostring(err))
         end
     end
-    os.execute("rm -rf " .. q(pinTree))
+    for _, dir in pairs(trees) do
+        os.execute("rm -rf " .. q(dir))
+    end
 end
 
 local specs = { ... }
