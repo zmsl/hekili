@@ -75,7 +75,7 @@ describe("check_wowsims_pin", function()
     it("refuses an export from a checkout not at the spec's pin, naming the spec and its pin", function()
         local repo = os.tmpname()
         os.remove(repo)
-        assert(os.execute(("git init -q %s && git -C %s commit -q --allow-empty -m x"):format(repo, repo)) == 0)
+        assert(os.execute(("git init -q %s && git -C %s -c user.name=t -c user.email=t@t commit -q --allow-empty -m x"):format(repo, repo)) == 0)
         local out, ok = sh(
             ('WOWSIMS=%s %s -e \'loadfile("tools/wowsims/export.lua")().checkout("druid_balance")\''):format(repo, lua)
         )

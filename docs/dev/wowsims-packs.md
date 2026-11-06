@@ -38,12 +38,12 @@ the coordinator, before the class lanes start (only one build per checkout, neve
 (never change ~/src/wowsims-forever's own HEAD), then `GOPROXY=off make wowsims-sim-cli WOWSIMS=$HOME/src/wowsims-pin-4b0030a44b`
 (offline; Go, protoc and protoc-gen-go on PATH; about 2 minutes). The `OLD` oracle stays in ~/src/wowsims-upstream.
 
-A class lane flips a spec:
-1. Fix the recipe for `NEW` (paths, talent string, options from that commit's presets) and re-export:
-   `WOWSIMS=$HOME/src/wowsims-pin-4b0030a44b .lua/bin/lua tools/wowsims/export.lua export <spec>` (refused until step 2).
-2. Change the spec's own line in `M.SPEC_PIN` from `OLD` to `NEW` (the one line of `export.lua` a class lane edits;
+A class lane flips a spec, the flip and the new log in one commit (the pin spec checks each log against its line):
+1. Change the spec's own line in `M.SPEC_PIN` from `OLD` to `NEW` (the one line of `export.lua` a class lane edits;
    the blank lines between entries keep two lanes' flips from conflicting: leave them).
-3. `make wowsims-packs`, then the spec's replay and gates, floors by R6.
+2. Fix the recipe for `NEW` (paths, talent string, options from that commit's presets) and re-export:
+   `WOWSIMS=$HOME/src/wowsims-pin-4b0030a44b .lua/bin/lua tools/wowsims/export.lua export <spec>`.
+3. `make wowsims-packs && make packs`, then the spec's replay and gates, floors by R6.
 A spec still at `OLD` keeps exporting and re-running against ~/src/wowsims-upstream, untouched. When every line says
 `NEW`, the coordinator collapses the pin: `NEW` becomes the only commit, `OLD` and `tools/wowsims/sim-pin/e2842f0a784d/`
 go, and `M.SPEC_PIN`'s entries all name one pin (the state the pin spec then checks).
