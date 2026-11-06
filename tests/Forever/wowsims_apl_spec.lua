@@ -2036,10 +2036,12 @@ describe("the wowsims APL translator's move rewrite and sequences as windows", f
             },
             groups = { { name = "Weave", actions = { move("5", cmp("OpGt", mh, const("0.5s"))), cast(400) } } },
         }, ctx({ executePhase = "execute_phase", ranges = { big_hit = { 0, 5 } } }))
-        assert.are.equal(
+        assert.are.equal( -- R51: the in-range arms in place, the move arms (in line order) where the call is
             lines({
-                "actions=strike,if=(toggle.movement&(execute_phase&mainhand_remains>0.5)|target.within5)",
-                "actions+=/big_hit,if=(toggle.movement&(execute_phase&mainhand_remains>0.5)|target.within5)",
+                "actions=strike,if=target.within5",
+                "actions+=/big_hit,if=target.within5",
+                "actions+=/strike,if=toggle.movement&(execute_phase&mainhand_remains>0.5)",
+                "actions+=/big_hit,if=toggle.movement&(execute_phase&mainhand_remains>0.5)",
                 "actions+=/call_action_list,name=weave,if=execute_phase",
                 "actions.weave=dot",
             }),
@@ -2047,6 +2049,47 @@ describe("the wowsims APL translator's move rewrite and sequences as windows", f
         )
         assert.are.same({ "weave #1: move" }, omitted)
         assert.are.same({ "# Movement: weave #1 reaches default: strike, big_hit" }, header)
+    end)
+
+    it(
+        "R51 Hunter-shaped: a shot above the last-called move group keeps its rank over the strike's move arm",
+        function()
+            local text, _, _, header = apl.translate({
+                priorityList = {
+                    cast(100, cmp("OpLe", d, const("5"))),
+                    cast(500), -- the shot: no range read, no recipe range
+                    { action = { groupReference = { groupName = "Weave" }, condition = E } },
+                },
+                groups = { { name = "Weave", actions = { move("5", cmp("OpGt", mh, const("0.5s"))) } } },
+            }, ctx({ executePhase = "execute_phase" }))
+            assert.are.equal(
+                lines({
+                    "actions=strike,if=target.within5",
+                    "actions+=/starfire",
+                    "actions+=/strike,if=toggle.movement&(execute_phase&mainhand_remains>0.5)",
+                }),
+                text
+            )
+            assert.are.same({ "# Movement: weave #1 reaches default: strike" }, header)
+        end
+    )
+
+    it("R51: a move above a reached line with an unreached line between puts the arm above that line", function()
+        local text = apl.translate({
+            priorityList = {
+                move("5", cmp("OpGt", mh, const("0.5s"))),
+                cast(500),
+                cast(100, cmp("OpLe", d, const("5"))),
+            },
+        }, ctx({}))
+        assert.are.equal(
+            lines({
+                "actions=strike,if=toggle.movement&mainhand_remains>0.5",
+                "actions+=/starfire",
+                "actions+=/strike,if=target.within5",
+            }),
+            text
+        )
     end)
 
     it("two moves reaching one strike join their conditions with | in one toggle term", function()
@@ -2241,11 +2284,14 @@ describe("the wowsims APL translator's move rewrite and sequences as windows", f
                 },
             },
         }, ctx({ executePhase = "execute_phase", ranges = { dot = { 5, 35 } } }))
-        assert.are.equal(
+        assert.are.equal( -- R51: weave #1's arm (the strike) before weave #2's (the shots), both where the call is
             lines({
-                "actions=strike,if=(toggle.movement&(execute_phase&(mainhand_remains>0.5&target.outside5))|target.within5)",
-                "actions+=/starfire,if=(toggle.movement&execute_phase|target.outside5)",
-                "actions+=/dot,if=(toggle.movement&execute_phase|target.outside5)",
+                "actions=strike,if=target.within5",
+                "actions+=/starfire,if=target.outside5",
+                "actions+=/dot,if=target.outside5",
+                "actions+=/strike,if=toggle.movement&(execute_phase&(mainhand_remains>0.5&target.outside5))",
+                "actions+=/starfire,if=toggle.movement&execute_phase",
+                "actions+=/dot,if=toggle.movement&execute_phase",
                 "actions+=/call_action_list,name=weave,if=execute_phase",
                 "actions.weave=big_hit",
             }),

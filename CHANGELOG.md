@@ -8,7 +8,7 @@
 - The engine supports rotation windows (spans the game shows no buff for), and the priority editor can add their Open Window and Close Window lines. No built-in priority uses them yet.
 
 ### Changed
-- Hunters: the melee weave's strikes can show at range with the Movement toggle on, from an Auto Shot whose next melee swing comes before your next shot until that swing (the weave window), and an open weave closes when you Raptor Strike. With it off, they show only in melee as before.
+- Hunters: the melee weave's strikes can show at range with the Movement toggle on, after whatever the rotation ranks above walking in (such as Hunter's Mark), from an Auto Shot whose next melee swing comes before your next shot until that swing (the weave window), and an open weave closes when you Raptor Strike. With it off, they show only in melee as before.
 - Balance Druids: the built-in priority follows the latest wowsims.com rotation. Out of combat it shows Wrath to open after Moonkin Form, and Innervate shows only when your mana is under 40%.
 - Mages: the built-in priorities follow the latest wowsims.com rotations. Arcane uses Frostbolt as a filler only without the Arcane Instability talent, at any level, and adds Fire Blast, with Arcane Wrath to open and its cooldowns lined up with Missile Barrage or Arcane Wrath. Fire keeps Arcane Blast up, uses Scorch as a filler while Fire Blast is nearly ready, and opens with Pyroblast, as Frostfire does. Frostfire shows Fireball while leveling, until Frostfire Bolt.
 - Protection Paladins: the built-in priority follows the latest wowsims.com rotation. Before the pull it shows Righteous Fury, and Holy Shock waits for Consecration's mark when you have the Consecrated Ground talent.

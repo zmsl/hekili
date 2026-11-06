@@ -224,10 +224,15 @@
 --    `target.within<D>` term; and, a move away, every such line that cannot be cast inside D: a `target.outside<N>`
 --    with N < D, a spellInRange of an ability whose recipe minimum is below D and maximum at least D, or, on a line
 --    with no range read, that recipe range as a new `target.outside<min>` term (the hunters' shots after the move
---    back to the shoot spot). Any other line is not reached. Each reached gate becomes `(toggle.movement&<move condition>|<gate>)`: the move's
---    condition translated by the usual rules (rule 18 drops its walk-time terms; a caller's line puts the call's
---    condition before it), several moves `|`-joined in one term, none for an unconditional move. ON shows the line
---    where wowsims would walk to it (the client's out-of-range tint marks it); OFF leaves the bracket, so the line
+--    back to the shoot spot). Any other line is not reached. A reached line keeps its gate in place (its in-range
+--    arm), and a copy of it, the move arm, with the gate as `toggle.movement&<move condition>`, goes at the move's
+--    position (R51): before the first line of an entry at or after the move's (in a caller, the call's), so a line
+--    wowsims ranks above the move still wins (the hunters' shots above the last-called Weave group). Arms at one
+--    position keep the moves' order, then the lines'; one line's moves at one position `|`-join in one term (none
+--    for an unconditional move); an arm alone right before its own line stays that one line,
+--    `(toggle.movement&<move condition>|<gate>)`. The move's condition is translated by the usual rules (rule 18
+--    drops its walk-time terms; a caller's line puts the call's condition before it). ON shows the line where
+--    wowsims would walk to it (the client's out-of-range tint marks it); OFF leaves the bracket, so the line
 --    waits for the range. An unknown bracket (no plain answer yet) still answers both sides (rule 11). Pre-pull lists
 --    are never rewritten (decision 7). The header lists `# Movement: <list> #<n> reaches <list>: <actions>; ...`
 --    per move that reaches a line; a spec opts into the Movement toggle (its NewClass entry's `movement = true`)
@@ -2083,11 +2088,11 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
     -- beyond D: its bracket `target.within<D>`, or its spellInRange of an ability the recipe's DB2 range gives D, or,
     -- with no range read at all, its own ability's DB2 range 0-D (a new term); a caller's line takes the call's
     -- condition before the move's
-    local rewrites = {} -- [list] = { [line] = { [gate term] = { move conditions } } }
-    for _, mv in ipairs(c.moving) do
+    local rewrites = {} -- [list] = { [line] = { [gate term] = { { cond =, at = its arm's line, mv = its index } } } }
+    for mi, mv in ipairs(c.moving) do
         if mv.D and not pre[mv.list] then
             local seen = {}
-            local function scope(L, prefix)
+            local function scope(L, prefix, p) -- `p`: the move's APL entry in `L` (in a caller: the call's)
                 if seen[L] or pre[L] then
                     return
                 end
@@ -2095,6 +2100,13 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
                 local cond = mv.cond or true
                 if prefix then
                     cond = cond == true and prefix or (paren(prefix) .. "&" .. paren(cond))
+                end
+                local at = #byName[L] + 1 -- the move's arm goes before the first line of an entry at or after `p`
+                for j, o in ipairs(origin[L]) do
+                    if o and o >= p then
+                        at = j
+                        break
+                    end
                 end
                 -- shortcut: inward reach is on equal range only: a move to D never reaches a shorter-range gate
                 -- (correct: it stops at D) nor a longer one (passed on the walk in); every inward move at the pin is
@@ -2126,31 +2138,73 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
                         rewrites[L] = rewrites[L] or {}
                         rewrites[L][j] = rewrites[L][j] or {}
                         rewrites[L][j][hit] = rewrites[L][j][hit] or {}
-                        table.insert(rewrites[L][j][hit], cond)
+                        table.insert(rewrites[L][j][hit], { cond = cond, at = at, mv = mi })
                         add(mv, L, b)
                     end
                 end
                 for _, k in ipairs(calls[L] or {}) do
-                    scope(k[1], k[4] and (prefix and (paren(k[4]) .. "&" .. paren(prefix)) or k[4]) or prefix)
+                    scope(k[1], k[4] and (prefix and (paren(k[4]) .. "&" .. paren(prefix)) or k[4]) or prefix, k[3])
                 end
             end
-            scope(mv.list, nil)
+            scope(mv.list, nil, mv.n)
         end
     end
+    -- R51: a reached line keeps its gate (the in-range arm) in place; its move arm, `toggle.movement&<move condition>`,
+    -- is a copy at the move's position, so whatever wowsims ranks above the move still wins. An arm alone right
+    -- before its own line is the one line `(toggle.movement&<move condition>|<gate>)`.
     for L, lines in pairs(rewrites) do
+        local l, o, arms, n, merged = byName[L], origin[L], {}, {}, {}
         for j, rw in pairs(lines) do
-            local b = byName[L][j]
-            local head, cnd = b:match("^(.-),if=(.*)$")
-            local ts = cnd and terms(cnd) or {}
-            for i, t in ipairs(ts) do
-                if rw[t] then
-                    ts[i], rw[t] = "(toggle.movement" .. moveTerm(rw[t]) .. "|" .. t .. ")", nil
+            local byAt = {}
+            for t, xs in pairs(rw) do
+                for _, x in ipairs(xs) do
+                    local a = byAt[x.at]
+                    if not a then
+                        a = { at = x.at, j = j, mv = x.mv, conds = {} }
+                        byAt[x.at], arms[#arms + 1], n[x.at] = a, a, (n[x.at] or 0) + 1
+                    end
+                    a.mv = math.min(a.mv, x.mv)
+                    a.conds[t] = a.conds[t] or {}
+                    table.insert(a.conds[t], x.cond)
                 end
             end
-            for t, conds in pairs(rw) do -- the DB2 range's new term
-                ts[#ts + 1] = "(toggle.movement" .. moveTerm(conds) .. "|" .. t .. ")"
+        end
+        for _, a in ipairs(arms) do
+            merged[a.j] = (a.at == a.j and n[a.at] == 1) and a or merged[a.j]
+        end
+        local function text(j, a, gate) -- line `j`, arm `a`'s terms as its move arm (`gate`: or'd with the gate)
+            local b = l[j]
+            local head, cnd = b:match("^(.-),if=(.*)$")
+            local ts, has = cnd and terms(cnd) or {}, {}
+            local function arm(t)
+                local x = a and a.conds[t] and ("toggle.movement" .. moveTerm(a.conds[t]))
+                return x and gate and ("(" .. x .. "|" .. t .. ")") or x or t
             end
-            byName[L][j] = (head or b) .. ",if=" .. table.concat(ts, "&")
+            for i, t in ipairs(ts) do
+                has[t], ts[i] = true, lines[j][t] and arm(t) or t
+            end
+            for t in pairs(lines[j]) do -- the DB2 range's new term
+                ts[#ts + 1] = not has[t] and arm(t) or nil
+            end
+            return (head or b) .. ",if=" .. table.concat(ts, "&")
+        end
+        table.sort(arms, function(x, y)
+            return x.at < y.at or (x.at == y.at and (x.mv < y.mv or (x.mv == y.mv and x.j < y.j)))
+        end)
+        local nl, no, k = {}, {}, 1
+        for j = 1, #l + 1 do
+            while arms[k] and arms[k].at == j do
+                if merged[arms[k].j] ~= arms[k] then
+                    nl[#nl + 1], no[#no + 1] = text(arms[k].j, arms[k]), o[arms[k].j]
+                end
+                k = k + 1
+            end
+            if j <= #l then
+                nl[#nl + 1], no[#no + 1] = lines[j] and text(j, merged[j], true) or l[j], o[j]
+            end
+        end
+        for j = 1, #nl do
+            l[j], o[j] = nl[j], no[j]
         end
     end
     local header = {}

@@ -15,7 +15,8 @@ end
 
 local ROGUE = { "garrote=1", "slice_and_dice=1", "rupture=1" } -- Slice and Dice and Rupture sort by soonest
 -- the melee-weave strikes (Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip) rotational (the user)
-local HUNTER = { "raptor_strike=1", "hunters_mark=2", "serpent_sting=1" }
+-- (R51: Raptor Strike's move arm is its own line where the weave is called, at the same tier)
+local HUNTER = { "raptor_strike=1", "hunters_mark=2", "raptor_strike=1", "serpent_sting=1" }
 
 local WARLOCK_DEMO = {
     "bane_of_doom=2",

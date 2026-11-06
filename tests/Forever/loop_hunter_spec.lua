@@ -97,7 +97,7 @@ describe("the headless Hunter gates, 3 fights a pack #slow", function()
     end
 end)
 
--- Gap 13 (wowsims unitDistance): the world at 25 yd, then in melee. Survival (wowsims.com)'s melee lines carry the
+-- Gap 13 (wowsims unitDistance): the world at 25 yd, then in melee. Survival (wowsims.com)'s melee lines are the
 -- translator's `target.within5` (the weave's move variant's in-melee arm; the loops run Movement OFF), read against the
 -- engine's range bracket.
 describe("the Hunter at range, then in melee", function()
@@ -121,8 +121,9 @@ describe("the Hunter at range, then in melee", function()
         local pack = H.Hekili.Engine.settings.packs[C.PACK]
         local gated = 0
         for _, e in ipairs(pack.lists.default) do
-            -- the bracket is the variant's in-melee arm: `(toggle.movement&(<the weave's move>)|target.within5)`
-            gated = gated + ((e.criteria or ""):find("|target.within5)", 1, true) and 1 or 0)
+            -- the bracket is the variant's in-melee arm, its own line (R51: the move arm,
+            -- `toggle.movement&(<the weave's move>)`, is a copy where the weave group is called)
+            gated = gated + (e.criteria == "target.within5" and 1 or 0)
         end
         assert.are.equal(5, gated) -- Raptor Strike, Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip
         local MELEE = { mongoose_bite = true, strider_kick = true, immolation_trap = true, wing_clip = true }
