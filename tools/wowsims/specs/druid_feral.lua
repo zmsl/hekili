@@ -4,41 +4,26 @@
 -- (DefaultOptions), :31-37 (OtherDefaults), :109 (CatTalents, "Monocat") at d33930d040; the re-pin (e2842f0a78) moves the
 -- APL to apls/adaptive.apl.json (presets.ts:9, :65-68 JVMES_APL "Adaptive Cat", spec.ts:79 the default rotation;
 -- 2250 lines); the gear stays gear_sets/pre_raid.gear.json (presets.ts:11, spec.ts:65).
--- Replay (P7): decisions on-GCD 0.898 (n 88; 0.909 before the lane fix round's Howling Idol -1 s), after central fix 6
--- gave the replay the log's mana pool and regen.
--- Temporary workaround for shared GAP U (Now.lua's context has no `level`): the kit's `ofBaseMana` caches the
--- simulation's last level so the belief prices the same cost; remove it when GAP U lands.
--- Worked (Task 7b):
--- - Content: the forms', Shifting Power's and Innervate's costs are percent of base mana, 1244 at 60 (the log's 684,
---   684 and 62), not of the maximum (2674: 1203 believed): right per the goal (wowsims prices them so); Shredding
---   Attacks has 3 points (Shred 42 at 3/3, the log's; the DB2 node lists 2 rank spells); mana declares the
---   five-second rule (22 a second outside it, none inside: the log's regen lines; 0.920 without it, one decision
---   more, but the belief then regenerates nothing in combat).
---   The world's usability now reads the kept mana pool (it said mana-free).
--- - The pre-raid set's Howling Idol (272427): its equip aura 1291059 takes 0.5 s off Shifting Power (DB2 1291059
---   -500 ms, wowsims item_idols.go and TestHowlingIdolShortensShiftingPower at both pins): the log's 7.5 s recasts.
---   (Lane P corrected the earlier -1 s, which read the recasts as 7 s plus the reaction twice.)
---   Other cooldown modifiers checked: none. The 1 s costs one decision (lane fix round), a second faerie_fire ->
---   shred (113.74, log time): Shifting Power, cast at 107.74, is exactly 1.000 s from ready, so wowsims's "Shifting
---   Power >= 1 s away" holds on the tie; ours reads it just under (a timing tie, not a content error; at -0.5 s the
---   margin was 1.5 s).
--- - The Wolfshead Helm (8345): its equip aura 17768 (the log gains it at 0 s) adds 5 energy to Shifting Power (45 in
---   the log) and half again to Enrage's instant rage (wowsims sim/druid/items.go): in the kit. No decision moved.
--- 1. shred -> shifting_power 2: at 41.24 the belief reads Shifting Power's function `cooldown` as 0 at the cast
---    (shared gap, not worked around); at 143.74 the mana belief sits a mana over the truth at the 684 cost (the
---    belief, shared; at 107.74 the opposite: shifting_power -> rake 1).
--- 2. faerie_fire -> rake 1 (45.74), 3. faerie_fire -> shred 1 (38.74): the same function-`cooldown` gap: the belief
---    believes Shifting Power ready, so "Faerie Fire for Omen" (Shifting Power >= 1 s away) fails. A scalar 7.5 s
---    cooldown (scratch) clears all three cooldown cases.
--- Also: ferocious_bite -> rake 1 (177.99): "Bite at the end" reads the fight's last 3 s; time to die is not modelled
---    on Forever (API-forced, below); innervate -> cat_form 1; shred -> rake 1 (73.99).
---    Known deviation: wowsims refunds 80% of a dodged strike's energy (OtherActionRefund, 8 in the log: central fix
---    7's).
--- The Berserk group's two strictSequence entries (Berserk then Rake or Shred; Berserk is cast once in 180 s) are rule
--- 14's lines since central fix 13: both open on `prev.1.berserk`, so each later member keeps its own sequence's terms
--- (Rake now, or not) to stay apart. Translation gaps: Thistle Tea (selectedConjured), the potion, sapper charges, autocastOtherCooldowns (GAP 14: this spec
--- loses no class cooldown to it; wowsims casts no other cooldown in the log). Time to die is unknown on Forever (3600),
--- so the `fight_remains` lines read a long fight (API-forced).
+-- Replay (re-pin e2842f0a78, Movement on): decisions on-GCD 0.916 (76/83), flicker 1.33/min (oracle 0.00). The
+-- request follows the preset build (Tauren, 25 yd, CatTalents); assumeBleedActive is read from the real target
+-- (druid_bleed_active). Since R52 the Rip line's "two Blood Frenzy points with Shifting Power" reads
+-- `action.shifting_power.known` (Shifting Power is a kit ability, a talent in wowsims's tree).
+-- Misses (log times), none content: 21.25 shred -> rip and 39.88 shred -> faerie_fire (energy is secret: the belief's
+-- lo 3.2 and 1.0 under the truth at Rip's 62 threshold and Shred's 42 cost); 140.38 shred -> rip (Rip fades in the
+-- instant wowsims Shreds); 19.25 shifting_power -> shred (a not-ready flag 0.05 s before the ready pushes it to now +
+-- CD_PROBE: shared); 111.89 shifting_power -> shred (mana 687 against the 684 cost: the belief's mana near cost,
+-- shared); 162.38 shred -> faerie_fire (after the missed 160.88 Faerie Fire the belief holds no cooldown: the in-form
+-- function cooldown evaluates 0 in the belief, shared; a scalar 6 clears it in scratch); 15.04 innervate -> cat_form
+-- (a 0.04 s tie at the Innervate powershift, pre-existing).
+-- Owner FYI (faithful to wowsims solo, L86): the pre-pull list casts Prowl then Dash; in combat `cancel_buff` drops
+-- Prowl at once, because the Ravage opener needs another druid's Faerie Fire (tag -1, never known solo), so Ravage
+-- never shows.
+-- Content kept from the old pin: the forms', Shifting Power's and Innervate's costs are percent of base mana (1244 at
+-- 60); Shredding Attacks 3 points (Shred 42); the Howling Idol (272427, aura 1291059) takes 0.5 s off Shifting Power;
+-- the Wolfshead Helm (8345, aura 17768) adds energy to Shifting Power; wowsims refunds 80% of a dodged strike's energy.
+-- Translation gaps: Thistle Tea (selectedConjured), potions, sapper charges, item swaps, autocastOtherCooldowns (GAP
+-- 14: no class cooldown lost). Time to die is unknown on Forever (3600), so the `fight_remains` lines read a long fight
+-- (API-forced).
 return {
     class = "DRUID",
     pack = "Feral (wowsims.com)",
@@ -47,19 +32,22 @@ return {
     talentTree = "druid",
     apl = "ui/specs/druid/feralcat/apls/adaptive.apl.json",
     player = {
-        race = "RaceNightElf",
+        race = "RaceTauren",
         class = "ClassDruid",
         gear = "ui/specs/druid/feralcat/gear_sets/pre_raid.gear.json",
-        talentsString = "050022-55000032021031212051-054",
+        talentsString = "050022-53200032123012124001-055",
         specKey = "feralCatDruid",
         options = { assumeBleedActive = true },
         profession1 = "Engineering",
         profession2 = "Enchanting",
         reactionTimeMs = 250,
-        distanceFromTarget = 0,
+        distanceFromTarget = 25,
     },
     executePhase = "execute_phase",
     map = {},
+    -- Faerie Fire's armor reduction is an exclusive effect (one slot with Curse of Recklessness: wowsims
+    -- sim/core/debuffs_generated_test.go TestGeneratedCurseOfRecklessnessAndFaerieFireDoNotStack): rule 10
+    exclusive = { [9907] = true },
     -- by role (docs/dev/wowsims-packs.md): Shred and Claw on Clearcasting (the first of each), not as builders
     focus = { shred = { 1, false }, claw = { 1, false }, rip = 2, rake = 2 },
     leveling = {},

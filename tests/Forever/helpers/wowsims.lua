@@ -344,7 +344,10 @@ M.READY = {
     -- { 0.25, 7 } -> { 0.50, 5 }: gap AS's reversed order (Rake dodged at 75.24 now undoes Rake): 76.24 timed, and
     -- the 91.74 / 95.24 late rows (0.22 / 0.25 s) fall inside the cost absorption; the five left have the larger median
     -- (controller ruling 2026-11-03 overnight, pending owner review)
-    druid_feral = { 0.50, 5 },
+    -- { 0.50, 5 } -> { 0.50, 9 } re-pin e2842f0a78 (adaptive list, 82 on-GCD decisions): median 0.500, 9 real (early 2,
+    -- late 7); top shifting_power 4 (max 0.50: a not-ready flag's CD_PROBE push, shared), rake 2, rip 2 (energy is
+    -- secret: the belief's lo under the truth at the cost)
+    druid_feral = { 0.50, 9 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone

@@ -931,8 +931,10 @@ describe("Forever Druid", function()
         local scanNs = {}
         assert(loadfile("src/Hekili/Engine/Sim/AplWarnings.lua"))("Hekili", scanNs)
         local secretToken = scanNs.AplSecretToken
-        -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items; Hekili_Shared/Races' Night Elf racial
-        local shared = { use_items = true, elunes_light = true }
+        -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items; Hekili_Shared/Races' Night Elf racial and the
+        -- Skyborne racial's aura (energized); the core's cancel_buff (tests/Forever/apl_entry_spec.lua), its buff_name a
+        -- registered aura
+        local shared = { use_items = true, elunes_light = true, cancel_buff = true, energized = true }
         local kinds = {
             buff = w.auras,
             debuff = w.auras,
@@ -952,11 +954,16 @@ describe("Forever Druid", function()
                             w.abilities[e.action] ~= nil or shared[e.action],
                             where .. ": no ability " .. e.action
                         )
+                        assert.is_true(
+                            e.buff_name == nil or w.auras[e.buff_name] ~= nil,
+                            where .. ": no aura " .. tostring(e.buff_name)
+                        )
                     end
                     local c = e.criteria or ""
                     for kind, key in c:gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
-                            assert.is_not_nil(kinds[kind][key], where .. ": no " .. kind .. " " .. key)
+                            local ok = kinds[kind][key] ~= nil or shared[key]
+                            assert.is_true(ok, where .. ": no " .. kind .. " " .. key)
                         end
                     end
                     assert.is_nil(secretToken(c), where) -- no health or time to die: secret on Forever
