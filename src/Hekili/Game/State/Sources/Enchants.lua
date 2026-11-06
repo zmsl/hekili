@@ -11,8 +11,8 @@
 -- too: plain in combat, probe 2026-11-05, Shaman L10, open world and a dungeon), or UNIT_INVENTORY_CHANGED or combat's
 -- end (out of combat: UNIT_INVENTORY_CHANGED also fires on durability). Between reads our apply cast's model stands.
 -- A secret answer or field reads nothing, and while either slot is unread no `enchants` aura is taken down (unknown is
--- never missing). A 0 time left (the client's first seconds after login) is unknown too: that aura keeps its belief
--- until the next read.
+-- never missing). A 0 time left (the client's first seconds after login) is unknown too: that aura keeps its belief, and
+-- every poll reads again for RETRY seconds; a 0 still there after that is an enchant with no expiry (up, -1).
 -- Credits: secret-value handling after Catnip's (Durts) research.
 
 local _, ns = ...
@@ -29,6 +29,8 @@ I.enchantAura, I.enchantSlot = slotOf, auraOf
 -- unknown, or its time left in seconds) and its charges.
 local watched, found, stacksOf = { n = 0 }, {}, {}
 local pending = false
+local RETRY = 10 -- seconds of re-reads while a 0 time left is unknown (probe 2026-11-05: 0 for the first seconds)
+local retryUntil, expired, unknown = nil, false, false
 
 I.OnBuild(function(def)
     for j in pairs(slotOf) do
@@ -78,13 +80,13 @@ local function plainList(api, list)
     return true
 end
 
--- Aura j seen with `left` (seconds, or true: unknown) and `n` charges: unknown wins, else the longer.
+-- Aura j seen with `left` (seconds, -1 no expiry, or true: unknown) and `n` charges: unknown wins, else the longer.
 local function see(j, left, n)
     local f = found[j]
-    if f == true then
+    if f == true or f == -1 then
         return
     end
-    if left == true or not f or left > f then
+    if left == true or left == -1 or not f or left > f then
         found[j], stacksOf[j] = left, n
     end
 end
@@ -114,6 +116,10 @@ local function readSlot(api, slot)
             local left, n = true, type(e.charges) == "number" and e.charges or 0
             if ms > 0 then
                 left = ms / 1000
+            elseif expired then
+                left = -1 -- still 0 after the retries: no expiry
+            else
+                unknown = true
             end
             local j = byEnchant[e.enchantID]
             if j then
@@ -128,11 +134,11 @@ local function readSlot(api, slot)
 end
 
 local function changed()
-    pending = true
+    pending, retryUntil = true, nil
 end
 local function outOfCombat()
     if not I.inCombat then
-        pending = true
+        pending, retryUntil = true, nil
     end
 end
 S.On("WEAPON_ENCHANT_CHANGED", nil, changed)
@@ -140,12 +146,13 @@ S.On("WEAPON_SLOT_CHANGED", nil, changed)
 S.On("UNIT_INVENTORY_CHANGED", "player", outOfCombat)
 S.On("PLAYER_REGEN_ENABLED", nil, changed)
 
--- Poll 12: both slots' reads, once per change (a burst of events is one read).
+-- Poll 12: both slots' reads, once per change (a burst of events is one read), and every poll while a 0 time left
+-- waits for its retries.
 S.Poll(12, function(api, t)
-    if not pending or not I.built then
+    if not (pending or retryUntil) or not I.built then
         return
     end
-    pending = false
+    pending, expired, unknown = false, retryUntil ~= nil and t >= retryUntil, false
     local n = watched.n
     if n == 0 then
         return
@@ -155,6 +162,11 @@ S.Poll(12, function(api, t)
     end
     local all = readSlot(api, 0)
     all = readSlot(api, 1) and all
+    if unknown then
+        retryUntil = retryUntil or t + RETRY
+    else
+        retryUntil = nil -- read, or secret: the next event reads again
+    end
     for k = 1, n do
         local j = watched[k]
         local f = found[j]

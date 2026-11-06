@@ -195,22 +195,36 @@ describe("weapon enchants", function()
         assert.are.equal(1810, VS.Aura("player", DP, 12).est)
     end)
 
-    -- Probe 2026-11-05: at login the imbue reads hasEnchant with timeLeft 0 for its first seconds; WEAPON_ENCHANT_CHANGED
-    -- follows with the real time left.
-    it("treats a 0 time left as unknown: nothing up or down until the next read", function()
+    -- Probe 2026-11-05: at login the imbue reads hasEnchant with timeLeft 0 for its first seconds.
+    it("treats a 0 time left as unknown, re-reading every poll for 10 s, then as up with no expiry", function()
         ctl.enchants[0] = { NONE, entry(1664, 1700000) }
         poll(10)
         ctl.enchants[0] = { NONE, entry(1664, 0) }
         ctl.Fire("WEAPON_ENCHANT_CHANGED")
-        poll(11)
+        poll(11) -- unknown: nothing up or down
         assert.are.same({ 1710, 1710 }, { VS.Aura("player", RB, 11).est, VS.Aura("player", MH, 11).est })
         local calls = ctl.enchantCalls
-        poll(12)
-        assert.are.equal(calls, ctl.enchantCalls) -- no retry per poll: the next event reads
+        poll(12) -- no event: re-read inside the window
+        assert.are.equal(calls + 2, ctl.enchantCalls)
         ctl.enchants[0] = { NONE, entry(1664, 1500000) }
-        ctl.Fire("WEAPON_ENCHANT_CHANGED")
         poll(13)
         assert.are.same({ 1513, 1513 }, { VS.Aura("player", RB, 13).est, VS.Aura("player", MH, 13).est })
+        calls = ctl.enchantCalls
+        poll(14) -- read: the retries end
+        assert.are.equal(calls, ctl.enchantCalls)
+        ctl.enchants[0] = { NONE, entry(1664, 0) } -- a 0 that stays: an enchant with no expiry
+        ctl.Fire("WEAPON_ENCHANT_CHANGED")
+        poll(15)
+        ctl.Fire("WEAPON_ENCHANT_CHANGED") -- an event restarts the window
+        poll(20)
+        assert.are.equal(1513, VS.Aura("player", RB, 20).est)
+        poll(29) -- the window from the read at 20
+        assert.are.equal(1513, VS.Aura("player", RB, 29).est)
+        poll(30)
+        assert.are.same({ math.huge, math.huge }, { VS.Aura("player", RB, 30).est, VS.Aura("player", MH, 30).est })
+        calls = ctl.enchantCalls
+        poll(31)
+        assert.are.equal(calls, ctl.enchantCalls)
     end)
 
     it("is never taken down by an aura walk that cannot list it", function()
