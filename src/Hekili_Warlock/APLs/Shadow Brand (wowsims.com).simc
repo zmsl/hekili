@@ -23,12 +23,13 @@ actions=use_items,use_off_gcd=1
 actions+=/demonic_rune,use_off_gcd=1
 actions+=/major_mana_potion,use_off_gcd=1
 actions+=/call_action_list,name=single_multi_target_curse_logic
+actions+=/hellfire,if=active_enemies>=3&toggle.movement&(active_enemies>=3&target.outside5)
 actions+=/bane_of_doom,focus=2,if=fight_remains>debuff.bane_of_doom.duration
 actions+=/searing_pain,focus=2,if=((!debuff.demonic_brand.up|debuff.demonic_brand.remains<2.5)&!action.searing_pain.executing&(!(active_enemies>=3)|target.outside5))
 actions+=/call_action_list,name=single_target_dot_logic,if=active_enemies=1
 actions+=/call_action_list,name=multi_target_dot_logic,if=active_enemies>1
 actions+=/call_action_list,name=cooldowns,if=((action.bane_of_doom.known&((!action.bane_of_doom.known|((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known|!debuff.bane_of_doom.up)))|((action.bane_of_doom.known&debuff.bane_of_doom.up)|(active_enemies>=3&target.within5)))
-actions+=/hellfire,if=active_enemies>=3&(toggle.movement&(active_enemies>=3&target.outside5)|target.within5)
+actions+=/hellfire,if=active_enemies>=3&target.within5
 actions+=/searing_pain,focus=2,if=(!action.shadow_bolt.known|(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)
 actions+=/death_coil,if=(!action.searing_pain.known|(action.searing_pain.cast+action.searing_pain.travel_time)>fight_remains)
 actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
