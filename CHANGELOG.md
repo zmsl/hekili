@@ -32,7 +32,7 @@
 - Warlock: the Demonology, Shadow Brand, Destruction and SM Ruin (wowsims.com) priorities follow wowsims's new Human builds and Sesam's lists: Life Tap below 30% mana, Major Mana Potion and Demonic Rune lines.
 - Warlock: SM Ruin keeps Corruption, Siphon Life and Immolate up (cast when down or about to fall), standing in for wowsims's damage-per-cast-time choice the addon cannot read yet.
 - Warlock: Demonology and Shadow Brand get the Movement toggle (Hellfire on three or more enemies at range).
-- Enhancement (wowsims.com) follows wowsims's current build: Magma and Windfury Totems, Water Shield (only while it is down), Fire Nova as the filler, an AoE list. Magma Totem lasts 40 s with Trial by Fire 2/2. Fire Nova's mana costs are corrected: 375 at rank 5 (was 520), as measured in game; ranks 1-4 follow wowsims's data and are not yet checked in game. The weapon imbue reminder (Flametongue, Rockbiter before 10) leads the list while the main hand has none.
+- Enhancement (wowsims.com) follows wowsims's current build: Magma and Windfury Totems, Water Shield (only while it is down), Fire Nova as the filler, an AoE list. Magma Totem lasts 40 s with Trial by Fire 2/2. Fire Nova's mana costs are corrected and match the game at every rank (375 at rank 5, was 520). The weapon imbue reminder (Flametongue, Rockbiter before 10) leads the list while the main hand has none.
 
 ### Fixed
 - Rogues and Feral Druids: after you switch targets, finishers no longer show while the new target has no combo points. The addon now counts only the points on your current target, and they come back when you switch back to the target that holds them.
