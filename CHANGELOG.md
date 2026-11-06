@@ -37,6 +37,7 @@
 - Warriors: in Battle Stance, Overpower no longer shows on another player's dodge; it waits for the game to say the spell is usable.
 - A free-cast proc raised by the cast that just landed is no longer counted as spent at low frame rates, so your mana estimate stays right.
 - Shaman: Chain Lightning, Lava Burst and Mana Tide Totem follow wowsims's spell data for costs and the levels their ranks are learned (Chain Lightning rank 4 is 315 mana, was 485); not yet checked in game.
+- No more Lua errors from nameplates and unit changes where the game hides who a unit is (likely in dungeons and raids). There, hits on a target the addon can't identify are no longer counted against your previous target.
 
 ### Known issues
 - Warlock: after a Demonic Rune or Major Mana Potion the packs may show Life Tap for up to 40 s while mana is in fact high (the refill is not seen in combat).

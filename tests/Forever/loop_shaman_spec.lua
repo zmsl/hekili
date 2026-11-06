@@ -1,8 +1,8 @@
 -- tests/Forever/loop_shaman_spec.lua (class-completion plan, "The per-pack gate"): stock Hekili headless as a level 60
 -- Shaman in each pack (tests/Forever/helpers/shaman_world.lua) against the harness's world; the mob swings at us
 -- (Lightning Shield's charges spent by its hits), the world keeps the totem slots (W.summonTotem). `make check` runs 3
--- fights a pack (#slow); `make test-shaman` the 20 (#shaman). Each gate also asserts its flagged lines ran (review
--- focus 5).
+-- fights a pack (#slow); `make test-shaman` the 20 (#shaman: loop_shaman_enhancement_spec.lua and
+-- loop_shaman_elemental_spec.lua). Each gate also asserts its flagged lines ran (review focus 5).
 local headless = require("Game.harness.headless")
 local pack_gate = require("Forever.helpers.pack_gate")
 local sw = require("Forever.helpers.shaman_world")
@@ -90,14 +90,5 @@ describe("the headless Shaman gates, 3 fights a pack #slow", function()
                 assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
             end
         )
-    end
-end)
-
-describe("the headless Shaman gates, 20 fights a pack #shaman", function()
-    for _, name in ipairs(PACKS) do
-        it(name .. " solo, level 60, one mob, 20 fights of up to 3 minutes", function()
-            local r, line = pack_gate.solo(name, sw[name], 20)
-            assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
-        end)
     end
 end)

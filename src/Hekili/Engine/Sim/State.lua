@@ -3212,9 +3212,10 @@ do
                 return Hekili:GetTimeToPct( "target", percent ) - ( state.offset + state.delay )
 
             elseif k == "unit" then
-                if state.args.cycle_target == 1 then return UnitGUID( "target" ) .. "c" or "cycle"
-                elseif state.args.target then return ( UnitGUID( "target" ) .. '+' .. state.args.target ) or "unknown" end
-                return UnitGUID( "target" ) or "unknown"
+                local guid = UnitGUID( "target" ) -- nil: none, or secret (the Map restriction)
+                if state.args.cycle_target == 1 then return guid and ( guid .. "c" ) or "cycle"
+                elseif state.args.target then return guid and ( guid .. '+' .. state.args.target ) or "unknown" end
+                return guid or "unknown"
 
             elseif k == "npcid" then
                 if UnitExists( "target" ) then

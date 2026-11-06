@@ -25,6 +25,37 @@ do
     mt.__tostring = refuse("convert to a string")
 end
 local SECRET = M.SECRET
+
+-- The client refuses a secret as a table key; Lua 5.1 does not (a proxy is a valid key). `strictKeys(t)` gives `t`
+-- the client's two errors: a secret key is never stored, so every secret read or write reaches the metamethods.
+-- `t` must have no metatable. Returns `t`.
+function M.strictKeys(t)
+    assert(getmetatable(t) == nil, "strictKeys: the table already has a metatable")
+    return setmetatable(t, {
+        __index = function(_, k)
+            if k == SECRET then
+                error("attempted to index a table that cannot be indexed with secret keys", 2)
+            end
+        end,
+        __newindex = function(tt, k, v)
+            if k == SECRET then
+                error("attempted to perform indexed assignment on a table that cannot be indexed with secret keys", 2)
+            end
+            rawset(tt, k, v)
+        end,
+    })
+end
+
+-- The secrets `t` holds as a key or a value (the illegal stores a truth test can't trap): 0 for a clean table.
+function M.secretsIn(t)
+    local n = 0
+    for k, v in pairs(t) do
+        if k == SECRET or v == SECRET then
+            n = n + 1
+        end
+    end
+    return n
+end
 -- UnitCreatureType's IDs (CreatureType.db2) by State.lua's `target.creature_type` key.
 local CREATURE_IDS = {}
 for id, key in ipairs({
@@ -94,7 +125,8 @@ function M.new()
         handlers = {},
         unitSpeed = {}, -- [unit] = speed for UnitAttackSpeed of a unit other than the player (default: secret)
         unitIs = {}, -- [unit] = the token UnitIsUnit(unit, x) is true for (SECRET: a secret answer)
-        friendly = {}, -- [unit] = true: UnitCanAttack("player", unit) answers false (default: hostile)
+        names = {}, -- [unit] = UnitName (default "Player" for the player, else "Unit"; SECRET: a secret answer)
+        friendly = {}, -- [unit] = true: UnitCanAttack("player", unit) false, UnitIsFriend true (default: hostile)
         level = { player = 20 }, -- [unit] = UnitLevel (nil: a secret answer)
         creature = {}, -- [unit] = UnitCreatureType's type as State.lua's key ("undead"; default "beast"; SECRET: secret)
         unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
@@ -419,7 +451,11 @@ function M.new()
     function api.UnitRace() -- ctl.race: the race token (the second return), e.g. the harness character's
         return ctl.race or "Race", ctl.race or "Race", 1
     end
-    function api.UnitName(u)
+    function api.UnitName(u) -- ctl.names[u] when set (SECRET: a secret answer)
+        local n = ctl.names[u]
+        if n ~= nil then
+            return n
+        end
         return u == "player" and "Player" or "Unit"
     end
     function api.UnitSex()
@@ -443,8 +479,11 @@ function M.new()
     function api.UnitIsPlayer(u)
         return u == "player"
     end
-    function api.UnitIsFriend(_, u)
-        return u == "player"
+    function api.UnitIsFriend(_, u) -- ctl.friendly: the friendly units (SECRET: a secret answer)
+        if ctl.friendly[u] == SECRET then
+            return SECRET
+        end
+        return u == "player" or ctl.friendly[u] == true
     end
     function api.UnitIsDeadOrGhost(u)
         return ctl.dead[u] == true

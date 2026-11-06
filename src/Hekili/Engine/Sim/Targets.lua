@@ -247,12 +247,14 @@ if Hekili.IsDev then
     enemyExclusions[202969] = 404705 -- Empty Recollection
 end
 
+-- Under the Map addon restriction a unit's identity is secret, which the facade answers as nil (unknown): a nil GUID
+-- keys nothing, and a plate whose GUID turned secret is dropped by the GUID stored while it was plain.
 RegisterEvent( "NAME_PLATE_UNIT_ADDED", function( event, unit )
     local id = UnitGUID( unit )
 
-    if UnitIsFriend( "player", unit ) then
+    if id == nil or UnitIsFriend( "player", unit ) then
         npGUIDs[ unit ] = nil
-        npUnits[ id ] = nil
+        if id ~= nil then npUnits[ id ] = nil end
         return
     end
 
@@ -274,11 +276,12 @@ RegisterEvent( "UNIT_FLAGS", function( event, unit )
     if unit == "player" or UnitIsUnit( unit, "player" ) then return end
 
     if UnitIsFriend( "player", unit ) then
-        local id = UnitGUID( unit )
-        ns.eliminateUnit( id )
-
+        local id = UnitGUID( unit ) or npGUIDs[ unit ] -- secret: the GUID stored while it was plain
+        if id ~= nil then
+            ns.eliminateUnit( id )
+            npUnits[ id ] = nil
+        end
         npGUIDs[ unit ] = nil
-        npUnits[ id ]   = nil
     end
 end )
 
@@ -408,7 +411,7 @@ do
                         local excluded = not UnitIsUnit( unit, "target" )
                         local _, range = nil, -1
 
-                        if debugging then details = format( "%s\n - Checking nameplate list for %s [ %s ] %s.", details, unit, guid, UnitName( unit ) ) end
+                        if debugging then details = format( "%s\n - Checking nameplate list for %s [ %s ] %s.", details, unit, guid, UnitName( unit ) or "Unknown" ) end
 
                         if excluded then
                             if requiredForInclusion[ npcid ] then
@@ -486,7 +489,7 @@ do
 
                             local _, range = nil, -1
 
-                            if debugging then details = format( "%s\n - Checking %s [ %s ] %s.", details, unit, guid, UnitName( unit ) ) end
+                            if debugging then details = format( "%s\n - Checking %s [ %s ] %s.", details, unit, guid, UnitName( unit ) or "Unknown" ) end
 
                             if excluded then
                                 excluded = enemyExclusions[ npcid ]
@@ -558,7 +561,7 @@ do
                     if unit and not UnitIsUnit( unit, "target" ) then
                         excluded = enemyExclusions[ npcid ]
 
-                        if debugging then details = format( "%s\n - Checking %s [ %s ] #%s.", details, unit, guid, UnitName( unit ) ) end
+                        if debugging then details = format( "%s\n - Checking %s [ %s ] #%s.", details, unit, guid, UnitName( unit ) or "Unknown" ) end
 
                         -- If our table has a number, unit is ruled out only if the buff is present.
                         if excluded and type( excluded ) == "number" then

@@ -1,0 +1,30 @@
+-- tests/Game/harness/detect_floors_spec.lua: a missing floors file is empty; a half-written one fails loudly, never as {}.
+local detect = require("Game.harness.detect")
+
+describe("detect.readFloors", function()
+    local path = os.tmpname()
+    after_each(function()
+        os.remove(path)
+    end)
+
+    it("returns {} for a missing file", function()
+        os.remove(path)
+        assert.are.same({}, detect.readFloors(path))
+    end)
+
+    it("reads a complete file", function()
+        local fh = assert(io.open(path, "w"))
+        fh:write("return { K1 = { solo = 0.5 } }\n")
+        fh:close()
+        assert.are.same({ K1 = { solo = 0.5 } }, detect.readFloors(path))
+    end)
+
+    it("errors on a half-written file", function()
+        local fh = assert(io.open(path, "w"))
+        fh:write("return { K1 = { solo = ")
+        fh:close()
+        assert.has_error(function()
+            detect.readFloors(path)
+        end)
+    end)
+end)

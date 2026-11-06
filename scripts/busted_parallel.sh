@@ -8,6 +8,10 @@ cd "$(dirname "$0")/.."
 export BUSTED=${BUSTED:-.lua/bin/busted}
 OUT=$(mktemp -d)
 export OUT
+if [ -n "${DETECT_WRITE:-}" ]; then # the floors file is read-modify-written by every writer: no parallel runs
+    BUSTED_JOBS=1
+    echo "DETECT_WRITE set: running the spec files serially (BUSTED_JOBS=1)"
+fi
 trap 'rm -rf "$OUT"' EXIT
 
 run_one() {
@@ -36,7 +40,7 @@ for f in "${files[@]}"; do
     log="$OUT/${f//\//_}"
     rc=$(cat "$log.rc" 2>/dev/null)
     [ "$rc" = 0 ] && grep -q '^0 successes / 0 failures / 0 errors / 0 pending' "$log" && continue
-    echo "== $f"
+    echo "== $f (rc=$rc)"
     cat "$log"
     [ "$rc" = 0 ] || failed+=("$f")
 done

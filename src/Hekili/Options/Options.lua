@@ -2488,7 +2488,7 @@ end
 do
     local impControl = {
         name = "",
-        source = UnitName( "player" ) .. " @ " .. GetRealmName(),
+        source = ( UnitName( "player" ) or "?" ) .. " @ " .. GetRealmName(),
         apl = L["Paste your SimulationCraft action priority list or profile here."],
 
         lists = {},

@@ -42,9 +42,10 @@ function B.Fits(lo, hi, n, k, v, kLo, kHi, minN)
     return v ~= nil and n[k] >= minN and v >= kLo * lo[k] and v <= kHi * hi[k]
 end
 
---- v's grade against a fixed range [lo, hi]: 1 inside, 2 loose [looseLo, 1.1 hi], 3 above (1.1 hi, 2 hi], 0 none.
+--- v's grade against a fixed range [lo, hi]: 1 inside, 2 loose [looseLo, 1.1 hi], 3 above (1.1 hi, 2 hi], 0 none
+--- (also for a nil v: a secret amount, which the event facade passes as nil).
 function B.Class(v, lo, hi, looseLo)
-    if hi <= 0 or v < looseLo or v > 2 * hi then
+    if v == nil or hi <= 0 or v < looseLo or v > 2 * hi then
         return 0
     elseif v >= lo and v <= hi then
         return 1

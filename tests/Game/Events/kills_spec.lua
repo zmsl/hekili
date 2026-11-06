@@ -106,6 +106,21 @@ describe("kills and the first swing", function()
         assert.are.same({ med, spr }, { L.med[1], L.spr[1] })
     end)
 
+    -- UNIT_COMBAT's amount was secret on a wound on the player in the owner's 2026-11-05 run; the event facade passes
+    -- it as nil. A white wound on the target with a nil amount and a known damage range raises nothing.
+    it("takes a white wound whose amount is secret without an error", function()
+        ctl.now = 20
+        ctl.damage = { 4, 6, 2, 3 }
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        ctl.Fire("PLAYER_ENTER_COMBAT")
+        ctl.Fire("PLAYER_SWING", 2.6, 0)
+        ctl.now = 20.47
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", fake.SECRET, 1)
+        ctl.Tick(22)
+        assert.are.equal(0, I.Melee.classOf(1, nil, "")) -- the amount class of a nil amount: none (no compare)
+    end)
+
     it("marks both hands' swings the client sent in the same ms before PLAYER_ENTER_COMBAT, and only those", function()
         ctl.now = 30
         ctl.Fire("PLAYER_SWING", 2.6, 0)

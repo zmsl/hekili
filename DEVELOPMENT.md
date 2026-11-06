@@ -104,6 +104,17 @@ Run `make check` before every commit. CI runs the same steps on every push, exce
 - The packs check: regenerating every priority pack leaves the source tree unchanged.
 - The offline tests of the release tools.
 
+`make check` may skip, for mid-work runs, and prints one line saying so. It skips when its inputs match the last green
+check in this worktree (tracked and untracked files, the index, the toolchain, the env vars the tests read), or when
+only docs no test reads changed (not README.md, CHANGELOG.md, docs/publishing/ or any doc under src/, tests/, tools/).
+`make check FULL=1` runs it all; so does any other command-line override (`TEST_EXCLUDE=`, `BUSTED=`) or `-i`/`-e`,
+and those leave no stamp. Pre-merge checks (the final reviewer's) use `FULL=1`. The stamp has a residual risk: a file
+edited and then reverted while a green run was in progress, or a hand edit under `.lua/share` or to the `lua` binary
+on PATH (the stamp keys neither), can leave a stamp that no longer matches what was tested. When in doubt, `FULL=1`.
+
+The runner keeps two changes from the test-speed pass: the belief loader compiles each file once per process
+(`tests/Game/State/helpers/load.lua`), and big spec files are split so no one file bounds the wall time.
+
 ### Editor IntelliSense (VS Code)
 
 Install the `ketho.wow-api` extension (it carries WoW's API annotations and the Lua language server). `.luarc.json` is the single
@@ -209,6 +220,7 @@ Work happens on a branch from `forever`.
 
 1. Keep `make check` green on every commit.
 2. Run `make gate` before asking for a merge. It runs the full check, then every class's 20-fight loops.
+   `make gate` never skips (it runs `make check-full`); neither do `gate-ab`, `accuracy`, the rig or packaging.
 3. Have the change reviewed against the rules above and the gate's output.
 4. Merge into `forever`. Never force-push it.
 

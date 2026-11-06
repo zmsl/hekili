@@ -191,21 +191,32 @@ local function bind(i, guid, t)
     return u
 end
 
--- Token i's live GUID (plain, non-empty), or nil.
+-- Token i's live GUID (plain, non-empty), or nil; then true when the GUID is secret (the Map addon restriction, the
+-- owner's FR-1 run 2026-11-05): a unit is there but which one is unknown, never "no unit".
 local function read(api, i)
-    local g = Plain(api, api.UnitGUID(TOKENS[i]))
-    if type(g) == "string" and g ~= "" then
-        return g
+    local raw = api.UnitGUID(TOKENS[i]) -- secret: tested with issecretvalue next, then read through Plain
+    if api.issecretvalue(raw) then
+        return nil, true
     end
+    local g = Plain(api, raw)
+    if type(g) == "string" and g ~= "" then
+        return g, false
+    end
+    return nil, false
 end
 
+-- Binds token i to its live GUID, else unbinds it; returns whether the GUID was secret.
 local function rebind(api, i, t)
-    local g = read(api, i)
+    local g, secret = read(api, i)
     if g then
         bind(i, g, t)
     else
         unbind(i, t)
+        if secret then -- an unknown unit took the token: a later clear must not fall back to the one before it
+            tokPrev[i] = 0
+        end
     end
+    return secret
 end
 
 local function kill(u, t, how)
@@ -219,10 +230,10 @@ end
 
 --- (spec §2.3) The GUID a row on token index i at t is about, its slot, and whether token i was swapped away from a
 --- still-resolvable unit. 1: the live read (rebinding a stale token first), except that a row the old unit's open
---- ticket owes (U.Claims) stays on the old unit; 2: while the live read is nil, the bound or previous slot while it
---- resolves; 3: nil (counted). Allocates nothing.
+--- ticket owes (U.Claims) stays on the old unit; 2: while the live read is nil (not secret), the bound or previous
+--- slot while it resolves; 3: nil (counted). Allocates nothing.
 function U.Resolve(api, i, t, act, school)
-    local g = read(api, i)
+    local g, secret = read(api, i)
     if g then
         local u = tokUid[i]
         if u == 0 or uGUID[u] ~= g then
@@ -238,6 +249,10 @@ function U.Resolve(api, i, t, act, school)
             return uGUID[p], p, true
         end
         return g, u, swapped
+    end
+    if secret then -- an unknown unit holds the token: its row is no earlier unit's
+        U.unresolved = U.unresolved + 1
+        return nil, 0, false
     end
     local u = tokUid[i] > 0 and tokUid[i] or tokPrev[i]
     if u > 0 and resolvable(u, t) then
@@ -302,9 +317,16 @@ S.On("UNIT_COMBAT", nil, U.OnCombat)
 
 S.On("PLAYER_TARGET_CHANGED", nil, function(api, t)
     local before = tokUid[1]
-    rebind(api, 1, t)
+    local secret = rebind(api, 1, t) -- a secret target is a switch, not a clear: no tell
     local stub = I.Events.STUB
-    if tokUid[1] == 0 and before > 0 and t - failT <= U.KILL_TELL and stub.UNIT_DIED and stub.PLAYER_TARGET_DIED then
+    if
+        not secret
+        and tokUid[1] == 0
+        and before > 0
+        and t - failT <= U.KILL_TELL
+        and stub.UNIT_DIED
+        and stub.PLAYER_TARGET_DIED
+    then
         kill(before, t, "tell") -- spec §2.5's fallback: the death events are refused
     end
 end)
@@ -355,12 +377,15 @@ S.On("UNIT_SPELLCAST_FAILED", "player", function(api, t, unit)
     end
 end)
 
---- (spec §2.7) Pins a commit: the target's live GUID, else the soft enemy's, else nil. Allocates nothing.
+--- (spec §2.7) Pins a commit: the target's live GUID, else (no target, not a secret one) the soft enemy's, else nil.
+--- Allocates nothing.
 function U.Pin(api, t)
-    local g = read(api, 1)
+    local g, secret = read(api, 1)
     if g then
         bind(1, g, t)
         return g
+    elseif secret then -- the cast goes to the unknown target, never the soft enemy
+        return nil
     end
     g = read(api, 43)
     if g then

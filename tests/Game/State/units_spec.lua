@@ -197,6 +197,51 @@ describe("the unit registry", function()
         assert.are.equal(1, U.deaths.tell)
     end)
 
+    -- The Map addon restriction (the owner's FR-1 run, 2026-11-05) makes UnitGUID secret: a unit is there, but which
+    -- one is unknown. Unknown is not "no unit": no fallback to the previous one, and no clear for the kill tell.
+    it("leaves a row on a secret-GUID target unresolved, never the previous target's", function()
+        ctl.now = 20
+        ctl.guid.target = fake.SECRET
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        ctl.now = 20.04
+        combat("target", "WOUND", 16, 8)
+        assert.are.equal(0, #rows)
+        assert.are.equal(1, U.unresolved)
+    end)
+
+    it("pays no row after a secret-GUID target clears to the unit held before it", function()
+        U.Hold(U.Uid(1)) -- Creature-1 held (a ticket)
+        ctl.now = 20
+        ctl.guid.target = fake.SECRET
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        ctl.guid.target = nil
+        ctl.now = 20.01
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        ctl.now = 20.04
+        combat("target", "WOUND", 16, 8)
+        assert.are.equal(0, #rows)
+    end)
+
+    it("takes a switch to a secret-GUID target for no kill tell", function()
+        boot({ "UNIT_DIED", "PLAYER_TARGET_DIED" })
+        local uid = U.Uid(1)
+        ctl.now = 50
+        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-2-0-0-0", 1)
+        ctl.guid.target = fake.SECRET
+        ctl.now = 50.003
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_false(U.IsDead(uid))
+        assert.are.equal(0, U.deaths.tell)
+    end)
+
+    it("passes a secret amount on as nil (UNIT_COMBAT's amount, secret on the player in combat)", function()
+        ctl.now = 10
+        combat("target", "WOUND", fake.SECRET, 1)
+        assert.are.equal(1, #rows)
+        assert.is_nil(rows[1].amount)
+        assert.are.equal("Creature-1", rows[1].guid)
+    end)
+
     it("does not use the tell while the death events are delivered", function()
         local uid = U.Uid(1)
         ctl.now = 50
@@ -259,6 +304,11 @@ describe("the unit registry", function()
         ctl.guid.target = "Creature-7" -- swapped mid-cast
         assert.are.equal("Creature-6", U.Sent("Cast-9"))
         assert.is_nil(U.Sent("Cast-10"))
+    end)
+
+    it("pins nothing for a secret-GUID target, never the soft enemy (the cast is the unknown target's)", function()
+        ctl.guid.target, ctl.guid.softenemy = fake.SECRET, "Creature-5"
+        assert.is_nil(U.Pin(api, 1))
     end)
 
     it("frees every unbound unit at combat end and keeps the bound target", function()
