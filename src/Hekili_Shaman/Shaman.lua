@@ -21,8 +21,7 @@
 -- Improved Stormstrike's casting share is the mana entry below).
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (in-game checks): Call of Flame's +3 s a
 -- rank on Flame Shock, Stormstrike's cost, Lava Burst's and Mana Tide Totem's rank 4 (1326047, 1325256), Elemental
--- Mastery, Revelation, Elemental Alacrity's Forever ranks. Fire Nova's (375 there) is not modelled (FIRE_NOVA_COST
--- says why).
+-- Mastery, Revelation, Elemental Alacrity's Forever ranks. Also from it: Fire Nova's costs (the DB2's are wrong: R57a).
 -- Credits: Hekili (registration API, pack format and `summonTotem`'s signature, State.lua). wowsims/forever (MIT,
 -- ui/specs/shaman/enhancement/apls/default.apl.json and sim/shaman/) is the reference for the priorities and the totem,
 -- Fire Nova, Maelstrom Weapon and Clearcasting rules; no code is copied.
@@ -78,11 +77,9 @@ local EARTH_SHOCK_COST = { 30, 50, 85, 145, 240, 345, 450 }
 local FLAME_SHOCK = { 8050, 8052, 8053, 10447, 10448, 29228 }
 local FLAME_SHOCK_COST = { 55, 95, 160, 250, 345, 410 }
 local FIRE_NOVA = { 408341, 408342, 408343, 408344, 408345 } -- Forever's spell (no totem): from the fire totem up
--- The DB2's. wowsims/forever's spell data says 65, 120, 210, 290, 375 (its log: 375): not modelled, because the
--- secret-mana belief pins itself at the dearest usable cost after an unseen refill, and at 375 that pin (Earth Shock's
--- 450) sits under the 10% Fire Nova filler (500 of the solo world's 5000 mana; 553 of 5530 in wowsims's fight), so the
--- solo gate falls to 0.89 (GAP V). IN-GAME CHECK: Fire Nova's cost.
-local FIRE_NOVA_COST = { 95, 170, 280, 395, 520 }
+-- wowsims/forever's spell data (e2842f0a78 sim/core/spelldata/spells_auto_gen.go, 408341-408345 Powers), every rank;
+-- the owner's in-game read confirms rank 5's 375 (R57a, 2026-11-06). The DB2's 95, 170, 280, 395, 520 are wrong.
+local FIRE_NOVA_COST = { 65, 120, 210, 290, 375 }
 local ROCKBITER_WEAPON = { 8017, 8018, 8019, 10399, 16314, 16315, 16316 }
 local ROCKBITER_WEAPON_COST = { 15, 25, 50, 75, 100, 125, 150 }
 local FLAMETONGUE_WEAPON = { 8024, 8027, 8030, 16339, 16341, 16342 }
@@ -719,7 +716,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(FIRE_NOVA),
         -- its usability answer is a mana rung (the ladder) although it also needs a fire totem: the costliest spell, so
-        -- without it the believed lower bound never reaches 520 (checkpoint: no totem answers not usable, not short)
+        -- without it the believed lower bound never reaches 375 (checkpoint: no totem answers not usable, not short)
 
         usable = function()
             return totem.fire.up, "requires a fire totem"
