@@ -143,8 +143,24 @@ M.FLICKER = {
     -- strider_kick <-> wing_clip near-ties fall (197 / 190 / 192 -> 168 / 151 / 170 pairs) and its own held ticks
     -- arrive (by key at 21-40 / 41-60: mongoose_bite 19 / 20, wing_clip 218 / 233 -> 209 / 221, raptor_strike 5 / 9
     -- -> 4 / 13)
-    ["Survival"] = { flicker = 0.2, retracted = 0, readyShort = 1, heldReady = 254 }, -- 0.15 / 0.07 / 0.15, 0 (oracle 1.71 / 1.46 / 1.61), 249 / 232 / 254
-    ["Marksmanship"] = { flicker = 0, retracted = 0, heldReady = 112 }, -- 0, 0
+    -- 0.2 / 254 -> 1.6 / 400, flickerK 1.5 (re-pin e2842f0a78, Task 19, R6; seeds 1-20 / 21-40 / 41-60: flicker 1.51 /
+    -- 1.10 / 0.93, oracle 0.07 / 0.02 / 0.02, held 400 / 348 / 347, agreement .966 / .972 / .971, dps A/B .971 / .973 /
+    -- 1.017; identical with the swing-recheck fix R61 merged): wowsims's new Wing Clip line
+    -- `(!action.strider_kick.known|cooldown.strider_kick.remains>1.5)` takes away the always-ready Wing Clip that won
+    -- every near-tie of the strikes. Ablation (seeds 1-20, the generated Wing Clip line without that prefix): held 400 ->
+    -- 255, flips 91 -> 16. What it exposes are two named classes: Raptor Strike's and Strider Kick's last 0.5 s under
+    -- CD_PROBE (the not-ready flag holds ours at now + 0.5 while the oracle counts down; held ticks at 21-40: 52 of 348)
+    -- and, at a dry pool (mana 32-41), the two strikes' near-tie at their mana crossing (costs 40 and 39.6) read from a
+    -- floor a few units under the truth (gap BT; held 296 of 348; flips 79 of 91 at seeds 1-20 raptor <-> strider, 37
+    -- of them beside a CD_PROBE 0.50). The oracle reads the exact pool, so the gap over it is ours. Owner FYI
+    -- (no-jitter rule: the controller weighs this pack against the old pin)
+    ["Survival"] = { flicker = 1.6, flickerK = 1.5, retracted = 0, readyShort = 1, heldReady = 400 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
+    -- 0 / 112 -> 0.1 / 116 (re-pin e2842f0a78, Task 19, R6; seeds 1-20 / 21-40 / 41-60: flicker 0.02 / 0.02 / 0, oracle
+    -- 0 / 0 / 0, held 116 / 110 / 106, agreement 1.000 each; identical with R61 merged): the flip (one a set) is
+    -- multi_shot@0.50 -> serpent_sting@0.40 -> multi_shot@0 (seed 1, 48.4-48.8 s): Multi-Shot's last 0.5 s under
+    -- CD_PROBE (central, Fire Blast's class); held, seeds 1-20: arcane_shot 109 (105 at its mana crossing with the pool
+    -- under 400, gap BT; 4 CD_PROBE), hunters_mark 7: the row's existing classes, the re-timed fights
+    ["Marksmanship"] = { flicker = 0.1, retracted = 0, heldReady = 116 }, -- 0.02 / 0.02 / 0, 0
     -- 0 -> 0.2 (Task 5, wowsims's Hunter regen in; seeds 1-20 / 21-40 / 41-60: 0 / 0.12 / 0, was 0 / 0 / 0): the new BM
     -- regen puts Arcane Shot's mana crossing 0.14 s from Hunter's Mark's refresh; lo runs ~3 mana under truth (gaps
     -- BQ/BT, G7), so the near-tie resolves both ways (fight 21); controller ruling 2026-10-29 while the owner was away
@@ -163,7 +179,15 @@ M.FLICKER = {
     -- fights 5 / 8 / 11 / 14 / 17 / 20 one tick each at t 3.6 (truth 179, lo 120), seeds 21-40 fights 3 / 6 / 9 / 12 / 15 /
     -- 18 1-3 ticks, seeds 41-60 fights 2 / 5 / 8 / 11 14-21 ticks at t 3.6-7.6, truth 146-179; replay, M.READY and LIVE60
     -- unmoved, the replay takes the log header's talents already)
-    ["Beast Mastery"] = { flicker = 0, retracted = 0, heldReady = 127 }, -- 0 / 0 / 0, 0 (gap CE)
+    -- 0 / 127 -> 0.1 / 156 (re-pin e2842f0a78, Task 19, R6; seeds 1-20 / 21-40 / 41-60: flicker 0 / 0.03 / 0, oracle 0
+    -- / 0 / 0, held 156 / 153 / 154, agreement .996 / .993 / .993, dps A/B .987 / .988 / .988; identical with R61
+    -- merged): wowsims's HHA sequence (`summon_hawk, summon_hawk, arcane_shot`) casts Arcane Shot every third step, so
+    -- Multi-Shot is the dry pool's spender and the cost-crossing hold (gap BT, the floor a few units under the truth:
+    -- pool 224-226 at its 224.66) moves onto it: multi_shot 137 of 156 held ticks at seeds 1-20, one a crossing, 7-8 a
+    -- fight; ablation (Arcane Shot without the HHA term): 156 -> 129, multi_shot's ticks gone. The two flips (seed 21,
+    -- 112.4-116.2 s) are Hunter's Mark's expiry against Summon Hawk's mana crossing at an empty pool (61-122 mana), both
+    -- 4-8 s away and 0.3 s apart, the lo lag reordering them (gap BT; the row's earlier Arcane Shot vs Mark class)
+    ["Beast Mastery"] = { flicker = 0.1, retracted = 0, heldReady = 156 }, -- 0 / 0.03 / 0, 0 (gap CE)
     -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
     -- wowsims's logged regen (Ret 8.25/s casting) runs the world at an empty mana pool; the oracle's flicker rose too; our
     -- extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike); controller ruling
