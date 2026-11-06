@@ -1739,6 +1739,7 @@ function entry(c, e)
     elseif kind == "cancelAura" then -- rule 10
         c.self = nil
         body = "cancel_buff,buff_name=" .. auraKey(c, a.cancelAura.auraId.spellId)
+        key = "cancel_buff" -- a recipe `condition` / `guard` names it so (owner deviation R69)
     elseif kind == "sequence" then -- rule 14b
         c.self = nil
         return windowed(c, a)
@@ -1770,7 +1771,10 @@ function entry(c, e)
         end
         return out
     end
-    if c.condition[key] then -- rule 7: the recipe's condition replaces the APL's
+    if c.condition[key] == false then -- rule 7: `false` omits the line (an owner deviation, R69's Prowl cancel)
+        c.conditioned[key] = true
+        return nil, "the recipe's condition is false"
+    elseif c.condition[key] then -- rule 7: the recipe's condition replaces the APL's
         cond, c.conditioned[key] = c.condition[key], true
     end
     cond = guarded(c, key, required(c, key, cond))
