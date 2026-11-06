@@ -6,6 +6,7 @@
 - Stoneskin Totem and the other Shaman totems now have their buffs registered, so custom priorities can use buff.stoneskin_totem.up and its siblings (also buff.stoneskin.up). The missing totems (Stoneskin, Healing Stream, the resistance totems, Windwall, Tremor, the cleansing totems, Sentry, Earthbind, Stoneclaw, Grounding) can be cast and tracked too; no built-in priority uses them.
 - A Movement toggle for priorities that move to reach the next ability: on, they show it out of range; off, they hide it until you are in range.
 - The engine supports rotation windows (spans the game shows no buff for), and the priority editor can add their Open Window and Close Window lines. No built-in priority uses them yet.
+- Weapon imbues and poisons: `buff.rockbiter_weapon`, `buff.flametongue_weapon`, `buff.windfury_weapon`, `buff.frostbrand_weapon` and the five Rogue poisons (`buff.instant_poison`, `buff.deadly_poison`, `buff.crippling_poison`, `buff.mind_numbing_poison`, `buff.wound_poison`) now follow the game, in combat too. `buff.main_hand_enchant` / `buff.off_hand_enchant` no longer count a sharpening stone or oil. An imbue or poison line in your precombat list is now also shown in combat while the buff is down. Rogue poisons last 30 minutes and take 3 s to apply.
 
 ### Changed
 - Hunters: the melee weave's strikes can show at range with the Movement toggle on, after whatever the rotation ranks above walking in (such as Hunter's Mark), from an Auto Shot whose next melee swing comes before your next shot until that swing (the weave window), and an open weave closes when you Raptor Strike. With it off, they show only in melee as before.
@@ -23,6 +24,7 @@
 - Warlock: the Demonology, Shadow Brand, Destruction and SM Ruin (wowsims.com) priorities follow wowsims's new Human builds and Sesam's lists: Life Tap below 30% mana, Major Mana Potion and Demonic Rune lines.
 - Warlock: SM Ruin keeps Corruption, Siphon Life and Immolate up (cast when down or about to fall), standing in for wowsims's damage-per-cast-time choice the addon cannot read yet.
 - Warlock: Demonology and Shadow Brand get the Movement toggle (Hellfire on three or more enemies at range).
+- Enhancement (wowsims.com) follows wowsims's current build: Magma and Windfury Totems, Water Shield (only while it is down), Fire Nova as the filler, an AoE list. Magma Totem lasts 40 s with Trial by Fire 2/2. Fire Nova's mana costs are corrected (375 at rank 5, was 520). The weapon imbue reminder (Flametongue, Rockbiter before 10) leads the list while the main hand has none.
 
 ### Fixed
 - Rogues and Feral Druids: after you switch targets, finishers no longer show while the new target has no combo points. The addon now counts only the points on your current target, and they come back when you switch back to the target that holds them.
@@ -33,6 +35,7 @@
 - Elemental Shamans: Mana Spring Totem counts at your real rank from the first fight of a session.
 - Warriors: in Battle Stance, Overpower no longer shows on another player's dodge; it waits for the game to say the spell is usable.
 - A free-cast proc raised by the cast that just landed is no longer counted as spent at low frame rates, so your mana estimate stays right.
+- Shaman: Chain Lightning, Lava Burst and Mana Tide Totem cost what the game charges (wowsims's spell data; Chain Lightning rank 4 is 315 mana, was 485); Lava Burst's and Mana Tide Totem's ranks are learned at the right levels.
 
 ### Known issues
 - Warlock: after a Demonic Rune or Major Mana Potion the packs may show Life Tap for up to 40 s while mana is in fact high (the refill is not seen in combat).
