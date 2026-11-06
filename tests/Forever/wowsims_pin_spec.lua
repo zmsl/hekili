@@ -29,7 +29,7 @@ describe("check_wowsims_pin", function()
                 local f = assert(io.open(ex.OUT .. spec .. ".log", "rb"), spec)
                 local first = f:read("*l")
                 f:close()
-                assert.are.equal(ex.OLD_SIM[spec] or ex.SIM_PIN, first:match("^# wowsims (%x+) "), spec)
+                assert.are.equal(ex.SIM_PIN, first:match("^# wowsims (%x+) "), spec)
                 assert.are.equal(spec, first:match("^# wowsims %x+ (%S+) "), spec)
             end
         end
@@ -63,6 +63,31 @@ describe("check_wowsims_pin", function()
         assert.is_true(ok, tostring(req))
         local p = req.raid.parties[1].players[1]
         assert.are.same({ "Siml", "5", 9 }, { p.name, p.talentsString, p.equipment.items[1].id })
+    end)
+
+    -- The hunter builds carry no race, professions, consumables or player buffs: siml.LoadBuild (sim/siml/build.go:25-30,
+    -- 54-62) keeps the spec's defaults.siml values for those when the build leaves them unset, and the site does the same
+    -- (ui/app/apply_build_files.test.ts). Checked by hand against sim/siml/testdata/builds/hunter_dps_*_weave.json.
+    it("fills the keys a siml build leaves unset from the spec's defaults, as siml.LoadBuild does", function()
+        local p = { race = "RaceTroll", talentsString = "5" }
+        local d = {
+            race = "RaceOrc",
+            profession1 = "Engineering",
+            profession2 = "Blacksmithing",
+            consumables = { flaskId = 1 },
+            buffs = { greaterBlessingOfKings = true },
+            talentsString = "9",
+            distanceFromTarget = 25,
+        }
+        assert.are.equal(p, ex.overDefaults(p, d))
+        assert.are.same({
+            race = "RaceTroll",
+            talentsString = "5",
+            profession1 = "Engineering",
+            profession2 = "Blacksmithing",
+            consumables = { flaskId = 1 },
+            buffs = { greaterBlessingOfKings = true },
+        }, p)
     end)
 
     it("takes M.OUT from WOWSIMS_OUT", function()

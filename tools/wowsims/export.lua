@@ -27,14 +27,9 @@ local M = {}
 M.PIN = "e2842f0a784d2f329dde0bc682a6b84202a780f2"
 --- The wowsims/forever commit whose CLI made every checked-in log (`rerun`; tests/Forever/wowsims_pin_spec.lua).
 M.SIM_PIN = M.PIN
---- The specs whose checked-in logs were made at another commit, and that commit. The hunter weave APLs of
---- d33930d040 do nothing on M.SIM_PIN's CLI (no auto shot or swing, dps 0), so their logs stay there until the
---- re-pin's Task 19 re-exports the hunters on the pin's own APLs; then this table goes.
-M.OLD_SIM = {
-    hunter_beast_mastery = "d33930d04030c3f556582f31949f1f22c17da0e4",
-    hunter_marksmanship = "d33930d04030c3f556582f31949f1f22c17da0e4",
-    hunter_survival = "d33930d04030c3f556582f31949f1f22c17da0e4",
-}
+--- Empty since the re-pin's Task 19 re-exported the hunters at M.SIM_PIN: every log is made there. Kept only because
+--- tools/wowsims/apl.lua's pack header still reads `ex.OLD_SIM[spec] or ex.PIN`; delete both together.
+M.OLD_SIM = {}
 M.OUT = os.getenv("WOWSIMS_OUT") or "tests/Forever/wowsims/"
 M.SEED, M.DURATION, M.TARGET_LEVEL = 101, 180, 63
 
@@ -207,17 +202,40 @@ end
 M.checkout = checkout -- tools/wowsims/dry.lua
 
 --- Converts spec `spec`'s `siml` build (a .siml path in the checkout at M.PIN) to M.OUT/<spec>.build.json with the
---- CLI's `siml parse -json` (see the header).
+--- CLI's `siml parse -json` (see the header). A recipe `defaults` (the spec's defaults.siml) fills what the build
+--- leaves unset (M.overDefaults).
 function M.siml(spec)
     local r = M.recipe(spec)
     local root = checkout()
     local src = assert(r.siml, spec .. ": the recipe has no `siml`")
     local cli = env("WOWSIMS_CLI", root .. "/wowsimcli-sim-pin")
-    local s = capture(("'%s' siml parse -json '%s'"):format(cli, join(root, src)))
-    if type(decode(s, src).player) ~= "table" then
-        error(src .. ": `siml parse -json` gave no top-level player", 0)
+    local function parse(path)
+        local s = capture(("'%s' siml parse -json '%s'"):format(cli, join(root, path)))
+        local t = decode(s, path)
+        if type(t.player) ~= "table" then
+            error(path .. ": `siml parse -json` gave no top-level player", 0)
+        end
+        return s, t
+    end
+    local s, t = parse(src)
+    if r.defaults then
+        M.overDefaults(t.player, select(2, parse(r.defaults)).player)
+        s = json.encode(t, { indent = true }) .. "\n"
     end
     spit(M.OUT .. spec .. ".build.json", s)
+end
+
+--- Fills player `p`'s race, professions, consumables and player buffs from the spec defaults' player `d` where the
+--- build leaves them unset, as wowsims's siml.LoadBuild layers a build over defaults.siml (sim/siml/build.go:25-30,
+--- 54-62). Returns `p`. shortcut: only these five keys (the rest of LoadBuild's rules match what a build sets); widen
+--- if a build ever leaves another player key to its defaults.
+function M.overDefaults(p, d)
+    for _, k in ipairs({ "race", "profession1", "profession2", "consumables", "buffs" }) do
+        if p[k] == nil then
+            p[k] = d[k]
+        end
+    end
+    return p
 end
 
 --- Exports spec `spec`: its request and log under M.OUT (see the header).
