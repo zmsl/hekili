@@ -20,6 +20,9 @@
 - Aura changes no longer bring the next update forward, so busy fights cost less. Your buffs still show within about 0.2 s.
 - Out of combat with no hostile target, the icons refresh every 1.5 s instead of 0.5 s; changing target, casting and entering combat still refresh them at once.
 - The experimental options to use the damage meter for swing outcomes and the Cooldown Manager for aura presence are gone from normal builds, and both are now off even if you had turned them on.
+- Warlock: the Demonology, Shadow Brand, Destruction and SM Ruin (wowsims.com) priorities follow wowsims's new Human builds and Sesam's lists: Life Tap below 30% mana, Major Mana Potion and Demonic Rune lines.
+- Warlock: SM Ruin keeps Corruption, Siphon Life and Immolate up (cast when down or about to fall), standing in for wowsims's damage-per-cast-time choice the addon cannot read yet.
+- Warlock: Demonology and Shadow Brand get the Movement toggle (Hellfire on three or more enemies at range).
 
 ### Fixed
 - Rogues and Feral Druids: after you switch targets, finishers no longer show while the new target has no combo points. The addon now counts only the points on your current target, and they come back when you switch back to the target that holds them.
@@ -32,6 +35,7 @@
 - A free-cast proc raised by the cast that just landed is no longer counted as spent at low frame rates, so your mana estimate stays right.
 
 ### Known issues
+- Warlock: after a Demonic Rune or Major Mana Potion the packs may show Life Tap for up to 40 s while mana is in fact high (the refill is not seen in combat).
 
 ### Upgrade notes
 - In a custom or imported priority, `energy.current` and `mana.pct` now mean the addon's best estimate, not its cautious floor. Add `.lo` or `.pct_lo` (`energy.lo`, `mana.pct_lo`) for the old meaning. The press check still protects you: a line can show a countdown earlier, never ready early.
