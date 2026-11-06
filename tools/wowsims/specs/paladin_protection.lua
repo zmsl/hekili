@@ -33,6 +33,7 @@
 --   Shield's price (before R31): ours 240 (DB2 70707) vs wowsims's 195 (both pins), kit unchanged; the log's mana just before the six
 --   Holy Shield misses is 224.67, 223.71, 275.24, 196.22, 213.65, 238.48 (the other two misses are Seal of Fury's), five
 --   of six under 240: the price is a necessary cause in 5 of the 8 (gaps.md CU).
+--   [Superseded 2026-11-06, owner's tooltips (L15): Holy Shield has FOUR ranks, 100/150/195/240 mana at levels 30/40/50/60.]
 --   R31 (owner fact): Holy Shield's max rank is 3 and costs 195; DB2 70707 carries the Era ladder one rank up (20925/
 --   20927/20928 at levels 40/50/60, 150/195/240; wowsims 30/40/50, 100/150/195), so the kit's rank 3 is 195 now (ranks
 --   1-2 and the learn levels stay the DB2's, owner item gaps.md CV). Replay 0.846 -> 0.885 (52), floor 0.84 -> 0.88;

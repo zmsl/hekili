@@ -136,7 +136,8 @@ Translation:
   every list (`requires` and `guard` still apply; an error when no line casts it). A deviation from wowsims, so only on
   the user's ruling, named in the recipe and under "Deviations by ruling" below (Balance's Innervate, R20a). A
   `cancelAura` line is addressed as `cancel_buff`, and `condition = { cancel_buff = false }` omits that line (listed in
-  the `# Omitted:` header as "the recipe's condition is false"; R69a, Feral's Ravage opener).
+  the `# Omitted:` header as "the recipe's condition is false"; R69a, Feral's Ravage opener). The key `cancel_buff` is shared by every `cancelAura` line, so `condition = { cancel_buff = false }` omits all of them
+  in a recipe that has several.
 - `notes` (`{ "<sentence>", ... }`): player-facing lines added to the pack's in-game description (what the toggles
   hide, what a player gates by hand).
 - `maintenance` (`{ [action] = setting key }`, rule 15): a raid debuff kept up (Protection's Demoralizing Shout, Arms's

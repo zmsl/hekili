@@ -533,6 +533,12 @@ describe("a display's style", function()
         f(d, 0.2)
         assert.are.same({ "boom from Build" }, H.errors) -- the redraws raised nothing more
         assert.are.same({}, log.draws)
+        -- nothing else reads the missing buttons either: the keybinding and bar events, and /hekili lock
+        for _, ev in ipairs({ "SPELLS_CHANGED", "ACTIONBAR_UPDATE_STATE", "UPDATE_SHAPESHIFT_FORM" }) do
+            d.__scripts.OnEvent(d, ev)
+        end
+        H.ns.StopConfiguration()
+        assert.are.same({ "boom from Build" }, H.errors)
         broken = false
         H.Hekili:BuildUI()
         assert.is_false(d.buildFailed == true)

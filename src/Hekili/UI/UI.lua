@@ -365,9 +365,11 @@ function ns.StopConfiguration()
             display.Backdrop:Hide()
         end
 
-        for i, btn in ipairs( display.Buttons ) do
-            btn:EnableMouse( mouseInteract )
-            btn:SetMovable( false )
+        if display.Buttons then -- nil after a failed style Build (bindStyle)
+            for i, btn in ipairs( display.Buttons ) do
+                btn:EnableMouse( mouseInteract )
+                btn:SetMovable( false )
+            end
         end
     end
 
@@ -1207,6 +1209,8 @@ do
         end
 
         function d:OnEvent( event, ... )
+            if self.buildFailed or not self.Buttons then return end -- a failed style Build (bindStyle): nothing to update
+
             local conf = Hekili.DB.profile.displays[ self.id ]
 
             if kbEvents[ event ] then
