@@ -58,6 +58,9 @@ local LISTS = {
 }
 
 local HANDS = { mainhand = 1, offhand = 2 }
+-- L90: a resource the game binds to one target: only the count on the current target is usable
+-- (GetComboPoints("player", "target")); the pool UnitPower answers survives a swap (Game/State/Sources/Power.lua).
+local ON_TARGET = { combo_points = true }
 -- a test's stand-in class may have no `pets`, `windows`, `reactions`, `gear` or `setBonuses`
 local NO_PETS, NO_WINDOWS, NO_GEAR = {}, {}, {}
 -- The sim's own generated entries (Spec.lua RegisterResource: the stepped decay and the hits taken), reserved names
@@ -268,6 +271,7 @@ local function buildDef()
             key = k,
             type = r.type,
             token = k:upper(),
+            onTarget = ON_TARGET[k] == true, -- usable only on the current target (Sources/Power.lua, L90)
             max = meta.max or 100, -- a number, or a function the belief runs in its context
             rest = ns.ResourceRegenerates(k) == true, -- a regenerating resource rests at its maximum (Resources.lua)
             swing = swing,

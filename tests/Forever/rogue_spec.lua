@@ -387,6 +387,72 @@ describe("Forever Rogue through the engine", function()
     end)
 end)
 
+-- L90: combo points are bound to one target (owner probes 2026-11-06, memory forever-combo-points-plain). The pool
+-- (UnitPower 4) survives a swap; only GetComboPoints("player", "target") is usable. The sim's combo_points.current and
+-- the belief's value are the same number at every step (the sim reads the belief through Facade.UnitPower).
+describe("Forever Rogue combo points on the current target (L90)", function()
+    local POINTS = 4
+    local H, S, VS, t
+
+    before_each(function()
+        local C = require("Forever.helpers.rogue_world").Combat
+        H = headless.new({ character = C.character(), pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        S, VS = H.Hekili.State, H.ns.VirtualState
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.ctl.power[3] = 100
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        t = H.ctl.now
+    end)
+
+    -- The client's pool and its answer for the current target (nil: the pool), an optional event, one refresh; the
+    -- sim's value after a reset, checked equal to the belief's.
+    local function at(pool, usable, swapTo)
+        H.ctl.power[POINTS], H.ctl.comboPoints.target = pool, usable
+        if swapTo then
+            H.ctl.guid.target = swapTo
+            H.Fire("PLAYER_TARGET_CHANGED")
+            H.Fire("PLAYER_TARGET_CHANGED") -- twice per swap, as the client fires it
+        else
+            H.Fire("UNIT_POWER_FREQUENT", "player", "COMBO_POINTS")
+        end
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        S.reset("Primary", true)
+        assert.are.equal(VS.Power(POINTS, t).est, S.combo_points.current) -- parity: belief and sim
+        return S.combo_points.current
+    end
+
+    it("refuses a finisher on a target with 0 usable points while the pool holds 4", function()
+        assert.are.equal(0, at(4, 0, "Creature-B"))
+        for _, key in ipairs({ "eviscerate", "slice_and_dice", "rupture" }) do
+            assert.is_false((S:IsUsable(key)), key)
+        end
+        assert.are.equal(4, at(4, nil, "Creature-1")) -- back on the combo target
+        assert.is_true((S:IsUsable("eviscerate")))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("follows the owner's probes: swap, swap back, a generator on another target", function()
+        assert.are.equal(1, at(1, 1)) -- generator on A: pool 1, usable 1 (2026-11-06 20:58)
+        assert.are.equal(0, at(1, 0, "Creature-B")) -- swap to B: 1 / 0
+        assert.are.equal(1, at(1, 1, "Creature-1")) -- swap back to A: 1 / 1
+        assert.are.equal(0, at(1, 0, "Creature-B"))
+        assert.are.equal(1, at(1, 1)) -- generator on B: A's point gone, B's count starts at 1 (measured 2026-11-06)
+        assert.are.equal(0, at(1, 0, "Creature-1")) -- A reads 0 on return
+        assert.is_false((S:IsUsable("eviscerate"))) -- a finisher at 0 usable points fails in game (measured)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("reads 0 with no target and on a secret answer", function()
+        assert.are.equal(0, at(3, false))
+        assert.are.equal(0, at(3, require("Game.State.helpers.fake_api").SECRET))
+        assert.are.same({}, H.errors)
+    end)
+end)
+
 -- Audit item 1: an Assassination Rogue whose energy rate never came plain (a /reload or a build in combat) has
 -- regen_combined 0; the forecast window must stay finite (the client raises on x/0, stock Lua gives inf).
 describe("Forever Assassination with no plain energy rate", function()

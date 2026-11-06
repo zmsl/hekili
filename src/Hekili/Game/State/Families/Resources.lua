@@ -63,6 +63,7 @@ local R = {
     n = 0,
     type = {},
     token = {},
+    onTarget = {}, -- true: read on the current target (Sources/Power.lua, def `onTarget`)
     max = {},
     rest = {},
     restMax = {},
@@ -366,7 +367,7 @@ I.OnBuild(function(def, now)
     hitRate[1], hitRate[2] = 1, 1
     for r = 1, R.n do
         local d = list[r]
-        R.type[r], R.token[r] = d.type, d.token
+        R.type[r], R.token[r], R.onTarget[r] = d.type, d.token, d.onTarget == true
         R.slotOf[d.type], R.slotOfToken[d.token] = r, r
         R.maxDef[r], R.maxMods[r], R.maxRead[r] = d.max, d.maxMods, false
         R.max[r] = maxOf(r)

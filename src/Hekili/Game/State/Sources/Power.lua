@@ -97,14 +97,39 @@ S.On("UNIT_DISPLAYPOWER", "player", function(api, t, unit)
     end
 end)
 
+-- A slot the game binds to one target (def `onTarget`, L90; owner probes 2026-11-06): the pool UnitPower answers
+-- survives a target swap, but only the count on the current target is usable, GetComboPoints("player", "target")
+-- (plain in combat). No target (nil) or a secret answer reads 0, never the pool: after a swap the pool is the stale
+-- count, and a hidden finisher beats one the game refuses. Idempotent (PLAYER_TARGET_CHANGED fires twice a swap).
+local function readOnTarget(api, t, r)
+    local raw = api.GetComboPoints("player", "target") -- secret: Plain next
+    Note("GetComboPoints", S.StatusOf(api, raw))
+    local v = Plain(api, raw)
+    Direct(Obs.Read, t, r, type(v) == "number" and v or 0, ReadOf.Resource)
+end
+
+S.On("PLAYER_TARGET_CHANGED", nil, function(api, t)
+    local R = I.res
+    for r = 1, R.n do
+        if R.onTarget[r] then
+            readOnTarget(api, t, r)
+        end
+    end
+end)
+
 -- Poll 1: readable resources (types plain in combat, e.g. combo points), maxima, the out-of-combat regen read.
 S.Poll(1, function(api, t)
     local R = I.res
     readMax(api, t, true)
     for r = 1, R.n do
-        local raw = api.UnitPower("player", R.type[r]) -- secret: Plain next
-        Note("UnitPower", S.StatusOf(api, raw))
-        local v = Plain(api, raw)
+        local v
+        if R.onTarget[r] then
+            readOnTarget(api, t, r)
+        else
+            local raw = api.UnitPower("player", R.type[r]) -- secret: Plain next
+            Note("UnitPower", S.StatusOf(api, raw))
+            v = Plain(api, raw)
+        end
         if type(v) == "number" then
             Direct(Obs.Read, t, r, v, ReadOf.Resource)
         end
