@@ -375,18 +375,21 @@ describe("Forever Paladin priorities", function()
     end)
 
     it(
-        "Retribution (wowsims.com): Hammer of Wrath and the twist seals at tier 1, Consecration at 2, Exorcism (a filler) none",
+        "Retribution (wowsims.com): Hammer of Wrath and the Unsealed Wrath seals at tier 1, Consecration at 2, Exorcism (a filler) none",
         function()
             local R = "Retribution (wowsims.com)"
             local _, how = line(R, "default", "hammer_of_wrath")
-            local twist = "talent.twist_of_light.enabled&(!buff.echo_of_command.up&!buff.seal_of_command.up)"
-            local _, soc = line(R, "default", "seal_of_command", twist)
-            local _, sor = line(
-                R,
-                "default",
-                "seal_of_righteousness",
-                "talent.twist_of_light.enabled&(!buff.echo_of_righteousness.up&!buff.seal_of_righteousness.up)"
-            )
+            -- wowsims's refresh lines (Should refresh SoC / SoR), after the recipe's kick-start (no tier)
+            local function refresh(action)
+                for _, e in ipairs(packs[R].lists.default) do
+                    if e.action == action and (e.criteria or ""):find("^talent%.twist_of_light%.enabled&%(%(") then
+                        return e
+                    end
+                end
+                error(action)
+            end
+            local soc, sor = refresh("seal_of_command"), refresh("seal_of_righteousness")
+            assert.is_nil(select(2, line(R, "default", "seal_of_command")).focus) -- the kick-start
             local _, con = line(R, "consecration", "consecration")
             local _, exo = line(R, "exorcism", "exorcism")
             assert.are.same({ 1, 1, 1, 2 }, { how.focus, soc.focus, sor.focus, con.focus })
@@ -475,6 +478,42 @@ describe("Forever Paladin through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- R15/R16 (re-pin Task 17): Retribution's opener, wowsims's "Move to melee" sequences move1 (Seal of Command) and
+    -- move2 (Seal of Righteousness), as stepped windows: open in combat until the fight's first main-hand swing (the
+    -- arrival in melee), each under its sequence's talent condition; closed out of combat; open again next fight.
+    it("opens the opener window of the talents at the pull, closes it at the first main-hand swing", function()
+        local function fight(talents, want1, want2)
+            local c = character()
+            c.talents = talents
+            H = headless.new({ character = c, pack = "Retribution (wowsims.com)" })
+            assert.are.same({}, H.loadErrors)
+            local F = H.ns.Facade
+            local t = H.ctl.now + 1
+            assert.is_true(headless.cycle(H, t))
+            assert.are.same({ false, false }, { (F.Window("move1")), (F.Window("move2")) }) -- out of combat
+            for _ = 1, 2 do
+                t = t + 1
+                H.ctl.now, H.ctl.combat = t, true
+                H.Fire("PLAYER_REGEN_DISABLED")
+                assert.is_true(headless.cycle(H, t + 0.1))
+                assert.are.same({ want1, want2 }, { (F.Window("move1")), (F.Window("move2")) })
+                t = t + 2
+                H.ctl.now = t
+                H.Fire("PLAYER_SWING", 3.6, 0) -- the first main-hand swing: the arrival in melee
+                assert.is_true(headless.cycle(H, t + 0.1))
+                assert.are.same({ false, false }, { (F.Window("move1")), (F.Window("move2")) })
+                t = t + 2
+                H.ctl.now, H.ctl.combat = t, false
+                H.Fire("PLAYER_REGEN_ENABLED")
+                assert.is_true(headless.cycle(H, t + 0.1))
+            end
+            assert.are.same({}, H.errors)
+        end
+        fight({ [1310735] = 1, [20375] = 1 }, true, false) -- Unsealed Wrath and Seal of Command: move1
+        fight({ [1310735] = 1 }, false, true) -- no Seal of Command: move2
+        fight({ [20375] = 1 }, true, true) -- Seal of Command without Unsealed Wrath: both (wowsims's conditions)
+    end)
+
     -- (plan "Open after Day 4", the mana bound; central fix 8) Mana is secret even out of combat, so nothing measures it:
     -- the belief assumes a fresh boot at rest, the bound too (`mana.pct` full), until a measurement says less (a short
     -- answer below it).
@@ -536,5 +575,133 @@ describe("Retribution (wowsims.com) below Seal of Command", function()
 
     it("scales with haste: at gcd.max 1.0 (50% spell haste) shown at 1.9 s left, not at 2.1 s", function()
         probe(50, 1.0, 2.1, 1.9)
+    end)
+end)
+
+-- R8 (re-pin Task 17, spec §2.3): Retribution's opener with the Movement toggle. At the pull the move1 window is up
+-- (Seal of Command build, no swing yet): the Judgement chain line `window.move1.next.judgement&(toggle.movement&
+-- window.move1.up|action.judgement.in_range)` and a held main-list line (Holy Strike, under the carried gate
+-- `(toggle.movement&(window.move1.up|window.move2.up)|action.holy_strike.in_range|...)`) show out of range only with
+-- Movement ON; in range they show either way. Ranges: the DB2's (Judgement 0-10, Holy Strike 0-5, Hammer of Wrath
+-- 0-30, the seals self).
+describe("Retribution (wowsims.com)'s opener and the Movement toggle", function()
+    local RANGES = { judgement = { 0, 10 }, holy_strike = { 0, 5 }, hammer_of_wrath = { 0, 30 } }
+
+    -- A world `yd` yards from its target at the pull (Seal of the Crusader up); returns the instance and a function
+    -- giving the shown abilities (the queue's records) at the next cycle: each one's first position.
+    local function world(yd)
+        local w = ld.load(nil, FILE, "PALADIN")
+        local known, ranges = {}, {}
+        for key, a in pairs(w.abilities) do
+            for _, id in ipairs(idsOf(a)) do
+                known[#known + 1] = id
+                ranges[id] = RANGES[key] or { 0, 0 }
+            end
+        end
+        local H = headless.new({
+            character = {
+                class = "PALADIN",
+                classID = 2,
+                specID = 1486,
+                level = 60,
+                known = known,
+                talents = { [1310735] = 1, [20375] = 1 },
+                power = { type = 0, token = "MANA", max = 5000 },
+                speed = { 3.6 },
+                ranges = ranges,
+            },
+            pack = "Retribution (wowsims.com)",
+        })
+        assert.are.same({}, H.loadErrors)
+        for _, id in ipairs(known) do
+            H.ctl.usable[id] = { true, false } -- mana for every press: the belief's floor follows the client's answer
+        end
+        -- Judgement's cooldown read plain and ready (the fake client's default is secret: an unknown cooldown)
+        H.ctl.cooldown[20271] = { isActive = false, isOnGCD = false, startTime = 0, duration = 0 }
+        H.ctl.level.target, H.ctl.distance.target = 60, yd
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 1
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 20308) -- the pre-pull Seal of the Crusader
+        assert.is_true(headless.cycle(H, t + 0.1))
+        t = t + 1
+        H.ctl.now, H.ctl.combat = t, true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        return H,
+            function()
+                t = math.max(t, H.ctl.now) + 0.2
+                assert.is_true(headless.cycle(H, t))
+                assert.are.same({}, H.errors)
+                local shown = {}
+                for i = 1, #out.recs do
+                    local r = out.recs[i]
+                    if r.actionName then
+                        shown[r.actionName] = shown[r.actionName] or i
+                    end
+                end
+                return shown
+            end
+    end
+
+    local function both(H, pick)
+        local on = pick()
+        H.Hekili:FireToggle("movement", "off")
+        local off = pick()
+        H.Hekili:FireToggle("movement", "on")
+        return on, off
+    end
+
+    it("at 20 yd shows the Judgement chain and the held Holy Strike only with Movement ON", function()
+        local H, pick = world(20)
+        local on, off = both(H, pick)
+        assert.is_true((H.ns.Facade.Window("move1")))
+        assert.are.same({ true, true }, { on.judgement ~= nil, on.holy_strike ~= nil })
+        assert.are.same({ false, false }, { off.judgement ~= nil, off.holy_strike ~= nil })
+    end)
+
+    -- (Holy Strike shows later in the queue either way: the forecast casts Judgement and the seal, the window's last
+    -- step, and a closed window releases the carried gate.)
+    it("at 8 yd shows the Judgement chain either way", function()
+        local on, off = both(world(8))
+        assert.are.same({ true, true }, { on.judgement ~= nil, off.judgement ~= nil })
+    end)
+
+    it("at 3 yd shows both either way", function()
+        local on, off = both(world(3))
+        assert.are.same({ true, true }, { on.judgement ~= nil, on.holy_strike ~= nil })
+        assert.are.same({ true, true }, { off.judgement ~= nil, off.holy_strike ~= nil })
+    end)
+
+    -- The recipe's kick-start (extra): a fight that starts in melee closes the opener at its first swing, before its
+    -- Seal of Command; with Unsealed Wrath neither of wowsims's seal lines can fire until one of the two seals is up
+    -- (each needs the other's Echo), so the kick-start casts Seal of Command once the Crusader's Judgement is out.
+    it("in melee from the pull: Seal of Command after the Crusader's Judgement, never before it", function()
+        local H, pick = world(3)
+        H.ctl.now = H.ctl.now + 0.5
+        H.Fire("PLAYER_SWING", 3.6, 0) -- the opener closes
+        local before = pick()
+        assert.is_false((H.ns.Facade.Window("move1")))
+        assert.are.equal(1, before.judgement) -- Seal of Command only after it (the queue's forecast casts it first)
+        assert.is_true((before.seal_of_command or 99) > 1)
+        H.ctl.now = H.ctl.now + 0.3
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-j", 20271)
+        assert.is_truthy(pick().seal_of_command)
+    end)
+
+    -- Review Focus 8 (decision 10, R7): after the first main-hand swing the opener is spent; knocked back out of range,
+    -- no move_to_melee line returns (each needs its window, closed for the fight), with Movement ON or OFF, and the
+    -- ranged pick is the main list's Judgement (shown out of range: the client's tint).
+    it("after the first main-hand swing, back at 20 yd, shows no move_to_melee line", function()
+        local H, pick = world(3)
+        H.ctl.now = H.ctl.now + 0.5
+        H.Fire("PLAYER_SWING", 3.6, 0)
+        pick()
+        pick() -- past the swing's first 0.1 s (the Judgement line's swing guard, wowsims's WF guard)
+        H.ctl.distance.target = 20
+        local on, off = both(H, pick)
+        assert.are.same({ false, false }, { (H.ns.Facade.Window("move1")), (H.ns.Facade.Window("move2")) })
+        assert.are.same({ true, true }, { on.judgement ~= nil, off.judgement ~= nil })
     end)
 end)

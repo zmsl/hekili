@@ -379,7 +379,9 @@ M.READY = {
     mage_frostfire = { 0.42, 9 }, -- 0.420, 9 (Task FFB, ruling M13)
     -- { 0.86, 7 } -> { 0.00, 0 } re-pin e2842f0a78: real 0 once Holy Shield's block hits are procs (PROT_REPLAY)
     paladin_protection = { 0.00, 0 }, -- 0.000, 0
-    paladin_retribution = { 0.29, 10 },
+    -- { 0.29, 10 } -> { 0.10, 7 } re-pin e2842f0a78 (fresh floor, Task 17: the Unsealed Wrath APL and the opener move):
+    -- holy_strike 5 (max 0.10), seal_of_command 1 (0.23), seal_of_righteousness 1 (0.17)
+    paladin_retribution = { 0.10, 7 }, -- 0.100, 7
     -- 1.500, 36 (Priest lane, Task 14; first clean run on 30e92574+): Mind Flay's 3 s channel, the next icon ready at
     -- the GCD's end inside it (Arcane's Missiles likewise, about 0.9 s)
     priest_shadow = { 1.50, 36 },

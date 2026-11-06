@@ -66,6 +66,9 @@ local PACKS = {
         "seal_of_righteousness=1",
         "seal_of_command=2",
         "seal_of_righteousness=2",
+        -- the opener's (move_to_melee) seals: the recipe's focus map tiers every occurrence (re-pin Task 17)
+        "seal_of_command=1",
+        "seal_of_righteousness=1",
         "consecration=2",
     },
     -- the totems carry none (the user, 2026-10-21)

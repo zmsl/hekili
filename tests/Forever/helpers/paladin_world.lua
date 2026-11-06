@@ -48,6 +48,28 @@ local function up(e, X, key)
     return e.auras[X.aura[key].id] ~= nil
 end
 
+-- The ranges in yards (DB2 70707 SpellMisc.RangeIndex -> SpellRange, every rank alike): Very Short Range 0-10
+-- (Judgement), Combat Range 0-5 (Holy Strike), Medium Range 0-30 (Exorcism, Hammer of Wrath), Holy Shock 0-20; Self Only
+-- (0) is no range check (Consecration, the seals, Swift Judgement, the auras). An unlisted spell answers melee (0-5) in
+-- the fake client.
+local RANGE = {
+    judgement = { 0, 10 },
+    swift_judgement = { 0, 0 },
+    holy_shock = { 0, 20 },
+    holy_strike = { 0, 5 },
+    exorcism = { 0, 30 },
+    hammer_of_wrath = { 0, 30 },
+    consecration = { 0, 0 },
+    seal_of_command = { 0, 0 },
+    seal_of_righteousness = { 0, 0 },
+    seal_of_the_crusader = { 0, 0 },
+    seal_of_fury = { 0, 0 },
+    retribution_aura = { 0, 0 },
+    righteous_fury = { 0, 0 },
+    holy_shield = { 0, 0 },
+    divine_favor = { 0, 0 },
+}
+
 local SEALS = { "seal_of_command", "seal_of_righteousness", "seal_of_the_crusader", "seal_of_fury" }
 local ECHO = {
     seal_of_command = "echo_of_command",
@@ -228,7 +250,7 @@ local function content(name, pack)
 
     function C.character()
         local w = class()
-        local known = {}
+        local known, ranges = {}, {}
         for _, key in ipairs(P.kit) do
             local a = assert(w.abilities[key], key)
             local ids = { a.id }
@@ -238,6 +260,7 @@ local function content(name, pack)
             C.IDS[key] = ids
             for _, id in ipairs(ids) do
                 known[#known + 1] = id
+                ranges[id] = RANGE[key]
             end
         end
         return {
@@ -249,6 +272,7 @@ local function content(name, pack)
             talents = P.talents,
             power = { type = MANA, token = "MANA", max = 6000 },
             speed = { P.weapon[3] },
+            ranges = ranges,
         }
     end
 

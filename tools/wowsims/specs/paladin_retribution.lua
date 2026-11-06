@@ -5,6 +5,19 @@
 -- (Twist of Light), at d33930d040. The re-pin (e2842f0a78) deletes the Twist of Light files: the APL moves to
 -- apls/default.apl.json (presets.ts:17, :24 DefaultAplPreset, spec.ts:105; 1091 lines) and the gear to
 -- gear_sets/default.gear.json (presets.ts:19, :37 DefaultGearPreset, spec.ts:81).
+-- Re-pin e2842f0a78 (Task 17, fresh floor): the build is presets.ts DefaultBuild 'Unsealed Wrath' (TypeSimple; its
+-- simpleRotation writes the APL's own values, R29), talents 050250002-501-05233011201301351, 25 yd (OtherDefaults).
+-- Omitted 1 -> 6 (dry run): the pre-pull Pull range move (spec §2.3), the Prep Seal groups and move3 (each gated on
+-- `!Has assigned judgement`, constant false), two empty pre-pull groups. The owner's 2026-10-21 pre-pull ruling (no
+-- twist, one starter seal) now holds by wowsims itself (Retribution Aura, then Seal of the Crusader), so
+-- `prepullSkip` is gone. Disagreements (P7; floor 0.93): 0.933 (45) top [consecration -> seal_of_command 3]: a white
+-- swing 0.02-0.05 s before completes an Echo; wowsims reads the stack with includeReactionTime (100 ms; the
+-- translator ignores it, rule 5), so it casts Consecration first (log 17.40, 47.22, 77.04): a replay limit.
+-- `requires` and the two `leveling` lines: kept until ruled (A/B, Task 17: removed, the replay and L10/L15/L40-L60
+-- idle are unchanged; L20-L35 swap the seals every GCD, L20 92 presses against 34, but only because the leveling
+-- world knows Seal of Command, a talent spell, without its point (ws.content filters the 60's spells by learn level
+-- only), so both of wowsims's refresh lines pass; inconclusive there).
+-- (History below: the old pin's Twist of Light APL.)
 -- Disagreements worked (P7, resume 3: after central fixes 6/8/C and 9/9b): replay 0.579 (57; 0.456 before them).
 -- seal_of_righteousness -> seal_of_command 13 and consecration -> seal_of_command 3: replay limit (central GAP N,
 -- tests/Game/harness/replay.lua): an aura the log removes early (a seal replaced, an Echo spent) is shown expiring at
@@ -46,24 +59,35 @@ return {
         race = "RaceHuman",
         class = "ClassPaladin",
         gear = "ui/specs/paladin/retribution/gear_sets/default.gear.json",
-        talentsString = "55003003--05225331101330321",
+        talentsString = "050250002-501-05233011201301351",
         specKey = "retributionPaladin",
         -- PaladinOptions is an empty message: an object, not dkjson's default empty array
         options = { classOptions = setmetatable({}, { __jsontype = "object" }) },
         profession1 = "Engineering",
         profession2 = "Blacksmithing",
         reactionTimeMs = 100,
-        distanceFromTarget = 5,
+        distanceFromTarget = 25,
     },
     map = { ["item:274759"] = "use_items" }, -- the Everlook Pathcarver (ItemSparse 274759: a trinket, InventoryType 12)
     -- by role (docs/dev/wowsims-packs.md); the Twist of Light seals (1) open
     focus = { hammer_of_wrath = 1, seal_of_command = 1, seal_of_righteousness = 1, consecration = 2 },
     -- The Twist of Light lines need the talent (wowsims's Auto rotation picks this APL by it): without it they swap the
-    -- seals every GCD.
+    -- seals every GCD (seen again at the re-pin in the L20-L35 worlds, which know Seal of Command without its talent).
     requires = { seal_of_command = "twist_of_light", seal_of_righteousness = "twist_of_light" },
-    -- Owner ruling (2026-10-21): the pre-pull must not twist; one starter seal, Seal of the Crusader. wowsims's -3 s
-    -- Seal of Command (the twist's first half) is omitted.
-    prepullSkip = { "seal_of_command" },
+    -- Not wowsims (no fight of its reaches it): the twist's kick-start. With Unsealed Wrath and Seal of Command,
+    -- wowsims's Should refresh SoC needs an Echo of Righteousness and Should refresh SoR three Echoes of Command, so
+    -- neither fires until one of the two seals is up; wowsims's opener (Move to melee) casts Seal of Command, but it
+    -- runs only from out of Crusader Strike's range (its build pulls from 25 yd). A fight that starts in melee (or one
+    -- whose first swing closes the opener before its seal, R16) would never cast either: the live loop idled 86 s
+    -- from the Crusader seal's end. Seal of Command when neither is up, once the Crusader's Judgement is out (or no
+    -- seal is up at all); a genuine need (no damage seal), R41. Silent while either seal is up.
+    extra = {
+        {
+            before = "seal_of_command",
+            line = "seal_of_command,if=talent.twist_of_light.enabled&talent.seal_of_command.enabled&!buff.seal_of_command.up"
+                .. "&!buff.seal_of_righteousness.up&(!seal_up|cooldown.judgement.remains>0)",
+        },
+    },
     leveling = {
         "seal_of_command,focus=2,if=!talent.twist_of_light.enabled&!buff.seal_of_command.up",
         "seal_of_righteousness,focus=2,if=!action.seal_of_command.known&buff.seal_of_righteousness.remains<gcd.max*2",

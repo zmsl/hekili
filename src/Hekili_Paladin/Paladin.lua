@@ -48,6 +48,7 @@ local spec = Hekili:NewClass("PALADIN", {
             icon = 135873,
             role = "attack",
             package = "Retribution (wowsims.com)",
+            movement = true, -- the pack reads toggle.movement: the opener's move reaches the Judgement chain (R5/R12)
         },
     },
 })
@@ -569,13 +570,38 @@ spec:RegisterAbilities({
     retribution_aura = selfBuff("retribution_aura", RETRIBUTION_AURA),
 })
 
+-- Retribution's opener (re-pin rulings R15/R16; wowsims's default.apl.json "Move to melee" group at e2842f0a78): the
+-- sequences move1 (Judgement, then Seal of Command) and move2 (Judgement, then Seal of Righteousness), each run once a
+-- fight, at the pull, as stepped windows over their casts (the pack's `# Window:` lines; move3 folds to never). Each
+-- evaluator is its sequence's condition (the header's), in combat, before the fight's first main-hand swing: the
+-- swing lands on arrival in melee, where wowsims's sequence completes, so the window closes there (`close_on_false`)
+-- or at its last step. No aura shows this span. (Each evaluator runs in the belief's `now` context: written in each.)
+spec:RegisterWindow("move1", {
+    evaluator = function()
+        return talent.seal_of_command.enabled and combat > 0 and lastSwing(1) < combat
+    end,
+    duration = "combat",
+    close_on_false = true,
+    steps = { "judgement", "seal_of_command" },
+})
+spec:RegisterWindow("move2", {
+    evaluator = function()
+        return (not talent.twist_of_light.enabled or not talent.seal_of_command.enabled)
+            and combat > 0
+            and lastSwing(1) < combat
+    end,
+    duration = "combat",
+    close_on_false = true,
+    steps = { "judgement", "seal_of_righteousness" },
+})
+
 -- The priorities, one a spec, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit
 -- those (a wowsims.com pack: its recipe, tools/wowsims/specs/) and run it, never these blocks
 -- (tests/Forever/paladin_spec.lua checks they match).
 spec:RegisterPack(
     "Retribution (wowsims.com)",
-    20261105001,
-    [[Hekili:TAv8VnQny0)w2V01ClZa5AV2vnQuNQMwN6QonUFgWb)rWxmyKT5YfPj(BFFoHqasinT6uLQm895375h2V4qVWVegWOgi8LzUZ(KNN71UUEHbM1LqyqjnzjDboOGMJ))FbJIpVYWLf1XxUsUsZZ1Kez(eBRRfskZc38kUW8ur48JISUescd(8dp)WJp9YDQ9qggKXzmy78aDYP47U6ytguh38oNuPc(gOQJzqkTsyQJF4ZpxhJVUoUpkvChRc0oLubLXlC6OahAPq70abbFG8vTSyYuKmfTqlWfddhlTKZ11Xugtw8Z4GLWAnPo(rQHE3re1L)ZtFbbjZyk1354SGBYQMBxhodADcIjQDy2Txnl1LEZTxXiO1QKPCb6)0eRk1KsfGtEo143r8r0kfDkp1)NMxLMsgwHuvw)3haWV47ObQisMgH(zuIQstzGApmhRAxO8R0qe3a56P2rY00OfjmFV2gqg(AfBbKdfMXBjJMNdklrRuut20uzsL23ZQJl32fzqlKeQ247(F5uErgTGfPa7q99TVa)mdSF1LmBspMKI1rA0Bwcw0n8C4ExY1DBz3AgTOCeOUIXqf46GywX1gBlc(ImdbkOZfa7Il36zqsMSZ8r76I(M5(ctogVklOGSsxaA97M9EOCOggwUNssOcr02hrs0MP2Z)(jyribnF7jPxTB47svcxN)6o7SnB3o9IBmd8C9VTC0SvAimllKRkU4e2tZERFh33sYPF)dZ2FuA3YSD9Uzp7b7k9ixFbYfLuMyIeY799C374KUoBpBUR6pxqddWKeTnqTFWR9tJ2Mp3La85x28BangD4FG1v4bAfNggCEuUlyAaYbB0okIqd(xWo)5ymUB(T9821WgoAIUpgfDIESfBPSn)cNpk1ZBsTjA2j9XXTVthDDwzx7jDakT(RNvexnIJ2jURRY2f7zN61JQ)3uEZ5K2Txxdk2FX8PFmk6TMaEO661sFnEZig(WWWTN7I2EbQENpqqU99as7HeeGFBuN6DMN(6FHShNFXZDCI)HfYEUFpAcyAVuZPsygETOEkFSloDSOHHsR7fKoe0rUg1gHJsNwzYK40(lyjxWXlm(Nn3hCt5W)p]]
+    20261105004,
+    [[Hekili:LRvBVPnsq4Fl8foZDPgJBsBUOZrkNQQUCQxu1r)Snl2l4TX2lY76qqc5F73S2gJFBxGqsdx6xsGD8mZZ826zgH9i7Vzp2dXX23zAy(HrJmUWW4C7X8vlW2JxGCVhnh(qeke(7)I5XKPjCcnkDI2s6sgjKP7sdhiE0vbuKNqCttib8BJSN2PKzlWU2J)6nF5MpD7DxfVvK2J9jEE4C(Wmxv67Q0jCFC6KIZgoJgJFahNoXdpdLeWtNCZx)s6e440j1LsczOabSHlqbips0WkiyiAraByHi0HVO)DgnAWzGYIrrSaWy8GptfkNWsNG88Or)c8H7XRy6Pt(eIJUQdqP9p3(nqi(C(c2vdhoNW9tMkSJHnE0bGmbSJnV8CZzgOpE55E6GRnMoJea(FKRaLm9fXyG5PiULlkiWj)yNacJFMiqzjo4baSoigJmpc75GsIrP)Dl()nRHDlbxeJVL7VN4nhhIJ4LIqIIdPpGD4uNqCagFgzMLwV8Nr3NgSYHbE67X63hrxgTUlkKihWrphpOuracl1(zjmSdD2mN5UEwJYeFiIe5JI8CIXIpY(dRYtGOm27Dg6J638HU2coDqFnoD(8aSUa0cX3xBjjYJUm7Gr6jlwx57MW3hSwH5OYAw3RHK73RPORAWcZKWXHS2gmNeIb4F6IDFuyiogaTZYye3)Szu3ewrWAJAQ)i6ICnlJ1TIsTIKMNWXSkYiZwpUmZnqUm1FtnJlLgayOkLymYBLcE6KLciP1brp4QcHGENXGbNWoCggfiYHGlYcbpywXbkqya8LW9rcsbK5(CDCeAAa2RFb1g8vsU30KzZArvGIAeIfYettyrygtqwRxgjWri3rFTHsOxPgrTjOPjdLR1Kb)opVDozXjIiEpLGyTumKRkSRpTTJIXHojU2A0GFEtuR5qoOyU6m31k5x4VvMa3iZPv(TcQhtw0UmQDG665AByollZ69)eMKjPloGi2n3aYER0)VGp(rASlHfEsd9UVm3uGz1LasFJZ(E5rUokmLMIjZo3NIxO1s9q0J)Q52Xde)V94dwvguk7Gm1NPHMuQAe6sgLWAdSG54CCJtyipC8wr2f1AIvemkh1WsXmc1IMr4h5BRUBxp3mPQ1TiTNqPosu)692yPXd3xzkJCDUF2V5Hy)MhR9l9fETruNSSV(Inxtu)(IwTwps)cOF7iK(cxUtafAgX44A0UJrAl5QkTC(Q4WQETC97ORuyFkAa2JFahZawBSshXv2mXMFQLkahCx26LkIy2)P94kzNcIfB0WECjiTh7gdZ(gtq2JpQkxfPU2Ca)naMkTEq1OBTPgSzpol6kmBq)V)zYXC4L07WXC((4yE6LTTDp1yUMtcS5nL0DLlTrqLptfSEKvppXYh11p5wuX2f7YGQaFv6qvZlB9knBPkVk1jFrU1Rt7OC4GshpUDDSZg7A3zNQw7u3B3E0C3HuDwUPUQUJ9FhDVcwM8Y7DSEUNR9Z9J2MlJvnSR6xhFHK7wQO3A(QJlL)OU2PftV0J0(JoIbHJpijC06vQvQ6EDx(N6T)jSPpkTYBNlas2s)(bU1VxU1(9Ml)D)Aa8YNE6WowD2XUqWxPncUZvc(ITtW3(zGY7X(UFxEdbNU2LYMBRorTWchz8MZelh5ryEYhJ4jUaYDFdMzMILpd9Z3wj33CzZ8PRk)LnOAGrLUwX5Tx(zxZiTxItY2pZrRmIkWEx7fTMNx12tl0A16d1JHEkof9w)Ev7OrEGKOOchBZDy32P2XwUTlcKOeUpfId)f(EsajDI2Nl(98Kr2()(]]
 )
 spec:RegisterPack(
     "Protection (wowsims.com)",
