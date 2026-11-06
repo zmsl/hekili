@@ -2096,6 +2096,8 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
                 if seen[L] or pre[L] then
                     return
                 end
+                -- shortcut: a list is scoped once a move, so a group called twice from one list takes the first call's
+                -- condition and position (R51) only; no pin has one. Upgrade when a pin calls a move's group twice.
                 seen[L] = true
                 local cond = mv.cond or true
                 if prefix then

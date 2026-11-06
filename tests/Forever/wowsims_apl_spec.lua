@@ -2074,6 +2074,25 @@ describe("the wowsims APL translator's move rewrite and sequences as windows", f
         end
     )
 
+    it("R51: two reached lines right after one move: both arms at the move, in line order, then both gates", function()
+        local text = apl.translate({
+            priorityList = {
+                move("5", cmp("OpGt", mh, const("0.5s"))),
+                cast(100, cmp("OpLe", d, const("5"))),
+                cast(200, cmp("OpLe", d, const("5"))),
+            },
+        }, ctx({}))
+        assert.are.equal(
+            lines({
+                "actions=strike,if=toggle.movement&mainhand_remains>0.5",
+                "actions+=/big_hit,if=toggle.movement&mainhand_remains>0.5",
+                "actions+=/strike,if=target.within5",
+                "actions+=/big_hit,if=target.within5",
+            }),
+            text
+        )
+    end)
+
     it("R51: a move above a reached line with an unreached line between puts the arm above that line", function()
         local text = apl.translate({
             priorityList = {
