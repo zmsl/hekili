@@ -83,8 +83,10 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- includeReactionTime (100 ms; the translator ignores it, rule 5) so it casts Consecration first (log 17.40,
         -- 47.22, 77.04). ON flicker ceiling 2.4 (2.33/min measured: 7 flips, 4 at an Echo-completing swing, 3
         -- Judgement / Holy Strike at Judgement's ready edge; 2.00 at the old pin, the same kinds)
+        -- ON flicker 2.4 -> 2.0 (R61, the swing-clock recheck at the guard's window end: 2.33 -> 2.00/min; decisions
+        -- unchanged, 0.933 (45))
         local r, line = ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.93, REPLAY)
-        ab.check(r.flicker <= 2.4 + 1e-9, "Retribution (wowsims.com)", "ON flicker ceiling: " .. line)
+        ab.check(r.flicker <= 2.0 + 1e-9, "Retribution (wowsims.com)", "ON flicker ceiling: " .. line)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Retribution is out of mana from 60 s
     -- of its log), so its longest wait is for mana. 4.4 before central fix 8, while
@@ -100,7 +102,8 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- Righteousness up (L10-L15 8.6, t 5.2-13.6). L40 keeps the 6 s bar (5.2); only L60 follows LIVE60 (R22)
     -- 8.6 -> 8.8 re-pin e2842f0a78 (Task 17): the same cause, Holy Strike (now waiting for Judgement on cooldown,
     -- wowsims's line), Judgement and Exorcism cooling, Seal of Righteousness up (t 5.0-13.2); L40 5.2
-    local RET_LIVE10 = 8.8
+    -- 8.8 -> 8.6 (R61, the swing-clock recheck: the same cause, one tick shorter)
+    local RET_LIVE10 = 8.6
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Retribution (wowsims.com) stays live at level " .. level, function()
             local C = content("paladin_retribution", RET_LIVE, "Retribution (wowsims.com)", level)

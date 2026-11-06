@@ -177,7 +177,10 @@ M.FLICKER = {
     -- Engine/Sim/Scripts.lua), where the other half is false, so the line drops for one tick. Our floor-paced mana wait
     -- (gap BT) slides the ready time through that half far more often than the oracle's. Probe (both rechecks, swing +
     -- 0.01 and + 0.11, lane-ret-wrap-recheck-experiment.patch): flips 59 -> 4, oracle 11 -> 1. Re-floor after R61.
-    ["Retribution"] = { flicker = 1.2, flickerK = 1.0, retracted = 0, readyShort = 1, heldReady = 271 }, -- 1.13, 0 (oracle 0.21); was 0.29 / 0.47 / 0.40 (oracle 0.53 / 0.22 / 0.02)
+    -- 1.2 -> 0.1, flickerK dropped (R61, the swing-clock `<`/`<=` guard rechecked at its window end, central-swing-recheck
+    -- 6bf4474f6 + 7a8972d4c; seeds 1-20 / 21-40 / 41-60: 0.04 / 0.04 / 0.04, oracle 0.04 / 0.00 / 0.11; agreement 0.999 / 0.999 /
+    -- 0.996); heldReady 271 -> 241 (230 / 241 / 227); readyShort 1 (1 / 0 / 0)
+    ["Retribution"] = { flicker = 0.1, retracted = 0, readyShort = 1, heldReady = 241 }, -- 0.04 / 0.04 / 0.04, 0 (oracle 0.04 / 0.00 / 0.11)
     -- 0.5 -> 0.8 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.54 / 0.71 / 0.49, was 0.45 / 0.03 / 0.68; oracle 0.59 / 1.81 / 1.73):
     -- wowsims's logged regen (Prot 0 casting) runs the world at an empty mana pool; the oracle's flicker rose to 0.59-1.81;
     -- our extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike, agreement .99 ->
