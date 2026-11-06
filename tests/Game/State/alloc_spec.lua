@@ -63,8 +63,12 @@ describe("zero allocation", function()
         sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
         -- a weapon-enchant pseudo-aura and a stealth aura (Sources/Enchants.lua, Sources/Forms.lua)
         h.Class.auras.enchant_x = { key = "enchant_x", id = -7, weaponEnchant = 0 }
+        h.Class.auras.enchant_y = { key = "enchant_y", id = -8, enchants = { 7, 8 } } -- an `enchants` aura
         h.Class.auras.stealth_x = { key = "stealth_x", id = 1999, isStealthed = true }
-        local ENCHANTED = { { hasEnchant = true, enchantType = 0, timeLeft = 1800000, charges = 20, enchantID = 7 } }
+        local ENCHANTED = {
+            { hasEnchant = true, enchantType = 2, timeLeft = 900000, charges = 0, enchantID = 2628 },
+            { hasEnchant = true, enchantType = 3, timeLeft = 1800000, charges = 20, enchantID = 7 },
+        }
         local STEALTHS = { true, false, fake.SECRET }
         h.Class.abilities.spender_c.healthGate = 0.2 -- a health-gated spender (Families/TargetHealth.lua)
         ctl.known[fs.SPENDER_C] = true -- known: its NOT answers can bound the target's health
@@ -81,6 +85,11 @@ describe("zero allocation", function()
         end
         VS.Start(api)
         ns.BuildTracked()
+        local tracked = {} -- both enchant auras crossed Build(def) (Engine/Schema/Tracked.lua) and are read
+        for j, slot in pairs(I.enchantAura) do
+            tracked[I.def.auras[j].key] = slot
+        end
+        assert.are.same({ enchant_x = 0, enchant_y = true }, tracked)
         state.time, state.query_time = 0, 1
         ctl.guid.target = "Creature-2" -- a target never held before: its first flip learns M, then WOUNDs move it
         ctl.Fire("PLAYER_TARGET_CHANGED")
@@ -110,7 +119,7 @@ describe("zero allocation", function()
                 ctl.stealthed = STEALTHS[i % 3 + 1] -- plain both ways and secret
                 ctl.Fire("UPDATE_STEALTH")
                 ctl.enchants[0] = i % 8 == 4 and fake.SECRET or ENCHANTED
-                ctl.Fire("WEAPON_ENCHANT_CHANGED") -- read only out of combat
+                ctl.Fire("WEAPON_ENCHANT_CHANGED") -- read in combat too
             else
                 local dodge = i % 12 == 5 -- an avoid at the swing's lag: provisional, SWING_MISSED at the window's close
                 ctl.Fire("UNIT_COMBAT", "target", dodge and "DODGE" or "WOUND", "", dodge and 0 or 10, 1)

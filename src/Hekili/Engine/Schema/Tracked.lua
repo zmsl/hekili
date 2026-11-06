@@ -331,8 +331,9 @@ local function buildDef()
         local a = class.auras[k]
         if a.key == k then
             local ids = idsOf(a)
-            if #ids == 0 and rawget(a, "weaponEnchant") ~= nil and type(a.id) == "number" then
-                ids[1] = a.id -- an id-less weapon-enchant pseudo-aura (C4): RegisterAura's negative pseudo-ID
+            local enchant = rawget(a, "weaponEnchant") ~= nil or type(rawget(a, "enchants")) == "table"
+            if #ids == 0 and enchant and type(a.id) == "number" then
+                ids[1] = a.id -- an id-less weapon-enchant aura (C4): RegisterAura's negative pseudo-ID
             end
             if #ids > 0 then
                 insert(def.auras, recordOf(a))

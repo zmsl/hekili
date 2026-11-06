@@ -54,7 +54,7 @@ describe("the Shaman loop worlds", function()
         end
         assert.are.same({
             { 15208, 220 * 0.9, 2, 0 },
-            { 10605, 485 * 0.9, 1.5, 6 },
+            { 10605, 315 * 0.9, 1.5, 6 },
             { 1326047, 265 * 0.9, 2, 10 },
         }, got)
         assert.is_true(#C.usable(H) > 0)

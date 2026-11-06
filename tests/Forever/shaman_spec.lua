@@ -10,7 +10,7 @@ local headless = require("Game.harness.headless")
 local FILE = "src/Hekili_Shaman/Shaman.lua"
 
 -- key = { spell IDs in rank order, the top rank's mana cost, cooldown, gcd }, from the DB2 (`wowdb spell <name>`;
--- Stormstrike's cost and Lava Burst's and Mana Tide Totem's Forever-only rank 4 (1326047, 1325256) from wowsims/forever's
+-- Stormstrike's, Chain Lightning's, Lava Burst's and Mana Tide Totem's costs and their Forever-only rank 4s (1326047, 1325256) from wowsims/forever's
 -- spell data, absent from the DB2 at 70338): the cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd
 -- "spell" for 1.5 s, "totem" for 1.0 s, "off" for none.
 local KIT = {
@@ -18,7 +18,7 @@ local KIT = {
     lightning_shield = { { 324, 325, 905, 945, 8134, 10431, 10432 }, 370, 0, "spell" },
     earth_shock = { { 8042, 8044, 8045, 8046, 10412, 10413, 10414 }, 450, 6, "spell" },
     flame_shock = { { 8050, 8052, 8053, 10447, 10448, 29228 }, 410, 6, "spell" },
-    fire_nova = { { 408341, 408342, 408343, 408344, 408345 }, 520, 10, "spell" }, -- wowsims's 375 not modelled
+    fire_nova = { { 408341, 408342, 408343, 408344, 408345 }, 375, 10, "spell" }, -- wowsims's (R57a; DB2 520)
     stormstrike = { { 17364 }, 121, 8, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat)
     searing_totem = { { 3599, 6363, 6364, 6365, 10437, 10438 }, 170, 0, "totem" },
     flametongue_totem = { { 8227, 8249, 10526, 16387 }, 275, 0, "totem" },
@@ -30,7 +30,7 @@ local KIT = {
     windfury_weapon = { { 8232, 8235, 10486, 16362 }, 165, 0, "spell" },
     frostbrand_weapon = { { 8033, 8038, 10456, 16355, 16356 }, 160, 0, "spell" },
     rage_of_the_farseer = { { 425336 }, 0, 180, "off" }, -- a Forever talent: no cost, off the GCD
-    chain_lightning = { { 421, 930, 2860, 10605 }, 485, 6, "spell" },
+    chain_lightning = { { 421, 930, 2860, 10605 }, 315, 6, "spell" }, -- wowsims's (DB2 485)
     lava_burst = { { 408490, 1238299, 1238300, 1326047 }, 265, 10, "spell" },
     elemental_mastery = { { 16166 }, 0, 180, "off" },
     magma_totem = { { 8190, 10585, 10586, 10587 }, 650, 0, "totem" },
@@ -168,7 +168,7 @@ describe("Forever Shaman", function()
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
         assert.are.same({ 14.12, 26.13, 0.15 }, seed("elemental")) -- Mindfulness 3/3: 15% while casting; no totem; re-pin log
-        assert.are.same({ 28.62, 4.8, 0 }, seed("enhancement"))
+        assert.are.same({ 31.25, 12.8, 0 }, seed("enhancement")) -- re-pin log (Windshaper Skyborne)
         assert.are.same({ aura = "improved_stormstrike", share = 0.5 }, r.models.improved_stormstrike)
         assert.are.same({ 2, 1223031, 2 }, w.talents.improved_stormstrike)
         -- Mana Spring Totem's buff: 10 every 2 s at rank 4 (DB2 aura 24), +5% a rank of Restorative Totems
@@ -236,6 +236,21 @@ describe("Forever Shaman", function()
                     assert.are.same({ { key, want[1], want[2][r] } }, got, key .. " " .. r .. " " .. field)
                 end
             end
+        end
+    end)
+
+    -- wowsims spell data (e2842f0a78 spells_auto_gen.go: 16086 effect 3, misc 1, +10000/+20000 ms on Magma Totem):
+    -- Trial by Fire (the kit's improved_fire_nova) lengthens Magma Totem; the re-pin log's 2/2 build recasts it 40 s apart.
+    it("lengthens Magma Totem by 10 s a rank of Trial by Fire (improved_fire_nova)", function()
+        for _, field in ipairs({ "now", "handler" }) do
+            local got = {}
+            local e = ld.env(w)
+            e.talent.improved_fire_nova = { rank = 2, enabled = true }
+            e.summonTotem = function(...)
+                got[#got + 1] = { ... }
+            end
+            ld.run(w.abilities.magma_totem[field], e)
+            assert.are.same({ { "magma_totem", "fire", 40 } }, got, field)
         end
     end)
 
@@ -398,7 +413,7 @@ describe("Forever Shaman", function()
         local e = ld.env(w)
         e.talent.convection = { rank = 5, enabled = true }
         e.talent.shamanistic_focus = { rank = 1, enabled = true }
-        assert.are.same({ 220 * 0.9, 485 * 0.9, 265 * 0.9, 450 * 0.9 * 0.55, 410 * 0.9 * 0.55, 370 * 0.55 }, {
+        assert.are.same({ 220 * 0.9, 315 * 0.9, 265 * 0.9, 450 * 0.9 * 0.55, 410 * 0.9 * 0.55, 370 * 0.55 }, {
             ld.run(w.abilities.lightning_bolt.spend, e),
             ld.run(w.abilities.chain_lightning.spend, e),
             ld.run(w.abilities.lava_burst.spend, e),
@@ -406,6 +421,27 @@ describe("Forever Shaman", function()
             ld.run(w.abilities.flame_shock.spend, e),
             ld.run(w.abilities.lightning_shield.spend, e),
         })
+    end)
+
+    -- wowsims e2842f0a78's spell data (spells_auto_gen.go Powers), every rank; the DB2's ladders (Chain Lightning 225..485,
+    -- Lava Burst 165/230/265/265, Mana Tide Totem 10/30/60/60) are wrong (owner rule 2026-11-06: wowsims over the DB2).
+    it("costs every rank of Chain Lightning, Lava Burst and Mana Tide Totem as wowsims's spell data", function()
+        local e = ld.env(w)
+        for key, costs in pairs({
+            chain_lightning = { 145, 200, 250, 315 },
+            lava_burst = { 135, 165, 230, 265 },
+            mana_tide_totem = { 10, 20, 30, 60 },
+        }) do
+            local ids, got = KIT[key][1], {}
+            for i = 1, #ids do
+                for _, id in ipairs(ids) do
+                    w.game.known[id] = false
+                end
+                w.game.known[ids[i]] = true
+                got[i] = ld.run(w.abilities[key].spend, e)
+            end
+            assert.are.same(costs, got, key)
+        end
     end)
 
     -- Elemental Alacrity (16578, aura 107 misc 10 on Lightning Bolt, Chain Lightning and Lava Burst): Forever's trait
@@ -469,12 +505,40 @@ describe("Forever Shaman", function()
         end
     end)
 
-    it("models each imbue on the main hand for its 60 minutes", function()
-        for _, key in ipairs({ "rockbiter_weapon", "flametongue_weapon", "windfury_weapon", "frostbrand_weapon" }) do
+    -- Enchant IDs: DB2 70707 SpellEffect.EffectMiscValue_0 of each rank's Effect 360, lowest rank first (weapon buffs
+    -- review §1); Rockbiter rank 2's 6 read in game (probe 2026-11-05, Shaman L10). 60 minutes: the tooltip and that
+    -- probe (3578906 ms left at the first read), not the effect's 1800.
+    local IMBUES = {
+        rockbiter_weapon = { 29, 6, 1, 503, 1663, 683, 1664 },
+        flametongue_weapon = { 5, 4, 3, 523, 1665, 1666 },
+        windfury_weapon = { 283, 284, 525, 1669 },
+        frostbrand_weapon = { 2, 12, 524, 1667, 1668 },
+    }
+
+    it("models each imbue on the main hand for its 60 minutes, replacing the others, as its own aura", function()
+        for key, ids in pairs(IMBUES) do
+            local aura, a = w.auras[key], w.abilities[key]
+            assert.are.same({ ids, 3600, 1 }, { aura.enchants, aura.duration, aura.max_stack }, key)
+            assert.is_nil(rawget(aura, "weaponEnchant"), key)
+            -- upstream retail: prompted in combat from precombat while down, never while up
+            assert.are.same({ true, key }, { a.essential, a.nobuff }, key)
+            local others = {}
+            for k in pairs(IMBUES) do
+                if k ~= key then
+                    others[#others + 1] = k
+                end
+            end
+            table.sort(others)
             for _, field in ipairs({ "now", "handler" }) do
                 local e = ld.env(w)
-                ld.run(w.abilities[key][field], e)
-                assert.are.same({ { "main_hand_enchant" }, 3600 }, { e.applied, e.durations.main_hand_enchant }, key)
+                ld.run(a[field], e)
+                table.sort(e.removed)
+                assert.are.same(others, e.removed, key)
+                assert.are.same({ { key, "main_hand_enchant" }, 3600, 3600 }, {
+                    e.applied,
+                    e.durations[key],
+                    e.durations.main_hand_enchant,
+                }, key)
             end
         end
     end)
@@ -510,7 +574,8 @@ describe("Forever Shaman priorities", function()
 
     it("names only registered abilities, auras, settings and totem elements", function()
         local cls = ld.load(nil, FILE, "SHAMAN")
-        local shared = { major_mana_potion = true, demonic_rune = true, blood_fury = true } -- Hekili_Shared's consumables, the Orc racial
+        -- Hekili_Shared's consumables and trinkets; the engine's own list call
+        local shared = { major_mana_potion = true, demonic_rune = true, use_items = true, call_action_list = true }
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, settings = cls.settings }
         local elements = { fire = true, earth = true, water = true, air = true, main_hand_enchant = true }
         for list, entries in pairs(packs[PACK].lists) do
@@ -528,29 +593,29 @@ describe("Forever Shaman priorities", function()
         end
     end)
 
+    -- re-pin e2842f0a78: the build's own list (Water Shield, Magma and Windfury Totems, Fire Nova the filler)
     it(
-        "tiers by role: Fire Nova on Clearcasting and the Maelstrom Lightning Bolt at 1, the shield and Flame Shock at 2, totems none",
+        "tiers by role: the Maelstrom Lightning Bolt at 1, Water Shield and Flame Shock at 2, Fire Nova and totems none",
         function()
-            local _, fn = line("default", "fire_nova", "buff.clearcasting.up")
-            local _, lb = line("default", "lightning_bolt", "buff.maelstrom_weapon.stack>=5")
-            local _, goa = line("default", "grace_of_air_totem", "totem.air.remains<=0")
-            local _, soe = line("default", "strength_of_earth_totem", "totem.earth.remains<=0")
-            local _, st = line("default", "searing_totem", "totem.fire.remains<=0")
-            local _, ls = line("default", "lightning_shield", "!buff.lightning_shield.up")
-            local _, fs = line("default", "flame_shock", "!debuff.flame_shock.up")
-            assert.are.same({ 1, 1, 2, 2 }, { fn.focus, lb.focus, ls.focus, fs.focus })
-            assert.are.same({}, { goa.focus, soe.focus, st.focus })
-            for _, e in ipairs(packs[PACK].lists.default) do
-                assert.are_not.equal("windfury_totem", e.action)
+            local _, ws = line("default", "water_shield")
+            local _, lb = line("single_target_rotation", "lightning_bolt")
+            local _, fs = line("single_target_rotation", "flame_shock")
+            local _, fn = line("single_target_rotation", "fire_nova")
+            assert.are.same({ 2, 1, 2 }, { ws.focus, lb.focus, fs.focus })
+            assert.is_nil(fn.focus)
+            for _, key in ipairs({ "windfury_totem", "strength_of_earth_totem", "mana_spring_totem", "magma_totem" }) do
+                local _, t = line("default", key)
+                assert.is_nil(t.focus, key)
             end
         end
     )
 
-    -- wowsims's autocast (rule 13) in the log's first-use order: Blood Fury, the trinket (unmapped), Rage of the Farseer.
-    it("casts Rage of the Farseer off the GCD right after Blood Fury, as wowsims's autocast does", function()
-        local bf = line("default", "blood_fury")
+    -- wowsims's autocast (rule 13) in the log's first-use order: the trinket (use_items), the Manual Crowd Pummeler
+    -- (unmapped: the item swap's), Rage of the Farseer.
+    it("casts Rage of the Farseer off the GCD right after the trinket, as wowsims's autocast does", function()
+        local ui = line("default", "use_items")
         local i, e = line("default", "rage_of_the_farseer")
-        assert.are.same({ bf + 1, nil }, { i, e.criteria })
+        assert.are.same({ ui + 1, nil }, { i, e.criteria })
         assert.is_truthy(e.use_off_gcd)
     end)
 end)
@@ -648,8 +713,99 @@ describe("Forever Shaman through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- Weapon buffs review §4.2: the engine's buff.<imbue> and main_hand_enchant follow the belief's reads and models
+    -- (the same answer in both layers), whatever the hand's temporary layer holds.
+    it("answers the imbue auras alike in the belief and the engine: reads, a cast in combat, a swap", function()
+        local VS, S, auras = H.ns.VirtualState, H.Hekili.State, H.Hekili.Class.auras
+        local I = H.ns.VirtualStateInternal
+        for _, k in ipairs({ "rockbiter_weapon", "flametongue_weapon", "windfury_weapon", "frostbrand_weapon" }) do
+            local found -- every `enchants` aura crossed Build(def) with its IDs as plain numbers
+            for _, rec in ipairs(I.def.auras) do
+                found = rec.key == k and rec or found
+            end
+            assert.are.same(auras[k].enchants, assert(found, k).enchants)
+            assert.is_nil(getmetatable(found.enchants))
+        end
+        local function same(t, want)
+            S.reset("Primary", true)
+            for k, up in pairs(want) do
+                local rec = VS.Aura("player", auras[k].id, t)
+                assert.are.equal(up, rec ~= nil, k)
+                assert.are.equal(up, S.buff[k].up, k)
+                if up then
+                    assert.is_true(math.abs(S.buff[k].remains - (rec.est - t)) < 0.2, k)
+                end
+            end
+        end
+        local OIL = { hasEnchant = true, enchantType = 2, timeLeft = 900000, charges = 0, enchantID = 2628 }
+        local NONE = { hasEnchant = false, enchantType = 0, timeLeft = 0, charges = 0, enchantID = 0 }
+        local t = H.ctl.now + 1
+        H.ctl.enchants[0] = { OIL, NONE } -- an oil alone: no imbue
+        H.Fire("WEAPON_ENCHANT_CHANGED")
+        assert.is_true(headless.cycle(H, t))
+        same(t, { main_hand_enchant = false, rockbiter_weapon = false })
+        H.ctl.enchants[0] =
+            { OIL, { hasEnchant = true, enchantType = 3, timeLeft = 1700000, charges = 0, enchantID = 1664 } }
+        H.Fire("WEAPON_ENCHANT_CHANGED")
+        t = t + 1
+        assert.is_true(headless.cycle(H, t))
+        same(t, { main_hand_enchant = true, rockbiter_weapon = true, flametongue_weapon = false })
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        t = t + 1
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 16342) -- Flametongue in combat: modelled, replaces
+        assert.is_true(headless.cycle(H, t + 0.1))
+        same(t + 0.1, { main_hand_enchant = true, rockbiter_weapon = false, flametongue_weapon = true })
+        H.ctl.enchants[0] = nil -- swapped for an unenchanted weapon in combat: read
+        H.Fire("WEAPON_SLOT_CHANGED", 0)
+        t = t + 1
+        assert.is_true(headless.cycle(H, t))
+        same(t, { main_hand_enchant = false, flametongue_weapon = false })
+        assert.are.same({}, H.errors)
+    end)
+
+    -- Upstream's `essential`: a precombat imbue line is prompted in combat while the imbue is down, never while up.
+    it("prompts an essential precombat imbue line in combat only while the main hand has no imbue", function()
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        local pack = H.Hekili.DB.profile.packs["Enhancement (wowsims.com)"]
+        local line = { enabled = true, action = "rockbiter_weapon", criteria = "!buff.main_hand_enchant.up" }
+        pack.lists = { precombat = { line }, default = {} }
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        assert.are.equal("rockbiter_weapon", out.count > 0 and out.recs[1].actionName or false)
+        H.ctl.enchants[0] =
+            { { hasEnchant = true, enchantType = 3, timeLeft = 1700000, charges = 0, enchantID = 1664 } }
+        H.Fire("WEAPON_ENCHANT_CHANGED")
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        assert.are.equal(false, out.count > 0 and out.recs[1].actionName or false)
+        assert.are.same({}, H.errors)
+    end)
+
     it("recommends Rage of the Farseer in combat when ready, only with Cooldowns on", function()
         H.ctl.inRange.target, H.ctl.level.target = true, 60
+        -- the main hand's Flametongue up (rank 6, 1666), so the pack's need-based imbue line stays silent
+        H.ctl.enchants[0] =
+            { { hasEnchant = true, enchantType = 3, timeLeft = 3600000, charges = 0, enchantID = 1666 } }
+        H.Fire("WEAPON_ENCHANT_CHANGED")
+        -- and Water Shield up, so its line (R55: while the shield is down) stays silent
+        H.ctl.auras.player.HELPFUL[1] =
+            { spellId = H.Hekili.Class.auras.water_shield.id, expirationTime = H.ctl.now + 600, applications = 3 }
+        H.Fire("UNIT_AURA", "player")
+        -- and the build's four totems standing, so their refresh lines (remains<=2) stay silent too
+        local A = H.Hekili.Class.abilities
+        for slot, key in ipairs({ "magma_totem", "strength_of_earth_totem", "mana_spring_totem", "windfury_totem" }) do
+            H.ctl.totems[slot] = { name = "", start = H.ctl.now, duration = 120, icon = 0, spell = A[key].id }
+            H.Fire("PLAYER_TOTEM_UPDATE", slot)
+        end
         H.Fire("PLAYER_TARGET_CHANGED")
         local t = H.ctl.now + 0.2
         assert(headless.cycle(H, t))

@@ -199,7 +199,10 @@ M.FLICKER = {
     -- one-poll-wider near-cost window (task-4c-wip.patch) fixes it but loosens Protection and Affliction instead;
     -- owner-approved standing named-cause policy, 2026-10-30 (controller ruling (b), task-4c-report.md)
     -- 0.3 -> 0.2 (decision 63's rule, gap CE; most of the Task 11 near-ties above went with the whole-number read)
-    ["Enhancement"] = { flicker = 0.2, retracted = 0, heldReady = 230 }, -- 0.13 / 0.13 / 0.13, 0 (oracle 0.03 / 0 / 0.02)
+    -- heldReady 230 -> 256 re-pin e2842f0a78 (lane 15, R6; seeds 1-20: 256, flicker 0.02, retracted 0; 249 at Fire
+    -- Nova's DB2 520): the build's own list (Magma Totem 40 s, Windfury Totem, Fire Nova the filler at wowsims's 375,
+    -- R57a) and the world's mana from the Skyborne log (6565, 12.8 / 31.25, was 5000 / 4.8 / 28.62)
+    ["Enhancement"] = { flicker = 0.2, retracted = 0, heldReady = 256 }, -- 0.13 / 0.13 / 0.13, 0 (oracle 0.03 / 0 / 0.02)
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     ["Arcane"] = { flicker = 0.1, retracted = 0, heldReady = 100 }, -- 0.03 / 0.05 / 0, 0
     -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new

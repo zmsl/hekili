@@ -409,7 +409,9 @@ M.READY = {
     -- "never" moved, now timed (176.62 eviscerate late 0.19 s)
     rogue_combat = { 0.24, 21 }, -- 0.240, 21
     rogue_subtlety = { 0.17, 40 }, -- 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
-    shaman_enhancement = { 0.21, 7 },
+    -- { 0.21, 7 } -> { 0.71, 16 } re-pin e2842f0a78 (lane 15, R6): the build's own list (Magma and Windfury Totems,
+    -- Fire Nova the filler at 375, Skyborne); 85 decisions, 16 real (10 early, 6 late); by class cooldown 15, cost 9, gcd 43
+    shaman_enhancement = { 0.71, 16 },
     shaman_elemental = { 0.48, 54 }, -- 0.480, 54 (Elemental lane, Task 14; first clean run on a21329fc)
     -- 1.000, 18 (Warlock lane, Task 13; first clean run on 5d62f44c+): Shadow Bolt's 2.5 s cast, the next icon ready
     -- at the GCD's end inside it (Shadow's Mind Flay likewise). Count 18 -> 21 on fix 31 (06eec227): G4 keeps

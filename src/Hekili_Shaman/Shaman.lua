@@ -21,8 +21,8 @@
 -- Improved Stormstrike's casting share is the mana entry below).
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (in-game checks): Call of Flame's +3 s a
 -- rank on Flame Shock, Stormstrike's cost, Lava Burst's and Mana Tide Totem's rank 4 (1326047, 1325256), Elemental
--- Mastery, Revelation, Elemental Alacrity's Forever ranks. Fire Nova's (375 there) is not modelled (FIRE_NOVA_COST
--- says why).
+-- Mastery, Revelation, Elemental Alacrity's Forever ranks. Also from it: Fire Nova's costs (the DB2's are wrong: R57a),
+-- Chain Lightning's, Lava Burst's and Mana Tide Totem's costs (owner rule 2026-11-06: wowsims over the DB2).
 -- Credits: Hekili (registration API, pack format and `summonTotem`'s signature, State.lua). wowsims/forever (MIT,
 -- ui/specs/shaman/enhancement/apls/default.apl.json and sim/shaman/) is the reference for the priorities and the totem,
 -- Fire Nova, Maelstrom Weapon and Clearcasting rules; no code is copied.
@@ -78,11 +78,9 @@ local EARTH_SHOCK_COST = { 30, 50, 85, 145, 240, 345, 450 }
 local FLAME_SHOCK = { 8050, 8052, 8053, 10447, 10448, 29228 }
 local FLAME_SHOCK_COST = { 55, 95, 160, 250, 345, 410 }
 local FIRE_NOVA = { 408341, 408342, 408343, 408344, 408345 } -- Forever's spell (no totem): from the fire totem up
--- The DB2's. wowsims/forever's spell data says 65, 120, 210, 290, 375 (its log: 375): not modelled, because the
--- secret-mana belief pins itself at the dearest usable cost after an unseen refill, and at 375 that pin (Earth Shock's
--- 450) sits under the 10% Fire Nova filler (500 of the solo world's 5000 mana; 553 of 5530 in wowsims's fight), so the
--- solo gate falls to 0.89 (GAP V). IN-GAME CHECK: Fire Nova's cost.
-local FIRE_NOVA_COST = { 95, 170, 280, 395, 520 }
+-- wowsims/forever's spell data (e2842f0a78 sim/core/spelldata/spells_auto_gen.go, 408341-408345 Powers), every rank;
+-- the owner's in-game read confirms rank 5's 375 (R57a, 2026-11-06). The DB2's 95, 170, 280, 395, 520 are wrong.
+local FIRE_NOVA_COST = { 65, 120, 210, 290, 375 }
 local ROCKBITER_WEAPON = { 8017, 8018, 8019, 10399, 16314, 16315, 16316 }
 local ROCKBITER_WEAPON_COST = { 15, 25, 50, 75, 100, 125, 150 }
 local FLAMETONGUE_WEAPON = { 8024, 8027, 8030, 16339, 16341, 16342 }
@@ -92,10 +90,13 @@ local WINDFURY_WEAPON_COST = { 90, 115, 140, 165 }
 local FROSTBRAND_WEAPON = { 8033, 8038, 10456, 16355, 16356 }
 local FROSTBRAND_WEAPON_COST = { 60, 85, 110, 135, 160 }
 local CHAIN_LIGHTNING = { 421, 930, 2860, 10605 }
-local CHAIN_LIGHTNING_COST = { 225, 305, 390, 485 }
+-- Chain Lightning's and Lava Burst's costs: wowsims e2842f0a78's spell data (spells_auto_gen.go Powers), every rank
+-- (owner rule 2026-11-06: wowsims over the DB2, whose 225..485 and 165/230/265 are wrong; the Elemental log's 238.5
+-- confirms Lava Burst rank 4's 265 x 0.9 Convection).
+local CHAIN_LIGHTNING_COST = { 145, 200, 250, 315 }
 -- Rank 4 (1326047) is Forever's, absent from the DB2 at 70338: wowsims/forever's spell data (265 mana, 2.5 s, 10 s).
 local LAVA_BURST = { 408490, 1238299, 1238300, 1326047 }
-local LAVA_BURST_COST = { 165, 230, 265, 265 }
+local LAVA_BURST_COST = { 135, 165, 230, 265 }
 -- Elemental Alacrity (16578, aura 107 misc 10 on Lightning Bolt, Chain Lightning and Lava Burst) by rank: Forever's
 -- trait curve, -170/-330/-500 ms (wowsims/forever's spell data; the DB2's Talent rows say -200 ms a rank of 5).
 -- IN-GAME CHECK: Lightning Bolt's cast at 3/3: 2.0 s?
@@ -147,11 +148,12 @@ local TOTEMS = {
         cost = { 115, 175, 250 },
         duration = { 300, 300, 300 },
     },
-    -- 5 minutes (category 591); rank 4 (1325256) is Forever's: wowsims/forever's spell data (60 mana, 13 s, 300 s).
+    -- 5 minutes (category 591); rank 4 (1325256) is Forever's. Costs: wowsims e2842f0a78's spell data, every rank
+    -- (the DB2's 10/30/60 for ranks 1-3 are wrong).
     mana_tide_totem = {
         element = "water",
         ids = { 16190, 17354, 17359, 1325256 },
-        cost = { 10, 30, 60, 60 },
+        cost = { 10, 20, 30, 60 },
         duration = { 13, 13, 13, 13 },
         cooldown = 300,
     },
@@ -249,7 +251,11 @@ end
 local function summon(key)
     local t = TOTEMS[key]
     return function()
-        summonTotem(key, t.element, byRank(t.duration, t.ids))
+        local d = byRank(t.duration, t.ids)
+        if key == "magma_totem" then -- Trial by Fire (16086 effect 3, wowsims spell data): +10 s a rank
+            d = d + 10 * talent.improved_fire_nova.rank
+        end
+        summonTotem(key, t.element, d)
     end
 end
 
@@ -273,9 +279,25 @@ local function totemAbility(key)
     }
 end
 
--- A weapon imbue on the main hand: 60 minutes (DB2 tooltip), the shared main_hand_enchant pseudo-aura (C4), read out of
--- combat.
-local function imbue(ids, costs)
+-- The weapon imbues: one per main hand (wowsims models the main hand only), so each replaces the others.
+local IMBUES = { "rockbiter_weapon", "flametongue_weapon", "windfury_weapon", "frostbrand_weapon" }
+
+-- A weapon imbue on the main hand: 60 minutes (DB2 tooltip; probe 2026-11-05: 3578906 ms left at the first read), its
+-- own aura (`enchants`) and the shared main_hand_enchant (C4), read from the client in combat too. Upstream retail's
+-- `essential` (a precombat line is prompted in combat while it is down) and `nobuff` (never while its own is up). The
+-- `now` and the `handler` are two closures, so each gets its own environment (as the totems' summon).
+local function imbue(ids, costs, key)
+    local function apply()
+        return function()
+            for i = 1, #IMBUES do
+                if IMBUES[i] ~= key then
+                    removeBuff(IMBUES[i])
+                end
+            end
+            applyBuff(key, 3600)
+            applyBuff("main_hand_enchant", 3600)
+        end
+    end
     return {
         id = ids[1],
         copy = rest(ids),
@@ -288,13 +310,11 @@ local function imbue(ids, costs)
 
         startsCombat = false,
         known = knows(ids),
+        essential = true,
+        nobuff = key,
 
-        now = function()
-            applyBuff("main_hand_enchant", 3600)
-        end,
-        handler = function()
-            applyBuff("main_hand_enchant", 3600)
-        end,
+        now = apply(),
+        handler = apply(),
     }
 end
 
@@ -372,10 +392,11 @@ end
 -- the in-combat calibration replace, as wowsims's logs measure them at 60: shaman_elemental 31.13 a second while casting
 -- (Mana Spring Totem, Mindfulness 3/3's 15% share and gear) and 45.25 outside the rule, so spirit 14.12 (the outside
 -- rate less the casting one) and mp5 31.13 (the e2842f0a78 log, Windshaper Skyborne; was 29.75 / 42.5 as a Troll);
--- shaman_enhancement 9.8 / 38.42, so spirit 28.62 and mp5 9.8. Forever's
+-- shaman_enhancement 17.8 / 49.05, so spirit 31.25 and mp5 17.8 (the e2842f0a78 log, Windshaper Skyborne; was 9.8 /
+-- 38.42 as an Orc). Forever's
 -- Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76), not Classic's formula.
 -- The seeds' mp5 is the rate without the totem's buff (the logs' casting rate a tick before it: 2.613 a tick in
--- shaman_elemental.log before -2.0 s, 0.480 in shaman_enhancement.log before -5.0 s), so 26.13 and 4.8; the totem's
+-- shaman_elemental.log before -2.0 s, 1.280 in shaman_enhancement.log before -3.0 s), so 26.13 and 12.8; the totem's
 -- own entry (below) adds its mp5 while the buff is up, as wowsims models it (totems.go:105-109).
 -- Improved Stormstrike (1238931, DB2 aura 134 = 50): +50% of Spirit regen while casting for 15 s.
 -- Mana Spring (DB2 aura 24, 4/6/8/10 every 2 s by rank, +5% a rank of Restorative Totems 16187): mp5 = value / 2.
@@ -398,10 +419,10 @@ spec:RegisterResource(
     {
         fsr = {
             spirit = function()
-                return state.spec.elemental and 14.12 or 28.62
+                return state.spec.elemental and 14.12 or 31.25
             end,
             mp5 = function()
-                return state.spec.elemental and 26.13 or 4.8
+                return state.spec.elemental and 26.13 or 12.8
             end,
             share = function()
                 return state.spec.elemental and 0.15 or 0
@@ -437,6 +458,12 @@ spec:RegisterAuras({
     revelation = { id = 1323418, duration = 15, max_stack = 1 },
     -- Maelstrom Weapon (408498, a rune: D4, inert until learned): our melee hits stack it to 5, Lightning Bolt spends it.
     maelstrom_weapon = { id = 408505, duration = 30, max_stack = 5 },
+    -- The weapon imbues (id-less): up while a weapon carries one of the rank's enchant IDs (DB2 70707, Effect 360's
+    -- misc value, lowest rank first; Rockbiter rank 2's 6 read in game, 2026-11-05), read from the client.
+    rockbiter_weapon = { enchants = { 29, 6, 1, 503, 1663, 683, 1664 }, duration = 3600, max_stack = 1 },
+    flametongue_weapon = { enchants = { 5, 4, 3, 523, 1665, 1666 }, duration = 3600, max_stack = 1 },
+    windfury_weapon = { enchants = { 283, 284, 525, 1669 }, duration = 3600, max_stack = 1 },
+    frostbrand_weapon = { enchants = { 2, 12, 524, 1667, 1668 }, duration = 3600, max_stack = 1 },
     -- Improved Stormstrike (DB2 1238931): Stormstrike's 15 s buff, +50% Spirit regen while casting (the mana entry).
     improved_stormstrike = { id = 1238931, duration = 15, max_stack = 1 },
     -- The totems' buffs on us (wowsims e2842f0a78's ids, ranks 1..n; copy leads with the `<name>_totem` alias), read like
@@ -694,7 +721,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(FIRE_NOVA),
         -- its usability answer is a mana rung (the ladder) although it also needs a fire totem: the costliest spell, so
-        -- without it the believed lower bound never reaches 520 (checkpoint: no totem answers not usable, not short)
+        -- without it the believed lower bound never reaches 375 (checkpoint: no totem answers not usable, not short)
 
         usable = function()
             return totem.fire.up, "requires a fire totem"
@@ -742,10 +769,10 @@ spec:RegisterAbilities({
         end,
     },
 
-    rockbiter_weapon = imbue(ROCKBITER_WEAPON, ROCKBITER_WEAPON_COST),
-    flametongue_weapon = imbue(FLAMETONGUE_WEAPON, FLAMETONGUE_WEAPON_COST),
-    windfury_weapon = imbue(WINDFURY_WEAPON, WINDFURY_WEAPON_COST),
-    frostbrand_weapon = imbue(FROSTBRAND_WEAPON, FROSTBRAND_WEAPON_COST),
+    rockbiter_weapon = imbue(ROCKBITER_WEAPON, ROCKBITER_WEAPON_COST, "rockbiter_weapon"),
+    flametongue_weapon = imbue(FLAMETONGUE_WEAPON, FLAMETONGUE_WEAPON_COST, "flametongue_weapon"),
+    windfury_weapon = imbue(WINDFURY_WEAPON, WINDFURY_WEAPON_COST, "windfury_weapon"),
+    frostbrand_weapon = imbue(FROSTBRAND_WEAPON, FROSTBRAND_WEAPON_COST, "frostbrand_weapon"),
 })
 
 -- Talents: { talent tree (1 Elemental, 2 Enhancement, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
@@ -817,8 +844,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Enhancement (wowsims.com)",
-    20261103001,
-    [[Hekili:vAvxVnUnqWFl9PMGZqF4KC2148bKIRf3DOxqbuEMY0sRSySePajvm8l63Exk7etrrf4(saJwod3D4oRjjM8mjjNQbYtZJM)544O7IIIjj6JnajPHMTNUdxWP14F)lEjLNb1ax3T5MdIdkwTkituFRzRhRe0CdDBBzv6FWjB9YSQbYijjF)XF94tRGlmsskz55WjyGk7JoUvDB0Lq3MZFlSqiHxbz3MCOG2wHB)X)9F62GFUBZqwAzHMeqfQkP1uEOvceAY7CvOguAgFxq))g8IsWVDgEEskxvHLtoUwyoFMQBdnpxW)DCXE4OkOBZ3OA6kp51n)6hpJKuQ1nQvHH7y6Y2TMsj0zR3ICI5jmF59ZlIOlwEFEakUsrbRcVbOzAMGRcAKacElvVENKMbPIIuktMQfAOEgRy9V1Vka)wqBt3phb7tRdlQW7uTGVRfgHRGjHjbQ0sGVtxAouGkXfUW7)6K4rzNMQAKOgpc5buGhKYRRPViKP9yAeMpnRvzQ3I0Dz5RJnynbdAY0PvIVSm6DO4rLd1collv2YHpg3Ib42wje5PfTYJdrzVhjAmmsa2iMwqLkaKtVz)3sxUKKqnLXvFz9G04duABH2pyZDykx8kDwHiRvDQK32wueKvH4YON6YT0AeufBxPMBUzuLmOk)m259xr9GD3HdbkK6bxSwnutvKcznwPS9G)mzROspQgQPqfcsuNEaOncEGsJZQ(66hgibMwCmpfz7hui5qphwHDQItIDFe)s6WUNVgh9bPU5epfmWQwd2Zfh4D)KKGUEfg0zmzftPv9dNpnsdx(u)WAGt3wb5K)KKy1UzcEE6ajzKNHKKjzOZIrnbTDlenEUxjT2UPPyCrpJ3DLmEXNzqD)vIYJZZa)bh4VT9XEp7K3Nh0W2NNGTj8KJP01BAiDHdPxW4ZyE5qFVXdxA6JnYbs3YjPBsV6foDd(o1Znu)htv(2(7XfTJp3WuC0Kk57MH(952D7iot649vsgJ3qTk2Tl3sS8opWs9V89HIuSBF(BiSMF0Vp3oBp3RETt4GLE8t1A7wWw10utCq(0MhuC(3J9nw56modEIHVXidKp7hA4HLZp4W3SJ)hgpNNF4BMYLrKopcXdpV9yKEjdfnARUuijjFh2ZQy4J6(7ZVzRpm5)(d]]
+    20261105003,
+    [[Hekili:DJvuVTTnq4Fl9LTeSajB3KMSG6cKHTH2H1Gb4(SKPLozXAjsbsQyKx0V9DKY1MIIuXyn7L(sIKiVV7439XJhDY8KVKSkNOGKhxmBX7MpF2nZM92KvQNBGKvnKSDKT4dmsn(3)GvsyzqnWuDRVypFVKwlJY41xQN6ZvCsUgUnT0k1NyjB8ISSbYswT6Jp85hE8E4eIjRkP55qVzGmBk3DF3Avj0T(W3Il4c4jq0TohkiTv40F4F(7U14N7wpeLwASoaKXYssnHfBfaX64oxgRaPIY2gzEn6Rso7YRq)jimzfUCYXN5A)tLDRj55C2pJpSdEwg1T(3jkY9EIRl(8N(ccsPs1iVpoElvv2UrVuIDM6LiMyCclU76ffZi3E315ri5k4f0kmdqYuuotg1ia04ne1YIkm1O4STTq6EG0Wzxrlw(MnTffr1eklfxF5Pald)VkQTP7VgHXVSmwWZ2THQaXzHXp9MEmIg78ODm(EMFNSNODGSKcv5NCG9xny77RbaKYYlAfpNQ4kO2aP5Picve0imRtsLncmfpYoJxdAPuja2wvzkVific8bx7nFDcpVTMmYMcQaSn5)Eg9)X8Oj6)kxKAyVgU(Jx1kbKkks3MLVCU2t6bJAYuPv83F3mBJZHAoJMLkAzW02D7a7gizk4zTYLlckDgy4iPXjLHa0KH89lxyBXezx7KRFJ9kQS1uHmBGIWsq4F(AMdZU1YHC4afawVwVeW6JPfeHear4jNrQQs7FnTIkvxPRZVuIRIkivreBbvQGRiM0ngG6P(eGkiOMcYZblchMaHpmaHk62sfttHB4vktA(G(uQ4IAmbr3bUfy8hS9BIqPbUFWw3KdgHJ1ONy6zVeOgrYXa5mMTZcQpomk(dBjHkelE932Zjv45TlV5mqUxGAwaNXS1kQug)jYP5ANxw(cJRr47IoDaZlj6mNVBQZbVbewYk8KwjoGtRjAzRu3bJTX47pA6scyKnvqEYV9TJHtwDK4suiuotktOletj62zMGMSq7044l6vSgue53gW9wePEAxhmaMKZoH3qs)ymmxd(nbIblIfNgAKFvOpw81JGCP(aeKlp(QsqUSVFckipAlLuAgX0i7KIVrhABVIcFQ)ueMB)dNhIVyFe(iFRdL0RXJHWO(mSJHHDy4J2dbRDhiHq82z(YqUmGtxhNCH9ad1NVlaDpSlfBx5RBfns3guP7T7LXq62fJg07ca6OUAgdNB3nA4(1GWDSBNXa501JgN5ZoZC7X2Imw5UFjKvE6uYyF464AlTB)5ewUn)0FwsA)1Mduru7RWvKg6RpCU(AWjxApeQSKBPmlv(HnZJA6QVY0XB08dCTj)7OFHcb(V56uhneE7)G7Xo1XgtUf15wTtvj6mQF4Ch3PQgfyN(WB8AKtOGI0Qk5IKvFe2rRODRV4pp8tHygo5F)]]
 )
 
 -- The hand-built Enhancement list, replaced by Enhancement (wowsims.com): a saved choice of it falls back to the default.

@@ -240,7 +240,32 @@ describe("Forever Rogue", function()
         assert.are.same({ true, 8927 }, { (ld.run(ip.usable, e)), (ip.item()) })
         ld.run(ip.handler, e)
         ld.run(w.abilities.deadly_poison.handler, e)
-        assert.are.same({ "main_hand_enchant", "off_hand_enchant" }, e.applied)
+        assert.are.same({ "instant_poison", "main_hand_enchant", "deadly_poison", "off_hand_enchant" }, e.applied)
+        -- 30 minutes and a 3 s cast (DB2 70707: Effect 360's 1800, the apply spells' cast_ms 3000; in-game check L37)
+        for k, d in pairs(e.durations) do
+            assert.are.equal(1800, d, k)
+        end
+        for _, k in ipairs({ "instant_poison", "deadly_poison" }) do
+            local a = w.abilities[k]
+            assert.are.same({ 3, true, k }, { a.cast, a.essential, a.nobuff }, k) -- upstream retail's
+        end
+    end)
+
+    -- Enchant IDs: DB2 70707 SpellEffect.EffectMiscValue_0 of each apply spell's Effect 360, lowest rank first (weapon
+    -- buffs review §1). Either hand: no `weaponEnchant`.
+    it("declares the five poisons as weapon-enchant auras by their enchant IDs", function()
+        local POISONS = {
+            instant_poison = { 323, 324, 325, 623, 624, 625 },
+            deadly_poison = { 7, 8, 626, 627, 2630 },
+            crippling_poison = { 22, 603 },
+            mind_numbing_poison = { 35, 23, 643 },
+            wound_poison = { 703, 704, 705, 706 },
+        }
+        for k, ids in pairs(POISONS) do
+            local a = assert(w.auras[k], k)
+            assert.are.same({ ids, 1800 }, { a.enchants, a.duration }, k)
+            assert.is_nil(rawget(a, "weaponEnchant"), k)
+        end
     end)
 end)
 
@@ -384,6 +409,47 @@ describe("Forever Rogue through the engine", function()
         assert.is_false(S.buff.main_hand_enchant.up)
         assert.are.same({}, H.errors)
         assert.are.same({}, headless.unexpected(H, "run"))
+    end)
+
+    -- Weapon buffs review §4.2: a poison's own aura follows its enchant ID on either hand, through the engine.
+    it("reads buff.deadly_poison from its enchant ID on either hand, beside the slot pseudo-aura", function()
+        local S, VS, I = H.Hekili.State, H.ns.VirtualState, H.ns.VirtualStateInternal
+        local keys = {} -- every `enchants` aura is in both layers
+        for _, rec in ipairs(I.def.auras) do
+            if rec.enchants then
+                keys[#keys + 1] = rec.key
+                assert.is_not_nil(H.Hekili.Class.auras[rec.key], rec.key)
+            end
+        end
+        table.sort(keys)
+        assert.are.same(
+            { "crippling_poison", "deadly_poison", "instant_poison", "mind_numbing_poison", "wound_poison" },
+            keys
+        )
+        local DP = { hasEnchant = true, enchantType = 3, timeLeft = 1700000, charges = 40, enchantID = 2630 }
+        local t = H.ctl.now + 1
+        for slot, alias in pairs({ [0] = "main_hand_enchant", [1] = "off_hand_enchant" }) do
+            H.ctl.enchants[0], H.ctl.enchants[1] = nil, nil
+            H.ctl.enchants[slot] = { DP }
+            H.Fire("WEAPON_ENCHANT_CHANGED")
+            t = t + 1
+            assert.is_true(headless.cycle(H, t))
+            S.reset("Primary", true)
+            assert.are.same(
+                { true, true, false },
+                { S.buff.deadly_poison.up, S.buff[alias].up, S.buff.instant_poison.up }
+            )
+            assert.is_true(
+                math.abs(S.buff.deadly_poison.remains - (VS.Aura("player", S.buff.deadly_poison.id, t).est - t)) < 0.2
+            )
+        end
+        H.ctl.enchants[1] = nil
+        H.Fire("WEAPON_ENCHANT_CHANGED")
+        t = t + 1
+        assert.is_true(headless.cycle(H, t))
+        S.reset("Primary", true)
+        assert.is_false(S.buff.deadly_poison.up)
+        assert.are.same({}, H.errors)
     end)
 end)
 

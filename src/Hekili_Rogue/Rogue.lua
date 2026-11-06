@@ -192,6 +192,13 @@ spec:RegisterTalents({
 })
 
 spec:RegisterAuras({
+    -- The poisons (id-less): up while either weapon carries one of the ranks' enchant IDs (DB2 70707, Effect 360's misc
+    -- value, lowest rank first), read from the client; 30 minutes (the effect's 1800 s; in-game check L37).
+    instant_poison = { enchants = { 323, 324, 325, 623, 624, 625 }, duration = 1800, max_stack = 1 },
+    deadly_poison = { enchants = { 7, 8, 626, 627, 2630 }, duration = 1800, max_stack = 1 },
+    crippling_poison = { enchants = { 22, 603 }, duration = 1800, max_stack = 1 },
+    mind_numbing_poison = { enchants = { 35, 23, 643 }, duration = 1800, max_stack = 1 },
+    wound_poison = { enchants = { 703, 704, 705, 706 }, duration = 1800, max_stack = 1 },
     adrenaline_rush = {
         id = 13750,
         duration = 15,
@@ -346,11 +353,13 @@ local function finisherUsable()
     return combo_points.current > 0, "requires combo points"
 end
 
--- A poison reminder (C4): the best of `items` in the bags, offered while one is there; its use enchants the weapon
--- whose pseudo-aura `slot` names (the sim models it; the belief reads it out of combat, Sources/Enchants.lua). Only
--- precombat lines read it. Under the Potions toggle: a buff consumable (user ruling 2026-10-21, as the shared mana and
--- energy ones); with Potions off the reminder is skipped.
-local function poison(name, items, slot)
+-- A poison reminder (C4): the best of `items` in the bags, offered while one is there; its use (a 3 s cast, DB2) puts
+-- its own aura `key` and the pseudo-aura `slot` names up for 30 minutes in the sim. The belief has no `now` for it (an
+-- id-less item use never reaches Build(def)): it reads the client (Sources/Enchants.lua), in combat too. Upstream
+-- retail's `essential` and `nobuff`: a precombat line is prompted in combat while the poison is down. Under the Potions
+-- toggle: a buff consumable (user ruling 2026-10-21, as the shared mana and energy ones); with Potions off the
+-- reminder is skipped.
+local function poison(name, items, slot, key)
     local function best()
         for i = 1, #items do
             if GetItemCount(items[i]) > 0 then
@@ -361,7 +370,7 @@ local function poison(name, items, slot)
     end
     return {
         name = name,
-        cast = 0,
+        cast = 3,
         cooldown = 0,
         gcd = "off",
 
@@ -371,6 +380,8 @@ local function poison(name, items, slot)
 
         startsCombat = false,
         toggle = "potions",
+        essential = true,
+        nobuff = key,
 
         usable = function()
             local _, have = best()
@@ -378,7 +389,8 @@ local function poison(name, items, slot)
         end,
 
         handler = function()
-            applyBuff(slot)
+            applyBuff(key, 1800)
+            applyBuff(slot, 1800)
         end,
     }
 end
@@ -918,8 +930,8 @@ spec:RegisterAbilities({
 
 -- The poison reminders (no wowsims.com list recommends them yet).
 spec:RegisterAbilities({
-    instant_poison = poison("Instant Poison", INSTANT_POISON, "main_hand_enchant"),
-    deadly_poison = poison("Deadly Poison", DEADLY_POISON, "off_hand_enchant"),
+    instant_poison = poison("Instant Poison", INSTANT_POISON, "main_hand_enchant", "instant_poison"),
+    deadly_poison = poison("Deadly Poison", DEADLY_POISON, "off_hand_enchant", "deadly_poison"),
 })
 
 -- The hand-built lists this file shipped before the wowsims.com packs: a saved choice of one falls back to the spec's
