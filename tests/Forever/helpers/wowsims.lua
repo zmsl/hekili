@@ -416,7 +416,9 @@ M.READY = {
     -- Corruption believed, so 12 more decisions are shown (never 22 -> 10), 3 of them a Shadow Bolt's early 1.0 s.
     -- Count 21 -> 23 on Task 16 (pack expects): decisions 12 and 15 (Shadow Bolt) moved from never to early (~1.0 s);
     -- never 10 -> 8; median 1.00 unchanged
-    warlock_affliction = { 1.00, 23 },
+    -- { 1.00, 23 } -> { 0.00, 0 } (Task 16, R6 and L82 M5: the floor follows the measurement; the fixture's 83 timed
+    -- decisions all in grain since 5049ede22 and R42; the kit's fsr seed moves 142.50 wrack never -> in grain)
+    warlock_affliction = { 0.00, 0 },
     -- Searing Pain's 1.5 s cast equals the GCD, so nearly every decision is absorbed at the grain. 0.10, 3 -> 0.20, 1,
     -- owner ruling 2026-10-26: gap BD's cast-bar fix removed the small misses; decision by decision none worse and
     -- none new; the median of the rest rose (the one left: life_tap 0.2 s early)

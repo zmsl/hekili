@@ -637,7 +637,8 @@ M.MAP = {
     life_tap = {
         effect = function(W, e, _, _, H)
             -- rank 6's 420 points + 4 (levels 56 to 60) + Spirit, x Improved Life Tap's 10% a rank
-            local amount = (424 + SPIRIT) * (1 + 0.1 * talentRank(H, T.improved_life_tap))
+            local spirit = e.stats and e.stats[5] or SPIRIT -- the caster's (the pack's WORLD.stats)
+            local amount = (424 + spirit) * (1 + 0.1 * talentRank(H, T.improved_life_tap))
             W.emit({ kind = "gain", src = e, pt = MANA, rage = amount })
             -- Demonic Energies: the demon out gains 50% of it a rank (wowsims's curve; its log: 645 to the Imp at 2/2)
             W.petGain(e, amount * 0.5 * talentRank(H, T.demonic_energies))
@@ -676,6 +677,32 @@ M.MAP = {
 local PET = { summon_imp = "summon", summon_voidwalker = "summon", summon_succubus = "summon" }
 PET.summon_incubus, PET.summon_felhunter, PET.demonic_sacrifice = "summon", "summon", "dismiss"
 
+-- The ranges in yards (DB2 70707 SpellMisc.RangeIndex -> SpellRange, every rank alike; re-pin R8): Medium Range 0-30,
+-- Short Range 0-20 (Drain Life), Self Only 0 (no range check: Hellfire, Life Tap, Amplify Curse, the summons).
+local RANGE = { drain_life = { 0, 20 }, hellfire = { 0, 0 }, life_tap = { 0, 0 }, amplify_curse = { 0, 0 } }
+for _, key in ipairs({
+    "shadow_bolt",
+    "immolate",
+    "corruption",
+    "siphon_life",
+    "bane_of_agony",
+    "bane_of_doom",
+    "curse_of_the_elements",
+    "curse_of_recklessness",
+    "curse_of_weakness",
+    "drain_soul",
+    "death_coil",
+    "searing_pain",
+    "soul_fire",
+    "rain_of_fire",
+    "incinerate",
+    "conflagrate",
+    "shadowburn",
+    "wrack",
+}) do
+    RANGE[key] = { 0, 30 }
+end
+
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, SPEC = P.spec, IDS = {} }
@@ -702,6 +729,15 @@ local function content(name)
                 known[#known + 1] = id
             end
         end
+        local ranges = {}
+        for key, r in pairs(RANGE) do -- every kit ability's ranks, known or not (the client's spell data)
+            local a = w.abilities[key]
+            if a then
+                for _, id in ipairs({ a.id, unpack(type(a.copy) == "table" and a.copy or { a.copy }) }) do
+                    ranges[id] = r
+                end
+            end
+        end
         return {
             class = "WARLOCK",
             classID = M.CLASS_ID,
@@ -711,6 +747,7 @@ local function content(name)
             talents = P.talents,
             power = { type = MANA, token = "MANA", max = MAX },
             speed = { 2.0 },
+            ranges = ranges,
         }
     end
 
@@ -731,7 +768,7 @@ local function content(name)
         canParry = false, -- warlocks never parry (wowsims's CanParry)
         weapons = { { 40, 70, 2.0 } },
         max = MAX,
-        fsr = { [MANA] = FSR },
+        fsr = { [MANA] = P.fsr or FSR },
         power = MAX,
         mobHealth = 1e9,
         distance = 25, -- a caster's range: no melee swings of ours
@@ -739,7 +776,7 @@ local function content(name)
         bags = { [SOUL_SHARD] = 32 },
         -- the build's demon, out from the start with its mana full (wowsims)
         pet = { pt = MANA, max = P.petMax or D.max, power = P.petMax or D.max, regen = D.regen, tick = 2, up = true },
-        stats = { [5] = SPIRIT }, -- UnitStat(5)'s Spirit, Life Tap's
+        stats = { [5] = P.spirit or SPIRIT }, -- UnitStat(5)'s Spirit, Life Tap's
     }
 
     -- No other power read (mana is secret in combat).

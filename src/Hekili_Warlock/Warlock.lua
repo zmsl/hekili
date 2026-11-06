@@ -210,8 +210,9 @@ local function sharded(fire, waived)
 end
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace: wowsims's logs at 60 (the five builds on the preraid gear: 1.04 a 0.1 s tick
--- inside the rule, 4.428 outside it, Blessing of Wisdom's mp5 included). UNMEASURED in game.
+-- the in-combat calibration replace: wowsims's logs at 60 (re-pin e2842f0a78: the four Human builds on the preraid
+-- gear, 1.52 a 0.1 s tick inside the rule, 5.333 outside it, Blessing of Wisdom's mp5 included; was the Orc builds'
+-- 1.04 / 4.428, Affliction's still 1.12 / 4.433). UNMEASURED in game.
 -- Fel Energy (the Voidwalker sacrifice, aura 18792, DB2 aura 21: 2 every 4000 ms; wowsims talents_demonology.go:168-185):
 -- 2% of max mana every 4 s while it is up, the tick times counted from its application.
 spec:RegisterResource(
@@ -234,7 +235,7 @@ spec:RegisterResource(
     },
     nil,
     {
-        fsr = { spirit = 33.88, mp5 = 10.4 },
+        fsr = { spirit = 38.13, mp5 = 15.2 },
         base = 1373, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
     }
 )

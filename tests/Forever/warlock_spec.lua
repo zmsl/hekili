@@ -148,7 +148,7 @@ describe("Forever Warlock", function()
     it("declares mana under the five-second rule, base 1373, from wowsims's logs", function()
         assert.are.same({ 0 }, w.order)
         local r = w.resources[0]
-        assert.are.same({ spirit = 33.88, mp5 = 10.4 }, r.meta.fsr)
+        assert.are.same({ spirit = 38.13, mp5 = 15.2 }, r.meta.fsr)
         assert.are.equal(1373, r.meta.base)
     end)
 
@@ -709,7 +709,7 @@ describe("Forever Warlock priorities", function()
     it("names only registered abilities and auras", function()
         local cls = ld.load(nil, FILE, "WARLOCK")
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, action = cls.abilities }
-        -- Hekili's `all`: Hekili_Shared's use_items, the racials and Demonic Rune
+        -- Hekili's `all`: Hekili_Shared's use_items, the racials, Demonic Rune and the Major Mana Potion
         local shared = {
             use_items = true,
             call_action_list = true,
@@ -717,6 +717,7 @@ describe("Forever Warlock priorities", function()
             berserking = true,
             eureka = true,
             demonic_rune = true,
+            major_mana_potion = true,
         }
         for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "warlock")) do
             for list, entries in pairs(p.lists) do
