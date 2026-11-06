@@ -50,7 +50,8 @@ local PACKS = {
     -- the totems carry none (the user, 2026-10-21)
     ["Shaman/APLs/Enhancement"] = { "fire_nova=1", "lightning_shield=2", "lightning_bolt=1", "flame_shock=2" },
     ["Druid/APLs/Balance"] = { "moonfire=2", "insect_swarm=2", "starfire=1" },
-    ["Druid/APLs/Feral"] = { "shred=1", "claw=1", "rake=2", "rip=2", "rake=2" },
+    -- re-pin e2842f0a78 (R66): the adaptive list's order; Claw's one line is wowsims's "Claw can replace Shred" fallback
+    ["Druid/APLs/Feral"] = { "shred=1", "rip=2", "rake=2", "claw=1" },
     ["Druid/APLs/Guardian"] = { "maul=1", "maul=2", "lacerate=2", "demoralizing_roar=2", "lacerate=2" },
     ["Mage/APLs/Arcane"] = { "arcane_missiles=1" },
     -- re-pin e2842f0a78: the closing second Scorch line is the filler, untiered (`scorch = { 2, false }`)

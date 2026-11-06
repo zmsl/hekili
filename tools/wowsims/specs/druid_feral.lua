@@ -5,8 +5,8 @@
 -- APL to apls/adaptive.apl.json (presets.ts:9, :65-68 JVMES_APL "Adaptive Cat", spec.ts:79 the default rotation;
 -- 2250 lines); the gear stays gear_sets/pre_raid.gear.json (presets.ts:11, spec.ts:65).
 -- Replay (re-pin e2842f0a78, Movement on): decisions on-GCD 0.916 (76/83), flicker 1.33/min (oracle 0.00). The
--- request follows the preset build (Tauren, 25 yd, CatTalents); assumeBleedActive is read from the real target
--- (druid_bleed_active). Since R52 the Rip line's "two Blood Frenzy points with Shifting Power" reads
+-- request follows the preset build (Tauren, 25 yd, CatTalents); assumeBleedActive only moves wowsims's own damage for
+-- Feral (no Feral line reads druid_bleed_active). Since R52 the Rip line's "two Blood Frenzy points with Shifting Power" reads
 -- `action.shifting_power.known` (Shifting Power is a kit ability, a talent in wowsims's tree).
 -- Misses (log times), none content: 21.25 shred -> rip and 39.88 shred -> faerie_fire (energy is secret: the belief's
 -- lo 3.2 and 1.0 under the truth at Rip's 62 threshold and Shred's 42 cost); 140.38 shred -> rip (Rip fades in the
@@ -48,7 +48,8 @@ return {
     -- Faerie Fire's armor reduction is an exclusive effect (one slot with Curse of Recklessness: wowsims
     -- sim/core/debuffs_generated_test.go TestGeneratedCurseOfRecklessnessAndFaerieFireDoNotStack): rule 10
     exclusive = { [9907] = true },
-    -- by role (docs/dev/wowsims-packs.md): Shred and Claw on Clearcasting (the first of each), not as builders
+    -- by role (docs/dev/wowsims-packs.md): Shred's first line (Clearcasting) at 1, not the builder; Claw's one line is
+    -- wowsims's "Claw can replace Shred" builder fallback, kept at tier 1 as before (R66)
     focus = { shred = { 1, false }, claw = { 1, false }, rip = 2, rake = 2 },
     leveling = {},
 }
