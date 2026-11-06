@@ -106,6 +106,17 @@ describe("the wowsims log parser", function()
         local e = q.ev[1]
         assert.are.same({ 51.94, "taken", "WOUND", "", 1880.168 }, { e.t, e.kind, e.act, e.flag, e.amount })
     end)
+
+    it("reads the target's Crit and Crush on us as `taken` wounds flagged CRITICAL and CRUSHING", function()
+        local q = replay.parse(table.concat({
+            "[12.03] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 14} Crush for 2347.908 damage (SpellSchool: 1). (Threat: 2347.908)",
+            "[30.03] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 14} Crit for 2990.5 damage (SpellSchool: 1). (Threat: 2990.5)",
+        }, "\n"))
+        assert.are.equal(2, #q.ev)
+        local a, b = q.ev[1], q.ev[2]
+        assert.are.same({ 12.03, "taken", "WOUND", "CRUSHING", 2347.908 }, { a.t, a.kind, a.act, a.flag, a.amount })
+        assert.are.same({ 30.03, "taken", "WOUND", "CRITICAL", 2990.5 }, { b.t, b.kind, b.act, b.flag, b.amount })
+    end)
 end)
 
 describe("the replay world", function()

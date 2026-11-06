@@ -44,6 +44,31 @@ local AMOUNT = {
     swipe_bear = 80,
 }
 
+-- The TRUE rage a landed hit on the bear pays (the world's W.takenRage), written from wowsims/forever's source at the
+-- pin e2842f0a78, NOT from the class file's `taken` (an independent truth): sim/core/rage.go:13-17 2.5 x (1 - A) x
+-- the hit before armor / c, :22-45 A by the attacker's level (rows interpolated), :47-50 c, :93-103 only while the
+-- rage bar is current (forms.go:161: Bear Form's) and on a landed hit, x damageTakenRageMultiplier (1: no caller of
+-- MultiplyDamageTakenRageGen at the pin). A crit's or crush's multiplier is inside the amount (as wowsims's
+-- PreArmorDamage); the world hands the amount before our armor (its only armor: our `dr`).
+local A_LEVEL, A_REDUCTION = { 42, 44, 46, 50, 63 }, { 0.20, 0.30, 0.36, 0.38, 0.40 }
+function M.takenRage(us, preArmor, level)
+    if us.form ~= M.BEAR then
+        return 0
+    end
+    local a = A_REDUCTION[#A_REDUCTION]
+    for i = 1, #A_LEVEL do
+        if level <= A_LEVEL[i] then
+            local j = math.max(i - 1, 1)
+            local span = A_LEVEL[i] - A_LEVEL[j]
+            a = span > 0 and A_REDUCTION[j] + (A_REDUCTION[i] - A_REDUCTION[j]) * (level - A_LEVEL[j]) / span
+                or A_REDUCTION[i]
+            break
+        end
+    end
+    local c = 0.0091107836 * level * level + 3.225598133 * level + 4.2652911
+    return 2.5 * (1 - a) * preArmor / c
+end
+
 -- The recording load and its stand-in state (talents at rank 0), once.
 local W0, E0
 local function class()
@@ -377,7 +402,8 @@ M.KEYS = {
 --- the pull, the rage per Bear swing and crit from the class file, its out-of-combat decay, the GCD flag's order mixed,
 --- and the observer: the GCD spell, combo points plain, rage and energy never, the forms, usability from `KEYS`.
 --- `o.form` the pull's form; `o.script` our presses; `o.pausedBy` the decay's truth variant; `o.regenAfter`,
---- `o.regenRead` (false: no regen read, a /reload in combat), `o.usable` (false: no answers).
+--- `o.regenRead` (false: no regen read, a /reload in combat), `o.usable` (false: no answers), `o.takenRage` (true: the
+--- world pays M.takenRage for the mob's hits on us).
 function M.knobs(o, R, gcdSpell)
     local form = o.form or M.CAT
     local k = {
@@ -397,6 +423,9 @@ function M.knobs(o, R, gcdSpell)
         rage = { R.swing, 0 },
         critRage = { R.crit, 0 },
         gcdOrder = "mixed",
+        -- opt-in until the class file credits rage from hits taken (its `taken`): without it the belief drifts
+        -- below this truth and the decay gate fails (errMax 2.189)
+        takenRage = o.takenRage and M.takenRage or nil,
         form = form,
         script = o.script,
         after = o.after,

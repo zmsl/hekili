@@ -166,12 +166,14 @@ local function theirs(rest)
         local id, _, tag = ids(b)
         return id and { kind = "stacks", unit = "target", id = id, to = tonumber(n), tag = tag }
     end
-    local avoid = rest:match("^%[[^%]]+ %(#1%)%] {[^}]*} (%a+)") -- its swing on us: a hit, parry, dodge or block (gap AH)
+    -- its swing on us: a hit, crit, crush, parry, dodge or block (gap AH)
+    local avoid = rest:match("^%[[^%]]+ %(#1%)%] {[^}]*} (%a+)")
+    local landed = ({ Hit = "", Crit = "CRITICAL", Crush = "CRUSHING" })[avoid]
     if avoid == "Parry" or avoid == "Dodge" then
         return { kind = "taken", act = avoid:upper(), flag = "", amount = 0 }
-    elseif avoid == "Hit" then
-        local n = tonumber(rest:match("} Hit for ([%d.]+) damage") or 0)
-        return { kind = "taken", act = "WOUND", flag = "", amount = n }
+    elseif landed then
+        local n = tonumber(rest:match("} " .. avoid .. " for ([%d.]+) damage") or 0)
+        return { kind = "taken", act = "WOUND", flag = landed, amount = n }
     elseif avoid == "Block" then
         local n = tonumber(rest:match("} Block for ([%d.]+) damage") or 0)
         if n > 0 then

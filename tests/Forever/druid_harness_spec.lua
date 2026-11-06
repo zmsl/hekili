@@ -7,6 +7,25 @@
 local dw = require("Forever.helpers.druid_world")
 local GATES = require("Forever.helpers.druid_harness_gates").GATES
 
+describe("the Druid world's true rage from a hit on us (wowsims rage.go)", function()
+    it("pays in Bear Form only, by the attacker's level, as the Guardian log's 6.03 hit", function()
+        local bear, cat = { form = dw.BEAR }, { form = dw.CAT }
+        assert.are.equal(0, dw.takenRage(cat, 1000, 60))
+        -- L60: A between the 50 and 63 rows (0.3954), c 230.60
+        local l60 = 2.5 * (1 - 0.38 - 0.02 * 10 / 13) * 1000 / 230.60
+        assert.is_true(math.abs(dw.takenRage(bear, 1000, 60) - l60) < 1e-3)
+        local l10 = 2.5 * 0.8 * 100 / (0.91107836 + 32.25598133 + 4.2652911) -- A 0.20 up to 42
+        assert.is_true(math.abs(dw.takenRage(bear, 100, 10) - l10) < 1e-9)
+        -- the log's 6.03 hit: 1216.573 after its 66.2 absorb, at 7395.6 armor against a level 63 attacker
+        -- (armor / (armor + 400 + 85 x 63) mitigated): 18.046 rage
+        local pre = (1216.573 + 66.2) / (1 - 7395.6 / (7395.6 + 400 + 85 * 63))
+        assert.is_true(math.abs(dw.takenRage(bear, pre, 63) - 18.046) < 0.01)
+        local R = dw.rules() -- opt-in: the fights' world pays it only when asked
+        assert.is_nil(dw.knobs({}, R).takenRage)
+        assert.are.equal(dw.takenRage, dw.knobs({ takenRage = true }, R).takenRage)
+    end)
+end)
+
 describe("the shift fight's usability answers", function()
     it("answers the Cat spenders short in Cat after a Bear section (seed 1: the 61.05 Cat entry)", function()
         dw.fights("shift", 1, {}, function(f)

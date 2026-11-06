@@ -120,7 +120,8 @@ M.ARCHETYPES = ARCHETYPES
 --- [none: no positions]; W.moveTo changes it), bags, pet and stats (ours: entities.new's; the pet regenerates from the
 --- start, W.startPetRegen), canParry (false: we never parry a swing at us, so no parry haste of ours; wowsims's
 --- PseudoStats.CanParry, true only for some classes [true]), mobAvoid (the mobs' avoid table of our hits, entities.new's
---- `avoid` [its 5/5/5]) and crit (our crit rate on an instant hit or strike, W.crit [world.CRIT]).
+--- `avoid` [its 5/5/5]), crit (our crit rate on an instant hit or strike, W.crit [world.CRIT]) and takenRage (W.takenRage:
+--- the swing-paid power a landed wound on us pays [none]).
 --- The detection suite's (unit-registry spec §6.2): noMelee (no white swings of ours), spells ({ t, kind }:
 --- behaviours.ours, from the pull, with distance and jitter), switchTo ({ t, mob index }: our target changes), churn
 --- ({ every, gap }: our target's plate leaves and comes back), extraMobs (mobs not on us, each with a plate), phase
@@ -148,6 +149,7 @@ function M.world(o, seed)
         us.avoid.parry = 0
     end
     W.crit = o.crit or W.crit
+    W.takenRage = o.takenRage
     if us.pet then
         W.startPetRegen(us)
     end
