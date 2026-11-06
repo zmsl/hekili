@@ -436,7 +436,10 @@ M.READY = {
     -- 0.900, 16: Shadow Bolt's, likewise. -> { 0.20, 1 } re-pin e2842f0a78 (Task 16, R6, L82 M5): 100 decisions, 1
     -- real (shadow_bolt late 0.20 s), the rest in grain or tie, never 24
     warlock_shadow_brand = { 0.20, 1 },
-    warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
+    -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28). -> { 0.20, 8 } re-pin e2842f0a78 (Task
+    -- 16, R6, L82 M5; R49's stand-in DoT lines): 93 decisions, 8 real all early (shadow_bolt 4 max 0.30, life_tap 2,
+    -- immolate 1), never 20
+    warlock_sm_ruin = { 0.20, 8 },
     -- 0.880, 5 (was 0.80, 6): the world's parry haste (decision 63); the tie hand-back moves 177.88 sunder late -> never
     -- 0.680, 6 (fix 40): a short answer read before our own gain shows is no rung, so 177.88 sunder never -> early 0.68
     -- { 0.68, 6 } -> { 1.21, 4 } (re-pin e2842f0a78, lane 14, R6): after the replay's GCD fix every early row is in

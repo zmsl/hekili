@@ -36,6 +36,9 @@ end
 -- (spellTravelTime does not fold). Each history names the floor's own cause; the counts are the traced misses.
 --   Affliction 0.98 -> 1.00 (1.000, 84): the kit's fsr seed {33.88, 10.4} -> {38.13, 15.2} (the four Human logs)
 --   moves one decision, Wrack at 142.50 (never -> in grain).
+--   SM Ruin 0.70 -> 0.78 (0.787, 94): R49's stand-in DoT lines (wowsims gates them on spellExpectedDpet, omitted;
+--   without them 0.606); top [shadow_bolt -> life_tap 9 (A); shadow_bolt -> siphon_life 5; shadow_bolt ->
+--   corruption 3]: the stand-ins' remains<=cast timing against wowsims's DPET choice.
 --   Demonology 0.77 -> 0.89 (0.897, 117): A 6, C 1, 5 Searing Pain / Life Tap near-ties.
 --   Shadow Brand 0.73 -> 0.71 (0.718, 103; LOWERED): A 14, C 1, and the Demonic Brand charges class (API-forced: the
 --   Succubus's attacks spend the brand's 6 charges, unseen; 8 misses at 157-170 s), larger now the new list leads with
@@ -43,7 +46,7 @@ end
 --   Destruction 0.74 -> 0.90 (0.900, 110): A 7, C 1, 3 Immolate refreshes at remains<=cast.
 local PACKS = {
     { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 1.00, 0.2 },
-    { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.70, 0.2 },
+    { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.78, 0.2 },
     { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.89, 0.2 },
     { "warlock_shadow_brand", "ShadowBrand", "Shadow Brand (wowsims.com)", 0.71, 0.2 },
     { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.90, 0.2 },

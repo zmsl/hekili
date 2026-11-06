@@ -293,17 +293,20 @@ local PACKS = {
         },
         uptime = { "immolate", "corruption" },
     },
-    -- sm_ruin.build.json 2540002013520105--0550305003 (30/0/21): Affliction's second pack
+    -- sm_ruin.build.json 2550002013520105--0550205003 (re-pin; was ...--0550305003; 30/0/21): Affliction's second pack
     SMRuin = {
         pack = "SM Ruin (wowsims.com)",
         spec = 100091,
-        max = 5353,
+        max = 5503,
+        fsr = FSR_HUMAN,
+        spirit = SPIRIT_HUMAN,
         demon = "succubus",
         kit = { "siphon_life", "amplify_curse" },
+        -- sm_ruin.build.json at e2842f0a78 (re-pin Task 16): 2550002013520105--0550205003 (was ...--0550305003)
         talents = {
             [18182] = 2, -- Improved Life Tap
             [18174] = 5, -- Suppression
-            [17810] = 4, -- Improved Corruption
+            [17810] = 5, -- Improved Corruption
             [18827] = 2, -- Improved Bane of Agony
             [18288] = 1, -- Amplify Curse
             [427712] = 3, -- Pandemic
@@ -313,7 +316,7 @@ local PACKS = {
             [18271] = 5, -- Shadow Mastery
             [17793] = 5, -- Improved Shadow Bolt
             [17788] = 5, -- Bane
-            [17778] = 3, -- Cataclysm
+            [17778] = 2, -- Cataclysm
             [17959] = 5, -- Ruin
             [17927] = 3, -- Agonizing Flames
         },
