@@ -223,6 +223,17 @@ describe("tools/check_pack_levels.lua", function()
         assert.are.same({}, levels.unguarded("(!action.big_hit.known|dot.big_hit.remains<2)", "strike", isAbility))
     end)
 
+    -- the translator's held range gate (apl.lua, a sequence's waitUntil on range: a whole wowsims condition, true while
+    -- the probe is unlearned, as wowsims's nil condition) carried as a term of the move gate's `|` (Retribution's opener)
+    it("accepts the held range gate as a term of an `|`, and only that form", function()
+        local gate = "x>1&(toggle.movement&window.w.up|(!action.big_hit.known|action.big_hit.in_range)|!window.w.up)"
+        assert.are.same({}, levels.unguarded(gate, "strike", isAbility))
+        assert.are.same(
+            { "cooldown.big_hit.ready" },
+            levels.unguarded("x>1&(y|(!action.big_hit.known|cooldown.big_hit.ready))", "strike", isAbility)
+        )
+    end)
+
     it("finds every wowsims pack line guarded", function()
         local pipe, checked = assert(io.popen("ls src")), 0
         for addon in pipe:lines() do
