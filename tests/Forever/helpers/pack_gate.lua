@@ -247,7 +247,13 @@ M.FLICKER = {
     -- (the not-ready flag's CD_PROBE, central). 0.4 -> 0.2 (Task 10b, gap CQ: the flag keeps a modelled end the GCD or a
     -- hard cast covers; 0.13 / 0.17 / 0.07, was 0.23 / 0.40 / 0.25; agreement .995 / .992 / .996); the rest is the probe
     -- on a free GCD, where the loops' grid puts the world's end a ulp after the tick
-    ["Destruction"] = { flicker = 0.2, retracted = 0, heldReady = 8 }, -- 0.13 / 0.17 / 0.07, 0
+    -- flicker 0.2 -> 0.5 (re-pin e2842f0a78, Task 16, R6; seeds 1-20 / 21-40 / 41-60: 0.50 / 0.30 / 0.30, oracle 0;
+    -- heldReady 1 / 0 / 0): gap CQ's uncovered shape (an end just past a hard cast's): traced seed 13, 49.4 s, one poll
+    -- `life_tap(0.10) conflagrate(1.60)` between `conflagrate(0.50)` and `conflagrate(0.00)`, at the end of the
+    -- Immolate refresh's hard cast, which the new list (`immolate,if=remains<=cast`, Conflagrate gated on Immolate up)
+    -- lands on Conflagrate's cooldown end in nearly every fight (~46 s into combat; 28 of the 30 flips at 1-20 are
+    -- conflagrate > incinerate / life_tap). Central (belief casts), existing; PROPOSED-warlock-5
+    ["Destruction"] = { flicker = 0.5, retracted = 0, heldReady = 8 }, -- 0.50 / 0.30 / 0.30, 0
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. It tightens the bar when a change lowers the oracle's own flicker. 1.8 -> 0.5 (forever-gap-bd,

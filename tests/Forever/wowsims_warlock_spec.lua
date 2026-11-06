@@ -40,12 +40,13 @@ end
 --   Shadow Brand 0.73 -> 0.71 (0.718, 103; LOWERED): A 14, C 1, and the Demonic Brand charges class (API-forced: the
 --   Succubus's attacks spend the brand's 6 charges, unseen; 8 misses at 157-170 s), larger now the new list leads with
 --   the brand's Searing Pain line; without A and C 0.841.
+--   Destruction 0.74 -> 0.90 (0.900, 110): A 7, C 1, 3 Immolate refreshes at remains<=cast.
 local PACKS = {
     { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 1.00, 0.2 },
     { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.70, 0.2 },
     { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.89, 0.2 },
     { "warlock_shadow_brand", "ShadowBrand", "Shadow Brand (wowsims.com)", 0.71, 0.2 },
-    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.74, 0.2 },
+    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.90, 0.2 },
 }
 
 describe("the Warlock wowsims.com packs #slow #wowsims", function()

@@ -431,7 +431,8 @@ M.READY = {
     -- 0.500, 5: Incinerate's 2.0 s cast, likewise. { 0.50, 5 } -> { 0.50, 16 } R42 (the replay answers
     -- fight_remains from the log): only rows that were "never" moved, now timed
     -- (never 28 -> 0; 12 of them early at the cast's grain); median 0.40
-    warlock_destruction = { 0.50, 16 },
+    -- { 0.50, 16 } -> { 0.00, 0 } re-pin e2842f0a78 (Task 16, R6, L82 M5): 107 decisions, 97 timed all in grain
+    warlock_destruction = { 0.00, 0 },
     -- 0.900, 16: Shadow Bolt's, likewise. -> { 0.20, 1 } re-pin e2842f0a78 (Task 16, R6, L82 M5): 100 decisions, 1
     -- real (shadow_bolt late 0.20 s), the rest in grain or tie, never 24
     warlock_shadow_brand = { 0.20, 1 },

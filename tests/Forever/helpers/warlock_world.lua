@@ -262,20 +262,23 @@ local PACKS = {
         },
         uptime = { "corruption", "immolate" },
     },
-    -- destro.build.json 2530000013-0004-0050355103101351 (14/4/33)
+    -- destro.build.json 2550002013--0050355103101351 (re-pin; was 2530000013-0004-..., 14/4/33)
     Destruction = {
         pack = "Destruction (wowsims.com)",
         spec = 100093,
-        max = 5353,
+        max = 5503,
+        fsr = FSR_HUMAN,
+        spirit = SPIRIT_HUMAN,
         demon = "succubus",
         kit = { "conflagrate", "shadowburn", "incinerate", "amplify_curse" },
+        -- destro.build.json at e2842f0a78 (re-pin Task 16): 2550002013--0050355103101351 (was 2530000013-0004-...)
         talents = {
             [18182] = 2, -- Improved Life Tap
             [18174] = 5, -- Suppression
-            [17810] = 3, -- Improved Corruption
+            [17810] = 5, -- Improved Corruption
+            [18827] = 2, -- Improved Bane of Agony
             [18288] = 1, -- Amplify Curse
             [427712] = 3, -- Pandemic
-            [18769] = 4, -- Unholy Power
             [17788] = 5, -- Bane
             [17778] = 3, -- Cataclysm
             [18119] = 5, -- Aftermath

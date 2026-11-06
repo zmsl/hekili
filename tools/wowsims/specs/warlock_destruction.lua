@@ -1,18 +1,25 @@
 -- tools/wowsims/specs/warlock_destruction.lua (wowsims packs plan, Task 13): Destruction (wowsims.com)'s
 -- wowsims/forever request and translation; wowsims's preset build "Destro" (presets.ts Builds).
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warlock/dps/builds/destro.build.json
--- (the build: race Orc, talents 2530000013-0004-0050355103101351, Succubus out, Demon Armor, curse Elements, 32 Soul
+-- (the build: race Human, talents 2550002013--0050355103101351, Succubus out, Demon Armor, curse Elements, 32 Soul
 -- Shards, Engineering/Tailoring, 20 yd; its rotation) and presets.ts:11,20,29,91 (DESTRO_APL, DestroTalents, the Builds
 -- list) at the pin. The build carries no gear: gear_sets/preraid.gear.json (central fix 27).
 -- Spec binding: 33 Destruction points to 14 Affliction and 4 Demonology: Destruction's default.
--- Disagreements (P7; floor 0.74), decisions on-GCD 0.743 (109) top [incinerate -> bane_of_doom 10; conflagrate ->
--- bane_of_doom 5; shadowburn -> bane_of_doom 4] (log times): every one is in the fight's last minute (120-180 s):
--- API-forced: `fight_remains` 3600 s (rule 10), so Bane of Doom whenever it is down; wowsims switches to Bane of Agony.
+-- Re-pin e2842f0a78 (Task 16): the build is now Human (Sesam's lists: Life Tap below 30% mana, Major Mana Potion and
+-- Demonic Rune lines); the replay answers `fight_remains` from the log's length (R42, a replay-world assumption; in
+-- game it reads 3600, gap AN, so the last-minute lines take the long-fight branch).
+-- Disagreements (P7; floor 0.90, was 0.74), decisions on-GCD 0.900 (110) top [incinerate -> life_tap 5; incinerate
+-- -> immolate 4; conflagrate -> immolate 1] (log times), 11 misses:
+--   class A (7, t=19-48; R50, accepted limit): the refill-blind mana belief's Life Tap (warlock_demonology.lua).
+--   class C (1; R50): the pre-pull Incinerate is omitted (warlock_demonology.lua).
+--   the rest (3: 101.5, 167, 185 immolate): the Immolate refresh at `remains<=cast`, not traced.
+-- Omitted 2 -> 3 (dry.lua 3): petAttack, the pre-pull doAtValue (C), spell 1225228 (Bane of Havoc: a NextTarget cast,
+-- never in this single-target log), listed.
 -- Leveling note: below Incinerate (40) the list has no filler and falls through to its last line, Life Tap (as
 -- wowsims's own list would at that level); the gate counts Life Tap as a press, so no bracket is idle.
 -- Deviations: the Boosts group's Major Spellblasting Potion (item 250937) has no key (no shared content): omitted
 -- (rule 2); the Ez-Thro Dynamite II (18588, rule 13) is unmapped (no shared key), listed; Berserking (Troll) and
--- Eureka! are other races' racials, never known to the Orc. The Weakness Analyzer trinket (272438) is `use_items` (rule
+-- Eureka! and Blood Fury are other races' racials, never known to the Human. The Weakness Analyzer trinket (272438) is `use_items` (rule
 -- 13).
 -- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket
 -- idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
