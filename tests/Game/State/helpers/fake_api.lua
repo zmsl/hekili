@@ -57,6 +57,9 @@ function M.new()
         combat = false,
         class = "CLASS_A",
         power = {}, -- [powerType] = value (SECRET for a secret read)
+        -- [target token] = GetComboPoints("player", token): the points usable on that unit (SECRET: a secret answer;
+        -- false: nil, no unit); unset: the pool, UnitPower("player", 4), as in a single-target world
+        comboPoints = {},
         petPower = 0, -- UnitPower("pet") of the pet's power type `petPowerType` while exists.pet (SECRET: a secret read)
         petPowerType = 0,
         itemCount = {}, -- [itemID] = C_Item.GetItemCount (default 0)
@@ -160,6 +163,15 @@ function M.new()
         local v = ctl.power[pt]
         if v == nil then
             return SECRET
+        end
+        return v
+    end
+    function api.GetComboPoints(_, target)
+        local v = ctl.comboPoints[target]
+        if v == nil then
+            return api.UnitPower("player", 4)
+        elseif v == false then
+            return nil
         end
         return v
     end
