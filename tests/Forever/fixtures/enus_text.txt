@@ -17727,7 +17727,6 @@ options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.clearcast
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.flame_shock	|T136000:0|t Spell 8050
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.improved_stormstrike	|T136000:0|t Spell 1238931
-options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.lightning_shield	|T136000:0|t Spell 324
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.maelstrom_weapon	|T136000:0|t Spell 408505
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.revelation	|T136000:0|t Spell 1323418
@@ -17981,21 +17980,20 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.windfury
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.windwall_totem	|T136000:0|t Spell 15107
 options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	name	Entry
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r [Item 13444] - |cFFFFD100|cffffd100mana.pct_lo<80|r|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r [Item 12662] - |cFFFFD100|cffffd100mana.pct_lo<70|r|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20572
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 425336
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 8835 - |cFFFFD100|cffffd100totem.air.remains<=0|r|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 8075 - |cFFFFD100|cffffd100totem.earth.remains<=0|r|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 408341 - |cFFFFD100|cffffd100buff.clearcasting.up|r|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 324 - |cFFFFD100|cffffd100!buff.lightning_shield.up|r|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 3599 - |cFFFFD100|cffffd100totem.fire.remains<=0|r|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 17364
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 403 - |cFFFFD100|cffffd100buff.maelstrom_weapon.stack>=5|r|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 8050 - |cFFFFD100|cffffd100!debuff.flame_shock.up|r|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 8042
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 408341 - |cFFFFD100|cffffd100mana.pct_lo>10|r|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 403 - |cFFFFD100|cffffd100!action.stormstrike.known|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 8024 - |cFFFFD100|cffffd100!buff.main_hand_enchant.up|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 8017 - |cFFFFD100|cffffd100!buff.main_hand_enchant.up&!action.flametongue_weapon.known|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r [Item 13444] - |cFFFFD100|cffffd100mana.pct_lo<80|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r [Item 12662] - |cFFFFD100|cffffd100mana.pct_lo<70|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 408510 - |cFFFFD100|cffffd100!buff.water_shield.up|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 8512 - |cFFFFD100|cffffd100totem.air.remains<=2|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 8075 - |cFFFFD100|cffffd100totem.earth.remains<=2|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 5675 - |cFFFFD100|cffffd100totem.water.remains<=2|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 8190 - |cFFFFD100|cffffd100totem.fire.remains<=2|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r |cff00ccff[Use Items]|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 425336
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_rotation|r, if |cffffd100active_enemies=1|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffaoe_rotation|r, if |cffffd100active_enemies>1|r|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 403 - |cFFFFD100|cffffd100!action.stormstrike.known|r|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	name	Action Name
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
@@ -18059,7 +18057,6 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.clear
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.flame_shock	|T136000:0|t Spell 8050
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.improved_stormstrike	|T136000:0|t Spell 1238931
-options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.lightning_shield	|T136000:0|t Spell 324
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.maelstrom_weapon	|T136000:0|t Spell 408505
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.revelation	|T136000:0|t Spell 1323418
@@ -18075,10 +18072,14 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.enabled	desc	If disabl
 options.packs.enhancement.Enhancement (wowsims.com).lists.enabled	name	Enabled
 options.packs.enhancement.Enhancement (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.enhancement.Enhancement (wowsims.com).lists.listName	name	Action List
+options.packs.enhancement.Enhancement (wowsims.com).lists.listName	values.aoe_rotation	aoe_rotation
 options.packs.enhancement.Enhancement (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.listName	values.single_target_rotation	single_target_rotation
 options.packs.enhancement.Enhancement (wowsims.com).lists.list_name	name	Action List
+options.packs.enhancement.Enhancement (wowsims.com).lists.list_name	values.aoe_rotation	aoe_rotation
 options.packs.enhancement.Enhancement (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
+options.packs.enhancement.Enhancement (wowsims.com).lists.list_name	values.single_target_rotation	single_target_rotation
 options.packs.enhancement.Enhancement (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.enhancement.Enhancement (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.enhancement.Enhancement (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
@@ -18108,7 +18109,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.modMoving.moving	value
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Item 12662)
+options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 8017)
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.enhancement.Enhancement (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
