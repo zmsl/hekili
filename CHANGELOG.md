@@ -4,6 +4,7 @@
 
 ### New
 - The wowsims.com priorities now follow wowsims as it was on 2 November 2026. wowsims has changed since (class hotfixes and two new game builds), so updated priorities for every class follow in 0.6.1 and later; some (the Rogues, Warriors, Hunters, Warlocks, Elemental, Arcane, Shadow and Protection Paladin) have moved noticeably.
+- Known issue: Lava Burst has been removed from the game, but the Elemental (wowsims.com) priority still has a Lava Burst line. It is skipped because you do not know the spell, and the rest of the Elemental rotation is not yet re-tuned for its absence; an updated Elemental priority follows in 0.6.1 or later.
 - Stoneskin Totem and the other Shaman totems now have their buffs registered, so custom priorities can use buff.stoneskin_totem.up and its siblings (also buff.stoneskin.up). The missing totems (Stoneskin, Healing Stream, the resistance totems, Windwall, Tremor, the cleansing totems, Sentry, Earthbind, Stoneclaw, Grounding) can be cast and tracked too; no built-in priority uses them.
 - A Movement toggle for priorities that move to reach the next ability: on, they show it out of range; off, they hide it until you are in range. It is on by default, so from your first login Hunters, Feral Druids, Retribution Paladins and Demonology and Shadow Brand Warlocks see out-of-range icons; to turn it off, open /hekili, then Toggles, Movement, and uncheck Enable Movement.
 - The engine supports rotation windows (spans the game shows no buff for), and the priority editor can add their Open Window and Close Window lines. No built-in priority uses them yet.
@@ -46,7 +47,7 @@
 - Elemental Shamans: Mana Spring Totem counts at your real rank from the first fight of a session.
 - Warriors: in Battle Stance, Overpower no longer shows on another player's dodge; it waits for the game to say the spell is usable.
 - A free-cast proc raised by the cast that just landed is no longer counted as spent at low frame rates, so your mana estimate stays right.
-- Shaman: Chain Lightning, Lava Burst and Mana Tide Totem follow wowsims's spell data for costs and the levels their ranks are learned (Chain Lightning rank 4 is 315 mana, was 485); not yet checked in game.
+- Shaman: Chain Lightning and Mana Tide Totem follow wowsims's spell data for costs and the levels their ranks are learned (Chain Lightning rank 4 is 315 mana, was 485); not yet checked in game.
 - No more Lua errors from nameplates and unit changes where the game hides who a unit is (likely in dungeons and raids). There, hits on a target the addon can't identify are no longer counted against your previous target.
 
 ### Known issues
