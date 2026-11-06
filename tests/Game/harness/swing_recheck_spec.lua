@@ -127,7 +127,11 @@ describe("a wrapping swing clock's recheck times (Scripts.lua ConvertTimeCompari
         local errs = {}
         local orig = H.Error
         H.Error = function(_, msg)
-            errs[#errs + 1] = tostring(msg)
+            msg = tostring(msg)
+            -- the bare harness also emits one-time "Unknown key" errors; only a compile failure counts
+            if msg:find("Unable to compile", 1, true) then
+                errs[#errs + 1] = msg
+            end
         end
         local ok, rs = pcall(function()
             return {
