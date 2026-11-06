@@ -47,6 +47,22 @@ local ELE_REPLAY = {
 
 describe("the Shaman wowsims.com packs #slow #wowsims", function()
     local PACK = "Enhancement (wowsims.com)"
+    -- the learn levels are wowsims e2842f0a78's SpellLevel (the DB2 at 70707 agrees); the table once had 25/48/58 for
+    -- Mana Tide Totem and 40/50/60 for Lava Burst, and lacked both Forever rank 4s (deferral L39)
+    it("learns Mana Tide Totem and Lava Burst at wowsims's levels", function()
+        local learn = ws.learn("SHAMAN")
+        assert.are.same({ 1, 38, 48, 58, 30, 40, 50, 60 }, {
+            learn[16190],
+            learn[17354],
+            learn[17359],
+            learn[1325256],
+            learn[408490],
+            learn[1238299],
+            learn[1238300],
+            learn[1326047],
+        })
+    end)
+
     -- the replay floor, measured (0.602 first; 0.750 with Call of Flame and Stormstrike's cost; 0.784 once the replay
     -- sends shared and talent cooldowns; 0.807 on central fix 6; Fire Nova at 375 was reverted, R2; 0.818 on central
     -- fix 12's five-second-rule mana forecast; 0.909 on central fix 13's cooldown restart; 0.920 on 13 over 12), never lowered
@@ -81,6 +97,7 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     -- run), never lowered; the misses are shared gaps (tools/wowsims/specs/shaman_elemental.lua's header). 0.93 -> 0.92
     -- re-pin e2842f0a78 (Task 11, ruling R26): 0.928 (97), was 0.957 (92); the central gaps.md "Travel time" row (3 of
     -- the 7 misses, Revelation spent at Lava Burst's cast end; 0.959 without them) plus gap BL; flicker 0.00/min
+    -- Chain Lightning's, Lava Burst's and Mana Tide Totem's costs from wowsims's spell data (lane shamanpin): 0.928 (97) unchanged
     it(ELE .. " follows wowsims's casts", function()
         ws.gate(ELE, content("shaman_elemental", sw.Elemental, ELE, 60), "shaman_elemental", 0.92, ELE_REPLAY)
     end)

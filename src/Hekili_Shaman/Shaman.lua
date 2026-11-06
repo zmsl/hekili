@@ -89,10 +89,13 @@ local WINDFURY_WEAPON_COST = { 90, 115, 140, 165 }
 local FROSTBRAND_WEAPON = { 8033, 8038, 10456, 16355, 16356 }
 local FROSTBRAND_WEAPON_COST = { 60, 85, 110, 135, 160 }
 local CHAIN_LIGHTNING = { 421, 930, 2860, 10605 }
-local CHAIN_LIGHTNING_COST = { 225, 305, 390, 485 }
+-- Chain Lightning's and Lava Burst's costs: wowsims e2842f0a78's spell data (spells_auto_gen.go Powers), every rank
+-- (owner rule 2026-11-06: wowsims over the DB2, whose 225..485 and 165/230/265 are wrong; the Elemental log's 238.5
+-- confirms Lava Burst rank 4's 265 x 0.9 Convection).
+local CHAIN_LIGHTNING_COST = { 145, 200, 250, 315 }
 -- Rank 4 (1326047) is Forever's, absent from the DB2 at 70338: wowsims/forever's spell data (265 mana, 2.5 s, 10 s).
 local LAVA_BURST = { 408490, 1238299, 1238300, 1326047 }
-local LAVA_BURST_COST = { 165, 230, 265, 265 }
+local LAVA_BURST_COST = { 135, 165, 230, 265 }
 -- Elemental Alacrity (16578, aura 107 misc 10 on Lightning Bolt, Chain Lightning and Lava Burst) by rank: Forever's
 -- trait curve, -170/-330/-500 ms (wowsims/forever's spell data; the DB2's Talent rows say -200 ms a rank of 5).
 -- IN-GAME CHECK: Lightning Bolt's cast at 3/3: 2.0 s?
@@ -144,11 +147,12 @@ local TOTEMS = {
         cost = { 115, 175, 250 },
         duration = { 300, 300, 300 },
     },
-    -- 5 minutes (category 591); rank 4 (1325256) is Forever's: wowsims/forever's spell data (60 mana, 13 s, 300 s).
+    -- 5 minutes (category 591); rank 4 (1325256) is Forever's. Costs: wowsims e2842f0a78's spell data, every rank
+    -- (the DB2's 10/30/60 for ranks 1-3 are wrong).
     mana_tide_totem = {
         element = "water",
         ids = { 16190, 17354, 17359, 1325256 },
-        cost = { 10, 30, 60, 60 },
+        cost = { 10, 20, 30, 60 },
         duration = { 13, 13, 13, 13 },
         cooldown = 300,
     },

@@ -39,7 +39,7 @@ local TOTEM = {
     windfury_totem = { 4, 300 },
 }
 
--- Each rank's mana cost (DB2, rank order; Stormstrike's wowsims/forever's), the world's truth the class file's costs are measured against; Shamanistic
+-- Each rank's mana cost (DB2, rank order; where wowsims/forever's spell data differs, its value), the world's truth the class file's costs are measured against; Shamanistic
 -- Focus (1223030, DB2 aura 108 misc 14) takes 45% off the shocks' and Lightning Shield's.
 local COST = {
     lightning_bolt = { 15, 30, 45, 60, 85, 110, 135, 160, 190, 220 },
@@ -53,8 +53,8 @@ local COST = {
     strength_of_earth_totem = { 25, 65, 125, 225, 275 },
     mana_spring_totem = { 40, 60, 80, 100 },
     grace_of_air_totem = { 155, 250, 310 },
-    chain_lightning = { 225, 305, 390, 485 },
-    lava_burst = { 165, 230, 265, 265 }, -- rank 4 (1326047) wowsims/forever's
+    chain_lightning = { 145, 200, 250, 315 }, -- wowsims/forever's spell data (the DB2's 225..485)
+    lava_burst = { 135, 165, 230, 265 }, -- wowsims/forever's spell data (the DB2's 165/230/265 for ranks 1-3)
     magma_totem = { 230, 360, 500, 650 },
     windfury_totem = { 115, 175, 250 },
 }

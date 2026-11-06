@@ -10,7 +10,7 @@ local headless = require("Game.harness.headless")
 local FILE = "src/Hekili_Shaman/Shaman.lua"
 
 -- key = { spell IDs in rank order, the top rank's mana cost, cooldown, gcd }, from the DB2 (`wowdb spell <name>`;
--- Stormstrike's cost and Lava Burst's and Mana Tide Totem's Forever-only rank 4 (1326047, 1325256) from wowsims/forever's
+-- Stormstrike's, Chain Lightning's, Lava Burst's and Mana Tide Totem's costs and their Forever-only rank 4s (1326047, 1325256) from wowsims/forever's
 -- spell data, absent from the DB2 at 70338): the cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd
 -- "spell" for 1.5 s, "totem" for 1.0 s, "off" for none.
 local KIT = {
@@ -30,7 +30,7 @@ local KIT = {
     windfury_weapon = { { 8232, 8235, 10486, 16362 }, 165, 0, "spell" },
     frostbrand_weapon = { { 8033, 8038, 10456, 16355, 16356 }, 160, 0, "spell" },
     rage_of_the_farseer = { { 425336 }, 0, 180, "off" }, -- a Forever talent: no cost, off the GCD
-    chain_lightning = { { 421, 930, 2860, 10605 }, 485, 6, "spell" },
+    chain_lightning = { { 421, 930, 2860, 10605 }, 315, 6, "spell" }, -- wowsims's (DB2 485)
     lava_burst = { { 408490, 1238299, 1238300, 1326047 }, 265, 10, "spell" },
     elemental_mastery = { { 16166 }, 0, 180, "off" },
     magma_totem = { { 8190, 10585, 10586, 10587 }, 650, 0, "totem" },
@@ -413,7 +413,7 @@ describe("Forever Shaman", function()
         local e = ld.env(w)
         e.talent.convection = { rank = 5, enabled = true }
         e.talent.shamanistic_focus = { rank = 1, enabled = true }
-        assert.are.same({ 220 * 0.9, 485 * 0.9, 265 * 0.9, 450 * 0.9 * 0.55, 410 * 0.9 * 0.55, 370 * 0.55 }, {
+        assert.are.same({ 220 * 0.9, 315 * 0.9, 265 * 0.9, 450 * 0.9 * 0.55, 410 * 0.9 * 0.55, 370 * 0.55 }, {
             ld.run(w.abilities.lightning_bolt.spend, e),
             ld.run(w.abilities.chain_lightning.spend, e),
             ld.run(w.abilities.lava_burst.spend, e),
@@ -421,6 +421,27 @@ describe("Forever Shaman", function()
             ld.run(w.abilities.flame_shock.spend, e),
             ld.run(w.abilities.lightning_shield.spend, e),
         })
+    end)
+
+    -- wowsims e2842f0a78's spell data (spells_auto_gen.go Powers), every rank; the DB2's ladders (Chain Lightning 225..485,
+    -- Lava Burst 165/230/265/265, Mana Tide Totem 10/30/60/60) are wrong (owner rule 2026-11-06: wowsims over the DB2).
+    it("costs every rank of Chain Lightning, Lava Burst and Mana Tide Totem as wowsims's spell data", function()
+        local e = ld.env(w)
+        for key, costs in pairs({
+            chain_lightning = { 145, 200, 250, 315 },
+            lava_burst = { 135, 165, 230, 265 },
+            mana_tide_totem = { 10, 20, 30, 60 },
+        }) do
+            local ids, got = KIT[key][1], {}
+            for i = 1, #ids do
+                for _, id in ipairs(ids) do
+                    w.game.known[id] = false
+                end
+                w.game.known[ids[i]] = true
+                got[i] = ld.run(w.abilities[key].spend, e)
+            end
+            assert.are.same(costs, got, key)
+        end
     end)
 
     -- Elemental Alacrity (16578, aura 107 misc 10 on Lightning Bolt, Chain Lightning and Lava Burst): Forever's trait
