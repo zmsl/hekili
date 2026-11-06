@@ -1,9 +1,6 @@
 {
   "encounter":{
-    "executeProportion20":0.2,
-    "executeProportion25":0.25,
     "executeProportion35":0.35,
-    "executeProportion90":0.9,
     "duration":180,
     "targets":[{
         "minBaseDamage":2601,
@@ -15,13 +12,13 @@
         "parryHaste":true,
         "mobType":"MobTypeMechanical"
       }],
-    "executeProportion45":0.45
+    "executeProportion20":0.2
   },
   "raid":{
     "parties":[{
         "players":[{
             "profession1":"Engineering",
-            "distanceFromTarget":0,
+            "distanceFromTarget":25,
             "reactionTimeMs":250,
             "class":"ClassDruid",
             "equipment":{
@@ -43,7 +40,7 @@
                   "id":19587,
                   "enchant":7656
                 },{
-                  "id":271948,
+                  "id":19049,
                   "enchant":2564
                 },{
                   "id":272396
@@ -69,94 +66,201 @@
                   "id":272427
                 }]
             },
-            "race":"RaceNightElf",
+            "race":"RaceTauren",
             "name":"Feral",
-            "talentsString":"050022-55000032023001125001-054",
+            "talentsString":"050022-53200032123012124001-055",
             "profession2":"Enchanting",
             "rotation":{
+              "type":"TypeAPL",
               "valueVariables":[{
-                  "name":"Rip has time",
+                  "name":"Rip target CP",
                   "value":{
-                    "cmp":{
-                      "op":"OpGe",
-                      "rhs":{
-                        "const":{
-                          "val":"10s"
-                        }
-                      },
-                      "lhs":{
-                        "remainingTime":{
-                        }
-                      }
+                    "const":{
+                      "val":"4"
                     }
                   }
                 },{
-                  "name":"Rip now",
+                  "name":"Preferred Rip CP with zero or two Blood Frenzy points",
+                  "value":{
+                    "const":{
+                      "val":"5"
+                    }
+                  }
+                },{
+                  "name":"Rip minimum fight left",
+                  "value":{
+                    "const":{
+                      "val":"8s"
+                    }
+                  }
+                },{
+                  "name":"Shifting Power energy ceiling",
+                  "value":{
+                    "const":{
+                      "val":"57"
+                    }
+                  }
+                },{
+                  "name":"Tea energy ceiling",
+                  "value":{
+                    "const":{
+                      "val":"20"
+                    }
+                  }
+                },{
+                  "name":"Fight-end Bite CP",
+                  "value":{
+                    "const":{
+                      "val":"5"
+                    }
+                  }
+                },{
+                  "name":"Fight-end Bite energy ceiling",
+                  "value":{
+                    "const":{
+                      "val":"55"
+                    }
+                  }
+                },{
+                  "name":"Final-global Bite CP",
+                  "value":{
+                    "const":{
+                      "val":"2"
+                    }
+                  }
+                },{
+                  "name":"Final-global Bite window",
+                  "value":{
+                    "const":{
+                      "val":"1s"
+                    }
+                  }
+                },{
+                  "name":"Ravage approach without Clearcasting",
+                  "value":{
+                    "const":{
+                      "val":"10"
+                    }
+                  }
+                },{
+                  "name":"Ravage approach with Clearcasting",
+                  "value":{
+                    "const":{
+                      "val":"35"
+                    }
+                  }
+                },{
+                  "name":"Skyborne Ravage approach without Clearcasting",
+                  "value":{
+                    "const":{
+                      "val":"5"
+                    }
+                  }
+                },{
+                  "name":"Skyborne Ravage approach with Clearcasting",
+                  "value":{
+                    "const":{
+                      "val":"25"
+                    }
+                  }
+                },{
+                  "name":"Midfight Bite CP",
+                  "value":{
+                    "const":{
+                      "val":"4"
+                    }
+                  }
+                },{
+                  "name":"Midfight Bite minimum Rip remaining",
+                  "value":{
+                    "const":{
+                      "val":"2s"
+                    }
+                  }
+                },{
+                  "name":"Tea energy ceiling without Blood Frenzy",
+                  "value":{
+                    "const":{
+                      "val":"25"
+                    }
+                  }
+                },{
+                  "name":"Bite energy target",
+                  "value":{
+                    "const":{
+                      "val":"85"
+                    }
+                  }
+                },{
+                  "name":"Bite energy target with Clearcasting",
+                  "value":{
+                    "const":{
+                      "val":"60"
+                    }
+                  }
+                },{
+                  "name":"Five-point Bite energy target",
+                  "value":{
+                    "const":{
+                      "val":"70"
+                    }
+                  }
+                },{
+                  "name":"Five-point Bite energy target with Clearcasting",
+                  "value":{
+                    "const":{
+                      "val":"50"
+                    }
+                  }
+                },{
+                  "name":"Shifting Power ready",
                   "value":{
                     "and":{
                       "vals":[{
+                          "auraIsActive":{
+                            "auraId":{
+                              "spellId":768
+                            }
+                          }
+                        },{
                           "cmp":{
-                            "op":"OpGe",
+                            "op":"OpLe",
                             "rhs":{
-                              "const":{
-                                "val":"5"
+                              "variableRef":{
+                                "name":"Shifting Power energy ceiling"
                               }
                             },
                             "lhs":{
-                              "currentComboPoints":{
+                              "currentEnergy":{
                               }
                             }
-                          }
-                        },{
-                          "not":{
-                            "val":{
-                              "dotIsActive":{
-                                "spellId":{
-                                  "spellId":9896
-                                }
-                              }
-                            }
-                          }
-                        },{
-                          "variableRef":{
-                            "name":"Rip has time"
                           }
                         },{
                           "spellCanCast":{
                             "spellId":{
-                              "spellId":9896
+                              "spellId":1322605
                             }
                           }
                         }]
                     }
                   }
                 },{
-                  "name":"Rake now",
+                  "name":"Rake due",
                   "value":{
                     "and":{
                       "vals":[{
-                          "and":{
-                            "vals":[{
-                                "not":{
-                                  "val":{
-                                    "dotIsActive":{
-                                      "spellId":{
-                                        "spellId":9904
-                                      }
-                                    }
-                                  }
-                                }
-                              },{
-                                "spellCanCast":{
-                                  "spellId":{
-                                    "spellId":9904
-                                  }
-                                }
-                              }]
+                          "auraIsInactive":{
+                            "includeReactionTime":true,
+                            "sourceUnit":{
+                              "type":"CurrentTarget"
+                            },
+                            "auraId":{
+                              "spellId":9904
+                            }
                           }
                         },{
                           "cmp":{
-                            "op":"OpGe",
+                            "op":"OpGt",
                             "rhs":{
                               "const":{
                                 "val":"6s"
@@ -171,13 +275,396 @@
                     }
                   }
                 },{
-                  "name":"Shifting Power now",
+                  "name":"Rip due",
                   "value":{
                     "and":{
                       "vals":[{
-                          "spellCanCast":{
+                          "and":{
+                            "vals":[{
+                                "cmp":{
+                                  "op":"OpGe",
+                                  "rhs":{
+                                    "variableRef":{
+                                      "name":"Rip target CP"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "currentComboPoints":{
+                                    }
+                                  }
+                                }
+                              },{
+                                "or":{
+                                  "vals":[{
+                                      "not":{
+                                        "val":{
+                                          "or":{
+                                            "vals":[{
+                                                "variableRef":{
+                                                  "name":"No Blood Frenzy points"
+                                                }
+                                              },{
+                                                "variableRef":{
+                                                  "name":"Two Blood Frenzy points with Shifting Power"
+                                                }
+                                              }]
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "cmp":{
+                                        "op":"OpGe",
+                                        "rhs":{
+                                          "variableRef":{
+                                            "name":"Preferred Rip CP with zero or two Blood Frenzy points"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "currentComboPoints":{
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "not":{
+                                        "val":{
+                                          "variableRef":{
+                                            "name":"One more Shred funds next-global Rip"
+                                          }
+                                        }
+                                      }
+                                    }]
+                                }
+                              }]
+                          }
+                        },{
+                          "auraIsInactive":{
+                            "includeReactionTime":true,
+                            "sourceUnit":{
+                              "type":"CurrentTarget"
+                            },
+                            "auraId":{
+                              "spellId":9896
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "variableRef":{
+                                "name":"Rip minimum fight left"
+                              }
+                            },
+                            "lhs":{
+                              "remainingTime":{
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Final-global Bite",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "auraIsActive":{
+                            "auraId":{
+                              "spellId":768
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpLe",
+                            "rhs":{
+                              "variableRef":{
+                                "name":"Final-global Bite window"
+                              }
+                            },
+                            "lhs":{
+                              "remainingTime":{
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "variableRef":{
+                                "name":"Final-global Bite CP"
+                              }
+                            },
+                            "lhs":{
+                              "currentComboPoints":{
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Ready to return to the main weapon",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "activeItemSwapSet":{
+                            "swapSet":"Swap1"
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "const":{
+                                "val":"30s"
+                              }
+                            },
+                            "lhs":{
+                              "currentTime":{
+                              }
+                            }
+                          }
+                        },{
+                          "not":{
+                            "val":{
+                              "auraIsActive":{
+                                "auraId":{
+                                  "spellId":13494
+                                }
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Ready to activate MCP",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "not":{
+                            "val":{
+                              "auraIsActive":{
+                                "auraId":{
+                                  "spellId":9913
+                                }
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpLe",
+                            "rhs":{
+                              "const":{
+                                "val":"5"
+                              }
+                            },
+                            "lhs":{
+                              "unitDistance":{
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Mana potion fits and is needed",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "spellIsKnown":{
                             "spellId":{
-                              "spellId":1322605
+                              "otherId":"OtherActionResourcePotion"
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpLe",
+                            "rhs":{
+                              "const":{
+                                "val":"0s"
+                              }
+                            },
+                            "lhs":{
+                              "gcdTimeToReady":{
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpLe",
+                            "rhs":{
+                              "const":{
+                                "val":"0s"
+                              }
+                            },
+                            "lhs":{
+                              "spellTimeToReady":{
+                                "spellId":{
+                                  "otherId":"OtherActionResourcePotion"
+                                }
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "math":{
+                                "op":"OpAdd",
+                                "rhs":{
+                                  "math":{
+                                    "op":"OpMul",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"5"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentManaRegen":{
+                                      }
+                                    }
+                                  }
+                                },
+                                "lhs":{
+                                  "const":{
+                                    "val":"2250"
+                                  }
+                                }
+                              }
+                            },
+                            "lhs":{
+                              "math":{
+                                "op":"OpSub",
+                                "rhs":{
+                                  "currentMana":{
+                                  }
+                                },
+                                "lhs":{
+                                  "maxMana":{
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },{
+                          "or":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "and":{
+                                      "vals":[{
+                                          "auraIsKnown":{
+                                            "sourceUnit":{
+                                              "type":"CurrentTarget"
+                                            },
+                                            "auraId":{
+                                              "spellId":20355,
+                                              "tag":-1
+                                            }
+                                          }
+                                        },{
+                                          "auraIsActive":{
+                                            "sourceUnit":{
+                                              "type":"CurrentTarget"
+                                            },
+                                            "auraId":{
+                                              "spellId":20355,
+                                              "tag":-1
+                                            }
+                                          }
+                                        }]
+                                    }
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpLt",
+                                  "rhs":{
+                                    "math":{
+                                      "op":"OpAdd",
+                                      "rhs":{
+                                        "spellCurrentCost":{
+                                          "spellId":{
+                                            "spellId":1322605
+                                          }
+                                        }
+                                      },
+                                      "lhs":{
+                                        "math":{
+                                          "op":"OpMul",
+                                          "rhs":{
+                                            "const":{
+                                              "val":"20"
+                                            }
+                                          },
+                                          "lhs":{
+                                            "math":{
+                                              "op":"OpDiv",
+                                              "rhs":{
+                                                "const":{
+                                                  "val":"1s"
+                                                }
+                                              },
+                                              "lhs":{
+                                                "min":{
+                                                  "vals":[{
+                                                      "remainingTime":{
+                                                      }
+                                                    },{
+                                                      "const":{
+                                                        "val":"120s"
+                                                      }
+                                                    }]
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "lhs":{
+                                    "currentMana":{
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Ready to use Elune's Light",
+                  "value":{
+                    "spellIsKnown":{
+                      "spellId":{
+                        "spellId":1259799
+                      }
+                    }
+                  }
+                },{
+                  "name":"Tea is selected and energy is low",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "or":{
+                            "vals":[{
+                                "selectedConjured":{
+                                  "conjuredId":{
+                                    "itemId":7676
+                                  }
+                                }
+                              },{
+                                "selectedConjured":{
+                                  "conjuredId":{
+                                    "itemId":12662
+                                  }
+                                }
+                              }]
+                          }
+                        },{
+                          "auraIsActive":{
+                            "auraId":{
+                              "spellId":768
                             }
                           }
                         },{
@@ -185,17 +672,15 @@
                             "vals":[{
                                 "and":{
                                   "vals":[{
-                                      "auraIsActive":{
-                                        "auraId":{
-                                          "spellId":16870
-                                        }
+                                      "variableRef":{
+                                        "name":"No Blood Frenzy points"
                                       }
                                     },{
                                       "cmp":{
-                                        "op":"OpLt",
+                                        "op":"OpLe",
                                         "rhs":{
-                                          "const":{
-                                            "val":"40"
+                                          "variableRef":{
+                                            "name":"Tea energy ceiling without Blood Frenzy"
                                           }
                                         },
                                         "lhs":{
@@ -210,19 +695,17 @@
                                   "vals":[{
                                       "not":{
                                         "val":{
-                                          "auraIsActive":{
-                                            "auraId":{
-                                              "spellId":16870
-                                            }
+                                          "variableRef":{
+                                            "name":"No Blood Frenzy points"
                                           }
                                         }
                                       }
                                     },{
                                       "cmp":{
-                                        "op":"OpLt",
+                                        "op":"OpLe",
                                         "rhs":{
-                                          "const":{
-                                            "val":"50"
+                                          "variableRef":{
+                                            "name":"Tea energy ceiling"
                                           }
                                         },
                                         "lhs":{
@@ -238,210 +721,49 @@
                     }
                   }
                 },{
-                  "name":"Pool for a refresh",
-                  "value":{
-                    "or":{
-                      "vals":[{
-                          "and":{
-                            "vals":[{
-                                "cmp":{
-                                  "op":"OpGe",
-                                  "rhs":{
-                                    "const":{
-                                      "val":"5"
-                                    }
-                                  },
-                                  "lhs":{
-                                    "currentComboPoints":{
-                                    }
-                                  }
-                                }
-                              },{
-                                "dotIsActive":{
-                                  "spellId":{
-                                    "spellId":9896
-                                  }
-                                }
-                              },{
-                                "variableRef":{
-                                  "name":"Rip has time"
-                                }
-                              },{
-                                "cmp":{
-                                  "op":"OpGt",
-                                  "rhs":{
-                                    "const":{
-                                      "val":"0s"
-                                    }
-                                  },
-                                  "lhs":{
-                                    "dotRemainingTime":{
-                                      "spellId":{
-                                        "spellId":9896
-                                      }
-                                    }
-                                  }
-                                }
-                              },{
-                                "cmp":{
-                                  "op":"OpLe",
-                                  "rhs":{
-                                    "const":{
-                                      "val":"2s"
-                                    }
-                                  },
-                                  "lhs":{
-                                    "dotRemainingTime":{
-                                      "spellId":{
-                                        "spellId":9896
-                                      }
-                                    }
-                                  }
-                                }
-                              },{
-                                "cmp":{
-                                  "op":"OpLt",
-                                  "rhs":{
-                                    "spellCurrentCost":{
-                                      "spellId":{
-                                        "spellId":9896
-                                      }
-                                    }
-                                  },
-                                  "lhs":{
-                                    "math":{
-                                      "op":"OpAdd",
-                                      "rhs":{
-                                        "const":{
-                                          "val":"10"
-                                        }
-                                      },
-                                      "lhs":{
-                                        "math":{
-                                          "op":"OpSub",
-                                          "rhs":{
-                                            "spellCurrentCost":{
-                                              "spellId":{
-                                                "spellId":9830
-                                              }
-                                            }
-                                          },
-                                          "lhs":{
-                                            "currentEnergy":{
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }]
-                          }
-                        },{
-                          "and":{
-                            "vals":[{
-                                "dotIsActive":{
-                                  "spellId":{
-                                    "spellId":9904
-                                  }
-                                }
-                              },{
-                                "cmp":{
-                                  "op":"OpGe",
-                                  "rhs":{
-                                    "const":{
-                                      "val":"9s"
-                                    }
-                                  },
-                                  "lhs":{
-                                    "remainingTime":{
-                                    }
-                                  }
-                                }
-                              },{
-                                "cmp":{
-                                  "op":"OpGt",
-                                  "rhs":{
-                                    "const":{
-                                      "val":"0s"
-                                    }
-                                  },
-                                  "lhs":{
-                                    "dotRemainingTime":{
-                                      "spellId":{
-                                        "spellId":9904
-                                      }
-                                    }
-                                  }
-                                }
-                              },{
-                                "cmp":{
-                                  "op":"OpLe",
-                                  "rhs":{
-                                    "const":{
-                                      "val":"1s"
-                                    }
-                                  },
-                                  "lhs":{
-                                    "dotRemainingTime":{
-                                      "spellId":{
-                                        "spellId":9904
-                                      }
-                                    }
-                                  }
-                                }
-                              },{
-                                "cmp":{
-                                  "op":"OpLt",
-                                  "rhs":{
-                                    "spellCurrentCost":{
-                                      "spellId":{
-                                        "spellId":9904
-                                      }
-                                    }
-                                  },
-                                  "lhs":{
-                                    "math":{
-                                      "op":"OpAdd",
-                                      "rhs":{
-                                        "const":{
-                                          "val":"10"
-                                        }
-                                      },
-                                      "lhs":{
-                                        "math":{
-                                          "op":"OpSub",
-                                          "rhs":{
-                                            "spellCurrentCost":{
-                                              "spellId":{
-                                                "spellId":9830
-                                              }
-                                            }
-                                          },
-                                          "lhs":{
-                                            "currentEnergy":{
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }]
-                          }
-                        }]
-                    }
-                  }
-                },{
-                  "name":"Elune's Light now",
+                  "name":"Rune can restore mana after Tea",
                   "value":{
                     "and":{
                       "vals":[{
-                          "not":{
-                            "val":{
-                              "auraIsActive":{
-                                "auraId":{
-                                  "spellId":417141
+                          "selectedConjured":{
+                            "conjuredId":{
+                              "itemId":12662
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGt",
+                            "rhs":{
+                              "const":{
+                                "val":"0s"
+                              }
+                            },
+                            "lhs":{
+                              "spellTimeToReady":{
+                                "spellId":{
+                                  "itemId":7676
+                                }
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "const":{
+                                "val":"1500"
+                              }
+                            },
+                            "lhs":{
+                              "math":{
+                                "op":"OpSub",
+                                "rhs":{
+                                  "currentMana":{
+                                  }
+                                },
+                                "lhs":{
+                                  "maxMana":{
+                                  }
                                 }
                               }
                             }
@@ -451,14 +773,11 @@
                             "op":"OpGt",
                             "rhs":{
                               "const":{
-                                "val":"15s"
+                                "val":"2000"
                               }
                             },
                             "lhs":{
-                              "spellTimeToReady":{
-                                "spellId":{
-                                  "spellId":417141
-                                }
+                              "currentHealth":{
                               }
                             }
                           }
@@ -466,224 +785,7 @@
                     }
                   }
                 },{
-                  "name":"Faerie Fire for Omen",
-                  "value":{
-                    "and":{
-                      "vals":[{
-                          "not":{
-                            "val":{
-                              "auraIsActive":{
-                                "auraId":{
-                                  "spellId":16870
-                                }
-                              }
-                            }
-                          }
-                        },{
-                          "auraIcdIsReady":{
-                            "auraId":{
-                              "spellId":16864
-                            }
-                          }
-                        },{
-                          "cmp":{
-                            "op":"OpGe",
-                            "rhs":{
-                              "const":{
-                                "val":"1s"
-                              }
-                            },
-                            "lhs":{
-                              "spellTimeToReady":{
-                                "spellId":{
-                                  "spellId":1322605
-                                }
-                              }
-                            }
-                          }
-                        },{
-                          "cmp":{
-                            "op":"OpLt",
-                            "rhs":{
-                              "spellCurrentCost":{
-                                "spellId":{
-                                  "spellId":9830
-                                }
-                              }
-                            },
-                            "lhs":{
-                              "math":{
-                                "op":"OpAdd",
-                                "rhs":{
-                                  "const":{
-                                    "val":"10"
-                                  }
-                                },
-                                "lhs":{
-                                  "currentEnergy":{
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        },{
-                          "or":{
-                            "vals":[{
-                                "not":{
-                                  "val":{
-                                    "or":{
-                                      "vals":[{
-                                          "not":{
-                                            "val":{
-                                              "dotIsActive":{
-                                                "spellId":{
-                                                  "spellId":9904
-                                                }
-                                              }
-                                            }
-                                          }
-                                        },{
-                                          "cmp":{
-                                            "op":"OpLt",
-                                            "rhs":{
-                                              "const":{
-                                                "val":"1s"
-                                              }
-                                            },
-                                            "lhs":{
-                                              "dotRemainingTime":{
-                                                "spellId":{
-                                                  "spellId":9904
-                                                }
-                                              }
-                                            }
-                                          }
-                                        }]
-                                    }
-                                  }
-                                }
-                              },{
-                                "cmp":{
-                                  "op":"OpLt",
-                                  "rhs":{
-                                    "spellCurrentCost":{
-                                      "spellId":{
-                                        "spellId":9904
-                                      }
-                                    }
-                                  },
-                                  "lhs":{
-                                    "math":{
-                                      "op":"OpAdd",
-                                      "rhs":{
-                                        "const":{
-                                          "val":"10"
-                                        }
-                                      },
-                                      "lhs":{
-                                        "currentEnergy":{
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }]
-                          }
-                        },{
-                          "or":{
-                            "vals":[{
-                                "not":{
-                                  "val":{
-                                    "and":{
-                                      "vals":[{
-                                          "cmp":{
-                                            "op":"OpGe",
-                                            "rhs":{
-                                              "const":{
-                                                "val":"5"
-                                              }
-                                            },
-                                            "lhs":{
-                                              "currentComboPoints":{
-                                              }
-                                            }
-                                          }
-                                        },{
-                                          "variableRef":{
-                                            "name":"Rip has time"
-                                          }
-                                        },{
-                                          "or":{
-                                            "vals":[{
-                                                "not":{
-                                                  "val":{
-                                                    "dotIsActive":{
-                                                      "spellId":{
-                                                        "spellId":9896
-                                                      }
-                                                    }
-                                                  }
-                                                }
-                                              },{
-                                                "cmp":{
-                                                  "op":"OpLt",
-                                                  "rhs":{
-                                                    "const":{
-                                                      "val":"1s"
-                                                    }
-                                                  },
-                                                  "lhs":{
-                                                    "dotRemainingTime":{
-                                                      "spellId":{
-                                                        "spellId":9896
-                                                      }
-                                                    }
-                                                  }
-                                                }
-                                              }]
-                                          }
-                                        }]
-                                    }
-                                  }
-                                }
-                              },{
-                                "cmp":{
-                                  "op":"OpLt",
-                                  "rhs":{
-                                    "spellCurrentCost":{
-                                      "spellId":{
-                                        "spellId":9896
-                                      }
-                                    }
-                                  },
-                                  "lhs":{
-                                    "math":{
-                                      "op":"OpAdd",
-                                      "rhs":{
-                                        "const":{
-                                          "val":"10"
-                                        }
-                                      },
-                                      "lhs":{
-                                        "currentEnergy":{
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }]
-                          }
-                        },{
-                          "spellCanCast":{
-                            "spellId":{
-                              "spellId":9907
-                            }
-                          }
-                        }]
-                    }
-                  }
-                },{
-                  "name":"Clearcasting into Shred",
+                  "name":"Fight-end Bite is worthwhile",
                   "value":{
                     "and":{
                       "vals":[{
@@ -693,81 +795,134 @@
                             }
                           }
                         },{
-                          "auraIsActive":{
-                            "auraId":{
-                              "spellId":16870
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "variableRef":{
+                                "name":"Fight-end Bite CP"
+                              }
+                            },
+                            "lhs":{
+                              "currentComboPoints":{
+                              }
                             }
                           }
-                        }]
-                    }
-                  }
-                },{
-                  "name":"Bite at the end",
-                  "value":{
-                    "or":{
-                      "vals":[{
-                          "and":{
+                        },{
+                          "or":{
                             "vals":[{
+                                "variableRef":{
+                                  "name":"Predatory Discipline keeps Bite energy"
+                                }
+                              },{
                                 "cmp":{
-                                  "op":"OpGe",
+                                  "op":"OpLe",
                                   "rhs":{
-                                    "const":{
-                                      "val":"5"
+                                    "variableRef":{
+                                      "name":"Fight-end Bite energy ceiling"
                                     }
                                   },
                                   "lhs":{
-                                    "currentComboPoints":{
-                                    }
-                                  }
-                                }
-                              },{
-                                "not":{
-                                  "val":{
-                                    "variableRef":{
-                                      "name":"Rip has time"
+                                    "currentEnergy":{
                                     }
                                   }
                                 }
                               }]
                           }
                         },{
-                          "and":{
-                            "vals":[{
-                                "cmp":{
-                                  "op":"OpGe",
-                                  "rhs":{
-                                    "const":{
-                                      "val":"3"
-                                    }
-                                  },
-                                  "lhs":{
-                                    "currentComboPoints":{
-                                    }
-                                  }
-                                }
-                              },{
-                                "cmp":{
-                                  "op":"OpLt",
-                                  "rhs":{
-                                    "const":{
-                                      "val":"3s"
-                                    }
-                                  },
-                                  "lhs":{
-                                    "remainingTime":{
-                                    }
-                                  }
-                                }
-                              }]
+                          "cmp":{
+                            "op":"OpLt",
+                            "rhs":{
+                              "variableRef":{
+                                "name":"Rip minimum fight left"
+                              }
+                            },
+                            "lhs":{
+                              "remainingTime":{
+                              }
+                            }
                           }
                         }]
                     }
                   }
                 },{
-                  "name":"Mana short",
+                  "name":"Claw can replace Shred",
                   "value":{
                     "and":{
                       "vals":[{
+                          "auraIsActive":{
+                            "auraId":{
+                              "spellId":768
+                            }
+                          }
+                        },{
+                          "not":{
+                            "val":{
+                              "spellCanCast":{
+                                "spellId":{
+                                  "spellId":9830
+                                }
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "spellCurrentCost":{
+                                "spellId":{
+                                  "spellId":9830
+                                }
+                              }
+                            },
+                            "lhs":{
+                              "currentEnergy":{
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Innervate can restore needed mana",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "auraIsActive":{
+                            "auraId":{
+                              "spellId":768
+                            }
+                          }
+                        },{
+                          "spellIsReady":{
+                            "spellId":{
+                              "spellId":29166
+                            }
+                          }
+                        },{
+                          "or":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "auraIsKnown":{
+                                      "auraId":{
+                                        "spellId":1270842
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "not":{
+                                  "val":{
+                                    "auraIsActive":{
+                                      "auraId":{
+                                        "spellId":1270842
+                                      }
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        },{
                           "cmp":{
                             "op":"OpLt",
                             "rhs":{
@@ -802,319 +957,751 @@
                               }
                             }
                           }
-                        }]
-                    }
-                  }
-                }],
-              "type":"TypeAPL",
-              "groups":[{
-                  "name":"Berserk",
-                  "actions":[{
-                      "action":{
-                        "condition":{
-                          "and":{
-                            "vals":[{
-                                "auraIsActive":{
-                                  "auraId":{
-                                    "spellId":768
-                                  }
-                                }
-                              },{
-                                "not":{
-                                  "val":{
-                                    "variableRef":{
-                                      "name":"Rip now"
-                                    }
-                                  }
-                                }
-                              },{
-                                "variableRef":{
-                                  "name":"Rake now"
-                                }
-                              }]
-                          }
-                        },
-                        "strictSequence":{
-                          "actions":[{
-                              "castSpell":{
-                                "spellId":{
-                                  "spellId":417141
-                                }
-                              }
-                            },{
-                              "castSpell":{
-                                "spellId":{
-                                  "spellId":9904
-                                }
-                              }
-                            }]
-                        }
-                      }
-                    },{
-                      "action":{
-                        "condition":{
-                          "and":{
-                            "vals":[{
-                                "auraIsActive":{
-                                  "auraId":{
-                                    "spellId":768
-                                  }
-                                }
-                              },{
-                                "not":{
-                                  "val":{
-                                    "variableRef":{
-                                      "name":"Rip now"
-                                    }
-                                  }
-                                }
-                              },{
-                                "not":{
-                                  "val":{
-                                    "variableRef":{
-                                      "name":"Rake now"
-                                    }
-                                  }
-                                }
-                              },{
-                                "not":{
-                                  "val":{
-                                    "variableRef":{
-                                      "name":"Pool for a refresh"
-                                    }
-                                  }
-                                }
-                              },{
-                                "not":{
-                                  "val":{
-                                    "variableRef":{
-                                      "name":"Shifting Power now"
-                                    }
-                                  }
-                                }
-                              },{
-                                "spellCanCast":{
-                                  "spellId":{
-                                    "spellId":9830
-                                  }
-                                }
-                              }]
-                          }
-                        },
-                        "strictSequence":{
-                          "actions":[{
-                              "castSpell":{
-                                "spellId":{
-                                  "spellId":417141
-                                }
-                              }
-                            },{
-                              "castSpell":{
-                                "spellId":{
-                                  "spellId":9830
-                                }
-                              }
-                            }]
-                        }
-                      }
-                    }]
-                },{
-                  "name":"Cooldowns",
-                  "actions":[{
-                      "action":{
-                        "condition":{
-                          "variableRef":{
-                            "name":"Elune's Light now"
-                          }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "spellId":1259799
-                          }
-                        }
-                      }
-                    },{
-                      "action":{
-                        "condition":{
-                          "and":{
-                            "vals":[{
-                                "selectedConjured":{
-                                  "conjuredId":{
-                                    "itemId":7676
-                                  }
-                                }
-                              },{
-                                "cmp":{
-                                  "op":"OpLe",
-                                  "rhs":{
-                                    "const":{
-                                      "val":"20"
-                                    }
-                                  },
-                                  "lhs":{
-                                    "currentEnergy":{
-                                    }
-                                  }
-                                }
-                              }]
-                          }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "itemId":7676
-                          }
-                        }
-                      }
-                    },{
-                      "action":{
-                        "condition":{
+                        },{
                           "cmp":{
                             "op":"OpLe",
                             "rhs":{
-                              "maxMana":{
+                              "const":{
+                                "val":"0s"
                               }
                             },
                             "lhs":{
-                              "math":{
-                                "op":"OpAdd",
-                                "rhs":{
-                                  "math":{
-                                    "op":"OpAdd",
-                                    "rhs":{
-                                      "const":{
-                                        "val":"2250"
+                              "gcdTimeToReady":{
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpLe",
+                            "rhs":{
+                              "const":{
+                                "val":"30"
+                              }
+                            },
+                            "lhs":{
+                              "currentEnergy":{
+                              }
+                            }
+                          }
+                        },{
+                          "not":{
+                            "val":{
+                              "auraIsActive":{
+                                "auraId":{
+                                  "spellId":16870
+                                }
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "const":{
+                                "val":"15s"
+                              }
+                            },
+                            "lhs":{
+                              "remainingTime":{
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Ravage opener fits the approach",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "auraIsKnown":{
+                            "sourceUnit":{
+                              "type":"CurrentTarget"
+                            },
+                            "auraId":{
+                              "spellId":9907,
+                              "tag":-1
+                            }
+                          }
+                        },{
+                          "auraIsActive":{
+                            "sourceUnit":{
+                              "type":"CurrentTarget"
+                            },
+                            "auraId":{
+                              "spellId":9907,
+                              "tag":-1
+                            }
+                          }
+                        },{
+                          "or":{
+                            "vals":[{
+                                "and":{
+                                  "vals":[{
+                                      "auraIsActive":{
+                                        "auraId":{
+                                          "spellId":16870
+                                        }
                                       }
-                                    },
-                                    "lhs":{
-                                      "math":{
-                                        "op":"OpMul",
+                                    },{
+                                      "cmp":{
+                                        "op":"OpLe",
+                                        "rhs":{
+                                          "variableRef":{
+                                            "name":"Ravage approach with Clearcasting"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "unitDistance":{
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "or":{
+                                        "vals":[{
+                                            "not":{
+                                              "val":{
+                                                "or":{
+                                                  "vals":[{
+                                                      "spellIsKnown":{
+                                                        "spellId":{
+                                                          "spellId":1259705
+                                                        }
+                                                      }
+                                                    },{
+                                                      "spellIsKnown":{
+                                                        "spellId":{
+                                                          "spellId":1259686
+                                                        }
+                                                      }
+                                                    }]
+                                                }
+                                              }
+                                            }
+                                          },{
+                                            "cmp":{
+                                              "op":"OpLe",
+                                              "rhs":{
+                                                "variableRef":{
+                                                  "name":"Skyborne Ravage approach with Clearcasting"
+                                                }
+                                              },
+                                              "lhs":{
+                                                "unitDistance":{
+                                                }
+                                              }
+                                            }
+                                          }]
+                                      }
+                                    }]
+                                }
+                              },{
+                                "and":{
+                                  "vals":[{
+                                      "not":{
+                                        "val":{
+                                          "auraIsActive":{
+                                            "auraId":{
+                                              "spellId":16870
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "cmp":{
+                                        "op":"OpLe",
+                                        "rhs":{
+                                          "variableRef":{
+                                            "name":"Ravage approach without Clearcasting"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "unitDistance":{
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "or":{
+                                        "vals":[{
+                                            "not":{
+                                              "val":{
+                                                "or":{
+                                                  "vals":[{
+                                                      "spellIsKnown":{
+                                                        "spellId":{
+                                                          "spellId":1259705
+                                                        }
+                                                      }
+                                                    },{
+                                                      "spellIsKnown":{
+                                                        "spellId":{
+                                                          "spellId":1259686
+                                                        }
+                                                      }
+                                                    }]
+                                                }
+                                              }
+                                            }
+                                          },{
+                                            "cmp":{
+                                              "op":"OpLe",
+                                              "rhs":{
+                                                "variableRef":{
+                                                  "name":"Skyborne Ravage approach without Clearcasting"
+                                                }
+                                              },
+                                              "lhs":{
+                                                "unitDistance":{
+                                                }
+                                              }
+                                            }
+                                          }]
+                                      }
+                                    }]
+                                }
+                              }]
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Drop Prowl for this opener",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "auraIsActive":{
+                            "auraId":{
+                              "spellId":9913
+                            }
+                          }
+                        },{
+                          "or":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "variableRef":{
+                                      "name":"Ravage opener fits the approach"
+                                    }
+                                  }
+                                }
+                              },{
+                                "and":{
+                                  "vals":[{
+                                      "cmp":{
+                                        "op":"OpLe",
                                         "rhs":{
                                           "const":{
                                             "val":"5"
                                           }
                                         },
                                         "lhs":{
-                                          "currentManaRegen":{
+                                          "unitDistance":{
                                           }
                                         }
                                       }
+                                    },{
+                                      "not":{
+                                        "val":{
+                                          "spellCanCast":{
+                                            "spellId":{
+                                              "spellId":9867
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }]
+                                }
+                              }]
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Two Blood Frenzy points with Shifting Power",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "const":{
+                                "val":"2"
+                              }
+                            },
+                            "lhs":{
+                              "talentRank":{
+                                "talentId":{
+                                  "spellId":16958
+                                }
+                              }
+                            }
+                          }
+                        },{
+                          "talentIsKnown":{
+                            "talentId":{
+                              "spellId":1322605
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"One more Shred funds next-global Rip",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "spellCanCast":{
+                            "spellId":{
+                              "spellId":9830
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "math":{
+                                "op":"OpAdd",
+                                "rhs":{
+                                  "const":{
+                                    "val":"1s"
+                                  }
+                                },
+                                "lhs":{
+                                  "variableRef":{
+                                    "name":"Rip minimum fight left"
+                                  }
+                                }
+                              }
+                            },
+                            "lhs":{
+                              "remainingTime":{
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "math":{
+                                "op":"OpAdd",
+                                "rhs":{
+                                  "spellCurrentCost":{
+                                    "spellId":{
+                                      "spellId":9896
                                     }
                                   }
                                 },
                                 "lhs":{
-                                  "currentMana":{
+                                  "spellCurrentCost":{
+                                    "spellId":{
+                                      "spellId":9830
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "lhs":{
+                              "math":{
+                                "op":"OpAdd",
+                                "rhs":{
+                                  "const":{
+                                    "val":"10"
+                                  }
+                                },
+                                "lhs":{
+                                  "currentEnergy":{
                                   }
                                 }
                               }
                             }
                           }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "otherId":"OtherActionResourcePotion"
-                          }
-                        }
-                      }
-                    },{
-                      "action":{
-                        "autocastOtherCooldowns":{
-                        }
-                      }
-                    }]
+                        }]
+                    }
+                  }
                 },{
-                  "name":"Bleeds",
-                  "actions":[{
-                      "action":{
-                        "condition":{
+                  "name":"Midfight Bite is worthwhile",
+                  "value":{
+                    "and":{
+                      "vals":[{
                           "variableRef":{
-                            "name":"Rip now"
+                            "name":"Bite combo points and Rip window"
                           }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "spellId":9896
-                          }
-                        }
-                      }
-                    },{
-                      "action":{
-                        "condition":{
-                          "variableRef":{
-                            "name":"Rake now"
-                          }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "spellId":9904
-                          }
-                        }
-                      }
-                    }]
-                },{
-                  "name":"Builders",
-                  "actions":[{
-                      "action":{
-                        "condition":{
-                          "not":{
-                            "val":{
-                              "variableRef":{
-                                "name":"Pool for a refresh"
-                              }
-                            }
-                          }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "spellId":9830
-                          }
-                        }
-                      }
-                    },{
-                      "action":{
-                        "condition":{
-                          "and":{
+                        },{
+                          "or":{
                             "vals":[{
-                                "not":{
-                                  "val":{
-                                    "variableRef":{
-                                      "name":"Pool for a refresh"
-                                    }
-                                  }
+                                "or":{
+                                  "vals":[{
+                                      "and":{
+                                        "vals":[{
+                                            "auraIsActive":{
+                                              "auraId":{
+                                                "spellId":16870
+                                              }
+                                            }
+                                          },{
+                                            "cmp":{
+                                              "op":"OpGe",
+                                              "rhs":{
+                                                "variableRef":{
+                                                  "name":"Bite energy target with Clearcasting"
+                                                }
+                                              },
+                                              "lhs":{
+                                                "currentEnergy":{
+                                                }
+                                              }
+                                            }
+                                          }]
+                                      }
+                                    },{
+                                      "and":{
+                                        "vals":[{
+                                            "not":{
+                                              "val":{
+                                                "auraIsActive":{
+                                                  "auraId":{
+                                                    "spellId":16870
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },{
+                                            "cmp":{
+                                              "op":"OpGe",
+                                              "rhs":{
+                                                "variableRef":{
+                                                  "name":"Bite energy target"
+                                                }
+                                              },
+                                              "lhs":{
+                                                "currentEnergy":{
+                                                }
+                                              }
+                                            }
+                                          }]
+                                      }
+                                    }]
                                 }
                               },{
-                                "cmp":{
-                                  "op":"OpGe",
-                                  "rhs":{
-                                    "spellCurrentCost":{
-                                      "spellId":{
-                                        "spellId":9830
+                                "and":{
+                                  "vals":[{
+                                      "cmp":{
+                                        "op":"OpGe",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"5"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "currentComboPoints":{
+                                          }
+                                        }
                                       }
-                                    }
-                                  },
-                                  "lhs":{
-                                    "currentEnergy":{
-                                    }
-                                  }
+                                    },{
+                                      "or":{
+                                        "vals":[{
+                                            "and":{
+                                              "vals":[{
+                                                  "not":{
+                                                    "val":{
+                                                      "auraIsActive":{
+                                                        "auraId":{
+                                                          "spellId":16870
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                },{
+                                                  "cmp":{
+                                                    "op":"OpGe",
+                                                    "rhs":{
+                                                      "variableRef":{
+                                                        "name":"Five-point Bite energy target"
+                                                      }
+                                                    },
+                                                    "lhs":{
+                                                      "currentEnergy":{
+                                                      }
+                                                    }
+                                                  }
+                                                }]
+                                            }
+                                          },{
+                                            "and":{
+                                              "vals":[{
+                                                  "auraIsActive":{
+                                                    "auraId":{
+                                                      "spellId":16870
+                                                    }
+                                                  }
+                                                },{
+                                                  "cmp":{
+                                                    "op":"OpGe",
+                                                    "rhs":{
+                                                      "variableRef":{
+                                                        "name":"Five-point Bite energy target with Clearcasting"
+                                                      }
+                                                    },
+                                                    "lhs":{
+                                                      "currentEnergy":{
+                                                      }
+                                                    }
+                                                  }
+                                                }]
+                                            }
+                                          }]
+                                      }
+                                    }]
                                 }
                               }]
                           }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "spellId":9850
+                        }]
+                    }
+                  }
+                },{
+                  "name":"No Blood Frenzy points",
+                  "value":{
+                    "cmp":{
+                      "op":"OpEq",
+                      "rhs":{
+                        "const":{
+                          "val":"0"
+                        }
+                      },
+                      "lhs":{
+                        "talentRank":{
+                          "talentId":{
+                            "spellId":16958
                           }
                         }
                       }
-                    }]
-                }],
-              "priorityList":[{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "itemId":10646
+                    }
+                  }
+                },{
+                  "name":"Bite combo points and Rip window",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "variableRef":{
+                            "name":"Predatory Discipline keeps Bite energy"
+                          }
+                        },{
+                          "auraIsActive":{
+                            "auraId":{
+                              "spellId":768
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "variableRef":{
+                                "name":"Midfight Bite CP"
+                              }
+                            },
+                            "lhs":{
+                              "currentComboPoints":{
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "variableRef":{
+                                "name":"Midfight Bite minimum Rip remaining"
+                              }
+                            },
+                            "lhs":{
+                              "dotRemainingTime":{
+                                "spellId":{
+                                  "spellId":9896
+                                }
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Pool energy for Bite",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "variableRef":{
+                            "name":"Bite combo points and Rip window"
+                          }
+                        },{
+                          "not":{
+                            "val":{
+                              "variableRef":{
+                                "name":"Midfight Bite is worthwhile"
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Predatory Discipline keeps Bite energy",
+                  "value":{
+                    "talentIsKnown":{
+                      "talentId":{
+                        "spellId":1328613
                       }
                     }
                   }
+                }],
+              "priorityList":[{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Ready to return to the main weapon"
+                      }
+                    },
+                    "itemSwap":{
+                      "swapSet":"Main"
+                    }
+                  },
+                  "notes":"After MCP haste expires, re-equip the main weapon"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Drop Prowl for this opener"
+                      }
+                    },
+                    "cancelAura":{
+                      "auraId":{
+                        "spellId":9913
+                      }
+                    }
+                  },
+                  "notes":"Drop Prowl when the faster approach wins or Ravage cannot be used"
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "spellIsKnown":{
+                              "spellId":{
+                                "spellId":9907
+                              }
+                            }
+                          },{
+                            "auraShouldRefresh":{
+                              "maxOverlap":{
+                                "const":{
+                                  "val":"0s"
+                                }
+                              },
+                              "auraId":{
+                                "spellId":9907
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":9907
+                      }
+                    }
+                  },
+                  "notes":"Maintain Faerie Fire for the raid before personal damage"
+                },{
+                  "action":{
+                    "condition":{
+                      "cmp":{
+                        "op":"OpGt",
+                        "rhs":{
+                          "const":{
+                            "val":"5"
+                          }
+                        },
+                        "lhs":{
+                          "unitDistance":{
+                          }
+                        }
+                      }
+                    },
+                    "move":{
+                      "rangeFromTarget":{
+                        "const":{
+                          "val":"5"
+                        }
+                      }
+                    }
+                  },
+                  "notes":"Run into melee with Dash"
+                },{
+                  "action":{
+                    "condition":{
+                      "cmp":{
+                        "op":"OpGt",
+                        "rhs":{
+                          "const":{
+                            "val":"5"
+                          }
+                        },
+                        "lhs":{
+                          "unitDistance":{
+                          }
+                        }
+                      }
+                    },
+                    "waitUntil":{
+                      "condition":{
+                        "not":{
+                          "val":{
+                            "cmp":{
+                              "op":"OpGt",
+                              "rhs":{
+                                "const":{
+                                  "val":"5"
+                                }
+                              },
+                              "lhs":{
+                                "unitDistance":{
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "notes":"Finish closing to melee before damage abilities"
+                },{
+                  "action":{
+                    "condition":{
+                      "auraIsActive":{
+                        "auraId":{
+                          "spellId":9913
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":9867
+                      }
+                    }
+                  },
+                  "notes":"Prowl is active: open with Ravage"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Ready to activate MCP"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "itemId":9449
+                      }
+                    }
+                  },
+                  "notes":"Activate the equipped MCP once in melee and out of Prowl"
                 },{
                   "action":{
                     "condition":{
@@ -1133,47 +1720,170 @@
                         "spellId":768
                       }
                     }
-                  }
-                },{
-                  "action":{
-                    "groupReference":{
-                      "groupName":"Berserk"
-                    }
-                  }
-                },{
-                  "action":{
-                    "groupReference":{
-                      "groupName":"Cooldowns"
-                    }
-                  }
+                  },
+                  "notes":"Outside Cat Form: return after utility casts"
                 },{
                   "action":{
                     "condition":{
                       "variableRef":{
-                        "name":"Clearcasting into Shred"
+                        "name":"Final-global Bite"
                       }
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":9830
+                        "spellId":22829
                       }
                     }
-                  }
+                  },
+                  "notes":"Bite in the final window with enough combo points"
+                },{
+                  "action":{
+                    "autocastOtherCooldowns":{
+                    }
+                  },
+                  "notes":"Use other available cooldowns"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Mana potion fits and is needed"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "otherId":"OtherActionResourcePotion"
+                      },
+                      "target":{
+                        "type":"Self"
+                      }
+                    }
+                  },
+                  "notes":"Use the selected mana potion when it fits and the remaining fight needs mana"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Ready to use Elune's Light"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":1259799
+                      }
+                    }
+                  },
+                  "notes":"Use Elune’s Light when available"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Midfight Bite is worthwhile"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":22829
+                      }
+                    }
+                  },
+                  "notes":"With Predatory Discipline, pool for Bite while Rip has time left; use the smaller pool at five combo points"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Shifting Power ready"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":1322605
+                      }
+                    }
+                  },
+                  "notes":"Shifting Power is ready at or below its energy ceiling"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Tea is selected and energy is low"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "itemId":7676
+                      }
+                    }
+                  },
+                  "notes":"Use Thistle Tea at or below the energy ceiling for your Blood Frenzy rank"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Rune can restore mana after Tea"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "itemId":12662
+                      }
+                    }
+                  },
+                  "notes":"Use Demonic Rune after Tea when missing 1500 mana"
+                },{
+                  "action":{
+                    "condition":{
+                      "auraIsActive":{
+                        "auraId":{
+                          "spellId":768
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "otherId":"OtherActionOffensivePotion"
+                      }
+                    }
+                  },
+                  "notes":"In Cat Form: use the selected offensive potion"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Fight-end Bite is worthwhile"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":22829
+                      }
+                    }
+                  },
+                  "notes":"Bite near fight end when Rip is no longer worthwhile"
                 },{
                   "action":{
                     "condition":{
                       "and":{
                         "vals":[{
-                            "variableRef":{
-                              "name":"Clearcasting into Shred"
+                            "and":{
+                              "vals":[{
+                                  "auraIsActive":{
+                                    "auraId":{
+                                      "spellId":768
+                                    }
+                                  }
+                                },{
+                                  "auraIsActive":{
+                                    "auraId":{
+                                      "spellId":16870
+                                    }
+                                  }
+                                }]
                             }
                           },{
                             "not":{
                               "val":{
-                                "spellCanCast":{
-                                  "spellId":{
-                                    "spellId":9830
-                                  }
+                                "variableRef":{
+                                  "name":"Pool energy for Bite"
                                 }
                               }
                             }
@@ -1182,66 +1892,11 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":9850
+                        "spellId":9830
                       }
                     }
-                  }
-                },{
-                  "action":{
-                    "groupReference":{
-                      "groupName":"Bleeds"
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "variableRef":{
-                        "name":"Bite at the end"
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":22829
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "or":{
-                        "vals":[{
-                            "variableRef":{
-                              "name":"Shifting Power now"
-                            }
-                          },{
-                            "and":{
-                              "vals":[{
-                                  "variableRef":{
-                                    "name":"Pool for a refresh"
-                                  }
-                                },{
-                                  "spellCanCast":{
-                                    "spellId":{
-                                      "spellId":1322605
-                                    }
-                                  }
-                                }]
-                            }
-                          }]
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":1322605
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "groupReference":{
-                      "groupName":"Builders"
-                    }
-                  }
+                  },
+                  "notes":"Clearcasting is active: Shred before refreshing bleeds"
                 },{
                   "action":{
                     "condition":{
@@ -1254,51 +1909,76 @@
                             }
                           },{
                             "variableRef":{
-                              "name":"Mana short"
+                              "name":"Rip due"
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":9896
+                      }
+                    }
+                  },
+                  "notes":"Refresh Rip: with zero or two Blood Frenzy points, build to five when the next-global Rip is funded"
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "auraIsActive":{
+                              "auraId":{
+                                "spellId":768
+                              }
                             }
                           },{
-                            "cmp":{
-                              "op":"OpLe",
-                              "rhs":{
-                                "const":{
-                                  "val":"30"
-                                }
-                              },
-                              "lhs":{
-                                "currentEnergy":{
-                                }
-                              }
+                            "variableRef":{
+                              "name":"Rake due"
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":9904
+                      }
+                    }
+                  },
+                  "notes":"Refresh Rake after reacting to its expiry, if enough fight time remains"
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "and":{
+                              "vals":[{
+                                  "auraIsActive":{
+                                    "auraId":{
+                                      "spellId":768
+                                    }
+                                  }
+                                },{
+                                  "cmp":{
+                                    "op":"OpGe",
+                                    "rhs":{
+                                      "spellCurrentCost":{
+                                        "spellId":{
+                                          "spellId":9830
+                                        }
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentEnergy":{
+                                      }
+                                    }
+                                  }
+                                }]
                             }
                           },{
                             "not":{
                               "val":{
-                                "auraIsActive":{
-                                  "auraId":{
-                                    "spellId":16870
-                                  }
-                                }
-                              }
-                            }
-                          },{
-                            "not":{
-                              "val":{
-                                "auraIsActive":{
-                                  "auraId":{
-                                    "spellId":417141
-                                  }
-                                }
-                              }
-                            }
-                          },{
-                            "cmp":{
-                              "op":"OpGe",
-                              "rhs":{
-                                "const":{
-                                  "val":"15s"
-                                }
-                              },
-                              "lhs":{
-                                "remainingTime":{
+                                "variableRef":{
+                                  "name":"Pool energy for Bite"
                                 }
                               }
                             }
@@ -1307,24 +1987,117 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":29166
+                        "spellId":9830
                       }
                     }
-                  }
+                  },
+                  "notes":"Build combo points when affordable unless pooling for Bite"
                 },{
                   "action":{
                     "condition":{
-                      "variableRef":{
-                        "name":"Faerie Fire for Omen"
+                      "and":{
+                        "vals":[{
+                            "and":{
+                              "vals":[{
+                                  "variableRef":{
+                                    "name":"Claw can replace Shred"
+                                  }
+                                },{
+                                  "cmp":{
+                                    "op":"OpGe",
+                                    "rhs":{
+                                      "spellCurrentCost":{
+                                        "spellId":{
+                                          "spellId":9850
+                                        }
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentEnergy":{
+                                      }
+                                    }
+                                  }
+                                }]
+                            }
+                          },{
+                            "not":{
+                              "val":{
+                                "variableRef":{
+                                  "name":"Pool energy for Bite"
+                                }
+                              }
+                            }
+                          }]
                       }
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":9907
+                        "spellId":9850
                       }
                     }
+                  },
+                  "notes":"Use Claw when Shred cannot land, unless pooling for Bite"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Innervate can restore needed mana"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":29166
+                      }
+                    }
+                  },
+                  "notes":"Innervate when mana is low and enough fight time remains"
+                }],
+              "prepullActions":[{
+                  "action":{
+                    "condition":{
+                      "spellIsKnown":{
+                        "spellId":{
+                          "itemId":9449
+                        }
+                      }
+                    },
+                    "itemSwap":{
+                      "swapSet":"Swap1"
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-33s"
+                    }
                   }
-                }]
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":9913
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-1s"
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":9821
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-0.01s"
+                    }
+                  }
+                }],
+              "groups":[]
             },
             "feralCatDruid":{
               "options":{

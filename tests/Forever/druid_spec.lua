@@ -885,6 +885,19 @@ describe("Forever Druid", function()
         end)
     end)
 
+    -- wowsims's druidBleedIsActive (sim/druid/feral.go targetIsBleeding): Rake, Rip, Lacerate or Pounce's bleed up
+    it("reads druid_bleed_active as one of its bleeds on the target", function()
+        local e = ld.env(w)
+        local function bleeding(debuffs)
+            e.debuff = auras(debuffs)
+            return ld.run(w.exprs.druid_bleed_active, e)
+        end
+        assert.is_false(bleeding({}))
+        for _, key in ipairs({ "rake", "rip", "lacerate", "pounce_bleed" }) do
+            assert.is_true(bleeding({ [key] = { up = true } }), key)
+        end
+    end)
+
     it("refuses Shred in the not-behind window unless the behind setting says otherwise (Claw then)", function()
         local e = ld.env(w)
         local ok = function()
@@ -918,8 +931,12 @@ describe("Forever Druid", function()
         local scanNs = {}
         assert(loadfile("src/Hekili/Engine/Sim/AplWarnings.lua"))("Hekili", scanNs)
         local secretToken = scanNs.AplSecretToken
-        -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items; Hekili_Shared/Races' Night Elf racial
-        local shared = { use_items = true, elunes_light = true }
+        -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items; Hekili_Shared/Races' Night Elf racial and the
+        -- Skyborne racial's aura (energized); the core's cancel_buff (tests/Forever/apl_entry_spec.lua), its buff_name a
+        -- registered aura
+        local sharedActions = { use_items = true, elunes_light = true, cancel_buff = true }
+        local sharedAuras = { energized = true }
+        local shared = { buff = sharedAuras, debuff = sharedAuras, action = sharedActions, cooldown = sharedActions }
         local kinds = {
             buff = w.auras,
             debuff = w.auras,
@@ -936,14 +953,19 @@ describe("Forever Druid", function()
                         assert.is_not_nil(p.lists[e.list_name], where .. ": no list " .. e.list_name)
                     else
                         assert.is_true(
-                            w.abilities[e.action] ~= nil or shared[e.action],
+                            w.abilities[e.action] ~= nil or sharedActions[e.action],
                             where .. ": no ability " .. e.action
+                        )
+                        assert.is_true(
+                            e.buff_name == nil or w.auras[e.buff_name] ~= nil,
+                            where .. ": no aura " .. tostring(e.buff_name)
                         )
                     end
                     local c = e.criteria or ""
                     for kind, key in c:gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
-                            assert.is_not_nil(kinds[kind][key], where .. ": no " .. kind .. " " .. key)
+                            local ok = kinds[kind][key] ~= nil or (shared[kind] or {})[key]
+                            assert.is_true(ok, where .. ": no " .. kind .. " " .. key)
                         end
                     end
                     assert.is_nil(secretToken(c), where) -- no health or time to die: secret on Forever
@@ -1223,5 +1245,71 @@ describe("Forever Druid in VirtualState's now context", function()
             cast(414644, t + 0.6)
         end, 1000)
         assert.are.equal(0, bytes)
+    end)
+end)
+
+-- R8: Feral (wowsims.com) opts into the Movement toggle; with it OFF its melee strikes wait for melee range.
+describe("Forever Druid Movement (R8)", function()
+    local headless = require("Game.harness.headless")
+    local dlw = require("Forever.helpers.druid_loop_world")
+    local PACK = "Feral (wowsims.com)"
+
+    local function lines(key)
+        local f = assert(io.open("src/Hekili_Druid/APLs/" .. PACK .. ".simc"))
+        local s = f:read("*a")
+        f:close()
+        local out = {}
+        for l in s:gmatch("\n(actions%+=/" .. key .. ",[^\n]+)") do
+            out[#out + 1] = l
+        end
+        return out
+    end
+
+    -- A Cat at `yd` yards from a level 60 target, in combat, energy full, the pack's Shred lines alone; returns a poll
+    -- of the first icon with the toggle set.
+    local function world(yd)
+        local C = dlw.Feral
+        local H = headless.new({ character = C.character(), pack = PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, yd
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        local list = {}
+        for _, l in ipairs(lines("shred")) do
+            local parsed = H.Hekili:ParseActionList(l)
+            parsed[1].enabled = true
+            list[#list + 1] = parsed[1]
+        end
+        H.Hekili.DB.profile.packs[PACK].lists = { precombat = {}, default = list }
+        H.Hekili:LoadScripts()
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local VS = H.ns.VirtualState
+        local power, full = VS.Power, { est = 100, lo = 100, hi = 100, conf = 1 }
+        VS.Power = function(pt, now)
+            return pt == 3 and full or power(pt, now)
+        end
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        assert.is_true(H.Hekili.Engine.Registry.MovementSpec(C.SPEC)) -- the options row shows (R3)
+        return function(movement)
+            H.Hekili:FireToggle("movement", movement and "on" or "off")
+            t = t + 0.2
+            assert(headless.cycle(H, t))
+            assert.are.same({}, H.errors)
+            return out.recs[1] and out.recs[1].actionName
+        end
+    end
+
+    it("OFF hides Shred outside 5 yd and shows it inside; ON shows it outside too", function()
+        local l = lines("shred")
+        assert.are.equal(2, #l)
+        for _, line in ipairs(l) do
+            assert.matches("&%(toggle%.movement&target%.outside5|target%.within5%)$", line)
+        end
+        local far, near = world(11), world(3)
+        assert.is_nil(far(false))
+        assert.are.equal("shred", near(false))
+        assert.are.equal("shred", far(true))
     end)
 end)
