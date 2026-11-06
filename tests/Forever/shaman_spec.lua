@@ -553,7 +553,8 @@ describe("Forever Shaman priorities", function()
 
     it("names only registered abilities, auras, settings and totem elements", function()
         local cls = ld.load(nil, FILE, "SHAMAN")
-        local shared = { major_mana_potion = true, demonic_rune = true, blood_fury = true } -- Hekili_Shared's consumables, the Orc racial
+        -- Hekili_Shared's consumables and trinkets; the engine's own list call
+        local shared = { major_mana_potion = true, demonic_rune = true, use_items = true, call_action_list = true }
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, settings = cls.settings }
         local elements = { fire = true, earth = true, water = true, air = true, main_hand_enchant = true }
         for list, entries in pairs(packs[PACK].lists) do
@@ -571,29 +572,29 @@ describe("Forever Shaman priorities", function()
         end
     end)
 
+    -- re-pin e2842f0a78: the build's own list (Water Shield, Magma and Windfury Totems, Fire Nova the filler)
     it(
-        "tiers by role: Fire Nova on Clearcasting and the Maelstrom Lightning Bolt at 1, the shield and Flame Shock at 2, totems none",
+        "tiers by role: the Maelstrom Lightning Bolt at 1, Water Shield and Flame Shock at 2, Fire Nova and totems none",
         function()
-            local _, fn = line("default", "fire_nova", "buff.clearcasting.up")
-            local _, lb = line("default", "lightning_bolt", "buff.maelstrom_weapon.stack>=5")
-            local _, goa = line("default", "grace_of_air_totem", "totem.air.remains<=0")
-            local _, soe = line("default", "strength_of_earth_totem", "totem.earth.remains<=0")
-            local _, st = line("default", "searing_totem", "totem.fire.remains<=0")
-            local _, ls = line("default", "lightning_shield", "!buff.lightning_shield.up")
-            local _, fs = line("default", "flame_shock", "!debuff.flame_shock.up")
-            assert.are.same({ 1, 1, 2, 2 }, { fn.focus, lb.focus, ls.focus, fs.focus })
-            assert.are.same({}, { goa.focus, soe.focus, st.focus })
-            for _, e in ipairs(packs[PACK].lists.default) do
-                assert.are_not.equal("windfury_totem", e.action)
+            local _, ws = line("default", "water_shield")
+            local _, lb = line("single_target_rotation", "lightning_bolt")
+            local _, fs = line("single_target_rotation", "flame_shock")
+            local _, fn = line("single_target_rotation", "fire_nova")
+            assert.are.same({ 2, 1, 2 }, { ws.focus, lb.focus, fs.focus })
+            assert.is_nil(fn.focus)
+            for _, key in ipairs({ "windfury_totem", "strength_of_earth_totem", "mana_spring_totem", "magma_totem" }) do
+                local _, t = line("default", key)
+                assert.is_nil(t.focus, key)
             end
         end
     )
 
-    -- wowsims's autocast (rule 13) in the log's first-use order: Blood Fury, the trinket (unmapped), Rage of the Farseer.
-    it("casts Rage of the Farseer off the GCD right after Blood Fury, as wowsims's autocast does", function()
-        local bf = line("default", "blood_fury")
+    -- wowsims's autocast (rule 13) in the log's first-use order: the trinket (use_items), the Manual Crowd Pummeler
+    -- (unmapped: the item swap's), Rage of the Farseer.
+    it("casts Rage of the Farseer off the GCD right after the trinket, as wowsims's autocast does", function()
+        local ui = line("default", "use_items")
         local i, e = line("default", "rage_of_the_farseer")
-        assert.are.same({ bf + 1, nil }, { i, e.criteria })
+        assert.are.same({ ui + 1, nil }, { i, e.criteria })
         assert.is_truthy(e.use_off_gcd)
     end)
 end)
@@ -770,6 +771,20 @@ describe("Forever Shaman through the engine", function()
 
     it("recommends Rage of the Farseer in combat when ready, only with Cooldowns on", function()
         H.ctl.inRange.target, H.ctl.level.target = true, 60
+        -- the main hand's Flametongue up (rank 6, 1666), so the pack's need-based imbue line stays silent
+        H.ctl.enchants[0] =
+            { { hasEnchant = true, enchantType = 3, timeLeft = 3600000, charges = 0, enchantID = 1666 } }
+        H.Fire("WEAPON_ENCHANT_CHANGED")
+        -- and Water Shield up, so its line (R55: while the shield is down) stays silent
+        H.ctl.auras.player.HELPFUL[1] =
+            { spellId = H.Hekili.Class.auras.water_shield.id, expirationTime = H.ctl.now + 600, applications = 3 }
+        H.Fire("UNIT_AURA", "player")
+        -- and the build's four totems standing, so their refresh lines (remains<=2) stay silent too
+        local A = H.Hekili.Class.abilities
+        for slot, key in ipairs({ "magma_totem", "strength_of_earth_totem", "mana_spring_totem", "windfury_totem" }) do
+            H.ctl.totems[slot] = { name = "", start = H.ctl.now, duration = 120, icon = 0, spell = A[key].id }
+            H.Fire("PLAYER_TOTEM_UPDATE", slot)
+        end
         H.Fire("PLAYER_TARGET_CHANGED")
         local t = H.ctl.now + 0.2
         assert(headless.cycle(H, t))

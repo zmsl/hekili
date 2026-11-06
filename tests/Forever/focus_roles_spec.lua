@@ -47,7 +47,13 @@ local PACKS = {
         "consecration=2",
     },
     -- the totems carry none (the user, 2026-10-21)
-    ["Shaman/APLs/Enhancement"] = { "fire_nova=1", "lightning_shield=2", "lightning_bolt=1", "flame_shock=2" },
+    ["Shaman/APLs/Enhancement"] = {
+        "water_shield=2",
+        "flame_shock=2",
+        "lightning_bolt=1",
+        "flame_shock=2",
+        "lightning_bolt=1",
+    },
     ["Druid/APLs/Balance"] = { "moonfire=2", "insect_swarm=2", "starfire=1" },
     ["Druid/APLs/Feral"] = { "shred=1", "claw=1", "rake=2", "rip=2", "rake=2" },
     ["Druid/APLs/Guardian"] = { "maul=1", "maul=2", "lacerate=2", "demoralizing_roar=2", "lacerate=2" },

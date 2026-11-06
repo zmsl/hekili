@@ -1,9 +1,6 @@
 {
   "encounter":{
-    "executeProportion20":0.2,
-    "executeProportion25":0.25,
     "executeProportion35":0.35,
-    "executeProportion90":0.9,
     "duration":180,
     "targets":[{
         "minBaseDamage":2601,
@@ -15,14 +12,15 @@
         "parryHaste":true,
         "mobType":"MobTypeMechanical"
       }],
-    "executeProportion45":0.45
+    "executeProportion20":0.2
   },
   "raid":{
     "parties":[{
         "players":[{
+            "enableItemSwap":true,
             "bonusStats":{
               "apiVersion":2,
-              "stats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+              "stats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
               "pseudoStats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
             },
             "class":"ClassShaman",
@@ -42,140 +40,289 @@
                 },{
                 },{
                 },{
+                  "id":250617,
+                  "enchant":8211
                 },{
                 },{
                 }],
               "prepullBonusStats":{
                 "apiVersion":2,
-                "stats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                "stats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                 "pseudoStats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
               }
             },
             "consumables":{
-              "conjuredId":12662,
+              "potions":[1072,2455,2456,3087,3385,3827,6048,6049,6050,6051,6052,6149,9144,9224,13443,13444,13456,13457,13458,13459,13460,13461,14894,17351,17352,18253,18841,250932,250933,250934,250935,250936,250937,250938,250939,250940,250941,250942,250943,250951,250953,250954,250955,255663,274935,282013],
+              "swapMhImbueId":20750,
+              "conjuredItems":[11952,12662,15723,17747],
               "flaskId":13512,
-              "mhImbueId":18262,
-              "extraIds":[10646],
-              "explosiveId":260817,
+              "mhImbueId":20750,
+              "conjuredId":12662,
+              "foodId":13935,
               "resourcePotId":13444,
-              "elixirIds":[250337,250338,250341,250343,13454,12820,250328,250350],
-              "foodId":20452
+              "elixirIds":[250343,13454,250351,13452,250337,250338,250341,12820],
+              "extraIds":[12217,8423]
             },
-            "race":"RaceOrc",
+            "race":"RaceWindshaperSkyborne",
             "apiVersion":2,
             "profession1":"Engineering",
             "reactionTimeMs":100,
             "distanceFromTarget":5,
-            "healingModel":{
-            },
             "equipment":{
               "items":[{
-                  "id":252605,
-                  "enchant":2543
+                  "id":252604,
+                  "enchant":1509
                 },{
-                  "id":22150
+                  "id":22149,
+                  "enchant":8218
                 },{
-                  "id":275737
+                  "id":19050
                 },{
-                  "id":272411,
-                  "enchant":7667
+                  "id":279270,
+                  "enchant":849
                 },{
-                  "id":252483,
-                  "enchant":1891
+                  "id":22102,
+                  "enchant":1893
                 },{
-                  "id":16714,
-                  "enchant":1885
+                  "id":22095,
+                  "enchant":1901
                 },{
-                  "id":21278,
-                  "enchant":8207
+                  "id":12632,
+                  "enchant":8213
                 },{
-                  "id":20216
+                  "id":18405
                 },{
                   "id":252486,
-                  "enchant":2543
+                  "enchant":1509
                 },{
                   "id":22096,
-                  "enchant":1887
+                  "enchant":8492
                 },{
-                  "id":275973
+                  "id":275972
                 },{
                   "id":272406
                 },{
-                  "id":272437
+                  "id":272438
                 },{
                   "id":249469
                 },{
-                  "id":12784,
-                  "enchant":1900
+                  "id":9449,
+                  "enchant":8211
                 },{
                 },{
                   "id":23199
                 }]
             },
-            "cooldowns":{
-            },
-            "name":"Enhancement",
-            "talentsString":"053503102-053030031005112251",
-            "profession2":"Leatherworking",
-            "buffs":{
-              "greaterBlessingOfSalvation":true,
-              "greaterBlessingOfMight":2,
-              "greaterBlessingOfKings":true
-            },
             "rotation":{
               "type":"TypeAPL",
-              "prepullActions":[{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":25359
+              "groups":[{
+                  "name":"Single Target Rotation",
+                  "actions":[{
+                      "action":{
+                        "multidot":{
+                          "maxDots":1,
+                          "spellId":{
+                            "spellId":10448,
+                            "rank":5
+                          },
+                          "maxOverlap":{
+                            "const":{
+                              "val":"0ms"
+                            }
+                          }
+                        }
                       }
-                    }
-                  },
-                  "doAtValue":{
-                    "const":{
-                      "val":"-8s"
-                    }
-                  }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":17364
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "auraIsKnown":{
+                                  "auraId":{
+                                    "spellId":408505
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpEq",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"5"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "auraNumStacks":{
+                                      "includeReactionTime":true,
+                                      "auraId":{
+                                        "spellId":408505
+                                      }
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":15208,
+                            "rank":10
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":10414,
+                            "rank":7
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":408345
+                          }
+                        }
+                      }
+                    }]
                 },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":16387
+                  "name":"AOE Rotation",
+                  "actions":[{
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "talentIsKnown":{
+                                  "talentId":{
+                                    "spellId":16578,
+                                    "rank":3
+                                  }
+                                }
+                              },{
+                                "auraIsActive":{
+                                  "includeReactionTime":true,
+                                  "sourceUnit":{
+                                    "type":"CurrentTarget"
+                                  },
+                                  "auraId":{
+                                    "spellId":17364
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGt",
+                                  "rhs":{
+                                    "spellCastTime":{
+                                      "spellId":{
+                                        "spellId":10605,
+                                        "rank":4
+                                      }
+                                    }
+                                  },
+                                  "lhs":{
+                                    "autoTimeToNext":{
+                                      "autoType":"AnyAuto"
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":10605,
+                            "rank":4
+                          }
+                        }
                       }
-                    }
-                  },
-                  "doAtValue":{
-                    "const":{
-                      "val":"-7s"
-                    }
-                  }
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":25361
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":408345
+                          }
+                        }
                       }
-                    }
-                  },
-                  "doAtValue":{
-                    "const":{
-                      "val":"-6s"
-                    }
-                  }
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":10497
+                    },{
+                      "action":{
+                        "multidot":{
+                          "maxDots":3,
+                          "spellId":{
+                            "spellId":10448,
+                            "rank":5
+                          },
+                          "maxOverlap":{
+                            "const":{
+                              "val":"0ms"
+                            }
+                          }
+                        }
                       }
-                    }
-                  },
-                  "doAtValue":{
-                    "const":{
-                      "val":"-5s"
-                    }
-                  }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":17364
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "auraIsKnown":{
+                                  "auraId":{
+                                    "spellId":408505
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpEq",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"5"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "auraNumStacks":{
+                                      "includeReactionTime":true,
+                                      "auraId":{
+                                        "spellId":408505
+                                      }
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":15208,
+                            "rank":10
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":10414,
+                            "rank":7
+                          }
+                        }
+                      }
+                    }]
                 }],
               "priorityList":[{
                   "action":{
@@ -223,7 +370,21 @@
                   }
                 },{
                   "action":{
-                    "autocastOtherCooldowns":{
+                    "condition":{
+                      "not":{
+                        "val":{
+                          "auraIsActive":{
+                            "includeReactionTime":true,
+                            "auraId":{
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":408510
+                      }
                     }
                   }
                 },{
@@ -233,7 +394,7 @@
                         "op":"OpLe",
                         "rhs":{
                           "const":{
-                            "val":"0s"
+                            "val":"2s"
                           }
                         },
                         "lhs":{
@@ -245,7 +406,7 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":25359
+                        "spellId":10614
                       }
                     }
                   }
@@ -256,7 +417,7 @@
                         "op":"OpLe",
                         "rhs":{
                           "const":{
-                            "val":"0s"
+                            "val":"2s"
                           }
                         },
                         "lhs":{
@@ -268,42 +429,8 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":25361
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "auraIsActive":{
-                        "includeReactionTime":true,
-                        "auraId":{
-                          "spellId":16246
-                        }
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":408345
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "not":{
-                        "val":{
-                          "auraIsActive":{
-                            "auraId":{
-                              "spellId":10432
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":10432
+                        "spellId":10442,
+                        "rank":4
                       }
                     }
                   }
@@ -314,7 +441,30 @@
                         "op":"OpLe",
                         "rhs":{
                           "const":{
-                            "val":"0s"
+                            "val":"2s"
+                          }
+                        },
+                        "lhs":{
+                          "totemRemainingTime":{
+                            "totemType":"Water"
+                          }
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":10497
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "cmp":{
+                        "op":"OpLe",
+                        "rhs":{
+                          "const":{
+                            "val":"2s"
                           }
                         },
                         "lhs":{
@@ -326,16 +476,13 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":10438
+                        "spellId":10587
                       }
                     }
                   }
                 },{
                   "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":17364
-                      }
+                    "autocastOtherCooldowns":{
                     }
                   }
                 },{
@@ -343,23 +490,27 @@
                     "condition":{
                       "and":{
                         "vals":[{
-                            "auraIsKnown":{
-                              "auraId":{
-                                "spellId":408505
+                            "spellIsKnown":{
+                              "spellId":{
+                                "itemId":9449
                               }
                             }
                           },{
-                            "cmp":{
-                              "op":"OpGe",
-                              "rhs":{
-                                "const":{
-                                  "val":"5"
+                            "not":{
+                              "val":{
+                                "spellIsReady":{
+                                  "spellId":{
+                                    "itemId":9449
+                                  }
                                 }
-                              },
-                              "lhs":{
-                                "auraNumStacks":{
+                              }
+                            }
+                          },{
+                            "not":{
+                              "val":{
+                                "auraIsActive":{
                                   "auraId":{
-                                    "spellId":408505
+                                    "spellId":13494
                                   }
                                 }
                               }
@@ -367,37 +518,28 @@
                           }]
                       }
                     },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":15208
-                      }
+                    "itemSwap":{
+                      "swapSet":"Swap1"
                     }
                   }
                 },{
                   "action":{
                     "condition":{
-                      "not":{
-                        "val":{
-                          "dotIsActive":{
-                            "spellId":{
-                              "spellId":29228
-                            }
+                      "cmp":{
+                        "op":"OpEq",
+                        "rhs":{
+                          "const":{
+                            "val":"1"
+                          }
+                        },
+                        "lhs":{
+                          "numberTargets":{
                           }
                         }
                       }
                     },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":29228
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":10414
-                      }
+                    "groupReference":{
+                      "groupName":"Single Target Rotation"
                     }
                   }
                 },{
@@ -407,29 +549,115 @@
                         "op":"OpGt",
                         "rhs":{
                           "const":{
-                            "val":"10%"
+                            "val":"1"
                           }
                         },
                         "lhs":{
-                          "currentManaPercent":{
+                          "numberTargets":{
                           }
                         }
                       }
                     },
+                    "groupReference":{
+                      "groupName":"AOE Rotation"
+                    }
+                  }
+                }],
+              "prepullActions":[{
+                  "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":408345
+                        "spellId":408510
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-5.5s"
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":10614
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-4s"
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":10497
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-3s"
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":10442,
+                        "rank":4
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-2s"
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":10587
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-1s"
+                    }
+                  }
+                }],
+              "valueVariables":[{
+                  "name":"Using MCP",
+                  "value":{
+                    "spellIsKnown":{
+                      "spellId":{
+                        "itemId":9449
                       }
                     }
                   }
                 }]
             },
+            "name":"Enhancement",
+            "talentsString":"053303102-053030031005102251-03",
+            "profession2":"Leatherworking",
+            "buffs":{
+              "greaterBlessingOfWisdom":2,
+              "greaterBlessingOfMight":2,
+              "greaterBlessingOfKings":true
+            },
             "enhancementShaman":{
               "options":{
                 "classOptions":{
-                  "imbueMh":"WindfuryWeapon"
+                  "imbueMh":"FlametongueWeapon",
+                  "imbueMhSwap":"FlametongueWeapon"
                 }
               }
+            },
+            "cooldowns":{
             }
           }]
       }]
