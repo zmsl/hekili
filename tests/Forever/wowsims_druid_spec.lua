@@ -72,7 +72,7 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- belief holds Faerie Fire ready about 0.1 s after every cast (kit or belief: undetermined; a scalar 6 clears it,
     -- scratch); 15.04 innervate -> cat_form, pre-existing (a 0.04 s tie at the Innervate powershift)
     -- the replay's flicker ceiling (Movement on): 1.33/min measured on the re-pin e2842f0a78 (oracle 0.00; the DB2
-    -- ranges in the Feral world moved nothing), so 1.4
+    -- ranges in the Feral world moved nothing), so 1.4. The gap to the oracle's 0.00 is untraced (L115).
     it("Feral (wowsims.com) follows wowsims's casts", function()
         local r, line = ws.gate(
             "Feral (wowsims.com)",

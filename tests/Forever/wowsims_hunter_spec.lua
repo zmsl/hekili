@@ -67,7 +67,8 @@ local REPLAY = { hidden = { [1310726] = true } }
 -- cast, not the landing, with EARLY_EXIT's 0.2 s (BM 2, MM 2: central, no belief landing hook); a mana refill the belief
 -- cannot see (MM 1, R50 class A); Serpent Sting priced 250 where wowsims charges 224.9 (SV 1, source not found).
 -- ON flicker: BM 0, MM 0; SV 0.4 -> 2.4 (2.33 measured: one-tick bounces at the weave's position changes since R51
--- placed the move arms where the weave is called, partly R60's swing-recheck shape; PROPOSED-hunters-4, owner FYI).
+-- placed the move arms where the weave is called; that is the R51 part. 2.33 was measured before and after R61, so the
+-- remainder is untraced (L115); PROPOSED-hunters-4, owner FYI).
 -- Live limits per bracket (R22a: 6 s unless a traced R41 cause). L40 and L60: mana dry (3-18 of 5000), Arcane Shot
 -- waiting on its cost, nothing useful to cast (R41, owner FYI): BM 7.8 / 12.2, MM 7.6 / 15.4, SV 7.6 / 14.0. BM L10 13.4
 -- -> 4.6 with the recipe's leveling Arcane Shot (wowsims's non-hawk line, below Summon Hawk's 25). Survival's live bars
