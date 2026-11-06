@@ -225,7 +225,10 @@ M.FLICKER = {
     -- heldReady 296 -> 289 (R31, Holy Shield rank 3 costs 195, not 240: 253 / 289 / 275); agreement 1.000 / 1.000 /
     -- 1.000 -> 0.981 / 1.000 / 0.986, top judgement -> holy_strike: lo 60-83 with hi 110-133 at Judgement's 90, truth
     -- 90-115 before the press, casting regen 0; gap AB family at a 50-wide band (R39)
-    ["Protection"] = { flicker = 0.1, retracted = 0, heldReady = 289 }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
+    -- heldReady 289 -> 296 (Holy Shield rank 4, 1239570 at 240 mana from level 60: the owner's in-game tooltips
+    -- 2026-11-06; the world's level-60 Protection casts it, R31's 195 rank 3 is no longer its top rank): 296 / 284 /
+    -- 293, R31's pre-change values at the same price; agreement 1.000 / 1.000 / 1.000; flicker 0.02 / 0.02 / 0.02
+    ["Protection"] = { flicker = 0.1, retracted = 0, heldReady = 296 }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was

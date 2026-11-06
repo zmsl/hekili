@@ -78,8 +78,9 @@ local EARTH_SHOCK_COST = { 30, 50, 85, 145, 240, 345, 450 }
 local FLAME_SHOCK = { 8050, 8052, 8053, 10447, 10448, 29228 }
 local FLAME_SHOCK_COST = { 55, 95, 160, 250, 345, 410 }
 local FIRE_NOVA = { 408341, 408342, 408343, 408344, 408345 } -- Forever's spell (no totem): from the fire totem up
--- wowsims/forever's spell data (e2842f0a78 sim/core/spelldata/spells_auto_gen.go, 408341-408345 Powers), every rank;
--- the owner's in-game read confirms rank 5's 375 (R57a, 2026-11-06). The DB2's 95, 170, 280, 395, 520 are wrong.
+-- The owner's in-game tooltips (2026-11-06), every rank: 65 / 120 / 210 / 290 / 375 mana at levels 12 / 22 / 32 / 42 /
+-- 52 (rank 5 first, R57a); wowsims/forever's spell data (e2842f0a78, 408341-408345 Powers) agrees. The DB2's 95, 170,
+-- 280, 395, 520 are wrong.
 local FIRE_NOVA_COST = { 65, 120, 210, 290, 375 }
 local ROCKBITER_WEAPON = { 8017, 8018, 8019, 10399, 16314, 16315, 16316 }
 local ROCKBITER_WEAPON_COST = { 15, 25, 50, 75, 100, 125, 150 }
