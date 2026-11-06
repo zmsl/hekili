@@ -269,6 +269,10 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   breaks Prowl) behind Ravage while Prowled. No 'behind the target' signal and no fallback timer: Ravage stays the
   first icon while Prowl is up and the target is in range; Prowl ends when Ravage lands or the player attacks. The
   replay and loop worlds do not know Prowl or Ravage, so they do not see the deviation (unit-tested in druid_spec).
+- Rogue Combat, Riposte (owner R70, 2026-11-06): "add it to the apl and make it focus=1". A recipe `extra` line before
+  Ambush: `riposte,use_off_gcd=1,focus=1,if=buff.riposte_usable.up&energy.lo>=action.riposte.cost`. wowsims never plays
+  it (no parry on us in its fight), so it moves no replay or loop number; the window is the kit's `riposte_usable`
+  (Rogue.lua, from the client's usability answer; a window migration is planned, L138). Not checked in game.
 
 ## Pack notes
 

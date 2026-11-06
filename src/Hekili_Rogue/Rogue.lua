@@ -70,6 +70,7 @@ local SLICE_AND_DICE = { 5171, 6774 }
 local RUPTURE = { 1943, 8639, 8640, 11273, 11274, 11275 }
 local EXPOSE_ARMOR = { 8647, 8649, 8650, 11197, 11198 }
 local KICK = { 1766, 1767, 1768, 1769 }
+local RIPOSTE = { 14251 }
 local AMBUSH = { 8676, 8724, 8725, 11267, 11268, 11269 }
 local GARROTE = { 703, 8631, 8632, 8633, 11289, 11290 }
 local MUTILATE = { 1310707, 399956, 1241582, 1241584 }
@@ -221,6 +222,13 @@ spec:RegisterAuras({
         duration = 10,
         max_stack = 1,
     },
+    -- Riposte's window: the game opens it for 5 s after a parry and answers Riposte as usable only inside it. From the
+    -- plain usability read like Cutthroat's (the player aura walk is secret in combat); the way Warrior's Overpower and
+    -- Revenge windows are modelled.
+    riposte_usable = {
+        duration = 5,
+        max_stack = 1,
+    },
     expose_armor = {
         id = 8647,
         copy = rest(EXPOSE_ARMOR),
@@ -317,6 +325,15 @@ end)
 -- Cutthroat from the plain usability read (the player aura walk is secret in combat): Ambush usable, or short only of
 -- energy, while neither Stealth nor Vanish is believed up, is the proc; its 10 s from the flip's time.
 local cutthroatAt, ambushOpen = 0, false
+local riposteAt, riposteOpen = 0, false
+local function riposteUsable()
+    local r = knownRank(RIPOSTE)
+    if r == 0 then
+        return false
+    end
+    local usable, noMana = IsSpellUsable(RIPOSTE[r])
+    return usable == true or noMana == true
+end
 local function ambushUsable()
     local r = knownRank(AMBUSH)
     if r == 0 then
@@ -331,6 +348,11 @@ spec:RegisterEvent("SPELL_UPDATE_USABLE", function()
         ambushOpen = u
         cutthroatAt = u and GetTime() or 0
     end
+    local p = riposteUsable()
+    if p ~= riposteOpen then
+        riposteOpen = p
+        riposteAt = p and GetTime() or 0
+    end
 end)
 
 spec:RegisterHook("reset_precast", function()
@@ -344,6 +366,15 @@ spec:RegisterHook("reset_precast", function()
             applyBuff("cutthroat", cutthroatAt + 10 - now)
         else
             applyBuff("cutthroat")
+        end
+    end
+
+    -- Riposte's 5 s from the parry (the usability flip's time), else its window with no known end.
+    if now == query_time and riposteUsable() then
+        if riposteAt > 0 and now - riposteAt < 5 then
+            applyBuff("riposte_usable", riposteAt + 5 - now)
+        else
+            applyBuff("riposte_usable")
         end
     end
 end)
@@ -688,6 +719,27 @@ spec:RegisterAbilities({
         end,
     },
 
+    -- Combat talent (DB2 14251: 10 energy, 6 s cooldown, off the global cooldown, 5 yd, a strike that also disarms for
+    -- 6 s). Usable only in the 5 s window after a parry (buff.riposte_usable, from the client's usability answer, as
+    -- Warrior's Revenge). On no built-in priority (L91): a custom priority adds `riposte` itself.
+    riposte = {
+        id = 14251,
+        cast = 0,
+        cooldown = 6,
+        gcd = "off",
+
+        spend = 10,
+        spendType = "energy",
+
+        startsCombat = true,
+        known = knows(RIPOSTE),
+        buff = "riposte_usable",
+
+        handler = function()
+            removeBuff("riposte_usable")
+        end,
+    },
+
     -- Both hands; +2 combo points (one effect).
     mutilate = {
         id = 1310707,
@@ -943,8 +995,8 @@ spec:RetirePacks({ "Combat", "Assassination", "Subtlety" })
 -- /hekili priority <name>.
 spec:RegisterPack(
     "Combat (wowsims.com)",
-    20261105000,
-    [[Hekili:TV1wVTTnu4Fl5fpj0aFjjUTlika7(6Ww3WC3RYMwIYwlYIgIuUWag(3(iPUrYqQB2PnRn9HgfrYZ1pkE45dXDI7hCN5diq33F14RE9KjJNoE8y3zK9BHUZ2c8EaSI(qmyd9))b0MLaYXfwFe9rC4g8qp0gB2S2hHa(mjTmnmI8Uy3LAfkEl0ZD2F)N)Y)8t36XLL7S1H((WSfaXEg0XThxqwdpUi)DJcqjWDWKJl8HbG0i60)U)63pUG(6JlkfqA4iMcXJsqRsHJ83Ihb2gHhLVMH0Fz4)IrX2xsLEcighrTyF6ZiM2cXhxa89rXFd9HhG7XdpU4hbeWTAScR)4DFGkK1eYw8TJgTkKSoDjZWhPmvBQmPMg8Q3EZvbJbV5T34pKg)sqbHr04lWJeIIXd3MaZcpolJa(W5brPjj7p(BpA8x5mI(8gOFibWg6YumCokiy(kpFNj6xaMabrK1Yt9YWaNlwMgemmF4HPBlxUdyZYu8A2CS4ZXlLqwNGae6SgWemA(wuymHMSOgkmMC3u7Yvtv5kqscIaVma5LIZuML(Ln4cFixf5lHQajjTdehI1y7wwxKnPYf(qm6JXh0iUbgMkmgMSA)Wi09okJ7HWeBd(zL0WrHEW5Gy)5(0hk0FwatzmAkdegJVZ5kBBj3JMN2csYsLmVQq2zUDHm9qOiF6tfVobc83ljhGp16arHXW5jfzUs)7oNPJBWS1z0SqxXIGrPXq88OWvRjzlPCOLriK)8G0K9zdizxvdwxkuX6ZTPsVwD4m3FGLbdOYvvhPsKcJKjTkXPXvTmhgQeP0yLcTpr9gZSg9CkCA3WjcV3(GXGXGxI)MI)SfEMcopd8gr0KOy1SJ8cRADAZ2Dn2ffcEQXYEgW6z8Q1B)0KBZ3akoIWwqTGHxc52z74AxK4j2F7Mz36J66T1XRB4ENjtUPt7Jp3Qlnb(aqJIkqj8XZH0v4JS3YdXdAWMQn3pGNauhIMbAyzn6OQMQFAwTynj4awCFErvDnPgfGc7QgKi4CAD36kksOSTjtpOnclmLRekivCozy283WXQd0xb(16vXJwUmuV6sks4TEwsSsfXMUEdtvA9bNRfLGSIKUdsTgYyTv8t3mm4cl5eUZRLT5DWy0MSabxd8F30vLU35APfNKULqJZnExj66kVSu(AyQWIaIOJoKSgLIzof9UA4Huy4YiOFzUDnCdkjzn9Q9553Cbj8EwwUrp1JI0NZ)sNgORoR250VWKaaFxi2ds3IA(kCctj7wC1Dsww2sAGhvWuP8Y2DQpZq3NQ15VzqUY3KscJkTBB9t)E687(brcPQtouB0WUEWJXfuT1kSxbyvc4v8YYJCUXwmB(MPhQhiUAnn7gTFoMKe(a04xgMkUMIKqDTJOS4oDrWbnhbpu76TQpbvfamifgK(vQqkoo)mK7TPtYWxavYn2goZPnNKOFsxOTObdt2sV21lctM6PvI0DoglDG)pryx13y)Ya4jCMXlqVN3qpCymTwtyIWNjl1U8rsLTZ7rvk8)E8Qsq4fq7ZsqR7SDWem9fkuifrZDyoNvzS4qF89CoSYlZW97lOrH(toTfUZ8scP57qG7S2tFHlHQyf5kiN2ZErL5K)s3z8s7zMnvhxROdHYOzZOCXzT6xYgkZbY8y0fopEAi9On7wy((ngYBcSGi5WfkvInet0HWuWutadzuPKs6cnjNvEsyg8RBjAOAX6re63v2CBVmyB10c)NIE4FsT92y35yX330daHXGIg2vob6v(6o50ckwADa6zHdXqBVTL7Mf1R8h8QTTJhQHnG6BpEJ9hV5yDFdO9nEYdOF7jS9TTSZCs0Z8vvgPfK08jZP7OPZattg3YTNgoST)MUaRkCdrT(1U)DIZMPOwYRrtHx1UKrua)eVQrV4(PVK)80X(Z5M(hEOUTv(lWpK8h2KzgQ)ud1bUHA1vuZ9ptv3lYwKwuCFVtbxRQL8BkQkXRKOzyGrjUWvlpx9ILMmUUrLuLrklp5looXuTSC2MKdSCJRrwO4svTMLgUZBVyH6SqdvLdNRxLWJATcMacvuy1OZ2i5vTaKkShuL9QtL(kt8xXBLH6HDLFiVudYFCXeXwDLzR(sT1jYTvlYeMTT(WUv3P3sHFlneCXtCMAULmJxn(fSPCHPE8EHWkYAnUf4C0P3tQvVDRxVDJuS2aASpuxBEBxFEB1POgMLPo92Pw92TE92uZEBS(YM62lhAQwoub0S6SGV0aNDL4SxGNFgHNMQMvHnjTf0(5MATpHy6ErU2la7pBaBc)MqS4kOwQ0KU0MgQXA31S6aFx5)zijUFs9VpjU5tDaqkTKSe3z)k8HWOWJlS(58)yR4d7(F]]
+    20261106000,
+    [[Hekili:TV1wVTTnu4Fl5fpl0cFjjoTlika7(6Ww3WC3RYMwIYwlYsgIuPWab(3(oK6gjdPUzN2S20hkKfjpx)O45WpeNPoFWzUhIIDE)5to)QPtNC1KjtCMt3Vd7mFhY9o0A4Hi0w4))H4TRq0dlh(X4psc2sg5gV1InR9HXipMKwLgesFxKZkTcLSd76m)V)ZF5F(PRD5YYz(MappC2cWexd646dlPBWhwM)UX(Xj47Xjhw6H9rPHW0)U)63pSeE9HLLcinymtHKXjXRtXJ92rgJ2fsgNVMrWpg9VK4iRxdspbfrcbl2dEoMPTaYHLipV4OVbE4o8EYOdl)refDTgRy4F8UpaczdLUJC94XRdOBsxXm8Xkt1cKjyA4ZF7LN7pb9M3EP3ii(Le7hecXxKlnioImAxcol8yVke5Hx4hMMKS)WV9OXFL9y45TyVakIn0Rtj4fX((lw76zpv)ciumkKUrEQVoW3(SvP((JYhEu6UYLBNeSlgEVYs8JDtjzlLVY8zTiLGwfIbbmahHtwVFuy8T2zIQyoqSHqlLpyuOTRsjByIAixwUPu6MKyeLjgMPhVyxCqefGdqOahrVzML46xJssIbluWMgQFzdoZdZvr(safijP7rrbenrNHdpl3hkw4DrXFm6bnIBGHP(4WrX4SWHLb)SsAKWax8cuK3cp4Hc9NfWugdafOGiYn2NBzj5EasyhkjdSW8QczN52fY0noo0dEQ41jyK3Ej5G8aRdfgeHxKuK5k9VBSNnPbZwNrZcDflchMgHjlcdwVHMTKYHwfgh7TWpnzF2as2v1G1LcvS(CBQ0RvhoZ9hm0Gbu5QQJujsHrYKwL404QdnhgQeP0yLcTpr9gZSg9CaoD)OPcV36bJbJbVe)nf)zl8efCEg4nIOjrXQzh5zdR1PnB31yxae8yJL9mG1Z4vR3(Pj3MVbuCeHTGAbdVeYTY2X1UiXtS)2nZU1h11BRJx3WT2tNEzN2hFQvxAc(oKgfvGs4JNdPRWhzVLhIh0GnvBUFapbOoeKbAyzn6OQMQxAwTynjyFwCFrrvDnPgfGcRzgAiEbuzVUIIekBB6Sh0gHfMY5cfKkoNmmB(B4y1b6Ra)c9Q4rlxgQx1gKeERNLeRurSPgOyQsRpyFHOeKvKupi1Ait0wXpSzyWzdLt42xjBZ3JJI3Mfi4AG)BtTkDR9fslojDhfIZn2ReSUYMLYxdtfdPOqy0r0nXqNEGtb9QrgbWqOPpVYC7g824KKnO15jLb5cs49SSCJEQlG0xW)sNgORoR2(4BysaGFFaXfdBrn3cNWuY6IRUtYYYwsd8OcMkLx2Ut9zgyFQwN)Yb5kFBkniS0UT0p9BH539dIesvhDO2OHDXGhJlaT1kSxbyvc4v8YYJCU0smB(MzpupqC9gi7gUFbHMeCh24xgMjUMIKqDxhrzXD6IGdAoc(qTRFy9jOQaGbPWG0VsfsXX5NGCVfmjdFbuj3yz4mN2CsI(jDM2Igmm5H61UEryYupUsKUX2yPd8)jc7Q(g7xgapHZmEb698g6rcIGAnXjcFMSu7YhjvEDEpQsH)3JxvccVaAFwcADMFpoHaVqHKQqi3r4SILXte8475SKLxMHZ37m3njaYVbigHx(DN5dN58AVzYDUqvT8FNnDN55Z3HcMNI2lMsgPjIwt7jpHj3lm6vDG7KkZj)LcohOJlv0Hj3nJObjBOebiZIsxyC5PHYL2SxL57ZmK3e4GrYHluQexmMiJHPGRmbmK3tiPKUqsZjLLgMb)MwIgQwSEeH(Vj08LUzW2QHaHNcgeoQlD34DdYIVVThacJbfnC7CeK781DYPfe806a0ZchIH2(2wUBwuVYFWR2l98HA4IO(lNVXBNV5yDFdO9nEYdOtNCe7FBl5qhf7qFvLsAbhrFYC6oA6C0KAvRD802(B6cK6Wne1cy7(hkozMIAnVgnfEtdsgrb8tStNEr9uF5E6PJ8Ptn7t8qDBl9xGEk5pSjtmv)zMQdut1QoKZ9ptL3lswLwuCFBQGRv1A(nfvLO1s0mmqOfx4Q1NR2zPjJRBmzvzKYYtUZXPMkMLt2LCGLBCnscgxQQfT0qtV9IeStclycxfqMELdpNRwRGjGqfdAn6SnYDwlaPc7bvjp7yzpZe9z8WH6HDLFiVudYFCXeVADLyT(YS2rsTwlYeMTT(qUw3zxtHEnn8RXtCMUDlzc3A8lyZ4ct949cHvK1AClWP4IMpQBAUBx1C34KRnGgRhQ7wMB31m3Qtrnmltx0CNUP5UDvZnDxZnwFztx2mhAQwoub0S6SGV0aNDL3UxGNFgHNMQMvHmlTf0(5MzVpHy6EXT3la7pBaBkVtiwCfPLjVcyUutBA4CRDTzPHuntlm)VZkX9tQ)byXnFWbqPqjzjoZ)v8DbHbhwo8NZ)RjJpSZ)9]]
 )
 spec:RegisterPack(
     "Assassination (wowsims.com)",

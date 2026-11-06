@@ -64,7 +64,7 @@ local WARLOCK_SHADOW_BRAND = {
 
 local PACKS = {
     ["Rogue/APLs/Assassination"] = ROGUE,
-    ["Rogue/APLs/Combat"] = ROGUE,
+    ["Rogue/APLs/Combat"] = { "riposte=1", "garrote=1", "slice_and_dice=1", "rupture=1" }, -- Riposte leads (owner R70)
     ["Rogue/APLs/Subtlety"] = ROGUE,
     ["Hunter/APLs/Beast Mastery"] = HUNTER,
     ["Hunter/APLs/Marksmanship"] = HUNTER_MM,

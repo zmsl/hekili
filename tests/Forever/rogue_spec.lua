@@ -19,6 +19,7 @@ local KIT = {
     rupture = { { 1943, 8639, 8640, 11273, 11274, 11275 }, 25, 0, "totem" },
     expose_armor = { { 8647, 8649, 8650, 11197, 11198 }, 25, 0, "totem" },
     kick = { { 1766, 1767, 1768, 1769 }, 25, 10, "totem" },
+    riposte = { { 14251 }, 10, 6, "off" }, -- off the GCD (DB2); owner R70: on the Combat priority, in the parry window
     ambush = { { 8676, 8724, 8725, 11267, 11268, 11269 }, 60, 0, "totem" },
     garrote = { { 703, 8631, 8632, 8633, 11289, 11290 }, 50, 0, "totem" },
     mutilate = { { 1310707, 399956, 1241582, 1241584 }, 60, 0, "totem" },
@@ -95,7 +96,7 @@ describe("Forever Rogue", function()
                 assert.are.equal("function", type(a.known), key)
             end
         end
-        assert.are.equal(20, n)
+        assert.are.equal(21, n)
         assert.are.same({ 8928, 8927, 8926, 6950, 6949, 6947 }, w.abilities.instant_poison.items)
         assert.are.same({ 20844, 8985, 8984, 2893, 2892 }, w.abilities.deadly_poison.items)
         assert.are.equal("cooldowns", w.abilities.vanish.toggle) -- the native Cooldowns toggle (APL usability audit B)

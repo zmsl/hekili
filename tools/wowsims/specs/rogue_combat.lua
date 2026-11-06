@@ -53,4 +53,14 @@ return {
     -- sort by soonest; Venom none (the user, 2026-10-21)
     focus = { garrote = 1, slice_and_dice = 1, rupture = 1 },
     leveling = {},
+    -- Riposte (owner ruling R70, 2026-11-06: "add it to the apl and make it focus=1"): not from wowsims, which never plays it
+    -- (its fight has no parry on us). Off the global cooldown, so it leads the list; it is a reaction to a parry, a real
+    -- need (R41), and shows only in the 5 s window `buff.riposte_usable` models (Rogue.lua, the client's usability
+    -- answer), skipped for a Rogue without the talent. Tier 1 in the line itself, as Victory Rush.
+    extra = {
+        {
+            before = "ambush",
+            line = "riposte,use_off_gcd=1,focus=1,if=buff.riposte_usable.up&energy.lo>=action.riposte.cost",
+        },
+    },
 }
