@@ -12,7 +12,7 @@
 
 actions.precombat=flametongue_weapon,if=!buff.main_hand_enchant.up
 actions.precombat+=/rockbiter_weapon,if=!buff.main_hand_enchant.up&!action.flametongue_weapon.known
-actions.precombat+=/water_shield,if=!buff.water_shield.up&!buff.water_shield.up
+actions.precombat+=/water_shield,if=!buff.water_shield.up
 actions.precombat+=/windfury_totem,if=!totem.air.up
 actions.precombat+=/mana_spring_totem,if=!totem.water.up
 actions.precombat+=/strength_of_earth_totem,if=!totem.earth.up

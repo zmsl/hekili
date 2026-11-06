@@ -20,6 +20,7 @@
 --      unless the aura's duration is at most the ability's cooldown (moot: the cooldown already hides it);
 --    - it summons a totem of its own key: `!totem.<element>.up` (the element's slot);
 --    - otherwise no guard (the ability's own usability and cooldown decide).
+--    A guard term the line's condition already has as an `&` term is not added twice (L102).
 --    A mutually exclusive group (lines of one list whose handlers remove each other's aura) guards its first line by
 --    every member's aura (`!buff.a.up&(!action.b.known|!buff.b.up)`: rule 6's guard on another ability's read),
 --    later lines by their own: the first is cast only when none is up, the later replaces it. A handler that raises
@@ -82,7 +83,8 @@
 --    documented deviation from wowsims, each
 --    with its reason in the recipe and docs/dev/wowsims-packs.md.
 --    The recipe's `condition` ({ [action key] = SimC expression }) replaces the APL's condition of each cast line of
---    that action, in every list (before `requires` and `guard`; an error when no line casts it): an owner-approved
+--    that action, in every list (before `requires` and `guard`; also where the APL's folds false, L11; an error when no
+--    line casts it): an owner-approved
 --    deviation from wowsims, with its reason in the recipe header.
 -- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N when
 --    it is a direct operand (a variable followed) of a comparison with a percent read (M.PERCENT: `mana.pct`,
@@ -1499,7 +1501,7 @@ local function automatic(c, kind, v)
     return keys
 end
 
-local entry, guard
+local entry, guard, terms
 
 -- Rule 7's cast line of key `x`, without its condition: off-GCD and focus flags.
 local function castBody(c, x)
@@ -1800,7 +1802,7 @@ function entry(c, e)
         unsupported(kind)
     end
     local cond = a.condition and condition(c, a.condition)
-    if cond == false then
+    if cond == false and c.condition[key] == nil then -- L11: a recipe condition replaces an APL one that folds false
         return nil, "never"
     end
     if seq then
@@ -1912,21 +1914,31 @@ function guard(c, name, out, origin, omitted)
     for i, b in ipairs(out) do
         local r, x, g = eff[i], keys[i], nil
         if r and x then
-            local terms = { "!" .. r.unit .. "." .. x .. ".up" }
+            local parts = { "!" .. r.unit .. "." .. x .. ".up" }
             for j = i + 1, later[i] and 0 or #out do
                 local y, s = keys[j], eff[j]
                 if y and y ~= x and s.unit == r.unit and (r.removes[y] or s.removes[x]) then
                     local k = knownTest(c, y) -- rule 6: another ability's aura, read only once it is learned
-                    terms[#terms + 1], later[j] = "(!" .. k .. "|!" .. s.unit .. "." .. y .. ".up)", true
+                    parts[#parts + 1], later[j] = "(!" .. k .. "|!" .. s.unit .. "." .. y .. ".up)", true
                 end
             end
-            g = table.concat(terms, "&")
+            g = parts
         elseif r then
-            g = "!totem." .. r.element .. ".up"
+            g = { "!totem." .. r.element .. ".up" }
         end
         if g then
             local head, cond = b:match("^(.-),if=(.*)$")
-            out[i] = head and (head .. ",if=" .. g .. "&" .. paren(cond)) or (b .. ",if=" .. g)
+            local has, kept = {}, {}
+            for _, t in ipairs(cond and terms(cond) or {}) do
+                has[t] = true
+            end
+            for _, t in ipairs(g) do -- L102: a term the condition already has as an `&` term is not added twice
+                kept[#kept + 1] = not has[t] and t or nil
+            end
+            g = table.concat(kept, "&")
+            if g ~= "" then
+                out[i] = head and (head .. ",if=" .. g .. "&" .. paren(cond)) or (b .. ",if=" .. g)
+            end
         end
     end
 end
@@ -1986,7 +1998,7 @@ end
 
 -- The `&` terms of condition text `s` (the whole as one term when it has a top-level `|`), a parenthesised
 -- conjunction's own terms in its place (`(a&b)&c` is a, b, c; `(a|b)` stays one term).
-local function terms(s)
+function terms(s)
     local parts, depth, from = {}, 0, 1
     for i = 1, #s do
         local ch = s:sub(i, i)
@@ -2635,7 +2647,7 @@ function M.write(spec, ex)
             r.apl or r.siml or r.build
         ),
         "# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at "
-            .. (ex.OLD_SIM[spec] or ex.PIN):sub(1, 12)
+            .. ((ex.OLD_SIM or {})[spec] or ex.PIN):sub(1, 12)
             .. ".",
     }
     for _, n in ipairs(r.notes or {}) do -- the recipe's player-facing notes: more of the in-game description

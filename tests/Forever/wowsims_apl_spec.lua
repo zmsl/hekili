@@ -467,6 +467,27 @@ describe("the wowsims APL translator", function()
             end
         )
 
+        -- L102: a condition that already has the guard's term as an `&` term does not take it twice (Enhancement's
+        -- `water_shield,if=!buff.water_shield.up&!buff.water_shield.up`)
+        it("adds no guard term the line's condition already has", function()
+            local down = NOT({ auraIsActive = { auraId = { spellId = 2001 } } })
+            local text = apl.translate({
+                prepullActions = {
+                    at(1001, "-5s", down),
+                    at(1001, "-4s", AND(down, { isExecutePhase = { threshold = "E20" } })),
+                    at(1001, "-3s", OR(down, { isExecutePhase = { threshold = "E20" } })),
+                },
+            }, guardCtx())
+            assert.are.equal(
+                table.concat({
+                    "actions.precombat=shout,if=!buff.shout.up",
+                    "actions.precombat+=/shout,if=(!buff.shout.up&execute_phase)",
+                    "actions.precombat+=/shout,if=!buff.shout.up&(!buff.shout.up|execute_phase)",
+                }, "\n"),
+                text
+            )
+        end)
+
         it("guards a mutually exclusive group's first line by every member's aura, later ones by their own", function()
             local text = apl.translate({
                 prepullActions = { at(1006, "-3s"), at(1007, "-1.5s") },
@@ -1272,6 +1293,18 @@ describe("the wowsims APL translator", function()
             end, "condition: no big_hit cast line")
         end
     )
+
+    -- L11: the recipe's condition replaces the APL's even where the APL's folds false (it was "never", then a
+    -- spurious "condition: no <key> cast line" error)
+    it("replaces an APL condition that folds false with the recipe's condition", function()
+        local never = AND(ready, const("false"))
+        local text, omitted = apl.translate(
+            { priorityList = { cast(200, never), cast(100, never) } },
+            ctx({ condition = { big_hit = "rage.lo>40" } })
+        )
+        assert.are.equal("actions=big_hit,if=rage.lo>40", text)
+        assert.are.same({ "default #2: never" }, omitted)
+    end)
 
     it("takes the character's ability set: a shared racial is mapped and off the GCD", function()
         local set = require("Forever.helpers.engine").abilitySet("WARRIOR")
