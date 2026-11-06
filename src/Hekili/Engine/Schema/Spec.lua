@@ -423,8 +423,11 @@ local HekiliSpecMixin = {
     -- 11): up with no expiry while it glows, down once it stops. A plain walk wins, except that a permanent aura
     -- with `overlay` still goes down while the glow is off.
     -- Also `isStealthed = true` (C5): the player aura follows IsStealthed (Sources/Forms.lua); and `weaponEnchant = slot`
-    -- (C4, Enum.WeaponSlot: 0 main hand, 1 off hand) on an id-less pseudo-aura, read out of combat from
-    -- C_Item.GetWeaponEnchantInfo (Sources/Enchants.lua) and modelled from our apply cast in combat.
+    -- (C4, Enum.WeaponSlot: 0 main hand, 1 off hand) on an id-less pseudo-aura: up while that slot carries an enchant
+    -- of any layer but the temporary one (stones and oils); and `enchants = { enchant IDs }` on an id-less aura: up
+    -- while either weapon slot carries one of those IDs (the client's enchantID). Both are read from
+    -- C_Item.GetWeaponEnchantInfo, in combat too, on its events (Sources/Enchants.lua), and modelled from our apply cast
+    -- between reads.
     RegisterAura = function( self, aura, data )
         CommitKey( aura )
 

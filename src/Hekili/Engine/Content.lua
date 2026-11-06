@@ -33,7 +33,9 @@ local format = string.format
 --   prices such a cost at or above 1 as points, silently.
 -- 9 (2026-10-21): the `now` verb `dismissPet` (central fix 27) and the simulation's `pet.<resource>` (the pet's power).
 -- 10 (2026-10-25): Hekili:GetLocale(addon); packs ship Locales/ (Hekili.L is gone; localization plan, Task 3).
-local CONTENT_API = 10
+-- 11 (2026-11-05): the aura field `enchants` (an id-less aura up while a weapon carries one of its enchant IDs); an
+-- older core drops such an aura from the belief silently, so it would read down forever.
+local CONTENT_API = 11
 
 local done, notice = false, nil
 
