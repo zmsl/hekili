@@ -20509,6 +20509,8 @@ options.packs.protection.Protection (wowsims.com).lists.var_name	desc	Specify a 
 options.packs.protection.Protection (wowsims.com).lists.var_name	name	Variable Name
 options.packs.protection.Protection (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.protection.Protection (wowsims.com).lists.window_name	name	Window Name
+options.packs.protection.Protection (wowsims.com).lists.window_name	values.move1	move1
+options.packs.protection.Protection (wowsims.com).lists.window_name	values.move2	move2
 options.packs.protection.Protection (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.protection.Protection (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.protection.Protection (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -20674,16 +20676,18 @@ options.packs.retribution.Retribution (wowsims.com).lists.action	values.variable
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.wait	|T136243:0|t |cff00ccff[Wait]|r
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	name	Entry
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Use Items]|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20271
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 24275 - |cFFFFD100|cffffd100(action.hammer_of_wrath.cast=0||mainhand_remains>mainhand_speed-0.2)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 679 - |cFFFFD100|cffffd100time>0.5|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20375 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&(!buff.echo_of_command.up&!buff.seal_of_command.up)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 20154 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&(!buff.echo_of_righteousness.up&!buff.seal_of_righteousness.up)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffconsecration|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffexorcism|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 20375 - |cFFFFD100|cffffd100!talent.twist_of_light.enabled&!buff.seal_of_command.up|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 20154 - |cFFFFD100|cffffd100!action.seal_of_command.known&buff.seal_of_righteousness.remains<gcd.max*2|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmove_to_melee|r, if |cffffd100(!action.holy_strike.known||!action.holy_strike.in_range)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20271 - |cFFFFD100|cffffd100(mainhand_remains<=mainhand_speed-0.1&mainhand_remains>=0.1)&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Use Items]|r - |cFFFFD100|cffffd100time>=0&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 24275 - |cFFFFD100|cffffd100(action.hammer_of_wrath.cast=0||mainhand_remains>mainhand_speed-0.2)&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 679 - |cFFFFD100|cffffd100((mainhand_remains<=mainhand_speed-0.1&mainhand_remains>=0.1)&(!action.judgement.known||!cooldown.judgement.ready)&(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0)))&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 20375 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&talent.seal_of_command.enabled&!buff.seal_of_command.up&(!action.seal_of_righteousness.known||!buff.seal_of_righteousness.up)&(!seal_up||(action.judgement.known&cooldown.judgement.remains>0))|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 20375 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&((!buff.seal_of_command.up||(buff.seal_of_command.up&buff.seal_of_command.remains<=mainhand_remains))&(!talent.twist_of_light.enabled||(!buff.seal_of_command.up&buff.echo_of_righteousness.stack>=1))&(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0)))&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 20154 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&((!talent.seal_of_command.enabled||talent.twist_of_light.enabled)&(!buff.seal_of_righteousness.up||(buff.seal_of_righteousness.up&buff.seal_of_righteousness.remains<=mainhand_remains))&(!talent.twist_of_light.enabled||!talent.seal_of_command.enabled||(!buff.seal_of_righteousness.up&buff.echo_of_command.stack=3))&(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0)))&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffconsecration|r, if |cffffd100(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffexorcism|r, if |cffffd100(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 20375 - |cFFFFD100|cffffd100!talent.twist_of_light.enabled&!buff.seal_of_command.up|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 20154 - |cFFFFD100|cffffd100!action.seal_of_command.known&buff.seal_of_righteousness.remains<gcd.max*2|r|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	name	Action Name
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
@@ -20744,13 +20748,19 @@ options.packs.retribution.Retribution (wowsims.com).lists.enabled	desc	If disabl
 options.packs.retribution.Retribution (wowsims.com).lists.enabled	name	Enabled
 options.packs.retribution.Retribution (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.retribution.Retribution (wowsims.com).lists.listName	name	Action List
+options.packs.retribution.Retribution (wowsims.com).lists.listName	values.activate_assigned_aura	activate_assigned_aura
+options.packs.retribution.Retribution (wowsims.com).lists.listName	values.cast_assigned_judgement	cast_assigned_judgement
 options.packs.retribution.Retribution (wowsims.com).lists.listName	values.consecration	consecration
 options.packs.retribution.Retribution (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
 options.packs.retribution.Retribution (wowsims.com).lists.listName	values.exorcism	exorcism
+options.packs.retribution.Retribution (wowsims.com).lists.listName	values.move_to_melee	move_to_melee
 options.packs.retribution.Retribution (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.retribution.Retribution (wowsims.com).lists.list_name	name	Action List
+options.packs.retribution.Retribution (wowsims.com).lists.list_name	values.activate_assigned_aura	activate_assigned_aura
+options.packs.retribution.Retribution (wowsims.com).lists.list_name	values.cast_assigned_judgement	cast_assigned_judgement
 options.packs.retribution.Retribution (wowsims.com).lists.list_name	values.consecration	consecration
 options.packs.retribution.Retribution (wowsims.com).lists.list_name	values.exorcism	exorcism
+options.packs.retribution.Retribution (wowsims.com).lists.list_name	values.move_to_melee	move_to_melee
 options.packs.retribution.Retribution (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.retribution.Retribution (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.retribution.Retribution (wowsims.com).lists.max_energy	name	Max Energy
@@ -20817,6 +20827,8 @@ options.packs.retribution.Retribution (wowsims.com).lists.var_name	desc	Specify 
 options.packs.retribution.Retribution (wowsims.com).lists.var_name	name	Variable Name
 options.packs.retribution.Retribution (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.retribution.Retribution (wowsims.com).lists.window_name	name	Window Name
+options.packs.retribution.Retribution (wowsims.com).lists.window_name	values.move1	move1
+options.packs.retribution.Retribution (wowsims.com).lists.window_name	values.move2	move2
 options.packs.retribution.Retribution (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.retribution.Retribution (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.retribution.Retribution (wowsims.com).pack.deletePack	desc	Delete Priority
