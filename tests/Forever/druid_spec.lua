@@ -1313,3 +1313,69 @@ describe("Forever Druid Movement (R8)", function()
         assert.are.equal("shred", far(true))
     end)
 end)
+
+-- Owner deviation R69 (2026-11-06): a Cat that Prowls up to a mob is shown Ravage, the optimal opener (a player who
+-- cannot get behind the target simply does not press it); the pack never cancels Prowl; once Prowl is gone the list
+-- runs as wowsims's.
+describe("Forever Druid Ravage opener (R69)", function()
+    local headless = require("Game.harness.headless")
+    local dlw = require("Forever.helpers.druid_loop_world")
+    local PACK = "Feral (wowsims.com)"
+
+    -- The icons of a Cat at `yd` yards, energy full, Prowled or not; `combat` seconds into combat (nil: out of it).
+    local function recs(yd, prowled, combat)
+        local c = dlw.Feral.character()
+        c.known[#c.known + 1] = 9867 -- Ravage rank 4 and Prowl rank 3 (the loop world's kit lists neither)
+        c.known[#c.known + 1] = 9913
+        local H = headless.new({ character = c, pack = PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, yd
+        if prowled then
+            H.ctl.auras.player.HELPFUL[1] = { spellId = 9913, expirationTime = H.ctl.now + 3600, applications = 0 }
+        end
+        H.Fire("UNIT_AURA", "player")
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local VS = H.ns.VirtualState
+        local power, full = VS.Power, { est = 100, lo = 100, hi = 100, conf = 1 }
+        VS.Power = function(pt, now)
+            return pt == 3 and full or power(pt, now)
+        end
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        if combat then
+            H.Fire("PLAYER_REGEN_DISABLED")
+            t = t + combat
+        else
+            t = t + 0.2
+        end
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        assert(headless.cycle(H, t))
+        assert.are.same({}, H.errors)
+        local names = {}
+        for i, r in ipairs(H.Hekili.Engine.Output.Primary.recs) do
+            names[i] = r.actionName
+        end
+        return names
+    end
+
+    local function none(list, key)
+        for _, n in ipairs(list) do
+            assert.are_not.equal(key, n, table.concat(list, " "))
+        end
+    end
+
+    it("shows Ravage first, and never cancel_buff, while Prowl is up and the target is in range", function()
+        for _, at in ipairs({ { 5 }, { 5, 0.2 }, { 5, 10 } }) do -- out of combat, the pull, Prowl kept in combat
+            local list = recs(at[1], true, at[2])
+            assert.are.equal("ravage", list[1], table.concat(list, " "))
+            none(list, "cancel_buff")
+        end
+    end)
+
+    it("runs the normal opener once Prowl is gone: no Ravage, no cancel_buff", function()
+        local list = recs(5, false, 0.2)
+        assert.are.equal("faerie_fire", list[1], table.concat(list, " "))
+        none(list, "ravage")
+        none(list, "cancel_buff")
+    end)
+end)

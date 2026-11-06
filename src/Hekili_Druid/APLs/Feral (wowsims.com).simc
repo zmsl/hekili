@@ -5,6 +5,7 @@
 # Movement: default #4 reaches default: ravage, cat_form, ferocious_bite, elunes_light, shifting_power, shred, rip, rake, claw, innervate
 # Omitted: precombat #1: itemSwap
 # Omitted: default #1: itemSwap
+# Omitted: default #2: the recipe's condition is false
 # Omitted: default #4: move
 # Omitted: default #5: waitUntil
 # Omitted: default #7: item 9449
@@ -16,8 +17,7 @@
 
 actions.precombat=prowl,use_off_gcd=1,if=!buff.prowl.up
 actions.precombat+=/dash,use_off_gcd=1
-actions=cancel_buff,buff_name=prowl,if=(!action.prowl.known|buff.prowl.up)
-actions+=/faerie_fire,if=(action.faerie_fire.known&debuff.faerie_fire.remains<=0)
+actions=faerie_fire,if=(action.faerie_fire.known&debuff.faerie_fire.remains<=0)&!buff.prowl.up
 actions+=/ravage,if=(!action.prowl.known|buff.prowl.up)&(toggle.movement&target.outside5|target.within5)
 actions+=/cat_form,if=!buff.cat_form.up&(toggle.movement&target.outside5|target.within5)
 actions+=/ferocious_bite,if=((!action.cat_form.known|buff.cat_form.up)&fight_remains<=1&combo_points.current>=2)&(toggle.movement&target.outside5|target.within5)
