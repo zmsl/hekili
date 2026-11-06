@@ -2661,3 +2661,62 @@ describe("the wowsims APL translator on a .siml-parsed APL", function()
         end)
     end
 end)
+
+-- CN3 (L124): upstream 60b9eec562 gates the Warlocks' curse group on `warlockIsAssignedCurse` (sim/warlock/apl_values.go:
+-- the option equals the value's curseType). That is rule 16's `is` value: a recipe whose `select` names it as `is`
+-- translates the group; one that does not (every Warlock recipe at the pin) omits the line, leaving the group empty.
+-- The group below is upstream/master 4b0030a44b's demo_fire_brand.build.json "Single/Multi Target Curse Logic" #1.
+describe("the wowsims APL translator on the Warlocks' assigned-curse check", function()
+    it("translates warlockIsAssignedCurse once the recipe's select names it `is`", function()
+        local rotation = {
+            priorityList = { { action = { groupReference = { groupName = "Single/Multi Target Curse Logic" } } } },
+            groups = {
+                {
+                    name = "Single/Multi Target Curse Logic",
+                    actions = {
+                        {
+                            action = {
+                                castWarlockAssignedCurse = {},
+                                condition = {
+                                    ["and"] = {
+                                        vals = {
+                                            { ["not"] = { val = { warlockAssignedCurseIsActive = {} } } },
+                                            {
+                                                ["not"] = {
+                                                    val = { warlockIsAssignedCurse = { curseType = "NoCurse" } },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        }
+        local r = dofile("tools/wowsims/specs/warlock_demonology.lua")
+        local set = require("Forever.helpers.engine").abilitySet(r.class)
+        local player = { warlock = { options = { classOptions = {} } } } -- the zero value, Elements
+        local before, omitted = apl.translate(rotation, apl.context(set, r, nil, player))
+        assert.are.equal("", before)
+        assert.are.same({
+            "single_multi_target_curse_logic #1: warlockIsAssignedCurse",
+            "default: empty group single_multi_target_curse_logic",
+        }, omitted)
+        r.select.castWarlockAssignedCurse.is = "warlockIsAssignedCurse"
+        local text, none = apl.translate(rotation, apl.context(set, r, nil, player))
+        assert.are.same({}, none)
+        local up = "(settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)"
+            .. "|(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)"
+            .. "|(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)"
+        assert.are.equal(
+            "actions=call_action_list,name=single_multi_target_curse_logic\n"
+                .. "actions.single_multi_target_curse_logic=curse_of_the_elements,focus=2,"
+                .. "if=settings.assigned_curse='elements'&(!("
+                .. up
+                .. ")&!(settings.assigned_curse='nocurse'))",
+            (text:gsub("\nactions%.single_multi_target_curse_logic%+=/.*", ""))
+        )
+    end)
+end)
