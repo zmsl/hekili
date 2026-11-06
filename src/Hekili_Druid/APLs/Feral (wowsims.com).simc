@@ -17,7 +17,7 @@
 
 actions.precombat=prowl,use_off_gcd=1,if=!buff.prowl.up
 actions.precombat+=/dash,use_off_gcd=1
-actions=faerie_fire,if=(action.faerie_fire.known&debuff.faerie_fire.remains<=0)&!buff.prowl.up
+actions=faerie_fire,if=(action.faerie_fire.known&debuff.faerie_fire.remains<=0)&(!action.prowl.known|!buff.prowl.up)
 actions+=/ravage,if=(!action.prowl.known|buff.prowl.up)&(toggle.movement&target.outside5|target.within5)
 actions+=/cat_form,if=!buff.cat_form.up&(toggle.movement&target.outside5|target.within5)
 actions+=/ferocious_bite,if=((!action.cat_form.known|buff.cat_form.up)&fight_remains<=1&combo_points.current>=2)&(toggle.movement&target.outside5|target.within5)

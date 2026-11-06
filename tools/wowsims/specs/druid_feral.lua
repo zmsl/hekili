@@ -55,7 +55,7 @@ return {
     -- owner deviation R69 (header): no Prowl cancel line; Prowl ends when Ravage lands or the player attacks
     condition = { cancel_buff = false },
     -- R69 too: Faerie Fire (wowsims's line above Ravage) breaks Prowl, so it waits while Prowl is up
-    guard = { faerie_fire = "!buff.prowl.up" },
+    guard = { faerie_fire = "!action.prowl.known|!buff.prowl.up" },
     -- by role (docs/dev/wowsims-packs.md): Shred's first line (Clearcasting) at 1, not the builder; Claw's one line is
     -- wowsims's "Claw can replace Shred" builder fallback, kept at tier 1 as before (R66)
     focus = { shred = { 1, false }, claw = { 1, false }, rip = 2, rake = 2 },
