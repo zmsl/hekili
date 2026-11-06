@@ -781,7 +781,7 @@ describe("Forever Warlock Movement (R8)", function()
         end
     end
 
-    for _, name in ipairs({ "Demonology" }) do
+    for _, name in ipairs({ "Demonology", "ShadowBrand" }) do
         it(name .. ": OFF shows Hellfire only inside 5 yd, ON outside it too", function()
             local far, near = world(ww[name], 20), world(ww[name], 3)
             assert.are.same({ "life_tap", "hellfire" }, { far(false), near(false) })

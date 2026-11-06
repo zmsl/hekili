@@ -239,7 +239,10 @@ M.FLICKER = {
     ["Affliction"] = { flicker = 0, retracted = 0, heldReady = 5 }, -- 0 / 0 / 0, 0
     ["SM Ruin"] = { flicker = 0.3, retracted = 0, heldReady = 6 }, -- 0.25 / 0.12 / 0.27, 0
     ["Demonology"] = { flicker = 0.1, retracted = 0, heldReady = 4 }, -- 0.02 / 0.05 / 0, 0
-    ["Shadow Brand"] = { flicker = 0.1, retracted = 0, heldReady = 3 }, -- 0.03 / 0.02 / 0.02, 0
+    -- heldReady 3 -> 6 (re-pin e2842f0a78, Task 16, R6; seeds 1-20 / 21-40 / 41-60: 6 / 6 / 6, flicker 0.03 / 0.02 /
+    -- 0.02, oracle 0): traced at 1-20, each the same icon (Searing Pain 4, Life Tap, Bane of Agony) at 0.10-0.11 s vs
+    -- the oracle's 0.00-0.01, mana est within 2-29 of the truth: the wait class above, more often in the new list
+    ["Shadow Brand"] = { flicker = 0.1, retracted = 0, heldReady = 6 }, -- 0.03 / 0.02 / 0.02, 0
     -- the excess over the oracle (0 / 0 / 0) is at Conflagrate's and Shadowburn's cooldown ends, as Fire's Fire Blast
     -- (the not-ready flag's CD_PROBE, central). 0.4 -> 0.2 (Task 10b, gap CQ: the flag keeps a modelled end the GCD or a
     -- hard cast covers; 0.13 / 0.17 / 0.07, was 0.23 / 0.40 / 0.25; agreement .995 / .992 / .996); the rest is the probe

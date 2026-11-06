@@ -432,7 +432,9 @@ M.READY = {
     -- fight_remains from the log): only rows that were "never" moved, now timed
     -- (never 28 -> 0; 12 of them early at the cast's grain); median 0.40
     warlock_destruction = { 0.50, 16 },
-    warlock_shadow_brand = { 0.90, 16 }, -- 0.900, 16: Shadow Bolt's, likewise
+    -- 0.900, 16: Shadow Bolt's, likewise. -> { 0.20, 1 } re-pin e2842f0a78 (Task 16, R6, L82 M5): 100 decisions, 1
+    -- real (shadow_bolt late 0.20 s), the rest in grain or tie, never 24
+    warlock_shadow_brand = { 0.20, 1 },
     warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
     -- 0.880, 5 (was 0.80, 6): the world's parry haste (decision 63); the tie hand-back moves 177.88 sunder late -> never
     -- 0.680, 6 (fix 40): a short answer read before our own gain shows is no rung, so 177.88 sunder never -> early 0.68
