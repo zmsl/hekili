@@ -134,7 +134,9 @@ Translation:
   under "Deviations by ruling" below.
 - `condition` (`{ [action] = SimC expression }`): replaces the APL's condition of each cast line of that action, in
   every list (`requires` and `guard` still apply; an error when no line casts it). A deviation from wowsims, so only on
-  the user's ruling, named in the recipe and under "Deviations by ruling" below (Balance's Innervate, R20a).
+  the user's ruling, named in the recipe and under "Deviations by ruling" below (Balance's Innervate, R20a). A
+  `cancelAura` line is addressed as `cancel_buff`, and `condition = { cancel_buff = false }` omits that line (listed in
+  the `# Omitted:` header as "the recipe's condition is false"; R69a, Feral's Ravage opener).
 - `notes` (`{ "<sentence>", ... }`): player-facing lines added to the pack's in-game description (what the toggles
   hide, what a player gates by hand).
 - `maintenance` (`{ [action] = setting key }`, rule 15): a raid debuff kept up (Protection's Demoralizing Shout, Arms's
@@ -259,6 +261,14 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   keeps only its low-mana branch: the fight's length is unknown in game (gap AN: `fight_remains` reads 3600), so
   "fight > 380 s" cannot be known and the long-fight branch would fire under 70% mana in every fight.
   `condition = { innervate = "mana.pct_lo<40&fight_remains>30" }`.
+- Druid Feral, the Ravage opener (owner R69, 2026-11-06): "We should have it cast Ravage if we're prowling up to a mob"
+  and "the player can make the decision to not ravage if they can't get behind. We're recommending the optimal
+  ability." wowsims's 'Drop Prowl for this opener' folds to always-true solo (its Ravage opener needs another druid's
+  Faerie Fire, tag -1), so Prowl would be cancelled at once and Ravage never shown. `condition = { cancel_buff = false }`
+  omits the cancel line and `guard = { faerie_fire = "!action.prowl.known|!buff.prowl.up" }` keeps Faerie Fire (which
+  breaks Prowl) behind Ravage while Prowled. No 'behind the target' signal and no fallback timer: Ravage stays the
+  first icon while Prowl is up and the target is in range; Prowl ends when Ravage lands or the player attacks. The
+  replay and loop worlds do not know Prowl or Ravage, so they do not see the deviation (unit-tested in druid_spec).
 
 ## Pack notes
 
