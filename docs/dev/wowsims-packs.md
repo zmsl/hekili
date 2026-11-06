@@ -128,9 +128,10 @@ Translation:
   so. `tests/Forever/focus_roles_spec.lua` holds every pack's tiers.
 - `requires` (`{ [action or group snake name] = talent key }`): entries written for a talent build run only once the
   talent is taken (Retribution's Twist of Light lines; Warrior's Berserker Rage, the user's ruling below). Not added
-  when the condition already has the talent test as a top-level `&` term.
+  when the condition already has the talent test as a top-level `&` term. A key no line has is an error (CN12).
 - `guard` (`{ [action or group snake name] = SimC expression }`): one `&(<expression>)` term appended to each such
-  entry's condition, in every list. A deviation from wowsims, so only on the user's ruling, named in the recipe and
+  entry's condition, in every list; a key no line (or move entry) has is an error (CN12: an upstream rename
+  would drop it silently). A deviation from wowsims, so only on the user's ruling, named in the recipe and
   under "Deviations by ruling" below.
 - `condition` (`{ [action] = SimC expression }`): replaces the APL's condition of each cast line of that action, in
   every list (`requires` and `guard` still apply; an error when no line casts it). A deviation from wowsims, so only on

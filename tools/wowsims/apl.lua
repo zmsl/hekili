@@ -108,7 +108,8 @@
 --    on the clock: `since<x` is `<hand>_remains><hand>_speed-x` (the recheck parser forecasts a clock's `<` and its `>`
 --    wrap). A variable the recipe's `windowVars` ({ [variable name] = window }) names reads that window instead (§3a:
 --    a span the kit registers, `RegisterWindow`): its comparison on a time since is `window.<w>.up&window.<w>.elapsed
---    <op> x` (the hunters' "Just shot" from the `weave` window).
+--    <op> x` (the hunters' "Just shot" from the `weave` window). A `windowVars`, `guard` or `requires` key that nothing
+--    reads or no line (or move entry) has is an error, as a `condition` key is (CN12).
 --    `remainingTime` is `fight_remains`, which answers "unknown" (3600 s) on Forever: an API-forced deviation (the
 --    replay world answers the log's time to its end: R42, tests/Game/harness/loop.lua). `multipleCdUsages` without a
 --    base spell is wowsims's GetBool on it: `alignCdEnd` `(fight_remains<=D|fight_remains>(CD+(D/2)))`, D the
@@ -1344,6 +1345,7 @@ local function bool(c, n)
         end
         return nil, c.groupUsed[v.name], false -- rule 3: wowsims's constant, a shown reference to the group exists
     elseif k == "variableRef" and c.windowVars[v.name] then -- rule 10: a time since read from the recipe's window
+        c.keyUsed["windowVars:" .. v.name] = true
         local w, cm = c.windowVars[v.name], c.vars[v.name] and c.vars[v.name].cmp
         local left = cm and sinceHand(c, cm.lhs) ~= nil
         if not (cm and (left or sinceHand(c, cm.rhs))) then
@@ -1399,6 +1401,7 @@ local function required(c, key, cond)
     if not talent then
         return cond
     end
+    c.keyUsed["requires:" .. key] = true
     if not c.talentKey[talent] then
         error(("requires: %s is not a talent key"):format(tostring(talent)), 0)
     end
@@ -1534,6 +1537,7 @@ local function guarded(c, key, cond)
     if not g then
         return cond
     end
+    c.keyUsed["guard:" .. key] = true
     return cond and (paren(cond) .. "&" .. paren(g)) or g
 end
 
@@ -1977,6 +1981,7 @@ local function motion(c, a)
         return "move (reaches nothing: its condition reads " .. tostring(cond.unsupported) .. ")"
     end
     local g = c.guard[c.listName .. " #" .. c.entryNo] -- rule 7's guard of a move: its reached lines carry it
+    c.keyUsed["guard:" .. c.listName .. " #" .. c.entryNo] = g and true or nil
     if g and cond ~= false then
         cond = cond and (paren(cond) .. "&" .. paren(g)) or g
     end
@@ -2313,6 +2318,7 @@ function M.translate(rotation, c)
     c.callers, c.deviated, c.deviations, c.moves, c.movedAll = {}, {}, {}, {}, {}
     c.held, c.windows, c.loops, c.moving = {}, {}, {}, {} -- rules 14b, 19
     c.conditioned = {} -- rule 7: the recipe's condition keys a line took
+    c.keyUsed = {} -- CN12: "<field>:<key>" of each recipe guard, requires and windowVars key a line took
     -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13)
     local lists = { rotation.prepullActions or {}, rotation.priorityList or {} }
     for _, g in ipairs(rotation.groups or {}) do
@@ -2527,6 +2533,19 @@ function M.translate(rotation, c)
             end
         end
     until not more
+    -- CN12: a recipe key that names nothing is an error, as for `condition` (an upstream rename would drop it silently)
+    for _, field in ipairs({ "guard", "requires", "windowVars" }) do
+        local names = {}
+        for key in pairs(c[field]) do
+            names[#names + 1] = key
+        end
+        table.sort(names)
+        for _, key in ipairs(names) do
+            if not c.keyUsed[field .. ":" .. key] then
+                error(("%s: no %s %s"):format(field, key, field == "windowVars" and "read" or "line"), 0)
+            end
+        end
+    end
     local pre = { precombat = true } -- rule 1: the pre-pull lists, precombat and those only pre-pull lists call
     local function isPre(name, seen)
         if pre[name] ~= nil then

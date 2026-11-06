@@ -2645,8 +2645,9 @@ describe("the wowsims APL translator's auto-attack clocks", function()
             }
         end
         -- the recipe's open line wants its raptor_strike; its leveling line (BM's Arcane Shot below Summon Hawk, Task 19)
-        -- is not one of the three timing lines under test
-        local lines = setmetatable({ extra = {}, leveling = {} }, { __index = r })
+        -- is not one of the three timing lines under test, nor is its `guard` (a move entry of the full APL; CN12 refuses
+        -- a guard key that names nothing)
+        local lines = setmetatable({ extra = {}, leveling = {}, guard = {} }, { __index = r })
         local text = apl.translate(rotation, apl.context(set, lines, nil, player))
         assert.are.equal(
             table.concat({
@@ -2751,5 +2752,30 @@ describe("the wowsims APL translator on the Warlocks' assigned-curse check", fun
                 .. ")&!(settings.assigned_curse='nocurse'))",
             (text:gsub("\nactions%.single_multi_target_curse_logic%+=/.*", ""))
         )
+    end)
+end)
+
+-- CN12: a recipe `guard`, `requires` or `windowVars` key that names nothing raises, as `condition` does. Upstream
+-- renamed the hunters' weave entries ("weave #6" is gone; "Just shot" became 'shot_since_swing' in
+-- weave_common.apl.siml at 4b0030a44b), so a re-export would otherwise drop the guard and the window read silently.
+describe("the wowsims APL translator's recipe keys", function()
+    local rotation = { priorityList = { cast(100) } }
+    it("refuses a guard key no line or move entry has", function()
+        assert.has_error(function()
+            apl.translate(rotation, ctx({ guard = { ["weave #6"] = "window.weave.up" } }))
+        end, "guard: no weave #6 line")
+        assert.has_error(function()
+            apl.translate(rotation, ctx({ guard = { strike = "buff.fury.up", nope = "x" } }))
+        end, "guard: no nope line")
+    end)
+    it("refuses a requires key no line has", function()
+        assert.has_error(function()
+            apl.translate(rotation, ctx({ requires = { nope = "furious" } }))
+        end, "requires: no nope line")
+    end)
+    it("refuses a windowVars variable nothing reads", function()
+        assert.has_error(function()
+            apl.translate(rotation, ctx({ windowVars = { ["Just shot"] = "weave" } }))
+        end, "windowVars: no Just shot read")
     end)
 end)
