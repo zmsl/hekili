@@ -143,7 +143,16 @@ function M.unguarded(criteria, self, isAbility)
             head, negated = head[1], true
         end
         local keys = #n > 1 and knownKeys(criteria, head)
-        local placed = keys and negated == (n.op == "or") and negated == want
+        -- the translator's held range gate `(!action.X.known|action.X.in_range)` (apl.lua, a sequence's waitUntil on
+        -- range: a whole wowsims condition, true while X is unlearned like wowsims's nil condition) is placed wherever
+        -- it is carried, a term of the move gate's `|` included (Retribution's opener)
+        local held = n.op == "or"
+            and #n == 2
+            and negated
+            and keys
+            and n[2].op == "atom"
+            and keys[criteria:sub(n[2].s, n[2].e):match("^action%.([%w_]+)%.in_range$") or false]
+        local placed = keys and (held or (negated == (n.op == "or") and negated == want))
         if placed and next(keys) then -- a guard; a group of several keys covers none, so its terms are plain terms
             local inner = setmetatable(keys, { __index = covered })
             -- `(K&(!x|t))` is a guard nesting another (the term reads the guard's position) or the condition K and a

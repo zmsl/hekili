@@ -84,8 +84,11 @@ return {
     extra = {
         {
             before = "seal_of_command",
+            -- the other abilities' reads guarded (rule 6, tools/check_pack_levels.lua): an unlearned Seal of
+            -- Righteousness is not up, an unlearned Judgement never cooling
             line = "seal_of_command,if=talent.twist_of_light.enabled&talent.seal_of_command.enabled&!buff.seal_of_command.up"
-                .. "&!buff.seal_of_righteousness.up&(!seal_up|cooldown.judgement.remains>0)",
+                .. "&(!action.seal_of_righteousness.known|!buff.seal_of_righteousness.up)"
+                .. "&(!seal_up|(action.judgement.known&cooldown.judgement.remains>0))",
         },
     },
     leveling = {
