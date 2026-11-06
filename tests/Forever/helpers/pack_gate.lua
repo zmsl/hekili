@@ -151,7 +151,7 @@ M.FLICKER = {
     -- 255, flips 91 -> 16. What it exposes are two named classes: Raptor Strike's and Strider Kick's last 0.5 s under
     -- CD_PROBE (the not-ready flag holds ours at now + 0.5 while the oracle counts down; held ticks at 21-40: 52 of 348)
     -- and, at a dry pool (mana 32-41), the two strikes' near-tie at their mana crossing (costs 40 and 39.6) read from a
-    -- floor a few units under the truth (gap BT; held 296 of 348; flips 79 of 91 at seeds 1-20 raptor <-> strider, 37
+    -- floor a few units under the truth (gap BT; held 296 of 348; flips 79 of 91 at seeds 1-20 raptor <-> strider, 30
     -- of them beside a CD_PROBE 0.50). The oracle reads the exact pool, so the gap over it is ours. Owner FYI
     -- (no-jitter rule: the controller weighs this pack against the old pin)
     ["Survival"] = { flicker = 1.6, flickerK = 1.5, retracted = 0, readyShort = 1, heldReady = 400 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
