@@ -196,6 +196,42 @@ describe("the world's resources", function()
         assert.are.same({ { true, "BLOCK" }, { true, "BLOCK" } }, seen)
     end)
 
+    it("pays no true power for a wound on us unless W.takenRage is set", function()
+        setup()
+        behaviours.mob({ phase = 0.5, crit = 0 })(W, mob)
+        W.run(5)
+        local wounds = 0
+        for _, ev in ipairs(W.truth) do
+            wounds = wounds + ((ev.act == "WOUND" and ev.dst == us) and 1 or 0)
+            assert.are_not.equal("gain", ev.kind)
+        end
+        assert.is_true(wounds > 0)
+        assert.are.equal(0, us.power)
+    end)
+
+    it("pays W.takenRage's power for a landed wound on us, before our armor, capped, a hit, crit or crush", function()
+        setup({ powerMax = 100, dr = 0.5 })
+        mob.level = 37
+        local seen = {}
+        W.takenRage = function(v, pre, level, flag)
+            seen[#seen + 1] = { v == us, pre, level, flag }
+            return pre / 10
+        end
+        W.emit({ kind = "swing", src = mob, dst = us, act = "WOUND", flag = "", amount = 100, school = 1 })
+        W.emit({ kind = "swing", src = mob, dst = us, act = "WOUND", flag = "CRITICAL", amount = 200, school = 1 })
+        W.emit({ kind = "swing", src = mob, dst = us, act = "WOUND", flag = "CRUSHING", amount = 150, school = 1 })
+        assert.are.equal(90, us.power) -- 20 + 40 + 30
+        assert.are.same({ true, 200, 37, "" }, seen[1])
+        assert.are.same({ "CRITICAL", "CRUSHING" }, { seen[2][4], seen[3][4] })
+        local last = W.truth[#W.truth]
+        assert.are.same({ "gain", us, 30, 90 }, { last.kind, last.src, last.rage, last.power })
+        W.emit({ kind = "swing", src = mob, dst = us, act = "DODGE", flag = "", amount = 0, school = 1 })
+        W.emit({ kind = "swing", src = us, dst = mob, act = "WOUND", flag = "", amount = 100, school = 1 })
+        assert.are.equal(3, #seen) -- an avoid and our own wound pay nothing
+        W.emit({ kind = "swing", src = mob, dst = us, act = "WOUND", flag = "", amount = 100, school = 1 })
+        assert.are.equal(100, us.power) -- capped
+    end)
+
     it("lets our `landed` see each of our swings land, after its land event", function()
         setup()
         local seen = {}

@@ -56,6 +56,9 @@ function M.new(seed)
     W.hitAtSwing = true -- our white wound takes health at the swing, its row a landing lag later (owner, 2026-10-22)
     W.parryHaste = true -- a parried attack pulls the parrier's next main-hand swing (parry-haste spec decision 63)
     W.crit = M.CRIT -- our crit rate on an instant hit or strike (W.rollOutcome; scenarios' `crit`)
+    -- fn(us, preArmor, attackerLevel, flag) -> the swing-paid power a landed wound on us pays (scenarios' `takenRage`;
+    -- nil: none, every world before it)
+    W.takenRage = nil
 
     --- Runs `fn(W)` at time `t` (after everything already queued for `t`).
     function W.at(t, fn)
@@ -126,6 +129,14 @@ function M.new(seed)
             end
         elseif ev.act == "HEAL" and ev.dst then
             ev.dst.health = math.min(ev.dst.healthMax, ev.dst.health + (ev.amount or 0))
+        end
+        -- a landed wound on us from another pays our TRUE rage by W.takenRage (opt-in, a content's own rule), as a gain
+        -- after it; the amount before our armor (the world's only armor: our `dr`), crits and crushes already inside it
+        if W.takenRage and ev.act == "WOUND" and me and ev.dst == me and ev.src ~= me and ev.kind ~= skip then
+            local g = W.takenRage(me, (ev.amount or 0) / (1 - (me.dr or 0)), ev.src and ev.src.level, ev.flag)
+            if g and g > 0 then
+                W.emit({ kind = "gain", src = me, rage = g })
+            end
         end
         -- parry haste: a parried attack, white or special, pulls the parrier's pending main-hand swing at the server's
         -- moment (its outcome row comes later); `land` is a row, not an attack
