@@ -174,7 +174,7 @@ end
 local function totem(key)
     return {
         effect = function(W, e, p, X)
-            W.summonTotem(e, TOTEM[key][1], TOTEM[key][2], p.spell)
+            W.summonTotem(e, TOTEM[key][1], key == "magma_totem" and X.magma or TOTEM[key][2], p.spell)
             if key == "mana_spring_totem" then -- its buff on us for the totem's life (the only water totem in the kits)
                 aura(W, X, e, "mana_spring", TOTEM[key][2])
             end
@@ -279,21 +279,22 @@ local PACKS = {
             "flame_shock",
             "fire_nova",
             "stormstrike",
-            "searing_totem",
-            "flametongue_totem",
+            "magma_totem", -- the re-pin build's totems (e2842f0a78; was Searing, Flametongue, Grace of Air)
             "strength_of_earth_totem",
             "mana_spring_totem",
-            "grace_of_air_totem",
+            "windfury_totem",
             "rage_of_the_farseer", -- the build's talent (wowsims's)
         },
         spec = 100072,
         weapon = { 180, 260, 3.6 },
         parry = true, -- the build's Spirit Weapons (wowsims's applySpiritWeapons: CanParry)
         talents = { [1223031] = 2 }, -- Improved Stormstrike 2/2 (rank 2: always; wowsims talents_enhancement.go:188-210)
-        -- wowsims's log (shaman_enhancement.log): 9.8 a second while casting, 38.42 outside; Improved Stormstrike
-        -- (1238931, DB2 aura 134 = 50) adds half the spirit part while casting; the 9.8 is 4.8 without Mana Spring
+        -- wowsims's log (shaman_enhancement.log, re-pin e2842f0a78: Windshaper Skyborne, was 5000 / 9.8 / 38.42 as an
+        -- Orc): 6565 mana, 17.8 a second while casting, 49.05 outside; Improved Stormstrike (1238931, DB2 aura 134 = 50)
+        -- adds half the spirit part while casting (33.42: the log's 3.342 a tick); the 17.8 is 12.8 without Mana Spring
         -- Totem's buff (10494: 5 a second, up while the totem stands)
-        fsr = { 28.62, 4.8, auras = { [1238931] = { share = 0.5 }, [10494] = { mp5 = 5 } } },
+        mana = 6565,
+        fsr = { 31.25, 12.8, auras = { [1238931] = { share = 0.5 }, [10494] = { mp5 = 5 } } },
         uptime = { "flame_shock" },
     },
     -- wowsims/forever's Elemental build (builds/testing.build.json, talents 5500331023001351-053002001-053): the casts,
@@ -362,10 +363,12 @@ local function classData(H, C)
         end
     end
     -- The world's own talent rules (the booted state's talents), restated from wowdb and wowsims/forever's spell data:
-    -- Reverberation -0.2 s a rank on the shocks' 6 s, Call of Flame +3 s a rank on Flame Shock's 12 s.
+    -- Reverberation -0.2 s a rank on the shocks' 6 s, Call of Flame +3 s a rank on Flame Shock's 12 s, Trial by Fire +10 s a
+    -- rank on Magma Totem's 20 s.
     local T = H.Hekili.State.talent
     X.shockCd = 6 - 0.2 * T.reverberation.rank
     X.flameShock = 12 + 3 * T.call_of_flame.rank
+    X.magma = TOTEM.magma_totem[2] + 10 * T.improved_fire_nova.rank -- Trial by Fire: +10 s a rank (wowsims spell data)
     X.convection = T.convection.rank
     X.alacrity = ALACRITY[T.elemental_alacrity.rank] or 0
     return X

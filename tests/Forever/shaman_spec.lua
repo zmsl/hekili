@@ -168,7 +168,7 @@ describe("Forever Shaman", function()
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
         assert.are.same({ 14.12, 26.13, 0.15 }, seed("elemental")) -- Mindfulness 3/3: 15% while casting; no totem; re-pin log
-        assert.are.same({ 28.62, 4.8, 0 }, seed("enhancement"))
+        assert.are.same({ 31.25, 12.8, 0 }, seed("enhancement")) -- re-pin log (Windshaper Skyborne)
         assert.are.same({ aura = "improved_stormstrike", share = 0.5 }, r.models.improved_stormstrike)
         assert.are.same({ 2, 1223031, 2 }, w.talents.improved_stormstrike)
         -- Mana Spring Totem's buff: 10 every 2 s at rank 4 (DB2 aura 24), +5% a rank of Restorative Totems
@@ -236,6 +236,21 @@ describe("Forever Shaman", function()
                     assert.are.same({ { key, want[1], want[2][r] } }, got, key .. " " .. r .. " " .. field)
                 end
             end
+        end
+    end)
+
+    -- wowsims spell data (e2842f0a78 spells_auto_gen.go: 16086 effect 3, misc 1, +10000/+20000 ms on Magma Totem):
+    -- Trial by Fire (the kit's improved_fire_nova) lengthens Magma Totem; the re-pin log's 2/2 build recasts it 40 s apart.
+    it("lengthens Magma Totem by 10 s a rank of Trial by Fire (improved_fire_nova)", function()
+        for _, field in ipairs({ "now", "handler" }) do
+            local got = {}
+            local e = ld.env(w)
+            e.talent.improved_fire_nova = { rank = 2, enabled = true }
+            e.summonTotem = function(...)
+                got[#got + 1] = { ... }
+            end
+            ld.run(w.abilities.magma_totem[field], e)
+            assert.are.same({ { "magma_totem", "fire", 40 } }, got, field)
         end
     end)
 

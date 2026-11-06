@@ -249,7 +249,11 @@ end
 local function summon(key)
     local t = TOTEMS[key]
     return function()
-        summonTotem(key, t.element, byRank(t.duration, t.ids))
+        local d = byRank(t.duration, t.ids)
+        if key == "magma_totem" then -- Trial by Fire (16086 effect 3, wowsims spell data): +10 s a rank
+            d = d + 10 * talent.improved_fire_nova.rank
+        end
+        summonTotem(key, t.element, d)
     end
 end
 
@@ -386,10 +390,11 @@ end
 -- the in-combat calibration replace, as wowsims's logs measure them at 60: shaman_elemental 31.13 a second while casting
 -- (Mana Spring Totem, Mindfulness 3/3's 15% share and gear) and 45.25 outside the rule, so spirit 14.12 (the outside
 -- rate less the casting one) and mp5 31.13 (the e2842f0a78 log, Windshaper Skyborne; was 29.75 / 42.5 as a Troll);
--- shaman_enhancement 9.8 / 38.42, so spirit 28.62 and mp5 9.8. Forever's
+-- shaman_enhancement 17.8 / 49.05, so spirit 31.25 and mp5 17.8 (the e2842f0a78 log, Windshaper Skyborne; was 9.8 /
+-- 38.42 as an Orc). Forever's
 -- Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76), not Classic's formula.
 -- The seeds' mp5 is the rate without the totem's buff (the logs' casting rate a tick before it: 2.613 a tick in
--- shaman_elemental.log before -2.0 s, 0.480 in shaman_enhancement.log before -5.0 s), so 26.13 and 4.8; the totem's
+-- shaman_elemental.log before -2.0 s, 1.280 in shaman_enhancement.log before -3.0 s), so 26.13 and 12.8; the totem's
 -- own entry (below) adds its mp5 while the buff is up, as wowsims models it (totems.go:105-109).
 -- Improved Stormstrike (1238931, DB2 aura 134 = 50): +50% of Spirit regen while casting for 15 s.
 -- Mana Spring (DB2 aura 24, 4/6/8/10 every 2 s by rank, +5% a rank of Restorative Totems 16187): mp5 = value / 2.
@@ -412,10 +417,10 @@ spec:RegisterResource(
     {
         fsr = {
             spirit = function()
-                return state.spec.elemental and 14.12 or 28.62
+                return state.spec.elemental and 14.12 or 31.25
             end,
             mp5 = function()
-                return state.spec.elemental and 26.13 or 4.8
+                return state.spec.elemental and 26.13 or 12.8
             end,
             share = function()
                 return state.spec.elemental and 0.15 or 0
