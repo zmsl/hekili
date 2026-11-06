@@ -602,11 +602,11 @@ do
         -- ["deficit$"] = true,
     }
 
-    -- Clocks that tick down and wrap back to their period (the hands' swing clocks the class kits declare).
+    -- Clocks that tick down and wrap back to their period (the hands' swing clocks the class kits declare): the period.
     local wraps = {
-        mainhand_remains = true,
-        offhand_remains = true,
-        ranged_remains = true,
+        mainhand_remains = "mainhand_speed",
+        offhand_remains = "offhand_speed",
+        ranged_remains = "ranged_speed",
     }
 
     -- Things that tick up.
@@ -711,10 +711,18 @@ do
             -- false there and its forecast is missed; no pack compares that close. Upgrade if one does.
             -- shortcut: the clock is recognised on the left only (`speed-x<clock` falls to the generic fallback); the
             -- translator writes it there (tools/wowsims/apl.lua rule 10). Upgrade when a pack puts it right.
-            if comp == ">" or comp == ">=" then
-                local clock = lhs:match( "^safenum%(([%w_]+)%)$" ) or lhs
-                if wraps[ clock ] then
+            local clock = lhs:match( "^safenum%(([%w_]+)%)$" ) or lhs
+            if wraps[ clock ] then
+                if comp == ">" or comp == ">=" then
                     return true, lhs .. " + 0.01"
+                end
+                -- R61: `<`/`<=` a fixed x (a since-swing guard, `clock<=speed-g`) holds until the wrap, then again once
+                -- the clock falls from its speed back to x: the time to x now, and the wrap's time plus (speed - x),
+                -- each 0.01 past its crossing like the wrap's. Two moving clocks (`clock<other_remains`) keep one time.
+                if comp == "<" or comp == "<=" then
+                    local now = "0.01 + " .. lhs .. " - (" .. rhs .. ")"
+                    if rhs:find( "remains", 1, true ) then return true, now end
+                    return true, now .. ", 0.01 + " .. lhs .. " + " .. wraps[ clock ] .. " - (" .. rhs .. ")"
                 end
             end
 
@@ -859,14 +867,18 @@ do
                 local converted, calc, why = ConvertTimeComparison( expr )
 
                 if converted then
-                    calc = SimToLua( calc )
-                    calc = self:EmulateSyntax( calc, true )
+                    -- A conversion may return several times joined by ", " (R61); the spaces were stripped from the
+                    -- conditions above, so a ", " is only ever that join. Each time is converted on its own.
+                    for part in ( calc .. ", " ):gmatch( "(.-), " ) do
+                        part = SimToLua( part )
+                        part = self:EmulateSyntax( part, true )
 
-                    local rslt, msg = Hekili:Loadstring( "return " .. calc )
-                    if not rslt then
-                        Hekili:Debug( "Recheck failed to loadstring: %s", msg )
-                    else
-                        recheck = ( recheck and ( recheck .. ", " ) or "" ) .. calc
+                        local rslt, msg = Hekili:Loadstring( "return " .. part )
+                        if not rslt then
+                            Hekili:Debug( "Recheck failed to loadstring: %s", msg )
+                        else
+                            recheck = ( recheck and ( recheck .. ", " ) or "" ) .. part
+                        end
                     end
                 end
             end
