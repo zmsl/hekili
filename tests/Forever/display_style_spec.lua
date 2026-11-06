@@ -510,6 +510,40 @@ describe("a display's style", function()
         end
     )
 
+    it("a style whose Build raises hands that error on once, draws nothing, and draws again once fixed", function()
+        local H, d = boot()
+        local log = stub(H)
+        local broken = true
+        local build = H.ns.UI.Styles.stub.Build
+        H.ns.UI.Styles.stub.Build = function(...)
+            if broken then
+                error("boom from Build", 0)
+            end
+            return build(...)
+        end
+        H.Hekili.DB.profile.displays.Primary.style = "stub"
+        H.Hekili:BuildUI()
+        assert.are.same({ "boom from Build" }, H.errors) -- the original message, once
+        assert.is_nil(d.Buttons)
+        assert.is_nil(H.ns.UI.Buttons.Primary)
+        publish(H)
+        H.ctl.now = H.ctl.now + 0.2
+        local f = d.__scripts.OnUpdate
+        f(d, 0.2)
+        f(d, 0.2)
+        assert.are.same({ "boom from Build" }, H.errors) -- the redraws raised nothing more
+        assert.are.same({}, log.draws)
+        broken = false
+        H.Hekili:BuildUI()
+        assert.is_false(d.buildFailed == true)
+        assert.is_not_nil(d.Buttons)
+        publish(H)
+        H.ctl.now = H.ctl.now + 0.2
+        f(d, 0.2)
+        assert.is_true(#log.draws > 0)
+        assert.are.same({ "boom from Build" }, H.errors)
+    end)
+
     it("binds a custom display's own style", function()
         local H = boot()
         local log = stub(H)

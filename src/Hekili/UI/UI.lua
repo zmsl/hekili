@@ -213,7 +213,7 @@ function ns.StartConfiguration( external )
             v.Header:Hide()
         end
 
-        if ns.UI.Buttons[ i ][ 1 ] and Hekili.DB.profile.displays[ i ] then
+        if ns.UI.Buttons[ i ] and ns.UI.Buttons[ i ][ 1 ] and Hekili.DB.profile.displays[ i ] then
             -- if not Hekili:IsDisplayActive( i ) then v:Show() end
 
             v.Backdrop = v.Backdrop or CreateFrame( "Frame", v:GetName().. "_Backdrop", UIParent, "BackdropTemplate" )
@@ -1084,8 +1084,17 @@ do
         d.styleState = d.styleState or {} -- per-display scratch, shared by every style the display has bound
         d.styleFrames = d.styleFrames or {} -- per style name, the frames it built (WoW cannot free frames)
         if d.truthOn then ns.UI.Truth.Clear( d ) end -- what the layer drew on the old buttons goes with them
-        ns.UI.Buttons[ d.id ] = d.style.Build( d, conf )
-        d.Buttons = ns.UI.Buttons[ d.id ]
+        -- A raising Build leaves no buttons and OnUpdate draws nothing; the original error still reaches the handler, once.
+        local ok, built = xpcall( function() return d.style.Build( d, conf ) end, geterrorhandler() ) -- a rebuild, not a frame: the closure is fine
+        d.buildFailed = not ok
+        if not ok then
+            ns.UI.Buttons[ d.id ] = nil
+            d.Buttons = nil
+            d.truthOn = false
+            return
+        end
+        ns.UI.Buttons[ d.id ] = built
+        d.Buttons = built
         -- Modern (spec §5.1, M2): core's layer over whichever style is bound, only while its toggle is on
         d.truthOn = conf.truth.enabled == true
         if d.truthOn then ns.UI.Truth.Build( d, conf, d.Buttons ) end
@@ -1130,7 +1139,7 @@ do
 
         function d:OnUpdate( elapsed )
             local out = Published[ self.id ] or noOutput
-            if not Hekili.PLAYER_ENTERING_WORLD then
+            if self.buildFailed or not self.Buttons or not Hekili.PLAYER_ENTERING_WORLD then
                 return
             end
 
