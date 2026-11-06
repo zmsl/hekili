@@ -121,9 +121,10 @@ describe("the Hunter at range, then in melee", function()
         local pack = H.Hekili.Engine.settings.packs[C.PACK]
         local gated = 0
         for _, e in ipairs(pack.lists.default) do
-            -- the bracket is the variant's in-melee arm, its own line (R51: the move arm,
-            -- `toggle.movement&(<the weave's move>)`, is a copy where the weave group is called)
-            gated = gated + (e.criteria == "target.within5" and 1 or 0)
+            -- the bracket is the variant's in-melee arm, its own line ending in the term (R51: the move arm,
+            -- `toggle.movement&(<the weave's move>)`, is a copy where the weave group is called; Wing Clip keeps its
+            -- Strider Kick condition before the term)
+            gated = gated + (("&" .. e.criteria):match("&target%.within5$") and 1 or 0)
         end
         assert.are.equal(5, gated) -- Raptor Strike, Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip
         local MELEE = { mongoose_bite = true, strider_kick = true, immolation_trap = true, wing_clip = true }
