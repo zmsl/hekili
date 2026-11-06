@@ -469,12 +469,40 @@ describe("Forever Shaman", function()
         end
     end)
 
-    it("models each imbue on the main hand for its 60 minutes", function()
-        for _, key in ipairs({ "rockbiter_weapon", "flametongue_weapon", "windfury_weapon", "frostbrand_weapon" }) do
+    -- Enchant IDs: DB2 70707 SpellEffect.EffectMiscValue_0 of each rank's Effect 360, lowest rank first (weapon buffs
+    -- review §1); Rockbiter rank 2's 6 read in game (probe 2026-11-05, Shaman L10). 60 minutes: the tooltip and that
+    -- probe (3578906 ms left at the first read), not the effect's 1800.
+    local IMBUES = {
+        rockbiter_weapon = { 29, 6, 1, 503, 1663, 683, 1664 },
+        flametongue_weapon = { 5, 4, 3, 523, 1665, 1666 },
+        windfury_weapon = { 283, 284, 525, 1669 },
+        frostbrand_weapon = { 2, 12, 524, 1667, 1668 },
+    }
+
+    it("models each imbue on the main hand for its 60 minutes, replacing the others, as its own aura", function()
+        for key, ids in pairs(IMBUES) do
+            local aura, a = w.auras[key], w.abilities[key]
+            assert.are.same({ ids, 3600, 1 }, { aura.enchants, aura.duration, aura.max_stack }, key)
+            assert.is_nil(rawget(aura, "weaponEnchant"), key)
+            -- upstream retail: prompted in combat from precombat while down, never while up
+            assert.are.same({ true, key }, { a.essential, a.nobuff }, key)
+            local others = {}
+            for k in pairs(IMBUES) do
+                if k ~= key then
+                    others[#others + 1] = k
+                end
+            end
+            table.sort(others)
             for _, field in ipairs({ "now", "handler" }) do
                 local e = ld.env(w)
-                ld.run(w.abilities[key][field], e)
-                assert.are.same({ { "main_hand_enchant" }, 3600 }, { e.applied, e.durations.main_hand_enchant }, key)
+                ld.run(a[field], e)
+                table.sort(e.removed)
+                assert.are.same(others, e.removed, key)
+                assert.are.same({ { key, "main_hand_enchant" }, 3600, 3600 }, {
+                    e.applied,
+                    e.durations[key],
+                    e.durations.main_hand_enchant,
+                }, key)
             end
         end
     end)
@@ -645,6 +673,83 @@ describe("Forever Shaman through the engine", function()
         assert.is_true(S.totem.fire.up)
         assert.are.equal(t + 55, S.totem.fire.expires)
         assert.is_false(S.totem.air.up)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- Weapon buffs review §4.2: the engine's buff.<imbue> and main_hand_enchant follow the belief's reads and models
+    -- (the same answer in both layers), whatever the hand's temporary layer holds.
+    it("answers the imbue auras alike in the belief and the engine: reads, a cast in combat, a swap", function()
+        local VS, S, auras = H.ns.VirtualState, H.Hekili.State, H.Hekili.Class.auras
+        local I = H.ns.VirtualStateInternal
+        for _, k in ipairs({ "rockbiter_weapon", "flametongue_weapon", "windfury_weapon", "frostbrand_weapon" }) do
+            local found -- every `enchants` aura crossed Build(def) with its IDs as plain numbers
+            for _, rec in ipairs(I.def.auras) do
+                found = rec.key == k and rec or found
+            end
+            assert.are.same(auras[k].enchants, assert(found, k).enchants)
+            assert.is_nil(getmetatable(found.enchants))
+        end
+        local function same(t, want)
+            S.reset("Primary", true)
+            for k, up in pairs(want) do
+                local rec = VS.Aura("player", auras[k].id, t)
+                assert.are.equal(up, rec ~= nil, k)
+                assert.are.equal(up, S.buff[k].up, k)
+                if up then
+                    assert.is_true(math.abs(S.buff[k].remains - (rec.est - t)) < 0.2, k)
+                end
+            end
+        end
+        local OIL = { hasEnchant = true, enchantType = 2, timeLeft = 900000, charges = 0, enchantID = 2628 }
+        local NONE = { hasEnchant = false, enchantType = 0, timeLeft = 0, charges = 0, enchantID = 0 }
+        local t = H.ctl.now + 1
+        H.ctl.enchants[0] = { OIL, NONE } -- an oil alone: no imbue
+        H.Fire("WEAPON_ENCHANT_CHANGED")
+        assert.is_true(headless.cycle(H, t))
+        same(t, { main_hand_enchant = false, rockbiter_weapon = false })
+        H.ctl.enchants[0] =
+            { OIL, { hasEnchant = true, enchantType = 3, timeLeft = 1700000, charges = 0, enchantID = 1664 } }
+        H.Fire("WEAPON_ENCHANT_CHANGED")
+        t = t + 1
+        assert.is_true(headless.cycle(H, t))
+        same(t, { main_hand_enchant = true, rockbiter_weapon = true, flametongue_weapon = false })
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        t = t + 1
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 16342) -- Flametongue in combat: modelled, replaces
+        assert.is_true(headless.cycle(H, t + 0.1))
+        same(t + 0.1, { main_hand_enchant = true, rockbiter_weapon = false, flametongue_weapon = true })
+        H.ctl.enchants[0] = nil -- swapped for an unenchanted weapon in combat: read
+        H.Fire("WEAPON_SLOT_CHANGED", 0)
+        t = t + 1
+        assert.is_true(headless.cycle(H, t))
+        same(t, { main_hand_enchant = false, flametongue_weapon = false })
+        assert.are.same({}, H.errors)
+    end)
+
+    -- Upstream's `essential`: a precombat imbue line is prompted in combat while the imbue is down, never while up.
+    it("prompts an essential precombat imbue line in combat only while the main hand has no imbue", function()
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        local pack = H.Hekili.DB.profile.packs["Enhancement (wowsims.com)"]
+        local line = { enabled = true, action = "rockbiter_weapon", criteria = "!buff.main_hand_enchant.up" }
+        pack.lists = { precombat = { line }, default = {} }
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        assert.are.equal("rockbiter_weapon", out.count > 0 and out.recs[1].actionName or false)
+        H.ctl.enchants[0] =
+            { { hasEnchant = true, enchantType = 3, timeLeft = 1700000, charges = 0, enchantID = 1664 } }
+        H.Fire("WEAPON_ENCHANT_CHANGED")
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        assert.are.equal(false, out.count > 0 and out.recs[1].actionName or false)
         assert.are.same({}, H.errors)
     end)
 

@@ -273,9 +273,25 @@ local function totemAbility(key)
     }
 end
 
--- A weapon imbue on the main hand: 60 minutes (DB2 tooltip), the shared main_hand_enchant pseudo-aura (C4), read out of
--- combat.
-local function imbue(ids, costs)
+-- The weapon imbues: one per main hand (wowsims models the main hand only), so each replaces the others.
+local IMBUES = { "rockbiter_weapon", "flametongue_weapon", "windfury_weapon", "frostbrand_weapon" }
+
+-- A weapon imbue on the main hand: 60 minutes (DB2 tooltip; probe 2026-11-05: 3578906 ms left at the first read), its
+-- own aura (`enchants`) and the shared main_hand_enchant (C4), read from the client in combat too. Upstream retail's
+-- `essential` (a precombat line is prompted in combat while it is down) and `nobuff` (never while its own is up). The
+-- `now` and the `handler` are two closures, so each gets its own environment (as the totems' summon).
+local function imbue(ids, costs, key)
+    local function apply()
+        return function()
+            for i = 1, #IMBUES do
+                if IMBUES[i] ~= key then
+                    removeBuff(IMBUES[i])
+                end
+            end
+            applyBuff(key, 3600)
+            applyBuff("main_hand_enchant", 3600)
+        end
+    end
     return {
         id = ids[1],
         copy = rest(ids),
@@ -288,13 +304,11 @@ local function imbue(ids, costs)
 
         startsCombat = false,
         known = knows(ids),
+        essential = true,
+        nobuff = key,
 
-        now = function()
-            applyBuff("main_hand_enchant", 3600)
-        end,
-        handler = function()
-            applyBuff("main_hand_enchant", 3600)
-        end,
+        now = apply(),
+        handler = apply(),
     }
 end
 
@@ -437,6 +451,12 @@ spec:RegisterAuras({
     revelation = { id = 1323418, duration = 15, max_stack = 1 },
     -- Maelstrom Weapon (408498, a rune: D4, inert until learned): our melee hits stack it to 5, Lightning Bolt spends it.
     maelstrom_weapon = { id = 408505, duration = 30, max_stack = 5 },
+    -- The weapon imbues (id-less): up while a weapon carries one of the rank's enchant IDs (DB2 70707, Effect 360's
+    -- misc value, lowest rank first; Rockbiter rank 2's 6 read in game, 2026-11-05), read from the client.
+    rockbiter_weapon = { enchants = { 29, 6, 1, 503, 1663, 683, 1664 }, duration = 3600, max_stack = 1 },
+    flametongue_weapon = { enchants = { 5, 4, 3, 523, 1665, 1666 }, duration = 3600, max_stack = 1 },
+    windfury_weapon = { enchants = { 283, 284, 525, 1669 }, duration = 3600, max_stack = 1 },
+    frostbrand_weapon = { enchants = { 2, 12, 524, 1667, 1668 }, duration = 3600, max_stack = 1 },
     -- Improved Stormstrike (DB2 1238931): Stormstrike's 15 s buff, +50% Spirit regen while casting (the mana entry).
     improved_stormstrike = { id = 1238931, duration = 15, max_stack = 1 },
     -- The totems' buffs on us (wowsims e2842f0a78's ids, ranks 1..n; copy leads with the `<name>_totem` alias), read like
@@ -742,10 +762,10 @@ spec:RegisterAbilities({
         end,
     },
 
-    rockbiter_weapon = imbue(ROCKBITER_WEAPON, ROCKBITER_WEAPON_COST),
-    flametongue_weapon = imbue(FLAMETONGUE_WEAPON, FLAMETONGUE_WEAPON_COST),
-    windfury_weapon = imbue(WINDFURY_WEAPON, WINDFURY_WEAPON_COST),
-    frostbrand_weapon = imbue(FROSTBRAND_WEAPON, FROSTBRAND_WEAPON_COST),
+    rockbiter_weapon = imbue(ROCKBITER_WEAPON, ROCKBITER_WEAPON_COST, "rockbiter_weapon"),
+    flametongue_weapon = imbue(FLAMETONGUE_WEAPON, FLAMETONGUE_WEAPON_COST, "flametongue_weapon"),
+    windfury_weapon = imbue(WINDFURY_WEAPON, WINDFURY_WEAPON_COST, "windfury_weapon"),
+    frostbrand_weapon = imbue(FROSTBRAND_WEAPON, FROSTBRAND_WEAPON_COST, "frostbrand_weapon"),
 })
 
 -- Talents: { talent tree (1 Elemental, 2 Enhancement, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
