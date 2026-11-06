@@ -855,7 +855,7 @@ kept("C_Item.GetWeaponEnchantInfo", realGetWeaponEnchantInfo and "hybrid" or "vi
     ENCHANT.timeLeft = rec.lo == HUGE and 0 or floor((rec.lo - t) * 1000)
     ENCHANT.charges = stacks
     return ENCHANTS
-end, "plain in combat (probe 2026-11-05, Shaman L10); the slot's `weaponEnchant` pseudo-aura when any field is secret")
+end, "plain in combat, open world (probe 11-05, n=1); the slot's `weaponEnchant` pseudo-aura when any field is secret")
 
 -- Pets (C1): the pet unit's reads are plain [W PR14; gate spike]; for "pet", our summon's model answers them until the
 -- first observation (Families/Pets.lua, VS.Pet), and so does the belief's last observation when one is secret. Every

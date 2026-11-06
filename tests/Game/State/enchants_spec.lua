@@ -114,7 +114,8 @@ describe("weapon enchants", function()
         end
     )
 
-    it("coalesces a burst of inventory events into one read per slot", function()
+    -- A characterization test: the pending flag already coalesced before this lane (pins the login burst's cost).
+    it("coalesces a burst of inventory events into one read per slot (characterization)", function()
         poll(10)
         local calls = ctl.enchantCalls
         for _ = 1, 60 do -- the login burst (probe 2026-11-05: about 60 in one instant)
@@ -196,6 +197,19 @@ describe("weapon enchants", function()
     end)
 
     -- Probe 2026-11-05: at login the imbue reads hasEnchant with timeLeft 0 for its first seconds.
+    -- Review fix round 1 (I-1): hasEnchant is a plain fact, only the expiry is unknown; at login there is no earlier read.
+    it(
+        "puts an aura with a 0 time left and no earlier record up with no expiry, until a real time replaces it",
+        function()
+            ctl.enchants[0] = { NONE, entry(1664, 0) }
+            poll(10)
+            assert.are.same({ math.huge, math.huge }, { VS.Aura("player", RB, 10).est, VS.Aura("player", MH, 10).est })
+            ctl.enchants[0] = { NONE, entry(1664, 1500000) }
+            poll(11) -- the retries read the real time with no event
+            assert.are.same({ 1511, 1511 }, { VS.Aura("player", RB, 11).est, VS.Aura("player", MH, 11).est })
+        end
+    )
+
     it("treats a 0 time left as unknown, re-reading every poll for 10 s, then as up with no expiry", function()
         ctl.enchants[0] = { NONE, entry(1664, 1700000) }
         poll(10)

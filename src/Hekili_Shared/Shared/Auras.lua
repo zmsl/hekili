@@ -91,8 +91,8 @@ local auras = {
         max_stack = 1,
     },
 
-    -- Weapon enchants (C4): the hand's imbue layer (imbues, poisons, Firestone, Spellstone, scrolls of imbue), never its
-    -- temporary layer (stones and oils). Id-less pseudo-auras read from C_Item.GetWeaponEnchantInfo, in combat too, the
+    -- Weapon enchants (C4): the hand's imbue layer (Shaman imbues, probed; poisons, Firestone, Spellstone and scrolls of
+    -- imbue inferred from the DB2's effect), never its temporary layer (stones and oils, inferred). Id-less pseudo-auras read from C_Item.GetWeaponEnchantInfo, in combat too, the
     -- charges as stacks; a pack's apply ability `applyBuff`s one to model it between reads. A single imbue or poison
     -- is its pack's own `enchants` aura (buff.windfury_weapon, buff.deadly_poison).
     main_hand_enchant = {

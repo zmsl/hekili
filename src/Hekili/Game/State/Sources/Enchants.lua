@@ -1,18 +1,20 @@
 -- Game/State/Sources/Enchants.lua
 -- Weapon-enchant sources (C4), read from C_Item.GetWeaponEnchantInfo(slot) (Enum.WeaponSlot: 0 main hand, 1 off hand):
--- a list per slot, one entry per enchant layer (Forever: a temporary layer, enchantType 2, for stones and oils; an imbue
--- layer for imbues, poisons and the like), matched by contents, never by position. Two kinds of id-less player aura
+-- a list per slot, one entry per enchant layer (Forever: two per weapon, probe 2026-11-05; the imbue layer read
+-- enchantType 3; inferred, not probed: stones and oils on the temporary layer, enchantType 2), matched by contents,
+-- never by position. Two kinds of id-less player aura
 -- (so the walk never lists them):
 -- - `weaponEnchant = slot`: the slot's pseudo-aura, up while that slot carries an enchant of any layer but the
 --   temporary one;
 -- - `enchants = { enchant IDs }`: up while either slot carries one of its IDs.
 -- An enchant is a `Read` up with its time left (ms in the client's answer) and its charges as stacks; none is a `Read`
 -- down. Read at the first poll after a build and the poll after WEAPON_ENCHANT_CHANGED or WEAPON_SLOT_CHANGED (in combat
--- too: plain in combat, probe 2026-11-05, Shaman L10, open world and a dungeon), or UNIT_INVENTORY_CHANGED or combat's
+-- too: plain in combat, probe 2026-11-05, Shaman L10, n=1; a populated read under a dungeon's restrictions is untested), or UNIT_INVENTORY_CHANGED or combat's
 -- end (out of combat: UNIT_INVENTORY_CHANGED also fires on durability). Between reads our apply cast's model stands.
 -- A secret answer or field reads nothing, and while either slot is unread no `enchants` aura is taken down (unknown is
--- never missing). A 0 time left (the client's first seconds after login) is unknown too: that aura keeps its belief, and
--- every poll reads again for RETRY seconds; a 0 still there after that is an enchant with no expiry (up, -1).
+-- never missing). A 0 time left (the client's first seconds after login) is an enchant up with an unknown expiry: an
+-- aura with a live record keeps it, one without is up with no expiry (-1); every poll reads again for RETRY seconds,
+-- and a 0 still there after that is up with no expiry.
 -- Credits: secret-value handling after Catnip's (Durts) research.
 
 local _, ns = ...
@@ -125,7 +127,9 @@ local function readSlot(api, slot)
             if j then
                 see(j, left, n)
             end
-            if alias and e.enchantType ~= 2 then -- the temporary layer (a stone, an oil) is not the slot's
+            -- the temporary layer (a stone, an oil) is not the slot's. Risk: ~= 2 also counts Permanent (1; Forever's
+            -- enum 0 None, 1 Permanent, 2 Temporary, 3 Imbue), unseen in the list so far (probe P2)
+            if alias and e.enchantType ~= 2 then
                 see(alias, left, n)
             end
         end
@@ -175,6 +179,8 @@ S.Poll(12, function(api, t)
         end
         if f == false then
             Direct(Obs.Read, t, j, 0, ReadOf.Aura)
+        elseif f == true and not VS.Aura("player", I.auras.id[j], t) then
+            Direct(Obs.Read, t, j, -1, ReadOf.Aura + stacksOf[j] * I.AURA_STACK) -- up (hasEnchant), expiry unknown
         elseif f ~= nil and f ~= true then
             Direct(Obs.Read, t, j, f, ReadOf.Aura + stacksOf[j] * I.AURA_STACK) -- a = j: unit 1, the player
         end
