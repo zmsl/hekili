@@ -13,10 +13,10 @@
 -- `prepullSkip` is gone. Disagreements (P7; floor 0.93): 0.933 (45) top [consecration -> seal_of_command 3]: a white
 -- swing 0.02-0.05 s before completes an Echo; wowsims reads the stack with includeReactionTime (100 ms; the
 -- translator ignores it, rule 5), so it casts Consecration first (log 17.40, 47.22, 77.04): a replay limit.
--- `requires` and the two `leveling` lines stay (A/B, Task 17: removed, the replay and L10/L40/L45-L60 idle are
--- unchanged, but L20-L35 swap the seals every GCD: L20 92 presses, Seal of Command 16 and Seal of Righteousness 16 in
--- 60 s, against 34; Seal of Command is known from 20 (learn_paladin) while talent.seal_of_command is not, so both of
--- wowsims's refresh lines pass without Twist of Light).
+-- `requires` and the two `leveling` lines: kept until ruled (A/B, Task 17: removed, the replay and L10/L15/L40-L60
+-- idle are unchanged; L20-L35 swap the seals every GCD, L20 92 presses against 34, but only because the leveling
+-- world knows Seal of Command, a talent spell, without its point (ws.content filters the 60's spells by learn level
+-- only), so both of wowsims's refresh lines pass; inconclusive there).
 -- (History below: the old pin's Twist of Light APL.)
 -- Disagreements worked (P7, resume 3: after central fixes 6/8/C and 9/9b): replay 0.579 (57; 0.456 before them).
 -- seal_of_righteousness -> seal_of_command 13 and consecration -> seal_of_command 3: replay limit (central GAP N,
@@ -72,7 +72,7 @@ return {
     -- by role (docs/dev/wowsims-packs.md); the Twist of Light seals (1) open
     focus = { hammer_of_wrath = 1, seal_of_command = 1, seal_of_righteousness = 1, consecration = 2 },
     -- The Twist of Light lines need the talent (wowsims's Auto rotation picks this APL by it): without it they swap the
-    -- seals every GCD (measured again at the re-pin: L20-L35, Seal of Command known, its talent not).
+    -- seals every GCD (seen again at the re-pin in the L20-L35 worlds, which know Seal of Command without its talent).
     requires = { seal_of_command = "twist_of_light", seal_of_righteousness = "twist_of_light" },
     -- Not wowsims (no fight of its reaches it): the twist's kick-start. With Unsealed Wrath and Seal of Command,
     -- wowsims's Should refresh SoC needs an Echo of Righteousness and Should refresh SoR three Echoes of Command, so
