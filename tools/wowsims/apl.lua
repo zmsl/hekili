@@ -2665,9 +2665,7 @@ function M.write(spec, ex)
             r.name,
             r.apl or r.siml or r.build
         ),
-        "# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at "
-            .. ((ex.OLD_SIM or {})[spec] or ex.PIN):sub(1, 12)
-            .. ".",
+        "# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at " .. ex.pin(spec):sub(1, 12) .. ".",
     }
     for _, n in ipairs(r.notes or {}) do -- the recipe's player-facing notes: more of the in-game description
         out[#out + 1] = "# " .. n
