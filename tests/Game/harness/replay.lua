@@ -487,18 +487,35 @@ function M.new(text, H, o)
     end
     -- each completed cast's logged cost (its Casting line's, same spell and tag): an on-next-swing strike's free cast
     -- queues it, its paid one lands
-    local castCost = {}
+    local castOf = {}
     for _, e in ipairs(p.ev) do
         if e.kind == "casting" and e.id then
-            castCost[e.id .. ":" .. (e.tag or 0)] = e.cost or 0
+            castOf[e.id .. ":" .. (e.tag or 0)] = e
         elseif e.kind == "completed" and e.id then
-            e.paid = castCost[e.id .. ":" .. (e.tag or 0)]
+            local c = castOf[e.id .. ":" .. (e.tag or 0)]
+            e.paid, e.casting = c and (c.cost or 0), c
+        end
+    end
+    -- R53: a free one followed in its timestamp, before the next cast, by one of our auras' fade is a landing that aura
+    -- made free (Guardian's log 60.95: Clearcasting's free Maul): read as its paid landing (`landed`, both lines)
+    for i, e in ipairs(p.ev) do
+        local key = e.kind == "completed" and e.paid == 0 and keyFor(e)
+        if key and class.abilities[key].onNextSwing then
+            for j = i + 1, #p.ev do
+                local f = p.ev[j]
+                if f.t ~= e.t or f.kind == "casting" or f.kind == "completed" then
+                    break
+                elseif f.kind == "aura" and f.unit == "player" and f.verb == "faded" then
+                    e.landed, e.casting.landed = true, true
+                    break
+                end
+            end
         end
     end
     -- a free cast of an on-next-swing strike is read as its queueing press only if its queue aura (our aura gained on
     -- its ID) comes before its next cast: a free landing fails here instead of lowering the agreement
     for i, e in ipairs(p.ev) do
-        local key = e.kind == "completed" and e.paid == 0 and keyFor(e)
+        local key = e.kind == "completed" and e.paid == 0 and not e.landed and keyFor(e)
         if key and class.abilities[key].onNextSwing then
             for j = i + 1, #p.ev do
                 local f = p.ev[j]
@@ -563,7 +580,7 @@ function M.new(text, H, o)
             R.decisions[#R.decisions + 1], R.casts[#R.casts + 1] = d, d
             -- an on-next-swing strike's paid cast is its swing's landing, not a press (its free cast queued it): not a
             -- next cast for the agreement
-            if not (class.abilities[d.key].onNextSwing and (e.cost or 0) > 0) then
+            if not (class.abilities[d.key].onNextSwing and ((e.cost or 0) > 0 or e.landed)) then
                 presses[#presses + 1] = d
             end
         end
@@ -766,7 +783,13 @@ function M.new(text, H, o)
                     ends = T + e.cast,
                     gcd = gcdk,
                 })
-            elseif key and e.kind == "completed" and class.abilities[key].onNextSwing and e.paid == 0 then
+            elseif
+                key
+                and e.kind == "completed"
+                and class.abilities[key].onNextSwing
+                and e.paid == 0
+                and not e.landed
+            then
                 -- wowsims's free cast of an on-next-swing strike is its queueing press (the Tag varies by spell: Heroic
                 -- Strike's is Tag 1, Maul's untagged): IsCurrentSpell, no cast event
                 W.emit({ kind = "queue", src = us, spell = e.id, ids = rankIDs[key] })

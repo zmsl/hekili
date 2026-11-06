@@ -478,6 +478,36 @@ describe("the replay world", function()
         end, "the free lunge at 2 queues no aura")
     end)
 
+    -- R53: Guardian's log, 60.95: Clearcasting made the Maul landing free and fades after it in the same instant
+    it("replays a free cast followed by an aura's fade in its timestamp as a landing, not a queueing press", function()
+        local function line(t)
+            local b, c = "{SpellID: 900060}", "(Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)"
+            return ("\n[%s] [Tester (#1)] Casting %s %s"):format(t, b, c)
+                .. ("\n[%s] [Tester (#1)] Completed cast %s"):format(t, b)
+        end
+        local queued = "\n[%s] [Tester (#1)] Aura gained: {SpellID: 900060, Tag: 1}"
+        local log = text():gsub("(\n%[2%.00%][^\n]*)", "%1" .. line("2.00") .. queued:format("2.05"), 1)
+        local requeue = line("3.90") .. queued:format("3.95") -- the next queueing press, at the landing's instant
+        -- the landing before the 3.90 fade of 900020 (the aura that made it free), the next press after it
+        local landed = log:gsub("(\n%[3%.90%][^\n]*Dodge)", "%1" .. line("3.90"), 1)
+            :gsub("(\n%[3%.90%][^\n]*Aura faded: {SpellID: 900020})", "%1" .. requeue, 1)
+        local R = replay.new(landed, H, O)
+        local W = at(R.world(setmetatable({ tag = "-q" }, { __index = WO }), 1), R.pull + 4)
+        local got = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.spell == 900060 then
+                got[#got + 1] = { ev.kind, math.floor((ev.t - R.pull) * 100 + 0.5) }
+            end
+        end
+        assert.are.same({ { "queue", 200 }, { "unqueue", 390 }, { "cast", 390 }, { "queue", 390 } }, got)
+        -- no fade after it in its timestamp: still the free landing the log cannot explain
+        local unexplained =
+            log:gsub("(\n%[3%.90%][^\n]*Aura faded: {SpellID: 900020})", "%1" .. line("3.90") .. requeue, 1)
+        assert.has_error(function()
+            replay.new(unexplained, H, O)
+        end, "the free lunge at 3.9 queues no aura")
+    end)
+
     it("replays a partial block on us as the client's BLOCK_REDUCED wound, our health untouched", function()
         local line =
             "[0.10] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Block for 40 damage (SpellSchool: 1). (Threat: 40)"
