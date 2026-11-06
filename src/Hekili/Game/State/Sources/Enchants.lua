@@ -52,11 +52,13 @@ local function read(api, j, slot, t)
             return
         end
         local has, ms, n = Plain(api, e.hasEnchant), Plain(api, e.timeLeft), Plain(api, e.charges)
-        if has == nil or ms == nil or n == nil then
+        local kind = Plain(api, e.enchantType)
+        if has == nil or ms == nil or n == nil or kind == nil then
             Note("GetWeaponEnchantInfo", "secret")
             return
         end
-        if has == true and type(ms) == "number" then
+        -- the imbue layer only: a temporary enchant (2, a stone or an oil) is not the slot's
+        if has == true and kind ~= 2 and type(ms) == "number" then
             left, charges = ms > 0 and ms / 1000 or -1, type(n) == "number" and n or 0 -- -1: up with no expiry
         end
     end

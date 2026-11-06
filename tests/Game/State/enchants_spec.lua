@@ -102,6 +102,25 @@ describe("weapon enchants", function()
         assert.are.equal(1810, VS.Aura("player", MH, 13).est)
     end)
 
+    -- Forever lists two layers per weapon slot: a temporary one (stones and oils, enchantType 2) and the imbue one
+    -- (imbues, poisons, enchantType 3). The slot pseudo-aura is the imbue layer only, matched by contents, not position.
+    it("puts the slot up for the imbue layer only: an oil or stone alone leaves it down", function()
+        local OIL = { hasEnchant = true, enchantType = 2, timeLeft = 900000, charges = 0, enchantID = 2628 }
+        local IMBUE = { hasEnchant = true, enchantType = 3, timeLeft = 1700000, charges = 0, enchantID = 1664 }
+        local EMPTY = { hasEnchant = false, enchantType = 0, timeLeft = 0, charges = 0, enchantID = 0 }
+        ctl.enchants[0] = { OIL, EMPTY }
+        poll(10)
+        assert.is_nil(VS.Aura("player", MH, 10))
+        ctl.enchants[0] = { OIL, IMBUE }
+        ctl.Fire("WEAPON_ENCHANT_CHANGED")
+        poll(11)
+        assert.are.equal(1711, VS.Aura("player", MH, 11).est)
+        ctl.enchants[0] = { IMBUE, OIL } -- by contents, never by position
+        ctl.Fire("WEAPON_ENCHANT_CHANGED")
+        poll(12)
+        assert.are.equal(1712, VS.Aura("player", MH, 12).est)
+    end)
+
     it("is never taken down by an aura walk that cannot list it", function()
         ctl.enchants[0] = enchant(1800000, 20)
         poll(10)
