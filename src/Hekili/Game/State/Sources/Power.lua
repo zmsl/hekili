@@ -99,8 +99,9 @@ end)
 
 -- A slot the game binds to one target (def `onTarget`, L90; owner probes 2026-11-06): the pool UnitPower answers
 -- survives a target swap, but only the count on the current target is usable, GetComboPoints("player", "target")
--- (plain in combat). No target (nil) or a secret answer reads 0, never the pool: after a swap the pool is the stale
--- count, and a hidden finisher beats one the game refuses. Idempotent (PLAYER_TARGET_CHANGED fires twice a swap).
+-- (plain in combat). With no target the client most likely answers 0 (a nil reads 0 too); a secret answer reads 0,
+-- never the pool: after a swap the pool is the stale count, and a hidden finisher beats one the game refuses.
+-- Idempotent (PLAYER_TARGET_CHANGED fires twice a swap).
 local function readOnTarget(api, t, r)
     local raw = api.GetComboPoints("player", "target") -- secret: Plain next
     Note("GetComboPoints", S.StatusOf(api, raw))
