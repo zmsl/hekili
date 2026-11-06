@@ -22,6 +22,7 @@
 - The experimental options to use the damage meter for swing outcomes and the Cooldown Manager for aura presence are gone from normal builds, and both are now off even if you had turned them on.
 
 ### Fixed
+- An ability a priority keeps away from your melee or ranged swing no longer disappears for a moment when it would be ready just before the swing: it now counts down to just after the swing, when the priority allows it.
 - Guardian Druids no longer recast Faerie Fire or Demoralizing Roar while the debuff is still on the target, at low levels. The Maintain Demoralizing Roar and Maintain Thunder Clap tooltips now say what the options do: they recast the debuff only when it is missing.
 - Low-level Paladins are no longer told to re-cast a seal that still has time left: Retribution shows Seal of Righteousness again only when it is down or about to run out (under two global cooldowns left), Protection only when Seal of Fury is down, and in between it shows Holy Strike or Judgement counting down.
 - Fewer one-moment flashes of a filler as a cooldown comes back: while a GCD or cast covers the cooldown's end, the icon now counts down to the believed end instead of stalling for its last half second.
