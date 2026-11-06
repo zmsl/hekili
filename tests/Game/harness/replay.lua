@@ -496,20 +496,23 @@ function M.new(text, H, o)
             e.paid, e.casting = c and (c.cost or 0), c
         end
     end
-    -- R53: a free one followed in its timestamp, before the next cast, by one of our auras' fade is a landing that aura
-    -- made free (Guardian's log 60.95: Clearcasting's free Maul): read as its paid landing (`landed`, both lines)
+    -- R53: a free one followed in its timestamp, before the next cast, by its queue aura's fade (it landed) and another
+    -- of our auras' fade (the one that made it free; Guardian's log 60.95: Clearcasting's free Maul) is read as its paid
+    -- landing (`landed`, both lines)
     for i, e in ipairs(p.ev) do
         local key = e.kind == "completed" and e.paid == 0 and keyFor(e)
         if key and class.abilities[key].onNextSwing then
+            local own, other = false, false
             for j = i + 1, #p.ev do
                 local f = p.ev[j]
                 if f.t ~= e.t or f.kind == "casting" or f.kind == "completed" then
                     break
                 elseif f.kind == "aura" and f.unit == "player" and f.verb == "faded" then
-                    e.landed, e.casting.landed = true, true
-                    break
+                    own, other = own or f.id == e.id, other or f.id ~= e.id
                 end
             end
+            e.landed = own and other
+            e.casting.landed = e.landed
         end
     end
     -- a free cast of an on-next-swing strike is read as its queueing press only if its queue aura (our aura gained on
