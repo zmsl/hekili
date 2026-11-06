@@ -14098,19 +14098,18 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	desc	Select the en
 options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	name	Entry
 options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Use Items]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r [Item 12662]
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffboosts|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||debuff.bane_of_doom.up)&(!action.bane_of_doom.known||debuff.bane_of_doom.remains<=14)))||((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&fight_remains<60))|r|r
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 18288 - |cFFFFD100|cffffd100(((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&(!action.bane_of_agony.known||!debuff.bane_of_agony.up)&fight_remains<60)&!buff.amplify_curse.up)|r|r
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 603 - |cFFFFD100|cffffd100(!debuff.bane_of_doom.up&fight_remains>=60)|r|r
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 980 - |cFFFFD100|cffffd100((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&!debuff.bane_of_agony.up&fight_remains<60)|r|r
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 172 - |cFFFFD100|cffffd100!debuff.corruption.up|r|r
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r [Item 13444]
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Curse of the Elements - |cFFFFD100|cffffd100settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Curse of Recklessness - |cFFFFD100|cffffd100settings.assigned_curse='recklessness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Curse of Weakness - |cFFFFD100|cffffd100settings.assigned_curse='weakness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 603 - |cFFFFD100|cffffd100fight_remains>=60|r|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 686 - |cFFFFD100|cffffd100buff.shadow_trance.up|r|r
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 18265 - |cFFFFD100|cffffd100!debuff.siphon_life.up|r|r
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Curse of the Elements - |cFFFFD100|cffffd100settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Curse of Recklessness - |cFFFFD100|cffffd100settings.assigned_curse='recklessness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Curse of Weakness - |cFFFFD100|cffffd100settings.assigned_curse='weakness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 348 - |cFFFFD100|cffffd100!debuff.immolate.up|r|r
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 686
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1454
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 172 - |cFFFFD100|cffffd100debuff.corruption.remains<=action.corruption.cast|r|r
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 18265 - |cFFFFD100|cffffd100debuff.siphon_life.remains<=action.siphon_life.cast|r|r
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 348 - |cFFFFD100|cffffd100debuff.immolate.remains<=action.immolate.cast|r|r
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 686
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	name	Action Name
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
@@ -14191,10 +14190,8 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.enabled	desc	If disabled, t
 options.packs.affliction.SM Ruin (wowsims.com).lists.enabled	name	Enabled
 options.packs.affliction.SM Ruin (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.affliction.SM Ruin (wowsims.com).lists.listName	name	Action List
-options.packs.affliction.SM Ruin (wowsims.com).lists.listName	values.boosts	boosts
 options.packs.affliction.SM Ruin (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.list_name	name	Action List
-options.packs.affliction.SM Ruin (wowsims.com).lists.list_name	values.boosts	boosts
 options.packs.affliction.SM Ruin (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.affliction.SM Ruin (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.affliction.SM Ruin (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
@@ -16409,21 +16406,20 @@ options.packs.demonology.Demonology (wowsims.com).lists.actionID	desc	Select the
 options.packs.demonology.Demonology (wowsims.com).lists.actionID	name	Entry
 options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Use Items]|r
 options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r [Item 12662]
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffboosts|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||debuff.bane_of_doom.up)&(!action.bane_of_doom.known||debuff.bane_of_doom.remains<=14)))||((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&fight_remains<60))|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsplit_boosts|r, if |cffffd100((!action.bane_of_doom.known||debuff.bane_of_doom.up)&!((fight_remains-((time+fight_remains)*0.35))<=0))|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 603 - |cFFFFD100|cffffd100(!debuff.bane_of_doom.up&fight_remains>=60)|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 5676 - |cFFFFD100|cffffd100!debuff.demonic_brand.up|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 980 - |cFFFFD100|cffffd100((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&!debuff.bane_of_agony.up&fight_remains<60)|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 348 - |cFFFFD100|cffffd100!debuff.immolate.up|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Curse of the Elements - |cFFFFD100|cffffd100settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Curse of Recklessness - |cFFFFD100|cffffd100settings.assigned_curse='recklessness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Curse of Weakness - |cFFFFD100|cffffd100settings.assigned_curse='weakness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1454 - |cFFFFD100|cffffd100pet.mana<115|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsplit_boosts|r, if |cffffd100buff.decimation.up|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 6353 - |cFFFFD100|cffffd100buff.decimation.up|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 172 - |cFFFFD100|cffffd100!debuff.corruption.up|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 5676
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1454
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r [Item 13444]
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_multi_target_curse_logic|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&toggle.movement&(active_enemies>=3&target.outside5)|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 603 - |cFFFFD100|cffffd100fight_remains>debuff.bane_of_doom.duration|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 5676 - |cFFFFD100|cffffd100((!debuff.demonic_brand.up||debuff.demonic_brand.remains<2.5)&!action.searing_pain.executing&(!(active_enemies>=3)||target.outside5))|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||((action.bane_of_doom.known&debuff.bane_of_doom.up)||(active_enemies>=3&target.within5)))|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 6353 - |cFFFFD100|cffffd100((!(active_enemies>=3)||target.outside5)&buff.decimation.up&fight_remains>(action.soul_fire.cast+action.soul_fire.travel_time)&!action.soul_fire.executing)|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||(action.searing_pain.cast+action.searing_pain.travel_time)>fight_remains)|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 5676
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	name	Action Name
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
@@ -16504,12 +16500,18 @@ options.packs.demonology.Demonology (wowsims.com).lists.enabled	desc	If disabled
 options.packs.demonology.Demonology (wowsims.com).lists.enabled	name	Enabled
 options.packs.demonology.Demonology (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.demonology.Demonology (wowsims.com).lists.listName	name	Action List
-options.packs.demonology.Demonology (wowsims.com).lists.listName	values.boosts	boosts
+options.packs.demonology.Demonology (wowsims.com).lists.listName	values.cooldowns	cooldowns
 options.packs.demonology.Demonology (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
-options.packs.demonology.Demonology (wowsims.com).lists.listName	values.split_boosts	split_boosts
+options.packs.demonology.Demonology (wowsims.com).lists.listName	values.multi_target_dot_logic	multi_target_dot_logic
+options.packs.demonology.Demonology (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
+options.packs.demonology.Demonology (wowsims.com).lists.listName	values.single_multi_target_curse_logic	single_multi_target_curse_logic
+options.packs.demonology.Demonology (wowsims.com).lists.listName	values.single_target_dot_logic	single_target_dot_logic
 options.packs.demonology.Demonology (wowsims.com).lists.list_name	name	Action List
-options.packs.demonology.Demonology (wowsims.com).lists.list_name	values.boosts	boosts
-options.packs.demonology.Demonology (wowsims.com).lists.list_name	values.split_boosts	split_boosts
+options.packs.demonology.Demonology (wowsims.com).lists.list_name	values.cooldowns	cooldowns
+options.packs.demonology.Demonology (wowsims.com).lists.list_name	values.multi_target_dot_logic	multi_target_dot_logic
+options.packs.demonology.Demonology (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
+options.packs.demonology.Demonology (wowsims.com).lists.list_name	values.single_multi_target_curse_logic	single_multi_target_curse_logic
+options.packs.demonology.Demonology (wowsims.com).lists.list_name	values.single_target_dot_logic	single_target_dot_logic
 options.packs.demonology.Demonology (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.demonology.Demonology (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.demonology.Demonology (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
@@ -16665,21 +16667,20 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	desc	Select t
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	name	Entry
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Use Items]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r [Item 12662]
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffboosts|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||debuff.bane_of_doom.up)&(!action.bane_of_doom.known||debuff.bane_of_doom.remains<=14)))||((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&fight_remains<60))|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsplit_boosts|r, if |cffffd100((!action.bane_of_doom.known||debuff.bane_of_doom.up)&!((fight_remains-((time+fight_remains)*0.35))<=0))|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 603 - |cFFFFD100|cffffd100(!debuff.bane_of_doom.up&fight_remains>=60)|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 5676 - |cFFFFD100|cffffd100!debuff.demonic_brand.up|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 980 - |cFFFFD100|cffffd100((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&!debuff.bane_of_agony.up&fight_remains<60)|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 348 - |cFFFFD100|cffffd100!debuff.immolate.up|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Curse of the Elements - |cFFFFD100|cffffd100settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Curse of Recklessness - |cFFFFD100|cffffd100settings.assigned_curse='recklessness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Curse of Weakness - |cFFFFD100|cffffd100settings.assigned_curse='weakness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1454 - |cFFFFD100|cffffd100pet.mana<160|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsplit_boosts|r, if |cffffd100buff.decimation.up|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 6353 - |cFFFFD100|cffffd100buff.decimation.up|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 172 - |cFFFFD100|cffffd100!debuff.corruption.up|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 686
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1454
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r [Item 13444]
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_multi_target_curse_logic|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&toggle.movement&(active_enemies>=3&target.outside5)|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 603 - |cFFFFD100|cffffd100fight_remains>debuff.bane_of_doom.duration|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 5676 - |cFFFFD100|cffffd100((!debuff.demonic_brand.up||debuff.demonic_brand.remains<2.5)&!action.searing_pain.executing&(!(active_enemies>=3)||target.outside5))|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||((action.bane_of_doom.known&debuff.bane_of_doom.up)||(active_enemies>=3&target.within5)))|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 5676 - |cFFFFD100|cffffd100(!action.shadow_bolt.known||(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||(action.searing_pain.cast+action.searing_pain.travel_time)>fight_remains)|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 686
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	name	Action Name
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
@@ -16760,12 +16761,18 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.enabled	desc	If disabl
 options.packs.demonology.Shadow Brand (wowsims.com).lists.enabled	name	Enabled
 options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	name	Action List
-options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	values.boosts	boosts
+options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	values.cooldowns	cooldowns
 options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	values.split_boosts	split_boosts
+options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	values.multi_target_dot_logic	multi_target_dot_logic
+options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	values.single_multi_target_curse_logic	single_multi_target_curse_logic
+options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	values.single_target_dot_logic	single_target_dot_logic
 options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	name	Action List
-options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	values.boosts	boosts
-options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	values.split_boosts	split_boosts
+options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	values.cooldowns	cooldowns
+options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	values.multi_target_dot_logic	multi_target_dot_logic
+options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	values.single_multi_target_curse_logic	single_multi_target_curse_logic
+options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	values.single_target_dot_logic	single_target_dot_logic
 options.packs.demonology.Shadow Brand (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.demonology.Shadow Brand (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
@@ -17004,18 +17011,20 @@ options.packs.destruction.Destruction (wowsims.com).lists.actionID	desc	Select t
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	name	Entry
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Use Items]|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r [Item 12662]
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffboosts|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||debuff.bane_of_doom.up)&(!action.bane_of_doom.known||debuff.bane_of_doom.remains<=14)))||((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&fight_remains<60))|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 603 - |cFFFFD100|cffffd100(!debuff.bane_of_doom.up&fight_remains>=60)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 980 - |cFFFFD100|cffffd100((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&!debuff.bane_of_agony.up&fight_remains<60)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Curse of the Elements - |cFFFFD100|cffffd100settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Curse of Recklessness - |cFFFFD100|cffffd100settings.assigned_curse='recklessness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Curse of Weakness - |cFFFFD100|cffffd100settings.assigned_curse='weakness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 348 - |cFFFFD100|cffffd100!debuff.immolate.up|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 172 - |cFFFFD100|cffffd100!debuff.corruption.up|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1293817 - |cFFFFD100|cffffd100(!action.immolate.known||debuff.immolate.up)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 17877
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 412758
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r [Item 13444]
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Curse of the Elements - |cFFFFD100|cffffd100settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Curse of Recklessness - |cFFFFD100|cffffd100settings.assigned_curse='recklessness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Curse of Weakness - |cFFFFD100|cffffd100settings.assigned_curse='weakness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 603 - |cFFFFD100|cffffd100fight_remains>60|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 18288 - |cFFFFD100|cffffd100(!(action.bane_of_doom.known||action.bane_of_agony.known)||((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&(!action.bane_of_agony.known||!debuff.bane_of_agony.up)))|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 980 - |cFFFFD100|cffffd100(((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&!debuff.bane_of_agony.up)&debuff.bane_of_agony.remains<=action.bane_of_agony.cast)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 348 - |cFFFFD100|cffffd100debuff.immolate.remains<=action.immolate.cast|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 172 - |cFFFFD100|cffffd100debuff.corruption.remains<=action.corruption.cast|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1293817 - |cFFFFD100|cffffd100(!action.immolate.known||debuff.immolate.up)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 17877
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 412758
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	name	Action Name
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
@@ -17096,10 +17105,10 @@ options.packs.destruction.Destruction (wowsims.com).lists.enabled	desc	If disabl
 options.packs.destruction.Destruction (wowsims.com).lists.enabled	name	Enabled
 options.packs.destruction.Destruction (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.destruction.Destruction (wowsims.com).lists.listName	name	Action List
-options.packs.destruction.Destruction (wowsims.com).lists.listName	values.boosts	boosts
 options.packs.destruction.Destruction (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
+options.packs.destruction.Destruction (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.destruction.Destruction (wowsims.com).lists.list_name	name	Action List
-options.packs.destruction.Destruction (wowsims.com).lists.list_name	values.boosts	boosts
+options.packs.destruction.Destruction (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.destruction.Destruction (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.destruction.Destruction (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.destruction.Destruction (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.

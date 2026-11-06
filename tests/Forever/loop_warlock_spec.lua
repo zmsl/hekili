@@ -53,10 +53,10 @@ describe("the Warlock loop worlds", function()
             local dl, ds = C.resolve("drain_life", H), C.resolve("drain_soul", H)
             assert.are.same({ 5, 1, 15, 3 }, { dl.channel.length, dl.channel.tick, ds.channel.length, ds.channel.tick })
             -- a cast press: its top rank's cost and cast time on the true state (Bane 5/5 in every build; Cataclysm
-            -- 3/3 in Destruction's and SM Ruin's)
+            -- 3/3 in Destruction's, 2/2 in SM Ruin's at the re-pin e2842f0a78)
             local p = C.resolve("shadow_bolt", H)
-            local cataclysm = name == "Destruction" or name == "SMRuin"
-            assert.are.same({ cataclysm and 342 or 380, 2.5, 0 }, { p.cost, p.cast, p.cooldown })
+            local cost = ({ Destruction = 342, SMRuin = 380 * (1 - 0.06) })[name] or 380
+            assert.are.same({ cost, 2.5, 0 }, { p.cost, p.cast, p.cooldown })
             assert.is_true(#C.usable(H) > 0)
             assert.are.same({}, H.errors)
         end)
@@ -108,7 +108,8 @@ describe("the Warlock loop worlds", function()
             for _, name in ipairs({ "Affliction", "Demonology", "Destruction" }) do
                 local C = ww[name]
                 assert.are.same({ [6265] = 32 }, C.WORLD.bags, name)
-                assert.are.same({ [5] = 221 }, C.WORLD.stats, name)
+                -- the re-pin's Human builds (Demonology, Destruction) read Spirit 255; Affliction (still Orc) 221
+                assert.are.same({ [5] = name == "Affliction" and 221 or 255 }, C.WORLD.stats, name)
                 local pet = C.WORLD.pet
                 -- wowsims's logs at 60: the Imp 2180 mana, 85.2 mp5; the Succubus 1871, 28.4 mp5
                 local want = name == "Demonology" and { 0, 2180, 2180, 17.04, 2, true }

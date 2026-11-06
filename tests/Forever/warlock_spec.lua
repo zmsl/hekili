@@ -737,7 +737,7 @@ end)
 
 -- R8 (re-pin plan Task 16 Step 3): Demonology's move (default #3, the 3-target move to melee range) reaches Hellfire,
 -- so the Demonology spec (100092: the Demonology and Shadow Brand packs) opts into the Movement toggle. The pack's own
--- Hellfire line through the real engine in the Demonology world, three enemies (the AOE mode's floor), Life Tap after
+-- Hellfire lines (both arms, R51) through the real engine in the Demonology world, three enemies (the AOE mode's floor), Life Tap after
 -- it: OFF hides Hellfire outside the move's 5 yd and shows it inside; ON shows it outside too.
 describe("Forever Warlock Movement (R8)", function()
     local ww = require("Forever.helpers.warlock_world")
@@ -746,7 +746,13 @@ describe("Forever Warlock Movement (R8)", function()
         local f = assert(io.open("src/Hekili_Warlock/APLs/" .. pack .. ".simc"))
         local s = f:read("*a")
         f:close()
-        return assert(s:match("\n(actions%+=/hellfire,[^\n]+)"), pack)
+        -- R51 splits a move-reached line in two: the move arm at the move's position, the in-range arm in place.
+        local out = {}
+        for l in s:gmatch("\n(actions%+=/hellfire,[^\n]+)") do
+            out[#out + 1] = l
+        end
+        assert(#out > 0, pack)
+        return table.concat(out, "\n")
     end
 
     local function world(C, yd)
@@ -757,8 +763,10 @@ describe("Forever Warlock Movement (R8)", function()
         local t = H.ctl.now + 0.2
         assert(headless.cycle(H, t))
         local lines = H.Hekili:ParseActionList(line(C.PACK))
-        lines[1].enabled = true
-        lines[2] = { enabled = true, action = "life_tap" }
+        for _, l in ipairs(lines) do
+            l.enabled = true
+        end
+        lines[#lines + 1] = { enabled = true, action = "life_tap" }
         H.Hekili.DB.profile.packs[C.PACK].lists = { precombat = {}, default = lines }
         H.Hekili.DB.profile.toggles.mode.value = "aoe" -- the Primary display counts the spec's AOE floor of enemies
         H.Hekili.DB.profile.specs[C.SPEC].aoe = 3
