@@ -41,4 +41,11 @@ return {
     -- before Stormstrike (learned at 40): Lightning Bolt fills while the shocks wait; silent from 40, and so at 60,
     -- where wowsims casts it only at five Maelstrom Weapon stacks
     leveling = { "lightning_bolt,if=!action.stormstrike.known" },
+    -- not wowsims (its imbue never expires, sim/shaman/weapon_imbues.go); need-based (R41): the main hand's imbue when
+    -- none is up (weapon buffs lane, owner 2026-11-05: Flametongue, Rockbiter before it is learned at 10), first so it
+    -- works in combat (a trailing line is never reached; a player's custom one only showed out of combat)
+    levelingFirst = {
+        "flametongue_weapon,if=!buff.main_hand_enchant.up",
+        "rockbiter_weapon,if=!buff.main_hand_enchant.up&!action.flametongue_weapon.known",
+    },
 }
