@@ -15,9 +15,13 @@
 -- shared); 162.38 shred -> faerie_fire (after the missed 160.88 Faerie Fire: the belief holds Faerie Fire ready about
 -- 0.1 s after every cast, kit or belief undetermined; a scalar 6 clears it in scratch); 15.04 innervate -> cat_form
 -- (a 0.04 s tie at the Innervate powershift, pre-existing).
--- Owner FYI (faithful to wowsims solo, L86): the pre-pull list casts Prowl then Dash; in combat `cancel_buff` drops
--- Prowl at once, because the Ravage opener needs another druid's Faerie Fire (tag -1, never known solo), so Ravage
--- never shows.
+-- Owner deviation R69 (2026-11-06; L86): wowsims's "Drop Prowl for this opener" drops Prowl at once solo (its Ravage
+-- opener needs another druid's Faerie Fire, tag -1, never known solo). The owner: recommend the optimal opener; a
+-- player who cannot get behind the target simply does not press Ravage. So the pack has no Prowl cancel line
+-- (`condition = { cancel_buff = false }`): while Prowl is up and the target in range (wowsims's Ravage line, with the
+-- Movement gating) Ravage is the first icon; wowsims's Faerie Fire line above it (a cast breaks Prowl) waits while
+-- Prowl is up (`guard`). Prowl ends when Ravage lands or the player attacks; the list then runs as wowsims's. The
+-- pre-pull Prowl and Dash stay. Not yet checked in game.
 -- Content kept from the old pin: the forms', Shifting Power's and Innervate's costs are percent of base mana (1244 at
 -- 60); Shredding Attacks 3 points (Shred 42); the Howling Idol (272427, aura 1291059) takes 0.5 s off Shifting Power;
 -- the Wolfshead Helm (8345, aura 17768) adds energy to Shifting Power; wowsims refunds 80% of a dodged strike's energy.
@@ -48,6 +52,10 @@ return {
     -- Faerie Fire's armor reduction is an exclusive effect (one slot with Curse of Recklessness: wowsims
     -- sim/core/debuffs_generated_test.go TestGeneratedCurseOfRecklessnessAndFaerieFireDoNotStack): rule 10
     exclusive = { [9907] = true },
+    -- owner deviation R69 (header): no Prowl cancel line; Prowl ends when Ravage lands or the player attacks
+    condition = { cancel_buff = false },
+    -- R69 too: Faerie Fire (wowsims's line above Ravage) breaks Prowl, so it waits while Prowl is up
+    guard = { faerie_fire = "!action.prowl.known|!buff.prowl.up" },
     -- by role (docs/dev/wowsims-packs.md): Shred's first line (Clearcasting) at 1, not the builder; Claw's one line is
     -- wowsims's "Claw can replace Shred" builder fallback, kept at tier 1 as before (R66)
     focus = { shred = { 1, false }, claw = { 1, false }, rip = 2, rake = 2 },

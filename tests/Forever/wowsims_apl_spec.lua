@@ -685,6 +685,33 @@ describe("the wowsims APL translator", function()
         end
     )
 
+    it("lets a recipe `condition` and `guard` name a cancelAura line as cancel_buff (owner deviation R69)", function()
+        local text = apl.translate({
+            priorityList = {
+                { action = { cancelAura = { auraId = { spellId = 910 } } } },
+                cast(100),
+            },
+        }, ctx({ condition = { cancel_buff = "target.within5" }, guard = { cancel_buff = "time>1" } }))
+        assert.are.equal(
+            table.concat({
+                "actions=cancel_buff,buff_name=stance,if=target.within5&time>1",
+                "actions+=/strike",
+            }, "\n"),
+            text
+        )
+    end)
+
+    it("omits a line whose recipe `condition` is false (owner deviation R69)", function()
+        local text, omitted = apl.translate({
+            priorityList = {
+                { action = { cancelAura = { auraId = { spellId = 910 } } } },
+                cast(100),
+            },
+        }, ctx({ condition = { cancel_buff = false } }))
+        assert.are.equal("actions=strike", text)
+        assert.are.same({ "default #1: the recipe's condition is false" }, omitted)
+    end)
+
     it("reads percents 0-100, Go durations in seconds, a Target's aura as a debuff, an item list", function()
         local text = apl.translate({
             priorityList = {
