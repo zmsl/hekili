@@ -84,7 +84,7 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- 47.22, 77.04). ON flicker ceiling 2.4 (2.33/min measured: 7 flips, 4 at an Echo-completing swing, 3
         -- Judgement / Holy Strike at Judgement's ready edge; 2.00 at the old pin, the same kinds)
         -- ON flicker 2.4 -> 2.0 (R61, the swing-clock recheck at the guard's window end: 2.33 -> 2.00/min; decisions
-        -- unchanged, 0.933 (45))
+        -- unchanged, 0.933 (45)). ON THE BAR (= measured 2.00): re-measure at integration.
         local r, line = ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.93, REPLAY)
         ab.check(r.flicker <= 2.0 + 1e-9, "Retribution (wowsims.com)", "ON flicker ceiling: " .. line)
     end)
