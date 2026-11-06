@@ -1,5 +1,6 @@
 -- tests/Forever/wowsims_paladin_spec.lua (wowsims packs plan, Task 9): the Paladin wowsims.com packs against
 -- wowsims/forever's own fights (tests/Forever/wowsims/*.log, MIT) and at three levels.
+local ab = require("Game.harness.ab")
 local ws = require("Forever.helpers.wowsims")
 local pw = require("Forever.helpers.paladin_world")
 
@@ -59,8 +60,9 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     pw.Protection.character()
 
     -- Mana: its regen per second, { from 5 s after the last spend, inside the five-second rule }
-    -- (Retribution: 2.19 and 0.825 each 0.1 s; Protection: 1.73 and 0.08 in the e2842f0a78 log, was 1.738 and none).
-    local RET = wowsims(pw.Retribution, set(EXORCISM_ANY), { fsr = { [0] = { 21.9, 8.25 } } })
+    -- (Retribution: 2.252 and 0.844 each 0.1 s in the e2842f0a78 log, was 2.19 and 0.825; Protection: 1.73 and 0.08 in
+    -- the e2842f0a78 log, was 1.738 and none).
+    local RET = wowsims(pw.Retribution, set(EXORCISM_ANY), { fsr = { [0] = { 22.52, 8.44 } } })
     local RET_LIVE = wowsims(pw.Retribution, set(EXORCISM_ANY), {})
 
     -- the replay floor: 0.860 measured on central fix 13 (49/57: removals shown as removals, the cooldown restart); 0.877
@@ -75,7 +77,14 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- seal comes one tick late, so one decision of 57 (Seal of Command on the tick that pays for it) shows Seal of
         -- Righteousness. Recover after the in-game UNIT_POWER_FREQUENT-for-mana
         -- checkpoint by rounding up to the observed tick; the belief's precision at near-ties is GAP AB.
-        ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.89, REPLAY)
+        -- 0.89 -> 0.93 re-pin e2842f0a78 (fresh floor, Task 17: the Unsealed Wrath APL, default.apl.json, the build's
+        -- talents, 25 yd with the opener move, Movement ON): 0.933 (45) top [consecration -> seal_of_command 3]; each at
+        -- a white swing 0.02-0.05 s before wowsims's cast that completes an Echo, which wowsims reads with
+        -- includeReactionTime (100 ms; the translator ignores it, rule 5) so it casts Consecration first (log 17.40,
+        -- 47.22, 77.04). ON flicker ceiling 2.4 (2.33/min measured: 7 flips, 4 at an Echo-completing swing, 3
+        -- Judgement / Holy Strike at Judgement's ready edge; 2.00 at the old pin, the same kinds)
+        local r, line = ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.93, REPLAY)
+        ab.check(r.flicker <= 2.4 + 1e-9, "Retribution (wowsims.com)", "ON flicker ceiling: " .. line)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Retribution is out of mana from 60 s
     -- of its log), so its longest wait is for mana. 4.4 before central fix 8, while
@@ -83,11 +92,15 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- 8.4 -> 5.2 (R41 task, measured at the base and after: the old 8.4 had not been re-measured since the re-pin); the
     -- 5.2 is no longer a mana wait: Holy Strike, Consecration and Judgement cooling, the seals up (t 57.2-62.2, mana
     -- about 60%)
-    local RET_LIVE60 = 5.2
+    -- 5.2 -> 5.0 re-pin e2842f0a78 (Task 17, with the recipe's Seal of Command kick-start; 86.4 without it: the twist
+    -- deadlocks from a melee start, see the recipe): nothing useful to cast, the strikes cooling, a seal up
+    local RET_LIVE60 = 5.0
     -- R41 (owner policy: no filler for filling's sake): the old `remains<24` Seal of Righteousness refresh held L10 at
     -- 4.4; it re-seals now only under two GCDs left. Nothing useful to cast: Holy Strike and Judgement cooling, Seal of
     -- Righteousness up (L10-L15 8.6, t 5.2-13.6). L40 keeps the 6 s bar (5.2); only L60 follows LIVE60 (R22)
-    local RET_LIVE10 = 8.6
+    -- 8.6 -> 8.8 re-pin e2842f0a78 (Task 17): the same cause, Holy Strike (now waiting for Judgement on cooldown,
+    -- wowsims's line), Judgement and Exorcism cooling, Seal of Righteousness up (t 5.0-13.2); L40 5.2
+    local RET_LIVE10 = 8.8
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Retribution (wowsims.com) stays live at level " .. level, function()
             local C = content("paladin_retribution", RET_LIVE, "Retribution (wowsims.com)", level)
