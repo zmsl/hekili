@@ -1,6 +1,7 @@
 -- tests/Forever/wowsims_warlock_spec.lua (wowsims packs plan, Task 13): the Warlock wowsims.com packs against
 -- wowsims/forever's own fights (tests/Forever/wowsims/*.log, MIT) and at three levels.
 local ws = require("Forever.helpers.wowsims")
+local ab = require("Game.harness.ab")
 local W = require("Forever.helpers.warlock_world")
 
 local function content(spec, base, pack, level, extra)
@@ -44,20 +45,23 @@ end
 --   Succubus's attacks spend the brand's 6 charges, unseen; 8 misses at 157-170 s), larger now the new list leads with
 --   the brand's Searing Pain line; without A and C 0.841.
 --   Destruction 0.74 -> 0.90 (0.900, 110): A 7, C 1, 3 Immolate refreshes at remains<=cast.
+-- The replay flicker ceiling (per minute, the last column; R8: Demonology and Shadow Brand replay with Movement ON, as
+-- every replay does): 0 in all five, measured 0.00/min (oracle 0.00) at the re-pin e2842f0a78.
 local PACKS = {
-    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 1.00, 0.2 },
-    { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.78, 0.2 },
-    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.89, 0.2 },
-    { "warlock_shadow_brand", "ShadowBrand", "Shadow Brand (wowsims.com)", 0.71, 0.2 },
-    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.90, 0.2 },
+    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 1.00, 0.2, 0 },
+    { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.78, 0.2, 0 },
+    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.89, 0.2, 0 },
+    { "warlock_shadow_brand", "ShadowBrand", "Shadow Brand (wowsims.com)", 0.71, 0.2, 0 },
+    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.90, 0.2, 0 },
 }
 
 describe("the Warlock wowsims.com packs #slow #wowsims", function()
     -- one block per pack: the replay floor, the pack's own worst idle at 60 (LIVE60, measured), and the brackets
     for _, p in ipairs(PACKS) do
-        local spec, world, pack, FLOOR, LIVE60 = p[1], W[p[2]], p[3], p[4], p[5]
+        local spec, world, pack, FLOOR, LIVE60, FLICKER = p[1], W[p[2]], p[3], p[4], p[5], p[6]
         it(pack .. " follows wowsims's casts", function()
-            ws.gate(pack, content(spec, world, pack, 60), spec, FLOOR)
+            local r, line = ws.gate(pack, content(spec, world, pack, 60), spec, FLOOR)
+            ab.check(r.flicker <= FLICKER, pack, line) -- a bar: recorded in a provider arm (providers spec §4.1)
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()
