@@ -77,11 +77,17 @@ M.FLICKER = {
     -- oracle 0.31 / 0.49 / 1.04, retracted 0.06 / 0.06 / 0.16): (1) wowsims's new order puts Heroic Strike above Rend
     -- and the Sunder fallback, so its `rage.lo>=40` wait is the first icon more often (held 120 -> 207 at seeds 1-20,
     -- 198 of them with the truth at 40-60: lo under the truth at the threshold, gap CJ's class); (2) wowsims's Rend line
-    -- reads `!debuff.rend.up` (was remains<=3): a Rend MISS that lands while a main-hand swing is in flight is credited
-    -- to that swing (Events/Rows.lua route; UNIT_COMBAT carries no spell id), so the avoid's undo never runs and the
-    -- belief keeps Rend up its full 15 s while the oracle shows it ready (51 held ticks, seeds 7 and 20; 17 and 1 in the
-    -- other sets): central, exposed not caused. readyShort: 44 of 53 with no swing in flight; the three traced (seed 1:
-    -- Sunder, Rend, Execute) pressed 0.049 s before a main-hand swing pays (the forecast class above). Flicker 1.1 -> 1.3:
+    -- reads `!debuff.rend.up` (was remains<=3): a Rend MISS tied with a main-hand swing in flight is held by the swing
+    -- (UNIT_COMBAT carries no spell id); gap AS gives such an avoid back when the swing's own wound arrives
+    -- (Events/Rows.lua:304-309, tieHolder :56-72; reactions_spec.lua:170-192), but a physical WOUND within SAME_FRAME
+    -- (0.05 s, Events/Melee.lua:28) after the tied miss pays the avoided cast's still-OPEN ticket at pass 1 (Rend has
+    -- no expects and no school, Warrior.lua:1531-1555, so it accepts any wound in its frame); the guard
+    -- `T.state[q] == T.OPEN` (Rows.lua:307) then fails, the give-back never fires and the Rend undo (Families/Now.lua)
+    -- is lost (paying-row candidates: the old Rend's tick at +24 ms, the swing's own wound at +6 ms), so the belief
+    -- keeps Rend up its full 15 s while the oracle shows it ready (51 held ticks, seeds 7 and 20; 17 and 1 in the
+    -- other sets): central, exposed not caused. Smallest central fix (not this lane): in route(), for a non-avoid
+    -- WOUND whose pass-1 pick p is the tieP of a PROV swing, try tieHolder first. readyShort: 44 of 53 with no swing
+    -- in flight; the three traced (seed 1: Sunder, Rend, Execute) pressed 0.049 s before a main-hand swing pays (the forecast class above). Flicker 1.1 -> 1.3:
     -- seeds 41-60 read 1.25 with the oracle's own 0.39 -> 1.04 (ours over the oracle 0.21, inside flickerK): the new
     -- order re-times the fights (seed reordering, as the note above)
     ["Fury L24"] = { flicker = 1.3, flickerK = 0.6, retracted = 0.2, readyShort = 53, heldReady = 406 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
