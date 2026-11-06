@@ -247,6 +247,22 @@ Upstream's newer values (CN4): the "on all/any targets" aura and DoT reads are t
 `# Deviation:` line; of the current target, "is active" is true, "time until active" 0 and "time until it dies"
 `fight_remains`; `numActiveAdds`, `remainingCastTime` and another target unit are unsupported.
 
+`spellExpectedDpet` stays unsupported (CN5, L84). wowsims computes it from the spell's own damage formula, at the
+fight's remaining time (sim/core/apl_values_spell.go `GetFloat`, upstream 4b0030a44b):
+- the expected initial and tick damage, which needs coefficients, spell power, the target's modifiers and crit;
+- the hasted cast and travel time;
+- the ticks that land before the fight ends: 0 once the cast would land after the end.
+None of these is available to Hekili. The kits model no damage (the drift report's "the kit does not model damage",
+per spec). Damage and attack speed are secret in combat on Forever (probe 2026-10-13). The fight's
+remaining time is unknown in game (`fight_remains` 3600, gap AN). So a translated DPET would be a constant guess
+dressed as wowsims's value. The entries stay omitted, and a spec that needs their effect keeps a recipe stand-in by
+owner ruling:
+- SM Ruin's DoT lines (R49): cast each DoT when it is down or within its cast time of falling. They keep the DoTs that
+  wowsims's DPET keeps up, but not its "stop refreshing in the last seconds", which needs the fight's end.
+- At upstream 4b0030a44b, Shadow's preset un-hides its Starshards line (`spellExpectedDpet(Starshards) >
+  spellExpectedDpet(Mind Flay)` with Mind Blast at least 4 s away). Its re-export gets a new `# Omitted: default #11:
+  spellExpectedDpet`. Whether it needs a stand-in is the Priest lane's question for the owner.
+
 Any node the translator does not handle is unsupported (rule 2): a new wowsims node omits its entry rather than
 mistranslating it.
 

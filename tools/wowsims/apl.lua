@@ -263,7 +263,7 @@
 --    the Druid kit's state expression `druid_bleed_active`. Re-pin plan Task 4: `spellIsCasting` is
 --    `action.<key>.executing` when the kit ability has a cast time (its `cast` above 0 or unreadable), else false;
 --    `spellInRange` is `action.<key>.in_range` (both rule 6 guarded, rule 12 dropped); `dotIsActiveOnAllTargets` is
---    `dotIsActive` on the current target, with rule 17's `# Deviation:` line. `spellExpectedDpet` stays unsupported, as
+--    `dotIsActive` on the current target, with rule 17's `# Deviation:` line. `spellExpectedDpet` stays unsupported (no damage model: CN5, docs/dev/wowsims-packs.md), as
 --    does a class's own "on all targets" read with no recipe `select` field (rule 16's `activeAll`).
 --    CN4 (upstream's values after the pin): `auraIsActiveOnAllTargets` / `auraIsActiveOnAnyTarget` are the target's
 --    `debuff.<key>.up` and `dotIsActiveOnAnyTarget` is `dotIsActive`, each on the current target with a `# Deviation:`
