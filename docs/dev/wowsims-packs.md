@@ -44,7 +44,8 @@ A class lane flips a spec, the flip and the new log in one commit (the pin spec 
 2. Fix the recipe for `NEW` (paths, talent string, options from that commit's presets) and re-export:
    `WOWSIMS=$HOME/src/wowsims-pin-4b0030a44b .lua/bin/lua tools/wowsims/export.lua export <spec>`.
 3. `make wowsims-packs && make packs`, then the spec's replay and gates, floors by R6.
-A spec still at `OLD` keeps exporting and re-running against ~/src/wowsims-upstream, untouched. When every line says
+A flip always uses `export`, never `rerun`: requests carry no pin, only the log header does, so `rerun` would give a new log on the old request (old APL and talents) and still pass the pin spec.
+A spec still at `OLD` keeps exporting and re-running against ~/src/wowsims-upstream (pass `WOWSIMS=$HOME/src/wowsims-upstream`: the default `WOWSIMS`, ~/src/wowsims-forever, is at neither pin, so leaving it out is refused, not wrong); `dry.lua` uses one `WOWSIMS` for every spec, so once the pins are mixed the specs on the other pin print `error`; untouched. When every line says
 `NEW`, the coordinator collapses the pin: `NEW` becomes the only commit, `OLD` and `tools/wowsims/sim-pin/e2842f0a784d/`
 go, and `M.SPEC_PIN`'s entries all name one pin (the state the pin spec then checks).
 
