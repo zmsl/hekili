@@ -16,14 +16,13 @@
 --   Corruption, Siphon Life, Immolate (#8-#10) on spellExpectedDpet, which the translator omits (rule 18; L84, after
 --   0.6.0): without the recipe's stand-in DoT lines (`extra`) the pack had no DoTs (0.606). The stand-ins cast each
 --   DoT when it is down or within its cast time of falling (the entries' own maxOverlap); the siphon_life /
---   corruption misses are their timing against wowsims's DPET choice. Amplify Curse and Bane of Agony (the
+--   corruption misses are all in the fight's last ~20 s, where wowsims's DPET stops refreshing the DoTs and ours recasts them. Amplify Curse and Bane of Agony (the
 --   last-minute Doom-to-Agony swap, not a DoT-down need) stay omitted.
 --   class A (shadow_bolt -> life_tap; R50, accepted limit): the refill-blind mana belief's Life Tap
 --   (warlock_demonology.lua).
 -- Omitted 2 -> 6 (dry.lua 6): the hidden #3 and five spellExpectedDpet (#6-#10).
 -- Worked: as warlock_affliction.lua.
--- Deviations: the Boosts group's Major Spellblasting Potion (item 250937) has no key (no shared content): omitted
--- (rule 2); the Ez-Thro Dynamite II (18588, rule 13) is unmapped (no shared key), listed; Berserking (Troll) and
+-- Deviations: Berserking (Troll) and
 -- Eureka! and Blood Fury are other races' racials, never known to the Human. The Weakness Analyzer trinket (272438) is `use_items` (rule
 -- 13).
 -- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket

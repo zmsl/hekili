@@ -24,8 +24,7 @@
 -- Omitted 2 -> 11 (dry.lua 11): Demonology's ten plus a `never` (default #9); unitIsMoving dropped, listed.
 -- Known deviations: warlock_demonology.lua's (the same list but Shadow Bolt the filler and the Life Tap line's constant
 -- "Lash of Pain cost" 160, the Succubus's, kept verbatim: ruling W7).
--- Deviations: the Boosts group's Major Spellblasting Potion (item 250937) has no key (no shared content): omitted
--- (rule 2); the Ez-Thro Dynamite II (18588, rule 13) is unmapped (no shared key), listed; Berserking (Troll) and
+-- Deviations: Berserking (Troll) and
 -- Eureka! and Blood Fury are other races' racials, never known to the Human. The Weakness Analyzer trinket (272438) is `use_items` (rule
 -- 13).
 -- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket

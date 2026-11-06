@@ -19,15 +19,15 @@
 --   travelTime) x 0.9` does not fold (spellTravelTime), so the precombat hard cast is omitted.
 --   the rest (5: 10.9 searing_pain -> corruption, 81.8 / 92.3 / 93.9 / 125.6): Searing Pain / Life Tap near-ties with
 --   lo 32 under the truth, not traced one by one.
+--   The measured top also has corruption -> searing_pain (2) and bane_of_agony -> searing_pain (1), the other way: untraced.
 -- Omitted 2 -> 10 (dry.lua 10): petAttack, the pre-pull doAtValue (C), the move (R8: it reaches Hellfire; the
--- spec opts into Movement), four changeTarget, the APL's trinket 18820 (not worn) and the Major Spellblasting Potion
+-- spec opts into Movement), five changeTarget, the APL's trinket 18820 (not worn) and the Major Spellblasting Potion
 -- 250937; unitIsMoving dropped (Task 5), listed.
 -- Known API deviations: the demon's attacks spend Demonic Brand's charges, unseen (the kit keeps
 -- the brand its full 10 s); before the Demonic Brand talent the brand is never up, so `searing_pain,if=!debuff.
 -- demonic_brand.up` leads the list (as wowsims's own list at that level would).
 -- "Execute at" (35%) reads 0.35 (rule 8); wowsims's pet-spell cost 115 ("Firebolt cost") is kept verbatim (ruling W7).
--- Deviations: the Boosts group's Major Spellblasting Potion (item 250937) has no key (no shared content): omitted
--- (rule 2); the Ez-Thro Dynamite II (18588, rule 13) is unmapped (no shared key), listed; Berserking (Troll) and
+-- Deviations: Berserking (Troll) and
 -- Eureka! and Blood Fury are other races' racials, never known to the Human. The Weakness Analyzer trinket (272438) is `use_items` (rule
 -- 13).
 -- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket

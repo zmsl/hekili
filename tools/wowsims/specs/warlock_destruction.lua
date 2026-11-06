@@ -17,8 +17,7 @@
 -- never in this single-target log), listed.
 -- Leveling note: below Incinerate (40) the list has no filler and falls through to its last line, Life Tap (as
 -- wowsims's own list would at that level); the gate counts Life Tap as a press, so no bracket is idle.
--- Deviations: the Boosts group's Major Spellblasting Potion (item 250937) has no key (no shared content): omitted
--- (rule 2); the Ez-Thro Dynamite II (18588, rule 13) is unmapped (no shared key), listed; Berserking (Troll) and
+-- Deviations: Berserking (Troll) and
 -- Eureka! and Blood Fury are other races' racials, never known to the Human. The Weakness Analyzer trinket (272438) is `use_items` (rule
 -- 13).
 -- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket

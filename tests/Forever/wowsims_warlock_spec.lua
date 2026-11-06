@@ -45,8 +45,9 @@ end
 --   Succubus's attacks spend the brand's 6 charges, unseen; 8 misses at 157-170 s), larger now the new list leads with
 --   the brand's Searing Pain line; without A and C 0.841.
 --   Destruction 0.74 -> 0.90 (0.900, 110): A 7, C 1, 3 Immolate refreshes at remains<=cast.
--- The replay flicker ceiling (per minute, the last column; R8: Demonology and Shadow Brand replay with Movement ON, as
--- every replay does): 0 in all five, measured 0.00/min (oracle 0.00) at the re-pin e2842f0a78.
+-- The replay flicker ceiling (per minute, the last column): plain flicker bars, 0 in all five, measured 0.00/min (oracle
+-- 0.00) at the re-pin e2842f0a78. They say nothing about Movement: Demonology and Shadow Brand replay with it ON (R8) but
+-- every replay is single-target and the Hellfire line needs active_enemies>=3.
 local PACKS = {
     { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 1.00, 0.2, 0 },
     { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.78, 0.2, 0 },
