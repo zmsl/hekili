@@ -114,7 +114,12 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
 
     -- The build takes no Holy Shock.
     local PROT_DROP = set(pw.Protection.IDS.holy_shock, EXORCISM_ANY)
-    local PROT = wowsims(pw.Protection, PROT_DROP, { fsr = { [0] = { 17.3, 0.8 } } })
+    -- The replay's character lacks Holy Shield rank 4 (1239570, 240 mana, the owner's in-game tooltip 2026-11-06): the
+    -- e2842f0a78 log predates it (wowsims added it in 041cd46cec) and casts rank 3 (20928) at 195. Replay world only;
+    -- the live worlds keep rank 4. Goes when the pin moves past 041cd46cec.
+    local PROT = wowsims(pw.Protection, set(pw.Protection.IDS.holy_shock, EXORCISM_ANY, { 1239570 }), {
+        fsr = { [0] = { 17.3, 0.8 } },
+    })
     local PROT_LIVE = wowsims(pw.Protection, PROT_DROP, {})
 
     -- the replay floor: 0.750 (28) was measured on a fight the target never swung in (the export set no tank, GAP AE);
@@ -152,9 +157,10 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- mana-dry), idle over 6 s either way (L32 11.0, L35-L40 8.4); gated at L40 only; no other bracket got a higher limit
     -- 4.6 -> 4.4 (R31: Holy Shield rank 3 costs 195, not 240; the price is the only change, L10 4.4 and L40 8.4 hold,
     -- rank 3 is learned at 60 only)
-    -- Holy Shield's ranks at wowsims's 100 / 150 / 195, learned at 30 / 40 / 50 (owner rule 2026-11-06, was the DB2's
-    -- 150 / 195 at 40 / 50, 60 for rank 3): L10 8.6, L40 8.4 (rank 2 at 150, the old rank 1's price), L60 4.4 and the
-    -- replay (level 60) hold; the L32-L40 band above was measured on the DB2 ladder
+    -- 4.4 -> 4.6 at L60 (Holy Shield's four ranks, the owner's in-game tooltips 2026-11-06: 100 / 150 / 195 / 240 at
+    -- 30 / 40 / 50 / 60, was the DB2's 150 / 195 / 195 at 40 / 50 / 60): rank 4's 240 is L60's price again, under
+    -- the 6 s bar; L10 8.6 and L40 8.4 (rank 2 at 150, the old rank 1's price) hold; the replay keeps rank 3 (PROT);
+    -- the L32-L40 band above was measured on the DB2 ladder
     -- R41 (owner policy, supersedes R28's L10 filler and R28a's guard): the Seal of Fury refresh (`remains<24`) is gone;
     -- wowsims's own line re-seals when the seal is down. L10 4.4 -> 8.6, its measured limit: nothing useful to cast:
     -- Holy Strike and Judgement cooling, Seal of Fury and Righteous Fury up (L10-L15 8.6, t 6.6-15.0). L20-L25 6.4,

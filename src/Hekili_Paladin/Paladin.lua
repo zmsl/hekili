@@ -78,10 +78,11 @@ local UNDEAD_DEMON = { "undead", "demon" }
 local EXORCISM_COST = { 85, 135, 180, 235, 285, 345, 85, 135, 180, 235, 285, 345 }
 local HOLY_SHOCK = { 1311606, 20473, 20929, 20930 } -- rank 1 Forever-only
 local HOLY_SHOCK_COST = { 160, 225, 275, 325 }
-local HOLY_SHIELD = { 20925, 20927, 20928 }
--- wowsims's costs (owner rule 2026-11-06: wowsims's data wins over the DB2; rank 3 also owner R31). DB2 70707's
--- 150 / 195 / 240 is the Era ladder one rank up.
-local HOLY_SHIELD_COST = { 100, 150, 195 }
+-- Four ranks, from the owner's in-game tooltips (2026-11-06; in game beats wowsims and the DB2): 100 / 150 / 195 / 240
+-- mana, learned at 30 / 40 / 50 / 60. Rank 4 (1239570, build 70755) is in wowsims after our pin (041cd46cec); DB2
+-- 70707's three-rank 150 / 195 / 240 ladder at 40 / 50 / 60 lacks it.
+local HOLY_SHIELD = { 20925, 20927, 20928, 1239570 }
+local HOLY_SHIELD_COST = { 100, 150, 195, 240 }
 local RETRIBUTION_AURA = { 7294, 10298, 10299, 10300, 10301 }
 local RIGHTEOUS_FURY = { 25780, 407627 } -- 407627: the rune's (D4: registered, inert unless learned)
 

@@ -34,7 +34,7 @@ local KIT = {
     },
     holy_shock = { { 1311606, 20473, 20929, 20930 }, 325, 10, "spell" },
     divine_favor = { { 20216 }, 0.04, 120, "off" },
-    holy_shield = { { 20925, 20927, 20928 }, 195, 10, "spell" }, -- R31: wowsims's 195, not the DB2's 240
+    holy_shield = { { 20925, 20927, 20928, 1239570 }, 240, 10, "spell" }, -- rank 4: the owner's in-game tooltip
     righteous_fury = { { 25780, 407627 }, 0.3, 0, "spell" },
     retribution_aura = { { 7294, 10298, 10299, 10300, 10301 }, 0, 0, "spell" },
 }
@@ -280,24 +280,13 @@ describe("Forever Paladin", function()
         assert.are.equal(6, ld.run(w.abilities.holy_strike.cooldown, e))
         assert.are.same({ 2, 1328544, 1 }, w.talents.shieldsworn)
     end)
-    -- R31 (owner): Forever's Holy Shield tops out at rank 3 (20928) for 195 mana, wowsims's price; DB2 70707's 240 is the
-    -- Classic Era ladder, one rank up (the log: `Casting {SpellID: 20928} (Cost = 195.000`).
-    it("prices Holy Shield rank 3 at 195 at level 60 with the Protection preset's talents (R31)", function()
-        for _, id in ipairs({ 20925, 20927 }) do
-            w.game.known[id] = false
-        end
-        w.game.known[20928] = true
+    -- The owner's in-game tooltips (2026-11-06): four ranks at 100 / 150 / 195 / 240 mana (R31's 195 is rank 3; rank 4,
+    -- 1239570, is build 70755's, past our wowsims pin), priced with the Protection preset's talents (no Benediction).
+    it("prices Holy Shield's four ranks at the game's 100, 150, 195 and 240", function()
         local e = ld.env(w)
         e.talent = talents({ swift_judgement = 1, holy_shield = 1, holy_shock = 1, shieldsworn = 1 })
-        assert.are.equal(195, ld.run(w.abilities.holy_shield.spend, e))
-    end)
-    -- Owner rule 2026-11-06 (wowsims's data wins over the DB2): ranks 1-2 cost wowsims's 100 and 150, not the DB2's
-    -- 150 and 195.
-    it("prices Holy Shield ranks 1 and 2 at wowsims's 100 and 150", function()
-        local e = ld.env(w)
-        e.talent = talents({ holy_shield = 1 })
-        for top, cost in ipairs({ 100, 150 }) do
-            for i, id in ipairs({ 20925, 20927, 20928 }) do
+        for top, cost in ipairs({ 100, 150, 195, 240 }) do
+            for i, id in ipairs({ 20925, 20927, 20928, 1239570 }) do
                 w.game.known[id] = i <= top
             end
             assert.are.equal(cost, ld.run(w.abilities.holy_shield.spend, e))
