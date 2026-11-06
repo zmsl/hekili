@@ -885,6 +885,19 @@ describe("Forever Druid", function()
         end)
     end)
 
+    -- wowsims's druidBleedIsActive (sim/druid/feral.go targetIsBleeding): Rake, Rip, Lacerate or Pounce's bleed up
+    it("reads druid_bleed_active as one of its bleeds on the target", function()
+        local e = ld.env(w)
+        local function bleeding(debuffs)
+            e.debuff = auras(debuffs)
+            return ld.run(w.exprs.druid_bleed_active, e)
+        end
+        assert.is_false(bleeding({}))
+        for _, key in ipairs({ "rake", "rip", "lacerate", "pounce_bleed" }) do
+            assert.is_true(bleeding({ [key] = { up = true } }), key)
+        end
+    end)
+
     it("refuses Shred in the not-behind window unless the behind setting says otherwise (Claw then)", function()
         local e = ld.env(w)
         local ok = function()

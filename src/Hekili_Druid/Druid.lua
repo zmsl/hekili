@@ -685,6 +685,12 @@ spec:RegisterCostMod({
     },
 })
 
+-- wowsims's druidBleedIsActive (wowsims/forever sim/druid/feral.go targetIsBleeding, apl_values.go): Rake, Rip, Lacerate
+-- or Pounce's bleed on the target. Its assumeBleedActive (both requests set it) has no in-game reading: the real target.
+spec:RegisterStateExpr("druid_bleed_active", function()
+    return debuff.rake.up or debuff.rip.up or debuff.lacerate.up or debuff.pounce_bleed.up
+end)
+
 -- A shift (Classic's swap_form, Forever's rules): the other forms and a queued Maul go; into Bear all rage is lost
 -- (Furor's 20%-a-rank chance of 10 is unknowable at the cast: none); into Cat the energy is kept (Furor's Forever
 -- restore is unmodelled until checkpoint Q3). The forms' `now` write the same lines.
