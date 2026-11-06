@@ -2524,3 +2524,31 @@ describe("the wowsims APL translator's auto-attack clocks", function()
         assert.is_true(waits > 0)
     end)
 end)
+
+-- CN2 (.siml recipes, L141): upstream moved the Paladin APLs to .apl.siml (2fe0846044). export.lua turns a .siml file
+-- into protojson with the CLI's `siml parse -json` (its `siml` step; a recipe `apl` path is CN1's); the translator then
+-- reads the request's rotation as it reads a JSON APL. The fixtures are upstream/master 4b0030a44b's
+-- ui/specs/paladin/{retribution,protection}/apls/default.apl.siml through a CLI built at that commit (the pin's CLI
+-- cannot parse them). SIML writes no `rank` fields; the translator ignores ranks (rule 5), so the pack is the same.
+describe("the wowsims APL translator on a .siml-parsed APL", function()
+    local json = require("dkjson")
+    local function slurp(path)
+        local f = assert(io.open(path, "rb"))
+        local s = f:read("*a")
+        f:close()
+        return s
+    end
+    for _, spec in ipairs({ "paladin_retribution", "paladin_protection" }) do
+        it(spec .. "'s upstream .apl.siml translates as the checked-in request's JSON APL", function()
+            local r = dofile("tools/wowsims/specs/" .. spec .. ".lua")
+            local set = require("Forever.helpers.engine").abilitySet(r.class)
+            local log = slurp("tests/Forever/wowsims/" .. spec .. ".log")
+            local player = json.decode(slurp("tests/Forever/wowsims/" .. spec .. ".json")).raid.parties[1].players[1]
+            local want = { apl.translate(player.rotation, apl.context(set, r, log, player)) }
+            local siml = json.decode(slurp("tests/Forever/fixtures/wowsims_siml_" .. spec .. ".apl.json"))
+            assert.are.equal("TypeAPL", siml.type)
+            local got = { apl.translate(siml, apl.context(set, r, log, player)) }
+            assert.are.same(want, got)
+        end)
+    end
+end)
