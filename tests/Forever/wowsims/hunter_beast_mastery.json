@@ -1,9 +1,6 @@
 {
   "encounter":{
-    "executeProportion20":0.2,
-    "executeProportion25":0.25,
     "executeProportion35":0.35,
-    "executeProportion90":0.9,
     "duration":180,
     "targets":[{
         "minBaseDamage":2601,
@@ -15,75 +12,60 @@
         "parryHaste":true,
         "mobType":"MobTypeMechanical"
       }],
-    "executeProportion45":0.45
+    "executeProportion20":0.2
   },
   "raid":{
     "parties":[{
         "players":[{
             "profession1":"Engineering",
-            "distanceFromTarget":11,
+            "distanceFromTarget":12,
+            "reactionTimeMs":250,
             "class":"ClassHunter",
             "equipment":{
               "items":[{
-                  "id":16428,
-                  "enchant":2586
+                  "id":16677
                 },{
-                  "id":21809
+                  "id":19620,
+                  "enchant":904
                 },{
-                  "id":13116
+                  "id":16679
                 },{
-                  "id":21187,
-                  "enchant":7667
+                  "id":18511,
+                  "enchant":849
                 },{
-                  "id":19685,
+                  "id":16674,
                   "enchant":1891
                 },{
-                  "id":19687,
+                  "id":16681,
                   "enchant":7656
                 },{
-                  "id":19686,
-                  "enchant":8206
+                  "id":16676,
+                  "enchant":2564
                 },{
-                  "id":20216
+                  "id":16680
                 },{
-                  "id":22690,
-                  "enchant":2586
+                  "id":16678,
+                  "enchant":8491
                 },{
-                  "id":18506,
-                  "enchant":904
+                  "id":16675,
+                  "enchant":1887
                 },{
                   "id":272408
                 },{
-                  "id":21182
+                  "id":11990,
+                  "randomSuffix":12728
                 },{
                   "id":272437
                 },{
-                  "id":270276
+                  "id":19120
                 },{
                   "id":250619,
                   "enchant":2646
                 },{
                 },{
                   "id":22347,
-                  "enchant":8720
+                  "enchant":2523
                 }]
-            },
-            "race":"RaceOrc",
-            "name":"Beast Mastery",
-            "talentsString":"5320001505101251-0053250001-4",
-            "profession2":"Blacksmithing",
-            "hunter":{
-              "options":{
-                "classOptions":{
-                  "cobraReflexes":true,
-                  "petAggression":5,
-                  "petUptime":1,
-                  "petAttackSpeed":"FasterAttackII",
-                  "ammo":"ThoriumHeadedArrow",
-                  "petType":"PetNone",
-                  "quiverBonus":"AncientSinewWrappedLamina"
-                }
-              }
             },
             "rotation":{
               "type":"TypeAPL",
@@ -93,35 +75,22 @@
                       "action":{
                         "condition":{
                           "cmp":{
-                            "op":"OpLt",
+                            "op":"OpLe",
                             "rhs":{
-                              "variableRef":{
-                                "name":"Wait at melee"
+                              "const":{
+                                "val":"5"
                               }
                             },
                             "lhs":{
-                              "autoTimeSinceLast":{
-                                "autoType":"MainHandAuto"
+                              "unitDistance":{
+                                "sourceUnit":{
+                                  "type":"Self"
+                                }
                               }
                             }
                           }
                         },
-                        "wait":{
-                          "duration":{
-                            "math":{
-                              "op":"OpSub",
-                              "rhs":{
-                                "autoTimeSinceLast":{
-                                  "autoType":"MainHandAuto"
-                                }
-                              },
-                              "lhs":{
-                                "variableRef":{
-                                  "name":"Wait at melee"
-                                }
-                              }
-                            }
-                          }
+                        "startAttack":{
                         }
                       }
                     },{
@@ -130,39 +99,36 @@
                           "and":{
                             "vals":[{
                                 "cmp":{
-                                  "op":"OpGe",
+                                  "op":"OpGt",
                                   "rhs":{
-                                    "variableRef":{
-                                      "name":"Wait at melee"
+                                    "const":{
+                                      "val":"0s"
                                     }
                                   },
                                   "lhs":{
-                                    "autoTimeSinceLast":{
-                                      "autoType":"MainHandAuto"
+                                    "gcdTimeToReady":{
                                     }
                                   }
                                 }
                               },{
                                 "cmp":{
-                                  "op":"OpGt",
+                                  "op":"OpLe",
                                   "rhs":{
                                     "const":{
-                                      "val":"0ms"
+                                      "val":"400ms"
                                     }
                                   },
                                   "lhs":{
-                                    "autoTimeToNext":{
-                                      "autoType":"MainHandAuto"
+                                    "gcdTimeToReady":{
                                     }
                                   }
                                 }
                               }]
                           }
                         },
-                        "move":{
-                          "rangeFromTarget":{
-                            "variableRef":{
-                              "name":"Starting weave distance"
+                        "wait":{
+                          "duration":{
+                            "gcdTimeToReady":{
                             }
                           }
                         }
@@ -175,27 +141,261 @@
                                 "cmp":{
                                   "op":"OpLe",
                                   "rhs":{
-                                    "variableRef":{
-                                      "name":"Move duration"
+                                    "const":{
+                                      "val":"5"
                                     }
                                   },
                                   "lhs":{
-                                    "autoTimeToNext":{
-                                      "autoType":"MainHandAuto"
+                                    "unitDistance":{
+                                      "sourceUnit":{
+                                        "type":"Self"
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "spellIsKnown":{
+                                  "spellId":{
+                                    "spellId":1317257,
+                                    "rank":1
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpLe",
+                                  "rhs":{
+                                    "currentMana":{
+                                    }
+                                  },
+                                  "lhs":{
+                                    "spellCurrentCost":{
+                                      "spellId":{
+                                        "spellId":1317257,
+                                        "rank":1
+                                      }
                                     }
                                   }
                                 }
                               },{
                                 "cmp":{
-                                  "op":"OpGe",
+                                  "op":"OpGt",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"0s"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "max":{
+                                      "vals":[{
+                                          "spellTimeToReady":{
+                                            "spellId":{
+                                              "spellId":1317257,
+                                              "rank":1
+                                            }
+                                          }
+                                        },{
+                                          "gcdTimeToReady":{
+                                          }
+                                        }]
+                                    }
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpLe",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"400ms"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "max":{
+                                      "vals":[{
+                                          "spellTimeToReady":{
+                                            "spellId":{
+                                              "spellId":1317257,
+                                              "rank":1
+                                            }
+                                          }
+                                        },{
+                                          "gcdTimeToReady":{
+                                          }
+                                        }]
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        },
+                        "wait":{
+                          "duration":{
+                            "max":{
+                              "vals":[{
+                                  "spellTimeToReady":{
+                                    "spellId":{
+                                      "spellId":1317257,
+                                      "rank":1
+                                    }
+                                  }
+                                },{
+                                  "gcdTimeToReady":{
+                                  }
+                                }]
+                            }
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "wait":{
+                          "duration":{
+                            "min":{
+                              "vals":[{
+                                  "math":{
+                                    "op":"OpSub",
+                                    "rhs":{
+                                      "autoTimeSinceLast":{
+                                        "autoType":"MainHandAuto"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "variableRef":{
+                                        "name":"Wait at melee"
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "max":{
+                                    "vals":[{
+                                        "gcdTimeToReady":{
+                                        }
+                                      },{
+                                        "inputDelay":{
+                                        }
+                                      }]
+                                  }
+                                }]
+                            }
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "cmp":{
+                                  "op":"OpLe",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"5"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "unitDistance":{
+                                      "sourceUnit":{
+                                        "type":"Self"
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGt",
                                   "rhs":{
                                     "variableRef":{
-                                      "name":"Auto Shot wait"
+                                      "name":"Time to range"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "autoTimeSinceLast":{
+                                      "autoType":"MainHandAuto"
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        },
+                        "wait":{
+                          "duration":{
+                            "min":{
+                              "vals":[{
+                                  "math":{
+                                    "op":"OpAdd",
+                                    "rhs":{
+                                      "inputDelay":{
+                                      }
+                                    },
+                                    "lhs":{
+                                      "autoTimeToNext":{
+                                        "autoType":"MainHandAuto"
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "max":{
+                                    "vals":[{
+                                        "gcdTimeToReady":{
+                                        }
+                                      },{
+                                        "inputDelay":{
+                                        }
+                                      }]
+                                  }
+                                }]
+                            }
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "cmp":{
+                                  "op":"OpLe",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"0s"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "variableRef":{
+                                      "name":"Time to walk in"
+                                    }
+                                  }
+                                }
+                              },{
+                                "variableRef":{
+                                  "name":"Weave fits"
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGt",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"500ms"
                                     }
                                   },
                                   "lhs":{
                                     "autoTimeToNext":{
                                       "autoType":"RangedAuto"
+                                    }
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGt",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"5"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "unitDistance":{
+                                      "sourceUnit":{
+                                        "type":"Self"
+                                      }
                                     }
                                   }
                                 }
@@ -205,48 +405,234 @@
                         "move":{
                           "rangeFromTarget":{
                             "variableRef":{
-                              "name":"Melee range"
+                              "name":"Melee spot"
+                            }
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "move":{
+                          "rangeFromTarget":{
+                            "variableRef":{
+                              "name":"Shoot spot"
+                            }
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "cmp":{
+                                  "op":"OpGt",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"0s"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "variableRef":{
+                                      "name":"Time to walk in"
+                                    }
+                                  }
+                                }
+                              },{
+                                "variableRef":{
+                                  "name":"Weave fits"
+                                }
+                              }]
+                          }
+                        },
+                        "wait":{
+                          "duration":{
+                            "min":{
+                              "vals":[{
+                                  "variableRef":{
+                                    "name":"Time to walk in"
+                                  }
+                                },{
+                                  "max":{
+                                    "vals":[{
+                                        "gcdTimeToReady":{
+                                        }
+                                      },{
+                                        "inputDelay":{
+                                        }
+                                      }]
+                                  }
+                                }]
                             }
                           }
                         }
                       }
                     }]
                 },{
-                  "name":"Move to starting range",
+                  "name":"Walk in",
                   "actions":[{
                       "action":{
                         "condition":{
-                          "variableRef":{
-                            "name":"Melee weave"
+                          "not":{
+                            "val":{
+                              "and":{
+                                "vals":[{
+                                    "spellInRange":{
+                                      "spellId":{
+                                        "spellId":14287,
+                                        "rank":8
+                                      }
+                                    }
+                                  },{
+                                    "or":{
+                                      "vals":[{
+                                          "variableRef":{
+                                            "name":"Windup close"
+                                          }
+                                        },{
+                                          "variableRef":{
+                                            "name":"Just shot"
+                                          }
+                                        }]
+                                    }
+                                  }]
+                              }
+                            }
                           }
                         },
                         "move":{
+                          "recheckWhileMoving":true,
                           "rangeFromTarget":{
                             "variableRef":{
-                              "name":"Starting weave distance"
+                              "name":"Shoot spot"
                             }
                           }
                         }
-                      }
+                      },
+                      "notes":"Walk to my spot, looking again every reaction time. Stop while my Auto Shot's windup is close or running, and react to each shot before walking on."
+                    },{
+                      "action":{
+                        "wait":{
+                          "duration":{
+                            "inputDelay":{
+                            }
+                          }
+                        }
+                      },
+                      "notes":"Standing for my Auto Shot."
                     }]
                 }],
               "priorityList":[{
                   "action":{
                     "condition":{
-                      "cmp":{
-                        "op":"OpGe",
-                        "rhs":{
-                          "const":{
-                            "val":"5s"
-                          }
-                        },
-                        "lhs":{
-                          "currentTime":{
+                      "and":{
+                        "vals":[{
+                            "cmp":{
+                              "op":"OpGt",
+                              "rhs":{
+                                "const":{
+                                  "val":"5"
+                                }
+                              },
+                              "lhs":{
+                                "unitDistance":{
+                                  "sourceUnit":{
+                                    "type":"Self"
+                                  }
+                                }
+                              }
+                            }
+                          },{
+                            "or":{
+                              "vals":[{
+                                  "variableRef":{
+                                    "name":"Rapid Fire at the pull"
+                                  }
+                                },{
+                                  "cmp":{
+                                    "op":"OpGe",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"5s"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentTime":{
+                                      }
+                                    }
+                                  }
+                                }]
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":3045
+                      }
+                    }
+                  },
+                  "notes":"Rapid Fire at range: from the pull, or like the other cooldowns after the first 5 s."
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"5s"
+                                }
+                              },
+                              "lhs":{
+                                "currentTime":{
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGt",
+                              "rhs":{
+                                "const":{
+                                  "val":"5"
+                                }
+                              },
+                              "lhs":{
+                                "unitDistance":{
+                                  "sourceUnit":{
+                                    "type":"Self"
+                                  }
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "autocastOtherCooldowns":{
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "not":{
+                        "val":{
+                          "auraIsActive":{
+                            "sourceUnit":{
+                              "type":"CurrentTarget"
+                            },
+                            "auraId":{
+                              "spellId":14325
+                            }
                           }
                         }
                       }
                     },
-                    "autocastOtherCooldowns":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":14325,
+                        "rank":4
+                      }
                     }
                   }
                 },{
@@ -262,21 +648,17 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":14325
+                        "spellId":1317257,
+                        "rank":1
                       }
-                    },
-                    "condition":{
-                      "not":{
-                        "val":{
-                          "auraIsActive":{
-                            "sourceUnit":{
-                              "type":"CurrentTarget"
-                            },
-                            "auraId":{
-                              "spellId":14325
-                            }
-                          }
-                        }
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":14271,
+                        "rank":4
                       }
                     }
                   }
@@ -286,8 +668,8 @@
                       "cmp":{
                         "op":"OpLe",
                         "rhs":{
-                          "variableRef":{
-                            "name":"Melee range"
+                          "const":{
+                            "val":"5"
                           }
                         },
                         "lhs":{
@@ -301,112 +683,71 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":14271
+                        "spellId":14305,
+                        "rank":5
                       }
                     }
                   }
                 },{
                   "action":{
                     "condition":{
-                      "cmp":{
-                        "op":"OpLe",
-                        "rhs":{
-                          "variableRef":{
-                            "name":"Melee range"
-                          }
-                        },
-                        "lhs":{
-                          "unitDistance":{
-                            "sourceUnit":{
-                              "type":"Self"
+                      "or":{
+                        "vals":[{
+                            "not":{
+                              "val":{
+                                "spellIsKnown":{
+                                  "spellId":{
+                                    "spellId":1317257,
+                                    "rank":1
+                                  }
+                                }
+                              }
                             }
-                          }
-                        }
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":1317257
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "cmp":{
-                        "op":"OpLe",
-                        "rhs":{
-                          "variableRef":{
-                            "name":"Melee range"
-                          }
-                        },
-                        "lhs":{
-                          "unitDistance":{
-                            "sourceUnit":{
-                              "type":"Self"
+                          },{
+                            "cmp":{
+                              "op":"OpGt",
+                              "rhs":{
+                                "const":{
+                                  "val":"1.5s"
+                                }
+                              },
+                              "lhs":{
+                                "spellTimeToReady":{
+                                  "spellId":{
+                                    "spellId":1317257,
+                                    "rank":1
+                                  }
+                                }
+                              }
                             }
-                          }
-                        }
+                          }]
                       }
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":14305
+                        "spellId":14268,
+                        "rank":3
                       }
                     }
                   }
                 },{
                   "action":{
-                    "condition":{
-                      "cmp":{
-                        "op":"OpLe",
-                        "rhs":{
-                          "variableRef":{
-                            "name":"Melee range"
-                          }
-                        },
-                        "lhs":{
-                          "unitDistance":{
-                            "sourceUnit":{
-                              "type":"Self"
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":14268
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "variableRef":{
-                        "name":"Melee weave"
-                      }
-                    },
-                    "groupReference":{
-                      "groupName":"Weave"
-                    }
-                  }
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":25295
-                      }
-                    },
                     "condition":{
                       "not":{
                         "val":{
                           "dotIsActive":{
                             "spellId":{
-                              "spellId":25295
+                              "spellId":13555,
+                              "rank":8
                             }
                           }
                         }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":13555,
+                        "rank":8
                       }
                     }
                   }
@@ -457,19 +798,22 @@
                       "actions":[{
                           "castSpell":{
                             "spellId":{
-                              "spellId":1293527
+                              "spellId":1293527,
+                              "rank":4
                             }
                           }
                         },{
                           "castSpell":{
                             "spellId":{
-                              "spellId":1293527
+                              "spellId":1293527,
+                              "rank":4
                             }
                           }
                         },{
                           "castSpell":{
                             "spellId":{
-                              "spellId":14287
+                              "spellId":14287,
+                              "rank":8
                             }
                           }
                         }]
@@ -496,7 +840,8 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":1293527
+                        "spellId":1293527,
+                        "rank":4
                       }
                     }
                   }
@@ -521,57 +866,16 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":14287
+                        "spellId":14287,
+                        "rank":8
                       }
                     }
                   }
                 },{
                   "action":{
                     "condition":{
-                      "and":{
-                        "vals":[{
-                            "variableRef":{
-                              "name":"Use Multi-Shot"
-                            }
-                          },{
-                            "or":{
-                              "vals":[{
-                                  "cmp":{
-                                    "op":"OpLe",
-                                    "rhs":{
-                                      "variableRef":{
-                                        "name":"Time to next weave"
-                                      }
-                                    },
-                                    "lhs":{
-                                      "math":{
-                                        "op":"OpAdd",
-                                        "rhs":{
-                                          "variableRef":{
-                                            "name":"Move duration"
-                                          }
-                                        },
-                                        "lhs":{
-                                          "spellCastTime":{
-                                            "spellId":{
-                                              "spellId":2643
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                },{
-                                  "not":{
-                                    "val":{
-                                      "variableRef":{
-                                        "name":"Melee weave"
-                                      }
-                                    }
-                                  }
-                                }]
-                            }
-                          }]
+                      "variableRef":{
+                        "name":"Use Multi-Shot"
                       }
                     },
                     "castSpell":{
@@ -594,8 +898,8 @@
                                   "cmp":{
                                     "op":"OpLe",
                                     "rhs":{
-                                      "variableRef":{
-                                        "name":"Time to next weave"
+                                      "autoTimeToNext":{
+                                        "autoType":"MainHandAuto"
                                       }
                                     },
                                     "lhs":{
@@ -603,13 +907,14 @@
                                         "op":"OpAdd",
                                         "rhs":{
                                           "variableRef":{
-                                            "name":"Move duration"
+                                            "name":"Time to melee"
                                           }
                                         },
                                         "lhs":{
                                           "spellCastTime":{
                                             "spellId":{
-                                              "spellId":20904
+                                              "spellId":20904,
+                                              "rank":6
                                             }
                                           }
                                         }
@@ -631,7 +936,8 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":20904
+                        "spellId":20904,
+                        "rank":6
                       }
                     }
                   }
@@ -641,75 +947,45 @@
                       "and":{
                         "vals":[{
                             "variableRef":{
-                              "name":"Melee weave"
+                              "name":"Walk to my spot first"
                             }
                           },{
                             "cmp":{
-                              "op":"OpGt",
+                              "op":"OpNe",
                               "rhs":{
                                 "variableRef":{
-                                  "name":"Move duration"
+                                  "name":"Shoot spot"
                                 }
                               },
                               "lhs":{
-                                "autoTimeToNext":{
-                                  "autoType":"MainHandAuto"
+                                "unitDistance":{
+                                  "sourceUnit":{
+                                    "type":"Self"
+                                  }
                                 }
                               }
                             }
                           },{
-                            "cmp":{
-                              "op":"OpGe",
-                              "rhs":{
-                                "math":{
-                                  "op":"OpAdd",
-                                  "rhs":{
-                                    "variableRef":{
-                                      "name":"Auto Shot wait"
-                                    }
-                                  },
-                                  "lhs":{
-                                    "math":{
-                                      "op":"OpSub",
-                                      "rhs":{
-                                        "variableRef":{
-                                          "name":"Move duration"
-                                        }
-                                      },
-                                      "lhs":{
-                                        "autoTimeToNext":{
-                                          "autoType":"MainHandAuto"
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              },
-                              "lhs":{
-                                "autoTimeToNext":{
-                                  "autoType":"RangedAuto"
-                                }
-                              }
+                            "variableRef":{
+                              "name":"Not weaving yet"
                             }
                           }]
                       }
                     },
-                    "wait":{
-                      "duration":{
-                        "math":{
-                          "op":"OpSub",
-                          "rhs":{
-                            "variableRef":{
-                              "name":"Move duration"
-                            }
-                          },
-                          "lhs":{
-                            "autoTimeToNext":{
-                              "autoType":"MainHandAuto"
-                            }
-                          }
-                        }
+                    "groupReference":{
+                      "groupName":"Walk in"
+                    }
+                  },
+                  "notes":"Start of the fight, before the first weave: get to my spot without losing an Auto Shot."
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Melee weave"
                       }
+                    },
+                    "groupReference":{
+                      "groupName":"Weave"
                     }
                   }
                 }],
@@ -717,7 +993,8 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":14325
+                        "spellId":14325,
+                        "rank":4
                       }
                     }
                   },
@@ -730,7 +1007,8 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":25296
+                        "spellId":14322,
+                        "rank":6
                       }
                     }
                   },
@@ -741,8 +1019,12 @@
                   }
                 },{
                   "action":{
-                    "groupReference":{
-                      "groupName":"Move to starting range"
+                    "move":{
+                      "rangeFromTarget":{
+                        "variableRef":{
+                          "name":"Pull range"
+                        }
+                      }
                     }
                   },
                   "doAtValue":{
@@ -762,103 +1044,7 @@
                   "name":"Time to weave",
                   "value":{
                     "const":{
-                      "val":"200ms"
-                    }
-                  }
-                },{
-                  "name":"Melee range",
-                  "value":{
-                    "const":{
-                      "val":"5.00"
-                    }
-                  }
-                },{
-                  "name":"Ranged range",
-                  "value":{
-                    "const":{
-                      "val":"11.00"
-                    }
-                  }
-                },{
-                  "name":"Starting weave distance",
-                  "value":{
-                    "variableRef":{
-                      "name":"Ranged range"
-                    }
-                  }
-                },{
-                  "name":"Move duration",
-                  "value":{
-                    "math":{
-                      "op":"OpMul",
-                      "rhs":{
-                        "math":{
-                          "op":"OpDiv",
-                          "rhs":{
-                            "const":{
-                              "val":"7"
-                            }
-                          },
-                          "lhs":{
-                            "math":{
-                              "op":"OpSub",
-                              "rhs":{
-                                "variableRef":{
-                                  "name":"Melee range"
-                                }
-                              },
-                              "lhs":{
-                                "variableRef":{
-                                  "name":"Ranged range"
-                                }
-                              }
-                            }
-                          }
-                        }
-                      },
-                      "lhs":{
-                        "const":{
-                          "val":"1s"
-                        }
-                      }
-                    }
-                  }
-                },{
-                  "name":"Wait at melee",
-                  "value":{
-                    "max":{
-                      "vals":[{
-                          "inputDelay":{
-                          }
-                        },{
-                          "variableRef":{
-                            "name":"Time to weave"
-                          }
-                        }]
-                    }
-                  }
-                },{
-                  "name":"Auto Shot wait",
-                  "value":{
-                    "math":{
-                      "op":"OpAdd",
-                      "rhs":{
-                        "variableRef":{
-                          "name":"Wait at melee"
-                        }
-                      },
-                      "lhs":{
-                        "variableRef":{
-                          "name":"Move duration"
-                        }
-                      }
-                    }
-                  }
-                },{
-                  "name":"Time to next weave",
-                  "value":{
-                    "autoTimeToNext":{
-                      "autoType":"MainHandAuto"
+                      "val":"250ms"
                     }
                   }
                 },{
@@ -886,10 +1072,435 @@
                   "name":"Use Summon Hawk",
                   "value":{
                     "const":{
+                      "val":"true"
+                    }
+                  }
+                },{
+                  "name":"Rapid Fire at the pull",
+                  "value":{
+                    "const":{
                       "val":"false"
                     }
                   }
+                },{
+                  "name":"Walk to my spot first",
+                  "value":{
+                    "const":{
+                      "val":"true"
+                    }
+                  }
+                },{
+                  "name":"Ranged range",
+                  "value":{
+                    "const":{
+                      "val":"13.19"
+                    }
+                  }
+                },{
+                  "name":"Walk-in range",
+                  "value":{
+                    "const":{
+                      "val":"4.99"
+                    }
+                  }
+                },{
+                  "name":"Wait at melee",
+                  "value":{
+                    "max":{
+                      "vals":[{
+                          "inputDelay":{
+                          }
+                        },{
+                          "variableRef":{
+                            "name":"Time to weave"
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Max Auto Shot delay",
+                  "value":{
+                    "const":{
+                      "val":"2.4s"
+                    }
+                  }
+                },{
+                  "name":"Max long weave delay",
+                  "value":{
+                    "const":{
+                      "val":"4s"
+                    }
+                  }
+                },{
+                  "name":"Melee spot",
+                  "value":{
+                    "min":{
+                      "vals":[{
+                          "variableRef":{
+                            "name":"Walk-in range"
+                          }
+                        },{
+                          "const":{
+                            "val":"4.99"
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Run speed",
+                  "value":{
+                    "unitMovementSpeed":{
+                      "sourceUnit":{
+                        "type":"Self"
+                      }
+                    }
+                  }
+                },{
+                  "name":"Time to melee",
+                  "value":{
+                    "math":{
+                      "op":"OpMul",
+                      "rhs":{
+                        "math":{
+                          "op":"OpDiv",
+                          "rhs":{
+                            "variableRef":{
+                              "name":"Run speed"
+                            }
+                          },
+                          "lhs":{
+                            "math":{
+                              "op":"OpSub",
+                              "rhs":{
+                                "variableRef":{
+                                  "name":"Melee spot"
+                                }
+                              },
+                              "lhs":{
+                                "unitDistance":{
+                                  "sourceUnit":{
+                                    "type":"Self"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "lhs":{
+                        "const":{
+                          "val":"1s"
+                        }
+                      }
+                    }
+                  }
+                },{
+                  "name":"Time to range",
+                  "value":{
+                    "math":{
+                      "op":"OpMul",
+                      "rhs":{
+                        "math":{
+                          "op":"OpDiv",
+                          "rhs":{
+                            "variableRef":{
+                              "name":"Run speed"
+                            }
+                          },
+                          "lhs":{
+                            "math":{
+                              "op":"OpSub",
+                              "rhs":{
+                                "variableRef":{
+                                  "name":"Melee spot"
+                                }
+                              },
+                              "lhs":{
+                                "variableRef":{
+                                  "name":"Shoot spot"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "lhs":{
+                        "const":{
+                          "val":"1s"
+                        }
+                      }
+                    }
+                  }
+                },{
+                  "name":"Time to walk in",
+                  "value":{
+                    "math":{
+                      "op":"OpSub",
+                      "rhs":{
+                        "inputDelay":{
+                        }
+                      },
+                      "lhs":{
+                        "math":{
+                          "op":"OpSub",
+                          "rhs":{
+                            "variableRef":{
+                              "name":"Time to melee"
+                            }
+                          },
+                          "lhs":{
+                            "autoTimeToNext":{
+                              "autoType":"MainHandAuto"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },{
+                  "name":"Weave done",
+                  "value":{
+                    "math":{
+                      "op":"OpAdd",
+                      "rhs":{
+                        "math":{
+                          "op":"OpAdd",
+                          "rhs":{
+                            "inputDelay":{
+                            }
+                          },
+                          "lhs":{
+                            "variableRef":{
+                              "name":"Wait at melee"
+                            }
+                          }
+                        }
+                      },
+                      "lhs":{
+                        "math":{
+                          "op":"OpAdd",
+                          "rhs":{
+                            "variableRef":{
+                              "name":"Time to range"
+                            }
+                          },
+                          "lhs":{
+                            "max":{
+                              "vals":[{
+                                  "autoTimeToNext":{
+                                    "autoType":"MainHandAuto"
+                                  }
+                                },{
+                                  "variableRef":{
+                                    "name":"Time to melee"
+                                  }
+                                }]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },{
+                  "name":"Allowed delay",
+                  "value":{
+                    "max":{
+                      "vals":[{
+                          "variableRef":{
+                            "name":"Max Auto Shot delay"
+                          }
+                        },{
+                          "min":{
+                            "vals":[{
+                                "variableRef":{
+                                  "name":"Max long weave delay"
+                                }
+                              },{
+                                "math":{
+                                  "op":"OpAdd",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"1s"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "math":{
+                                      "op":"OpSub",
+                                      "rhs":{
+                                        "autoSwingTime":{
+                                          "autoType":"Ranged"
+                                        }
+                                      },
+                                      "lhs":{
+                                        "variableRef":{
+                                          "name":"Weave done"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Weave fits",
+                  "value":{
+                    "cmp":{
+                      "op":"OpGe",
+                      "rhs":{
+                        "variableRef":{
+                          "name":"Weave done"
+                        }
+                      },
+                      "lhs":{
+                        "math":{
+                          "op":"OpAdd",
+                          "rhs":{
+                            "variableRef":{
+                              "name":"Allowed delay"
+                            }
+                          },
+                          "lhs":{
+                            "autoTimeToNext":{
+                              "autoType":"RangedAuto"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },{
+                  "name":"Not weaving yet",
+                  "value":{
+                    "cmp":{
+                      "op":"OpGt",
+                      "rhs":{
+                        "currentTime":{
+                        }
+                      },
+                      "lhs":{
+                        "autoTimeSinceLast":{
+                          "autoType":"MainHandAuto"
+                        }
+                      }
+                    }
+                  }
+                },{
+                  "name":"Shoot spot",
+                  "value":{
+                    "max":{
+                      "vals":[{
+                          "variableRef":{
+                            "name":"Ranged range"
+                          }
+                        },{
+                          "const":{
+                            "val":"11.67"
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Pull range",
+                  "value":{
+                    "const":{
+                      "val":"25"
+                    }
+                  }
+                },{
+                  "name":"Windup close",
+                  "value":{
+                    "or":{
+                      "vals":[{
+                          "cmp":{
+                            "op":"OpLe",
+                            "rhs":{
+                              "inputDelay":{
+                              }
+                            },
+                            "lhs":{
+                              "autoTimeToNext":{
+                                "autoType":"RangedAuto"
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "math":{
+                                "op":"OpSub",
+                                "rhs":{
+                                  "autoTimeSinceLast":{
+                                    "autoType":"RangedAuto"
+                                  }
+                                },
+                                "lhs":{
+                                  "autoSwingTime":{
+                                    "autoType":"Ranged"
+                                  }
+                                }
+                              }
+                            },
+                            "lhs":{
+                              "autoTimeToNext":{
+                                "autoType":"RangedAuto"
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Just shot",
+                  "value":{
+                    "cmp":{
+                      "op":"OpLt",
+                      "rhs":{
+                        "inputDelay":{
+                        }
+                      },
+                      "lhs":{
+                        "autoTimeSinceLast":{
+                          "autoType":"RangedAuto"
+                        }
+                      }
+                    }
+                  }
                 }]
+            },
+            "race":"RaceOrc",
+            "name":"Beast Mastery",
+            "talentsString":"5320001505101251-0053250001-4",
+            "profession2":"Blacksmithing",
+            "buffs":{
+              "greaterBlessingOfWisdom":2,
+              "greaterBlessingOfMight":2,
+              "greaterBlessingOfKings":true
+            },
+            "consumables":{
+              "conjuredId":12662,
+              "explosiveId":18588,
+              "flaskId":274274,
+              "offensivePotId":250943,
+              "extraIds":[10646,10310,12460,12217,8412],
+              "foodId":250072,
+              "resourcePotId":13444,
+              "elixirIds":[13452,250341],
+              "mhImbueId":18262
+            },
+            "hunter":{
+              "options":{
+                "classOptions":{
+                  "petUptime":1,
+                  "petAttackSpeed":"FasterAttackII",
+                  "ammo":"ThoriumHeadedArrow",
+                  "petType":"Raptor",
+                  "quiverBonus":"AncientSinewWrappedLamina"
+                }
+              }
             }
           }]
       }]

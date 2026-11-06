@@ -1,30 +1,37 @@
 -- tools/wowsims/specs/hunter_survival.lua (wowsims packs plan, Task 11): Survival (wowsims.com)'s wowsims/forever request and translation.
--- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/hunter/dps/presets.ts:68-89,128-134 (the SV Weave talents,
--- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1) at
--- d33930d040. The re-pin (e2842f0a78) deletes those JSON files: the request is the SIML build
--- ui/specs/hunter/dps/builds/sv_weave.siml (SV Weave: talents :3, gear ../gear_sets/p1.gear.siml :4, rotation
--- ../apls/default.apl.siml :5, settings :7-14; no pet (:7, Lone Wolf)), converted by `make wowsims-siml`
--- (tests/Forever/wowsims/hunter_survival.build.json). petAggression and cobraReflexes are no longer set.
--- Disagreements worked (P7, after central fixes 6 and 11), decisions on-GCD 0.878 (41) top [strider_kick -> wing_clip
--- 3; immolation_trap -> wing_clip 1; multi_shot -> arcane_shot 1]:
---   strider_kick -> wing_clip: shared gap (percent-of-base costs priced on the maximum; see hunter_marksmanship.lua).
---   multi_shot -> arcane_shot (22.73 s): the same shared gap under Multi-Shot's 13.9% (387.8 vs wowsims's 239).
---   immolation_trap -> wing_clip (37.09 s): API-forced (mana secret in combat): the belief sits at its last usable
---   rung, Strider Kick's price (64.8; 39.95 priced on base mana), while the truth is 112 and the trap costs 98.
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e2842f0a78 (re-pin Task 19): the request is the
+-- SIML build ui/specs/hunter/dps/builds/sv_weave.siml (SV Weave: talents :3, gear ../gear_sets/p1.gear.siml :4, rotation
+-- ../apls/default.apl.siml :5, settings :7-14; no pet (:7, Lone Wolf)), layered over the spec's
+-- defaults.siml as wowsims's siml.LoadBuild does (the recipe's `defaults`: race Orc, Engineering and Blacksmithing, the
+-- consumables (flask, food, elixirs, Demonic Rune, the Major Mana and Major Frenzy potions, EZ-Thro Dynamite II, Goblin
+-- Sapper Charge), Kings, Might 2 and Wisdom 2, the top ranks: R25), converted by `make wowsims-siml`
+-- (tests/Forever/wowsims/hunter_survival.build.json). Raid buffs and debuffs stay unsent, as for every spec.
+-- Disagreements (P7, re-pin e2842f0a78 after R51; fresh floor), decisions on-GCD 0.989 (90) top [serpent_sting ->
+-- multi_shot 1]:
+--   serpent_sting -> multi_shot (125.50): price. The replay's truth is 229.8 mana when wowsims stings and 4.95 after
+--   (it charged 224.9); the kit prices Serpent Sting at 250, so the belief holds it and shows Multi-Shot. The source
+--   of wowsims's 10% (a talent or an item) is not identified (deferral; wowsims's value wins once found).
+-- Was (old pin d33930d040): 1.000 (41) under the melee world; the old notes (percent-of-base pricing) are history.
 -- Content gaps fixed (P6): Resourcefulness (440529, 2/2) cuts Raptor Strike, Mongoose Bite, Wing Clip, Immolation Trap
 -- and Strider Kick 60% (wowsims's 40, 26, 32, 98 and 39.6; 30% at rank 1): before it the bite was believed short of
 -- mana at every window (0.415 -> 0.659), and with Raptor Strike priced too and the world's truth under the build's
 -- talents 0.659 -> 0.780. Strider Kick's DB2 mask is outside 440529's, but wowsims's log charges it 39.6: the kit
 -- follows the log.
--- Ranges: the weave's melee-range lines read `target.within5` (rule 11) and the shots the bracket from the kit's
--- range checks; wowsims's Movement steps place us in the replay.
--- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): Blood Fury (20572, the Orc's) and Rapid Fire
--- (3045), each `if=time>=5`, at the top of the list.
 -- Lacerating Strikes (1310536) and the trap's burn (14301) are procs no key maps.
 -- Multi-Shot (2643): its cast is the DB2's 500 ms; wowsims has no cast time for it (instant there). Kept: the client
 -- charges the DB2's, and the `action.multi_shot.cast+...<=mainhand_remains` line reads it (in-game checkpoint).
 -- Unmodelled: Resourcefulness's second effect (1242688, from 1.38 s in the log: 30 s of 50% mana regen while casting
 -- after a critical strike; the kit's mana belief has no hook for it).
+-- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): Blood Fury (20572, the Orc's), Rapid Fire
+-- (3045), Demonic Rune and the Major Mana Potion, each `if=time>=5` at range, at the top of the list. Unmapped
+-- autocast items (no kit key; precedent: the Warlock and Enhancement recipes): 250943 Major Frenzy Potion, 10646 Goblin
+-- Sapper Charge, 18588 EZ-Thro Dynamite II.
+-- Omitted (tools/wowsims/dry.lua): 14 -> 13 lines at the export (20 in the pack header after the regeneration: the
+-- weave's waits and moves, resetSequence, never-lines, the three unmapped items).
+-- Movement (rule 19, R51): the weave's move to melee (#6) reaches the strikes, its move back (#7) and the walk in
+-- (walk_in #1) the shots and cooldowns; each reached line keeps its range gate in place and its move arm goes where
+-- wowsims calls the group (after the shots), so a ready shot wins over the walk in. The recipe `ranges` are the DB2's
+-- (Combat Range 0-5, Hunter Range 8-35, checked with wowdb).
 return {
     class = "HUNTER",
     pack = "Survival (wowsims.com)",
@@ -32,12 +39,23 @@ return {
     name = "Survival",
     talentTree = "hunter",
     siml = "ui/specs/hunter/dps/builds/sv_weave.siml",
+    -- the spec defaults the build is layered over (race Orc, professions, consumables, player buffs: siml.LoadBuild)
+    defaults = "ui/specs/hunter/dps/defaults.siml",
     map = {},
     -- by role (docs/dev/wowsims-packs.md); the melee-weave strikes rotational, Serpent Sting 1 (the user, 2026-10-21)
     focus = { raptor_strike = 1, hunters_mark = 2, serpent_sting = 1 },
-    -- rule 19 (R4): the DB2's range (SpellMisc.RangeIndex -> SpellRange: Combat Range 0-5) of the one weave strike
-    -- the APL gives no bracket, so the weave's melee move reaches it
-    ranges = { raptor_strike = { 0, 5 } },
+    -- rule 19 (R4): the DB2's ranges (SpellMisc.RangeIndex -> SpellRange: Combat Range 0-5, Hunter Range 8-35) of the
+    -- strikes and shots the APL gives no bracket, so the weave's melee move reaches the strikes and its move back the shots
+    ranges = {
+        raptor_strike = { 0, 5 },
+        mongoose_bite = { 0, 5 },
+        strider_kick = { 0, 5 },
+        wing_clip = { 0, 5 },
+        arcane_shot = { 8, 35 },
+        multi_shot = { 8, 35 },
+        serpent_sting = { 8, 35 },
+        aimed_shot = { 8, 35 },
+    },
     leveling = {},
     -- the weave window (re-pin design §3a; the kit's RegisterWindow "weave"; R17: timing only): the forecast opens it
     -- just past an Auto Shot whose next main-hand swing comes before the next shot (the belief's evaluator,
@@ -49,8 +67,8 @@ return {
         },
     },
     windowVars = { ["Just shot"] = "weave" },
-    -- weave #3's move (R4: it reaches the strikes) carries the open weave: wowsims walks in at the first poll its
+    -- weave #6's move (R4: it reaches the strikes) carries the open weave: wowsims walks in at the first poll its
     -- condition holds after a shot (the main hand ready by the walk in), an edge the stateless condition cannot tell
     -- (it holds for most of each shot cycle out of melee); in melee the strikes stay as wowsims's
-    guard = { ["weave #3"] = "window.weave.up" },
+    guard = { ["weave #6"] = "window.weave.up" },
 }

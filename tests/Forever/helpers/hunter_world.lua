@@ -29,7 +29,7 @@ local RESOURCEFULNESS = 1242688 -- its aura: +50% of the spirit regen while cast
 -- The share of a landed melee or ranged ability (not Auto Shot) that crits, counted in wowsims's logs (the abilities
 -- that gave Resourcefulness there: Raptor Strike, Mongoose Bite, Arcane Shot, Multi-Shot, Strider Kick): Marksmanship
 -- 5 of 43, Survival 8 of 42. The world's shots do not roll crits, so the aura rolls this itself.
-local CRIT = { Marksmanship = 5 / 43, Survival = 8 / 42 }
+local CRIT = { Marksmanship = 5 / 43, Survival = 8 / 42, SurvivalRanged = 8 / 42 }
 local QUICK_SHOTS = 0.1 -- wowsims aspects.go: Deadly Aspects' 2% a rank, 5 ranks
 local AUTO_SHOT = 75
 
@@ -58,6 +58,7 @@ local COST = {
     wing_clip = { 40, 40, 60, 80 },
     immolation_trap = { 50, 90, 135, 190, 245 },
     blood_fury = 0,
+    bestial_wrath = 0,
 }
 
 -- UNMEASURED: the hits' amounts.
@@ -81,7 +82,7 @@ local RANGE = {
     arcane_shot = { 8, 35 },
     aimed_shot = { 8, 35 },
     multi_shot = { 8, 35 },
-    sniper_shot = { 0, 100 },
+    sniper_shot = { 8, 45 },
     summon_hawk = { 0, 35 },
     raptor_strike = { 0, 5 },
     mongoose_bite = { 0, 5 },
@@ -90,6 +91,7 @@ local RANGE = {
     aspect_of_the_hawk = { 0, 0 },
     aspect_of_the_beast = { 0, 0 },
     rapid_fire = { 0, 0 },
+    bestial_wrath = { 0, 100 },
     immolation_trap = { 0, 0 },
 }
 
@@ -210,6 +212,7 @@ M.MAP = {
     strider_kick = shot("strider_kick", true),
     wing_clip = shot("wing_clip"),
     immolation_trap = {}, -- the trap's burn is unmodelled (no read of it)
+    bestial_wrath = {}, -- the BM talent: its rage is the pet's (no pet modelled), nothing on us
     -- the Orc racial (Hekili_Shared, the wowsims build's race): its buff on us; the attack power it adds is unmodelled
     blood_fury = {
         effect = function(W, e, _, X)
@@ -303,6 +306,15 @@ local PACKS = {
         uptime = { "hunters_mark" },
     },
 }
+-- Survival at the weave's range with a ranged weapon, as BM and MM (R63): its live bars only. At melee the shots sit
+-- inside their 8-35 band and Raptor Strike is off the GCD, so the GCD-idle metric never ends a streak; the loop and
+-- replay worlds stay M.Survival.
+PACKS.SurvivalRanged = setmetatable({ distance = 11, ranged = { 140, 200, 3.0 }, kit = { "auto_shot" } }, {
+    __index = PACKS.Survival,
+})
+for _, key in ipairs(PACKS.Survival.kit) do
+    table.insert(PACKS.SurvivalRanged.kit, key)
+end
 
 -- The class data a press reads from a booted instance `H` (once per instance): each aura's ID, duration and stacks.
 local cache = setmetatable({}, { __mode = "k" })
@@ -378,7 +390,7 @@ local function content(name)
     -- Resourcefulness's proc: 50% a rank of a crit (wowsims: 440529 effect 2); nil: the build lacks the talent
     local res = P.talents and P.talents[440529]
     local rate = res and CRIT[name] * res / 2
-    C.SPEC = ({ BeastMastery = 100031, Marksmanship = 100032, Survival = 100033 })[name]
+    C.SPEC = ({ BeastMastery = 100031, Marksmanship = 100032, Survival = 100033, SurvivalRanged = 100033 })[name]
 
     function C.character()
         local w = class()
@@ -592,5 +604,6 @@ end
 M.BeastMastery = content("BeastMastery")
 M.Marksmanship = content("Marksmanship")
 M.Survival = content("Survival")
+M.SurvivalRanged = content("SurvivalRanged")
 
 return M
