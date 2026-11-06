@@ -2475,7 +2475,9 @@ describe("the wowsims APL translator's auto-attack clocks", function()
                 },
             }
         end
-        local lines = setmetatable({ extra = {} }, { __index = r }) -- the recipe's open line wants its raptor_strike
+        -- the recipe's open line wants its raptor_strike; its leveling line (BM's Arcane Shot below Summon Hawk, Task 19)
+        -- is not one of the three timing lines under test
+        local lines = setmetatable({ extra = {}, leveling = {} }, { __index = r })
         local text = apl.translate(rotation, apl.context(set, lines, nil, player))
         assert.are.equal(
             table.concat({
