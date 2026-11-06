@@ -10,8 +10,10 @@ describe("a wrapping swing clock's recheck times (Scripts.lua ConvertTimeCompari
     local Sc
     local SPEED = 3.0
 
+    local H
     setup(function()
-        Sc = headless.new({}).Hekili.Scripts
+        H = headless.new({}).Hekili
+        Sc = H.Scripts
     end)
 
     -- The clock at `t` s after a read of `r0`: counts down, wraps back to SPEED at 0.
@@ -120,5 +122,24 @@ describe("a wrapping swing clock's recheck times (Scripts.lua ConvertTimeCompari
         -- the clock on the right: as before
         env.buff = { x = { remains = 5 } }
         only(4.61, "buff.x.remains<mainhand_remains")
+    end)
+    it("compiles the two-time recheck with no engine error (the Hunter packs' `clock<x` lines)", function()
+        local errs = {}
+        local orig = H.Error
+        H.Error = function(_, msg)
+            errs[#errs + 1] = tostring(msg)
+        end
+        local ok, rs = pcall(function()
+            return {
+                Sc:BuildRecheck("mainhand_remains<mainhand_speed-0.5"),
+                Sc:BuildRecheck("ranged_remains<=0"),
+            }
+        end)
+        H.Error = orig
+        assert(ok, rs)
+        assert.are.same({}, errs)
+        for _, r in ipairs(rs) do
+            assert.is_truthy(r:find(", ", 1, true), r) -- both times survive
+        end
     end)
 end)

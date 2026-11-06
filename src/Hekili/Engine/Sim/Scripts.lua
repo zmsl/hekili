@@ -867,14 +867,18 @@ do
                 local converted, calc, why = ConvertTimeComparison( expr )
 
                 if converted then
-                    calc = SimToLua( calc )
-                    calc = self:EmulateSyntax( calc, true )
+                    -- A conversion may return several times joined by ", " (R61); the spaces were stripped from the
+                    -- conditions above, so a ", " is only ever that join. Each time is converted on its own.
+                    for part in ( calc .. ", " ):gmatch( "(.-), " ) do
+                        part = SimToLua( part )
+                        part = self:EmulateSyntax( part, true )
 
-                    local rslt, msg = Hekili:Loadstring( "return " .. calc )
-                    if not rslt then
-                        Hekili:Debug( "Recheck failed to loadstring: %s", msg )
-                    else
-                        recheck = ( recheck and ( recheck .. ", " ) or "" ) .. calc
+                        local rslt, msg = Hekili:Loadstring( "return " .. part )
+                        if not rslt then
+                            Hekili:Debug( "Recheck failed to loadstring: %s", msg )
+                        else
+                            recheck = ( recheck and ( recheck .. ", " ) or "" ) .. part
+                        end
                     end
                 end
             end
