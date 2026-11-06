@@ -18,16 +18,37 @@ local ROGUE = { "garrote=1", "slice_and_dice=1", "rupture=1" } -- Slice and Dice
 -- (R51: Raptor Strike's move arm is its own line where the weave is called, at the same tier)
 local HUNTER = { "raptor_strike=1", "hunters_mark=2", "raptor_strike=1", "serpent_sting=1" }
 
+-- file order of the generated simc: the Banes, Searing Pain's Demonic Brand upkeep and the curses at 2, Soul Fire on Decimation at 1
 local WARLOCK_DEMO = {
     "bane_of_doom=2",
     "searing_pain=2",
-    "bane_of_agony=2",
-    "immolate=2",
+    "soul_fire=1",
     "curse_of_the_elements=2",
     "curse_of_recklessness=2",
     "curse_of_weakness=2",
-    "soul_fire=1",
+    "bane_of_agony=2",
+    "immolate=2",
     "corruption=2",
+    "bane_of_agony=2",
+    "immolate=2",
+    "corruption=2",
+}
+
+-- Shadow Brand's second searing_pain is the end-of-fight line (!shadow_bolt.known|cast+travel>fight_remains): filler-like, never fires
+-- in game (fight_remains reads 3600, gap AN), so it takes the lower tier (2) like the other upkeep lines; the DoT order differs from Demonology's
+local WARLOCK_SHADOW_BRAND = {
+    "bane_of_doom=2",
+    "searing_pain=2",
+    "searing_pain=2",
+    "curse_of_the_elements=2",
+    "curse_of_recklessness=2",
+    "curse_of_weakness=2",
+    "bane_of_agony=2",
+    "corruption=2",
+    "immolate=2",
+    "bane_of_agony=2",
+    "corruption=2",
+    "immolate=2",
 }
 
 local PACKS = {
@@ -69,24 +90,23 @@ local PACKS = {
         "shadow_bolt=1",
     },
     ["Warlock/APLs/SM Ruin"] = {
-        "bane_of_doom=2",
-        "bane_of_agony=2",
-        "corruption=2",
-        "shadow_bolt=1",
-        "siphon_life=2",
         "curse_of_the_elements=2",
         "curse_of_recklessness=2",
         "curse_of_weakness=2",
+        "bane_of_doom=2",
+        "shadow_bolt=1",
+        "corruption=2",
+        "siphon_life=2",
         "immolate=2",
     },
     ["Warlock/APLs/Demonology"] = WARLOCK_DEMO,
-    ["Warlock/APLs/Shadow Brand"] = WARLOCK_DEMO,
+    ["Warlock/APLs/Shadow Brand"] = WARLOCK_SHADOW_BRAND,
     ["Warlock/APLs/Destruction"] = {
-        "bane_of_doom=2",
-        "bane_of_agony=2",
         "curse_of_the_elements=2",
         "curse_of_recklessness=2",
         "curse_of_weakness=2",
+        "bane_of_doom=2",
+        "bane_of_agony=2",
         "immolate=2",
         "corruption=2",
     },

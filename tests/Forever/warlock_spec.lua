@@ -148,7 +148,7 @@ describe("Forever Warlock", function()
     it("declares mana under the five-second rule, base 1373, from wowsims's logs", function()
         assert.are.same({ 0 }, w.order)
         local r = w.resources[0]
-        assert.are.same({ spirit = 33.88, mp5 = 10.4 }, r.meta.fsr)
+        assert.are.same({ spirit = 38.13, mp5 = 15.2 }, r.meta.fsr)
         assert.are.equal(1373, r.meta.base)
     end)
 
@@ -709,7 +709,7 @@ describe("Forever Warlock priorities", function()
     it("names only registered abilities and auras", function()
         local cls = ld.load(nil, FILE, "WARLOCK")
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, action = cls.abilities }
-        -- Hekili's `all`: Hekili_Shared's use_items, the racials and Demonic Rune
+        -- Hekili's `all`: Hekili_Shared's use_items, the racials, Demonic Rune and the Major Mana Potion
         local shared = {
             use_items = true,
             call_action_list = true,
@@ -717,6 +717,7 @@ describe("Forever Warlock priorities", function()
             berserking = true,
             eureka = true,
             demonic_rune = true,
+            major_mana_potion = true,
         }
         for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "warlock")) do
             for list, entries in pairs(p.lists) do
@@ -732,4 +733,59 @@ describe("Forever Warlock priorities", function()
             end
         end
     end)
+end)
+
+-- R8 (re-pin plan Task 16 Step 3): Demonology's move (default #3, the 3-target move to melee range) reaches Hellfire,
+-- so the Demonology spec (100092: the Demonology and Shadow Brand packs) opts into the Movement toggle. The pack's own
+-- Hellfire line through the real engine in the Demonology world, three enemies (the AOE mode's floor), Life Tap after
+-- it: OFF hides Hellfire outside the move's 5 yd and shows it inside; ON shows it outside too.
+describe("Forever Warlock Movement (R8)", function()
+    local ww = require("Forever.helpers.warlock_world")
+
+    local function line(pack)
+        local f = assert(io.open("src/Hekili_Warlock/APLs/" .. pack .. ".simc"))
+        local s = f:read("*a")
+        f:close()
+        return assert(s:match("\n(actions%+=/hellfire,[^\n]+)"), pack)
+    end
+
+    local function world(C, yd)
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, yd
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        local lines = H.Hekili:ParseActionList(line(C.PACK))
+        lines[1].enabled = true
+        lines[2] = { enabled = true, action = "life_tap" }
+        H.Hekili.DB.profile.packs[C.PACK].lists = { precombat = {}, default = lines }
+        H.Hekili.DB.profile.toggles.mode.value = "aoe" -- the Primary display counts the spec's AOE floor of enemies
+        H.Hekili.DB.profile.specs[C.SPEC].aoe = 3
+        H.Hekili:LoadScripts()
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local VS = H.ns.VirtualState
+        local power, mana = VS.Power, { est = 6000, lo = 6000, hi = 6000, conf = 1 }
+        VS.Power = function(pt, now)
+            return pt == 0 and mana or power(pt, now)
+        end
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        assert.is_true(H.Hekili.Engine.Registry.MovementSpec(C.SPEC)) -- the options row shows (R3)
+        return function(movement)
+            H.Hekili:FireToggle("movement", movement and "on" or "off")
+            t = t + 0.2
+            assert(headless.cycle(H, t))
+            assert.are.same({}, H.errors)
+            return out.recs[1] and out.recs[1].actionName
+        end
+    end
+
+    for _, name in ipairs({ "Demonology", "ShadowBrand" }) do
+        it(name .. ": OFF shows Hellfire only inside 5 yd, ON outside it too", function()
+            local far, near = world(ww[name], 20), world(ww[name], 3)
+            assert.are.same({ "life_tap", "hellfire" }, { far(false), near(false) })
+            assert.are.same({ "hellfire", "hellfire" }, { far(true), near(true) })
+        end)
+    end
 end)

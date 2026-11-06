@@ -416,20 +416,30 @@ M.READY = {
     -- Corruption believed, so 12 more decisions are shown (never 22 -> 10), 3 of them a Shadow Bolt's early 1.0 s.
     -- Count 21 -> 23 on Task 16 (pack expects): decisions 12 and 15 (Shadow Bolt) moved from never to early (~1.0 s);
     -- never 10 -> 8; median 1.00 unchanged
-    warlock_affliction = { 1.00, 23 },
+    -- { 1.00, 23 } -> { 0.00, 0 } (Task 16, R6 and L82 M5: the floor follows the measurement; the fixture's 83 timed
+    -- decisions all in grain since 5049ede22 and R42; the kit's fsr seed moves 142.50 wrack never -> in grain)
+    warlock_affliction = { 0.00, 0 },
     -- Searing Pain's 1.5 s cast equals the GCD, so nearly every decision is absorbed at the grain. 0.10, 3 -> 0.20, 1,
     -- owner ruling 2026-10-26: gap BD's cast-bar fix removed the small misses; decision by decision none worse and
     -- none new; the median of the rest rose (the one left: life_tap 0.2 s early)
     -- { 0.30, 1 } -> { 0.30, 10 } R42 (the replay answers fight_remains from the log): only rows that were
     -- "never" moved, now timed
     -- (never 25 -> 2; 9 of them 0.2-0.3 s early, the Searing Pain grain as above); median 0.20
-    warlock_demonology = { 0.30, 10 },
+    -- { 0.30, 10 } -> { 0.00, 0 } re-pin e2842f0a78 (Task 16, R6, L82 M5): 114 decisions, 103 timed all in grain,
+    -- never 11 (A: the refill-blind Life Tap, R50)
+    warlock_demonology = { 0.00, 0 },
     -- 0.500, 5: Incinerate's 2.0 s cast, likewise. { 0.50, 5 } -> { 0.50, 16 } R42 (the replay answers
     -- fight_remains from the log): only rows that were "never" moved, now timed
     -- (never 28 -> 0; 12 of them early at the cast's grain); median 0.40
-    warlock_destruction = { 0.50, 16 },
-    warlock_shadow_brand = { 0.90, 16 }, -- 0.900, 16: Shadow Bolt's, likewise
-    warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
+    -- { 0.50, 16 } -> { 0.00, 0 } re-pin e2842f0a78 (Task 16, R6, L82 M5): 107 decisions, 97 timed all in grain
+    warlock_destruction = { 0.00, 0 },
+    -- 0.900, 16: Shadow Bolt's, likewise. -> { 0.20, 1 } re-pin e2842f0a78 (Task 16, R6, L82 M5): 100 decisions, 1
+    -- real (shadow_bolt late 0.20 s), the rest in grain or tie, never 24
+    warlock_shadow_brand = { 0.20, 1 },
+    -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28). -> { 0.20, 8 } re-pin e2842f0a78 (Task
+    -- 16, R6, L82 M5; R49's stand-in DoT lines): 93 decisions, 8 real all early (shadow_bolt 4 max 0.30, life_tap 2,
+    -- immolate 1), never 20
+    warlock_sm_ruin = { 0.20, 8 },
     -- 0.880, 5 (was 0.80, 6): the world's parry haste (decision 63); the tie hand-back moves 177.88 sunder late -> never
     -- 0.680, 6 (fix 40): a short answer read before our own gain shows is no rung, so 177.88 sunder never -> early 0.68
     -- { 0.68, 6 } -> { 1.21, 4 } (re-pin e2842f0a78, lane 14, R6): after the replay's GCD fix every early row is in
