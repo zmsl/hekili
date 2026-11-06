@@ -45,7 +45,8 @@ local REPLAY_EXTRA = {
 -- Expose Prey in the truth only: the kit opens Mongoose Bite from its usability read, never from the player aura walk
 local REPLAY = { hidden = { [1310726] = true } }
 
--- recipe, world content, pack, the replay floor (the first clean run's, never lowered), LIVE60: the pack's own worst
+-- recipe, world content, pack, the replay floor, the live limit per bracket, the ON flicker ceiling, the live world
+-- (default: the replay's). History (old pin): LIVE60, the pack's own worst
 -- idle at 60, rounded up to 0.1 s (P8). It is our secret-mana lower bound, not a wowsims pooling condition: BM and MM
 -- (their worlds at 11 yd, the weave's range) believe Arcane Shot's mana short after Rapid Fire's 100 (BM less long: its
 -- Efficiency; MM longer since Improved Arcane Shot 3/5 casts it every 5.1 s); SV, whose strikes Resourcefulness makes
@@ -60,24 +61,58 @@ local REPLAY = { hidden = { [1310726] = true } }
 -- to the next 0.1, pack_gate.FLICKER's convention (0 stays 0). The oracle + FLICKER_K bar does not apply: a replay has
 -- no oracle run (loop.replay, its oracle flicker reads 0). Measured BM 0.00, MM 0.67, SV 0.33 (one 180 s fight: a flip
 -- is 0.33/min).
+-- Re-pin e2842f0a78 (Task 19, after R51; fresh floors, spec §7: the old floors are not comparable): replay BM 1.00 ->
+-- 0.92 (0.929, 65 of 70), MM 0.92 -> 0.96 (0.966, 84 of 87), SV 0.97 -> 0.98 (0.989, 89 of 90). Named causes (recipe
+-- headers): wowsims's HHA sequence index stalls on queued hawks (BM 3, an oracle quirk); Serpent Sting applied at the
+-- cast, not the landing, with EARLY_EXIT's 0.2 s (BM 2, MM 2: central, no belief landing hook); a mana refill the belief
+-- cannot see (MM 1, R50 class A); Serpent Sting priced 250 where wowsims charges 224.9 (SV 1, source not found).
+-- ON flicker: BM 0, MM 0; SV 0.4 -> 2.4 (2.33 measured: one-tick bounces at the weave's position changes since R51
+-- placed the move arms where the weave is called, partly R60's swing-recheck shape; PROPOSED-hunters-4, owner FYI).
+-- Live limits per bracket (R22a: 6 s unless a traced R41 cause). L40 and L60: mana dry (3-18 of 5000), Arcane Shot
+-- waiting on its cost, nothing useful to cast (R41, owner FYI): BM 7.8 / 12.2, MM 7.6 / 15.4, SV 7.6 / 14.0. BM L10 13.4
+-- -> 4.6 with the recipe's leveling Arcane Shot (wowsims's non-hawk line, below Summon Hawk's 25). Survival's live bars
+-- run at 11 yd with a ranged weapon (R63, W.SurvivalRanged): at melee the shots sit inside their 8-35 band and Raptor
+-- Strike is off the GCD, so the GCD-idle metric read 116.8 s at L10; its loop and replay worlds stay melee.
 local PACKS = {
-    { "hunter_beast_mastery", "BeastMastery", "Beast Mastery (wowsims.com)", 1.00, 5.4, 0 },
-    { "hunter_marksmanship", "Marksmanship", "Marksmanship (wowsims.com)", 0.92, 12.8, 0.7 },
-    { "hunter_survival", "Survival", "Survival (wowsims.com)", 0.97, 0, 0.4 },
+    {
+        "hunter_beast_mastery",
+        "BeastMastery",
+        "Beast Mastery (wowsims.com)",
+        0.92,
+        { [10] = 6, [40] = 7.8, [60] = 12.2 },
+        0,
+    },
+    {
+        "hunter_marksmanship",
+        "Marksmanship",
+        "Marksmanship (wowsims.com)",
+        0.96,
+        { [10] = 6, [40] = 7.6, [60] = 15.4 },
+        0,
+    },
+    {
+        "hunter_survival",
+        "Survival",
+        "Survival (wowsims.com)",
+        0.98,
+        { [10] = 6, [40] = 7.6, [60] = 14.0 },
+        2.4,
+        "SurvivalRanged",
+    },
 }
 
 describe("the Hunter wowsims.com packs #slow #wowsims", function()
-    -- one block per pack: the replay floor (measured on the first clean run, never lowered), the pack's own worst
-    -- idle at 60 (LIVE60, measured), and the brackets
+    -- one block per pack: the replay floor, the ON flicker ceiling, and the live limit per bracket
     for _, p in ipairs(PACKS) do
-        local spec, world, pack, FLOOR, LIVE60, FLICKER = p[1], W[p[2]], p[3], p[4], p[5], p[6]
+        local spec, world, pack, FLOOR, LIVE, FLICKER = p[1], W[p[2]], p[3], p[4], p[5], p[6]
+        local liveWorld = W[p[7] or p[2]]
         it(pack .. " follows wowsims's casts", function()
             local r, line = ws.gate(pack, content(spec, world, pack, 60, REPLAY_EXTRA), spec, FLOOR, REPLAY)
             ab.check(r.flicker <= FLICKER + 1e-9, pack, "ON flicker ceiling: " .. line)
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()
-                ws.live(pack, content(spec, world, pack, level, EXTRA), math.max(6, LIVE60))
+                ws.live(pack, content(spec, liveWorld, pack, level, EXTRA), LIVE[level])
             end)
         end
     end

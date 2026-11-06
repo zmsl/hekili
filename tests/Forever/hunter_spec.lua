@@ -20,6 +20,8 @@ local KIT = {
     aspect_of_the_hawk = { { 13165, 14318, 14319, 14320, 14321, 14322, 25296 }, 120, 0, "spell" },
     aspect_of_the_beast = { { 13161, 1299445, 1299446, 1299447 }, 110, 0, "spell" },
     rapid_fire = { { 3045 }, 100, 300, "off" },
+    -- the BM talent (19574): its pet's 18 s rage, autocast as a major cooldown in wowsims's BM log
+    bestial_wrath = { { 19574 }, 0, 120, "off" },
     serpent_sting = { { 1978, 13549, 13550, 13551, 13552, 13553, 13554, 13555, 25295 }, 250, 0, "spell" },
     arcane_shot = { { 3044, 14281, 14282, 14283, 14284, 14285, 14286, 14287 }, 190, 6, "spell" },
     summon_hawk = { { 1293241, 1293525, 1293526, 1293527 }, 190, 6, "spell" },
@@ -77,10 +79,11 @@ describe("Forever Hunter", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(16, n)
+        assert.are.equal(17, n)
         assert.are.equal("HUNTER", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.rapid_fire.toggle)
+        assert.are.equal("cooldowns", w.abilities.bestial_wrath.toggle)
     end)
 
     it("places every DB2 talent in a tree and keeps the Forever-only ones at tree 0", function()
@@ -382,12 +385,17 @@ describe("Forever Hunter priorities", function()
     it("names only registered abilities, auras, settings and the hawk", function()
         local cls = ld.load(nil, FILE, "HUNTER")
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, settings = cls.settings }
-        -- every race's racials (the Races files Hekili_Shared's TOC lists: rule 13's Blood Fury) are registered too
+        -- every race's racials (the Races files Hekili_Shared's TOC lists: rule 13's Blood Fury) and the shared
+        -- consumables (rule 13's Demonic Rune and Major Mana Potion) are registered too
         local racials = {}
         local toc = assert(io.open(TOC_SHARED))
-        for path in toc:read("*a"):gmatch("(Races\\[%w_]+%.lua)") do
+        for path in toc:read("*a"):gmatch("((%a+)\\[%w_]+%.lua)") do
             local f = assert(io.open("src/Hekili_Shared/" .. path:gsub("\\", "/")))
-            for key in f:read("*a"):gmatch('RegisterAbility%("([%w_]+)"') do
+            local text = f:read("*a")
+            for key in text:gmatch('RegisterAbility%("([%w_]+)"') do
+                racials[key] = true
+            end
+            for key in text:gmatch('consume%("([%w_]+)"') do
                 racials[key] = true
             end
             f:close()
@@ -825,5 +833,81 @@ describe("Forever Hunter through the engine", function()
         assert.is_true(S.buff.raptor_strike.down)
         assert.are.same({ true }, { S:IsUsable("raptor_strike") })
         assert.are.same({}, H.errors)
+    end)
+end)
+
+-- R8 (re-pin plan Task 19 Step 2): the weave's moves reach the strikes (weave #6, to melee) and the shots (weave #7,
+-- the move back). The packs' own lines through the real engine in the Survival world (the DB2's ranges), Aspect of
+-- the Hawk after them as the filler: OFF hides Raptor Strike's in-range line outside 5 yd and Multi-Shot's inside 8
+-- yd, and shows each in its own band; ON shows Multi-Shot inside 8 yd too (weave #7's arm is unconditional). Raptor
+-- Strike's arm needs the weave's swing state (the loops and the replay exercise it); here its text is pinned.
+describe("Forever Hunter Movement (R8)", function()
+    local hw = require("Forever.helpers.hunter_world")
+    local PACK = "Survival (wowsims.com)"
+
+    local function lines(key)
+        local f = assert(io.open("src/Hekili_Hunter/APLs/" .. PACK .. ".simc"))
+        local s = f:read("*a")
+        f:close()
+        local out = {}
+        for l in s:gmatch("\n(actions%+=/" .. key .. ",[^\n]+)") do
+            out[#out + 1] = l
+        end
+        return out
+    end
+
+    local function world(key, yd)
+        local C = hw.Survival
+        local H = headless.new({ character = C.character(), pack = PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, yd
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        local list = {}
+        for _, l in ipairs(lines(key)) do
+            if not l:find("max%(") then -- ParseActionList splits a line at its commas: the weave arm's max(a,b) stays out
+                local parsed = H.Hekili:ParseActionList(l)
+                parsed[1].enabled = true
+                list[#list + 1] = parsed[1]
+            end
+        end
+        list[#list + 1] = { enabled = true, action = "aspect_of_the_hawk" }
+        H.Hekili.DB.profile.packs[PACK].lists = { precombat = {}, default = list }
+        H.Hekili:LoadScripts()
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local VS = H.ns.VirtualState
+        local power, mana = VS.Power, { est = 5000, lo = 5000, hi = 5000, conf = 1 }
+        VS.Power = function(pt, now)
+            return pt == 0 and mana or power(pt, now)
+        end
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        assert.is_true(H.Hekili.Engine.Registry.MovementSpec(C.SPEC)) -- the options row shows (R3)
+        return function(movement)
+            H.Hekili:FireToggle("movement", movement and "on" or "off")
+            t = t + 0.2
+            assert(headless.cycle(H, t))
+            assert.are.same({}, H.errors)
+            return out.recs[1] and out.recs[1].actionName
+        end
+    end
+
+    it(
+        "OFF hides Raptor Strike outside 5 yd and shows it inside; its move arm waits on the toggle and the weave",
+        function()
+            local l = lines("raptor_strike")
+            assert.are.equal(2, #l)
+            assert.matches(",if=target%.within5$", l[1])
+            assert.matches(",if=toggle%.movement&%(.+&target%.outside5%)&window%.weave%.up%)$", l[2])
+            local far, near = world("raptor_strike", 11), world("raptor_strike", 3)
+            assert.are.same({ "aspect_of_the_hawk", "raptor_strike" }, { far(false), near(false) })
+        end
+    )
+
+    it("OFF hides Multi-Shot inside 8 yd and shows it outside; ON shows it inside too (the move back)", function()
+        local far, near = world("multi_shot", 11), world("multi_shot", 3)
+        assert.are.same({ "multi_shot", "aspect_of_the_hawk" }, { far(false), near(false) })
+        assert.are.same({ "multi_shot", "multi_shot" }, { far(true), near(true) })
     end)
 end)

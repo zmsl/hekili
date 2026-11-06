@@ -15,8 +15,19 @@ end
 
 local ROGUE = { "garrote=1", "slice_and_dice=1", "rupture=1" } -- Slice and Dice and Rupture sort by soonest
 -- the melee-weave strikes (Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip) rotational (the user)
--- (R51: Raptor Strike's move arm is its own line where the weave is called, at the same tier)
-local HUNTER = { "raptor_strike=1", "hunters_mark=2", "raptor_strike=1", "serpent_sting=1" }
+-- (R51: each move arm is its own line where its move is called, at its source line's tier: the re-pin's Hunter's Mark
+-- leads, Raptor Strike's and Serpent Sting's in-range lines, then the arms: Beast Mastery and Survival walk in (walk_in
+-- #1 reaches Serpent Sting) before the weave (#6: Raptor Strike; #7, the move back: Serpent Sting); Marksmanship's walk
+-- in is never called)
+local HUNTER = {
+    "hunters_mark=2",
+    "raptor_strike=1",
+    "serpent_sting=1",
+    "serpent_sting=1",
+    "raptor_strike=1",
+    "serpent_sting=1",
+}
+local HUNTER_MM = { "hunters_mark=2", "raptor_strike=1", "serpent_sting=1", "raptor_strike=1", "serpent_sting=1" }
 
 -- file order of the generated simc: the Banes, Searing Pain's Demonic Brand upkeep and the curses at 2, Soul Fire on Decimation at 1
 local WARLOCK_DEMO = {
@@ -56,7 +67,7 @@ local PACKS = {
     ["Rogue/APLs/Combat"] = ROGUE,
     ["Rogue/APLs/Subtlety"] = ROGUE,
     ["Hunter/APLs/Beast Mastery"] = HUNTER,
-    ["Hunter/APLs/Marksmanship"] = HUNTER,
+    ["Hunter/APLs/Marksmanship"] = HUNTER_MM,
     ["Hunter/APLs/Survival"] = HUNTER,
     ["Paladin/APLs/Protection"] = { "seal_of_fury=2", "holy_shield=2" }, -- R41: the leveling refresh (R28) is gone
     -- the Twist of Light seals (1): open
