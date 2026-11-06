@@ -291,6 +291,18 @@ describe("Forever Paladin", function()
         e.talent = talents({ swift_judgement = 1, holy_shield = 1, holy_shock = 1, shieldsworn = 1 })
         assert.are.equal(195, ld.run(w.abilities.holy_shield.spend, e))
     end)
+    -- Owner rule 2026-11-06 (wowsims's data wins over the DB2): ranks 1-2 cost wowsims's 100 and 150, not the DB2's
+    -- 150 and 195.
+    it("prices Holy Shield ranks 1 and 2 at wowsims's 100 and 150", function()
+        local e = ld.env(w)
+        e.talent = talents({ holy_shield = 1 })
+        for top, cost in ipairs({ 100, 150 }) do
+            for i, id in ipairs({ 20925, 20927, 20928 }) do
+                w.game.known[id] = i <= top
+            end
+            assert.are.equal(cost, ld.run(w.abilities.holy_shield.spend, e))
+        end
+    end)
     it("gives Holy Shield 4 charges, each block or partial block on us spending one", function()
         local a = w.auras.holy_shield
         assert.are.same({ 4, 10, { BLOCK = true, BLOCKED = true } }, { a.max_stack, a.duration, a.consumedBy })

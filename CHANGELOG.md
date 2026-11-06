@@ -17,7 +17,7 @@
 - Balance Druids: the built-in priority follows the latest wowsims.com rotation. Out of combat it shows Wrath to open after Moonkin Form, and Innervate shows only when your mana is under 40%.
 - Mages: the built-in priorities follow the latest wowsims.com rotations. Arcane uses Frostbolt as a filler only without the Arcane Instability talent, at any level, and adds Fire Blast, with Arcane Wrath to open and its cooldowns lined up with Missile Barrage or Arcane Wrath. Fire keeps Arcane Blast up, uses Scorch as a filler while Fire Blast is nearly ready, and opens with Pyroblast, as Frostfire does. Frostfire shows Fireball while leveling, until Frostfire Bolt.
 - Protection Paladins: the built-in priority follows the latest wowsims.com rotation. Before the pull it shows Righteous Fury, and Holy Shock waits for Consecration's mark when you have the Consecrated Ground talent.
-- Protection Paladins: Holy Shield's top rank costs 195 mana, as in the game, not 240, so it shows ready sooner.
+- Protection Paladins: Holy Shield's top rank costs 195 mana, as in the game, not 240, so it shows ready sooner. Ranks 1 and 2 cost 100 and 150 mana (were 150 and 195), following wowsims's data; not yet checked in game.
 - Less memory churn in big pulls: the engine no longer builds its nameplate debug text on every update, only when you take a snapshot.
 - Less work per update, mostly for casters: the engine does less setup and bookkeeping each time the icons refresh, and works out an ability's cost once per moment instead of repeatedly. The recommendations are unchanged.
 - Auras on your target no longer trigger extra refreshes in combat, which matters most in raids.

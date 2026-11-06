@@ -152,6 +152,9 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- mana-dry), idle over 6 s either way (L32 11.0, L35-L40 8.4); gated at L40 only; no other bracket got a higher limit
     -- 4.6 -> 4.4 (R31: Holy Shield rank 3 costs 195, not 240; the price is the only change, L10 4.4 and L40 8.4 hold,
     -- rank 3 is learned at 60 only)
+    -- Holy Shield's ranks at wowsims's 100 / 150 / 195, learned at 30 / 40 / 50 (owner rule 2026-11-06, was the DB2's
+    -- 150 / 195 at 40 / 50, 60 for rank 3): L10 8.6, L40 8.4 (rank 2 at 150, the old rank 1's price), L60 4.4 and the
+    -- replay (level 60) hold; the L32-L40 band above was measured on the DB2 ladder
     -- R41 (owner policy, supersedes R28's L10 filler and R28a's guard): the Seal of Fury refresh (`remains<24`) is gone;
     -- wowsims's own line re-seals when the seal is down. L10 4.4 -> 8.6, its measured limit: nothing useful to cast:
     -- Holy Strike and Judgement cooling, Seal of Fury and Righteous Fury up (L10-L15 8.6, t 6.6-15.0). L20-L25 6.4,
