@@ -252,7 +252,8 @@
 -- One-line reads (re-pin plan, docs/superpowers/plans/2026-11-03-wowsims-repin.md, Task 3; wowsims sim/core
 --    apl_values_*.go): `talentIsKnown` (wowsims's constant: the build holds that rank or a higher one) of an ID that
 --    resolves to a talent (a kit talent's spell, or a recipe `map` to a talent's key, as rule 4) is
---    `talent.<key>.enabled` (a `rank` above 1: `talent.<key>.rank>=<rank>`), else false; `talentRank` is
+--    `talent.<key>.enabled` (a `rank` above 1: `talent.<key>.rank>=<rank>`), of one that resolves to a kit ability
+--    (R52: wowsims's talent, our ability, Feral's Shifting Power) `action.<key>.known`, else false; `talentRank` is
 --    `talent.<key>.rank`, else 0; `spellFullCooldown` `cooldown.<key>.duration`, `spellTravelTime`
 --    `action.<key>.travel_time` and `spellGcdHastedDuration` `action.<key>.gcd` (each nil while the spell is unknown:
 --    rules 6, 12); `gcdIsReady` `gcd.remains<=0` (wowsims also counts the queue window); `currentHealth`
@@ -1174,6 +1175,10 @@ local function bool(c, n)
     elseif k == "talentIsKnown" then -- wowsims: a constant, the build holds the rank or a higher one
         local t = talentOf(c, v.talentId)
         if not t then
+            local x = spellLookup(c, v.talentId) -- R52: wowsims's talent the kit has as an ability (Shifting Power)
+            if x and c.ability[x] then
+                return "action." .. x .. ".known", nil, false
+            end
             return nil, false, false
         end
         local rank = v.talentId.rank or 1

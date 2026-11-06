@@ -1614,6 +1614,26 @@ describe("the wowsims APL translator's re-pin reads", function()
         assert.are.same({ "default #1: never" }, omitted)
     end)
 
+    -- R52: wowsims's tree holds a talent the kit has as an ability (Feral's Shifting Power): the ability's known test
+    it(
+        "talentIsKnown of an ID that resolves to a kit ability is the ability's known test; an aura's is false",
+        function()
+            local function known(id, rank)
+                return { talentIsKnown = { talentId = { spellId = id, rank = rank } } }
+            end
+            assert.are.equal("actions=strike,if=action.big_hit.known", lines(known(200)))
+            assert.are.equal("actions=strike,if=action.big_hit.known", lines(known(200, 2)))
+            assert.are.equal("actions=strike,if=action.strike.known", lines(known(101)))
+            assert.are.equal(
+                "actions=strike,if=action.big_hit.known",
+                lines(known(990), { map = { [990] = "big_hit" } })
+            )
+            local text, omitted = one(known(910)) -- an aura, no ability: still wowsims's constant false
+            assert.are.equal("", text)
+            assert.are.same({ "default #1: never" }, omitted)
+        end
+    )
+
     it("talentRank is the talent's rank; an ID no talent has reads 0", function()
         local function rank(id)
             return cmp("OpGe", { talentRank = { talentId = { spellId = id } } }, const("2"))
