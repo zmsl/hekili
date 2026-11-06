@@ -50,6 +50,23 @@ local AMOUNT = {
     moonfire = 100,
 }
 
+-- Feral's ranges in yards that differ from the fake client's melee default (0-5), every rank alike: the DB2's
+-- SpellMisc MinRange/MaxRange as wowsims/forever's DB2-derived assets/db_inputs/spell_store_inputs.json carries them at
+-- e2842f0a78; 0-0 is Self Only (no range check). Melee strikes keep the default 0-5. The Feral world only (its
+-- Movement opt-in: the 25 yd opener's Faerie Fire at 30 yd).
+local FERAL_RANGE = {
+    faerie_fire = { 0, 30 },
+    innervate = { 0, 30 },
+    mark_of_the_wild = { 0, 30 },
+    thorns = { 0, 30 },
+    cat_form = { 0, 0 },
+    bear_form = { 0, 0 },
+    prowl = { 0, 0 },
+    dash = { 0, 0 },
+    shifting_power = { 0, 0 },
+    berserk = { 0, 0 },
+}
+
 -- The recording load (talents at rank 0), once: the aura data and the cost modifier's covered spells.
 local W0
 local function class()
@@ -384,6 +401,21 @@ local function formOk(a, e)
     return true
 end
 
+-- Every rank's range of FERAL_RANGE's kit abilities, known or not (the client's spell data): { [spellID] = { min, max } }.
+local function ranges(w)
+    local out = {}
+    for key, r in pairs(FERAL_RANGE) do
+        local a = w.abilities[key]
+        if a then
+            out[a.id] = r
+            for _, id in ipairs(type(a.copy) == "table" and a.copy or {}) do
+                out[id] = r
+            end
+        end
+    end
+    return out
+end
+
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = name .. " (wowsims.com)", IDS = {} } -- the spec's default (wowsims packs plan, P9)
@@ -423,6 +455,7 @@ local function content(name)
             speed = { P.weapon[3] },
             forms = forms,
             form = FORM[P.form],
+            ranges = name == "Feral" and ranges(w) or nil,
         }
     end
 

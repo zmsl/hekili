@@ -109,7 +109,10 @@ M.FLICKER = {
     -- seed set; owner standing approval 2026-10-30
     -- heldReady 383 -> 393 (seeds 1-20; 347 with Druid.lua and druid_world as of its parent): Shifting Power's 8 s
     -- cooldown (hotfix 113554, 8b07b2d58)
-    ["Feral"] = { flicker = 1.3, retracted = 0, heldReady = 393 }, -- 1.20 / 1.24 / 1.10, 0
+    -- re-pin e2842f0a78 (lane feralguardian fix round 1; the adaptive list, Movement on, the DB2 ranges in the Feral
+    -- world): seeds 1-20 / 21-40 / 41-60 flicker 0.56 / 0.89 / 0.56 (oracle 0.59 / 0.99 / 0.94), retracted 0 / 0 / 0,
+    -- heldReady 236 / 263 / 283, agreement .984 / .983 / .977: flicker 1.3 -> 0.9, heldReady 393 -> 283 (the worst set)
+    ["Feral"] = { flicker = 0.9, retracted = 0, heldReady = 283 }, -- 0.56 / 0.89 / 0.56, 0
     ["Balance"] = { flicker = 0.1, retracted = 0, heldReady = 140 }, -- 0.03 / 0.05 / 0.07, 0
     -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
     -- 0.37 / 0.21): the swing-paid rage class (a forecast swing's gain shows Lacerate or Primal Bite ready; retracted
