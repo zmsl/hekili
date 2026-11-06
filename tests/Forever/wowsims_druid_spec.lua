@@ -69,7 +69,7 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- Shreds (same-instant order); 19.25 shifting_power -> shred, a not-ready flag 0.05 s before the ready pushes it
     -- to now + CD_PROBE (shared, the 26.99 case below); 111.89 shifting_power -> shred, mana 687 against the 684 cost
     -- (the belief's mana near cost, shared); 162.38 shred -> faerie_fire, after the missed 160.88 Faerie Fire the
-    -- belief holds no cooldown: its in-form function cooldown evaluates 0 in the belief (shared; a scalar 6 clears it,
+    -- belief holds Faerie Fire ready about 0.1 s after every cast (kit or belief: undetermined; a scalar 6 clears it,
     -- scratch); 15.04 innervate -> cat_form, pre-existing (a 0.04 s tie at the Innervate powershift)
     it("Feral (wowsims.com) follows wowsims's casts", function()
         ws.gate("Feral (wowsims.com)", content("druid_feral", W.Feral, "Feral (wowsims.com)", 60), "druid_feral", 0.91)

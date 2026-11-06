@@ -12,8 +12,8 @@
 -- lo 3.2 and 1.0 under the truth at Rip's 62 threshold and Shred's 42 cost); 140.38 shred -> rip (Rip fades in the
 -- instant wowsims Shreds); 19.25 shifting_power -> shred (a not-ready flag 0.05 s before the ready pushes it to now +
 -- CD_PROBE: shared); 111.89 shifting_power -> shred (mana 687 against the 684 cost: the belief's mana near cost,
--- shared); 162.38 shred -> faerie_fire (after the missed 160.88 Faerie Fire the belief holds no cooldown: the in-form
--- function cooldown evaluates 0 in the belief, shared; a scalar 6 clears it in scratch); 15.04 innervate -> cat_form
+-- shared); 162.38 shred -> faerie_fire (after the missed 160.88 Faerie Fire: the belief holds Faerie Fire ready about
+-- 0.1 s after every cast, kit or belief undetermined; a scalar 6 clears it in scratch); 15.04 innervate -> cat_form
 -- (a 0.04 s tie at the Innervate powershift, pre-existing).
 -- Owner FYI (faithful to wowsims solo, L86): the pre-pull list casts Prowl then Dash; in combat `cancel_buff` drops
 -- Prowl at once, because the Ravage opener needs another druid's Faerie Fire (tag -1, never known solo), so Ravage
