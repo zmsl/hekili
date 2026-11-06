@@ -127,9 +127,9 @@ local function readSlot(api, slot)
             if j then
                 see(j, left, n)
             end
-            -- the temporary layer (a stone, an oil) is not the slot's. Risk: ~= 2 also counts Permanent (1; Forever's
-            -- enum 0 None, 1 Permanent, 2 Temporary, 3 Imbue), unseen in the list so far (probe P2)
-            if alias and e.enchantType ~= 2 then
+            -- neither a stone or oil (Temporary, 2) nor a permanent enchant (1) is the slot's imbue (Forever's enum:
+            -- 0 None, 1 Permanent, 2 Temporary, 3 Imbue). Any other type counts, since a poison's is unprobed (P3)
+            if alias and e.enchantType ~= 2 and e.enchantType ~= 1 then
                 see(alias, left, n)
             end
         end

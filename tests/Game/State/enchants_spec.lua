@@ -161,6 +161,16 @@ describe("weapon enchants", function()
         assert.are.equal(1712, VS.Aura("player", MH, 12).est)
     end)
 
+    -- R68: a permanent weapon enchant (Fiery, Crusader; enchantType 1) is not the slot's imbue either, or a Shaman with
+    -- one and no imbue would never be prompted for the imbue.
+    it("leaves the slot down for a permanent enchant layer alone", function()
+        local PERM = { hasEnchant = true, enchantType = 1, timeLeft = 0, charges = 0, enchantID = 1900 }
+        local EMPTY = { hasEnchant = false, enchantType = 0, timeLeft = 0, charges = 0, enchantID = 0 }
+        ctl.enchants[0] = { PERM, EMPTY }
+        poll(10)
+        assert.is_nil(VS.Aura("player", MH, 10))
+    end)
+
     it("puts an `enchants` aura up from its enchant ID on either hand, and down when no hand carries it", function()
         ctl.enchants[0] = { OIL, entry(1664, 1700000) }
         poll(10)

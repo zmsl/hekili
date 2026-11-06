@@ -238,7 +238,7 @@ M.FLICKER = {
     -- heldReady 230 -> 256 re-pin e2842f0a78 (lane 15, R6; seeds 1-20: 256, flicker 0.02, retracted 0; 249 at Fire
     -- Nova's DB2 520): the build's own list (Magma Totem 40 s, Windfury Totem, Fire Nova the filler at wowsims's 375,
     -- R57a) and the world's mana from the Skyborne log (6565, 12.8 / 31.25, was 5000 / 4.8 / 28.62)
-    ["Enhancement"] = { flicker = 0.2, retracted = 0, heldReady = 256 }, -- 0.13 / 0.13 / 0.13, 0 (oracle 0.03 / 0 / 0.02)
+    ["Enhancement"] = { flicker = 0.2, retracted = 0, heldReady = 256 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     ["Arcane"] = { flicker = 0.1, retracted = 0, heldReady = 100 }, -- 0.03 / 0.05 / 0, 0
     -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new
@@ -279,12 +279,12 @@ M.FLICKER = {
     -- heldReady 6 -> 8 (re-pin e2842f0a78, Task 16, R6, R49; seeds 1-20 / 21-40 / 41-60: 7 / 8 / 2, flicker 0.17 / 0.17 /
     -- 0.05, oracle 0): traced at 21-40, all 8 the stand-in Siphon Life after a hard cast, ours 0.10 s vs the oracle's
     -- 0.00 (the same icon one poll late; mana est within 2 of the truth): the wait class above
-    ["SM Ruin"] = { flicker = 0.3, retracted = 0, heldReady = 8 }, -- 0.17 / 0.17 / 0.05, 0
+    ["SM Ruin"] = { flicker = 0.3, retracted = 0, heldReady = 8 }, -- 0.17 / 0.17 / 0.05, 0; heldReady ON THE BAR (max of 7 / 8 / 2): re-measure at integration
     ["Demonology"] = { flicker = 0.1, retracted = 0, heldReady = 4 }, -- 0.02 / 0.05 / 0, 0
     -- heldReady 3 -> 6 (re-pin e2842f0a78, Task 16, R6; seeds 1-20 / 21-40 / 41-60: 6 / 6 / 6, flicker 0.03 / 0.02 /
     -- 0.02, oracle 0): traced at 1-20, each the same icon (Searing Pain 4, Life Tap, Bane of Agony) at 0.10-0.11 s vs
     -- the oracle's 0.00-0.01, mana est within 2-29 of the truth: the wait class above, more often in the new list
-    ["Shadow Brand"] = { flicker = 0.1, retracted = 0, heldReady = 6 }, -- 0.03 / 0.02 / 0.02, 0
+    ["Shadow Brand"] = { flicker = 0.1, retracted = 0, heldReady = 6 }, -- 0.03 / 0.02 / 0.02, 0; heldReady ON THE BAR (6 / 6 / 6): re-measure at integration
     -- the excess over the oracle (0 / 0 / 0) is at Conflagrate's and Shadowburn's cooldown ends, as Fire's Fire Blast
     -- (the not-ready flag's CD_PROBE, central). 0.4 -> 0.2 (Task 10b, gap CQ: the flag keeps a modelled end the GCD or a
     -- hard cast covers; 0.13 / 0.17 / 0.07, was 0.23 / 0.40 / 0.25; agreement .995 / .992 / .996); the rest is the probe
@@ -295,7 +295,7 @@ M.FLICKER = {
     -- Immolate refresh's hard cast, which the new list (`immolate,if=remains<=cast`, Conflagrate gated on Immolate up)
     -- lands on Conflagrate's cooldown end in nearly every fight (~46 s into combat; 28 of the 30 flips at 1-20 are
     -- conflagrate > incinerate / life_tap). Central (belief casts), existing; PROPOSED-warlock-5
-    ["Destruction"] = { flicker = 0.5, retracted = 0, heldReady = 8 }, -- 0.50 / 0.30 / 0.30, 0
+    ["Destruction"] = { flicker = 0.5, retracted = 0, heldReady = 8 }, -- 0.50 / 0.30 / 0.30, 0; flicker ON THE BAR at seeds 1-20 and fragile (R58): re-measure at integration
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. It tightens the bar when a change lowers the oracle's own flicker. 1.8 -> 0.5 (forever-gap-bd,
