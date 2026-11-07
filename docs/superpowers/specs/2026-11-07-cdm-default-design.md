@@ -137,7 +137,7 @@ What happens:
 |---|---|
 | Our fresh cast of a buff whose item lit for an **earlier** application | the cast writes `applied = T` (`Families/Now.lua:325-328` through `I.AuraModel`), so `sSeen < applied`: the silent item is not live, the fact is UNKNOWN until the item lights (then `sSeen >= applied`); no close in the gap between our cast and the client's `UNIT_AURA` (closes I-B) |
 | A **never-lit** item (F12) | its `sSeen` stays 0: never live as NONE, fact UNKNOWN; the model closes the record at its expiry |
-| A buff **re-applied after its item went silent** (an item that stops following) | the new application moves `applied`; the item never holds it, so it never closes it: UNKNOWN, the model runs (closes I-A) |
+| A buff **re-applied after its item went silent** (an item that stops following), by a fresh application | the new application moves `applied`; the item never holds it, so it never closes it: UNKNOWN, the model runs (closes I-A for a fresh application; a refresh before expiry: the Residual row) |
 | Our refresh while the item stays held | `applied = T`; the next sweep writes `sSeen = t >= T`; when the aura really ends the item's NONE is live and DOWN closes |
 | A **partner's copy** of our buff (out of combat it overwrites ours; a walk re-read keeps `applied`, `Families/Auras.lua:208-212`) | `sSeen` may still be `>= applied`, so the NONE is live and the reduced fact is DOWN; it does not close, because the walk read with a partner source cleared `ours[k]` (rule 2.5.1). That is why `ours` stays |
 | Two items for one aura, one silent (also across our refresh) | the silent one's `sSeen` stays 0, so it is never live: the working one alone decides (UP while held, DOWN when the aura ends); no flip, `agree` stays true |
@@ -145,6 +145,7 @@ What happens:
 | An **ambiguous** item | its UP counts for no j and it never writes `sSeen`: never live as NONE |
 | A target slot after a target switch | its `sSeen` was reset at the switch: not live for the new target until it holds that target's aura |
 | A hidden viewer | its slots are stale (`nStale > 0`, UNKNOWN), and while hidden they write no `sSeen`; an application no visible item showed is never closed by an item (the model handles it) |
+| **Residual**: our refresh lands before the old application expires, a sweep inside the latency window still sees the item holding the old one (`sSeen >= T`), and the item then does not light the new application (an item that stops following) | its silence is live, the state is DOWN and `ours` is set: the record closes **once** (one wrong "rebuff"). The next cast moves `applied` again and is gated, so it is not a loop. Accepted, no guard (D14) |
 
 ### 2.3 The reduction: one pure, total function
 
@@ -448,7 +449,7 @@ flicker rise beyond seed noise (±0.3/min) on any spec in any viewer arm.
 | 112 | An UP with no model: registered duration from `max(fact.t, applied)`; past it a `HOLD` (1.0 s) re-staged once per `HOLD` while the fact stays UP; `math.huge` only for a player aura with no numeric duration | never stuck up on the target; bounded lapse; no per-poll churn (C2; owner Q3) |
 | 113 | `apply` skips player form and enchant auras | their records belong to Forms/Enchants (M5) |
 | 114 | CN13 owns a generic `I.auraFloor[j]`; this lane writes it from the reduced fact | no one-update flash; `Families/` knows nothing of the router (owner Q4) |
-| 115 | **The seen rule, per slot**: a silent slot counts as NONE for (j, u) only for an application that slot was seen holding: the record is up (`U.exp0[u][j] > t`), `sSeen[s] >= U.applied[u][j]` and `sUnit[s] == u`; `sSeen` is written at every sweep the slot is held for u (unambiguous), reset at a mapping change, a rebuild, a held sweep with a secret or nil unit and, for a target slot, a target switch; otherwise not live, so UNKNOWN | an item can stay silent while its aura is up (F12); also closes the cast-before-`UNIT_AURA` flash (I-B) and the item-stops-following loop (I-A); per slot, not per thing, so a silent item never borrows another item's light (review 3); one number per slot (`MAX_SLOTS`), the leaf's own, no per-entry or per-thing state |
+| 115 | **The seen rule, per slot**: a silent slot counts as NONE for (j, u) only for an application that slot was seen holding: the record is up (`U.exp0[u][j] > t`), `sSeen[s] >= U.applied[u][j]` and `sUnit[s] == u`; `sSeen` is written at every sweep the slot is held for u (unambiguous), reset at a mapping change, a rebuild, a held sweep with a secret or nil unit and, for a target slot, a target switch; otherwise not live, so UNKNOWN | an item can stay silent while its aura is up (F12); also closes the cast-before-`UNIT_AURA` flash (I-B) and the item-stops-following loop (I-A) for a fresh application (a refresh before expiry leaves one wrong close: §2.2a Residual, D14); per slot, not per thing, so a silent item never borrows another item's light (review 3); one number per slot (`MAX_SLOTS`), the leaf's own, no per-entry or per-thing state |
 
 ## 12. Credits
 
@@ -469,7 +470,7 @@ needed, §3.3), GPL-3.0 like Hekili Forever; ideas only, re-implemented, no code
 | D8 | Target-side changes we did not cause wait up to 0.5 s (no hooks; the target's `UNIT_AURA` is not delivered in combat); upgrade: deliver it inside `Game/` while target coverage > 0 | small impact; a target NONE is no answer | the A/B or a player shows late target edges |
 | D9 | `HOLD` = 1.0 s is a guess | no measurement | Task 9's target-DoT-past-duration flicker row |
 | D13 | A player aura with no numeric duration whose item is lost mid-fight (viewer hidden, Alt-Z) stays up (-1) until combat ends and the exit walk closes it | rare: such auras are mostly permanent | Task 9 or a player report |
-| D14 | The I-B race size (time between our cast's record write and the item lighting) is unmeasured; the seen rule makes it safe (UNKNOWN), it only delays a CDM-confirmed DOWN | needs the game | the LAT probe's timestamps (cast success vs `OnAuraInstanceInfoSet`) |
+| D14 | The latency window between our cast's record write and the item lighting is unmeasured. Safe for a fresh cast (UNKNOWN until the item lights). A refresh before expiry whose new application the item does not light gives one wrong close (§2.2a Residual): one "rebuff", not a loop; no guard built | needs the game; one close per such refresh | the LAT probe (cast success vs `OnAuraInstanceInfoSet` timestamps), or a report of a single mid-fight rebuff |
 | D15 | The cause of the silent Mark of the Wild item (F12) | needs the game | Task 10's `/fprobe cdm sets` on that entry |
 
 D2 (stuck-up after losing a fact) and D7 (an acquire hook) are closed by decisions 112 and 101.

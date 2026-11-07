@@ -463,8 +463,8 @@ Only if Task 10's Shaman run finds a flag-0 pack aura. **Files:** `Presence/Dire
 
 ## Candidate deferrals (for the controller's ledger)
 
-Spec §13 (D1, D3-D6, D8, D9, D13 player aura with no numeric duration whose item is lost mid-fight, D14 the I-B
-race size, D15 the silent item's cause), plus:
+Spec §13 (D1, D3-D6, D8, D9, D13 player aura with no numeric duration whose item is lost mid-fight, D14 the latency
+window: one wrong close on a refresh whose new application the item does not light, D15 the silent item's cause), plus:
 - P1: Task 8's `fixture` arm covers only Warrior and Druid. Trigger: each class's `/fprobe cdm sets` (CDM-C).
 - P2: the release gate above. Trigger: Tasks 9 and 10 done.
 - P3: Task 4c if CN13 merges without `I.auraFloor`. Trigger: CN13 merged.
