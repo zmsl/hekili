@@ -47,6 +47,7 @@ TellMeWhen research (`~/src/hekili-central-needs/tmw-research.md`, "TMW"), the 2
 | F10 | The viewer tracks player-cast auras only | CDM-S; and from source below |
 | F11 | Item presence matches the aura's lifetime to the second, in combat, gain and removal: Enrage 10 s, Demoralizing Roar 30 s, Growl 3 s, Nature's Grasp consumed at 18 s; Faerie Fire, Demoralizing Roar and Growl (target debuffs) lit their items | AuraProbe run 1, P0 result 10 (`~/src/hekili-central-needs/auraprobe-druid-run1-2026-11-07.txt`) |
 | F12 | **An item can stay silent while its aura is up**: the Mark of the Wild item (5232) held no aura for a whole 55 s fight while the buff was up (the owner confirms it was up all fight); cause unknown, possibly a client bug (Task 10 records its `sets` entry) | P0 result 10.4 |
+| F13 | **The layout can be edited in combat.** Removing an item drops its frame from `viewer:GetItemFrames()` (2 of 2 removals; never a listed frame with `cooldownID` nil); adding one brings a frame in; the same item can come back as a **different frame table** (a Maul frame gone and one added in the same second). Removing the item of a buff that is up (Thorns) read as no item, never as a silent one; re-adding it 7 s later, the buff still up, lit it in the same sample. Not measured: whether a dropped frame stays a viewer child | AuraProbe 0.1.3 runs 3-4 (`~/src/hekili-central-needs/auraprobe-druid-run3-2026-11-07.md`, `...-run4-...`) |
 | F14 | A target item's `auraDataUnit` is plain "target" while held | CV §2 (Rend); the probe now records it (P0 result 10.5) |
 
 Read from source (not measured): `SetAuraInstanceInfo` clears then sets in one call (BD:368-380);
@@ -121,7 +122,11 @@ another item's light (review 3, must-fix 1):
 - **Resets** (`sSeen[s] = 0`, `sUnit[s] = 0`): when the slot's mapping is (re)assigned, that is at a `cooldownID` change
   (release, re-point, (re)configure) and at a map rebuild; at a held sweep whose unit is secret or nil (it held
   something for no known unit); and at `PLAYER_TARGET_CHANGED` for a slot whose `sUnit` is the target (the same place
-  §3.4 marks it settling: mob A's light says nothing of mob B's application).
+  §3.4 marks it settling: mob A's light says nothing of mob B's application). A **new frame table is a new slot**
+  (collected on `GetNumChildren` growth, §3.2) whose `sSeen` starts at 0; slot indices are never reused for another
+  frame, so a replaced item (F13) can never close an application it was not seen holding. A dropped frame is not live:
+  a pool release clears `cooldownID` first (BD:95), and a slot is live only while its frame reads a plain configured
+  `cooldownID` and `layoutIndex`.
 - **The gate is in liveness:** a silent slot s is live as NONE for (j, u) only when all three hold:
   the record is up, `U.exp0[u][j] > t`; `sSeen[s] >= U.applied[u][j]` (this slot held this application); and
   `sUnit[s] == u`. Otherwise it is not live, so the reduced fact reads UNKNOWN, never DOWN. `Reduce` and its table are
@@ -142,6 +147,8 @@ What happens:
 | A **partner's copy** of our buff (out of combat it overwrites ours; a walk re-read keeps `applied`, `Families/Auras.lua:208-212`) | `sSeen` may still be `>= applied`, so the NONE is live and the reduced fact is DOWN; it does not close, because the walk read with a partner source cleared `ours[k]` (rule 2.5.1). That is why `ours` stays |
 | Two items for one aura, one silent (also across our refresh) | the silent one's `sSeen` stays 0, so it is never live: the working one alone decides (UP while held, DOWN when the aura ends); no flip, `agree` stays true |
 | The working item **leaves** mid-application (released, re-pointed, held with a secret or nil unit) while the silent one stays | the working slot drops or resets; the silent one is still not live: UNKNOWN, the model runs, no close |
+| An item **removed while its buff is up** (F13) | its frame drops out (released: `cooldownID` nil): not live; with no other item the fact is UNKNOWN, the model runs, no close |
+| An item **re-added or replaced while its buff is up** (F13: it lights at once) | a new or re-configured slot starts at `sSeen` 0, lights in that sweep, so `sSeen` is written and the fact is UP; its later silence closes only this application |
 | An **ambiguous** item | its UP counts for no j and it never writes `sSeen`: never live as NONE |
 | A target slot after a target switch | its `sSeen` was reset at the switch: not live for the new target until it holds that target's aura |
 | A hidden viewer | its slots are stale (`nStale > 0`, UNKNOWN), and while hidden they write no `sSeen`; an application no visible item showed is never closed by an item (the model handles it) |

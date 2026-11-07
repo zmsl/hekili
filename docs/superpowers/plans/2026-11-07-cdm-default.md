@@ -176,7 +176,9 @@ Task 3a rewrites them.
   - `ctl.ViewerItem(viewer, layoutIndex, id)` (`id == nil`: unconfigured); `ctl.ViewerChild(viewer)` a non-item child
     (no `cooldownID`, no `layoutIndex`);
   - viewers: `IsVisible()` (false when `ctl.viewer.shown[name]` or `ctl.viewer.parentShown` is false), `GetChildren()`
-    (varargs), `GetNumChildren()`; `ctl.ViewerAcquire(viewer, id)` adds a child (pool growth, also in combat);
+    (varargs), `GetNumChildren()`; `ctl.ViewerAcquire(viewer, id)` adds a child (pool growth, also in combat; a new frame table, so an item can be
+    replaced by a different frame for the same cooldownID; spec F13), and an acquired item whose aura is up lights at
+    once (F13) unless `silent` or `lag`;
   - `ctl.ViewerAura(item, unit|nil)` follows the client order (BD:368-392): changing a held aura clears first, then sets
     (`auraInstanceID = SECRET`, `auraSpellID` SECRET or plain per `ctl.viewer.plainSpell`, `auraDataUnit = unit`);
   - `ctl.ViewerRelease(item)`: `cooldownID = nil` (BD:95), then the aura clear (BD:98), then `layoutIndex = nil`;
@@ -323,6 +325,9 @@ Snapshot `:281-306`); `Families/Now.lua:325` (one line: `I.auraOurs[k] = true` o
       closes".
     - **per slot** "re-point the working item mid-application: no close"; control as above.
     - **per slot** "the working item held with a secret or nil unit, then silent: no close"; control as above.
+    - **replaced frame** (F13) "mid-application, the item's frame is released and a new frame table is acquired for the
+      same cooldownID, not lit yet (`lag = 1`): no close while it is silent (new slot, `sSeen` 0); it lights: UP";
+      control: "the new frame lit, then the aura ends: DOWN closes".
   - **C1 partner** keeps its control: "partner copy overwrites ours out of combat (walk read, source party1), item NONE in
     combat: no close; control: our own cast, item lit, then ends: DOWN closes".
   - **M5** "a form or enchant aura on the player is never written by apply".
@@ -437,6 +442,10 @@ snapshot's `presence` section.
 - [ ] **e4b, Alt-Z, hidden bar:** `/fprobe cdm items` with Alt-Z in combat and with one bar hidden in Edit Mode: the
   viewers read not visible (plain); the debug snapshot shows `fact=unknown` (never down) meanwhile, the right facts
   after.
+- [ ] **Dropped frame (F13):** removing the item of a buff that is up is answered for the active list (it reads as no
+  item, and re-added it lights at once). Still to read: after a removal, is the dropped frame still a child of its
+  viewer (`/fprobe cdm items` over `GetChildren()`: listed with `cooldownID` nil, or absent)? Either is not live in the
+  design; a child that kept a plain `cooldownID` while released would contradict BD:95 and must be reported.
 - [ ] **ACQ:** set one viewer to show "In Combat", log in, first fight: `/fprobe cdm hooks` counts `OnAcquireItemFrame`
   in combat; the debug snapshot shows its auras covered during that fight.
 - [ ] **LAT:** the time from `OnAuraInstanceInfoSet` (probe) to the change in the snapshot (player: within one forced
