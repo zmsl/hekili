@@ -149,6 +149,9 @@ local function capture(cmd)
     p:close()
     return s
 end
+local function q(s) -- one shell word
+    return "'" .. s:gsub("'", "'\\''") .. "'"
+end
 local function join(root, path)
     return root == "" and path or root .. "/" .. path
 end
@@ -192,8 +195,7 @@ function M.request(r, root, spec, cli)
             return checked
         end
         local pin, c = M.pin(spec), cli or env("WOWSIMS_CLI", join(root, "wowsimcli-sim-pin"))
-        local head =
-            capture("git -C '" .. (c:match("^(.*)/") or ".") .. "' rev-parse HEAD 2>/dev/null"):gsub("%s+$", "")
+        local head = capture("git -C " .. q(c:match("^(.*)/") or ".") .. " rev-parse HEAD 2>/dev/null"):gsub("%s+$", "")
         if head ~= pin then
             error(
                 ("%s is pinned at %s: %s needs the CLI of a checkout at that pin, and %s is at %s"):format(
@@ -240,6 +242,7 @@ function M.request(r, root, spec, cli)
             profession1 = pl.profession1,
             profession2 = pl.profession2,
             reactionTimeMs = pl.reactionTimeMs,
+            inFrontOfTarget = pl.inFrontOfTarget,
             distanceFromTarget = pl.distanceFromTarget,
         }
         p[pl.specKey] = { options = pl.options }
@@ -322,7 +325,7 @@ function M.simlParse(cli, file, who)
     end
     f:close()
     local out, errs = os.tmpname(), os.tmpname()
-    local rc = os.execute(("'%s' siml parse -json '%s' > '%s' 2> '%s'"):format(cli, file, out, errs))
+    local rc = os.execute(("%s siml parse -json %s > %s 2> %s"):format(q(cli), q(file), q(out), q(errs)))
     local s, e = slurp(out), slurp(errs)
     os.remove(out)
     os.remove(errs)

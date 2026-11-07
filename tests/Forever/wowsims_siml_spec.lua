@@ -42,6 +42,88 @@ describe("export.lua .siml recipe paths", function()
         assert.is_truthy(err:find("paladin_retribution", 1, true), err)
         assert.is_truthy(err:find(ex.pin("paladin_retribution"), 1, true), err)
         assert.is_truthy(err:find("a/default.apl.siml", 1, true), err)
+        assert.is_truthy(err:find(cli, 1, true), err) -- the CLI and its head (none here)
+        assert.is_truthy(err:find("no commit", 1, true), err)
+    end)
+
+    it("refuses a spec at the new pin with a CLI whose checkout is at another commit, naming that head", function()
+        local dir = os.tmpname()
+        os.remove(dir)
+        os.execute("mkdir -p '" .. dir .. "'")
+        os.execute(
+            "cd '" .. dir .. "' && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m old"
+        )
+        local pipe = assert(io.popen("git -C '" .. dir .. "' rev-parse HEAD"))
+        local head = pipe:read("*l")
+        pipe:close()
+        local cli = dir .. "/wowsimcli-sim-pin"
+        spit(dir .. "/gear.json", '{"items":[]}')
+        local spec = "paladin_protection"
+        local saved = ex.SPEC_PIN[spec]
+        ex.SPEC_PIN[spec] = ex.NEW_PIN
+        local r = { name = "S", apl = "a/default.apl.siml", player = { gear = "gear.json", specKey = "rogue" } }
+        local ok, err = pcall(ex.request, r, dir, spec, cli)
+        ex.SPEC_PIN[spec] = saved
+        os.execute("rm -rf '" .. dir .. "'")
+        assert.is_false(ok)
+        err = tostring(err)
+        for _, want in ipairs({ spec, ex.NEW_PIN, "a/default.apl.siml", cli, head }) do
+            assert.is_truthy(err:find(want, 1, true), want .. " in " .. err)
+        end
+    end)
+
+    it("quotes a CLI and a .siml path holding a quote for the shell", function()
+        local base = os.tmpname()
+        os.remove(base)
+        local dir = base .. "it's"
+        os.execute('mkdir -p "' .. dir .. '"')
+        local cli = dir .. "/cli"
+        spit(cli, '#!/bin/sh\ncat "$4.json"\n')
+        os.execute('chmod +x "' .. cli .. '"')
+        spit(dir .. "/a.apl.siml.json", '{"type":"TypeAPL"}')
+        local ok, t = pcall(ex.simlParse, cli, dir .. "/a.apl.siml", "test")
+        os.execute('rm -rf "' .. dir .. '"')
+        assert(ok, t)
+        assert.are.equal("TypeAPL", t.type)
+    end)
+
+    it("keeps a recipe player's inFrontOfTarget in the request", function()
+        local gear = os.tmpname()
+        spit(gear, '{"items":[]}')
+        local p = ex.request(
+            { name = "F", player = { gear = gear, specKey = "protectionPaladin", inFrontOfTarget = true } },
+            "",
+            "paladin_protection"
+        ).raid.parties[1].players[1]
+        os.remove(gear)
+        assert.is_true(p.inFrontOfTarget)
+    end)
+
+    it("gives drift's new side a .siml build over its defaults, as M.request does (one implementation)", function()
+        local drift = assert(loadfile("tools/wowsims/drift.lua"))()
+        local dir = os.tmpname()
+        os.remove(dir)
+        os.execute("mkdir -p '" .. dir .. "'")
+        local cli = dir .. "/cli" -- a fake CLI: the JSON beside each .siml
+        spit(cli, '#!/bin/sh\ncat "$4.json"\n')
+        os.execute("chmod +x '" .. cli .. "'")
+        spit(dir .. "/b.siml", "") -- drift checks the file is in the tree
+        spit(dir .. "/d.siml", "")
+        spit(dir .. "/b.siml.json", '{"player":{"class":"ClassHunter","equipment":{"items":[{"id":9}]}}}')
+        spit(dir .. "/d.siml.json", '{"player":{"race":"RaceOrc","buffs":{"giftOfTheWild":2}}}')
+        local ok, req = pcall(
+            drift.newRequest,
+            ex,
+            { name = "B", build = "b.siml", defaults = "d.siml" },
+            "hunter_survival",
+            dir,
+            cli,
+            {}
+        )
+        os.execute("rm -rf '" .. dir .. "'")
+        assert(ok, req)
+        local p = req.raid.parties[1].players[1]
+        assert.are.same({ "RaceOrc", 2, 9 }, { p.race, p.buffs and p.buffs.giftOfTheWild, p.equipment.items[1].id })
     end)
 
     it("still reads a .json path as JSON, with no CLI", function()

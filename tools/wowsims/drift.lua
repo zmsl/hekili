@@ -192,7 +192,10 @@ local function newRequest(ex, r, spec, tree, cli, notes)
         end
         error(path .. " is gone at the new rev", 0)
     end
-    r2.apl, r2.build, r2.gear = resolve(r.apl), resolve(r.build), resolve(r.gear)
+    r2.apl, r2.gear = resolve(r.apl), resolve(r.gear)
+    -- a .siml build or a recipe `siml` build: over its defaults, as M.request reads one
+    local whole = r.siml or (r.build and r.build:find("%.siml$") and r.build)
+    r2.build = not whole and resolve(r.build) or nil
     if r.player then
         r2.player = {}
         for k, v in pairs(r.player) do
@@ -200,14 +203,16 @@ local function newRequest(ex, r, spec, tree, cli, notes)
         end
         r2.player.gear = resolve(r.player.gear)
     end
-    if r.siml then
-        needCli(r.siml)
+    if whole then
+        needCli(whole)
         local path = os.tmpname()
-        spit(path, select(2, ex.simlBuild(cli, tree, r, "new rev")))
+        spit(path, select(2, ex.simlBuild(cli, tree, r, "new rev", whole)))
         r2.siml, r2.build = nil, path
     end
     return ex.request(r2, "", spec)
 end
+
+M.newRequest = newRequest -- tests/Forever/wowsims_siml_spec.lua
 
 local function translate(apl, set, r, log, player)
     local text, omitted = apl.translate(player.rotation, apl.context(set, r, log, player))

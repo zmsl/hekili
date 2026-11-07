@@ -115,7 +115,7 @@ Request (export):
   name in the header), `talentTree` (the wowsims tree file), `apl` (the APL JSON path in the checkout).
 - `player`: `race`, `class`, `gear` (a gear-set JSON path), `talentsString`, `specKey`, `options` (the spec's
   `DefaultOptions` in protojson: enum values by name), `profession1`/`profession2`, `reactionTimeMs`,
-  `distanceFromTarget`. Or `build`: a preset build file whose `player` is taken whole (Feral), with `gear` (a gear-set
+  `distanceFromTarget`, `inFrontOfTarget`. Or `build`: a preset build file whose `player` is taken whole (Feral), with `gear` (a gear-set
   JSON path) replacing its equipment; a build file with no equipment (Warlock's) needs `gear`, or the export stops
   (wowsimcli crashes on a player without equipment).
 - Or `siml`: a .siml build path in the checkout (the Hunters' `builds/*_weave.siml`), an export path key like `apl`
