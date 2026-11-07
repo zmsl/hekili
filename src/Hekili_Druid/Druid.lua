@@ -58,6 +58,7 @@ local spec = Hekili:NewClass("DRUID", {
             icon = 132276,
             role = "tank",
             package = "Guardian (wowsims.com)",
+            movement = true, -- the pack reads toggle.movement: the run into melee reaches the damage lines (R8)
         },
         { key = "restoration", name = L["Restoration"], tree = 3, icon = 136041, role = "healer", unsupported = true },
     },
