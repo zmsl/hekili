@@ -150,6 +150,7 @@ describe("resource modifiers", function()
         h.Class.auras.mod_aura_b = { key = "mod_aura_b", id = 1032, duration = 30 }
         ns.raceMods.costMods = first and { held, other } or { other, held }
         ns.BuildTracked()
+        VS.Drain(1.5) -- the build's player walk first: the client lists neither aura, the models below are the fixture
     end
 
     for _, first in ipairs({ true, false }) do
