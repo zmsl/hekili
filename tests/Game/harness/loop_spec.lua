@@ -464,7 +464,7 @@ describe("the headless loop's replay injection (o.replay)", function()
         assert.is_truthy(
             loop.line(m):find("; decision flips 0 (0.0 per 100), retracted confirmed by wowsims 0", 1, true)
         )
-        local t = loop.tally(L, 1, { duration = 6, hold = true })
+        local t = loop.tally(L, 1, { duration = 6, hold = true, steady = false }) -- the hold experiment alone
         assert.is_nil(loop.summary(t).decisions) -- the normal tally: unchanged
         -- every line carries the ledger's fields, and says when the hold experiment was on
         assert.is_truthy(loop.line(t):find("; dips 0.00 flashes 0.00; top []", 1, true))
