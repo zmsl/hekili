@@ -106,7 +106,8 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- about 60%)
     -- 5.2 -> 5.0 re-pin e2842f0a78 (Task 17, with the recipe's Seal of Command kick-start; 86.4 without it: the twist
     -- deadlocks from a melee start, see the recipe): nothing useful to cast, the strikes cooling, a seal up
-    local RET_LIVE60 = 5.0
+    -- 5.0 -> 5.2 pin move 2 on CN8 (steady icons on), measured 5.2 at L60 (the same cause; the 6 s bar governs)
+    local RET_LIVE60 = 5.2
     -- R41 (owner policy: no filler for filling's sake): the old `remains<24` Seal of Righteousness refresh held L10 at
     -- 4.4; it re-seals now only under two GCDs left. Nothing useful to cast: Holy Strike and Judgement cooling, Seal of
     -- Righteousness up (L10-L15 8.6, t 5.2-13.6). L40 keeps the 6 s bar (5.2); only L60 follows LIVE60 (R22)
@@ -146,7 +147,13 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- (34.04, 88.04, 103.90, 128.04 Holy Shield; 108.04, 172.04 Seal of Fury) all have the truth over the cost and
         -- the belief's lo under it (lo 119 / 161 / 171 / 22 / 162 / 23 vs truth 225 / 275 / 196 / 214 / 300 / 256): the
         -- unmodelled Shieldsworn Holy Strike return (gaps.md CU), no longer the price
-        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.88, PROT_REPLAY)
+        -- 0.88 -> 0.95 pin move 2 (e5a9cd2a2dfc, logs identical to 4b0030a44b's but the header) on CN8: 0.958 (46/48), top
+        -- [holy_shield -> holy_strike 1; seal_of_fury -> holy_strike 1] (decisions on-GCD; tick agreement 0.866). Cause of the
+        -- rise from 0.885 (old pin, rank 3 at 195): the log casts Holy Shield rank 4 (1239570), and PROT_REPLAY's procs now
+        -- hold its block hits (Tag 2) and Shieldsworn returns (Tag 1328544), which were replayed as casts that restarted
+        -- Holy Shield's believed cooldown and spent 240 mana. The 2 left are the unmodelled Shieldsworn Holy Strike
+        -- return (gaps.md CU)
+        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.95, PROT_REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Protection is out of mana from 24 s),
     -- so its longest wait is for mana. 10.4 on central fix 22 rebased (the live world's presses resolve from the driving
@@ -178,9 +185,11 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- L40 8.4 keeps R28's cause: out of mana (86), nothing castable; the band L32 11.0
     -- (mana 13), L35-L40 8.4
     -- is the same cause, gated at L40 only; L41 and up 4.4 (Shieldsworn)
-    local PROT_LIVE60 = 4.4
+    -- pin move 2 on CN8 (steady icons on), measured: L10 8.6 -> 8.4 (the same cause: nothing useful to cast), L60 4.6
+    -- (rank 4's 240 as above; the 6 s bar governs), L40 8.4 holds
+    local PROT_LIVE60 = 4.6
     local PROT_LIVE40 = 8.4
-    local PROT_LIVE10 = 8.6
+    local PROT_LIVE10 = 8.4
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()
             local C = content("paladin_protection", PROT_LIVE, "Protection (wowsims.com)", level)
