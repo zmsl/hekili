@@ -1,5 +1,5 @@
 # Arms (wowsims.com): the wowsims/forever default APL for Arms (ui/specs/warrior/dps/apls/arms.apl.json), translated to this addon's keys.
-# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at 4b0030a44be2.
+# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at e5a9cd2a2dfc.
 # Cooldowns toggle hides: Death Wish, Recklessness (also behind its pack setting, off by default), Sweeping Strikes and the racials (Blood Fury, Berserking, Eureka, Elune's Light).
 # No line here sits under the Potions or Defensives toggles.
 # Rend is used on every target, boss or not.
