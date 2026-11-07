@@ -78,9 +78,11 @@ function Race:RegisterResourceMod(def)
     end
 end
 
---- { aura = key, pct = n | flat = n, charges = k | nil, spells = { spell IDs } | nil }: an ability whose spell ID (or
---- one of its `copy` ranks) is listed (every ability paid from the resource when `spells` is nil) costs less while the
---- aura is up; with charges, each such cast whose declared cost is above 0 takes a stack. Also a class file's
+--- { aura = key, pct = n | flat = n, charges = k | nil, spells = { spell IDs } | nil, unless = key | nil }: an ability
+--- whose spell ID (or one of its `copy` ranks) is listed (every ability paid from the resource when `spells` is nil)
+--- costs less while the aura is up; with charges, each such cast whose declared cost is above 0 takes a stack. While
+--- the player's aura `unless` is up (as the cast starts: another modifier's spend in the same cast never decides it),
+--- the modifier neither prices nor takes a stack. Also a class file's
 --- `spec:RegisterCostMod` (Engine/Schema/Spec.lua): the class file has returned for any other class, so its append is the player's.
 function ns.RegisterCostMod(def)
     mods.costMods[#mods.costMods + 1] = def
@@ -161,7 +163,7 @@ function M.Apply(cost, a)
     local buff = Hekili.State.buff
     for i = 1, #list do
         local m = list[i]
-        if buff[m.aura].up and inScope(m, a) then
+        if buff[m.aura].up and not (m.unless and buff[m.unless].up) and inScope(m, a) then
             if type(m.pct) == "number" then
                 cost = cost * (1 + m.pct)
             elseif type(m.flat) == "number" then
@@ -172,9 +174,11 @@ function M.Apply(cost, a)
     return cost > 0 and cost or 0
 end
 
+local held = {} -- M.Spend's per-modifier `unless` answers, decided before any stack goes; grows once, to the list's size
+
 --- Ability `key` was cast in the simulation with declared cost `base` (ns.spendResources, before any discount): when
 --- `base` is above 0, a stack of each charged modifier in scope whose buff is up (gone at the last), even when the
---- discount brought the paid cost to 0.
+--- discount brought the paid cost to 0; a modifier whose `unless` aura is up as the cast starts takes none.
 function M.Spend(base, key)
     local list = mods.costMods
     if #list == 0 or type(base) ~= "number" or base <= 0 then
@@ -186,8 +190,12 @@ function M.Spend(base, key)
         return
     end
     for i = 1, #list do
+        local u = list[i].unless
+        held[i] = u ~= nil and state.buff[u].up or false
+    end
+    for i = 1, #list do
         local m = list[i]
-        if m.charges and state.buff[m.aura].up and inScope(m, a) then
+        if m.charges and not held[i] and state.buff[m.aura].up and inScope(m, a) then
             state.removeStack(m.aura)
         end
     end
