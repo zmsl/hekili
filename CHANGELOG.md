@@ -38,6 +38,7 @@
 - Enhancement (wowsims.com) follows wowsims's current build: Magma and Windfury Totems, Water Shield (only while it is down), Fire Nova as the filler, an AoE list. Magma Totem lasts 40 s with Trial by Fire 2/2. Fire Nova's mana costs are corrected and match the game at every rank (375 at rank 5, was 520). The weapon imbue reminder (Flametongue, Rockbiter before 10) leads the list while the main hand has none.
 
 ### Fixed
+- Icons no longer flash to the next ability for a moment as a cooldown comes back: while the game still says an ability is not ready, the addon now counts down to the end it expects (when your global cooldown ends first, or the cooldown ends on the update itself) instead of pushing it half a second out. Not yet checked in game.
 - A display whose buttons fail to build no longer raises the same error on every redraw: the original error is reported once and that display stays blank until the next rebuild. (Cause of the build failure itself still being investigated.)
 - Rogues and Feral Druids: after you switch targets, finishers no longer show while the new target has no combo points. The addon now counts only the points on your current target, and they come back when you switch back to the target that holds them.
 - An ability a priority keeps away from your melee swing no longer disappears for a moment when it would be ready just before the swing: it now counts down to just after the swing, when the priority allows it.
