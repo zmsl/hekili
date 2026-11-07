@@ -47,7 +47,6 @@ TellMeWhen research (`~/src/hekili-central-needs/tmw-research.md`, "TMW"), the 2
 | F10 | The viewer tracks player-cast auras only | CDM-S; and from source below |
 | F11 | Item presence matches the aura's lifetime to the second, in combat, gain and removal: Enrage 10 s, Demoralizing Roar 30 s, Growl 3 s, Nature's Grasp consumed at 18 s; Faerie Fire, Demoralizing Roar and Growl (target debuffs) lit their items | AuraProbe run 1, P0 result 10 (`~/src/hekili-central-needs/auraprobe-druid-run1-2026-11-07.txt`) |
 | F12 | **An item can stay silent while its aura is up**: Mark of the Wild rank 3 (6756) up (direct read at 0 s), the item (spell 5232, rank 2) never held an aura | P0 result 10.4 |
-| F13 | Direct reads are readable for the first sample of a fight (0 s) and hidden from the second (1 s): the restriction lands just after `PLAYER_REGEN_DISABLED` | P0 result 10.2 |
 | F14 | A target item's `auraDataUnit` is plain "target" while held | CV §2 (Rend); the probe now records it (P0 result 10.5) |
 
 Read from source (not measured): `SetAuraInstanceInfo` clears then sets in one call (BD:368-380);
@@ -124,7 +123,7 @@ per-spell table, no layout assumption.
   applied at least `GRACE` (1.0 s) ago: held -> `trust[e] = 1`; silent -> `trust[e] = 2` (disproven: its NONE is never
   used; its UP would still count and re-prove it). `GRACE` absorbs the viewer and the walk handling the same
   `UNIT_AURA` in different frames. The record down per the walk proves nothing (a silent item agrees with anything).
-  The last out-of-combat poll before `PLAYER_REGEN_DISABLED` is the last comparison of that fight.
+  The last out-of-combat poll before the fight is the last comparison until combat ends.
 - **Rank change.** The walk sees the aura's spell ID out of combat (`U.seenId[u][j]`, a preallocated array the walk
   fills, `Sources/Auras.lua:97-120`); when it differs from `trustId[e]` for a proven or disproven entry, the entry goes
   back to unproven and the next comparison decides again (a newly learned rank is re-judged at its first out-of-combat
@@ -135,8 +134,8 @@ per-spell table, no layout assumption.
   aura once (in or out of combat) or been compared with the walk. Until then the model closes records, as today.
 - **Residual risk.** An entry proven for rank n, then rank n+1 cast for the first time **in combat** (no walk to see the
   new ID): the item may go silent while the aura is up, and that NONE is trusted. Rare (ranks are learned out of combat
-  and cast before the next pull is usual); deferral D11 names the upgrade (D10's walk at `PLAYER_REGEN_DISABLED`, or our
-  cast's plain spell ID compared with `trustId`).
+  and cast before the next pull is usual); deferral D11 names the upgrade (our cast's plain spell ID
+  compared with `trustId`).
 - **Allocation.** None in the poll: two preallocated arrays per entry and one per (u, j).
 - **Counters** (debug snapshot): per entry proven / disproven / unproven counts in the summary line; a per-aura `trust=`
   field (the best entry state among its live slots).
@@ -461,8 +460,7 @@ needed, §3.3), GPL-3.0 like Hekili Forever; ideas only, re-implemented, no code
 | D6 | Coverage fixtures for classes other than Warrior and Druid | in game only | each class's `/fprobe cdm sets` |
 | D8 | Target-side changes we did not cause wait up to 0.5 s (no hooks; the target's `UNIT_AURA` is not delivered in combat); upgrade: deliver it inside `Game/` while target coverage > 0 | small impact; a target NONE is no answer | the A/B or a player shows late target edges |
 | D9 | `HOLD` = 1.0 s is a guess | no measurement | Task 9's target-DoT-past-duration flicker row |
-| D10 | A walk at `PLAYER_REGEN_DISABLED` (F13: reads are still plain at the fight's first instant; today `Sources/Auras.lua:273` only resets counters): ground truth at the pull, and one more trust comparison (§2.2a) | the delay between the event and the restriction is unmeasured; a walk that half-succeeds would write a partial state | probe e6 (`/fprobe cdm events`) measures the delay; build as plan Task 12 if the walk completes reliably |
-| D11 | A rank first cast in combat after its entry was proven on a lower rank: the silent item's NONE is trusted (§2.2a residual risk) | rare: ranks are learned and usually cast out of combat | D10 built, or a player report of a mid-fight "rebuff" |
+| D11 | A rank first cast in combat after its entry was proven on a lower rank: the silent item's NONE is trusted (§2.2a residual risk) | rare: ranks are learned and usually cast out of combat | a player report of a mid-fight "rebuff" |
 | D12 | `GRACE` = 1.0 s for disproof is a guess | no measurement of the viewer's lag behind the walk out of combat | the A/B's disproven counts on the `buffs` layout, or a probe |
 
 D2 (stuck-up after losing a fact) and D7 (an acquire hook) are closed by decisions 112 and 101.
@@ -475,5 +473,4 @@ Round 2 (P0 result 10): decision 115 as the controller specified it; no owner qu
 Q1 sweep: yes (controller's recommendation, reversible). Q2 no hooks: yes (same). Q3 registered duration: yes, made
 complete by decision 112. Q4 floor: CN13 builds it (decision 114; Task 4c fallback). Q5: no command; the debug
 snapshot (§6). Q6: superseded by "no toggle". New for the owner: confirm `Hekili.cdmOff` (a field on the addon table set
-by `/run`, not a command or option) as the debug-only session off; and whether D10 (a walk at `PLAYER_REGEN_DISABLED`)
-should be built once e6 measures the delay, or stays a deferral.
+by `/run`, not a command or option) as the debug-only session off.
