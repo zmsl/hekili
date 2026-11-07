@@ -1,6 +1,6 @@
 # Cooldown Manager facts, always on: one reduced fact per tracked thing (spec amendment, 2026-11-07)
 
-Status: DESIGN (not built), review rounds 1-3 applied (round 3: the seen rule, review 2 §3) (`~/src/hekili-central-needs/cdm-design-review.md`). Plan:
+Status: DESIGN (not built), review rounds 1-4 applied (round 3: the seen rule, review 2 §3; round 4: the seen rule per slot, review 3) (`~/src/hekili-central-needs/cdm-design-review.md`). Plan:
 `docs/superpowers/plans/2026-11-07-cdm-default.md`.
 Amends `docs/superpowers/specs/2026-10-23-providers-design.md` ("the providers spec", decisions 65-91). New decisions
 are numbered from 92. Paths are under `src/Hekili/` unless they start with `tests/`, `tools/` or `docs/`. Line numbers
@@ -92,9 +92,9 @@ One item frame is one **evidence slot**. A slot is **live** for thing (j, u) whe
 - it is configured: `cooldownID` and `layoutIndex` plain and non-nil;
 - its `cooldownID` maps to aura j (§3.1);
 - u = 2 only: it is not **settling** (§3.4);
-- it gives an answer for u: **UP** (held, with plain `auraDataUnit` = u, F14) or **NONE** (not held, and the seen rule
-  of §2.2a holds for (j, u)). A held slot for the other unit, a held slot with a secret or nil unit, and a silent slot
-  failing the seen rule are not live for u.
+- it gives an answer for u: **UP** (held, with plain `auraDataUnit` = u, F14) or **NONE** (not held, and the slot's
+  seen rule of §2.2a holds for (j, u)). A held slot for the other unit, a held slot with a secret or nil unit, and a
+  silent slot failing its seen rule are not live for u.
 
 `held = issecretvalue(aid) or aid ~= nil`, `aid = rawget(item, "auraInstanceID")`. The entry's role plays no part (F6).
 
@@ -103,35 +103,48 @@ spells' auras: BD `FindLinkedSpellForCurrentAuras`; F4: the Omen passive did not
 `overrideSpellID`, `overrideTooltipSpellID` (each with `GetOverrideSpell`). The plan's Task 3a reads
 `GetAssociatedAuraSpellPriority` (BD:327-358) and widens the candidate set if the base spell can bear the aura while links
 exist. UP is evidence for j only if **every** candidate maps to j (untracked candidates included: an unregistered linked
-proc makes the item ambiguous); a NONE counts for every j a candidate maps to. Counted per fight as `ambiguous`.
+proc makes the item ambiguous). An ambiguous item gives no NONE either: its UP names no single aura, so the seen rule
+(§2.2a) never holds for it. Counted per fight as `ambiguous`.
 
-### 2.2a The seen rule: silence closes only an application an item was seen holding (decision 115)
+### 2.2a The seen rule: a slot's silence closes only an application that slot was seen holding (decision 115)
 
 F12 shows an item can stay silent while its aura is up. Under "DOWN when every existing item says none" that silence
 would close the record: a wrong DOWN and a "rebuff" every poll for the rest of the fight. The cause does not matter
-(a client bug, a candidate list, anything); one rule covers it:
+(a client bug, a candidate list, anything); one rule covers it, kept **per slot** so a silent item can never borrow
+another item's light (review 3, must-fix 1):
 
-- **`fact.seen[k]`**, one preallocated number per thing (u, j), 0 at build: at **every** sweep where the thing has
-  `nUp > 0`, `seen[k] = t`. Every sweep, not only on a reading change: a refresh is a clear-then-set inside one client
-  call, so a change-only write would leave `seen` at the first light while our refresh moves `applied`.
-- **The gate is in liveness:** a silent slot is live as NONE for k only while the record is up and
-  `seen[k] >= U.applied[u][j]` (an item of this thing has held this application). Otherwise it is not live, so the
-  reduced fact reads UNKNOWN, never DOWN. `Reduce` and its table are unchanged.
-- The sweep re-evaluates the silent slots of a thing whose `applied` moved (our cast) or whose record closed: one check
-  per such thing per sweep, no allocation.
-- Nothing is reset at a rebuild or a layout change; no per-entry state.
+- **`sSeen[s]`**, one preallocated number per slot (beside the leaf's other slot arrays, `MAX_SLOTS` numbers), 0 at
+  build. At **every** sweep where slot s is held with plain `auraDataUnit` = u and its UP counts for a single j (not
+  ambiguous, §2.2): `sSeen[s] = t` and `sUnit[s] = u`. Every sweep, not only on a reading change: a refresh is a
+  clear-then-set inside one client call, so a change-only write would leave `sSeen` at the first light while our refresh
+  moves `applied`. `sUnit[s]` is the slot's last plain held unit and is kept through silence.
+- **Resets** (`sSeen[s] = 0`, `sUnit[s] = 0`): when the slot's mapping is (re)assigned, that is at a `cooldownID` change
+  (release, re-point, (re)configure) and at a map rebuild; at a held sweep whose unit is secret or nil (it held
+  something for no known unit); and at `PLAYER_TARGET_CHANGED` for a slot whose `sUnit` is the target (the same place
+  §3.4 marks it settling: mob A's light says nothing of mob B's application).
+- **The gate is in liveness:** a silent slot s is live as NONE for (j, u) only when all three hold:
+  the record is up, `U.exp0[u][j] > t`; `sSeen[s] >= U.applied[u][j]` (this slot held this application); and
+  `sUnit[s] == u`. Otherwise it is not live, so the reduced fact reads UNKNOWN, never DOWN. `Reduce` and its table are
+  unchanged.
+- **Owner and detection, no hook.** The leaf owns `sSeen` and `sUnit`; the router never reads them. `applied` moves in
+  `Families/` (our cast, a read) without telling the leaf, so the sweep re-checks the gate of **every silent mapped slot
+  at every sweep** (bounded by `MAX_SLOTS`, reading `U.applied`/`U.exp0` inside `Game/`, no allocation); a slot whose
+  gate result changed moves the counters like any reading change. Nothing is added to `Families/Auras.lua`.
 
 What happens:
 
 | Case | Result |
 |---|---|
-| Our fresh cast of a buff whose item lit for an **earlier** application | the cast writes `applied = T` (`Families/Now.lua:325-328` through `I.AuraModel`), so `seen < applied`: the silent item is not live, the fact is UNKNOWN until the item lights (then `seen >= applied`); no close in the gap between our cast and the client's `UNIT_AURA` (closes I-B) |
-| A **never-lit** item (F12) | `seen` stays below `applied`: never live as NONE, fact UNKNOWN; the model closes the record at its expiry |
+| Our fresh cast of a buff whose item lit for an **earlier** application | the cast writes `applied = T` (`Families/Now.lua:325-328` through `I.AuraModel`), so `sSeen < applied`: the silent item is not live, the fact is UNKNOWN until the item lights (then `sSeen >= applied`); no close in the gap between our cast and the client's `UNIT_AURA` (closes I-B) |
+| A **never-lit** item (F12) | its `sSeen` stays 0: never live as NONE, fact UNKNOWN; the model closes the record at its expiry |
 | A buff **re-applied after its item went silent** (an item that stops following) | the new application moves `applied`; the item never holds it, so it never closes it: UNKNOWN, the model runs (closes I-A) |
-| Our refresh while the item stays held | `applied = T`; the next sweep writes `seen = t >= T`; when the aura really ends the item's NONE is live and DOWN closes |
-| A **partner's copy** of our buff (out of combat it overwrites ours; a walk re-read keeps `applied`, `Families/Auras.lua:208-212`) | `seen` may still be `>= applied`, so the NONE is live and the reduced fact is DOWN; it does not close, because the walk read with a partner source cleared `ours[k]` (rule 2.5.1). That is why `ours` stays |
-| Two items for one aura, one silent | the working one lights (`seen`), then the silent one is live as NONE: outvoted while the other is held (fresher UP), agreeing after the aura ends |
-| A hidden viewer | no live slot, no `seen`; an application no visible item showed is never closed by an item (the model handles it) |
+| Our refresh while the item stays held | `applied = T`; the next sweep writes `sSeen = t >= T`; when the aura really ends the item's NONE is live and DOWN closes |
+| A **partner's copy** of our buff (out of combat it overwrites ours; a walk re-read keeps `applied`, `Families/Auras.lua:208-212`) | `sSeen` may still be `>= applied`, so the NONE is live and the reduced fact is DOWN; it does not close, because the walk read with a partner source cleared `ours[k]` (rule 2.5.1). That is why `ours` stays |
+| Two items for one aura, one silent (also across our refresh) | the silent one's `sSeen` stays 0, so it is never live: the working one alone decides (UP while held, DOWN when the aura ends); no flip, `agree` stays true |
+| The working item **leaves** mid-application (released, re-pointed, held with a secret or nil unit) while the silent one stays | the working slot drops or resets; the silent one is still not live: UNKNOWN, the model runs, no close |
+| An **ambiguous** item | its UP counts for no j and it never writes `sSeen`: never live as NONE |
+| A target slot after a target switch | its `sSeen` was reset at the switch: not live for the new target until it holds that target's aura |
+| A hidden viewer | its slots are stale (`nStale > 0`, UNKNOWN), and while hidden they write no `sSeen`; an application no visible item showed is never closed by an item (the model handles it) |
 
 ### 2.3 The reduction: one pure, total function
 
@@ -154,9 +167,10 @@ Reduce(nLive, nUp, nNone, nStale, tUp, tNone) -> state, agree
 Pure: numbers in, two values out, no tables. `I.ReduceFact` in `Presence/Reduce.lua`, tested row by row.
 
 **Times (I3).** `tUp` / `tNone` are the latest time a live slot of the thing *began* to answer UP / NONE. A slot begins
-to answer at a reading change, at its first collect, at stale-to-live (viewer visible again), at settle end and when the seen rule starts to hold
-for a silent slot; each is a change at that poll's time. The seen rule is folded into liveness (§2.2), so `Reduce`
-itself does not change. `fact.t[k]` is the time the reduced state last went from UNKNOWN or DOWN to UP.
+to answer at a reading change, at its first collect, at stale-to-live (viewer visible again) and at settle end; each is
+a change at that poll's time. A silent slot begins to answer NONE only at its own held-to-silent change (its `sSeen` is
+written only while it is held, so its seen rule can afterwards only stop holding, which takes it out of liveness, never
+give it a new answer). The seen rule is folded into liveness (§2.2), so `Reduce` itself does not change. `fact.t[k]` is the time the reduced state last went from UNKNOWN or DOWN to UP.
 
 **Disagreement (M8, M3).** `disagree[k]` counts transitions of `agree` from true to false, not polls. Expected source:
 an Essential/Utility item that does not refresh on a target change (BV:483-485) beside a Buff entry that does; the
@@ -275,7 +289,8 @@ Blizzard frames spreading taint; and it never sees Essential/Utility changes), a
 
 Target evidence is presence **on the current target only**, never per GUID (P0 result 8). On `PLAYER_TARGET_CHANGED`
 every slot whose last answer was for the target, and every NONE slot, is **settling** until `t + SETTLE` (0.05 s until
-CDM-O measures it); settling slots count as `nStale`, so the target's thing is UNKNOWN meanwhile and the per-target
+CDM-O measures it), and every slot whose `sUnit` is the target has its `sSeen` reset (§2.2a); settling slots count as
+`nStale`, so the target's thing is UNKNOWN meanwhile and the per-target
 memory (`Families/Auras.lua:255-264`) gets no old-target state. Settle end is a reading change (§2.3). An
 Essential/Utility NONE may stay stale after the switch (BV:483-485, M3): the fresher-UP rule covers it. Replaces today's
 immediate re-read (`CooldownViewer.lua:161-168`).
@@ -413,9 +428,9 @@ flicker rise beyond seed noise (±0.3/min) on any spec in any viewer arm.
 | 92 | A fact reducer between evidence and belief: one reduced fact per (aura, unit); the belief reads only it | "1 fact per thing that we track" |
 | 93 | Providers have a standing (walk 3 out of combat only, direct 2, CDM 1, model 0); the highest standing with live evidence decides | a plain walk carries durations; in combat a walk's "plain" is not trustworthy (I7) |
 | 94 | `Reduce` is pure and total, table-tested; disagreements counted on transitions | no silent resolution |
-| 95 | Any item in any viewer is evidence; role ignored; a slot is live for (j, u) only if it answers UP (unit from the plain `auraDataUnit`, F14) or a NONE that passes the seen rule | F6; totality; F12 |
-| 96 | Not evidence: an invisible viewer, an unconfigured or released slot, an unmapped item, a settling target slot, a secret identity field, a silent slot failing the seen rule; no item = UNKNOWN | no layout assumptions; F12 |
-| 97 | UP counts for j only if every aura candidate of the item maps to j; a NONE counts for every j it maps to | `auraSpellID` secret (F3); untracked linked procs (I2) |
+| 95 | Any item in any viewer is evidence; role ignored; a slot is live for (j, u) only if it answers UP (unit from the plain `auraDataUnit`, F14) or a NONE that passes its own seen rule | F6; totality; F12 |
+| 96 | Not evidence: an invisible viewer, an unconfigured or released slot, an unmapped item, a settling target slot, a secret identity field, a silent slot failing its seen rule; no item = UNKNOWN | no layout assumptions; F12 |
+| 97 | UP counts for j only if every aura candidate of the item maps to j; an ambiguous item gives neither UP nor NONE (it never passes the seen rule) | `auraSpellID` secret (F3); untracked linked procs (I2); an ambiguous light names no single application |
 | 98 | The map is keyed by cooldownID, complete over categories 0-8 with unlearned spells, built out of combat | in combat only the evidence set changes |
 | 99 (supersedes 89) | Mid-fight layout changes apply as evidence changes; losing evidence makes a thing UNKNOWN and keeps its belief | the owner's amended 89 |
 | 100 (supersedes 79) | Presence is read by a rawget sweep at poll 15, run before the `covered` guard | the refresh pair, release order and always-shown items vanish |
@@ -433,7 +448,7 @@ flicker rise beyond seed noise (±0.3/min) on any spec in any viewer arm.
 | 112 | An UP with no model: registered duration from `max(fact.t, applied)`; past it a `HOLD` (1.0 s) re-staged once per `HOLD` while the fact stays UP; `math.huge` only for a player aura with no numeric duration | never stuck up on the target; bounded lapse; no per-poll churn (C2; owner Q3) |
 | 113 | `apply` skips player form and enchant auras | their records belong to Forms/Enchants (M5) |
 | 114 | CN13 owns a generic `I.auraFloor[j]`; this lane writes it from the reduced fact | no one-update flash; `Families/` knows nothing of the router (owner Q4) |
-| 115 | **The seen rule**: a silent slot counts as NONE only for an application an item of the thing was seen holding (`fact.seen[k] >= U.applied[u][j]`, `seen` written at every sweep with `nUp > 0`); otherwise not live, so UNKNOWN | an item can stay silent while its aura is up (F12); also closes the cast-before-`UNIT_AURA` flash (I-B) and the item-stops-following loop (I-A); one number per thing, no per-entry state (review 2 §3) |
+| 115 | **The seen rule, per slot**: a silent slot counts as NONE for (j, u) only for an application that slot was seen holding: the record is up (`U.exp0[u][j] > t`), `sSeen[s] >= U.applied[u][j]` and `sUnit[s] == u`; `sSeen` is written at every sweep the slot is held for u (unambiguous), reset at a mapping change, a rebuild, a held sweep with a secret or nil unit and, for a target slot, a target switch; otherwise not live, so UNKNOWN | an item can stay silent while its aura is up (F12); also closes the cast-before-`UNIT_AURA` flash (I-B) and the item-stops-following loop (I-A); per slot, not per thing, so a silent item never borrows another item's light (review 3); one number per slot (`MAX_SLOTS`), the leaf's own, no per-entry or per-thing state |
 
 ## 12. Credits
 
@@ -462,7 +477,7 @@ D2 (stuck-up after losing a fact) and D7 (an acquire hook) are closed by decisio
 ## 14. Owner answers recorded (2026-11-07)
 
 Round 2 (P0 result 10) introduced decision 115; round 3 (review 2 §3, owner: keep it small) replaced its machinery with
-the seen rule.
+the seen rule; round 4 (review 3) keys it per slot, so a silent item cannot borrow another item's light.
 
 
 Q1 sweep: yes (controller's recommendation, reversible). Q2 no hooks: yes (same). Q3 registered duration: yes, made

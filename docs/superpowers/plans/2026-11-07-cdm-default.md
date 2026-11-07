@@ -88,8 +88,8 @@ DEVELOPMENT.md                                             MODIFY   Hekili.cdmOf
 1. **The reducer is pure and total.** Every row of spec §2.3 in the table test; no upvalue read but the constants.
 2. **No layout assumption.** No item anywhere is UNKNOWN; unconfigured, released, invisible, unmapped, settling and
    secret-field slots are not live; roles never consulted.
-3. **No wrong DOWN.** A silent item counts as NONE only for an application an item was seen holding (the seen rule,
-   decision 115); a player DOWN closes only with `ours`; a target NONE never; the walk wins only out of combat.
+3. **No wrong DOWN.** A silent slot counts as NONE only for an application that same slot was seen holding (the seen
+   rule, per slot, decision 115); a player DOWN closes only with `ours`; a target NONE never; the walk wins only out of combat.
 4. **Never stuck up.** No `math.huge` on the target or with a numeric duration; bounded lapse; no per-poll re-stage.
 5. **Reconciliation only in `Sources/Auras.lua`** (plus Now.lua's one line; `Families/Auras.lua` only in Task 4c).
 6. **Default arm identical**; viewer arms measured.
@@ -206,14 +206,16 @@ Task 3a rewrites them.
   1. "maps by spellID, overrideSpellID, overrideTooltipSpellID, linkedSpellIDs and GetOverrideSpell; never the singular linkedSpellID"
   2. "maps unlearned entries (allowUnlearned)"
   3. "Omen-like: linked proc tracked, passive untracked: UP counts for the proc" (F4)
-  4. "Eclipse-like: two linked procs, the pack tracks one: ambiguous, UP counts for none, NONE for the tracked one" (I2)
-  5. "an item naming two pack auras is ambiguous: NONE for both, UP for neither"
+  4. "Eclipse-like: two linked procs, the pack tracks one: ambiguous (maps to the tracked one), UP counts for none" (I2)
+  5. "an item naming two pack auras is ambiguous: maps to both, UP for neither"
+  (An ambiguous slot's silence is never live once Task 3c's seen rule lands: spec §2.2, decision 97.)
   6. "the collect keeps every child once, items and non-items; past MAX_SLOTS a child is ignored and counted (overflow)"
   7. "collects at activation, rebuild and PLAYER_REGEN_ENABLED; in combat only on GetNumChildren growth, the new indices only, allocating no table"
   8. "a NEW pack aura added to the fake viewer with no code change is mapped" (owner acceptance, generic)
   9. "no HookScript and no hooksecurefunc call is made"
 - [ ] **Step 2: expect failure. Step 3: Implement** spec §3.1 and §3.2's collect: `cdvToJ` (j, or -a with `amb[a]`),
-  `Q.Mappable(j)`, the slot arrays preallocated to `MAX_SLOTS` (`sJ`, `sAmb`, `sV`, `sAns`, `sUnit`, `sT`), the
+  `Q.Mappable(j)`, the slot arrays preallocated to `MAX_SLOTS` (`sJ`, `sAmb`, `sV`, `sAns`, `sUnit`, `sT`, `sSeen`;
+  `sSeen`/`sUnit` are used from Task 3c), the
   frame-to-slot weak map, `known[v]` children per viewer. Delete the `HookScript` path (`:107-133`). Header credits
   TellMeWhen (Cybeloras) for the hidden-viewer rule, the all-viewers presence bit and the mapping (ideas, GPL-3.0).
 - [ ] **Step 4:** specs; `make check`; `tools/check_border.sh`; first gate `IDENTICAL`.
@@ -246,18 +248,30 @@ Task 3a rewrites them.
 - [ ] **Step 1: Failing tests** (counts read through `Q.Counts`; each "not live" test has its positive control):
   1. "target change: target and NONE slots settle for SETTLE as stale; settle end is a change at that poll"
   2. "an error in the sweep turns the leaf off for the session with one def.error line"
-  3. **seen** "seen[k] is written at every sweep with nUp > 0, not only on a change" (a refresh that keeps the item held
-     moves `applied`; the next sweep's `seen >= applied`)
+  3. **seen** "sSeen[s] is written at every sweep the slot is held for u, not only on a change" (a refresh that keeps
+     the item held moves `applied`; the next sweep's `sSeen >= applied`)
   4. **seen** "a silent item for an application it never held is not live (counts 0); control: the same item, lit this
      application, then silent, is live as NONE"
-  5. **seen** "our new cast moves applied past seen: the silent item is not live until it lights again (I-B); control: once
-     it lights, its later silence is live"
-  6. "nothing about the seen rule is reset at a rebuild or a layout change"
-  `alloc_spec`: the seen write and gate allocate nothing.
-- [ ] **Step 2: expect failure. Step 3: Implement** settling, `fact.seen[k]` (preallocated, written by the leaf; the
-  router exposes it in Task 4a), the gate in liveness reading `I.auras` (`U.applied`, `U.exp0`), re-evaluating the silent
-  slots of things whose `applied` moved or whose record closed, the `pcall` self-off. Delete the immediate target
-  re-read (`:161-168`).
+  5. **seen** "our new cast moves applied past sSeen: the silent item is not live until it lights again (I-B); control:
+     once it lights, its later silence is live"
+  6. **seen per slot** "two items for one aura, B never lit: B is never live (A held: UP, agree true; our refresh while A
+     is held: no flip); A released mid-application: counts all zero (UNKNOWN, not DOWN); control: A stays and goes
+     silent: live as NONE"
+  7. **seen per slot** "re-point resets the slot: re-pointed to another aura and silent, it is not live for either;
+     re-pointed back, not live until it lights again; control: it lights the new aura, then goes silent: live"
+  8. **seen per slot** "a held slot with a secret or nil unit, then silent, is not live for either unit; control: held
+     with plain unit u, then silent: live for u only"
+  9. **seen per slot** "an ambiguous slot, held then silent, is never live; control: an unambiguous slot, same sequence,
+     is live"
+  10. **seen per slot** "a rebuild resets every slot's sSeen; a target switch resets the target-held slots' sSeen (not
+     live for the new target until lit); a record that closed (`U.exp0[u][j] <= t`) makes its silent slots not live
+     at the next sweep"
+  `alloc_spec`: the seen write, the resets and the gate allocate nothing.
+- [ ] **Step 2: expect failure. Step 3: Implement** settling, `sSeen`/`sUnit` per spec §2.2a (preallocated slot arrays,
+  owned by the leaf; the router never reads them), the gate in liveness reading `I.auras` (`U.applied`, `U.exp0`):
+  every sweep re-checks the gate of every silent mapped slot (bounded by `MAX_SLOTS`; no hook, nothing added to
+  `Families/Auras.lua`), and a changed gate result moves the counters like a reading change; the resets; the `pcall`
+  self-off. Delete the immediate target re-read (`:161-168`).
 - [ ] **Step 4:** specs; `make check`; first gate `IDENTICAL`.
 - [ ] **Step 5: Commit** `feat(belief): CDM leaf target settle, the seen rule, self-off (decisions 103, 107, 115)`.
 
@@ -304,6 +318,11 @@ Snapshot `:281-306`); `Families/Now.lua:325` (one line: `I.auraOurs[k] = true` o
       `seen` write).
     - "a buff re-applied after its item went silent (the item stops lighting): UNKNOWN, never closed by the item";
       control as above.
+    - **per slot** "two items for one aura, one silent (F12 flag): release the working one mid-application in combat:
+      no close, the reduced fact UNKNOWN"; control: "the same two items, the working one stays and the aura ends: DOWN
+      closes".
+    - **per slot** "re-point the working item mid-application: no close"; control as above.
+    - **per slot** "the working item held with a secret or nil unit, then silent: no close"; control as above.
   - **C1 partner** keeps its control: "partner copy overwrites ours out of combat (walk read, source party1), item NONE in
     combat: no close; control: our own cast, item lit, then ends: DOWN closes".
   - **M5** "a form or enchant aura on the player is never written by apply".
