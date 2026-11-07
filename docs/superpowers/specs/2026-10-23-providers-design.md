@@ -551,4 +551,6 @@ from the assumption and from the wound scoring. The plan's Task 1 needs recovery
 | 90 | The audit is per aura: path (viewer or model), facts, and facts that disagreed with the belief | the measure of how wrong the modelled timers were |
 | 91 | Outcomes has no router: the switch picks the leaf | its questions are not keyed by a coverage set |
 
+Table note (2026-11-07): decision 89 is superseded by decision 99 and decision 79 by decision 100 of `docs/superpowers/specs/2026-11-07-cdm-default-design.md` (the map is complete and built out of combat; mid-fight layout changes apply as evidence changes; presence is read by a poll sweep, hooks only wake a cycle); decisions 80, 82 and 88 are amended there (the reduced fact, default ON, the router hosts the reducer), as are §2.4's BuffIcon/BuffBar-only rule and its taint rule.
+
 Table note (Task 8, 2026-10-24): decision 73 is superseded (RowOwner is count-only: rows route at once, no hold, no `T.Expire(now - ROW_DELAY)`); decisions 71 (the mute counts avoids on our swing's unit) and 75 (EnemyHitAt takes the latest unused taken group) are refined by the §2.2 amendments.
