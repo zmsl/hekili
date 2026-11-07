@@ -88,8 +88,8 @@ DEVELOPMENT.md                                             MODIFY   Hekili.cdmOf
 1. **The reducer is pure and total.** Every row of spec §2.3 in the table test; no upvalue read but the constants.
 2. **No layout assumption.** No item anywhere is UNKNOWN; unconfigured, released, invisible, unmapped, settling and
    secret-field slots are not live; roles never consulted.
-3. **No wrong DOWN.** A silent item counts only once its entry is proven (decision 115); a player DOWN closes only
-   with trusted NONEs and `ours`; a target NONE never; the walk wins only out of combat.
+3. **No wrong DOWN.** A silent item counts as NONE only for an application an item was seen holding (the seen rule,
+   decision 115); a player DOWN closes only with `ours`; a target NONE never; the walk wins only out of combat.
 4. **Never stuck up.** No `math.huge` on the target or with a numeric duration; bounded lapse; no per-poll re-stage.
 5. **Reconciliation only in `Sources/Auras.lua`** (plus Now.lua's one line; `Families/Auras.lua` only in Task 4c).
 6. **Default arm identical**; viewer arms measured.
@@ -99,16 +99,20 @@ DEVELOPMENT.md                                             MODIFY   Hekili.cdmOf
 
 | Wave | Tasks (parallel within a wave) | Needs |
 |---|---|---|
-| A | 1 Reducer [belief] · 2 Fake viewer [harness] · 5 Exit counter [belief] | nothing |
+| A | 1 Reducer [belief] · 2 Fake viewer [harness] · 5 Exit counter [belief]: **startable now** (none depends on the seen rule; no file shared with CN8 or CN11) | nothing |
 | B | 3a Map and collect [belief] | 1, 2 |
-| C | 3b Sweep, settle, self-off [belief] | 3a |
-| D | 4a Router and reduced records [belief] | 3b, 5 (both edit `Sources/Auras.lua`: 5 first) |
+| C | 3b The sweep [belief] | 3a |
+| C' | 3c Target settle, the seen rule, self-off [belief] | 3b |
+| D | 4a Router and reduced records [belief] | 3c, 5 (both edit `Sources/Auras.lua`: 5 first) |
 | E | 4b Reconciliation in apply, `ours`, hold, floor write, snapshot section [belief] | 4a |
 | F | 6 Always on: remove the setting [options] · 7 Coverage line [options] | 4b and CN8 merged (6); 2 and 6 (7) |
 | G | 8 Harness loops and layouts [harness] | 4b, **CN8 merged** |
 | H | 9 A/B and docs [docs] | 8 |
 | I | 10 In-game checklist (owner) | a dev build with 1-7 |
 | J | 4c CN13 fallback floor [belief] (only if CN13 merged without `I.auraFloor`) · 11 Direct provider [belief], CONDITIONAL on the Shaman flag-0 finding | 4b |
+
+Tasks that depend on the seen rule (decision 115): 3c (builds it), 4a (reduces its liveness), 4b (its red tests and
+`ours`), 8 (the `mixed` layout's silent and lagging items), 9 (reads its counts) and 10 (the F12 check).
 
 **Release gate** (the owner's acceptance list, all of it): no release is tagged from a branch holding Task 6 until Task 9
 shows no flicker rise on any spec (the Shaman `consumedBy` and target-DoT-past-duration rows included) and Task 10
@@ -157,9 +161,8 @@ end)
 ```
 
 - [ ] **Step 2: Run, expect failure** (`flock /tmp/hekili-gate.lock busted tests/Game/State/reduce_spec.lua`).
-- [ ] **Step 3: Implement** `I.ReduceFact` as spec §2.3 (only `I.UP`, `I.DOWN`, `I.UNDECIDED` cached at load). Item
-  trust (decision 115) is folded into liveness by the leaf (Task 3b): `nNone` means trusted NONEs, and the reducer
-  needs no trust input.
+- [ ] **Step 3: Implement** `I.ReduceFact` as spec §2.3 (only `I.UP`, `I.DOWN`, `I.UNDECIDED` cached at load). The seen
+  rule (decision 115) is folded into liveness by the leaf (Task 3c), so the reducer takes no extra input.
 - [ ] **Step 4: Run** PASS; `make check`; first gate `IDENTICAL`.
 - [ ] **Step 5: Commit** `feat(belief): the pure fact reducer (cdm-default decision 94)`.
 
@@ -184,8 +187,10 @@ Task 3a rewrites them.
   - `ctl.ViewerAuraBySpell(unit, spellID, up, source)`: every configured item in any viewer whose info candidates name
     the spell gets `ViewerAura`, **only when `source` is "player"** (a partner's copy lights nothing, F10);
   - `HookScript` on items and `api.hooksecurefunc` record their calls (asserted unused later);
-  - **rank mismatch** (F12): `ctl.ViewerAuraBySpell` lights an item only if the spell is one of its info's candidates, so
-    an item listing rank 2 stays silent for a rank-3 aura; a test pins that.
+  - `ctl.ViewerAuraBySpell` lights an item only if the spell is one of its info's candidates (a test pins it);
+  - **silent item** flag (`item.silent = true`, F12): the item never lights, whatever the aura does;
+  - **lag** option (`ctl.viewer.lag = 1`, I-B): items light one poll after the aura goes up (the client's
+    `UNIT_AURA` arriving after our cast's record write); removal stays immediate. Tests for both.
 - [ ] **Step 2: Run, expect failure. Step 3: Implement** in the fake only. **Step 4:** `make check`; old viewer and router
   specs still pass. **Step 5: Commit** `test(harness): the any-layout Cooldown Manager fake`.
 
@@ -207,17 +212,16 @@ Task 3a rewrites them.
   7. "collects at activation, rebuild and PLAYER_REGEN_ENABLED; in combat only on GetNumChildren growth, the new indices only, allocating no table"
   8. "a NEW pack aura added to the fake viewer with no code change is mapped" (owner acceptance, generic)
   9. "no HookScript and no hooksecurefunc call is made"
-- [ ] **Step 2: expect failure. Step 3: Implement** spec §3.1 and §3.2's collect: one preallocated map entry per (cooldownID,
-  aura) with `trust[e] = 0`, `trustId[e] = 0` (decision 115; a rebuild resets them), `cdvToJ` (j, or -a with `amb[a]`),
+- [ ] **Step 2: expect failure. Step 3: Implement** spec §3.1 and §3.2's collect: `cdvToJ` (j, or -a with `amb[a]`),
   `Q.Mappable(j)`, the slot arrays preallocated to `MAX_SLOTS` (`sJ`, `sAmb`, `sV`, `sAns`, `sUnit`, `sT`), the
   frame-to-slot weak map, `known[v]` children per viewer. Delete the `HookScript` path (`:107-133`). Header credits
   TellMeWhen (Cybeloras) for the hidden-viewer rule, the all-viewers presence bit and the mapping (ideas, GPL-3.0).
 - [ ] **Step 4:** specs; `make check`; `tools/check_border.sh`; first gate `IDENTICAL`.
 - [ ] **Step 5: Commit** `feat(belief): CDM leaf map over all candidates and an allocation-free collect (decisions 97-98, 101)`.
 
-### Task 3b [belief]: The CDM leaf, part 2: the sweep, the target settle, the self-off
+### Task 3b [belief]: The CDM leaf, part 2: the sweep
 
-**Files:** `Presence/CooldownViewer.lua` (sweep part), `tests/Game/State/viewer_spec.lua`, `alloc_spec.lua`.
+**Files:** `Presence/CooldownViewer.lua` (sweep), `tests/Game/State/viewer_spec.lua`, `alloc_spec.lua`.
 
 - [ ] **Step 1: Failing tests:**
   1. "a cooldown entry (Essential) holding an aura is UP evidence; a Buff icon entry for the same aura agrees" (F6)
@@ -228,20 +232,34 @@ Task 3a rewrites them.
   6. "the refresh pair (clear then set in one call) is never seen as NONE"
   7. "a release, held or not, drops the slot (no NONE)"
   8. "a re-point moves the slot's evidence from the old aura to the new"
-  9. "target change: target and NONE slots settle for SETTLE as stale; settle end is a change at that poll"
-  10. "an error in the sweep turns the leaf off for the session with one def.error line"
-  11. **trust** (decision 115): "an unproven silent item is not live (UNKNOWN)"; "an item that shows UP becomes proven,
-      and its later silence is a trusted NONE (DOWN)"; "out of combat, aura up per the walk for GRACE and the item
-      held: proven; silent: disproven, its silence never live, its UP still counts and re-proves"; "a rank change seen
-      by the walk (seenId differs from trustId) resets the entry to unproven"; "a rebuild resets every entry";
-      "a re-point moves the slot to the other entry's trust; a layout change keeps trust"; "nothing is disproven in combat".
   `alloc_spec`: the sweep over a 40-slot layout with changes allocates nothing.
+  (Until Task 3c, a silent slot counts as NONE unconditionally; 3c adds the seen gate.)
 - [ ] **Step 2: expect failure. Step 3: Implement** `Q.Sweep(t)` (per viewer `IsVisible`, `GetNumChildren` growth ->
-  collect; per slot rawgets; change-only O(1) counter moves; a touched list), `Q.Counts(j, u)`, settling, the trust
-  proof and disproof (out of combat, reading `I.auras.exp0`, `U.applied` and `U.seenId`), the `pcall` self-off.
-  `Sources/Auras.lua` `walk` fills a preallocated `U.seenId[u][j]` (one line beside `found[u][j] = serial`). Delete the immediate target re-read (`:161-168`).
+  collect; per slot rawgets; change-only O(1) counter moves; a touched list) and `Q.Counts(j, u)`.
 - [ ] **Step 4:** specs; `make check`; first gate `IDENTICAL`.
-- [ ] **Step 5: Commit** `feat(belief): CDM leaf reads every slot by a poll sweep (decisions 95-96, 100, 102-103)`.
+- [ ] **Step 5: Commit** `feat(belief): CDM leaf reads every slot by a poll sweep (decisions 95-96, 100, 102)`.
+
+### Task 3c [belief]: The CDM leaf, part 3: the target settle, the seen rule, the self-off
+
+**Files:** `Presence/CooldownViewer.lua`, `tests/Game/State/viewer_spec.lua`, `alloc_spec.lua`.
+
+- [ ] **Step 1: Failing tests** (counts read through `Q.Counts`; each "not live" test has its positive control):
+  1. "target change: target and NONE slots settle for SETTLE as stale; settle end is a change at that poll"
+  2. "an error in the sweep turns the leaf off for the session with one def.error line"
+  3. **seen** "seen[k] is written at every sweep with nUp > 0, not only on a change" (a refresh that keeps the item held
+     moves `applied`; the next sweep's `seen >= applied`)
+  4. **seen** "a silent item for an application it never held is not live (counts 0); control: the same item, lit this
+     application, then silent, is live as NONE"
+  5. **seen** "our new cast moves applied past seen: the silent item is not live until it lights again (I-B); control: once
+     it lights, its later silence is live"
+  6. "nothing about the seen rule is reset at a rebuild or a layout change"
+  `alloc_spec`: the seen write and gate allocate nothing.
+- [ ] **Step 2: expect failure. Step 3: Implement** settling, `fact.seen[k]` (preallocated, written by the leaf; the
+  router exposes it in Task 4a), the gate in liveness reading `I.auras` (`U.applied`, `U.exp0`), re-evaluating the silent
+  slots of things whose `applied` moved or whose record closed, the `pcall` self-off. Delete the immediate target
+  re-read (`:161-168`).
+- [ ] **Step 4:** specs; `make check`; first gate `IDENTICAL`.
+- [ ] **Step 5: Commit** `feat(belief): CDM leaf target settle, the seen rule, self-off (decisions 103, 107, 115)`.
 
 ### Task 4a [belief]: The router hosts the reduced facts
 
@@ -274,9 +292,20 @@ Snapshot `:281-306`); `Families/Now.lua:325` (one line: `I.auraOurs[k] = true` o
     max(fact.t, applied)"; "target aura with no numeric duration: HOLD, never math.huge"; "player aura with no numeric
     duration: -1, closed by an ours NONE".
   - **I7** "in combat, a walk with nil at index 1 does not suppress CDM facts" (`walkWins` = plain and out of combat).
-  - **F12 rank mismatch** (decision 115): "an item for rank 2 silent while the rank-3 aura is up in combat (our cast,
-    ours set): the fact stays UNKNOWN or UP, the record never goes down"; "a proven item whose aura really ends: DOWN
-    closes the record"; "a never-proven item: UNKNOWN, the model closes the record at its expiry".
+  - **Seen rule** (decision 115). Each test that asserts "no close" carries a **positive control in the same test**
+    (the same setup with the item lit this application, then the aura ends: DOWN closes the record), so it is red
+    against an unbuilt `apply`:
+    - "silent item (F12 flag) while our buff is up in combat, ours set: the record never goes down; the reduced fact
+      reads UNKNOWN (`R.Presence`)"; control as above.
+    - "never-lit item: UNKNOWN, the model closes the record at its expiry"; control as above.
+    - **I-B** "our cast, the item lights one poll later (fake `lag = 1`): the record never goes down; then the aura
+      ends: DOWN closes".
+    - **I-B refresh** "our cast refreshes; the item stays held; the aura then ends: DOWN closes" (red for a change-only
+      `seen` write).
+    - "a buff re-applied after its item went silent (the item stops lighting): UNKNOWN, never closed by the item";
+      control as above.
+  - **C1 partner** keeps its control: "partner copy overwrites ours out of combat (walk read, source party1), item NONE in
+    combat: no close; control: our own cast, item lit, then ends: DOWN closes".
   - **M5** "a form or enchant aura on the player is never written by apply".
   - "UP while believed up stages nothing"; "UNKNOWN leaves the record untouched".
   - **flap** (tests/Forever engine spec): an item appears, is released, reappears during one record: the belief never
@@ -399,8 +428,9 @@ snapshot's `presence` section.
 - [ ] **Shaman flag run (e1-e3):** `/fprobe aurasec` for every Lightning Shield and Water Shield rank, then
   `/fprobe aurawatch` in combat. Any 0: Task 11 go; else Task 11 dropped (ledger).
 - [ ] **Coverage:** the options line on a Druid and a Warrior matches the bars.
-- [ ] **Trust (F12):** a Druid with Mark of the Wild rank 3 up and a rank-2 item in a bar: after an out-of-combat poll
-  the snapshot shows that entry disproven; in combat the record stays up (no "rebuff").
+- [ ] **Silent item (F12):** a Druid with Mark of the Wild up and its item in a bar: in combat the record stays up (no
+  "rebuff"); the snapshot shows the aura `fact=unknown` while the item is silent. Run `/fprobe cdm sets` on the Mark of
+  the Wild entry (spellID, override, linkedSpellIDs) so its cause is recorded once (D15).
 - [ ] Results into `docs/dev/ingame-ledger.md` (controller); `SETTLE` (and any `IsVisible` fallback) in one commit.
 
 ### Task 11 [belief], CONDITIONAL: the direct never-secret provider
@@ -414,8 +444,8 @@ Only if Task 10's Shaman run finds a flag-0 pack aura. **Files:** `Presence/Dire
 
 ## Candidate deferrals (for the controller's ledger)
 
-Spec §13 (D1, D3-D6, D8, D9), plus:
+Spec §13 (D1, D3-D6, D8, D9, D13 player aura with no numeric duration whose item is lost mid-fight, D14 the I-B
+race size, D15 the silent item's cause), plus:
 - P1: Task 8's `fixture` arm covers only Warrior and Druid. Trigger: each class's `/fprobe cdm sets` (CDM-C).
 - P2: the release gate above. Trigger: Tasks 9 and 10 done.
 - P3: Task 4c if CN13 merges without `I.auraFloor`. Trigger: CN13 merged.
-- D11, D12 (spec §13).
