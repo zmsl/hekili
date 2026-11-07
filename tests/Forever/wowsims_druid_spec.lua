@@ -103,7 +103,7 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "Guardian (wowsims.com)",
             content("druid_guardian", W.Guardian, "Guardian (wowsims.com)", 60),
             "druid_guardian",
-            0.80, -- 0.782 (61/78) with Primal Fury's onCrit (central fix 15) and the bear's 11.25 a swing; 0.808 (63/78)
+            0, -- re-pin 4b0030a44b: floor measured after CN8 (FLOORS WAIT). 0.782 (61/78) with Primal Fury's onCrit (central fix 15) and the bear's 11.25 a swing; 0.808 (63/78)
             -- once the replay ends a cooldown at its log timestamp (the ready-time ruling)
             -- Maul's untagged Casting lines are wowsims's queue at each swing (Cost = 0); its Tag 1 line is the hit,
             -- when the game's cast succeeds
@@ -125,10 +125,10 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local out = H.Hekili.Engine.Output.Primary
         assert.are.equal("bear_form", out.recs[1] and out.recs[1].actionName)
     end)
-    -- The recipe's leveling Demoralizing Roar filler is behind the maintenance setting `maintain_demoralizing_roar`
-    -- (rule 15; user, 2026-10-21; off in game, on in the harness): off, a level 10 bear in Bear Form with the rage for it and the Roar already on the
-    -- target is shown something else
-    it("Guardian (wowsims.com)'s Demoralizing Roar filler is skipped with its setting off", function()
+    -- wowsims's Demoralizing Roar line (re-pin: "Attack-power reduction is covered") is behind the
+    -- maintenance setting `maintain_demoralizing_roar` (rule 15; user, 2026-10-21; off in game, on in the harness): off,
+    -- or with the Roar already on the target, a level 10 bear in Bear Form with the rage for it is shown something else
+    it("Guardian (wowsims.com)'s Demoralizing Roar is skipped with its setting off or the debuff up", function()
         local function first(on, up, level, aura, name, rage)
             level, aura, name = level or 10, aura or "demoralizing_roar", name or "Demoralizing Roar"
             local c =
@@ -143,7 +143,7 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             settings.maintain_demoralizing_roar = on
             H.ctl.inRange.target, H.ctl.level.target = true, level
             H.Fire("PLAYER_TARGET_CHANGED")
-            if up then -- the debuff on the target: the leveling line (R45) and keep_up both stand aside
+            if up then -- the debuff on the target: the line stands aside (R45)
                 H.ctl.auras.target.HARMFUL[1] = {
                     name = name,
                     spellId = hk.Class.auras[aura].id,
@@ -168,13 +168,17 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         f:close()
         assert.matches("\n# Setting maintain_demoralizing_roar %(", simc)
         assert.matches(
-            "\nactions%+=/demoralizing_roar,if=settings%.maintain_demoralizing_roar&%(!debuff%.demoralizing_roar%.up&!action%.lacerate%.known",
+            "\nactions%+=/demoralizing_roar,focus=2,if=settings%.maintain_demoralizing_roar&%(!%(!%(debuff%.demoralizing_roar%.remains<=0%)%)",
+            simc
+        )
+        assert.matches(
+            "\nactions%+=/faerie_fire,if=%(action%.faerie_fire%.known&debuff%.faerie_fire%.remains<=0%)",
             simc
         )
         assert.matches("demoralizing_roar", first(true, false))
         assert.not_matches("demoralizing_roar", first(true, true)) -- R45: only while the debuff is down
         assert.not_matches("demoralizing_roar", first(false, false))
-        -- Faerie Fire likewise (no talents: Lacerate silences the line), at 5 rage so only it is affordable
+        -- Faerie Fire likewise (wowsims's own line, no setting), at 5 rage so only it is affordable
         local ff = "faerie_fire"
         assert.matches(ff, first(false, false, 30, ff, "Faerie Fire", 5))
         assert.not_matches(ff, first(false, true, 30, ff, "Faerie Fire", 5))
