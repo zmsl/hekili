@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- Paladin (wowsims.com) priorities follow the current wowsims (Retribution unchanged; Protection casts Holy Shield rank 4)
 - The wowsims.com priorities now follow wowsims as it was on 2 November 2026. wowsims has changed since (class hotfixes and two new game builds), so updated priorities for every class follow in 0.6.1 and later; some (the Rogues, Warriors, Hunters, Warlocks, Elemental, Arcane, Shadow and Protection Paladin) have moved noticeably.
 - Known issue: Lava Burst has been removed from the game, but the Elemental (wowsims.com) priority still has a Lava Burst line. It is skipped because you do not know the spell, and the rest of the Elemental rotation is not yet re-tuned for its absence; an updated Elemental priority follows in 0.6.1 or later.
 - Rogues: Riposte is now an ability you can use in custom priorities (`riposte`, and `buff.riposte_usable` for its window after a parry), and the Combat priority casts it first when the window is open. Not yet checked in game.

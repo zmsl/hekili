@@ -114,10 +114,7 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
 
     -- The build takes no Holy Shock.
     local PROT_DROP = set(pw.Protection.IDS.holy_shock, EXORCISM_ANY)
-    -- The replay's character lacks Holy Shield rank 4 (1239570, 240 mana, the owner's in-game tooltip 2026-11-06): the
-    -- e2842f0a78 log predates it (wowsims added it in 041cd46cec) and casts rank 3 (20928) at 195. Replay world only;
-    -- the live worlds keep rank 4. Goes when the pin moves past 041cd46cec.
-    local PROT = wowsims(pw.Protection, set(pw.Protection.IDS.holy_shock, EXORCISM_ANY, { 1239570 }), {
+    local PROT = wowsims(pw.Protection, PROT_DROP, {
         fsr = { [0] = { 17.3, 0.8 } },
     })
     local PROT_LIVE = wowsims(pw.Protection, PROT_DROP, {})
