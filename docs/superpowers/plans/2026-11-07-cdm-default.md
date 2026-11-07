@@ -217,8 +217,8 @@ Task 3a rewrites them.
   8. "a NEW pack aura added to the fake viewer with no code change is mapped" (owner acceptance, generic)
   9. "no HookScript and no hooksecurefunc call is made"
 - [ ] **Step 2: expect failure. Step 3: Implement** spec §3.1 and §3.2's collect: `cdvToJ` (j, or -a with `amb[a]`),
-  `Q.Mappable(j)`, the slot arrays preallocated to `MAX_SLOTS` (`sJ`, `sAmb`, `sV`, `sAns`, `sUnit`, `sT`, `sSeen`;
-  `sSeen`/`sUnit` are used from Task 3c), the
+  `Q.Mappable(j)`, the slot arrays preallocated to `MAX_SLOTS` (`sJ`, `sAmb`, `sV`, `sAns`, `sUnit`, `sT`, `sSeen`,
+  `sCd`; `sAns`/`sUnit` are what the slot is counted as; `sSeen`/`sCd` are used from Task 3c), the
   frame-to-slot weak map, `known[v]` children per viewer. Delete the `HookScript` path (`:107-133`). Header credits
   TellMeWhen (Cybeloras) for the hidden-viewer rule, the all-viewers presence bit and the mapping (ideas, GPL-3.0).
 - [ ] **Step 4:** specs; `make check`; `tools/check_border.sh`; first gate `IDENTICAL`.
@@ -261,16 +261,20 @@ Task 3a rewrites them.
      is held: no flip); A released mid-application: counts all zero (UNKNOWN, not DOWN); control: A stays and goes
      silent: live as NONE"
   7. **seen per slot** "re-point resets the slot: re-pointed to another aura and silent, it is not live for either;
-     re-pointed back, not live until it lights again; control: it lights the new aura, then goes silent: live"
-  8. **seen per slot** "a held slot with a secret or nil unit, then silent, is not live for either unit; control: held
-     with plain unit u, then silent: live for u only"
+     re-pointed back, not live until it lights again; re-pointed to another cooldownID that maps to the **same** aura
+     (`sCd` changes, `sJ` does not), then silent: not live; control: it lights the new aura, then goes silent: live"
+  8. **seen per slot** "a held slot with a secret or nil unit, or a plain unit that is neither player nor target
+     (e.g. "focus"), then silent, is not live for either unit; control: held with plain unit u, then silent: live for
+     u only"; and "a reset of a slot counted as NONE (target switch, cooldownID change) un-counts it first: no `nNone`
+     is left with no live slot"
   9. **seen per slot** "an ambiguous slot, held then silent, is never live; control: an unambiguous slot, same sequence,
      is live"
   10. **seen per slot** "a rebuild resets every slot's sSeen; a target switch resets the target-held slots' sSeen (not
      live for the new target until lit); a record that closed (`U.exp0[u][j] <= t`) makes its silent slots not live
      at the next sweep"
   `alloc_spec`: the seen write, the resets and the gate allocate nothing.
-- [ ] **Step 2: expect failure. Step 3: Implement** settling, `sSeen`/`sUnit` per spec §2.2a (preallocated slot arrays,
+- [ ] **Step 2: expect failure. Step 3: Implement** settling, `sSeen`/`sUnit`/`sCd` per spec §2.2a (every reset
+  un-counts the slot first; preallocated slot arrays,
   owned by the leaf; the router never reads them), the gate in liveness reading `I.auras` (`U.applied`, `U.exp0`):
   every sweep re-checks the gate of every silent mapped slot (bounded by `MAX_SLOTS`; no hook, nothing added to
   `Families/Auras.lua`), and a changed gate result moves the counters like a reading change; the resets; the `pcall`

@@ -119,19 +119,24 @@ another item's light (review 3, must-fix 1):
   ambiguous, §2.2): `sSeen[s] = t` and `sUnit[s] = u`. Every sweep, not only on a reading change: a refresh is a
   clear-then-set inside one client call, so a change-only write would leave `sSeen` at the first light while our refresh
   moves `applied`. `sUnit[s]` is the slot's last plain held unit and is kept through silence.
-- **Resets** (`sSeen[s] = 0`, `sUnit[s] = 0`): when the slot's mapping is (re)assigned, that is at a `cooldownID` change
-  (release, re-point, (re)configure) and at a map rebuild; at a held sweep whose unit is secret or nil (it held
-  something for no known unit); and at `PLAYER_TARGET_CHANGED` for a slot whose `sUnit` is the target (the same place
+- **Resets** (`sSeen[s] = 0`, `sUnit[s] = 0`): when the slot's mapping is (re)assigned, that is when its plain
+  `cooldownID` differs from `sCd[s]` (the slot's last plain `cooldownID`, one more slot array: release, re-point,
+  (re)configure, **including a re-point to another cooldownID that maps to the same aura**) and at a map rebuild; at a
+  held sweep whose unit is not a plain "player" or "target" (secret, nil or another unit: it held something for no
+  unit we track); and at `PLAYER_TARGET_CHANGED` for a slot whose `sUnit` is the target (the same place
   §3.4 marks it settling: mob A's light says nothing of mob B's application). A **new frame table is a new slot**
   (collected on `GetNumChildren` growth, §3.2, if dropped frames stay children: Task 10) whose `sSeen` starts at 0; slot indices are never reused for another
   frame, so a replaced item (F13) can never close an application it was not seen holding. A dropped frame is not live:
   a pool release clears `cooldownID` first (BD:95), and a slot is live only while its frame reads a plain configured
   `cooldownID` and `layoutIndex`.
+- **No reset leaks a count.** `sAns[s]`/`sUnit[s]` also say what the slot is counted as (its answer and unit, §2.3);
+  every reset first un-counts the slot through them (the counters move as at a reading change), then zeroes them, so
+  a reset can never leave an `nNone` with no live slot behind it. (Chosen over a separate counted-unit array: smaller.)
 - **The gate is in liveness:** a silent slot s is live as NONE for (j, u) only when all three hold:
   the record is up, `U.exp0[u][j] > t`; `sSeen[s] >= U.applied[u][j]` (this slot held this application); and
   `sUnit[s] == u`. Otherwise it is not live, so the reduced fact reads UNKNOWN, never DOWN. `Reduce` and its table are
   unchanged.
-- **Owner and detection, no hook.** The leaf owns `sSeen` and `sUnit`; the router never reads them. `applied` moves in
+- **Owner and detection, no hook.** The leaf owns `sSeen`, `sUnit` and `sCd`; the router never reads them. `applied` moves in
   `Families/` (our cast, a read) without telling the leaf, so the sweep re-checks the gate of **every silent mapped slot
   at every sweep** (bounded by `MAX_SLOTS`, reading `U.applied`/`U.exp0` inside `Game/`, no allocation); a slot whose
   gate result changed moves the counters like any reading change. Nothing is added to `Families/Auras.lua`.
@@ -459,7 +464,7 @@ flicker rise beyond seed noise (±0.3/min) on any spec in any viewer arm.
 | 112 | An UP with no model: registered duration from `max(fact.t, applied)`; past it a `HOLD` (1.0 s) re-staged once per `HOLD` while the fact stays UP; `math.huge` only for a player aura with no numeric duration | never stuck up on the target; bounded lapse; no per-poll churn (C2; owner Q3) |
 | 113 | `apply` skips player form and enchant auras | their records belong to Forms/Enchants (M5) |
 | 114 | CN13 owns a generic `I.auraFloor[j]`; this lane writes it from the reduced fact | no one-update flash; `Families/` knows nothing of the router (owner Q4) |
-| 115 | **The seen rule, per slot**: a silent slot counts as NONE for (j, u) only for an application that slot was seen holding: the record is up (`U.exp0[u][j] > t`), `sSeen[s] >= U.applied[u][j]` and `sUnit[s] == u`; `sSeen` is written at every sweep the slot is held for u (unambiguous), reset at a mapping change, a rebuild, a held sweep with a secret or nil unit and, for a target slot, a target switch; otherwise not live, so UNKNOWN | an item can stay silent while its aura is up (F12); also closes the cast-before-`UNIT_AURA` flash (I-B) and the item-stops-following loop (I-A) for a fresh application (a refresh before expiry leaves one wrong close: §2.2a Residual, D14); per slot, not per thing, so a silent item never borrows another item's light (review 3); a new frame table is a new slot (F13); one number per slot (`MAX_SLOTS`), the leaf's own, no per-entry or per-thing state |
+| 115 | **The seen rule, per slot**: a silent slot counts as NONE for (j, u) only for an application that slot was seen holding: the record is up (`U.exp0[u][j] > t`), `sSeen[s] >= U.applied[u][j]` and `sUnit[s] == u`; `sSeen` is written at every sweep the slot is held for u (unambiguous), reset (after un-counting the slot) at a `cooldownID` change (`sCd`, same-aura re-points included), a rebuild, a held sweep whose unit is not a plain player or target and, for a target slot, a target switch; otherwise not live, so UNKNOWN | an item can stay silent while its aura is up (F12); also closes the cast-before-`UNIT_AURA` flash (I-B) and the item-stops-following loop (I-A) for a fresh application (a refresh before expiry leaves one wrong close: §2.2a Residual, D14); per slot, not per thing, so a silent item never borrows another item's light (review 3); a new frame table is a new slot (F13); one number per slot (`MAX_SLOTS`), the leaf's own, no per-entry or per-thing state |
 
 ## 12. Credits
 
