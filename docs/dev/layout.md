@@ -183,9 +183,10 @@ measured value rounded up to the next 0.1, 0 where it measured 0; only ever down
 `FLICKER_K` (0.5): redundant with the floors today, it tightens the bar when a change lowers the oracle's own flicker.
 `HEKILI_LOOP_HOLD=1 make test-<tag>` runs the display-side hold experiment (`; hold on`, floors not applied); as
 expected it turns the Arms 20-fight gate red (agreement, unmatched cost refusals) and the Fury gates and two leveling
-gates red (react p90, idle). The shipped steady icons (the spec's `steadyIcons`, on by default since CN8, hold 1)
-are on in every loop and replay on our instance (`; steady icons on`; the oracle shadow stays plain): the loop reads
-the held output itself, not a harness copy, and the floors are measured on it. `HEKILI_LOOP_STEADY=N` (or
+gates red (react p90, idle). The shipped steady icons (always on for players, hold 1; no setting) are on in every
+loop and replay on our instance (`; steady icons on`; the oracle shadow stays plain; the harness sets the instance's
+`Output.steady`/`Output.hold`): the loop reads the held output itself, not a harness copy, and the floors are measured
+on it. `HEKILI_LOOP_STEADY=N` (or
 `o.steady = N`) sets the updates to hold (1 to 3; `; steady icons on (hold N)` for N above 1, floors not applied);
 `HEKILI_LOOP_STEADY=0` turns them off (floors not applied).
 

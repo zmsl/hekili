@@ -85,8 +85,7 @@ local function boot(style, truth)
     H.ctl.inRange.target, H.ctl.level.target = true, 60
     H.Fire("PLAYER_TARGET_CHANGED")
     assert(headless.cycle(H, H.ctl.now + 0.2))
-    -- the styles' contract is the published set as it is: the steady hold (on by default since CN8) off
-    H.Hekili.DB.profile.specs[H.Hekili.State.spec.id].steadyIcons = false
+    -- the styles' contract is the published set as it is: the steady hold (always on for players) off on this instance
     H.ns.Output.steady = false
     local conf = H.Hekili.DB.profile.displays.Primary
     conf.style = style

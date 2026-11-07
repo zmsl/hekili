@@ -452,23 +452,14 @@ describe("Engine.Output (headless Arms)", function()
 
     before_each(boot)
 
-    it("steady icons: on in a fresh profile, read per update from the active spec, our casts bridged", function()
+    it("steady icons: always on, hold 1, whatever an old profile saved; our casts bridged", function()
         local id = H.Hekili.State.spec.id
-        local info = { "packs", id, "performance", "steadyIcons" }
-        assert.is_true(H.Hekili:GetSpecOption(info))
-        H.Hekili.DB.profile.specs[id].steadyIcons = false
-        t = t + 0.2
-        assert(headless.cycle(H, t))
-        assert.is_false(H.ns.Output.steady)
-        H.Hekili.DB.profile.specs[id].steadyIcons = true
-        t = t + 0.2
-        assert(headless.cycle(H, t))
-        assert.is_true(H.ns.Output.steady)
-        assert.are.equal(1, H.ns.Output.hold) -- the default: today's one update
+        H.Hekili.DB.profile.specs[id].steadyIcons = false -- an old profile's saved toggle: ignored, never raises
         H.Hekili.DB.profile.specs[id].steadyHold = 3
         t = t + 0.2
         assert(headless.cycle(H, t))
-        assert.are.equal(3, H.ns.Output.hold)
+        assert.is_true(H.ns.Output.steady)
+        assert.are.equal(1, H.ns.Output.hold)
         -- our cast reaches Output.Acted through Hekili's own cast handler (Engine/Sim/Events.lua), not the belief
         local acts, acted = 0, H.ns.Output.Acted
         H.ns.Output.Acted = function()
