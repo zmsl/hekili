@@ -214,6 +214,32 @@ describe("Engine/Schema/Races.lua", function()
         assert.are.equal(3, state.buff.racial_a.count)
     end)
 
+    -- `unless` (CN11): while the named aura is up, the modifier neither prices nor takes a charge; the other modifier's
+    -- spend in the same cast never decides it, whichever comes first in the list.
+    for _, first in ipairs({ true, false }) do
+        it(
+            "skips a modifier's price and charge while its `unless` aura is up (listed "
+                .. (first and "first" or "last")
+                .. ")",
+            function()
+                local held = { aura = "racial_a", pct = -0.10, charges = 3, spells = { 1011 }, unless = "proc_b" }
+                local other = { aura = "proc_b", pct = -0.5, charges = 1, spells = { 1011 } }
+                load("Fake", nil, first and held or other)
+                hekili:NewRace("Fake"):RegisterCostMod(first and other or held)
+                local a = ability("spender_a", { id = 1011, spend = 15, spendType = "resource_a" })
+                state.buff.racial_a = { up = true, count = 3 }
+                assert.are.equal(13.5, a.spend)
+                ns.costMods.Spend(a.baseSpend, "spender_a")
+                assert.are.equal(2, state.buff.racial_a.count)
+                state.buff.proc_b = { up = true, count = 1 }
+                assert.are.equal(7.5, a.spend) -- racial_a held: proc_b's half alone
+                ns.costMods.Spend(a.baseSpend, "spender_a")
+                assert.are.same({ false, 2 }, { state.buff.proc_b.up, state.buff.racial_a.count })
+                assert.are.equal(13.5, a.spend)
+            end
+        )
+    end
+
     it("takes a class file's spec:RegisterCostMod (Engine/Schema/Spec.lua) into the same list, for any race", function()
         load("Other")
         -- the mixin's entry as Engine/Schema/Spec.lua declares it, compiled with this `ns` as its upvalue

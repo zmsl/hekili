@@ -560,8 +560,8 @@ button draws, 0 for none), `b.isFocus`, `b.Cooldown`, `b.round` (and `b.timersHi
 6. Core calls Truth through `ns.UI.Truth.<member>` at each call (no local cached at load), so the TOC order does not
    matter and a test can count the calls.
 
-**Steady icons (experimental, off by default).** With the active specialization's `steadyIcons` on (its Performance
-tab), `Output.Publish` holds a slot when its shown icon and the new one are both countdowns (due more than 0.05 s
+**Steady icons (on by default since CN8, owner 2026-11-07).** With the active specialization's `steadyIcons` on (its
+Performance tab), `Output.Publish` holds a slot when its shown icon and the new one are both countdowns (due more than 0.05 s
 out) with different names and the raw set has had the new one in that slot for no more than `hold` publishes (the
 `steadyHold` slider, 1 to 3 updates, default 1; each update is about 0.1 to 0.2 s): an icon the engine keeps shows
 at most `hold` publishes late. The shown record table moves into the new set and the new one into the old, so the

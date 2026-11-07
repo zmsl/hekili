@@ -208,6 +208,8 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         assert.are.equal(1, H.Hekili:GetSpecOption(info))
         H.Hekili:SetSpecOption(info, 2)
         assert.are.equal(2, H.Hekili.DB.profile.specs[id].steadyHold)
+        assert.is_false(slider.disabled(info)) -- the toggle is on by default
+        H.Hekili.DB.profile.specs[id].steadyIcons = false
         assert.is_true(slider.disabled(info))
         H.Hekili.DB.profile.specs[id].steadyIcons = true
         assert.is_false(slider.disabled(info))
