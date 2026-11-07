@@ -452,7 +452,8 @@ describe("Forever Mage through the engine", function()
             end
         end
         -- last, after Missile Barrage's own: the spend decides `unless` before either charge goes
-        list[#list + 1] = { aura = "clearcasting", pct = -1, charges = 1, spells = { 5143 }, unless = "missile_barrage" }
+        list[#list + 1] =
+            { aura = "clearcasting", pct = -1, charges = 1, spells = { 5143 }, unless = "missile_barrage" }
         H.ns.BuildTracked()
     end
 
@@ -464,7 +465,10 @@ describe("Forever Mage through the engine", function()
     }) do
         local id, key, barrage, want = case[1], case[2], case[3], case[4]
         it(
-            "agrees on " .. key .. "'s price and spent charges with Clearcasting up, Missile Barrage " .. (barrage and "up" or "down"),
+            "agrees on "
+                .. key
+                .. "'s price and spent charges with Clearcasting up, Missile Barrage "
+                .. (barrage and "up" or "down"),
             function()
                 local H = headless.new({ character = character() })
                 splitClearcasting(H)

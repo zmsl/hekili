@@ -155,7 +155,9 @@ describe("resource modifiers", function()
 
     for _, first in ipairs({ true, false }) do
         it(
-            "skips a modifier's price and charge while its `unless` aura is up (listed " .. (first and "first" or "last") .. ")",
+            "skips a modifier's price and charge while its `unless` aura is up (listed "
+                .. (first and "first" or "last")
+                .. ")",
             function()
                 unlessMods(first)
                 local spender_b = I.ab.bySpell[fs.SPENDER_B]

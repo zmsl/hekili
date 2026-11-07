@@ -218,7 +218,9 @@ describe("Engine/Schema/Races.lua", function()
     -- spend in the same cast never decides it, whichever comes first in the list.
     for _, first in ipairs({ true, false }) do
         it(
-            "skips a modifier's price and charge while its `unless` aura is up (listed " .. (first and "first" or "last") .. ")",
+            "skips a modifier's price and charge while its `unless` aura is up (listed "
+                .. (first and "first" or "last")
+                .. ")",
             function()
                 local held = { aura = "racial_a", pct = -0.10, charges = 3, spells = { 1011 }, unless = "proc_b" }
                 local other = { aura = "proc_b", pct = -0.5, charges = 1, spells = { 1011 } }
