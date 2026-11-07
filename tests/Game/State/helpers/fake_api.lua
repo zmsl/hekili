@@ -803,12 +803,13 @@ function M.new()
             end
             return false
         end
-        for _, c in ipairs({ info.spellID, info.overrideSpellID, info.overrideTooltipSpellID }) do
-            if c == spellID or ctl.overrides[c] == spellID then
-                return true
-            end
-        end
-        return false
+        local a, b, c = info.spellID, info.overrideSpellID, info.overrideTooltipSpellID -- (no ipairs: nil gaps)
+        return a == spellID
+            or b == spellID
+            or c == spellID
+            or (a ~= nil and ctl.overrides[a] == spellID)
+            or (b ~= nil and ctl.overrides[b] == spellID)
+            or (c ~= nil and ctl.overrides[c] == spellID)
     end
     --- Re-point (BV:137-147): the cooldownID, then the refresh (a held aura clears, then sets again).
     function ctl.ViewerRepoint(item, id)
