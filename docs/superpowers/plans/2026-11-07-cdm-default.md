@@ -191,8 +191,9 @@ Task 3a rewrites them.
   - `HookScript` on items and `api.hooksecurefunc` record their calls (asserted unused later);
   - `ctl.ViewerAuraBySpell` lights an item only if the spell is one of its info's candidates (a test pins it);
   - **silent item** flag (`item.silent = true`, F12): the item never lights, whatever the aura does;
-  - **lag** option (`ctl.viewer.lag = 1`, I-B): items light one poll after the aura goes up (the client's
-    `UNIT_AURA` arriving after our cast's record write); removal stays immediate. Tests for both.
+  - **lag** option (`ctl.viewer.lag = 1`, I-B): pending lights are applied at the next `ctl.Tick`
+    (`fake_api.lua:793`), not in the call that raised the aura (the client's `UNIT_AURA` arriving after our cast's
+    record write); removal stays immediate. Tasks 4b and 8 use this same mechanism. Tests for both.
 - [ ] **Step 2: Run, expect failure. Step 3: Implement** in the fake only. **Step 4:** `make check`; old viewer and router
   specs still pass. **Step 5: Commit** `test(harness): the any-layout Cooldown Manager fake`.
 
@@ -284,7 +285,8 @@ Task 3a rewrites them.
 
 - [ ] **Step 1: Failing tests:** "the reduced state per (aura, unit) from the leaf's counts through I.ReduceFact";
   "the highest standing with nLive > 0 decides"; "onEdge fires on a reduced change only"; "disagree counts transitions
-  to disagreement, not polls" (M8); "lost counts a thing that had a fact and went UNKNOWN"; "fact.t is the last
+  to disagreement, not polls" (M8); "lost counts a thing that had a fact and went UNKNOWN while its record is up; control: a fact that goes UNKNOWN
+  because its record closed (U.exp0 <= t) is not lost"; "fact.t is the last
   UNKNOWN/DOWN->UP time" (I3); "rebuild events in combat wait for combat end; evidence changes apply at once"
   (decision 99); "activated with zero items, an item collected later is counted and followed" (the sweep runs before
   poll 15's `covered == 0` guard, `Sources/Auras.lua:259`).
@@ -425,7 +427,8 @@ standalone `description` in the Performance tab, `name` a function), TOC, `tests
   past `d`: the `HOLD` rule).
 - [ ] **Step 2: Record** per arm with the default beside it, the difference and the noise band; header "Measured, not
   gated (decisions 86, 110). Acceptance: no flicker rise beyond ±0.3/min on any spec." Any spec over the band: stop and
-  report; **the release waits**. Read item disagreements as lag (spec §2.3, M3).
+  report; **the release waits**. Read item disagreements as lag (spec §2.3, M3); a silent item beside a working one is never live (per-slot seen
+  rule), so it adds no disagreement; `lost` excludes normal aura ends (spec §2.4).
 - [ ] **Step 3: Docs.** gaps row 103 for "any viewer" coverage (Druid fixture added); ledger: CDM-E closed by P0
   result 9; CDM-T/O/I/P and e4b/ACQ open with the `/fprobe cdm` commands. **Step 4:** `make check`. **Step 5: Commit**
   `docs(cdm): the viewer A/B per layout; ledger and gaps`.

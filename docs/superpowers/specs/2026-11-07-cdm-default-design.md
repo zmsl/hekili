@@ -192,7 +192,8 @@ reducer gives UP (fresher), and the A/B reads the column as lag, not error.
 fact.state[k] 0 UNKNOWN, 1 UP, 2 DOWN      fact.n[k]     nLive of the deciding standing
 fact.agree[k]                              fact.t[k]     §2.3
 fact.from[k]  deciding standing 0-3        fact.via[k]   bitmask: 1 Essential, 2 Utility, 4 Buff icon, 8 Buff bar, 16 direct
-counters per fight: disagree, ambiguous, lost (a thing with a fact went UNKNOWN), exitFix (§2.6)
+counters per fight: disagree, ambiguous, lost (a thing with a fact went UNKNOWN while its record is still up,
+  U.exp0[u][j] > t: a normal aura end, where the record closed, is not lost), exitFix (§2.6)
 ```
 
 `k = (u - 1) * I.AURA_UNIT + j`. `R.Presence(j, u)` returns `fact.state[k]` as UP, DOWN or `I.UNDECIDED`. The contract
@@ -406,7 +407,8 @@ The fake viewer (`tests/Game/State/helpers/fake_api.lua:666-712`) models any lay
 configured or not, non-item children), `IsVisible` (own and parent), `GetNumChildren`, pool growth in combat; infos
 with `overrideTooltipSpellID`, `linkedSpellIDs`, a secret singular `linkedSpellID`; `allowUnlearned`; the client order
 (clear then set; release clears `cooldownID` first); only player-sourced auras light items; a **silent item** flag
-(an item that never lights, F12) and a **lag** option (an item lights one poll after our cast, I-B); `HookScript`/`hooksecurefunc`
+(an item that never lights, F12) and a **lag** option (an item lights at the next `ctl.Tick` after our cast,
+`tests/Game/State/helpers/fake_api.lua:793`, I-B); `HookScript`/`hooksecurefunc`
 recorders (asserted unused). Layout presets: `none`, `buffs`, `fixture`, `mixed`. Arms: `default` (viewer off),
 `viewer-none`, `viewer-buffs`, `viewer-fixture`, `viewer-mixed`; measured: flicker/min, readyShort, agreement, facts,
 disagreements, item disagreements, ambiguous, lost, exit fixes, and two flicker rows: a Shaman `consumedBy` row (§7) and
