@@ -414,7 +414,8 @@ configured or not, non-item children), `IsVisible` (own and parent), `GetNumChil
 with `overrideTooltipSpellID`, `linkedSpellIDs`, a secret singular `linkedSpellID`; `allowUnlearned`; the client order
 (clear then set; release clears `cooldownID` first); only player-sourced auras light items; a **silent item** flag
 (an item that never lights, F12) and a **lag** option (an item lights at the next `ctl.Tick` after our cast,
-`tests/Game/State/helpers/fake_api.lua:793`, I-B); `HookScript`/`hooksecurefunc`
+`tests/Game/State/helpers/fake_api.lua:793`, I-B; a held item's refresh stays held, its clear and set moving
+together); `HookScript`/`hooksecurefunc`
 recorders (asserted unused); an acquire makes a new frame table and lights at once if its aura is up (F13). Layout presets: `none`, `buffs`, `fixture`, `mixed`. Arms: `default` (viewer off),
 `viewer-none`, `viewer-buffs`, `viewer-fixture`, `viewer-mixed`; measured: flicker/min, readyShort, agreement, facts,
 disagreements, item disagreements, ambiguous, lost, exit fixes, and two flicker rows: a Shaman `consumedBy` row (§7) and

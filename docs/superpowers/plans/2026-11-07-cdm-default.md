@@ -193,7 +193,11 @@ Task 3a rewrites them.
   - **silent item** flag (`item.silent = true`, F12): the item never lights, whatever the aura does;
   - **lag** option (`ctl.viewer.lag = 1`, I-B): pending lights are applied at the next `ctl.Tick`
     (`fake_api.lua:793`), not in the call that raised the aura (the client's `UNIT_AURA` arriving after our cast's
-    record write); removal stays immediate. Tasks 4b and 8 use this same mechanism. Tests for both.
+    record write); a removal of an aura stays immediate. A **refresh of a held item stays held**: under lag the clear
+    and the set move together at the Tick (the client's pair is one call, BD:368-380), so the fake never shows a
+    one-poll silence (UNKNOWN, floor 0) the real client does not; Task 8's `viewer-mixed` flicker feeds the release
+    gate. Tasks 4b and 8 use this same mechanism. Tests for both, plus "under lag, a held item's refresh is never read
+    silent at any sweep".
 - [ ] **Step 2: Run, expect failure. Step 3: Implement** in the fake only. **Step 4:** `make check`; old viewer and router
   specs still pass. **Step 5: Commit** `test(harness): the any-layout Cooldown Manager fake`.
 
