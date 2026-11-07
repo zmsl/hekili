@@ -508,6 +508,43 @@ describe("Forever Mage through the engine", function()
             end
         )
     end
+
+    -- CN11 price parity on a cost that is not free: a test-only Arcane Power held by Missile Barrage (no pack's rule).
+    it("prices a non-free modifier with `unless` alike in both layers, its aura down and up", function()
+        local H = headless.new({ character = character() })
+        local list = H.ns.raceMods.costMods
+        for i, m in ipairs(list) do
+            if m.aura == "arcane_power" then
+                list[i] = { aura = "arcane_power", pct = 0.3, spells = { 400574 }, unless = "missile_barrage" }
+            end
+        end
+        H.ns.BuildTracked()
+        local I, VS, S = H.ns.VirtualStateInternal, H.ns.VirtualState, H.Hekili.State
+        local a = I.ab.bySpell[400574]
+        local t = H.ctl.now + 1
+        H.ctl.now = t
+        assert.is_true(headless.cycle(H, t)) -- the rebuild's player aura walk first (the client lists none)
+        VS.Drain(t)
+        local out = {}
+        for _, barrage in ipairs({ false, true }) do
+            I.AuraModel(1, I.auras.bySpell[12042], t, t + 15, 1, t, nil, false)
+            if barrage then
+                I.AuraModel(1, I.auras.bySpell[400589], t, t + 15, 1, t, nil, false)
+            end
+            S.reset("Primary", true)
+            S.applyBuff("arcane_power")
+            if barrage then
+                S.applyBuff("missile_barrage")
+            end
+            out[#out + 1] = { I.CostOf(a), S.action.arcane_blast.cost }
+        end
+        -- under 1 mana apart, not equal: on the stock kit too, Arcane Power's +30% on Arcane Blast's fraction-of-base
+        -- cost prices 235.3 in the belief and 236 in the simulation (rounding order; reported in CN11, not `unless`)
+        assert.is_true(math.abs(out[1][1] - out[1][2]) < 1, out[1][1] .. " vs " .. out[1][2])
+        assert.are.equal(out[2][1], out[2][2])
+        assert.is_true(out[1][1] > out[2][1], "Arcane Power prices Arcane Blast only while Missile Barrage is down")
+        assert.are.same({}, H.errors)
+    end)
 end)
 
 -- The priorities: the wowsims.com packs (generated from wowsims/forever's APLs by `make wowsims-packs`).
