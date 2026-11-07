@@ -1,6 +1,6 @@
 # Cooldown Manager facts, always on: one reduced fact per tracked thing (spec amendment, 2026-11-07)
 
-Status: DESIGN (not built), review round 1 applied (`~/src/hekili-central-needs/cdm-design-review.md`). Plan:
+Status: DESIGN (not built), review rounds 1-2 applied (round 2: P0 result 10, item trust) (`~/src/hekili-central-needs/cdm-design-review.md`). Plan:
 `docs/superpowers/plans/2026-11-07-cdm-default.md`.
 Amends `docs/superpowers/specs/2026-10-23-providers-design.md` ("the providers spec", decisions 65-91). New decisions
 are numbered from 92. Paths are under `src/Hekili/` unless they start with `tests/`, `tools/` or `docs/`. Line numbers
@@ -45,6 +45,10 @@ TellMeWhen research (`~/src/hekili-central-needs/tmw-research.md`, "TMW"), the 2
 | F8 | Coverage is a property of the player's layout, not of the category sets | probe §8 |
 | F9 | The combat-exit walk is ground truth for every aura | `Sources/Auras.lua:165-190` |
 | F10 | The viewer tracks player-cast auras only | CDM-S; and from source below |
+| F11 | Item presence matches the aura's lifetime to the second, in combat, gain and removal: Enrage 10 s, Demoralizing Roar 30 s, Growl 3 s, Nature's Grasp consumed at 18 s; Faerie Fire, Demoralizing Roar and Growl (target debuffs) lit their items | AuraProbe run 1, P0 result 10 (`~/src/hekili-central-needs/auraprobe-druid-run1-2026-11-07.txt`) |
+| F12 | **An item can stay silent while its aura is up**: Mark of the Wild rank 3 (6756) up (direct read at 0 s), the item (spell 5232, rank 2) never held an aura | P0 result 10.4 |
+| F13 | Direct reads are readable for the first sample of a fight (0 s) and hidden from the second (1 s): the restriction lands just after `PLAYER_REGEN_DISABLED` | P0 result 10.2 |
+| F14 | A target item's `auraDataUnit` is plain "target" while held | CV §2 (Rend); the probe now records it (P0 result 10.5) |
 
 Read from source (not measured): `SetAuraInstanceInfo` clears then sets in one call (BD:368-380);
 `ClearAuraInstanceInfo` fires nothing when nothing was held (BD:382-392); a pool release runs `ResetCooldownData`,
@@ -89,8 +93,9 @@ One item frame is one **evidence slot**. A slot is **live** for thing (j, u) whe
 - it is configured: `cooldownID` and `layoutIndex` plain and non-nil;
 - its `cooldownID` maps to aura j (§3.1);
 - u = 2 only: it is not **settling** (§3.4);
-- it gives an answer for u: **UP** (held, with plain `auraDataUnit` = u) or **NONE** (not held). A held slot for the
-  other unit, or held with a secret or nil unit, is not live for u.
+- it gives an answer for u: **UP** (held, with plain `auraDataUnit` = u, F14) or a **trusted NONE** (not held, and its
+  entry is **proven** for aura j: §2.2a). A held slot for the other unit, a held slot with a secret or nil unit, and a
+  silent slot whose entry is unproven or disproven are not live for u.
 
 `held = issecretvalue(aid) or aid ~= nil`, `aid = rawget(item, "auraInstanceID")`. The entry's role plays no part (F6).
 
@@ -99,7 +104,42 @@ spells' auras: BD `FindLinkedSpellForCurrentAuras`; F4: the Omen passive did not
 `overrideSpellID`, `overrideTooltipSpellID` (each with `GetOverrideSpell`). The plan's Task 3a reads
 `GetAssociatedAuraSpellPriority` (BD:327-358) and widens the candidate set if the base spell can bear the aura while links
 exist. UP is evidence for j only if **every** candidate maps to j (untracked candidates included: an unregistered linked
-proc makes the item ambiguous); NONE counts for every j a candidate maps to. Counted per fight as `ambiguous`.
+proc makes the item ambiguous); a trusted NONE counts for every j a candidate maps to. Counted per fight as `ambiguous`.
+
+### 2.2a Item trust: NONE only from an item that has proven it follows the aura (decision 115)
+
+F12 shows an item can be silent while its aura is up (a higher rank than the item lists). Under "DOWN when every
+existing item says none" that silence would close the record: a wrong DOWN, "rebuff" mid-fight. So an item's silence is
+evidence only after the item has **proven**, for that aura, that it lights when the aura is up. Rank-agnostic, no
+per-spell table, no layout assumption.
+
+- **Key.** Per map entry e = (cooldownID, j): one entry per pair the map builds (§3.1), preallocated at the build:
+  `trust[e]` (0 unproven, 1 proven, 2 disproven) and `trustId[e]` (the aura spell ID the walk saw when it last decided,
+  0 none). Keyed by cooldownID, not by frame: a re-point moves the slot to another entry with its own trust; a layout
+  change (items added, removed, moved between viewers) keeps every entry's trust.
+- **Proof (b), any time.** A slot of entry e that answers UP for j sets `trust[e] = 1` (its UP always counts, whatever
+  the trust: F12 is a silence, not a false light).
+- **Proof or disproof (a), out of combat**, where the walk is ground truth (`walkWins(u)`, §2.1): at each poll 15, for
+  each live-but-silent or held slot of entry e and each aura j it maps to, with the record (u, j) up per the walk and
+  applied at least `GRACE` (1.0 s) ago: held -> `trust[e] = 1`; silent -> `trust[e] = 2` (disproven: its NONE is never
+  used; its UP would still count and re-prove it). `GRACE` absorbs the viewer and the walk handling the same
+  `UNIT_AURA` in different frames. The record down per the walk proves nothing (a silent item agrees with anything).
+  The last out-of-combat poll before `PLAYER_REGEN_DISABLED` is the last comparison of that fight.
+- **Rank change.** The walk sees the aura's spell ID out of combat (`U.seenId[u][j]`, a preallocated array the walk
+  fills, `Sources/Auras.lua:97-120`); when it differs from `trustId[e]` for a proven or disproven entry, the entry goes
+  back to unproven and the next comparison decides again (a newly learned rank is re-judged at its first out-of-combat
+  cast).
+- **Reset.** A map rebuild (§3.1 triggers, out of combat) resets every entry to unproven; nothing resets in combat.
+  Trust lives for the session (a `/reload` starts unproven).
+- **At login** every entry is unproven: the CDM gives UP facts at once and NONE facts only after each entry has shown its
+  aura once (in or out of combat) or been compared with the walk. Until then the model closes records, as today.
+- **Residual risk.** An entry proven for rank n, then rank n+1 cast for the first time **in combat** (no walk to see the
+  new ID): the item may go silent while the aura is up, and that NONE is trusted. Rare (ranks are learned out of combat
+  and cast before the next pull is usual); deferral D11 names the upgrade (D10's walk at `PLAYER_REGEN_DISABLED`, or our
+  cast's plain spell ID compared with `trustId`).
+- **Allocation.** None in the poll: two preallocated arrays per entry and one per (u, j).
+- **Counters** (debug snapshot): per entry proven / disproven / unproven counts in the summary line; a per-aura `trust=`
+  field (the best entry state among its live slots).
 
 ### 2.3 The reduction: one pure, total function
 
@@ -151,7 +191,8 @@ One rule set, in `Sources/Auras.lua` `apply` (`:218-243`), plus one array CN13 r
 1. **Who may close a record (C1).** The viewer reads only our own auras (F10). A NONE closes a record (stages
    `Obs.Read` 0) only where our evidence opened it:
    - target (u = 2): never (today's scope rule, `Router.lua:22-24`, `:139`);
-   - player (u = 1): only when `ours[k]` is set. `ours[k]` (preallocated, `Sources/Auras.lua`, exposed as
+   - player (u = 1): only when the reduced DOWN rests on trusted NONEs (§2.2a: an item that never proved itself
+     cannot close anything; F12) **and** `ours[k]` is set: both are needed. `ours[k]` (preallocated, `Sources/Auras.lua`, exposed as
      `I.auraOurs`) is set by our cast opening or refreshing the record (`Families/Now.lua:325`, the `aura()` writer: a
      one-line write), by a CDM UP that opened it, and by an out-of-combat walk read whose `sourceUnit` is plain "player"
      or "pet"; it is cleared when a walk read with any other or a secret source opens or refreshes the record, and when
@@ -378,10 +419,10 @@ flicker rise beyond seed noise (±0.3/min) on any spec in any viewer arm.
 | 92 | A fact reducer between evidence and belief: one reduced fact per (aura, unit); the belief reads only it | "1 fact per thing that we track" |
 | 93 | Providers have a standing (walk 3 out of combat only, direct 2, CDM 1, model 0); the highest standing with live evidence decides | a plain walk carries durations; in combat a walk's "plain" is not trustworthy (I7) |
 | 94 | `Reduce` is pure and total, table-tested; disagreements counted on transitions | no silent resolution |
-| 95 | Any item in any viewer is evidence; role ignored; a slot is live for (j, u) only if it answers UP or NONE for u | F6; totality |
-| 96 | Not evidence: an invisible viewer, an unconfigured or released slot, an unmapped item, a settling target slot, a secret identity field; no item = UNKNOWN | no layout assumptions |
-| 97 | UP counts for j only if every aura candidate of the item maps to j; NONE counts for every j it maps to | `auraSpellID` secret (F3); untracked linked procs (I2) |
-| 98 | The map is keyed by cooldownID, complete over categories 0-8 with unlearned spells, built out of combat | in combat only the evidence set changes |
+| 95 | Any item in any viewer is evidence; role ignored; a slot is live for (j, u) only if it answers UP (unit from the plain `auraDataUnit`, F14) or a trusted NONE for u | F6; totality; F12 |
+| 96 | Not evidence: an invisible viewer, an unconfigured or released slot, an unmapped item, a settling target slot, a secret identity field, a silent slot of an unproven or disproven entry; no item = UNKNOWN | no layout assumptions; F12 |
+| 97 | UP counts for j only if every aura candidate of the item maps to j; a trusted NONE counts for every j it maps to | `auraSpellID` secret (F3); untracked linked procs (I2) |
+| 98 | The map is keyed by cooldownID, complete over categories 0-8 with unlearned spells, built out of combat; one preallocated entry per (cooldownID, aura) carries the trust | in combat only the evidence set changes |
 | 99 (supersedes 89) | Mid-fight layout changes apply as evidence changes; losing evidence makes a thing UNKNOWN and keeps its belief | the owner's amended 89 |
 | 100 (supersedes 79) | Presence is read by a rawget sweep at poll 15, run before the `covered` guard | the refresh pair, release order and always-shown items vanish |
 | 101 | No hooks; children collected at activation, rebuild, combat end and on `GetNumChildren` growth in combat | a hook buys no player latency (perf 2.1a); target-side 0.5 s accepted (D8); smallest taint surface |
@@ -394,10 +435,11 @@ flicker rise beyond seed noise (±0.3/min) on any spec in any viewer arm.
 | 108 | The coverage line is computed in `Options/` from the client API and `class.auras`; the CDM debug information is a section of the belief's own Snapshot, reaching the core through the SetLog logger: no new crossing | the border rule; owner Q5 |
 | 109 | The direct never-secret provider only if a pack aura reads flag 0 | 15 of 15 contextual so far |
 | 110 | The fake viewer models any layout and the client's order; the default arm stays viewer-off; viewer arms measured, not gated, except no flicker rise | the first loop A/B of the viewer |
-| 111 | A player NONE closes a record only where our evidence opened it (`ours[k]`: our cast, a CDM UP, an out-of-combat walk read with source player/pet); a target NONE never closes | the viewer reads only our auras (C1) |
+| 111 | A player DOWN closes a record only if it rests on trusted NONEs (decision 115) and our evidence opened the record (`ours[k]`: our cast, a CDM UP, an out-of-combat walk read with source player/pet); a target NONE never closes | the viewer reads only our auras (C1); a silent item proves nothing (F12) |
 | 112 | An UP with no model: registered duration from `max(fact.t, applied)`; past it a `HOLD` (1.0 s) re-staged once per `HOLD` while the fact stays UP; `math.huge` only for a player aura with no numeric duration | never stuck up on the target; bounded lapse; no per-poll churn (C2; owner Q3) |
 | 113 | `apply` skips player form and enchant auras | their records belong to Forms/Enchants (M5) |
 | 114 | CN13 owns a generic `I.auraFloor[j]`; this lane writes it from the reduced fact | no one-update flash; `Families/` knows nothing of the router (owner Q4) |
+| 115 | **Item trust**: an item's silence is NONE evidence only for an entry (cooldownID, aura) proven to follow the aura, by showing it UP (any time) or by matching an up aura of the out-of-combat walk (held = proven, silent for `GRACE` = disproven); a rank change seen by the walk, or a map rebuild, resets the entry; unproven or disproven silence is UNKNOWN | Mark of the Wild rank 3 under a rank-2 item (F12): no wrong DOWN, rank- and layout-agnostic |
 
 ## 12. Credits
 
@@ -417,12 +459,19 @@ needed, §3.3), GPL-3.0 like Hekili Forever; ideas only, re-implemented, no code
 | D6 | Coverage fixtures for classes other than Warrior and Druid | in game only | each class's `/fprobe cdm sets` |
 | D8 | Target-side changes we did not cause wait up to 0.5 s (no hooks; the target's `UNIT_AURA` is not delivered in combat); upgrade: deliver it inside `Game/` while target coverage > 0 | small impact; a target NONE is no answer | the A/B or a player shows late target edges |
 | D9 | `HOLD` = 1.0 s is a guess | no measurement | Task 9's target-DoT-past-duration flicker row |
+| D10 | A walk at `PLAYER_REGEN_DISABLED` (F13: reads are still plain at the fight's first instant; today `Sources/Auras.lua:273` only resets counters): ground truth at the pull, and one more trust comparison (§2.2a) | the delay between the event and the restriction is unmeasured; a walk that half-succeeds would write a partial state | probe e6 (`/fprobe cdm events`) measures the delay; build as plan Task 12 if the walk completes reliably |
+| D11 | A rank first cast in combat after its entry was proven on a lower rank: the silent item's NONE is trusted (§2.2a residual risk) | rare: ranks are learned and usually cast out of combat | D10 built, or a player report of a mid-fight "rebuff" |
+| D12 | `GRACE` = 1.0 s for disproof is a guess | no measurement of the viewer's lag behind the walk out of combat | the A/B's disproven counts on the `buffs` layout, or a probe |
 
 D2 (stuck-up after losing a fact) and D7 (an acquire hook) are closed by decisions 112 and 101.
 
 ## 14. Owner answers recorded (2026-11-07)
 
+Round 2 (P0 result 10): decision 115 as the controller specified it; no owner question beyond those below.
+
+
 Q1 sweep: yes (controller's recommendation, reversible). Q2 no hooks: yes (same). Q3 registered duration: yes, made
 complete by decision 112. Q4 floor: CN13 builds it (decision 114; Task 4c fallback). Q5: no command; the debug
 snapshot (§6). Q6: superseded by "no toggle". New for the owner: confirm `Hekili.cdmOff` (a field on the addon table set
-by `/run`, not a command or option) as the debug-only session off.
+by `/run`, not a command or option) as the debug-only session off; and whether D10 (a walk at `PLAYER_REGEN_DISABLED`)
+should be built once e6 measures the delay, or stays a deferral.
