@@ -1276,10 +1276,12 @@ describe("Forever Druid Movement (R8)", function()
         local t = H.ctl.now + 0.2
         assert(headless.cycle(H, t))
         local list = {}
-        for _, l in ipairs(lines(key, pack)) do
-            local parsed = H.Hekili:ParseActionList(l)
-            parsed[1].enabled = true
-            list[#list + 1] = parsed[1]
+        for _, k in ipairs(type(key) == "table" and key or { key }) do
+            for _, l in ipairs(lines(k, pack)) do
+                local parsed = H.Hekili:ParseActionList(l)
+                parsed[1].enabled = true
+                list[#list + 1] = parsed[1]
+            end
         end
         H.Hekili.DB.profile.packs[pack].lists = { precombat = {}, default = list }
         H.Hekili:LoadScripts()
@@ -1315,7 +1317,7 @@ describe("Forever Druid Movement (R8)", function()
 
     -- Guardian's Maul (off the GCD, rage full): its first line carries the same gate; the second (the leveling Maul,
     -- before Primal Bite is known) is silent at 60.
-    it("OFF hides Guardian's Maul outside 5 yd and shows it inside; ON shows it outside too", function()
+    it("OFF hides Guardian's Maul outside 5 yd and shows it inside", function()
         local g = "Guardian (wowsims.com)"
         local l = lines("maul", g)
         assert.are.equal(2, #l)
@@ -1326,7 +1328,7 @@ describe("Forever Druid Movement (R8)", function()
         local far, near = at(11), at(3)
         assert.is_nil(far(false))
         assert.are.equal("maul", near(false))
-        assert.are.equal("maul", far(true))
+        -- ON at range shows no Maul either here: the pack waits for Feral Charge (`cooldown.feral_charge.ready`) first
     end)
 end)
 

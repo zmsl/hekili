@@ -7,8 +7,12 @@
 -- pack's lines are the old pin's (the translator already omitted that entry).
 -- Replay (4b0030a44b, `procs { ["9881:0"] = true }`: Maul's untagged Casting lines are wowsims's queue at each swing):
 -- the kit has no rage-from-damage-taken rule (`taken`: CN7's hook, a named gap), so the belief sees only the bear's own
--- rage (white swings, Primal Fury, Enrage): decisions on-GCD 0.632 (117). With the archived kit rule (scratch, not
--- shipped: lane-feralguardian-taken-wip.patch) 0.923 (117), 9 misses, none a pack line, by log time:
+-- rage (white swings, Primal Fury, Enrage): decisions on-GCD 0.632 (117). NAMED GAP (owner ruling 2026-11-07): the
+-- shipped kit has no rage from hits taken (CN7; the belief cannot read hit amounts in game, L67); the floor is measured
+-- without it (fresh-floor rule waived for this one cause). With the archived kit rule (lane-feralguardian-taken-wip.patch,
+-- scratch, NOT shipped: do not land it blind) the replay is 0.923 (117) once CN7 and CN9 (the Druid world's rage knob)
+-- land, but its replay flicker is 14.65/min (off-GCD Maul alternation; oracle 0.00). 9 misses with it, none a pack
+-- line, by log time:
 --   8.95 lacerate -> primal_bite, 10.45 primal_bite -> lacerate, 18.20 primal_bite -> lacerate, 23.95 lacerate ->
 --   primal_bite, 38.20 primal_bite -> lacerate, 151.20 primal_bite -> lacerate: the belief's rage lo sits under the
 --   true rage at Lacerate's 15 / Primal Bite's 18 (truth 15-34, lo 1.6-17.8: the hits' rage is an estimate band);

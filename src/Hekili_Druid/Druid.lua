@@ -218,6 +218,9 @@ spec:RegisterResource(
         -- `aura` gates it in both layers (the belief's swing entry, spec §0.3; Hekili's forecast); `stop` too.
         -- A white crit adds one more base swing (without the two-hand factor), as wowsims's, and Primal Fury's rage:
         -- `crit`. A yellow crit's Primal Fury is the strikes' `onCrit`.
+        -- NAMED GAP (owner 2026-11-07): no `taken` (rage from hits) until CN7 gives the belief its hook; the archived rule
+        -- (lane-feralguardian-taken-wip.patch) lifts the Guardian replay 0.632 -> 0.923 but with replay flicker 14.65/min: land it
+        -- only with CN7 + CN9, never blind.
         -- shortcut: misses, Natural Reaction and rage from damage taken are unmodelled; the belief's swing-scale
         -- calibration absorbs a steady bias. Upgrade from the combat-log rows once a non-cast `now` exists.
         mainhand = {
