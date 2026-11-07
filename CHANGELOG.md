@@ -7,11 +7,19 @@
 ### Changed
 
 ### Fixed
-- Choosing Style: None for a font no longer raises "bad argument #3 to SetFont" and leaves the display unbuilt; the display builds with no outline (reported by a player, confirmed in game on the Forever client).
 
 ### Known issues
 
 ### Upgrade notes
+
+## v0.6.1
+
+_Released 2026-11-07_
+
+This small fix release stops the font outline setting "None" from breaking the display.
+
+### Core and display
+- Setting a font's outline Style to None no longer causes a Lua error that kept the display from appearing. The display now shows with plain, unoutlined text.
 
 ## v0.6.0
 
