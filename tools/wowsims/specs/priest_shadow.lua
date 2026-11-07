@@ -14,6 +14,11 @@
 -- Re-pin e2842f0a78 (Task 11): decisions on-GCD 1.000 (85) before and after, no disagreement. The build moves four gear
 -- slots; its Greater Blessing of Wisdom `1` is rank 1 (25894), so the request sends `2`, the top rank 25918 (R25);
 -- the hidden Starshards line now compares spellExpectedDpet (still hidden, omitted). Omitted 4 -> 4.
+-- Re-pin 4b0030a44b (0.7 lane priest): talents 00530300103-3-50042201251302051 (Improved Mind Blast 4, Twilight Focus 3
+-- in the Holy tree, Martyrdom out); the Night Elf's Elune's Light and the Gnome's Eureka! lines are gated on the GCD
+-- and on Shadow Word: Pain / Devouring Plague having 10 s (Eureka! 8 s) left, no longer on the clock (5ba44c16f6);
+-- default #11 (Starshards vs Mind Flay on spellExpectedDpet) is no longer `hidden` but still omitted (CN5: the
+-- translator does not support spellExpectedDpet; owner question). Binding Heal (left the game) is out of the kit.
 -- Worked (P8): Smite fills below Mind Flay (a talent: the L10 bracket idled 8.0 s on Mind Blast's cooldown); the world's
 -- Shadow character knows Smite (P9.4), silent at 60.
 -- Deviations: Mind Flay's channelSpell.interruptIf (MF3: clip at its third tick) is dropped by the translator (the

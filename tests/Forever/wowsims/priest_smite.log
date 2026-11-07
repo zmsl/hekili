@@ -1,4 +1,4 @@
-# wowsims e2842f0a784d2f329dde0bc682a6b84202a780f2 priest_smite seed 101 180 s target 63
+# wowsims 4b0030a44be2d798319ffedc55a5fa1df5727912 priest_smite seed 101 180 s target 63
 # talents 1309969=5@1 14524=2@1 1225132=5@1 14523=2@1 1309957=3@1 18551=5@1 14520=3@1 14751=1@1 14521=3@1 402174=1@1 10060=1@1 14913=3@2 14889=5@2 27900=1@2 18530=5@2 15237=1@2 14909=2@2 15260=3@3
 [0.00] [Smite (#1)] Aura gained: {SpellID: 25898, Tag: -1}
 [0.00] [Smite (#1)] Dynamic dep enabled (Strength *= 1.10): {"Strength": 3.000,"AttackPower": 3.000,}
