@@ -1,7 +1,8 @@
 -- Game/State/Sources/Presence/Reduce.lua
 -- The fact reducer (cdm-default spec §2.3, decision 94): one thing's evidence counters in, one reduced state and an
--- agree flag out. Pure and total: numbers only, no tables, no state, no game calls. nNone counts trusted NONEs only
--- (item trust is folded into liveness by the leaf, §2.2a); disagreement transitions are counted by the router (§2.4).
+-- agree flag out. Pure and total: numbers only, no tables, no state, no game calls. The seen rule (§2.2a, decision 115)
+-- is folded into liveness by the leaf; disagreement transitions are counted by the router (§2.4). Counts are tested
+-- `> 0` as the spec's rows say, so a negative count (a leaf un-count imbalance) fails safe to UNKNOWN, never DOWN.
 -- The presence-bit-on-items idea is from TellMeWhen (Cybeloras), GPL-3.0; ideas only, no code copied.
 
 local _, ns = ...
@@ -12,13 +13,14 @@ local UP, DOWN, UNKNOWN = I.UP, I.DOWN, I.UNDECIDED
 ---@return integer state I.UP, I.DOWN or I.UNDECIDED
 ---@return boolean agree false when live slots answer both UP and NONE
 function I.ReduceFact(nLive, nUp, nNone, nStale, tUp, tNone)
-    if nLive == 0 or (nUp == 0 and nNone == 0) then
+    local up, none = nUp > 0, nNone > 0
+    if nLive <= 0 or not (up or none) then
         return UNKNOWN, true
     end
-    if nNone == 0 then
+    if not none then
         return UP, true
     end
-    if nUp == 0 then
+    if not up then
         if nStale == 0 then
             return DOWN, true
         end
