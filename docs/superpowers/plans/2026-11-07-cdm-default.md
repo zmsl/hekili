@@ -403,7 +403,8 @@ standalone `description` in the Performance tab, `name` a function), TOC, `tests
   class fixture"; ab: arms `viewer-none`, `viewer-buffs`, `viewer-fixture`, `viewer-mixed`; `default` unchanged.
 - [ ] **Step 2: expect failure. Step 3: Implement.** `mixed`: each pack aura gets 0-3 items over the four viewers (from
   `W.mrng`), unconfigured slots, one viewer hidden for a random 10 s, one mid-fight re-point, one viewer whose pool
-  grows in the first fight. `fixture`: `tools/data/cooldownviewer/<CLASS>.lua` plus an Essential entry per ability whose
+  grows in the first fight, at least one silent item (`item.silent`) beside a working item for the same aura, and
+  `ctl.viewer.lag = 1` on one seed set (so the viewer arms exercise the seen rule). `fixture`: `tools/data/cooldownviewer/<CLASS>.lua` plus an Essential entry per ability whose
   aura the pack registers (F6). Classes without a fixture skip that arm (reported).
 - [ ] **Step 4:** `make check`; `make gate` (default arm identical); `make gate-ab` runs the new arms.
 - [ ] **Step 5: Commit** `test(harness): Cooldown Manager layouts in the loops; four viewer arms (decision 110)`.
