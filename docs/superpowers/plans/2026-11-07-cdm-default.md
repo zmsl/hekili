@@ -452,6 +452,10 @@ snapshot's `presence` section.
   frame leaves the child list, a replacement can arrive with the count unchanged and is never collected: safe
   (UNKNOWN) but that item's coverage is lost for the rest of the fight. Fallback then: on any count change walk all
   indices and insert only frames not yet mapped (no allocation but the new inserts).
+  Also read the dropped frame's own fields: the probe keeps a reference to the item's frame from before the removal
+  and rawgets its `cooldownID`, `layoutIndex` and `auraInstanceID` afterwards (the leaf sweeps that frame by rawget
+  whether or not it is still a child). Expected from source: `cooldownID` nil (BD:95). A plain configured
+  `cooldownID` and `layoutIndex` after the removal contradicts BD:95 and **blocks the release under CDM-I**.
 - [ ] **ACQ:** set one viewer to show "In Combat", log in, first fight: `/fprobe cdm hooks` counts `OnAcquireItemFrame`
   in combat; the debug snapshot shows its auras covered during that fight.
 - [ ] **LAT:** the time from `OnAuraInstanceInfoSet` (probe) to the change in the snapshot (player: within one forced
