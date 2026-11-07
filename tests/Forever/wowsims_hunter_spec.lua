@@ -81,7 +81,10 @@ local PACKS = {
         "Beast Mastery (wowsims.com)",
         0.92,
         { [10] = 6, [40] = 7.8, [60] = 12.2 },
-        0,
+        -- ON flicker 0 -> 1.0 (CN8 D2, 1.00 measured, the same with steady icons off): the not-ready flag keeps the
+        -- modelled end, so Multi-Shot (n147) and Blood Fury (n631) lead for the tick before the log casts them; under the
+        -- old probe their last 0.5 s read 0.50 and never led. A replay has no press exclusion (the log presses)
+        1.0,
     },
     {
         "hunter_marksmanship",
