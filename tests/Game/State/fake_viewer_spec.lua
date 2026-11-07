@@ -60,7 +60,10 @@ describe("the any-layout Cooldown Manager fake", function()
     it("ViewerAura clears a held aura first, then sets (secret id; secret or plain spell)", function()
         local item = ctl.ViewerItem(ICON, 1, 501)
         ctl.ViewerAura(item, "target", 77)
-        assert.are.same({ SECRET, "target", SECRET, true }, { item.auraInstanceID, item.auraDataUnit, item.auraSpellID, item.shown })
+        assert.are.same(
+            { SECRET, "target", SECRET, true },
+            { item.auraInstanceID, item.auraDataUnit, item.auraSpellID, item.shown }
+        )
         assert.are.same({ "set" }, item.writes)
         ctl.ViewerAura(item, "player", 77)
         assert.are.same({ "set", "clear", "set" }, item.writes)
@@ -69,7 +72,10 @@ describe("the any-layout Cooldown Manager fake", function()
         ctl.ViewerAura(item, "player", 77)
         assert.are.equal(77, item.auraSpellID)
         ctl.ViewerClear(item)
-        assert.are.same({ nil, nil, nil, false }, { item.auraInstanceID, item.auraDataUnit, item.auraSpellID, item.shown })
+        assert.are.same(
+            { nil, nil, nil, false },
+            { item.auraInstanceID, item.auraDataUnit, item.auraSpellID, item.shown }
+        )
     end)
 
     it("ViewerRelease: cooldownID first, then the aura clear, then layoutIndex", function()
@@ -102,15 +108,29 @@ describe("the any-layout Cooldown Manager fake", function()
         assert.are.same({}, api.C_CooldownViewer.GetCooldownViewerCategorySet(0, true))
     end)
 
-    it("infos carry the override, tooltip, linked and secret-singular fields; GetOverrideSpell reads ctl.overrides", function()
-        ctl.viewer.infos[501] = { spellID = 1, overrideSpellID = 2, overrideTooltipSpellID = 3, linkedSpellIDs = { 4, 5 }, linkedSpellID = SECRET, hasAura = true, selfAura = true }
-        local i = api.C_CooldownViewer.GetCooldownViewerCooldownInfo(501)
-        assert.is_true(api.issecretvalue(i.linkedSpellID))
-        assert.are.same({ 2, 3, 4, 5 }, { i.overrideSpellID, i.overrideTooltipSpellID, i.linkedSpellIDs[1], i.linkedSpellIDs[2] })
-        assert.are.equal(9, api.C_Spell.GetOverrideSpell(9))
-        ctl.overrides[9] = 10
-        assert.are.equal(10, api.C_Spell.GetOverrideSpell(9))
-    end)
+    it(
+        "infos carry the override, tooltip, linked and secret-singular fields; GetOverrideSpell reads ctl.overrides",
+        function()
+            ctl.viewer.infos[501] = {
+                spellID = 1,
+                overrideSpellID = 2,
+                overrideTooltipSpellID = 3,
+                linkedSpellIDs = { 4, 5 },
+                linkedSpellID = SECRET,
+                hasAura = true,
+                selfAura = true,
+            }
+            local i = api.C_CooldownViewer.GetCooldownViewerCooldownInfo(501)
+            assert.is_true(api.issecretvalue(i.linkedSpellID))
+            assert.are.same(
+                { 2, 3, 4, 5 },
+                { i.overrideSpellID, i.overrideTooltipSpellID, i.linkedSpellIDs[1], i.linkedSpellIDs[2] }
+            )
+            assert.are.equal(9, api.C_Spell.GetOverrideSpell(9))
+            ctl.overrides[9] = 10
+            assert.are.equal(10, api.C_Spell.GetOverrideSpell(9))
+        end
+    )
 
     describe("ViewerAuraBySpell", function()
         before_each(function()
@@ -208,6 +228,14 @@ describe("the any-layout Cooldown Manager fake", function()
         ctl.ViewerShow(item, false)
         assert.is_nil(item.auraInstanceID)
         local _, fresh = fake.new()
-        assert.are.same({ {}, {}, {}, {} }, { fresh.viewer.items[fake.VIEWERS[1]], fresh.viewer.items[fake.VIEWERS[2]], fresh.viewer.items[fake.VIEWERS[3]], fresh.viewer.items[fake.VIEWERS[4]] })
+        assert.are.same(
+            { {}, {}, {}, {} },
+            {
+                fresh.viewer.items[fake.VIEWERS[1]],
+                fresh.viewer.items[fake.VIEWERS[2]],
+                fresh.viewer.items[fake.VIEWERS[3]],
+                fresh.viewer.items[fake.VIEWERS[4]],
+            }
+        )
     end)
 end)
