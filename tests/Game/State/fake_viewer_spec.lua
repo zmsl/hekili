@@ -207,6 +207,19 @@ describe("the any-layout Cooldown Manager fake", function()
             assert.is_nil(item.auraInstanceID)
         end)
 
+        it("under lag a held item's refresh stays held: clear and set move together at the next Tick", function()
+            local item = ctl.ViewerItem(ICON, 1, 501)
+            ctl.ViewerAura(item, "player", 1001)
+            ctl.viewer.lag = true
+            ctl.viewer.shown[ICON] = nil
+            ctl.ViewerAuraBySpell("player", 1001, true, "player") -- the refresh
+            assert.are.equal(SECRET, item.auraInstanceID) -- never nil in between
+            assert.are.same({ "set" }, item.writes)
+            ctl.Tick(101)
+            assert.are.same({ "set", "clear", "set" }, item.writes)
+            assert.are.equal(SECRET, item.auraInstanceID)
+        end)
+
         it("an acquire is a new frame each time; a removal drops the frame from GetItemFrames", function()
             local a = ctl.ViewerAcquire(ICON, 501)
             ctl.ViewerRemove(ICON, a)
