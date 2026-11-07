@@ -678,6 +678,7 @@ function M.new()
         parentShown = true, -- false: no viewer is visible (their parent is hidden)
         plainSpell = false, -- an applied item's auraSpellID is plain (out of combat, probed) instead of SECRET
         lag = false, -- ViewerAuraBySpell lights its items at the NEXT ctl.Tick, not in the same call
+        applied = {}, -- the auras up on us: { unit, spellID }, for an item acquired while one is still running
         pending = {}, -- the lagged lights: { item, unit, up }
         hookCalls = {}, -- every HookScript / hooksecurefunc call (the leaf is asserted to make none)
     }
@@ -763,10 +764,6 @@ function M.new()
         list[#list + 1] = child
         return child
     end
-    --- The pool grows (also in combat): a new item for `id`, at the next layout index.
-    function ctl.ViewerAcquire(name, id)
-        return ctl.ViewerItem(name, #ctl.viewer.items[name] + 1, id)
-    end
     local function clearAura(item)
         item.auraInstanceID, item.auraSpellID, item.auraDataUnit = nil, nil, nil
         item.shown = false
@@ -826,17 +823,56 @@ function M.new()
         if source ~= "player" then
             return
         end
+        local ap = ctl.viewer.applied
+        for i = #ap, 1, -1 do
+            if ap[i][1] == unit and ap[i][2] == spellID then
+                table.remove(ap, i)
+            end
+        end
+        if up then
+            ap[#ap + 1] = { unit, spellID }
+        end
         for _, name in ipairs(M.VIEWERS) do
             for _, item in ipairs(ctl.viewer.items[name]) do
                 local info = item.cooldownID and ctl.viewer.infos[item.cooldownID]
                 if info and not item.silent and (item.unit == nil or item.unit == unit) and names(info, spellID) then
-                    if ctl.viewer.lag then
+                    if ctl.viewer.lag and up then -- removal stays immediate
                         local p = ctl.viewer.pending
                         p[#p + 1] = { item, unit, up, spellID }
                     else
                         light(item, unit, up, spellID)
                     end
                 end
+            end
+        end
+    end
+    --- The pool grows (also in combat): a NEW frame table each time (an item can come back as a different frame for the
+    --- same cooldownID), at the next layout index. An aura of its spell still up lights it at once (F13) unless `silent`
+    --- (3rd argument) or ctl.viewer.lag (then at the next Tick).
+    function ctl.ViewerAcquire(name, id, silent)
+        local item = ctl.ViewerItem(name, #ctl.viewer.items[name] + 1, id)
+        item.silent = silent or nil
+        local info = ctl.viewer.infos[id]
+        for _, a in ipairs(ctl.viewer.applied) do
+            if info and not silent and (item.unit == nil or item.unit == a[1]) and names(info, a[2]) then
+                if ctl.viewer.lag then
+                    local p = ctl.viewer.pending
+                    p[#p + 1] = { item, a[1], true, a[2] }
+                else
+                    light(item, a[1], true, a[2])
+                end
+            end
+        end
+        return item
+    end
+    --- The item leaves the pool: released, and its frame drops out of the viewer's children and GetItemFrames.
+    function ctl.ViewerRemove(name, item)
+        ctl.ViewerRelease(item)
+        local list = ctl.viewer.items[name]
+        for i, c in ipairs(list) do
+            if c == item then
+                table.remove(list, i)
+                return
             end
         end
     end

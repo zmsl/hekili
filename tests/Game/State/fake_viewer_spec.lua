@@ -203,10 +203,36 @@ describe("the any-layout Cooldown Manager fake", function()
             assert.is_nil(item.auraInstanceID)
             ctl.Tick(101)
             assert.are.equal(SECRET, item.auraInstanceID)
-            ctl.ViewerAuraBySpell("player", 1001, false, "player")
-            assert.are.equal(SECRET, item.auraInstanceID)
-            ctl.Tick(102)
+            ctl.ViewerAuraBySpell("player", 1001, false, "player") -- removal stays immediate
             assert.is_nil(item.auraInstanceID)
+        end)
+
+        it("an acquire is a new frame each time; a removal drops the frame from GetItemFrames", function()
+            local a = ctl.ViewerAcquire(ICON, 501)
+            ctl.ViewerRemove(ICON, a)
+            assert.are.same({}, viewer(ICON):GetItemFrames())
+            assert.are.equal(0, viewer(ICON):GetNumChildren())
+            assert.is_nil(a.cooldownID)
+            local b = ctl.ViewerAcquire(ICON, 501)
+            assert.are_not.equal(a, b)
+            assert.are.same({ b }, viewer(ICON):GetItemFrames())
+        end)
+
+        it("a re-added item lights at once for a still-running application, unless silent or lagged", function()
+            ctl.ViewerAuraBySpell("player", 1001, true, "player")
+            local b = ctl.ViewerAcquire(ICON, 501)
+            assert.are.equal(SECRET, b.auraInstanceID)
+            local s = ctl.ViewerAcquire(ICON, 501, true)
+            assert.is_nil(s.auraInstanceID)
+            ctl.viewer.lag = true
+            local l = ctl.ViewerAcquire(ICON, 501)
+            assert.is_nil(l.auraInstanceID)
+            ctl.Tick(101)
+            assert.are.equal(SECRET, l.auraInstanceID)
+            ctl.ViewerAuraBySpell("player", 1001, false, "player")
+            local after = ctl.ViewerAcquire(ICON, 501)
+            ctl.Tick(102)
+            assert.is_nil(after.auraInstanceID) -- the aura ended: nothing to light
         end)
     end)
 
@@ -228,14 +254,11 @@ describe("the any-layout Cooldown Manager fake", function()
         ctl.ViewerShow(item, false)
         assert.is_nil(item.auraInstanceID)
         local _, fresh = fake.new()
-        assert.are.same(
-            { {}, {}, {}, {} },
-            {
-                fresh.viewer.items[fake.VIEWERS[1]],
-                fresh.viewer.items[fake.VIEWERS[2]],
-                fresh.viewer.items[fake.VIEWERS[3]],
-                fresh.viewer.items[fake.VIEWERS[4]],
-            }
-        )
+        assert.are.same({ {}, {}, {}, {} }, {
+            fresh.viewer.items[fake.VIEWERS[1]],
+            fresh.viewer.items[fake.VIEWERS[2]],
+            fresh.viewer.items[fake.VIEWERS[3]],
+            fresh.viewer.items[fake.VIEWERS[4]],
+        })
     end)
 end)
