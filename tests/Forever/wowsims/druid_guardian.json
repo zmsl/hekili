@@ -1,9 +1,6 @@
 {
   "encounter":{
-    "executeProportion20":0.2,
-    "executeProportion25":0.25,
     "executeProportion35":0.35,
-    "executeProportion90":0.9,
     "duration":180,
     "targets":[{
         "minBaseDamage":2601,
@@ -15,15 +12,23 @@
         "parryHaste":true,
         "mobType":"MobTypeMechanical"
       }],
-    "executeProportion45":0.45
+    "executeProportion20":0.2
   },
   "raid":{
     "parties":[{
         "players":[{
             "profession1":"Engineering",
-            "distanceFromTarget":0,
+            "distanceFromTarget":25,
             "reactionTimeMs":250,
             "class":"ClassDruid",
+            "healingModel":{
+              "inspirationUptime":0.25,
+              "hps":2200,
+              "cadenceVariation":1.2,
+              "cadenceSeconds":0.4,
+              "absorbFrac":0.02,
+              "burstWindow":6
+            },
             "equipment":{
               "items":[{
                   "id":252485
@@ -38,7 +43,7 @@
                 },{
                   "id":272754
                 },{
-                  "id":271948
+                  "id":19049
                 },{
                   "id":272396
                 },{
@@ -59,13 +64,61 @@
                 },{
                 }]
             },
-            "race":"RaceNightElf",
+            "race":"RaceTauren",
             "name":"Guardian",
-            "talentsString":"050022-5020032212310212551-05",
+            "talentsString":"050022-2322030212310212501-055",
             "profession2":"Enchanting",
             "rotation":{
+              "simple":{
+                "cooldowns":{
+                  "hpPercentForDefensives":0.4
+                }
+              },
+              "type":"TypeAPL",
               "valueVariables":[{
-                  "name":"Lacerate at 5 stacks",
+                  "name":"Healthstone health threshold",
+                  "value":{
+                    "const":{
+                      "val":"30%"
+                    }
+                  }
+                },{
+                  "name":"Mighty Rage potion rage threshold",
+                  "value":{
+                    "const":{
+                      "val":"20"
+                    }
+                  }
+                },{
+                  "name":"Barkskin health threshold",
+                  "value":{
+                    "const":{
+                      "val":"60%"
+                    }
+                  }
+                },{
+                  "name":"Maul minimum rage",
+                  "value":{
+                    "const":{
+                      "val":"20"
+                    }
+                  }
+                },{
+                  "name":"Lacerate refresh window",
+                  "value":{
+                    "const":{
+                      "val":"3s"
+                    }
+                  }
+                },{
+                  "name":"Frenzied Regeneration health threshold",
+                  "value":{
+                    "const":{
+                      "val":"25%"
+                    }
+                  }
+                },{
+                  "name":"Lacerate has five stacks",
                   "value":{
                     "and":{
                       "vals":[{
@@ -97,70 +150,65 @@
                     }
                   }
                 },{
-                  "name":"Demoralizing Roar is up",
+                  "name":"Attack-power reduction is covered",
                   "value":{
-                    "auraIsActive":{
-                      "sourceUnit":{
-                        "type":"CurrentTarget"
-                      },
-                      "auraId":{
-                        "spellId":9898
-                      }
-                    }
-                  }
-                },{
-                  "name":"Berserk follows Primal Bite",
-                  "value":{
-                    "and":{
+                    "or":{
                       "vals":[{
-                          "spellIsKnown":{
-                            "spellId":{
-                              "spellId":417141
-                            }
-                          }
-                        },{
-                          "spellIsReady":{
-                            "spellId":{
-                              "spellId":417141
-                            }
-                          }
-                        },{
-                          "variableRef":{
-                            "name":"Demoralizing Roar is up"
-                          }
-                        },{
-                          "cmp":{
-                            "op":"OpGe",
-                            "rhs":{
-                              "const":{
-                                "val":"4s"
-                              }
-                            },
-                            "lhs":{
-                              "spellTimeToReady":{
-                                "spellId":{
-                                  "spellId":1238070
+                          "not":{
+                            "val":{
+                              "auraShouldRefresh":{
+                                "maxOverlap":{
+                                  "const":{
+                                    "val":"0s"
+                                  }
+                                },
+                                "auraId":{
+                                  "spellId":9898
                                 }
                               }
                             }
+                          }
+                        },{
+                          "and":{
+                            "vals":[{
+                                "auraIsKnown":{
+                                  "sourceUnit":{
+                                    "type":"CurrentTarget"
+                                  },
+                                  "auraId":{
+                                    "spellId":440667,
+                                    "tag":-1
+                                  }
+                                }
+                              },{
+                                "auraIsActive":{
+                                  "sourceUnit":{
+                                    "type":"CurrentTarget"
+                                  },
+                                  "auraId":{
+                                    "spellId":440667,
+                                    "tag":-1
+                                  }
+                                }
+                              }]
                           }
                         }]
                     }
                   }
                 },{
-                  "name":"Lacerate falls off",
+                  "name":"Five-stack Lacerate is near expiry",
                   "value":{
                     "and":{
                       "vals":[{
                           "variableRef":{
-                            "name":"Lacerate at 5 stacks"
+                            "name":"Lacerate has five stacks"
                           }
                         },{
                           "cmp":{
                             "op":"OpLe",
                             "rhs":{
-                              "const":{
-                                "val":"1.5s"
+                              "variableRef":{
+                                "name":"Lacerate refresh window"
                               }
                             },
                             "lhs":{
@@ -174,146 +222,481 @@
                         }]
                     }
                   }
-                }],
-              "type":"TypeAPL",
-              "groups":[{
-                  "name":"Cooldowns",
-                  "actions":[{
-                      "action":{
-                        "condition":{
-                          "variableRef":{
-                            "name":"Berserk follows Primal Bite"
+                },{
+                  "name":"Maul leaves rage for a nearby Primal Bite",
+                  "value":{
+                    "or":{
+                      "vals":[{
+                          "not":{
+                            "val":{
+                              "spellIsKnown":{
+                                "spellId":{
+                                  "spellId":1238070
+                                }
+                              }
+                            }
                           }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "spellId":417141
+                        },{
+                          "cmp":{
+                            "op":"OpGt",
+                            "rhs":{
+                              "const":{
+                                "val":"1.5s"
+                              }
+                            },
+                            "lhs":{
+                              "spellTimeToReady":{
+                                "spellId":{
+                                  "spellId":1238070
+                                }
+                              }
+                            }
                           }
-                        }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "spellCurrentCost":{
+                                "spellId":{
+                                  "spellId":1238070
+                                }
+                              }
+                            },
+                            "lhs":{
+                              "math":{
+                                "op":"OpSub",
+                                "rhs":{
+                                  "spellCurrentCost":{
+                                    "spellId":{
+                                      "spellId":9881,
+                                      "tag":1
+                                    }
+                                  }
+                                },
+                                "lhs":{
+                                  "currentRage":{
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Ready to use Elune's Light",
+                  "value":{
+                    "spellIsKnown":{
+                      "spellId":{
+                        "spellId":1259799
                       }
-                    },{
-                      "action":{
-                        "condition":{
+                    }
+                  }
+                },{
+                  "name":"Enrage can rescue the next attack",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "spellId":5229
+                            }
+                          }
+                        },{
+                          "gcdIsReady":{
+                          }
+                        },{
                           "or":{
                             "vals":[{
-                                "auraIsActive":{
-                                  "auraId":{
-                                    "spellId":417141
-                                  }
-                                }
-                              },{
-                                "not":{
-                                  "val":{
-                                    "spellIsKnown":{
-                                      "spellId":{
-                                        "spellId":417141
+                                "and":{
+                                  "vals":[{
+                                      "and":{
+                                        "vals":[{
+                                            "spellIsKnown":{
+                                              "spellId":{
+                                                "spellId":1238070
+                                              }
+                                            }
+                                          },{
+                                            "spellIsReady":{
+                                              "spellId":{
+                                                "spellId":1238070
+                                              }
+                                            }
+                                          }]
                                       }
-                                    }
-                                  }
-                                }
-                              }]
-                          }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "spellId":1259799
-                          }
-                        }
-                      }
-                    },{
-                      "action":{
-                        "autocastOtherCooldowns":{
-                        }
-                      }
-                    }]
-                },{
-                  "name":"Keep up",
-                  "actions":[{
-                      "action":{
-                        "condition":{
-                          "and":{
-                            "vals":[{
-                                "variableRef":{
-                                  "name":"Lacerate falls off"
+                                    },{
+                                      "cmp":{
+                                        "op":"OpLt",
+                                        "rhs":{
+                                          "spellCurrentCost":{
+                                            "spellId":{
+                                              "spellId":1238070
+                                            }
+                                          }
+                                        },
+                                        "lhs":{
+                                          "currentRage":{
+                                          }
+                                        }
+                                      }
+                                    }]
                                 }
                               },{
-                                "not":{
-                                  "val":{
-                                    "variableRef":{
-                                      "name":"Berserk follows Primal Bite"
-                                    }
-                                  }
+                                "and":{
+                                  "vals":[{
+                                      "not":{
+                                        "val":{
+                                          "and":{
+                                            "vals":[{
+                                                "spellIsKnown":{
+                                                  "spellId":{
+                                                    "spellId":1238070
+                                                  }
+                                                }
+                                              },{
+                                                "spellIsReady":{
+                                                  "spellId":{
+                                                    "spellId":1238070
+                                                  }
+                                                }
+                                              }]
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "cmp":{
+                                        "op":"OpLt",
+                                        "rhs":{
+                                          "spellCurrentCost":{
+                                            "spellId":{
+                                              "spellId":1235827
+                                            }
+                                          }
+                                        },
+                                        "lhs":{
+                                          "currentRage":{
+                                          }
+                                        }
+                                      }
+                                    }]
                                 }
                               }]
                           }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "spellId":1235827
-                          }
-                        }
-                      }
-                    },{
-                      "action":{
-                        "condition":{
-                          "not":{
-                            "val":{
-                              "variableRef":{
-                                "name":"Demoralizing Roar is up"
-                              }
-                            }
-                          }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "spellId":9898
-                          }
-                        }
-                      }
-                    }]
+                        }]
+                    }
+                  }
                 },{
-                  "name":"Damage",
-                  "actions":[{
-                      "action":{
-                        "castSpell":{
-                          "spellId":{
-                            "spellId":1238070
+                  "name":"Faerie Fire needs refreshing",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "spellId":9907
+                            }
                           }
-                        }
-                      }
-                    },{
-                      "action":{
-                        "condition":{
-                          "not":{
-                            "val":{
+                        },{
+                          "auraShouldRefresh":{
+                            "maxOverlap":{
+                              "const":{
+                                "val":"0s"
+                              }
+                            },
+                            "sourceUnit":{
+                              "type":"CurrentTarget"
+                            },
+                            "auraId":{
+                              "spellId":9907
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Enough rage to queue Maul",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
                               "variableRef":{
-                                "name":"Berserk follows Primal Bite"
+                                "name":"Maul minimum rage"
+                              }
+                            },
+                            "lhs":{
+                              "currentRage":{
                               }
                             }
                           }
-                        },
-                        "castSpell":{
-                          "spellId":{
-                            "spellId":1235827
+                        },{
+                          "variableRef":{
+                            "name":"Maul leaves rage for a nearby Primal Bite"
                           }
-                        }
-                      }
-                    }]
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Offensive potion is useful without a defensive potion",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "otherId":"OtherActionOffensivePotion"
+                            }
+                          }
+                        },{
+                          "not":{
+                            "val":{
+                              "spellIsKnown":{
+                                "spellId":{
+                                  "otherId":"OtherActionDefensivePotion"
+                                }
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpLt",
+                            "rhs":{
+                              "variableRef":{
+                                "name":"Mighty Rage potion rage threshold"
+                              }
+                            },
+                            "lhs":{
+                              "currentRage":{
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
                 }],
               "priorityList":[{
                   "action":{
-                    "groupReference":{
-                      "groupName":"Cooldowns"
+                    "condition":{
+                      "cmp":{
+                        "op":"OpGt",
+                        "rhs":{
+                          "const":{
+                            "val":"5"
+                          }
+                        },
+                        "lhs":{
+                          "unitDistance":{
+                          }
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":16979
+                      }
                     }
-                  }
+                  },
+                  "notes":"Charge into melee when available"
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "cmp":{
+                              "op":"OpGt",
+                              "rhs":{
+                                "const":{
+                                  "val":"5"
+                                }
+                              },
+                              "lhs":{
+                                "unitDistance":{
+                                }
+                              }
+                            }
+                          },{
+                            "spellIsReady":{
+                              "spellId":{
+                                "spellId":16979
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "move":{
+                      "rangeFromTarget":{
+                        "const":{
+                          "val":"5"
+                        }
+                      }
+                    }
+                  },
+                  "notes":"Run into melee when Charge cannot close the gap"
+                },{
+                  "action":{
+                    "condition":{
+                      "cmp":{
+                        "op":"OpGt",
+                        "rhs":{
+                          "const":{
+                            "val":"5"
+                          }
+                        },
+                        "lhs":{
+                          "unitDistance":{
+                          }
+                        }
+                      }
+                    },
+                    "waitUntil":{
+                      "condition":{
+                        "not":{
+                          "val":{
+                            "cmp":{
+                              "op":"OpGt",
+                              "rhs":{
+                                "const":{
+                                  "val":"5"
+                                }
+                              },
+                              "lhs":{
+                                "unitDistance":{
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "notes":"Finish closing to melee before damage abilities"
+                },{
+                  "action":{
+                    "condition":{
+                      "cmp":{
+                        "op":"OpLe",
+                        "rhs":{
+                          "variableRef":{
+                            "name":"Barkskin health threshold"
+                          }
+                        },
+                        "lhs":{
+                          "currentHealthPercent":{
+                          }
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":22812
+                      }
+                    }
+                  },
+                  "notes":"Use Barkskin when health falls to the chosen threshold"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Ready to use Elune's Light"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":1259799
+                      }
+                    }
+                  },
+                  "notes":"Use Elune's Light when available"
+                },{
+                  "action":{
+                    "condition":{
+                      "spellIsKnown":{
+                        "spellId":{
+                          "itemId":10646
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "itemId":10646
+                      }
+                    }
+                  },
+                  "notes":"Use Sapper without leaving Bear Form"
+                },{
+                  "action":{
+                    "condition":{
+                      "spellIsKnown":{
+                        "spellId":{
+                          "otherId":"OtherActionDefensivePotion"
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "otherId":"OtherActionDefensivePotion"
+                      }
+                    }
+                  },
+                  "notes":"Use the selected defensive potion on cooldown"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Offensive potion is useful without a defensive potion"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "otherId":"OtherActionOffensivePotion"
+                      }
+                    }
+                  },
+                  "notes":"Otherwise use the selected offensive potion when rage is low"
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "selectedConjured":{
+                              "conjuredId":{
+                                "itemId":9421
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpLe",
+                              "rhs":{
+                                "variableRef":{
+                                  "name":"Healthstone health threshold"
+                                }
+                              },
+                              "lhs":{
+                                "currentHealthPercent":{
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "itemId":9421
+                      },
+                      "target":{
+                        "type":"Self"
+                      }
+                    }
+                  },
+                  "notes":"Use the selected Major Healthstone at 30% health or lower"
                 },{
                   "action":{
                     "condition":{
                       "cmp":{
                         "op":"OpLt",
                         "rhs":{
-                          "const":{
-                            "val":"20%"
+                          "variableRef":{
+                            "name":"Frenzied Regeneration health threshold"
                           }
                         },
                         "lhs":{
@@ -327,39 +710,267 @@
                         "spellId":22842
                       }
                     }
-                  }
-                },{
-                  "action":{
-                    "groupReference":{
-                      "groupName":"Keep up"
-                    }
-                  }
-                },{
-                  "action":{
-                    "groupReference":{
-                      "groupName":"Damage"
-                    }
-                  }
+                  },
+                  "notes":"Use Frenzied Regeneration at the low-health threshold"
                 },{
                   "action":{
                     "condition":{
-                      "cmp":{
-                        "op":"OpGe",
-                        "rhs":{
-                          "const":{
-                            "val":"20"
-                          }
-                        },
-                        "lhs":{
-                          "currentRage":{
+                      "variableRef":{
+                        "name":"Enrage can rescue the next attack"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":5229
+                      }
+                    }
+                  },
+                  "notes":"Use Enrage when rage is blocking Primal Bite or Lacerate"
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "activeItemSwapSet":{
+                              "swapSet":"Swap1"
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"30s"
+                                }
+                              },
+                              "lhs":{
+                                "currentTime":{
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpLe",
+                              "rhs":{
+                                "const":{
+                                  "val":"0.1s"
+                                }
+                              },
+                              "lhs":{
+                                "autoTimeSinceLast":{
+                                  "autoType":"MainHandAuto"
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "itemSwap":{
+                      "swapSet":"Main"
+                    }
+                  },
+                  "notes":"After the MCP opener, return to the main weapon just after a Bear swing"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Faerie Fire needs refreshing"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":9907
+                      }
+                    }
+                  },
+                  "notes":"Apply Faerie Fire when missing; maintain it unless the raid supplies it"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Five-stack Lacerate is near expiry"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":1235827
+                      }
+                    }
+                  },
+                  "notes":"Refresh five-stack Lacerate before it expires"
+                },{
+                  "action":{
+                    "condition":{
+                      "not":{
+                        "val":{
+                          "variableRef":{
+                            "name":"Attack-power reduction is covered"
                           }
                         }
                       }
                     },
                     "castSpell":{
                       "spellId":{
+                        "spellId":9898
+                      }
+                    }
+                  },
+                  "notes":"Maintain the attack-power debuff when the raid does not cover it"
+                },{
+                  "action":{
+                    "condition":{
+                      "spellIsKnown":{
+                        "spellId":{
+                          "spellId":1238070
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":1238070
+                      }
+                    }
+                  },
+                  "notes":"Use Primal Bite before spending rage on filler"
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"2"
+                                }
+                              },
+                              "lhs":{
+                                "numberTargets":{
+                                }
+                              }
+                            }
+                          },{
+                            "druidBleedIsActive":{
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":9908
+                      }
+                    }
+                  },
+                  "notes":"Swipe with more than one target once one bleeds, so Rend and Tear applies"
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":1235827
+                      }
+                    }
+                  },
+                  "notes":"Build or refresh Lacerate when no higher-priority attack needs the global"
+                },{
+                  "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Enough rage to queue Maul"
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
                         "spellId":9881
                       }
+                    }
+                  },
+                  "notes":"Queue Maul with enough rage left for a nearby Primal Bite"
+                }],
+              "prepullActions":[{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":9634
+                      }
+                    },
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "talentIsKnown":{
+                              "talentId":{
+                                "spellId":17056
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpLt",
+                              "rhs":{
+                                "const":{
+                                  "val":"10"
+                                }
+                              },
+                              "lhs":{
+                                "currentRage":{
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-10s"
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":5229
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-10s"
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "spellIsKnown":{
+                        "spellId":{
+                          "itemId":9449
+                        }
+                      }
+                    },
+                    "itemSwap":{
+                      "swapSet":"Swap1"
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-33s"
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "spellIsKnown":{
+                        "spellId":{
+                          "itemId":9449
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "itemId":9449
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"0s"
                     }
                   }
                 }]
@@ -371,6 +982,10 @@
               }
             }
           }]
+      }],
+    "tanks":[{
+        "index":0,
+        "type":"Player"
       }]
   },
   "simOptions":{

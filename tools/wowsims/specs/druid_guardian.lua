@@ -20,7 +20,7 @@
 --    (casts land at completion: replay limit).
 -- Translation: `health.pct<20` (Frenzied Regeneration) reads the player's health, full while the game keeps it
 -- secret (central fix 12: API-forced, never fires in combat); autocastOtherCooldowns (GAP 14: no class cooldown lost).
--- Sim-setup difference (ruling L16): wowsims's sim starts in Dire Bear Form and its list never shifts, so out of form
+-- Sim-setup difference (ruling L16): wowsims's sim starts in Dire Bear Form (its pre-pull) and its list never shifts, so out of form
 -- the list showed nothing; the `bear_form` line (the Feral APL's own cat_form pattern) never fires in the replay.
 return {
     class = "DRUID",
@@ -30,34 +30,45 @@ return {
     talentTree = "druid",
     apl = "ui/specs/druid/feralbear/apls/adaptive.apl.json",
     player = {
-        race = "RaceNightElf",
+        race = "RaceTauren",
         class = "ClassDruid",
         gear = "ui/specs/druid/feralbear/gear_sets/default.gear.json",
-        talentsString = "0500220000000000-55200322120132012551-0000000000000000",
+        talentsString = "050022-2322030212310212501-055",
         specKey = "feralBearDruid",
         options = { startingRage = 0, assumeBleedActive = true },
         profession1 = "Engineering",
         profession2 = "Enchanting",
         reactionTimeMs = 250,
-        distanceFromTarget = 0,
+        distanceFromTarget = 25,
+    },
+    -- a tank: the raid's tank (the target swings at it) and presets.ts:55-69's healing model (apply_defaults.ts:108-125)
+    tank = true,
+    healingModel = {
+        hps = 2200,
+        cadenceSeconds = 0.4,
+        cadenceVariation = 1.2,
+        absorbFrac = 0.02,
+        burstWindow = 6,
+        inspirationUptime = 0.25,
     },
     executePhase = "execute_phase",
     map = {},
+    -- Faerie Fire's armor and Demoralizing Roar's attack power are exclusive effects (wowsims
+    -- sim/core/debuffs_generated_test.go:326 with Curse of Recklessness, :446 with Demoralizing Shout): rule 10
+    exclusive = { [9907] = true, [9898] = true },
     -- by role (docs/dev/wowsims-packs.md): Maul a rage dump as Heroic Strike ({ 1, 2 } by line; the leveling Maul,
     -- a literal, the second at 2); Lacerate (both lines) and Demoralizing Roar at 2
     focus = { maul = { 1, 2 }, lacerate = 2, demoralizing_roar = 2 },
-    -- Before Primal Bite (25) Maul is the only rage sink: queued whenever affordable instead of at wowsims's 20, which
-    -- pools for the on-GCD strikes a level 10 bear lacks (ruling L18; silent at 60). Before Lacerate (42), wowsims's
-    -- 13-rage filler between Primal Bites, the bear waits for Primal Bite (L40 9.6 s, L10 7.2 s on central fix 22):
-    -- Demoralizing Roar fills the GCD with 10 rage, Faerie Fire (free in a form; learned at 18) below it, after a run of
-    -- avoided swings (both silent at 60: Lacerate is known).
-    -- Rule 15: the raid debuff, a setting off in game and on in the harness (the user's ruling, 2026-10-21); it governs
-    -- the leveling Roar filler below too, and Berserk's wait for the Roar reads "up or disabled"
+    -- Before Primal Bite Maul is the only rage sink: queued whenever affordable instead of at
+    -- wowsims's 20, which pools for the on-GCD strikes a low-level bear lacks (ruling L18; silent once Primal Bite is
+    -- known). The re-pin's adaptive list maintains Faerie Fire (#14) and Demoralizing Roar (#16, "Attack-power reduction
+    -- is covered") itself, whenever the debuff is down and at every level, above every strike: the leveling Roar and
+    -- Faerie Fire lines R45 guarded were dead behind them and are gone (L47).
+    -- Rule 15: the raid debuff, a setting off in game and on in the harness (the user's ruling, 2026-10-21)
     maintenance = { demoralizing_roar = "maintain_demoralizing_roar" },
-    leveling = {
-        "maul,use_off_gcd=1,focus=2,if=!action.primal_bite.known",
-        "demoralizing_roar,if=!debuff.demoralizing_roar.up&!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.lo<action.primal_bite.cost)",
-        "faerie_fire,if=!debuff.faerie_fire.up&!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.lo<action.primal_bite.cost)",
-        "bear_form,if=!buff.bear_form.up",
-    },
+    leveling = { "maul,use_off_gcd=1,focus=2,if=!action.primal_bite.known" },
+    -- wowsims's sim starts in Dire Bear Form (its pre-pull shift only with Furor under 10 rage): the form first, as
+    -- Balance's Moonkin Form (ruling L16); the re-pin's Faerie Fire line has no form gate, so a trailing line came after
+    -- it. Silent in the replay (the log is in Bear Form from the pre-pull on).
+    levelingFirst = { "bear_form,if=!buff.bear_form.up" },
 }
