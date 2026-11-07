@@ -20,6 +20,10 @@
 -- The replay does not replay the target's swings (replay limit: rage from damage taken reaches the belief only
 -- through the truth's after-values); Revenge's window (25288, 5302 since e2842f0a78) is a hidden aura in the replay knobs.
 -- Precombat calls no list (fix 16 does not reach this pack). Automatic cooldowns (rule 13): none in the log.
+-- Re-pin 4b0030a44b (0.7 warrior lane): talents 05-05050005-150531120300001351 (presets.ts:32, the owner's #841 build), the APL's
+-- precombat Bloodrage, Battle Shout, Battle Stance, Retaliation and Defensive Stance (Retaliation sits under the Cooldowns
+-- toggle and needs Battle Stance), Heroic Strike at 20 rage, Revenge moved up, Reckless Swings (no talent in this build:
+-- the line is never usable). Revenge's window is read by 25288 again (`auras` below).
 -- Re-pin e2842f0a78 (Task 14): talents from presets.ts:32 ProtectionTalents (35301003002-03-050530120301011351),
 -- hasBsT2 false (DefaultOptions; battle_shout.go:30-36: +30 attack power only), the APL's 5 changed lines (Revenge's
 -- window read as 5302 in Bloodrage's condition, mapped by `auras`; "Battle Shout: No Raid Buff" folds to true solo),
@@ -65,7 +69,7 @@ return {
     },
     -- player-facing lines of the in-game description (the user's audit rulings, 2026-10-21)
     notes = {
-        "Cooldowns toggle hides: Death Wish, Sweeping Strikes and the racials (Blood Fury, Berserking, Eureka, Elune's Light).",
+        "Cooldowns toggle hides: Retaliation, Death Wish, Sweeping Strikes and the racials (Blood Fury, Berserking, Eureka, Elune's Light).",
         "Defensives toggle hides: Shield Wall, Last Stand, Healthstone and the racials Stoneform and Shatter Curse. No line here sits under the Potions toggle.",
         "Last Stand, Shield Wall, Stoneform, Shatter Curse and Healthstone wait for low health, and the game hides your health from addons in combat, so they never show there: use them by hand.",
         "Demoralizing Shout is off unless you turn on Maintain Demoralizing Shout. To keep it (when on) and Thunder Clap for bosses, tick Boss Encounter Only on those abilities, or put them under the Custom 1 toggle.",
@@ -82,7 +86,7 @@ return {
         inspirationUptime = 0.25,
     },
     -- the Revenge window (DB2 5302 Defensive State, 5 s), the kit's revenge_usable; wowsims logged and read it under
-    -- Revenge's own ID (25288) before e2842f0a78, and reads 5302 since (Bloodrage's condition, default #16)
+    -- Revenge's own ID (25288) before e2842f0a78, read 5302 at e2842f0a78 and reads 25288 again at 4b0030a44b
     auras = { [25288] = "revenge_usable" },
     exclusive = { [11556] = true }, -- Demoralizing Shout bids in wowsims's "Demoralizing" category (an exclusive effect)
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292

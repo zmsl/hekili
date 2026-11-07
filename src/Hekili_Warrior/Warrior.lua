@@ -101,9 +101,11 @@ local knownRank = state.knownRank
 local TACTICAL_MASTERY_IDS = { TACTICAL_MASTERY }
 spec:RegisterAbility("tactical_mastery", { id = TACTICAL_MASTERY, passive = true })
 
--- The rage a stance swap keeps (Tactical Mastery and its improvement): shared by swap_stance and the stances' `now`.
+-- The rage a stance swap keeps (Tactical Mastery's 10 and Improved Tactical Mastery's 5 a rank, 15 at 3/3: wowsims/forever's
+-- curve {5, 10, 15} at 4b0030a44b, {3, 6, 9, 12, 15} at the old pin, both logging 25 kept at the top rank; the kit's old
+-- "15 a rank" (85 kept at 5/5) was never measured): shared by swap_stance and the stances' `now`.
 local function stanceKeep(improvedRank)
-    return (knownRank(TACTICAL_MASTERY_IDS) > 0 and 10 or 0) + 15 * improvedRank
+    return (knownRank(TACTICAL_MASTERY_IDS) > 0 and 10 or 0) + 5 * improvedRank
 end
 
 local function knows(ids)
@@ -384,7 +386,8 @@ spec:RegisterResource(
 )
 
 -- Talents: { talent tree (1 Arms, 2 Fury, 3 Protection: the dominant tree picks the spec), the definition spell,
--- max rank }: the 52 nodes of Forever's one talent tree, grouped by their columns as the pane shows them. The tree is
+-- max rank }: the 53 nodes of Forever's one talent tree (Raging Blows became Improved Whirlwind and Reckless Swings is
+-- new at 4b0030a44b), grouped by their columns as the pane shows them. The tree is
 -- the DB2's (Talent.TabID; Improved Slam and Improved Thunder Clap sit in another column than their tab), a
 -- Forever-only node its section's. Keys are Classic's where the talent exists (Bastion keeps Classic's
 -- one_handed_weapon_specialization), snake_case names for the Forever-only ones. Each node reported one definition
@@ -397,7 +400,7 @@ spec:RegisterTalents({
     deflection = { 1, 16462, 5 },
     improved_rend = { 1, 12286, 3 },
     improved_charge = { 1, 12285, 2 },
-    improved_tactical_mastery = { 1, 12295, 5 },
+    improved_tactical_mastery = { 1, 12295, 3 }, -- 5 ranks before 4b0030a44b (e430b5e640)
     improved_overpower = { 1, 12290, 2 },
     anger_management = { 1, 12296, 1 },
     deep_wounds = { 1, 12834, 3 },
@@ -410,8 +413,8 @@ spec:RegisterTalents({
     -- Forever-only; Weaponmaster (in place of the four weapon specializations) and Bloodthrill unmodelled.
     weaponmaster = { 1, 1290261, 5 },
     spearing_strike = { 1, 1310222, 1 },
-    bloodthrill = { 1, 1289682, 5 },
-    -- Fury (17 here, 18 on the tree)
+    bloodthrill = { 1, 1289682, 2 }, -- 5 ranks before 4b0030a44b (e430b5e640)
+    -- Fury (18)
     booming_voice = { 2, 12321, 5 },
     cruelty = { 2, 12320, 5 },
     unbridled_wrath = { 2, 12322, 5 },
@@ -423,11 +426,13 @@ spec:RegisterTalents({
     death_wish = { 2, 12328, 1 },
     improved_intercept = { 2, 20504, 2 },
     improved_berserker_rage = { 2, 20500, 2 },
-    flurry = { 2, 12319, 5 },
+    flurry = { 2, 12319, 3 }, -- 5 ranks before 4b0030a44b (e430b5e640)
     bloodthirst = { 2, 23881, 1 },
-    -- Forever-only: Raging Blows (-3 rage on Cleave and Whirlwind); the others unmodelled.
+    -- Forever-only: Reckless Swings (the ability below), Improved Whirlwind (1310315, once Raging Blows: Whirlwind's
+    -- cooldown -1 s a rank); the others unmodelled.
     furious_precision = { 2, 1323963, 3 },
-    raging_blows = { 2, 1310315, 1 },
+    reckless_swings = { 2, 1329555, 1 },
+    improved_whirlwind = { 2, 1310315, 2 },
     lingering_rage = { 2, 1323964, 5 },
     gore_drinker = { 2, 1323967, 2 },
     -- Protection (18 here, 17 on the tree)
@@ -620,6 +625,11 @@ spec:RegisterAuras({
         id = 12323,
         duration = 6,
         max_stack = 1,
+    },
+    reckless_swings = {
+        id = 1329555,
+        duration = 8,
+        max_stack = 4,
     },
     recklessness = {
         id = 1719,
@@ -1061,8 +1071,8 @@ spec:RegisterAbilities({
         gcd = "off",
 
         spend = function()
-            return offensive_cost(talent, 20 - 3 * talent.raging_blows.rank)
-        end, -- Raging Blows: -3
+            return offensive_cost(talent, 20)
+        end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1467,7 +1477,10 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = 10,
+        -- Booming Voice and Focused Rage name it since 4b0030a44b (their class masks gained its bit)
+        spend = function()
+            return shout_cost(talent, 10, true)
+        end,
         spendType = "rage",
 
         talent = "piercing_howl",
@@ -1505,6 +1518,32 @@ spec:RegisterAbilities({
 
         handler = function()
             interrupt()
+        end,
+    },
+
+    -- Fury talent (1329555, new at 4b0030a44b): 15 s cooldown, a 1 s GCD, 25% of base health (unsimulated, like
+    -- Bloodrage's: the player's health is secret) for 4 charges in 8 s; each white swing spends one and gives 5 rage.
+    -- shortcut: the belief cannot spend a charge on our own swing (consumedBy reads hits on us only), so the four
+    -- swings' 20 rage are granted at the cast; upgrade when central support exists (blocker note warrior-1).
+    reckless_swings = {
+        id = 1329555,
+        cast = 0,
+        cooldown = 15,
+        gcd = "spell",
+        gcdTime = 1,
+
+        startsCombat = false,
+        talent = "reckless_swings",
+        known = knows({ 1329555 }),
+
+        now = function()
+            applyBuff("reckless_swings", nil, 4)
+            gain(20, "rage")
+        end,
+
+        handler = function()
+            applyBuff("reckless_swings", nil, 4)
+            gain(20, "rage")
         end,
     },
 
@@ -1698,21 +1737,23 @@ spec:RegisterAbilities({
         end,
     },
 
-    -- Forever gave Slam an 18 s cooldown (DB2 category recovery) and a rank 1 at level 20.
+    -- Forever gave Slam a 15 s cooldown (wowsims/forever's category recovery from 4b0030a44b, 18 s before: hotfix 113600)
+    -- and a rank 1 at level 20.
     slam = {
         id = 1240193,
         copy = rest(SLAM),
-        -- Improved Slam (12862, Forever DB2): the cast and the GCD 0.5 s and the cooldown 3 s shorter (wowsims's log:
-        -- 1 s casts); at 2/2 Slam no longer delays the swing (its tooltip), and this kit models no delay either way
+        -- Improved Slam (12862, wowsims/forever's curves at 4b0030a44b): the cast and the GCD 0.25 s a rank shorter (1 s
+        -- at 2/2: wowsims's log) and the cooldown 2.5 s a rank (10 s at 2/2); at 2/2 Slam no longer delays the swing (its
+        -- tooltip), and this kit models no delay either way
         cast = function()
-            return talent.improved_slam.enabled and 1.0 or 1.5
+            return 1.5 - 0.25 * talent.improved_slam.rank
         end,
         cooldown = function()
-            return talent.improved_slam.enabled and 15 or 18
+            return 15 - 2.5 * talent.improved_slam.rank
         end,
         gcd = "spell",
         gcdTime = function()
-            return talent.improved_slam.enabled and 1.0 or nil
+            return talent.improved_slam.enabled and 1.5 - 0.25 * talent.improved_slam.rank or nil
         end,
 
         spend = function()
@@ -1869,12 +1910,15 @@ spec:RegisterAbilities({
     whirlwind = {
         id = 1680,
         cast = 0,
-        cooldown = 10,
+        -- Improved Whirlwind (1310315): -1 s a rank (wowsims/forever's curve {-1000, -2000}, misc 11)
+        cooldown = function()
+            return 10 - talent.improved_whirlwind.rank
+        end,
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(talent, 25 - 3 * talent.raging_blows.rank)
-        end, -- Raging Blows: -3
+            return offensive_cost(talent, 25)
+        end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1969,13 +2013,13 @@ spec:RegisterSetting("maintain_thunder_clap", false, {
 -- /hekili priority <name>.
 spec:RegisterPack(
     "Protection (wowsims.com)",
-    20261107000,
-    [[Hekili:vN12UTnoq0VL8swBSgYxAs72G4a0RODrVH4a03KmTeTfxtlAqsfdViWF77mu0wu0soYO7lffiWICUCMHZm8i1WHHpeojHOPHFB0GrVC4WbVAWGbHt0BxtdNSMeVKSa(rgzf83FifAASMjY2nTZgXgfBLkiwSQlk5wUGKGwBwoJR)Cw4SAnSAnnoCYpFZ93)5VF)nRpyXWjPSKeAHAuv8j82n7MQtP7MAxR)CHK(ivUBAcDojNR3n9n)4l7MclVBAfJKZ6JUx1Fdrkzcz)s33NSMR6Bnqa8qW)OezD7bUssYuCiqsGFlqxZu7Msssez)b8JL0TQGDtFprtUPgi15RF(bWiPA9A1n97VGPtZNHrrFpr7c2eq(vZgm4fdixD1m6iWSVti4jInzk03lwWHOgstuf4Q3tj60Dt)jtLcoyYgkDnlBb8lTKTKIqmlXMOKKygHdl15TCHaw9J5YTGsVLkvu5sqn4HpKlPlj4p45zum0(cBrQUlgC050mf7rAnWao2OCWK)KW5GYFHO0igaNdp9jkHRtvArgTw8mb3bsaRS7ojLO1yA7D5aYap)niHZzO2Puj8xftdQLNLGczS1pe4X3bGf4dbp8DWJ989MfcvG8gctBlK4IniiWn75gllGodB2y30TIC5EPa9KIv2kfypgubcN7ZiAqFLPqIUD30SI6evkAFngLqsnhHd8aO(mqMuWDMJHvcjHZ(3IZ5uroaoSyumFoMu4uvbgaDZLG7WI(VsyzAc68Auhm6dcSgMUgSKg7ZsPgf7AJXhsTj73XjRTPIzcLIQWwdw8sOksGU9dzXI8mt687z8TfoxNkmj2zmotZm6Ggync8IWZ9O8D5qAhwBOZH59uefyqc5KKcRIzmWbAICbftMZmaanCMqhaZIKI5momVIyATvbRL0Im)4zy9VegP1dmxeK3IweNmE4U)(ir)ZX9H)Q50ifMP6XMp(Iz5ZNh4UAq(6tRkueg75RJTKriWux25IcBfKSVHB)MlZGHapvO2rBMVUB9Oqs1W5nXm9Rwb8nvtiTgxEWGJ5q)Mz9KJvVZfDmgOugq1N6ydtLP3mAd0AweHxAe2Dzi26EzrdvW6y9TJVAqzWcrGJSg)5k6lU(Yl6S3xoiWXvvWv3NQ19vC3HXhOZGORbR)utry3NotiDM5QQjRR9twMbErX48UFlJG0YPZhxSv5SFGRAj4DLrBGRkDxngCzuXJrCMs3dz5moojA)9thxNbZpIxwtzoosjGlUdkpFQtrpdERE2cAuUImJxT92ULnrhBVJ)WYs6kyGT62XddUURx9N9AEi9AUL)yOGYc9P0m6kyG7DdD1wxmmpkgMLxJSJCL1cMEZfX5QXdRjxaKIw5U8JSyTqUnsMdmsQrnZSxG9KeUE2zz4sjykLnGod0oS6bC5DBLdSvuTgwqfSYEjy0XYDzc1oIZFNYZHxEkyz13D5g00)(KJVoP8KFq1Zcy2QzAQ1z4cfvuDGdFKEqeqSLMmEa0U5TszzNZ5MFPN7wwqCNT8RA9xrqsKqYYGilGCxpaA9JxE71p15xYZxwNPDsqD9gmifSyBvKxxrrT4idERwenE4Lh6ChvDstmNsES9w6ohl5DfvdCoqJyv52xxEChuo)PGTs0CKSEd0vkfgDujD(2ioTGWFRefFLafmKeEHaFfcNa0XuGoEVOhorvHVpyPLGN(M5foPz4mXKW3goXXA4MwoBWBrEi2d1GLBRwhsbOwVOLAvKjqnUQTA4KqcX)nX(QJNtiwEpjKKKm4MzgjCs9uMo3Br95mvxsCpoC0Tcq(14svpzQ6owoGJ9KRQGItqr5eCuoxskNB(9iwk1v9uMGD4D97AWDDlRQDOO5gQvjNHg8LnKTkjRHs9QgKYN8wXaNOIpuLZihWe)vlrUlhVkNsUS7oB6Dpl)oeIVUTq0J)Nlm9VqcT7WbnK(CPRCcJmYye)bA7nInGcNyUxebkk9ZmMbVP3ixtJbC5r6z6MAWCOwAKZVwDVCv4AAKSPIWwMFkGvt1OhZP01u)VXo1Gb)I8NlqonTvJj9lkpKTDOS6AYtYN1CbutvJiF2Q3b2cIUNft3wq402koQPQDxIOva7P4aFssWTaupplydM975Cqx1kwpgVh6VgDQb6ouRnEZVZTrV5XkUnERG3TXnTLm2bc2UiPKADb)SdF2RZHHwPLpb9PMAhQ9ZfEo0sR89bB2YT(ZhEIVF4PyV48vephEa(U54aOgGeAzttY1Pyx2NOlzC2UPD(O9)LeZ2H)h]]
+    20261107001,
+    [[Hekili:vN12UTnoq0VL8swBSgYxAs72G4a0M2I2f9gIdqFtY0s0wCnTObjvm8Ia)TVZqrBrrl5kJUVuuGalY5YzgoZWJudhg(y4KeIMg(1rdg9YHdh8QbdggorVDnnCYAs8sYc4hzKvWF)UuOPXAMiB30oBeBuSvQGyXQUOKB5cscATz5mU(tzHZQ1WQ104Wj)4np8WN(2d3S(GfdNKYssOfQrvXNWB3SBQoLUBQDT(Zfs6tu5UPj05KCUE30389pVBkS8UPvmsoRp6Ev)nePKjK9lDFFYAUQV1abWdb)JsK1Th4kjjtXHajb(TaDntTBkjjrK9hWpws3Qc2n9Den5MAGuNV8PhbJKQ1Rv30V)cMonFggf99eTlyta5xnBWGxmGC1vZOJaZEVqWteBYuOVxSGdrnKMOkWvpq1eoJGGhCW7OeD6UP)GPsHNMSHsxZYwa)slzlPiGZsSPnjjMr4WsDElxiGv)qUClO0BPsfvUeudE495s6sc(dEEgfd0pZwKQ7IHkDontXEIwdOGdrkhm5piCoO8NjknIbW5WtFKs46uLwKrRfptWDG0Xk7UtsjAnMeVphqg45VcPFod1oLkH)QyAqT8SeuiJT(UaZhhawGpe8W3bp2Z3BwiubYBimTTSIl2GGa3SNBSSa6tSzJDt3kYL7Lc0tkwzRBG9yq9iufmJOb9vMYk62DtZkQAuPO91yucj1CeoWdG6Zazsb3zogwjKqfW)wCoNkYbWHLMI5ZXKcNQkWaOBUeCh2c8fclttqNxJ6GrFuGv001GL0yxxk1OyxBm(yQnzFpNS2MkMjukQcBuyXlHQib623NflYZmPZVLX3w4CDQWKyNX4mnZOdAG1iWlcp3JY7ZH0oS2qNdZhOikWGeYjjfwfZyGd0e5ckMmNzaaA4mHoaMmjfZzCy6fX0ORcwlPfz(XZW6FjmGRhyUiiVfTioz8WD)9rI(NJ7d)vZPrkmt1JnF8fZYNppWD1G81NwvOim2ZxhBjJqGPUSZff2kizFd3(nxMbJeEUqTJ2mFD36rHSCGr9c4BQMqAnU8GbhZH(nZ6jhRENl6ymqPmGQp3XgMktVz0gO1SicV0iS7YqS19YIgQG1X6BhF1GYGfIahzn(Zv0xC9Lx0zVVCqGJRQGRUpxR7R4UdJpqNbrxdw)5MIWUpFMq6mZvvtwx7NSmd8IIX5D)wgbPLtNpUyRYz)ax1Gs(L40Xi1gy4NYDRe8A0OnWTOURgdOjQ4XiotP7H0HghNeT)QRJlbHrlXlRPdaN2eWf3bvUp3PODcV(pBbnkxrMXR25B3YEgeBjdCyzjDfmlxD74Hbx31R00YaaY8gcahdfuwOfMMrxbZIVBOR26I58rXWy(AKDu1SPbm9MlIZvJhwtUaypTYD5NyXAHCBKmhiRuJAMXYanljCZTZYW9vWamBaDgODy1d4YR9kNLROAnwkeSYE)y0XYDzc1o9ZFNYZHxEkyz13D5g00)QMJVPP8K3RYgg7Ag0ADgUqrfvh4WhzoebmGPjJhaDIERuw25CU5x65ULfe3zl)Qw)veKejKSmiYci31dGPcXlV96N78l55lRZ0ojOUEZmKcwSTkYRROOwCKbVvlIgp8YdDUJQoekMtjp1ElDNJL8U9Qb6iOrSQC7RlpUdkN)uqKjAoYJVbMmLcJoQKPFBeNw8UaTsu8TfuWqs4Df8viCcWutb649gH4evf(IJLwcE6RM3mLMHZetcFB4ehRHBAPZbVU5HypudwUTADifGA9IwQvrMa14Q2QHtcje)3e77yEoHy5vOqssYGlTzKWj1ZM6CVG1NovDjX94Wr3ka5xJMv98SQ7y5ao2Z7Qckob7LtqF5C5VCU53JiWux1tzc2Hs2VRb31TSQ2H9MBOwL3gAWx2q2YJhhk6RAq0sEDOu)vds5ZZRy2uuXh)Yz6eyIx3YG0LoyLduxIGNntWFkvqeIdh0wm6Xv0fN(xEzmS)CR9gYLAZjmYiJrAAiJnIcNyUdfbkkDJJckzfyKRPolxoNEM2VETYflf0qnY1uzyfEPgjBQkSL5Ncy1ur6X8pDn1)BmznyWVk)NfiNMIR5Qf)IYdzBh6TUM8KCFnwSPQrK7B17lBbP4ZIvCliNA7fh14vQoKwRa2tXx(KeMBbO(5mMny2VNZbDvRy9yhFO)A0Pg(7qd34n)o3g9Mhd624Tco6g302BNoqg3fjL0Wl4YD4RNDoS5kT8jOA1u7qTF1XZHcBLpZyZwU1FfYt8zipfthNpg55WzW3nhha1aKqlZBsUof7Y(iDjJZ2nTZhS)xVy2o8)o]]
 )
 spec:RegisterPack(
     "Fury (wowsims.com)",
-    20261107000,
-    [[Hekili:TVv3UTnUs4NLCJxB0a)t(PDBqDaApDloDrpDlIlqVtY0s02CTSKajL9jab(zFhsjlrstkl74e02TxudbYHZ8ndNHCMHPEd8(Q3Oqeh795l6FXlhmO)R63VV3i(9PyVrPOGfOzWhXOLWVFiJE)MXTxNSMrwY6gKSSJGM7JsqHc(mjJeX)yS3eRSKLId8g9T3E3DF8VU7MPaV8gnNegIZxaMfyvc3SzmFoEZ4IX6nnHIxHPBghINIYI4Bg)2V8PnJHH3mUy5zKEcHX6TgrPKeAVWuwpuAeSyGGUWxD)BwsCNZbwtrXSiaSHW3jcrryBgJcdtI)n4Jf47zD3m(9io6glqO9)7JFfyYCopLDtVEZi85zteOUNbPDaEci9Qj97FzF0vxnbFbW2)tssuyY6yMq2ZMfbAjyqWmquVhJ4Z3m(Be2Cqa3HdweHzSy4FGurrmaQtWZjXaSjCymXo1MXmmNtINbRiz6uGI7lTscDD0AmofMg(ItjlWcfvWaP5LIciaFbU)UOKKWCBjSO3HPmmDrox)JmkEbs8ruwmwyG(ez2CEhqx(mGOisSqfWu4xMewzXHc7KucFjHtse6QyN694P4ygzfUu3f257WsfsSqMyhjjEZyH5d0doIodZbrpjHvWJ4eExW)JMmLebENOaj)7MsXWoWeeF4KCSJP(uWl(CY0HCueoM3LSew1kCOVofDXXOjrGG)ZD41lg2BIWUizeaoFWa7pliC4aheJ48iSpBEsgxi4ZMKnDAx1r7MLAFPbOOi)8j8Jim(5IGVHaf(PzWmlbGxUWH2jMjT7(i6YeQq6ccwH9XX4LemtbZofxqO)wpcfAdfEL(RfoLaxBpvS57tXlrKy2BgkvXks6gMrrIv(GgD32oOWT3gTVOTlU07IoD6OcgQsqHeofE)SUfbF(Qu0YkAvPy)41k1fi26CsmRbAwrmOplpeu3xA39QB12RwpNqJwdr97Jq7BQGNdnnzn4zSgJwjojqfzPyeTczsl6z5tx63YrXb4UlIbJXdAo05tKLQPR4)poiJl5uXN(PZrmSvnsd9ra8mcZoFAsqgB4fsCzQ6TKrVrj3o8IR1GWksapHEVpndCzZ5GMDsgtdN5tzC1HHJWsibBTeUXrBZaRwNPPPv46Q(DEOD7ZAV1Gwj3cZzXeL2J8HLlY5AkDmvNARB7qlld0GoTkzOHSQyx1eMmRAgbR60PubFzFD)CnhdRwWbw2jbdOTO44qPdl206wQjcskuIZcXfXJWqGdz1wWG(k6Unp6kZP2KLNyaQyfdkJLkwC7CQL3J4VaNYlTzvugKW4TkLs14BLGe4vbPumk8(TtAE2hCgWoEI21RwWvhR6oqFkWXQgtrRF02xe7mpVqU(TJdqYgsrtiAruLPQynOs6eC4Nx36S2TT62PIKR3(5Bg(QlDhcy1Zg4vhWz7amih(wHd702K((z8C3MLiR1JK3Ms6pJMLDZYU8ucJWjZuKDQwTkC9uxqxiakyXBUwlb(Q0ZhgmxuTILi0dpa1HianGeZX0a4MM6KJXHgAIYConPvvaWqPjXxu6SfjzlR6QfS)CQTqBrg1wMrVgafmwf3lkuTHOSCbnaL7s7wuU7m1HsCEf0ndH5eVF0zqxbYmgTwujkNNbvka83M30ruzLklBGgyJ6T6HT5mQS6GuN9Onvx)OurxX1q7wQN4YiDTAW1gwKBh86RFWWgDPAgeANTStX7n68NDkTBytZa)z46)w1Ly7TaK2(9JnpWdeCFNLx)UBIGVC5y6BAUnthv6()YjOOiIVpnenI5vkYX4rDG6Tt1BZF6ncgIbI3O))I(qXKp3qElPHp)S85hksw17DEJcOeiPgckVBUQvZTT)Uang92kNZ(5prH6PKECabgcOrmP6YeblU0blQ6rPkUBCtrpHDfvGYRCGs1lR0W5rCNU9ULEQBxQqBU2qBuU(s40uQDMTt1Th0Tde89LoSsLfsSpg8QJXFANOqbN(DhCYOpSA7z1DWOJ6heI61oevrD3QIqRuCXAh0FVMmbvUdKRVzTEJKhcjcuDUjN3oyPyCfoR2N3swk3Wg4k8vPqpjDMbqkAWH1M367ZRZkRRT06tDT1hvX1Q96Tj7BADrxAJndRD6LCc6E3JPJJnilJAsZ4ziNrfFCNMFnOln)MN(z6IFqju(C3a5N69ZNKwiVNgxQEnT4UNYykXUL5vn1F39X0E5AfV59toDZmAJKUB1rCJ1PSL011t6hDtP3xxPLMrx39Q3WwdJ2pLxF0WwwlZA3vshQT29Fd2mTiKD6NT0uzM51wtLwLqkMQJQr3EICKgv(xPITs32VJDZCaSv1MZZEe6Gum1uNMlFgR)j5uxPu1MJVw35ZnxA7a1yXCTt1K9dfzArcoZOw((eNIslA6ov5JvyxO2FMc3VtrU(RuN(bO8vVRWERB32dzCcFjJdXaw9od7h1wEyJt4lBylwZfQZFdI9IyZh64e8sh2cKDIsL3lq3)8iAsI9h(4u)YhhstsCQEh)dH8yEjeBpfsE88U9jP2we(SKM4r0T2JScKdfE)ixkQ5PEpLvI(lVKNGN340AlAg3RuLkpRY5176N59tk(xhOfWPEUpmiprdLXNlsQ7)IxqIiBg3(df))bqoT3)a]]
+    20261107001,
+    [[Hekili:TV1wVTnUs4Fl5fV2Ob(sU0UnOoaTNUfNUONUfXfOVjzAjABUwwsGKY(eGa)BFhsjlrstkl74e02TpSbgIdN5BUroZWUEd8(Q3Oqeh795l6FXlhmO)R63FG3i(9PyVrPOGfOzWpIrlH)(Hm69Bg3EDYAgzjRBqYYocAUpkbfk4ZKmse)JXEtSYswkoWB03E7D39X)6UBMc8YB0CsyioFdywGvjCZMX854nJl(wVPju8kmDZ4q8uuweFZ43(LpTzm85nJl2EgPNqySERrukjH2lmL1dLgbBgiOl8RU)nljUZ5aRPOywea2q43jcrryBgJcdtI)n4hlW3Z6Uz87rC0nwGq7)3h)kWK5CEk7ME9Mr4ZZMiqDpds7a8eq6vt63)Y(ORUAc(cGT)NKKOWK1XmHSNnlc0sWGGzGOEpgXNVz83iS5GaUdhSicZyXW)bsffXaOobpNedWMWHVj8uBgZWCojEgSJKPtbkUV0kj01rRX4uyz4xCkzbwOOcginVuuab4lW93fLKeMBlHn9omLHPlY56FKrXlqIFeLfJfgOprMnN3b0LpdikIelubmf(ltcRS4qHDskHVKWjjcDv4PEpEkoMrwHl1DHD(oSuHeBKj8ijXBglmFGEWr0zyoi6jjScEeNW7cXF0KPKii6efi5F3ukg8atq8HtYXoM6tHO4ZjthYrr4yExYsyxRWH(6u0fhJMebc(p3HxVyyVjc7IKra48bdS)SGWHdCqmIZJW(S5jzCHGpBs20PDv)A3Su7BLw4S9zRbRoZorbOOi)8f8Jim(5Im0Haf(PzWklbTRCJdTtmt6C8r0LjubefeSc7JJXljyMII5uCbH(BdBuOnue66Vwe5cCT9ureIpfVerIzVzO0ours3WmksSZh0O722bf5g2O9fTDXLEx0PthvWqvYCKWPifH1Tid1xLIwwrRkf7hVwPUaXwxtIznqZksu9z55P6bC76RUvZxTEoHgbHoH7Jq7oviYHMMSgImwJrRehxOISumIwHmPf9S8LldU5O4aC3fXGX4bTO(8fYs10v8)hhKXLCQ4N(PZrmSvnsd9ra8mYfpFAsqgB4fsCzQ6TKP4rj3o8IR1GWksapHEVpndczZ5GMDsM4dxmqzC1pdNZLqc2AjCJJ2MjwTotttRW1v978q72N1ERbTsUfMZIfkTh5FwUjN7PmWuDPTHTdTSnqd60QKHgYQIDvlyYSQveSQtNsf8L91JZ1cmSAbhyXtcgqBzXXHYawSP1TuteKuOeNfIlYhHpbbKvUGb9v0DBr0vMtTflpXauXkguMlvS525ulVSXFboLxAZQOmiHXBvkLQVVvcsGxLKsXOW73UO5zFWza7ejAxVAbxDSQ7a9LGaRAmfT(rZVi8mpVqUE3XbizdPOjeTmQY6zSMujdco8ZRBDw72wd7urY1B)5Bg(QlDNcynYg4vhiy7amihURWAzbM1yPzc3w04pJhj3ScHTEA92sA)z0SSBv6LhGyKPzw9St1QvruP6g6c5wblEZ1A12xv5(WG5IUDSK8E45UoebObKyoMgaxcvNCmoprtuMRPjTQEdgknj(IwVTijBfCxTH9xUTfAlk22Yk6ThOGXQ8ErJUneLLBObOCxA3IYDxPouIZ7aVzimN49Jod6kqMXxRfvIXbWGMia(BlA6iA6sLLnqdSr9w9W2AgnDDqQZE0MQBMuA2R4gQD7cuCpLUwn4AdlYTdE91pyyJUuT4cTZw2PV(gD(ZoD9nSPfN)muzqR6Q59wasB)9JTeXdeCFNvY)UoriwU8B6on3MPJQtGFfeu0FX3NgIgX8kf5yIOoq92P6T5p9gbFIbI349deJOIjFUI8rAd)8ZYNVOOyvV35nkGsGIAiO8PbR2O325dd0ym2RCo7N)ehQNs6XbeyiGgXKQlteS4shSOA8LQ4UXZl9eoWubkVYbkvVSsdNhXD62hK6PEsQcT5AdTr56lrqtP2zoPv3rq3oqW3x6Wkv2iX(yWRoM4PDYcfC63DWjJr0Q5ZQ7Grh9pie1RDiQIwYvfHwx6I9oO)EnzcQCNix)CC9gjpesKO60jNpPyPyCLoRoc4swkDydCL(Q0ONKoZeifn4WMaC9Ja2zN112A9PU36JQ5A1Xa3e)M2a2L2yZ0ANrjNGb79yggzdQYOMYmEgQzujg3P5xd6sZV5PFMH4hubLp3Zw(P2F(KmD59mtt1RPf39uMtj8wMx1u)D3hZKNRv8M3p5mmZyms6HvhXnwNYPvx34QF0ZREFdSwAgDD3RXeSL1Q66Qw9H7AyG)P8QMgoEBPvZS0dZZ)eJb(Fd2mTSPDM9T0u5Q8jTUMumvh1qX9e1tnQ8FSl2AZB)b2nlaWwhEopNsOdsXutpDUIzS(p)NM02Ls6TzXpBjT2wh0g6FULvZzvJX1LtTjUofzArcolux(ShNIowAQtT8nqSlu7V(H7N)ix)vA))au(QNRyVJdW27JCcFGKdXaw98f7h1wEVKt4dMylT0fQZFAJ9IyZ3p5e8ak2Y5DIsLNHqp(8iM9I93t5u)Gk2oN6GvVJ)9vEmpWITxyjpFE3XVu7KhFwQ(8igc8r2yZHcVFK7W18uVNYgC)vuYtWRMCATfnJ7vQsvKv566dt08(jL4Rd0c4up3hgKNOHY4Zff19FXlirKnJB)HI)3uqUS3)8]]
 )
 spec:RegisterPack(
     "Arms (wowsims.com)",

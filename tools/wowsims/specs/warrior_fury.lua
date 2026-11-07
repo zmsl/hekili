@@ -1,6 +1,13 @@
 -- tools/wowsims/specs/warrior_fury.lua (wowsims packs plan, Task 6): Fury (wowsims.com)'s wowsims/forever request and
 -- translation. Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warrior/dps/presets.ts
 -- (FuryTalents :73, DefaultOptions :143-152, OtherDefaults :169-175) at the pin; gear p1_fury (a level 60 dual-wield set).
+-- Re-pin 4b0030a44b (0.7 warrior lane): talents 30303213002-350530005122100231-1 (presets.ts:74; Reckless Swings 1329555 takes
+-- Raging Blows's slot, Flurry and Improved Tactical Mastery cut to 3 ranks, Improved Intercept to 2), the Fury APL's new
+-- Reckless Swings lines (precombat -1.5 s and priority #28), Spearing Strike and the Cleave 25 rage line, the Rend weave on
+-- one target only. This build takes Improved Berserker Rage 2/2, so the `requires` gate below now passes: Berserker Rage
+-- shows at -4.5 and in combat as wowsims casts it (the ruled pre-pull deviation applies to Arms only). Omitted: Spearing
+-- Strike's Dragonkin/Giant sequence (default #15 `targetIsMobType`: the build has no Spearing Strike, the target is
+-- Mechanical; blocker note warrior-2) and Bloodrage #29 (`autoTimeToNext`, translator-5).
 -- Re-pin e2842f0a78 (lane 14): talents 30305213002-15053105102210501 (presets.ts), hasBsT2 false. Replay assumption
 -- (R42): the replay world answers `fight_remains` from the log's known length (the game reads 3600, gap AN), so the
 -- translated multipleCdUsages lines (Death Wish, Recklessness, the racials) follow wowsims's 180 s fight there and fire
@@ -87,7 +94,7 @@ return {
     -- execute phase, the window up with 5 <= rage <= 100, and gcd 0) checks the rage before the swap only: below
     -- Tactical Mastery (level 14; Overpower is 12) the swap keeps no rage, and it never reads Overpower's 5 s cooldown
     -- against the 5 s window. The guard: the rage a swap keeps (the kit's stance_rage_kept: Tactical Mastery's 10, its
-    -- improvement's 15 a rank) pays for Overpower, and Overpower is ready before the window closes. A deviation
+    -- improvement's 5 a rank) pays for Overpower, and Overpower is ready before the window closes. A deviation
     -- (docs/dev/wowsims-packs.md).
     guard = {
         battle_stance = "!action.overpower.known|(stance_rage_kept>=action.overpower.cost"

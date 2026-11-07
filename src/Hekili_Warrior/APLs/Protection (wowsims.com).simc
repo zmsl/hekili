@@ -1,6 +1,6 @@
 # Protection (wowsims.com): the wowsims/forever default APL for Protection (ui/specs/warrior/protection/apls/default.apl.json), translated to this addon's keys.
 # Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at 4b0030a44be2.
-# Cooldowns toggle hides: Death Wish, Sweeping Strikes and the racials (Blood Fury, Berserking, Eureka, Elune's Light).
+# Cooldowns toggle hides: Retaliation, Death Wish, Sweeping Strikes and the racials (Blood Fury, Berserking, Eureka, Elune's Light).
 # Defensives toggle hides: Shield Wall, Last Stand, Healthstone and the racials Stoneform and Shatter Curse. No line here sits under the Potions toggle.
 # Last Stand, Shield Wall, Stoneform, Shatter Curse and Healthstone wait for low health, and the game hides your health from addons in combat, so they never show there: use them by hand.
 # Demoralizing Shout is off unless you turn on Maintain Demoralizing Shout. To keep it (when on) and Thunder Clap for bosses, tick Boss Encounter Only on those abilities, or put them under the Custom 1 toggle.
@@ -13,7 +13,6 @@
 # Omitted: default #7: hidden
 # Omitted: default #11: other OtherActionDefensivePotion
 # Omitted: default #12: other OtherActionOffensivePotion
-# Omitted: default #13: spell 1329555
 # Omitted: default #14: other OtherActionResourcePotion
 # Omitted: default #20: hidden
 # Omitted: default #27: dropped the unresolved aura 27648 (its branch only)
@@ -43,6 +42,7 @@ actions+=/shield_wall,if=(health.pct<=35&!((action.last_stand.known&buff.last_st
 actions+=/stoneform,if=((!(action.last_stand.known|action.shield_wall.known)|!((action.last_stand.known&buff.last_stand.up)|(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=50)
 actions+=/shatter_curse,if=((!(action.last_stand.known|action.shield_wall.known)|!((action.last_stand.known&buff.last_stand.up)|(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=50)
 actions+=/healthstone,use_off_gcd=1,if=health.pct<=30
+actions+=/reckless_swings
 actions+=/death_wish
 actions+=/call_action_list,name=cd_racials
 actions+=/shield_block,use_off_gcd=1,if=(rage.lo>=40|(!buff.revenge_usable.up&(!action.revenge.known|cooldown.revenge.remains<=1.5)))
