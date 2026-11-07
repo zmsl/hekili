@@ -207,8 +207,15 @@ spec:RegisterResource(
 -- Arcane Wrath's mask is wowsims's): Clearcasting (12536: -100%, a charge), Missile Barrage (400589: Arcane Missiles
 -- -100%, a charge), Arcane Power (12042: +30%; Arcane Wrath inside its mask: wowsims's data, word 1 0x9000 covering its
 -- 0x8000, and its log's 513.5 = 395 x 1.3 while Arcane Power is up).
-local CLEARCASTING_SCOPE = { 400574, 5143, 2136, 133, 116, 401502, 11366, 2948, 1326079 }
-spec:RegisterCostMod({ aura = "clearcasting", pct = -1, charges = 1, spells = CLEARCASTING_SCOPE })
+-- Arcane Missiles (5143) keeps Clearcasting when Missile Barrage pays for the cast (wowsims ef6fb99ee1): its own
+-- registration with `unless`; every other spell in the mask still spends it while Barrage is up.
+spec:RegisterCostMod({
+    aura = "clearcasting",
+    pct = -1,
+    charges = 1,
+    spells = { 400574, 2136, 133, 116, 401502, 11366, 2948, 1326079 },
+})
+spec:RegisterCostMod({ aura = "clearcasting", pct = -1, charges = 1, spells = { 5143 }, unless = "missile_barrage" })
 spec:RegisterCostMod({ aura = "missile_barrage", pct = -1, charges = 1, spells = { 5143 } })
 spec:RegisterCostMod({
     aura = "arcane_power",
