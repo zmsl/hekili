@@ -380,7 +380,7 @@ function M.solo(label, world, n, seed0, tag, reported)
     else
         M.gate(m, r, line, label)
     end
-    if n >= 20 and not m.hold and not m.steady then -- the floors are the unheld display's
+    if n >= 20 and not m.hold and (m.steady == 1 or m.steady == true) then -- the floors are the shipped display's
         M.flicker(label, r, line, reported)
     end
     return r, line
