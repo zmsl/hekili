@@ -5,10 +5,13 @@
 ### New
 
 ### Changed
+- Heroic Strike, Maul and Raptor Strike now disappear once the target is beyond melee range, because Hekili Forever can now tell when you are out of melee.
 
 ### Fixed
+- Feral Druids were not shown Shred, Claw or any other damage ability in melee range; only Prowl or Faerie Fire was recommended. The game reports no range for melee attacks, so Hekili Forever never learned the target was in melee. Melee attacks now count as a 5 yard range check. Survival Hunters' melee abilities (Mongoose Bite, Wing Clip, Strider Kick) were likely affected the same way and are fixed too. Not yet checked in game.
 
 ### Known issues
+- Feral: when you stand in front of your target, Shred is still shown even though the game refuses it, and Claw is not offered in its place.
 
 ### Upgrade notes
 

@@ -388,8 +388,14 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
   bracket reads it; the packs have no deadzone guard of their own); plain or secret in combat? Raptor Strike (on the
   next swing) in range at any distance, like Heroic Strike?
 - H14 (gap 13): `/run local r=Hekili.State.target VSCopy(r.distance,r.minR,r.maxR,r.within5,r.outside8)` at 3, 11 and
-  30 yards: about 2.5 / 0 / 5 / true / false in melee, 21.5 / 8 / 35 / false / true at 11 yd; and
-  `C_Spell.GetSpellInfo(14268).maxRange` (Wing Clip) reads 5, not 0.
+  30 yards: about 2.5 / 0 / 5 / true / false in melee, 21.5 / 8 / 35 / false / true at 11 yd. Measured
+  2026-11-07 (Warrior ForeverProbe dump): the live client reads `C_Spell.GetSpellInfo(<melee strike>).maxRange` 0 (Mortal
+  Strike, Rend, Hamstring, Overpower, Slam, Revenge, Sunder Armor, Shield Bash) while `C_Spell.IsSpellInRange` answers
+  plain true/false; and the owner's Druid check (2026-11-07, level 22): Claw, Shred and Swipe read 0 and answer true in
+  melee, false at about 20 yd; Demoralizing Roar and Cat Form read 0 and answer nil at both. The belief reads a hostile
+  (`startsCombat`) spell's 0 as a 5 yd check whose nil answer is skipped (Sources/Spellbook.lua, 0.6.2). Still to
+  confirm: Wing Clip (14268) and Mongoose Bite read 0 the same, and the other classes' self-centred hostile spells
+  (Thunder Clap, Hellfire, Consecration, Holy Nova, Fire Nova) answer nil, not true, at 20 yd.
 - H7 (Q4): Multi-Shot's and Strider Kick's actual costs (DB2 13.9% and 5.81% of base mana, priced here as of the
   maximum); UnitPower(mana) secret out of combat on a Hunter too; GetPowerRegenForPowerType(0)'s two returns.
 - H8 (Q5): Rapid Fire (3045) and Quick Shots (6150) readable on the player in combat (Aimed, Multi and Sniper Shot's

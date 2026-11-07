@@ -239,6 +239,45 @@ describe("facts and polls", function()
         end
     )
 
+    it("reads the live client's maxRange 0 on a hostile strike as melee, never a self-centred spell's", function()
+        I.Build(fs.def(fs.new(9, false, false, true)), 1) -- 1 spender_a (friendly), 3 spender_c, 4 spender_f, 6 spender_m
+        for _, id in ipairs({ fs.SPENDER_A, fs.SPENDER_C, fs.SPENDER_F, fs.SPENDER_M }) do
+            ctl.known[id] = true
+        end
+        -- the live shape: a strike reads maxRange 0 and answers against 5 yd; a self-centred spell reads 0, answers nil
+        ctl.ranges[fs.SPENDER_A], ctl.ranges[fs.SPENDER_C] = { 0, 0, 5 }, { 0, 0, 5 }
+        ctl.ranges[fs.SPENDER_F], ctl.ranges[fs.SPENDER_M] = { 0, 0 }, { 0, 30 }
+        ctl.Fire("SPELLS_CHANGED")
+        -- a: not hostile, never asked; f: asked as melee, but its nil answer is skipped (no range check)
+        assert.are.same({ 0, 5, 5, 30 }, { I.ab.rMax[1], I.ab.rMax[3], I.ab.rMax[4], I.ab.rMax[6] })
+        local function bracket(d, t)
+            ctl.distance.target = d
+            drain(t)
+            local r = VS.TargetRange()
+            return { r.lo, r.hi }
+        end
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        drain(2)
+        assert.are.same({ 0, 5 }, bracket(3, 3))
+        assert.are.same({ 5, 30 }, bracket(20, 4))
+        -- were the client to answer the self-centred spell at any distance (unchecked live), true or false, the melee
+        -- answers disagree on one side of 5 yd and tell nothing there: never the wrong side
+        ctl.ranges[fs.SPENDER_F] = { 0, 0, 100 } -- true at any distance
+        ctl.Fire("SPELLS_CHANGED")
+        assert.are.equal(5, I.ab.rMax[4])
+        assert.are.same({ 0, 5 }, bracket(3, 5))
+        assert.are.same({ 0, 30 }, bracket(20, 6))
+        ctl.ranges[fs.SPENDER_F] = { 0, 0, -1 } -- false at any distance
+        assert.are.same({ 0, 30 }, bracket(3, 7))
+        assert.are.same({ 5, 30 }, bracket(20, 8))
+        -- a kit whose only range answers are melee ones that disagree: unknown, never blocking
+        ctl.known[fs.SPENDER_M] = false
+        ctl.Fire("SPELLS_CHANGED")
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        bracket(3, 9)
+        assert.are.equal("unknown", VS.TargetRange().basis)
+    end)
+
     it("reads the player's health when plain and caches the stats out of combat", function()
         ctl.health, ctl.healthMax = 500, 1000
         drain(2)
