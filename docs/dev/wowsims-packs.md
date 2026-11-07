@@ -122,6 +122,13 @@ Request (export):
   and `build`. `export.lua siml <spec>` converts it to the checked-in `tests/Forever/wowsims/<spec>.build.json`, whose
   `player` (talents, gear, options, rotation) is taken whole; no `player`, `build` or `apl` beside it.
 - `apl` is optional when the build carries the rotation (Enhancement's `testing.build.json`, every `siml` build).
+- `apl`, `gear`, `player.gear` and `build` may each end in `.siml` (upstream's `default.apl.siml`, `default.gear.siml`,
+  a whole build): `M.request` reads it through `siml parse -json` of the CLI of the checkout at the spec's pin
+  (`WOWSIMS_CLI`, else `$WOWSIMS/wowsimcli-sim-pin`), which gives the APL, the equipment or the build as the JSON file
+  would; a `.siml` `build` takes `defaults` like `siml`. The CLI's directory must be a checkout at `M.pin(spec)`, or the
+  export stops naming spec, pin and path (the `OLD` CLI cannot parse `NEW`'s Paladin siml: flip the spec first).
+  `M.simlParse` (the parse) and `M.simlBuild` (a `siml` build over its `defaults`) are shared with `drift.lua`, which
+  parses with `WOWSIMS_NEW_CLI` instead.
 - `tank = true` and `healingModel = { hps, cadenceSeconds, ... }` for a tank spec: the player becomes the raid's tank
   and gets the preset's incoming healing, as wowsims's UI does (apply_defaults.ts). Without them the target swings at
   no one (GAP AE: the first Protection and Guardian floors were set on fights with no incoming melee).
