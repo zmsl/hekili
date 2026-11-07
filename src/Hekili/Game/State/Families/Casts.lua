@@ -344,8 +344,9 @@ I.On(Obs.Cooldown, function(o, t)
 end)
 
 -- The standing flags at `now` (TDF constrain): ready pulls a later ready time back to now (and restores a charge);
--- not ready keeps any believed end not already past now by more than EPS, and pushes one that is to now + CD_PROBE
--- (the model is provably short: probe, re-pushed when that end passes too). Gap CQ: pushing an end the flag agrees
+-- not ready keeps a modelled end not already past now by more than EPS, and pushes one that is to now + CD_PROBE
+-- (the model is provably short); a probe or any other unmodelled end is pushed again each poll, frozen at CD_PROBE, so
+-- it never counts down to a ready shown while the flag says no (review I1). Gap CQ: pushing an end the flag agrees
 -- with froze the wait at 0.5 for a cooldown's last polls, so a filler showed for a poll at each end, covered by the
 -- GCD or not (A1: an end just past the GCD's; A2: an end on the poll tick whose real end is a float ulp later). A
 -- press within the client's spell queue window of a kept end is held to it, not refused.
@@ -367,7 +368,7 @@ I.OnSettle(function(now)
                 if A.next0[a] < probe then
                     A.next0[a] = probe
                 end
-            elseif A.ready0[a] < now - I.EPS then
+            elseif A.ready0[a] < now - I.EPS or A.cd[a].basis ~= "modelled" then
                 A.ready0[a] = probe
                 I.Sample(A.cd[a], "pinned", probe, now, Obs.Cooldown)
             end

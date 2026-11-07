@@ -38,27 +38,31 @@ describe("casts and cooldowns", function()
 
     -- gap CQ: pushing a modelled end the flag agrees with to now + CD_PROBE froze the wait at 0.5 for its last polls, so
     -- a filler ranked first for one poll at each cooldown end, covered by the GCD or not
-    it("keeps every later modelled end under a not-ready flag; probes one past now - EPS", function()
-        I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
-        S.Direct(Obs.Cooldown, 10.1, REND, 0)
-        I.gcdStart, I.gcdDur = 38.5, 1.5 -- the GCD ends with the cooldown
-        for _, now in ipairs({ 39.6, 39.8, 39.9, 39.98, 40 }) do -- the flag agrees: the countdown runs to the model's end
-            I.Fold(now, false)
-            I.Settle(now)
-            assert.are.equal(40, VS.Cooldown(fs.SPENDER_C, now).est)
+    it(
+        "keeps every later modelled end under a not-ready flag; probes one past now - EPS, and re-pushes a probe",
+        function()
+            I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
+            S.Direct(Obs.Cooldown, 10.1, REND, 0)
+            I.gcdStart, I.gcdDur = 38.5, 1.5 -- the GCD ends with the cooldown
+            for _, now in ipairs({ 39.6, 39.8, 39.9, 39.98, 40 }) do -- the flag agrees: the countdown runs to the model's end
+                I.Fold(now, false)
+                I.Settle(now)
+                assert.are.equal(40, VS.Cooldown(fs.SPENDER_C, now).est)
+            end
+            -- past the model's end by more than EPS while the flag says no: the model is short, probed
+            I.Fold(40.18, false)
+            I.Settle(40.18)
+            assert.are.equal(40.18 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 40.18).est)
+            -- a probe is no modelled end: it is pushed again each poll the flag says no (frozen at CD_PROBE), never
+            -- counted down to a moment it would read ready while the flag still says no (review I1)
+            I.Fold(40.38, false)
+            I.Settle(40.38)
+            assert.are.equal(40.38 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 40.38).est)
+            I.Fold(40.86, false) -- 0.02 s before the last probe's end: inside READY, the flag still no
+            I.Settle(40.86)
+            assert.are.equal(40.86 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 40.86).est)
         end
-        -- past the model's end by more than EPS while the flag says no: the model is short, probed
-        I.Fold(40.18, false)
-        I.Settle(40.18)
-        assert.are.equal(40.18 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 40.18).est)
-        -- the probe counts down like any end, and is pushed again once it is past too
-        I.Fold(40.38, false)
-        I.Settle(40.38)
-        assert.are.equal(40.18 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 40.38).est)
-        I.Fold(40.78, false)
-        I.Settle(40.78)
-        assert.are.equal(40.78 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 40.78).est)
-    end)
+    )
 
     it(
         "keeps an uncovered modelled end: past the GCD's end, under a channel, off the GCD, on the next swing",
