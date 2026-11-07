@@ -38,7 +38,7 @@ return {
         race = "RaceHuman",
         class = "ClassRogue",
         gear = "ui/specs/rogue/dps/gear_sets/p1_bssub.gear.json",
-        talentsString = "005323101014--4323200300013211501",
+        talentsString = "00530301-320003-305230031321001151",
         specKey = "rogue",
         options = { classOptions = setmetatable({}, { __jsontype = "object" }) }, -- an empty message (dkjson: {} is [])
         profession1 = "Engineering",

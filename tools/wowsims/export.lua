@@ -58,11 +58,11 @@ M.SPEC_PIN = {
 
     priest_smite = OLD,
 
-    rogue_assassination = OLD,
+    rogue_assassination = NEW,
 
-    rogue_combat = OLD,
+    rogue_combat = NEW,
 
-    rogue_subtlety = OLD,
+    rogue_subtlety = NEW,
 
     shaman_elemental = OLD,
 

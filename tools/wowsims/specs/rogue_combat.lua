@@ -38,7 +38,7 @@ return {
         race = "RaceHuman",
         class = "ClassRogue",
         gear = "ui/specs/rogue/dps/gear_sets/p1_slowmh.gear.json",
-        talentsString = "005323101012-32030320201515231",
+        talentsString = "00530320201-3200132202012321551",
         specKey = "rogue",
         options = { classOptions = setmetatable({}, { __jsontype = "object" }) }, -- an empty message (dkjson: {} is [])
         profession1 = "Engineering",
@@ -59,7 +59,7 @@ return {
     -- answer), skipped for a Rogue without the talent. Tier 1 in the line itself, as Victory Rush.
     extra = {
         {
-            before = "ambush",
+            before = "garrote",
             line = "riposte,use_off_gcd=1,focus=1,if=buff.riposte_usable.up&energy.lo>=action.riposte.cost",
         },
     },
