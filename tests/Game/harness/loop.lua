@@ -64,11 +64,10 @@ M.PULL = 3 -- the world starts this long before the pull, the target selected (p
 M.GAP = 30 -- out of combat between two fights on one boot (consecutive pulls)
 -- The display-side hold experiment (flicker.hold) on our instance's shown queue: o.hold, else this switch (off)
 M.HOLD = os.getenv("HEKILI_LOOP_HOLD") == "1"
--- The shipped steady icons (Engine/Output.lua, the spec's experimental steadyIcons) on our instance: o.steady, else
--- this switch (off; the flicker design study's hold3). o.steady is true (hold 1) or the updates to hold (1 to 3);
--- HEKILI_LOOP_STEADY=N sets the switch to N.
-M.STEADY = tonumber(os.getenv("HEKILI_LOOP_STEADY")) -- 0 is off
-    or os.getenv("HEKILI_LOOP_HOLD") == "3"
+-- The shipped steady icons (Engine/Output.lua, the spec's steadyIcons) on our instance: o.steady, else this switch
+-- (1, the shipped default since CN8, so the gates and make accuracy measure what players see; the oracle shadow stays
+-- plain). o.steady is true (hold 1) or the updates to hold (1 to 3); HEKILI_LOOP_STEADY=N sets the switch to N, 0 off.
+M.STEADY = tonumber(os.getenv("HEKILI_LOOP_STEADY")) or os.getenv("HEKILI_LOOP_HOLD") == "3" or 1
 -- The oracle's facade rows answered by the client (§4's override): the target's health, and the debuff row Hekili's
 -- aura scan reads (raw since VirtualState counted a modelled stack on top of a plain read that arrived before the
 -- cast's drain, fixed in Auras.lua's I.AuraModel and pinned in loop_warrior_spec). The buff row stays VirtualState's: our

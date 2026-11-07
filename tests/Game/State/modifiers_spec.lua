@@ -142,6 +142,70 @@ describe("resource modifiers", function()
         assert.are.equal(15, I.CostOf(spender_b))
     end)
 
+    -- `unless` (CN11): while the named aura is believed up on the player, the modifier neither prices nor takes a
+    -- charge; the other modifier's spend in the same cast never decides it, whichever comes first in the list.
+    local function unlessMods(first)
+        local held = { aura = "mod_aura_a", pct = -0.10, charges = 3, spells = { fs.SPENDER_B }, unless = "mod_aura_b" }
+        local other = { aura = "mod_aura_b", pct = -0.5, charges = 1, spells = { fs.SPENDER_B } }
+        h.Class.auras.mod_aura_b = { key = "mod_aura_b", id = 1032, duration = 30 }
+        ns.raceMods.costMods = first and { held, other } or { other, held }
+        ns.BuildTracked()
+        VS.Drain(1.5) -- the build's player walk first: the client lists neither aura, the models below are the fixture
+    end
+
+    for _, first in ipairs({ true, false }) do
+        it(
+            "skips a modifier's price and charge while its `unless` aura is up (listed "
+                .. (first and "first" or "last")
+                .. ")",
+            function()
+                unlessMods(first)
+                local spender_b = I.ab.bySpell[fs.SPENDER_B]
+                local ja, jb = I.auras.bySpell[MOD_AURA], I.auras.bySpell[1032]
+                I.AuraModel(1, ja, 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+                I.clock = 5
+                assert.are.equal(13.5, I.CostOf(spender_b))
+                cast(fs.SPENDER_B, 6)
+                local _, stacks = VS.Aura("player", MOD_AURA, 6.1)
+                assert.are.equal(2, stacks)
+                I.AuraModel(1, jb, 7, 37, 1, 7, VS.Obs.CastSuccess, false)
+                I.clock = 7
+                assert.are.equal(7.5, I.CostOf(spender_b)) -- mod_aura_a held: mod_aura_b's half alone
+                cast(fs.SPENDER_B, 8)
+                _, stacks = VS.Aura("player", MOD_AURA, 8.1)
+                assert.are.same({ false, 2 }, { VS.Aura("player", 1032, 8.1) ~= nil, stacks })
+                I.clock = 8.1
+                assert.are.equal(13.5, I.CostOf(spender_b))
+            end
+        )
+    end
+
+    it("carries `unless` into the build as a plain copy, and an aura key the class lacks never holds", function()
+        unlessMods(true)
+        local built = I.mods.costMods[1]
+        assert.are_not.equal(ns.raceMods.costMods, built) -- Tracked.lua's plain() copy, not the core's list
+        assert.are.same({ "mod_aura_b", false }, { built[1].unless, built[2].unless or false })
+        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -0.10, spells = { fs.SPENDER_B }, unless = "no_such" } }
+        ns.BuildTracked()
+        I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+        I.clock = 5
+        assert.are.equal(13.5, I.CostOf(I.ab.bySpell[fs.SPENDER_B]))
+    end)
+
+    it("allocates nothing over 1000 casts with an `unless` modifier, its aura up and down", function()
+        unlessMods(false)
+        local ja, jb = I.auras.bySpell[MOD_AURA], I.auras.bySpell[1032]
+        local t = 10
+        local bytes = alloc.bytes(function()
+            t = t + 1
+            I.AuraModel(1, ja, t, t + 15, 3, t, VS.Obs.CastSuccess, false)
+            I.AuraModel(1, jb, t, t + 15, 1, t, VS.Obs.CastSuccess, false)
+            cast(fs.SPENDER_B, t + 0.3)
+            cast(fs.SPENDER_B, t + 0.6)
+        end, 1000)
+        assert.are.equal(0, bytes)
+    end)
+
     it(
         "prices a cast when it is heard: the free-cast aura it consumed, read away first, still makes it free",
         function()
