@@ -1,4 +1,4 @@
-# wowsims 4b0030a44be2d798319ffedc55a5fa1df5727912 druid_guardian seed 101 180 s target 63
+# wowsims e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664 druid_guardian seed 101 180 s target 63
 # talents 1223081=5@1 1223082=2@1 16819=2@1 16934=2@2 17056=3@2 17002=2@2 16947=2@2 16929=3@2 16998=2@2 1238122=1@2 16942=2@2 16972=3@2 1328617=1@2 16958=2@2 17007=1@2 1223242=2@2 1223246=5@2 407995=1@2 17003=5@3 17069=5@3
 [0.00] [Guardian (#1)] Aura gained: {SpellID: 24932, Tag: -1}
 [0.00] [Guardian (#1)] Aura gained: {SpellID: 1328827}
@@ -395,7 +395,7 @@
 [5.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [5.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [5.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (27.750 --> 12.750) of 100 total.
-[5.95] [Guardian (#1)] [Target 1] {SpellID: 1235827} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[5.95] [Guardian (#1)] [Target 1] {SpellID: 1235827} Hit for 23.099 damage (SpellSchool: 1). (Threat: 49.663)
 [5.95] [Target 1] Aura gained: {SpellID: 1235827}
 [5.95] [Target 1] {SpellID: 1235827} stacks: 0 --> 1
 [5.96] [Guardian (#1)] Gained 5.000 rage from {SpellID: 16959} (12.750 --> 17.750) of 100 total.
@@ -447,7 +447,7 @@
 [7.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [7.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [7.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (35.796 --> 20.796) of 100 total.
-[7.45] [Guardian (#1)] [Target 1] {SpellID: 1235827} Hit for 20.361 damage (SpellSchool: 1). (Threat: 43.777)
+[7.45] [Guardian (#1)] [Target 1] {SpellID: 1235827} Hit for 40.723 damage (SpellSchool: 1). (Threat: 87.554)
 [7.45] [Target 1] Aura faded: {SpellID: 1235827}
 [7.45] [Target 1] {SpellID: 1235827} stacks: 1 --> 0
 [7.45] [Target 1] Aura gained: {SpellID: 1235827}
@@ -513,7 +513,7 @@
 [8.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [8.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [8.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (25.879 --> 10.879) of 100 total.
-[8.95] [Guardian (#1)] [Target 1] {SpellID: 1235827} Hit for 45.363 damage (SpellSchool: 1). (Threat: 97.530)
+[8.95] [Guardian (#1)] [Target 1] {SpellID: 1235827} Hit for 68.044 damage (SpellSchool: 1). (Threat: 146.295)
 [8.95] [Target 1] Aura faded: {SpellID: 1235827}
 [8.95] [Target 1] {SpellID: 1235827} stacks: 2 --> 0
 [8.95] [Target 1] Aura gained: {SpellID: 1235827}
@@ -622,7 +622,7 @@
 [12.20] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [12.20] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [12.20] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (39.427 --> 24.427) of 100 total.
-[12.20] [Guardian (#1)] [Target 1] {SpellID: 1235827} Hit for 67.278 damage (SpellSchool: 1). (Threat: 144.647)
+[12.20] [Guardian (#1)] [Target 1] {SpellID: 1235827} Hit for 89.704 damage (SpellSchool: 1). (Threat: 192.863)
 [12.20] [Target 1] Aura faded: {SpellID: 1235827}
 [12.20] [Target 1] {SpellID: 1235827} stacks: 3 --> 0
 [12.20] [Target 1] Aura gained: {SpellID: 1235827}
@@ -674,7 +674,7 @@
 [13.70] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [13.70] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [13.70] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (16.427 --> 1.427) of 100 total.
-[13.70] [Guardian (#1)] [Target 1] {SpellID: 1235827} Hit for 83.741 damage (SpellSchool: 1). (Threat: 180.044)
+[13.70] [Guardian (#1)] [Target 1] {SpellID: 1235827} Hit for 104.677 damage (SpellSchool: 1). (Threat: 225.055)
 [13.70] [Target 1] Aura faded: {SpellID: 1235827}
 [13.70] [Target 1] {SpellID: 1235827} stacks: 4 --> 0
 [13.70] [Target 1] Aura gained: {SpellID: 1235827}
