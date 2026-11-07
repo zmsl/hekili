@@ -56,13 +56,13 @@ M.UNMATCHED_BY = {
 -- presses hiding under another first icon or an oracle wait).
 M.FLICKER = {
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.04 / 0.04 / 0.04, readyShort 0 / 0 / 0, heldReady 315 / 221 / 228):
-    -- flicker 0.3 -> 0.04 (S, steady icons on by default); readyShort 173 -> 0 (C1, a resource wait inside READY reads 0.06)
-    ["Arms"] = { flicker = 0.04, retracted = 0.1, readyShort = 0, heldReady = 340 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
+    -- flicker 0.3 -> 0.05 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); readyShort 173 -> 0 (C1, a resource wait inside READY reads 0.06)
+    ["Arms"] = { flicker = 0.05, retracted = 0.1, readyShort = 0, heldReady = 340 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
-    -- flicker 0.9 -> 0.3 (S, steady icons on by default); readyShort 116 -> 5 (C1, a resource wait inside READY reads 0.06); heldReady 226 -> 228 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Fury L60"] = { flicker = 0.3, flickerK = 0.6, retracted = 0.2, readyShort = 5, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
+    -- flicker 0.9 -> 0.31 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); readyShort 116 -> 5 (C1, a resource wait inside READY reads 0.06); heldReady 226 -> 228 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
+    ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.2, readyShort = 5, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -95,8 +95,8 @@ M.FLICKER = {
     -- seeds 41-60 read 1.25 with the oracle's own 0.39 -> 1.04 (ours over the oracle 0.21, inside flickerK): the new
     -- order re-times the fights (seed reordering, as the note above)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.2 / 0.32 / 0.49, readyShort 0 / 0 / 0, heldReady 439 / 336 / 238):
-    -- flicker 1.3 -> 0.49 (S, steady icons on by default); readyShort 53 -> 0 (C1, a resource wait inside READY reads 0.06); heldReady 406 -> 439 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Fury L24"] = { flicker = 0.49, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 439 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
+    -- flicker 1.3 -> 0.5 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); readyShort 53 -> 0 (C1, a resource wait inside READY reads 0.06); heldReady 406 -> 439 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
+    ["Fury L24"] = { flicker = 0.5, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 439 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -109,8 +109,8 @@ M.FLICKER = {
     -- flicker 0.8 -> 0.7 (Task 10b, gap CQ: the not-ready flag keeps a modelled end the GCD covers; seeds 1-20 / 21-40 /
     -- 41-60 0.62 / 0.64 / 0.54, was 0.68 / 0.64 / 0.54)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.05 / 0.15 / 0.03, readyShort 0 / 0 / 0, heldReady 329 / 343 / 311):
-    -- flicker 0.7 -> 0.15 (S, steady icons on by default); readyShort 204 -> 0 (C1, a resource wait inside READY reads 0.06)
-    ["Warrior Protection"] = { flicker = 0.15, retracted = 0.1, readyShort = 0, heldReady = 383 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
+    -- flicker 0.7 -> 0.16 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); readyShort 204 -> 0 (C1, a resource wait inside READY reads 0.06)
+    ["Warrior Protection"] = { flicker = 0.16, retracted = 0.1, readyShort = 0, heldReady = 383 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
@@ -121,8 +121,8 @@ M.FLICKER = {
     -- world): seeds 1-20 / 21-40 / 41-60 flicker 0.56 / 0.89 / 0.56 (oracle 0.59 / 0.99 / 0.94), retracted 0 / 0 / 0,
     -- heldReady 236 / 263 / 283, agreement .984 / .983 / .977: flicker 1.3 -> 0.9, heldReady 393 -> 283 (the worst set)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0.02, readyShort 0 / 0 / 0, heldReady 200 / 259 / 266):
-    -- flicker 0.9 -> 0.02 (S, steady icons on by default)
-    ["Feral"] = { flicker = 0.02, retracted = 0, heldReady = 283 }, -- 0.56 / 0.89 / 0.56, 0
+    -- flicker 0.9 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)
+    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 283 }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     ["Balance"] = { flicker = 0, retracted = 0, heldReady = 140 }, -- 0.03 / 0.05 / 0.07, 0
@@ -133,16 +133,16 @@ M.FLICKER = {
     -- flicker sits 0.47 / 0.54 / 0.83 over the oracle's against FLICKER_K 0.5, so the gated branch would hold only at
     -- seeds 1-20; neither bar is loosened for it.
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.07 / 0.05, readyShort 0 / 0 / 0, heldReady 325 / 288 / 305):
-    -- flicker 1.1 -> 0.07 (S, steady icons on by default); readyShort 190 -> 0 (C1, a resource wait inside READY reads 0.06)
-    ["Guardian"] = { flicker = 0.07, retracted = 0.7, readyShort = 0, heldReady = 330 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- flicker 1.1 -> 0.08 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); readyShort 190 -> 0 (C1, a resource wait inside READY reads 0.06)
+    ["Guardian"] = { flicker = 0.08, retracted = 0.7, readyShort = 0, heldReady = 330 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     ["Assassination"] = { flicker = 0, retracted = 0, heldReady = 329 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either
     -- tree, flips match base's tick for tick; Sinister Strike's entry is gated on `!(buff.slice_and_dice.remains<=2)`,
     -- inferred as an energy wait against that window; base's floor was 0.4; owner standing approval 2026-10-30
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0.04, readyShort 0 / 0 / 0, heldReady 341 / 356 / 350):
-    -- flicker 0.2 -> 0.04 (S, steady icons on by default)
-    ["Combat"] = { flicker = 0.04, retracted = 0, heldReady = 356 }, -- 0.15 / 0 / 0.02, 0
+    -- flicker 0.2 -> 0.05 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)
+    ["Combat"] = { flicker = 0.05, retracted = 0, heldReady = 356 }, -- 0.15 / 0 / 0.02, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 382 / 364 / 363):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     ["Subtlety"] = { flicker = 0, retracted = 0, heldReady = 382 }, -- 0.02 / 0 / 0, 0 (gap CE)
@@ -176,8 +176,8 @@ M.FLICKER = {
     -- of them beside a CD_PROBE 0.50). The oracle reads the exact pool, so the gap over it is ours. Owner FYI
     -- (R67, controller: ship the new pack with this measured limit, no pack deviation, no old-pin fallback)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.03 / 0.02 / 0.02, readyShort 0 / 1 / 1, heldReady 323 / 304 / 311):
-    -- flicker 1.6 -> 0.03 (S, steady icons on by default); flickerK 1.5 dropped (its cause, the probe and the near-tie flips, gone)
-    ["Survival"] = { flicker = 0.03, retracted = 0, readyShort = 1, heldReady = 400 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
+    -- flicker 1.6 -> 0.04 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); flickerK 1.5 dropped (its cause, the probe and the near-tie flips, gone)
+    ["Survival"] = { flicker = 0.04, retracted = 0, readyShort = 1, heldReady = 400 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
     -- 0 / 112 -> 0.1 / 116 (re-pin e2842f0a78, Task 19, R6; seeds 1-20 / 21-40 / 41-60: flicker 0.02 / 0.02 / 0, oracle
     -- 0 / 0 / 0, held 116 / 110 / 106, agreement 1.000 each; identical with R61 7a8972d4c): the flip (one a set) is
     -- multi_shot@0.50 -> serpent_sting@0.40 -> multi_shot@0 (seed 1, 48.4-48.8 s): Multi-Shot's last 0.5 s under
@@ -274,8 +274,8 @@ M.FLICKER = {
     ["Enhancement"] = { flicker = 0, retracted = 0, heldReady = 256 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
-    -- flicker 0.1 -> 0.02 (S, steady icons on by default); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Arcane"] = { flicker = 0.02, retracted = 0, heldReady = 109 }, -- 0.03 / 0.05 / 0, 0
+    -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
+    ["Arcane"] = { flicker = 0.03, retracted = 0, heldReady = 109 }, -- 0.03 / 0.05 / 0, 0
     -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new
     -- list runs dry onto the Scorch filler; 174 of the 175 ticks (seeds 1-20) are Scorch at its 150 cost crossing, one
     -- tick an episode, lo 141-150 against the truth's 150-152 (gap BQ)
@@ -290,15 +290,15 @@ M.FLICKER = {
     -- 0.2 -> 0.1 (decision 63's rule, gap CE, a short answer's cap reads a whole unit under)
     -- heldReady 124 -> 106 (re-pin e2842f0a78, the Mage fix round: 96 / 100 / 106)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 110 / 119 / 104):
-    -- flicker 0.1 -> 0.02 (S, steady icons on by default); heldReady 106 -> 119 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Frostfire"] = { flicker = 0.02, retracted = 0, heldReady = 119 }, -- 0.08 / 0.05 / 0.07, 0 (oracle 0.05 / 0.03 / 0.68)
+    -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 106 -> 119 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
+    ["Frostfire"] = { flicker = 0.03, retracted = 0, heldReady = 119 }, -- 0.08 / 0.05 / 0.07, 0 (oracle 0.05 / 0.03 / 0.68)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 396 / 398 / 399):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 405 }, -- 0.03 / 0.02 / 0.02, 0
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
-    -- flicker 0.1 -> 0.02 (S, steady icons on by default)
-    ["Smite"] = { flicker = 0.02, retracted = 0, heldReady = 0 }, -- 0.03 / 0.02 / 0.03, 0
+    -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)
+    ["Smite"] = { flicker = 0.03, retracted = 0, heldReady = 0 }, -- 0.03 / 0.02 / 0.03, 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
