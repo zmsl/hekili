@@ -1,4 +1,4 @@
-# wowsims 4b0030a44be2d798319ffedc55a5fa1df5727912 paladin_retribution seed 101 180 s target 63
+# wowsims e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664 paladin_retribution seed 101 180 s target 63
 # talents 20262=5@1 1310899=2@1 20224=5@1 1237268=2@1 20257=5@2 20189=1@2 20101=5@3 25956=2@3 20117=3@3 1311074=3@3 9453=1@3 20375=1@3 26022=2@3 1311087=1@3 20111=3@3 20066=1@3 20049=3@3 1311084=5@3 1310735=1@3
 [0.00] [Retribution (#1)] Aura gained: {SpellID: 26022}
 [-20.00] [Retribution (#1)] Casting {SpellID: 10301} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: prepull 1 > group 1.1

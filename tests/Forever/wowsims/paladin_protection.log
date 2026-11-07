@@ -1,4 +1,4 @@
-# wowsims 4b0030a44be2d798319ffedc55a5fa1df5727912 paladin_protection seed 101 180 s target 63
+# wowsims e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664 paladin_protection seed 101 180 s target 63
 # talents 20262=5@1 20224=5@1 1237268=2@1 20127=5@2 20189=3@2 1224697=2@2 1311015=1@2 20150=2@2 20143=2@2 1310994=1@2 20468=3@2 20096=3@2 20925=1@2 20177=5@2 1311034=3@2 1328544=1@2 20060=5@3 25956=2@3
 [-20.00] [Protection (#1)] Casting {SpellID: 25780} (Cost = 453.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: prepull 1
 [-20.00] [Protection (#1)] Completed cast {SpellID: 25780}
