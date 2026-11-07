@@ -42,7 +42,9 @@ local OVL_J, OVL_ID, OVL_N = {}, {}, 0
 -- zeroed at each fight's start.
 local facts, disagree = {}, {}
 local staged = {} -- by the same key: 1 up or 2 down staged and not yet folded into the belief, else 0
--- By the same key: the presence corrections of the first plain walk after combat (spec §2.6, decision 105), per fight.
+-- By the same key: 1 when the first plain walk after combat corrected the believed presence (spec §2.6, decision 105),
+-- per fight. At most one count per key: exp0 moves only at the fold, so every walk of the exit frame (a UNIT_AURA one,
+-- then poll 10's) sees the same stale belief.
 local exitFix = {}
 local exiting = false -- from PLAYER_REGEN_ENABLED until poll 10's walk completes
 I.presenceFacts, I.presenceDisagree, I.auraExitFix = facts, disagree, exitFix
@@ -115,7 +117,6 @@ local function walk(api, u, unit, t)
                     break
                 end
                 Note(WALK[u], "readable")
-                local first = found[u][j] ~= serial -- two ranks of one aura count once
                 found[u][j] = serial
                 if I.inCombat then
                     seen[u][j] = true
@@ -123,8 +124,8 @@ local function walk(api, u, unit, t)
                 local stacks = type(apps) == "number" and apps or 0
                 local remaining = exp > 0 and exp - t or -1
                 if remaining > 0 or exp == 0 then
-                    if count and first and U.exp0[u][j] <= t then
-                        exitFix[(u - 1) * I.AURA_UNIT + j] = exitFix[(u - 1) * I.AURA_UNIT + j] + 1
+                    if count and exitFix[(u - 1) * I.AURA_UNIT + j] == 0 and U.exp0[u][j] <= t then
+                        exitFix[(u - 1) * I.AURA_UNIT + j] = 1
                     end
                     Direct(Obs.Read, t, (u - 1) * I.AURA_UNIT + j, remaining, ReadOf.Aura + stacks * I.AURA_STACK)
                     U.harm[u][j] = filter == "HARMFUL"
@@ -149,8 +150,8 @@ local function walk(api, u, unit, t)
                 and (not I.inCombat or seen[u][j])
                 and not (u == 1 and (I.formAura[j] or I.enchantAura[j]))
             then
-                if count and e[j] > t then -- a record already lapsed by time is no presence change
-                    exitFix[(u - 1) * I.AURA_UNIT + j] = exitFix[(u - 1) * I.AURA_UNIT + j] + 1
+                if count and exitFix[(u - 1) * I.AURA_UNIT + j] == 0 and e[j] > t then -- lapsed by time: no change
+                    exitFix[(u - 1) * I.AURA_UNIT + j] = 1
                 end
                 Direct(Obs.Read, t, (u - 1) * I.AURA_UNIT + j, 0, ReadOf.Aura)
             end

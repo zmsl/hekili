@@ -339,14 +339,45 @@ describe("auras", function()
             assert.are.same({ 1, 0 }, { I.auraExitFix[I.AURA_UNIT + REND], I.auraExitFix[REND] })
         end)
 
-        it("a UNIT_AURA walk in the exit frame is the first plain walk: counted there, once", function()
+        -- The real exit frame: the events, then the drain's polls (poll 10 walks again), then the fold.
+        local function frame(t)
+            ctl.Tick(t)
+            S.RunPolls(t)
+            I.Fold(t, false)
+        end
+
+        it("a UNIT_AURA walk in the exit frame, then poll 10's walk before the fold: down counted once", function()
             I.AuraModel(1, SHOUT, 10, 40, 1, 10, Obs.CastSuccess, false)
             ctl.Fire("PLAYER_REGEN_ENABLED")
             ctl.Fire("UNIT_AURA", "player")
-            fold(12)
-            S.RunPolls(13)
-            I.Fold(13, false)
+            frame(12)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 12))
             assert.are.equal(1, I.auraExitFix[SHOUT])
+        end)
+
+        it("a UNIT_AURA walk in the exit frame, then poll 10's walk before the fold: up counted once", function()
+            up(fs.SPENDER_A, 130)
+            ctl.auraError.player = true
+            ctl.Fire("UNIT_AURA", "player")
+            fold(10)
+            ctl.auraError.player = nil
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.Fire("UNIT_AURA", "player")
+            frame(12)
+            assert.are.equal(130, VS.Aura("player", fs.SPENDER_A, 12).est)
+            assert.are.equal(1, I.auraExitFix[SHOUT])
+        end)
+
+        it("two UNIT_AURA walks in the exit frame count each correction once", function()
+            I.AuraModel(1, SHOUT, 10, 40, 1, 10, Obs.CastSuccess, false)
+            I.AuraModel(2, REND, 10, 40, 1, 10, Obs.CastSuccess, true)
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.Fire("UNIT_AURA", "player")
+            ctl.Fire("UNIT_AURA", "target")
+            ctl.Fire("UNIT_AURA", "player")
+            ctl.Fire("UNIT_AURA", "target")
+            frame(12)
+            assert.are.same({ 1, 1 }, { I.auraExitFix[SHOUT], I.auraExitFix[I.AURA_UNIT + REND] })
         end)
 
         it("a failed exit walk then its retry counts once", function()
@@ -384,20 +415,29 @@ describe("auras", function()
             assert.are.equal(0, I.auraExitFix[SHOUT])
         end)
 
-        it("allocates nothing over 1000 fights' exit walks", function()
+        it("allocates nothing over 1000 fights' exit walks, up and down", function()
             local alloc = require("Game.State.helpers.alloc")
-            local t = 10
+            local t, n, total = 10, 0, 0
+            local aura = { spellId = fs.SPENDER_A, expirationTime = 1e9, applications = 0 }
             assert.are.equal(
                 0,
                 alloc.bytes(function()
                     t = t + 0.01
-                    I.AuraModel(1, SHOUT, t, t + 30, 1, t, Obs.CastSuccess, false)
+                    n = n + 1
+                    if n % 2 == 1 then -- modelled up, the walk says down
+                        ctl.auras.player.HELPFUL[1] = nil
+                        I.AuraModel(1, SHOUT, t, t + 30, 1, t, Obs.CastSuccess, false)
+                    else -- believed down since the last fight, the walk says up
+                        ctl.auras.player.HELPFUL[1] = aura
+                    end
                     ctl.Fire("PLAYER_REGEN_ENABLED")
                     S.RunPolls(t)
                     I.Fold(t, false)
+                    total = total + I.auraExitFix[SHOUT]
                     ctl.Fire("PLAYER_REGEN_DISABLED")
                 end, 1000)
             )
+            assert.is_true(total >= 1000) -- every fight's exit corrected SHOUT (both sides measured)
         end)
     end)
 
