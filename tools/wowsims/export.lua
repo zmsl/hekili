@@ -44,11 +44,11 @@ M.SPEC_PIN = {
 
     hunter_survival = OLD,
 
-    mage_arcane = OLD,
+    mage_arcane = NEW,
 
-    mage_fire = OLD,
+    mage_fire = NEW,
 
-    mage_frostfire = OLD,
+    mage_frostfire = NEW,
 
     paladin_protection = OLD,
 

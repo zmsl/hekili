@@ -55,6 +55,10 @@
 -- affordable and unlisted. The filler Frostbolt (the old list's, simc line `frostbolt,if=!talent.arcane_instability.
 -- enabled`) is keyed to the talent, not the level: it shows whenever Arcane Instability is not taken, at 60 too (every
 -- kit ability is known at 40 and at 60, so the guard is a talent's, as Retribution's); wowsims's build takes it.
+-- Re-pin 4b0030a44b (0.7 lane mage): Read Ley Line's pre-pull time is now the hasted GCD (901c5b8cfd), translated by
+-- the CN4 rule with the kit's unhasted GCD (the deviation line in the pack); Clearcasting is spent by Arcane Missiles
+-- only when Missile Barrage is not up, and each landed missile rolls Arcane Concentration under a 1 s ICD (ef6fb99ee1;
+-- the world, mage_world.lua; the kit's rule is the cost mod's `unless`, CN11).
 return {
     class = "MAGE",
     pack = "Arcane (wowsims.com)",
