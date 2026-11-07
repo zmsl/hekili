@@ -8,10 +8,10 @@ step-by-step procedure the lanes ran is the plan's "per-spec procedure" (P1-P10,
 What only the game can answer (the in-game checkpoints and the long-term items) is in `docs/dev/ingame-ledger.md`.
 
 Each spec has its own pin (`tools/wowsims/export.lua` `M.SPEC_PIN`, read by `M.pin(spec)`): the wowsims/forever
-commit its recipe, request and log come from, `OLD` (e2842f0a78, the 11-02 re-pin) or `NEW` (4b0030a44b, the 0.7
-re-pin) while the pin moves ("Moving the pin" below; `tests/Forever/wowsims_pin_spec.lua` checks every log's header
-against its spec's pin). `export.lua export <spec>`, `siml <spec>` and `rerun <spec>` refuse a checkout not at the
-spec's pin and use that checkout's oracle CLI (`make wowsims-sim-cli WOWSIMS=<checkout>`). A recipe's `siml` (a .siml build in the checkout) is converted
+commit its recipe, request and log come from, `OLD` (e2842f0a78, the 11-02 re-pin) or `NEW` (e5a9cd2a2d, the 0.7
+re-pin; moved from 4b0030a44b on 2026-11-07, CN18) while the pin moves ("Moving the pin" below;
+`tests/Forever/wowsims_pin_spec.lua` checks every log's header against its spec's pin). `export.lua export <spec>`,
+`siml <spec>` and `rerun <spec>` refuse a checkout not at the spec's pin and use that checkout's oracle CLI (`make wowsims-sim-cli WOWSIMS=<checkout>`). A recipe's `siml` (a .siml build in the checkout) is converted
 first by `export.lua siml <spec>` (`make wowsims-siml SPEC=<spec>`) to `tests/Forever/wowsims/<spec>.build.json`, which
 the request reads as its build.
 
@@ -34,16 +34,18 @@ Request edits the new sim needed (2026-11-02), none changing what an APL entry d
 
 The 0.7 re-pin moves every spec from `OLD` to `NEW` one class lane at a time (central need CN1). One-time setup, by
 the coordinator, before the class lanes start (only one build per checkout, never while a lane exports from it):
-`git -C ~/src/wowsims-forever worktree add --detach ~/src/wowsims-pin-4b0030a44b 4b0030a44be2d798319ffedc55a5fa1df5727912`
-(never change ~/src/wowsims-forever's own HEAD), then `GOPROXY=off make wowsims-sim-cli WOWSIMS=$HOME/src/wowsims-pin-4b0030a44b`
+`git -C ~/src/wowsims-forever worktree add --detach ~/src/wowsims-pin-e5a9cd2a2d e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664`
+(never change ~/src/wowsims-forever's own HEAD), then `GOPROXY=off make wowsims-sim-cli WOWSIMS=$HOME/src/wowsims-pin-e5a9cd2a2d`
 (offline; Go, protoc and protoc-gen-go on PATH; about 2 minutes). The `OLD` oracle stays in ~/src/wowsims-upstream.
 
 A class lane flips a spec, the flip and the new log in one commit (the pin spec checks each log against its line):
 1. Change the spec's own line in `M.SPEC_PIN` from `OLD` to `NEW` (the one line of `export.lua` a class lane edits;
    the blank lines between entries keep two lanes' flips from conflicting: leave them).
 2. Fix the recipe for `NEW` (paths, talent string, options from that commit's presets) and re-export:
-   `WOWSIMS=$HOME/src/wowsims-pin-4b0030a44b .lua/bin/lua tools/wowsims/export.lua export <spec>`.
+   `WOWSIMS=$HOME/src/wowsims-pin-e5a9cd2a2d .lua/bin/lua tools/wowsims/export.lua export <spec>`.
 3. `make wowsims-packs && make packs`, then the spec's replay and gates, floors by R6.
+A spec flipped while `NEW` was 4b0030a44b fails the pin spec once `NEW` names e5a9cd2a2d: re-export it from
+~/src/wowsims-pin-e5a9cd2a2d (step 2; the CN18 drift report says what moves per spec).
 A flip always uses `export`, never `rerun`: requests carry no pin, only the log header does, so `rerun` would give a new log on the old request (old APL and talents) and still pass the pin spec.
 A spec still at `OLD` keeps exporting and re-running against ~/src/wowsims-upstream (pass `WOWSIMS=$HOME/src/wowsims-upstream`: the default `WOWSIMS`, ~/src/wowsims-forever, is at neither pin, so leaving it out is refused, not wrong); `dry.lua` uses one `WOWSIMS` for every spec, so once the pins are mixed the specs on the other pin print `error`; untouched. When every line says
 `NEW`, the coordinator collapses the pin: `NEW` becomes the only commit, `OLD` and `tools/wowsims/sim-pin/e2842f0a784d/`
@@ -59,21 +61,21 @@ replays).
   (3e9de3f83b) dropped go back in leftover_db.bin, read from d33930d040's db (871, 5267, 10136, 10246, 10247, 10251,
   10253, 10255, 10271, 11904, 13001, 13002, 13015, 13022, 13070, 13072, 13077, 13096, 13116, 14332, 14978, 14979,
   271928, 271948, 272411, 272414, 272415, 284716: not in the live client's cache; their procs are upstream's, so Flurry
-  Axe 871 has no extra attacks). Not in the `NEW` set: at 4b0030a44b every item the checked-in requests wear (185) and
-  every gear-set JSON item (181) is in the db; 8 of the 28 are still absent (871, 11904, 13001, 13002, 13015, 13070,
-  13072, 13116) and nothing wears them. A re-export whose gear the `NEW` db lacks fails in wowsimcli: bring it back then.
+  Axe 871 has no extra attacks). Not in the `NEW` set: at e5a9cd2a2d (item db 70862) every item the checked-in
+  requests wear (186) and every gear-set JSON item (181) is in the db; 7 of the 28 are still absent (871, 11904, 13002,
+  13015, 13070, 13072, 13116) and nothing wears them. A re-export whose gear the `NEW` db lacks fails in wowsimcli: bring it back then.
 - No cast-end pick (`no-cast-end-pick.patch`; both sets, re-cut for `NEW`): upstream 1435e39a74 (#640) picks a
   hardcast's next cast at the cast's end, before it lands (its "Queueing up" lines), so an APL without upstream's later
   `not(Spell Is Casting)` guards recasts on a proc or stack the landing cast just spent (a second Pyroblast on spent
   Heating Up). Hekili's next icon is computed with the cast landed, which is the right play. The patch makes the pick,
   its landed aura reads and its mana-after-cast off (a constant, not a switch). It changes only logs with a hardcast
-  (the casters, Arms' Slam). Upstream still picks at the cast end at 4b0030a44b (sim/core/gcd.go pickAtCastEnd), so the
+  (the casters, Arms' Slam). Upstream still picks at the cast end at e5a9cd2a2d (sim/core/gcd.go pickAtCastEnd), so the
   `NEW` set keeps it; only the readLanding hunk moved (sim/core/apl_values_aura.go:43): upstream added a channel-clip
   lookahead branch (`endedChannel`) before it, which is not the pick and stays unpatched.
 - Darkmantle set ID (`darkmantle-set-512.patch`; both sets): upstream dba41b7ac3 (#677) re-registered the Darkmantle
   Armor reissue under set 1676 (sim/common/forever/items_sets.go), but its db gives the pieces (22003-22009) setId 512,
   so a rogue wearing them got no 2/4/6-piece bonus (Rogue Armor Energize 27788 and the 14049 / 18679 procs gone). Still
-  so at 4b0030a44b. Likely an upstream bug (report it); the patch registers it as 512. Changes only the three rogue
+  so at e5a9cd2a2d. Likely an upstream bug (report it); the patch registers it as 512. Changes only the three rogue
   logs. Drop it when upstream's set and db IDs agree.
 
 ## The rules (the user's; binding)
