@@ -32,6 +32,9 @@
 -- autoTimeToNext; the Weakness Analyzer 272438 maps to use_items (as Elemental's).
 -- The miss (log clock): 121.47 magma_totem -> stormstrike: the Major Mana Potion's +2008 is a refill the belief
 -- cannot see (R50 class A, GAP V).
+-- Re-pin 0.7 (4b0030a44b, lane shaman): the pack's lines are unchanged (the talent string re-encoded, Improved Ghost Wolf
+-- moved); Stormstrike's cooldown is 6 s (was 8; the kit's). aoe_rotation #1's autoTimeToNext stays omitted (translator-5,
+-- held: nothing in this lane adds it).
 return {
     class = "SHAMAN",
     pack = "Enhancement (wowsims.com)",

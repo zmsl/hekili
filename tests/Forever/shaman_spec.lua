@@ -10,7 +10,7 @@ local headless = require("Game.harness.headless")
 local FILE = "src/Hekili_Shaman/Shaman.lua"
 
 -- key = { spell IDs in rank order, the top rank's mana cost, cooldown, gcd }, from the DB2 (`wowdb spell <name>`;
--- Stormstrike's, Chain Lightning's, Lava Burst's and Mana Tide Totem's costs and their Forever-only rank 4s (1326047, 1325256) from wowsims/forever's
+-- Stormstrike's, Chain Lightning's and Mana Tide Totem's costs and its Forever-only rank 4 (1325256) from wowsims/forever's
 -- spell data, absent from the DB2 at 70338): the cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd
 -- "spell" for 1.5 s, "totem" for 1.0 s, "off" for none.
 local KIT = {
@@ -19,7 +19,7 @@ local KIT = {
     earth_shock = { { 8042, 8044, 8045, 8046, 10412, 10413, 10414 }, 450, 6, "spell" },
     flame_shock = { { 8050, 8052, 8053, 10447, 10448, 29228 }, 410, 6, "spell" },
     fire_nova = { { 408341, 408342, 408343, 408344, 408345 }, 375, 10, "spell" }, -- the game's (owner's tooltips, every rank; DB2 520)
-    stormstrike = { { 17364 }, 121, 8, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat)
+    stormstrike = { { 17364 }, 121, 6, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat)
     searing_totem = { { 3599, 6363, 6364, 6365, 10437, 10438 }, 170, 0, "totem" },
     flametongue_totem = { { 8227, 8249, 10526, 16387 }, 275, 0, "totem" },
     strength_of_earth_totem = { { 8075, 8160, 8161, 10442, 25361 }, 275, 0, "totem" },
@@ -30,8 +30,7 @@ local KIT = {
     windfury_weapon = { { 8232, 8235, 10486, 16362 }, 165, 0, "spell" },
     frostbrand_weapon = { { 8033, 8038, 10456, 16355, 16356 }, 160, 0, "spell" },
     rage_of_the_farseer = { { 425336 }, 0, 180, "off" }, -- a Forever talent: no cost, off the GCD
-    chain_lightning = { { 421, 930, 2860, 10605 }, 315, 6, "spell" }, -- wowsims's (DB2 485)
-    lava_burst = { { 408490, 1238299, 1238300, 1326047 }, 265, 10, "spell" },
+    chain_lightning = { { 421, 930, 2860, 10605 }, 495, 6, "spell" }, -- wowsims's (DB2 485)
     elemental_mastery = { { 16166 }, 0, 180, "off" },
     magma_totem = { { 8190, 10585, 10586, 10587 }, 650, 0, "totem" },
     windfury_totem = { { 8512, 10613, 10614 }, 250, 0, "totem" },
@@ -311,7 +310,7 @@ describe("Forever Shaman", function()
 
     it("makes Clearcasting a charged -100% on the elemental spells", function()
         assert.are.same({
-            { aura = "clearcasting", pct = -1, charges = 1, spells = { 403, 421, 8042, 8050, 408341, 408490 } },
+            { aura = "clearcasting", pct = -1, charges = 1, spells = { 403, 421, 8042, 8050, 408341 } },
         }, w.costMods)
         assert.are.same({ 16246, 15 }, { w.auras.clearcasting.id, w.auras.clearcasting.duration })
     end)
@@ -402,34 +401,32 @@ describe("Forever Shaman", function()
         end
     end)
 
-    -- Convection (16039, aura 108 misc 14, -2% a rank on mask 0x90100003 and Lava Burst's: Lightning Bolt, Chain
-    -- Lightning, the shocks, Lava Burst; not Lightning Shield), multiplied with Shamanistic Focus (wowsims's
+    -- Convection (16039, aura 108 misc 14, -2% a rank on mask 0x90100003: Lightning Bolt, Chain
+    -- Lightning, the shocks; not Lightning Shield), multiplied with Shamanistic Focus (wowsims's
     -- PowerCost_Pct rows multiply).
     it("takes 2% a rank of Convection off the elemental spells' cost, not Lightning Shield's", function()
-        for _, key in ipairs({ "lightning_bolt", "chain_lightning", "lava_burst", "earth_shock", "lightning_shield" }) do
+        for _, key in ipairs({ "lightning_bolt", "chain_lightning", "earth_shock", "lightning_shield" }) do
             w.game.known[KIT[key][1][#KIT[key][1]]] = true
         end
         w.game.known[29228] = true
         local e = ld.env(w)
         e.talent.convection = { rank = 5, enabled = true }
         e.talent.shamanistic_focus = { rank = 1, enabled = true }
-        assert.are.same({ 220 * 0.9, 315 * 0.9, 265 * 0.9, 450 * 0.9 * 0.55, 410 * 0.9 * 0.55, 370 * 0.55 }, {
+        assert.are.same({ 220 * 0.9, 495 * 0.9, 450 * 0.9 * 0.55, 410 * 0.9 * 0.55, 370 * 0.55 }, {
             ld.run(w.abilities.lightning_bolt.spend, e),
             ld.run(w.abilities.chain_lightning.spend, e),
-            ld.run(w.abilities.lava_burst.spend, e),
             ld.run(w.abilities.earth_shock.spend, e),
             ld.run(w.abilities.flame_shock.spend, e),
             ld.run(w.abilities.lightning_shield.spend, e),
         })
     end)
 
-    -- wowsims e2842f0a78's spell data (spells_auto_gen.go Powers), every rank; the DB2's ladders (Chain Lightning 225..485,
-    -- Lava Burst 165/230/265/265, Mana Tide Totem 10/30/60/60) are wrong (owner rule 2026-11-06: wowsims over the DB2).
-    it("costs every rank of Chain Lightning, Lava Burst and Mana Tide Totem as wowsims's spell data", function()
+    -- wowsims 4b0030a44b's spell data (spells_auto_gen.go Powers), every rank; the DB2's ladders (Chain Lightning 225..485,
+    -- Mana Tide Totem 10/30/60/60) are wrong (owner rule 2026-11-06: wowsims over the DB2).
+    it("costs every rank of Chain Lightning and Mana Tide Totem as wowsims's spell data", function()
         local e = ld.env(w)
         for key, costs in pairs({
-            chain_lightning = { 145, 200, 250, 315 },
-            lava_burst = { 135, 165, 230, 265 },
+            chain_lightning = { 245, 360, 425, 495 },
             mana_tide_totem = { 10, 20, 30, 60 },
         }) do
             local ids, got = KIT[key][1], {}
@@ -444,30 +441,30 @@ describe("Forever Shaman", function()
         end
     end)
 
-    -- Elemental Alacrity (16578, aura 107 misc 10 on Lightning Bolt, Chain Lightning and Lava Burst): Forever's trait
+    -- Elemental Alacrity (16578, aura 107 misc 10 on Lightning Bolt and Chain Lightning): Forever's trait
     -- curve, -170/-330/-500 ms (wowsims/forever's spell data; the DB2's Talent rows: -200 ms a rank of 5). Elemental
-    -- Mastery (16166, wowsims's data, absent from the DB2): -500 ms on Lightning Bolt and Lava Burst, -100% on Chain
+    -- Mastery (16166, wowsims's data, absent from the DB2): -500 ms on Lightning Bolt, -100% on Chain
     -- Lightning's cooldown, 15 s, 3 min.
     it(
         "shortens the casts with Elemental Alacrity and Elemental Mastery, which also lifts Chain Lightning's cooldown",
         function()
-            for _, key in ipairs({ "lightning_bolt", "chain_lightning", "lava_burst" }) do
+            for _, key in ipairs({ "lightning_bolt", "chain_lightning" }) do
                 w.game.known[KIT[key][1][#KIT[key][1]]] = true
             end
             local function casts(e)
                 local out = {}
-                for _, key in ipairs({ "lightning_bolt", "chain_lightning", "lava_burst" }) do
+                for _, key in ipairs({ "lightning_bolt", "chain_lightning" }) do
                     out[#out + 1] = math.floor(ld.run(w.abilities[key].cast, e) * 1000 + 0.5) / 1000
                 end
                 out[#out + 1] = ld.run(w.abilities.chain_lightning.cooldown, e)
                 return out
             end
             local e = ld.env(w)
-            assert.are.same({ 2.5, 2, 2.5, 6 }, casts(e))
+            assert.are.same({ 2.5, 2, 6 }, casts(e))
             e.talent.elemental_alacrity = { rank = 3, enabled = true }
-            assert.are.same({ 2, 1.5, 2, 6 }, casts(e))
+            assert.are.same({ 2, 1.5, 6 }, casts(e))
             e.buff = buffs({ elemental_mastery = true })
-            assert.are.same({ 1.5, 1.5, 1.5, 0 }, casts(e))
+            assert.are.same({ 1.5, 1.5, 0 }, casts(e))
             for _, field in ipairs({ "now", "handler" }) do
                 e = ld.env(w)
                 ld.run(w.abilities.elemental_mastery[field], e)
@@ -478,8 +475,8 @@ describe("Forever Shaman", function()
     )
 
     -- Revelation (1323418, the weapon enchant 8217's Shaman buff; wowsims's data): one charge, 15 s, spent by the next
-    -- spell its mask names (Lightning Bolt, Chain Lightning, Lava Burst, Earth Shock; not Flame Shock).
-    it("spends Revelation on Lightning Bolt, Chain Lightning, Lava Burst and Earth Shock", function()
+    -- spell its mask names (Lightning Bolt, Chain Lightning, Earth Shock; not Flame Shock).
+    it("spends Revelation on Lightning Bolt, Chain Lightning and Earth Shock", function()
         assert.are.same({ 1323418, 15, 1 }, {
             w.auras.revelation.id,
             w.auras.revelation.duration,
@@ -488,7 +485,6 @@ describe("Forever Shaman", function()
         for key, want in pairs({
             lightning_bolt = true,
             chain_lightning = true,
-            lava_burst = true,
             earth_shock = true,
             flame_shock = false,
         }) do

@@ -64,9 +64,9 @@ M.SPEC_PIN = {
 
     rogue_subtlety = OLD,
 
-    shaman_elemental = OLD,
+    shaman_elemental = NEW,
 
-    shaman_enhancement = OLD,
+    shaman_enhancement = NEW,
 
     warlock_affliction = OLD,
 
