@@ -78,11 +78,11 @@ M.SPEC_PIN = {
 
     warlock_sm_ruin = OLD,
 
-    warrior_arms = OLD,
+    warrior_arms = NEW,
 
-    warrior_fury = OLD,
+    warrior_fury = NEW,
 
-    warrior_protection = OLD,
+    warrior_protection = NEW,
 }
 
 --- The pin of spec `spec` (raises on a spec with no line in M.SPEC_PIN).

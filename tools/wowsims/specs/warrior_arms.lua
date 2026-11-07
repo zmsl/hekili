@@ -54,7 +54,7 @@ return {
         race = "RaceOrc",
         class = "ClassWarrior",
         gear = "ui/specs/warrior/dps/gear_sets/p1_arms.gear.json",
-        talentsString = "30325213132515201-0505-2",
+        talentsString = "30303213132215201-55050000002-2",
         specKey = "dpsWarrior",
         options = {
             classOptions = {

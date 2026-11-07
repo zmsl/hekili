@@ -46,7 +46,7 @@ return {
         race = "RaceOrc",
         class = "ClassWarrior",
         gear = "ui/specs/warrior/protection/gear_sets/prebis.gear.json",
-        talentsString = "35301003002-03-050530120301011351",
+        talentsString = "05-05050005-150531120300001351",
         specKey = "protectionWarrior",
         options = {
             classOptions = {
@@ -83,7 +83,7 @@ return {
     },
     -- the Revenge window (DB2 5302 Defensive State, 5 s), the kit's revenge_usable; wowsims logged and read it under
     -- Revenge's own ID (25288) before e2842f0a78, and reads 5302 since (Bloodrage's condition, default #16)
-    auras = { [5302] = "revenge_usable" },
+    auras = { [25288] = "revenge_usable" },
     exclusive = { [11556] = true }, -- Demoralizing Shout bids in wowsims's "Demoralizing" category (an exclusive effect)
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
     -- the user's tiers (2026-10-21): Revenge 1 (its reactive window); Heroic Strike and Cleave always 2 (the owner's
