@@ -84,4 +84,21 @@ describe("export.lua .siml recipe paths", function()
             assert.is_truthy(tostring(err):find(ex.OLD_PIN, 1, true), tostring(err))
         end
     )
+
+    real("parses a whole .siml build over its defaults, with a .siml gear set (the Hunters' shape)", function()
+        local spec = "hunter_survival"
+        local saved = ex.SPEC_PIN[spec]
+        ex.SPEC_PIN[spec] = ex.NEW_PIN
+        local ok, req = pcall(ex.request, {
+            name = "S",
+            build = "ui/specs/hunter/dps/builds/sv_weave.siml",
+            defaults = "ui/specs/hunter/dps/defaults.siml",
+            gear = "ui/specs/hunter/dps/gear_sets/p1_melee.gear.siml",
+        }, NEW_ROOT, spec, NEW_CLI)
+        ex.SPEC_PIN[spec] = saved
+        assert(ok, req)
+        local p = req.raid.parties[1].players[1]
+        assert.are.same({ "RaceOrc", "TypeAPL" }, { p.race, p.rotation.type }) -- the race is the defaults'
+        assert.is_true(#p.equipment.items > 0)
+    end)
 end)
