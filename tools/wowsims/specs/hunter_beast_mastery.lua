@@ -1,5 +1,5 @@
 -- tools/wowsims/specs/hunter_beast_mastery.lua (wowsims packs plan, Task 11): Beast Mastery (wowsims.com)'s wowsims/forever request and translation.
--- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at 4b0030a44b (0.7 re-pin; the weave is upstream acc6bcb5f8's: reaction 150-350 ms, no weave window read, so no `extra`, `windowVars` or `guard`): the request is the
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e5a9cd2a2d (0.7 re-pin; the weave is upstream acc6bcb5f8's: reaction 150-350 ms, no weave window read, so no `extra`, `windowVars` or `guard`): the request is the
 -- SIML build ui/specs/hunter/dps/builds/bm_weave.siml (BM Weave: talents :3, gear ../gear_sets/p1.gear.siml :4, rotation
 -- ../apls/default_hawks.apl.siml :5, settings :7-14; pet_type raptor (:12): the Raptor, whose casts are not
 -- scored), layered over the spec's defaults.siml as wowsims's siml.LoadBuild does (the recipe's `defaults`: race Orc, Engineering and Blacksmithing, the
