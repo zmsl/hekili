@@ -49,12 +49,13 @@ describe("the any-layout Cooldown Manager fake", function()
         assert.is_false(viewer(ICON):IsVisible())
     end)
 
-    it("the pool grows, in combat too", function()
+    it("the pool grows: an acquire is a new child at a fresh layout index", function()
         ctl.ViewerItem(ICON, 1, 501)
-        ctl.combat = true
         local n = ctl.ViewerAcquire(ICON, 502)
         assert.are.equal(2, viewer(ICON):GetNumChildren())
         assert.are.same({ 2, 502 }, { n.layoutIndex, n.cooldownID })
+        ctl.ViewerRemove(ICON, viewer(ICON):GetItemFrames()[1])
+        assert.are.equal(3, ctl.ViewerAcquire(ICON, 503).layoutIndex) -- never a repeat of the live index 2
     end)
 
     it("ViewerAura clears a held aura first, then sets (secret id; secret or plain spell)", function()
@@ -217,6 +218,53 @@ describe("the any-layout Cooldown Manager fake", function()
             assert.are.same({ "set" }, item.writes)
             ctl.Tick(101)
             assert.are.same({ "set", "clear", "set" }, item.writes)
+            assert.are.equal(SECRET, item.auraInstanceID)
+        end)
+
+        it("under lag an apply and its removal inside one poll light nothing", function()
+            ctl.viewer.lag = true
+            local item = ctl.ViewerItem(ICON, 1, 501)
+            ctl.ViewerAuraBySpell("player", 1001, true, "player")
+            ctl.ViewerAuraBySpell("player", 1001, false, "player")
+            ctl.Tick(101)
+            assert.is_nil(item.auraInstanceID)
+        end)
+
+        it("an info with links is dark for its base spell and lit by the link only (F4)", function()
+            local item = ctl.ViewerItem(ICON, 1, 502) -- spellID 9, linked 1001
+            ctl.ViewerAuraBySpell("player", 9, true, "player")
+            assert.is_nil(item.auraInstanceID)
+            ctl.ViewerAuraBySpell("player", 1001, true, "player")
+            assert.are.equal(SECRET, item.auraInstanceID)
+        end)
+
+        it("GetOverrideSpell applies to the override and tooltip IDs too", function()
+            ctl.viewer.infos[510] = { spellID = 1, overrideSpellID = 2, overrideTooltipSpellID = 3 }
+            ctl.overrides[2], ctl.overrides[3] = 22, 33
+            local item = ctl.ViewerItem(ICON, 1, 510)
+            ctl.ViewerAuraBySpell("player", 33, true, "player")
+            assert.are.equal(SECRET, item.auraInstanceID)
+            ctl.ViewerAuraBySpell("player", 22, true, "player")
+            assert.are.equal(SECRET, item.auraInstanceID)
+        end)
+
+        it("ViewerFlush lights a pending item without a Tick", function()
+            ctl.viewer.lag = true
+            local item = ctl.ViewerItem(ICON, 1, 501)
+            ctl.ViewerAuraBySpell("player", 1001, true, "player")
+            assert.is_nil(item.auraInstanceID)
+            ctl.ViewerFlush()
+            assert.are.equal(SECRET, item.auraInstanceID)
+        end)
+
+        it("a re-point of a held item clears it when the new cooldownID does not name the aura", function()
+            local item = ctl.ViewerItem(ICON, 1, 501)
+            ctl.ViewerAuraBySpell("player", 1001, true, "player")
+            ctl.viewer.infos[520] = { spellID = 5555 }
+            ctl.ViewerRepoint(item, 520)
+            assert.is_nil(item.auraInstanceID)
+            ctl.ViewerAura(item, "player", 1001)
+            ctl.ViewerRepoint(item, 502) -- links 1001: still named, refreshed
             assert.are.equal(SECRET, item.auraInstanceID)
         end)
 

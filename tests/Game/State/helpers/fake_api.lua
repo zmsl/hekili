@@ -765,7 +765,7 @@ function M.new()
         return child
     end
     local function clearAura(item)
-        item.auraInstanceID, item.auraSpellID, item.auraDataUnit = nil, nil, nil
+        item.auraInstanceID, item.auraSpellID, item.auraDataUnit, item.litBy = nil, nil, nil, nil
         item.shown = false
         write(item, "clear")
     end
@@ -774,7 +774,7 @@ function M.new()
         if item.auraInstanceID ~= nil then
             clearAura(item)
         end
-        item.auraInstanceID, item.auraDataUnit = SECRET, unit
+        item.auraInstanceID, item.auraDataUnit, item.litBy = SECRET, unit, spellID
         item.auraSpellID = ctl.viewer.plainSpell and spellID or SECRET
         item.shown = true
         write(item, "set")
@@ -790,24 +790,38 @@ function M.new()
         item.layoutIndex = nil
         write(item, "layoutIndex")
     end
+    --- Does `info` name `spellID`? As the client does (FindLinkedSpellForCurrentAuras): an info with linkedSpellIDs
+    --- matches ONLY those (its base spell stays dark, F4); otherwise spellID, overrideSpellID and overrideTooltipSpellID,
+    --- each also through GetOverrideSpell.
+    local function names(info, spellID)
+        local links = info.linkedSpellIDs
+        if links and links[1] ~= nil then
+            for _, l in ipairs(links) do
+                if l == spellID then
+                    return true
+                end
+            end
+            return false
+        end
+        for _, c in ipairs({ info.spellID, info.overrideSpellID, info.overrideTooltipSpellID }) do
+            if c == spellID or ctl.overrides[c] == spellID then
+                return true
+            end
+        end
+        return false
+    end
     --- Re-point (BV:137-147): the cooldownID, then the refresh (a held aura clears, then sets again).
     function ctl.ViewerRepoint(item, id)
         item.cooldownID = id
         write(item, "cooldownID")
         if item.auraInstanceID ~= nil then
-            ctl.ViewerAura(item, item.auraDataUnit, item.auraSpellID)
-        end
-    end
-    local function names(info, spellID)
-        if info.spellID == spellID or info.overrideSpellID == spellID or info.overrideTooltipSpellID == spellID then
-            return true
-        end
-        for _, l in ipairs(info.linkedSpellIDs or NO_HOOKS) do
-            if l == spellID then
-                return true
+            local info = ctl.viewer.infos[id]
+            if item.litBy and info and not names(info, item.litBy) then
+                clearAura(item) -- the new cooldownID does not name the aura it held: the refresh finds none
+            else
+                ctl.ViewerAura(item, item.auraDataUnit, item.litBy)
             end
         end
-        return (ctl.overrides[info.spellID] or info.spellID) == spellID
     end
     local function light(item, unit, up, spellID)
         if up then
@@ -850,7 +864,11 @@ function M.new()
     --- same cooldownID), at the next layout index. An aura of its spell still up lights it at once (F13) unless `silent`
     --- (3rd argument) or ctl.viewer.lag (then at the next Tick).
     function ctl.ViewerAcquire(name, id, silent)
-        local item = ctl.ViewerItem(name, #ctl.viewer.items[name] + 1, id)
+        local top = 0 -- max + 1: a removal must not make a live index repeat
+        for _, c in ipairs(ctl.viewer.items[name]) do
+            top = math.max(top, c.layoutIndex or 0)
+        end
+        local item = ctl.ViewerItem(name, top + 1, id)
         item.silent = silent or nil
         local info = ctl.viewer.infos[id]
         for _, a in ipairs(ctl.viewer.applied) do
@@ -880,11 +898,18 @@ function M.new()
         local p = ctl.viewer.pending
         ctl.viewer.pending = {}
         for _, e in ipairs(p) do
-            if e[1].cooldownID ~= nil then
+            local up = false -- an apply and its removal inside one poll: nothing to light (a held refresh stays lit)
+            for _, a in ipairs(ctl.viewer.applied) do
+                if a[1] == e[2] and a[2] == e[4] then
+                    up = true
+                end
+            end
+            if e[1].cooldownID ~= nil and up then
                 light(e[1], e[2], e[3], e[4])
             end
         end
     end
+    ctl.ViewerFlush = flushLag -- the loop harness never calls ctl.Tick: its cycle calls this
     function ctl.ViewerShow(item, up)
         item.shown = up
         if up then
