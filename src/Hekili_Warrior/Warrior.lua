@@ -743,7 +743,7 @@ local function offensive_cost(talent, cost)
     return max(0, cost - talent.focused_rage.rank)
 end
 
--- Booming Voice: -5% a rank on the four shouts (DB2 12321 effect 1, -25% at rank 5, class mask 983040; Battle Shout
+-- Booming Voice: -5% a rank on the four shouts and, since 4b0030a44b, Piercing Howl (DB2 12321 effect 1, -25% at rank 5, class mask 983040; Battle Shout
 -- 9 at rank 2 in wowsims/forever's Fury log), applied after the flat modifiers as the client's spell mods are;
 -- `focused`: the shout is in Focused Rage's mask too.
 local function shout_cost(talent, cost, focused)
@@ -1477,7 +1477,8 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        -- Booming Voice and Focused Rage name it since 4b0030a44b (their class masks gained its bit)
+        -- Focused Rage's class mask names it (29787, unchanged between the pins: the old kit missed it) and, since
+        -- 4b0030a44b, Booming Voice's does too (12321's mask gained its bit)
         spend = function()
             return shout_cost(talent, 10, true)
         end,
