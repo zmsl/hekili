@@ -151,11 +151,15 @@ Translation:
   so. `tests/Forever/focus_roles_spec.lua` holds every pack's tiers.
 - `requires` (`{ [action or group snake name] = talent key }`): entries written for a talent build run only once the
   talent is taken (Retribution's Twist of Light lines; Warrior's Berserker Rage, the user's ruling below). Not added
-  when the condition already has the talent test as a top-level `&` term. A key no line has is an error (CN12).
+  when the condition already has the talent test as a top-level `&` term. A key naming no APL entry is an error (CN12; an omitted entry still matches).
 - `guard` (`{ [action or group snake name] = SimC expression }`): one `&(<expression>)` term appended to each such
-  entry's condition, in every list; a key no line (or move entry) has is an error (CN12: an upstream rename
-  would drop it silently). A deviation from wowsims, so only on the user's ruling, named in the recipe and
-  under "Deviations by ruling" below.
+  entry's condition, in every list (rule 16's select lines too); a key naming no APL entry (an action, a group, or a
+  move entry `"<list> #<n>"`) is an error (CN12: an upstream rename would drop it silently; an omitted entry still
+  matches). A deviation from wowsims, so only on the user's ruling, named in the recipe and under "Deviations by
+  ruling" below.
+- `windowVars` (`{ [variable name] = window }`): an APL variable that times "since the last shot or swing", read from
+  the kit's registered window instead (rule 10: `window.<w>.up&window.<w>.elapsed<op>x`; the hunters' "Just shot"
+  from `weave`). A name the APL's variables lack is an error (CN12).
 - `condition` (`{ [action] = SimC expression }`): replaces the APL's condition of each cast line of that action, in
   every list (`requires` and `guard` still apply; an error when no line casts it). A deviation from wowsims, so only on
   the user's ruling, named in the recipe and under "Deviations by ruling" below (Balance's Innervate, R20a). A

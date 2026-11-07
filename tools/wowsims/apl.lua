@@ -108,8 +108,8 @@
 --    on the clock: `since<x` is `<hand>_remains><hand>_speed-x` (the recheck parser forecasts a clock's `<` and its `>`
 --    wrap). A variable the recipe's `windowVars` ({ [variable name] = window }) names reads that window instead (§3a:
 --    a span the kit registers, `RegisterWindow`): its comparison on a time since is `window.<w>.up&window.<w>.elapsed
---    <op> x` (the hunters' "Just shot" from the `weave` window). A `windowVars`, `guard` or `requires` key that nothing
---    reads or no line (or move entry) has is an error, as a `condition` key is (CN12).
+--    <op> x` (the hunters' "Just shot" from the `weave` window). A `windowVars`, `guard` or `requires` key that names no
+--    variable or APL entry (an action, a group, a move entry; emitted or omitted) is an error (CN12).
 --    `remainingTime` is `fight_remains`, which answers "unknown" (3600 s) on Forever: an API-forced deviation (the
 --    replay world answers the log's time to its end: R42, tests/Game/harness/loop.lua). `multipleCdUsages` without a
 --    base spell is wowsims's GetBool on it: `alignCdEnd` `(fight_remains<=D|fight_remains>(CD+(D/2)))`, D the
@@ -783,7 +783,9 @@ local function folded(c, n)
         c.gcdFolded = true -- rule 1's deviation: the kit's unhasted GCD, where wowsims folds the hasted one
         -- shortcut: the engine's 1 s GCD of a "spell" press for a one_sec_gcd class (State.lua mt_gcd) reads 1.5 here;
         -- no pre-pull entry at the pin or upstream times by such a GCD. Upgrade if one does.
-        return type(a.gcdTime) == "number" and a.gcdTime or (a.gcd == "off" and 0) or (a.gcd == "totem" and 1) or 1.5
+        -- An off-GCD spell reads wowsims's floor, max(1 s, its hasted 0 s) (sim/core/apl_values_spell.go:402-409); wowsims
+        -- reads 0 only for a spell that ignores haste, which the kit cannot tell.
+        return type(a.gcdTime) == "number" and a.gcdTime or (a.gcd == "off" and 1) or (a.gcd == "totem" and 1) or 1.5
     elseif k == "math" then
         local l, r = folded(c, v.lhs or {}), folded(c, v.rhs or {})
         if not (l and r) then
@@ -820,7 +822,8 @@ local function currentTarget(k, v)
     end
 end
 local PREPULL_CAST = "the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast."
-local PREPULL_GCD = "the pre-pull time uses the kit's base GCD; wowsims uses the hasted GCD."
+local PREPULL_GCD =
+    "the pre-pull time uses the kit's unhasted GCD (1 s off the GCD, wowsims's floor); wowsims uses the hasted GCD."
 
 -- Rule 18: a movement term of kind `kind`, recorded once an entry; returns wowsims's nil.
 local function moved(c, kind)
@@ -1768,7 +1771,8 @@ function entry(c, e)
                 c.self = x
                 local cond = a.condition and condition(c, a.condition)
                 if cond ~= false then
-                    cond = required(c, x, cond and (sel.term[val] .. "&" .. paren(cond)) or sel.term[val])
+                    cond =
+                        guarded(c, x, required(c, x, cond and (sel.term[val] .. "&" .. paren(cond)) or sel.term[val]))
                     out[#out + 1] = castBody(c, x) .. ",if=" .. cond
                 end
             end
@@ -2340,6 +2344,40 @@ function M.translate(rotation, c)
     for _, v in ipairs(rotation.valueVariables or {}) do
         c.vars[v.name] = v.value
     end
+    -- CN12 (review I2): every entry name the APL has, emitted or omitted: its action's key (a select's candidates, a
+    -- sequence's members), a group call's snake name, `cancel_buff`, and "<list> #<n>" (a move entry's guard key)
+    c.entryNames = {}
+    local function named(a)
+        for k, v in pairs(a or {}) do
+            if k ~= "condition" and type(v) == "table" then
+                local x = type(v.spellId) == "table" and spellLookup(c, v.spellId)
+                c.entryNames[x or ""] = true
+                if k == "groupReference" then
+                    c.entryNames[M.snake(v.groupName or "")] = true
+                elseif k == "cancelAura" then
+                    c.entryNames.cancel_buff = true
+                elseif c.select[k] then
+                    for _, key in pairs(c.select[k].x.candidates) do
+                        c.entryNames[key or ""] = true
+                    end
+                end
+                for _, m in ipairs(v.actions or {}) do
+                    named(m)
+                end
+            end
+        end
+    end
+    local function nameList(name, entries)
+        for i, e in ipairs(entries or {}) do
+            c.entryNames[name .. " #" .. i] = true
+            named(e.action)
+        end
+    end
+    nameList("precombat", rotation.prepullActions)
+    nameList("default", rotation.priorityList)
+    for _, g in ipairs(rotation.groups or {}) do
+        nameList(M.snake(g.name or ""), g.actions)
+    end
     c.yards = {} -- rule 18 (R17)
     findYards(c, rotation)
     local toggles, shown = {}, {}
@@ -2518,11 +2556,6 @@ function M.translate(rotation, c)
         table.insert(byName.default, at, x.line)
         table.insert(origin.default, at, false)
     end
-    for x in pairs(c.condition) do
-        if not c.conditioned[x] then
-            error("condition: no " .. x .. " cast line", 0)
-        end
-    end
     local done = {}
     repeat
         local more = false
@@ -2533,6 +2566,11 @@ function M.translate(rotation, c)
             end
         end
     until not more
+    for x in pairs(c.condition) do -- after the groups: a condition may name an action cast only in one (review M1)
+        if not c.conditioned[x] then
+            error("condition: no " .. x .. " cast line", 0)
+        end
+    end
     -- CN12: a recipe key that names nothing is an error, as for `condition` (an upstream rename would drop it silently)
     for _, field in ipairs({ "guard", "requires", "windowVars" }) do
         local names = {}
@@ -2541,7 +2579,8 @@ function M.translate(rotation, c)
         end
         table.sort(names)
         for _, key in ipairs(names) do
-            if not c.keyUsed[field .. ":" .. key] then
+            local has = field == "windowVars" and c.vars or c.entryNames -- an entry of that name, emitted or not
+            if not (c.keyUsed[field .. ":" .. key] or has[key]) then
                 error(("%s: no %s %s"):format(field, key, field == "windowVars" and "read" or "line"), 0)
             end
         end

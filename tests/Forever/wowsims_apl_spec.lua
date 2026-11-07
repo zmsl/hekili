@@ -1940,8 +1940,11 @@ describe("the wowsims APL translator's casting, range, curse and cast-time pre-p
         local text, omitted, _, header = apl.translate({
             prepullActions = {
                 at(500, neg(spell("spellCastTime", 500))), -- -3
-                at(300, neg(add(spell("spellGcdHastedDuration", 300), const("1s")))), -- off the GCD: -1
+                -- off the GCD: wowsims's floor, max(1 s, hasted 0) (apl_values_spell.go:402-409; 0 only for a spell
+                -- that ignores haste, which the kit cannot tell): -1, before the -0.5 line
+                at(300, neg(spell("spellGcdHastedDuration", 300))),
                 at(200, neg(add(spell("spellCastTime", 500), spell("spellGcdHastedDuration", 200)))), -- -4.5
+                at(100, const("-0.5s")),
                 at(400, neg(spell("spellGcdHastedDuration", 999))), -- an unresolved spell
             },
         }, ctx({}))
@@ -1950,13 +1953,14 @@ describe("the wowsims APL translator's casting, range, curse and cast-time pre-p
                 "actions.precombat=big_hit",
                 "actions.precombat+=/starfire",
                 "actions.precombat+=/roar,use_off_gcd=1",
+                "actions.precombat+=/strike",
             }, "\n"),
             text
         )
-        assert.are.same({ "precombat #4: doAtValue not a constant" }, omitted)
+        assert.are.same({ "precombat #5: doAtValue not a constant" }, omitted)
         local cast, gcd =
             "the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast.",
-            "the pre-pull time uses the kit's base GCD; wowsims uses the hasted GCD."
+            "the pre-pull time uses the kit's unhasted GCD (1 s off the GCD, wowsims's floor); wowsims uses the hasted GCD."
         assert.are.same({
             "# Deviation: precombat #3: " .. cast,
             "# Deviation: precombat #3: " .. gcd,
@@ -2773,6 +2777,51 @@ describe("the wowsims APL translator's recipe keys", function()
             apl.translate(rotation, ctx({ requires = { nope = "furious" } }))
         end, "requires: no nope line")
     end)
+    -- fix round 1 (review I2, probes P3-P5): the error means only "the APL has no entry of that name"; an entry that
+    -- exists but is omitted (folds false, hidden, an unsupported node) matches its key
+    it("matches a guard or requires key whose entry exists but is omitted", function()
+        local never = AND(ready, const("false"))
+        for _, e in ipairs({
+            cast(200, never), -- P3: its condition folds false
+            { hide = true, action = { castSpell = { spellId = { spellId = 200 } } } }, -- P4: hidden
+            cast(200, { brandNewValue = {} }), -- P5: a node the translator does not know
+        }) do
+            for _, r in ipairs({ { guard = { big_hit = "buff.fury.up" } }, { requires = { big_hit = "furious" } } }) do
+                local text = apl.translate({ priorityList = { cast(100), e } }, ctx(r))
+                assert.are.equal("actions=strike", text)
+            end
+        end
+    end)
+
+    -- review I2: rule 16's select lines take a guard on a candidate, as every other cast line does
+    it("appends a guard to a select candidate's line", function()
+        local r = {
+            guard = { dot = "buff.fury.up" },
+            select = {
+                castAssigned = {
+                    setting = "pick",
+                    option = "pickOption",
+                    zero = "Elements",
+                    candidates = { Elements = "dot", NoCurse = false },
+                },
+            },
+        }
+        local text = apl.translate(
+            { priorityList = { { action = { castAssigned = {} } } } },
+            ctx(r, { warlock = { options = { classOptions = {} } } })
+        )
+        assert.are.equal("actions=dot,if=settings.pick='elements'&buff.fury.up", text)
+    end)
+
+    -- review M1 (probe P1): a recipe condition on an action cast only inside a group
+    it("finds a condition's cast line inside a group", function()
+        local text = apl.translate({
+            priorityList = { { action = { groupReference = { groupName = "G" } } } },
+            groups = { { name = "G", actions = { cast(200) } } },
+        }, ctx({ condition = { big_hit = "rage.lo>40" } }))
+        assert.are.equal("actions=call_action_list,name=g\nactions.g=big_hit,if=rage.lo>40", text)
+    end)
+
     it("refuses a windowVars variable nothing reads", function()
         assert.has_error(function()
             apl.translate(rotation, ctx({ windowVars = { ["Just shot"] = "weave" } }))
