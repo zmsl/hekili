@@ -434,6 +434,76 @@ describe("Forever Mage through the engine", function()
         )
         assert.are.same({}, H.errors)
     end)
+
+    -- CN11 parity: the cost modifier's `unless`, in the belief and the simulation alike. The registrations are the
+    -- split the Mage lane adopts at a pin with wowsims ef6fb99ee1 (an Arcane Missiles that Missile Barrage pays for
+    -- keeps Clearcasting), set here in the test only: the kit still spends both, as the pinned wowsims does.
+    local function splitClearcasting(H)
+        local list = H.ns.raceMods.costMods
+        for i, m in ipairs(list) do
+            if m.aura == "clearcasting" then
+                local rest = {}
+                for _, id in ipairs(m.spells) do
+                    if id ~= 5143 then
+                        rest[#rest + 1] = id
+                    end
+                end
+                list[i] = { aura = "clearcasting", pct = -1, charges = 1, spells = rest }
+            end
+        end
+        -- last, after Missile Barrage's own: the spend decides `unless` before either charge goes
+        list[#list + 1] = { aura = "clearcasting", pct = -1, charges = 1, spells = { 5143 }, unless = "missile_barrage" }
+        H.ns.BuildTracked()
+    end
+
+    for _, case in ipairs({
+        { 5143, "arcane_missiles", true, { 0, 0, true, false } },
+        { 5143, "arcane_missiles", false, { 0, 0, false, false } },
+        { 400574, "arcane_blast", true, { 0, 0, false, true } },
+        { 400574, "arcane_blast", false, { 0, 0, false, false } },
+    }) do
+        local id, key, barrage, want = case[1], case[2], case[3], case[4]
+        it(
+            "agrees on " .. key .. "'s price and spent charges with Clearcasting up, Missile Barrage " .. (barrage and "up" or "down"),
+            function()
+                local H = headless.new({ character = character() })
+                splitClearcasting(H)
+                local I, VS, S = H.ns.VirtualStateInternal, H.ns.VirtualState, H.Hekili.State
+                local t = H.ctl.now + 1
+                H.ctl.now = t
+                assert.is_true(headless.cycle(H, t)) -- the rebuild's player aura walk first (the client lists none)
+                VS.Drain(t)
+                I.AuraModel(1, I.auras.bySpell[12536], t, t + 15, 1, t, nil, false)
+                if barrage then
+                    I.AuraModel(1, I.auras.bySpell[400589], t, t + 15, 1, t, nil, false)
+                end
+                assert.is_true(headless.cycle(H, t + 0.05))
+                VS.Drain(t + 0.05)
+                S.reset("Primary", true)
+                S.applyBuff("clearcasting") -- the same procs in the simulation (it reads none from the belief)
+                if barrage then
+                    S.applyBuff("missile_barrage")
+                end
+                assert.are.same({ true, barrage }, { S.buff.clearcasting.up, S.buff.missile_barrage.up })
+                assert.are.same(
+                    { true, barrage },
+                    { VS.Aura("player", 12536, t + 0.05) ~= nil, VS.Aura("player", 400589, t + 0.05) ~= nil }
+                )
+                local belief, sim = { I.CostOf(I.ab.bySpell[id]) }, { S.action[key].cost }
+                H.ns.spendResources(key) -- the simulation's cast
+                sim[2], sim[3] = S.buff.clearcasting.up, S.buff.missile_barrage.up
+                H.ctl.now = t + 1
+                H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", id) -- the belief's
+                assert.is_true(headless.cycle(H, t + 1.1))
+                VS.Drain(t + 1.1)
+                belief[2] = VS.Aura("player", 12536, t + 1.1) ~= nil
+                belief[3] = VS.Aura("player", 400589, t + 1.1) ~= nil
+                assert.are.same({ want[1], want[3], want[4] }, belief)
+                assert.are.same({ want[2], want[3], want[4] }, sim)
+                assert.are.same({}, H.errors)
+            end
+        )
+    end
 end)
 
 -- The priorities: the wowsims.com packs (generated from wowsims/forever's APLs by `make wowsims-packs`).
