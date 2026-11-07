@@ -13,7 +13,7 @@ local function flagged(path)
     return out
 end
 
-local ROGUE = { "garrote=1", "slice_and_dice=1", "rupture=1" } -- Slice and Dice and Rupture sort by soonest
+local ROGUE = { "garrote=1", "rupture=1", "slice_and_dice=1" } -- Slice and Dice and Rupture sort by soonest (Rupture first since the re-pin)
 -- the melee-weave strikes (Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip) rotational (the user)
 -- (R51: each move arm is its own line where its move is called, at its source line's tier: the re-pin's Hunter's Mark
 -- leads, Raptor Strike's and Serpent Sting's in-range lines, then the arms: Beast Mastery and Survival walk in (walk_in
@@ -64,7 +64,7 @@ local WARLOCK_SHADOW_BRAND = {
 
 local PACKS = {
     ["Rogue/APLs/Assassination"] = ROGUE,
-    ["Rogue/APLs/Combat"] = { "riposte=1", "garrote=1", "slice_and_dice=1", "rupture=1" }, -- Riposte leads (owner R70)
+    ["Rogue/APLs/Combat"] = { "riposte=1", "garrote=1", "rupture=1", "slice_and_dice=1" }, -- Riposte leads (owner R70)
     ["Rogue/APLs/Subtlety"] = ROGUE,
     ["Hunter/APLs/Beast Mastery"] = HUNTER,
     ["Hunter/APLs/Marksmanship"] = HUNTER_MM,

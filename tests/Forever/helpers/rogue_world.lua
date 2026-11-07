@@ -36,6 +36,7 @@ local AMOUNT = {
     ghostly_strike = 130,
     ambush = 300,
     eviscerate = 450,
+    shank = 90,
 }
 
 local W0
@@ -111,22 +112,24 @@ M.MAP = {
         effect = function(W, e, _, X)
             W.hit(e, e.target, AMOUNT.ghostly_strike, 1)
             aura(W, X, e, "ghostly_strike")
+            aura(W, X, e, "ghostly_strike_next")
         end,
         points = 1,
     },
     ambush = {
         effect = function(W, e, _, X)
             drop(W, e, X, "cold_blood")
-            drop(W, e, X, "cutthroat")
+            drop(W, e, X, "ghostly_strike_next")
             W.hit(e, e.target, AMOUNT.ambush, 1)
         end,
         points = 1,
         requires = function(_, e, X)
-            return stealthed(e, X) or e.auras[X.aura.cutthroat.id] ~= nil, "not stealthed"
+            return stealthed(e, X) or e.auras[X.aura.ghostly_strike_next.id] ~= nil, "not stealthed"
         end,
     },
     garrote = {
         effect = function(W, e, _, X)
+            drop(W, e, X, "ghostly_strike_next")
             if W.hit(e, e.target, nil, 1).act == "WOUND" then
                 aura(W, X, e.target, "garrote")
                 W.dot(e, e.target, 3, 6, 50, 1)
@@ -134,7 +137,7 @@ M.MAP = {
         end,
         points = 1,
         requires = function(_, e, X)
-            return stealthed(e, X), "not stealthed"
+            return stealthed(e, X) or e.auras[X.aura.ghostly_strike_next.id] ~= nil, "not stealthed"
         end,
     },
     eviscerate = finisher(function(W, e, _, X)
@@ -144,9 +147,20 @@ M.MAP = {
     slice_and_dice = finisher(function(W, e, cp, X)
         aura(W, X, e, "slice_and_dice", (6 + 3 * cp) * (1 + 0.15 * X.isnd))
     end),
-    venom = finisher(function(W, e, cp, X)
-        aura(W, X, e, "venom", 6 + 3 * cp)
+    death_mark = finisher(function(W, e, _, X)
+        if W.hit(e, e.target, nil, 1).act == "WOUND" then
+            aura(W, X, e.target, "death_mark")
+        end
     end),
+    shank = { -- no combo point (wowsims's Shank is no builder); an always-hit strike, energy back, Venom's buff
+        effect = function(W, e, _, X)
+            W.hit(e, e.target, AMOUNT.shank, 1)
+            W.emit({ kind = "gain", src = e, pt = ENERGY, rage = 25 + 3 * X.fos })
+            if X.venom then
+                aura(W, X, e, "venom")
+            end
+        end,
+    },
     rupture = finisher(function(W, e, cp, X)
         if W.hit(e, e.target, nil, 1).act == "WOUND" then
             aura(W, X, e.target, "rupture", 6 + 2 * cp)
@@ -213,6 +227,7 @@ local COMMON = {
     "kick",
     "ambush",
     "garrote",
+    "shank",
     "stealth",
     "vanish",
 }
@@ -229,32 +244,34 @@ end
 -- The wowsims.com builds (tools/wowsims/specs/rogue_<spec>.lua's talent strings): the abilities and the talents the
 -- packs and the kit read.
 local PACKS = {
-    -- Combat SS: Improved Sinister Strike 2, Improved Slice and Dice 3, Relentless Strikes, Flawless Execution,
-    -- Adrenaline Rush, Blade Flurry, Cold Blood.
+    -- Combat SS (presets.ts TALENTS_COMBAT_SS at 4b0030a44b): Efficient Strikes 2, Improved Slice and Dice 3, Flawless
+    -- Execution, Flash of Steel 5, Adrenaline Rush, Blade Flurry, Cold Blood (no Relentless Strikes).
     Combat = {
         kit = kit({ "adrenaline_rush", "blade_flurry", "cold_blood" }),
-        talents = { [13732] = 2, [14165] = 3, [14179] = 1, [1310711] = 1 },
+        talents = { [13732] = 2, [14165] = 3, [1310711] = 1, [1329284] = 5 },
         uptime = { "rupture", "garrote" },
     },
-    -- Asn Muti: Improved Slice and Dice 3, Relentless Strikes, Flawless Execution, Cold Blood, Mutilate, Venom.
+    -- Asn Muti: Efficient Strikes 2, Improved Slice and Dice 3, Relentless Strikes 5, Flawless Execution, Cold Blood,
+    -- Mutilate, Venom.
     Assassination = {
-        kit = kit({ "mutilate", "cold_blood", "venom" }),
-        talents = { [14165] = 3, [14179] = 1, [1310711] = 1 },
+        kit = kit({ "mutilate", "cold_blood" }),
+        talents = { [13732] = 2, [14165] = 3, [14179] = 5, [1310711] = 1, [1329328] = 1 },
         uptime = { "rupture", "garrote" },
     },
-    -- Subtlety Hemo: Improved Slice and Dice 3, Relentless Strikes, Setup 3, Dirty Deeds 2, Hemorrhage,
-    -- Premeditation, Preparation, Thousand Cuts, Cold Blood (no Ghostly Strike).
+    -- Subtlety Hemo: Efficient Strikes 2, Improved Slice and Dice 3, Setup 3, Dirty Deeds 2, Hemorrhage, Premeditation,
+    -- Preparation, Ghostly Strike, Death Mark (no Cold Blood, no Relentless Strikes).
     Subtlety = {
-        kit = kit({ "hemorrhage", "cold_blood", "premeditation", "preparation" }),
+        kit = kit({ "hemorrhage", "premeditation", "preparation", "ghostly_strike", "death_mark" }),
         talents = {
+            [13732] = 2,
             [14165] = 3,
-            [14179] = 1,
             [13983] = 3,
             [14082] = 2,
             [16511] = 1,
             [14183] = 1,
             [14185] = 1,
-            [1310721] = 1,
+            [14278] = 1,
+            [1316709] = 1,
         },
         uptime = { "rupture", "hemorrhage" },
     },
@@ -276,7 +293,9 @@ local function classData(H)
         end
     end
     local talent = H.Hekili.State.talent
-    X.relentless = (talent.relentless_strikes.rank or 0) > 0
+    X.relentless = (talent.relentless_strikes.rank or 0) >= 5
+    X.fos = talent.flash_of_steel.rank or 0
+    X.venom = talent.venom.enabled == true
     X.isnd = talent.improved_slice_and_dice.rank or 0
     return X
 end

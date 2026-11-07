@@ -7,10 +7,7 @@
 # Omitted: default #2: never
 # Omitted: default #5: never
 # Omitted: default #9: autocastOtherCooldowns: spell 13877 is blade_flurry, which the APL casts itself
-# Omitted: default #11: spell 1329549
 # Omitted: default #17: other OtherActionOffensivePotion
-# Omitted: default #18: dropped the unresolved aura 1325758 (its branch only)
-# Omitted: default #20: spell 1325758
 # Omitted: default #25: frontOfTarget
 # Omitted: default #26: never
 # Omitted: default #27: never
@@ -20,13 +17,14 @@
 
 actions.precombat=blade_flurry
 actions.precombat+=/premeditation,use_off_gcd=1
-actions=riposte,use_off_gcd=1,focus=1,if=buff.riposte_usable.up&energy.lo>=action.riposte.cost
+actions=riposte,use_off_gcd=1,focus=1,if=energy.lo>=action.riposte.cost
 actions+=/garrote,focus=1,if=(combo_points.current<5&!debuff.garrote.up)
 actions+=/vanish,use_off_gcd=1,if=((!action.garrote.known|!debuff.garrote.up)&(!action.garrote.known|energy.lo>=action.garrote.cost)&combo_points.current<5&time>=1)
 actions+=/preparation,if=(!action.vanish.known|!cooldown.vanish.ready)
 actions+=/blood_fury,use_off_gcd=1,if=(!action.blade_flurry.known|(action.blade_flurry.known&buff.blade_flurry.up))
 actions+=/blood_fury,use_off_gcd=1,if=((!action.blade_flurry.known|cooldown.blade_flurry.ready)&action.blood_fury.known)
 actions+=/blade_flurry,if=((action.blood_fury.known&prev.1.blood_fury)|(!action.blood_fury.known&((!action.blade_flurry.known|cooldown.blade_flurry.ready)&action.blood_fury.known)))&(!action.blade_flurry.known|cooldown.blade_flurry.ready)
+actions+=/shank,if=(((talent.boot_knife.rank>=5|talent.boot_knife.rank>=4|talent.boot_knife.rank>=3|talent.boot_knife.rank>=2|talent.boot_knife.enabled)&combo_points.current<=3&energy.lo<=80)|(!(talent.boot_knife.rank>=5|talent.boot_knife.rank>=4|talent.boot_knife.rank>=3|talent.boot_knife.rank>=2|talent.boot_knife.enabled)&energy.lo<=80))
 actions+=/adrenaline_rush,if=(energy.lo<=50&(!action.slice_and_dice.known|buff.slice_and_dice.up)&!action.elunes_light.known&!action.blood_fury.known)
 actions+=/blood_fury,use_off_gcd=1,if=((!action.adrenaline_rush.known|cooldown.adrenaline_rush.ready)&(action.blood_fury.known&(!action.blood_fury.known|cooldown.blood_fury.ready))&(action.elunes_light.known&(!action.elunes_light.known|cooldown.elunes_light.ready))&(!action.slice_and_dice.known|buff.slice_and_dice.up))
 actions+=/adrenaline_rush,if=((action.blood_fury.known&prev.1.blood_fury)|(!action.blood_fury.known&((!action.adrenaline_rush.known|cooldown.adrenaline_rush.ready)&(action.blood_fury.known&(!action.blood_fury.known|cooldown.blood_fury.ready))&(action.elunes_light.known&(!action.elunes_light.known|cooldown.elunes_light.ready))&(!action.slice_and_dice.known|buff.slice_and_dice.up))))&((!action.adrenaline_rush.known|cooldown.adrenaline_rush.ready)&(action.elunes_light.known&(!action.elunes_light.known|cooldown.elunes_light.ready))&(!action.slice_and_dice.known|buff.slice_and_dice.up))
@@ -34,12 +32,13 @@ actions+=/elunes_light,use_off_gcd=1,if=(!(action.adrenaline_rush.known|action.e
 actions+=/adrenaline_rush,if=((action.elunes_light.known&prev.1.elunes_light)|(!action.elunes_light.known&(!(action.adrenaline_rush.known|action.elunes_light.known|action.slice_and_dice.known)|((!action.adrenaline_rush.known|cooldown.adrenaline_rush.ready)&(!action.elunes_light.known|cooldown.elunes_light.ready)&(!action.slice_and_dice.known|buff.slice_and_dice.up)))))&(!(action.adrenaline_rush.known|action.slice_and_dice.known)|((!action.adrenaline_rush.known|cooldown.adrenaline_rush.ready)&(!action.slice_and_dice.known|buff.slice_and_dice.up)))
 actions+=/elunes_light,use_off_gcd=1,if=(!action.adrenaline_rush.known|cooldown.adrenaline_rush.remains>=114)
 actions+=/eureka,use_off_gcd=1,if=(action.eureka.known&cooldown.eureka.ready&(!action.adrenaline_rush.known|(action.adrenaline_rush.known&buff.adrenaline_rush.up)|(action.adrenaline_rush.known&cooldown.adrenaline_rush.remains>cooldown.eureka.duration)|(action.adrenaline_rush.known&fight_remains<cooldown.adrenaline_rush.remains)))
-actions+=/thistle_tea,use_off_gcd=1,if=((energy.lo<=15|(action.eureka.known&energy.lo<=25)|energy.lo<=25)&(combo_points.current<3|(action.eureka.known&buff.eureka.up)))
+actions+=/thistle_tea,use_off_gcd=1,if=(((energy.lo<=15&!talent.death_mark.enabled)|(action.eureka.known&energy.lo<=25)|(energy.lo<=25&(!action.death_mark.known|debuff.death_mark.up)))&(combo_points.current<3|(action.eureka.known&buff.eureka.up)))
 actions+=/premeditation,use_off_gcd=1,if=combo_points.current<=3
-actions+=/rupture,focus=1,if=(talent.hemorrhage.enabled&combo_points.current>=3&!debuff.rupture.up&!(fight_remains<=6)&!talent.flawless_execution.enabled)
+actions+=/death_mark,if=combo_points.current>=4
+actions+=/rupture,focus=1,if=((talent.blood_splatter.enabled|talent.hemorrhage.enabled)&combo_points.current>=3&!debuff.rupture.up&!(fight_remains<=6)&!talent.flawless_execution.enabled)
 actions+=/slice_and_dice,focus=1,if=(buff.slice_and_dice.remains<=0&combo_points.current>=1&!(fight_remains<=6))
 actions+=/cold_blood,use_off_gcd=1,if=(combo_points.current=5&(!action.eviscerate.known|energy.lo>=action.eviscerate.cost)&(!action.elunes_light.known|!buff.elunes_light.up))
-actions+=/eviscerate,if=(combo_points.current>=5|(combo_points.current=4&action.mutilate.known)|(combo_points.current>=4&(!action.slice_and_dice.known|buff.slice_and_dice.remains<=6))|(combo_points.current>=3&fight_remains<=6))
+actions+=/eviscerate,if=((combo_points.current>=5|(combo_points.current=4&action.mutilate.known)|(combo_points.current>=4&(!action.slice_and_dice.known|buff.slice_and_dice.remains<=6))|(combo_points.current>=3&fight_remains<=6))&!talent.death_mark.enabled)
 actions+=/mutilate,if=(combo_points.current<5&(!action.eureka.known|(action.eureka.known&buff.eureka.up)|(action.eureka.known&!cooldown.eureka.ready)|(action.eureka.known&((!action.eureka.known|cooldown.eureka.ready)&(!action.eureka.known|(!action.adrenaline_rush.known|cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))
 actions+=/hemorrhage,if=(combo_points.current<5&(!action.eureka.known|(action.eureka.known&buff.eureka.up)|(action.eureka.known&!cooldown.eureka.ready)|(action.eureka.known&((!action.eureka.known|cooldown.eureka.ready)&(!action.eureka.known|(!action.adrenaline_rush.known|cooldown.adrenaline_rush.remains<=cooldown.eureka.duration)))))&((action.garrote.known&debuff.garrote.remains>=8)|!talent.ghostly_strike.enabled))
 actions+=/sinister_strike,if=(!action.mutilate.known&!action.hemorrhage.known&combo_points.current<5&(!action.eureka.known|(action.eureka.known&buff.eureka.up)|(action.eureka.known&!cooldown.eureka.ready)|(action.eureka.known&((!action.eureka.known|cooldown.eureka.ready)&(!action.eureka.known|(!action.adrenaline_rush.known|cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))
