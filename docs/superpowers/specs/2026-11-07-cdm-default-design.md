@@ -178,7 +178,8 @@ Pure: numbers in, two values out, no tables. `I.ReduceFact` in `Presence/Reduce.
 to answer at a reading change, at its first collect, at stale-to-live (viewer visible again) and at settle end; each is
 a change at that poll's time. A silent slot begins to answer NONE only at its own held-to-silent change (its `sSeen` is
 written only while it is held, so its seen rule can afterwards only stop holding, which takes it out of liveness, never
-give it a new answer). The seen rule is folded into liveness (§2.2), so `Reduce` itself does not change. `fact.t[k]` is the time the reduced state last went from UNKNOWN or DOWN to UP.
+give it a new answer). The seen rule is folded into liveness (§2.2), so `Reduce` itself does not change.
+`fact.t[k]` is the time the reduced state last went from UNKNOWN or DOWN to UP.
 
 **Disagreement (M8, M3).** `disagree[k]` counts transitions of `agree` from true to false, not polls. Expected source:
 an Essential/Utility item that does not refresh on a target change (BV:483-485) beside a Buff entry that does; the

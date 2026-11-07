@@ -316,10 +316,10 @@ Snapshot `:281-306`); `Families/Now.lua:325` (one line: `I.auraOurs[k] = true` o
     - "silent item (F12 flag) while our buff is up in combat, ours set: the record never goes down; the reduced fact
       reads UNKNOWN (`R.Presence`)"; control as above.
     - "never-lit item: UNKNOWN, the model closes the record at its expiry"; control as above.
-    - **I-B** "our cast, the item lights one poll later (fake `lag = 1`): the record never goes down; then the aura
+    - **I-B** "our cast, the item lights at the next `ctl.Tick` (fake `lag = 1`): the record never goes down; then the aura
       ends: DOWN closes".
     - **I-B refresh** "our cast refreshes; the item stays held; the aura then ends: DOWN closes" (red for a change-only
-      `seen` write).
+      `sSeen` write).
     - "a buff re-applied after its item went silent (the item stops lighting): UNKNOWN, never closed by the item";
       control as above.
     - **per slot** "two items for one aura, one silent (F12 flag): release the working one mid-application in combat:
@@ -427,8 +427,8 @@ standalone `description` in the Performance tab, `name` a function), TOC, `tests
   past `d`: the `HOLD` rule).
 - [ ] **Step 2: Record** per arm with the default beside it, the difference and the noise band; header "Measured, not
   gated (decisions 86, 110). Acceptance: no flicker rise beyond ±0.3/min on any spec." Any spec over the band: stop and
-  report; **the release waits**. Read item disagreements as lag (spec §2.3, M3); a silent item beside a working one is never live (per-slot seen
-  rule), so it adds no disagreement; `lost` excludes normal aura ends (spec §2.4).
+  report; **the release waits**. Read item disagreements as lag (spec §2.3, M3); a silent item beside a working one
+  is never live (per-slot seen rule), so it adds no disagreement; `lost` excludes normal aura ends (spec §2.4).
 - [ ] **Step 3: Docs.** gaps row 103 for "any viewer" coverage (Druid fixture added); ledger: CDM-E closed by P0
   result 9; CDM-T/O/I/P and e4b/ACQ open with the `/fprobe cdm` commands. **Step 4:** `make check`. **Step 5: Commit**
   `docs(cdm): the viewer A/B per layout; ledger and gaps`.
