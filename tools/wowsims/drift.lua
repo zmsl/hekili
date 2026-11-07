@@ -156,20 +156,22 @@ local function fence(s)
 end
 
 -- the new side's request: the recipe's paths read under the new tree; a `.json` path gone there but with a `.siml`
--- sibling (2fe0846044's Paladin move), and a recipe `siml` build, parsed with the new CLI
+-- sibling (2fe0846044's Paladin move), a `.siml` path and a recipe `siml` build, parsed with the new CLI (export.lua's
+-- M.simlParse / M.simlBuild; not M.request's own .siml read, which wants the CLI at the spec's pin)
 local function newRequest(ex, r, spec, tree, cli, notes)
     local r2 = {}
     for k, v in pairs(r) do
         r2[k] = v
     end
-    local function parse(path)
+    local function needCli(path)
         if not cli then
             error(path .. ": needs WOWSIMS_NEW_CLI (siml)", 0)
         end
+    end
+    local function parse(path)
+        needCli(path)
         local out = os.tmpname()
-        if os.execute(("%s siml parse -json %s > %s 2>&1"):format(q(cli), q(tree .. "/" .. path), out)) ~= 0 then
-            error(path .. ": siml parse failed: " .. (slurp(out) or ""), 0)
-        end
+        spit(out, select(2, ex.simlParse(cli, tree .. "/" .. path, "new rev")))
         return out
     end
     local function exists(path)
@@ -181,7 +183,7 @@ local function newRequest(ex, r, spec, tree, cli, notes)
             return nil
         end
         if exists(path) then
-            return tree .. "/" .. path
+            return path:find("%.siml$") and parse(path) or tree .. "/" .. path
         end
         local siml = path:gsub("%.json$", ".siml")
         if siml ~= path and exists(siml) then
@@ -190,7 +192,10 @@ local function newRequest(ex, r, spec, tree, cli, notes)
         end
         error(path .. " is gone at the new rev", 0)
     end
-    r2.apl, r2.build, r2.gear = resolve(r.apl), resolve(r.build), resolve(r.gear)
+    r2.apl, r2.gear = resolve(r.apl), resolve(r.gear)
+    -- a .siml build or a recipe `siml` build: over its defaults, as M.request reads one
+    local whole = r.siml or (r.build and r.build:find("%.siml$") and r.build)
+    r2.build = not whole and resolve(r.build) or nil
     if r.player then
         r2.player = {}
         for k, v in pairs(r.player) do
@@ -198,18 +203,16 @@ local function newRequest(ex, r, spec, tree, cli, notes)
         end
         r2.player.gear = resolve(r.player.gear)
     end
-    if r.siml then
-        local json = require("dkjson")
-        local t = json.decode(slurp(parse(r.siml)))
-        if r.defaults then
-            ex.overDefaults(t.player, json.decode(slurp(parse(r.defaults))).player)
-        end
+    if whole then
+        needCli(whole)
         local path = os.tmpname()
-        spit(path, json.encode(t))
+        spit(path, select(2, ex.simlBuild(cli, tree, r, "new rev", whole)))
         r2.siml, r2.build = nil, path
     end
     return ex.request(r2, "", spec)
 end
+
+M.newRequest = newRequest -- tests/Forever/wowsims_siml_spec.lua
 
 local function translate(apl, set, r, log, player)
     local text, omitted = apl.translate(player.rotation, apl.context(set, r, log, player))
@@ -288,7 +291,8 @@ function M.spec(ctx, spec)
     end
     -- shipped -> pin: the checked-in request against the recipe's request built from the pin's own files (a stale
     -- export, or a request edit the re-pin made by hand); pin -> new: the drift itself
-    local okp, preq = pcall(ex.request, r, ctx.treeAt(pin), spec)
+    -- a .siml recipe path at a spec flipped to the new rev parses with WOWSIMS_NEW_CLI (its pin's CLI)
+    local okp, preq = pcall(ex.request, r, ctx.treeAt(pin), spec, pin == ctx.new and ctx.cli or nil)
     local notes = {}
     local ok2, nreq = pcall(newRequest, ex, r, spec, ctx.tree, ctx.cli, notes)
     for _, n in ipairs(notes) do
