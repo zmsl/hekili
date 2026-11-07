@@ -18,7 +18,7 @@ local function spit(path, s)
 end
 
 -- the shared new-pin checkout and its oracle CLI (docs/dev/wowsims-packs.md "Moving the pin"); absent off this machine
-local NEW_ROOT = (os.getenv("HOME") or "") .. "/src/wowsims-pin-4b0030a44b"
+local NEW_ROOT = (os.getenv("HOME") or "") .. "/src/wowsims-pin-e5a9cd2a2d"
 local NEW_CLI = NEW_ROOT .. "/wowsimcli-sim-pin"
 local function present(path)
     local f = io.open(path, "rb")
