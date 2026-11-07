@@ -1,0 +1,13 @@
+diff --git a/sim/common/forever/items_sets.go b/sim/common/forever/items_sets.go
+index 0a1c2cd8be..ac828abd53 100644
+--- a/sim/common/forever/items_sets.go
++++ b/sim/common/forever/items_sets.go
+@@ -444,7 +444,7 @@ var ItemSetShadowcraftArmor = core.NewItemSet(core.ItemSet{
+ // The 3-piece bonus restores health over time and the 5-piece bonus removes a snare when struck,
+ // neither of which has a place in the sim.
+ var ItemSetDarkmantleArmorReissue = core.NewItemSet(core.ItemSet{
+-	ID:    1676,
++	ID:    512, // Hekili oracle patch (tools/wowsims/sim-pin): the db gives the reissued pieces setId 512
+ 	Name:  "Darkmantle Armor",
+ 	Slots: shared.EightPieceSlots,
+ 	Bonuses: map[int32]core.ApplySetBonus{

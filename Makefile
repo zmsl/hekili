@@ -100,8 +100,8 @@ WOWSIMS ?= $(HOME)/src/wowsims-forever
 wowsims-cli:
 	cd $(WOWSIMS) && make sim/core/proto/api.pb.go && go build --tags=with_db -o wowsimcli-amd64-linux ./cmd/wowsimcli/cli_main.go
 
-# wowsims-sim-cli: the oracle CLI (wowsimcli-sim-pin) that `export.lua export`, `siml` and `rerun` use, from a checkout at M.SIM_PIN
-# with the oracle patches (tools/wowsims/sim-pin/build.sh; docs/dev/wowsims-packs.md "Oracle patches").
+# wowsims-sim-cli: the oracle CLI (wowsimcli-sim-pin) that `export.lua export`, `siml` and `rerun` use, from a checkout at one of
+# export.lua's pins with that pin's oracle patches (tools/wowsims/sim-pin/build.sh; docs/dev/wowsims-packs.md "Oracle patches").
 wowsims-sim-cli:
 	sh tools/wowsims/sim-pin/build.sh $(WOWSIMS)
 

@@ -1,5 +1,5 @@
 -- tests/Forever/wowsims_pin_spec.lua (wowsims packs plan, Task 2; check_wowsims_pin): every checked-in wowsims log
--- comes from the wowsims/forever commit tools/wowsims/export.lua pins as its sim (M.SIM_PIN), every recipe has its request and log, and the
+-- comes from the wowsims/forever commit tools/wowsims/export.lua pins for its spec (M.pin), every recipe has its request and log, and the
 -- exporter's pure parts (the talent string, the request) hold. Data: wowsims/forever (MIT).
 local ex = assert(loadfile("tools/wowsims/export.lua"))()
 
@@ -19,24 +19,80 @@ local function tmp(text)
     return path
 end
 
+local function recipes()
+    local out, pipe = {}, assert(io.popen("ls tools/wowsims/specs"))
+    for file in pipe:lines() do
+        out[#out + 1] = file:match("^(.+)%.lua$")
+    end
+    pipe:close()
+    return out
+end
+
+local function sh(cmd) -- the command's stdout+stderr and whether it exited 0
+    local pipe = assert(io.popen(cmd .. " 2>&1; echo rc=$?"))
+    local s = pipe:read("*a")
+    pipe:close()
+    return s, s:find("rc=0\n$") ~= nil
+end
+
+local lua = io.open(".lua/bin/lua", "rb") and ".lua/bin/lua" or "lua5.1"
+
 describe("check_wowsims_pin", function()
-    it("finds every recipe's log made at the pinned wowsims sim commit, beside its request", function()
-        local pipe = assert(io.popen("ls tools/wowsims/specs"))
-        for file in pipe:lines() do
-            local spec = file:match("^(.+)%.lua$")
-            if spec then
-                assert.is_true(exists(ex.OUT .. spec .. ".json"), spec)
-                local f = assert(io.open(ex.OUT .. spec .. ".log", "rb"), spec)
-                local first = f:read("*l")
-                f:close()
-                assert.are.equal(ex.SIM_PIN, first:match("^# wowsims (%x+) "), spec)
-                assert.are.equal(spec, first:match("^# wowsims %x+ (%S+) "), spec)
-            end
+    it("finds every recipe's log made at its spec's pinned wowsims commit, beside its request", function()
+        for _, spec in ipairs(recipes()) do
+            assert.is_true(exists(ex.OUT .. spec .. ".json"), spec)
+            local f = assert(io.open(ex.OUT .. spec .. ".log", "rb"), spec)
+            local first = f:read("*l")
+            f:close()
+            assert.are.equal(ex.pin(spec), first:match("^# wowsims (%x+) "), spec)
+            assert.are.equal(spec, first:match("^# wowsims %x+ (%S+) "), spec)
         end
-        pipe:close()
-        assert.are.equal(40, #ex.PIN)
-        assert.are.equal(40, #ex.SIM_PIN)
-        assert.are.equal(ex.SIM_PIN, ex.PIN) -- the requests and the oracle CLI come from one wowsims commit
+    end)
+
+    -- The transitional per-spec pin (docs/dev/wowsims-packs.md "Moving the pin"): every spec is at the old pin or the
+    -- new one, so once every line says NEW the tooling is at one global pin again.
+    it("pins every recipe, and only recipes, to the old or the new pin, each with its oracle patch set", function()
+        assert.are.equal(40, #ex.OLD_PIN)
+        assert.are.equal(40, #ex.NEW_PIN)
+        local seen = {}
+        for _, spec in ipairs(recipes()) do
+            local pin = ex.SPEC_PIN[spec]
+            assert.is_true(pin == ex.OLD_PIN or pin == ex.NEW_PIN, spec)
+            assert.are.equal(pin, ex.pin(spec))
+            seen[spec] = true
+            local f = io.open("tools/wowsims/sim-pin/" .. pin:sub(1, 12) .. "/no-cast-end-pick.patch", "rb")
+            assert.is_truthy(f, spec .. ": no oracle patch set for its pin")
+            f:close()
+        end
+        for spec in pairs(ex.SPEC_PIN) do
+            assert.is_true(seen[spec], spec .. " has no recipe")
+        end
+        assert.has_error(function()
+            ex.pin("no_such_spec")
+        end)
+    end)
+
+    it("refuses an export from a checkout not at the spec's pin, naming the spec and its pin", function()
+        local repo = os.tmpname()
+        os.remove(repo)
+        assert(
+            os.execute(
+                ("git init -q %s && git -C %s -c user.name=t -c user.email=t@t commit -q --allow-empty -m x"):format(
+                    repo,
+                    repo
+                )
+            ) == 0
+        )
+        local out, ok = sh(
+            ('WOWSIMS=%s %s -e \'loadfile("tools/wowsims/export.lua")().checkout("druid_balance")\''):format(repo, lua)
+        )
+        local built, builtOk = sh("sh tools/wowsims/sim-pin/build.sh " .. repo)
+        os.execute("rm -rf " .. repo)
+        assert.is_false(ok)
+        assert.is_truthy(out:find("druid_balance", 1, true), out)
+        assert.is_truthy(out:find(ex.pin("druid_balance"), 1, true), out)
+        assert.is_false(builtOk) -- build.sh: a checkout at no pin of export.lua's has no oracle patch set
+        assert.is_truthy(built:find("not at a pin", 1, true), built)
     end)
 
     it("asks for no execute phase the pin's sim no longer reads (25, 45, 90 gone; 20 and 35 kept)", function()

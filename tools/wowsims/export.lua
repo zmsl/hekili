@@ -3,13 +3,13 @@
 --   .lua/bin/lua tools/wowsims/export.lua export <spec>  the request tests/Forever/wowsims/<spec>.json from the recipe
 --       tools/wowsims/specs/<spec>.lua and the wowsims checkout's preset files, wowsimcli run on it, and
 --       tests/Forever/wowsims/<spec>.log: the debug log (noise lines dropped) under a header (the pin, the spec, the
---       seed, the duration, the target level, the build's talents). Needs the checkout at M.PIN and its oracle CLI
+--       seed, the duration, the target level, the build's talents). Needs the checkout at the spec's pin (M.pin) and its oracle CLI
 --       (`make wowsims-sim-cli`). A recipe with `siml` runs the siml step first.
 --   .lua/bin/lua tools/wowsims/export.lua siml <spec>    tests/Forever/wowsims/<spec>.build.json: the recipe's `siml`
 --       build (a .siml path in the checkout) as protojson, from the CLI's `siml parse -json`; request() reads it as
 --       the recipe's `build`
 --   .lua/bin/lua tools/wowsims/export.lua rerun <spec>   the log only: the checked-in request, unchanged, on the
---       oracle CLI (`make wowsims-sim-cli`) of a checkout at M.SIM_PIN
+--       oracle CLI (`make wowsims-sim-cli`) of a checkout at the spec's pin
 --   .lua/bin/lua tools/wowsims/export.lua learn <CLASS>  tests/Forever/wowsims/learn_<class>.lua: the DB2 learn level
 --       of every rank of every ability in the class's ability set: kit, shared content, racials (wowdb)
 --   .lua/bin/lua tools/wowsims/export.lua pack <spec>    the spec's pack .simc from its checked-in request (Task 4;
@@ -22,14 +22,73 @@ local json = require("dkjson")
 
 local M = {}
 
---- The wowsims/forever commit every request (its APL, gear, talents) and recipe comes from. Equal to M.SIM_PIN since
---- the re-pin (docs/superpowers/plans/2026-11-03-wowsims-repin.md): requests and oracle come from one commit.
-M.PIN = "e2842f0a784d2f329dde0bc682a6b84202a780f2"
---- The wowsims/forever commit whose CLI made every checked-in log (`rerun`; tests/Forever/wowsims_pin_spec.lua).
-M.SIM_PIN = M.PIN
---- Empty since the re-pin's Task 19 re-exported the hunters at M.SIM_PIN: every log is made there. Kept only because
---- tools/wowsims/apl.lua's pack header still reads `ex.OLD_SIM[spec] or ex.PIN`; delete both together.
-M.OLD_SIM = {}
+--- The two wowsims/forever commits of the per-spec pin (docs/dev/wowsims-packs.md "Moving the pin"): OLD, the 11-02
+--- re-pin's, and NEW, upstream/master at the 0.7 re-pin (2026-11-06). Each has its oracle patch set in
+--- tools/wowsims/sim-pin/<first 12 hex>/.
+local OLD, NEW = "e2842f0a784d2f329dde0bc682a6b84202a780f2", "4b0030a44be2d798319ffedc55a5fa1df5727912"
+M.OLD_PIN, M.NEW_PIN = OLD, NEW
+--- The commit each spec's recipe, request and log come from (its checkout and oracle CLI;
+--- tests/Forever/wowsims_pin_spec.lua). A class lane flips its spec by re-exporting it at NEW and changing its own
+--- line to NEW; once every line says NEW, OLD and its patch set go. One spec per line, a blank line between: two
+--- lanes flipping neighbours then merge without a conflict.
+M.SPEC_PIN = {
+    druid_balance = OLD,
+
+    druid_feral = OLD,
+
+    druid_guardian = OLD,
+
+    hunter_beast_mastery = OLD,
+
+    hunter_marksmanship = OLD,
+
+    hunter_survival = OLD,
+
+    mage_arcane = OLD,
+
+    mage_fire = OLD,
+
+    mage_frostfire = OLD,
+
+    paladin_protection = OLD,
+
+    paladin_retribution = OLD,
+
+    priest_shadow = OLD,
+
+    priest_smite = OLD,
+
+    rogue_assassination = OLD,
+
+    rogue_combat = OLD,
+
+    rogue_subtlety = OLD,
+
+    shaman_elemental = OLD,
+
+    shaman_enhancement = OLD,
+
+    warlock_affliction = OLD,
+
+    warlock_demonology = OLD,
+
+    warlock_destruction = OLD,
+
+    warlock_shadow_brand = OLD,
+
+    warlock_sm_ruin = OLD,
+
+    warrior_arms = OLD,
+
+    warrior_fury = OLD,
+
+    warrior_protection = OLD,
+}
+
+--- The pin of spec `spec` (raises on a spec with no line in M.SPEC_PIN).
+function M.pin(spec)
+    return M.SPEC_PIN[spec] or error(tostring(spec) .. ": no pin in M.SPEC_PIN (tools/wowsims/export.lua)", 0)
+end
 M.OUT = os.getenv("WOWSIMS_OUT") or "tests/Forever/wowsims/"
 M.SEED, M.DURATION, M.TARGET_LEVEL = 101, 180, 63
 
@@ -184,15 +243,16 @@ function M.request(r, root, spec)
     }
 end
 
---- The wowsims checkout (WOWSIMS) and its HEAD, which must be M.PIN.
-local function checkout()
+--- The wowsims checkout (WOWSIMS) and its HEAD, which must be spec `spec`'s pin.
+local function checkout(spec)
     local root = env("WOWSIMS", "~/src/wowsims-forever")
     local head = capture("git -C '" .. root .. "' rev-parse HEAD"):gsub("%s+$", "")
-    if head ~= M.PIN then
+    if head ~= M.pin(spec) then
         error(
-            ("wowsims checkout at %s, the pin is %s: check out the pin (or move M.PIN and re-export every spec)"):format(
+            ("wowsims checkout at %s, %s is pinned at %s: export it from a checkout at its pin (docs/dev/wowsims-packs.md)"):format(
                 head,
-                M.PIN
+                spec,
+                M.pin(spec)
             ),
             0
         )
@@ -201,12 +261,12 @@ local function checkout()
 end
 M.checkout = checkout -- tools/wowsims/dry.lua
 
---- Converts spec `spec`'s `siml` build (a .siml path in the checkout at M.PIN) to M.OUT/<spec>.build.json with the
+--- Converts spec `spec`'s `siml` build (a .siml path in the checkout at the spec's pin) to M.OUT/<spec>.build.json with the
 --- CLI's `siml parse -json` (see the header). A recipe `defaults` (the spec's defaults.siml) fills what the build
 --- leaves unset (M.overDefaults).
 function M.siml(spec)
     local r = M.recipe(spec)
-    local root = checkout()
+    local root = checkout(spec)
     local src = assert(r.siml, spec .. ": the recipe has no `siml`")
     local cli = env("WOWSIMS_CLI", root .. "/wowsimcli-sim-pin")
     local function parse(path)
@@ -241,7 +301,7 @@ end
 --- Exports spec `spec`: its request and log under M.OUT (see the header).
 function M.export(spec)
     local r = M.recipe(spec)
-    local root, head = checkout()
+    local root, head = checkout(spec)
     if r.siml then
         M.siml(spec)
     end
@@ -349,14 +409,10 @@ function M.learn(token)
     spit(M.OUT .. "learn_" .. name .. ".lua", table.concat(out, "\n") .. "\n")
 end
 
---- Re-runs the checked-in request of `spec` on the oracle CLI of the wowsims checkout at M.SIM_PIN (the request
+--- Re-runs the checked-in request of `spec` on the oracle CLI of the wowsims checkout at the spec's pin (the request
 --- unchanged): its wowsimcli-sim-pin, `make wowsims-sim-cli`'s build with the oracle patches (tools/wowsims/sim-pin).
 function M.rerun(spec)
-    local root = env("WOWSIMS", "~/src/wowsims-forever")
-    local head = capture("git -C '" .. root .. "' rev-parse HEAD"):gsub("%s+$", "")
-    if head ~= M.SIM_PIN then
-        error(("wowsims checkout at %s, the sim pin is %s"):format(head, M.SIM_PIN), 0)
-    end
+    local root, head = checkout(spec)
     M.run(spec, root, head, env("WOWSIMS_CLI", root .. "/wowsimcli-sim-pin"))
 end
 
