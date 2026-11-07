@@ -139,7 +139,7 @@ describe("Forever Shaman", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(36, n)
+        assert.are.equal(35, n)
         assert.are.equal("SHAMAN", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.elemental_mastery.toggle)
