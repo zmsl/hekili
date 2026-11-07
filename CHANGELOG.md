@@ -12,7 +12,6 @@
 
 ### Changed
 - Shamans (wowsims.com): Elemental and Enhancement follow wowsims's current build. Lava Burst is gone from the game, so the Elemental priority no longer has it: Chain Lightning now also shows on a single target above 40% mana, Earth Shock waits for a single target, and Water Shield comes before Searing Totem. Chain Lightning costs about 70% more mana, and Stormstrike's cooldown is 6 seconds. Not yet checked in game.
-||||||| 7361b64ee
 - An ability waiting for mana, rage or energy now shows as ready only once the addon is sure you have enough. Before, it could show as ready a few hundredths of a second early, and pressing it then failed with not enough mana or rage. It can now light up one update (about 0.2 s) later at the moment you reach the cost. Not yet checked in game.
 - Steady icons are now on by default (each specialization's Performance tab): when the first icon would swap between two abilities that are both still counting down, it keeps the shown one for one more update, so the icons flicker much less. Ready icons and anything after your own cast still show at once. Turn it off there if you prefer every swap at once. Not yet checked in game.
 - Hunters: the melee weave's strikes can show at range with the Movement toggle on, after whatever the rotation ranks above walking in (such as Hunter's Mark), from an Auto Shot whose next melee swing comes before your next shot until that swing (the weave window), and an open weave closes when you Raptor Strike. With it off, they show only in melee as before.
