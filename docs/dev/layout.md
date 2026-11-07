@@ -535,7 +535,7 @@ the author's guide, the user's binding rules and the translator's rules: `docs/d
   checkout needed, so `packs-check` runs it) -> `make packs` (the RegisterPack blocks). `make wowsims-learn
   CLASS=<TOKEN>` writes the class's learn levels (`tests/Forever/wowsims/learn_<class>.lua`, from wowdb).
 - **The pin.** Per spec: `M.SPEC_PIN` in `tools/wowsims/export.lua` (`M.pin(spec)`) names the wowsims/forever
-  commit each spec's recipe, request and log come from (OLD e2842f0a78 or NEW 4b0030a44b while the 0.7 re-pin moves
+  commit each spec's recipe, request and log come from (OLD e2842f0a78 or NEW e5a9cd2a2d while the 0.7 re-pin moves
   them; `tests/Forever/wowsims_pin_spec.lua`); the export refuses a checkout at another commit. To move a spec: the
   flip procedure in `docs/dev/wowsims-packs.md` ("Moving the pin"), then `make wowsims-packs && make packs` and
   re-measure its floors and LIVE60 (each move named in the floor's comment).
