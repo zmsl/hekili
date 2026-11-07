@@ -8,7 +8,7 @@ that fact by one rule set; with no fact the model runs alone.
 
 **Architecture:** A pure reducer (`Game/State/Sources/Presence/Reduce.lua`) between the providers and the belief. The
 CDM leaf (`Presence/CooldownViewer.lua`) keeps a complete cooldownID->aura map built out of combat and sweeps its item
-slots by `rawget` at poll 15; method hooks (gated on the taint probe) only wake a cycle. The router
+slots by `rawget` at poll 15; it installs no hooks (a forced update never shortens the wait, perf 2.1a). The router
 (`Presence/Router.lua`) holds the reduced records and picks the highest standing with evidence; `Sources/Auras.lua`
 `apply` reconciles. The game layer flips the default and shows a coverage line computed in `Options/`.
 
@@ -38,14 +38,13 @@ providers spec (`docs/superpowers/specs/2026-10-23-providers-design.md`, decisio
   IDs live in `tools/data/cooldownviewer/*.lua` and docs.
 - **Secrets.** `auraInstanceID` only via `api.issecretvalue(x) or x ~= nil`; every other client value through `S.Plain`
   before use; never `a and b or c` on a raw value; nothing read passed back to an API. New API names
-  (`C_Spell.GetOverrideSpell`, viewer `IsShown`, `hooksecurefunc`, and in Task 11 `C_Secrets.GetSpellAuraSecrecy`,
+  (`C_Spell.GetOverrideSpell`, viewer `IsVisible`, and in Task 11 `C_Secrets.GetSpellAuraSecrecy`,
   `C_UnitAuras.GetUnitAuraBySpellID`) join `tools/api_inventory.txt` (`make api-check`).
 - **No allocation in recurring paths.** The sweep, `I.ReduceFact`, the router's reduction and `apply` allocate nothing
   (`tests/Game/State/alloc_spec.lua` extended). Getters that allocate run out of combat only. The only in-combat
-  inserts are once per new pooled frame (`onAcquire`), bounded by `MAX_SLOTS = 128`.
-- **Taint rule (spec §3.5).** rawget on items; on Blizzard frames only `GetChildren` (out of combat) and `IsShown`;
-  `hooksecurefunc` only on `OnAcquireItemFrame` and item `OnAuraInstanceInfoSet`/`Cleared`, behind `WAKE_HOOKS`; no
-  `HookScript`; nothing written to Blizzard frames.
+  inserts: none (frames are collected out of combat; slot arrays preallocated to `MAX_SLOTS = 128`).
+- **Taint rule (spec §3.5).** rawget on items; on Blizzard frames only `GetChildren` (out of combat) and `IsVisible`;
+  no hooks of any kind (`HookScript` removed); nothing written to Blizzard frames.
 - **No jitter.** UNKNOWN never flips the belief; a viewer arm may not raise flicker beyond seed noise (±0.3/min) on any spec.
 - **First gate.** The `default` A/B arm (viewer off) is identical to the digit before and after every task (providers
   plan "First gate", `docs/superpowers/plans/2026-10-23-providers.md:47-55`). Tasks 1-5 and 7 prove it.
@@ -64,7 +63,7 @@ providers spec (`docs/superpowers/specs/2026-10-23-providers-design.md`, decisio
 
 ```
 src/Hekili/Game/State/Sources/Presence/Reduce.lua          NEW   I.ReduceFact (pure), I.FACT constants
-src/Hekili/Game/State/Sources/Presence/CooldownViewer.lua  REWRITE  map, slots, sweep, counts, wake hooks
+src/Hekili/Game/State/Sources/Presence/CooldownViewer.lua  REWRITE  map, slots, sweep, counts, no hooks
 src/Hekili/Game/State/Sources/Presence/Router.lua          MODIFY  reduced records, standings, Sweep, onEdge on change
 src/Hekili/Game/State/Sources/Presence/Default.lua         MODIFY  Sweep/Counts/Mappable no-ops
 src/Hekili/Game/State/Sources/Presence/Direct.lua          NEW, CONDITIONAL (Task 11)
@@ -85,7 +84,7 @@ tools/data/cooldownviewer/DRUID.lua                        NEW     from the 2026
 1. **The reducer is pure and total.** Every row of spec §2.3 in the table test; no upvalue read.
 2. **No layout assumption.** No item anywhere is UNKNOWN, never DOWN; unconfigured, hidden, unmapped, settling and
    secret-field slots are not evidence; roles never consulted.
-3. **The sweep reads after the call stack.** No state taken from a hook; the wake hook stores nothing.
+3. **The sweep reads after the call stack.** No hooks; the sweep runs before poll 15's `covered` guard.
 4. **Release and re-point.** A released slot (`cooldownID`/`layoutIndex` nil) leaves the evidence; a re-pointed one
    moves; neither stages DOWN.
 5. **Reconciliation only in `Sources/Auras.lua`** (no `Families/Auras.lua` diff).
@@ -102,12 +101,16 @@ tools/data/cooldownviewer/DRUID.lua                        NEW     from the 2026
 | D | 6b Default flip on · 7 Coverage line and `/hekili cdm` [options] | 4 (6b), 2 + 6a (7) |
 | E | 8 Harness loops and layouts [harness] | 4, **CN8 merged** |
 | F | 9 A/B and docs [docs] | 8 |
-| G | 10 In-game checklist (owner) | a dev build with 1-7; sets `WAKE_HOOKS`, `SETTLE` |
+| G | 10 In-game checklist (owner) | a dev build with 1-7; sets `SETTLE`, confirms `IsVisible` |
+| G' | 4b The CN13 floor: while the fact says UP, consumption keeps one stack [belief] | 4 and CN13 merged, unless CN13 builds it (owner question 4) |
 | H | 11 Direct never-secret provider [belief], CONDITIONAL | 4, and the Shaman probe finding a flag-0 aura |
 
-Release gate: 6b ships in a tagged build only after Task 9's A/B shows no flicker rise and Task 10's CDM-T and CDM-I
-pass (spec acceptance; plan P4 in the owner's plan). Until then 6b is merged with the default still ON in dev builds
-only (`Hekili.IsDev`), which is a one-line switch in `providersOf`.
+Release gate (the owner's acceptance list, all of it): no tag carries 6b until Task 9 shows no flicker rise on any
+spec (Shaman `consumedBy` row included) and Task 10 passes CDM-T (taint), CDM-I (no wrong DOWN in a dungeon), CDM-O (no
+target-switch mis-attribution), the hidden-viewer and Alt-Z rows, and the coverage rows; and `tools/check_border.sh` is
+unchanged. One mechanism: 6b is merged into integ/0.7 (default ON for everyone in that branch, so the A/B and the
+owner's dev build exercise it); the controller does not tag a release from a branch holding 6b until the gate passes,
+and reverts 6b's one-line default if the gate fails.
 
 ---
 
@@ -161,10 +164,9 @@ end)
 
 - [ ] **Step 1: Failing tests** in `fake_viewer_spec.lua` for each fake behaviour:
   - `ctl.ViewerItem(viewer, layoutIndex, id)` with `id == nil` makes an unconfigured slot;
-  - each viewer has `IsShown()` (from `ctl.viewer.shown[name]`, default true) and an `OnAcquireItemFrame(frame)` method,
-    called by `ctl.ViewerAcquire(viewer, id)` (a new frame; `hooksecurefunc` post-hooks run);
-  - each item frame has `OnAuraInstanceInfoSet` / `OnAuraInstanceInfoCleared` methods (no-ops), so the fake
-    `hooksecurefunc(t, name, fn)` (new on `api`, a post-hook wrapper) can hook them;
+  - each viewer has `IsVisible()` (false when `ctl.viewer.shown[name]` or `ctl.viewer.parentShown` is false; default
+    true) and `GetChildren()`; `ctl.ViewerAcquire(viewer, id)` adds a new frame (pool growth in combat);
+  - `HookScript` on items and a fake `api.hooksecurefunc` record their calls (Task 3 asserts none);
   - `ctl.ViewerAura(item, unit|nil)` follows the client order (BD:371-392): when held and changing, clear first
     (fields nil, then Cleared), then set (`auraInstanceID = SECRET`, `auraSpellID = SECRET` or plain per
     `ctl.viewer.plainSpell`, `auraDataUnit = unit`, then Set); clearing with nothing held fires nothing;
@@ -179,7 +181,7 @@ end)
 - [ ] **Step 2: Run, expect failure.** **Step 3: Implement** in the fake only. **Step 4:** `make check`; the existing
   viewer and router specs still pass. **Step 5: Commit** `test(harness): the any-layout Cooldown Manager fake`.
 
-### Task 3 [belief]: The CDM leaf: complete map, slots, sweep, wake hooks
+### Task 3 [belief]: The CDM leaf: complete map, slots, sweep, no hooks
 
 **Files:** Rewrite `src/Hekili/Game/State/Sources/Presence/CooldownViewer.lua`; Modify
 `src/Hekili/Game/State/Sources/Presence/Default.lua` (no-op `Sweep`, `Counts` returning zeros, `Mappable` false);
@@ -192,29 +194,29 @@ Rewrite `tests/Game/State/viewer_spec.lua`; Modify `tools/api_inventory.txt`, `t
   4. "a cooldown entry (Essential) holding an aura is UP evidence; a Buff icon entry for the same aura agrees" (F6)
   5. "no item in any viewer: counts all zero (UNKNOWN)"
   6. "an unconfigured slot, an unmapped id and a secret cooldownID are not evidence"
-  7. "a hidden viewer's items are stale, not evidence; shown again they count at the next sweep"
+  7. "a viewer that is not visible (itself or its parent hidden) gives stale items, not evidence; visible again they count at the next sweep"
   8. "the refresh pair (clear then set in one call) is invisible to the sweep: no NONE ever counted"
   9. "a release with the aura held drops the slot (no NONE), a release with nothing held drops it too"
   10. "a re-point moves the slot's evidence from the old aura to the new"
-  11. "a frame acquired in combat is swept after OnAcquireItemFrame (WAKE_HOOKS on); with WAKE_HOOKS off it is found at the next out-of-combat build"
-  12. "the wake hook stores nothing and delivers one synthetic UNIT_AURA per frame time"
+  11. "a frame created in combat is not swept until the combat-end collect, and is counted in unseenFrames"
+  12. "frames are collected at activation, at a rebuild and at PLAYER_REGEN_ENABLED, never in combat"
   13. "target change: target slots settle for SETTLE, counted stale; after it they count again"
   14. "a NEW pack aura added to the fake viewer with no code change is covered and followed" (owner acceptance, generic)
   15. "an error in the sweep turns the leaf off for the session with one def.error line"
-  16. "no HookScript is called" (the fake records HookScript calls; zero)
+  16. "no HookScript and no hooksecurefunc call is made" (the fake records both; zero)
   `alloc_spec`: the sweep over a 40-slot layout with edges allocates nothing.
 - [ ] **Step 2: Run, expect failure.**
 - [ ] **Step 3: Implement** spec §3.1-§3.5: `build` (out of combat; categories 0-8 with `true`; candidate IDs;
   `cdvToJ[id]` = j or -a; `amb[a]`), slots (`slotOf` weak-keyed frame->index; preallocated per-slot arrays `sJ`, `sV`,
   `sUp`, `sUnit`, `sLive`; per (u, j) counters `nLive`, `nUp`, `nNone`, `nStale`, `tUp`, `tNone`, `via`), `Q.Sweep(t)`
-  (per viewer `IsShown` once; per slot rawgets; change-only counter moves; a list of touched things for the router),
-  `Q.Counts(j, u)`, `Q.Mappable(j)`, `PLAYER_TARGET_CHANGED` settling, `WAKE_HOOKS` (constant, default `true` until
-  Task 10 says otherwise) with `onAcquire` and `wake`, the `pcall` self-off. Delete the `HookScript` path and the
-  immediate target re-read (`:107-133`, `:161-168`). File header: credits TellMeWhen (Cybeloras) for the hook
-  technique, the hidden-viewer rule and the mapping (ideas only, GPL-3.0).
+  (per viewer `IsVisible` once; per slot rawgets; change-only counter moves; a list of touched things for the router),
+  `Q.Counts(j, u)`, `Q.Mappable(j)`, `PLAYER_TARGET_CHANGED` settling, the frame collect at activation, rebuild and
+  `PLAYER_REGEN_ENABLED`, `unseenFrames`, the `pcall` self-off. Delete the `HookScript` path and the immediate target
+  re-read (`:107-133`, `:161-168`). File header: credits TellMeWhen (Cybeloras) for the hidden-viewer rule, the
+  all-viewers presence bit and the mapping (ideas only, GPL-3.0).
 - [ ] **Step 4: Run** `viewer_spec`, `alloc_spec`; `make check`; `tools/check_border.sh`; first gate `IDENTICAL`
   (default arm has no leaf).
-- [ ] **Step 5: Commit** `feat(belief): CDM leaf reads every item by a poll sweep; complete map; wake hooks (decisions 95-103)`.
+- [ ] **Step 5: Commit** `feat(belief): CDM leaf reads every item by a poll sweep; complete map; no hooks (decisions 95-103)`.
 
 ### Task 4 [belief]: The router hosts the reduced facts; reconciliation in apply
 
@@ -236,16 +238,28 @@ Rewrite `tests/Game/State/viewer_spec.lua`; Modify `tools/api_inventory.txt`, `t
     change between polls.
   - **re-map test**: an override re-points mid-fight (`ViewerRepoint`): the old aura goes UNKNOWN and keeps its belief;
     the new one follows its item.
+  - "activated with zero items, an item collected later (combat end) is counted and followed" (the sweep runs before
+    poll 15's `covered == 0` guard, `Sources/Auras.lua:259`).
   - Snapshot: the `presence <key> ...` line of spec §6 and the `presence covered=...` summary.
 - [ ] **Step 2: Run, expect failure.**
 - [ ] **Step 3: Implement.** Router: preallocated `fact.*` arrays (spec §2.4) at build; `R.Sweep(t)` calls the leaf's
   `Sweep`, then reduces the touched things and calls `R.onEdge` on a change; `R.Presence` returns the reduced state;
   `R.tracked` now reads `leaf.Mappable(j)`; delete the router's own `mark` (`Router.lua:43-80`). `Sources/Auras.lua`:
-  poll 15 calls `P.Sweep(t)` first; `apply` gains rule 2.5.3 (duration from `def.auras[j].duration` when a number,
+  poll 15 calls `P.Sweep(t)` first, before its `covered == 0` return; `apply` gains rule 2.5.3 (duration from `def.auras[j].duration` when a number,
   cached at OnBuild into a preallocated array; `fact.t[k]` read through a router field, not a new crossing: both are
   `Game/`); Snapshot lines.
 - [ ] **Step 4: Run** the specs; `make check`; `tools/check_border.sh`; first gate `IDENTICAL`; `make gate` (tdf-runner).
 - [ ] **Step 5: Commit** `feat(belief): one reduced fact per aura and unit; reconciliation rules (decisions 92-94, 99, 104)`.
+
+### Task 4b [belief], after CN13: the consumption floor while the fact is UP
+
+Only if CN13 does not build it (spec §7, owner question 4). **Files:** `src/Hekili/Game/State/Families/Auras.lua`
+(`Obs.PlayerHit` `:240-252`), `tests/Game/State/auras_spec.lua`.
+
+- [ ] **Step 1: Failing test:** "a hit that would spend the last charge of a consumedBy aura whose reduced fact is UP
+  leaves one stack; with the fact UNKNOWN or DOWN it spends as before".
+- [ ] **Steps 2-5:** implement by reading the router's `fact.state` (both `Game/`, no crossing); `make gate`; commit
+  `fix(belief): no one-update flash of a consumed aura the CDM still shows`.
 
 ### Task 5 [belief]: The combat-exit reconcile counted
 
@@ -281,8 +295,8 @@ only), `src/Hekili/Engine/Schema/Tracked.lua` (`providersOf` `:216-226`), `tests
 - [ ] **6b (after Task 4):** `Options.lua:312` `cooldownViewer = true`; the harness `default` arm stays off explicitly
   (`tests/Game/harness/loop.lua:333` already writes `arm.viewer`; `detect.lua:155` sets `def.providers = ab.providers()`,
   so `viewer = false` in the default arm; check every other harness `def.providers` writer); fix the audited specs (set the profile value explicitly where a spec means
-  "off"). Test: "a fresh profile has cooldownViewer true; a saved false stays false". `make check`; first gate
-  `IDENTICAL`; CHANGELOG "The Cooldown Manager now corrects aura presence by default ...; not yet checked in game for
+  "off"). Test: "a fresh profile and an existing profile with no saved value read cooldownViewer true; a profile switched off after the flip stays off" (AceDB never stored the old default `false`). `make check`; first gate
+  `IDENTICAL`; CHANGELOG "The Cooldown Manager now corrects aura presence by default, for every profile (switch it off under Performance); not yet checked in game for
   classes without a fixture". Commit `feat(options): Cooldown Manager facts on by default (decision 107)`.
 
 ### Task 7 [options]: The coverage line and `/hekili cdm`
@@ -298,7 +312,7 @@ only), `src/Hekili/Engine/Schema/Tracked.lua` (`providersOf` `:216-226`), `tests
   presence lines and the summary through the debug bridge into the copy box".
 - [ ] **Step 2: expect failure. Step 3: Implement** spec §6: the helper reads `C_CooldownViewer` as the rest of
   `Options/` reads the client (globals; `Hekili.Client` is the facade and lists these names, `Facade.lua:1141-1148`, so
-  either works; `IsShown`/`GetChildren` are frame methods on the viewer globals), viewers' `GetChildren`, rawget `cooldownID`, the cooldown info's IDs,
+  either works; `IsVisible`/`GetChildren` are frame methods on the viewer globals), viewers' `GetChildren`, rawget `cooldownID`, the cooldown info's IDs,
   `C_Spell.GetOverrideSpell`, and the active spec's `class.auras` IDs. **Step 4:** `make check`;
   `tools/check_border.sh` (expected unchanged output). **Step 5: Commit** `feat(options): Cooldown Manager coverage
   line and /hekili cdm (decision 108)`.
@@ -327,7 +341,8 @@ from the probe file §2 and §8), `tests/Game/harness/drive_spec.lua`, `observer
 
 - [ ] **Step 1: Run** (tdf-runner): `make gate-ab` on the gate's seeds plus four more seed sets (seed noise rule); collect
   per spec and arm: flicker/min, readyShort, agreement, presence facts and disagreements, item disagreements, ambiguous,
-  lost, exit fixes (viewer arms vs default).
+  lost, exit fixes, unseenFrames (viewer arms vs default); and a Shaman `consumedBy` row (Lightning Shield flicker
+  with the `buffs` layout): the one-update flash of spec §7, before and after Task 4b / CN13's floor.
 - [ ] **Step 2: Record** a table per arm with the default beside it, the difference and the noise band. Header:
   "Measured, not gated (decision 86 / 110). Acceptance: no flicker rise beyond ±0.3/min on any spec." Any spec over the
   band: stop and report to the controller (the default flip waits).
@@ -340,12 +355,15 @@ from the probe file §2 and §8), `tests/Game/harness/drive_spec.lua`, `observer
 Needs a dev build with Tasks 1-7. Use ForeverProbe branch `aurasec` beside it (`~/src/forever-probe-cdm-report.md`;
 helpers are lost on `/reload`, re-run them). Copy results through the ForeverProbe copy box (`/vscopy`).
 
-- [ ] **CDM-T taint (e4, e4b):** `/console taintLog 1`, the toggle on, a full pull with a DoT and a proc (Druid:
-  Moonfire, Clearcasting); `/fprobe cdm hooks on` during it; after `/reload` `Logs/taint.log` names neither Hekili nor a
-  `CooldownViewer` or `DamageMeter` frame; the CDM keeps updating in combat. Clean: `WAKE_HOOKS = true`. Not clean:
-  `WAKE_HOOKS = false` (one-line commit), and repeat.
-- [ ] **Latency (LAT):** from the hooks run, the time from `OnAuraInstanceInfoSet` to the `presence` edge in
-  `/hekili cdm`.
+- [ ] **CDM-T taint:** `/console taintLog 1`, Hekili's toggle on, ForeverProbe's hooks OFF, a full pull with a DoT and
+  a proc (Druid: Moonfire, Clearcasting); after `/reload` `Logs/taint.log` names neither Hekili nor a `CooldownViewer`
+  or `DamageMeter` frame; the CDM keeps updating in combat. Not clean: the default goes back off; report.
+- [ ] **IsVisible and Alt-Z (e4b):** `/fprobe cdm items` with Alt-Z pressed in combat: the viewers' visible state reads
+  plain false; `/hekili cdm` shows `fact=unknown` (never down) while hidden, the right facts after.
+- [ ] **New frames in combat (ACQ):** `/fprobe cdm hooks` counts `OnAcquireItemFrame` calls in combat; > 0 with a
+  steady layout raises deferral D7.
+- [ ] **Latency (LAT):** from the hooks run, the time from `OnAuraInstanceInfoSet` to the `presence` change in
+  `/hekili cdm` (expected: within one update).
 - [ ] **Dungeon (CDM-I):** `/fprobe cdm items` and `/hekili cdm` in a dungeon and on a boss: no `fact=down` for an aura
   that is up; secret fields counted, not evidence.
 - [ ] **Partner buffs (CDM-P):** in a party, a partner's copy of a buff we track: does our item drop while the buff is up?
@@ -355,7 +373,7 @@ helpers are lost on `/reload`, re-run them). Copy results through the ForeverPro
 - [ ] **Shaman flag run (e1-e3):** `/fprobe aurasec` for every Lightning Shield and Water Shield rank, then
   `/fprobe aurawatch` in combat. Any 0: Task 11 is go; else Task 11 is dropped (ledger).
 - [ ] **Coverage:** the options line on a Druid and a Warrior matches the bars.
-- [ ] Results into `docs/dev/ingame-ledger.md` rows (controller), constants into one commit.
+- [ ] Results into `docs/dev/ingame-ledger.md` rows (controller), `SETTLE` (and any `IsVisible` fallback) in one commit.
 
 ### Task 11 [belief], CONDITIONAL: the direct never-secret provider
 
@@ -372,4 +390,5 @@ Only if Task 10's Shaman run finds a flag-0 pack aura. **Files:** Create `Presen
 Spec §13 D1-D6, plus:
 - P1: Task 8's `fixture` arm covers only classes with a fixture (Warrior, Druid); the other classes run `buffs` and
   `mixed` only. Trigger: each class's `/fprobe cdm sets` (CDM-C).
-- P2: 6b's release gate (A/B + CDM-T + CDM-I). Trigger: Tasks 9 and 10 done.
+- P2: 6b's release gate (the whole acceptance list above). Trigger: Tasks 9 and 10 done.
+- P3: Task 4b (the consumption floor) if CN13 does not build it. Trigger: CN13 merged.
