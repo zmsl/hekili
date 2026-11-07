@@ -181,15 +181,14 @@ local PACKS = {
             "inner_fire",
             "smite", -- the pack's leveling filler before Mind Flay (silent at 60)
         },
-        talents = { -- 00530320103--50052201251302051 (Human)
+        talents = { -- 00530300103-3-50042201251302051 (Human; Twilight Focus, a Holy no-op upstream, is not carried)
             [1225132] = 5, -- Twin Disciplines
             [14523] = 3, -- Silent Resolve
             [18551] = 3, -- Mental Strength
-            [14531] = 2, -- Martyrdom
             [14751] = 1, -- Inner Focus
             [14521] = 3, -- Meditation
             [15260] = 5, -- Shadow Focus
-            [15273] = 5, -- Improved Mind Blast
+            [15273] = 4, -- Improved Mind Blast
             [15275] = 2, -- Improved Shadow Word: Pain
             [17322] = 2, -- Shadow Reach
             [15407] = 1, -- Mind Flay
