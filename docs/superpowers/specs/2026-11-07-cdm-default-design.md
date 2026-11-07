@@ -47,7 +47,7 @@ TellMeWhen research (`~/src/hekili-central-needs/tmw-research.md`, "TMW"), the 2
 | F10 | The viewer tracks player-cast auras only | CDM-S; and from source below |
 | F11 | Item presence matches the aura's lifetime to the second, in combat, gain and removal: Enrage 10 s, Demoralizing Roar 30 s, Growl 3 s, Nature's Grasp consumed at 18 s; Faerie Fire, Demoralizing Roar and Growl (target debuffs) lit their items | AuraProbe run 1, P0 result 10 (`~/src/hekili-central-needs/auraprobe-druid-run1-2026-11-07.txt`) |
 | F12 | **An item can stay silent while its aura is up**: the Mark of the Wild item (5232) held no aura for a whole 55 s fight while the buff was up (the owner confirms it was up all fight); cause unknown, possibly a client bug (Task 10 records its `sets` entry) | P0 result 10.4 |
-| F13 | **The layout can be edited in combat.** Removing an item drops its frame from `viewer:GetItemFrames()` (2 of 2 removals; never a listed frame with `cooldownID` nil); adding one brings a frame in; the same item can come back as a **different frame table** (a Maul frame gone and one added in the same second). Removing the item of a buff that is up (Thorns) read as no item, never as a silent one; re-adding it 7 s later, the buff still up, lit it in the same sample. Not measured: whether a dropped frame stays a viewer child | AuraProbe 0.1.3 runs 3-4 (`~/src/hekili-central-needs/auraprobe-druid-run3-2026-11-07.md`, `...-run4-...`) |
+| F13 | **The layout can be edited in combat.** Removing an item drops its frame from `viewer:GetItemFrames()` (3 of 3 removals over runs 3-4; never a listed frame with `cooldownID` nil); adding one brings a frame in; the same item can come back as a **different frame table** (a Maul frame gone and one added in the same second). Removing the item of a buff that is up (Thorns) read as no item, never as a silent one; re-adding it 7 s later, the buff still up, lit it in the same sample. Not measured: whether a dropped frame stays a viewer child | AuraProbe 0.1.3 runs 3-4 (`~/src/hekili-central-needs/auraprobe-druid-run3-2026-11-07.md`, `auraprobe-druid-run4-2026-11-07.md`) |
 | F14 | A target item's `auraDataUnit` is plain "target" while held | CV §2 (Rend); the probe now records it (P0 result 10.5) |
 
 Read from source (not measured): `SetAuraInstanceInfo` clears then sets in one call (BD:368-380);
@@ -123,7 +123,7 @@ another item's light (review 3, must-fix 1):
   (release, re-point, (re)configure) and at a map rebuild; at a held sweep whose unit is secret or nil (it held
   something for no known unit); and at `PLAYER_TARGET_CHANGED` for a slot whose `sUnit` is the target (the same place
   §3.4 marks it settling: mob A's light says nothing of mob B's application). A **new frame table is a new slot**
-  (collected on `GetNumChildren` growth, §3.2) whose `sSeen` starts at 0; slot indices are never reused for another
+  (collected on `GetNumChildren` growth, §3.2, if dropped frames stay children: Task 10) whose `sSeen` starts at 0; slot indices are never reused for another
   frame, so a replaced item (F13) can never close an application it was not seen holding. A dropped frame is not live:
   a pool release clears `cooldownID` first (BD:95), and a slot is live only while its frame reads a plain configured
   `cooldownID` and `layoutIndex`.
@@ -410,7 +410,7 @@ with `overrideTooltipSpellID`, `linkedSpellIDs`, a secret singular `linkedSpellI
 (clear then set; release clears `cooldownID` first); only player-sourced auras light items; a **silent item** flag
 (an item that never lights, F12) and a **lag** option (an item lights at the next `ctl.Tick` after our cast,
 `tests/Game/State/helpers/fake_api.lua:793`, I-B); `HookScript`/`hooksecurefunc`
-recorders (asserted unused). Layout presets: `none`, `buffs`, `fixture`, `mixed`. Arms: `default` (viewer off),
+recorders (asserted unused); an acquire makes a new frame table and lights at once if its aura is up (F13). Layout presets: `none`, `buffs`, `fixture`, `mixed`. Arms: `default` (viewer off),
 `viewer-none`, `viewer-buffs`, `viewer-fixture`, `viewer-mixed`; measured: flicker/min, readyShort, agreement, facts,
 disagreements, item disagreements, ambiguous, lost, exit fixes, and two flicker rows: a Shaman `consumedBy` row (§7) and
 a target-DoT-past-duration row (rule 2.5.4). Measured, not gated (decision 86), except the owner's acceptance: no
@@ -459,7 +459,7 @@ flicker rise beyond seed noise (±0.3/min) on any spec in any viewer arm.
 | 112 | An UP with no model: registered duration from `max(fact.t, applied)`; past it a `HOLD` (1.0 s) re-staged once per `HOLD` while the fact stays UP; `math.huge` only for a player aura with no numeric duration | never stuck up on the target; bounded lapse; no per-poll churn (C2; owner Q3) |
 | 113 | `apply` skips player form and enchant auras | their records belong to Forms/Enchants (M5) |
 | 114 | CN13 owns a generic `I.auraFloor[j]`; this lane writes it from the reduced fact | no one-update flash; `Families/` knows nothing of the router (owner Q4) |
-| 115 | **The seen rule, per slot**: a silent slot counts as NONE for (j, u) only for an application that slot was seen holding: the record is up (`U.exp0[u][j] > t`), `sSeen[s] >= U.applied[u][j]` and `sUnit[s] == u`; `sSeen` is written at every sweep the slot is held for u (unambiguous), reset at a mapping change, a rebuild, a held sweep with a secret or nil unit and, for a target slot, a target switch; otherwise not live, so UNKNOWN | an item can stay silent while its aura is up (F12); also closes the cast-before-`UNIT_AURA` flash (I-B) and the item-stops-following loop (I-A) for a fresh application (a refresh before expiry leaves one wrong close: §2.2a Residual, D14); per slot, not per thing, so a silent item never borrows another item's light (review 3); one number per slot (`MAX_SLOTS`), the leaf's own, no per-entry or per-thing state |
+| 115 | **The seen rule, per slot**: a silent slot counts as NONE for (j, u) only for an application that slot was seen holding: the record is up (`U.exp0[u][j] > t`), `sSeen[s] >= U.applied[u][j]` and `sUnit[s] == u`; `sSeen` is written at every sweep the slot is held for u (unambiguous), reset at a mapping change, a rebuild, a held sweep with a secret or nil unit and, for a target slot, a target switch; otherwise not live, so UNKNOWN | an item can stay silent while its aura is up (F12); also closes the cast-before-`UNIT_AURA` flash (I-B) and the item-stops-following loop (I-A) for a fresh application (a refresh before expiry leaves one wrong close: §2.2a Residual, D14); per slot, not per thing, so a silent item never borrows another item's light (review 3); a new frame table is a new slot (F13); one number per slot (`MAX_SLOTS`), the leaf's own, no per-entry or per-thing state |
 
 ## 12. Credits
 

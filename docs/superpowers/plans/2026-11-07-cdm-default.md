@@ -447,8 +447,11 @@ snapshot's `presence` section.
   after.
 - [ ] **Dropped frame (F13):** removing the item of a buff that is up is answered for the active list (it reads as no
   item, and re-added it lights at once). Still to read: after a removal, is the dropped frame still a child of its
-  viewer (`/fprobe cdm items` over `GetChildren()`: listed with `cooldownID` nil, or absent)? Either is not live in the
-  design; a child that kept a plain `cooldownID` while released would contradict BD:95 and must be reported.
+  viewer (`/fprobe cdm items` over `GetChildren()`: listed with `cooldownID` nil, or absent)? Why it matters: the
+  in-combat collect (spec §3.2) fires only when `GetNumChildren` grows and walks the new indices only. If a dropped
+  frame leaves the child list, a replacement can arrive with the count unchanged and is never collected: safe
+  (UNKNOWN) but that item's coverage is lost for the rest of the fight. Fallback then: on any count change walk all
+  indices and insert only frames not yet mapped (no allocation but the new inserts).
 - [ ] **ACQ:** set one viewer to show "In Combat", log in, first fight: `/fprobe cdm hooks` counts `OnAcquireItemFrame`
   in combat; the debug snapshot shows its auras covered during that fight.
 - [ ] **LAT:** the time from `OnAuraInstanceInfoSet` (probe) to the change in the snapshot (player: within one forced
