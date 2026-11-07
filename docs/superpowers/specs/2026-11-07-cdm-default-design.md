@@ -162,8 +162,9 @@ Reduce(nLive, nUp, nNone, nStale, tUp, tNone) -> state, agree
 Pure: numbers in, two values out, no tables. `I.ReduceFact` in `Presence/Reduce.lua`, tested row by row.
 
 **Times (I3).** `tUp` / `tNone` are the latest time a live slot of the thing *began* to answer UP / NONE. A slot begins
-to answer at a reading change, at its first collect, at stale-to-live (viewer visible again) and at settle end; each is
-a change at that poll's time. `fact.t[k]` is the time the reduced state last went from UNKNOWN or DOWN to UP.
+to answer at a reading change, at its first collect, at stale-to-live (viewer visible again), at settle end and when its
+entry becomes proven (a silent slot starts answering NONE); each is a change at that poll's time. Trust is folded into
+liveness (§2.2), so `Reduce` itself does not change: `nNone` counts trusted NONEs only. `fact.t[k]` is the time the reduced state last went from UNKNOWN or DOWN to UP.
 
 **Disagreement (M8, M3).** `disagree[k]` counts transitions of `agree` from true to false, not polls. Expected source:
 an Essential/Utility item that does not refresh on a target change (BV:483-485) beside a Buff entry that does; the
@@ -389,7 +390,8 @@ knowledge. If CN13 merges without it, Task 4c adds the three-line read (one `Fam
 The fake viewer (`tests/Game/State/helpers/fake_api.lua:666-712`) models any layout: per viewer a child list (items
 configured or not, non-item children), `IsVisible` (own and parent), `GetNumChildren`, pool growth in combat; infos
 with `overrideTooltipSpellID`, `linkedSpellIDs`, a secret singular `linkedSpellID`; `allowUnlearned`; the client order
-(clear then set; release clears `cooldownID` first); only player-sourced auras light items; `HookScript`/`hooksecurefunc`
+(clear then set; release clears `cooldownID` first); only player-sourced auras light items; a **rank-mismatch item**
+(its info lists rank n; the aura up is rank n+1: it stays silent, F12); `HookScript`/`hooksecurefunc`
 recorders (asserted unused). Layout presets: `none`, `buffs`, `fixture`, `mixed`. Arms: `default` (viewer off),
 `viewer-none`, `viewer-buffs`, `viewer-fixture`, `viewer-mixed`; measured: flicker/min, readyShort, agreement, facts,
 disagreements, item disagreements, ambiguous, lost, exit fixes, and two flicker rows: a Shaman `consumedBy` row (§7) and
