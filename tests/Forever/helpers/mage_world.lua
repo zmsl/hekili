@@ -388,7 +388,8 @@ local function spell(key, extra)
                     aura(W, X, e, "missile_barrage")
                 end
                 local ac = talentRank(H, T.arcane_concentration)
-                if ac > 0 and W.rng.chance(0.02 * ac) then
+                if ac > 0 and W.t >= (e.clearcastingIcd or 0) and W.rng.chance(0.02 * ac) then
+                    e.clearcastingIcd = W.t + 1 -- one 1 s ICD for every roll (upstream's row)
                     aura(W, X, e, "clearcasting")
                 end
                 local n = HEATING[key] and ((crit and 1 or 0) + (key == "fire_blast" and 1 or 0)) or 0
@@ -459,13 +460,19 @@ M.MAP = {
         end,
     },
     arcane_missiles = {
-        effect = function(W, e, _, X)
+        effect = function(W, e, _, X, H)
             local up = onEntity(e, X)
             -- Clearcasting stays up when Missile Barrage pays for the cast (wowsims ef6fb99ee1); Barrage always drops
             if up("clearcasting") and not up("missile_barrage") then
                 drop(W, e, X, "clearcasting")
             end
             drop(W, e, X, "missile_barrage")
+            -- the channel start rolls Arcane Concentration too (53b0b6a80e), after the spend
+            local ac = talentRank(H, T.arcane_concentration)
+            if ac > 0 and W.t >= (e.clearcastingIcd or 0) and W.rng.chance(0.02 * ac) then
+                e.clearcastingIcd = W.t + 1
+                aura(W, X, e, "clearcasting")
+            end
         end,
         channel = function(H, ids, up)
             local rank = #MISSILES_TIME
