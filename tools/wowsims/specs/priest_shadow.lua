@@ -49,4 +49,14 @@ return {
     -- before Mind Flay (a Shadow talent): Smite fills while Mind Blast and the DoTs wait; silent once Mind Flay is known,
     -- and so at 60
     leveling = { "smite,if=!action.mind_flay.known" },
+    -- owner 2026-11-07: Starshards by user preference replaces spellExpectedDpet default #11 (wowsims casts Starshards when
+    -- its expected damage per execution time beats Mind Flay's and Mind Blast is 4 s or more from ready; the translator
+    -- cannot compute the first term, CN5). The player's `prefer_starshards` setting (off by default, so the default pack is
+    -- wowsims's without it) stands for it; upstream's second condition is kept.
+    extra = {
+        {
+            before = "mind_flay",
+            line = "starshards,if=settings.prefer_starshards&cooldown.mind_blast.remains>=4",
+        },
+    },
 }

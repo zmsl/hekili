@@ -797,13 +797,23 @@ spec:RegisterTalents({
     early_demise = { 3, 1310076, 2 },
 })
 
+-- Shadow's Starshards (the Night Elf racial): wowsims casts it when its expected damage per cast beats Mind Flay's, which
+-- this addon cannot compute (the translator has no spellExpectedDpet), so the player says it (owner 2026-11-07); the pack's
+-- `extra` line reads it. Off by default: the pack is wowsims's without that line.
+spec:RegisterSetting("prefer_starshards", false, {
+    type = "toggle",
+    name = L["Prefer Starshards"],
+    desc = L["Shadow only, and only when you know Starshards (the Night Elf racial). When enabled, the priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Off: the priority never shows Starshards."],
+    width = "full",
+}, "shadow")
+
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
 -- run it, never this block (tests/Forever/priest_spec.lua checks it matches). Each pack's .simc is generated from its
 -- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/priest_*.lua).
 spec:RegisterPack(
     "Shadow (wowsims.com)",
-    20261107000,
-    [[Hekili:9E17VTTnq0)wYxsTrd0pCZA8cIhqh2gwk2kkMYNPeLiLnRLifiPIrak0F77iTIcLSKThs6YhcK4D37o(oY3jJcrpGIiynf9Lfbl(yyyWnbbbOi9tvuuufoBlEn8ahxc)pAdMi21KmBNyNIvQ8YeLZnE9uHatmiLwZk03ZrPJcQQIMHI(6)C)Vh9WTklyOOnmcHUpcQkBIKCBtIEdTjPDn)CHK(iv2KqO546cDtYN(6F1Kal3K0bqnZ3KrLFLKrvAFsLY3uGeLVgENXx7zF17BkbF(vqkKyUQaQBc8SWKsMQjbtic(7Gh2sFs51K8Byn(2rkLz)99paGSrRRu367VMP3uNAQE)bUohWeQ4Rtdc(qa(6RtPl8awukYzfalJZ0mbx5vjPqWPy9Q9u16ASKCflF1fP155Eol6vxD5(O6T6wUyhV5ZhG37x5xY4K40cSs3zVnlqnwomjM1GC05kaabl3gRWzswolJAcOeZXEfI7wTa61UUslQ5uvCbB9g9v1kASippEDgzvOjSzTfURx7R8lNbo5jPLygxD3QGlNDrVnz8oHKexbw37)3juNA2XAle)YQWG5VacH(OOwchcIRkWRRPTGmB2rTFzBsoWQBs((jWitikGsCe7DOSCU5VE0yTKUfFec0A)hf1T8)bMB5pgIZWymnTu1N76DAMwk4SSyjCgCAVkXFtiJnNZJReMfN21He5v5ISA1Qf2Bwtr2dUHnylogehqd9HyKB5dQncfR34AKX5uzSnvdoQTp9HhGFEb(j75WN7Doq022aLNh9cDnaD6lMY9(DVUC0Blucnulr0csNxpl6HIaHwfyAWiOcMsRSZ82p4aE8l2zGuooTGsq)6ZcWW4QoXpuei0PPsggfnIWisdzzcq6lu6cupbtdeFyaeo8VPi7G0vQ0fW3qP0tliCoAPVEjbJy6BMOGHJV(C5yRA6OS7RrN9086zi0(6P1LVXS6pDMSANuSjOpEMb5koBI7MZmUdKRnbVCqWo3RNwwEOKWlgrrwHlZ1Fa8F(KGpIGT7gTVX(GhgmHcZlQ8w3oUAMJSV17HYwtrMoQ0DLvOfHHQw9klJKCVlr)3gsC0Pe2Sp8(8Hz341WZNDCIzosV(04ZtqgQnQ7dOp9qd7hGp1uJt(n7hBEsVUTTSW16ncjk6pPBzfm43H8hT)mdRz0)o]]
+    20261107001,
+    [[Hekili:9E17VTTnq0)wYxYSXc0pCCt9cIhql2gwgwdkQYNPeLiLnRLefiPIrak0F77iTImLSKT3sY8hmK5D37o(0X3zI8rpIciyff9WmVz34779rppFuG65skkOeNSbVcEOaNdFhSgt4BRJMSLVvYYLoj88PAVEoJJjAKIRyzQ7lqXdcQSKMGc(63U)3dE8wPbmuWAgHq3fbvMmssUTosTMwh1SMBkxqFIkQJi0uCvMQo6tF9VRJGLRJAbOI5QZO0TuWOsLlPu6QlqI0vb)MvSYX8tNVl5ftVcsHaxiZG6MapZ1PKjRJWecV4NGh2qFw6uh9Byf(2bkLjF5(hbqwRuLYBDDxXuRRI1vVBpxNcycv88ypVR9WZNhtN5aSOGNYYawgNOy8cPtPGcbhJvl3rvRQWcYvS0LxexLM6yTOtv5L7IQZQBk4BlQ)RdW7Nx6MZkiHXzyPQ1EtwGAmVFs0Rb5O1vaacwSjuIteSuwcvhqoUa7KXVB5mpppBxPzvfuzygB1A1vvsAipnnCvczPVoSjnfUTx7Q8lNao5iO5ywH8ULExo5IoBYWTCbjSeSUZ)FqOw1SL1gi(1L(Et3dcH(eVsanbHLz4vv0gqMm5O2VSjjhy1oj)4eyKW5zqjoG9wuwmv)PdnwjOBWhHan2FVOUf)pWClEFionJXu0CzxURt3mnNxWscfqp44ELJ)oxeQ7Zdl56fh31(e5vP8Kk5YzMtwJr29oH1BloeehqdDHyGt59QncfRwBBKvuqfHMu1RvBx67UlvybGMGi1fLKQ0AQgHMuaK9w3)EBFfT)n28dk50m8ZMw7xAhSQQMobihp54BBaAEUym372q0MJo7LCOhXWTnG061l6OOaq7wcM6nvlJjvsZy0DZIGhFWmwLwGJZOe0NFrthMa2QNIcaTtfvWWOGb0ArkilJasxTxBG6ObRH46Eqy9kvxKTqAR(Ad4BO68P1yoh55xVkJwF(ntNrZXZpxo2iqpi7(AKUpnVEgA3VEADXBmR(HZKvBv31bDZzgKTEVoUpEMXDWeaDWl6fS156Xv67ljS3ikWiCPp(dG)lNe8bMbyVr7ASl4(EJOWSxM242XvZSMKy8UVS1yKPLkDBz5BqOVQvB(ANOyte)NN7yYv)tVDOaT8FNdS)7giD0jsMS3Vl)WSR9QFBDlFONz1PNy4zxi9RXG2)))PhqzU)WytOo5voo2SRoDwMYcxPwZfOG)KUHLXGRr9hn3sYyg9pp]]
 )
 spec:RegisterPack(
     "Smite (wowsims.com)",

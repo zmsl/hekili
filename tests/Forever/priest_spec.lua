@@ -430,7 +430,13 @@ describe("Forever Priest priorities", function()
 
     it("names only registered abilities and auras", function()
         local cls = ld.load(nil, FILE, "PRIEST")
-        local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, action = cls.abilities }
+        local kinds = {
+            buff = cls.auras,
+            debuff = cls.auras,
+            cooldown = cls.abilities,
+            action = cls.abilities,
+            settings = cls.settings,
+        }
         -- Hekili's `all` (Hekili_Shared): the trinket, the consumables, the race packs' Elune's Light and Eureka!
         local shared = {
             use_items = true,

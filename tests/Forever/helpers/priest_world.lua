@@ -409,6 +409,7 @@ M.MAP = {
     holy_fire = spell("holy_fire", "holy", "holy_fire"),
     holy_nova = spell("holy_nova", "holy"),
     mind_flay = channel("mind_flay", "shadow", 3, 1),
+    elunes_light = {}, -- the Night Elf racial (Hekili_Shared): cast, no effect the Shadow pack reads (prefer_starshards test)
     starshards = channel("starshards", "arcane", 6, 1),
     penance = channel("penance", "holy", 2, 1, true),
     shoot = {

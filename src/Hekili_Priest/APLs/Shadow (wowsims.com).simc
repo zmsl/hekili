@@ -21,6 +21,7 @@ actions+=/devouring_plague,focus=2,if=!debuff.devouring_plague.up
 actions+=/mind_blast
 actions+=/shadow_word_death
 actions+=/inner_focus,use_off_gcd=1,focus=1
+actions+=/starshards,if=settings.prefer_starshards&cooldown.mind_blast.remains>=4
 actions+=/mind_flay,if=((action.inner_focus.known&prev.1.inner_focus)|(!action.inner_focus.known))
 actions+=/mind_flay
 actions+=/smite,if=!action.mind_flay.known

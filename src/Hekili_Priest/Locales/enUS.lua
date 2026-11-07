@@ -9,5 +9,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("Hekili_Priest", "enUS", true, true
 L["Discipline"] = true
 L["Holy"] = true
 L["Shadow"] = true
+L["Prefer Starshards"] = true
+L["Shadow only, and only when you know Starshards (the Night Elf racial). When enabled, the priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Off: the priority never shows Starshards."] = true
 L["Shadow (wowsims.com)"] = true
 L["Smite (wowsims.com)"] = true
