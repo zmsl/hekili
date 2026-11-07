@@ -287,7 +287,9 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- talents; the pack's lines unchanged): this check's fight 6.0 / 17.2 / 17.2 (was 6.0 / 10.2 / 14.6), L60 at its
     -- limit; re-traced (95-112 s): rage 0.9-9.1, Rend, Shield Block and Sunder waiting on rage: rage-starved, gap CK's
     -- cause. The seeds 1-20 sweep behind 19.0 / 17.2 predates the new export (not re-run)
-    local PROT_LIVE = { [10] = 6, [40] = 19.0, [60] = 17.2 }
+    -- L40 19.0 -> 21.8, L60 17.2 -> 21.8 (CN8 D2; this check's fight, seed 1): the same rage-starved stretch (95-116.6 s,
+    -- rage 4-7, Shield Block and Sunder waiting on rage, only Shield Wall usable), 4.6 s longer on the re-timed fight
+    local PROT_LIVE = { [10] = 6, [40] = 21.8, [60] = 21.8 }
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()
             ws.live(

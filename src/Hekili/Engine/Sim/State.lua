@@ -7622,6 +7622,9 @@ function state:TimeToReady( action, pool )
     end
     if spend and z and z > wait then
         wait = max( wait, ceil( z * 100 ) / 100 )
+        -- a resource wait inside Output's READY (0.05 s) would show ready while the floor is still under the cost
+        -- (dim never promote, CN8 C1): shown one update later instead
+        if wait <= 0.05 then wait = 0.06 end
         -- Forever (mana-regen plan, Task 4a): near its cost when the belief's estimate (the `current` stream) reaches
         -- the cost within EARLY_EXIT (at the estimate the pick would end the scan) while the floor reaches it within
         -- one more update (the usability poll that settles it; the client answers a gain late, so the floor runs a few
