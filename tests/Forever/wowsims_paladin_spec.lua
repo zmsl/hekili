@@ -53,7 +53,15 @@ local REPLAY = {}
 -- Protection's GCD-0 Casting lines under a kit ID are the procs' hits, not presses: Holy Shield's block damage
 -- {SpellID: 20928, Tag: 2} and a Shieldsworn Holy Strike's {20928, Tag: 1328544} (each restarted the believed 10 s
 -- cooldown: holy_shield -> holy_strike, re-pin e2842f0a78) and Retribution Aura's {10301, Tag: 2}
-local PROT_REPLAY = { procs = { ["20928:2"] = true, ["20928:1328544"] = true, ["10301:2"] = true } }
+local PROT_REPLAY = {
+    procs = {
+        ["20928:2"] = true,
+        ["20928:1328544"] = true,
+        ["1239570:2"] = true,
+        ["1239570:1328544"] = true,
+        ["10301:2"] = true,
+    },
+}
 
 describe("the Paladin wowsims.com packs #slow #wowsims", function()
     pw.Retribution.character() -- fills IDS
