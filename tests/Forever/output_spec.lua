@@ -452,10 +452,13 @@ describe("Engine.Output (headless Arms)", function()
 
     before_each(boot)
 
-    it("steady icons: off in a fresh profile, read per update from the active spec, our casts bridged", function()
+    it("steady icons: on in a fresh profile, read per update from the active spec, our casts bridged", function()
         local id = H.Hekili.State.spec.id
         local info = { "packs", id, "performance", "steadyIcons" }
-        assert.is_false(H.Hekili:GetSpecOption(info))
+        assert.is_true(H.Hekili:GetSpecOption(info))
+        H.Hekili.DB.profile.specs[id].steadyIcons = false
+        t = t + 0.2
+        assert(headless.cycle(H, t))
         assert.is_false(H.ns.Output.steady)
         H.Hekili.DB.profile.specs[id].steadyIcons = true
         t = t + 0.2

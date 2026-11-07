@@ -66,7 +66,9 @@ local REPLAY = {
 -- Leveling (R22): Arcane L40 6.4 s and Frostfire L10 6.6 s took recipe `leveling` fillers (the recipes' headers).
 local PACKS = {
     { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0, 1.4 },
-    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.97, 6.0, 0.7 },
+    -- LIVE60 6.0 -> 6.2 (CN8 D2): the same dry-pool wait for Scorch (96.4-102.4 s, mana 49-153), one poll longer on
+    -- the re-timed fight
+    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.97, 6.2, 0.7 },
     { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8, 0 },
 }
 
