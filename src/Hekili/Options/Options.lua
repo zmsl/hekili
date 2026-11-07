@@ -4175,7 +4175,7 @@ found = true end
                                         .. "keep the shown icon for a few more updates (set below) and show the new one if it is still there after that.\n\n"
                                         .. "An icon that is ready to press, a ready icon that goes back to waiting, and anything after your own "
                                         .. "cast always show at once, so what you can press and when never changes; the icons just flicker less.\n\n"
-                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
+                                        .. "On by default."],
                                     order = 21,
                                     width = "full",
                                 },

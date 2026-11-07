@@ -93,8 +93,10 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- Judgement / Holy Strike at Judgement's ready edge; 2.00 at the old pin, the same kinds)
         -- ON flicker 2.4 -> 2.0 (R61, the swing-clock recheck at the guard's window end: 2.33 -> 2.00/min; decisions
         -- unchanged, 0.933 (45)). ON THE BAR (= measured 2.00): re-measure at integration.
+        -- 2.0 -> 2.7 (CN8 D2, 2.66 measured, the same with steady icons off): two more one-tick Holy Strike leads
+        -- (n219, n319), the shape traced on Arms and Beast Mastery (an end the old probe read 0.50 now leads for a tick)
         local r, line = ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.93, REPLAY)
-        ab.check(r.flicker <= 2.0 + 1e-9, "Retribution (wowsims.com)", "ON flicker ceiling: " .. line)
+        ab.check(r.flicker <= 2.7 + 1e-9, "Retribution (wowsims.com)", "ON flicker ceiling: " .. line)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Retribution is out of mana from 60 s
     -- of its log), so its longest wait is for mana. 4.4 before central fix 8, while

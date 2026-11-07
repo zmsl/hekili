@@ -61,6 +61,17 @@ describe("the sim's near-cost mark (TimeToReady)", function()
         end
     )
 
+    -- CN8 C1 (dim never promote): a resource wait inside Output's READY (0.05 s) would show ready while the floor is
+    -- still under the cost; the press then meets the client's no (the forecast's regen not yet landed)
+    it("reads a floor wait inside READY (0.05 s) as 0.06: never ready while the floor is under the cost", function()
+        r.actual, r.actual_lo = 369.5, 369 -- the floor 1 under: 0.026 s at 38/s
+        S.forecastResources("mana")
+        assert.are.equal(0.06, S:TimeToReady("surge"))
+        r.actual, r.actual_lo = 369.5, 367 -- 3 under: 0.079 s, past READY, unchanged
+        S.forecastResources("mana")
+        assert.are.equal(0.08, S:TimeToReady("surge"))
+    end)
+
     it("does not mark it when a cooldown, or a check after the resource, holds it", function()
         rawset(S.cooldown, "surge", { remains = 2 })
         local w = S:TimeToReady("surge")

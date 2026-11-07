@@ -44,6 +44,25 @@ describe("the world's resources", function()
         assert.are.same({ { 10, 1.05, 1 }, { 11.05, 1.05, 1 } }, casts)
     end)
 
+    it("holds a press up to the spell queue window before its cooldown's end and lands it at the end", function()
+        setup()
+        W.t = 10
+        assert.is_true(W.press(us, "k", { spell = 5, gcd = 0, cooldown = 6 }))
+        W.t = 15.94
+        assert.are.same({ false, "cooldown" }, { W.press(us, "k", { spell = 5, gcd = 0, cooldown = 6 }) })
+        W.t = 15.98
+        assert.is_true(W.press(us, "k", { spell = 5, gcd = 0, cooldown = 6 }))
+        W.run(16.5)
+        local casts = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "cast" then
+                casts[#casts + 1] = ev.t
+            end
+        end
+        assert.are.same({ 10, 16 }, casts)
+        assert.are.equal(22, us.cdUntil.k)
+    end)
+
     it("starts a queued strike's cooldown at the swing that takes it, and the client answers it then", function()
         setup()
         W.emit({ kind = "pull" })

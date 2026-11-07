@@ -498,7 +498,7 @@ L["\nThis setting determines how far ahead the Primary and AOE recommendations l
 L["Current window: |cFF00FF00%s s|r"] = true
 L["Experimental"] = true
 L["Experimental: steady icons (hold a swap between two countdown icons)"] = true
-L["When an icon that is still counting down would be replaced by another icon that is also counting down, keep the shown icon for a few more updates (set below) and show the new one if it is still there after that.\n\nAn icon that is ready to press, a ready icon that goes back to waiting, and anything after your own cast always show at once, so what you can press and when never changes; the icons just flicker less.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested."] = true
+L["When an icon that is still counting down would be replaced by another icon that is also counting down, keep the shown icon for a few more updates (set below) and show the new one if it is still there after that.\n\nAn icon that is ready to press, a ready icon that goes back to waiting, and anything after your own cast always show at once, so what you can press and when never changes; the icons just flicker less.\n\nOn by default."] = true
 L["Steady icons: updates to hold"] = true
 L["How many updates a swap between two countdown icons is held. Each update is about 0.1 to 0.2 s, so 1 holds a swap for about 0.1 to 0.2 s and 3 for about 0.3 to 0.6 s; more updates flicker less but show a changed countdown icon later.\n\nAn icon that is ready to press, a ready icon that goes back to waiting, and anything after your own cast are never held.\n\nTurn on steady icons above first."] = true
 L["Experimental: use the damage meter for swing outcomes"] = true
