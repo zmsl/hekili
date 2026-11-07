@@ -19,12 +19,7 @@
         "players":[{
             "profession1":"Engineering",
             "distanceFromTarget":5,
-            "rogue":{
-              "options":{
-                "classOptions":{
-                }
-              }
-            },
+            "reactionTimeMs":100,
             "class":"ClassRogue",
             "equipment":{
               "items":[{
@@ -2271,7 +2266,12 @@
                   }
                 }]
             },
-            "reactionTimeMs":100
+            "rogue":{
+              "options":{
+                "classOptions":{
+                }
+              }
+            }
           }]
       }]
   },
