@@ -304,11 +304,12 @@ end
 describe("the build's plain records at every pack #slow", function()
     for _, w in ipairs(WORLDS) do
         local name = w[1]:match("[^.]+$") .. (w[2] and (" " .. w[2]) or "")
-        local I, def, H
+        local I, def, H, ns
         setup(function()
             local world = require(w[1])
             local L = loop.new(w[2] and world[w[2]] or world)
-            I, H = L.us.ns.VirtualStateInternal, L.us.Hekili
+            ns = L.us.ns
+            I, H = ns.VirtualStateInternal, L.us.Hekili
             def = I.def
         end)
 
@@ -381,6 +382,30 @@ describe("the build's plain records at every pack #slow", function()
             end
             table.sort(only)
             assert.are.same(ENGINE_ONLY[name] or {}, only)
+        end)
+
+        -- a cost modifier's `aura` and `unless` (CN11) are aura keys the belief resolves at the build (Modifiers.lua):
+        -- each a tracked aura, the record Tracked.lua's plain() copy of the core's declaration
+        it(name .. ": every cost modifier's aura and `unless` name a tracked aura, in a plain copy", function()
+            local tracked, missing, src = {}, {}, ns.raceMods.costMods
+            for j = 1, #def.auras do
+                tracked[def.auras[j].key] = true
+            end
+            for r = 1, #def.resources do
+                local list = def.resources[r].costMods or {}
+                assert.are.equal(#src, #list)
+                for k = 1, #list do
+                    local m = list[k]
+                    assert.are_not.equal(src[k], m)
+                    assert.are.same({ src[k].aura, src[k].unless }, { m.aura, m.unless })
+                    for _, key in ipairs({ m.aura, m.unless or m.aura }) do
+                        if not tracked[key] then
+                            missing[#missing + 1] = def.resources[r].key .. ".costMods[" .. k .. "] " .. tostring(key)
+                        end
+                    end
+                end
+            end
+            assert.are.same({}, missing)
         end)
 
         it(name .. ": the gear keys are the same on both sides", function()
