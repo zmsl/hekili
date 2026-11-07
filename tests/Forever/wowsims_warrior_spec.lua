@@ -43,7 +43,7 @@ local ARMS_CHAR = setmetatable({
 
 -- Fury: the same Overpower window (its Overpower Weaving group reads 1282733); Berserker Rage is a trained ability the
 -- loop kit lacks. The base is the dual-wield world (ww.Fury), the log's own weapon speeds.
-local FURY = { kit = { "berserker_rage" }, requires = ARMS.requires }
+local FURY = { kit = { "berserker_rage", "reckless_swings" }, requires = ARMS.requires }
 -- Whirlwind's off-hand hit (1680 Tag 15, the off hand's item slot) is logged as its own Casting line: a hit of the one cast, not a decision.
 -- wowsims logs the Heroic Strike queue (25286 Tag 1) as an aura the client never shows (the client sees
 -- IsCurrentSpell): hidden.
@@ -62,7 +62,8 @@ local FURY_REPLAY = { hidden = hideQueue({ [1282733] = true }), procs = { ["1680
 -- window stays in the truth (`hidden`) and answers Revenge's usability; the live world's mob swings at us, so there
 -- Revenge keeps the world's own requirement. The Heroic Strike queue (25286 Tag 1) as Fury's. Shield Slam is the talent's
 -- rank 1 plus its trained ranks (the log casts rank 4, 23925).
-local PROT_KIT = { "berserker_rage", "revenge", "shield_block", "shield_slam", "shield_wall", "shield_bash", "taunt" }
+local PROT_KIT =
+    { "berserker_rage", "retaliation", "revenge", "shield_block", "shield_slam", "shield_wall", "shield_bash", "taunt" }
 local PROT = {
     kit = PROT_KIT,
     requires = {
