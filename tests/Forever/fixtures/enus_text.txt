@@ -15607,6 +15607,7 @@ options.packs.balance.Balance (wowsims.com).lists.buff_name	values.lacerate	|T13
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
+options.packs.balance.Balance (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328827
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079
@@ -18520,6 +18521,7 @@ options.packs.feral.Feral (wowsims.com).lists.buff_name	values.lacerate	|T136000
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
+options.packs.feral.Feral (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328827
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079
@@ -19772,6 +19774,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.lacerate	|T
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
+options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328827
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079

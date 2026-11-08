@@ -9,6 +9,7 @@
 - Mages (wowsims.com): Arcane Missiles cast under Missile Barrage no longer spends Clearcasting, and Arcane Missiles can give you Clearcasting when it starts and on each missile (at most one a second), as in wowsims. Arcane, Fire and Frostfire follow wowsims as of 7 November 2026.
 - An ability waiting for mana, rage or energy now shows as ready only once the addon is sure you have enough. Before, it could show as ready a few hundredths of a second early, and pressing it then failed with not enough mana or rage. It can now light up one update (about 0.2 s) later at the moment you reach the cost. Not yet checked in game.
 - Steady icons are now on by default (each specialization's Performance tab): when the first icon would swap between two abilities that are both still counting down, it keeps the shown one for one more update, so the icons flicker much less. Ready icons and anything after your own cast still show at once. Turn it off there if you prefer every swap at once. Not yet checked in game.
+- Feral Druids: Poised (the Feral Combat passive) is modelled: out of combat at full energy, your next Claw, Rake, Shred, Ravage, Pounce, Rip, Ferocious Bite or Cower costs 10 less energy. Not yet checked in game.
 
 ### Fixed
 - Icons no longer flash to the next ability for a moment as a cooldown comes back: while the game still says an ability is not ready, the addon now counts down to the end it expects (when your global cooldown ends first, or the cooldown ends on the update itself) instead of pushing it half a second out. Not yet checked in game.

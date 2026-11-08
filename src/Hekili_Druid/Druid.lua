@@ -452,6 +452,14 @@ spec:RegisterAuras({
         icd = 10,
         icdSpell = 16864,
     },
+    -- Poised (passive 1328829, buff 1328827; wowsims dd2fda98b9, hotfix 113351/113578): out of combat at full energy
+    -- the next Claw, Rake, Shred, Ravage, Pounce, Rip, Ferocious Bite or Cower costs 10 less (the cost modifier
+    -- below). Not yet checked in game.
+    poised = {
+        id = 1328827,
+        duration = 3600,
+        max_stack = 1,
+    },
     dash = {
         id = 1850,
         copy = rest(DASH),
@@ -691,6 +699,15 @@ spec:RegisterCostMod({
         407995,
         99,
     },
+})
+
+-- Poised (1328827): aura 107 misc 14 -10 flat Energy on the class mask {8622080, 536870912} against SpellClassSet 7 (the
+-- eight abilities wowsims's mechanics_test names; rank-1 IDs, the ranks through each ability's `copy`); one charge.
+spec:RegisterCostMod({
+    aura = "poised",
+    flat = -10,
+    charges = 1,
+    spells = { 1082, 1822, 5221, 6785, 9005, 1079, 1328618, 8998 },
 })
 
 -- wowsims's druidBleedIsActive (wowsims/forever sim/druid/feral.go targetIsBleeding, apl_values.go): Rake, Rip, Lacerate
@@ -1896,13 +1913,13 @@ spec:RegisterSetting("maintain_demoralizing_roar", false, {
 -- (tests/Forever/druid_spec.lua checks they match). Pick one with /hekili priority <name>. Restoration is deferred.
 spec:RegisterPack(
     "Feral (wowsims.com)",
-    20261106004,
-    [[Hekili:TRvBVTQnu4Fl5lmyTIqYnPnR6sL2u1vRtBxnTC3xjXbmjEHGJSnjktr8BFhducqmTjqRUPQRFOI4xoNNZRy)iC658nNXEib25R9T6FtVEw3yznWzSy3ASZ41i3LO5WdHOvW))cMHcINQVLULtwXnDPRmKlAxaf5jf0SisG4XqNzkLjFn21z8d)1F)4d35lfLZ4feppC66XCx1A4U4PIf44PzJ11NYWBWS4PEyFuuGiE6p)N)E8uy44PpT)isxP24D9yreVUjAZfj6IwhW7I8qRfKnyt4xM)dNgACnOcgkKhaG2dEMkvjHhpf55rd)b4HL4DCZ4PpGeO7uaf9)4XVbczHqSMFx3UZjIfrZKOVBLLAaYeqmU)Ob99Tq3oAGNj4czuFsa4HrUccnKBUMHHnpdjSHP2gCDehpH67pzURNDVRj(2DMf57BMmPz064F7OnELDxpeFr5DMVoBFeMrWt8jmSuC6PJBwyyZLH0THAE4envCcgEfIeY)STLHMENSDMcLK9SVm4mY1kGjgAdKqLOsv7S8g10f05ZdWMROBWRWHcnbInhlmPrcoXdpCF2V3c(Bs4WsAcc3taN(QdERNgbeDRKmKnrDj0i(KzerQTKBm56OG9uqVgA(K5letYDH90KHl6K1usOaY3Jyman3B3VDgpoikeZNeiv2XjpzyT4IYI2TrNQClcuaifzwj0pGY2nXJWDjRdiHytCiAwa2t709DQDvdoibgzD2MZsBLdK5RL(uWPQRNk3amI5I4cs4Cz(aoeZMVZmGEV9nwg7178sRA0qdyzQr0qqnVOaUvQMxArdTmK)1Q4cFbXxkAaMBXSZmDnhlF2E4TAz7QSebhmYBx7WyRkPQniCczF7lAGdRwEoQDwfFbO5R9PUr80cp9ZWQuLAyO15cSM6setVpRZBzLo4fYY26FMLq61yHsF(HGlzfkyIFeBNjCyPL2w7RBkigutVIeaaE0ACO77Ca0jvpziU0qz9BkvQEVT(OR6v48if3TEUN(QEwg3NFAN014s5IRkKyj)DASOtHSliEvrHJAB0cTe30WvoYazCm0UPLilTV1z2VQq28rU3lZEexIy6dzFl3a02QVMuxTt)4QBaLNEesz7HoQ6UOCLpBoUHQAaPP9)LaNfM(qwcqcbjUb1GZ(sd8GPmZfqAcSwQXLGtY)cPOaOxHcrYd62BGLv(p0l9QJFeSgn4EIfUJFXRa8jln1oTkVAS3WM4nCgVbZ4GzxH3OacxWt4PkLWh4XVMWBvw6PZV8eXjoJlWtHZyxgCzcgb5m(1LFJQeC4iaexdGsj8OewukYYs8L9EvDFsm8PAWWtzmfrrdOerLkhuxCO0f6kz(1LC)2swIkWpSc4lquImdl3yksusrtjZoAcpkQGZnnWx2MU3TR9DB7FFQnWBDh8tUfEZIA3wtuR8fFAAfWRj)lQq)OgKZD6OVvmZ0EQzuzW)ufdUOHDgwMQuQwFCQt2dEEfKxMO6DBBIg1OOqBbiga1xYB7iFjdKs2Z6zYjp9Gsd5WPfK4ullo1rJtl5X57jro1hrbHMhp7NepRE40ggpFfi55zqni0kWUUJWMLY2WoLVP8c9g1B6YevFS6ykZiREHMYPG1qrKsoIQNKOtLLOZGMOVR8e9gL8DzIQpwLehUqpKTu5me1Dr8CEHA6RHEhZWKIEkc5hBt2NiJkEKQJcGeMzoM)KNiSrfdq1jk5NLtcsaSGIelOWLd)v8ssajEQ(xY(mHsM25)(]]
+    20261107001,
+    [[Hekili:TRvBVTQnu4Fl5lmyTIaznT9wDPsBQ6Q1PTRMwU7RK4aMeVqWiBtIYuu(TVJbkbiM2eOv3u11pur8lNZZ5vSFeU2UFZDKpsGD)6aRbxBBBDJLLT7iXMyS7OyK3c0m4Hi0s4)FbZqH7MOVMUMtwYn9OlnKlAtif5lf00esO4Xi3PkLjpg75o6H)6VF8H7cKIYD0CIVpoB9yUNAnC3UjI54DtYhRFaLHxHz7M4JdqjHIDt(5)833nbgE3KN2FcPVuB8((SeIF)uT5He9rXH8(iFuSGScBc)Y8F40iJlbvWqr8qa0(WZuPkj8Dtq((0OFaEybEd3C3Khqc0DkGI(F843aHmxiI531V)mIyEYuj67xBPgGmbeJhI(KN)a0a)aptWfYObKqWdJ8eeAe3mMHHnpfjCGPwhEzchpMgemEMNVJ9LKaNEttccmtN0mjE3VDWgVWPVpIpV6olwNtacZi4Xbegwko9SXnlnS5Ii66inFCQMkpbdVerI4F2XYqtVx(oZGs6E2wfCgfAfWedTcsOsvPQDwDJA6c6SzHyZL0v4L4iHMaXMHfM0ebN4JhUn)3Rb)njAyfnbH7XGtF5EV1tJaIUtsgYMOEeAcF8uIiZwkmMcDuYEkPxdTaYS5IXfUqBnz4IooMsIeq(EcJbO5ENbDZ4XHjry(4qPYom5jhRLxuE0Ul6uLBrGcbPiZkH(bu2MX(eUhjoKeHnXrOPHyFTJ33P2vD1EjWiX5BopTvoqUVw6tbNQUEMCdXiMhIlirZK5d4imB2gZq69oxBzSvV3lTQBhAaltnIgcQ5ffWns18slAOLH8Vofx4ZjbsrdWCnMDIPRfy5ZodVrlFxvLi4Gr(B6gg7ujvJbHJi7BBzdCy9YZB7MvXNdA(YaQxcpRWt)eSkvPggA9odRPohX07Z68owPdEH8STbNyjKEdwO0NVp4swIchhKW2ychwAHJ12MMcIbn0RifaGhTbh62E7bDA1toIRmuE)MkLQ37OF7f2Lops5DRx4PVW2Y4(It7KTgpkxCrPel5VZIf9kLDbXRAk82UgTqlWTnCvGmqghcTR7iYY6BDI9RkLnFG798ShX5iM(q23YleTU(Rj1v70pS6gq5XhHu2EONQUlkx5ZMJBOQgqAA)FjWjHPpKLaKiqIRqT4SV0qFykZcbKLaRLzCP4K8Vqkka6LOiK8GU2xzzv8d9kV64hbRrdUNyP74x(ka)KLMANwTxnApSnEd3rRWmoy214nkKWf8uEQYi8bE8RP8wLNE6(lprCI7Os8u4oYJbxMGrqUJED53OobhUcaXnaOmcpQGfLISQeFzVxD3Ned)udy4PmMYOOfuIOsLx1uCOYf6Qy(nLC)2swIkWpSg4lruImdRWyktusztj3oAdpkQGZ1TWx2LU3DR9Dx7FFSnW7Ch8JUfE7IA30quR6fFABfWRj)lQq)TTiN74rFNyMP7uZOYG)undUSHDcwMQuQoFCQJ2dEAfKNNO6DBBIw1OOuBbiga1xYB7iFjdKsAB9m5KhFqPLC40bsCAKfNMOXPJ8489KiNMJOGqlINdsJN1pCAlJNVcK88mOgeAny30ryZtzBzNY3uEHEJ6nDEIQpwDmLzK1Vqt1uWgOisjhrnts0XYs0jqt03vEIEJs(opr1hRsI9xOhYwQDgIMUiEbVqT91qVJzysrpfH8JTj)tKrfpsnrbqkZmhYFYte2OIbOMeL8ZYjfjawqjI5u4YH)kEbjKSBI(xY)mHsN29)o]]
 )
 spec:RegisterPack(
     "Balance (wowsims.com)",
-    20261104001,
-    [[Hekili:1svxpTnpu4FlCdJQvL0uYauffPxeAAG2lAAHDRBCIpPXRo2r2o0H0u(TVJtHGBA7y7IDtL754NpSppoKiYdKeg1cK7Noz6zrrtINmjIKyFQgij108v0L4cjTc)9AQGkZH20twRwB4vMGCv1i32EsOOmhvznCH9wjjBVSAQHCsYnF9B3EZSSnKrsk5mgSbbyYpKkZAtTLyXNRfwO0WJGUnLbf0gHTn9)(YNBtXYTPVYqdp0PPjKPB4SWN1mKwlWsBagG)j47gLC0yucnvAeOXz4ALtsUPnLYyk57WfRGNmbTP3qT0z7XkN8)3(assP1wBMfgUKBlBYCUpCWwhHCIogMEr80Ij0ZViMfGxJAvbxG3i0Clxjnb1AabNrTZRuk5kUCbIVAmVy(rznffb(vdAQBVBhGVFE4An1w6W4A(iSaKqfhmxg3V9)s2robrJemle8LL2XngyHQOyXYC28i)DXLsq)iEz64SIkPb152fc1LXtoUWbDHgQOCP5QtN4JZjCbxdJlu5nM5t7Sed6nLR3adHKai3M1u8eShy(9haTSrR55ujS7D0vZJ93PXs1E(kYb4Ko6HCbV24m1XBxaHKV6QOFE0gwcEHIa4hqEJLlxoAKVeDdR27ijyiXG1g8(rWnwt3l2nzxC59DVGbjntamY1VeEij(JpssUMBbnNss27WLyrLgqK3C1PspX(dFhUtpGb6h)(Q)gXahFXd4ZZ67gc2(86kss6gpUZds2hEtYgen89)Rn2M0ZoWjUpk5RZorkhdNFqB9hgO(TjQxD0lD79FKt9loG)7sFe3qnP)li)tJyBl8bV0UmUZuOTOn2sLMK8jyfxWXV4(XN)GAxBYV(d]]
+    20261107001,
+    [[Hekili:1sv3oTnmu4NfUHr1QsAkfydrrAi00aTHMwy36ex7tA8QJDKTdDinLN9DCkeC)BSDXUPY9C83p2Nphsc5EskN6aYDJhn(0KKrNnAucj19ynqsRPSf054cfTc)9kQKQyqB(rl1lTIkBetxnWVThLAk3t1SgH0DJImBNSARbgj96V99BU(8zRiJKwk4CyfcWY2NkN3M7kXIpvlUqBGhatBohkOnsxB(h(6NBZXYT5VWqJi2RPnMBAe84N0mMwlXsRagH)j6hwTAWqucdvzLOX54ATxsHTnNY5A1BWflGhTrT5xtD0Z3Hvo6l3CpssPZvBppoEUWv2mZ7(4n26aKt0XWj03Z4JPJ5fSi8A0Oles8gHYCcTYgvBae8mQBALwRwiuzi(QHIIPhmRPOikSAutD7TBb8TtJxAOUspgFZhGmqbvcWEXK(T)pYoYjiBuGntkMx6g2yHmDrr2CgFAs4UekfyEaVm9Cwrv0OAMltQVyYOdl8qZmqfvOSxE8OqCEHlegyyHM1yNoUZsCO3u(EByiKea52UKINGDalS)gqlBmgbJQGTVJUC6KWDADutGVs8aoQJEGjf1wVPoC9cie2Ilt(1bRyj6zkIGFcSgNqnFWGqj6gwT3ssXqIfRTX7hPW6SDVyxLDXL319cgu0zsGtU65WdjnC8rszgHdmckjDNdxIdvAdIcMREv6joC47XD8Emq)4pu9xjg45BYg8fy9TdbRFE9fjPDJh)5bj7KxLSnIgH()LgRt6P75e3hLc1zRiLNHZ2RT(ldu)Xe1lo65U9(pXR(72J)7sFe)qnT)li)xJyRl8EV0UysNPqBrBCLAdj9tWcHuGFX9Jp9b1U2KFd]]
 )
 spec:RegisterPack(
     "Guardian (wowsims.com)",

@@ -347,7 +347,10 @@ M.READY = {
     -- { 0.50, 5 } -> { 0.50, 9 } re-pin e2842f0a78 (adaptive list, 82 on-GCD decisions): median 0.500, 9 real (early 2,
     -- late 7); top shifting_power 4 (max 0.50: a not-ready flag's CD_PROBE push, shared), rake 2, rip 2 (energy is
     -- secret: the belief's lo under the truth at the cost)
-    druid_feral = { 0.50, 9 },
+    -- { 0.50, 9 } -> { 0.35, 10 } on the 0.7 floors run (integ/0.7 5deb101c4; R6): the never rows of the
+    -- old log are gone (CN8's cooldown countdown, pin-2 export: not separated) but cost rows rake 25.14 and
+    -- shifting_power 111.89 (0.47 / 0.45, the belief's lo under the truth) are now late; 10 real (early 2, late 8), median 0.350
+    druid_feral = { 0.35, 10 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone
