@@ -26,11 +26,23 @@
                   "actions":[{
                       "action":{
                         "condition":{
-                          "not":{
-                            "val":{
-                              "warlockAssignedCurseIsActive":{
-                              }
-                            }
+                          "and":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "warlockAssignedCurseIsActive":{
+                                    }
+                                  }
+                                }
+                              },{
+                                "not":{
+                                  "val":{
+                                    "warlockIsAssignedCurse":{
+                                      "curseType":"NoCurse"
+                                    }
+                                  }
+                                }
+                              }]
                           }
                         },
                         "castWarlockAssignedCurse":{
@@ -1046,7 +1058,7 @@
                                   "op":"OpLt",
                                   "rhs":{
                                     "const":{
-                                      "val":"22s"
+                                      "val":"15s"
                                     }
                                   },
                                   "lhs":{
@@ -1466,21 +1478,9 @@
                           }
                         },
                         "lhs":{
-                          "math":{
-                            "op":"OpAdd",
-                            "rhs":{
-                              "spellTravelTime":{
-                                "spellId":{
-                                  "spellId":17923
-                                }
-                              }
-                            },
-                            "lhs":{
-                              "spellCastTime":{
-                                "spellId":{
-                                  "spellId":17923
-                                }
-                              }
+                          "spellCastTime":{
+                            "spellId":{
+                              "spellId":17923
                             }
                           }
                         }
@@ -1501,7 +1501,7 @@
                               "op":"OpLt",
                               "rhs":{
                                 "const":{
-                                  "val":"30%"
+                                  "val":"35%"
                                 }
                               },
                               "lhs":{
@@ -1825,7 +1825,7 @@
               "mhWeaponImbueId":13701,
               "foodId":13931,
               "resourcePotId":13444,
-              "elixirIds":[250341,250335,13454,250337,250347],
+              "elixirIds":[250341,250335,13454,250337,250347,9264,6373],
               "extraIds":[18269,10309]
             },
             "warlock":{

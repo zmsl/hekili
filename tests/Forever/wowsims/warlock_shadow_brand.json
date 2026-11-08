@@ -26,11 +26,23 @@
                   "actions":[{
                       "action":{
                         "condition":{
-                          "not":{
-                            "val":{
-                              "warlockAssignedCurseIsActive":{
-                              }
-                            }
+                          "and":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "warlockAssignedCurseIsActive":{
+                                    }
+                                  }
+                                }
+                              },{
+                                "not":{
+                                  "val":{
+                                    "warlockIsAssignedCurse":{
+                                      "curseType":"NoCurse"
+                                    }
+                                  }
+                                }
+                              }]
                           }
                         },
                         "castWarlockAssignedCurse":{
@@ -1544,21 +1556,9 @@
                           }
                         },
                         "lhs":{
-                          "math":{
-                            "op":"OpAdd",
-                            "rhs":{
-                              "spellTravelTime":{
-                                "spellId":{
-                                  "spellId":17923
-                                }
-                              }
-                            },
-                            "lhs":{
-                              "spellCastTime":{
-                                "spellId":{
-                                  "spellId":17923
-                                }
-                              }
+                          "spellCastTime":{
+                            "spellId":{
+                              "spellId":17923
                             }
                           }
                         }
@@ -1697,18 +1697,6 @@
                     }
                   }
                 },{
-                  "name":"Improved Shadow Bolt Known",
-                  "value":{
-                    "auraIsKnown":{
-                      "sourceUnit":{
-                        "type":"CurrentTarget"
-                      },
-                      "auraId":{
-                        "spellId":17794
-                      }
-                    }
-                  }
-                },{
                   "name":"Amount of Dooms left",
                   "value":{
                     "math":{
@@ -1733,6 +1721,18 @@
                             }
                           }
                         }
+                      }
+                    }
+                  }
+                },{
+                  "name":"Improved Shadow Bolt Known",
+                  "value":{
+                    "auraIsKnown":{
+                      "sourceUnit":{
+                        "type":"CurrentTarget"
+                      },
+                      "auraId":{
+                        "spellId":17794
                       }
                     }
                   }
@@ -1915,7 +1915,7 @@
               "mhWeaponImbueId":13603,
               "foodId":13931,
               "resourcePotId":13444,
-              "elixirIds":[250341,250335,13454,250337,250347],
+              "elixirIds":[250341,250335,13454,250337,250347,9264,6373],
               "extraIds":[18269,10309]
             },
             "warlock":{

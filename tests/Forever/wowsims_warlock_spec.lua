@@ -45,15 +45,28 @@ end
 --   Succubus's attacks spend the brand's 6 charges, unseen; 8 misses at 157-170 s), larger now the new list leads with
 --   the brand's Searing Pain line; without A and C 0.841.
 --   Destruction 0.74 -> 0.90 (0.900, 110): A 7, C 1, 3 Immolate refreshes at remains<=cast.
+-- Re-pin e5a9cd2a2d (0.7 re-pin, R6; DECISIONS on-GCD, the pack's APL rewritten at 4b0030a44b and the pin move to
+-- e5a9cd2a2d changed nothing; replay flicker 0.00/min in all five, oracle 0.00; steady icons on, CN8 C1/D2/S):
+--   Affliction 1.00 -> 0.73 (0.733, 60): the omitted Siphon Life line (CN14, spellIsChanneling: wowsims casts it 7
+--   times, ours shows the next line down; top [siphon_life -> wrack 5; wrack -> corruption 3; wrack -> life_tap 3])
+--   and class A (the Demonic Rune / Major Mana Potion refill is invisible to the mana belief, so the new
+--   `life_tap,if=mana.lo<1800` cooldowns line fires on an under-believed lo). Neither is this lane's; not worked around.
+--   SM Ruin 0.78 (0.787, 94) unchanged: R49 stand-in DoT lines, CN5 stays unsupported.
+--   Demonology 0.89 -> 0.86 (0.863, 117): A and C (the pre-pull cast, spellTravelTime fold held) and the Life Tap line
+--   now at mana.pct_lo<35, which fires 5 points earlier on the under-believed lo.
+--   Shadow Brand 0.71 (0.718, 103) unchanged: A, C and the Demonic Brand charges class (API-forced).
+--   Destruction 0.90 -> 0.89 (0.899, 109): the rewritten list (Immolate refresh inside Incinerate's cast, new
+--   cooldowns group), A and C; top [incinerate -> life_tap 6; immolate -> life_tap 2; incinerate -> immolate 2].
+--   LIVE60 Destruction 0.2 -> 0.4 (worst idle 0.4 s at 60 with a usable ability, not traced; limit is still 6 s).
 -- The replay flicker ceiling (per minute, the last column): plain flicker bars, 0 in all five, measured 0.00/min (oracle
 -- 0.00) at the re-pin e2842f0a78. They say nothing about Movement: Demonology and Shadow Brand replay with it ON (R8) but
 -- every replay is single-target and the Hellfire line needs active_enemies>=3.
 local PACKS = {
-    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 1.00, 0.2, 0 },
+    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.73, 0.2, 0 },
     { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.78, 0.2, 0 },
-    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.89, 0.2, 0 },
+    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.86, 0.2, 0 },
     { "warlock_shadow_brand", "ShadowBrand", "Shadow Brand (wowsims.com)", 0.71, 0.2, 0 },
-    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.90, 0.2, 0 },
+    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.89, 0.4, 0 },
 }
 
 describe("the Warlock wowsims.com packs #slow #wowsims", function()

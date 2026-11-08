@@ -68,15 +68,15 @@ M.SPEC_PIN = {
 
     shaman_enhancement = OLD,
 
-    warlock_affliction = OLD,
+    warlock_affliction = NEW,
 
-    warlock_demonology = OLD,
+    warlock_demonology = NEW,
 
-    warlock_destruction = OLD,
+    warlock_destruction = NEW,
 
-    warlock_shadow_brand = OLD,
+    warlock_shadow_brand = NEW,
 
-    warlock_sm_ruin = OLD,
+    warlock_sm_ruin = NEW,
 
     warrior_arms = NEW,
 
