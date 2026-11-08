@@ -22,6 +22,10 @@ L["Hekili Forever is designed for level %s content.\nIt may not work as expected
 L["on"] = true
 L["off"] = true
 L["%s\n\nThe wowsims gate runs this as %s."] = true
+L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = true
+L["%s, picked from your talents."] = true
+
+-- Hekili/Engine/Schema/Spec/Packs.lua
 L[" and "] = true
 L["The %s priority was retired; a spec that used it now runs its default priority."] = true
 L["The %s priorities were retired; a spec that used one now runs its default priority."] = true
@@ -31,8 +35,6 @@ L["The %s, and |cFFFFD100%s|r priorities were updated."] = true
 L["The |cFFFFD100%s|r priority was reverted."] = true
 L["The |cFFFFD100%s|r and |cFFFFD100%s|r priorities were reverted."] = true
 L["The %s, and |cFFFFD100%s|r priorities were reverted."] = true
-L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = true
-L["%s, picked from your talents."] = true
 
 -- Hekili/Options/ChatCommands.lua
 L["Invalid command. Type '/hekili help' to see the available commands."] = true
