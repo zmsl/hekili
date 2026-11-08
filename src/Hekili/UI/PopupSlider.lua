@@ -15,7 +15,6 @@ function HekiliPopupDropdownMixin:OnLoad()
 end
 
 function HekiliPopupDropdownMixin:OnShow()
-    -- self.Toggle:RegisterEvents();
     if ElvUI then
         local E = ElvUI[1]
         local S = E:GetModule( "Skins" )
@@ -41,11 +40,9 @@ function HekiliPopupDropdownMixin:OnShow()
 end
 
 function HekiliPopupDropdownMixin:OnHide()
-    -- self.Toggle:UnregisterEvents();
 end
 
 function HekiliPopupDropdownMixin:OnSetOwningButton()
-    -- self.Toggle:UpdateVisibleState();
     self.Slider:UpdateVisibleState()
 end
 
