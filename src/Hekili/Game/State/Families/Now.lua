@@ -323,6 +323,7 @@ local function aura(u, key, duration, stacks)
         end
     end
     I.AuraModel(u, j, T, after, stacks or 1, T, CAST, u == 2)
+    I.AuraOurs(u, j) -- cdm-default rule 2.5.1: this application is ours (Sources/Auras.lua)
     I.Log.Aura(u, j, auraSpell[j], before, after, T)
 end
 -- Hekili's own signatures (State.lua), so a Classic handler's lines port by copying.

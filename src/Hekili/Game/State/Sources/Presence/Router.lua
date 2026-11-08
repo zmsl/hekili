@@ -24,15 +24,10 @@ local leaf, want, api0, def0, pending = nil, nil, nil, nil, false
 local edges = { up = 0, down = 0 } -- the edges passed on this fight (Snapshot)
 I.presenceEdges = edges
 
--- A "self" provider's DOWN on the target says only that our debuff is gone; another caster's may be up (the target
--- walk reads anyone's), so it is no answer.
-local function selfDownOnTarget(u, up)
-    return u == 2 and not up and R.scope == "self"
-end
-
--- A tracked aura's edge only, counted. Allocates nothing.
+-- A tracked aura's edge only, counted; a target DOWN included (decision 111 as amended: the CDM's "now" state has
+-- precedence on the target; Sources/Auras.lua closes only a record our evidence opened). Allocates nothing.
 local function forward(j, u, up, t)
-    if tracked[j] and not selfDownOnTarget(u, up) then
+    if tracked[j] then
         if up then
             edges.up = edges.up + 1
         else
@@ -64,7 +59,8 @@ local function thing(k, t)
     fState[k] = st
     if st == I.UNDECIDED then
         local U = I.auras
-        if u <= U.n and U.exp0[u][j] > t then -- it had a fact and lost it while its record is up
+        -- it had a fact and lost it while its record is up; (4a review m5) an in-combat rebuild may shrink the set
+        if u <= U.n and j <= U.nAura and U.exp0[u][j] > t then
             lost[k] = lost[k] + 1
         end
         return
@@ -183,11 +179,29 @@ end
 function R.Presence(j, u)
     if leaf and tracked[j] then
         local a = fState[(u - 1) * I.AURA_UNIT + j]
-        if (a == I.UP or a == I.DOWN) and not selfDownOnTarget(u, a == I.UP) then
+        if a == I.UP or a == I.DOWN then
             return a
         end
     end
     return I.UNDECIDED
+end
+
+--- The active leaf, nil without one (the snapshot's per-slot reads: Via, Ambiguous, Unmapped).
+function R.Leaf()
+    return leaf
+end
+
+--- The leaf's state for the snapshot (cdm-default §6). An error may come from the belief code onEdge runs inside the
+--- leaf's pcall, not only from the CDM reading (4a review m3).
+function R.LeafState()
+    if leaf then
+        return "on"
+    elseif I.PRESENCE.viewer and I.PRESENCE.viewer.errors > 0 then
+        return "off(error in the CDM sweep or the belief code it calls: see the error line)"
+    elseif want then
+        return "pending" -- waits for combat end
+    end
+    return "off(debug)"
 end
 
 -- The viewer's sets changed (CV §3): rebuild out of combat, else at combat end (decision 89: no change mid-fight).
@@ -204,6 +218,17 @@ end
 S.On("PLAYER_REGEN_ENABLED", nil, function(_, t)
     if pending and I.presence == R then
         activate(t)
+    end
+end)
+-- A target change (cdm-default §3.4): the target's facts start over, UNKNOWN, so the next sweep that sees mob B's
+-- light is an UNKNOWN -> UP change with its own fact.t (rule 4's t0), even when no sweep falls inside the leaf's
+-- settle window (review I1). The leaf has reset its target slots in the same event. Allocates nothing.
+S.On("PLAYER_TARGET_CHANGED", nil, function()
+    for j = 1, def0 and #def0.auraIds or 0 do
+        local k = I.AURA_UNIT + j
+        if fState[k] ~= nil then
+            fState[k], fT[k] = I.UNDECIDED, 0
+        end
     end
 end)
 S.On("PLAYER_REGEN_DISABLED", nil, function()

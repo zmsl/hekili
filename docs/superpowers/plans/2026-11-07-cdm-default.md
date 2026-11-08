@@ -89,8 +89,10 @@ DEVELOPMENT.md                                             MODIFY   Hekili.cdmOf
 2. **No layout assumption.** No item anywhere is UNKNOWN; unconfigured, released, invisible, unmapped, settling and
    secret-field slots are not live; roles never consulted.
 3. **No wrong DOWN.** A silent slot counts as NONE only for an application that same slot was seen holding (the seen
-   rule, per slot, decision 115); a player DOWN closes only with `ours`; a target NONE never; the walk wins only out of combat.
-4. **Never stuck up.** No `math.huge` on the target or with a numeric duration; bounded lapse; no per-poll re-stage.
+   rule, per slot, decision 115); a DOWN closes only with `ours` (the target too since decision 111's 2026-11-08 amendment; after our cast only past
+   `REFRESH_LAG`, D14); the walk wins only out of combat.
+4. **Never stuck up.** No `math.huge` on the target or with a numeric duration; bounded lapse; a hold re-stage about every `HOLD - LAPSE`,
+   at most once per poll (every poll at 0.5 s or slower rates).
 5. **Reconciliation only in `Sources/Auras.lua`** (plus Now.lua's one line; `Families/Auras.lua` only in Task 4c).
 6. **Default arm identical**; viewer arms measured.
 7. **Border, secrets, allocation** as the Global Constraints.

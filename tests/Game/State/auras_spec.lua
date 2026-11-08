@@ -624,7 +624,7 @@ describe("auras", function()
             ctl.ViewerAura(item, "player")
             poll(10) -- the sweep at poll 15 reads the item: an edge
             local rec = VS.Aura("player", fs.SPENDER_A, 10)
-            assert.are.same({ math.huge, "observed" }, { rec.est, rec.basis }) -- a Read with no expiry
+            assert.are.same({ 130, "observed" }, { rec.est, rec.basis }) -- from the light: its registered 120 s (C2)
             assert.are.same({ 1, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
             poll(11) -- the poll agrees with the belief now: no fact
             assert.are.same({ 1, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
@@ -640,6 +640,7 @@ describe("auras", function()
 
         it("the poll takes a believed-up aura down when an item seen holding it goes silent", function()
             I.AuraModel(1, SHOUT, 10, 20, 1, 10, Obs.CastSuccess, false)
+            I.AuraOurs(1, SHOUT) -- our cast's (Families/Now.lua): rule 2.5.1
             ctl.ViewerAura(item, "player")
             poll(10.5) -- the item holds our application
             ctl.ViewerClear(item)
@@ -677,7 +678,8 @@ describe("auras", function()
             end
         )
 
-        it("a plain walk wins: presence stages nothing", function()
+        it("out of combat, a plain walk wins: presence stages nothing (in combat it does not: I7)", function()
+            ctl.Fire("PLAYER_REGEN_ENABLED")
             ctl.auras.player.HELPFUL[1] = nil
             ctl.Fire("UNIT_AURA", "player")
             I.ObsLog.Clear(I.log)
@@ -690,7 +692,7 @@ describe("auras", function()
         it("a staged read cut short by a plain walk does not suppress the next fight's edge", function()
             ctl.ViewerAura(item, "player")
             poll(10) -- in combat: the sweep's edge stages a Read up, the fold takes it
-            assert.are.equal(math.huge, VS.Aura("player", fs.SPENDER_A, 10).est)
+            assert.are.equal(130, VS.Aura("player", fs.SPENDER_A, 10).est)
             assert.are.same({ 1, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
             ctl.Fire("PLAYER_REGEN_ENABLED") -- combat ends, the walk turns plain and shows it gone
             ctl.auras.player.HELPFUL[1] = nil
@@ -707,7 +709,7 @@ describe("auras", function()
             ctl.ViewerAura(item, "player")
             poll(21)
             poll(22)
-            assert.are.equal(math.huge, VS.Aura("player", fs.SPENDER_A, 22).est)
+            assert.are.equal(141, VS.Aura("player", fs.SPENDER_A, 22).est)
             assert.are.same({ 1, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
         end)
 
@@ -717,9 +719,8 @@ describe("auras", function()
             ctl.Fire("PLAYER_REGEN_ENABLED")
             poll(12)
             local snap = VS.Snapshot()
-            assert.is_truthy(
-                snap:find("presence spender_a unit=player path=viewer facts=0 disagree=0 exitFix=1", 1, true)
-            )
+            assert.is_truthy(snap:find("presence spender_a unit=player fact=unknown from=walk n=0 ", 1, true), snap)
+            assert.is_truthy(snap:find("beliefDisagree=0 itemDisagree=0 ambiguous=0 lost=0 exitFix=1", 1, true), snap)
         end)
 
         it("allocates nothing over 1000 polls, sweeps and edges", function()
@@ -736,6 +737,579 @@ describe("auras", function()
                     I.Fold(t, false)
                 end, 1000)
             )
+        end)
+    end)
+
+    -- cdm-default §2.5 (Task 4b): who may close (ours, decision 111 as amended: the target too), the bounded UP (C2,
+    -- decision 112), the walk wins out of combat only (I7), forms skipped (M5), the floor, the snapshot section.
+    describe("reconciliation of the reduced facts (cdm-default §2.5)", function()
+        local pi, ti, P -- the player aura's item (SHOUT), the target debuff's item (REND), the router
+
+        local function start(def)
+            ctl.now = 1 -- a restart's own observations are stamped before the fight's (the log folds in order)
+            def.providers = { presence = "router", viewer = true }
+            I.Build(def, 1)
+            VS.Start(api)
+            P = I.presence
+            ctl.now = 10
+            ctl.Fire("PLAYER_TARGET_CHANGED") -- mob A (Creature-1) in its memory slot
+            I.Fold(10, false)
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.auras.player.HELPFUL[1] = fake.SECRET -- both walks secret: only the reduced facts speak
+            ctl.auras.target.HARMFUL[1] = fake.SECRET
+            ctl.Fire("UNIT_AURA", "player")
+            ctl.Fire("UNIT_AURA", "target")
+            I.ObsLog.Clear(I.log)
+        end
+
+        before_each(function()
+            ctl.viewer.sets[2] = { 501, 502 }
+            ctl.viewer.infos[501] = { spellID = fs.SPENDER_A }
+            ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
+            pi = ctl.ViewerItem("BuffIconCooldownViewer", 1, 501)
+            ti = ctl.ViewerItem("BuffIconCooldownViewer", 2, 502)
+            start(fs.def(fs.new(9)))
+        end)
+
+        local function poll(t)
+            ctl.now = t
+            ctl.Tick(t)
+            S.RunPolls(t)
+            I.Fold(t, false)
+            I.Settle(t)
+        end
+        -- Our cast's write as Families/Now.lua makes it: the record, then ours.
+        local function cast(u, j, t, d)
+            I.AuraModel(u, j, t, t + d, 1, t, Obs.CastSuccess, u == 2)
+            I.AuraOurs(u, j)
+        end
+        local function est(unit, spell, t)
+            local r = VS.Aura(unit, spell, t)
+            return r and r.est
+        end
+        local function swap(guid, t)
+            ctl.now = t
+            ctl.guid.target = guid
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+        end
+
+        it(
+            "a target DOWN closes our debuff once its item lit this application; never lit, it closes nothing",
+            function()
+                cast(2, REND, 10, 15)
+                for t = 10.5, 12, 0.5 do
+                    poll(t)
+                    assert.are.equal(25, est("target", fs.SPENDER_C, t)) -- never lit: UNKNOWN, the model runs
+                end
+                assert.are.equal(I.UNDECIDED, P.Presence(REND, 2))
+                ctl.ViewerAura(ti, "target")
+                poll(12.5)
+                assert.are.equal(I.UP, P.Presence(REND, 2))
+                ctl.ViewerClear(ti) -- our debuff ends early (a dispel): the item that lit it goes silent
+                poll(13)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13))
+            end
+        )
+
+        it("a target switch resets the item: silent on the new target it closes nothing; lit there, it does", function()
+            cast(2, REND, 10, 15)
+            ctl.ViewerAura(ti, "target")
+            poll(10.5)
+            poll(11) -- lit for mob A's application
+            swap("Creature-2", 11.1)
+            ctl.ViewerClear(ti) -- the client clears A's light from the next frame
+            poll(11.2)
+            cast(2, REND, 11.5, 15) -- our debuff on mob B; its item has not lit it yet
+            for t = 12, 13, 0.5 do
+                poll(t)
+                assert.are.equal(26.5, est("target", fs.SPENDER_C, t)) -- reset at the switch: no close
+            end
+            ctl.ViewerAura(ti, "target")
+            poll(13.5)
+            poll(14)
+            ctl.ViewerClear(ti)
+            poll(14.5)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 14.5)) -- control: lit on B, then silent: closes
+        end)
+
+        it("switching away and back does not restore a record the item closed", function()
+            cast(2, REND, 10, 15)
+            ctl.ViewerAura(ti, "target")
+            poll(10.5)
+            ctl.ViewerClear(ti)
+            poll(11)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11))
+            swap("Creature-2", 12)
+            poll(12.2)
+            swap("Creature-1", 13)
+            poll(13.2)
+            poll(13.5)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13.5))
+        end)
+
+        it("the switch's own frame (f=0) is stale: an old light opens nothing, a silence closes nothing", function()
+            cast(2, REND, 10, 15)
+            ctl.ViewerAura(ti, "target")
+            poll(10.5) -- lit on mob A
+            swap("Creature-2", 11)
+            poll(11.01) -- f=0 (CDM-O): the item still shows A's debuff
+            assert.are.equal(I.UNDECIDED, P.Presence(REND, 2))
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.01)) -- no UP on mob B
+            ctl.ViewerClear(ti) -- right from f=1
+            poll(11.1)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.1))
+            swap("Creature-1", 12)
+            poll(12.01) -- f=0 back on A: the item is still silent (not re-lit yet)
+            assert.are.equal(25, est("target", fs.SPENDER_C, 12.01)) -- no DOWN
+            poll(12.1)
+            assert.are.equal(25, est("target", fs.SPENDER_C, 12.1)) -- reset at the switch: no DOWN after it either
+            ctl.ViewerAura(ti, "target") -- A's debuff lit again
+            poll(12.2)
+            ctl.ViewerClear(ti)
+            poll(12.8)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12.8)) -- control: lit after the switch, then silent
+        end)
+
+        it(
+            "an item seen only for the player, held for the target while hidden, then silent keeps our debuff (F1)",
+            function()
+                cast(2, REND, 10, 15)
+                ctl.ViewerAura(ti, "player")
+                poll(10.5) -- seen holding for the player only
+                ctl.viewer.shown.BuffIconCooldownViewer = false
+                ctl.ViewerAura(ti, "target")
+                poll(11) -- hidden: stale for the target, no sSeen write
+                ctl.viewer.shown.BuffIconCooldownViewer = nil
+                ctl.ViewerClear(ti)
+                poll(11.5)
+                poll(12)
+                assert.are.equal(25, est("target", fs.SPENDER_C, 12))
+                ctl.ViewerAura(ti, "target")
+                poll(12.5)
+                ctl.ViewerClear(ti)
+                poll(13)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13)) -- control: lit for the target, then silent
+            end
+        )
+
+        it("a false target UP (a stale light) is bounded and taken down at the next silent sweep (L288)", function()
+            ctl.ViewerAura(ti, "target")
+            poll(10.5)
+            assert.are.equal(25.5, est("target", fs.SPENDER_C, 10.5)) -- from the light: never math.huge
+            ctl.ViewerClear(ti)
+            poll(10.7)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 10.7))
+        end)
+
+        it("a target UP past its registered duration holds within HOLD, not per poll; lost, it lapses", function()
+            ctl.ViewerAura(ti, "target")
+            poll(10) -- opened: expires 25
+            local last, stages, t = est("target", fs.SPENDER_C, 10), 0, 20
+            for i = 1, 34 do
+                t = 20 + i * 0.3 -- to 30.2, past the registered duration; 0.3 s polls (the in-combat rates are 0.2-0.5)
+                poll(t)
+                local e = est("target", fs.SPENDER_C, t)
+                assert.is_truthy(VS.Aura("target", fs.SPENDER_C, t + 0.29), t) -- never down, not even between polls
+                if t > 24.6 then
+                    assert.is_true(e - t <= 1.0 + 1e-9) -- at most HOLD: refreshable throughout
+                end
+                if e ~= last then
+                    stages = stages + 1
+                end
+                last = e
+            end
+            assert.is_true(stages >= 5 and stages <= 12, "stages " .. stages) -- about every HOLD - LAPSE, not 17 polls
+            ctl.ViewerRelease(ti) -- the evidence goes away (UNKNOWN): nothing re-stages
+            poll(30.3)
+            assert.is_truthy(VS.Aura("target", fs.SPENDER_C, 30.3))
+            poll(31.3)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 31.3)) -- lapsed within HOLD
+        end)
+
+        it("a hold re-stage of a record believed up keeps its stacks (rule 3: the model's stacks stand)", function()
+            I.AuraModel(2, REND, 10, 25, 3, 10, Obs.CastSuccess, true) -- our 3-stack debuff
+            I.AuraOurs(2, REND)
+            ctl.ViewerAura(ti, "target")
+            for t = 10.5, 26, 0.5 do
+                poll(t) -- from 24.5 on, within LAPSE of its expiry: re-staged
+            end
+            local rec, stacks = VS.Aura("target", fs.SPENDER_C, 26)
+            assert.is_truthy(rec)
+            assert.are.equal(3, stacks)
+        end)
+
+        it("an icd aura's hold keeps the application: its ICD does not restart and it stays ours", function()
+            local def = fs.def(fs.new(9))
+            def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, duration = 3, icd = 10 }
+            start(def)
+            cast(1, SHOUT, 10, 3)
+            ctl.ViewerAura(pi, "player")
+            for t = 10.2, 16, 0.2 do
+                poll(t)
+                assert.are.equal(10, select(3, VS.Aura("player", fs.SPENDER_A, t)), t) -- applied (the ICD's start)
+            end
+            ctl.ViewerClear(pi)
+            poll(16.2)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 16.2)) -- still ours: its NONE closes it
+        end)
+
+        it("a target switch starts the fact over: mob B opens from its own light, not mob A's (review I1)", function()
+            cast(2, REND, 10, 15)
+            ctl.ViewerAura(ti, "target")
+            poll(10.2)
+            for t = 10.5, 19.5, 0.5 do
+                poll(t)
+            end
+            swap("Creature-2", 20)
+            ctl.ViewerAura(ti, "target") -- mob B carries our debuff too (an AoE): lit from the next frame
+            poll(20.2) -- the first drain after the switch lands past the settle window (no UNKNOWN sweep)
+            poll(20.5)
+            assert.are.equal(35.2, est("target", fs.SPENDER_C, 20.5)) -- from B's light at 20.2, not A's at 10.2
+        end)
+
+        it(
+            "the switch's drain applies nothing on the target: mob A's record never decides for mob B (review m3)",
+            function()
+                cast(2, REND, 10, 15) -- mob A's record expires at 25
+                ctl.ViewerAura(ti, "target")
+                for t = 10.5, 24.5, 0.5 do
+                    poll(t)
+                end
+                assert.are.equal(25.5, est("target", fs.SPENDER_C, 24.5)) -- held past its duration (rule 4)
+                swap("Creature-2", 25)
+                ctl.ViewerAura(ti, "target") -- mob B carries our debuff too: lit from the next frame
+                poll(25.1) -- the switch's drain: its polls run before the fold takes the switch (A's record near lapse)
+                poll(25.3)
+                assert.are.equal(40.1, est("target", fs.SPENDER_C, 25.3)) -- opened on B from B's light
+                ctl.ViewerClear(ti)
+                poll(25.6)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 25.6)) -- a CDM UP opened it on B: ours, so its NONE closes
+            end
+        )
+
+        it("an icd aura's hold keeps the application at slow polls and with no numeric duration (review m2)", function()
+            for _, dur in ipairs({ 3, false }) do
+                local def = fs.def(fs.new(9))
+                def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, duration = dur or nil, icd = 10 }
+                start(def)
+                cast(1, SHOUT, 10, 3)
+                ctl.ViewerAura(pi, "player")
+                local t = 10
+                for i = 1, 38 do
+                    t = 10 + i * 0.52 -- slower than the 0.5 s in-combat rate (the reviewer's probe: lost at 21.44)
+                    poll(t)
+                    local rec, _, applied = VS.Aura("player", fs.SPENDER_A, t)
+                    assert.is_truthy(rec, t)
+                    assert.is_truthy(VS.Aura("player", fs.SPENDER_A, t + 0.51), t) -- not down until the next poll
+                    assert.are.equal(10, applied, t) -- the same application: its ICD does not restart
+                    assert.is_true(t < 12.5 or rec.est - t <= 1.0 + 1e-9, t) -- past its 3 s: held, never math.huge
+                end
+                ctl.ViewerClear(pi)
+                poll(t + 0.2)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, t + 0.2)) -- still ours: its NONE closes it
+            end
+        end)
+
+        it("an UP with no numeric duration: HOLD on the target, -1 on the player closed by its NONE", function()
+            local def = fs.def(fs.new(9))
+            def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }
+            def.auras[REND] = { key = "spender_c", id = fs.SPENDER_C }
+            start(def)
+            ctl.ViewerAura(ti, "target")
+            ctl.ViewerAura(pi, "player")
+            poll(10.5)
+            assert.are.equal(11.5, est("target", fs.SPENDER_C, 10.5))
+            assert.are.equal(math.huge, est("player", fs.SPENDER_A, 10.5))
+            ctl.ViewerClear(pi) -- the CDM UP opened it: ours, so its NONE closes
+            poll(11)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
+        end)
+
+        it("in combat, a walk with nil at index 1 does not suppress the facts (I7)", function()
+            ctl.auras.player.HELPFUL[1] = nil
+            ctl.Fire("UNIT_AURA", "player") -- in combat a nil first entry reads as a complete walk (F1)
+            ctl.ViewerAura(pi, "player")
+            poll(10.5)
+            assert.are.equal(130.5, est("player", fs.SPENDER_A, 10.5)) -- t0 + the registered 120 s
+        end)
+
+        it("C1: a partner's copy read out of combat is not ours: its NONE closes nothing; ours does", function()
+            cast(1, SHOUT, 10, 120)
+            ctl.ViewerAura(pi, "player")
+            poll(10.5)
+            poll(11)
+            ctl.now = 12
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.auras.player.HELPFUL[1] =
+                { spellId = fs.SPENDER_A, expirationTime = 200, applications = 0, sourceUnit = "party1" }
+            ctl.Fire("UNIT_AURA", "player") -- a partner's copy overwrote ours
+            poll(12)
+            ctl.ViewerClear(pi)
+            poll(12.5)
+            ctl.now = 13
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.auras.player.HELPFUL[1] = fake.SECRET
+            ctl.Fire("UNIT_AURA", "player")
+            for t = 13, 15, 0.5 do
+                poll(t)
+                assert.are.equal(200, est("player", fs.SPENDER_A, t))
+            end
+            assert.are.equal(I.DOWN, P.Presence(SHOUT, 1)) -- the NONE is there; not ours, so no close
+            cast(1, SHOUT, 16, 120)
+            ctl.ViewerAura(pi, "player")
+            poll(16.5)
+            poll(17)
+            ctl.ViewerClear(pi)
+            poll(17.5)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 17.5)) -- control: our cast, lit, then it ends
+        end)
+
+        it("C1: a CDM UP opens ours; an out-of-combat walk read sets ours by its source", function()
+            ctl.ViewerAura(pi, "player")
+            poll(10.5)
+            assert.is_true(I.auraOurs[SHOUT] ~= 0)
+            ctl.ViewerClear(pi)
+            poll(11)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11)) -- opened by the CDM: its NONE closes
+            ctl.now = 12
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            for i, c in ipairs({ { "player", true }, { "party1", false }, { "pet", true }, { fake.SECRET, false } }) do
+                ctl.auras.player.HELPFUL[1] =
+                    { spellId = fs.SPENDER_A, expirationTime = 200, applications = 0, sourceUnit = c[1] }
+                ctl.Fire("UNIT_AURA", "player")
+                assert.are.equal(c[2], I.auraOurs[SHOUT] ~= 0, "case " .. i)
+            end
+            local function entry(src)
+                return { spellId = fs.SPENDER_A, expirationTime = 200, applications = 0, sourceUnit = src }
+            end
+            ctl.auras.player.HELPFUL[1], ctl.auras.player.HELPFUL[2] = entry("player"), entry("party1")
+            ctl.Fire("UNIT_AURA", "player")
+            assert.is_true(I.auraOurs[SHOUT] ~= 0) -- ours and a partner's copy in one walk: ours
+            ctl.auras.player.HELPFUL[1], ctl.auras.player.HELPFUL[2] = entry("party1"), entry("player")
+            ctl.Fire("UNIT_AURA", "player")
+            assert.is_true(I.auraOurs[SHOUT] ~= 0)
+        end)
+
+        it("CDM-P: a partner's copy of our debuff lights nothing, and our item never closes it", function()
+            cast(2, REND, 10, 15)
+            ctl.ViewerAuraBySpell("target", fs.SPENDER_C, true, "player")
+            poll(10.5)
+            poll(11)
+            ctl.now = 12
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.ViewerAuraBySpell("target", fs.SPENDER_C, true, "party1") -- the partner's copy: lights nothing (F10)
+            assert.are.equal(1, #ti.writes) -- only our own light so far
+            ctl.ViewerAuraBySpell("target", fs.SPENDER_C, false, "player") -- it overwrote ours: our item goes silent
+            ctl.auras.target.HARMFUL[1] =
+                { spellId = fs.SPENDER_C, expirationTime = 40, applications = 0, sourceUnit = "party1" }
+            ctl.Fire("UNIT_AURA", "target")
+            poll(12)
+            ctl.now = 13
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.auras.target.HARMFUL[1] = fake.SECRET
+            ctl.Fire("UNIT_AURA", "target")
+            for t = 13, 15, 0.5 do
+                poll(t)
+                assert.are.equal(40, est("target", fs.SPENDER_C, t)) -- no needless close, no recast loop
+            end
+            cast(2, REND, 16, 15)
+            ctl.ViewerAuraBySpell("target", fs.SPENDER_C, true, "player")
+            poll(16.5)
+            poll(17)
+            ctl.ViewerAuraBySpell("target", fs.SPENDER_C, false, "player")
+            poll(17.5)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 17.5)) -- control: our own cast, lit, then it ends
+        end)
+
+        it("a target's ours does not follow us to another mob: mob B's partner copy is not closed", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            swap("Creature-2", 10)
+            ctl.auras.target.HARMFUL[1] =
+                { spellId = fs.SPENDER_C, expirationTime = 60, applications = 0, sourceUnit = "party1" }
+            ctl.Fire("UNIT_AURA", "target") -- mob B: a partner's copy, not ours
+            poll(10.2)
+            swap("Creature-1", 10.5)
+            ctl.auras.target.HARMFUL[1] = nil
+            ctl.Fire("UNIT_AURA", "target")
+            poll(10.7)
+            ctl.now = 12
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.auras.target.HARMFUL[1] = fake.SECRET
+            cast(2, REND, 12, 15) -- ours on mob A
+            ctl.ViewerAura(ti, "target")
+            poll(12.5)
+            poll(13)
+            swap("Creature-2", 14)
+            ctl.ViewerClear(ti)
+            poll(14.1)
+            assert.are.equal(60, est("target", fs.SPENDER_C, 14.1))
+            ctl.ViewerAura(ti, "target") -- the item shows a copy on B for a while
+            poll(14.2)
+            poll(14.8)
+            ctl.ViewerClear(ti)
+            for t = 15, 16, 0.5 do
+                poll(t)
+                assert.are.equal(60, est("target", fs.SPENDER_C, t)) -- A's cast does not make B's record ours
+            end
+            cast(2, REND, 17, 15) -- ours on B now
+            ctl.ViewerAura(ti, "target")
+            poll(17.5)
+            poll(18)
+            ctl.ViewerClear(ti)
+            poll(18.5)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 18.5)) -- control
+        end)
+
+        it(
+            "D14: a refresh the item does not light closes nothing; one it holds past the lag closes at its end",
+            function()
+                cast(1, SHOUT, 10, 120)
+                ctl.ViewerAura(pi, "player")
+                poll(10.5)
+                poll(11)
+                cast(1, SHOUT, 20, 120) -- our refresh before expiry: applied 20, expires 140
+                poll(20.1) -- the item still holds the old application (the client's update not in yet)
+                ctl.ViewerClear(pi) -- and it does not light the new one (an item that stops following)
+                for t = 20.3, 22, 0.3 do
+                    poll(t)
+                    assert.are.equal(140, est("player", fs.SPENDER_A, t))
+                end
+                assert.are.equal(I.DOWN, P.Presence(SHOUT, 1)) -- the reduced NONE; the refresh guard keeps it open
+                cast(1, SHOUT, 30, 120)
+                ctl.ViewerAura(pi, "player")
+                poll(30.1)
+                poll(30.6) -- held past the refresh lag: it follows this application
+                ctl.ViewerClear(pi)
+                poll(31)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 31)) -- control
+            end
+        )
+
+        it(
+            "an UP while believed up stages nothing; UNKNOWN leaves the record; an item flap never takes it down",
+            function()
+                cast(1, SHOUT, 10, 120)
+                ctl.ViewerAuraBySpell("player", fs.SPENDER_A, true, "player")
+                for t = 10.5, 12, 0.5 do
+                    poll(t)
+                    assert.are.equal(130, est("player", fs.SPENDER_A, t))
+                end
+                ctl.ViewerRemove("BuffIconCooldownViewer", pi) -- removed while up (F13): UNKNOWN
+                poll(12.5)
+                assert.are.equal(I.UNDECIDED, P.Presence(SHOUT, 1))
+                assert.are.equal(130, est("player", fs.SPENDER_A, 12.5))
+                ctl.ViewerAcquire("BuffIconCooldownViewer", 501) -- re-added: a new frame, lit at once
+                poll(13)
+                assert.are.equal(I.UP, P.Presence(SHOUT, 1))
+                assert.are.equal(130, est("player", fs.SPENDER_A, 13))
+            end
+        )
+
+        it("a form or enchant aura on the player is never written by the facts (M5)", function()
+            I.formAura[SHOUT] = true
+            ctl.ViewerAura(pi, "player")
+            poll(10.5)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 10.5))
+            I.formAura[SHOUT] = nil
+            I.enchantAura[SHOUT] = 1
+            poll(11)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
+        end)
+
+        it("the floor: I.auraFloor[j] is 1 while the player fact is UP, else 0", function()
+            assert.are.equal(0, I.auraFloor[SHOUT])
+            ctl.ViewerAura(pi, "player")
+            ctl.ViewerAura(ti, "target")
+            poll(10.5)
+            assert.are.same({ 1, 0 }, { I.auraFloor[SHOUT], I.auraFloor[REND] }) -- a target UP is no floor
+            ctl.ViewerRelease(pi)
+            poll(11)
+            assert.are.equal(0, I.auraFloor[SHOUT]) -- UNKNOWN
+            ctl.ViewerAcquire("BuffIconCooldownViewer", 501)
+            ctl.ViewerAura(ctl.viewer.items.BuffIconCooldownViewer[3], "player")
+            poll(11.5)
+            assert.are.equal(1, I.auraFloor[SHOUT])
+            ctl.viewer.parentShown = false -- every viewer hidden: no live slot, covered 0
+            poll(12)
+            assert.are.equal(0, I.auraFloor[SHOUT])
+        end)
+
+        it("out of combat, a walk turning plain then secret again leaves no stale staged read (L281)", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.Fire("UNIT_AURA", "player") -- out of combat, still secret
+            ctl.ViewerAura(pi, "player")
+            poll(10.2)
+            assert.is_true(math.abs(est("player", fs.SPENDER_A, 10.2) - 130.2) < 1e-9)
+            ctl.auras.player.HELPFUL[1] = nil
+            ctl.Fire("UNIT_AURA", "player") -- plain: the walk shows it gone, and wins
+            poll(10.4)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 10.4))
+            ctl.auras.player.HELPFUL[1] = fake.SECRET
+            ctl.Fire("UNIT_AURA", "player")
+            poll(10.6)
+            assert.is_truthy(VS.Aura("player", fs.SPENDER_A, 10.6)) -- staged again, not blocked by the old mark
+        end)
+
+        it("allocates nothing over 1000 polls of the rules: ours, the hold, closes and re-opens, the floor", function()
+            local alloc = require("Game.State.helpers.alloc")
+            cast(1, SHOUT, 10, 120)
+            cast(2, REND, 10, 15)
+            local t = 10
+            assert.are.equal(
+                0,
+                alloc.bytes(function(i)
+                    t = t + 0.1
+                    -- the items' fields directly (ctl.ViewerAura logs its writes: the fake's allocation)
+                    local on = i % 20 < 15
+                    pi.auraInstanceID, pi.auraDataUnit = on and fake.SECRET or nil, on and "player" or nil
+                    ti.auraInstanceID, ti.auraDataUnit = on and fake.SECRET or nil, on and "target" or nil
+                    if i % 40 == 1 then
+                        I.AuraOurs(1, SHOUT)
+                    end
+                    S.RunPolls(t)
+                    I.Fold(t, false)
+                    I.Settle(t)
+                end, 1000)
+            )
+        end)
+
+        it("the snapshot's CDM section: per thing and one summary line, each under 255 characters", function()
+            ctl.viewer.sets[0] = { 600, 700 }
+            ctl.viewer.infos[600] = { spellID = fs.SPENDER_A } -- a cooldown entry for the same aura
+            ctl.viewer.infos[700] = { spellID = 9999, linkedSpellIDs = { fs.SPENDER_A, 9998 } } -- ambiguous
+            ctl.viewer.sets[1] = { 800 }
+            ctl.viewer.infos[800] = { spellID = 9997 } -- unmapped
+            local e = ctl.ViewerItem("EssentialCooldownViewer", 1, 600)
+            local amb = ctl.ViewerItem("EssentialCooldownViewer", 2, 700)
+            ctl.ViewerItem("UtilityCooldownViewer", 1, 800)
+            start(fs.def(fs.new(9)))
+            ctl.ViewerAura(pi, "player")
+            ctl.ViewerAura(e, "player")
+            ctl.ViewerAura(amb, "player")
+            poll(10.5)
+            local snap = VS.Snapshot()
+            assert.is_truthy(
+                snap:find(
+                    "presence spender_a unit=player fact=up from=viewer n=2 via=EB agree=true ours=cdm facts=1"
+                        .. " beliefDisagree=1 itemDisagree=0 ambiguous=1 lost=0 exitFix=0",
+                    1,
+                    true
+                ),
+                snap
+            )
+            assert.is_truthy(snap:find("presence covered=1/2 unmapped=1 ambiguous=1 overflow=0 leaf=on", 1, true), snap)
+            for line in snap:gmatch("[^\n]+") do
+                assert.is_true(#line < 255, line)
+            end
+            P.onEdge = function()
+                error("a belief handler raised")
+            end
+            ctl.ViewerClear(pi)
+            ctl.ViewerClear(e)
+            poll(11)
+            assert.is_truthy(VS.Snapshot():find("leaf=off(error", 1, true))
         end)
     end)
 end)

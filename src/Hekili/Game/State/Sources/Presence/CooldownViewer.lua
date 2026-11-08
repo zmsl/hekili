@@ -33,7 +33,8 @@ local mappable = {} -- j -> true when some cooldownID's candidates name it (alon
 local slotOf = setmetatable({}, { __mode = "k" }) -- child frame -> slot: the only in-combat insert (a new child)
 local known = { 0, 0, 0, 0 } -- children collected per viewer (GetNumChildren at the last collect)
 
--- The slots, preallocated: the frame, its viewer, the aura it is counted for (sJ; sAmb unused), what it is counted as
+-- The slots, preallocated: the frame, its viewer, the aura it is counted for (sJ; sAmb 1 while an ambiguous item is
+-- held: its lights are counted, never evidence), what it is counted as
 -- (sAns, sUnit: sUnit is also the last plain held unit, kept through silence) since sT, the seen rule's last held time
 -- and last plain cooldownID (sSeen, sCd, §2.2a), the end of a target settle (sSettle, §3.4). sAns 0 not counted, else
 -- UP, NONE or STALE (a hidden viewer's or a settling slot: what it would answer, not live).
@@ -49,6 +50,8 @@ local UNIT = { player = 1, target = 2 }
 -- The things' counters, by k = (u - 1) * AURA_UNIT + j, zeroed for both units at activation (preallocated: the
 -- target's keys are in the hash part); live slots per aura (covered).
 local cUp, cNone, cStale, tUp, tNone, live = {}, {}, {}, {}, {}, {}
+local ambC = {} -- by k: the per-fight lights of ambiguous items naming aura j on unit u (§2.2; the snapshot's)
+local VBIT = { 1, 2, 4, 8 } -- a viewer's bit in Q.Via (§2.4)
 local touched, mark, nTouched = {}, {}, 0 -- the things a sweep moved, each once
 local vis = { false, false, false, false } -- each viewer's IsVisible at this sweep
 
@@ -61,6 +64,7 @@ local Q = {
     nSlots = 0,
     overflow = 0, -- children past MAX_SLOTS, ignored
     errors = 0, -- sweeps that raised (the first turns the leaf off for the session)
+    ambiguous = 0, -- ambiguous items' lights this fight (§2.2)
     map = cdvToJ, -- read-only views for the tests and the snapshot
     amb = amb,
     slotOf = slotOf,
@@ -323,6 +327,8 @@ local function sweep(t)
     for s = 1, Q.nSlots do
         local item = sFrame[s]
         local j, u, a = 0, 0, NOT
+        local wasAmb = sAmb[s]
+        sAmb[s] = 0
         local id = Plain(api, rawget(item, "cooldownID"))
         if (id or 0) ~= sCd[s] then -- (re)assigned, released or secret: a new mapping (same-aura re-points too)
             reset(s)
@@ -344,12 +350,35 @@ local function sweep(t)
                 end
             else -- silent: NONE only for the application this slot was seen holding (§2.2a)
                 j, u = m, sUnit[s]
-                if u > 0 and u <= U.n and sSeen[s] > 0 and U.exp0[u][m] > t and sSeen[s] >= U.applied[u][m] then
+                -- (4a review m5) m <= U.nAura: an in-combat rebuild may shrink the set under this map
+                if
+                    u > 0
+                    and u <= U.n
+                    and m <= U.nAura
+                    and sSeen[s] > 0
+                    and U.exp0[u][m] > t
+                    and sSeen[s] >= U.applied[u][m]
+                then
                     a = NONE
                 end
             end
             if a ~= NOT and (not vis[sV[s]] or u == 2 and sSettle[s] > t) then -- settling: target answers only (§2.2)
                 a = STALE
+            end
+        elseif m and m < 0 and vis[sV[s]] then -- ambiguous: its lights counted (each once), never evidence (§2.2)
+            local aid = rawget(item, "auraInstanceID")
+            if issecret(aid) or aid ~= nil then -- secret: only tested, never compared
+                sAmb[s] = 1
+                if wasAmb == 0 then
+                    Q.ambiguous = Q.ambiguous + 1
+                    local unit = Plain(api, rawget(item, "auraDataUnit"))
+                    local au = unit ~= nil and UNIT[unit] or 0
+                    local list = amb[-m]
+                    for n = 1, au > 0 and #list or 0 do
+                        local k = (au - 1) * I.AURA_UNIT + list[n]
+                        ambC[k] = ambC[k] + 1
+                    end
+                end
             end
         end
         if a ~= sAns[s] or j ~= sJ[s] or u ~= sUnit[s] then
@@ -400,8 +429,9 @@ function Q.Activate(api, t, def)
     api0, active = api, api ~= nil and not broken -- off after an error until /reload
     Q.covered, nTouched = 0, 0
     for k in pairs(cUp) do
-        cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k] = 0, 0, 0, 0, 0, false
+        cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k], ambC[k] = 0, 0, 0, 0, 0, false, 0
     end
+    Q.ambiguous = 0
     for j in pairs(live) do
         live[j] = 0
     end
@@ -414,7 +444,7 @@ function Q.Activate(api, t, def)
         live[j] = 0
         for u = 1, 2 do
             local k = (u - 1) * I.AURA_UNIT + j
-            cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k] = 0, 0, 0, 0, 0, false
+            cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k], ambC[k] = 0, 0, 0, 0, 0, false, 0
             touched[(u - 1) * nAura + j] = touched[(u - 1) * nAura + j] or 0
         end
     end
@@ -429,6 +459,37 @@ end
 --- Stops answering; the slots stay (a frame is never given another slot).
 function Q.Deactivate()
     active, Q.covered = false, 0
+end
+
+--- The viewers with a live slot (UP or NONE) for aura `j` on unit `u`: a bitmask, 1 Essential, 2 Utility, 4 Buff icon,
+--- 8 Buff bar (§2.4, the snapshot's fact.via). Loops the slots; allocates nothing.
+function Q.Via(j, u)
+    local via = 0
+    for s = 1, active and Q.nSlots or 0 do
+        local a, b = sAns[s], VBIT[sV[s]]
+        if (a == UP or a == NONE) and sJ[s] == j and sUnit[s] == u and via % (2 * b) < b then
+            via = via + b
+        end
+    end
+    return via
+end
+
+--- This fight's lights of ambiguous items naming aura `j` on unit `u` (§2.2). Allocates nothing.
+function Q.Ambiguous(j, u)
+    return ambC[(u - 1) * I.AURA_UNIT + j] or 0
+end
+
+--- Configured slots whose cooldownID maps to no pack aura (the snapshot's summary). Allocates nothing.
+function Q.Unmapped()
+    local api, n = api0, 0
+    for s = 1, active and Q.nSlots or 0 do
+        local item = sFrame[s]
+        local id = Plain(api, rawget(item, "cooldownID"))
+        if id ~= nil and Plain(api, rawget(item, "layoutIndex")) ~= nil and cdvToJ[id] == nil then
+            n = n + 1
+        end
+    end
+    return n
 end
 
 --- Whether some cooldownID's candidates name aura j (alone or ambiguously): the router's tracked set.
@@ -458,6 +519,14 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
         if sUnit[s] == 2 then
             reset(s)
         end
+    end
+end)
+
+-- A fight's start: the ambiguous lights are counted per fight.
+S.On("PLAYER_REGEN_DISABLED", nil, function()
+    Q.ambiguous = 0
+    for k in pairs(ambC) do
+        ambC[k] = 0
     end
 end)
 

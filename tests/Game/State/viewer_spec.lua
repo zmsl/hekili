@@ -231,21 +231,24 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         end
     )
 
-    it("target items answer for the target; a target NONE is no answer through the router", function()
-        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
-        item.unit = "target"
-        start()
-        up(C, "target")
-        sweep(2)
-        assert.are.same({ 1, 1, 0, 0, 2, 0 }, counts(2, 2))
-        assert.are.equal(I.UP, I.presence.Presence(2, 2))
-        rec(2, 2, 2)
-        down(C, "target")
-        sweep(3)
-        assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(2, 2)) -- its last held unit
-        assert.are.equal(I.DOWN, (I.ReduceFact(Q.Counts(2, 2)))) -- the reduced fact ...
-        assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2)) -- ... is no answer: the router's self-scope rule
-    end)
+    it(
+        "target items answer for the target; a target NONE is a DOWN through the router (decision 111 amended)",
+        function()
+            local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
+            item.unit = "target"
+            start()
+            up(C, "target")
+            sweep(2)
+            assert.are.same({ 1, 1, 0, 0, 2, 0 }, counts(2, 2))
+            assert.are.equal(I.UP, I.presence.Presence(2, 2))
+            rec(2, 2, 2)
+            down(C, "target")
+            sweep(3)
+            assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(2, 2)) -- its last held unit
+            assert.are.equal(I.DOWN, (I.ReduceFact(Q.Counts(2, 2)))) -- the reduced fact ...
+            assert.are.equal(I.DOWN, I.presence.Presence(2, 2)) -- ... is the answer (Sources/Auras.lua closes only ours)
+        end
+    )
 
     it("an ambiguous item counts for no aura", function()
         ctl.viewer.infos[502] = { spellID = A, overrideSpellID = fs.SPENDER_C }

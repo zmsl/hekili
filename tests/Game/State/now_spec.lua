@@ -86,6 +86,14 @@ describe("now handlers", function()
         assert.are.same({ 0, 0, 0 }, { state.resets, state.offset, state.delay }) -- Hekili's state untouched
     end)
 
+    it("our cast's aura write marks that application ours (cdm-default rule 2.5.1)", function()
+        start()
+        local k = I.AURA_UNIT + I.auras.bySpell[fs.SPENDER_C]
+        assert.are.equal(0, I.auraOurs[k])
+        cast(fs.SPENDER_C, 5)
+        assert.is_true(I.auraOurs[k] ~= 0)
+    end)
+
     it("shifts a resource by `gain` (est, lo and hi) and writes its energize row back-dated to the cast", function()
         register("rage_test", {
             id = 2687,
