@@ -71,7 +71,7 @@ end
 -- (the viewer fills it with the secret aura id: TMW Auras.lua:960-1010).
 local function candidates(api, byId, info, js)
     local links = Plain(api, info.linkedSpellIDs)
-    if type(links) == "table" and links[1] ~= nil then
+    if type(links) == "table" and #links > 0 then -- the length only: an element is read through note (issecretvalue)
         for n = 1, #links do
             note(api, byId, js, links[n])
         end

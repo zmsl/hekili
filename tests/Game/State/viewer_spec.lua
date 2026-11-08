@@ -175,6 +175,44 @@ describe("the CooldownViewer leaf: the map (cdm-default §3.1)", function()
         assert.is_true(Q.Mappable(1))
     end)
 
+    it(
+        "a secret candidate (spellID, override, linked element, GetOverrideSpell's answer) never raises: ambiguous or unmapped",
+        function()
+            ctl.viewer.sets[0] = { 610, 611, 612, 613 }
+            ctl.viewer.infos[610] = { spellID = fake.SECRET } -- nothing tracked: unmapped
+            ctl.viewer.infos[611] = { spellID = fs.SPENDER_A, overrideSpellID = fake.SECRET }
+            ctl.viewer.infos[612] = { spellID = 9000, linkedSpellIDs = { fake.SECRET, fs.SPENDER_A } }
+            ctl.viewer.infos[613] = { spellID = fs.SPENDER_C }
+            ctl.overrides[fs.SPENDER_C] = fake.SECRET
+            start()
+            assert.is_nil(Q.map[610])
+            for _, id in ipairs({ 611, 612 }) do
+                assert.is_true(Q.map[id] < 0, id)
+                assert.are.same({ 1 }, Q.amb[-Q.map[id]])
+            end
+            assert.is_true(Q.map[613] < 0)
+            assert.are.same({ 2 }, Q.amb[-Q.map[613]])
+        end
+    )
+
+    it("an item with links and a tracked base spell maps by the links only", function()
+        ctl.viewer.sets[0] = { 620 }
+        ctl.viewer.infos[620] = { spellID = fs.SPENDER_C, linkedSpellIDs = { fs.SPENDER_A } }
+        start()
+        assert.are.equal(1, Q.map[620])
+        assert.is_false(Q.Mappable(2))
+    end)
+
+    it("a raising GetOverrideSpell is caught: the item maps by its own IDs", function()
+        ctl.viewer.sets[0] = { 630 }
+        ctl.viewer.infos[630] = { spellID = fs.SPENDER_A }
+        api.C_Spell.GetOverrideSpell = function()
+            error("no override")
+        end
+        start()
+        assert.are.equal(1, Q.map[630])
+    end)
+
     it("maps unlearned entries (allowUnlearned)", function()
         ctl.viewer.unlearned[1] = { 701 }
         ctl.viewer.infos[701] = { spellID = fs.SPENDER_A }
