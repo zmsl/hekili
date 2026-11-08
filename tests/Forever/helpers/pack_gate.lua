@@ -275,14 +275,16 @@ M.FLICKER = {
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Arcane"] = { flicker = 0.03, retracted = 0, heldReady = 109 }, -- 0.03 / 0.05 / 0, 0
+    -- 0.7 re-pin e5a9cd2a2d (lane mage, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 95 / 93 / 81, agreement .990 / .987 / .984): heldReady 109 -> 95 (the Arcane Concentration channel-start roll re-timed the fights); flicker 0.03 kept (0.02 + 0.01)
+    ["Arcane"] = { flicker = 0.03, retracted = 0, heldReady = 95 }, -- 0 / 0.02 / 0, 0
     -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new
     -- list runs dry onto the Scorch filler; 174 of the 175 ticks (seeds 1-20) are Scorch at its 150 cost crossing, one
     -- tick an episode, lo 141-150 against the truth's 150-152 (gap BQ)
     -- flicker 0.3 -> 0.1 (the same sweep: 0 / 0 / 0; the loops do not show gap CQ's replay flash)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 180 / 182 / 177):
     -- flicker 0.1 -> 0 (S, steady icons on by default); heldReady 175 -> 182 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Fire"] = { flicker = 0, retracted = 0, heldReady = 182 }, -- 0 / 0 / 0, 0
+    -- 0.7 re-pin e5a9cd2a2d (lane mage, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 171 / 174 / 180, agreement .995 / .994 / .997): heldReady 182 -> 180 (the Fire Arcane Concentration 5/5 stream; cost crossings as before)
+    ["Fire"] = { flicker = 0, retracted = 0, heldReady = 180 }, -- 0 / 0 / 0, 0
     -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits
     -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
     -- after its Evocation, more fights reach the existing frostfire_bolt <-> scorch pooling edge (gap BS); isolated by
@@ -291,7 +293,8 @@ M.FLICKER = {
     -- heldReady 124 -> 106 (re-pin e2842f0a78, the Mage fix round: 96 / 100 / 106)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 110 / 119 / 104):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 106 -> 119 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Frostfire"] = { flicker = 0.03, retracted = 0, heldReady = 119 }, -- 0.08 / 0.05 / 0.07, 0 (oracle 0.05 / 0.03 / 0.68)
+    -- 0.7 re-pin e5a9cd2a2d (lane mage, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 110 / 119 / 104, agreement .919 / .898 / .930): floors unchanged (the 21-40 set is the CN8 figure, accepted: gap BS's Scorch `fire_vulnerability.remains<5` edge and the Evocation pull-lo edge, lo about 520 against truth 1190, both pre-existing)
+    ["Frostfire"] = { flicker = 0.03, retracted = 0, heldReady = 119 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 396 / 398 / 399):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 405 }, -- 0.03 / 0.02 / 0.02, 0
