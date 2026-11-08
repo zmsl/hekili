@@ -103,7 +103,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "Guardian (wowsims.com)",
             content("druid_guardian", W.Guardian, "Guardian (wowsims.com)", 60),
             "druid_guardian",
-            0, -- re-pin 4b0030a44b: floor measured after CN8 (FLOORS WAIT). 0.782 (61/78) with Primal Fury's onCrit (central fix 15) and the bear's 11.25 a swing; 0.808 (63/78)
+            -- 0 -> 0.63 (0.632 of 117 decisions on-GCD; R6, truncated): no rage from hits yet (CN7): the kit has no `taken`, so
+            -- the belief sees only the bear's own rage (0.923 with the archived rule: named gap in the recipe header). Old pin: 0.782 (61/78)
+            0.63,
             -- once the replay ends a cooldown at its log timestamp (the ready-time ruling)
             -- Maul's untagged Casting lines are wowsims's queue at each swing (Cost = 0); its Tag 1 line is the hit,
             -- when the game's cast succeeds
@@ -218,7 +220,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             else
                 -- R45 (R41): the L10 bear's Roar line fires only with the debuff down, so with Roar up (30 s) the bar
                 -- idles: nothing useful to cast (Roar up, Maul off the GCD, Faerie Fire not known at L10, learned at 18): 0.2 -> 10.2 s
-                ws.live("Guardian (wowsims.com)", C, level == 10 and 10.2 or 6.0)
+                -- L40 6.0 -> 8.4 (8.4 s measured): R41 white-miss rage starvation (the bear's rage comes from its own swings only and
+                -- no rage from hits yet, CN7), as in the old-pin analysis
+                ws.live("Guardian (wowsims.com)", C, level == 10 and 10.2 or 8.4)
             end
         end)
     end
