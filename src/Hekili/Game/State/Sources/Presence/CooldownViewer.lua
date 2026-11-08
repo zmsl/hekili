@@ -5,10 +5,10 @@
 -- to MAX_SLOTS; past that a child is ignored and counted (overflow). A new frame is a new slot; a slot is never reused.
 -- The sweep (§3.2): at poll 15, per viewer IsVisible and GetNumChildren once, per slot four rawgets; a reading change
 -- moves its thing's counters (aura j, unit u: nUp, nNone, nStale) in O(1); the moved things' tUp/tNone are recomputed
--- over the live slots (O(slots)); a reduced UP or DOWN change goes to onEdge. The seen rule (§2.2a, decision 115): a
--- silent slot answers NONE only for an application it was seen holding (its record up, sSeen >= applied, its last held
+-- over the live slots (O(slots)); each moved thing goes to Q.onThing (the router reduces it, §2.4). The seen rule
+-- (§2.2a, decision 115): a silent slot answers NONE only for an application it was seen holding (its record up, sSeen >= applied, its last held
 -- unit). A target change makes target and NONE slots settle for SETTLE: their target answers are stale (§3.4). A raise
--- in the sweep turns the leaf off for the session (§3.5). Read, never write: rawget on items, on Blizzard frames only
+-- in the sweep, or in the router's reduction it calls, turns the leaf off for the session (§3.5). Read, never write: rawget on items, on Blizzard frames only
 -- GetChildren, GetNumChildren and IsVisible; no hooks of any kind (§3.3, §3.5).
 -- The idea of reading the viewer's items for presence, the all-viewers presence bit, the hidden-viewer rule and the
 -- spell mapping are TellMeWhen's (Cybeloras), GPL-3.0; ideas only, no code copied.
@@ -47,8 +47,8 @@ local NOT, UP, NONE, STALE = 0, 1, 2, 3
 local UNIT = { player = 1, target = 2 }
 
 -- The things' counters, by k = (u - 1) * AURA_UNIT + j, zeroed for both units at activation (preallocated: the
--- target's keys are in the hash part); the last reduced state (onEdge on a change); live slots per aura (covered).
-local cUp, cNone, cStale, tUp, tNone, last, live = {}, {}, {}, {}, {}, {}, {}
+-- target's keys are in the hash part); live slots per aura (covered).
+local cUp, cNone, cStale, tUp, tNone, live = {}, {}, {}, {}, {}, {}
 local touched, mark, nTouched = {}, {}, 0 -- the things a sweep moved, each once
 local vis = { false, false, false, false } -- each viewer's IsVisible at this sweep
 
@@ -56,7 +56,7 @@ local Q = {
     name = "viewer", -- l10n: verbatim
     scope = "self",
     covered = 0,
-    onEdge = nil,
+    onThing = nil, -- (k, t): a thing this sweep moved, its counts final (the router reduces it, §2.4)
     MAX_SLOTS = MAX_SLOTS,
     nSlots = 0,
     overflow = 0, -- children past MAX_SLOTS, ignored
@@ -266,6 +266,40 @@ local function reset(s)
     sSeen[s], sUnit[s] = 0, 0
 end
 
+-- The things a sweep moved: tUp/tNone recomputed as the latest begin (sT) of a live slot (§2.3: a slot that left takes
+-- its time with it), O(slots); then each goes to Q.onThing. Allocates nothing.
+local function reduce(t)
+    if nTouched == 0 then
+        return
+    end
+    for i = 1, nTouched do
+        local k = touched[i]
+        tUp[k], tNone[k] = 0, 0
+    end
+    for s = 1, Q.nSlots do
+        local a = sAns[s]
+        if a == UP or a == NONE then
+            local k = (sUnit[s] - 1) * I.AURA_UNIT + sJ[s]
+            if mark[k] then
+                if a == UP and sT[s] > tUp[k] then
+                    tUp[k] = sT[s]
+                elseif a == NONE and sT[s] > tNone[k] then
+                    tNone[k] = sT[s]
+                end
+            end
+        end
+    end
+    local on = Q.onThing
+    for i = 1, nTouched do
+        local k = touched[i]
+        mark[k] = false
+        if on then
+            on(k, t)
+        end
+    end
+    nTouched = 0
+end
+
 -- One sweep (§3.2), under one pcall: each viewer's visibility and growth, then every slot's reading against what it is
 -- counted as. Un-count before count, so a raise between the two leaves the slot not counted, never counted twice.
 local function sweep(t)
@@ -326,50 +360,13 @@ local function sweep(t)
             sSeen[s] = t
         end
     end
+    reduce(t) -- inside the pcall: a raise in the router's reduction or onEdge is a self-off too (§3.5)
 end
 
--- The things a sweep moved: tUp/tNone recomputed as the latest begin (sT) of a live slot (§2.3: a slot that left takes
--- its time with it), O(slots); then each reduced; an UP or DOWN change goes to onEdge (UNKNOWN fires none). Allocates
--- nothing.
-local function reduce(t)
-    if nTouched == 0 then
-        return
-    end
-    for i = 1, nTouched do
-        local k = touched[i]
-        tUp[k], tNone[k] = 0, 0
-    end
-    for s = 1, Q.nSlots do
-        local a = sAns[s]
-        if a == UP or a == NONE then
-            local k = (sUnit[s] - 1) * I.AURA_UNIT + sJ[s]
-            if mark[k] then
-                if a == UP and sT[s] > tUp[k] then
-                    tUp[k] = sT[s]
-                elseif a == NONE and sT[s] > tNone[k] then
-                    tNone[k] = sT[s]
-                end
-            end
-        end
-    end
-    for i = 1, nTouched do
-        local k = touched[i]
-        mark[k] = false
-        local st = I.ReduceFact(cUp[k] + cNone[k], cUp[k], cNone[k], cStale[k], tUp[k], tNone[k])
-        if st ~= last[k] then
-            last[k] = st
-            if st ~= I.UNDECIDED and Q.onEdge then
-                local u = k > I.AURA_UNIT and 2 or 1
-                Q.onEdge(k - (u - 1) * I.AURA_UNIT, u, st == I.UP, t)
-            end
-        end
-    end
-    nTouched = 0
-end
-
---- The sweep at poll 15: reads every slot, moves the counters, then reduces what moved. A raise inside the sweep turns
---- the leaf off for the session (§3.5): it answers nothing from then on, so no frozen answer is applied again; one
---- def.error line. Allocates nothing (a new child's slotOf entry aside; the error path formats once).
+--- The sweep at poll 15: reads every slot, moves the counters, then hands each moved thing to Q.onThing, all under one
+--- pcall. A raise anywhere in it turns the leaf off for the session (§3.5): it answers nothing from then on, so no
+--- frozen answer is applied again; one def.error line; Q.errors counts it (the router drops the leaf on a change).
+--- Allocates nothing (a new child's slotOf entry aside; the error path formats once).
 function Q.Sweep(t)
     if not active then
         return
@@ -386,9 +383,7 @@ function Q.Sweep(t)
         if def and def.error then
             def.error(STOPPED, tostring(err))
         end
-        return
     end
-    reduce(t)
 end
 
 --- nLive, nUp, nNone, nStale, tUp, tNone for aura `j` on unit `u`. Allocates nothing.
@@ -405,7 +400,7 @@ function Q.Activate(api, t, def)
     api0, active = api, api ~= nil and not broken -- off after an error until /reload
     Q.covered, nTouched = 0, 0
     for k in pairs(cUp) do
-        cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], last[k], mark[k] = 0, 0, 0, 0, 0, I.UNDECIDED, false
+        cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k] = 0, 0, 0, 0, 0, false
     end
     for j in pairs(live) do
         live[j] = 0
@@ -419,7 +414,7 @@ function Q.Activate(api, t, def)
         live[j] = 0
         for u = 1, 2 do
             local k = (u - 1) * I.AURA_UNIT + j
-            cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], last[k], mark[k] = 0, 0, 0, 0, 0, I.UNDECIDED, false
+            cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k] = 0, 0, 0, 0, 0, false
             touched[(u - 1) * nAura + j] = touched[(u - 1) * nAura + j] or 0
         end
     end
@@ -447,16 +442,6 @@ function Q.Collect()
     if active then
         collect(api0, false)
     end
-end
-
---- I.UP, I.DOWN or I.UNDECIDED for aura `j` on unit `u` (1 player, 2 target): the reduced counts at the last
---- sweep. Allocates nothing.
-function Q.Presence(j, u)
-    local v = active and last[(u - 1) * I.AURA_UNIT + j]
-    if v == I.UP or v == I.DOWN then
-        return v
-    end
-    return I.UNDECIDED
 end
 
 -- A target change (§3.4): the slots last answering for the target, and every NONE slot, settle until t + SETTLE (stale);
