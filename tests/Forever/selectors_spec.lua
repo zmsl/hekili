@@ -71,6 +71,22 @@ describe("Selectors.lua", function()
             end
         )
 
+        it(
+            "holds the last settled spec with no points or a tie, unless the tree's stored spec has the player's pack",
+            function()
+                local held = K.specs.two_b
+                local choice = { [2] = "two", last = 2 }
+                local s, source = T.PickSpec(K, choice, ranks({}), 60, { [100052] = { packManual = true } }, held)
+                assert.are.same({ "two", "stored" }, { s.key, source }) -- the activation wins
+                s, source = T.PickSpec(K, choice, ranks({}), 60, {}, held)
+                assert.are.same({ "two_b", "held" }, { s.key, source }) -- an older choice does not
+                s, source = T.PickSpec(K, { last = 2 }, ranks({ [101] = 3, [201] = 3 }), 60, {}, held) -- a tie
+                assert.are.same({ "two_b", "held" }, { s.key, source })
+                s, source = T.PickSpec(K, choice, ranks({}), 60, {}, nil) -- no settle yet: the stored spec, as before
+                assert.are.same({ "two", "stored" }, { s.key, source })
+            end
+        )
+
         it("falls back to today's rule when no selector is true", function()
             local s, source, _, picked = T.PickSpec(K, nil, ranks({ [101] = 5 }), 60)
             assert.are.same({ "one", "dominant" }, { s.key, source })
