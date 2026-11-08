@@ -40,7 +40,7 @@ local env = {
 -- The first of `kit`'s selectors (RegisterSelector's order) whose spec has priorities and whose condition, called with
 -- the points per tree, holds; a condition that raises counts as false and on `kit.selectorErrors` (its message in
 -- `kit.selectorError`); with `only` (a spec key), only that spec's selectors count. Returns the selector and its spec.
-local function select(kit, p, rankOf, level, only)
+local function firstSelector(kit, p, rankOf, level, only)
     local list = kit.selectors
     if not list then
         return nil
@@ -83,10 +83,10 @@ function ns.PickSpec(kit, choice, rankOf, level)
     local s = type(key) == "string" and kit.specs[key]
     if s then
         -- the player's choice fixes the spec only: that spec's own selectors still pick its pack (owner ruling I1)
-        return s, "stored", dominant, (select(kit, p, rankOf, level, s.key))
+        return s, "stored", dominant, (firstSelector(kit, p, rankOf, level, s.key))
     end
     local sel
-    sel, s = select(kit, p, rankOf, level)
+    sel, s = firstSelector(kit, p, rankOf, level)
     if s then
         return s, "selector", dominant, sel
     end
