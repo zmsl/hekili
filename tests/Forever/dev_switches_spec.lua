@@ -35,8 +35,8 @@ describe("the dev-only switches", function()
             assert.is_true(perf[name], name)
         end
         assert.are.same({ "default", false, false, false }, seen())
-        assert.is_falsy(args.experimentalHeader.hidden)
-        assert.is_falsy(args.steadyIcons.hidden)
+        assert.is_true(args.experimentalHeader.hidden) -- nothing under it outside a dev build (steady icons have no setting)
+        assert.is_nil(args.steadyIcons)
     end)
 
     it("a dev build shows them and honours them", function()
@@ -44,6 +44,7 @@ describe("the dev-only switches", function()
         for _, name in ipairs(NAMES) do
             assert.is_false(args[name].hidden, name)
         end
+        assert.is_false(args.experimentalHeader.hidden)
         assert.are.same({ "meter", true, true, true }, seen())
     end)
 end)

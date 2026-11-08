@@ -93,10 +93,9 @@ ns.Output = Output
 
 local annotators = slots()
 
--- Steady icons, an experimental option (the active spec's `steadyIcons`, off by default): Core sets `Output.steady`
--- once per update, with `Output.hold`, the updates to hold (1 to 3). Our own casts, channel ends and swing queue
--- changes since the start (Output.Acted).
-Output.steady = false
+-- Steady icons: always on for players (owner 2026-11-07, no setting); `Output.hold` the updates to hold (1). Only the
+-- headless harness turns them off or holds longer, per instance (tests/Game/harness/loop.lua's measurement arms).
+Output.steady = true
 Output.hold = 1
 Output.interval = 0.2 -- seconds between updates in combat (the driver's combatRate)
 local acts = 0

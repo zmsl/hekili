@@ -7624,6 +7624,8 @@ function state:TimeToReady( action, pool )
         wait = max( wait, ceil( z * 100 ) / 100 )
         -- a resource wait inside Output's READY (0.05 s) would show ready while the floor is still under the cost
         -- (dim never promote, CN8 C1): shown one update later instead
+        -- shortcut: 0.05 is READY in three places (Engine/Output.lua's READY, tests/Game/harness/loop.lua's REACT, here);
+        -- change them together, or share one engine constant if a fourth reader appears
         if wait <= 0.05 then wait = 0.06 end
         -- Forever (mana-regen plan, Task 4a): near its cost when the belief's estimate (the `current` stream) reaches
         -- the cost within EARLY_EXIT (at the estimate the pick would end the scan) while the floor reaches it within
