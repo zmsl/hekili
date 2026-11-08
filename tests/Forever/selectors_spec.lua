@@ -382,6 +382,16 @@ describe("the shipped selectors (headless)", function()
         assert.is_truthy(H.notes[#H.notes]:find("SM Ruin", 1, true), H.notes[#H.notes])
     end)
 
+    it("keeps a Feral build with a stray Thick Hide point Feral (Guardian takes all three)", function()
+        local feral = build("druid_feral", "druid")
+        feral[16929] = 1 -- Thick Hide 1/3
+        local H = boot("druid", feral)
+        assert.are.same({ 100112, "Feral (wowsims.com)" }, { active(H) })
+        feral[16929] = 3
+        respec(H, feral)
+        assert.are.same({ 100113, "Guardian (wowsims.com)" }, { active(H) })
+    end)
+
     it("names the selector in the snapshot's spec line", function()
         local H = boot("druid", build("druid_guardian", "druid"))
         assert.are.equal("selector", H.Hekili.State.spec.source)

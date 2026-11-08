@@ -30,7 +30,7 @@ local IsCurrentSpell = C_Spell.IsCurrentSpell
 local floor, max, min = math.floor, math.max, math.min
 
 -- The class kit and its specs (ids the core's: Balance 100111, Feral 100112, Guardian 100113, Restoration 100114).
--- Feral and Guardian ride the Feral Combat tree: its points pick Feral, with Thick Hide Guardian (the selector below
+-- Feral and Guardian ride the Feral Combat tree: its points pick Feral, with Thick Hide 3/3 Guardian (the selector below
 -- RegisterTalents); /hekili spec guardian or feral keeps one for the tree.
 local spec = Hekili:NewClass("DRUID", {
     specs = {
@@ -378,10 +378,11 @@ spec:RegisterTalents({
 
 -- Spec and pack from the talents (Engine/Schema/Selectors.lua; after the Hekili classic branch's pack selectors).
 -- wowsims's Guardian and Feral builds both spend 32 points in Feral Combat; only Guardian takes Thick Hide (3/3, with
--- Feral Instinct, Lacerate and Primal Bite), so Feral Combat ahead with Thick Hide is Guardian. Anything else on the
--- tree is Feral (the tree's first spec), unless the player activated Guardian for it.
+-- Feral Instinct, Lacerate and Primal Bite), so Feral Combat ahead with all of Thick Hide is Guardian (one stray point
+-- does not turn a Feral build). Anything else on the tree is Feral (the tree's first spec), unless the player
+-- activated Guardian for it.
 spec:RegisterSelector("guardian", { spec = "guardian", pack = "Guardian (wowsims.com)" }, function(tab1, tab2, tab3)
-    return tab2 > tab1 and tab2 > tab3 and talent.thick_hide.rank > 0
+    return tab2 > tab1 and tab2 > tab3 and talent.thick_hide.rank >= 3
 end)
 
 spec:RegisterGear("swarming_idol", GEAR.swarming_idol)
