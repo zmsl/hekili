@@ -93,7 +93,8 @@ local PACKS = {
     ["Druid/APLs/Balance"] = { "moonfire=2", "insect_swarm=2", "starfire=1" },
     -- re-pin e2842f0a78 (R66): the adaptive list's order; Claw's one line is wowsims's "Claw can replace Shred" fallback
     ["Druid/APLs/Feral"] = { "shred=1", "rip=2", "rake=2", "claw=1" },
-    ["Druid/APLs/Guardian"] = { "maul=1", "maul=2", "lacerate=2", "demoralizing_roar=2", "lacerate=2" },
+    -- re-pin e5a9cd2a2d: the adaptive list puts the upkeep Lacerate and Roar first, the rage dump (Maul) last
+    ["Druid/APLs/Guardian"] = { "lacerate=2", "demoralizing_roar=2", "lacerate=2", "maul=1", "maul=2" },
     ["Mage/APLs/Arcane"] = { "arcane_missiles=1" },
     -- re-pin e2842f0a78: the closing second Scorch line is the filler, untiered (`scorch = { 2, false }`)
     ["Mage/APLs/Fire"] = { "pyroblast=1", "scorch=2", "arcane_missiles=1" },
