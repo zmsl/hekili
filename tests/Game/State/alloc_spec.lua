@@ -270,17 +270,18 @@ describe("zero allocation", function()
     it("the sweep over a 40-slot layout with changes allocates nothing (cdm-default §3.2)", function()
         local api, ctl = fake.new()
         ctl.now = 1
-        ctl.viewer.sets[2] = { 501, 502, 503 }
+        ctl.viewer.sets[2] = { 501, 502, 503, 504 }
         ctl.viewer.infos[501] = { spellID = fs.SPENDER_A }
         ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
         ctl.viewer.infos[503] = { spellID = 9999 } -- unmapped
+        ctl.viewer.infos[504] = { spellID = 9998, linkedSpellIDs = { fs.SPENDER_A, 9997 } } -- ambiguous (counted)
         local items = {}
         for n = 1, 40 do
             local v = fake.VIEWERS[n % 4 + 1]
             if n % 10 == 0 then
                 ctl.ViewerChild(v)
             else
-                items[#items + 1] = ctl.ViewerItem(v, n, 500 + n % 3 + 1)
+                items[#items + 1] = ctl.ViewerItem(v, n, 500 + n % 4 + 1)
             end
         end
         local ns = load.module()

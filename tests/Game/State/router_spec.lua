@@ -105,21 +105,23 @@ describe("the Presence router", function()
         assert.are.equal(1, I.presenceEdges.up)
     end)
 
-    it("prints one audit line per tracked aura and unit; none with the switch off", function()
+    it("prints one line per tracked aura and unit, and the summary; with the switch off only the summary", function()
         local snap = VS.Snapshot()
-        assert.is_truthy(snap:find("presence spender_a unit=- path=viewer facts=0 disagree=0", 1, true))
-        assert.is_truthy(snap:find("presence spender_c unit=- path=viewer facts=0 disagree=0", 1, true))
-        assert.is_falsy(snap:find("unit=target path=viewer facts=0", 1, true)) -- one line per aura without facts
+        assert.is_truthy(snap:find("presence spender_a unit=- fact=unknown", 1, true))
+        assert.is_truthy(snap:find("presence spender_c unit=- fact=unknown", 1, true))
         assert.is_falsy(snap:find("presence spender_m", 1, true)) -- untracked and no fact: no line
-        I.presenceFacts[1] = 2 -- a fact on the player: that unit's line replaces the aura's line
+        I.presenceFacts[1] = 2 -- a fact on the player: that unit's line replaces the aura's line (out of combat a plain walk decides)
         snap = VS.Snapshot()
-        assert.is_truthy(snap:find("presence spender_a unit=player path=viewer facts=2 disagree=0", 1, true))
+        assert.is_truthy(snap:find("presence spender_a unit=player fact=unknown from=walk n=0 via=- ", 1, true))
         assert.is_falsy(snap:find("presence spender_a unit=-", 1, true))
         assert.is_falsy(snap:find("presence spender_a unit=target", 1, true))
+        assert.is_truthy(snap:find("presence covered=0/2 unmapped=0 ambiguous=0 overflow=0 leaf=on", 1, true))
         local d2 = fs.def(fs.new(9))
         d2.providers = { presence = "router", viewer = false }
         I.Build(d2, 1)
-        assert.is_falsy(VS.Snapshot():find("presence ", 1, true))
+        snap = VS.Snapshot()
+        assert.is_truthy(snap:find("presence covered=0/0 unmapped=0 ambiguous=0 overflow=0 leaf=off(debug)", 1, true))
+        assert.is_falsy(snap:find("presence spender_", 1, true))
     end)
 
     it("zeroes the edge and fact counters at each fight's start", function()
@@ -130,14 +132,16 @@ describe("the Presence router", function()
         assert.are.same({ 0, 0, 0 }, { I.presenceEdges.up, I.presenceEdges.down, I.presenceFacts[1] })
     end)
 
-    it("a self-scoped DOWN on the target is no answer and no edge (others' debuffs may be up)", function()
+    it("a target DOWN is an answer and an edge (decision 111 amended: the CDM's 'now' state has precedence)", function()
         local item = ctl.viewer.items.BuffIconCooldownViewer[2]
-        local n = 0
+        local ups, downs = 0, 0
         I.presence.onEdge = function(_, _, up)
-            n = n + 1
-            assert.is_true(up)
+            if up then
+                ups = ups + 1
+            else
+                downs = downs + 1
+            end
         end
-        assert.are.equal("self", I.presence.scope)
         assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2))
         ctl.ViewerAura(item, "target")
         I.presence.Sweep(2)
@@ -145,9 +149,29 @@ describe("the Presence router", function()
         I.auras.exp0[2][2], I.auras.applied[2][2] = 1e6, 2 -- the record the item was seen holding (seen rule)
         ctl.ViewerClear(item)
         I.presence.Sweep(3)
-        assert.are.equal(I.DOWN, I.presence.fact.state[I.AURA_UNIT + 2]) -- the reduced fact ...
-        assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2)) -- ... is none through the router
-        assert.are.same({ 1, 1, 0 }, { n, I.presenceEdges.up, I.presenceEdges.down })
+        assert.are.equal(I.DOWN, I.presence.Presence(2, 2))
+        assert.are.same({ 1, 1, 1, 1 }, { ups, downs, I.presenceEdges.up, I.presenceEdges.down })
+    end)
+
+    it("an aura index past the set (an in-combat rebuild shrank it) is skipped, never a self-off (4a m5)", function()
+        local item = ctl.viewer.items.BuffIconCooldownViewer[2] -- aura 2 on the target
+        local Q = I.PRESENCE.viewer
+        ctl.Fire("PLAYER_REGEN_DISABLED") -- in combat: Sources/Auras.lua's apply reads the record (no walk wins)
+        ctl.ViewerAura(item, "target")
+        I.presence.Sweep(2)
+        I.auras.exp0[2][2], I.auras.applied[2][2] = 1e6, 2
+        I.presence.Sweep(2.5)
+        local U = I.auras
+        U.nAura = 1 -- the set shrank under the leaf's old map: aura 2's arrays are gone
+        U.exp0[2][2], U.applied[2][2], U.exp0[1][2], U.applied[1][2] = nil, nil, nil, nil
+        ctl.ViewerClear(item) -- silent: the seen gate would read the gone record
+        I.presence.Sweep(3)
+        ctl.ViewerAura(item, "target") -- an UP edge: Sources/Auras.lua's apply would read it
+        I.presence.Sweep(3.2)
+        ctl.ViewerRelease(item) -- UNKNOWN: the router's lost check would read it too
+        I.presence.Sweep(3.5)
+        assert.are.equal(0, Q.errors)
+        assert.is_truthy(I.presence.covered)
     end)
 end)
 
