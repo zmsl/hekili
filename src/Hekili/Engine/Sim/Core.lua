@@ -140,8 +140,6 @@ function Hekili:AddToStack( script, list, parent, run )
         self:Debug( path )
     end
 
-    -- if self.ActiveDebug then self:Debug( "Adding " .. list .. " to stack, parent is " .. ( parent or "(none)" ) .. " (RAL = " .. tostring( run ) .. ".") end
-
     InUse[ list ] = true
 end
 
@@ -178,7 +176,6 @@ function Hekili:PopStack()
         end
     end
 
-    -- if self.ActiveDebug then self:Debug( "Removed " .. x.list .. " from stack." ) end
     if x.priorMin then
         if self.ActiveDebug then Hekili:Debug( "Resetting delayMin to %.2f from %.2f.", x.priorMin, state.delayMin ) end
         state.delayMin = x.priorMin
@@ -360,19 +357,6 @@ function Hekili:CheckChannel( ability, prio )
     local modifiers = scripts.Channels[ state.system.packName ]
     modifiers = modifiers and modifiers[ channel ] or default_modifiers
 
-    --[[ if self.ActiveDebug then
-        if default_modifiers == modifiers then
-            self:Debug( "Using default modifiers." )
-        else
-            local vals = ""
-            for k, v in pairs( modifiers ) do
-                vals = format( "%s%s = %s - ", vals, tostring( k ), tostring( type(v) == "function" and v() or v ) )
-            end
-
-            self:Debug( "Channel modifiers: %s", vals )
-        end
-    end ]]
-
     local tick_time = a.tick_time or aura.tick_time
     local remains = state.channel_remains
 
@@ -386,12 +370,6 @@ function Hekili:CheckChannel( ability, prio )
     last_tick = remains <= last_tick
 
     if ability == nil or channel == ability then
-
-        --[[ if prio <= remains + 0.01 then
-            if self.ActiveDebug then self:Debug( "CC: ...looks like chaining, not breaking channel.", ability ) end
-            state.this_action = act
-            return true
-        end ]]
 
         if modifiers.early_chain_if and modifiers.early_chain_if() then
             local timing = last_tick or ( state.query_time - state.buff.casting.applied ) % tick_time < 0.25
@@ -417,10 +395,6 @@ function Hekili:CheckChannel( ability, prio )
         -- If interrupt_global is flagged, we interrupt for any potential cast.  Don't bother with additional testing.
         -- REVISIT THIS:  Interrupt Global allows entries from any action list rather than just the current (sub) list.
         -- That means interrupt / interrupt_if should narrow their scope to the current APL (at some point, anyway).
-        --[[ if modifiers.interrupt_global and modifiers.interrupt_global() then
-            if self.ActiveDebug then self:Debug( "CC:  Interrupt Global is true." ) end
-            return true
-        end ]]
 
         -- We are concerned with chain and early_chain_if.
 
@@ -608,8 +582,6 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
     local debug = self.ActiveDebug
 
-    -- if debug then self:Debug( "ListCheck: Success(%s-%s)", packName, listName ) end
-
     local wasPrecombat = inPrecombat
     if listName == "precombat" then inPrecombat = true end
     local precombatFilter = inPrecombat and state.time > 0
@@ -739,7 +711,6 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                     end
 
                     rDepth = rDepth + 1
-                    -- if debug then self:Debug( "[%03d] %s ( %s - %d )", rDepth, action, listName, actID ) end
 
                     local wait_time = state.delayMax or 15
                     local clash = 0
@@ -824,7 +795,6 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                                     elseif not entry.criteria or entry.criteria == "" then
                                         if debug then self:Debug( "There is no criteria for %s.", action == "use_items" and "Use Items" or state.args.list_name or "this action list" ) end
-                                        -- aScriptPass = ts or self:CheckStack()
 
                                     else
                                         aScriptPass = scripts:CheckScript( scriptID ) -- and self:CheckStack() -- we'll check the stack with the list's entries.
@@ -1021,9 +991,6 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                             elseif cap_sec > 0 and new_wait > cap_sec then
                                                                 if debug then self:Debug( "Rechecking stopped at step #%d.  The recheck time ( %.2f ) exceeds the preferred Maximum Forecasting Time ( %.2f ).", i, new_wait, cap_sec ) end
                                                                 break
-                                                            --[[ elseif new_wait >= 10 then
-                                                                    if debug then self:Debug( "Rechecking stopped at step #%d.  The recheck ( %.2f ) isn't ready within a reasonable time frame ( 10s ).", i, new_wait ) end
-                                                                    break ]]
                                                             elseif ( action ~= state.channel ) and waitValue <= base_delay + step + 0.05 then
                                                                 if debug then self:Debug( "Rechecking stopped at step #%d.  The previously chosen ability is ready before this recheck would occur ( %.2f <= %.2f + 0.05 ).", i, waitValue, new_wait ) end
                                                                 break
@@ -1084,43 +1051,6 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                 Timer:Track("Post Recheck")
 
                                                 if aScriptPass then
-                                                    --[[ if action == "potion" then
-                                                        local item = class.abilities.potion.item
-
-                                                        slot.scriptType = "simc"
-                                                        slot.script = scriptID
-                                                        slot.hook = caller
-
-                                                        slot.display = dispName
-                                                        slot.pack = packName
-                                                        slot.list = listName
-                                                        slot.listName = listName
-                                                        slot.action = actID
-                                                        slot.actionName = state.this_action
-                                                        slot.actionID = -1 * item
-
-                                                        slot.texture = select( 10, GetItemInfo( item ) )
-                                                        slot.caption = ability.caption or entry.caption
-                                                        slot.item = item
-
-                                                        slot.wait = state.delay
-                                                        slot.resource = state.GetResourceType( rAction )
-
-                                                        rAction = state.this_action
-                                                        rWait = state.delay
-                                                        state.nearAction = ( near and state.delay <= wait_time ) and rAction or false -- a recheck that delayed it past its resource wait: not near
-
-                                                        if debug then
-                                                            -- scripts:ImplantDebugData( slot )
-                                                            self:Debug( "Action chosen:  %s at %.2f!", rAction, rWait )
-                                                            self:Debug( "Texture shown:  %s", slot.texture )
-                                                        end
-
-                                                        -- slot.indicator = ( entry.Indicator and entry.Indicator ~= "none" ) and entry.Indicator
-
-                                                        state.selection_time = state.delay
-                                                        state.selected_action = rAction ]]
-
                                                     if action == "wait" then
                                                         local sec = state.args.sec or 0.5
 
@@ -1202,18 +1132,12 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                                 -- Oops.  We only want to wait if
                                                                 local next_wait = state[ next_res ].timeToLo( next_cost + extra_amt )
 
-                                                                --[[ if next_wait > 0 then
-                                                                    if debug then self:Debug( "Next Wait: %.2f; TTR: %.2f, Resource(%.2f): %.2f", next_wait, state:TimeToReady( next_action, true ), next_cost + extra_amt, state[ next_res ][ "time_to_" .. ( next_cost + extra_amt ) ] ) end
-                                                                end ]]
-
                                                                 if next_wait <= 0 then
                                                                     if debug then self:Debug( "Attempted to Pool Resources for Next Entry ( %s ), but there is no need to wait.  Skipping.", next_action ) end
                                                                 elseif next_wait >= rWait then
                                                                     if debug then self:Debug( "The currently chosen action ( %s ) is ready at or before the next action ( %.2fs <= %.2fs ).  Skipping.", ( rAction or "???" ), rWait, next_wait ) end
                                                                 elseif state.delayMax and next_wait >= state.delayMax then
                                                                     if debug then self:Debug( "Attempted to Pool Resources for Next Entry ( %s ), but we would exceed our time ceiling in %.2fs.  Skipping.", next_action, next_wait ) end
-                                                                --[[ elseif next_wait >= 15 then
-                                                                    if debug then self:Debug( "Attempted to Pool Resources for Next Entry ( %s ), but we'd have to wait much too long ( %.2f ).  Skipping.", next_action, next_wait ) end ]]
                                                                 else
                                                                     -- Pad the wait value slightly, to make sure the resource is actually generated.
                                                                     next_wait = next_wait + 0.01
@@ -1240,10 +1164,6 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                             -- if debug then self:Debug( "Pooling for a specified period of time is not supported yet.  Skipping." ) end
                                                             if debug then self:Debug( "pool_resource is disabled as pooling is automatically accounted for by the forecasting engine." ) end
                                                         end
-
-                                                        -- if entry.PoolForNext or state.args.for_next == 1 then
-                                                        --    if debug then self:Debug( "Pool Resource is not used in the Predictive Engine; ignored." ) end
-                                                        -- end
 
                                                     else
                                                         slot.scriptType = "simc"
@@ -1284,7 +1204,6 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                         state.selected_action = rAction
 
                                                         if debug then
-                                                            -- scripts:ImplantDebugData( slot )
                                                             self:Debug( "Action chosen:  %s at %.2f!", rAction, state.delay )
                                                             self:Debug( "Texture shown:  %s", slot.texture )
                                                         end
@@ -1698,13 +1617,6 @@ function Hekili.Update()
                             state:HandleEvent( event )
                             state.offset = state.offset + t
                             event = events[ 1 ]
-                        --[[ elseif t < 0.2 then
-                            if debug then Hekili:Debug( 1, "Finishing queued event #%d ( %s of %s ) due at %.2f because the event occurs w/in 0.2 seconds.\n", n, event.type, event.action, t ) end
-                            state.advance( t )
-                            if event == events[ 1 ] then
-                                state:HandleEvent( event )
-                            end
-                            event = events[ 1 ] ]]
                         else
                             --[[
                                 Okay, new paradigm.  We're checking whether we should break channeled spells before we worry about casting while casting.
@@ -2160,8 +2072,6 @@ function Hekili:DumpFrameInfo()
     wipe( usedCPU )
     for k, v in orderedPairs( ns.frameProfile ) do
         local usage, calls = GetFrameCPUUsage( v, true )
-
-        -- calls = self.ECount[ k ] or calls
 
         if usage and calls > 0 then
             local db = {}
