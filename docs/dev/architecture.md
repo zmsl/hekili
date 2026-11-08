@@ -312,7 +312,8 @@ class token, a missing pack, a mismatch or a failed pack load keeps one notice, 
 `## X-Hekili-ContentAPI` change together, only when the content surface changes: the Register* API, `Hekili.Client`,
 or the environment names above (10: `Hekili:GetLocale`, the packs' `Locales/`). `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
 
-**Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`) from the
+**Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`, `Engine/Schema/Selectors.lua`; the tree arithmetic, ids, share keys and
+migration are `Engine/Schema/Trees.lua`'s) from the
 talent tree with the most points: the spec the character activated for that tree
 (`profile.specChoice["Name-Realm"] = { [tree] = key, last = tree }`), else the tree's first spec; on no points or a
 tie, the last dominant tree seen; with none seen, the first supported spec. A respec or dual-spec swap that moves the

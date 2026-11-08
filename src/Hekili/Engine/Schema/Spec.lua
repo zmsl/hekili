@@ -2357,7 +2357,7 @@ function Hekili:SpecializationChanged()
         return
     end
 
-    -- The class pack's spec: the one chosen for the dominant tree, else its first (Engine/Schema/Trees.lua). The ranks
+    -- The class pack's spec: the one chosen for the dominant tree, else its first (Engine/Schema/Selectors.lua). The ranks
     -- may be the last walk's here; SettleSpecChoice re-picks after this pass's walk.
     local kit = class.kit
     local tree, source
@@ -2656,7 +2656,7 @@ function Hekili:SpecializationChanged()
     self:UpdateDamageDetectionForCLEU()
 end
 
--- This character's spec choice table ({ [tree] = spec key, last = tree }; Trees.lua's PickSpec), made on first use;
+-- This character's spec choice table ({ [tree] = spec key, last = tree }; Selectors.lua's PickSpec), made on first use;
 -- a legacy scalar choice moves onto `tree` (the dominant tree now, else 0) once.
 local function charChoice( tree )
     local all, key = Hekili.Engine.settings.specChoice, ns.CharKey()
