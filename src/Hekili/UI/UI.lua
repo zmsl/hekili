@@ -141,6 +141,13 @@ end
 -- The mover handlers a style sets on its buttons (UI/Styles/Classic.lua).
 ns.UI.Button_OnMouseUp, ns.UI.Button_OnMouseDown = Button_OnMouseUp, Button_OnMouseDown
 
+-- The client rejects "NONE" as a SetFont flag ("" is plain); the Style dropdowns store "NONE" for None.
+local function fontFlags( style )
+    if style == nil or style == "NONE" then return "" end
+    return style
+end
+ns.UI.FontFlags = fontFlags
+
 function ns.StartConfiguration( external )
     Hekili.Config = true
 
@@ -1476,7 +1483,7 @@ function Hekili:BuildUI()
 
     f.Text = f.Text or f:CreateFontString( "HekiliNotificationText", "OVERLAY" )
     f.Text:SetAllPoints( f )
-    f.Text:SetFont( LSM:Fetch( "font", notif.font ), notif.fontSize * scaleFactor, notif.fontStyle )
+    f.Text:SetFont( LSM:Fetch( "font", notif.font ), notif.fontSize * scaleFactor, fontFlags( notif.fontStyle ) )
     f.Text:SetJustifyV("MIDDLE")
     f.Text:SetJustifyH("CENTER")
     f.Text:SetTextColor(1, 1, 1, 1)
