@@ -23,12 +23,6 @@ local GetBuffDataByIndex, GetDebuffDataByIndex = Facade.C_UnitAuras.GetBuffDataB
 local FindAura = Facade.AuraUtil.FindAura
 local UnpackAuraData = AuraUtil.UnpackAuraData
 
-local GetSpellBookItemInfo = function( index, bookType )
-    local spellBank = ( bookType == "spell" or bookType == Enum.SpellBookItemType.Spell ) and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet
-    local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
-    if info then return info.name, info.iconID, info.spellID end
-end
-
 ns.UnitBuff = function( unit, index, filter )
     return UnpackAuraData( GetBuffDataByIndex( unit, index, filter ) )
 end
