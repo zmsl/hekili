@@ -312,67 +312,67 @@ spec:RegisterResource(
     }
 )
 
--- Talents: { talent tree (1 Balance, 2 Feral Combat, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
--- max rank }: the DB2's 47 Classic nodes (16 Balance, 16 Feral Combat, 15 Restoration; the tree is the DB2's
--- Talent.TabID), keys Classic's, until the live export (checkpoint Q1) replaces them. The last two are placeholders
--- the export replaces, so no reader names an unregistered key; their tree is 0 until the export places them.
+-- Talents: { talent tree (1 Balance, 2 Feral Combat, 3 Restoration: the dominant tree picks the spec), rank 1's
+-- spell, max rank }: Forever's tree as wowsims/forever's ui/sim/talents/trees/druid.json lists it
+-- (tools/wowsims/talents.lua writes it; tests/Forever/talent_trees_spec.lua checks it and the spec detection over it). A
+-- key is Classic's where the talent exists there (code reads `talent.<key>.rank`), else the snake_case of the node's
+-- name.
 spec:RegisterTalents({
-    -- Balance (16)
+    -- Balance (tree 1)
     improved_wrath = { 1, 16814, 5 },
-    natures_grasp = { 1, 16689, 1 },
-    improved_natures_grasp = { 1, 17245, 4 },
-    improved_entangling_roots = { 1, 16918, 3 },
-    improved_moonfire = { 1, 16821, 5 },
-    natural_weapons = { 1, 16902, 5 },
-    natural_shapeshifter = { 1, 16833, 3 },
-    improved_thorns = { 1, 16836, 3 },
-    omen_of_clarity = { 1, 16864, 1 },
+    genesis = { 1, 1223081, 5 },
+    moonglow = { 1, 16845, 3 },
+    improved_moonfire = { 1, 16821, 2 },
+    natures_majesty = { 1, 1223082, 2 },
     natures_reach = { 1, 16819, 2 },
+    improved_entangling_roots = { 1, 16918, 3 },
+    natures_splendor = { 1, 1223083, 1 },
+    insect_swarm = { 1, 5570, 1 },
     vengeance = { 1, 16909, 5 },
     improved_starfire = { 1, 16850, 5 },
+    improved_natures_grasp = { 1, 17245, 2 },
     natures_grace = { 1, 16880, 1 },
-    moonglow = { 1, 16845, 3 },
+    eclipse = { 1, 408248, 3 },
     moonfury = { 1, 16896, 5 },
     moonkin_form = { 1, 24858, 1 },
-    -- Feral Combat (16)
+    -- Feral Combat (tree 2)
     ferocity = { 2, 16934, 5 },
-    feral_aggression = { 2, 16858, 5 },
-    feral_instinct = { 2, 16947, 5 },
-    brutal_impact = { 2, 16940, 2 },
-    thick_hide = { 2, 16929, 5 },
-    feline_swiftness = { 2, 17002, 2 },
-    feral_charge = { 2, 16979, 1 },
-    sharpened_claws = { 2, 16942, 3 },
-    -- Shredding Attacks: wowsims/forever's 3 points (Shred 42 at 3/3, its log; the DB2 node lists 2 rank spells)
-    improved_shred = { 2, 16966, 3 },
-    predatory_strikes = { 2, 16972, 3 },
-    blood_frenzy = { 2, 16952, 2 },
-    primal_fury = { 2, 16958, 2 }, -- "Blood Frenzy" on Forever
-    savage_fury = { 2, 16998, 2 },
-    faerie_fire_feral = { 2, 16857, 1 },
-    heart_of_the_wild = { 3, 17003, 5 }, -- hotfix 113554: moved to Restoration
-    leader_of_the_pack = { 2, 17007, 1 },
-    predatory_discipline = { 2, 1328613, 1 }, -- hotfix 113554: Bite keeps its extra energy
-    lacerate = { 2, 1328617, 1 }, -- hotfix 113554: Lacerate's rank 1 is a talent
-    -- Restoration (15)
-    improved_mark_of_the_wild = { 3, 17050, 5 },
     furor = { 2, 17056, 5 }, -- hotfix 113554: moved to Feral Combat
-    improved_healing_touch = { 3, 17069, 5 },
+    feline_swiftness = { 2, 17002, 2 },
+    feral_instinct = { 2, 16947, 3 },
+    brutal_impact = { 2, 16940, 2 },
+    thick_hide = { 2, 16929, 3 },
+    improved_shred = { 2, 16966, 3 },
+    savage_fury = { 2, 16998, 2 },
+    feral_charge = { 2, 1238122, 1 },
+    sharpened_claws = { 2, 16942, 2 },
+    predatory_strikes = { 2, 16972, 3 },
+    lacerate = { 2, 1328617, 1 }, -- hotfix 113554: Lacerate's rank 1 is a talent
+    predatory_discipline = { 2, 1328613, 1 }, -- hotfix 113554: Bite keeps its extra energy
+    primal_fury = { 2, 16958, 2 }, -- "Blood Frenzy" on Forever
+    leader_of_the_pack = { 2, 17007, 1 },
+    natural_instinct = { 2, 1223242, 2 },
+    rend_and_tear = { 2, 1223246, 5 },
+    natural_reaction = { 2, 417051, 5 },
+    primal_bite = { 2, 407995, 1 },
+    shifting_power = { 2, 1322605, 1 },
+    -- Restoration (tree 3)
     natures_focus = { 3, 17063, 5 },
-    improved_enrage = { 3, 17079, 2 },
+    heart_of_the_wild = { 3, 17003, 5 }, -- hotfix 113554: moved to Restoration
+    improved_healing_touch = { 3, 17069, 5 },
     reflection = { 3, 17106, 3 },
-    insect_swarm = { 3, 5570, 1 },
-    subtlety = { 3, 17118, 5 },
+    natural_shapeshifter = { 3, 16833, 3 },
+    subtlety = { 3, 17118, 3 },
+    gift_of_nature = { 3, 17104, 5 },
+    bloom = { 3, 1328621, 1 },
     tranquil_spirit = { 3, 24968, 5 },
     improved_rejuvenation = { 3, 17111, 3 },
+    swiftmend = { 3, 18562, 1 },
     natures_swiftness = { 3, 17116, 1 },
-    gift_of_nature = { 3, 17104, 5 },
+    living_spirit = { 3, 1309631, 3 },
     improved_tranquility = { 3, 17123, 2 },
     improved_regrowth = { 3, 17074, 5 },
-    swiftmend = { 3, 18562, 1 },
-    -- Forever-only placeholders, replaced by the export (checkpoint Q1).
-    natures_splendor = { 0, 1223083, 1 },
-    eclipse = { 0, 408248, 3 },
+    wild_growth = { 3, 408120, 1 },
 })
 
 spec:RegisterGear("swarming_idol", GEAR.swarming_idol)
