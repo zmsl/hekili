@@ -33,11 +33,11 @@ actions+=/call_action_list,name=aoe_rotation,if=active_enemies>1
 actions+=/lightning_bolt,if=!action.stormstrike.known
 actions.single_target_rotation=flame_shock,focus=2,if=debuff.flame_shock.remains<=0
 actions.single_target_rotation+=/stormstrike
-actions.single_target_rotation+=/lightning_bolt,focus=1,if=buff.maelstrom_weapon.stack=5
+actions.single_target_rotation+=/lightning_bolt,focus=1,if=(talent.maelstrom_weapon.enabled&buff.maelstrom_weapon.stack=5)
 actions.single_target_rotation+=/earth_shock
 actions.single_target_rotation+=/fire_nova
 actions.aoe_rotation=fire_nova
 actions.aoe_rotation+=/flame_shock,focus=2,if=debuff.flame_shock.remains<=0
 actions.aoe_rotation+=/stormstrike
-actions.aoe_rotation+=/lightning_bolt,focus=1,if=buff.maelstrom_weapon.stack=5
+actions.aoe_rotation+=/lightning_bolt,focus=1,if=(talent.maelstrom_weapon.enabled&buff.maelstrom_weapon.stack=5)
 actions.aoe_rotation+=/earth_shock

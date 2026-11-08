@@ -281,7 +281,10 @@ local PACKS = {
         spec = 100072,
         weapon = { 180, 260, 3.6 },
         parry = true, -- the build's Spirit Weapons (wowsims's applySpiritWeapons: CanParry)
-        talents = { [1223031] = 2 }, -- Improved Stormstrike 2/2 (rank 2: always; wowsims talents_enhancement.go:188-210)
+        -- Improved Stormstrike 2/2 (rank 2: always; wowsims talents_enhancement.go:188-210); Maelstrom Weapon 5/5 (the
+        -- build's 408498=5@2: the world stacks it on every landed swing, and the pack's Lightning Bolt line reads the talent
+        -- since central-talents registered it)
+        talents = { [1223031] = 2, [408498] = 5 },
         -- wowsims's log (shaman_enhancement.log, re-pin e2842f0a78: Windshaper Skyborne, was 5000 / 9.8 / 38.42 as an
         -- Orc): 6565 mana, 17.8 a second while casting, 49.05 outside; Improved Stormstrike (1238931, DB2 aura 134 = 50)
         -- adds half the spirit part while casting (33.42: the log's 3.342 a tick); the 17.8 is 12.8 without Mana Spring
