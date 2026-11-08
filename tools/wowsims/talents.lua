@@ -111,7 +111,13 @@ function M.render(rows)
         if r.header then
             out[#out + 1] = "    -- " .. r.header
         end
-        out[#out + 1] = ("    %s = { %d, %d, %d },%s"):format(r.name, r.tree, r.spell, r.max, r.comment and " " .. r.comment or "")
+        out[#out + 1] = ("    %s = { %d, %d, %d },%s"):format(
+            r.name,
+            r.tree,
+            r.spell,
+            r.max,
+            r.comment and " " .. r.comment or ""
+        )
     end
     return table.concat(out, "\n") .. "\n"
 end
