@@ -48,14 +48,13 @@ describe("the Shaman loop worlds", function()
         assert.is_false(pcall(C.resolve, "not_an_ability", H))
         -- the top ranks with Convection 5/5 and Elemental Alacrity 3/3
         local got = {}
-        for _, key in ipairs({ "lightning_bolt", "chain_lightning", "lava_burst" }) do
+        for _, key in ipairs({ "lightning_bolt", "chain_lightning" }) do
             local p = C.resolve(key, H)
             got[#got + 1] = { p.spell, p.cost, p.cast, p.cooldown }
         end
         assert.are.same({
             { 15208, 220 * 0.9, 2, 0 },
-            { 10605, 315 * 0.9, 1.5, 6 },
-            { 1326047, 265 * 0.9, 2, 10 },
+            { 10605, 495 * 0.9, 1.5, 6 },
         }, got)
         assert.is_true(#C.usable(H) > 0)
         assert.are.same({}, H.errors)

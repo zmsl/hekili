@@ -3928,39 +3928,6 @@ options.abilities.last_stand.toggle	values.interrupts	Interrupts
 options.abilities.last_stand.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.last_stand.toggle	values.none	None
 options.abilities.last_stand.toggle	values.potions	Potions
-options.abilities.lava_burst	name	Spell 408490
-options.abilities.lava_burst.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 408490 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 408490 can be recommended in any type of fight.
-options.abilities.lava_burst.boss	name	Boss Encounter Only
-options.abilities.lava_burst.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 408490 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
-options.abilities.lava_burst.clash	name	Clash
-options.abilities.lava_burst.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 408490.
-options.abilities.lava_burst.disabled	name	Disable |T136000:0|t Spell 408490
-options.abilities.lava_burst.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
-options.abilities.lava_burst.dotCap	name	Maximum Applications
-options.abilities.lava_burst.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
-options.abilities.lava_burst.hasIcon	name	Icon Replacement
-options.abilities.lava_burst.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
-options.abilities.lava_burst.keybind	name	Override Keybind Text
-options.abilities.lava_burst.lineBreak1	name	\032
-options.abilities.lava_burst.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
-options.abilities.lava_burst.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
-options.abilities.lava_burst.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
-options.abilities.lava_burst.noIcon	name	Icon Replacement
-options.abilities.lava_burst.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 408490 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
-options.abilities.lava_burst.targetMax	name	Maximum Targets
-options.abilities.lava_burst.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 408490 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
-options.abilities.lava_burst.targetMin	name	Minimum Targets
-options.abilities.lava_burst.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
-options.abilities.lava_burst.toggle	name	Require Toggle
-options.abilities.lava_burst.toggle	values.cooldowns	Cooldowns
-options.abilities.lava_burst.toggle	values.custom1	Custom 1
-options.abilities.lava_burst.toggle	values.custom2	Custom 2
-options.abilities.lava_burst.toggle	values.default	Default |cffffd100(none)|r
-options.abilities.lava_burst.toggle	values.defensives	Defensives
-options.abilities.lava_burst.toggle	values.interrupts	Interrupts
-options.abilities.lava_burst.toggle	values.minor_cooldowns	Minor CDs
-options.abilities.lava_burst.toggle	values.none	None
-options.abilities.lava_burst.toggle	values.potions	Potions
 options.abilities.life_tap	name	Spell 1454
 options.abilities.life_tap.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1454 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1454 can be recommended in any type of fight.
 options.abilities.life_tap.boss	name	Boss Encounter Only
@@ -17742,7 +17709,6 @@ options.packs.elemental.Elemental (wowsims.com).lists.action	values.grace_of_air
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.grounding_totem	|T136000:0|t Spell 8177
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.healing_stream_totem	|T136000:0|t Spell 5394
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
-options.packs.elemental.Elemental (wowsims.com).lists.action	values.lava_burst	|T136000:0|t Spell 408490
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.lightning_bolt	|T136000:0|t Spell 403
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.lightning_shield	|T136000:0|t Spell 324
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.magma_totem	|T136000:0|t Spell 8190
@@ -17780,18 +17746,18 @@ options.packs.elemental.Elemental (wowsims.com).lists.actionID	desc	Select the e
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	name	Entry
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r [Item 13444] - |cFFFFD100|cffffd100mana.pct_lo<80|r|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r [Item 12662] - |cFFFFD100|cffffd100mana.pct_lo<70|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Use Items]|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 16190 - |cFFFFD100|cffffd100mana.pct_lo<50|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 3599 - |cFFFFD100|cffffd100(active_enemies=1&totem.fire.remains<=0)|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 8190 - |cFFFFD100|cffffd100(active_enemies>1&totem.fire.remains<=0)|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 408341 - |cFFFFD100|cffffd100active_enemies>1|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 16190 - |cFFFFD100|cffffd100mana.pct_lo<50|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 408510 - |cFFFFD100|cffffd100!buff.water_shield.up|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Use Items]|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 3599 - |cFFFFD100|cffffd100(active_enemies=1&totem.fire.remains<=0)|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 8190 - |cFFFFD100|cffffd100(active_enemies>1&totem.fire.remains<=0)|r|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 16166 - |cFFFFD100|cffffd100(!action.flame_shock.known||debuff.flame_shock.up)|r|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 20572 - |cFFFFD100|cffffd100(!action.flame_shock.known||debuff.flame_shock.up)|r|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 20554 - |cFFFFD100|cffffd100(!action.flame_shock.known||debuff.flame_shock.up)|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 421 - |cFFFFD100|cffffd100active_enemies>1|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 408490 - |cFFFFD100|cffffd100(!action.flame_shock.known||debuff.flame_shock.up)|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 421 - |cFFFFD100|cffffd100(active_enemies>1||(mana.pct_lo>=40&(!action.elemental_mastery.known||!buff.elemental_mastery.up)))|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 408341 - |cFFFFD100|cffffd100active_enemies>1|r|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 8050 - |cFFFFD100|cffffd100debuff.flame_shock.remains<=0|r|r
-options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 8042 - |cFFFFD100|cffffd100buff.revelation.up|r|r
+options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 8042 - |cFFFFD100|cffffd100(active_enemies=1&buff.revelation.up)|r|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 403 - |cFFFFD100|cffffd100mana.pct_lo<20|r|r
 options.packs.elemental.Elemental (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 403
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
@@ -17817,7 +17783,6 @@ options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.grace_o
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.grounding_totem	|T136000:0|t Spell 8177
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.healing_stream_totem	|T136000:0|t Spell 5394
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
-options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.lava_burst	|T136000:0|t Spell 408490
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.lightning_bolt	|T136000:0|t Spell 403
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.lightning_shield	|T136000:0|t Spell 324
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.magma_totem	|T136000:0|t Spell 8190
@@ -18070,7 +18035,6 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.grace_of
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.grounding_totem	|T136000:0|t Spell 8177
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.healing_stream_totem	|T136000:0|t Spell 5394
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.lava_burst	|T136000:0|t Spell 408490
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.lightning_bolt	|T136000:0|t Spell 403
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.lightning_shield	|T136000:0|t Spell 324
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.magma_totem	|T136000:0|t Spell 8190
@@ -18143,7 +18107,6 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.gra
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.grounding_totem	|T136000:0|t Spell 8177
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.healing_stream_totem	|T136000:0|t Spell 5394
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.lava_burst	|T136000:0|t Spell 408490
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.lightning_bolt	|T136000:0|t Spell 403
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.lightning_shield	|T136000:0|t Spell 324
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.magma_totem	|T136000:0|t Spell 8190

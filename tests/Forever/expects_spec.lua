@@ -42,7 +42,7 @@ local DECLARED = {
         pyroblast = { "travel", 24, "fire" },
         frostfire_bolt = { "travel", 24, nil },
     },
-    Shaman = { lightning_bolt = { "travel", 20, "nature" }, lava_burst = { "travel", 20, "fire" } },
+    Shaman = { lightning_bolt = { "travel", 20, "nature" } },
     Priest = { shoot = { "travel", 20, "physical" } },
     Paladin = { hammer_of_wrath = { "travel", 35, "holy" } },
     Hunter = {

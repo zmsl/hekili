@@ -17,6 +17,17 @@ M.UNMATCHED_BY = {
     ["Arms"] = 5.9,
 }
 
+-- The first-icon reaction bar's p90 (ticks) per label, 3 where not named (M.gate).
+M.REACT_P90_BY = {
+    -- 3 -> 8 (0.7 re-pin, R6, owner ruling option b, reversible; seeds 1-20 reactP90 8, agreement 0.912, was 0 / 0.963 before
+    -- CN8): a mana-wait tie. Flame Shock costs 410; the oracle's exact mana reaches it at the instant Stormstrike's
+    -- cooldown ends (it shows Flame Shock first by priority), our conservative lower bound runs 2-4 mana under the
+    -- truth (259.0 true vs 256.7 believed), so our Flame Shock is 0.04 s late and Stormstrike shows during the wait; at
+    -- the edge both press Flame Shock (no cast lost). CN8's world queue window re-times the fights so the tie recurs about
+    -- once per ~47 s cycle. The owner's "dim, never promote" rule losing a tie to an exact oracle, by design
+    ["Enhancement"] = 8,
+}
+
 -- The flicker floors at 20 fights: per label the first-icon flicker/min (loop.flips: an A -> B -> A over three ticks,
 -- not counted when the instance pressed B at the tick it showed or the next, owner rule 2026-10-26) and the
 -- unjustified retracted readies/min (tests/Game/harness/flicker.lua). A floor is the worst of seeds 1-20 / 21-40 /
@@ -282,9 +293,11 @@ M.FLICKER = {
     -- heldReady 230 -> 256 re-pin e2842f0a78 (lane 15, R6; seeds 1-20: 256, flicker 0.02, retracted 0; 249 at Fire
     -- Nova's DB2 520): the build's own list (Magma Totem 40 s, Windfury Totem, Fire Nova the filler at wowsims's 375,
     -- R57a) and the world's mana from the Skyborne log (6565, 12.8 / 31.25, was 5000 / 4.8 / 28.62)
+    -- 0.7 re-pin (R6; seed set 1-20, steady icons on): heldReady 256 -> 152, flicker 0.00 (oracle 0.00), agreement 0.912, the
+    -- mana-wait tie named at M.REACT_P90_BY (the held count fell with it)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 145 / 145 / 147):
     -- flicker 0.2 -> 0 (S, steady icons on by default)
-    ["Enhancement"] = { flicker = 0, retracted = 0, heldReady = 256 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
+    ["Enhancement"] = { flicker = 0, retracted = 0, heldReady = 152 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
@@ -333,9 +346,11 @@ M.FLICKER = {
     -- shape. With the old world regen 0. The other moved Elemental cells (L10 idle 0.0 -> 0.2, the dps A/B both ways,
     -- refused-for-cost 0.0 -> 0.1) move as a group with the world/log change. Flicker 0.00 / 0.00 / 0.00 (oracle
     -- 0.05 / 0.05 / 0.07): ceiling 0.1 kept
+    -- re-pin 0.7 (e5a9cd2a2dfc, lane shaman, R6; seeds 1-20, steady icons on, melee-range tree): heldReady 321 -> 284 (the
+    -- bar is seeds 1-20 only; flicker 0.00, readyShort 0, oracle 0.02): the new list has no Lava Burst
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 1 / 0 / 0, heldReady 285 / 301 / 321):
     -- flicker 0.1 -> 0 (S, steady icons on by default); heldReady 302 -> 321 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 321, readyShort = 1 }, -- 0.00 / 0.00 / 0.00, 0 (oracle 0.05 / 0.05 / 0.07)
+    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 284, readyShort = 1 }, -- 0.00 / 0.00 / 0.00, 0 (oracle 0.05 / 0.05 / 0.07)
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996
@@ -430,7 +445,7 @@ end
 function M.gate(m, r, line, label)
     local at = label or "gate" -- loop_spec's bar checks pass no label
     ab.check(r.agreement >= 0.85, at, line)
-    ab.check(r.reactMedian <= 1 and r.reactP90 <= 3, at, line)
+    ab.check(r.reactMedian <= 1 and r.reactP90 <= (M.REACT_P90_BY[label] or 3), at, line)
     ab.check((r.per100.gcd or 0) == 0 and (r.per100.cooldown or 0) == 0, at, line)
     -- our cost refusals the oracle shadow would not have made at that tick (loop.unmatched: the round-3 ruling); a
     -- refusal both make is the press protocol meeting the world's rage timing, kept visible in the raw rate

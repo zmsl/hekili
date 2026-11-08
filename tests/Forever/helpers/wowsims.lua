@@ -433,8 +433,17 @@ M.READY = {
     rogue_subtlety = { 0.17, 40 }, -- 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
     -- { 0.21, 7 } -> { 0.71, 16 } re-pin e2842f0a78 (lane 15, R6): the build's own list (Magma and Windfury Totems,
     -- Fire Nova the filler at 375, Skyborne); 85 decisions, 16 real (10 early, 6 late); by class cooldown 15, cost 9, gcd 43
-    shaman_enhancement = { 0.71, 16 },
-    shaman_elemental = { 0.48, 54 }, -- 0.480, 54 (Elemental lane, Task 14; first clean run on a21329fc)
+    -- { 0.71, 16 } -> { 0.38, 34 } 0.7 re-pin (e5a9cd2a2dfc, lane shaman, R6, owner ruling option b, reversible): 92
+    -- decisions, early 26 / late 8, by class cooldown 23 / cost 10 / gcd 46 (earth_shock 11, stormstrike 6, fire_nova 6,
+    -- shown 0.2-0.8 s before wowsims's cast). Cause as the Enhancement loop bar (pack_gate M.REACT_P90_BY): the
+    -- conservative mana lower bound loses cost ties at the oracle's exact edge, re-timed by CN8's queue window; no cast
+    -- lost. Not traced row by row (deferral)
+    shaman_enhancement = { 0.38, 34 },
+    -- { 0.48, 54 } -> { 2.20, 3 } re-pin 0.7 (lane shaman, R6): 91 decisions, 3 real (all late, cost class: the Major
+    -- Mana Potion / Demonic Rune refills the belief cannot see leave lo ~2630 under the truth, gaps.md "Potion mana
+    -- refill"; Lightning Bolt at its top rank's 198 where wowsims down-ranks, gap BL), median 2.20; the count falls from
+    -- 54 with the new build's list (Lava Burst gone)
+    shaman_elemental = { 2.20, 3 },
     -- 1.000, 18 (Warlock lane, Task 13; first clean run on 5d62f44c+): Shadow Bolt's 2.5 s cast, the next icon ready
     -- at the GCD's end inside it (Shadow's Mind Flay likewise). Count 18 -> 21 on fix 31 (06eec227): G4 keeps
     -- Corruption believed, so 12 more decisions are shown (never 22 -> 10), 3 of them a Shadow Bolt's early 1.0 s.
