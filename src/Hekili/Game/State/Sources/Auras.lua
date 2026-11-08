@@ -266,10 +266,15 @@ function I.OnPresence(P)
     P.onEdge = onEdge
 end
 
--- Poll 15: every pair the provider answers, each poll (an edge the hook missed, a target swap). Allocates nothing.
+-- Poll 15: the provider's sweep first (cdm-default §3.2: its edges come to onEdge), then every pair it answers, each
+-- poll. Allocates nothing.
 S.Poll(15, function(_, t)
     local P = I.presence
-    if not P or P.covered == 0 or not I.built then
+    if not P or not I.built then
+        return
+    end
+    P.Sweep(t)
+    if P.covered == 0 then
         return
     end
     local U = I.auras

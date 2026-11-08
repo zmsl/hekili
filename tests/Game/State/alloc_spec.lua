@@ -261,38 +261,62 @@ describe("zero allocation", function()
         end
     )
 
-    it("allocates nothing over 100 Cooldown Manager hook calls (providers spec §2.4)", function()
+    -- The sweep (cdm-default §3.2, plan Task 3b): the item fields are written directly (ctl.ViewerAura logs its writes,
+    -- the fake's allocation, not the leaf's).
+    local function hold(item, on)
+        item.auraInstanceID, item.auraDataUnit = on and fake.SECRET or nil, on and "player" or nil
+    end
+
+    it("the sweep over a 40-slot layout with changes allocates nothing (cdm-default §3.2)", function()
         local api, ctl = fake.new()
         ctl.now = 1
-        ctl.viewer.sets[2] = { 501 }
+        ctl.viewer.sets[2] = { 501, 502, 503 }
         ctl.viewer.infos[501] = { spellID = fs.SPENDER_A }
-        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 501)
-        item.unit = "player"
+        ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
+        ctl.viewer.infos[503] = { spellID = 9999 } -- unmapped
+        local items = {}
+        for n = 1, 40 do
+            local v = fake.VIEWERS[n % 4 + 1]
+            if n % 10 == 0 then
+                ctl.ViewerChild(v)
+            else
+                items[#items + 1] = ctl.ViewerItem(v, n, 500 + n % 3 + 1)
+            end
+        end
         local ns = load.module()
         local I = ns.VirtualStateInternal
         local def = fs.def(fs.new(9))
+        def.providers = { presence = "router", viewer = true }
         I.Build(def, 1)
-        local Q = I.PRESENCE.viewer
-        Q.Activate(api, 1, def)
+        ns.VirtualState.Start(api)
+        local R = I.presence
         local n = 0
-        Q.onEdge = function()
+        R.onEdge = function()
             n = n + 1
         end
+        local t = 1
         local ok, bytes = pcall(alloc.bytes, function(i)
-            ctl.ViewerShow(item, i % 2 == 1)
+            t = t + 0.1
+            ctl.now = t
+            for k = 1, #items, 3 do -- a third of the slots change at every sweep
+                hold(items[k], i % 2 == 1)
+            end
+            ctl.viewer.shown.BuffBarCooldownViewer = i % 5 ~= 0 -- and a viewer hides now and then
+            R.Sweep(t)
+            R.Presence(1, 1)
+            R.Presence(2, 2)
         end, 100)
         assert.is_true(ok, tostring(bytes))
         assert.are.equal(0, bytes)
-        assert.is_true(n > 100, "every call an edge")
+        assert.is_true(n > 100, "the changes are edges")
     end)
 
-    it("allocates nothing over 100 hook calls through the Presence router (providers spec §2.5)", function()
+    it("allocates nothing over 100 sweeps and edges through the leaf and the router (providers spec §2.5)", function()
         local api, ctl = fake.new()
         ctl.now = 1
         ctl.viewer.sets[2] = { 501 }
         ctl.viewer.infos[501] = { spellID = fs.SPENDER_A }
         local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 501)
-        item.unit = "player"
         local ns = load.module()
         local I = ns.VirtualStateInternal
         local def = fs.def(fs.new(9))
@@ -303,8 +327,11 @@ describe("zero allocation", function()
         R.onEdge = function()
             n = n + 1
         end
+        local t = 1
         local ok, bytes = pcall(alloc.bytes, function(i)
-            ctl.ViewerShow(item, i % 2 == 1)
+            t = t + 0.1
+            hold(item, i % 2 == 1)
+            R.Sweep(t)
             R.Presence(1, 1)
             R.Presence(2, 2)
         end, 100)

@@ -22,9 +22,7 @@ local function selfDownOnTarget(u, up)
     return u == 2 and not up and R.scope == "self"
 end
 
--- The leaf's onEdge: a tracked aura's edge only, counted. Allocates nothing. An item released to its pool keeps its
--- hook harmlessly: the pool hides it before ResetCooldownData clears its aura fields (CooldownViewer.lua:1646-1650,
--- CooldownViewerItemData.lua:383-391), so the hide reads its true presence and the reacquired item's show re-reads.
+-- The leaf's onEdge (a reduced change at its sweep): a tracked aura's edge only, counted. Allocates nothing.
 local function forward(j, u, up, t)
     if tracked[j] and not selfDownOnTarget(u, up) then
         if up then
@@ -95,6 +93,15 @@ function R.Deactivate(t)
         leaf.Deactivate(t)
     end
     leaf, want, pending, R.covered, R.scope = nil, nil, false, 0, nil
+end
+
+--- Poll 15's sweep: the leaf reads its items (cdm-default §3.2); covered follows it. Until Task 4a the leaf reduces and
+--- sends the edges itself. Allocates nothing.
+function R.Sweep(t)
+    if leaf then
+        leaf.Sweep(t)
+        R.covered = leaf.covered
+    end
 end
 
 --- The leaf's answer for a tracked aura, else I.UNDECIDED. Allocates nothing.

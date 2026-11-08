@@ -1,5 +1,6 @@
 -- tests/Game/State/router_spec.lua: the Presence router (providers spec §2.5, decisions 88-90), against the viewer
--- fakes and the Task 5 fixture (viewer_spec.lua).
+-- fakes and the Task 5 fixture (viewer_spec.lua). The leaf reads its items by a sweep at poll 15 (cdm-default §3.2):
+-- the fake's ctl.ViewerAura / ViewerClear set the item, R.Sweep reads it.
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
@@ -28,7 +29,8 @@ describe("the Presence router", function()
     it("a tracked aura is answered by the viewer leaf", function()
         local R = I.presence
         assert.are.equal("router", R.name)
-        ctl.ViewerShow(ctl.viewer.items.BuffIconCooldownViewer[1], true)
+        ctl.ViewerAura(ctl.viewer.items.BuffIconCooldownViewer[1], "player")
+        R.Sweep(2)
         assert.are.equal(I.UP, R.Presence(1, 1))
         assert.are.equal("self", VS.PresenceScope("player", I.auras.obj[1].key)) -- the pack-facing read (decision 77)
     end)
@@ -37,7 +39,7 @@ describe("the Presence router", function()
         assert.are.equal(I.UNDECIDED, I.presence.Presence(3, 1))
     end)
 
-    it("switch off: every aura UNDECIDED, covered 0, no hook installed, no getter read", function()
+    it("switch off: every aura UNDECIDED, covered 0, no getter read, the sweep a no-op", function()
         local calls = 0
         local get = api.C_CooldownViewer.GetCooldownViewerCategorySet
         api.C_CooldownViewer.GetCooldownViewerCategorySet = function(...)
@@ -47,6 +49,8 @@ describe("the Presence router", function()
         local d2 = fs.def(fs.new(9))
         d2.providers = { presence = "router", viewer = false }
         I.Build(d2, 1)
+        ctl.ViewerAura(ctl.viewer.items.BuffIconCooldownViewer[1], "player")
+        I.presence.Sweep(2)
         assert.are.same({ 0, 0 }, { I.presence.covered, calls })
         for j = 1, I.auras.nAura do
             assert.are.equal(I.UNDECIDED, I.presence.Presence(j, 1))
@@ -94,7 +98,8 @@ describe("the Presence router", function()
     end)
 
     it("passes only tracked edges on and counts them", function()
-        ctl.ViewerShow(ctl.viewer.items.BuffIconCooldownViewer[1], true)
+        ctl.ViewerAura(ctl.viewer.items.BuffIconCooldownViewer[1], "player")
+        I.presence.Sweep(2)
         assert.are.equal(1, I.presenceEdges.up)
     end)
 
@@ -116,7 +121,8 @@ describe("the Presence router", function()
     end)
 
     it("zeroes the edge and fact counters at each fight's start", function()
-        ctl.ViewerShow(ctl.viewer.items.BuffIconCooldownViewer[1], true)
+        ctl.ViewerAura(ctl.viewer.items.BuffIconCooldownViewer[1], "player")
+        I.presence.Sweep(2)
         I.presenceFacts[1] = 3
         ctl.Fire("PLAYER_REGEN_DISABLED")
         assert.are.same({ 0, 0, 0 }, { I.presenceEdges.up, I.presenceEdges.down, I.presenceFacts[1] })
@@ -131,10 +137,13 @@ describe("the Presence router", function()
         end
         assert.are.equal("self", I.presence.scope)
         assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2))
-        ctl.ViewerShow(item, true)
+        ctl.ViewerAura(item, "target")
+        I.presence.Sweep(2)
         assert.are.equal(I.UP, I.presence.Presence(2, 2))
-        ctl.ViewerShow(item, false)
-        assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2))
+        ctl.ViewerClear(item)
+        I.presence.Sweep(3)
+        assert.are.equal(I.DOWN, I.PRESENCE.viewer.Presence(2, 2)) -- the leaf's answer ...
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2)) -- ... is none through the router
         assert.are.same({ 1, 1, 0 }, { n, I.presenceEdges.up, I.presenceEdges.down })
     end)
 end)
@@ -159,16 +168,16 @@ describe("the Presence router at VS.Start (a /reload in combat)", function()
         ctl.combat = true
         I.Build(d, 1)
         VS.Start(api)
-        local item = ctl.viewer.items.BuffIconCooldownViewer[1]
-        assert.is_nil(item.hooks.OnShow)
         assert.are.equal(0, I.presence.covered)
         for j = 1, I.auras.nAura do
             assert.is_false(I.presence.tracked[j])
         end
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
         ctl.combat = false
         ctl.Fire("PLAYER_REGEN_ENABLED")
         assert.is_true(I.presence.tracked[1])
-        assert.is_not_nil(item.hooks.OnShow)
+        assert.are.equal(1, I.presence.covered) -- built and read at once (the activation's sweep)
+        assert.are.equal(I.DOWN, I.presence.Presence(1, 1))
     end)
 
     it("out of combat, builds at Start", function()
@@ -176,6 +185,7 @@ describe("the Presence router at VS.Start (a /reload in combat)", function()
         I.Build(d, 1)
         VS.Start(api)
         assert.is_true(I.presence.tracked[1])
-        assert.is_not_nil(ctl.viewer.items.BuffIconCooldownViewer[1].hooks.OnShow)
+        assert.are.equal(1, I.presence.covered)
+        assert.are.equal(I.DOWN, I.presence.Presence(1, 1))
     end)
 end)

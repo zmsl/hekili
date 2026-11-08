@@ -3,8 +3,11 @@
 -- of categories 0-8, unlearned included, to one pack aura j, or ambiguous (-a, amb[a] its tracked js), built out of
 -- combat. The collect (§3.2): every child of the four viewers kept once as a slot, item or not, in arrays preallocated
 -- to MAX_SLOTS; past that a child is ignored and counted (overflow). A new frame is a new slot; a slot is never reused.
--- Read, never write: rawget on items, on Blizzard frames only GetChildren and GetNumChildren (§3.5). The map and the
--- collect install no hook (§3.3); the providers-spec hook block at the end stays until Task 3b's sweep replaces it.
+-- The sweep (§3.2): at poll 15, per viewer IsVisible and GetNumChildren once, per slot four rawgets; a reading change
+-- moves its thing's counters (aura j, unit u: nUp, nNone, nStale, tUp, tNone) in O(1), and a reduced UP or DOWN change
+-- goes to onEdge. Until Task 3c's seen rule a silent mapped slot answers NONE for its last held unit (the player if it
+-- held none). Read, never write: rawget on items, on Blizzard frames only GetChildren, GetNumChildren and IsVisible;
+-- no hooks of any kind (§3.3, §3.5).
 -- The idea of reading the viewer's items for presence, the all-viewers presence bit, the hidden-viewer rule and the
 -- spell mapping are TellMeWhen's (Cybeloras), GPL-3.0; ideas only, no code copied.
 
@@ -24,12 +27,22 @@ local mappable = {} -- j -> true when some cooldownID's candidates name it (alon
 local slotOf = setmetatable({}, { __mode = "k" }) -- child frame -> slot: the only in-combat insert (a new child)
 local known = { 0, 0, 0, 0 } -- children collected per viewer (GetNumChildren at the last collect)
 
--- The slots, preallocated: the frame, its viewer, the aura it maps to (sJ, or sAmb the ambiguous a), what it is
--- counted as (sAns, sUnit) since sT, the seen rule's last held time and last plain cooldownID (sSeen, sCd: Task 3c).
+-- The slots, preallocated: the frame, its viewer, the aura it is counted for (sJ, or sAmb the ambiguous a: Task 3c),
+-- what it is counted as (sAns, sUnit) since sT, the seen rule's last held time and last plain cooldownID (sSeen, sCd:
+-- Task 3c). sAns 0 not counted, else UP, NONE or STALE (a hidden viewer's slot: what it would answer, not live).
 local sFrame, sV, sJ, sAmb, sAns, sUnit, sT, sSeen, sCd = {}, {}, {}, {}, {}, {}, {}, {}, {}
 for s = 1, MAX_SLOTS do
     sFrame[s], sV[s], sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s], sSeen[s], sCd[s] = false, 0, 0, 0, 0, 0, 0, 0, 0
 end
+
+local NOT, UP, NONE, STALE = 0, 1, 2, 3
+local UNIT = { player = 1, target = 2 }
+
+-- The things' counters, by k = (u - 1) * AURA_UNIT + j, zeroed for both units at activation (preallocated: the
+-- target's keys are in the hash part); the last reduced state (onEdge on a change); live slots per aura (covered).
+local cUp, cNone, cStale, tUp, tNone, last, live = {}, {}, {}, {}, {}, {}, {}
+local touched, mark, nTouched = {}, {}, 0 -- the things a sweep moved, each once
+local vis = { false, false, false, false } -- each viewer's IsVisible at this sweep
 
 local Q = {
     name = "viewer", -- l10n: verbatim
@@ -183,101 +196,172 @@ local function collect(api, full)
     end
 end
 
--- Until Task 3b's sweep reads every slot: the providers-spec hooks on the aura viewers' items (OnShow/OnHide), so the
--- router's Presence keeps its in-combat edges. Task 3b deletes this block, the hooks and Q.Presence's table.
-local UNIT = { player = 1, target = 2 }
-local unitOf = {} -- cooldownID -> its last known unit (0: none yet); a down item reads no unit (CDV_FRAME 5609)
-local st = {} -- (u - 1) * AURA_UNIT + j -> 0 undecided, 1 up, 2 down
-local hooked = setmetatable({}, { __mode = "k" })
+-- Un-counts slot s (what sAns/sUnit/sJ say it is counted as) and marks it not counted. Allocates nothing.
+local function uncount(s)
+    local a = sAns[s]
+    if a == NOT then
+        return
+    end
+    local j = sJ[s]
+    local k = (sUnit[s] - 1) * I.AURA_UNIT + j
+    sAns[s] = NOT
+    if a == UP then
+        cUp[k] = cUp[k] - 1
+    elseif a == NONE then
+        cNone[k] = cNone[k] - 1
+    else
+        cStale[k] = cStale[k] - 1
+    end
+    if a ~= STALE then
+        live[j] = live[j] - 1
+        if live[j] == 0 then
+            Q.covered = Q.covered - 1
+        end
+    end
+    if not mark[k] then
+        mark[k], nTouched = true, nTouched + 1
+        touched[nTouched] = k
+    end
+end
 
--- The hook (one function for every item): presence at fire time, a change only. Allocates nothing.
-local function hook(self)
+-- Counts slot s as answer `a` for aura j on unit u, beginning at t. Allocates nothing.
+local function count(s, j, u, a, t)
+    sJ[s], sUnit[s], sAns[s], sT[s] = j, u, a, t
+    if a == NOT then
+        return
+    end
+    local k = (u - 1) * I.AURA_UNIT + j
+    if a == UP then
+        cUp[k], tUp[k] = cUp[k] + 1, t
+    elseif a == NONE then
+        cNone[k], tNone[k] = cNone[k] + 1, t
+    else
+        cStale[k] = cStale[k] + 1
+    end
+    if a ~= STALE then
+        live[j] = live[j] + 1
+        if live[j] == 1 then
+            Q.covered = Q.covered + 1
+        end
+    end
+    if not mark[k] then
+        mark[k], nTouched = true, nTouched + 1
+        touched[nTouched] = k
+    end
+end
+
+-- One sweep (§3.2), under one pcall: each viewer's visibility and growth, then every slot's reading against what it is
+-- counted as. Un-count before count, so a raise between the two leaves the slot not counted, never counted twice.
+local function sweep(t)
+    local api = api0
+    local issecret = api.issecretvalue
+    for v = 1, #VIEWERS do
+        local f = Plain(api, api[VIEWERS[v]])
+        local n = f and f.GetNumChildren and Plain(api, f:GetNumChildren())
+        if type(n) == "number" and n ~= known[v] then
+            for i = known[v] + 1, n do -- growth: the new indices only (varargs, no table)
+                local c = Plain(api, (select(i, f:GetChildren())))
+                if type(c) == "table" then
+                    take(c, v)
+                end
+            end
+            known[v] = n
+        end
+        vis[v] = f ~= nil and f.IsVisible ~= nil and Plain(api, f:IsVisible()) == true
+    end
+    for s = 1, Q.nSlots do
+        local item = sFrame[s]
+        local j, u, a = 0, 0, NOT
+        local id = Plain(api, rawget(item, "cooldownID"))
+        local m = id ~= nil and Plain(api, rawget(item, "layoutIndex")) ~= nil and cdvToJ[id]
+        if m and m > 0 then -- configured and mapped to one aura (an ambiguous item counts for none)
+            local aid = rawget(item, "auraInstanceID")
+            if issecret(aid) or aid ~= nil then -- secret: only tested, never compared
+                local unit = Plain(api, rawget(item, "auraDataUnit"))
+                u = unit ~= nil and UNIT[unit] or 0 -- a secret, nil or other unit: not live for either
+                if u > 0 then
+                    j, a = m, UP
+                end
+            else
+                j, u, a = m, sUnit[s], NONE -- the last held unit (Task 3c's seen rule gates this)
+                if u == 0 then
+                    u = 1
+                end
+            end
+            if a ~= NOT and not vis[sV[s]] then
+                a = STALE
+            end
+        end
+        if a ~= sAns[s] or j ~= sJ[s] or u ~= sUnit[s] then
+            uncount(s)
+            count(s, j, u, a, t)
+        end
+    end
+end
+
+-- The things a sweep moved: each reduced; an UP or DOWN change goes to onEdge (UNKNOWN fires none). Allocates nothing.
+local function reduce(t)
+    for i = 1, nTouched do
+        local k = touched[i]
+        mark[k] = false
+        local st = I.ReduceFact(cUp[k] + cNone[k], cUp[k], cNone[k], cStale[k], tUp[k], tNone[k])
+        if st ~= last[k] then
+            last[k] = st
+            if st ~= I.UNDECIDED and Q.onEdge then
+                local u = k > I.AURA_UNIT and 2 or 1
+                Q.onEdge(k - (u - 1) * I.AURA_UNIT, u, st == I.UP, t)
+            end
+        end
+    end
+    nTouched = 0
+end
+
+--- The sweep at poll 15: reads every slot, moves the counters, then reduces what moved. A raise inside the sweep is
+--- swallowed (the poll goes on; the slots read before it stand, the rest wait for the next sweep); Task 3c turns the
+--- leaf off on one. Allocates nothing (a new child's slotOf entry aside).
+function Q.Sweep(t)
     if not active then
         return
     end
-    local api = api0
-    local id = Plain(api, rawget(self, "cooldownID"))
-    local j = id and cdvToJ[id]
-    if not j or j < 0 then
-        return -- an unmapped or ambiguous item
-    end
-    local aid = rawget(self, "auraInstanceID")
-    local up = api.issecretvalue(aid) or aid ~= nil -- secret: only tested, never compared
-    local u = UNIT[Plain(api, rawget(self, "auraDataUnit")) or ""] or unitOf[id]
-    if not u or u == 0 then
-        return -- no unit ever seen: nothing to move (every pair is down from the build)
-    end
-    local v = I.DOWN
-    if up then
-        v = I.UP
-        unitOf[id] = u
-    end
+    pcall(sweep, t)
+    reduce(t)
+end
+
+--- nLive, nUp, nNone, nStale, tUp, tNone for aura `j` on unit `u`. Allocates nothing.
+function Q.Counts(j, u)
     local k = (u - 1) * I.AURA_UNIT + j
-    if st[k] ~= v then
-        st[k] = v
-        if Q.onEdge then
-            Q.onEdge(j, u, up, api.GetTime())
-        end
+    if not active or not cUp[k] then
+        return 0, 0, 0, 0, 0, 0
     end
+    return cUp[k] + cNone[k], cUp[k], cNone[k], cStale[k], tUp[k], tNone[k]
 end
 
--- Hooks the aura viewers' configured items (out of combat) and marks what they cover.
-local function hookAll(api)
-    for _, j in pairs(cdvToJ) do
-        if j > 0 then
-            st[j], st[I.AURA_UNIT + j] = 0, 0 -- preallocated: the hook inserts nothing
-        end
-    end
-    for id, j in pairs(cdvToJ) do
-        if j > 0 then
-            unitOf[id] = 0
-        end
-    end
-    local seen = {}
-    for s = 1, Q.nSlots do
-        local item = sFrame[s]
-        if sV[s] >= 3 and rawget(item, "layoutIndex") ~= nil then -- BuffIcon and BuffBar only
-            if not hooked[item] then
-                item:HookScript("OnShow", hook)
-                item:HookScript("OnHide", hook)
-                hooked[item] = true
-            end
-            local id = Plain(api, rawget(item, "cooldownID"))
-            local j = id and cdvToJ[id]
-            if j and j > 0 then
-                local u = UNIT[Plain(api, rawget(item, "auraDataUnit")) or ""]
-                if u then
-                    unitOf[id] = u
-                end
-                if not seen[j] then -- covered: down on both units until a read says up
-                    seen[j] = true
-                    st[j], st[I.AURA_UNIT + j] = I.DOWN, I.DOWN
-                    Q.covered = Q.covered + 1
-                end
-            end
-        end
-    end
-end
-
---- Builds the map and collects every viewer's children (out of combat), then reads the hooked items' presence now.
+--- Builds the map and collects every viewer's children (out of combat), then sweeps once: the state now.
 function Q.Activate(api, t, def)
     api0, active = api, api ~= nil
-    Q.covered = 0
-    for k in pairs(unitOf) do
-        unitOf[k] = nil
+    Q.covered, nTouched = 0, 0
+    for k in pairs(cUp) do
+        cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], last[k], mark[k] = 0, 0, 0, 0, 0, I.UNDECIDED, false
     end
-    for k in pairs(st) do
-        st[k] = 0
+    for j in pairs(live) do
+        live[j] = 0
+    end
+    for s = 1, Q.nSlots do -- a new map: every slot counted afresh
+        sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s] = 0, 0, NOT, 0, 0
+    end
+    local nAura = def and #def.auraIds or 0
+    for j = 1, nAura do
+        live[j] = 0
+        for u = 1, 2 do
+            local k = (u - 1) * I.AURA_UNIT + j
+            cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], last[k], mark[k] = 0, 0, 0, 0, 0, I.UNDECIDED, false
+            touched[(u - 1) * nAura + j] = touched[(u - 1) * nAura + j] or 0
+        end
     end
     if api then
         if build(api, def) then
             collect(api, true)
-            hookAll(api)
-            for s = 1, Q.nSlots do
-                if hooked[sFrame[s]] then
-                    hook(sFrame[s]) -- the state now
-                end
-            end
+            Q.Sweep(t)
         end
     end
 end
@@ -300,9 +384,10 @@ function Q.Collect()
     end
 end
 
---- I.UP, I.DOWN or I.UNDECIDED for aura `j` on unit `u` (1 player, 2 target). Allocates nothing.
+--- I.UP, I.DOWN or I.UNDECIDED for aura `j` on unit `u` (1 player, 2 target): the reduced counts at the last
+--- sweep. Allocates nothing.
 function Q.Presence(j, u)
-    local v = active and st[(u - 1) * I.AURA_UNIT + j] or 0
+    local v = active and last[(u - 1) * I.AURA_UNIT + j]
     if v == I.UP or v == I.DOWN then
         return v
     end
@@ -313,17 +398,6 @@ end
 S.On("PLAYER_REGEN_ENABLED", nil, function()
     if active then
         collect(api0, true)
-    end
-end)
-
--- The target's items may change without a show edge ("hide when inactive" off, CV §7): re-read them.
-S.On("PLAYER_TARGET_CHANGED", nil, function()
-    if active then
-        for s = 1, Q.nSlots do
-            if hooked[sFrame[s]] then
-                hook(sFrame[s])
-            end
-        end
     end
 end)
 

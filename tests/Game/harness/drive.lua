@@ -454,14 +454,18 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         ctl.exists.pet, ctl.dead.pet, ctl.petPowerType, ctl.petPower = a1 or nil, nil, a2, a3
     elseif ev == "@petPower" then
         ctl.petPower = a1
-    elseif ev == "@viewer" then -- unit, spellID, up: the viewer item tracking that spell shows or hides (providers §4.2)
+    elseif ev == "@viewer" then -- unit, spellID, up: the viewer item tracking that spell lights or clears (providers
+        -- §4.2); the client's order (a held item clears, then sets); the leaf reads it at the next drain's sweep
         local V = ctl.viewer
         for _, name in ipairs(fake.VIEWERS) do
             for _, item in ipairs(V.items[name]) do
                 local info = V.infos[item.cooldownID]
                 if info and info.spellID == a2 then
-                    item.auraDataUnit = a1
-                    ctl.ViewerShow(item, a3)
+                    if a3 then
+                        ctl.ViewerAura(item, a1, a2)
+                    else
+                        ctl.ViewerClear(item)
+                    end
                 end
             end
         end

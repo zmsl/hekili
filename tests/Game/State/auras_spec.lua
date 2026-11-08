@@ -619,9 +619,8 @@ describe("auras", function()
         end
 
         it("a viewer UP for an aura believed down stages one Read up and counts one disagreement", function()
-            ctl.ViewerShow(item, true)
-            assert.are.equal(1, I.log.n)
-            poll(10)
+            ctl.ViewerAura(item, "player")
+            poll(10) -- the sweep at poll 15 reads the item: an edge
             local rec = VS.Aura("player", fs.SPENDER_A, 10)
             assert.are.same({ math.huge, "observed" }, { rec.est, rec.basis }) -- a Read with no expiry
             assert.are.same({ 1, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
@@ -631,7 +630,7 @@ describe("auras", function()
 
         it("an UP for an aura already believed up counts a fact, no disagreement", function()
             I.AuraModel(1, SHOUT, 10, 20, 1, 10, Obs.CastSuccess, false)
-            ctl.ViewerShow(item, true)
+            ctl.ViewerAura(item, "player")
             poll(11)
             assert.are.equal(20, VS.Aura("player", fs.SPENDER_A, 11).est)
             assert.are.same({ 1, 0 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
@@ -648,27 +647,27 @@ describe("auras", function()
             ctl.auras.player.HELPFUL[1] = nil
             ctl.Fire("UNIT_AURA", "player")
             I.ObsLog.Clear(I.log)
-            ctl.ViewerShow(item, true)
+            ctl.ViewerAura(item, "player")
             poll(11)
             assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
             assert.are.same({ 0, 0 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
         end)
 
         it("a staged read cut short by a plain walk does not suppress the next fight's edge", function()
-            ctl.ViewerShow(item, true) -- staged up
+            ctl.ViewerAura(item, "player") -- staged up
             ctl.Fire("PLAYER_REGEN_ENABLED") -- same frame: combat ends, the walk turns plain and shows it gone
             ctl.auras.player.HELPFUL[1] = nil
             ctl.Fire("UNIT_AURA", "player")
             poll(10)
             ctl.Fire("UNIT_AURA", "player")
-            ctl.ViewerShow(item, false)
+            ctl.ViewerClear(item)
             poll(11)
             assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
             ctl.now = 20 -- the next fight: the walk is secret, the viewer shows the aura before any poll
             ctl.Fire("PLAYER_REGEN_DISABLED")
             ctl.auras.player.HELPFUL[1] = fake.SECRET
             ctl.Fire("UNIT_AURA", "player")
-            ctl.ViewerShow(item, true)
+            ctl.ViewerAura(item, "player")
             poll(21)
             poll(22)
             assert.are.equal(math.huge, VS.Aura("player", fs.SPENDER_A, 22).est)
@@ -686,14 +685,16 @@ describe("auras", function()
             )
         end)
 
-        it("allocates nothing over 1000 polls and edges", function()
+        it("allocates nothing over 1000 polls, sweeps and edges", function()
             local alloc = require("Game.State.helpers.alloc")
             local t = 10
             assert.are.equal(
                 0,
                 alloc.bytes(function()
                     t = t + 0.01
-                    ctl.ViewerShow(item, not item.shown)
+                    -- the item's fields directly (ctl.ViewerAura logs its writes: the fake's allocation)
+                    local on = item.auraInstanceID == nil
+                    item.auraInstanceID, item.auraDataUnit = on and fake.SECRET or nil, on and "player" or nil
                     S.RunPolls(t)
                     I.Fold(t, false)
                 end, 1000)
