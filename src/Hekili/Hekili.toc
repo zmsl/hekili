@@ -85,6 +85,7 @@ Engine\Schema\Spec.lua
 Engine\Schema\Spec\Regen.lua
 Engine\Schema\Spec\Auras.lua
 Engine\Schema\Spec\Abilities.lua
+Engine\Schema\Spec\Kits.lua
 Engine\Schema\Spec\All.lua
 Engine\Schema\Shared.lua
 Engine\Schema\Threat.lua
