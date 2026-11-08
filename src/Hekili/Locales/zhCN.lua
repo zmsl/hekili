@@ -43,6 +43,10 @@ L["The |cFFFFD100%s|r priority was reverted."] = "|cFFFFD100%s|r优先级已还�
 L["The |cFFFFD100%s|r and |cFFFFD100%s|r priorities were reverted."] = "|cFFFFD100%s|r和|cFFFFD100%s|r优先级已还原。"
 L["The %s, and |cFFFFD100%s|r priorities were reverted."] = "%s和|cFFFFD100%s|r优先级已还原。"
 
+-- Hekili/Engine/Schema/Spec/Activation.lua
+-- L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = ""
+-- L["%s, picked from your talents."] = ""
+
 -- Hekili/Options/ChatCommands.lua
 L["Invalid command. Type '/hekili help' to see the available commands."] = "无效的命令。输入“/hekili help”查看可用命令。"
 L["Target Swap minimum time to die set to %d seconds."] = "切换目标的最短存活时间已设为 %d 秒。"

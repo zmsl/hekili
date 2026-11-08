@@ -4,7 +4,8 @@
 -- the events were once the end of Spec.lua.
 
 local addon, ns = ...
-local L, Facade = ns.L, ns.Facade
+local L = ns.L
+local Facade = ns.Facade
 local C_SpecializationInfo, C_Spell, GetTime, UnitAttackSpeed, UnitGUID, UnitLevel = Facade.C_SpecializationInfo, Facade.C_Spell, Facade.GetTime, Facade.UnitAttackSpeed, Facade.UnitGUID, Facade.UnitLevel
 local Hekili = _G[ addon ]
 local class = Hekili.Class
