@@ -433,7 +433,15 @@ M.READY = {
     -- { 0.23, 29 } -> { 0.23, 31 } R42 (the replay answers fight_remains from the log): only rows that were
     -- "never" moved, now timed
     -- (174.06 eviscerate in:reaction, 178.66 mutilate and 179.66 eviscerate late 0.16/0.20 s: the fight's last 6 s)
-    rogue_assassination = { 0.23, 31 }, -- 0.230, 31
+    -- { 0.23, 31 } -> { 0.20, 35 } (0.7 rogue lane's re-pin e5a9cd2a2d, R6; set on central-gatefix): lane-rogue e7fe801a4
+    -- re-recorded the fixture on the new log (58 -> 90 decisions) but kept the old row; 35 real, all late, median 0.20:
+    -- 32 cost (the belief's lo under the truth at the cost edge, gap BQ/CE; the two longest, 46.10 and 97.80 Mutilate
+    -- 1.15/1.44 s, follow an unseen Rogue Armor Energize 27788 at 46.08/97.17), 3 gcd, each a cost edge landing on the
+    -- GCD's end (class gcd: the later gate; no lo-truth recorded): 33.20 Eviscerate 0.23 (energy 10 -> 20 = cost over the
+    -- GCD after the 32.20 Mutilate), 47.10 Eviscerate 0.71 (the same, behind the 46.08 unseen Energize), 63.60 Mutilate
+    -- 1.12 (25 + Relentless Strikes 14179's 25 at 62.60 + regen = 60 = cost at the GCD's end; the belief's lo ~11 under,
+    -- not traced further)
+    rogue_assassination = { 0.20, 35 }, -- 0.200, 35
     -- { 0.20, 18 } -> { 0.24, 20 } re-pin e2842f0a78: cost class; 6 of the 7 large rows follow a 27788 energize (6 in
     -- the new log, 2 in the old: 21.18, 56.26, 64.69, 65.49, 69.00, 83.96), the rest the floor's lag (gap BQ/CE)
     -- { 0.24, 20 } -> { 0.24, 21 } R42 (the replay answers fight_remains from the log): only rows that were
