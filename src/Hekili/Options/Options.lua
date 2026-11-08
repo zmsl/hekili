@@ -2844,8 +2844,15 @@ do
         self.DB.profile.specs[ spec ] = self.DB.profile.specs[ spec ] or {}
         self.DB.profile.specs[ spec ][ option ] = val
 
-        -- the player's pick: a selector never replaces it, and it activates its spec (Hekili:ActivatePack)
-        if option == "package" then self:ActivatePack( spec ) end
+        -- the player's pick: a selector never replaces it, and it activates its spec (Hekili:ActivatePack); "(none)"
+        -- only marks it, activating nothing (as a pack's Active toggle switched off)
+        if option == "package" then
+            if val == "(none)" then
+                self.DB.profile.specs[ spec ].packManual, self.DB.profile.specs[ spec ].packAuto = true, nil
+            else
+                self:ActivatePack( spec )
+            end
+        end
 
         if option == "package" then self:UpdateUseItems()
 self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )

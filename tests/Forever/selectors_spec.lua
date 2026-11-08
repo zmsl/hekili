@@ -455,6 +455,18 @@ describe("the shipped selectors (headless)", function()
         assert.is_true(H.Hekili.DB.profile.specs[100113].packManual)
     end)
 
+    it("takes (none) on another spec's page as that spec's pick only: the active spec stays", function()
+        local H = boot("druid", build("druid_feral", "druid"))
+        assert.are.equal(100112, (active(H)))
+        H.Hekili:EmbedSpecOptions()
+        H.Hekili:SetSpecOption({ "packs", "guardian", "core", "package" }, "(none)")
+        settle(H)
+        assert.are.same({ 100112, "Feral (wowsims.com)" }, { active(H) })
+        local sp = H.Hekili.DB.profile.specs[100113]
+        assert.are.same({ "(none)", true }, { sp.package, sp.packManual })
+        assert.is_nil(H.Hekili.DB.profile.specChoice["Player-Realm"][2])
+    end)
+
     it("leaves an automatic Frostfire alone until the player activates the Fire pack, then keeps Fire", function()
         local H = boot("mage", build("mage_fire", "mage"))
         respec(H, build("mage_frostfire", "mage")) -- the automatic Fire becomes Frostfire
