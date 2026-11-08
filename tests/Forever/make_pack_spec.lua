@@ -139,9 +139,6 @@ describe("tools/make_pack.lua", function()
 
     describe("write (the version changes only with the text)", function()
         local TODAY = 20991231
-        local function date(src, name)
-            return math.floor(tonumber(src:match('"' .. name:gsub("%p", "%%%0") .. '",\n    (%d+),')) / 1000)
-        end
 
         for class, Class in pairs(CLASSES) do
             it("leaves the checked-in " .. Class .. ".lua alone on any day", function()
