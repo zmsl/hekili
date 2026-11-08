@@ -388,9 +388,15 @@ M.FLICKER = {
     -- conflagrate > incinerate / life_tap). Central (belief casts), existing; PROPOSED-warlock-5
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 2):
     -- flicker 0.5 -> 0 (S, steady icons on by default)
-    -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 readyShort 0 / 0 / 0, heldReady 1 / 2 / 3, the ledger flicker 0.02 / 0.00 / 0.02 vs
-    -- the oracle 0.02 / 0.02 / 0.03; the gate's own first-set flicker reads 0 under the row): heldReady 8 -> 3 (the worst set)
-    ["Destruction"] = { flicker = 0, retracted = 0, heldReady = 3 }, -- 0 / 0 / 0, 0
+    -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0.00 / 0.02 (one flip a set), readyShort 0 / 0 / 0, heldReady 1 / 2 / 3,
+    -- oracle flicker 0.02 / 0.02 / 0.03): heldReady 8 -> 3 (the worst set). flicker 0 -> 0.03 (the measured worst + 0.01: the
+    -- line rounds to two decimals). Traced, seed 1 fight 1, 16.2-16.6 s: immolate@0.00 / conflagrate@0.20 / immolate@0.10 as
+    -- the first icon on consecutive polls; Conflagrate's cooldown ends at 16.6 s while Immolate sits at its refresh
+    -- threshold (`immolate,if=remains<incinerate cast`), so each of the two lines is the first icon on alternate polls. The
+    -- oracle's own queue shows the identical three firsts (or[] equals us[] on all three ticks), so it is the wowsims list's
+    -- near-tie, not the kit or pack: a cooldown end beside a refresh threshold, which the steady-icons hold does not cover (a
+    -- 3-poll swap with neither line pressed). The only flip in seeds 1-20; sets 21-40 and 41-60 read 0.00 and 0.02.
+    ["Destruction"] = { flicker = 0.03, retracted = 0, heldReady = 3 }, -- 0.02 / 0.00 / 0.02, 0
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. It tightens the bar when a change lowers the oracle's own flicker. 1.8 -> 0.5 (forever-gap-bd,
