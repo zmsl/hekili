@@ -42,7 +42,12 @@ local OVL_J, OVL_ID, OVL_N = {}, {}, 0
 -- zeroed at each fight's start.
 local facts, disagree = {}, {}
 local staged = {} -- by the same key: 1 up or 2 down staged and not yet folded into the belief, else 0
-I.presenceFacts, I.presenceDisagree = facts, disagree
+-- By the same key: 1 when the first plain walk after combat corrected the believed presence (spec §2.6, decision 105),
+-- per fight. At most one count per key: exp0 moves only at the fold, so every walk of the exit frame (a UNIT_AURA one,
+-- then poll 10's) sees the same stale belief.
+local exitFix = {}
+local exiting = false -- from PLAYER_REGEN_ENABLED until poll 10's walk completes
+I.presenceFacts, I.presenceDisagree, I.auraExitFix = facts, disagree, exitFix
 local KEY = {} -- aura index -> its key, for the Snapshot lines
 
 I.OnBuild(function(def)
@@ -66,9 +71,11 @@ I.OnBuild(function(def)
     playerPlain, targetPlain = true, true
     for j = 1, U.nAura do
         KEY[j] = tostring(def.auras[j].key)
-        facts[j], disagree[j], staged[j] = 0, 0, 0
-        facts[I.AURA_UNIT + j], disagree[I.AURA_UNIT + j], staged[I.AURA_UNIT + j] = 0, 0, 0
+        facts[j], disagree[j], staged[j], exitFix[j] = 0, 0, 0, 0
+        local k = I.AURA_UNIT + j
+        facts[k], disagree[k], staged[k], exitFix[k] = 0, 0, 0, 0
     end
+    exiting = false -- a walk after a build finds every record cleared: no correction to count
     pending = true -- a build cleared every record: walk the player at the next out-of-combat poll 10 (gear-aware spec §2)
 end)
 
@@ -77,6 +84,7 @@ local function walk(api, u, unit, t)
     local U = I.auras
     serial = serial + 1
     local complete = true
+    local count = exiting and u <= 2 and not I.inCombat
     for f = 1, #FILTERS do
         local filter = FILTERS[f]
         for i = 1, SCAN do
@@ -116,6 +124,9 @@ local function walk(api, u, unit, t)
                 local stacks = type(apps) == "number" and apps or 0
                 local remaining = exp > 0 and exp - t or -1
                 if remaining > 0 or exp == 0 then
+                    if count and exitFix[(u - 1) * I.AURA_UNIT + j] == 0 and U.exp0[u][j] <= t then
+                        exitFix[(u - 1) * I.AURA_UNIT + j] = 1
+                    end
                     Direct(Obs.Read, t, (u - 1) * I.AURA_UNIT + j, remaining, ReadOf.Aura + stacks * I.AURA_STACK)
                     U.harm[u][j] = filter == "HARMFUL"
                 end
@@ -139,6 +150,9 @@ local function walk(api, u, unit, t)
                 and (not I.inCombat or seen[u][j])
                 and not (u == 1 and (I.formAura[j] or I.enchantAura[j]))
             then
+                if count and exitFix[(u - 1) * I.AURA_UNIT + j] == 0 and e[j] > t then -- lapsed by time: no change
+                    exitFix[(u - 1) * I.AURA_UNIT + j] = 1
+                end
                 Direct(Obs.Read, t, (u - 1) * I.AURA_UNIT + j, 0, ReadOf.Aura)
             end
         end
@@ -172,7 +186,7 @@ S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
             seen[u][j] = false
         end
     end
-    pending = true
+    pending, exiting = true, true
 end)
 
 -- Poll 10 (after the form read, 9, so a walk's form-aura skip sees this frame's form): once combat has ended, walk the
@@ -181,12 +195,11 @@ S.Poll(10, function(api, t)
     if not pending or I.inCombat or not I.built then
         return
     end
-    if walk(api, 1, "player", t) then
-        pending = false
-    end
+    pending = not walk(api, 1, "player", t)
     if I.auras.n >= 2 and Plain(api, api.UnitExists("target")) == true then
         walk(api, 2, "target", t)
     end
+    exiting = exiting and pending
 end)
 
 -- Poll 11: the overlay reads, while the player walk is secret or stopped. An overlay-read proc (no expiry) is still taken
@@ -272,8 +285,9 @@ end)
 
 S.On("PLAYER_REGEN_DISABLED", nil, function()
     for k in pairs(facts) do
-        facts[k], disagree[k], staged[k] = 0, 0, 0
+        facts[k], disagree[k], staged[k], exitFix[k] = 0, 0, 0, 0
     end
+    exiting = false
 end)
 
 -- Per aura and unit with a fact this fight, one line; a tracked aura with none, one `unit=-` line (debugging only: it
@@ -288,14 +302,15 @@ I.OnSnapshot(function(out)
         local lines = #out
         for u = 1, (U.n < 2 and U.n or 2) do
             local k = (u - 1) * I.AURA_UNIT + j
-            if facts[k] > 0 then
+            if facts[k] > 0 or exitFix[k] > 0 then
                 out[#out + 1] = string.format(
-                    "presence %s unit=%s path=%s facts=%d disagree=%d",
+                    "presence %s unit=%s path=%s facts=%d disagree=%d exitFix=%d",
                     KEY[j],
                     u == 1 and "player" or "target",
                     path,
                     facts[k],
-                    disagree[k]
+                    disagree[k],
+                    exitFix[k]
                 )
             end
         end

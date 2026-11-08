@@ -227,7 +227,7 @@ local function CreateButton( dispID, id )
     b.Caption = b.Caption or b:CreateFontString( bName .. "_Caption", "OVERLAY" )
 
     local captionFont = conf.classic.captions.font or conf.font
-    b.Caption:SetFont( LSM:Fetch("font", captionFont), conf.classic.captions.fontSize or 12, conf.classic.captions.fontStyle or "OUTLINE" )
+    b.Caption:SetFont( LSM:Fetch("font", captionFont), conf.classic.captions.fontSize or 12, ns.UI.FontFlags( conf.classic.captions.fontStyle or "OUTLINE" ) )
 
     local capAnchor = conf.classic.captions.anchor or "BOTTOM"
     b.Caption:ClearAllPoints()
@@ -249,7 +249,7 @@ local function CreateButton( dispID, id )
     local queued = id > 1 and conf.classic.keybindings.separateQueueStyle
     local kbFont = queued and conf.classic.keybindings.queuedFont or conf.classic.keybindings.font or conf.font
 
-    b.Keybinding:SetFont( LSM:Fetch("font", kbFont), queued and conf.classic.keybindings.queuedFontSize or conf.classic.keybindings.fontSize or 12, queued and conf.classic.keybindings.queuedFontStyle or conf.classic.keybindings.fontStyle or "OUTLINE" )
+    b.Keybinding:SetFont( LSM:Fetch("font", kbFont), queued and conf.classic.keybindings.queuedFontSize or conf.classic.keybindings.fontSize or 12, ns.UI.FontFlags( queued and conf.classic.keybindings.queuedFontStyle or conf.classic.keybindings.fontStyle or "OUTLINE" ) )
 
     local kbAnchor = conf.classic.keybindings.anchor or "TOPRIGHT"
     b.Keybinding:ClearAllPoints()
@@ -350,7 +350,7 @@ local function CreateButton( dispID, id )
         b.Targets = b.Targets or b:CreateFontString( bName .. "_Targets", "OVERLAY" )
 
         local tarFont = conf.classic.targets.font or conf.font
-        b.Targets:SetFont( LSM:Fetch( "font", tarFont ), conf.classic.targets.fontSize or 12, conf.classic.targets.fontStyle or "OUTLINE" )
+        b.Targets:SetFont( LSM:Fetch( "font", tarFont ), conf.classic.targets.fontSize or 12, ns.UI.FontFlags( conf.classic.targets.fontStyle or "OUTLINE" ) )
 
         local tarAnchor = conf.classic.targets.anchor or "BOTTOM"
         b.Targets:ClearAllPoints()
@@ -370,7 +370,7 @@ local function CreateButton( dispID, id )
         --[[ b.Auras = b.Auras or b:CreateFontString(bName .. "_Auras", "OVERLAY")
 
         local auraFont = conf.auraFont or (ElvUI and "PT Sans Narrow" or "Arial Narrow")
-        b.Auras:SetFont(LSM:Fetch("font", auraFont), conf.auraFontSize or 12, conf.auraFontStyle or "OUTLINE")
+        b.Auras:SetFont(LSM:Fetch("font", auraFont), conf.auraFontSize or 12, ns.UI.FontFlags( conf.auraFontStyle or "OUTLINE" ))
         b.Auras:SetSize(b:GetWidth(), b:GetHeight() / 2)
 
         local auraAnchor = conf.auraAnchor or "BOTTOM"
@@ -390,7 +390,7 @@ local function CreateButton( dispID, id )
         b.DelayText = b.DelayText or b:CreateFontString( bName .. "_DelayText", "OVERLAY" )
 
         local delayFont = conf.classic.delays.font or conf.font
-        b.DelayText:SetFont( LSM:Fetch("font", delayFont), conf.classic.delays.fontSize or 12, conf.classic.delays.fontStyle or "OUTLINE" )
+        b.DelayText:SetFont( LSM:Fetch("font", delayFont), conf.classic.delays.fontSize or 12, ns.UI.FontFlags( conf.classic.delays.fontStyle or "OUTLINE" ) )
 
         local delayAnchor = conf.classic.delays.anchor or "TOPLEFT"
         b.DelayText:ClearAllPoints()

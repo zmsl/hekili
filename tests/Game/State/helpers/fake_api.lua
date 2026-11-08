@@ -121,7 +121,10 @@ function M.new()
         traits = nil, -- { config = id, trees = { tree }, nodes = { [node] = info }, entries = {}, defs = {} }
         inRange = {}, -- [unit] = true: every range check in range (when `distance` has no entry for the unit)
         distance = {}, -- [unit] = yards (SECRET: a secret answer): range checks against the spell's `ranges`
-        ranges = {}, -- [spellID] = { min, max } yards: GetSpellInfo's minRange/maxRange (default 0, 5: melee)
+        -- [spellID] = { min, max[, reach] } yards: GetSpellInfo's minRange/maxRange (default 0, 5). maxRange 0 is a
+        -- spell the client checks no range for (IsSpellInRange nil: self-centred), unless `reach` is set: the live
+        -- client's melee strike reads maxRange 0 and still answers IsSpellInRange against `reach` (5)
+        ranges = {},
         handlers = {},
         unitSpeed = {}, -- [unit] = speed for UnitAttackSpeed of a unit other than the player (default: secret)
         unitIs = {}, -- [unit] = the token UnitIsUnit(unit, x) is true for (SECRET: a secret answer)
@@ -347,7 +350,7 @@ function M.new()
                 return ctl.inRange[unit] == true
             end
             local r = ctl.ranges[id]
-            local lo, hi = r and r[1] or 0, r and r[2] or 5
+            local lo, hi = r and r[1] or 0, r and (r[3] or r[2]) or 5
             if hi == 0 then
                 return nil -- no range check (the client's nil)
             end
