@@ -161,7 +161,9 @@ describe("export.lua .siml recipe paths", function()
                 { apl.translate(p.rotation, apl.context(set, r, log, old)) }
             )
             -- a spec left at the old pin refuses the new pin's CLI instead of parsing with it
+            ex.SPEC_PIN[spec] = ex.OLD_PIN -- explicit: the checked-in line is NEW once the lane has flipped this spec
             local ok2, err = pcall(ex.request, r, NEW_ROOT, spec, NEW_CLI)
+            ex.SPEC_PIN[spec] = saved
             assert.is_false(ok2)
             assert.is_truthy(tostring(err):find(ex.OLD_PIN, 1, true), tostring(err))
         end

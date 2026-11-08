@@ -18,13 +18,10 @@
     "parties":[{
         "players":[{
             "profession1":"Engineering",
-            "protectionPaladin":{
-              "options":{
-                "classOptions":{
-                }
-              }
-            },
+            "distanceFromTarget":5,
+            "reactionTimeMs":100,
             "class":"ClassPaladin",
+            "inFrontOfTarget":true,
             "healingModel":{
               "inspirationUptime":0.25,
               "hps":2200,
@@ -182,8 +179,7 @@
                               "lhs":{
                                 "auraRemainingTime":{
                                   "auraId":{
-                                    "spellId":20423,
-                                    "rank":7
+                                    "spellId":20423
                                   }
                                 }
                               }
@@ -191,8 +187,7 @@
                           },{
                             "auraIsInactive":{
                               "auraId":{
-                                "spellId":20423,
-                                "rank":7
+                                "spellId":20423
                               }
                             }
                           }]
@@ -220,8 +215,7 @@
                               "lhs":{
                                 "auraRemainingTime":{
                                   "auraId":{
-                                    "spellId":20293,
-                                    "rank":8
+                                    "spellId":20293
                                   }
                                 }
                               }
@@ -229,8 +223,7 @@
                           },{
                             "auraIsInactive":{
                               "auraId":{
-                                "spellId":20293,
-                                "rank":8
+                                "spellId":20293
                               }
                             }
                           }]
@@ -262,8 +255,7 @@
                               "val":{
                                 "talentIsKnown":{
                                   "talentId":{
-                                    "spellId":1310905,
-                                    "rank":1
+                                    "spellId":1310905
                                   }
                                 }
                               }
@@ -291,8 +283,8 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":20928,
-                        "rank":3
+                        "spellId":1239570,
+                        "rank":4
                       }
                     }
                   }
@@ -316,7 +308,12 @@
                   }
                 }]
             },
-            "distanceFromTarget":5
+            "protectionPaladin":{
+              "options":{
+                "classOptions":{
+                }
+              }
+            }
           }]
       }],
     "tanks":[{
