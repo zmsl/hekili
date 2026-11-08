@@ -4,8 +4,8 @@
 -- combat. The collect (§3.2): every child of the four viewers kept once as a slot, item or not, in arrays preallocated
 -- to MAX_SLOTS; past that a child is ignored and counted (overflow). A new frame is a new slot; a slot is never reused.
 -- The sweep (§3.2): at poll 15, per viewer IsVisible and GetNumChildren once, per slot four rawgets; a reading change
--- moves its thing's counters (aura j, unit u: nUp, nNone, nStale, tUp, tNone) in O(1), and a reduced UP or DOWN change
--- goes to onEdge. Until Task 3c's seen rule a silent mapped slot answers NONE for its last held unit (the player if it
+-- moves its thing's counters (aura j, unit u: nUp, nNone, nStale) in O(1); the moved things' tUp/tNone are recomputed
+-- over the live slots (O(slots)); a reduced UP or DOWN change goes to onEdge. Until Task 3c's seen rule a silent mapped slot answers NONE for its last held unit (the player if it
 -- held none). Read, never write: rawget on items, on Blizzard frames only GetChildren, GetNumChildren and IsVisible;
 -- no hooks of any kind (§3.3, §3.5).
 -- The idea of reading the viewer's items for presence, the all-viewers presence bit, the hidden-viewer rule and the
@@ -232,9 +232,9 @@ local function count(s, j, u, a, t)
     end
     local k = (u - 1) * I.AURA_UNIT + j
     if a == UP then
-        cUp[k], tUp[k] = cUp[k] + 1, t
+        cUp[k] = cUp[k] + 1
     elseif a == NONE then
-        cNone[k], tNone[k] = cNone[k] + 1, t
+        cNone[k] = cNone[k] + 1
     else
         cStale[k] = cStale[k] + 1
     end
@@ -299,8 +299,30 @@ local function sweep(t)
     end
 end
 
--- The things a sweep moved: each reduced; an UP or DOWN change goes to onEdge (UNKNOWN fires none). Allocates nothing.
+-- The things a sweep moved: tUp/tNone recomputed as the latest begin (sT) of a live slot (§2.3: a slot that left takes
+-- its time with it), O(slots); then each reduced; an UP or DOWN change goes to onEdge (UNKNOWN fires none). Allocates
+-- nothing.
 local function reduce(t)
+    if nTouched == 0 then
+        return
+    end
+    for i = 1, nTouched do
+        local k = touched[i]
+        tUp[k], tNone[k] = 0, 0
+    end
+    for s = 1, Q.nSlots do
+        local a = sAns[s]
+        if a == UP or a == NONE then
+            local k = (sUnit[s] - 1) * I.AURA_UNIT + sJ[s]
+            if mark[k] then
+                if a == UP and sT[s] > tUp[k] then
+                    tUp[k] = sT[s]
+                elseif a == NONE and sT[s] > tNone[k] then
+                    tNone[k] = sT[s]
+                end
+            end
+        end
+    end
     for i = 1, nTouched do
         local k = touched[i]
         mark[k] = false
