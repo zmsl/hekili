@@ -22,7 +22,9 @@ local Plain = S.Plain
 local VIEWERS =
     { "EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
 local MAX_SLOTS = 128
-local SETTLE = 0.05 -- shortcut: a guess until the CDM-O probe measures the target switch (spec D5)
+-- CDM-O (owner probe 2026-11-08, cdm-o-probe-result.md): items are stale only in the switch's own frame, right from the
+-- next (~6 ms); 0.05 s covers frames 0-3 (~45 ms).
+local SETTLE = 0.05
 local STOPPED = "Forever: Cooldown Manager reading stopped for this session after an error: %s"
 
 local cdvToJ = {} -- cooldownID -> j, or -a (ambiguous: amb[a] lists its tracked js); built out of combat
@@ -299,6 +301,9 @@ local function sweep(t)
                 local unit = Plain(api, rawget(item, "auraDataUnit"))
                 u = unit ~= nil and UNIT[unit] or 0 -- a secret, nil or other unit: not live for either
                 if u > 0 then
+                    if u ~= sUnit[s] then -- sSeen pairs with sUnit: a stale light for another unit must not inherit it
+                        sSeen[s] = 0
+                    end
                     j, a = m, UP
                 else
                     reset(s) -- held for no unit we track: what it was seen holding says nothing now

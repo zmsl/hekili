@@ -659,6 +659,24 @@ describe("auras", function()
             assert.are.same({ 0, 0 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
         end)
 
+        it(
+            "an item seen only for the target, held for the player while hidden, then silent keeps our buff (F1)",
+            function()
+                I.AuraModel(1, SHOUT, 10, 20, 1, 10, Obs.CastSuccess, false) -- our player application at 10
+                ctl.ViewerAura(item, "target")
+                poll(10.5) -- seen holding for the target only
+                ctl.viewer.shown.BuffIconCooldownViewer = false
+                ctl.ViewerAura(item, "player")
+                poll(11) -- hidden: stale for the player, no sSeen write
+                ctl.viewer.shown.BuffIconCooldownViewer = nil
+                ctl.ViewerClear(item)
+                poll(11.5)
+                poll(12)
+                assert.are.equal(20, VS.Aura("player", fs.SPENDER_A, 12).est)
+                assert.are.equal(0, I.presenceDisagree[SHOUT])
+            end
+        )
+
         it("a plain walk wins: presence stages nothing", function()
             ctl.auras.player.HELPFUL[1] = nil
             ctl.Fire("UNIT_AURA", "player")

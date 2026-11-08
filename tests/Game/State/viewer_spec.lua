@@ -650,6 +650,73 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         assert.are.same({ 1, 0, 1, 0, 0, 5 }, counts(2, 2))
     end)
 
+    -- 3c review F1: sSeen pairs with the unit it was seen for; a held unit change (even while stale) starts it over.
+    it("seen for the target, held for the player while hidden, then silent: not live for the player", function()
+        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        start()
+        rec(1, 1, 1) -- our player application
+        ctl.ViewerAura(item, "target")
+        sweep(2) -- seen holding for the target only
+        ctl.viewer.shown.BuffIconCooldownViewer = false
+        ctl.ViewerAura(item, "player")
+        sweep(3) -- hidden: stale for the player, no sSeen write
+        ctl.viewer.shown.BuffIconCooldownViewer = nil
+        ctl.ViewerClear(item)
+        sweep(4)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
+    end)
+
+    it(
+        "control: seen for the target, then held for the player while visible, then silent: live for the player",
+        function()
+            local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            start()
+            rec(1, 1, 1)
+            ctl.ViewerAura(item, "target")
+            sweep(2)
+            ctl.ViewerAura(item, "player")
+            sweep(3)
+            ctl.ViewerClear(item)
+            sweep(4)
+            assert.are.same({ 1, 0, 1, 0, 0, 4 }, counts(1, 1))
+        end
+    )
+
+    it(
+        "a player slot lighting for the new target inside the settle window does not lend its sSeen to the target",
+        function()
+            local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            start()
+            ctl.ViewerAura(item, "player")
+            sweep(2)
+            rec(1, 1, 2)
+            rec(1, 2, 1) -- the new target's application, older than the player light
+            ctl.ViewerClear(item)
+            sweep(2.5) -- a player NONE slot: marked settling at the switch
+            ctl.now = 3
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.ViewerAura(item, "target")
+            sweep(3.01) -- held for the target while settling: stale, no sSeen write
+            ctl.ViewerClear(item)
+            sweep(3.1) -- settled, silent
+            assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 2))
+        end
+    )
+
+    it("the sSeen > 0 term: a slot never seen visible does not close a record whose applied is 0", function()
+        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        ctl.viewer.shown.BuffIconCooldownViewer = false
+        start()
+        rec(1, 1, 0)
+        ctl.ViewerAura(item, "player")
+        sweep(2) -- hidden: stale, never seen
+        ctl.viewer.shown.BuffIconCooldownViewer = nil
+        ctl.ViewerClear(item)
+        sweep(3)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+    end)
+
     it("a record that closed makes its silent slots not live at the next sweep", function()
         local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
         start()
