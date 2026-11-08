@@ -171,7 +171,7 @@ describe("the Presence router", function()
         ctl.ViewerRelease(item) -- UNKNOWN: the router's lost check would read it too
         I.presence.Sweep(3.5)
         assert.are.equal(0, Q.errors)
-        assert.is_truthy(I.presence.covered)
+        assert.are.equal(Q, I.presence.Leaf()) -- the leaf is still on: no self-off dropped it
     end)
 end)
 
