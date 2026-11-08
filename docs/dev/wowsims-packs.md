@@ -329,10 +329,19 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   breaks Prowl) behind Ravage while Prowled. No 'behind the target' signal and no fallback timer: Ravage stays the
   first icon while Prowl is up and the target is in range; Prowl ends when Ravage lands or the player attacks. The
   replay and loop worlds do not know Prowl or Ravage, so they do not see the deviation (unit-tested in druid_spec).
-- Rogue Combat, Riposte (owner R70, 2026-11-06): "add it to the apl and make it focus=1". A recipe `extra` line before
-  Ambush: `riposte,use_off_gcd=1,focus=1,if=buff.riposte_usable.up&energy.lo>=action.riposte.cost`. wowsims never plays
-  it (no parry on us in its fight), so it moves no replay or loop number; the window is the kit's `riposte_usable`
-  (Rogue.lua, from the client's usability answer; a window migration is planned, L138). Not checked in game.
+- Rogue Combat, Riposte (owner R70, 2026-11-06: "add it to the apl and make it focus=1"). A recipe `extra` line before
+  Garrote (the first line left once the new pin's APL dropped its Ambush opener: re-anchored, L143):
+  `riposte,use_off_gcd=1,focus=1,if=energy.lo>=action.riposte.cost`. The 5 s parry window is the kit's registered window
+  `riposte` (Rogue.lua, evaluator = the client's usability answer: L138 migrated), which Riposte's own `usable` reads, so
+  the line carries no window term (a recipe `extra` line cannot name a kit window: the translator treats `window.X` as a
+  sequence's). wowsims never plays it (no parry on us in its fight; at 4b0030a44b the Combat SS build does not take the
+  talent), so it moves no replay or loop number. Not checked in game.
+- Priest Shadow, Starshards (owner 2026-11-07: Starshards by user preference replaces spellExpectedDpet default #11): upstream's
+  default #11 casts Starshards when its expected damage per execution time beats Mind Flay's and Mind Blast is 4 s or more from
+  ready; the translator cannot compute the first term (CN5). A recipe `extra` line before Mind Flay,
+  `starshards,if=settings.prefer_starshards&(!action.mind_blast.known|cooldown.mind_blast.remains>=4)`, with the class setting `prefer_starshards` (off by
+  default, no `sim` default, so the default pack and every number are as before). Only matters when Starshards is known (the
+  Night Elf racial). The Human replay and loops never cast it. Not checked in game.
 
 ## Pack notes
 
@@ -428,3 +437,19 @@ start outlives the fight. That order is UNMEASURED (in-game ledger CS1): the cli
 INTERRUPTED when the target dies; the belief handles either. An unmapped item's use in a replay log is still our cast
 to the client: a success of spell
 `replay.UNMAPPED_SPELL` (0, no ability's), which `Events/Rows.lua` reads as "an outcome now may be that item's".
+
+## Talent tables (spec detection)
+
+Spec detection counts the live rank of every node a kit REGISTERS (`spec:RegisterTalents`, `ns.TreePoints`), so a missing or
+mis-filed node moves a build's points between trees. The kits' tables follow Forever's tree, `ui/sim/talents/trees/<class>.json`
+at the pin (generated from the game files; checked against one Warrior `/fprobe export` of 2026-10-15 only, so a fresh export
+per class would confirm it). Copies live in `tests/Forever/fixtures/talent_trees/`.
+
+- `WOWSIMS_TREES=<dir> .lua/bin/lua tools/wowsims/talents.lua all|<class> [--write]` prints or rewrites each kit's table: tree
+  = the JSON's order, a spell id the kit has keeps its name (code reads `talent.<name>.rank`), a row named like an unmatched
+  node is that node under its new id, other new nodes are snake_case(fancyName), rows the tree lacks are dropped unless
+  `M.KEEP` (in the generator) lists them because code reads them. `--write` also refreshes the fixtures. Re-run it on a re-pin.
+- `tests/Forever/talent_trees_spec.lua`: every node registered with its tree and max rank, every `talent.<name>` the kit and its
+  packs read is registered, and for every recipe's talent string (decoded as `export.lua`'s `M.talents`) the counted points per
+  tree equal the string's own. A pack line that reads a talent its own build does not take (a wowsims line gated on a
+  talent) is not an error: the translation keeps the sim's condition.

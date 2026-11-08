@@ -6,7 +6,7 @@
 -- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
 -- `summonPet`, `dismissPet`, `openWindow`, `closeWindow`) and reads (`talent`, `buff`, `debuff`, the resources by key,
 -- `knownRank`, `stat`, `swingBase`, `mainhand_speed`, `offhand_speed`, `weapon`, `equipped`, `set_bonus`, `healthMax`,
--- `now`, `combat`, `level`, `lastSwing`, `nextSwing`, `usable`) with belief meanings. A window's evaluator
+-- `now`, `combat`, `level`, `lastSwing`, `nextSwing`, `usable`, `window`) with belief meanings. A window's evaluator
 -- (Families/Windows.lua) runs in the same context, reads only. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An `applyBuff`/`applyDebuff` with no duration writes the aura's registered one: its number, or its function evaluated
 -- in this context (gear-aware spec §5), so a pack writes a duration once.
@@ -411,6 +411,59 @@ function NAMES.closeWindow(name)
     end
 end
 
+-- window.<name>: the window's state (Families/Windows.lua) at the context's time, the sim's state.window answers
+-- (Engine/Sim/State.lua mtWindow): up, down, remains, elapsed, step, next.<ability key> (the due step; casts already
+-- folded). Read-only (the verbs above are the writers); an unregistered name reads down (the sim's would raise). One
+-- reader per registered window, built at the build; the index is resolved per read (Windows.lua builds after this file).
+local function readOnly()
+    error("now: window readers are read-only", 2)
+end
+local function upAt(r) -- the window's index when up at T, else nil (expired but not yet closed reads down)
+    local W = I.win
+    local w = W.byKey[rawget(r, "key")]
+    if w and W.up[w] and W.openedAt[w] <= T and T < W.expiresAt[w] then
+        return w
+    end
+    return nil
+end
+local windowMeta = {
+    __index = function(r, f)
+        local w = upAt(r)
+        if f == "up" then
+            return w ~= nil
+        elseif f == "down" then
+            return w == nil
+        elseif f == "remains" then
+            return w and I.win.expiresAt[w] - T or 0
+        elseif f == "elapsed" then
+            return w and T - I.win.openedAt[w] or 0
+        elseif f == "step" then
+            return w and I.win.step[w] or 0
+        end
+        return nil
+    end,
+    __newindex = readOnly,
+}
+local nextMeta = {
+    __index = function(r, key)
+        local w = upAt(r)
+        local steps = w and I.win.steps[w]
+        local a = abByKey[key]
+        return steps and a ~= nil and steps[I.win.step[w]] == a or false
+    end,
+    __newindex = readOnly,
+}
+local function reader(key)
+    return setmetatable({ key = key, next = setmetatable({ key = key }, nextMeta) }, windowMeta)
+end
+local NO_WINDOW = reader(false)
+NAMES.window = setmetatable({}, {
+    __index = function()
+        return NO_WINDOW
+    end,
+    __newindex = readOnly,
+})
+
 ----------------------------------------------------------------------------------------------------------------------
 -- Reactions (RegisterReaction, re-pin design §3a): `now` functions run by a settled outcome, never by a cast. By `who`
 -- (1 player, 2 target) x outcome (OUTCOME): the bound functions, a list each, and each one's hand (0 any, 1 main,
@@ -477,6 +530,13 @@ I.OnBuild(function(def)
     end
     for k in pairs(NAMES.action) do
         NAMES.action[k] = nil
+    end
+    for k in pairs(NAMES.window) do
+        rawset(NAMES.window, k, nil)
+    end
+    local wins = def.windows or NO_SETTINGS -- a hand-built def may carry no `windows`
+    for k = 1, #wins do
+        rawset(NAMES.window, wins[k].key, reader(wins[k].key))
     end
     for a = 1, A.n do
         abByKey[A.key[a]] = a

@@ -376,6 +376,14 @@ Snapshot `:281-306`); `Families/Now.lua:325` (one line: `I.auraOurs[k] = true` o
 `src/Hekili/Engine/Schema/Tracked.lua` (`providersOf` `:216-226`), `tests/Forever/providers_option_spec.lua` (rewrite),
 `tests/Game/harness/loop.lua:333`, `DEVELOPMENT.md`, `CHANGELOG.md`, `docs/dev/architecture.md:133-135`.
 
+- [ ] **Owner direction 2026-11-08: the DAMAGE METER setting goes in this task too** (the same dev-only 'Experimental' block):
+  delete `performance.damageMeter` (`Options.lua:311`, its entry `:4171-4186`, the two locale strings `enUS.lua:500-501` and
+  `zhCN`), make `providersOf` (`Tracked.lua:220`) stop reading `p.damageMeter` (the Outcomes provider is always the
+  default one; keep the meter provider code only if the A/B harness still uses it, say which in the report), tests: "no
+  damage meter option exists in the options table" and "a saved performance.damageMeter = true is ignored without an
+  error"; update `providers_option_spec`, `docs/dev/providers-ab.md`, DEVELOPMENT.md and CHANGELOG (no player-visible
+  setting existed in release builds, so no Changed line unless something visible moves). Owner rule: no user-facing
+  toggles for adaptive features, only the undocumented `Hekili.cdmOff` session switch.
 - [ ] **Step 1: Failing tests:** "providersOf gives viewer true in a release build with any saved value"; "no Cooldown
   Manager option exists in the options table"; "a saved performance.cooldownViewer = false is ignored"; "Hekili.cdmOff =
   true then ProvidersChanged gives viewer false (out of combat at once, else at combat end)".

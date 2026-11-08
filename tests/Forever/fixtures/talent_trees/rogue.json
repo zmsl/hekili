@@ -1,0 +1,646 @@
+[
+  {
+    "name": "Assassination",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/182.jpg",
+    "talents": [
+      {
+        "fieldName": "improvedGouge",
+        "fancyName": "Improved Gouge",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 0
+        },
+        "spellId": 13741,
+        "definitionId": 135272,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "remorselessAttacks",
+        "fancyName": "Remorseless Attacks",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 14144,
+        "definitionId": 135253,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "malice",
+        "fancyName": "Malice",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 14138,
+        "definitionId": 135252,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "ruthlessness",
+        "fancyName": "Ruthlessness",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 14156,
+        "definitionId": 135251,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedExposeArmor",
+        "fancyName": "Improved Expose Armor",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 14168,
+        "definitionId": 135247,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "improvedSliceAndDice",
+        "fancyName": "Improved Slice and Dice",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 3
+        },
+        "spellId": 14165,
+        "definitionId": 135269,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "vigor",
+        "fancyName": "Vigor",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 14983,
+        "definitionId": 135250,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "bloodSplatter",
+        "fancyName": "Blood Splatter",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 1329256,
+        "definitionId": 135248,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "lethality",
+        "fancyName": "Lethality",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 14128,
+        "definitionId": 135246,
+        "maxPoints": 2,
+        "prereqLocation": {
+          "rowIdx": 0,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "vilePoisons",
+        "fancyName": "Vile Poisons",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 16513,
+        "definitionId": 135244,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "coldBlood",
+        "fancyName": "Cold Blood",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 14177,
+        "definitionId": 135245,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "improvedPoisons",
+        "fancyName": "Improved Poisons",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 14113,
+        "definitionId": 135243,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "relentlessStrikes",
+        "fancyName": "Relentless Strikes",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 14179,
+        "definitionId": 145964,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "venom",
+        "fancyName": "Venom",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 1329328,
+        "definitionId": 135242,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "improvedKidneyShot",
+        "fancyName": "Improved Kidney Shot",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 14174,
+        "definitionId": 135241,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "sealFate",
+        "fancyName": "Seal Fate",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 14186,
+        "definitionId": 135240,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "mutilate",
+        "fancyName": "Mutilate",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 399956,
+        "definitionId": 135239,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "Combat",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/181.jpg",
+    "talents": [
+      {
+        "fieldName": "coupDeGrace",
+        "fancyName": "Coup de Grace",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 0
+        },
+        "spellId": 14162,
+        "definitionId": 135238,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "efficientStrikes",
+        "fancyName": "Efficient Strikes",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 13732,
+        "definitionId": 135271,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "lightningReflexes",
+        "fancyName": "Lightning Reflexes",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 13712,
+        "definitionId": 145370,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "puncturingWounds",
+        "fancyName": "Puncturing Wounds",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 1224716,
+        "definitionId": 135249,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "deflection",
+        "fancyName": "Deflection",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 13713,
+        "definitionId": 135268,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "precision",
+        "fancyName": "Precision",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 13705,
+        "definitionId": 135267,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedSprint",
+        "fancyName": "Improved Sprint",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 3
+        },
+        "spellId": 13743,
+        "definitionId": 135262,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "endurance",
+        "fancyName": "Endurance",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 13742,
+        "definitionId": 135266,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "riposte",
+        "fancyName": "Riposte",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 14251,
+        "definitionId": 135265,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 1,
+          "colIdx": 1
+        }
+      },
+      {
+        "fieldName": "composure",
+        "fancyName": "Composure",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 3
+        },
+        "spellId": 1329265,
+        "definitionId": 135289,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "improvedKick",
+        "fancyName": "Improved Kick",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 13754,
+        "definitionId": 135263,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "flawlessExecution",
+        "fancyName": "Flawless Execution",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 1310711,
+        "definitionId": 138268,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "weaponExpertise",
+        "fancyName": "Weapon Expertise",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 30919,
+        "definitionId": 135256,
+        "maxPoints": 2,
+        "prereqLocation": {
+          "rowIdx": 1,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "aggression",
+        "fancyName": "Aggression",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 3
+        },
+        "spellId": 18427,
+        "definitionId": 135260,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "dualWieldSpecialization",
+        "fancyName": "Dual Wield Specialization",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 13715,
+        "definitionId": 145965,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "bladeFlurry",
+        "fancyName": "Blade Flurry",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 13877,
+        "definitionId": 135258,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "hackAndSlash",
+        "fancyName": "Hack and Slash",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 13960,
+        "definitionId": 135257,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "flashOfSteel",
+        "fancyName": "Flash of Steel",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 1329284,
+        "definitionId": 135270,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "adrenalineRush",
+        "fancyName": "Adrenaline Rush",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 13750,
+        "definitionId": 135254,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "Subtlety",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/183.jpg",
+    "talents": [
+      {
+        "fieldName": "setup",
+        "fancyName": "Setup",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 0
+        },
+        "spellId": 13983,
+        "definitionId": 135281,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "masterOfDeception",
+        "fancyName": "Master of Deception",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 13958,
+        "definitionId": 135291,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "opportunity",
+        "fancyName": "Opportunity",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 14057,
+        "definitionId": 135290,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "dirtyDeeds",
+        "fancyName": "Dirty Deeds",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 14082,
+        "definitionId": 135275,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "camouflage",
+        "fancyName": "Camouflage",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 13975,
+        "definitionId": 135286,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedAmbush",
+        "fancyName": "Improved Ambush",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 14079,
+        "definitionId": 135279,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "dirtyTricks",
+        "fancyName": "Dirty Tricks",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 3
+        },
+        "spellId": 1224782,
+        "definitionId": 135287,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "initiative",
+        "fancyName": "Initiative",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 13976,
+        "definitionId": 135285,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "premeditation",
+        "fancyName": "Premeditation",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 14183,
+        "definitionId": 135273,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "serratedBlades",
+        "fancyName": "Serrated Blades",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 14171,
+        "definitionId": 135282,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "elusiveness",
+        "fancyName": "Elusiveness",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 13981,
+        "definitionId": 135283,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "ghostlyStrike",
+        "fancyName": "Ghostly Strike",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 14278,
+        "definitionId": 135284,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "quickGetaway",
+        "fancyName": "Quick Getaway",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 3
+        },
+        "spellId": 1310728,
+        "definitionId": 142619,
+        "maxPoints": 2,
+        "prereqLocation": {
+          "rowIdx": 1,
+          "colIdx": 3
+        }
+      },
+      {
+        "fieldName": "heightenedSenses",
+        "fancyName": "Heightened Senses",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 30894,
+        "definitionId": 135277,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "preparation",
+        "fancyName": "Preparation",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 14185,
+        "definitionId": 135276,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "hemorrhage",
+        "fancyName": "Hemorrhage",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 16511,
+        "definitionId": 135278,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 2,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "bootKnife",
+        "fancyName": "Boot Knife",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 1329286,
+        "definitionId": 135280,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "deathMark",
+        "fancyName": "Death Mark",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 1316709,
+        "definitionId": 142618,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  }
+]

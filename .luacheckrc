@@ -132,7 +132,7 @@ end
 files["src/Hekili_Druid/Druid.lua"] = { globals = druidEnv }
 -- The Rogue's further `state` names.
 local rogueEnv = {
-    "energy", "combo_points", "cooldown", "combat", "class", "interrupt", "stealthed", "expose_due",
+    "energy", "combo_points", "cooldown", "combat", "class", "interrupt", "stealthed", "expose_due", "window", "closeWindow",
 }
 for _, k in ipairs(stateEnv) do
     rogueEnv[#rogueEnv + 1] = k

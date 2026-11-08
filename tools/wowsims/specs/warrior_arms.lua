@@ -2,6 +2,10 @@
 -- translation. Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warrior/dps/presets.ts
 -- (ArmsTalents :102, DefaultOptions :143-152, OtherDefaults :169-175) at the pin; gear p1_arms (the spike's, a level
 -- 60 set; the presets' default is the Fury build).
+-- Re-pin 4b0030a44b (0.7 warrior lane): talents 30303213132215201-55050000002-2 (presets.ts:104; Bloodthrill 2 ranks, Improved
+-- Tactical Mastery 3), the APL's Slam through execute, Whirlwind and the Berserker Stance weave from 2 targets (Battle
+-- Stance below, waiting for Whirlwind), Slam cooldown 15 s and Improved Slam -2.5 s a rank (10 s at 2/2). The build has no
+-- Improved Berserker Rage, so the ruled pre-pull gate below stays.
 -- Re-pin e2842f0a78 (lane 14): hasBsT2 false (the pin's DefaultOptions; +30 AP only). Replay assumption (R42): the
 -- replay world answers `fight_remains` from the log's known length (the game reads 3600, gap AN), so the translated
 -- multipleCdUsages lines (Death Wish, Recklessness, the racials) follow wowsims's 180 s fight there and fire on
@@ -54,7 +58,7 @@ return {
         race = "RaceOrc",
         class = "ClassWarrior",
         gear = "ui/specs/warrior/dps/gear_sets/p1_arms.gear.json",
-        talentsString = "30325213132515201-0505-2",
+        talentsString = "30303213132215201-55050000002-2",
         specKey = "dpsWarrior",
         options = {
             classOptions = {

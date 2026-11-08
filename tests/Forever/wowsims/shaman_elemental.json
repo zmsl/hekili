@@ -20,7 +20,7 @@
             "bonusStats":{
               "apiVersion":2,
               "stats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-              "pseudoStats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+              "pseudoStats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
             },
             "class":"ClassShaman",
             "itemSwap":{
@@ -45,7 +45,7 @@
               "prepullBonusStats":{
                 "apiVersion":2,
                 "stats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                "pseudoStats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                "pseudoStats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
               }
             },
             "consumables":{
@@ -88,7 +88,7 @@
                   "randomSuffix":12734,
                   "enchant":1901
                 },{
-                  "id":17721,
+                  "id":21178,
                   "enchant":8213
                 },{
                   "id":20047
@@ -115,15 +115,48 @@
                   "id":23199
                 }]
             },
-            "distanceFromTarget":20,
+            "distanceFromTarget":5,
             "name":"Elemental",
-            "talentsString":"5500331023001351-053002001-053",
+            "talentsString":"5500331023001351-05500001-053",
             "profession2":"Enchanting",
             "buffs":{
               "greaterBlessingOfWisdom":2,
               "greaterBlessingOfKings":true
             },
             "rotation":{
+              "valueVariables":[{
+                  "name":"Single Target",
+                  "value":{
+                    "cmp":{
+                      "op":"OpEq",
+                      "rhs":{
+                        "const":{
+                          "val":"1"
+                        }
+                      },
+                      "lhs":{
+                        "numberTargets":{
+                        }
+                      }
+                    }
+                  }
+                },{
+                  "name":"Multi Target",
+                  "value":{
+                    "cmp":{
+                      "op":"OpGt",
+                      "rhs":{
+                        "const":{
+                          "val":"1"
+                        }
+                      },
+                      "lhs":{
+                        "numberTargets":{
+                        }
+                      }
+                    }
+                  }
+                }],
               "type":"TypeAPL",
               "prepullActions":[{
                   "action":{
@@ -181,17 +214,8 @@
                 },{
                   "action":{
                     "condition":{
-                      "cmp":{
-                        "op":"OpEq",
-                        "rhs":{
-                          "const":{
-                            "val":"1"
-                          }
-                        },
-                        "lhs":{
-                          "numberTargets":{
-                          }
-                        }
+                      "variableRef":{
+                        "name":"Single Target"
                       }
                     },
                     "castSpell":{
@@ -208,17 +232,8 @@
                 },{
                   "action":{
                     "condition":{
-                      "cmp":{
-                        "op":"OpGt",
-                        "rhs":{
-                          "const":{
-                            "val":"1"
-                          }
-                        },
-                        "lhs":{
-                          "numberTargets":{
-                          }
-                        }
+                      "variableRef":{
+                        "name":"Multi Target"
                       }
                     },
                     "castSpell":{
@@ -279,11 +294,6 @@
                   }
                 },{
                   "action":{
-                    "autocastOtherCooldowns":{
-                    }
-                  }
-                },{
-                  "action":{
                     "condition":{
                       "cmp":{
                         "op":"OpLt",
@@ -307,19 +317,35 @@
                 },{
                   "action":{
                     "condition":{
+                      "not":{
+                        "val":{
+                          "auraIsActive":{
+                            "includeReactionTime":true,
+                            "auraId":{
+                              "spellId":408510
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":408510
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "autocastOtherCooldowns":{
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
                       "and":{
                         "vals":[{
-                            "cmp":{
-                              "op":"OpEq",
-                              "rhs":{
-                                "const":{
-                                  "val":"1"
-                                }
-                              },
-                              "lhs":{
-                                "numberTargets":{
-                                }
-                              }
+                            "variableRef":{
+                              "name":"Single Target"
                             }
                           },{
                             "cmp":{
@@ -349,17 +375,8 @@
                     "condition":{
                       "and":{
                         "vals":[{
-                            "cmp":{
-                              "op":"OpGt",
-                              "rhs":{
-                                "const":{
-                                  "val":"1"
-                                }
-                              },
-                              "lhs":{
-                                "numberTargets":{
-                                }
-                              }
+                            "variableRef":{
+                              "name":"Multi Target"
                             }
                           },{
                             "cmp":{
@@ -381,28 +398,6 @@
                     "castSpell":{
                       "spellId":{
                         "spellId":10587
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "cmp":{
-                        "op":"OpGt",
-                        "rhs":{
-                          "const":{
-                            "val":"1"
-                          }
-                        },
-                        "lhs":{
-                          "numberTargets":{
-                          }
-                        }
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":408345
                       }
                     }
                   }
@@ -457,17 +452,40 @@
                 },{
                   "action":{
                     "condition":{
-                      "cmp":{
-                        "op":"OpGt",
-                        "rhs":{
-                          "const":{
-                            "val":"1"
-                          }
-                        },
-                        "lhs":{
-                          "numberTargets":{
-                          }
-                        }
+                      "or":{
+                        "vals":[{
+                            "variableRef":{
+                              "name":"Multi Target"
+                            }
+                          },{
+                            "and":{
+                              "vals":[{
+                                  "cmp":{
+                                    "op":"OpGe",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"40%"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentManaPercent":{
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "not":{
+                                    "val":{
+                                      "auraIsActive":{
+                                        "includeReactionTime":true,
+                                        "auraId":{
+                                          "spellId":16166
+                                        }
+                                      }
+                                    }
+                                  }
+                                }]
+                            }
+                          }]
                       }
                     },
                     "castSpell":{
@@ -479,16 +497,13 @@
                 },{
                   "action":{
                     "condition":{
-                      "dotIsActive":{
-                        "spellId":{
-                          "spellId":10448,
-                          "rank":5
-                        }
+                      "variableRef":{
+                        "name":"Multi Target"
                       }
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":1326047
+                        "spellId":408345
                       }
                     }
                   }
@@ -512,6 +527,10 @@
                     "condition":{
                       "and":{
                         "vals":[{
+                            "variableRef":{
+                              "name":"Single Target"
+                            }
+                          },{
                             "auraIsKnown":{
                               "auraId":{
                                 "spellId":1323418

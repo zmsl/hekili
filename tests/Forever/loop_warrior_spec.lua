@@ -83,7 +83,7 @@ describe("the Warrior world mapping", function()
         s.rage.current, s.rage.lo, s.rage.actual = 100, 100, 100 -- the class file reads the floor (border batch 2)
         s.swap_stance("berserker_stance") -- the booted class file, on the character's talents and spells
         local keep = s.rage.actual
-        assert.are.equal(85, keep) -- Forever's Tactical Mastery passive 10, the talent's 5 ranks 15 each
+        assert.are.equal(25, keep) -- Forever's Tactical Mastery passive 10, the talent's 3 ranks 5 each (wowsims/forever's curve)
         local W = { t = 0 }
         local e = { power = 100, form = 1 }
         function W.setForm(x, f)

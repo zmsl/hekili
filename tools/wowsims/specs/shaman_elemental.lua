@@ -34,6 +34,12 @@
 -- +2% cast speed in wowsims (Lightning Bolt 2.0 s -> 1.961 s in the log). The Blood Fury and Berserking lines stay
 -- silent (other races'). The Weakness Analyzer (item 272438) is `use_items` (rule 13; as Shadow and Affliction).
 -- Omitted 1 -> 0.
+-- Re-pin 0.7 (4b0030a44b, lane shaman): Lava Burst is gone from the game (owner, 2026-11-07; the sim dropped it at
+-- 4fe09d45b7 and Call of Thunder 16120 took its talent slot), so the kit, the world and the pack have none, and
+-- disagreements 2 (Revelation spent at a Lava Burst's landing) and the Lava Burst clauses of the 4 above are gone.
+-- The list: Water Shield and the Weakness Analyzer after Mana Tide Totem, Chain Lightning also on a single target at
+-- mana >= 40% without Elemental Mastery up, Fire Nova after it, Earth Shock single-target only; Chain Lightning costs
+-- 245/360/425/495 (was 145..315). The disagreements above are re-counted at the floors step.
 -- Levels (P8; learn_shaman.lua regenerated with the Elemental kit's ranks): L10 0.0, L40 0.0, L60 5.0 s, no leveling
 -- line needed. The spells the DB2 lacks (Lava Burst rank 4, 1326047; Elemental Mastery, 16166) still count as learned
 -- at level 1, so the lower brackets can press them early (the check's limit, docs/dev/wowsims-packs.md).
@@ -47,7 +53,7 @@ return {
     -- the build's resourcePotId 13444, Major Mana Potion; the Weakness Analyzer (ItemSparse 272438: a trinket) as
     -- Shadow and Affliction map it
     map = { OtherActionResourcePotion = "major_mana_potion", ["item:272438"] = "use_items" },
-    -- by role (docs/dev/wowsims-packs.md): Flame Shock upkeep, Earth Shock on Revelation; Lava Burst (on cooldown while
-    -- Flame Shock is up), Lightning Bolt and the AoE lines rotational; the totems none (the user, 2026-10-21)
+    -- by role (docs/dev/wowsims-packs.md): Flame Shock upkeep, Earth Shock on Revelation; Chain Lightning, Lightning
+    -- Bolt and the AoE lines rotational; the totems none (the user, 2026-10-21)
     focus = { flame_shock = 2, earth_shock = 1 },
 }

@@ -207,8 +207,15 @@ spec:RegisterResource(
 -- Arcane Wrath's mask is wowsims's): Clearcasting (12536: -100%, a charge), Missile Barrage (400589: Arcane Missiles
 -- -100%, a charge), Arcane Power (12042: +30%; Arcane Wrath inside its mask: wowsims's data, word 1 0x9000 covering its
 -- 0x8000, and its log's 513.5 = 395 x 1.3 while Arcane Power is up).
-local CLEARCASTING_SCOPE = { 400574, 5143, 2136, 133, 116, 401502, 11366, 2948, 1326079 }
-spec:RegisterCostMod({ aura = "clearcasting", pct = -1, charges = 1, spells = CLEARCASTING_SCOPE })
+-- Arcane Missiles (5143) keeps Clearcasting when Missile Barrage pays for the cast (wowsims ef6fb99ee1): its own
+-- registration with `unless`; every other spell in the mask still spends it while Barrage is up.
+spec:RegisterCostMod({
+    aura = "clearcasting",
+    pct = -1,
+    charges = 1,
+    spells = { 400574, 2136, 133, 116, 401502, 11366, 2948, 1326079 },
+})
+spec:RegisterCostMod({ aura = "clearcasting", pct = -1, charges = 1, spells = { 5143 }, unless = "missile_barrage" })
 spec:RegisterCostMod({ aura = "missile_barrage", pct = -1, charges = 1, spells = { 5143 } })
 spec:RegisterCostMod({
     aura = "arcane_power",
@@ -610,43 +617,48 @@ spec:RegisterAbilities({
     },
 })
 
--- Talents: { talent tree (1 Arcane, 2 Fire, 3 Frost: the dominant tree picks the spec), rank 1's spell, max rank }: the
--- DB2's 49 nodes (`wowdb talents MAGE`; the tree is the DB2's Talent.TabID), keys the snake_case names. The cast times
--- read Improved Fireball and Improved Frostbolt, Fire Blast's cooldown Wake of Fire, Scorch Improved Scorch.
+-- Talents: { talent tree (1 Arcane, 2 Fire, 3 Frost: the dominant tree picks the spec), rank 1's spell, max rank }:
+-- Forever's tree as wowsims/forever's ui/sim/talents/trees/mage.json lists it (tools/wowsims/talents.lua writes it;
+-- tests/Forever/talent_trees_spec.lua checks it and the spec detection over it). A key is Classic's where the talent
+-- exists there (code reads `talent.<key>.rank`), else the snake_case of the node's name. The cast times read Improved
+-- Fireball and Improved Frostbolt, Fire Blast's cooldown Wake of Fire, Scorch Improved Scorch.
 spec:RegisterTalents({
     -- Arcane (tree 1)
-    arcane_subtlety = { 1, 11210, 2 },
-    arcane_focus = { 1, 11222, 5 },
-    improved_channeling = { 1, 11237, 5 },
     wand_specialization = { 1, 6057, 2 },
-    magic_absorption = { 1, 29441, 5 },
+    improved_channeling = { 1, 11237, 5 },
+    arcane_resilience = { 1, 28574, 3 },
+    arcane_subtlety = { 1, 11210, 2 },
+    magic_absorption = { 1, 29441, 2 },
     arcane_concentration = { 1, 11213, 5 },
+    missile_barrage = { 1, 400588, 2 },
     arcane_geometry = { 1, 11247, 2 },
     arcane_impact = { 1, 11242, 3 },
-    arcane_resilience = { 1, 28574, 1 },
+    arcane_blast = { 1, 400574, 1 },
     arcane_shielding = { 1, 11252, 2 },
     improved_counterspell = { 1, 11255, 2 },
     arcane_meditation = { 1, 18462, 3 },
+    arcane_wrath = { 1, 1326079, 1 },
     presence_of_mind = { 1, 12043, 1 },
     arcane_mind = { 1, 11232, 5 },
     arcane_instability = { 1, 15058, 3 },
     arcane_power = { 1, 12042, 1 },
     -- Fire (tree 2)
+    incineration = { 2, 18459, 5 },
     improved_fireball = { 2, 11069, 5 },
-    impact_talent = { 2, 11103, 5 }, -- `impact` is a core identifier (tests/boundary_spec.lua)
     ignite = { 2, 11119, 5 },
     flame_throwing = { 2, 11100, 2 },
-    wake_of_fire = { 2, 11078, 3 },
-    incineration = { 2, 18459, 2 },
+    impact_talent = { 2, 11103, 3 }, -- `impact` is a core identifier (tests/boundary_spec.lua)
+    burning_soul = { 2, 11083, 3 },
     improved_flamestrike = { 2, 11108, 3 },
     pyroblast = { 2, 11366, 1 },
-    burning_soul = { 2, 11083, 2 },
+    wake_of_fire = { 2, 11078, 2 },
     improved_scorch = { 2, 11095, 3 },
     improved_fire_ward = { 2, 11094, 2 },
+    heating_up = { 2, 400624, 1 },
     master_of_elements = { 2, 29074, 3 },
     critical_mass = { 2, 11115, 3 },
     blast_wave = { 2, 11113, 1 },
-    fire_power = { 2, 11124, 5 },
+    fire_power = { 2, 11124, 3 },
     combustion = { 2, 11129, 1 },
     -- Frost (tree 3)
     frost_warding = { 3, 11189, 2 },
@@ -656,25 +668,17 @@ spec:RegisterTalents({
     frostbite = { 3, 11071, 3 },
     improved_frost_nova = { 3, 11165, 2 },
     permafrost = { 3, 11175, 3 },
-    piercing_ice = { 3, 11151, 3 },
-    cold_snap = { 3, 12472, 1 },
-    improved_blizzard = { 3, 11185, 3 },
-    arctic_reach = { 3, 16757, 2 },
     frost_channeling = { 3, 11160, 3 },
-    shatter = { 3, 11170, 5 },
+    improved_blizzard = { 3, 11185, 3 },
+    ice_lance = { 3, 1312002, 1 },
+    arctic_reach = { 3, 16757, 2 },
     ice_block = { 3, 11958, 1 },
+    shatter = { 3, 11170, 3 },
     improved_cone_of_cold = { 3, 11190, 3 },
+    cold_snap = { 3, 12472, 1 },
+    fingers_of_frost = { 3, 400647, 2 },
     winters_chill_talent = { 3, 11180, 5 }, -- `winters_chill` is upstream's (Engine/Sim/Scripts.lua)
     ice_barrier = { 3, 11426, 1 },
-    -- Forever-only (tree 0: not in the DB2's Talent table; wowsims's tree places Missile Barrage, Arcane Blast and
-    -- Arcane Wrath in Arcane, Heating Up in Fire, Ice Lance and Fingers of Frost in Frost; its ranks). Arcane Wrath's
-    -- node spell is unknown: rank 1 of the spell it teaches (wowsims's) until the live export.
-    missile_barrage = { 0, 400588, 2 },
-    arcane_blast = { 0, 400574, 1 },
-    arcane_wrath = { 0, 1326079, 1 },
-    heating_up = { 0, 400624, 1 },
-    ice_lance = { 0, 1312002, 1 },
-    fingers_of_frost = { 0, 400647, 2 },
 })
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
@@ -682,16 +686,16 @@ spec:RegisterTalents({
 -- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/mage_*.lua).
 spec:RegisterPack(
     "Arcane (wowsims.com)",
-    20261104001,
-    [[Hekili:9EvxVPnpu4Fl9MUgnucW6A7lACrN2E360w1KsV2bNehWdh7iBNIycXV9DCsiKaouOvT3Gm(81Z5CSppoObOhq(XynbD)W(dVAWG(x2V)aKVEzgb5NHJMJNcl44u43BLryoz9KlwiwOOPk3irQJrRLmbo24PWCktFhhfA1PQmseY)x3(TVocx4kK)mACmPuFIkQJqmA9e9myZQ98sesYJe56jXKeCotVEYT)(NRNaBdR24GCQNjEkVuid8IZuE4mg8tHCxyT7FucUtpW3smxXa4gdRfMyrvRNGJJf83blMtwQCxp5lynEKfmCXVU7bWjZ06m1ipVPu9S8qdS92rvhWNaujdV5YHj9XxFZLXUqXtksOmOsGJ0ubx5MjjGXHy9yjbhhWildyuiJ(XEk8(XvztWcjwpRwJXryglO8pGTkDpt7Bm5rre2SxpAY4umh7MfPdyIpnEq)ABbFMRibunjv1ZSsKKemnkE8aJvxeMNK4MsvkaYbHyPeQTU5zRUO0C3M4XDoxSGFEKqWIHfTLzYTLoonJBL8mXcI8no0MQrWus6BCyRKx5DvVeruUQmUDe2MwdNdueEKbWGl4Xwa)zDcYvhcKwWyH4cFUjX3n8vjpS9JUd2tQZQAW0HHpxW648SnTR8S5(juj0ayyL2I27TFIuO0HcM2uQotJzeUEtKPCLghszu9sxchhYG5n1xQRVC2(wFzxS4WaHtKtP)LedhdoVkFBPBzc7yXNaWAD5VUhAX(nnWwIA09SzYjIqOJTVbhdSpagwDOu6S6dbTLwEky1EybQHiFyITcC4ouyMXPkdtxnYG)CFblAvpf95nZYr(TchYpscZvLumY)eRyinaJoIXwG00)NEh(1VfBYIpCszXHA4VKoULwoaoT5rifpOWwpDlS2H7CBsSlVB5XLGYhpTndT0mBm62e5ApwZf3QS0fN0ZMuYwNPli1KM(1hvxEKOAdd(RpI(yNNl6iC7v62W3J8li8n5b43RoYmDx6tRxySqeEqMqdaUUJRMnv36mMt9LaVONc8sElWtwcU5ykbGE)xh6T9XcgTGrdh0DBvSl(J6Nt0SU)0pROCww93jC8muhGMzNsqreW56zcyiW3jZH4dFk0)x9LofIr)7p]]
+    20261107001,
+    [[Hekili:9E1xVPTou8pl9LoIgkby32EhA8qNU37wNwRMu6Zo4y7aE4yhf7ueti(SFpojesGek0Q2xqgF(3VZ5yF(5GgIEe5tXgg6HrdgD9WHdUzWGHiFZQegYpbtwGNblK4y43BtjyjBZ0Elvl18yTlrf7y1ALqHPwpfMXfM7KOWwDQoHrq(3F73(3X4CxH8NZPuwH(mnPJqmEZuZCyZY98IuPSNyPBMszr4mHzZ0B)1p3mf2gwT1bzCpB80EXqg4rt0E4eb8tUCxyT7V1kPtFW3PyPwaWLcRv2yX1BMIPuL8dWIfSvA3nt)hSbpUfm07(7EeCYCJjrp2ZBg3mpl0cBV9u1b8jav2v4ptOJWJOrexO4LQI4cOsGjgUsQDtszGXHyZKugMgiyRceCiJ(Xbk8XjLztWYuSzELgtiyHiO4pGTAtFB7Bc7jfbB3RppAsmwIDtiMaH6ltgoOYwWNzAwa3WI19TRurrbZi0jdTw1lmlkYnMR1aKdcXPPqT1nlzDVcZDRJh3fs1s5LeLsqHfnLzZTvoo1JBP8e1sw67COTvJGzS435WwkV076(rksMUiUDe26wdNd0mjXcyWfsAlG)Iob56JbYwWyU4CFUnX3p8LjpS9tUdpqQZ6kW0HHVuW648InTR8S((r8uObiWAtlAFW(rPkTjujm2s1fgSGjnBJmxQn4qUGBw5YK4qbmVP6sD1LZM36l6I5hgysw6m(Fyu4yWLL5BdDlsyNw8jaSgx(R6HTy)2gydr16ETzYzIqOJDObNcSpcgwFSu6IQdbnLwCky9bybQHiFyITgC4Euy2XPAltxfYG)8qolAzpf91TZYr(nchYNKcZvt5yK)zwXqgagDeJDaPU)p)o8BFl2MfF6SYIJ1WFnD8wA5a4m2hHK)GI26P7G1ECN7sI95DloUeu84PDzylnZAJUTrUYJvCXnklDXj9IjLARZ0fKQtt)2JQ)6er1wg83EeDvNNl6iChu62Y3J8Zj8T5b43RpXmDF6ZwVW0cr4rzcTa4MoUAwx9wNXCUVe4v9uGxZBbE2sWFFkLaqVp3HE7ESGvly0WrD3of7I)O65e1R7p)ZkkMLv9DcNod1rOz2ReKhbCMzUcgc8D2ci(WNc9FLFPtUy0)d]]
 )
 spec:RegisterPack(
     "Fire (wowsims.com)",
-    20261104001,
-    [[Hekili:1EvBpoQnq4Fl7x2lOlcsYLC32vlv6QAV2TQ3PkX(zdgBtI7cyKTz3Mti(T3XaHxsijB2TNIue4XZmpZB(XGMJEa5rXAg6BlMT4JZNpB5SzZrE6TzmKxgM8iEn8qkob()lCjRmyYZINv8eLnrKyz2Z2ybMAStyopwFFkkCutQYyeK3x)8V)B3gbgc5THtPS6DZuKrn)TLb6nWInR5ejKSNyYYaklcNhRld(8F)xLbWYLbnQNZDmEs5Kai3HMPCWzXkhkJLz2Hn8M9)OePwtbBlXPQyaQu4zHXxCvzaMsfPVdE4r2wLDzWVI14Bhbdt(69pagzJwNPU1XznxVjp0aBN92QfytaQSf3SCr0m8NUzj1gsCsrepgYdyIMlsv2zsgOCiw7MTvkcJXkD5F2i0LGJJ9RFXpMR0tnLex2tcc2S2uEK7KRQLB3QU9JPINtlsWPy7yXDhiMiuARwF8ExNwrtJeKCL78k7gMhfzVHbokDTFEMTsd9fUF46d9h7FzKCZ2gyvt52Fy8aRQicjztJJwu5OjuwLVQu4P84uMehYJ56T1(8UvfhFhswcMNQUBL11N1oll2H9Au0d4dqEUI5Z1Se1uZtIOi)1eADw5mUWDvF7yQR5QQc1BZqMsP)AwYB0myjbN2utQZ8xvPD)1TZZkoCXDz5M03aze4pR2UIbIgVXOzljCLcMeu9B6Q8CJa)qSuctZaI2VTkeglg0731R108teIyk8qFjnbXp72tjJLQJGdBsBxXUDGZvYWu)y2wyAmLvdHkmZGm)A(3zuaTx3y)b7TgxwJytWFdhONCC9VgoT4j75dfzv0MhgtLleHwqT8afEjW(eyO4uH0vT1QHsnVT1Q4aSa5qKhC(Qcm4EKnMJivgoPwKbV8Tk2owkomMrr)YUtErEdChYJiHzEjhJ8UWmgsdW4i(Odi9T)LxH)XxInrXhUOO4uf83sfFKsoaoT5cdv0)Jvthbw7ZhEgcXUODFs36(k)6Bd1LkgPQ3dfVg2Zoi0kf5vD6OjGpr9P7qoZUwECuDwkYvf)VX1EcY2oKxlRnkxyW)Q9WFpsptEOv3wA6(H4zjenE4JVqp0rGFXU4tVqxSJA)IDWnhPxOpb8WA)4K9)iy7n47NoAx4ri5pie2DbHHZaZNDIHadD(OhgCWfeEf3qOY7hJmPPrU6CQ2R0Fk2NUr86FE4C9gHe59hShHIn8HgFP57iQeJ(Vp]]
+    20261107001,
+    [[Hekili:1E1AVPnpu4Fl9lDenucWgBROMj1P9UBATAsPF2bhBhWRjXr2o0xMq53(oojKlqakRBcjuIp(CopNB(XbngDpYJI1m0Dtgn5nJhp6TJgng5PxNYqEPyYd4fWdj4y4)pXLS85dEu8OIhRSjIylZEwhjWuJDcY4r6VMGc61KQugb5D7nF()Mfcgc5TKtPSYDZuKEn)S856LWIvR5ekKSvmz(CkleNfPZNFZp(E(Cy585vQNXDmEs5edi3HMQCWPrkhkJLA2Hn8M9pvIeRHGTL4eveavk8SW4lUkFoMsfjVaE4b2ALD(8pI14z9GHb3(17bJSuRtvZCCwW1lZcmW2zNTAb2eGkBk(kcDcEcnKydjoPiKhb5bmrZfjk7ujduoaRDtxlfbryLo)BvcDj4Oi)Yx8J4k9qtjXLTsqWM1gYdDhCrPC7A1TFir8yYMyCc2osC9EIjcL2Q2hV01Pw0Wqbjt5oUWUbzHH2lzGJsw4NLAR0qFH7RUCF)X(FgjZSTow1uU97gpWQkIqsww5OjfoAaLv4RcfwLfLWK4aEexVU0NxpDZH3HKfJ5jQRNAD5jTZR3Sf7LOOfW7G8mfZNRzXQHMNeHH(li0YSYjCH7022XuxZuffQNNHmLs)fS4NPzWscoPQMuM5VOq72RBNLUz)f3MLRsFDKrG)SQ7k6iQ)gJQTeZvkysq1UPRWZvc8dWsjmndiA32QaySOtVFtVwvZpriIOWdTLufeV3TLsglvgb73KwVID9aNRKHP(rS1W0ycRecfyMbz(f8FXOaAVSY(D2BjUS6XMG)6oqp4W6FjCAXk7XDfzTPop0NkNjcTGA5Ek8uG9rWWMJfsxuxR6k182ARn7HfihI8GZxvGb3HSXCePYWjvJm4L7ky7yj4Gigf9HTN8I864oKhrcZ8sog5DMzmKgGXb8rdqAB)ZVc)VVeBIIxDwrXXk4pNkEpLCaCAZfgkO)7RM2dS2Lp8eeInr7UKUL9v(L3gQjv0tvVfk(typBGqTuKxXPJMa(i1NMd5m761hgvNKIC6M)ACThHSTb5LYQJYjg8pDh83I0ZKhQ1TMMUDiEscrJhEZt0dne4NTlE7t0fBP2pBh8Ud0l0MaUBTVFY()fS9g8D1b7cpaj)EHW2li0Dgy8OJmeyOZ79WG9UGWFWnek8(HitQAKloNQ(k9hJ9PzeV8NhotVuirEFH9auSHp04tvFhrHy0Vd]]
 )
 spec:RegisterPack(
     "Frostfire (wowsims.com)",
-    20261104001,
-    [[Hekili:1A17VTPou0)w6xYcArqswsBvv5d9PTUxNwRMe9ZgmytIF1Gr2M2LNI4V931abcjHKxw3uKImyFp3Z9hCpgnb9mYJG1u0tthp9YjtgpB84jip9QmkYldh9cEbSifNa)FVuO0XmjTiy4BI3uSeLDKiXYCWvCbMyalmNX1pKIcpiUQmAeY7X7(6xUXaeYBjJqOvNMQI63h3ueOxcVS(DoXcj9vQSiGqJX5CDrWD)47fbWRlc2gJCMJXNkNeiqCizkhCghmpo0gwy)pkrQ1iaBjovXb(sG1cJVyQIamHis)aS4f6kLDrWNXA8nhGddF8HNbqwQ1zQBCCwW0lZdn02zNJAbycuLo96ztJhJV66zeBi7jfXmoKmWrAMivzNjPGXHyTB2kPiKJv6IVvVPBeMZ9REWNZu6rMIJl9vre28UrSy3HxuTVDJ52VKkElDDcofBZf3U32rqgZQXhF01rfjKrlhflIYvUtlbDiHgMhhBBYS(VMZtPsCiJZ0RSvAOt525R7)esAcMLQUDU1GtIZS1B4FflSP)KgLRzPlS6WXCf1NPPjQrMvI4y)fre3jgYEcx4oFBCmzf)f0K3jmnzZ6SwjcdlbyjfBOVFEwTHFAW(LO2OCBul99EWwtR0fuPcOSFSPLVo9nTJ5B(wWpuW17cCi0lzGBdz6E6QMMgBSB6XCLumXNtxbnGP0QoUsgrHm0c2)sj25zdQXSZzRG06aycmQThUtBx)4ma(q5v7jD3YADt7)Hm5mzQL1G9n4CO)r4Y6JfAxejeCcSANDnpTYA9ECcYPipyeJcaCNHUMPekZS5ggcp8u5OFAkoKtjO)AZWhKxh3H8IKWNysgg5DMzoKgOXo(ylWo)Y6F(6ABsOnt5vwmnHcepFQ)45y153tH(av6trtTrmTuv8q15dW5DLjoHorR)3vlQQxZV66cTK7eDcNspy(6FBclhrzPnQQ274v(TKkmP4gBB0K2oepPmIXdZ(F6HnQvNTdM3Fj4xrKQLrn72KYMy83L96VJQE1IBR0xxGVQNjxDvVmN86(ozT232K6yAGvFu1CTSJn(Snzu9ZdNRxkKiV)M(cusGllEF9Dbl3g9F]]
+    20261107001,
+    [[Hekili:1AvxVnkou0Fl9LSbTrqtMjTZwvEORMP72vtRgj6Zgm2Mep1Gr2M0nRI43(EnqGq(GSzNDvKImyFp3Z9dUhJMIEffqXgg6Lzxp7MPtV(2RVEkkWSoNHcYXK3WlGfz4u4)hvsTjHRyLrJFx(UMNQDjYuh7bxlKyQfS4cUW8ugk(O4QZzeuWZp8BF5olqOGLCkLvFAMMCAFCxzKzj8YM35LivSvmvzeLLGleMYOh(2xlJGxxgTlgfCpRp1EPqG4rZ1E4CbyEsSlSW97AzMZeaBfotla(sH1sRV46YimLkZ(jyXBS1A3YOpJn47ochg)8tVcGS0yY1355TGBwweBPT3Eh1bWeOkBo(xi0z4z0eIlK9uYeUasgyIHlZ0U5kgyCm24NVwjJfyTP8pA20NGfIW6hcfCTzIT44Zwjjy77MWt8hFv9(UTM7(wM89SnP4mSRqE)bBtGmMtRp(zFpnrQilNKijfA)zvGoMYIlssCTz2WvfImMchZfCZAxTb6uUF(MtFcflfZZ03p3z0zX5JB2Y)Aw4Y(tgPWWZw40JJfAwi3Ws1tSRKjjHliu)PwYEgx4pFxCSzLWfS0FqyAZMnzTkegxbWsg2s)WI8gd)WOdlrDr5UOw57dGTHwzlyknq5WeBlFt6BwpZ3(TqySuy2h4yOxYc3wY0)01nnT2422J5RyyAOGTgAaZy1DCvmIbzOf8)IrDlYh1GzVZwdPZrWeyuxpCV2UtJZi4dLvUt7VLZM22)JzYfYuhNrhAWLq)b4YMHcTRisPGcR2Bx7tRD2CaNGCkkagXOba3BORDkH2oBULHWdVun6NLHJfmk6x3o8bf0ZDOaIc(etXXOGlmZHman2Zh7a2Lxw))VU2Le6YubvftBOaXZhoD8muD(hPqFKk95OPXkMwPkES68r48(YeNrNOZ)7Rfv3RfwFDHoYDMoHZPhmFZ)zcldOS0fv17nCLFhPcBkU12wnPDdXZkJy9Wh)h6HTQvxSdMF6sW)grQog1UBBkBQ1F3Cs)nO6vhUDsF9b(2tm5QV6L9KF6uNSr7BxsnKgy9hvTxlBOXNDjJ6Fb4cZsPcf87S3GscCzXhBUly12O)(]]
 )

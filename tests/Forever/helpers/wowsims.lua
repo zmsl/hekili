@@ -347,11 +347,20 @@ M.READY = {
     -- { 0.50, 5 } -> { 0.50, 9 } re-pin e2842f0a78 (adaptive list, 82 on-GCD decisions): median 0.500, 9 real (early 2,
     -- late 7); top shifting_power 4 (max 0.50: a not-ready flag's CD_PROBE push, shared), rake 2, rip 2 (energy is
     -- secret: the belief's lo under the truth at the cost)
-    druid_feral = { 0.50, 9 },
+    -- { 0.50, 9 } -> { 0.35, 10 } on the 0.7 floors run (integ/0.7 5deb101c4; R6): the never rows of the
+    -- old log are gone (CN8's cooldown countdown, pin-2 export: not separated) but cost rows rake 25.14 and
+    -- shifting_power 111.89 (0.47 / 0.45, the belief's lo under the truth) are now late; 10 real (early 2, late 8), median 0.350
+    -- { 0.35, 10 } -> { 0.40, 10 } (CN8 I1, R6: a probe stands until the game says ready): decision 12, shifting_power
+    -- at 11.75, the model's end short of the flag's, reads 0.500 late (0.350 while the probe counted down); real 10
+    -- (early 2, late 8), median 0.400
+    druid_feral = { 0.40, 10 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone
-    druid_guardian = { 2.50, 10 }, -- was 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
+    -- { 2.50, 10 } -> { 1.76, 55 } (re-pin e5a9cd2a2d, floors step): 55 late GCD-chain rows (median 1.751): with no rage from hits
+    -- yet (CN7) Lacerate/Primal Bite show a GCD after wowsims casts them (24 lacerate -> primal_bite replay misses); the median falls (1.751 measured; a ceiling rounds up)
+    -- 2.50 -> 1.75, the count rises by the same cause (not by the metric)
+    druid_guardian = { 1.76, 55 }, -- was 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     -- re-pin 8b-2 (controller ruling, round 3): move-reached weave strikes show at the decision to walk (the Auto Shot that
     -- opens the weave window); wowsims logs the cast at arrival; the offset is the walk time, which Hekili does not model
     -- (owner rule: no movement in Hekili or the belief) and which is the lead a player needs to start walking. Every new
@@ -433,8 +442,17 @@ M.READY = {
     rogue_subtlety = { 0.17, 40 }, -- 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
     -- { 0.21, 7 } -> { 0.71, 16 } re-pin e2842f0a78 (lane 15, R6): the build's own list (Magma and Windfury Totems,
     -- Fire Nova the filler at 375, Skyborne); 85 decisions, 16 real (10 early, 6 late); by class cooldown 15, cost 9, gcd 43
-    shaman_enhancement = { 0.71, 16 },
-    shaman_elemental = { 0.48, 54 }, -- 0.480, 54 (Elemental lane, Task 14; first clean run on a21329fc)
+    -- { 0.71, 16 } -> { 0.38, 34 } 0.7 re-pin (e5a9cd2a2dfc, lane shaman, R6, owner ruling option b, reversible): 92
+    -- decisions, early 26 / late 8, by class cooldown 23 / cost 10 / gcd 46 (earth_shock 11, stormstrike 6, fire_nova 6,
+    -- shown 0.2-0.8 s before wowsims's cast). Cause as the Enhancement loop bar (pack_gate M.REACT_P90_BY): the
+    -- conservative mana lower bound loses cost ties at the oracle's exact edge, re-timed by CN8's queue window; no cast
+    -- lost. Not traced row by row (deferral)
+    shaman_enhancement = { 0.38, 34 },
+    -- { 0.48, 54 } -> { 2.20, 3 } re-pin 0.7 (lane shaman, R6): 91 decisions, 3 real (all late, cost class: the Major
+    -- Mana Potion / Demonic Rune refills the belief cannot see leave lo ~2630 under the truth, gaps.md "Potion mana
+    -- refill"; Lightning Bolt at its top rank's 198 where wowsims down-ranks, gap BL), median 2.20; the count falls from
+    -- 54 with the new build's list (Lava Burst gone)
+    shaman_elemental = { 2.20, 3 },
     -- 1.000, 18 (Warlock lane, Task 13; first clean run on 5d62f44c+): Shadow Bolt's 2.5 s cast, the next icon ready
     -- at the GCD's end inside it (Shadow's Mind Flay likewise). Count 18 -> 21 on fix 31 (06eec227): G4 keeps
     -- Corruption believed, so 12 more decisions are shown (never 22 -> 10), 3 of them a Shadow Bolt's early 1.0 s.
@@ -471,16 +489,21 @@ M.READY = {
     -- (3.80: a white crit's 34.2 rage logged at the cast, heard one landing lag later, so the queue waits a swing),
     -- 40.05 / 90.05 Sunder and 110.05 Mortal Strike (1.81 / 1.21 / 0.21: an Anger Management tick crosses the cost
     -- 0.05 s before the cast; the belief's lo sits 1.5-6.9 under the truth)
-    warrior_arms = { 1.21, 4 },
+    -- -> { 1.81, 2 } (0.7 warrior lane, R6; re-pin 4b0030a44b/e5a9cd2a2d, fixtures re-recorded): 67 decisions, 2 real, both late
+    -- cost waits (Execute 2.01, Sunder Armor 1.81 on a same-instant gain wowsims casts on)
+    warrior_arms = { 1.81, 2 },
     -- 0.51, 35 (was 0.48, 32): harness corrected to the measured swing timing (2026-10-22); 0.44 (fix 40): Whirlwind at
     -- 57.09 and 117.06 late -> early 0.09 and 0.06
     -- { 0.52, 26 } -> { 0.90, 19 } (lane 14, replay world fix, as druid_guardian's): 6 early GCD-chain rows in grain,
     -- the 19 left all late; -> { 0.42, 13 } re-pin e2842f0a78 (R6: the new log's 87 decisions, 13 real, all late)
-    warrior_fury = { 0.42, 13 },
+    -- -> { 0.42, 14 } (0.7 warrior lane, R6): 95 decisions, 14 real, all late (Bloodthirst x7, Whirlwind x3, Sunder x3), median 0.40
+    warrior_fury = { 0.42, 14 },
     -- { 0.38, 11 } -> { 0.37, 3 } re-pin e2842f0a78 (lane 14, R6; after 5049ede22's GCD fix): 98 decisions, 3 real, all
     -- early, class aura: Shield Slam 49.84 (0.24), Sunder Armor 71.77 / 143.44 (0.37 / 0.44): wowsims queues Shield Block
     -- (`Queueing up 2565 to cast at`) and casts the on-GCD ability at that instant, after ours shows it ready
-    warrior_protection = { 0.37, 3 },
+    -- -> { 0.37, 4 } (0.7 warrior lane, R6): 97 decisions, 4 real, all late, median 0.18 (Thunder Clap x2 0.32, Demoralizing
+    -- Shout 0.31, Revenge 0.18: cost and cooldown edges at the cast's instant)
+    warrior_protection = { 0.37, 4 },
 }
 
 --- The ready-time check of replay `R` (timing.lua) on spec `spec` after its run: prints "<label> wowsims timing:

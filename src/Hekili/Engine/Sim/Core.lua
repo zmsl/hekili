@@ -1589,10 +1589,6 @@ function Hekili.Update()
         Output.Publish( "status", 1 )
     end
 
-    Output.steady = spec.steadyIcons == true -- the experimental steady icons, read once per update
-    local hold = spec.steadyHold
-    Output.hold = type( hold ) == "number" and hold >= 1 and hold <= 3 and hold - hold % 1 or 1 -- a profile can hold anything
-
     local snaps
 
     local dispName = "Interrupts"

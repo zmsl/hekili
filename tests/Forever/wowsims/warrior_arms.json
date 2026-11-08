@@ -71,7 +71,7 @@
             },
             "race":"RaceOrc",
             "name":"Arms",
-            "talentsString":"30325213132515201-0505-2",
+            "talentsString":"30303213132215201-55050000002-2",
             "profession2":"Blacksmithing",
             "rotation":{
               "type":"TypeAPL",
@@ -735,33 +735,6 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":2457
-                      }
-                    },
-                    "condition":{
-                      "and":{
-                        "vals":[{
-                            "not":{
-                              "val":{
-                                "actionGroupUsed":{
-                                  "name":"Stance Dance ON/OFF"
-                                }
-                              }
-                            }
-                          },{
-                            "auraIsInactive":{
-                              "auraId":{
-                                "spellId":2457
-                              }
-                            }
-                          }]
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
                         "spellId":21553
                       }
                     },
@@ -869,25 +842,8 @@
                     "condition":{
                       "and":{
                         "vals":[{
-                            "not":{
-                              "val":{
-                                "actionGroupUsed":{
-                                  "name":"Stance Dance ON/OFF"
-                                }
-                              }
-                            }
-                          },{
-                            "cmp":{
-                              "op":"OpGe",
-                              "rhs":{
-                                "const":{
-                                  "val":"3"
-                                }
-                              },
-                              "lhs":{
-                                "numberTargets":{
-                                }
-                              }
+                            "variableRef":{
+                              "name":"Whirlwind Weave: Ready"
                             }
                           },{
                             "cmp":{
@@ -911,13 +867,6 @@
                                 "spellId":2458
                               }
                             }
-                          },{
-                            "spellIsReady":{
-                              "spellId":{
-                                "spellId":1680,
-                                "tag":14
-                              }
-                            }
                           }]
                       }
                     },
@@ -930,29 +879,8 @@
                 },{
                   "action":{
                     "condition":{
-                      "and":{
-                        "vals":[{
-                            "not":{
-                              "val":{
-                                "actionGroupUsed":{
-                                  "name":"Stance Dance ON/OFF"
-                                }
-                              }
-                            }
-                          },{
-                            "cmp":{
-                              "op":"OpGe",
-                              "rhs":{
-                                "const":{
-                                  "val":"3"
-                                }
-                              },
-                              "lhs":{
-                                "numberTargets":{
-                                }
-                              }
-                            }
-                          }]
+                      "variableRef":{
+                        "name":"Whirlwind Weave"
                       }
                     },
                     "castSpell":{
@@ -987,34 +915,22 @@
                       }
                     },
                     "condition":{
-                      "and":{
-                        "vals":[{
-                            "not":{
-                              "val":{
-                                "isExecutePhase":{
-                                  "threshold":"E20"
-                                }
-                              }
+                      "cmp":{
+                        "op":"OpLt",
+                        "rhs":{
+                          "spellGcdHastedDuration":{
+                            "spellId":{
+                              "spellId":21553
                             }
-                          },{
-                            "cmp":{
-                              "op":"OpLt",
-                              "rhs":{
-                                "spellGcdHastedDuration":{
-                                  "spellId":{
-                                    "spellId":21553
-                                  }
-                                }
-                              },
-                              "lhs":{
-                                "spellCastTime":{
-                                  "spellId":{
-                                    "spellId":11605
-                                  }
-                                }
-                              }
+                          }
+                        },
+                        "lhs":{
+                          "spellCastTime":{
+                            "spellId":{
+                              "spellId":11605
                             }
-                          }]
+                          }
+                        }
                       }
                     }
                   }
@@ -1191,19 +1107,42 @@
                       }
                     },
                     "condition":{
+                      "auraIsActive":{
+                        "auraId":{
+                          "spellId":2457
+                        }
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":2457
+                      }
+                    },
+                    "condition":{
                       "and":{
                         "vals":[{
                             "not":{
                               "val":{
-                                "isExecutePhase":{
-                                  "threshold":"E20"
+                                "actionGroupUsed":{
+                                  "name":"Stance Dance ON/OFF"
                                 }
                               }
                             }
                           },{
-                            "auraIsActive":{
+                            "auraIsInactive":{
                               "auraId":{
                                 "spellId":2457
+                              }
+                            }
+                          },{
+                            "not":{
+                              "val":{
+                                "variableRef":{
+                                  "name":"Whirlwind Weave: Ready"
+                                }
                               }
                             }
                           }]
@@ -1324,6 +1263,44 @@
                                 }
                               }
                             }
+                          },{
+                            "or":{
+                              "vals":[{
+                                  "cmp":{
+                                    "op":"OpLt",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"2"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "numberTargets":{
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "and":{
+                                    "vals":[{
+                                        "actionGroupUsed":{
+                                          "name":"Stance Dance ON/OFF"
+                                        }
+                                      },{
+                                        "cmp":{
+                                          "op":"OpLt",
+                                          "rhs":{
+                                            "const":{
+                                              "val":"3"
+                                            }
+                                          },
+                                          "lhs":{
+                                            "numberTargets":{
+                                            }
+                                          }
+                                        }
+                                      }]
+                                  }
+                                }]
+                            }
                           }]
                       }
                     }
@@ -1428,6 +1405,32 @@
                       "spellId":{
                         "spellId":25286,
                         "tag":1
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "variableRef":{
+                              "name":"Whirlwind Weave: Ready"
+                            }
+                          },{
+                            "auraIsInactive":{
+                              "auraId":{
+                                "spellId":2458
+                              }
+                            }
+                          },{
+                            "gcdIsReady":{
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":2458
                       }
                     }
                   }
@@ -1645,12 +1648,29 @@
                         },{
                           "or":{
                             "vals":[{
-                                "not":{
-                                  "val":{
-                                    "actionGroupUsed":{
-                                      "name":"Stance Dance ON/OFF"
-                                    }
-                                  }
+                                "and":{
+                                  "vals":[{
+                                      "not":{
+                                        "val":{
+                                          "actionGroupUsed":{
+                                            "name":"Stance Dance ON/OFF"
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "cmp":{
+                                        "op":"OpLt",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"2"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "numberTargets":{
+                                          }
+                                        }
+                                      }
+                                    }]
                                 }
                               },{
                                 "cmp":{
@@ -1713,6 +1733,52 @@
                                   "spellId":2457
                                 }
                               }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Whirlwind Weave",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "not":{
+                            "val":{
+                              "actionGroupUsed":{
+                                "name":"Stance Dance ON/OFF"
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "const":{
+                                "val":"2"
+                              }
+                            },
+                            "lhs":{
+                              "numberTargets":{
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Whirlwind Weave: Ready",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "variableRef":{
+                            "name":"Whirlwind Weave"
+                          }
+                        },{
+                          "spellIsReady":{
+                            "spellId":{
+                              "spellId":1680,
+                              "tag":14
                             }
                           }
                         }]

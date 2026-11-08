@@ -17,6 +17,17 @@ M.UNMATCHED_BY = {
     ["Arms"] = 5.9,
 }
 
+-- The first-icon reaction bar's p90 (ticks) per label, 3 where not named (M.gate).
+M.REACT_P90_BY = {
+    -- 3 -> 8 (0.7 re-pin, R6, owner ruling option b, reversible; seeds 1-20 reactP90 8, agreement 0.912, was 0 / 0.963 before
+    -- CN8): a mana-wait tie. Flame Shock costs 410; the oracle's exact mana reaches it at the instant Stormstrike's
+    -- cooldown ends (it shows Flame Shock first by priority), our conservative lower bound runs 2-4 mana under the
+    -- truth (259.0 true vs 256.7 believed), so our Flame Shock is 0.04 s late and Stormstrike shows during the wait; at
+    -- the edge both press Flame Shock (no cast lost). CN8's world queue window re-times the fights so the tie recurs about
+    -- once per ~47 s cycle. The owner's "dim, never promote" rule losing a tie to an exact oracle, by design
+    ["Enhancement"] = 8,
+}
+
 -- The flicker floors at 20 fights: per label the first-icon flicker/min (loop.flips: an A -> B -> A over three ticks,
 -- not counted when the instance pressed B at the tick it showed or the next, owner rule 2026-10-26) and the
 -- unjustified retracted readies/min (tests/Game/harness/flicker.lua). A floor is the worst of seeds 1-20 / 21-40 /
@@ -62,7 +73,13 @@ M.FLICKER = {
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
     -- flicker 0.9 -> 0.31 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); readyShort 116 -> 5 (C1, a resource wait inside READY reads 0.06); heldReady 226 -> 228 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.2, readyShort = 5, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
+    -- 0.7 warrior lane (R6; re-pin 4b0030a44b/e5a9cd2a2d on integ/0.7 27add4428; seeds 1-20 / 21-40 / 41-60: readyShort 20 / 3 / 9, flicker
+    -- 0.16 / 0.30 / 0.30, heldReady 129 / 130 / 186, retracted 0.16 / 0.10 / -): readyShort 5 -> 20. Traced (seeds 1-20, 20 attempts; 21-40
+    -- seed 40: 9): every one is a Whirlwind (25) or Bloodthirst (30) pressed as ready 0.02-4.5 rage under its cost (pre 21.2-28.3),
+    -- repeated on the 1-3 ticks the first icon stayed ready before the GCD's end, with no cast or spend in flight; the shortfall is
+    -- the size of one forecast off-hand swing's rage (the loop world's off hand stays at FURY_SPEED 1.9 s, recipe header). Not traced
+    -- to the swing time itself: the off-hand forecast is the named class, not measured per event. heldReady/flicker keep their rows
+    ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.2, readyShort = 20, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -110,7 +127,10 @@ M.FLICKER = {
     -- 41-60 0.62 / 0.64 / 0.54, was 0.68 / 0.64 / 0.54)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.05 / 0.15 / 0.03, readyShort 0 / 0 / 0, heldReady 329 / 343 / 311):
     -- flicker 0.7 -> 0.16 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); readyShort 204 -> 0 (C1, a resource wait inside READY reads 0.06)
-    ["Warrior Protection"] = { flicker = 0.16, retracted = 0.1, readyShort = 0, heldReady = 383 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
+    -- 0.7 warrior lane (R6; seeds 1-20 / 21-40 / 41-60: readyShort 1 / 0 / 0, flicker 0.10 / 0.02 / 0.13, heldReady 320 / 331 / 330):
+    -- readyShort 0 -> 1, traced: one Shield Slam (17 rage) at 60.80 s pressed with the truth at 16.74, 0.26 short (the belief's lo
+    -- above the truth at the cost edge; no cooldown involved)
+    ["Warrior Protection"] = { flicker = 0.16, retracted = 0.1, readyShort = 1, heldReady = 383 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
@@ -134,7 +154,11 @@ M.FLICKER = {
     -- seeds 1-20; neither bar is loosened for it.
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.07 / 0.05, readyShort 0 / 0 / 0, heldReady 325 / 288 / 305):
     -- flicker 1.1 -> 0.08 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); readyShort 190 -> 0 (C1, a resource wait inside READY reads 0.06)
-    ["Guardian"] = { flicker = 0.08, retracted = 0.7, readyShort = 0, heldReady = 330 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- flicker 0.08 -> 0.23 (floors step, re-pin e5a9cd2a2d; seeds 1-20 / 21-40 / 41-60 read 0.22 / 0.14 / 0.09, retracted 0 / 0 / 0, heldReady
+    -- 284 / 308 / 298; the worst + 0.01): TRACED by A/B on one tree: the old-pin Guardian pack gives 0.00 at seeds 1-20, the new adaptive list
+    -- (rage-gated Primal Bite / Lacerate / Enrage lines, no rage from hits yet, CN7) 0.22; the Movement opt-in is not it (off: identical 0.22).
+    -- The flicker pairs are primal_bite <-> lacerate (929 / 476 ticks), the swing-paid rage class the row already names
+    ["Guardian"] = { flicker = 0.23, retracted = 0.7, readyShort = 0, heldReady = 330 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     ["Assassination"] = { flicker = 0, retracted = 0, heldReady = 329 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either
@@ -269,20 +293,24 @@ M.FLICKER = {
     -- heldReady 230 -> 256 re-pin e2842f0a78 (lane 15, R6; seeds 1-20: 256, flicker 0.02, retracted 0; 249 at Fire
     -- Nova's DB2 520): the build's own list (Magma Totem 40 s, Windfury Totem, Fire Nova the filler at wowsims's 375,
     -- R57a) and the world's mana from the Skyborne log (6565, 12.8 / 31.25, was 5000 / 4.8 / 28.62)
+    -- 0.7 re-pin (R6; seed set 1-20, steady icons on): heldReady 256 -> 152, flicker 0.00 (oracle 0.00), agreement 0.912, the
+    -- mana-wait tie named at M.REACT_P90_BY (the held count fell with it)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 145 / 145 / 147):
     -- flicker 0.2 -> 0 (S, steady icons on by default)
-    ["Enhancement"] = { flicker = 0, retracted = 0, heldReady = 256 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
+    ["Enhancement"] = { flicker = 0, retracted = 0, heldReady = 152 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Arcane"] = { flicker = 0.03, retracted = 0, heldReady = 109 }, -- 0.03 / 0.05 / 0, 0
+    -- 0.7 re-pin e5a9cd2a2d (lane mage, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 95 / 93 / 81, agreement .990 / .987 / .984): heldReady 109 -> 95 (the Arcane Concentration channel-start roll re-timed the fights); flicker 0.03 kept (0.02 + 0.01)
+    ["Arcane"] = { flicker = 0.03, retracted = 0, heldReady = 95 }, -- 0 / 0.02 / 0, 0
     -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new
     -- list runs dry onto the Scorch filler; 174 of the 175 ticks (seeds 1-20) are Scorch at its 150 cost crossing, one
     -- tick an episode, lo 141-150 against the truth's 150-152 (gap BQ)
     -- flicker 0.3 -> 0.1 (the same sweep: 0 / 0 / 0; the loops do not show gap CQ's replay flash)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 180 / 182 / 177):
     -- flicker 0.1 -> 0 (S, steady icons on by default); heldReady 175 -> 182 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Fire"] = { flicker = 0, retracted = 0, heldReady = 182 }, -- 0 / 0 / 0, 0
+    -- 0.7 re-pin e5a9cd2a2d (lane mage, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 171 / 174 / 180, agreement .995 / .994 / .997): heldReady 182 -> 180 (the Fire Arcane Concentration 5/5 stream; cost crossings as before)
+    ["Fire"] = { flicker = 0, retracted = 0, heldReady = 180 }, -- 0 / 0 / 0, 0
     -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits
     -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
     -- after its Evocation, more fights reach the existing frostfire_bolt <-> scorch pooling edge (gap BS); isolated by
@@ -291,14 +319,19 @@ M.FLICKER = {
     -- heldReady 124 -> 106 (re-pin e2842f0a78, the Mage fix round: 96 / 100 / 106)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 110 / 119 / 104):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 106 -> 119 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Frostfire"] = { flicker = 0.03, retracted = 0, heldReady = 119 }, -- 0.08 / 0.05 / 0.07, 0 (oracle 0.05 / 0.03 / 0.68)
+    -- 0.7 re-pin e5a9cd2a2d (lane mage, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 110 / 119 / 104, agreement .919 / .898 / .930): floors unchanged (the 21-40 set is the CN8 figure, accepted: gap BS's Scorch `fire_vulnerability.remains<5` edge and the Evocation pull-lo edge, lo about 520 against truth 1190, both pre-existing)
+    ["Frostfire"] = { flicker = 0.03, retracted = 0, heldReady = 119 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 396 / 398 / 399):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
-    ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 405 }, -- 0.03 / 0.02 / 0.02, 0
+    -- Priest re-pin lane (pin e5a9cd2a2dfc, CN8 merged, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, readyShort 0, heldReady 395 / 395 / 397):
+    -- heldReady 405 -> 397 (the measured worst: the world's Shadow build now has Improved Mind Blast 4, the pack's Elune's Light and Eureka lines moved)
+    ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 397 }, -- 0 / 0 / 0, 0
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)
-    ["Smite"] = { flicker = 0.03, retracted = 0, heldReady = 0 }, -- 0.03 / 0.02 / 0.03, 0
+    -- Priest re-pin lane (pin e5a9cd2a2dfc, integ/0.7 27add4428, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0.05, retracted 0, heldReady 0 / 0 / 0):
+    -- row unchanged at 0.03: the gate's seeds (1-20) read 0.02; seeds 41-60 read 0.05, above the row, and its cause is not traced, so the row is not raised (recorded as a deferral candidate)
+    ["Smite"] = { flicker = 0.03, retracted = 0, heldReady = 0 }, -- 0.02 / 0 / 0.05, 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
@@ -313,29 +346,36 @@ M.FLICKER = {
     -- shape. With the old world regen 0. The other moved Elemental cells (L10 idle 0.0 -> 0.2, the dps A/B both ways,
     -- refused-for-cost 0.0 -> 0.1) move as a group with the world/log change. Flicker 0.00 / 0.00 / 0.00 (oracle
     -- 0.05 / 0.05 / 0.07): ceiling 0.1 kept
+    -- re-pin 0.7 (e5a9cd2a2dfc, lane shaman, R6; seeds 1-20, steady icons on, melee-range tree): heldReady 321 -> 284 (the
+    -- bar is seeds 1-20 only; flicker 0.00, readyShort 0, oracle 0.02): the new list has no Lava Burst
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 1 / 0 / 0, heldReady 285 / 301 / 321):
     -- flicker 0.1 -> 0 (S, steady icons on by default); heldReady 302 -> 321 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 321, readyShort = 1 }, -- 0.00 / 0.00 / 0.00, 0 (oracle 0.05 / 0.05 / 0.07)
+    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 284, readyShort = 1 }, -- 0.00 / 0.00 / 0.00, 0 (oracle 0.05 / 0.05 / 0.07)
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996
     -- on seeds 21-40); controller rule, the measured values beside the line
-    ["Affliction"] = { flicker = 0, retracted = 0, heldReady = 5 }, -- 0 / 0 / 0, 0
+    -- 0.7 re-pin (e5a9cd2a2d, merged tree 27add4428+, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
+    -- heldReady 5 -> 0 (the rewritten list, steady icons and C1)
+    ["Affliction"] = { flicker = 0, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
     -- heldReady 6 -> 8 (re-pin e2842f0a78, Task 16, R6, R49; seeds 1-20 / 21-40 / 41-60: 7 / 8 / 2, flicker 0.17 / 0.17 /
     -- 0.05, oracle 0): traced at 21-40, all 8 the stand-in Siphon Life after a hard cast, ours 0.10 s vs the oracle's
     -- 0.00 (the same icon one poll late; mana est within 2 of the truth): the wait class above
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 3 / 5 / 2):
     -- flicker 0.3 -> 0 (S, steady icons on by default)
-    ["SM Ruin"] = { flicker = 0, retracted = 0, heldReady = 8 }, -- 0.17 / 0.17 / 0.05, 0; heldReady ON THE BAR (max of 7 / 8 / 2): re-measure at integration
+    -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 3 / 5 / 2): heldReady 8 -> 5 (the worst set)
+    ["SM Ruin"] = { flicker = 0, retracted = 0, heldReady = 5 }, -- 0 / 0 / 0, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 2 / 0):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
-    ["Demonology"] = { flicker = 0, retracted = 0, heldReady = 4 }, -- 0.02 / 0.05 / 0, 0
+    -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0): heldReady 4 -> 0
+    ["Demonology"] = { flicker = 0, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
     -- heldReady 3 -> 6 (re-pin e2842f0a78, Task 16, R6; seeds 1-20 / 21-40 / 41-60: 6 / 6 / 6, flicker 0.03 / 0.02 /
     -- 0.02, oracle 0): traced at 1-20, each the same icon (Searing Pain 4, Life Tap, Bane of Agony) at 0.10-0.11 s vs
     -- the oracle's 0.00-0.01, mana est within 2-29 of the truth: the wait class above, more often in the new list
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 6 / 5 / 6):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
-    ["Shadow Brand"] = { flicker = 0, retracted = 0, heldReady = 6 }, -- 0.03 / 0.02 / 0.02, 0; heldReady ON THE BAR (6 / 6 / 6): re-measure at integration
+    -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 6 / 5 / 6): unchanged, still ON THE BAR (the wait class above)
+    ["Shadow Brand"] = { flicker = 0, retracted = 0, heldReady = 6 }, -- 0 / 0 / 0, 0
     -- the excess over the oracle (0 / 0 / 0) is at Conflagrate's and Shadowburn's cooldown ends, as Fire's Fire Blast
     -- (the not-ready flag's CD_PROBE, central). 0.4 -> 0.2 (Task 10b, gap CQ: the flag keeps a modelled end the GCD or a
     -- hard cast covers; 0.13 / 0.17 / 0.07, was 0.23 / 0.40 / 0.25; agreement .995 / .992 / .996); the rest is the probe
@@ -348,7 +388,15 @@ M.FLICKER = {
     -- conflagrate > incinerate / life_tap). Central (belief casts), existing; PROPOSED-warlock-5
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 2):
     -- flicker 0.5 -> 0 (S, steady icons on by default)
-    ["Destruction"] = { flicker = 0, retracted = 0, heldReady = 8 }, -- 0.50 / 0.30 / 0.30, 0; flicker ON THE BAR at seeds 1-20 and fragile (R58): re-measure at integration
+    -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0.00 / 0.02 (one flip a set), readyShort 0 / 0 / 0, heldReady 1 / 2 / 3,
+    -- oracle flicker 0.02 / 0.02 / 0.03): heldReady 8 -> 3 (the worst set). flicker 0 -> 0.03 (the measured worst + 0.01: the
+    -- line rounds to two decimals). Traced, seed 1 fight 1, 16.2-16.6 s: immolate@0.00 / conflagrate@0.20 / immolate@0.10 as
+    -- the first icon on consecutive polls; Conflagrate's cooldown ends at 16.6 s while Immolate sits at its refresh
+    -- threshold (`immolate,if=remains<incinerate cast`), so each of the two lines is the first icon on alternate polls. The
+    -- oracle's own queue shows the identical three firsts (or[] equals us[] on all three ticks), so it is the wowsims list's
+    -- near-tie, not the kit or pack: a cooldown end beside a refresh threshold, which the steady-icons hold does not cover (a
+    -- 3-poll swap with neither line pressed). The only flip in seeds 1-20; sets 21-40 and 41-60 read 0.00 and 0.02.
+    ["Destruction"] = { flicker = 0.03, retracted = 0, heldReady = 3 }, -- 0.02 / 0.00 / 0.02, 0
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. It tightens the bar when a change lowers the oracle's own flicker. 1.8 -> 0.5 (forever-gap-bd,
@@ -403,7 +451,7 @@ end
 function M.gate(m, r, line, label)
     local at = label or "gate" -- loop_spec's bar checks pass no label
     ab.check(r.agreement >= 0.85, at, line)
-    ab.check(r.reactMedian <= 1 and r.reactP90 <= 3, at, line)
+    ab.check(r.reactMedian <= 1 and r.reactP90 <= (M.REACT_P90_BY[label] or 3), at, line)
     ab.check((r.per100.gcd or 0) == 0 and (r.per100.cooldown or 0) == 0, at, line)
     -- our cost refusals the oracle shadow would not have made at that tick (loop.unmatched: the round-3 ruling); a
     -- refusal both make is the press protocol meeting the world's rage timing, kept visible in the raw rate

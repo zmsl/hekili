@@ -7,7 +7,8 @@ local ww = require("Forever.helpers.warrior_world")
 
 local M = {}
 
-M.KIT = { "berserker_rage", "revenge", "shield_block", "shield_slam", "shield_wall", "shield_bash", "taunt" }
+M.KIT =
+    { "berserker_rage", "retaliation", "revenge", "shield_block", "shield_slam", "shield_wall", "shield_bash", "taunt" }
 
 --- The Protection (wowsims.com) content at `level` [60].
 function M.content(level)

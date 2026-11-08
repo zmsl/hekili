@@ -13,7 +13,7 @@ local function flagged(path)
     return out
 end
 
-local ROGUE = { "garrote=1", "slice_and_dice=1", "rupture=1" } -- Slice and Dice and Rupture sort by soonest
+local ROGUE = { "garrote=1", "rupture=1", "slice_and_dice=1" } -- Slice and Dice and Rupture sort by soonest (Rupture first since the re-pin)
 -- the melee-weave strikes (Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip) rotational (the user)
 -- (R51: each move arm is its own line where its move is called, at its source line's tier: the re-pin's Hunter's Mark
 -- leads, Raptor Strike's and Serpent Sting's in-range lines, then the arms: Beast Mastery and Survival walk in (walk_in
@@ -64,7 +64,7 @@ local WARLOCK_SHADOW_BRAND = {
 
 local PACKS = {
     ["Rogue/APLs/Assassination"] = ROGUE,
-    ["Rogue/APLs/Combat"] = { "riposte=1", "garrote=1", "slice_and_dice=1", "rupture=1" }, -- Riposte leads (owner R70)
+    ["Rogue/APLs/Combat"] = { "riposte=1", "garrote=1", "rupture=1", "slice_and_dice=1" }, -- Riposte leads (owner R70)
     ["Rogue/APLs/Subtlety"] = ROGUE,
     ["Hunter/APLs/Beast Mastery"] = HUNTER,
     ["Hunter/APLs/Marksmanship"] = HUNTER_MM,
@@ -93,22 +93,25 @@ local PACKS = {
     ["Druid/APLs/Balance"] = { "moonfire=2", "insect_swarm=2", "starfire=1" },
     -- re-pin e2842f0a78 (R66): the adaptive list's order; Claw's one line is wowsims's "Claw can replace Shred" fallback
     ["Druid/APLs/Feral"] = { "shred=1", "rip=2", "rake=2", "claw=1" },
-    ["Druid/APLs/Guardian"] = { "maul=1", "maul=2", "lacerate=2", "demoralizing_roar=2", "lacerate=2" },
+    -- re-pin e5a9cd2a2d: the adaptive list puts the upkeep Lacerate and Roar first, the rage dump (Maul) last
+    ["Druid/APLs/Guardian"] = { "lacerate=2", "demoralizing_roar=2", "lacerate=2", "maul=1", "maul=2" },
     ["Mage/APLs/Arcane"] = { "arcane_missiles=1" },
     -- re-pin e2842f0a78: the closing second Scorch line is the filler, untiered (`scorch = { 2, false }`)
     ["Mage/APLs/Fire"] = { "pyroblast=1", "scorch=2", "arcane_missiles=1" },
     -- the DoTs, Banes, curses and Searing Pain's Demonic Brand upkeep at 2; Shadow Bolt on Shadow Trance and Soul Fire on
     -- Decimation at 1; Affliction's first Shadow Bolt keeps Shadow Vulnerability up (2); Amplify Curse a cooldown (none)
+    -- 0.7 re-pin (e5a9cd2a2d): the rewritten build's lists; the Siphon Life line is omitted (CN14 spellIsChanneling), so
+    -- siphon_life and immolate no longer appear
     ["Warlock/APLs/Affliction"] = {
-        "bane_of_agony=2",
-        "corruption=2",
-        "siphon_life=2",
+        "shadow_bolt=2",
+        "shadow_bolt=1",
         "curse_of_the_elements=2",
         "curse_of_recklessness=2",
         "curse_of_weakness=2",
-        "immolate=2",
-        "shadow_bolt=2",
-        "shadow_bolt=1",
+        "bane_of_agony=2",
+        "corruption=2",
+        "bane_of_agony=2",
+        "corruption=2",
     },
     ["Warlock/APLs/SM Ruin"] = {
         "curse_of_the_elements=2",
@@ -122,14 +125,21 @@ local PACKS = {
     },
     ["Warlock/APLs/Demonology"] = WARLOCK_DEMO,
     ["Warlock/APLs/Shadow Brand"] = WARLOCK_SHADOW_BRAND,
+    -- 0.7 re-pin (e5a9cd2a2d): the rewritten rotation (Bane of Doom first, the dot groups, Immolate in the cooldowns and
+    -- as the Incinerate-cast refresh)
     ["Warlock/APLs/Destruction"] = {
+        "bane_of_doom=2",
+        "immolate=2",
         "curse_of_the_elements=2",
         "curse_of_recklessness=2",
         "curse_of_weakness=2",
-        "bane_of_doom=2",
         "bane_of_agony=2",
         "immolate=2",
         "corruption=2",
+        "bane_of_agony=2",
+        "immolate=2",
+        "corruption=2",
+        "immolate=2",
     },
 }
 

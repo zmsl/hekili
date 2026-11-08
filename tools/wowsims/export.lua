@@ -32,11 +32,11 @@ M.OLD_PIN, M.NEW_PIN = OLD, NEW
 --- line to NEW; once every line says NEW, OLD and its patch set go. One spec per line, a blank line between: two
 --- lanes flipping neighbours then merge without a conflict.
 M.SPEC_PIN = {
-    druid_balance = OLD,
+    druid_balance = NEW,
 
-    druid_feral = OLD,
+    druid_feral = NEW,
 
-    druid_guardian = OLD,
+    druid_guardian = NEW,
 
     hunter_beast_mastery = NEW,
 
@@ -44,45 +44,45 @@ M.SPEC_PIN = {
 
     hunter_survival = NEW,
 
-    mage_arcane = OLD,
+    mage_arcane = NEW,
 
-    mage_fire = OLD,
+    mage_fire = NEW,
 
-    mage_frostfire = OLD,
+    mage_frostfire = NEW,
 
     paladin_protection = NEW,
 
     paladin_retribution = NEW,
 
-    priest_shadow = OLD,
+    priest_shadow = NEW,
 
-    priest_smite = OLD,
+    priest_smite = NEW,
 
-    rogue_assassination = OLD,
+    rogue_assassination = NEW,
 
-    rogue_combat = OLD,
+    rogue_combat = NEW,
 
-    rogue_subtlety = OLD,
+    rogue_subtlety = NEW,
 
-    shaman_elemental = OLD,
+    shaman_elemental = NEW,
 
-    shaman_enhancement = OLD,
+    shaman_enhancement = NEW,
 
-    warlock_affliction = OLD,
+    warlock_affliction = NEW,
 
-    warlock_demonology = OLD,
+    warlock_demonology = NEW,
 
-    warlock_destruction = OLD,
+    warlock_destruction = NEW,
 
-    warlock_shadow_brand = OLD,
+    warlock_shadow_brand = NEW,
 
-    warlock_sm_ruin = OLD,
+    warlock_sm_ruin = NEW,
 
-    warrior_arms = OLD,
+    warrior_arms = NEW,
 
-    warrior_fury = OLD,
+    warrior_fury = NEW,
 
-    warrior_protection = OLD,
+    warrior_protection = NEW,
 }
 
 --- The pin of spec `spec` (raises on a spec with no line in M.SPEC_PIN).

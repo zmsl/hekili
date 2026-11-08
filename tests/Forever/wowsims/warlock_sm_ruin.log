@@ -1,4 +1,4 @@
-# wowsims e2842f0a784d2f329dde0bc682a6b84202a780f2 warlock_sm_ruin seed 101 180 s target 63
+# wowsims e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664 warlock_sm_ruin seed 101 180 s target 63
 # talents 18182=2@1 18174=5@1 17810=5@1 18827=2@1 18288=1@1 427712=3@1 1310949=5@1 18094=2@1 18265=1@1 18271=5@1 17793=5@3 17788=5@3 17778=2@3 17959=5@3 17927=3@3
 [0.00] [SM Ruin (#1)] Aura gained: {SpellID: 18679}
 [0.00] [SM Ruin (#1)] Aura gained: {SpellID: 9346}
@@ -22,13 +22,14 @@
 [0.00] [SM Ruin (#1)] Aura gained: {ItemID: 6265}
 [0.00] [SM Ruin (#1)] {ItemID: 6265} stacks: 0 --> 32
 [0.00] [SM Ruin (#1)] Aura gained: {SpellID: 11735}
-[0.00] [SM Ruin (#1) - Succubus] Pet stats: {"Strength": 129.000,"Agility": 85.000,"Stamina": 234.000,"Intellect": 70.000,"SpellDamage": 54.200,"Spirit": 150.000,"AttackPower": 278.140,"Armor": 2687.580,"Health": 4888.635,"Mana": 1871.000,"MP5": 29.400,"PhysicalHitPercent": 2.824,"SpellHitPercent": 6.000,"PhysicalCritPercent": 10.051,"SpellCritPercent": 10.051,}
-[0.00] [SM Ruin (#1) - Succubus] Pet inherited stats: {"SpellDamage": 54.200,"AttackPower": 92.140,"Armor": 441.000,"Health": 1837.500,"MP5": 29.400,"PhysicalHitPercent": 2.824,"SpellHitPercent": 6.000,"PhysicalCritPercent": 10.051,"SpellCritPercent": 10.051,}
+[0.00] [SM Ruin (#1) - Succubus] Pet stats: {"Strength": 129.000,"Agility": 85.000,"Stamina": 234.000,"Intellect": 70.000,"SpellDamage": 54.200,"Spirit": 150.000,"AttackPower": 278.140,"Armor": 2687.580,"Health": 3541.135,"Mana": 1871.000,"MP5": 29.400,"PhysicalHitPercent": 2.824,"SpellHitPercent": 6.000,"PhysicalCritPercent": 10.051,"SpellCritPercent": 10.051,}
+[0.00] [SM Ruin (#1) - Succubus] Pet inherited stats: {"SpellDamage": 54.200,"AttackPower": 92.140,"Armor": 441.000,"Health": 490.000,"MP5": 29.400,"PhysicalHitPercent": 2.824,"SpellHitPercent": 6.000,"PhysicalCritPercent": 10.051,"SpellCritPercent": 10.051,}
 [0.00] [SM Ruin (#1) - Succubus] Pet summoned
 [0.00] [SM Ruin (#1) - Succubus] Casting {OtherID: 20} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [0.00] [SM Ruin (#1) - Succubus] Completed cast {OtherID: 20}
 [0.00] [SM Ruin (#1) - Succubus] Aura gained: {OtherID: 20}
 [0.00] [SM Ruin (#1) - Succubus] {OtherID: 20} stacks: 0 --> 20
+[0.00] [SM Ruin (#1) - Succubus] Walking from 20.00 to 4.00 yards over 2.000s
 [0.00] [SM Ruin (#1)] Casting {ItemID: 272438} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 1
 [0.00] [SM Ruin (#1)] Completed cast {ItemID: 272438}
 [0.00] [SM Ruin (#1)] Aura gained: {SpellID: 1291101}
@@ -110,6 +111,7 @@
 [2.00] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (1711.118 --> 1711.706) of 1871 total.
 [2.00] [SM Ruin (#1) - Succubus] Aura faded: {OtherID: 20}
 [2.00] [SM Ruin (#1) - Succubus] {OtherID: 20} stacks: 4 --> 0
+[2.00] [SM Ruin (#1) - Succubus] Stopped walking at 4.00 yards
 [2.10] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (5033.400 --> 5034.920) of 5503 total.
 [2.10] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (1711.706 --> 1712.294) of 1871 total.
 [2.20] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (5034.920 --> 5036.440) of 5503 total.
@@ -1318,7 +1320,7 @@
 [49.02] [SM Ruin (#1)] Spent 357.200 mana from {SpellID: 25307} (1717.460 --> 1360.260) of 5503 total.
 [49.02] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 11
 [49.02] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[49.02] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (4084.000 --> 3405.000) of 4084 total.
+[49.02] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (4084.000 --> 3405.000) of 4084 total.
 [49.02] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (1360.260 --> 2175.060) of 5503 total.
 [49.10] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (2175.060 --> 2176.580) of 5503 total.
 [49.10] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 2} (1508.066 --> 1508.654) of 1871 total.
@@ -1523,7 +1525,7 @@
 [56.87] [Target 1] Aura gained: {SpellID: 25309}
 [56.87] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 11
 [56.87] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[56.87] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (3734.604 --> 3055.604) of 4084 total.
+[56.87] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (3734.604 --> 3055.604) of 4084 total.
 [56.87] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (1222.020 --> 2036.820) of 5503 total.
 [56.90] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (2036.820 --> 2038.340) of 5503 total.
 [56.90] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 2} (1393.930 --> 1394.518) of 1871 total.
@@ -1704,7 +1706,7 @@
 [63.70] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (1273.914 --> 1274.502) of 1871 total.
 [63.73] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 11
 [63.73] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[63.73] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (3220.406 --> 2541.406) of 4084 total.
+[63.73] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (3220.406 --> 2541.406) of 4084 total.
 [63.73] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (1144.500 --> 1959.300) of 5503 total.
 [63.80] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (1959.300 --> 1960.820) of 5503 total.
 [63.80] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (1274.502 --> 1275.090) of 1871 total.
@@ -1782,7 +1784,7 @@
 [66.60] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (1290.966 --> 1291.554) of 1871 total.
 [66.67] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 11
 [66.67] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[66.67] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (2623.807 --> 1944.807) of 4084 total.
+[66.67] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (2623.807 --> 1944.807) of 4084 total.
 [66.67] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (1638.380 --> 2453.180) of 5503 total.
 [66.70] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (2453.180 --> 2454.700) of 5503 total.
 [66.70] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (1291.554 --> 1292.142) of 1871 total.
@@ -1988,7 +1990,7 @@
 [74.52] [SM Ruin (#1)] Spent 357.200 mana from {SpellID: 25307} (1873.844 --> 1516.644) of 5503 total.
 [74.52] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 11
 [74.52] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[74.52] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (2192.010 --> 1513.010) of 4084 total.
+[74.52] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (2192.010 --> 1513.010) of 4084 total.
 [74.52] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (1516.644 --> 2331.444) of 5503 total.
 [74.53] [SM Ruin (#1)] Casting {SpellID: 450583} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [74.53] [SM Ruin (#1)] Completed cast {SpellID: 450583}
@@ -2188,7 +2190,7 @@
 [82.36] [SM Ruin (#1)] Spent 357.200 mana from {SpellID: 25307} (1752.804 --> 1395.604) of 5503 total.
 [82.36] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 11
 [82.36] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[82.36] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (1959.124 --> 1280.124) of 4084 total.
+[82.36] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (1959.124 --> 1280.124) of 4084 total.
 [82.36] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (1395.604 --> 2210.404) of 5503 total.
 [82.40] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (2210.404 --> 2211.924) of 5503 total.
 [82.40] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 2} (1223.870 --> 1224.458) of 1871 total.
@@ -2369,7 +2371,7 @@
 [89.23] [Target 1] Aura gained: {SpellID: 25309}
 [89.23] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 11
 [89.23] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[89.23] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (1692.129 --> 1013.129) of 4084 total.
+[89.23] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (1692.129 --> 1013.129) of 4084 total.
 [89.23] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (1243.684 --> 2058.484) of 5503 total.
 [89.30] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (2058.484 --> 2060.004) of 5503 total.
 [89.30] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (1104.442 --> 1105.030) of 1871 total.
@@ -2618,7 +2620,7 @@
 [98.50] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (998.538 --> 999.126) of 1871 total.
 [98.54] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 11
 [98.54] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[98.54] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (1194.411 --> 515.411) of 4084 total.
+[98.54] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (1194.411 --> 515.411) of 4084 total.
 [98.54] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (780.444 --> 1595.244) of 5503 total.
 [98.60] [SM Ruin (#1)] [Target 1] {SpellID: 18881} tick Crit for 197.762 damage (SpellSchool: 32). (Threat: 158.210)
 [98.60] [SM Ruin (#1)] Gained 197.762 health from {SpellID: 18881} (515.411 --> 713.174) of 4084 total.
@@ -2657,7 +2659,7 @@
 [100.00] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (1007.358 --> 1007.946) of 1871 total.
 [100.01] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 11
 [100.01] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[100.01] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (713.174 --> 34.174) of 4084 total.
+[100.01] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (713.174 --> 34.174) of 4084 total.
 [100.01] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (1618.044 --> 2432.844) of 5503 total.
 [100.07] [SM Ruin (#1)] [Target 1] {SpellID: 25311} tick Hit for 289.732 damage (SpellSchool: 32). (Threat: 231.786)
 [100.10] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (2432.844 --> 2434.364) of 5503 total.
@@ -2858,7 +2860,7 @@
 [107.86] [SM Ruin (#1)] Spent 357.200 mana from {SpellID: 25307} (1908.069 --> 1550.869) of 5503 total.
 [107.86] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 11
 [107.86] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[107.86] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (604.023 --> 0.000) of 4084 total.
+[107.86] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (604.023 --> 0.000) of 4084 total.
 [107.86] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (1550.869 --> 2365.669) of 5503 total.
 [107.88] [SM Ruin (#1) - Succubus] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [107.88] [SM Ruin (#1) - Succubus] Completed cast {OtherID: 3, Tag: 14}
@@ -3125,7 +3127,7 @@
 [118.10] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 2} (953.786 --> 954.374) of 1871 total.
 [118.15] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 11
 [118.15] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[118.15] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (296.644 --> 0.000) of 4084 total.
+[118.15] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (296.644 --> 0.000) of 4084 total.
 [118.15] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (1110.629 --> 1925.429) of 5503 total.
 [118.20] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (1925.429 --> 1926.949) of 5503 total.
 [118.20] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 2} (954.374 --> 954.962) of 1871 total.
@@ -3631,7 +3633,7 @@
 [136.70] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (743.154 --> 743.742) of 1871 total.
 [136.78] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 13
 [136.78] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[136.78] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (480.646 --> 0.000) of 4084 total.
+[136.78] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (480.646 --> 0.000) of 4084 total.
 [136.78] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (185.295 --> 1000.095) of 5503 total.
 [136.80] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (1000.095 --> 1001.615) of 5503 total.
 [136.80] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (743.742 --> 744.330) of 1871 total.
@@ -4110,7 +4112,7 @@
 [154.92] [SM Ruin (#1)] Spent 357.200 mana from {SpellID: 25307} (630.794 --> 273.594) of 5503 total.
 [154.92] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 13
 [154.92] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[154.92] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (576.807 --> 0.000) of 4084 total.
+[154.92] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (576.807 --> 0.000) of 4084 total.
 [154.92] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (273.594 --> 1088.394) of 5503 total.
 [155.00] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (1088.394 --> 1089.914) of 5503 total.
 [155.00] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 2} (690.758 --> 691.346) of 1871 total.
@@ -4285,7 +4287,7 @@
 [161.78] [SM Ruin (#1)] Spent 357.200 mana from {SpellID: 25307} (494.554 --> 137.354) of 5503 total.
 [161.78] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 13
 [161.78] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[161.78] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (98.881 --> 0.000) of 4084 total.
+[161.78] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (98.881 --> 0.000) of 4084 total.
 [161.78] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (137.354 --> 952.154) of 5503 total.
 [161.80] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (952.154 --> 953.674) of 5503 total.
 [161.80] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 1} (570.742 --> 571.330) of 1871 total.
@@ -4446,7 +4448,7 @@
 [168.16] [SM Ruin (#1)] Spent 357.200 mana from {SpellID: 25307} (692.234 --> 335.034) of 5503 total.
 [168.16] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 13
 [168.16] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[168.16] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (0.000 --> 0.000) of 4084 total.
+[168.16] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (0.000 --> 0.000) of 4084 total.
 [168.16] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (335.034 --> 1149.834) of 5503 total.
 [168.20] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (1149.834 --> 1151.354) of 5503 total.
 [168.20] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 2} (608.374 --> 608.962) of 1871 total.
@@ -4653,7 +4655,7 @@
 [176.00] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 2} (494.238 --> 494.826) of 1871 total.
 [176.00] [SM Ruin (#1)] Casting {SpellID: 11689} (Cost = 0.000, Cast Time = 0s, GCD = 1.471s, Effective Time = 1.471s) APL: priority 13
 [176.00] [SM Ruin (#1)] Completed cast {SpellID: 11689}
-[176.00] [SM Ruin (#1)] Spent 679.000 health from {OtherID: 9} (0.000 --> 0.000) of 4084 total.
+[176.00] [SM Ruin (#1)] Spent 679.000 health from {SpellID: 11689} (0.000 --> 0.000) of 4084 total.
 [176.00] [SM Ruin (#1)] Gained 814.800 mana from {SpellID: 11689} (198.314 --> 1013.114) of 5503 total.
 [176.10] [SM Ruin (#1)] Gained 1.520 mana from {OtherID: 2, Tag: 1} (1013.114 --> 1014.634) of 5503 total.
 [176.10] [SM Ruin (#1) - Succubus] Gained 0.588 mana from {OtherID: 2, Tag: 2} (494.826 --> 495.414) of 1871 total.

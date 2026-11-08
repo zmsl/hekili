@@ -13,16 +13,16 @@
 -- +30% attack speed (nothing reads swing timing for mana).
 -- The Elemental kit (class-completion Task 17; its priority Elemental (wowsims.com)): what wowsims/forever's
 -- Elemental list casts (ui/specs/shaman/elemental/builds/testing.build.json): Chain Lightning (its 6 s cooldown lifted
--- by Elemental Mastery), Lava Burst, Elemental Mastery, Magma, Windfury and Mana Tide Totems (Windfury Totem only for a
+-- by Elemental Mastery), Elemental Mastery, Magma, Windfury and Mana Tide Totems (Windfury Totem only for a
 -- pack that casts it, as that list's pre-pull does), Water Shield (one shield at a time), Convection's and Elemental
--- Alacrity's cuts, Clearcasting on Chain Lightning and Lava Burst, Revelation's charge.
+-- Alacrity's cuts, Clearcasting on Chain Lightning, Revelation's charge (Lava Burst is gone from the game).
 -- Also unmodelled: Mana Tide's mana, Water Shield's mana, Revelation's proc (the weapon enchant's; the player aura read
 -- answers it), Lightning Overload, Mindfulness (mana regen while casting: Elemental's `fsr.share`, below, carries it;
 -- Improved Stormstrike's casting share is the mana entry below).
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (in-game checks): Call of Flame's +3 s a
--- rank on Flame Shock, Stormstrike's cost, Lava Burst's and Mana Tide Totem's rank 4 (1326047, 1325256), Elemental
+-- rank on Flame Shock, Stormstrike's cost, Mana Tide Totem's rank 4 (1325256), Elemental
 -- Mastery, Revelation, Elemental Alacrity's Forever ranks. Also from it: Fire Nova's costs (the DB2's are wrong: R57a),
--- Chain Lightning's, Lava Burst's and Mana Tide Totem's costs (owner rule 2026-11-06: wowsims over the DB2).
+-- Chain Lightning's and Mana Tide Totem's costs (owner rule 2026-11-06: wowsims over the DB2).
 -- Credits: Hekili (registration API, pack format and `summonTotem`'s signature, State.lua). wowsims/forever (MIT,
 -- ui/specs/shaman/enhancement/apls/default.apl.json and sim/shaman/) is the reference for the priorities and the totem,
 -- Fire Nova, Maelstrom Weapon and Clearcasting rules; no code is copied.
@@ -91,14 +91,11 @@ local WINDFURY_WEAPON_COST = { 90, 115, 140, 165 }
 local FROSTBRAND_WEAPON = { 8033, 8038, 10456, 16355, 16356 }
 local FROSTBRAND_WEAPON_COST = { 60, 85, 110, 135, 160 }
 local CHAIN_LIGHTNING = { 421, 930, 2860, 10605 }
--- Chain Lightning's and Lava Burst's costs: wowsims e2842f0a78's spell data (spells_auto_gen.go Powers), every rank
--- (owner rule 2026-11-06: wowsims over the DB2, whose 225..485 and 165/230/265 are wrong; the Elemental log's 238.5
--- confirms Lava Burst rank 4's 265 x 0.9 Convection).
-local CHAIN_LIGHTNING_COST = { 145, 200, 250, 315 }
--- Rank 4 (1326047) is Forever's, absent from the DB2 at 70338: wowsims/forever's spell data (265 mana, 2.5 s, 10 s).
-local LAVA_BURST = { 408490, 1238299, 1238300, 1326047 }
-local LAVA_BURST_COST = { 135, 165, 230, 265 }
--- Elemental Alacrity (16578, aura 107 misc 10 on Lightning Bolt, Chain Lightning and Lava Burst) by rank: Forever's
+-- Chain Lightning's costs: wowsims 4b0030a44b's spell data (spells_auto_gen.go Powers), every rank (re-pin 0.7: up from
+-- 145/200/250/315; the Elemental log's 445.5 is rank 4's 495 x 0.9 Convection). Lava Burst is gone from the game
+-- (owner, 2026-11-07; the sim dropped it at 4fe09d45b7).
+local CHAIN_LIGHTNING_COST = { 245, 360, 425, 495 }
+-- Elemental Alacrity (16578, aura 107 misc 10 on Lightning Bolt and Chain Lightning) by rank: Forever's
 -- trait curve, -170/-330/-500 ms (wowsims/forever's spell data; the DB2's Talent rows say -200 ms a rank of 5).
 -- IN-GAME CHECK: Lightning Bolt's cast at 3/3: 2.0 s?
 local ALACRITY = { 0.17, 0.33, 0.5 }
@@ -339,8 +336,8 @@ local function shockEffect(other, debuffKey)
     end
 end
 
--- A rank's cost with Convection (16039, aura 108 misc 14: -2% a rank on mask 0x90100003 and Lava Burst's: Lightning
--- Bolt, Chain Lightning, the shocks, Lava Burst) when `convection`, and Shamanistic Focus (1223030, aura 108 misc 14:
+-- A rank's cost with Convection (16039, aura 108 misc 14: -2% a rank on mask 0x90100003: Lightning
+-- Bolt, Chain Lightning, the shocks) when `convection`, and Shamanistic Focus (1223030, aura 108 misc 14:
 -- -45% on mask 0x90100400: the shocks and Lightning Shield) when `focus`, multiplied (wowsims's PowerCost_Pct rows).
 local function costed(costs, ids, convection, focus)
     return function()
@@ -355,7 +352,7 @@ local function costed(costs, ids, convection, focus)
     end
 end
 
--- A `now` or `handler` that spends Revelation (one charge: the next Lightning Bolt, Chain Lightning or Lava Burst).
+-- A `now` or `handler` that spends Revelation (one charge: the next Lightning Bolt or Chain Lightning).
 local function revealed()
     return function()
         removeBuff("revelation")
@@ -538,14 +535,14 @@ spec:RegisterAuras({
 })
 
 -- Clearcasting (16246): aura 108 misc 14 (cost) -100% on the spells its class mask names (-1743781885 / 4096 against
--- SpellClassSet 11, and Lava Burst's 4096 in the second word); the registered ones: Lightning Bolt, Chain Lightning,
--- Earth Shock, Flame Shock, Fire Nova, Lava Burst (rank 1 IDs, the others through each ability's `copy`). Covered but
+-- SpellClassSet 11); the registered ones: Lightning Bolt, Chain Lightning,
+-- Earth Shock, Flame Shock, Fire Nova (rank 1 IDs, the others through each ability's `copy`). Covered but
 -- unregistered: Frost Shock, the rune shocks.
 spec:RegisterCostMod({
     aura = "clearcasting",
     pct = -1,
     charges = 1,
-    spells = { 403, 421, 8042, 8050, 408341, 408490 },
+    spells = { 403, 421, 8042, 8050, 408341 },
 })
 
 spec:RegisterAbilities({
@@ -610,33 +607,6 @@ spec:RegisterAbilities({
         handler = revealed(),
     },
 
-    -- 2.5 s, 10 s apart (category 1224); Elemental Mastery takes 0.5 s off the cast (16166 effect 0, -500 ms).
-    lava_burst = {
-        id = 408490,
-        expects = "travel",
-        velocity = 20,
-        school = "fire",
-        copy = rest(LAVA_BURST),
-        cast = function()
-            local t = 2.5 - (ALACRITY[talent.elemental_alacrity.rank] or 0)
-            if buff.elemental_mastery.up then
-                t = t - 0.5
-            end
-            return t
-        end,
-        cooldown = 10,
-        gcd = "spell",
-
-        spend = costed(LAVA_BURST_COST, LAVA_BURST, true),
-        spendType = "mana",
-
-        startsCombat = true,
-        known = knows(LAVA_BURST),
-
-        now = revealed(),
-        handler = revealed(),
-    },
-
     -- 3 minutes, off the GCD (wowsims's data: no GCD), under the Cooldowns toggle.
     elemental_mastery = {
         id = 16166,
@@ -690,7 +660,7 @@ spec:RegisterAbilities({
     stormstrike = {
         id = 17364,
         cast = 0,
-        cooldown = 8,
+        cooldown = 6, -- wowsims 4b0030a44b (was 8)
         gcd = "spell",
 
         -- wowsims spell data, absent from DB2 (wowdb spell 17364 costs 125 flat): 8% of base mana, 121 at level 60
@@ -776,77 +746,79 @@ spec:RegisterAbilities({
     frostbrand_weapon = imbue(FROSTBRAND_WEAPON, FROSTBRAND_WEAPON_COST, "frostbrand_weapon"),
 })
 
--- Talents: { talent tree (1 Elemental, 2 Enhancement, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
--- max rank }: the DB2's 46 nodes (`wowdb talents SHAMAN`; the tree is the DB2's Talent.TabID), keys the snake_case
--- names (a nameless node talent_<spell>), then Shamanistic Focus at tree 0. Reverberation and Improved Fire Nova
--- shorten cooldowns; Shamanistic Focus cuts the shocks' and Lightning Shield's cost.
+-- Talents: { talent tree (1 Elemental, 2 Enhancement, 3 Restoration: the dominant tree picks the spec), rank 1's
+-- spell, max rank }: Forever's tree as wowsims/forever's ui/sim/talents/trees/shaman.json lists it
+-- (tools/wowsims/talents.lua writes it; tests/Forever/talent_trees_spec.lua checks it and the spec detection over it). A
+-- key is Classic's where the talent exists there (code reads `talent.<key>.rank`), else the snake_case of the node's
+-- name. Reverberation and Improved Fire Nova shorten cooldowns; Shamanistic Focus cuts the shocks' and Lightning
+-- Shield's cost.
 spec:RegisterTalents({
     -- Elemental (tree 1)
     convection = { 1, 16039, 5 },
     concussion = { 1, 16035, 5 },
-    earths_grasp = { 1, 16043, 2 },
-    elemental_warding = { 1, 28996, 3 },
+    elemental_devastation = { 1, 30160, 3 },
+    reverberation = { 1, 16040, 5 },
+    elemental_alacrity = { 1, 16578, 3 },
     call_of_flame = { 1, 16038, 3 },
     elemental_focus = { 1, 16164, 1 },
-    reverberation = { 1, 16040, 5 },
-    talent_16041 = { 1, 16041, 5 },
+    elemental_warding = { 1, 28996, 3 },
     improved_fire_nova = { 1, 16086, 2 },
     eye_of_the_storm = { 1, 29062, 3 },
-    elemental_devastation = { 1, 30160, 3 },
+    earthbound = { 1, 1222988, 1 },
     elemental_reach = { 1, 28999, 2 },
-    elemental_fury = { 1, 16089, 1 },
-    elemental_alacrity = { 1, 16578, 5 },
+    call_of_thunder = { 1, 16120, 1 },
+    lightning_overload = { 1, 408438, 3 },
+    elemental_fury = { 1, 16089, 5 },
     talent_16166 = { 1, 16166, 1 },
     -- Enhancement (tree 2)
-    ancestral_knowledge = { 2, 17485, 5 },
-    shield_specialization = { 2, 16253, 5 },
-    guardian_totems = { 2, 16258, 2 },
+    earths_grasp = { 2, 16043, 2 },
     thundering_strikes = { 2, 16255, 5 },
-    improved_ghost_wolf = { 2, 16262, 2 },
+    ancestral_knowledge = { 2, 17485, 5 },
+    guardian_totems = { 2, 16258, 2 },
+    mental_dexterity = { 2, 415140, 3 },
     improved_lightning_shield = { 2, 16261, 3 },
-    enhancing_totems = { 2, 16259, 2 },
-    two_handed_axes_and_maces = { 2, 16269, 1 },
-    anticipation = { 2, 16254, 5 },
-    flurry = { 2, 16256, 5 },
-    toughness = { 2, 16252, 5 },
-    improved_weapon_totems = { 2, 29192, 2 },
     elemental_weapons = { 2, 16266, 3 },
-    spirit_weapons = { 2, 16268, 1 },
-    weapon_mastery = { 2, 29082, 5 },
+    shamanistic_focus = { 2, 1223030, 1 },
+    anticipation = { 2, 16254, 3 },
+    toughness = { 2, 16252, 5 },
+    flurry = { 2, 16256, 5 },
     stormstrike = { 2, 17364, 1 },
+    improved_ghost_wolf = { 2, 16262, 2 },
+    spirit_weapons = { 2, 16268, 1 },
+    mental_quickness = { 2, 30812, 2 },
     improved_stormstrike = { 2, 1223031, 2 }, -- wowsims's tree (spell_data_auto_gen.go:238); the DB2 names the spell only
-    -- Forever-only (wowsims/forever's tree; not in the DB2's Talent table at 70338: checkpoint)
-    shamanistic_focus = { 0, 1223030, 1 },
-    rage_of_the_farseer = { 0, 425336, 1 },
+    maelstrom_weapon = { 2, 408498, 5 },
+    rage_of_the_farseer = { 2, 425336, 1 },
     -- Restoration (tree 3)
     improved_healing_wave = { 3, 16182, 5 },
     tidal_focus = { 3, 16179, 5 },
+    mindfulness = { 3, 1223033, 3 },
+    natural_grace = { 3, 29187, 3 },
+    totemic_focus = { 3, 16173, 5 },
     improved_reincarnation = { 3, 16184, 2 },
     ancestral_healing = { 3, 16176, 3 },
-    totemic_focus = { 3, 16173, 5 },
-    natures_guidance = { 3, 16180, 3 },
-    healing_focus = { 3, 16181, 5 },
-    totemic_mastery = { 3, 16189, 1 },
-    natural_grace = { 3, 29187, 3 },
-    restorative_totems = { 3, 16187, 5 },
+    healing_focus = { 3, 16181, 3 },
+    water_shield = { 3, 408510, 1 },
     tidal_mastery = { 3, 16194, 5 },
+    restorative_totems = { 3, 16187, 5 },
+    mana_tide_totem = { 3, 16190, 1 },
     healing_way = { 3, 29206, 3 },
     natures_swiftness = { 3, 16188, 1 },
     purification = { 3, 16178, 5 },
-    mana_tide_totem = { 3, 16190, 1 },
+    riptide = { 3, 408521, 1 },
 })
 
 -- The priority, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run
 -- it, never this block (tests/Forever/shaman_spec.lua checks it matches).
 spec:RegisterPack(
     "Elemental (wowsims.com)",
-    20261104000,
-    [[Hekili:TEzuVTTnqC8pl9LmhmdjzVKMSG6bKHUH2I1GbO(SKPepzXAjsbsQyyGb9zFhLJLOKfJnAdcqafjVF3Xt8(RZrlI(wuiLOHONwgS89lweCtqqquOEFfefwrs3s2Gd4Ks8))vbucCnPOz9SDIDkwPYlvuETzJ7leeQbwsnRq)zEuYKCvvqAuy4NE8Rp(0dWrErH5mkfoyeOsD7QhAwRZHM1VmNFMqcpdYM1uiJuxOBw)4)(pnRXPBwBZOM5BCTYxLtkjC)ox7BIxQYxdknJVXR9rVVRe8RNJ(ss4Qc8yqXXcJVzQM1ekvW)fCWwyVYRz9hjAYdtetZ(6N)gcjxRRup47VHPZRtmhd)rB9AKjg6WY7Vzzwa5U7VH6HjvPiJvG5DsQMj4kVkjGgNq0R2HHKmwLZGc6Cw2Q3LuNL5zpRxDvZxoXWFDLVslb(gDESilgisCGwOHYwkTJ8AN1P97yCAwTC)jMrysNgHPCsSQsIz4tSRnQDhUy0mLvzmjGgDLXMNHyGdLmqTAHl)VPKCHm(JEgRkjFxiJBJ(kHzQ51kaZCzXBsPRwyyzw0Rkvhxi(W9bDMIoLcLcolnwwZHx3U7gyNzRmm(udnYElTrKMrH(ZKnVBhW7Ku4SXjTRSYhsOKW4QpSk46HECqgC24C2fGWSwmx8mXaWzoh3yxXjM5v4LJ9NM9M9UdB3lRaLMW78I0TEB5ID8)JcTfd2luxniqskecAS5s8BnyqQa5wmz)gdonhtOXfSn5AUH(zsGfKNjXj1sL(N2ZwlnptKwRwT0WCcd7FRp4DzReJT9TzJwRnAFO4Qj0Sk)nX)XdACIOqp(29Ya37T5lrHOGQcxC0xEkykTQ9RDh(sbo8P2V(bCssbqJ(ZOqRxAMfFr4nk8ezGOWujwIkzeZI2carA0VxiwBbcxeVRL4VDHe7KomgDZiJ6pndepC55BB98ToGmquXgXLkUyG)ENryNyZRG2POJb9Doq3jczdEmxdG7VWu(jIvdIy3LEoQ9mU(3Vqx3RJ9Z7ZfbxQt704EdC64cWJozKE35ExTyCf3ro9cHVbb74IWEGVQAO1DV(1XhmIHgTcd6XLQ9OpvO06QxV2AhVd5dxvTdflDv5VSTYFHRQZrqm)f21S1uYQhn0U)uBFpz3RtjK2j(mDpSdyoSx2Per7cRbD0obKdD2Ewjv7(BNGYX(C)HuvptxV)aIPNPh4OxEXsQ15czu4NGTScg(BA(7x(jlTlh9)p]]
+    20261107001,
+    [[Hekili:TEv7UTTnu0NL(NmBSa9HxttBqvbYW2qBXAWau)TKPfVYI1sKcKujWab6zFxkBlRVOIxxqacOe59CU3d59i6i)OVhfsjAi6HvERENVV3TEE(rH69LquyjjzhzloGtkW))N5qbW1K861lEs8KIvOCseflnlCFUGqnGTPILR)cpAZK4QkHKOWWpF)3U)H7Gt4ffMXOu4qqGkXov3vVwNb1Rp(o3uHeEeK1RPqkPkxxV(()5VRxJVUEDxmQyUgQvUQmsbH72sTRjFPkxnO0m(wNMhD(HsWxEnYLKWv5yzqXXcd3mv9AcLk4)coyhSx5uV(piAYDtKtl(2x(ocsMwxQUZ1DltNvTXugUdw6setm1HBiFiHUISIMM4GIQuKYYrDNKOzcUYPucyWBi6GNWusgRYyqo9AwAWB2uLM609TovL1FDuG)AGRslb(wDwSingisCGwOHIguAg508wRX)eJttRK7hfgHjTgek5KyvPev4rX1K12txmBMkQuMeWGUYeZJqmWHcgOc8TX)2cYfIXNoJrqb5hczCt2xkmV66kfGkxA82eAGVblZKoLj64CXhFVxBOiPuOqWzjXYkomFC32lUg60mkCoH7U4B6T4)BNeWamjcdHv1pL6UKrA(IHQ8vDeqjuqyC1hd8w2Vk6j5lgkYxaeTnP4oGclO9JvXfV5WYDsZrlkSIfj7C2XfpXFMcnsr3jQk7H)MCHGgBom)AdmivGChQHVYaNKH6uCoBBMMBqFkH95fDoT8PG36DvlLJe0JeF4qZ4zr2x2JFZUvmx8iXWS12gZcpxdxNksQubRmHmrfEEVV3wFJZu349N(GydEgtu0L2uIdeSwPkEJixpSvALN91w)1Oq0AwHto4By5mLw18DZdFZbh(qZ3rboztoqJ(9OWoB7MjpAHhfoYqjkmrITJsgXmzxRKinY7fcBxRgBiEBdI)2aepNy9mDSbYnnG8wlG012PlctAkza6MlS(AnTmb9olS3Z2Ql9xQ9Lb8BTQpT2zZaTvBnd0V)cl2r9H9i0U9Hf)dd1F4cP(SJ4)Fo99UusBDlFfiDyJ4jsg4Co7E4Z)ewOZ7H2KAdBMpLATMQDtQH5udcdBEpV8znw7q155Xhm(Qgpgd0dBPNR7zcp3oNEp7C3sXHSFyZ(Pi677AZ5zvJZJVTM)bGy(lS9gGt5q)t7zzBB0YfR7Hz)lypNFC)RzpbihUU9CUXJU09eOC6Y3tzg)I(QVWvXNZR2ID6lCX8OJBSKkDMqgf(zyhlNH)qR)64VJQz6O)9d]]
 )
 spec:RegisterPack(
     "Enhancement (wowsims.com)",
-    20261106000,
-    [[Hekili:DJ13VTTnq4)w6lBjybsYEPjzb1fidBdTdRbdW9zjtlDYI1sKcKuXiVO)23rAxBkkszJ1Ux2lj6h39Dh)UpE8KtNL(50LfefK(88K53nBwYDjjjPlvV2cPlBj5BjBWlyKg8V)oRIWYHgGP6xD1o(ojTrgLZBUwB6R1CsHgU1D0A1hzPR9ISSfYtxU8dp9PNE(r4eIPlROffWE3az(uH7X(vQkOF1HNfxYfWlGOFvbus6QrZF6V)R(v4J7xneLoASobKXYksdHfBLaX68UqgRaPIY2ezUn6lso76BW4jimznUCkWR564tL9RiffC2pIxSfEvg1V63ikYJEYRR(0h)mcsLs1kFmoEdvv1TwVuIDm9AetmpH5pC78YeY9pCBresUcEjTgRaKCfLZKrTcaDEnrTOSglnkoBthKTdiTC2n0YfVzDxzzudHYYW1xrgWYX)RI6A7)Zry8tlIf88TRPkqCry8dVzpgrJdE0wgFhZFq2r0bqwrH6ItbW(PbZVDuwrzN41mfxbngNnxfrOIGoH1xsMSvGfZr(zIAqpLkbW2OQY4LzarGx46V5Pte5nnKr(usfGTl)7RD)hwXmz)x4Imd71Y1p8MojGurz2M8IfZ0rs)YO2Cvwn)DpKy7Cb0Wz08mrhdM2V7h43aXrjpVtUy(5fjELgNugcqtgY3TyUThtuDTlU(D2ROYwtfYTbkclbHF71mhwDBKd5WbkaSZSEjGDcZkjcjaIWgNtQRZ2FBwnvQUr3rFHexf1qMIi2aQmbxrmLBmb1M(cGkiOHcYlblchMaH3paHA6MkfttHR51ktz(G(uQ4IgSar3cUTs8NS73eHsdC)GTUPamchR3EIPtohOgrYXe5cS2zbTppmk(dBjHAelEZx3Zjv4jRlE7fG8EbQzbCbwRvuzm(lKt2AxxwCM3Rr4BIoDaZlj6yZ3m15G3aclDjEMQeFHZqiAzRupRITZ49pBMhcyK11qr6V(1dCtxEK4sviuogLl0nIPe9GltqtwOD694n6vSgue5Foq4TisTz3gmbMKZoH3qs)yomtd(BdKdwelAg6KFvOpw87hb5s9biixE87kb5Y((jOG8OTusPzeZiRtk(gDOT9kk8P(tryUZpCziE25i8r(whkPxJhtHrZzyNddNWWhThcw7jqcH49j(QqUmGZuhNcH9lgQpVlaDpCkf7q5BAfns3huP7D6LXq6ofJg0hca6OPAgdN70nA4(LGWDCANXa5m1JgNzjxyT94yrgVC3VeYlptkz8pCFCTN2J)Ccl3HF2Fws2(pqoqhrDSc3rAySE)LgRbNCPJqO2sUTYSu5h2mpAOR9DMo(fn)pU3K)D0NRrWehceEJ(GVyDQdiMCZOZ3VovpNlOtHZxZovFNa7Ph(TTgHdkDiDQkUiD5hGT0AA)QR(Jd)8gMxN(pp]]
+    20261107001,
+    [[Hekili:DJ13VTTnq4)w6lBjybs2ElnTb1fidBdTdRbdW9zjtlEYI1sKcKuXiVO)23r6uBkkszJ1Ux2lj6h39Dh)UpE8KZMN95SvuIgYECXSfVE(8z3nB28Sv6NBHSvTKIDKT4fCsd(3FNxr4fqdW19RVAVyVI1OskenxBm95AbHAGBthRw)rE2MGiRAHISvR(WdF6HhVhoHy2QkgLchCduftfU77xRRG(1V8S0sHeEcK9RPqjPRgn)H)(V6xJpUF9qu6yPMeqLQQineEQtcKAYBQkvdknJVnXEBYxuc(13GXts4QAC5qXRfM4Zu9RjuQG)J4f7GNvj9R)nIMCFG86Qp9XpJGuP1TQ7tt3Y0vDBmlLuptVgXeZt4wYBlOlilOLfji5kfLSAScqk0mbxL0kb05ne9YYAS0Of8TDq(EG0k43Wkx(QnDLLjnegphxF0CGxG)xN012)NJW4NwMkff72W0G8IW4hE1bmsgh8KDCXEE4GSNycGQIb10tbW9PrZV9moTSt(CUwOHgRZ2RsimzuNW6ljx1kXI5i)SrnQNkTe4B1v5IYCGiXl893(0jI82gYiFkzsW1L)91U)dRy2S)lczUL9AfMhEtNcqQOmFBbD5CtKmVmPTqNxlE3BM56mfAeCwrUSJdt73Dd8BG4Ouu0PwU48IKGsJtkdjyid17wUW1JjQUUf3Wohuu5QPI52afHJGiS9gMdRUnQHC4afa2z2SeWoH5LePcazCJli115hUnVMP03y6OVuHRIAixtKBbDUuOj2YnMGgtFcqfe0Wa1LGfratGW7hGqnBBLMBOWnIATTm)I(uPfYgSaX2b(TscNSh2eHsdC)GRUHcwHJZBpX0ZohOwrYXe5cS2BbDipSk(x2sc1iwIMVUNtPXtwxE7fG8bbQDbCbwBuu5CXtKt26wxwEM3Bq4BIo9alij6zZ3m15H3aclBfEMQcFH3qigzRYmRIRZ49pANhc4Kn1an7x)6bUzRosCzAekpJkKMgXmIzWLjOjh0o9E8gZk2akI8phj8oePXSFjAcmjNDcVHK(XCyUb8BJKdoelAg6uyvyiw87hb5t9riiFE87kb5Z(HjOO8ORusBye7iRtk(gDOT7kk(P(try(ZpCziE25icr(ohkzwJhtHrZz4MddNWieThdw3jqIH4DZcvH8zaVPoofc3xmuF(6i09WPuCdvOPvmiDxuLEWPxgdP)umgqFteqhnvZy48NUXa3BJc3XPDgdK3upgCMp7cRThhlY6L)(LyEfysjR)X7JB80D8Nty5p8ZHZsYp8bYr6iAIv8osdJ17V0yn4KlteI1wYVvMJk)LnZJg66qNPJFrZ)J7nfEh95AemXHaX3Op4lwN6aIj3m699Rt1Z5c6u491St13jYE6HFBRv4GshsNUsiZw9byhRM1V(Q)4LFEd7RZ(Nd]]
 )
 
 -- The hand-built Enhancement list, replaced by Enhancement (wowsims.com): a saved choice of it falls back to the default.

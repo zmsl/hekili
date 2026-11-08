@@ -707,61 +707,64 @@ spec:RegisterAbilities({
 })
 
 -- Talents: { talent tree (1 Beast Mastery, 2 Marksmanship, 3 Survival: the dominant tree picks the spec), rank 1's
--- spell, max rank }: the DB2's 46 nodes (`wowdb talents HUNTER`; the tree is the DB2's Talent.TabID), keys the
--- snake_case names (a nameless node talent_<spell>). The costs read Efficiency and Resourcefulness.
+-- spell, max rank }: Forever's tree as wowsims/forever's ui/sim/talents/trees/hunter.json lists it (tools/wowsims/talents.lua
+-- writes it; tests/Forever/talent_trees_spec.lua checks it and the spec detection over it). A key is Classic's where the
+-- talent exists there (code reads `talent.<key>.rank`), else the snake_case of the node's name. The costs read Efficiency
+-- and Resourcefulness.
 spec:RegisterTalents({
     -- Beast Mastery (tree 1)
     deadly_aspects = { 1, 19552, 5 },
     endurance_training = { 1, 19583, 5 },
-    improved_eyes_of_the_beast = { 1, 19557, 2 },
-    improved_aspect_of_the_monkey = { 1, 19549, 5 },
-    thick_hide = { 1, 19609, 3 },
+    focused_fire = { 1, 1223755, 2 },
+    improved_aspect_of_the_monkey = { 1, 19549, 3 },
     improved_revive_pet = { 1, 24443, 2 },
     pathfinding = { 1, 19559, 2 },
     bestial_swiftness = { 1, 19596, 1 },
     unleashed_fury = { 1, 19616, 5 },
     improved_mend_pet = { 1, 19572, 2 },
     ferocity = { 1, 19598, 5 },
+    summon_hawk = { 1, 1293241, 1 },
     spirit_bond = { 1, 19578, 2 },
     intimidation = { 1, 19577, 1 },
     bestial_discipline = { 1, 19590, 2 },
     frenzy = { 1, 19621, 5 },
     bestial_wrath = { 1, 19574, 1 },
     -- Marksmanship (tree 2)
-    improved_concussive_shot = { 2, 19407, 5 },
-    efficiency = { 2, 19416, 5 },
-    improved_hunters_mark = { 2, 19421, 5 },
-    lethal_attacks = { 2, 19426, 5 },
-    aimed_shot = { 2, 19434, 1 },
-    improved_arcane_shot = { 2, 19454, 5 },
     hawk_eye = { 2, 19498, 3 },
-    improved_serpent_sting = { 2, 19464, 5 },
+    improved_concussive_shot = { 2, 19407, 5 },
+    lethal_attacks = { 2, 19426, 5 },
+    improved_stings = { 2, 1310661, 3 },
+    efficiency = { 2, 19416, 5 },
+    careful_aim = { 2, 1223984, 5 },
+    rapid_killing = { 2, 415405, 2 },
+    improved_arcane_shot = { 2, 19454, 5 },
+    lone_wolf = { 2, 415370, 1 },
+    trueshot_aura = { 2, 1299346, 1 },
     mortal_shots = { 2, 19485, 5 },
-    scatter_shot = { 2, 19503, 1 },
+    rapid_recuperation = { 2, 1223987, 2 }, -- wowsims's Marksmanship (spell_data_auto_gen.go:401); the DB2 names the spell only
     barrage = { 2, 19461, 3 },
-    talent_19491 = { 2, 19491, 3 },
+    scatter_shot = { 2, 19503, 1 },
     ranged_weapon_specialization = { 2, 19507, 5 },
-    trueshot_aura = { 2, 19506, 1 },
+    sniper_shot = { 2, 1310687, 1 },
     -- Survival (tree 3)
-    improved_tracking = { 3, 24293, 3 },
-    humanoid_slaying = { 3, 19151, 3 },
+    improved_tracking = { 3, 24293, 5 },
     deflection = { 3, 19295, 5 },
     entrapment = { 3, 19184, 5 },
     savage_strikes = { 3, 19159, 2 },
-    improved_wing_clip = { 3, 19228, 5 },
-    clever_traps = { 3, 19239, 2 },
     survivalist = { 3, 19255, 5 },
+    improved_wing_clip = { 3, 19228, 3 },
+    clever_traps = { 3, 19239, 2 },
+    surefooted = { 3, 19290, 3 },
     deterrence = { 3, 19263, 1 },
     survival_tactics = { 3, 19376, 2 },
-    surefooted = { 3, 19290, 3 },
-    improved_feign_death = { 3, 19286, 2 },
-    killer_instinct = { 3, 19370, 3 },
+    predators_edge = { 3, 1310627, 5 },
     counterattack = { 3, 19306, 1 },
+    resourcefulness = { 3, 440529, 2 },
+    expose_prey = { 3, 1310532, 2 },
+    survivalists_discipline = { 3, 1310496, 2 },
+    strider_kick = { 3, 1317257, 1 },
     lightning_reflexes = { 3, 19168, 5 },
-    talent_19386 = { 3, 19386, 1 },
-    -- Forever-only (tree 0: not in the DB2's Talent table; wowsims's tree places it in Survival, 2 ranks)
-    resourcefulness = { 0, 440529, 2 },
-    rapid_recuperation = { 0, 1223987, 2 }, -- wowsims's Marksmanship (spell_data_auto_gen.go:401); the DB2 names the spell only
+    lacerating_strikes = { 3, 1310533, 1 },
 })
 
 -- Beast Mastery's HHA (re-pin ruling R15; wowsims bm_weave's default_hawks APL at e2842f0a78: a sequence of Summon

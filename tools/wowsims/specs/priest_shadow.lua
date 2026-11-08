@@ -14,6 +14,11 @@
 -- Re-pin e2842f0a78 (Task 11): decisions on-GCD 1.000 (85) before and after, no disagreement. The build moves four gear
 -- slots; its Greater Blessing of Wisdom `1` is rank 1 (25894), so the request sends `2`, the top rank 25918 (R25);
 -- the hidden Starshards line now compares spellExpectedDpet (still hidden, omitted). Omitted 4 -> 4.
+-- Re-pin 4b0030a44b (0.7 lane priest): talents 00530300103-3-50042201251302051 (Improved Mind Blast 4, Twilight Focus 3
+-- in the Holy tree, Martyrdom out); the Night Elf's Elune's Light and the Gnome's Eureka! lines are gated on the GCD
+-- and on Shadow Word: Pain / Devouring Plague having 10 s (Eureka! 8 s) left, no longer on the clock (5ba44c16f6);
+-- default #11 (Starshards vs Mind Flay on spellExpectedDpet) is no longer `hidden` but still omitted (CN5: the
+-- translator does not support spellExpectedDpet; owner question). Binding Heal (left the game) is out of the kit.
 -- Worked (P8): Smite fills below Mind Flay (a talent: the L10 bracket idled 8.0 s on Mind Blast's cooldown); the world's
 -- Shadow character knows Smite (P9.4), silent at 60.
 -- Deviations: Mind Flay's channelSpell.interruptIf (MF3: clip at its third tick) is dropped by the translator (the
@@ -23,10 +28,10 @@
 -- runs about 1000 under the truth after the Demonic Rune and Major Mana Potion (rule 13 lines; the replay emits no cast
 -- for an item's use: the Mage lane's shared gap); no decision reads it here. Follow-up: the world's pool was not
 -- refreshed from the re-pin log (priest_world.lua 4711, the log 4846): no decision reads it, lane 10's precedent.
--- Omitted: the hidden entries (#10 Vampiric Embrace, #11 Starshards on its expected damage, #12 the Inner Focus ->
--- Starshards sequence); the Major Spellblasting Potion (item 250937, rule 13: no such consumable in Hekili_Shared; a
+-- Omitted: the hidden entries (#10 Vampiric Embrace, #12 the Inner Focus -> Starshards sequence) and #11 (Starshards on
+-- its expected damage: spellExpectedDpet, unsupported since the re-pin un-hid it); the Major Spellblasting Potion (item 250937, rule 13: no such consumable in Hekili_Shared; a
 -- potion under Potions, off). Race lines: the Troll's pre-pull Shadowguard (`action.shadowguard.known`), the Night Elf's
--- Elune's Light and the Gnome's Eureka! (wowsims's variables, `time=3|time>=N|known`), the Undead's Dark Sacrifice: each
+-- Elune's Light and the Gnome's Eureka! (wowsims's variables: at the old pin `time=3|time>=N|known`, now the GCD and the DoTs' time left, see Re-pin 4b0030a44b), the Undead's Dark Sacrifice: each
 -- silent for another race (the engine skips an unknown action). The Cooldowns group is empty and unread (no setting).
 -- Kit notes (owner rulings on the kit task): mana regen is declared from this build's log (one value per class: the
 -- Smite world keeps its own); talent max ranks stay at the DB2's Era values where wowsims differs (per-rank lookups
@@ -44,4 +49,14 @@ return {
     -- before Mind Flay (a Shadow talent): Smite fills while Mind Blast and the DoTs wait; silent once Mind Flay is known,
     -- and so at 60
     leveling = { "smite,if=!action.mind_flay.known" },
+    -- owner 2026-11-07: Starshards by user preference replaces spellExpectedDpet default #11 (wowsims casts Starshards when
+    -- its expected damage per execution time beats Mind Flay's and Mind Blast is 4 s or more from ready; the translator
+    -- cannot compute the first term, CN5). The player's `prefer_starshards` setting (off by default, so the default pack is
+    -- wowsims's without it) stands for it; upstream's second condition is kept.
+    extra = {
+        {
+            before = "mind_flay",
+            line = "starshards,if=settings.prefer_starshards&(!action.mind_blast.known|cooldown.mind_blast.remains>=4)",
+        },
+    },
 }
