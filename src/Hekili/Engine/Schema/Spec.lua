@@ -2365,6 +2365,11 @@ end
 
 Hekili.SpecChangeHistory = {}
 
+-- (selectors) The last settle's pick, selector and dominant tree (nil: no points or a tie, so the last pack holds),
+-- the spec it settled on with points (nil until then: no notice at login; a read with no points
+-- keeps it: PickSpec's `held`), and the notice due.
+local picked, pickedBy, pickedTree, settledID, note
+
 function Hekili:SpecializationChanged()
     local currentSpec = GetSpecialization()
     if currentSpec == 5 then currentSpec = 1 end -- no specialization: the first
@@ -2383,7 +2388,7 @@ function Hekili:SpecializationChanged()
     local tree, source
     local selector
     if kit then
-        tree, source, _, selector = ns.PickSpec( kit, Hekili.Engine.settings.specChoice[ ns.CharKey() ], talentRank, UnitLevel( "player" ), Hekili.Engine.settings.specs )
+        tree, source, _, selector = ns.PickSpec( kit, Hekili.Engine.settings.specChoice[ ns.CharKey() ], talentRank, UnitLevel( "player" ), Hekili.Engine.settings.specs, settledID and class.specs[ settledID ] )
     end
     local currentID = tree and tree.id or clientID
 
@@ -2692,9 +2697,6 @@ local function charChoice( tree )
     return choice
 end
 
--- (selectors) The last settle's pick, selector and dominant tree (nil: no points or a tie, so the last pack holds),
--- the spec it settled on with points (nil until then: no notice at login), and the notice due.
-local picked, pickedBy, pickedTree, settledID, note
 
 local function notifyPick()
     if note then
@@ -2726,7 +2728,7 @@ function Hekili:SettleSpecChoice( clientID )
     local tree = ns.DominantTree( ns.TreePoints( kit.talents, talentRank ) )
     local choice = charChoice( tree )
     if tree then choice.last = tree end
-    local pick, source, _, sel = ns.PickSpec( kit, choice, talentRank, UnitLevel( "player" ), settings.specs )
+    local pick, source, _, sel = ns.PickSpec( kit, choice, talentRank, UnitLevel( "player" ), settings.specs, settledID and class.specs[ settledID ] )
     if ns.MigrateTrees( settings.specs, settings.packs, settings.specMigrated, kit, clientID, pick ) then
         self:SettingsChanged() -- the migrated settings reach the belief's plain copy (Engine/Schema/Tracked.lua)
     end

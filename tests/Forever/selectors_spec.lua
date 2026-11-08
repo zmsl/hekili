@@ -371,6 +371,20 @@ describe("the shipped selectors (headless)", function()
         assert.are.same({}, D.notes)
     end)
 
+    it("keeps the last settled spec through a read with no points; a first login with no history does not", function()
+        local H = boot("druid", build("druid_guardian", "druid"))
+        assert.are.same({ 100113, "Guardian (wowsims.com)" }, { active(H) })
+        respec(H, {}) -- the ranks read zero (a walk before they arrive, a wipe)
+        assert.are.same({ 100113, "Guardian (wowsims.com)" }, { active(H) })
+        assert.are.equal("held", H.Hekili.State.spec.source)
+        respec(H, build("druid_guardian", "druid"))
+        assert.are.same({ 100113, "Guardian (wowsims.com)" }, { active(H) })
+        assert.are.same({}, H.notes)
+        local F = boot("druid", {}) -- no settle with points yet: the first supported spec, as before
+        assert.are.equal(100111, (active(F)))
+        assert.are.equal("default", F.Hekili.State.spec.source)
+    end)
+
     it("gives one notice naming the pack when a selector switches the spec and its pack together", function()
         local H = boot("warlock", build("warlock_destruction", "warlock"))
         local n = #H.notes

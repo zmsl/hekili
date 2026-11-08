@@ -339,7 +339,9 @@ RestoreDefaults (the built-ins exist only then at login), its pack (`ns.SelectPa
 `packAuto = "<name>"` the pack a selector set. A selector writes only a built-in pack bound to that spec, and only over
 the default or its own `packAuto` pick: any other value (a custom priority, `(none)`, a profile's pick from before
 selectors) stays. With no selector holding, a pack still equal to `packAuto` goes back to the default; with no points or a
-tie (a walk before the ranks arrive, a talent wipe) the pack holds. One notice says so when a selector switches the
+tie (a walk before the ranks arrive, a talent wipe) the last spec settled with points (source `held`) and
+its pack hold, unless the player activated a pack for the tree; a first login or /reload with no settle yet falls to
+the rule above. One notice says so when a selector switches the
 pack, or the spec after the first settle with points (never at login). On a class's first login after the update a one-time migration (`ns.MigrateTrees`, marked in
 `profile.specMigrated[<TOKEN>]`) merges the legacy pseudo-spec profile (the client's id, now read for nothing else:
 Rogue 1488 and Warrior 1491 read in game; Druid 1483, Hunter 1484, Paladin 1486, Shaman 1489 assumed) into every

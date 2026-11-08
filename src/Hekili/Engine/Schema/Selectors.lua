@@ -76,8 +76,9 @@ end
 --- `specs` (the profile's specs table) carries the player's pack (`packManual`); else the first selector that holds at
 --- `level` ("selector"); else the spec chosen for the tree, if any ("stored"); else the tree's first spec
 --- ("dominant"); else the first supported spec ("default": no points yet). Returns the spec, the source, the dominant tree (nil on no points or a tie) and the
---- selector (nil unless the source is "selector").
-function ns.PickSpec(kit, choice, rankOf, level, specs)
+--- selector (nil unless the source is "selector"). With no points or a tie and `held` (the spec the last settle with
+--- points chose), that spec stays ("held") unless the player activated a pack for the tree (owner ruling I2).
+function ns.PickSpec(kit, choice, rankOf, level, specs, held)
     local p = ns.TreePoints(kit.talents, rankOf)
     local dominant = ns.DominantTree(p)
     local tree, key = dominant, choice
@@ -91,6 +92,9 @@ function ns.PickSpec(kit, choice, rankOf, level, specs)
     local sp = s and specs and rawget(specs, s.id)
     if type(sp) == "table" and sp.packManual then
         return s, "stored", dominant
+    end
+    if dominant == nil and held then
+        return held, "held", nil -- no points or a tie: the last settled spec stays, as choice.last did
     end
     local sel, ss = firstSelector(kit, p, rankOf, level)
     if ss then
