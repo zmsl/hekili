@@ -367,6 +367,21 @@ describe("the shipped selectors (headless)", function()
         assert.are.same({}, D.notes)
     end)
 
+    it("gives one notice naming the pack when a selector switches the spec and its pack together", function()
+        local H = boot("warlock", build("warlock_destruction", "warlock"))
+        local n = #H.notes
+        -- Destruction to Affliction and SM Ruin over its default, the pass's first pick on the last walk's ranks (as
+        -- spec_choice_spec's stale-ranks case): the pack changes on that pass, the spec on the next
+        H.ctl.traits = traits(build("warlock_sm_ruin", "warlock"))
+        H.Hekili.PendingSpecializationChange = true
+        settle(H)
+        H.ctl.now = H.ctl.now + 6
+        H.RunTimers(H.ctl.now)
+        assert.are.same({ 100091, "SM Ruin (wowsims.com)" }, { active(H) })
+        assert.are.equal(n + 1, #H.notes)
+        assert.is_truthy(H.notes[#H.notes]:find("SM Ruin", 1, true), H.notes[#H.notes])
+    end)
+
     it("names the selector in the snapshot's spec line", function()
         local H = boot("druid", build("druid_guardian", "druid"))
         assert.are.equal("selector", H.Hekili.State.spec.source)

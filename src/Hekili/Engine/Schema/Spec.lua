@@ -2739,8 +2739,9 @@ function Hekili:SettleSpecChoice( clientID )
     end
     -- settled: the pick's source is this walk's (the pass's own pick may have been on the last walk's ranks)
     state.spec.source, state.spec.selector = source, sel and sel.key
-    -- a selector's spec switch (not the first settle: a login) gets the notice a pack change has not given
-    if source == "selector" and not packChanged and settledID and settledID ~= pick.id then
+    -- a selector's spec switch (not the first settle: a login) gets the notice a pack change has not given, on this
+    -- pass or the last one (its notice, still pending, names the spec too)
+    if source == "selector" and not packChanged and not note and settledID and settledID ~= pick.id then
         note = string.format( L["%s, picked from your talents."], pick.name )
         C_Timer.After( 5, notifyPick )
     end
