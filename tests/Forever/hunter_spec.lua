@@ -899,7 +899,11 @@ describe("Forever Hunter Movement (R8)", function()
             local l = lines("raptor_strike")
             assert.are.equal(2, #l)
             assert.matches(",if=target%.within5$", l[1])
-            assert.matches(",if=toggle%.movement&%(.+&target%.outside5%)&window%.weave%.up%)$", l[2])
+            -- 0.7 re-pin: the weave's move arm is gated on the Auto Shot since the last swing, not the old weave window
+            assert.matches(
+                ",if=toggle%.movement&ranged_remains>=ranged_speed%-%(mainhand_speed%-mainhand_remains%)$",
+                l[2]
+            )
             local far, near = world("raptor_strike", 11), world("raptor_strike", 3)
             assert.are.same({ "aspect_of_the_hawk", "raptor_strike" }, { far(false), near(false) })
         end

@@ -1,12 +1,12 @@
 -- tools/wowsims/specs/hunter_beast_mastery.lua (wowsims packs plan, Task 11): Beast Mastery (wowsims.com)'s wowsims/forever request and translation.
--- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e2842f0a78 (re-pin Task 19): the request is the
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e5a9cd2a2d (0.7 re-pin; the weave is upstream acc6bcb5f8's: reaction 150-350 ms, no weave window read, so no `extra`, `windowVars` or `guard`): the request is the
 -- SIML build ui/specs/hunter/dps/builds/bm_weave.siml (BM Weave: talents :3, gear ../gear_sets/p1.gear.siml :4, rotation
 -- ../apls/default_hawks.apl.siml :5, settings :7-14; pet_type raptor (:12): the Raptor, whose casts are not
 -- scored), layered over the spec's defaults.siml as wowsims's siml.LoadBuild does (the recipe's `defaults`: race Orc, Engineering and Blacksmithing, the
 -- consumables (flask, food, elixirs, Demonic Rune, the Major Mana and Major Frenzy potions, EZ-Thro Dynamite II, Goblin
 -- Sapper Charge), Kings, Might 2 and Wisdom 2, the top ranks: R25), converted by `make wowsims-siml`
 -- (tests/Forever/wowsims/hunter_beast_mastery.build.json). Raid buffs and debuffs stay unsent, as for every spec.
--- Disagreements (P7, re-pin e2842f0a78 after R51; fresh floor), decisions on-GCD 0.929 (70) top [summon_hawk ->
+-- Disagreements below are the e2842f0a78 numbers, STALE until the 0.7 floors are re-measured (P7, after R51), decisions on-GCD 0.929 (70) top [summon_hawk ->
 -- arcane_shot 2; arcane_shot -> serpent_sting 1; multi_shot -> serpent_sting 1]:
 --   summon_hawk -> arcane_shot (13.50, 19.62) and summon_hawk -> wing_clip (7.50): wowsims's own HHA sequence. The log
 --   casts Summon Hawk at 1.50, 7.50, 13.50 and 19.62 and its first Arcane Shot at 27.20: APLActionSequence advances
@@ -57,25 +57,10 @@ return {
         arcane_shot = { 8, 35 },
         multi_shot = { 8, 35 },
         serpent_sting = { 8, 35 },
-        aimed_shot = { 8, 35 },
     },
     -- below 25 (Summon Hawk's learn level) the HHA window never reaches Arcane Shot, so the L10 character stings and
     -- waits 13.4 s: wowsims's own non-hawk line (`cast arcane_shot if $use_arcane_shot and not $use_summon_hawk`),
     -- keyed on Summon Hawk being known, not on the setting (R41: a real rotation shot, silent at 60); its range gate
     -- written in (rule 19 reaches APL lines only)
     leveling = { "arcane_shot,if=!action.summon_hawk.known&target.outside8" },
-    -- the weave window (re-pin design §3a; the kit's RegisterWindow "weave"; R17: timing only): the forecast opens it
-    -- just past an Auto Shot whose next main-hand swing comes before the next shot (the belief's evaluator,
-    -- Hunter.lua); "Just shot" reads it (windowVars)
-    extra = {
-        {
-            before = "raptor_strike",
-            line = "open_window,name=weave,if=ranged_remains>ranged_speed-0.1&mainhand_remains<ranged_remains",
-        },
-    },
-    windowVars = { ["Just shot"] = "weave" },
-    -- weave #6's move (R4: it reaches the strikes) carries the open weave: wowsims walks in at the first poll its
-    -- condition holds after a shot (the main hand ready by the walk in), an edge the stateless condition cannot tell
-    -- (it holds for most of each shot cycle out of melee); in melee the strikes stay as wowsims's
-    guard = { ["weave #6"] = "window.weave.up" },
 }

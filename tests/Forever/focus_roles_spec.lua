@@ -24,10 +24,11 @@ local HUNTER = {
     "raptor_strike=1",
     "serpent_sting=1",
     "serpent_sting=1",
-    "raptor_strike=1",
     "serpent_sting=1",
+    "raptor_strike=1",
 }
-local HUNTER_MM = { "hunters_mark=2", "raptor_strike=1", "serpent_sting=1", "raptor_strike=1", "serpent_sting=1" }
+-- 0.7 re-pin: the weave is move #4 (the shots' move back) then #5 (the strikes), so the strike line comes last
+local HUNTER_MM = { "hunters_mark=2", "raptor_strike=1", "serpent_sting=1", "serpent_sting=1", "raptor_strike=1" }
 
 -- file order of the generated simc: the Banes, Searing Pain's Demonic Brand upkeep and the curses at 2, Soul Fire on Decimation at 1
 local WARLOCK_DEMO = {

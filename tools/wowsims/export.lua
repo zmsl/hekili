@@ -38,11 +38,11 @@ M.SPEC_PIN = {
 
     druid_guardian = NEW,
 
-    hunter_beast_mastery = OLD,
+    hunter_beast_mastery = NEW,
 
-    hunter_marksmanship = OLD,
+    hunter_marksmanship = NEW,
 
-    hunter_survival = OLD,
+    hunter_survival = NEW,
 
     mage_arcane = NEW,
 

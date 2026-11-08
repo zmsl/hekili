@@ -1,12 +1,12 @@
 -- tools/wowsims/specs/hunter_marksmanship.lua (wowsims packs plan, Task 11): Marksmanship (wowsims.com)'s wowsims/forever request and translation.
--- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e2842f0a78 (re-pin Task 19): the request is the
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e5a9cd2a2d (0.7 re-pin; the weave is upstream acc6bcb5f8's: reaction 150-350 ms, no weave window read, so no `extra`, `windowVars` or `guard`): the request is the
 -- SIML build ui/specs/hunter/dps/builds/mm_weave.siml (MM Weave: talents :3, gear ../gear_sets/p1.gear.siml :4, rotation
 -- ../apls/default_mm.apl.siml :5, settings :7-14; no pet (:7, Lone Wolf)), layered over the spec's
 -- defaults.siml as wowsims's siml.LoadBuild does (the recipe's `defaults`: race Orc, Engineering and Blacksmithing, the
 -- consumables (flask, food, elixirs, Demonic Rune, the Major Mana and Major Frenzy potions, EZ-Thro Dynamite II, Goblin
 -- Sapper Charge), Kings, Might 2 and Wisdom 2, the top ranks: R25), converted by `make wowsims-siml`
 -- (tests/Forever/wowsims/hunter_marksmanship.build.json). Raid buffs and debuffs stay unsent, as for every spec.
--- Disagreements (P7, re-pin e2842f0a78 after R51; fresh floor), decisions on-GCD 0.966 (87) top [arcane_shot ->
+-- Disagreements below are the e2842f0a78 numbers, STALE until the 0.7 floors are re-measured (P7, after R51), decisions on-GCD 0.966 (87) top [arcane_shot ->
 -- serpent_sting 2; serpent_sting -> arcane_shot 1]:
 --   Serpent Sting a beat early (class B; 15.16, 140.34): the kit applies the target's dot at the cast (`now`), wowsims at the landing
 --   (0.33 s later in every log); with EARLY_EXIT (0.2 s, Core.lua) a refresh due inside 0.2 s ends the list, so it
@@ -56,21 +56,6 @@ return {
         arcane_shot = { 8, 35 },
         multi_shot = { 8, 35 },
         serpent_sting = { 8, 35 },
-        aimed_shot = { 8, 35 },
     },
     leveling = {},
-    -- the weave window (re-pin design §3a; the kit's RegisterWindow "weave"; R17: timing only): the forecast opens it
-    -- just past an Auto Shot whose next main-hand swing comes before the next shot (the belief's evaluator,
-    -- Hunter.lua); "Just shot" reads it (windowVars)
-    extra = {
-        {
-            before = "raptor_strike",
-            line = "open_window,name=weave,if=ranged_remains>ranged_speed-0.1&mainhand_remains<ranged_remains",
-        },
-    },
-    windowVars = { ["Just shot"] = "weave" },
-    -- weave #6's move (R4: it reaches the strikes) carries the open weave: wowsims walks in at the first poll its
-    -- condition holds after a shot (the main hand ready by the walk in), an edge the stateless condition cannot tell
-    -- (it holds for most of each shot cycle out of melee); in melee the strikes stay as wowsims's
-    guard = { ["weave #6"] = "window.weave.up" },
 }
