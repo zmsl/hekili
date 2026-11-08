@@ -262,7 +262,6 @@ local function GenerateDiagnosticTooltip( widget, event )
     end
 
     local packName, script = path[ 2 ], path[ #path ]
-    -- print( unpack( path ) )
 
     local pack = rawget( Hekili.DB.profile.packs, packName )
     local list = pack and pack.lists[ listName ]
@@ -538,8 +537,6 @@ local function Constructor()
   scrollBG:SetBackdrop(backdrop)
   scrollBG:SetBackdropColor(0, 0, 0)
   scrollBG:SetBackdropBorderColor(0.4, 0.4, 0.4)
-
-  --scrollBG:SetBackdropBorderColor(1,0,0)
 
   local scrollFrame = CreateFrame("ScrollFrame", ("%s%dScrollFrame"):format(Type, widgetNum), frame, "UIPanelScrollFrameTemplate")
 
