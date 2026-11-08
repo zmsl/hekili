@@ -654,11 +654,14 @@ describe("auras", function()
         end)
 
         it("a staged read cut short by a plain walk does not suppress the next fight's edge", function()
-            ctl.ViewerAura(item, "player") -- staged up
-            ctl.Fire("PLAYER_REGEN_ENABLED") -- same frame: combat ends, the walk turns plain and shows it gone
+            ctl.ViewerAura(item, "player")
+            poll(10) -- in combat: the sweep's edge stages a Read up, the fold takes it
+            assert.are.equal(math.huge, VS.Aura("player", fs.SPENDER_A, 10).est)
+            assert.are.same({ 1, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
+            ctl.Fire("PLAYER_REGEN_ENABLED") -- combat ends, the walk turns plain and shows it gone
             ctl.auras.player.HELPFUL[1] = nil
             ctl.Fire("UNIT_AURA", "player")
-            poll(10)
+            poll(10.5)
             ctl.Fire("UNIT_AURA", "player")
             ctl.ViewerClear(item)
             poll(11)
