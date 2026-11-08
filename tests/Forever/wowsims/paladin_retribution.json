@@ -216,8 +216,7 @@
                                     },{
                                       "talentIsKnown":{
                                         "talentId":{
-                                          "spellId":1310735,
-                                          "rank":1
+                                          "spellId":1310735
                                         }
                                       }
                                     }]
@@ -302,8 +301,7 @@
                                         "val":{
                                           "talentIsKnown":{
                                             "talentId":{
-                                              "spellId":1310735,
-                                              "rank":1
+                                              "spellId":1310735
                                             }
                                           }
                                         }
@@ -915,8 +913,7 @@
                               },{
                                 "talentIsKnown":{
                                   "talentId":{
-                                    "spellId":1310735,
-                                    "rank":1
+                                    "spellId":1310735
                                   }
                                 }
                               }]
@@ -926,8 +923,7 @@
                             "vals":[{
                                 "auraIsInactive":{
                                   "auraId":{
-                                    "spellId":20920,
-                                    "rank":5
+                                    "spellId":20920
                                   }
                                 }
                               },{
@@ -935,8 +931,7 @@
                                   "vals":[{
                                       "auraIsActive":{
                                         "auraId":{
-                                          "spellId":20920,
-                                          "rank":5
+                                          "spellId":20920
                                         }
                                       }
                                     },{
@@ -950,8 +945,7 @@
                                         "lhs":{
                                           "auraRemainingTime":{
                                             "auraId":{
-                                              "spellId":20920,
-                                              "rank":5
+                                              "spellId":20920
                                             }
                                           }
                                         }
@@ -967,8 +961,7 @@
                                   "val":{
                                     "talentIsKnown":{
                                       "talentId":{
-                                        "spellId":1310735,
-                                        "rank":1
+                                        "spellId":1310735
                                       }
                                     }
                                   }
@@ -979,8 +972,7 @@
                                       "auraIsInactive":{
                                         "includeReactionTime":true,
                                         "auraId":{
-                                          "spellId":20920,
-                                          "rank":5
+                                          "spellId":20920
                                         }
                                       }
                                     },{
@@ -1035,8 +1027,7 @@
                               },{
                                 "talentIsKnown":{
                                   "talentId":{
-                                    "spellId":1310735,
-                                    "rank":1
+                                    "spellId":1310735
                                   }
                                 }
                               }]
@@ -1065,8 +1056,7 @@
                               },{
                                 "talentIsKnown":{
                                   "talentId":{
-                                    "spellId":1310735,
-                                    "rank":1
+                                    "spellId":1310735
                                   }
                                 }
                               }]
@@ -1076,8 +1066,7 @@
                             "vals":[{
                                 "auraIsInactive":{
                                   "auraId":{
-                                    "spellId":20293,
-                                    "rank":8
+                                    "spellId":20293
                                   }
                                 }
                               },{
@@ -1085,8 +1074,7 @@
                                   "vals":[{
                                       "auraIsActive":{
                                         "auraId":{
-                                          "spellId":20293,
-                                          "rank":8
+                                          "spellId":20293
                                         }
                                       }
                                     },{
@@ -1100,8 +1088,7 @@
                                         "lhs":{
                                           "auraRemainingTime":{
                                             "auraId":{
-                                              "spellId":20293,
-                                              "rank":8
+                                              "spellId":20293
                                             }
                                           }
                                         }
@@ -1117,8 +1104,7 @@
                                   "val":{
                                     "talentIsKnown":{
                                       "talentId":{
-                                        "spellId":1310735,
-                                        "rank":1
+                                        "spellId":1310735
                                       }
                                     }
                                   }
@@ -1140,8 +1126,7 @@
                                       "auraIsInactive":{
                                         "includeReactionTime":true,
                                         "auraId":{
-                                          "spellId":20293,
-                                          "rank":8
+                                          "spellId":20293
                                         }
                                       }
                                     },{

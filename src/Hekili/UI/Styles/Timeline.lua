@@ -240,7 +240,7 @@ local function readyGlow( b, on, c )
 end
 
 local function setFont( fs, font, size, style, color )
-    fs:SetFont( LSM:Fetch( "font", font ), size, style )
+    fs:SetFont( LSM:Fetch( "font", font ), size, ns.UI.FontFlags( style ) )
     if color then fs:SetTextColor( color[ 1 ], color[ 2 ], color[ 3 ], color[ 4 ] ) end
     fs:SetWordWrap( false )
 end
