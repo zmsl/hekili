@@ -297,30 +297,6 @@ function SkeletonGen:CleanTooltip( tooltip )
 end
 
 
---[[
-local function trackAuraApplication( token, spellID, time )
-    table.insert( SkeletonGen._applications, { token = token, id = spellID, time = time } )
-end
-
-local function trackAuraRemoval( token, spellID, time )
-    table.insert( SkeletonGen._removals, { token = token, id = spellID, time = time } )
-end
-
-local function assignAuraToLastCast( auraType, token, spellID )
-    local last = SkeletonGen._lastCast
-    if not last.ability or ( GetTime() - last.time > 0.25 ) then return end
-
-    -- Ensure ability exists
-    local ability = SkeletonGen.abilities[ last.ability ]
-    if not ability then
-        SkeletonGen.abilities[ last.ability ] = { id = spellID }
-        ability = SkeletonGen.abilities[ last.ability ]
-    end
-
-    ability[ auraType ] = ability[ auraType ] or {}
-    ability[ auraType ][ token ] = spellID
-end--]]
-
 local function GetAbilityKey( ability )
     local name = GetSpellInfo( ability.id )
     return name and formatKey( name ) or "s" .. ability.id
@@ -1078,18 +1054,6 @@ function SkeletonGen:Generate()
             self:AppendField( "talent", ability.talent )
             self:Blank()
         end
-
-        --[[ Applies/Removes lines as comments
-        if ability.applies then
-            for auraKey, auraID in pairs( ability.applies ) do
-                self:Append( "-- applies " .. auraKey .. " (" .. auraID .. ")" )
-            end
-        end
-        if ability.removes then
-            for auraKey, auraID in pairs( ability.removes ) do
-                self:Append( "-- removes " .. auraKey .. " (" .. auraID .. ")" )
-            end
-        end --]]
 
         self:Append( "handler = function () end" )
 
