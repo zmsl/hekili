@@ -67,9 +67,10 @@ local HOLD, LAPSE = 1.0, 0.5
 -- item still showing the old application inside the client's latency says nothing of the new one.
 -- shortcut: 0.5 s is unmeasured; the LAT probe (cast success vs the item's light) sets it.
 local REFRESH_LAG = 0.5
--- A hold re-stage of an `icd` aura moves its expiry by at most this (I.AURA_REFRESH less a float margin), so the fold
--- keeps the application (its ICD and applied time; ours stays valid).
+-- Each Read of a hold re-stage of an `icd` aura moves its expiry by at most this (I.AURA_REFRESH less a float margin),
+-- so the fold keeps the application (its ICD and applied time; ours stays valid).
 local REFRESH_HOLD = I.AURA_REFRESH * 0.99
+local ICD_STEPS = 4 -- at most this many extra Reads per hold re-stage of an icd aura (HOLD + LAPSE fits in 3)
 local DUR = {}
 -- Decision 114: 1 while the player's reduced fact is UP, else 0 (CN13's Obs.PlayerHit keeps one stack while it is 1).
 local floor = I.auraFloor or {}
@@ -360,12 +361,20 @@ local function apply(j, u, up, t, edge)
         ours[k], oursAp[k] = BY_CDM, foldApplied(u, j, t) -- a CDM UP opened it
     elseif up then -- a hold re-stage: the model's stacks stand (rule 3)
         stacks = U.stacks[u][j]
-        if U.icd[j] > 0 and rem > e + REFRESH_HOLD - t then
-            -- an icd aura's later expiry past AURA_REFRESH reads as a re-application (Families/Auras.lua): stay short
-            rem = e + REFRESH_HOLD - t
-        end
     end
-    Direct(Obs.Read, t, k, rem, ReadOf.Aura + stacks * I.AURA_STACK)
+    local c = ReadOf.Aura + stacks * I.AURA_STACK
+    if up and e > 0 and U.icd[j] > 0 and e + REFRESH_HOLD > t then
+        -- an icd aura still on record: a Read more than AURA_REFRESH past its expiry is a re-application to
+        -- Families/Auras.lua (ICD restart, applied moves, ours lost), so the hold steps there, each Read at most
+        -- REFRESH_HOLD past the one before (the fold takes them in order), whatever the poll gap (review m2)
+        local goal, x, n = t + (rem > 0 and rem or HOLD), e, 0
+        while x + REFRESH_HOLD < goal and n < ICD_STEPS do
+            x, n = x + REFRESH_HOLD, n + 1
+            Direct(Obs.Read, t, k, x - t, c)
+        end
+        rem = (goal < x + REFRESH_HOLD and goal or x + REFRESH_HOLD) - t
+    end
+    Direct(Obs.Read, t, k, rem, c)
     return true
 end
 local function onEdge(j, u, up, t)

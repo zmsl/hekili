@@ -746,6 +746,7 @@ describe("auras", function()
         local pi, ti, P -- the player aura's item (SHOUT), the target debuff's item (REND), the router
 
         local function start(def)
+            ctl.now = 1 -- a restart's own observations are stamped before the fight's (the log folds in order)
             def.providers = { presence = "router", viewer = true }
             I.Build(def, 1)
             VS.Start(api)
@@ -985,6 +986,29 @@ describe("auras", function()
                 assert.is_nil(VS.Aura("target", fs.SPENDER_C, 25.6)) -- a CDM UP opened it on B: ours, so its NONE closes
             end
         )
+
+        it("an icd aura's hold keeps the application at slow polls and with no numeric duration (review m2)", function()
+            for _, dur in ipairs({ 3, false }) do
+                local def = fs.def(fs.new(9))
+                def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, duration = dur or nil, icd = 10 }
+                start(def)
+                cast(1, SHOUT, 10, 3)
+                ctl.ViewerAura(pi, "player")
+                local t = 10
+                for i = 1, 38 do
+                    t = 10 + i * 0.52 -- slower than the 0.5 s in-combat rate (the reviewer's probe: lost at 21.44)
+                    poll(t)
+                    local rec, _, applied = VS.Aura("player", fs.SPENDER_A, t)
+                    assert.is_truthy(rec, t)
+                    assert.is_truthy(VS.Aura("player", fs.SPENDER_A, t + 0.51), t) -- not down until the next poll
+                    assert.are.equal(10, applied, t) -- the same application: its ICD does not restart
+                    assert.is_true(t < 12.5 or rec.est - t <= 1.0 + 1e-9, t) -- past its 3 s: held, never math.huge
+                end
+                ctl.ViewerClear(pi)
+                poll(t + 0.2)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, t + 0.2)) -- still ours: its NONE closes it
+            end
+        end)
 
         it("an UP with no numeric duration: HOLD on the target, -1 on the player closed by its NONE", function()
             local def = fs.def(fs.new(9))
