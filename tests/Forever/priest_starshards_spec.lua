@@ -47,7 +47,8 @@ describe("Shadow's prefer_starshards option", function()
         local f = assert(io.open("src/Hekili_Priest/APLs/Shadow (wowsims.com).simc"))
         local text = f:read("*a")
         f:close()
-        local line = "actions+=/starshards,if=settings.prefer_starshards&cooldown.mind_blast.remains>=4"
+        local line =
+            "actions+=/starshards,if=settings.prefer_starshards&(!action.mind_blast.known|cooldown.mind_blast.remains>=4)"
         local a = text:find(line, 1, true)
         assert.is_truthy(a)
         assert.is_truthy(a < text:find("actions+=/mind_flay", 1, true))

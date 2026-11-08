@@ -336,7 +336,7 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
 - Priest Shadow, Starshards (owner 2026-11-07: Starshards by user preference replaces spellExpectedDpet default #11): upstream's
   default #11 casts Starshards when its expected damage per execution time beats Mind Flay's and Mind Blast is 4 s or more from
   ready; the translator cannot compute the first term (CN5). A recipe `extra` line before Mind Flay,
-  `starshards,if=settings.prefer_starshards&cooldown.mind_blast.remains>=4`, with the class setting `prefer_starshards` (off by
+  `starshards,if=settings.prefer_starshards&(!action.mind_blast.known|cooldown.mind_blast.remains>=4)`, with the class setting `prefer_starshards` (off by
   default, no `sim` default, so the default pack and every number are as before). Only matters when Starshards is known (the
   Night Elf racial). The Human replay and loops never cast it. Not checked in game.
 

@@ -56,7 +56,7 @@ return {
     extra = {
         {
             before = "mind_flay",
-            line = "starshards,if=settings.prefer_starshards&cooldown.mind_blast.remains>=4",
+            line = "starshards,if=settings.prefer_starshards&(!action.mind_blast.known|cooldown.mind_blast.remains>=4)",
         },
     },
 }
