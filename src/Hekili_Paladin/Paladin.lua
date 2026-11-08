@@ -221,66 +221,64 @@ spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
 })
 
 -- Talents: { talent tree (1 Holy, 2 Protection, 3 Retribution: the dominant tree picks the spec), rank 1's spell, max
--- rank }: the DB2's 44 nodes (`wowdb talents PALADIN`; the tree is the DB2's Talent.TabID), keys the snake_case names
--- (Holy Power is holy_power_talent; a nameless node talent_<spell>), and the Forever-only ones by spell at tree 0
--- until the live export places them.
+-- rank }: Forever's tree as wowsims/forever's ui/sim/talents/trees/paladin.json lists it (tools/wowsims/talents.lua
+-- writes it; tests/Forever/talent_trees_spec.lua checks it and the spec detection over it). A key is Classic's where the
+-- talent exists there (code reads `talent.<key>.rank`), else the snake_case of the node's name.
 spec:RegisterTalents({
     -- Holy (tree 1)
-    divine_strength = { 1, 20262, 5 },
-    divine_intellect = { 1, 20257, 5 },
     spiritual_focus = { 1, 20205, 5 },
-    improved_seals = { 1, 20224, 5 },
+    divine_strength = { 1, 20262, 5 },
     healing_light = { 1, 20237, 3 },
-    consecration = { 1, 26573, 1 },
-    talent_20234 = { 1, 20234, 2 },
-    unyielding_faith = { 1, 9453, 2 },
-    illumination = { 1, 20210, 5 },
-    improved_blessing_of_wisdom = { 1, 20244, 2 },
+    reverence = { 1, 1310899, 2 },
+    improved_seals = { 1, 20224, 5 },
+    purifying_power = { 1, 429144, 2 },
     divine_favor = { 1, 20216, 1 },
-    lasting_judgement = { 1, 20359, 3 },
+    illumination = { 1, 20210, 5 },
+    holy_conduit = { 1, 1237268, 2 },
+    divine_precision = { 1, 1310904, 2 },
+    infusion_of_light = { 1, 426065, 2 },
+    oath_of_light = { 1, 1328548, 1 },
+    consecrated_ground = { 1, 1310905, 2 },
+    holy_shock = { 1, 1311606, 1 },
+    boundless_light = { 1, 1328550, 2 },
     holy_power_talent = { 1, 5923, 5 },
-    holy_shock = { 1, 20473, 1 },
+    lights_vigil = { 1, 1310911, 1 },
     -- Protection (tree 2)
-    improved_devotion_aura = { 2, 20138, 5 },
+    divine_intellect = { 2, 20257, 5 },
     redoubt = { 2, 20127, 5 },
     precision = { 2, 20189, 3 },
     guardians_favor = { 2, 20174, 2 },
-    toughness = { 2, 20143, 5 },
-    blessing_of_kings = { 2, 20217, 1 },
-    improved_righteous_fury = { 2, 20468, 3 },
-    shield_specialization = { 2, 20148, 3 },
-    anticipation = { 2, 20096, 5 },
+    sacred_duty = { 2, 1224697, 2 },
+    templars_bulwark = { 2, 1311015, 1 },
     improved_hammer_of_justice = { 2, 20487, 3 },
-    improved_concentration_aura = { 2, 20254, 3 },
-    talent_20911 = { 2, 20911, 1 },
-    reckoning = { 2, 20177, 5 },
-    one_handed_weapon_specialization = { 2, 20196, 5 },
+    shield_specialization = { 2, 20150, 2 },
+    toughness = { 2, 20143, 5 },
+    swift_judgement = { 2, 1310994, 1 },
+    improved_righteous_fury = { 2, 20468, 3 },
+    anticipation = { 2, 20096, 5 },
+    stoicism = { 2, 1328546, 2 },
     holy_shield = { 2, 20925, 1 },
+    reckoning = { 2, 20177, 5 },
+    iron_creed = { 2, 1311034, 3 },
     shieldsworn = { 2, 1328544, 1 }, -- hotfix 113554
     -- Retribution (tree 3)
-    improved_blessing_of_might = { 3, 20042, 5 },
+    deflection = { 3, 20060, 5 },
     benediction = { 3, 20101, 5 },
     improved_judgement = { 3, 25956, 2 },
-    improved_seal_of_the_crusader = { 3, 20335, 3 },
-    deflection = { 3, 20060, 5 },
+    conviction = { 3, 20117, 3 },
+    sanctified_judgement = { 3, 1311074, 3 },
     vindication = { 3, 9452, 3 },
-    conviction = { 3, 20117, 5 },
+    unyielding_faith = { 3, 9453, 2 },
     seal_of_command = { 3, 20375, 1 },
     pursuit_of_justice = { 3, 26022, 2 },
     eye_for_an_eye = { 3, 9799, 2 },
-    improved_retribution_aura = { 3, 20091, 2 },
+    sacred_arbiter = { 3, 1311087, 1 },
     two_handed_weapon_specialization = { 3, 20111, 3 },
-    sanctity_aura = { 3, 20218, 1 },
-    vengeance = { 3, 20049, 5 },
+    turn_evil = { 3, 1328370, 2 },
     repentance = { 3, 20066, 1 },
+    vengeance = { 3, 20049, 3 },
     champion_of_the_light = { 3, 1311084, 5 }, -- hotfix 113554 (replaces Instrument of Law)
-    -- Forever-only (tree unknown until the export)
-    twist_of_light = { 0, 1310735, 1 },
-    swift_judgement = { 0, 1310994, 1 },
-    holy_conduit = { 0, 1237268, 2 },
-    sanctified_judgement = { 0, 1311074, 3 },
-    -- Consecrated Ground (wowsims talents_holy.go: Holy, 2 points; DB2 spell only): the talent, not the target's mark
-    consecrated_ground = { 0, 1310905, 2 },
+    twist_of_light = { 3, 1310735, 1 },
 })
 
 spec:RegisterAuras({
