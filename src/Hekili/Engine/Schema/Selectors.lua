@@ -3,9 +3,12 @@
 -- the Hekili classic branch's RegisterPackSelector, GPL-3.0, no code taken). Which of a class kit's specs
 -- (Hekili:NewClass, Spec.lua) runs: the character's choice for the dominant tree, else the first selector whose
 -- condition holds (a spec and its pack, from the talents), else the dominant tree's first spec, else the first
--- supported one; and when a selector may set a spec's pack (ns.SelectPack: the player's pick and custom priorities
--- stay). Pure functions over a kit and the settings tables (tree points from Trees.lua); Spec.lua calls them on login,
--- a talent change and a spec change, never per poll. Spec.lua's kit:RegisterSelector stores the selectors.
+-- supported one; a chosen spec still takes its pack from its own selectors. And when a selector may set a spec's pack
+-- (ns.SelectPack: the player's pick and custom priorities stay). Functions over a kit and the settings tables (tree
+-- points from Trees.lua), pure of Hekili state: they write only the engine's selector bookkeeping (a selector's
+-- `bound`, the kit's `selectorErrors`/`selectorError`) and, in SelectPack, the spec profile's `package`/`packAuto`.
+-- Spec.lua calls them on login, a talent change and a spec change, never per poll; its kit:RegisterSelector stores
+-- the selectors.
 
 local _, ns = ...
 
