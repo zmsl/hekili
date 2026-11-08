@@ -966,6 +966,26 @@ describe("auras", function()
             assert.are.equal(35.2, est("target", fs.SPENDER_C, 20.5)) -- from B's light at 20.2, not A's at 10.2
         end)
 
+        it(
+            "the switch's drain applies nothing on the target: mob A's record never decides for mob B (review m3)",
+            function()
+                cast(2, REND, 10, 15) -- mob A's record expires at 25
+                ctl.ViewerAura(ti, "target")
+                for t = 10.5, 24.5, 0.5 do
+                    poll(t)
+                end
+                assert.are.equal(25.5, est("target", fs.SPENDER_C, 24.5)) -- held past its duration (rule 4)
+                swap("Creature-2", 25)
+                ctl.ViewerAura(ti, "target") -- mob B carries our debuff too: lit from the next frame
+                poll(25.1) -- the switch's drain: its polls run before the fold takes the switch (A's record near lapse)
+                poll(25.3)
+                assert.are.equal(40.1, est("target", fs.SPENDER_C, 25.3)) -- opened on B from B's light
+                ctl.ViewerClear(ti)
+                poll(25.6)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 25.6)) -- a CDM UP opened it on B: ours, so its NONE closes
+            end
+        )
+
         it("an UP with no numeric duration: HOLD on the target, -1 on the player closed by its NONE", function()
             local def = fs.def(fs.new(9))
             def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }

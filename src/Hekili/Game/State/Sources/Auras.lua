@@ -328,6 +328,10 @@ local function apply(j, u, up, t, edge)
     end
     if u == 1 and (I.formAura[j] or I.enchantAura[j]) then
         return false -- Sources/Forms.lua's and Sources/Enchants.lua's records
+    elseif u == 2 and I.targetSlot ~= I.curSlot then
+        -- (review m3) a target change's TargetSwap folds after this drain's polls: until then the record is the old
+        -- mob's, so nothing is applied on the target; the next poll answers
+        return false
     end
     local e = U.exp0[u][j]
     local stage, rem = false, 0

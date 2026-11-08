@@ -24,6 +24,7 @@ end
 local dead = false
 local HUGE = math.huge
 local lastLo, lastHi = -1, -1 -- the bracket last logged (-1: none since the swap)
+I.targetSlot = 0 -- the memory slot the last swap logged (0: no target)
 local answer = {} -- by ability index: this poll's plain answer (true, false, or 0 for none)
 I.rangeAnswer = answer -- Families/Now.lua's action.<key>.in_range reads it
 
@@ -64,6 +65,7 @@ local function swap(api, t)
     local attackable = s > 0 and Plain(api, api.UnitCanAttack("player", "target")) == true
     dead, lastLo, lastHi = false, -1, -1
     Direct(Obs.TargetSwap, t, s, fresh and 1 or 0, attackable and 1 or 0)
+    I.targetSlot = s -- the slot this swap names; I.curSlot follows at its fold (Sources/Auras.lua waits for it)
     if s > 0 and I.auras.n >= 2 then
         I.WalkAuras(api, 2, "target", t)
     end
