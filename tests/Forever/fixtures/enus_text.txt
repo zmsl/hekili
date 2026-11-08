@@ -21108,8 +21108,8 @@ options.packs.shadow.Shadow (wowsims.com).lists.actionID	desc	Select the entry t
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	name	Entry
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 15473 - |cFFFFD100|cffffd100!buff.shadowform.up|r|r
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1277324 - |cFFFFD100|cffffd100mana.lo<=2000|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 1259799 - |cFFFFD100|cffffd100(time=3||time>=180||action.elunes_light.known)|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1259813 - |cFFFFD100|cffffd100(time=3||time>=120||action.eureka.known)|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 1259799 - |cFFFFD100|cffffd100(action.elunes_light.known&(gcd.remains<=0&(!action.shadow_word_pain.known||debuff.shadow_word_pain.remains>=10)&(!action.devouring_plague.known||((action.devouring_plague.known&debuff.devouring_plague.remains>=10)||(action.devouring_plague.known&cooldown.devouring_plague.remains>=8)))))|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1259813 - |cFFFFD100|cffffd100(action.eureka.known&(gcd.remains<=0&(!action.shadow_word_pain.known||debuff.shadow_word_pain.remains>=8)&(!action.devouring_plague.known||((action.devouring_plague.known&debuff.devouring_plague.remains>=8)||(action.devouring_plague.known&cooldown.devouring_plague.remains>=8)))))|r|r
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Use Items]|r
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 12662]
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r [Item 13444]
@@ -21118,9 +21118,10 @@ options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0009	|cFFFFD1009
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 8092
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1309595
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 14751
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 15407 - |cFFFFD100|cffffd100((action.inner_focus.known&prev.1.inner_focus)||(!action.inner_focus.known))|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 15407
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 585 - |cFFFFD100|cffffd100!action.mind_flay.known|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 10797 - |cFFFFD100|cffffd100settings.prefer_starshards&cooldown.mind_blast.remains>=4|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 15407 - |cFFFFD100|cffffd100((action.inner_focus.known&prev.1.inner_focus)||(!action.inner_focus.known))|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 15407
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 585 - |cFFFFD100|cffffd100!action.mind_flay.known|r|r
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	name	Action Name
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
@@ -21302,6 +21303,10 @@ options.packs.shadow.core.package	values.Shadow (wowsims.com)	|W|T136207:0::::64
 options.packs.shadow.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.shadow.core.potion	name	Potion
 options.packs.shadow.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.shadow.core.prefHeader	name	|W|T136207:0::::64:64:4:60:4:60|t Shadow|w Preferences
+options.packs.shadow.core.prefSpacer	name	\032
+options.packs.shadow.core.prefer_starshards	desc	Shadow only, and only when you know Starshards (the Night Elf racial). When enabled, the priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Off: the priority never shows Starshards.
+options.packs.shadow.core.prefer_starshards	name	Prefer Starshards
 options.packs.shadow.performance	name	Performance
 options.packs.shadow.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.shadow.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
