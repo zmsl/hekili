@@ -1864,7 +1864,7 @@ function VS.Power(powerType, now)
 end
 
 --- (stepped-decay design §3.3) The time of a power type's last stepped decay quantum, the anchor of the sim's
---- `__decay` entry (Engine/Schema/Spec.lua): 0 while its decay is inactive or continuous, or the type untracked. Allocates nothing.
+--- `__decay` entry (Engine/Schema/Spec/Regen.lua): 0 while its decay is inactive or continuous, or the type untracked. Allocates nothing.
 function VS.DecayAnchor(powerType)
     local r = R.slotOf[powerType]
     local n = r and R.decayNext[r] or 0

@@ -1,5 +1,5 @@
 -- Hekili_Shared/Races/NightElf.lua
--- `all` (Engine/Schema/Spec.lua) no longer registers this racial: the stock entry named below is what it used to register.
+-- `all` (Engine/Schema/Spec/All.lua) no longer registers this racial: the stock entry named below is what it used to register.
 -- The Night Elf's Forever racials (DB2 build 70707), for every class: Elune's Light (1259799: +10% critical strike
 -- chance with spells and attacks, aura 290 base 10, for 15 s; 180 s, off the GCD) and Shadowmeld, which replaces
 -- `all`'s stock entry (58984, absent on Forever): 20580, no cooldown of its own but a 10 s category recovery (871),

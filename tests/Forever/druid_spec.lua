@@ -805,7 +805,7 @@ describe("Forever Druid", function()
             return e
         end
 
-        it("declares its bleeds missable, which core drops on a miss (Engine/Schema/Spec.lua)", function()
+        it("declares its bleeds missable, which core drops on a miss (Engine/Schema/Spec/Abilities.lua)", function()
             assert.are.same({ true, true, "pounce_bleed" }, {
                 w.abilities.rake.missable,
                 w.abilities.rip.missable,

@@ -1,7 +1,9 @@
 -- Engine/Schema/Spec.lua
--- The spec engine (was Classes.lua): the spec mixin and its Register* API, the shared `all` spec and the keys core reads
--- by name, and SpecializationChanged's merge. Game content shared by every class lives in Hekili_Shared/Shared/*.lua
--- (registered through Engine/Schema/Shared.lua) and the race packs.
+-- The spec engine (was Classes.lua): the spec mixin (ns.SpecMixin) and its small Register* methods. The rest of the spec
+-- API is in Engine/Schema/Spec/: resources (Regen), auras and powers (Auras), abilities (Abilities), spec records (Kits),
+-- the shared `all` spec and the keys core reads by name (All), the built-in packs (Packs) and SpecializationChanged's
+-- merge (Activation). Game content shared by every class lives in Hekili_Shared/Shared/*.lua (registered through
+-- Engine/Schema/Shared.lua) and the race packs.
 
 local addon, ns = ...
 local L = ns.L

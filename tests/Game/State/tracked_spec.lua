@@ -93,7 +93,7 @@ describe("the tracked set", function()
             return build(def, t)
         end
         h.Class.gear = {
-            idol = { 900001, [900001] = true }, -- RegisterGear's shape (Spec.lua:792-796)
+            idol = { 900001, [900001] = true }, -- RegisterGear's shape (Engine/Schema/Spec.lua)
             set = { 900011, 900012, [900011] = true, [900012] = true },
         }
         h.Class.setBonuses = { set_5pc = 900021 }
@@ -271,24 +271,27 @@ describe("the tracked set", function()
         assert.are.equal(1, #errors)
     end)
 
-    it("skips the sim's own generated entries (`__decay`, `__taken`: Engine/Schema/Spec.lua's) in the walk", function()
-        local model = h.Class.resources.rage.state.regenModel
-        model.__decay = { resource = "rage", interval = 1 }
-        model.__taken = { resource = "rage", interval = 1 }
-        model.regen_aura_a = { aura = "regen_aura_a", interval = 1, value = 1 }
-        h.Class.auras.regen_aura_a = { key = "regen_aura_a", id = 1021, duration = 10 }
-        local got
-        local build = I.Build
-        I.Build = function(def, t)
-            got = def
-            return build(def, t)
+    it(
+        "skips the sim's own generated entries (`__decay`, `__taken`: Engine/Schema/Spec/Regen.lua's) in the walk",
+        function()
+            local model = h.Class.resources.rage.state.regenModel
+            model.__decay = { resource = "rage", interval = 1 }
+            model.__taken = { resource = "rage", interval = 1 }
+            model.regen_aura_a = { aura = "regen_aura_a", interval = 1, value = 1 }
+            h.Class.auras.regen_aura_a = { key = "regen_aura_a", id = 1021, duration = 10 }
+            local got
+            local build = I.Build
+            I.Build = function(def, t)
+                got = def
+                return build(def, t)
+            end
+            ns.BuildTracked()
+            I.Build = build
+            assert.are.same({ model.regen_aura_a }, got.resources[1].auraRegen) -- the two names are no regen entries
+            assert.are.equal(1, I.res.auraRegen.n)
+            model.__decay, model.__taken, model.regen_aura_a = nil, nil, nil
         end
-        ns.BuildTracked()
-        I.Build = build
-        assert.are.same({ model.regen_aura_a }, got.resources[1].auraRegen) -- the two names are no regen entries
-        assert.are.equal(1, I.res.auraRegen.n)
-        model.__decay, model.__taken, model.regen_aura_a = nil, nil, nil
-    end)
+    )
 
     it("forwards a regenerating resource's rest as a flag and a swing entry's `aura` as its gate", function()
         local got

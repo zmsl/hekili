@@ -30,7 +30,22 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - root: `Hekili.toc`, `Hekili.lua` (the addon object), `embeds.xml`;
   - `Engine/Sim/`: upstream's simulation (`Core`, `State`, `Scripts`, `Events`, `Targets`, `Constants`, `Utils`);
   - `Engine/Schema/`: the class/race/shared registration API (`Spec`, `Races`, `Shared`, `Threat`), the engine core the
-    boundary spec scans;
+    boundary spec scans. `Spec.lua` is the spec API's head and the files of `Spec/` add to it (load order matters: all
+    of `Spec/` is Spec.lua's slot in `Hekili.toc`, and `Spec/All.lua` builds spec 0 at load and copies the mixin then, so
+    every file that adds mixin methods loads before it):
+    - `Trees.lua`: talent-tree arithmetic, spec ids, migration and share keys (pure);
+    - `Selectors.lua`: the active-spec and pack pick: selectors, precedence, `PickSpec` (pure);
+    - `Tracked.lua`: the build's def for the belief (`Build(def)`);
+    - `Spec.lua`: the mixin table (`ns.SpecMixin`), the small Register* methods (talents, selectors, packs, windows,
+      reactions, options, state expressions, hooks, pets, totems, settings), `ns.SCHOOL`, `specTemplate`, `ns.callHook`;
+    - `Spec/Regen.lua`: RegisterResource and the sim's generated regen entries;
+    - `Spec/Auras.lua`: RegisterAura(s), RegisterPower(s);
+    - `Spec/Abilities.lua`: RegisterAbility(ies), missable DoTs;
+    - `Spec/Kits.lua`: spec records: `NewClass` (the class kit), `NewSpecialization` (spec 0), `GetSpecialization`;
+    - `Spec/All.lua`: spec 0 (`all`): the engine keys core reads by name;
+    - `Spec/Packs.lua`: built-in packs into the profile: `DefaultPackage`, `RestoreDefaults`, `RestoreDefault`;
+    - `Spec/Activation.lua`: the spec switch: `SpecializationChanged`'s merge, spec choice, the login/zone events;
+    - `Races.lua`, `Shared.lua`, `Threat.lua`: race packs, shared content, threat;
   - `UI/`: the display core and editor widgets (`UI`, `Formatting`, `MultilineEditor`, `PopupSlider`), the display
     style registry (`Styles`), the shared "what to show" (`Resolve`), the styles themselves (`Styles/Classic`,
     `Styles/Timeline`) and the Modern layer (`Truth`, the only reader of `Facade.Display`); architecture §7;

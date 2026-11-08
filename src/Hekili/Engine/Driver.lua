@@ -90,7 +90,7 @@ ns.EngineFrame = CreateFrame("Frame", "HekiliEngine")
 ns.EngineFrame.refreshTimer = 1
 
 -- One engine coroutine, reused: it yields DONE after each Update (a new coroutine per Update cost ~9 KB). `parked`:
--- it waits at DONE; an error kills it and a drop mid-Update (Snapshot.lua, Spec.lua) abandons it, so either recreates.
+-- it waits at DONE; an error kills it and a drop mid-Update (Snapshot.lua, Spec/Activation.lua) abandons it, so either recreates.
 local DONE = {}
 local engineThread, parked
 local function engineLoop()

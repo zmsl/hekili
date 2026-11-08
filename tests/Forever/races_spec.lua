@@ -88,7 +88,7 @@ describe("race packs", function()
         function all:RegisterAura(key, def)
             register(self.auras, key, def)
         end
-        -- Engine/Schema/Spec.lua sets class.file before any race file runs
+        -- Engine/Schema/Spec/All.lua sets class.file before any race file runs
         hekili = { State = state, Class = { specs = { [0] = all }, abilities = {}, file = class or "WARRIOR" } }
         _G.Hekili = hekili
         ns = {}

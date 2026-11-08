@@ -377,10 +377,14 @@ describe("shared content", function()
     )
 
     it("leaves each key `all` gave up registered by its class or race file", function()
-        local spec = read("src/Hekili/Engine/Schema/Spec.lua")
         for k, owner in pairs(OWNERS) do
             assert.is_true(names(read("src/" .. owner), k), owner .. ": " .. k)
-            assert.is_false(names(spec, k), "Engine/Schema/Spec.lua: " .. k)
+            for _, file in ipairs({ "Spec.lua", "Spec/All.lua" }) do -- `all` is Spec/All.lua since the split
+                assert.is_false(
+                    names(read("src/Hekili/Engine/Schema/" .. file), k),
+                    "Engine/Schema/" .. file .. ": " .. k
+                )
+            end
         end
     end)
 

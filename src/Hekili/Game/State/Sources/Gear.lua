@@ -15,7 +15,7 @@ local Obs = VS.Obs
 local Plain, Direct, Note = S.Plain, S.Direct, S.Note
 local G = I.gear
 
-I.GEAR_DELAY = 1 -- the core's 1 s (Events.lua QueueUpdate, Spec.lua CheckSpellsAndGear)
+I.GEAR_DELAY = 1 -- the core's 1 s (Events.lua QueueUpdate, Spec/Activation.lua CheckSpellsAndGear)
 local dueAt = 0 -- the pending read's time; 0 none
 
 -- 1 equipped, 0 not, nil a secret answer (the key keeps its value). Allocates nothing.

@@ -1,5 +1,5 @@
 -- tests/Game/harness/regen_entries_spec.lua (border batch 2 Part C, E3): the sim's generated regen entries are the
--- engine's own, built by RegisterResource (Engine/Schema/Spec.lua) from the meta (`__decay`: the stepped
+-- engine's own, built by RegisterResource (Engine/Schema/Spec/Regen.lua) from the meta (`__decay`: the stepped
 -- out-of-combat decay, stepped-decay design §3.3) and from the main hand's `taken` (`__taken`: rage from hits on the
 -- player, tank design §1.2.5). Both read the reset's stored regen tail (decay_anchor, taken_rate), never the belief.
 local headless = require("Game.harness.headless")

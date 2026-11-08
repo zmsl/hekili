@@ -132,7 +132,7 @@ describe("Forever content through the real Engine/Schema/Spec.lua", function()
                         end
                         for _, k in ipairs(keys) do
                             local ok, err = pcall(function()
-                                local v = a[k] -- funcs[k]() through Spec.lua's __index; a protected field is the function
+                                local v = a[k] -- funcs[k]() through Spec/Abilities.lua's __index; a protected field is the function
                                 if type(v) == "function" then
                                     v()
                                 end
@@ -149,7 +149,7 @@ describe("Forever content through the real Engine/Schema/Spec.lua", function()
                 it("runs every ability's meta functions under state", function()
                     local failed = {}
                     for _, a in ipairs(abilities(env)) do
-                        for k, f in pairs(rawget(a, "meta") or {}) do -- Spec.lua's RegisterAbility setfenv's them
+                        for k, f in pairs(rawget(a, "meta") or {}) do -- Spec/Abilities.lua's RegisterAbility setfenv's them
                             if type(f) == "function" then
                                 local ok, err = pcall(f)
                                 if not ok then
