@@ -2656,8 +2656,9 @@ describe("the wowsims APL translator's auto-attack clocks", function()
         assert.are.equal(
             table.concat({
                 "actions=arcane_shot,if=(ranged_remains<=0|ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))",
-                -- "Weave fits" (R17 refined): "Weave done" keeps its timing addends, the walk times drop alone
-                "actions+=/arcane_shot,if=(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))",
+                -- 0.7 re-pin (e5a9cd2a2d, acc6bcb5f8's weave): "Weave fits" no longer carries the walk and swing addends; the
+                -- variable keeps its ranged clock term alone
+                "actions+=/arcane_shot,if=ranged_remains>ranged_speed-0",
             }, "\n"),
             text
         )
