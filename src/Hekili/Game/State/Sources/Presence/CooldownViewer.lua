@@ -7,9 +7,9 @@
 -- moves its thing's counters (aura j, unit u: nUp, nNone, nStale) in O(1); the moved things' tUp/tNone are recomputed
 -- over the live slots (O(slots)); a reduced UP or DOWN change goes to onEdge. The seen rule (§2.2a, decision 115): a
 -- silent slot answers NONE only for an application it was seen holding (its record up, sSeen >= applied, its last held
--- unit). A target change makes target and NONE slots settle for SETTLE (§3.4). A raise in the sweep turns the leaf off
--- for the session (§3.5). Read, never write: rawget on items, on Blizzard frames only GetChildren, GetNumChildren and
--- IsVisible; no hooks of any kind (§3.3, §3.5).
+-- unit). A target change makes target and NONE slots settle for SETTLE: their target answers are stale (§3.4). A raise
+-- in the sweep turns the leaf off for the session (§3.5). Read, never write: rawget on items, on Blizzard frames only
+-- GetChildren, GetNumChildren and IsVisible; no hooks of any kind (§3.3, §3.5).
 -- The idea of reading the viewer's items for presence, the all-viewers presence bit, the hidden-viewer rule and the
 -- spell mapping are TellMeWhen's (Cybeloras), GPL-3.0; ideas only, no code copied.
 
@@ -309,7 +309,7 @@ local function sweep(t)
                     a = NONE
                 end
             end
-            if a ~= NOT and (not vis[sV[s]] or sSettle[s] > t) then
+            if a ~= NOT and (not vis[sV[s]] or u == 2 and sSettle[s] > t) then -- settling: target answers only (§2.2)
                 a = STALE
             end
         end

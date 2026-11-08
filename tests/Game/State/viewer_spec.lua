@@ -670,26 +670,39 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         function()
             local tItem = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
             tItem.unit = "target"
-            local pItem = ctl.ViewerItem("BuffIconCooldownViewer", 2, 502)
+            local p1 = ctl.ViewerItem("BuffIconCooldownViewer", 2, 502)
+            local p2 = ctl.ViewerItem("BuffIconCooldownViewer", 3, 502)
             start()
             up(C, "target")
-            ctl.ViewerAura(pItem, "player")
+            ctl.ViewerAura(p1, "player")
+            ctl.ViewerAura(p2, "player")
             sweep(2)
             rec(1, 1, 2)
-            ctl.ViewerClear(pItem)
+            ctl.ViewerClear(p1)
+            ctl.ViewerClear(p2)
             sweep(2.5)
             assert.are.same({ 1, 1, 0, 0, 2, 0 }, counts(2, 2))
-            assert.are.same({ 1, 0, 1, 0, 0, 2.5 }, counts(1, 1))
+            assert.are.same({ 2, 0, 2, 0, 0, 2.5 }, counts(1, 1))
+            local edges = {}
+            Q.onEdge = function(j, u, isUp)
+                edges[#edges + 1] = { j, u, isUp }
+            end
             ctl.now = 3
             ctl.Fire("PLAYER_TARGET_CHANGED") -- the target item still shows the old mob's light
             sweep(3.01)
             assert.are.same({ 0, 0, 0, 1, 0, 0 }, counts(2, 2))
-            assert.are.same({ 0, 0, 0, 1, 0, 0 }, counts(1, 1))
+            assert.are.same({ 2, 0, 2, 0, 0, 2.5 }, counts(1, 1)) -- a player answer does not settle (§2.2)
             assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2))
+            ctl.ViewerAura(p2, "target") -- a NONE slot lights for the new target inside the window: settling
+            sweep(3.03)
+            assert.are.same({ 0, 0, 0, 1, 0, 0 }, counts(1, 2))
+            assert.are.same({ 1, 0, 1, 0, 0, 2.5 }, counts(1, 1))
             sweep(3.06) -- settled: each a change at this poll
             assert.are.same({ 1, 1, 0, 0, 3.06, 0 }, counts(2, 2))
-            assert.are.same({ 1, 0, 1, 0, 0, 3.06 }, counts(1, 1))
+            assert.are.same({ 1, 1, 0, 0, 3.06, 0 }, counts(1, 2))
+            assert.are.same({ 1, 0, 1, 0, 0, 2.5 }, counts(1, 1))
             assert.are.equal(I.UP, I.presence.Presence(2, 2))
+            assert.are.same({ { 2, 2, true }, { 1, 2, true } }, edges) -- no second player DOWN edge
         end
     )
 end)
