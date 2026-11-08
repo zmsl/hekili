@@ -1,4 +1,4 @@
--- tests/Forever/loop_steady_spec.lua: the steady icons (Engine/Output.lua, the spec's `steadyIcons`) on our instance
+-- tests/Forever/loop_steady_spec.lua: the steady icons (Engine/Output.lua, always on for players) on our instance
 -- in the Fury L60 20-fight loop (#loop), reported, not gated: the engine's health only. Since CN8 they are on by
 -- default, so this run matches loop_warrior_fury_spec.lua's; the flicker design study measured it as hold3 (first-icon
 -- flicker 1.71 -> 0.93/min, presses, refusals and dps identical).

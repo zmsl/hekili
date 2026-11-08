@@ -57,7 +57,7 @@ describe("the Priest loop worlds", function()
             local p = C.resolve(key, H)
             return { p.cost, p.cast, p.cooldown, p.channel and p.channel.length or false }
         end
-        assert.are.same({ 175, 1.5, 5.5, false }, resolve("mind_blast")) -- Improved Mind Blast 5/5
+        assert.are.same({ 175, 1.5, 6, false }, resolve("mind_blast")) -- Improved Mind Blast 4/5 (the re-pin build)
         assert.are.same({ 102.5, 0, 0, 3 }, resolve("mind_flay"))
         assert.are.same({ 246.25, 0, 24, false }, resolve("devouring_plague"))
         assert.are.same({ 170, 0, 18, false }, resolve("shadow_word_death"))

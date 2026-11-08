@@ -789,7 +789,6 @@ spec:RegisterTalents({
     penance = { 1, 402174, 1 },
     renewed_hope = { 1, 425280, 5 },
     divine_aegis = { 1, 431622, 3 },
-    binding_heal = { 2, 401937, 1 },
     litany_of_light = { 2, 1317006, 2 },
     prayer_of_mending = { 2, 401859, 1 },
     improved_mind_flay = { 3, 1225139, 2 },
@@ -798,16 +797,26 @@ spec:RegisterTalents({
     early_demise = { 3, 1310076, 2 },
 })
 
+-- Shadow's Starshards (the Night Elf racial): wowsims casts it when its expected damage per cast beats Mind Flay's, which
+-- this addon cannot compute (the translator has no spellExpectedDpet), so the player says it (owner 2026-11-07); the pack's
+-- `extra` line reads it. Off by default: the pack is wowsims's without that line.
+spec:RegisterSetting("prefer_starshards", false, {
+    type = "toggle",
+    name = L["Prefer Starshards"],
+    desc = L["Shadow only, and only when you know Starshards (the Night Elf racial). When enabled, the priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Off: the priority never shows Starshards."],
+    width = "full",
+}, "shadow")
+
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
 -- run it, never this block (tests/Forever/priest_spec.lua checks it matches). Each pack's .simc is generated from its
 -- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/priest_*.lua).
 spec:RegisterPack(
     "Shadow (wowsims.com)",
-    20261103000,
-    [[Hekili:vAv3oUjpq0NL9M9lrFr83UTnnQuPw1w1TQTQQSxBWbBcUbSr2MnksR4zV2MSedbssVjXypZ5mEM5maWh8iicbLyWpd8cETVV3DEEEGi5(kmiQcMUfUrTGclv)gLdrSDnjZ2X2jiLcNuw5CTv7lyqKgP11Kc5duW6rbvuHtbr)63p85OhxjmGbIYjieU1dSiDcsw1KiZXnjh2ZnJXXpH5njiCgSUq2K8HF99Me12njDautC1mkCR4eSq6IQeU6aejCLQNj0noMhD(JGrNVqrbhsffQ4gPwZ0usenjqeIr)p1IT49cNMKpbLWvJekZ(XdpQajxkReRCD3qK51R1rV7atNRWufX4GL3hK5bFZY7roQSiNLrkuzzyQKWOcNkow58AOmSnvTPgYrlizH3SUolZXAtN6QBB9Q3UBPSD0MVDcE)FOBjHIIxxafYUZpWIkglhsIEpfhDMQaab5BJfWuojJKI1oucPqNc27cdu1ABtXf1uSiUGSjxUOwGJzzzXBsrH(A3MjjL4W7Ew)37d9x698HBITBTxL59qTMJ3cViEbhXZ4WiiPHGiXLI(G172IlzusAmxfstBvj8pmESopexX0BoTPT514DmokUcsOlYyP1IWatMhHTY9hTzyfa)eRMRAIJRkGBQXJbXqBgaXiDbdInegkZTpKqPyESHQb5(w69pb)Sc4EtHz2HcHfeTvJBvDMp54BFW8NNDZuMpF(OC07kuQkOMeXbq6S6frbisjefQJgmIQGiKcZmX2blQL)0mJetHRlWiWhFrGQgN1joarkHGeZjqq0ichGuXYeG0xizdupbLgI7gaHv(xhKDqARCSb8fPHLw7mInnJ3FTmA0wNJRalUSfIAwE1vYsNqv70RVsNSLUA)EZv63jIzTZlh4SvvFAr7WgMJhcImT16Mdf4V9IGpIC2(I2)W(G77nr)3XzagZoFVU1qbJ1dBQNkzAPH7clFdcd7P7fwAbBVMQ)TriNDgIH9H93NYU2QH9ND5e9uME1PXN2a0P2OUx)E5rkMxFp1mLl(g)ZnTPx12ewWAzoJdI(kElPGO(kMVC4Jumhd(7]]
+    20261107003,
+    [[Hekili:9EvxVnUnqWFl5fxB0ajzFFeFbNlqp0wCPO9qqvEMs0Iu2mwIuGKkgg4G(T3L0kYuYs2(AsAEiqM7YzxoA5mqOPOhqHeSMI(2SGzFC60GBccEhkuVRGIclWjBWRGh44C4)HRXeX2Q4XBfBvSCLxIiFIjRDzcmXG0YswM(ooAzVGQkOjOW7)N7(9WhUvzbdfUMri097GQsgOi3wfRxtRIRxZpviPprLvXeAkUmtxf)R3)xvXWYvXnauY8nvu5xizuL2NuO8nnir5RHFZ4R8S)07rLGp5AOesmxLb9nbEwykjtvfJjeb)NGh2q3P8QI)nSgFBpTY4)(UhaqwR1fQB99xX0RlxA6E)oPobWe6y6hWFkHmdpJKM4bSOuKYYawgNOzcUYRqsHnVeRxSNQwvILKRzPlUAzzAQNZIELfJ2VRwRUHl2YR(ZJW7Nx4NZ4KOLzyLUjEDvGEmVBrmRb1OjvaacwUjsHtKSuwc1SHCmh7Lj(8IzbbbUPsZk5uvugB1A91LkAKinnAvczXuZ2gx34UzTVZhngsYtsZXmU6Zlcgn(QwhYOTcjjQaIUp)VtOo9St0Ai(LftdMCaec9jrPegcIkYWRkP1GmE8jJpQUihf1TiF)myKiezql2t8guMpX8xlASus3GpbbAJ)wrDZ)FG5M)2qCggJPP5Q2CxRPzAUGZsIKWm4WzLJFuiJmZ5rfcZIdNAxI86ursPAXm7nRHi7o3W6Ce7dIJOH2q0ZT8o9gHI1RDdY4CQmYwQoJA7lF7tPglb0KeLPPuuTrt1k0KcGCi6HrNdDu9qtZBuNinVlF)KJonPz4D2P(NNuCA46HeO8p5n1namxD1qPpP)A06yMdJpwA39uyY6zjwuiiRRGqDm8YykTY6WU3McE8BwhxkhVmJsqF5z5EWCSrQffcYQAQKHrH9idJ0qvgaK2YYUa1sE2aX76aHZBBtt2aPRWSlGVIc3Nx(5suUF5cqgP7xnjidh)(lLJTA39YUVev9ZZRxGS(lNwN)kZQF4cz1gHFZM(4fUjxRaZ(U5c33rMdMnpVZMDUxpSjqxjHdbrHwHlZ1Fa8pDwW7XEW9G2oyBWNgmGcZbDABANwnZXKXMDxzRHithv6M2AQfHUQwn1RXSXLi(pzjDopjBF09MDl6Xyn06Y8pMz1jDRSvV7nGJRUjRUJ8nCLXpR18s)(AiZR4WMpB48Mx2p7yi3RZ(LkNYxR1uNTTWL61cjk8R0nSmg81x)r9hxzdJ(3d]]
 )
 spec:RegisterPack(
     "Smite (wowsims.com)",
-    20261103000,
-    [[Hekili:LsvyVPnpq4Fl7lBfnusiTRfHwqAtBtRvBvvZ9ZoXeFM4xc2w2ofXxYV93ZPuGqHUUnHeY6UN755YDp20r07PeoZd0BttsVC0OKZtssOe)Adqjgw5c2C8GITe)NSu6H2IZwPx5KlDrL6LdcGwxRz8arZAK1(Rv0zhLtNbkPK7(11FLC)eU0vkn1sfYBLKZHhRcCLhxNjTf(km4MyXcTfEaSTfCqWAQ9TfF6UF0wGHBlEQ(gzCqtxSXkbNpMBCXHwK7IDbi5EmQunpQly0)50QbdrDSmLRg7FoEwh0v6AlyCUw9o8WcyTlQT4lmpBYr6NZ(513JKu59g3K445sFvZSWNq8bqhGCITnKo(Iurc7QXxWJWPPvlK14qHv6LALlYybS4zmFMrVcS5sLOXHzg24GCTqKpVKNnQ9Mn4ZCvATVFYHsr2sMIfzk9516pMnkzl(3NfxPRxNlKwyOqx24Ysd4p7nCywJqeTnBuJ5T9yjnzW)ontpknk9dSUY3vRPXA0UUYdGFaYbfSe3RtZoVhbUkgxVkFL2YZnmPA)25PU5qmiR7tHbumvjeQ4XGrBIezbgFDp1cgPNnGttEgM2BOeCRhwDhCVOw68UU7HpALXJ32DVe1CwnWPFMs2BFgsUXDG3PcBBkP0IkyLmk5G9m1JIDax7a)B3oDl5DQTfgL0nudCJcC(FVatFvcCXbc0dEWR0tZxPNjq8hozN)coL9N(9t2VRV8eD9gV0(QDmxwGIRobfDoQtU2t7w7JFXA94pY23w(tSC9FgQJiKkwJVsBPKVdlK1s8zWVT5vUU00)p]]
+    20261107001,
+    [[Hekili:LsvyVnnmq0Fl8fyvuLKMX2GkYKabi2emnH3NDIJ9LgZsTTSDwv)s(TZ5SSUMs7yaQsvw39U37YDpB6m6nuIG5b6vPjPNoBwYzjjZOe)Adqjgg)w2c8GITe)NSu6HUIJwPx5KlDrC9YjbqRB0mrGOYwzJ)cfTCVC6maNsU(hx8zYnZfshxAAKkK3APqa3xf447xN5Df(Am4qS4kTfUdSDfcOI1247k(W1FRRad3v8q9TY4GMUyJvcoFSW4IdTOWf7cqY9yuPAruFWOF60QjtrDSmLRb7FbEwh0v66kycHw9k8WTWAxuxXNyE2890ph99lUbjP27nU5XXlK(62YWNq8oqNGCITnCc7DCrklvuXJWPPvxjBWHcJ7LALlYybS4sMpZOxb2CPQQ1HzM26GCDvv(cUiBw3Ld4ZC1ATFCYPYQSLmflYW95n63Nnlzd(xNfxRBwNxjTW0knV1LLgWF0leqzBvv0MSrTMxoIL0Kj))0C(EPrPVJ1x(J1AATgTRV8a47GCqblX965zhpIaxntOxLVsBf5gMuTD78q3SlgK1TPWakMIdHkUpy0qKilWeRhPwWi9Bd40KFdt3LucU1dRUDUx0iDEx)9W7TY4XR6VxIAw2ac6hPKT2NHKdUd8ovyBtjClQGvYOKD2Zupk2oC9i4)42PFj)OABGrj9d1a3Oah)VlW5plbEZocmcEWRmsZNPNjq8jhSZFcNY2t)Xjh31NEGUEWlTTA7ZLfO4SdqrVJ6GR90(1(BFYA94pYM3w(BSCJFgQNiKkwRVwBPKVc3kBK4ZGFz4vU(00F9]]
 )

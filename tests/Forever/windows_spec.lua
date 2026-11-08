@@ -260,6 +260,41 @@ describe("the core's windows", function()
         assert.are.same({ 0, 0 }, { S.window.w.remains, S.window.w.elapsed })
     end)
 
+    -- the belief's reader (Families/Now.lua window.<name>) answers what the sim's state.window does at the same time
+    it("the belief's window.<name> reader matches the sim's up, down, remains, elapsed and step", function()
+        local on = false
+        core({
+            w = {
+                duration = 6,
+                evaluator = function()
+                    return on
+                end,
+            },
+        })
+        on = true
+        assert(headless.cycle(H, H.ctl.now + 0.2)) -- the belief's Drain opens it
+        local I = H.ns.VirtualStateInternal
+        local r = I.nowCtx.window.w
+        local function same()
+            I.NowAt(S.query_time)
+            local sim = S.window.w
+            assert.are.same(
+                { sim.up, sim.down, sim.step },
+                { r.up, r.down, r.step },
+                "at query_time " .. tostring(S.query_time)
+            )
+            near(sim.remains, r.remains)
+            near(sim.elapsed, r.elapsed)
+            return sim.up
+        end
+        S.reset("Primary")
+        assert.is_true(same())
+        S.advance(2)
+        assert.is_true(same())
+        S.advance(4.5)
+        assert.is_false(same())
+    end)
+
     it("restarts with refresh within max_refresh, and duration= overrides the registered one", function()
         core({ w = { duration = 6, max_refresh = 1 }, d = { duration = 6 } })
         S.reset("Primary")

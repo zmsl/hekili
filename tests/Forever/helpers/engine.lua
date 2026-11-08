@@ -145,6 +145,24 @@ local function newState(class, race)
     s.stat = function()
         return 0
     end
+    -- window.<name> (State.lua's and the belief's reader): every window down
+    local down = {
+        up = false,
+        down = true,
+        remains = 0,
+        elapsed = 0,
+        step = 0,
+        next = setmetatable({}, {
+            __index = function()
+                return false
+            end,
+        }),
+    }
+    s.window = setmetatable({}, {
+        __index = function()
+            return down
+        end,
+    })
     return setmetatable(s, {
         __index = function(_, k)
             if class.stateExprs[k] then

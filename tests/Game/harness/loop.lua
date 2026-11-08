@@ -64,9 +64,8 @@ M.PULL = 3 -- the world starts this long before the pull, the target selected (p
 M.GAP = 30 -- out of combat between two fights on one boot (consecutive pulls)
 -- The display-side hold experiment (flicker.hold) on our instance's shown queue: o.hold, else this switch (off)
 M.HOLD = os.getenv("HEKILI_LOOP_HOLD") == "1"
--- The shipped steady icons (Engine/Output.lua, the spec's steadyIcons) on our instance: o.steady, else this switch
--- (1, the shipped default since CN8, so the gates and make accuracy measure what players see; the oracle shadow stays
--- plain). o.steady is true (hold 1) or the updates to hold (1 to 3); HEKILI_LOOP_STEADY=N sets the switch to N, 0 off.
+-- The shipped steady icons (Engine/Output.lua, always on for players) on our instance: o.steady, else this switch
+-- (1, what players see, so the gates and make accuracy measure it; the oracle shadow stays plain). o.steady is true (hold 1) or the updates to hold (1 to 3); HEKILI_LOOP_STEADY=N sets the switch to N, 0 off.
 M.STEADY = tonumber(os.getenv("HEKILI_LOOP_STEADY")) or os.getenv("HEKILI_LOOP_HOLD") == "3" or 1
 -- The oracle's facade rows answered by the client (§4's override): the target's health, and the debuff row Hekili's
 -- aura scan reads (raw since VirtualState counted a modelled stack on top of a plain read that arrived before the
@@ -319,12 +318,9 @@ function M.run(L, seed, o, drivers)
     local steps = {}
     local arm = ab.ARMS[ab.arm()]
     for i, d in ipairs(drivers) do
-        local id = d.H.Hekili.State.spec.id
-        local sp = id and d.H.Hekili.DB.profile.specs[id]
-        if sp then
-            sp.steadyIcons = steady and not d.plain -- the oracle shadow never holds
-            sp.steadyHold = type(steady) == "number" and steady or 1
-        end
+        local out = d.H.ns.Output -- the steady icons (no player setting): this instance's measurement arm
+        out.steady = (steady and not d.plain) and true or false -- the oracle shadow never holds
+        out.hold = type(steady) == "number" and steady or 1
         -- Movement ON in a replay (wowsims's rotation moves: tested as it runs), OFF in a loop and ws.live
         d.H.Hekili.DB.profile.toggles.movement.value = (R ~= nil)
         -- the A/B arm's experimental toggles (providers decision 82), applied out of combat as the option does

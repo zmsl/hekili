@@ -64,11 +64,19 @@ local REPLAY = {
 -- poll off Fire Blast's end and at the frozen polls the GCD has 0.3 s or more left, where the engine keeps the frozen
 -- pick; wowsims's casts line the GCD's end up with the cooldown's, 0.1 s after the last frozen poll.
 -- Leveling (R22): Arcane L40 6.4 s and Frostfire L10 6.6 s took recipe `leveling` fillers (the recipes' headers).
+-- 0.7 re-pin e5a9cd2a2d + CN8 (lane mage, R6, measured on the new logs, steady icons on): Arcane 0.96 -> 0.95 (0.954, 63 of
+-- 66; the Arcane Concentration channel-start roll moved the random stream and the logs, 53b0b6a80e: the remaining
+-- misses are arcane_blast / arcane_missiles / arcane_wrath -> evocation at its cooldown end, one each); Fire 0.97 ->
+-- 0.96 (0.963, 78 of 81; the same cause: Fire takes Arcane Concentration 5/5, Clearcasting lines 20 -> 25, top
+-- arcane_missiles -> arcane_blast, fireball -> scorch, pyroblast -> scorch, one each); Frostfire 0.96 kept (0.964, 55
+-- of 57; fire_blast -> frostfire_bolt, fire_blast -> scorch). Flicker ceilings 1.4 / 0.7 -> 0.34 (measured 0.33, S:
+-- steady icons on by default; the line rounds up) for Arcane and Fire, Frostfire 0. LIVE60 unchanged (Arcane 10.0,
+-- Fire 6.2, Frostfire 11.8: re-measured, the same).
 local PACKS = {
-    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0, 1.4 },
+    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.95, 10.0, 0.34 },
     -- LIVE60 6.0 -> 6.2 (CN8 D2): the same dry-pool wait for Scorch (96.4-102.4 s, mana 49-153), one poll longer on
     -- the re-timed fight
-    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.97, 6.2, 0.7 },
+    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.96, 6.2, 0.34 },
     { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8, 0 },
 }
 

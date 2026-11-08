@@ -120,7 +120,7 @@
             },
             "distanceFromTarget":20,
             "name":"Shadow",
-            "talentsString":"00530320103--50052201251302051",
+            "talentsString":"00530300103-3-50042201251302051",
             "profession2":"Tailoring",
             "buffs":{
               "greaterBlessingOfWisdom":2,
@@ -315,8 +315,7 @@
                         "spellId":19305
                       }
                     }
-                  },
-                  "hide":true
+                  }
                 },{
                   "action":{
                     "strictSequence":{
@@ -480,38 +479,74 @@
                 },{
                   "name":"Night Elf",
                   "value":{
-                    "or":{
+                    "and":{
                       "vals":[{
-                          "cmp":{
-                            "op":"OpEq",
-                            "rhs":{
-                              "const":{
-                                "val":"3s"
-                              }
-                            },
-                            "lhs":{
-                              "currentTime":{
-                              }
-                            }
-                          }
-                        },{
-                          "cmp":{
-                            "op":"OpGe",
-                            "rhs":{
-                              "const":{
-                                "val":"180s"
-                              }
-                            },
-                            "lhs":{
-                              "currentTime":{
-                              }
-                            }
-                          }
-                        },{
                           "spellIsKnown":{
                             "spellId":{
                               "spellId":1259799
                             }
+                          }
+                        },{
+                          "and":{
+                            "vals":[{
+                                "gcdIsReady":{
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGe",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"10s"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "dotRemainingTime":{
+                                      "spellId":{
+                                        "spellId":10894,
+                                        "rank":8
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "or":{
+                                  "vals":[{
+                                      "cmp":{
+                                        "op":"OpGe",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"10s"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "dotRemainingTime":{
+                                            "spellId":{
+                                              "spellId":19280,
+                                              "rank":6
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "cmp":{
+                                        "op":"OpGe",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"8s"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "spellTimeToReady":{
+                                            "spellId":{
+                                              "spellId":19280,
+                                              "rank":6
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }]
+                                }
+                              }]
                           }
                         }]
                     }
@@ -519,38 +554,74 @@
                 },{
                   "name":"Gnome",
                   "value":{
-                    "or":{
+                    "and":{
                       "vals":[{
-                          "cmp":{
-                            "op":"OpEq",
-                            "rhs":{
-                              "const":{
-                                "val":"3s"
-                              }
-                            },
-                            "lhs":{
-                              "currentTime":{
-                              }
-                            }
-                          }
-                        },{
-                          "cmp":{
-                            "op":"OpGe",
-                            "rhs":{
-                              "const":{
-                                "val":"120s"
-                              }
-                            },
-                            "lhs":{
-                              "currentTime":{
-                              }
-                            }
-                          }
-                        },{
                           "spellIsKnown":{
                             "spellId":{
                               "spellId":1259823
                             }
+                          }
+                        },{
+                          "and":{
+                            "vals":[{
+                                "gcdIsReady":{
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGe",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"8s"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "dotRemainingTime":{
+                                      "spellId":{
+                                        "spellId":10894,
+                                        "rank":8
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "or":{
+                                  "vals":[{
+                                      "cmp":{
+                                        "op":"OpGe",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"8s"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "dotRemainingTime":{
+                                            "spellId":{
+                                              "spellId":19280,
+                                              "rank":6
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "cmp":{
+                                        "op":"OpGe",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"8s"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "spellTimeToReady":{
+                                            "spellId":{
+                                              "spellId":19280,
+                                              "rank":6
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }]
+                                }
+                              }]
                           }
                         }]
                     }

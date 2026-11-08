@@ -560,17 +560,18 @@ button draws, 0 for none), `b.isFocus`, `b.Cooldown`, `b.round` (and `b.timersHi
 6. Core calls Truth through `ns.UI.Truth.<member>` at each call (no local cached at load), so the TOC order does not
    matter and a test can count the calls.
 
-**Steady icons (on by default since CN8, owner 2026-11-07).** With the active specialization's `steadyIcons` on (its
-Performance tab), `Output.Publish` holds a slot when its shown icon and the new one are both countdowns (due more than 0.05 s
-out) with different names and the raw set has had the new one in that slot for no more than `hold` publishes (the
-`steadyHold` slider, 1 to 3 updates, default 1; each update is about 0.1 to 0.2 s): an icon the engine keeps shows
+**Steady icons (always on, no setting; owner 2026-11-07).** `Output.Publish` holds a slot when its shown icon and
+the new one are both countdowns (due more than 0.05 s
+out) with different names and the raw set has had the new one in that slot for no more than `Output.hold` publishes
+(1 for players; each update is about 0.1 to 0.2 s): an icon the engine keeps shows
 at most `hold` publishes late. The shown record table moves into the new set and the new one into the old, so the
 hold costs no copy and no allocation (`streak[i]` is a preallocated counter), and `out.held[i]` says which slots are
 held (the snapshot marks them `(held)`). A ready icon on either side and the first publish after our own cast start
 or success, channel end or swing queue change (`Output.Acted`, from the engine's own cast and
 `CURRENT_SPELL_CAST_CHANGED` handlers in `Engine/Sim/Events.lua`) show at once, so
-what is pressable and when never changes. Core reads both settings once per update into `Output.steady` and
-`Output.hold`; styles see only the held records and need nothing. Known limits: a held cell keeps the previous
+what is pressable and when never changes. `Output.steady` (true) and `Output.hold` (1) are module fields no profile
+reads (an old profile's saved `steadyIcons`/`steadyHold` are ignored); only the headless harness sets them per instance
+(its measurement arms). Styles see only the held records and need nothing. Known limits: a held cell keeps the previous
 publish's `time` (one poll off in Timeline's out-of-combat pinned mode), and for some publishes the same icon can
 show in two slots when a held slot's icon is the next slot's new icon.
 

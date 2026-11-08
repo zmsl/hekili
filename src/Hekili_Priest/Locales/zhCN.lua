@@ -18,5 +18,7 @@ end
 L["Discipline"] = "戒律"
 L["Holy"] = "神圣"
 L["Shadow"] = "暗影"
+-- L["Prefer Starshards"] = ""
+-- L["Shadow only, and only when you know Starshards (the Night Elf racial). When enabled, the priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Off: the priority never shows Starshards."] = ""
 -- L["Shadow (wowsims.com)"] = ""
 -- L["Smite (wowsims.com)"] = ""

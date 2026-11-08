@@ -21,7 +21,7 @@ function M.content(level)
         talents = ws.header("warrior_fury").talents,
         learn = ws.learn("WARRIOR"),
         race = ws.race("warrior_fury"),
-        kit = { "berserker_rage" },
+        kit = { "berserker_rage", "reckless_swings" },
     })
 end
 

@@ -94,7 +94,7 @@
             },
             "race":"RaceOrc",
             "name":"Protection",
-            "talentsString":"35301003002-03-050530120301011351",
+            "talentsString":"05-05050005-150531120300001351",
             "profession2":"Blacksmithing",
             "rotation":{
               "type":"TypeAPL",
@@ -212,7 +212,7 @@
                         },
                         "castSpell":{
                           "spellId":{
-                            "spellId":2457
+                            "spellId":2458
                           }
                         }
                       }
@@ -225,7 +225,21 @@
                         },
                         "castSpell":{
                           "spellId":{
-                            "spellId":20662
+                            "spellId":1719
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "condition":{
+                          "isExecutePhase":{
+                            "threshold":"E20"
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":20662,
+                            "rank":5
                           }
                         }
                       }
@@ -556,6 +570,14 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
+                        "spellId":1329555
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
                         "otherId":"OtherActionResourcePotion"
                       }
                     }
@@ -597,7 +619,7 @@
                                   "auraIsInactive":{
                                     "includeReactionTime":true,
                                     "auraId":{
-                                      "spellId":5302
+                                      "spellId":25288
                                     }
                                   }
                                 },{
@@ -611,7 +633,8 @@
                                     "lhs":{
                                       "spellTimeToReady":{
                                         "spellId":{
-                                          "spellId":25288
+                                          "spellId":25288,
+                                          "rank":6
                                         }
                                       }
                                     }
@@ -691,7 +714,8 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":23925
+                        "spellId":25288,
+                        "rank":6
                       }
                     }
                   }
@@ -699,7 +723,8 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":23894
+                        "spellId":23925,
+                        "rank":4
                       }
                     }
                   }
@@ -707,7 +732,8 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":21553
+                        "spellId":23894,
+                        "rank":4
                       }
                     }
                   }
@@ -715,7 +741,8 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":25288
+                        "spellId":21553,
+                        "rank":4
                       }
                     }
                   }
@@ -769,7 +796,8 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":11556
+                        "spellId":11556,
+                        "rank":5
                       }
                     }
                   }
@@ -800,8 +828,7 @@
                                     "type":"CurrentTarget"
                                   },
                                   "auraId":{
-                                    "spellId":11581,
-                                    "rank":6
+                                    "spellId":11581
                                   }
                                 }
                               }
@@ -821,8 +848,26 @@
                     "condition":{
                       "and":{
                         "vals":[{
-                            "variableRef":{
-                              "name":"Battle Shout: No Raid Buff"
+                            "not":{
+                              "val":{
+                                "auraIsKnown":{
+                                  "auraId":{
+                                    "spellId":11551,
+                                    "tag":-1
+                                  }
+                                }
+                              }
+                            }
+                          },{
+                            "not":{
+                              "val":{
+                                "auraIsKnown":{
+                                  "auraId":{
+                                    "spellId":25289,
+                                    "tag":-1
+                                  }
+                                }
+                              }
                             }
                           },{
                             "cmp":{
@@ -835,7 +880,8 @@
                               "lhs":{
                                 "auraRemainingTime":{
                                   "auraId":{
-                                    "spellId":25289
+                                    "spellId":25289,
+                                    "rank":7
                                   }
                                 }
                               }
@@ -845,7 +891,8 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":25289
+                        "spellId":25289,
+                        "rank":7
                       }
                     }
                   }
@@ -860,8 +907,7 @@
                                 "type":"CurrentTarget"
                               },
                               "auraId":{
-                                "spellId":11574,
-                                "rank":7
+                                "spellId":11574
                               }
                             }
                           },{
@@ -958,7 +1004,48 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":11597
+                        "spellId":11597,
+                        "rank":5
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "cmp":{
+                              "op":"OpEq",
+                              "rhs":{
+                                "const":{
+                                  "val":"1"
+                                }
+                              },
+                              "lhs":{
+                                "numberTargets":{
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"20"
+                                }
+                              },
+                              "lhs":{
+                                "currentRage":{
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":25286,
+                        "tag":1
                       }
                     }
                   }
@@ -998,46 +1085,6 @@
                     "castSpell":{
                       "spellId":{
                         "spellId":20569,
-                        "tag":1
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "and":{
-                        "vals":[{
-                            "cmp":{
-                              "op":"OpEq",
-                              "rhs":{
-                                "const":{
-                                  "val":"1"
-                                }
-                              },
-                              "lhs":{
-                                "numberTargets":{
-                                }
-                              }
-                            }
-                          },{
-                            "cmp":{
-                              "op":"OpGe",
-                              "rhs":{
-                                "const":{
-                                  "val":"40"
-                                }
-                              },
-                              "lhs":{
-                                "currentRage":{
-                                }
-                              }
-                            }
-                          }]
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":25286,
                         "tag":1
                       }
                     }
@@ -1101,26 +1148,66 @@
                   "action":{
                     "castSpell":{
                       "spellId":{
-                        "spellId":25289
-                      }
-                    }
-                  },
-                  "doAtValue":{
-                    "const":{
-                      "val":"-1.5s"
-                    }
-                  }
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
                         "spellId":2687
                       }
                     }
                   },
                   "doAtValue":{
                     "const":{
-                      "val":"-1.5s"
+                      "val":"-6"
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":25289,
+                        "rank":7
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-5"
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":2457
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-4"
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":20230
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-1.5"
+                    }
+                  }
+                },{
+                  "action":{
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":71
+                      }
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-1"
                     }
                   }
                 },{
@@ -1138,31 +1225,6 @@
                   }
                 }],
               "valueVariables":[{
-                  "name":"Battle Shout: No Raid Buff",
-                  "value":{
-                    "not":{
-                      "val":{
-                        "or":{
-                          "vals":[{
-                              "auraIsKnown":{
-                                "auraId":{
-                                  "spellId":11551,
-                                  "tag":-1
-                                }
-                              }
-                            },{
-                              "auraIsKnown":{
-                                "auraId":{
-                                  "spellId":25289,
-                                  "tag":-1
-                                }
-                              }
-                            }]
-                        }
-                      }
-                    }
-                  }
-                },{
                   "name":"Delay Check",
                   "value":{
                     "and":{
@@ -1177,7 +1239,8 @@
                             "lhs":{
                               "spellTimeToReady":{
                                 "spellId":{
-                                  "spellId":23925
+                                  "spellId":23925,
+                                  "rank":4
                                 }
                               }
                             }

@@ -38,7 +38,7 @@ return {
         race = "RaceHuman",
         class = "ClassRogue",
         gear = "ui/specs/rogue/dps/gear_sets/p1_slowmh.gear.json",
-        talentsString = "005323101012-32030320201515231",
+        talentsString = "00530320201-3200132202012321551",
         specKey = "rogue",
         options = { classOptions = setmetatable({}, { __jsontype = "object" }) }, -- an empty message (dkjson: {} is [])
         profession1 = "Engineering",
@@ -54,13 +54,15 @@ return {
     focus = { garrote = 1, slice_and_dice = 1, rupture = 1 },
     leveling = {},
     -- Riposte (owner ruling R70, 2026-11-06: "add it to the apl and make it focus=1"): not from wowsims, which never plays it
-    -- (its fight has no parry on us). Off the global cooldown, so it leads the list; it is a reaction to a parry, a real
-    -- need (R41), and shows only in the 5 s window `buff.riposte_usable` models (Rogue.lua, the client's usability
-    -- answer), skipped for a Rogue without the talent. Tier 1 in the line itself, as Victory Rush.
+    -- (its fight has no parry on us; at 4b0030a44b the Combat SS build does not even take the talent). Off the global
+    -- cooldown, so it leads the list (anchored on Garrote, the first line left once upstream dropped its Ambush opener:
+    -- L143); it is a reaction to a parry, a real need (R41), and shows only in the 5 s `window.riposte` (Rogue.lua: the
+    -- client's usability answer, L138), which the ability's own `usable` reads, so the line carries the energy term only;
+    -- skipped for a Rogue without the talent. Tier 1 in the line itself, as Victory Rush.
     extra = {
         {
-            before = "ambush",
-            line = "riposte,use_off_gcd=1,focus=1,if=buff.riposte_usable.up&energy.lo>=action.riposte.cost",
+            before = "garrote",
+            line = "riposte,use_off_gcd=1,focus=1,if=energy.lo>=action.riposte.cost",
         },
     },
 }

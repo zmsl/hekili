@@ -841,8 +841,16 @@ describe("Forever Druid", function()
         }, yes)
     end)
 
+    it("declares Poised as a flat -10 cost modifier over the eight Feral abilities (one charge)", function()
+        local m = w.costMods[2]
+        assert.are.same(
+            { "poised", -10, 1, { 1082, 1822, 5221, 6785, 9005, 1079, 1328618, 8998 } },
+            { m.aura, m.flat, m.charges, m.spells }
+        )
+    end)
+
     it("declares Clearcasting as one cost modifier over the covered rank-1 IDs, and no `spend` reads it", function()
-        assert.are.equal(1, #w.costMods)
+        assert.are.equal(2, #w.costMods) -- Clearcasting, then Poised
         local m = w.costMods[1]
         assert.are.same({ "clearcasting", -1, 1, COVERED }, { m.aura, m.pct, m.charges, m.spells })
         local first = {}
@@ -1248,14 +1256,14 @@ describe("Forever Druid in VirtualState's now context", function()
     end)
 end)
 
--- R8: Feral (wowsims.com) opts into the Movement toggle; with it OFF its melee strikes wait for melee range.
+-- R8: Feral and Guardian (wowsims.com) opt into the Movement toggle; with it OFF their melee strikes wait for melee range.
 describe("Forever Druid Movement (R8)", function()
     local headless = require("Game.harness.headless")
     local dlw = require("Forever.helpers.druid_loop_world")
     local PACK = "Feral (wowsims.com)"
 
-    local function lines(key)
-        local f = assert(io.open("src/Hekili_Druid/APLs/" .. PACK .. ".simc"))
+    local function lines(key, pack)
+        local f = assert(io.open("src/Hekili_Druid/APLs/" .. (pack or PACK) .. ".simc"))
         local s = f:read("*a")
         f:close()
         local out = {}
@@ -1267,27 +1275,29 @@ describe("Forever Druid Movement (R8)", function()
 
     -- A Cat at `yd` yards from a level 60 target, in combat, energy full, the pack's Shred lines alone; returns a poll
     -- of the first icon with the toggle set.
-    local function world(yd)
-        local C = dlw.Feral
-        local H = headless.new({ character = C.character(), pack = PACK })
+    local function world(yd, C, pack, key, ptype)
+        C, pack, key, ptype = C or dlw.Feral, pack or PACK, key or "shred", ptype or 3
+        local H = headless.new({ character = C.character(), pack = pack })
         assert.are.same({}, H.loadErrors)
         H.ctl.level.target, H.ctl.distance.target = 60, yd
         H.Fire("PLAYER_TARGET_CHANGED")
         local t = H.ctl.now + 0.2
         assert(headless.cycle(H, t))
         local list = {}
-        for _, l in ipairs(lines("shred")) do
-            local parsed = H.Hekili:ParseActionList(l)
-            parsed[1].enabled = true
-            list[#list + 1] = parsed[1]
+        for _, k in ipairs(type(key) == "table" and key or { key }) do
+            for _, l in ipairs(lines(k, pack)) do
+                local parsed = H.Hekili:ParseActionList(l)
+                parsed[1].enabled = true
+                list[#list + 1] = parsed[1]
+            end
         end
-        H.Hekili.DB.profile.packs[PACK].lists = { precombat = {}, default = list }
+        H.Hekili.DB.profile.packs[pack].lists = { precombat = {}, default = list }
         H.Hekili:LoadScripts()
         H.Fire("PLAYER_REGEN_DISABLED")
         local VS = H.ns.VirtualState
         local power, full = VS.Power, { est = 100, lo = 100, hi = 100, conf = 1 }
         VS.Power = function(pt, now)
-            return pt == 3 and full or power(pt, now)
+            return pt == ptype and full or power(pt, now)
         end
         local out = H.Hekili.Engine.Output.Primary
         assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
@@ -1311,6 +1321,22 @@ describe("Forever Druid Movement (R8)", function()
         assert.is_nil(far(false))
         assert.are.equal("shred", near(false))
         assert.are.equal("shred", far(true))
+    end)
+
+    -- Guardian's Maul (off the GCD, rage full): its first line carries the same gate; the second (the leveling Maul,
+    -- before Primal Bite is known) is silent at 60.
+    it("OFF hides Guardian's Maul outside 5 yd and shows it inside", function()
+        local g = "Guardian (wowsims.com)"
+        local l = lines("maul", g)
+        assert.are.equal(2, #l)
+        assert.matches("&%(toggle%.movement&%(target%.outside5.*%)|target%.within5%)$", l[1])
+        local function at(yd)
+            return world(yd, dlw.Guardian, g, "maul", 1)
+        end
+        local far, near = at(11), at(3)
+        assert.is_nil(far(false))
+        assert.are.equal("maul", near(false))
+        -- ON at range shows no Maul either here: the pack waits for Feral Charge (`cooldown.feral_charge.ready`) first
     end)
 end)
 
