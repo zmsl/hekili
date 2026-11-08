@@ -906,17 +906,6 @@ return end
     end
 
 
-    local function setWidth( info, field, condition, if_true, if_false )
-        local tab = getOptionTable( info )
-
-        if condition then
-            tab.args[ field ].width = if_true or "full"
-        else
-            tab.args[ field ].width = if_false or "full"
-        end
-    end
-
-
     local function rangeIcon( info )
         local tab = getOptionTable( info )
 
@@ -7934,24 +7923,6 @@ function Hekili:GetOption( info, input )
 
     ns.Error( "GetOption() - should never see." )
 
-end
-
-local getUniqueName = function( category, name )
-    local numChecked, suffix, original = 0, 1, name
-
-    while numChecked < #category do
-        for i, instance in ipairs( category ) do
-            if name == instance.Name then
-                name = original .. ' (' .. suffix .. ')'
-                suffix = suffix + 1
-                numChecked = 0
-            else
-                numChecked = numChecked + 1
-            end
-        end
-    end
-
-    return name
 end
 
 
