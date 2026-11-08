@@ -3,10 +3,12 @@
 ## Unreleased
 
 ### New
+- Shadow Priests: a new option, Prefer Starshards (off by default; it only matters if you know Starshards, the Night Elf racial). When enabled, the Shadow (wowsims.com) priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Not yet checked in game.
 - Paladin (wowsims.com) priorities follow the current wowsims (Retribution unchanged; Protection casts Holy Shield rank 4)
 
 ### Changed
 - Mages (wowsims.com): Arcane Missiles cast under Missile Barrage no longer spends Clearcasting, and Arcane Missiles can give you Clearcasting when it starts and on each missile (at most one a second), as in wowsims. Arcane, Fire and Frostfire follow wowsims as of 7 November 2026.
+- Priests (wowsims.com): Shadow and Smite follow wowsims's build of 6 November. Shadow uses its new talent build, and its Night Elf (Elune's Light) and Gnome (Eureka!) racials are used when Shadow Word: Pain and Devouring Plague have 10 s (Eureka! 8 s) or more left, instead of on cooldown. Not yet checked in game.
 - An ability waiting for mana, rage or energy now shows as ready only once the addon is sure you have enough. Before, it could show as ready a few hundredths of a second early, and pressing it then failed with not enough mana or rage. It can now light up one update (about 0.2 s) later at the moment you reach the cost. Not yet checked in game.
 - Steady icons are now on by default (each specialization's Performance tab): when the first icon would swap between two abilities that are both still counting down, it keeps the shown one for one more update, so the icons flicker much less. Ready icons and anything after your own cast still show at once. Turn it off there if you prefer every swap at once. Not yet checked in game.
 - Feral Druids: Poised (the Feral Combat passive) is modelled: out of combat at full energy, your next Claw, Rake, Shred, Ravage, Pounce, Rip, Ferocious Bite or Cower costs 10 less energy. Not yet checked in game.

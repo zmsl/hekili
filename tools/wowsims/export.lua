@@ -54,9 +54,9 @@ M.SPEC_PIN = {
 
     paladin_retribution = NEW,
 
-    priest_shadow = OLD,
+    priest_shadow = NEW,
 
-    priest_smite = OLD,
+    priest_smite = NEW,
 
     rogue_assassination = OLD,
 

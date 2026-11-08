@@ -99,8 +99,8 @@ describe("Forever Priest", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        -- the DB2's 15 / 16 / 16, and 7 / 3 / 4 Forever-only nodes
-        assert.are.same({ [0] = 0, 22, 19, 20 }, n)
+        -- the DB2's 15 / 16 / 16, and 7 / 2 / 4 Forever-only nodes (Binding Heal left the game)
+        assert.are.same({ [0] = 0, 22, 18, 20 }, n)
         assert.are.same({ 1, 402174, 1 }, w.talents.penance)
         assert.are.same({ 3, 1309950, 2 }, w.talents.devouring_contagion)
     end)
@@ -430,7 +430,13 @@ describe("Forever Priest priorities", function()
 
     it("names only registered abilities and auras", function()
         local cls = ld.load(nil, FILE, "PRIEST")
-        local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, action = cls.abilities }
+        local kinds = {
+            buff = cls.auras,
+            debuff = cls.auras,
+            cooldown = cls.abilities,
+            action = cls.abilities,
+            settings = cls.settings,
+        }
         -- Hekili's `all` (Hekili_Shared): the trinket, the consumables, the race packs' Elune's Light and Eureka!
         local shared = {
             use_items = true,
