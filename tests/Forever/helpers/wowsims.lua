@@ -424,12 +424,10 @@ M.READY = {
     rogue_subtlety = { 0.17, 40 }, -- 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
     -- { 0.21, 7 } -> { 0.71, 16 } re-pin e2842f0a78 (lane 15, R6): the build's own list (Magma and Windfury Totems,
     -- Fire Nova the filler at 375, Skyborne); 85 decisions, 16 real (10 early, 6 late); by class cooldown 15, cost 9, gcd 43
-    -- { 0.71, 16 } -> { 0.38, 34 } re-pin 0.7 (e5a9cd2a2dfc, lane shaman, R6): 92 decisions, 34 real (26 early, 8 late),
-    -- median 0.38 (was 0.71 of 16); by class cooldown 23, cost 10, gcd 46: the early rows are the icon shown 0.2-0.8 s
-    -- ahead of wowsims's cast at an instant's GCD or shared-cooldown edge (earth_shock 11, stormstrike 6, fire_nova 6);
-    -- CN8's D2 (the exact cooldown edge, no probe freeze) moved this timing fixture by 10 decisions at the merge (not
-    -- traced row by row), and Stormstrike's cooldown is now 6 s like the shocks'
-    shaman_enhancement = { 0.38, 34 },
+    -- OPEN (lane shaman, re-pin 0.7): kept at { 0.71, 16 }; the measured row is { 0.38, 34 } (92 decisions, early 26 / late
+    -- 8, by class cooldown 23 / cost 10 / gcd 46; earth_shock 11, stormstrike 6, fire_nova 6 shown 0.2-0.8 s before
+    -- wowsims's cast). Not raised: the cause is not traced (lane report, 'Not closed')
+    shaman_enhancement = { 0.71, 16 },
     -- { 0.48, 54 } -> { 2.20, 3 } re-pin 0.7 (lane shaman, R6): 91 decisions, 3 real (all late, cost class: the Major
     -- Mana Potion / Demonic Rune refills the belief cannot see leave lo ~2630 under the truth, gaps.md "Potion mana
     -- refill"; Lightning Bolt at its top rank's 198 where wowsims down-ranks, gap BL), median 2.20; the count falls from

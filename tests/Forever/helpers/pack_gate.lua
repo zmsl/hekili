@@ -313,9 +313,11 @@ M.FLICKER = {
     -- shape. With the old world regen 0. The other moved Elemental cells (L10 idle 0.0 -> 0.2, the dps A/B both ways,
     -- refused-for-cost 0.0 -> 0.1) move as a group with the world/log change. Flicker 0.00 / 0.00 / 0.00 (oracle
     -- 0.05 / 0.05 / 0.07): ceiling 0.1 kept
+    -- re-pin 0.7 (e5a9cd2a2dfc, lane shaman, R6; seeds 1-20, steady icons on, melee-range tree): heldReady 321 -> 284 (the
+    -- bar is seeds 1-20 only; flicker 0.00, readyShort 0, oracle 0.02): the new list has no Lava Burst
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 1 / 0 / 0, heldReady 285 / 301 / 321):
     -- flicker 0.1 -> 0 (S, steady icons on by default); heldReady 302 -> 321 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 321, readyShort = 1 }, -- 0.00 / 0.00 / 0.00, 0 (oracle 0.05 / 0.05 / 0.07)
+    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 284, readyShort = 1 }, -- 0.00 / 0.00 / 0.00, 0 (oracle 0.05 / 0.05 / 0.07)
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996
