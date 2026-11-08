@@ -21118,7 +21118,7 @@ options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0009	|cFFFFD1009
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 8092
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1309595
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 14751
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 10797 - |cFFFFD100|cffffd100settings.prefer_starshards&cooldown.mind_blast.remains>=4|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 10797 - |cFFFFD100|cffffd100settings.prefer_starshards&(!action.mind_blast.known||cooldown.mind_blast.remains>=4)|r|r
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 15407 - |cFFFFD100|cffffd100((action.inner_focus.known&prev.1.inner_focus)||(!action.inner_focus.known))|r|r
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 15407
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 585 - |cFFFFD100|cffffd100!action.mind_flay.known|r|r

@@ -300,9 +300,9 @@ M.FLICKER = {
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)
-    -- Priest re-pin lane (pin e5a9cd2a2dfc, CN8 merged, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0.05, retracted 0, heldReady 0 / 0 / 0):
-    -- flicker 0.03 -> 0.06 (seeds 41-60 read 0.05 where CN8 read 0.03; the Smite world and pack lines did not change, so the cause is the merged engine changes (integ/0.7 5deb101c4) re-ordering a seeded fight; NOT traced, one seed set of three; the measured worst + 0.01, as CN8's rows)
-    ["Smite"] = { flicker = 0.06, retracted = 0, heldReady = 0 }, -- 0.02 / 0 / 0.05, 0
+    -- Priest re-pin lane (pin e5a9cd2a2dfc, integ/0.7 27add4428, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0.05, retracted 0, heldReady 0 / 0 / 0):
+    -- row unchanged at 0.03: the gate's seeds (1-20) read 0.02; seeds 41-60 read 0.05, above the row, and its cause is not traced, so the row is not raised (recorded as a deferral candidate)
+    ["Smite"] = { flicker = 0.03, retracted = 0, heldReady = 0 }, -- 0.02 / 0 / 0.05, 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
