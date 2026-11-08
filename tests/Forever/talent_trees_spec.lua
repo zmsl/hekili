@@ -9,7 +9,7 @@ local json = require("dkjson")
 
 local TREES = "tests/Forever/fixtures/talent_trees"
 -- classes whose kit still follows the Classic tree (its lane has not merged); empty it in that class's commit
-local PENDING = { hunter = true }
+local PENDING = {}
 
 local function slurp(path)
     local f = assert(io.open(path, "rb"), path)

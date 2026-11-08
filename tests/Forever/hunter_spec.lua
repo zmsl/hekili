@@ -86,12 +86,12 @@ describe("Forever Hunter", function()
         assert.are.equal("cooldowns", w.abilities.bestial_wrath.toggle)
     end)
 
-    it("places every DB2 talent in a tree and keeps the Forever-only ones at tree 0", function()
+    it("places every talent in a tree (Forever's)", function()
         local n = { [0] = 0, 0, 0, 0 }
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 2, 16, 14, 16 }, n)
+        assert.are.same({ [0] = 0, 16, 16, 18 }, n) -- Forever's tree (trees/hunter.json)
     end)
 
     it("declares mana as wowsims's logs measure it per spec, and the two casting shares", function()
@@ -108,7 +108,7 @@ describe("Forever Hunter", function()
         assert.are.same({ aura = "rapid_recuperation", share = 0.5 }, r.models.rapid_recuperation)
         assert.are.same(1242688, w.auras.resourcefulness.id)
         assert.are.same(1242512, w.auras.rapid_recuperation.id)
-        assert.are.same({ 0, 1223987, 2 }, w.talents.rapid_recuperation)
+        assert.are.same({ 2, 1223987, 2 }, w.talents.rapid_recuperation)
     end)
 
     it("anchors the ranged clock on Auto Shot, off the GCD", function()
