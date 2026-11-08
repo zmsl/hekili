@@ -555,6 +555,13 @@ describe("the shipped selectors (headless)", function()
         assert.are.same({}, H.errors)
     end)
 
+    it("reports no activation when a spec's profile is unreadable", function()
+        local H = boot("druid", build("druid_feral", "druid"))
+        rawset(H.Hekili.DB.profile.specs, 100113, "broken") -- never in a real profile (Options seeds a table)
+        assert.is_nil(H.Hekili:SetSpecChoice("guardian"))
+        assert.is_nil(H.Hekili.DB.profile.specChoice["Player-Realm"][2])
+    end)
+
     it("rejects a selector for a spec the class does not have", function()
         local H = boot("druid", build("druid_feral", "druid"))
         local kit = H.Hekili.Class.kit
