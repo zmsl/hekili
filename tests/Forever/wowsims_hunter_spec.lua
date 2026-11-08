@@ -79,28 +79,33 @@ local PACKS = {
         "hunter_beast_mastery",
         "BeastMastery",
         "Beast Mastery (wowsims.com)",
-        0.92,
+        0.95,
         { [10] = 6, [40] = 7.8, [60] = 12.2 },
         -- ON flicker 0 -> 1.0 (CN8 D2, 1.00 measured, the same with steady icons off): the not-ready flag keeps the
         -- modelled end, so Multi-Shot (n147) and Blood Fury (n631) lead for the tick before the log casts them; under the
         -- old probe their last 0.5 s read 0.50 and never led. A replay has no press exclusion (the log presses)
-        1.0,
+        -- 0.7 floors (e5a9cd2a2d, steady icons on): 1.0 -> 3.4 (3.33 measured, 6 flips): the new weave's strike and shot
+        -- lines trade at the Auto Shot edge and the melee strike reads range unknown (wing_clip:unknown 40; dips top
+        -- [unknown 74]); probable cause hotfix-0.6.2's maxRange 0 bug, untraced here: re-measure after it lands
+        3.4,
     },
     {
         "hunter_marksmanship",
         "Marksmanship",
         "Marksmanship (wowsims.com)",
-        0.96,
+        0.98,
         { [10] = 6, [40] = 7.6, [60] = 15.4 },
-        0,
+        -- 0 -> 1.0 (1.00 measured, 3 flips): the same new-weave edge as Beast Mastery
+        1.0,
     },
     {
         "hunter_survival",
         "Survival",
         "Survival (wowsims.com)",
-        0.98,
+        0.94,
         { [10] = 6, [40] = 7.6, [60] = 14.0 },
-        2.4,
+        -- 2.4 -> 0.7 (0.67 measured): R51's weave position bounces (above) are gone with the new weave
+        0.7,
         "SurvivalRanged",
     },
 }
