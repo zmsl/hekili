@@ -27,6 +27,7 @@
 ### Known issues
 
 ### Upgrade notes
+- Update the core addon (Hekili) together with its class addons (content API 12). A mismatched pair loads no priorities and says "update the older one".
 
 ## v0.6.2
 

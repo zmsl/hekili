@@ -35,7 +35,9 @@ local format = string.format
 -- 10 (2026-10-25): Hekili:GetLocale(addon); packs ship Locales/ (Hekili.L is gone; localization plan, Task 3).
 -- 11 (2026-11-05): the aura field `enchants` (an id-less aura up while a weapon carries one of its enchant IDs); an
 -- older core drops such an aura from the belief silently, so it would read down forever.
-local CONTENT_API = 11
+-- 12 (2026-11-08): kit:RegisterSelector (a spec and its pack from the talents; Engine/Schema/Selectors.lua): an older
+-- core has no such method, so the pack's load would raise.
+local CONTENT_API = 12
 
 local done, notice = false, nil
 
