@@ -520,7 +520,9 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         sweep(3)
         assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
         assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(2, 1))
+        item.silent = true -- (CDM Task 8: a re-point's refresh now lights an aura that is up; silent keeps it dark here)
         ctl.ViewerRepoint(item, 502) -- back to aura 1, silent: not live until it lights again
+        item.silent = nil
         sweep(4)
         assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
         ctl.ViewerAura(item, "player", A)
@@ -528,7 +530,9 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         ctl.ViewerClear(item)
         sweep(5.5)
         assert.are.same({ 1, 0, 1, 0, 0, 5.5 }, counts(1, 1)) -- lit again, then silent: live
+        item.silent = true
         ctl.ViewerRepoint(item, 501) -- another cooldownID, the same aura (sCd moves, sJ does not)
+        item.silent = nil
         sweep(6)
         assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
         ctl.ViewerAura(item, "player", A) -- control: it lights the aura, then goes silent: live

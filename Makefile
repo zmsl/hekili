@@ -62,11 +62,15 @@ accuracy:
 	$(LUA) tools/accuracy/report.lua
 
 # The A/B (providers spec §4.1): the gate once per arm on the same seeds; the provider arms record in .ab/<arm>.tsv.
+# The four viewer arms (cdm-default decision 110) differ by the Cooldown Manager layout (scenarios.viewerLayout).
 gate-ab:
 	rm -rf .ab
 	$(MAKE) gate
 	$(MAKE) gate AB_ARM=meter
-	$(MAKE) gate AB_ARM=viewer
+	$(MAKE) gate AB_ARM=viewer-none
+	$(MAKE) gate AB_ARM=viewer-buffs
+	$(MAKE) gate AB_ARM=viewer-fixture
+	$(MAKE) gate AB_ARM=viewer-mixed
 	@wc -l .ab/*.tsv
 
 $(LOOPS): test-%:

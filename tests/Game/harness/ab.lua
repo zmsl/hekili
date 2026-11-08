@@ -7,7 +7,12 @@ M.ARMS = {
     -- `observe`: the observer knobs the arm turns on (providers spec §4.2): the meter's events, and the hit row on us
     -- 0.48 +-0.09 s after its taken group (DM §3's measured lead; it moves those rows, so only a provider arm sets it)
     meter = { outcomes = "meter", presence = "router", viewer = false, observe = { meter = true, takenLag = 0.48 } },
-    viewer = { outcomes = "default", presence = "router", viewer = true },
+    -- the Cooldown Manager arms (cdm-default decision 110): the viewer on with the loops' layout `layout`
+    -- (scenarios.viewerLayout: none, buffs, fixture, mixed), on the driving instance only (loop.lua)
+    ["viewer-none"] = { outcomes = "default", presence = "router", viewer = true, layout = "none" },
+    ["viewer-buffs"] = { outcomes = "default", presence = "router", viewer = true, layout = "buffs" },
+    ["viewer-fixture"] = { outcomes = "default", presence = "router", viewer = true, layout = "fixture" },
+    ["viewer-mixed"] = { outcomes = "default", presence = "router", viewer = true, layout = "mixed" },
     -- the meter arm's baseline (measured by hand, not by make gate-ab): the Default with the meter arm's taken lead, so
     -- the two differ only by the leaf and its assumptions
     lagged = { outcomes = "default", presence = "router", viewer = false, observe = { takenLag = 0.48 } },

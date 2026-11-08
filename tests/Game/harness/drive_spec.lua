@@ -74,4 +74,74 @@ describe("the drive's ticket captures", function()
         end
         assert.is_true(n > 0)
     end)
+
+    -- CDM Task 8 (decision 110): the viewer ops the loops' layouts drive
+    describe("the Cooldown Manager ops", function()
+        local fake = require("Game.State.helpers.fake_api")
+        local ESS, ICON, BAR = fake.VIEWERS[1], fake.VIEWERS[3], fake.VIEWERS[4]
+        local ctl
+        before_each(function()
+            local _
+            _, ctl = fake.new()
+            ctl.viewer.infos[501] = { spellID = 77 } -- a cooldown entry (Essential) of the aura's spell
+            ctl.viewer.infos[502] = { spellID = 9, linkedSpellIDs = { 77 } } -- a buff entry linking it
+            ctl.viewer.infos[503] = { spellID = 9078 } -- another aura's
+        end)
+
+        it(
+            "@viewer lights every item in any viewer naming the spell, cooldown entries included, our auras only",
+            function()
+                local e = ctl.ViewerItem(ESS, 1, 501)
+                local b = ctl.ViewerItem(ICON, 1, 502)
+                local o = ctl.ViewerItem(BAR, 1, 503)
+                drive.op({}, ctl, "@viewer", "target", 77, true, "party1") -- a partner's copy (CDM-P): nothing lights
+                assert.are.same({ nil, nil, nil }, { e.auraInstanceID, b.auraInstanceID, o.auraInstanceID })
+                drive.op({}, ctl, "@viewer", "target", 77, true, "player")
+                assert.are.same(
+                    { fake.SECRET, fake.SECRET, nil },
+                    { e.auraInstanceID, b.auraInstanceID, o.auraInstanceID }
+                )
+                assert.are.same({ "target", "target" }, { e.auraDataUnit, b.auraDataUnit })
+                drive.op({}, ctl, "@viewer", "target", 77, false, "player")
+                assert.are.same({ nil, nil }, { e.auraInstanceID, b.auraInstanceID })
+                drive.op({}, ctl, "@viewer", "player", 9078, true) -- no source: ours (the observer's older streams)
+                assert.are.equal(fake.SECRET, o.auraInstanceID)
+            end
+        )
+
+        it("@viewerLayout acquires (also in combat), releases, re-acquires the released frame, re-points", function()
+            ctl.combat = true
+            drive.op({}, ctl, "@viewer", "player", 77, true, "player")
+            drive.op({}, ctl, "@viewerLayout", "acquire", ICON, 502)
+            local item = ctl.viewer.items[ICON][1]
+            assert.are.same({ 502, fake.SECRET }, { item.cooldownID, item.auraInstanceID }) -- lit at once (F13)
+            drive.op({}, ctl, "@viewerLayout", "release", ICON, 502)
+            assert.are.same({ nil, nil, 1 }, { item.cooldownID, item.auraInstanceID, #ctl.viewer.items[ICON] })
+            drive.op({}, ctl, "@viewerLayout", "acquire", ICON, 502)
+            assert.are.equal(item, ctl.viewer.items[ICON][1]) -- the pool's frame, no new child
+            assert.are.same({ 1, 502, fake.SECRET }, { #ctl.viewer.items[ICON], item.cooldownID, item.auraInstanceID })
+            drive.op({}, ctl, "@viewerLayout", "repoint", ICON, 502, 503)
+            assert.are.same({ 503, nil }, { item.cooldownID, item.auraInstanceID }) -- 503 names no aura that is up
+            drive.op({}, ctl, "@viewerLayout", "repoint", ICON, 503, 502)
+            assert.are.same({ 502 }, { item.cooldownID })
+        end)
+
+        it("@viewerRetarget clears the items held for the target (our target changed)", function()
+            local e = ctl.ViewerItem(ESS, 1, 501)
+            drive.op({}, ctl, "@viewer", "target", 77, true, "player")
+            drive.op({}, ctl, "@viewerRetarget")
+            assert.is_nil(e.auraInstanceID)
+        end)
+
+        it("@viewerShown hides a viewer, or every viewer through the parent (name nil)", function()
+            drive.op({}, ctl, "@viewerShown", ESS, false)
+            assert.are.same({ false, true }, { ctl.viewer.shown[ESS] == nil, ctl.viewer.shown[ICON] == nil })
+            drive.op({}, ctl, "@viewerShown", ESS, true)
+            assert.is_nil(ctl.viewer.shown[ESS])
+            drive.op({}, ctl, "@viewerShown", nil, false)
+            assert.is_false(ctl.viewer.parentShown)
+            drive.op({}, ctl, "@viewerShown", nil, true)
+            assert.is_true(ctl.viewer.parentShown)
+        end)
+    end)
 end)

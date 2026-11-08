@@ -307,6 +307,99 @@ describe("the any-layout Cooldown Manager fake", function()
         assert.are.equal(item, ctl.viewer.hookCalls[2][1])
     end)
 
+    -- CDM Task 8 (the loops' layouts): the harness turns the write log off (L279: it grew one entry per light, unbounded
+    -- over a 20-fight boot); an item with no target aura unit (BV:483-485); a released frame back from the pool; the
+    -- fight-start reset.
+    it("ctl.viewer.log = false records no write; the order tests' default keeps the log", function()
+        local item = ctl.ViewerItem(ICON, 1, 501)
+        ctl.ViewerAura(item, "player", 77)
+        assert.are.same({ "set" }, item.writes)
+        ctl.viewer.log = false
+        for _ = 1, 50 do
+            ctl.ViewerAura(item, "player", 77)
+            ctl.ViewerClear(item)
+        end
+        ctl.ViewerRelease(item)
+        assert.are.same({ "set" }, item.writes)
+        assert.is_nil(item.cooldownID)
+    end)
+
+    it("an item flagged noUnit lights with auraDataUnit nil (an entry with no target aura unit)", function()
+        ctl.viewer.infos[501] = { spellID = 77 }
+        local item = ctl.ViewerItem(ESS, 1, 501)
+        item.noUnit = true
+        ctl.ViewerAuraBySpell("target", 77, true, "player")
+        assert.are.same({ SECRET, nil }, { item.auraInstanceID, item.auraDataUnit })
+        ctl.ViewerAuraBySpell("target", 77, false, "player")
+        assert.is_nil(item.auraInstanceID)
+    end)
+
+    it("ViewerAcquire with a released frame reuses it (the pool) and lights it like a new one", function()
+        ctl.viewer.infos[501] = { spellID = 77 }
+        ctl.ViewerAuraBySpell("player", 77, true, "player")
+        local item = ctl.ViewerItem(ICON, 1, 501)
+        ctl.ViewerRelease(item)
+        local back = ctl.ViewerAcquire(ICON, 501, nil, item)
+        assert.are.equal(item, back)
+        assert.are.equal(1, viewer(ICON):GetNumChildren())
+        assert.are.same({ 501, 1, SECRET, "player" }, { -- index 1: no live child holds it
+            back.cooldownID,
+            back.layoutIndex,
+            back.auraInstanceID,
+            back.auraDataUnit,
+        })
+    end)
+
+    it("ViewerReset clears every item's aura, the applied auras and the pending lights; frames stay", function()
+        ctl.viewer.infos[501] = { spellID = 77 }
+        local a = ctl.ViewerItem(ICON, 1, 501)
+        local b = ctl.ViewerItem(ESS, 1, 501)
+        ctl.ViewerAuraBySpell("player", 77, true, "player")
+        ctl.viewer.lag = 1
+        ctl.ViewerAuraBySpell("target", 77, true, "player")
+        ctl.ViewerReset()
+        local got = { a.auraInstanceID, b.auraInstanceID, #ctl.viewer.applied, #ctl.viewer.pending }
+        assert.are.same({ nil, nil, 0, 0 }, got)
+        assert.are.same({ 501, 501 }, { a.cooldownID, b.cooldownID })
+        assert.are.equal(1, viewer(ICON):GetNumChildren())
+    end)
+
+    it("a re-point's refresh finds an aura its new entry names that is up (silent: none; lag: at the Tick)", function()
+        ctl.viewer.infos[501] = { spellID = 77 }
+        ctl.viewer.infos[502] = { spellID = 78 }
+        ctl.ViewerAuraBySpell("target", 78, true, "player") -- up before the re-point, no item for it yet
+        local item = ctl.ViewerItem(ICON, 1, 501)
+        ctl.ViewerAuraBySpell("player", 77, true, "player")
+        ctl.ViewerRepoint(item, 502)
+        assert.are.same({ SECRET, "target", 78 }, { item.auraInstanceID, item.auraDataUnit, item.litBy })
+        local quiet = ctl.ViewerItem(ICON, 2, 501)
+        quiet.silent = true
+        ctl.ViewerRepoint(quiet, 502)
+        assert.is_nil(quiet.auraInstanceID)
+        local late = ctl.ViewerItem(ICON, 3, 501)
+        ctl.viewer.lag = 1
+        ctl.ViewerRepoint(late, 502)
+        assert.is_nil(late.auraInstanceID)
+        ctl.Tick()
+        assert.are.equal(SECRET, late.auraInstanceID)
+    end)
+
+    it("ViewerRetarget: our target changed: every item held for the target clears, a player item stays", function()
+        ctl.viewer.infos[501] = { spellID = 77 }
+        ctl.viewer.infos[502] = { spellID = 78 }
+        local t = ctl.ViewerItem(ICON, 1, 501)
+        local n = ctl.ViewerItem(ESS, 1, 501)
+        n.noUnit = true -- held for the target with its unit unread: clears too
+        local p = ctl.ViewerItem(ICON, 2, 502)
+        ctl.ViewerAuraBySpell("target", 77, true, "player")
+        ctl.ViewerAuraBySpell("player", 78, true, "player")
+        ctl.ViewerRetarget()
+        assert.are.same({ nil, nil, SECRET }, { t.auraInstanceID, n.auraInstanceID, p.auraInstanceID })
+        assert.are.same({ { "player", 78 } }, ctl.viewer.applied)
+        local a = ctl.ViewerAcquire(ICON, 501) -- mob A's debuff is no longer up on the target: nothing to light
+        assert.is_nil(a.auraInstanceID)
+    end)
+
     it("the legacy ViewerShow still works and a fresh fake has no viewer layout (default arm: viewer off)", function()
         local item = ctl.ViewerItem(ICON, 1, 501)
         item.unit = "player"

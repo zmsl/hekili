@@ -12,6 +12,19 @@ describe("the A/B harness", function()
         end)
     end)
 
+    it("four viewer arms (cdm-default decision 110), each with its layout; the default arm unchanged", function()
+        assert.are.same({ outcomes = "default", presence = "router", viewer = false }, ab.ARMS.default)
+        for _, layout in ipairs({ "none", "buffs", "fixture", "mixed" }) do
+            local a = ab.ARMS["viewer-" .. layout]
+            assert.are.same({ outcomes = "default", presence = "router", viewer = true, layout = layout }, a)
+            assert.are.same(
+                { outcomes = "default", presence = "router", viewer = true },
+                ab.providers("viewer-" .. layout)
+            )
+        end
+        assert.is_nil(ab.ARMS.viewer) -- the layout-less arm is viewer-none now
+    end)
+
     local function count(s, ev)
         local n = 0
         for i = 1, s.n do
