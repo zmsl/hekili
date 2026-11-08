@@ -375,6 +375,14 @@ spec:RegisterTalents({
     wild_growth = { 3, 408120, 1 },
 })
 
+-- Spec and pack from the talents (Engine/Schema/Selectors.lua; after the Hekili classic branch's pack selectors).
+-- wowsims's Guardian and Feral builds both spend 32 points in Feral Combat; only Guardian takes Thick Hide (3/3, with
+-- Feral Instinct, Lacerate and Primal Bite), so Feral Combat ahead with Thick Hide is Guardian. Anything else on the
+-- tree is Feral (the tree's first spec), unless the player activated Guardian for it.
+spec:RegisterSelector("guardian", { spec = "guardian", pack = "Guardian (wowsims.com)" }, function(tab1, tab2, tab3)
+    return tab2 > tab1 and tab2 > tab3 and talent.thick_hide.rank > 0
+end)
+
 spec:RegisterGear("swarming_idol", GEAR.swarming_idol)
 spec:RegisterGear("grovekeeper_eclipse", unpack(GEAR.grovekeeper_eclipse))
 spec:RegisterSetBonus("grovekeeper_eclipse_5pc", GEAR.grovekeeper_eclipse_5pc)

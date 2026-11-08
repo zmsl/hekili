@@ -312,14 +312,30 @@ class token, a missing pack, a mismatch or a failed pack load keeps one notice, 
 `## X-Hekili-ContentAPI` change together, only when the content surface changes: the Register* API, `Hekili.Client`,
 or the environment names above (10: `Hekili:GetLocale`, the packs' `Locales/`). `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
 
-**Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`, `Engine/Schema/Selectors.lua`; the tree arithmetic, ids, share keys and
-migration are `Engine/Schema/Trees.lua`'s) from the
-talent tree with the most points: the spec the character activated for that tree
-(`profile.specChoice["Name-Realm"] = { [tree] = key, last = tree }`), else the tree's first spec; on no points or a
-tie, the last dominant tree seen; with none seen, the first supported spec. A respec or dual-spec swap that moves the
-dominant tree therefore switches the spec, and two builds of one tree share its choice. The choice is written only by a
-spec page's "Activate <Spec>" button or `/hekili spec <name>`, for the current dominant tree (a pre-table scalar
-choice moves onto it once). On a class's first login after the update a one-time migration (`ns.MigrateTrees`, marked in
+**Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`,
+`Engine/Schema/Selectors.lua`; the tree arithmetic, ids, share keys and migration are `Engine/Schema/Trees.lua`'s) from
+the talent tree with the most points: the spec the character activated for that tree
+(`profile.specChoice["Name-Realm"] = { [tree] = key, last = tree }`); else the first of the class's **selectors** that
+holds; else the tree's first spec; on no points or a tie, the last dominant tree seen; with none seen, the first
+supported spec. A respec or dual-spec swap that moves the dominant tree therefore switches the spec, and two builds of
+one tree share its choice. The choice is written only by a spec page's "Activate <Spec>" button or `/hekili spec
+<name>`, for the current dominant tree (a pre-table scalar choice moves onto it once).
+
+**Selectors** (after the Hekili classic branch's pack selectors; no user toggle). A class kit registers
+`spec:RegisterSelector(key, { spec = "<spec key>", pack = "<built-in pack>" }, function(tab1, tab2, tab3) ... end)`
+(Spec.lua stores them in order; specific before general). The condition gets the points per tree and runs in one reused
+environment: `talent.<name>.rank` (the kit's talents, the talent walk's ranks), `level`, `max`, `min`. They run on
+login, a talent change and a spec change (SpecializationChanged's pick and SettleSpecChoice), never per poll, each
+under `pcall`: one that raises counts as false and on `kit.selectorErrors` (the snapshot's `spec:` line shows the count
+and the last message; a selector pick shows as `(selector <key>)`). A selector whose spec is unsupported is skipped. The
+first that holds picks its spec, unless the player activated one for the tree, and, in SettleSpecChoice and again after
+RestoreDefaults (the built-ins exist only then at login), its pack (`ns.SelectPack`) on `profile.specs[id]`:
+`packManual = true` marks the player's pick (the spec page's Priority, a pack's Active toggle, `/hekili priority
+<name>`; cleared by `/hekili priority default`, a toggle back to the default, a delete or retire fallback), and
+`packAuto = "<name>"` the pack a selector set. A selector writes only a built-in pack bound to that spec, and only over
+the default or its own `packAuto` pick: any other value (a custom priority, `(none)`, a profile's pick from before
+selectors) stays. With no selector holding, a pack still equal to `packAuto` goes back to the default. One notice says
+so when a selector switches the pack, or the spec after the first settle (never at login). On a class's first login after the update a one-time migration (`ns.MigrateTrees`, marked in
 `profile.specMigrated[<TOKEN>]`) merges the legacy pseudo-spec profile (the client's id, now read for nothing else:
 Rogue 1488 and Warrior 1491 read in game; Druid 1483, Hunter 1484, Paladin 1486, Shaman 1489 assumed) into every
 supported spec, value by

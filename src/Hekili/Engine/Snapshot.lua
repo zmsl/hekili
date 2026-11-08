@@ -475,7 +475,13 @@ function Hekili:GenerateProfile()
     local s = state
 
     local spec = s.spec.key
-    if spec and s.spec.source then spec = spec .. " (" .. s.spec.source .. ")" end
+    if spec and s.spec.source then
+        spec = spec .. " (" .. s.spec.source .. ( s.spec.selector and " " .. s.spec.selector or "" ) .. ")"
+    end
+    local kit = Hekili.Class.kit
+    if spec and kit and kit.selectorErrors then
+        spec = spec .. ", selector errors " .. kit.selectorErrors .. ": " .. tostring( kit.selectorError )
+    end
 
     local talents
 

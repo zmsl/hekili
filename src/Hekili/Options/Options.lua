@@ -2844,6 +2844,9 @@ do
         self.DB.profile.specs[ spec ] = self.DB.profile.specs[ spec ] or {}
         self.DB.profile.specs[ spec ][ option ] = val
 
+        -- the player's pick: a selector never replaces it (Engine/Schema/Selectors.lua)
+        if option == "package" then self.DB.profile.specs[ spec ].packManual, self.DB.profile.specs[ spec ].packAuto = true, nil end
+
         if option == "package" then self:UpdateUseItems()
 self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
         elseif option == "enabled" then ns.StartConfiguration() end
@@ -4986,17 +4989,20 @@ found = true end
                                     end,
                                     set = function ()
                                         local p = rawget( Hekili.DB.profile.packs, pack )
-                                        if Hekili.DB.profile.specs[ p.spec ].package == pack then
+                                        local sp = Hekili.DB.profile.specs[ p.spec ]
+                                        -- a pick (and "(none)") is the player's; back to the default hands the pack
+                                        -- to the selectors again (Engine/Schema/Selectors.lua)
+                                        if sp.package == pack then
                                             if p.builtIn then
-                                                Hekili.DB.profile.specs[ p.spec ].package = "(none)"
+                                                sp.package, sp.packManual, sp.packAuto = "(none)", true, nil
                                             else
                                                 local def = ns.DefaultPackage( p.spec )
                                                 if def and rawget( Hekili.DB.profile.packs, def ) then
-                                                    Hekili.DB.profile.specs[ p.spec ].package = def
+                                                    sp.package, sp.packManual, sp.packAuto = def, nil, nil
                                                 end
                                             end
                                         else
-                                            Hekili.DB.profile.specs[ p.spec ].package = pack
+                                            sp.package, sp.packManual, sp.packAuto = pack, true, nil
                                         end
                                     end,
                                 },
@@ -5124,6 +5130,7 @@ found = true end
                                             -- after the delete: deleting the default must not point back at it
                                             local def = ns.DefaultPackage( specId )
                                             spec.package = def and rawget( Hekili.DB.profile.packs, def ) and def or "(none)"
+                                            spec.packManual, spec.packAuto = nil, nil
                                         end
                                         Hekili.Options.args.packs.plugins.packages[ pack ] = nil
                                         for _, nodes in pairs( packNodes ) do nodes[ pack ] = nil end

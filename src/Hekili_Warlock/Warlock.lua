@@ -987,6 +987,22 @@ spec:RegisterTalents({
     incinerate = { 3, 412758, 1 },
 })
 
+-- Packs from the talents (Engine/Schema/Selectors.lua; after the Hekili classic branch's pack selectors).
+-- SM Ruin (31/0/20) stops Affliction at Shadow Mastery and takes Ruin from Destruction; the Affliction build
+-- (35/11/5, aff_wrack) goes on to Wrack (an older Affliction build took Ruin too, so Ruin alone does not tell them
+-- apart). Shadow Brand and Demonology are both 2/31/18: only Shadow Brand takes Improved Shadow Bolt (the fire brand
+-- build spends those points on Aftermath). Any other build runs its tree's default.
+spec:RegisterSelector("sm_ruin", { spec = "affliction", pack = "SM Ruin (wowsims.com)" }, function(tab1, tab2, tab3)
+    return tab1 > tab2 and tab1 > tab3 and talent.ruin.rank > 0 and talent.wrack.rank == 0
+end)
+spec:RegisterSelector(
+    "shadow_brand",
+    { spec = "demonology", pack = "Shadow Brand (wowsims.com)" },
+    function(tab1, tab2, tab3)
+        return tab2 > tab1 and tab2 > tab3 and talent.improved_shadow_bolt.rank > 0
+    end
+)
+
 -- A curse's name as the client shows it (localization spec §5): the client's, already in the player's language and as
 -- its tooltip words it, read once here (a plain string); `english` when the client has no name for it (not cached).
 local function curseName(id, english)
