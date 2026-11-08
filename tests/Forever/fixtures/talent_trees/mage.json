@@ -1,0 +1,631 @@
+[
+  {
+    "name": "Arcane",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/81.jpg",
+    "talents": [
+      {
+        "fieldName": "wandSpecialization",
+        "fancyName": "Wand Specialization",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 0
+        },
+        "spellId": 6057,
+        "definitionId": 135345,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "improvedChanneling",
+        "fancyName": "Improved Channeling",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 11237,
+        "definitionId": 135343,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "arcaneResilience",
+        "fancyName": "Arcane Resilience",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 28574,
+        "definitionId": 135332,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "arcaneSubtlety",
+        "fancyName": "Arcane Subtlety",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 11210,
+        "definitionId": 135342,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "magicAbsorption",
+        "fancyName": "Magic Absorption",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 29441,
+        "definitionId": 135341,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "arcaneConcentration",
+        "fancyName": "Arcane Concentration",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 11213,
+        "definitionId": 135340,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "missileBarrage",
+        "fancyName": "Missile Barrage",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 3
+        },
+        "spellId": 400588,
+        "definitionId": 135339,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "arcaneGeometry",
+        "fancyName": "Arcane Geometry",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 11247,
+        "definitionId": 135338,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "arcaneImpact",
+        "fancyName": "Arcane Impact",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 11242,
+        "definitionId": 135337,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "arcaneBlast",
+        "fancyName": "Arcane Blast",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 3
+        },
+        "spellId": 400574,
+        "definitionId": 135336,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "arcaneShielding",
+        "fancyName": "Arcane Shielding",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 11252,
+        "definitionId": 135335,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "improvedCounterspell",
+        "fancyName": "Improved Counterspell",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 11255,
+        "definitionId": 135334,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "arcaneMeditation",
+        "fancyName": "Arcane Meditation",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 18462,
+        "definitionId": 135333,
+        "maxPoints": 3,
+        "prereqLocation": {
+          "rowIdx": 1,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "arcaneWrath",
+        "fancyName": "Arcane Wrath",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 3
+        },
+        "spellId": 1326079,
+        "definitionId": 145958,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 2,
+          "colIdx": 3
+        }
+      },
+      {
+        "fieldName": "presenceOfMind",
+        "fancyName": "Presence of Mind",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 12043,
+        "definitionId": 135331,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "arcaneMind",
+        "fancyName": "Arcane Mind",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 11232,
+        "definitionId": 135330,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "arcaneInstability",
+        "fancyName": "Arcane Instability",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 15058,
+        "definitionId": 135329,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "arcanePower",
+        "fancyName": "Arcane Power",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 12042,
+        "definitionId": 135328,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "Fire",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/41.jpg",
+    "talents": [
+      {
+        "fieldName": "incineration",
+        "fancyName": "Incineration",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 18459,
+        "definitionId": 135326,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "accelerant",
+        "fancyName": "Accelerant",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 11069,
+        "definitionId": 135325,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "ignite",
+        "fancyName": "Ignite",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 11119,
+        "definitionId": 135324,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "flameThrowing",
+        "fancyName": "Flame Throwing",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 11100,
+        "definitionId": 135323,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "impact",
+        "fancyName": "Impact",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 11103,
+        "definitionId": 135322,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "burningSoul",
+        "fancyName": "Burning Soul",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 11083,
+        "definitionId": 135319,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedFlamestrike",
+        "fancyName": "Improved Flamestrike",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 11108,
+        "definitionId": 135321,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "pyroblast",
+        "fancyName": "Pyroblast",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 11366,
+        "definitionId": 135320,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "improvedFireBlast",
+        "fancyName": "Improved Fire Blast",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 3
+        },
+        "spellId": 11078,
+        "definitionId": 135327,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "improvedScorch",
+        "fancyName": "Improved Scorch",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 11095,
+        "definitionId": 135318,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedFireWard",
+        "fancyName": "Improved Fire Ward",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 11094,
+        "definitionId": 135317,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "heatingUp",
+        "fancyName": "Heating Up",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 400624,
+        "definitionId": 135316,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 2,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "masterOfElements",
+        "fancyName": "Master of Elements",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 3
+        },
+        "spellId": 29074,
+        "definitionId": 135315,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "criticalMass",
+        "fancyName": "Critical Mass",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 11115,
+        "definitionId": 135314,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "blastWave",
+        "fancyName": "Blast Wave",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 11113,
+        "definitionId": 135313,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "firePower",
+        "fancyName": "Fire Power",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 11124,
+        "definitionId": 135312,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "combustion",
+        "fancyName": "Combustion",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 11129,
+        "definitionId": 135311,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "Frost",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/61.jpg",
+    "talents": [
+      {
+        "fieldName": "frostWarding",
+        "fancyName": "Frost Warding",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 0
+        },
+        "spellId": 11189,
+        "definitionId": 135310,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "improvedFrostbolt",
+        "fancyName": "Improved Frostbolt",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 11070,
+        "definitionId": 135309,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "precision",
+        "fancyName": "Precision",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 29438,
+        "definitionId": 135308,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "iceShards",
+        "fancyName": "Ice Shards",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 11207,
+        "definitionId": 135307,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "frostbite",
+        "fancyName": "Frostbite",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 11071,
+        "definitionId": 135304,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedFrostNova",
+        "fancyName": "Improved Frost Nova",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 11165,
+        "definitionId": 135305,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "permafrost",
+        "fancyName": "Permafrost",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 3
+        },
+        "spellId": 11175,
+        "definitionId": 135306,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "frostChanneling",
+        "fancyName": "Frost Channeling",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 11160,
+        "definitionId": 135302,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedBlizzard",
+        "fancyName": "Improved Blizzard",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 11185,
+        "definitionId": 135301,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "iceLance",
+        "fancyName": "Ice Lance",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 1312002,
+        "definitionId": 135297,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "arcticReach",
+        "fancyName": "Arctic Reach",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 16757,
+        "definitionId": 135300,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "iceBlock",
+        "fancyName": "Ice Block",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 11958,
+        "definitionId": 135299,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "shatter",
+        "fancyName": "Shatter",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 3
+        },
+        "spellId": 11170,
+        "definitionId": 135298,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedConeOfCold",
+        "fancyName": "Improved Cone of Cold",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 11190,
+        "definitionId": 135295,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "coldSnap",
+        "fancyName": "Cold Snap",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 12472,
+        "definitionId": 135296,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "fingersOfFrost",
+        "fancyName": "Fingers of Frost",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 400647,
+        "definitionId": 135294,
+        "maxPoints": 2,
+        "prereqLocation": {
+          "rowIdx": 2,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "wintersChill",
+        "fancyName": "Winter's Chill",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 11180,
+        "definitionId": 135293,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "iceBarrier",
+        "fancyName": "Ice Barrier",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 11426,
+        "definitionId": 135292,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,632 @@
+[
+  {
+    "name": "Balance",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/283.jpg",
+    "talents": [
+      {
+        "fieldName": "improvedWrath",
+        "fancyName": "Improved Wrath",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 16814,
+        "definitionId": 134384,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "genesis",
+        "fancyName": "Genesis",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 1223081,
+        "definitionId": 134385,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "moonglow",
+        "fancyName": "Moonglow",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 16845,
+        "definitionId": 134386,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedMoonfire",
+        "fancyName": "Improved Moonfire",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 16821,
+        "definitionId": 134392,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "naturesMajesty",
+        "fancyName": "Nature's Majesty",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 1223082,
+        "definitionId": 134388,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "naturesReach",
+        "fancyName": "Nature's Reach",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 3
+        },
+        "spellId": 16819,
+        "definitionId": 134390,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "improvedEntanglingRoots",
+        "fancyName": "Improved Entangling Roots",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 16918,
+        "definitionId": 134387,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "naturesSplendor",
+        "fancyName": "Nature's Splendor",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 1223083,
+        "definitionId": 134389,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 1,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "insectSwarm",
+        "fancyName": "Insect Swarm",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 5570,
+        "definitionId": 134391,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "vengeance",
+        "fancyName": "Vengeance",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 16909,
+        "definitionId": 134393,
+        "maxPoints": 5,
+        "prereqLocation": {
+          "rowIdx": 1,
+          "colIdx": 1
+        }
+      },
+      {
+        "fieldName": "improvedStarfire",
+        "fancyName": "Improved Starfire",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 16850,
+        "definitionId": 134394,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "overgrowth",
+        "fancyName": "Overgrowth",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 17245,
+        "definitionId": 142590,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "naturesGrace",
+        "fancyName": "Nature's Grace",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 16880,
+        "definitionId": 134395,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "eclipse",
+        "fancyName": "Eclipse",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 408248,
+        "definitionId": 134396,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "moonfury",
+        "fancyName": "Moonfury",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 1
+        },
+        "spellId": 16896,
+        "definitionId": 134397,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "moonkinForm",
+        "fancyName": "Moonkin Form",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 24858,
+        "definitionId": 134398,
+        "maxPoints": 1
+      }
+    ]
+  },
+  {
+    "name": "Feral Combat",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/281.jpg",
+    "talents": [
+      {
+        "fieldName": "ferocity",
+        "fancyName": "Ferocity",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 16934,
+        "definitionId": 134399,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "furor",
+        "fancyName": "Furor",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 17056,
+        "definitionId": 134400,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "feralSwiftness",
+        "fancyName": "Feral Swiftness",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 17002,
+        "definitionId": 134404,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "feralInstinct",
+        "fancyName": "Feral Instinct",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 16947,
+        "definitionId": 134401,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "brutalImpact",
+        "fancyName": "Brutal Impact",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 16940,
+        "definitionId": 134402,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "thickHide",
+        "fancyName": "Thick Hide",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 3
+        },
+        "spellId": 16929,
+        "definitionId": 134403,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "shreddingAttacks",
+        "fancyName": "Shredding Attacks",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 16966,
+        "definitionId": 134406,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "savageFury",
+        "fancyName": "Savage Fury",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 16998,
+        "definitionId": 134409,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "feralCharge",
+        "fancyName": "Feral Charge",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 1238122,
+        "definitionId": 134405,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "sharpenedClaws",
+        "fancyName": "Sharpened Claws",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 3
+        },
+        "spellId": 16942,
+        "definitionId": 134407,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "predatoryStrikes",
+        "fancyName": "Predatory Strikes",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 16972,
+        "definitionId": 134413,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "lacerate",
+        "fancyName": "Lacerate",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 1328617,
+        "definitionId": 134410,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 2,
+          "colIdx": 1
+        }
+      },
+      {
+        "fieldName": "predatoryDiscipline",
+        "fancyName": "Predatory Discipline",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 1328613,
+        "definitionId": 134412,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "bloodFrenzy",
+        "fancyName": "Blood Frenzy",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 3
+        },
+        "spellId": 16958,
+        "definitionId": 134408,
+        "maxPoints": 2,
+        "prereqLocation": {
+          "rowIdx": 2,
+          "colIdx": 3
+        }
+      },
+      {
+        "fieldName": "leaderOfThePack",
+        "fancyName": "Leader of the Pack",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 17007,
+        "definitionId": 134416,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "naturalInstinct",
+        "fancyName": "Natural Instinct",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 3
+        },
+        "spellId": 1223242,
+        "definitionId": 134411,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "rendAndTear",
+        "fancyName": "Rend and Tear",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 0
+        },
+        "spellId": 1223246,
+        "definitionId": 134414,
+        "maxPoints": 5,
+        "prereqLocation": {
+          "rowIdx": 3,
+          "colIdx": 0
+        }
+      },
+      {
+        "fieldName": "naturalReaction",
+        "fancyName": "Natural Reaction",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 3
+        },
+        "spellId": 417051,
+        "definitionId": 134415,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "primalBite",
+        "fancyName": "Primal Bite",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 407995,
+        "definitionId": 134417,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      },
+      {
+        "fieldName": "shiftingPower",
+        "fancyName": "Shifting Power",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 2
+        },
+        "spellId": 1322605,
+        "definitionId": 145859,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 3,
+          "colIdx": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "Restoration",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/282.jpg",
+    "talents": [
+      {
+        "fieldName": "naturesFocus",
+        "fancyName": "Nature's Focus",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 17063,
+        "definitionId": 134418,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "heartOfTheWild",
+        "fancyName": "Heart of the Wild",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 17003,
+        "definitionId": 134419,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "naturalist",
+        "fancyName": "Naturalist",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 17069,
+        "definitionId": 134383,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "reflection",
+        "fancyName": "Reflection",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 17106,
+        "definitionId": 134381,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "naturalShapeshifter",
+        "fancyName": "Natural Shapeshifter",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 16833,
+        "definitionId": 134380,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "subtlety",
+        "fancyName": "Subtlety",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 17118,
+        "definitionId": 134378,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "giftOfNature",
+        "fancyName": "Gift of Nature",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 17104,
+        "definitionId": 134377,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "bloom",
+        "fancyName": "Bloom",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 3
+        },
+        "spellId": 1328621,
+        "definitionId": 134379,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "tranquilSpirit",
+        "fancyName": "Tranquil Spirit",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 24968,
+        "definitionId": 134376,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "improvedRejuvenation",
+        "fancyName": "Improved Rejuvenation",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 17111,
+        "definitionId": 134375,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "swiftmend",
+        "fancyName": "Swiftmend",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 3
+        },
+        "spellId": 18562,
+        "definitionId": 134373,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "naturesSwiftness",
+        "fancyName": "Nature's Swiftness",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 17116,
+        "definitionId": 134382,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 1,
+          "colIdx": 0
+        }
+      },
+      {
+        "fieldName": "livingSpirit",
+        "fancyName": "Living Spirit",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 1309631,
+        "definitionId": 134372,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedTranquility",
+        "fancyName": "Improved Tranquility",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 3
+        },
+        "spellId": 17123,
+        "definitionId": 134370,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "improvedRegrowth",
+        "fancyName": "Improved Regrowth",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 17074,
+        "definitionId": 134374,
+        "maxPoints": 5,
+        "prereqLocation": {
+          "rowIdx": 3,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "wildGrowth",
+        "fancyName": "Wild Growth",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 408120,
+        "definitionId": 134371,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  }
+]

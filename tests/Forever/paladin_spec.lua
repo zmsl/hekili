@@ -105,12 +105,12 @@ describe("Forever Paladin", function()
         assert.is_nil(w.options)
     end)
 
-    it("places every DB2 talent in a tree and keeps the Forever-only ones at tree 0", function()
+    it("places every talent in a tree (Forever's)", function()
         local n = { [0] = 0, 0, 0, 0 }
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 5, 14, 16, 16 }, n)
+        assert.are.same({ [0] = 0, 17, 17, 17 }, n) -- Forever's tree (trees/paladin.json)
     end)
 
     it("declares mana under the five-second rule", function()

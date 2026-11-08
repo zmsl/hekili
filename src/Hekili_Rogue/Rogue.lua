@@ -136,73 +136,67 @@ spec:RegisterResource(Enum.PowerType.Energy, {
 }, nil, { refundOnAvoid = 0.8 })
 
 -- Talents: { talent tree (1 Assassination, 2 Combat, 3 Subtlety: the dominant tree picks the spec), rank 1's spell,
--- max rank }: the DB2's nodes with wowsims/forever's 4b0030a44b max ranks (`Talent(id, max)` of sim/rogue/
--- spell_data_auto_gen.go) and trees (the `=rank@tree` of its logs' talents header) where it states them, keys the
--- snake_case names (Setup is setup_talent; a nameless node talent_<spell>), and the Forever-only ones by spell at
--- tree 0 until the live export (checkpoint Q1) places them.
+-- max rank }: Forever's tree as wowsims/forever's ui/sim/talents/trees/rogue.json lists it (tools/wowsims/talents.lua
+-- writes it; tests/Forever/talent_trees_spec.lua checks it and the spec detection over it). A key is Classic's where the
+-- talent exists there (code reads `talent.<key>.rank`; Setup is setup_talent), else the snake_case of the node's name.
 spec:RegisterTalents({
     -- Assassination (tree 1)
+    improved_gouge = { 1, 13741, 3 },
     remorseless_attacks = { 1, 14144, 2 },
     malice = { 1, 14138, 5 },
     ruthlessness = { 1, 14156, 3 },
-    improved_slice_and_dice = { 1, 14165, 3 },
-    relentless_strikes = { 1, 14179, 5 },
     improved_expose_armor = { 1, 14168, 2 },
-    lethality = { 1, 14128, 2 },
-    vile_poisons = { 1, 16513, 5 },
-    improved_poisons = { 1, 14113, 5 },
-    cold_blood = { 1, 14177, 1 },
-    improved_kidney_shot = { 1, 14174, 2 },
-    seal_fate = { 1, 14186, 3 },
+    improved_slice_and_dice = { 1, 14165, 3 },
     vigor = { 1, 14983, 2 },
     blood_splatter = { 1, 1329256, 1 },
+    lethality = { 1, 14128, 2 },
+    vile_poisons = { 1, 16513, 5 },
+    cold_blood = { 1, 14177, 1 },
+    improved_poisons = { 1, 14113, 5 },
+    relentless_strikes = { 1, 14179, 5 },
     venom = { 1, 1329328, 1 }, -- Shank's 6 s poison bonus
+    improved_kidney_shot = { 1, 14174, 2 },
+    seal_fate = { 1, 14186, 3 },
+    mutilate = { 1, 399956, 1 },
     -- Combat (tree 2)
     coup_de_grace = { 2, 14162, 3 },
     efficient_strikes = { 2, 13732, 2 },
-    improved_gouge = { 2, 13741, 3 },
     lightning_reflexes = { 2, 13712, 5 },
-    talent_13733 = { 2, 13733, 3 },
+    puncturing_wounds = { 2, 1224716, 3 },
     deflection = { 2, 13713, 3 },
     precision = { 2, 13705, 3 },
-    endurance = { 2, 13742, 2 },
-    composure = { 2, 1329265, 2 },
-    riposte = { 2, 14251, 1 },
     improved_sprint = { 2, 13743, 2 },
+    endurance = { 2, 13742, 2 },
+    riposte = { 2, 14251, 1 },
+    composure = { 2, 1329265, 2 },
     improved_kick = { 2, 13754, 2 },
-    hack_and_slash = { 2, 13706, 5 },
+    flawless_execution = { 2, 1310711, 1 },
+    weapon_expertise = { 2, 30919, 2 },
+    aggression = { 2, 18427, 3 },
     dual_wield_specialization = { 2, 13715, 2 },
-    hack_and_slash_2 = { 2, 13709, 5 },
     blade_flurry = { 2, 13877, 1 },
     hack_and_slash_3 = { 2, 13960, 5 },
     flash_of_steel = { 2, 1329284, 5 }, -- Shank: +3 energy and -0.4 s cooldown a rank
-    fist_weapon_specialization = { 2, 13707, 5 },
-    weapon_expertise = { 2, 30919, 2 },
-    aggression = { 2, 18427, 3 },
     adrenaline_rush = { 2, 13750, 1 },
     -- Subtlety (tree 3)
+    setup_talent = { 3, 13983, 3 },
     master_of_deception = { 3, 13958, 3 },
     opportunity = { 3, 14057, 5 },
-    sleight_of_hand = { 3, 30892, 2 },
-    elusiveness = { 3, 13981, 2 },
+    dirty_deeds = { 3, 14082, 2 },
     camouflage = { 3, 13975, 3 },
-    initiative = { 3, 13976, 3 },
-    ghostly_strike = { 3, 14278, 1 },
     improved_ambush = { 3, 14079, 3 },
-    setup_talent = { 3, 13983, 3 },
-    improved_sap = { 3, 14076, 3 },
+    dirty_tricks = { 3, 1224782, 2 },
+    initiative = { 3, 13976, 3 },
+    premeditation = { 3, 14183, 1 },
     serrated_blades = { 3, 14171, 3 },
+    elusiveness = { 3, 13981, 2 },
+    ghostly_strike = { 3, 14278, 1 },
+    quick_getaway = { 3, 1310728, 2 },
     heightened_senses = { 3, 30894, 2 },
     preparation = { 3, 14185, 1 },
-    dirty_deeds = { 3, 14082, 2 },
     hemorrhage = { 3, 16511, 1 },
-    deadliness = { 3, 30902, 5 },
-    premeditation = { 3, 14183, 1 },
     boot_knife = { 3, 1329286, 5 }, -- Shank's chance of 2 combo points (20% a rank; not modelled)
-    quick_getaway = { 3, 1310728, 2 },
     death_mark = { 3, 1316709, 1 },
-    -- Forever-only (tree unknown until the export)
-    flawless_execution = { 2, 1310711, 1 },
 })
 
 spec:RegisterAuras({

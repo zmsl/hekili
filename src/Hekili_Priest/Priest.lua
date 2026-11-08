@@ -721,34 +721,34 @@ spec:RegisterAbilities({
     },
 })
 
--- Talents: { talent tree (1 Discipline, 2 Holy, 3 Shadow: the dominant tree picks the spec), rank 1's spell, max rank }:
--- the DB2's 47 nodes (`wowdb talents PRIEST`; the tree is the DB2's Talent.TabID, the max rank its rank slots), keys
--- the snake_case names; then the Forever-only nodes, absent from the DB2's Talent table, in wowsims's tree
--- (ui/sim/talents/trees/priest.json: their trees and ranks; the definition spell its spellId). wowsims's Forever tree
--- drops some Era nodes (Unbreakable Will, Improved Power Word: Fortitude, Divine Spirit, Force of Will, Lightwell,
--- Shadow Affinity, Improved Fade, Improved Vampiric Embrace and the unnamed Holy 14911) and gives others fewer ranks
--- (Silent Resolve, Mental Agility, Wand Specialization 3 / 3 / 2; Twilight Focus 3 to the DB2's 2): the DB2's are kept
--- until the live export (no Forever node holds them). The costs read Mental Agility and Devouring Contagion, the cast
--- times Divine Fury, Mind Blast's cooldown Improved Mind Blast, Shadow Word: Pain's duration Improved Shadow Word: Pain.
+-- Talents: { talent tree (1 Discipline, 2 Holy, 3 Shadow: the dominant tree picks the spec), rank 1's spell, max rank
+-- }: Forever's tree as wowsims/forever's ui/sim/talents/trees/priest.json lists it (tools/wowsims/talents.lua writes it;
+-- tests/Forever/talent_trees_spec.lua checks it and the spec detection over it). A key is Classic's where the talent
+-- exists there (code reads `talent.<key>.rank`), else the snake_case of the node's name. The costs read Mental Agility
+-- and Devouring Contagion, the cast times Divine Fury, Mind Blast's cooldown Improved Mind Blast, Shadow Word: Pain's
+-- duration Improved Shadow Word: Pain.
 spec:RegisterTalents({
     -- Discipline (tree 1)
-    unbreakable_will = { 1, 14522, 5 },
-    wand_specialization = { 1, 14524, 5 },
-    silent_resolve = { 1, 14523, 5 },
-    improved_power_word_fortitude = { 1, 14749, 2 },
-    improved_power_word_shield = { 1, 14748, 3 },
+    power_in_light = { 1, 1309969, 5 },
+    wand_specialization = { 1, 14524, 2 },
+    twin_disciplines = { 1, 1225132, 5 },
+    silent_resolve = { 1, 14523, 3 },
+    holy_precision = { 1, 1309957, 3 },
+    mental_strength = { 1, 18551, 5 },
     martyrdom = { 1, 14531, 2 },
+    mental_agility = { 1, 14520, 3 },
     inner_focus = { 1, 14751, 1 },
+    improved_power_word_shield = { 1, 14748, 3 },
     meditation = { 1, 14521, 3 },
     improved_inner_fire = { 1, 14747, 3 },
-    mental_agility = { 1, 14520, 5 },
     improved_mana_burn = { 1, 14750, 2 },
-    mental_strength = { 1, 18551, 5 },
-    divine_spirit = { 1, 14752, 1 },
-    force_of_will = { 1, 18544, 5 },
+    soul_warding = { 1, 402000, 1 },
+    penance = { 1, 402174, 1 },
+    renewed_hope = { 1, 425280, 5 },
+    divine_aegis = { 1, 431622, 3 },
     power_infusion = { 1, 10060, 1 },
     -- Holy (tree 2)
-    twilight_focus = { 2, 14913, 2 },
+    twilight_focus = { 2, 14913, 3 },
     improved_renew = { 2, 14908, 3 },
     holy_specialization = { 2, 14889, 5 },
     spell_warding = { 2, 27900, 5 },
@@ -759,42 +759,30 @@ spec:RegisterTalents({
     holy_reach = { 2, 27789, 2 },
     improved_healing = { 2, 14912, 3 },
     searing_light = { 2, 14909, 2 },
-    holy_14911 = { 2, 14911, 2 }, -- the DB2 names neither the node nor its spell (tier 4, column 0)
+    holy_binding = { 2, 1328569, 1 },
+    litany_of_light = { 2, 1317006, 2 },
     spirit_of_redemption = { 2, 20711, 1 },
     spiritual_guidance = { 2, 14901, 5 },
-    spiritual_healing = { 2, 14898, 5 },
-    lightwell = { 2, 724, 1 },
-    -- Shadow (tree 3)
-    spirit_tap = { 3, 15270, 5 },
-    blackout = { 3, 15268, 5 }, -- wowsims's node names 15326, the DB2's rank 5
-    shadow_affinity = { 3, 15318, 3 },
-    improved_shadow_word_pain = { 3, 15275, 2 },
-    shadow_focus = { 3, 15260, 5 },
-    improved_psychic_scream = { 3, 15392, 2 },
-    improved_mind_blast = { 3, 15273, 5 },
-    mind_flay = { 3, 15407, 1 },
-    improved_fade = { 3, 15274, 2 },
-    shadow_reach = { 3, 17322, 3 },
-    shadow_weaving = { 3, 15257, 5 },
-    silence = { 3, 15487, 1 },
-    vampiric_embrace = { 3, 15286, 1 },
-    improved_vampiric_embrace = { 3, 27839, 2 },
-    darkness = { 3, 15259, 5 },
-    shadowform = { 3, 15473, 1 },
-    -- Forever-only (wowsims's trees and ranks)
-    power_in_light = { 1, 1309969, 5 },
-    twin_disciplines = { 1, 1225132, 5 },
-    holy_precision = { 1, 1309957, 3 },
-    soul_warding = { 1, 402000, 1 },
-    penance = { 1, 402174, 1 },
-    renewed_hope = { 1, 425280, 5 },
-    divine_aegis = { 1, 431622, 3 },
-    litany_of_light = { 2, 1317006, 2 },
+    spiritual_healing = { 2, 14898, 3 },
     prayer_of_mending = { 2, 401859, 1 },
+    -- Shadow (tree 3)
+    shadow_focus = { 3, 15260, 5 },
+    blackout = { 3, 15326, 5 }, -- wowsims's node names 15326, the DB2's rank 5
+    spirit_tap = { 3, 15270, 5 },
+    improved_mind_blast = { 3, 15273, 5 },
+    improved_shadow_word_pain = { 3, 15275, 2 },
+    shadow_reach = { 3, 17322, 2 },
+    improved_psychic_scream = { 3, 15392, 2 },
+    mind_flay = { 3, 15407, 1 },
     improved_mind_flay = { 3, 1225139, 2 },
     dark_inspiration = { 3, 1326159, 5 },
+    vampiric_embrace = { 3, 15286, 1 },
+    shadow_weaving = { 3, 15257, 3 },
+    silence = { 3, 15487, 1 },
     devouring_contagion = { 3, 1309950, 2 },
     early_demise = { 3, 1310076, 2 },
+    darkness = { 3, 15259, 5 },
+    shadowform = { 3, 15473, 1 },
 })
 
 -- Shadow's Starshards (the Night Elf racial): wowsims casts it when its expected damage per cast beats Mind Flay's, which

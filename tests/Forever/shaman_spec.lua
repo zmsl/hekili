@@ -145,14 +145,14 @@ describe("Forever Shaman", function()
         assert.are.equal("cooldowns", w.abilities.elemental_mastery.toggle)
     end)
 
-    it("places every DB2 talent in a tree and keeps the Forever-only ones at tree 0", function()
+    it("places every talent in a tree (Forever's)", function()
         local n = { [0] = 0, 0, 0, 0 }
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 2, 15, 17, 15 }, n)
-        assert.are.same({ 0, 1223030, 1 }, w.talents.shamanistic_focus) -- wowsims's tree; not in the DB2's Talent table
-        assert.are.same({ 0, 425336, 1 }, w.talents.rage_of_the_farseer)
+        assert.are.same({ [0] = 0, 16, 18, 16 }, n) -- Forever's tree (trees/shaman.json)
+        assert.are.same({ 2, 1223030, 1 }, w.talents.shamanistic_focus)
+        assert.are.same({ 2, 425336, 1 }, w.talents.rage_of_the_farseer)
     end)
 
     it("declares no settings (the hand-built list's are retired with it)", function()

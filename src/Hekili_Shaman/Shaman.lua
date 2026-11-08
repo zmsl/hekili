@@ -746,64 +746,66 @@ spec:RegisterAbilities({
     frostbrand_weapon = imbue(FROSTBRAND_WEAPON, FROSTBRAND_WEAPON_COST, "frostbrand_weapon"),
 })
 
--- Talents: { talent tree (1 Elemental, 2 Enhancement, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
--- max rank }: the DB2's 46 nodes (`wowdb talents SHAMAN`; the tree is the DB2's Talent.TabID), keys the snake_case
--- names (a nameless node talent_<spell>), then Shamanistic Focus at tree 0. Reverberation and Improved Fire Nova
--- shorten cooldowns; Shamanistic Focus cuts the shocks' and Lightning Shield's cost.
+-- Talents: { talent tree (1 Elemental, 2 Enhancement, 3 Restoration: the dominant tree picks the spec), rank 1's
+-- spell, max rank }: Forever's tree as wowsims/forever's ui/sim/talents/trees/shaman.json lists it
+-- (tools/wowsims/talents.lua writes it; tests/Forever/talent_trees_spec.lua checks it and the spec detection over it). A
+-- key is Classic's where the talent exists there (code reads `talent.<key>.rank`), else the snake_case of the node's
+-- name. Reverberation and Improved Fire Nova shorten cooldowns; Shamanistic Focus cuts the shocks' and Lightning
+-- Shield's cost.
 spec:RegisterTalents({
     -- Elemental (tree 1)
     convection = { 1, 16039, 5 },
     concussion = { 1, 16035, 5 },
-    earths_grasp = { 1, 16043, 2 },
-    elemental_warding = { 1, 28996, 3 },
+    elemental_devastation = { 1, 30160, 3 },
+    reverberation = { 1, 16040, 5 },
+    elemental_alacrity = { 1, 16578, 3 },
     call_of_flame = { 1, 16038, 3 },
     elemental_focus = { 1, 16164, 1 },
-    reverberation = { 1, 16040, 5 },
-    talent_16041 = { 1, 16041, 5 },
+    elemental_warding = { 1, 28996, 3 },
     improved_fire_nova = { 1, 16086, 2 },
     eye_of_the_storm = { 1, 29062, 3 },
-    elemental_devastation = { 1, 30160, 3 },
+    earthbound = { 1, 1222988, 1 },
     elemental_reach = { 1, 28999, 2 },
-    elemental_fury = { 1, 16089, 1 },
-    elemental_alacrity = { 1, 16578, 5 },
+    call_of_thunder = { 1, 16120, 1 },
+    lightning_overload = { 1, 408438, 3 },
+    elemental_fury = { 1, 16089, 5 },
     talent_16166 = { 1, 16166, 1 },
     -- Enhancement (tree 2)
-    ancestral_knowledge = { 2, 17485, 5 },
-    shield_specialization = { 2, 16253, 5 },
-    guardian_totems = { 2, 16258, 2 },
+    earths_grasp = { 2, 16043, 2 },
     thundering_strikes = { 2, 16255, 5 },
-    improved_ghost_wolf = { 2, 16262, 2 },
+    ancestral_knowledge = { 2, 17485, 5 },
+    guardian_totems = { 2, 16258, 2 },
+    mental_dexterity = { 2, 415140, 3 },
     improved_lightning_shield = { 2, 16261, 3 },
-    enhancing_totems = { 2, 16259, 2 },
-    two_handed_axes_and_maces = { 2, 16269, 1 },
-    anticipation = { 2, 16254, 5 },
-    flurry = { 2, 16256, 5 },
-    toughness = { 2, 16252, 5 },
-    improved_weapon_totems = { 2, 29192, 2 },
     elemental_weapons = { 2, 16266, 3 },
-    spirit_weapons = { 2, 16268, 1 },
-    weapon_mastery = { 2, 29082, 5 },
+    shamanistic_focus = { 2, 1223030, 1 },
+    anticipation = { 2, 16254, 3 },
+    toughness = { 2, 16252, 5 },
+    flurry = { 2, 16256, 5 },
     stormstrike = { 2, 17364, 1 },
+    improved_ghost_wolf = { 2, 16262, 2 },
+    spirit_weapons = { 2, 16268, 1 },
+    mental_quickness = { 2, 30812, 2 },
     improved_stormstrike = { 2, 1223031, 2 }, -- wowsims's tree (spell_data_auto_gen.go:238); the DB2 names the spell only
-    -- Forever-only (wowsims/forever's tree; not in the DB2's Talent table at 70338: checkpoint)
-    shamanistic_focus = { 0, 1223030, 1 },
-    rage_of_the_farseer = { 0, 425336, 1 },
+    maelstrom_weapon = { 2, 408498, 5 },
+    rage_of_the_farseer = { 2, 425336, 1 },
     -- Restoration (tree 3)
     improved_healing_wave = { 3, 16182, 5 },
     tidal_focus = { 3, 16179, 5 },
+    mindfulness = { 3, 1223033, 3 },
+    natural_grace = { 3, 29187, 3 },
+    totemic_focus = { 3, 16173, 5 },
     improved_reincarnation = { 3, 16184, 2 },
     ancestral_healing = { 3, 16176, 3 },
-    totemic_focus = { 3, 16173, 5 },
-    natures_guidance = { 3, 16180, 3 },
-    healing_focus = { 3, 16181, 5 },
-    totemic_mastery = { 3, 16189, 1 },
-    natural_grace = { 3, 29187, 3 },
-    restorative_totems = { 3, 16187, 5 },
+    healing_focus = { 3, 16181, 3 },
+    water_shield = { 3, 408510, 1 },
     tidal_mastery = { 3, 16194, 5 },
+    restorative_totems = { 3, 16187, 5 },
+    mana_tide_totem = { 3, 16190, 1 },
     healing_way = { 3, 29206, 3 },
     natures_swiftness = { 3, 16188, 1 },
     purification = { 3, 16178, 5 },
-    mana_tide_totem = { 3, 16190, 1 },
+    riptide = { 3, 408521, 1 },
 })
 
 -- The priority, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run

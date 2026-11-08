@@ -94,13 +94,12 @@ describe("Forever Priest", function()
         assert.are.equal("defensives", w.abilities.power_word_shield.toggle)
     end)
 
-    it("places every DB2 talent in its tree and the Forever-only ones in wowsims's", function()
+    it("places every talent in its tree (Forever's)", function()
         local n = { [0] = 0, 0, 0, 0 }
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        -- the DB2's 15 / 16 / 16, and 7 / 2 / 4 Forever-only nodes (Binding Heal left the game)
-        assert.are.same({ [0] = 0, 22, 18, 20 }, n)
+        assert.are.same({ [0] = 0, 18, 17, 17 }, n) -- Forever's tree (trees/priest.json)
         assert.are.same({ 1, 402174, 1 }, w.talents.penance)
         assert.are.same({ 3, 1309950, 2 }, w.talents.devouring_contagion)
     end)

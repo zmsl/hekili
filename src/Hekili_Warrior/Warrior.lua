@@ -388,14 +388,14 @@ spec:RegisterResource(
 -- Talents: { talent tree (1 Arms, 2 Fury, 3 Protection: the dominant tree picks the spec), the definition spell,
 -- max rank }: the 53 nodes of Forever's one talent tree (Raging Blows became Improved Whirlwind and Reckless Swings is
 -- new at 4b0030a44b), grouped by their columns as the pane shows them. The tree is
--- the DB2's (Talent.TabID; Improved Slam and Improved Thunder Clap sit in another column than their tab), a
--- Forever-only node its section's. Keys are Classic's where the talent exists (Bastion keeps Classic's
+-- wowsims/forever's ui/sim/talents/trees/warrior.json (tools/wowsims/talents.lua writes it; tests/Forever/
+-- talent_trees_spec.lua checks it and the spec detection over it). Keys are Classic's where the talent exists (Bastion keeps Classic's
 -- one_handed_weapon_specialization), snake_case names for the Forever-only ones. Each node reported one definition
 -- spell at every rank the export saw (owned nodes at ranks 1-5 report their rank 1 spell; Iron Will and Defiance
 -- define themselves by a higher DB2 rank's ID), so there are no rank aliases. The belief maps the trait walk's
 -- spells to them.
 spec:RegisterTalents({
-    -- Arms (16 here, 17 on the tree)
+    -- Arms (tree 1)
     improved_heroic_strike = { 1, 12282, 3 },
     deflection = { 1, 16462, 5 },
     improved_rend = { 1, 12286, 3 },
@@ -404,58 +404,53 @@ spec:RegisterTalents({
     improved_overpower = { 1, 12290, 2 },
     anger_management = { 1, 12296, 1 },
     deep_wounds = { 1, 12834, 3 },
+    spearing_strike = { 1, 1310222, 1 },
     two_handed_weapon_specialization = { 1, 12163, 3 },
     impale = { 1, 16493, 2 },
+    bloodthrill = { 1, 1289682, 2 }, -- 5 ranks before 4b0030a44b (e430b5e640)
     sweeping_strikes = { 1, 12292, 1 },
+    weaponmaster = { 1, 1290261, 5 },
+    improved_slam = { 1, 12862, 2 }, -- the DB2 tab is Fury
     improved_hamstring = { 1, 12289, 3 },
     mortal_strike = { 1, 12294, 1 },
-    improved_slam = { 2, 12862, 2 }, -- the DB2 tab is Fury
-    -- Forever-only; Weaponmaster (in place of the four weapon specializations) and Bloodthrill unmodelled.
-    weaponmaster = { 1, 1290261, 5 },
-    spearing_strike = { 1, 1310222, 1 },
-    bloodthrill = { 1, 1289682, 2 }, -- 5 ranks before 4b0030a44b (e430b5e640)
-    -- Fury (18)
+    -- Fury (tree 2)
     booming_voice = { 2, 12321, 5 },
     cruelty = { 2, 12320, 5 },
+    lingering_rage = { 2, 1323964, 5 },
     unbridled_wrath = { 2, 12322, 5 },
+    furious_precision = { 2, 1323963, 3 },
     piercing_howl = { 2, 12323, 1 },
     blood_craze = { 2, 16487, 3 },
-    dual_wield_specialization = { 2, 23584, 5 },
-    improved_execute = { 2, 20502, 2 },
     enrage = { 2, 12317, 5 },
-    death_wish = { 2, 12328, 1 },
-    improved_intercept = { 2, 20504, 2 },
+    dual_wield_specialization = { 2, 23584, 5 },
+    reckless_swings = { 2, 1329555, 1 },
+    improved_execute = { 2, 20502, 2 },
     improved_berserker_rage = { 2, 20500, 2 },
+    death_wish = { 2, 12328, 1 },
+    gore_drinker = { 2, 1323967, 2 },
+    improved_intercept = { 2, 20504, 2 },
+    improved_whirlwind = { 2, 1310315, 2 },
     flurry = { 2, 12319, 3 }, -- 5 ranks before 4b0030a44b (e430b5e640)
     bloodthirst = { 2, 23881, 1 },
-    -- Forever-only: Reckless Swings (the ability below), Improved Whirlwind (1310315, once Raging Blows: Whirlwind's
-    -- cooldown -1 s a rank); the others unmodelled.
-    furious_precision = { 2, 1323963, 3 },
-    reckless_swings = { 2, 1329555, 1 },
-    improved_whirlwind = { 2, 1310315, 2 },
-    lingering_rage = { 2, 1323964, 5 },
-    gore_drinker = { 2, 1323967, 2 },
-    -- Protection (18 here, 17 on the tree)
-    shield_specialization = { 3, 12298, 5 },
-    anticipation = { 3, 12297, 5 },
+    -- Protection (tree 3)
     improved_bloodrage = { 3, 12301, 2 },
-    improved_thunder_clap = { 1, 12287, 3 }, -- the DB2 tab is Arms
+    shield_specialization = { 3, 12298, 5 },
     iron_will = { 3, 12962, 5 },
-    last_stand = { 3, 12975, 1 },
+    anticipation = { 3, 12297, 5 },
     improved_revenge = { 3, 12797, 3 },
+    improved_thunder_clap = { 3, 12287, 3 }, -- the DB2 tab is Arms
+    last_stand = { 3, 12975, 1 },
+    master_of_defense = { 3, 1310316, 2 },
+    improved_disarm = { 3, 12313, 3 },
     defiance = { 3, 12792, 3 },
     improved_sunder_armor = { 3, 12308, 3 },
-    improved_disarm = { 3, 12313, 3 },
+    vanguard = { 3, 1310317, 1 },
+    improved_shield_bash = { 3, 12311, 2 },
     improved_shield_wall = { 3, 12312, 2 },
     concussion_blow = { 3, 12809, 1 },
-    improved_shield_bash = { 3, 12311, 2 },
+    focused_rage = { 3, 29787, 3 },
     one_handed_weapon_specialization = { 3, 16538, 5 }, -- "Bastion" on Forever
     shield_slam = { 3, 23922, 1 },
-    -- Forever-only: Focused Rage (-3 rage a rank on the offensive abilities), Vanguard (Charge in Defensive Stance),
-    -- Master of Defense (rage on a dodge or parry: the rage resource's `taken`).
-    focused_rage = { 3, 29787, 3 },
-    vanguard = { 3, 1310317, 1 },
-    master_of_defense = { 3, 1310316, 2 },
 })
 
 spec:RegisterAuras({

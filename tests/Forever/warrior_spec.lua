@@ -852,15 +852,15 @@ describe("Forever Warrior", function()
         assert.are.same({ id = 1310185, passive = true }, w.passives.tactical_mastery)
     end)
 
-    it("places every registered talent in a tree, 17 Arms, 19 Fury and 17 Protection", function()
-        -- the DB2's tabs (wowdb talents WARRIOR): Improved Slam is Fury's and Improved Thunder Clap Arms's, though the
-        -- pane groups them with the other tree; a Forever-only node is its section's
+    it("places every registered talent in a tree, 17 Arms, 18 Fury and 18 Protection", function()
+        -- Forever's trees (trees/warrior.json): Improved Slam sits in Arms and Improved Thunder Clap in Protection, where
+        -- the pane groups them (the DB2's tabs had them in Fury and Arms)
         local n = { 0, 0, 0 }
         for key, t in pairs(require("Forever.helpers.load_warrior").load().talents) do
             assert.is_true(t[1] >= 1 and t[1] <= 3, key)
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ 17, 19, 17 }, n)
+        assert.are.same({ 17, 18, 18 }, n)
     end)
 
     it("reads a queued strike and Revenge's window at reset, leaving the stance to the Forms source", function()

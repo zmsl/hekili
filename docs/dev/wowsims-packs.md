@@ -437,3 +437,19 @@ start outlives the fight. That order is UNMEASURED (in-game ledger CS1): the cli
 INTERRUPTED when the target dies; the belief handles either. An unmapped item's use in a replay log is still our cast
 to the client: a success of spell
 `replay.UNMAPPED_SPELL` (0, no ability's), which `Events/Rows.lua` reads as "an outcome now may be that item's".
+
+## Talent tables (spec detection)
+
+Spec detection counts the live rank of every node a kit REGISTERS (`spec:RegisterTalents`, `ns.TreePoints`), so a missing or
+mis-filed node moves a build's points between trees. The kits' tables follow Forever's tree, `ui/sim/talents/trees/<class>.json`
+at the pin (generated from the game files; checked against one Warrior `/fprobe export` of 2026-10-15 only, so a fresh export
+per class would confirm it). Copies live in `tests/Forever/fixtures/talent_trees/`.
+
+- `WOWSIMS_TREES=<dir> .lua/bin/lua tools/wowsims/talents.lua all|<class> [--write]` prints or rewrites each kit's table: tree
+  = the JSON's order, a spell id the kit has keeps its name (code reads `talent.<name>.rank`), a row named like an unmatched
+  node is that node under its new id, other new nodes are snake_case(fancyName), rows the tree lacks are dropped unless
+  `M.KEEP` (in the generator) lists them because code reads them. `--write` also refreshes the fixtures. Re-run it on a re-pin.
+- `tests/Forever/talent_trees_spec.lua`: every node registered with its tree and max rank, every `talent.<name>` the kit and its
+  packs read is registered, and for every recipe's talent string (decoded as `export.lua`'s `M.talents`) the counted points per
+  tree equal the string's own. A pack line that reads a talent its own build does not take (a wowsims line gated on a
+  talent) is not an error: the translation keeps the sim's condition.

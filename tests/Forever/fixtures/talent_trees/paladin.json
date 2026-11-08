@@ -1,0 +1,613 @@
+[
+  {
+    "name": "Holy",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/382.jpg",
+    "talents": [
+      {
+        "fieldName": "spiritualFocus",
+        "fancyName": "Spiritual Focus",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 20205,
+        "definitionId": 134830,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "divineStrength",
+        "fancyName": "Divine Strength",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 20262,
+        "definitionId": 145961,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "healingLight",
+        "fancyName": "Healing Light",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 20237,
+        "definitionId": 134828,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "reverence",
+        "fancyName": "Reverence",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 1310899,
+        "definitionId": 142623,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "improvedSeals",
+        "fancyName": "Improved Seals",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 20224,
+        "definitionId": 134829,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "purifyingPower",
+        "fancyName": "Purifying Power",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 3
+        },
+        "spellId": 429144,
+        "definitionId": 134822,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "divineFavor",
+        "fancyName": "Divine Favor",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 20216,
+        "definitionId": 134820,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "illumination",
+        "fancyName": "Illumination",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 20210,
+        "definitionId": 134824,
+        "maxPoints": 5,
+        "prereqLocation": {
+          "rowIdx": 1,
+          "colIdx": 1
+        }
+      },
+      {
+        "fieldName": "holyConduit",
+        "fancyName": "Holy Conduit",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 1237268,
+        "definitionId": 135234,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "divinePrecision",
+        "fancyName": "Divine Precision",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 1310904,
+        "definitionId": 134819,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "infusionOfLight",
+        "fancyName": "Infusion of Light",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 426065,
+        "definitionId": 142625,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "oathOfLight",
+        "fancyName": "Oath of Light",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 1328548,
+        "definitionId": 134825,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "consecratedGround",
+        "fancyName": "Consecrated Ground",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 1310905,
+        "definitionId": 142624,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "holyShock",
+        "fancyName": "Holy Shock",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 1311606,
+        "definitionId": 134818,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "boundlessLight",
+        "fancyName": "Boundless Light",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 1328550,
+        "definitionId": 145962,
+        "maxPoints": 2,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      },
+      {
+        "fieldName": "holyPower",
+        "fancyName": "Holy Power",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 5923,
+        "definitionId": 134816,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "lightsVigil",
+        "fancyName": "Light's Vigil",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 1310911,
+        "definitionId": 134815,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "Protection",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/383.jpg",
+    "talents": [
+      {
+        "fieldName": "divineIntellect",
+        "fancyName": "Divine Intellect",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 20257,
+        "definitionId": 134827,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "redoubt",
+        "fancyName": "Redoubt",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 20127,
+        "definitionId": 135151,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "precision",
+        "fancyName": "Precision",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 20189,
+        "definitionId": 135163,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "guardiansFavor",
+        "fancyName": "Guardian's Favor",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 20174,
+        "definitionId": 135162,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "sacredDuty",
+        "fancyName": "Sacred Duty",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 3
+        },
+        "spellId": 1224697,
+        "definitionId": 135157,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "templarsBulwark",
+        "fancyName": "Templar's Bulwark",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 1311015,
+        "definitionId": 135150,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "improvedHammerOfJustice",
+        "fancyName": "Improved Hammer of Justice",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 20487,
+        "definitionId": 135158,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "shieldSpecialization",
+        "fancyName": "Shield Specialization",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 20150,
+        "definitionId": 142626,
+        "maxPoints": 2,
+        "prereqLocation": {
+          "rowIdx": 0,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "toughness",
+        "fancyName": "Toughness",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 3
+        },
+        "spellId": 20143,
+        "definitionId": 135155,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "swiftJudgement",
+        "fancyName": "Swift Judgement",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 1310994,
+        "definitionId": 142630,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 2,
+          "colIdx": 0
+        }
+      },
+      {
+        "fieldName": "improvedRighteousFury",
+        "fancyName": "Improved Righteous Fury",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 20468,
+        "definitionId": 135159,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "anticipation",
+        "fancyName": "Anticipation",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 20096,
+        "definitionId": 135161,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "stoicism",
+        "fancyName": "Stoicism",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 1328546,
+        "definitionId": 135164,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "holyShield",
+        "fancyName": "Holy Shield",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 20925,
+        "definitionId": 135153,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "reckoning",
+        "fancyName": "Reckoning",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 20177,
+        "definitionId": 135152,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "ironCreed",
+        "fancyName": "Iron Creed",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 1311034,
+        "definitionId": 142631,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "shieldsworn",
+        "fancyName": "Shieldsworn",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 1328544,
+        "definitionId": 142627,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "Retribution",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/381.jpg",
+    "talents": [
+      {
+        "fieldName": "deflection",
+        "fancyName": "Deflection",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 20060,
+        "definitionId": 135237,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "benediction",
+        "fancyName": "Benediction",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 20101,
+        "definitionId": 135236,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "improvedJudgement",
+        "fancyName": "Improved Judgement",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 25956,
+        "definitionId": 135235,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "conviction",
+        "fancyName": "Conviction",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 20117,
+        "definitionId": 135233,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "sanctifiedJudgement",
+        "fancyName": "Sanctified Judgement",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 1311074,
+        "definitionId": 135231,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "vindication",
+        "fancyName": "Vindication",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 9452,
+        "definitionId": 135232,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "unyieldingFaith",
+        "fancyName": "Unyielding Faith",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 9453,
+        "definitionId": 134826,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "sealOfCommand",
+        "fancyName": "Seal of Command",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 20375,
+        "definitionId": 135226,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "pursuitOfJustice",
+        "fancyName": "Pursuit of Justice",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 3
+        },
+        "spellId": 26022,
+        "definitionId": 135229,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "eyeForAnEye",
+        "fancyName": "Eye for an Eye",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 9799,
+        "definitionId": 135228,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "sacredArbiter",
+        "fancyName": "Sacred Arbiter",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 1311087,
+        "definitionId": 135230,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "twohandedWeaponSpecialization",
+        "fancyName": "Two-Handed Weapon Specialization",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 3
+        },
+        "spellId": 20111,
+        "definitionId": 135227,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "turnEvil",
+        "fancyName": "Turn Evil",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 1328370,
+        "definitionId": 145960,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "repentance",
+        "fancyName": "Repentance",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 20066,
+        "definitionId": 135224,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "vengeance",
+        "fancyName": "Vengeance",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 20049,
+        "definitionId": 135223,
+        "maxPoints": 3,
+        "prereqLocation": {
+          "rowIdx": 2,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "championOfTheLight",
+        "fancyName": "Champion of the Light",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 1311084,
+        "definitionId": 142634,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "unsealedWrath",
+        "fancyName": "Unsealed Wrath",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 1310735,
+        "definitionId": 135222,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  }
+]
