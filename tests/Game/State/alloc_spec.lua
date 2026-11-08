@@ -263,8 +263,8 @@ describe("zero allocation", function()
 
     -- The sweep (cdm-default §3.2, plan Task 3b): the item fields are written directly (ctl.ViewerAura logs its writes,
     -- the fake's allocation, not the leaf's).
-    local function hold(item, on)
-        item.auraInstanceID, item.auraDataUnit = on and fake.SECRET or nil, on and "player" or nil
+    local function hold(item, on, unit)
+        item.auraInstanceID, item.auraDataUnit = on and fake.SECRET or nil, on and (unit or "player") or nil
     end
 
     it("the sweep over a 40-slot layout with changes allocates nothing (cdm-default §3.2)", function()
@@ -294,14 +294,29 @@ describe("zero allocation", function()
         R.onEdge = function()
             n = n + 1
         end
+        local U = I.auras -- records up, so a silence that passes the seen rule is live (Task 3c)
+        for u = 1, 2 do
+            for j = 1, 2 do
+                U.exp0[u][j], U.applied[u][j] = 1e6, 1
+            end
+        end
         local t = 1
         local ok, bytes = pcall(alloc.bytes, function(i)
             t = t + 0.1
             ctl.now = t
-            for k = 1, #items, 3 do -- a third of the slots change at every sweep
-                hold(items[k], i % 2 == 1)
+            for k = 1, #items, 3 do -- a third of the slots change at every sweep, some for the target
+                hold(items[k], i % 2 == 1, k % 6 == 1 and "target" or "player")
             end
             ctl.viewer.shown.BuffBarCooldownViewer = i % 5 ~= 0 -- and a viewer hides now and then
+            if i % 7 == 0 then -- a re-point to the other aura and back (a seen-rule reset)
+                items[2].cooldownID = items[2].cooldownID == 501 and 502 or 501
+            end
+            if i % 11 == 0 then -- a record closes and opens again (the gate)
+                U.exp0[1][2] = U.exp0[1][2] > 0 and 0 or 1e6
+            end
+            if i % 13 == 0 then -- a target switch: settle and reset
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+            end
             R.Sweep(t)
             R.Presence(1, 1)
             R.Presence(2, 2)
@@ -327,6 +342,7 @@ describe("zero allocation", function()
         R.onEdge = function()
             n = n + 1
         end
+        I.auras.exp0[1][1], I.auras.applied[1][1] = 1e6, 1 -- the record up: the item's silence is live (seen rule)
         local t = 1
         local ok, bytes = pcall(alloc.bytes, function(i)
             t = t + 0.1

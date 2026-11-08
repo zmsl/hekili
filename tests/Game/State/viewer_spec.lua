@@ -7,8 +7,8 @@ local fs = require("Game.State.helpers.fake_spec")
 local alloc = require("Game.State.helpers.alloc")
 
 -- The sweep (cdm-default spec §3.2, decisions 95-96, 100, 102; plan Task 3b): every slot read by rawget at poll 15,
--- counted per thing (aura j, unit u) as nLive, nUp, nNone, nStale, tUp, tNone, against the any-layout fake. Until
--- Task 3c's seen rule, a silent mapped slot counts as NONE for its last held unit (the player if it held none).
+-- counted per thing (aura j, unit u) as nLive, nUp, nNone, nStale, tUp, tNone, against the any-layout fake. A silent
+-- slot is NONE only under Task 3c's seen rule (spec §2.2a): rec() opens the record a silence may close.
 describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
     local VS, I, ctl, api, d, Q
     local A, C = fs.SPENDER_A, fs.SPENDER_C_R2 -- aura 1 (spender_a), aura 2 (spender_c, by its rank 2)
@@ -46,6 +46,9 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
     local function down(spell, unit)
         ctl.ViewerAuraBySpell(unit or "player", spell, false, "player")
     end
+    local function rec(j, u, applied) -- the belief's record of aura j on unit u: up since `applied`
+        I.auras.exp0[u][j], I.auras.applied[u][j] = 1e6, applied
+    end
 
     it(
         "a cooldown entry (Essential) holding an aura is UP evidence; a Buff icon entry for the same aura agrees",
@@ -53,16 +56,17 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
             ctl.ViewerItem("EssentialCooldownViewer", 1, 501)
             ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
             start()
-            assert.are.same({ 2, 0, 2, 0, 0, 1 }, counts(1, 1)) -- read at activation: both silent
+            assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1)) -- read at activation: both silent, never seen holding
             up(A)
             sweep(2)
             assert.are.same({ 2, 2, 0, 0, 2, 0 }, counts(1, 1))
             assert.are.equal(I.UP, I.presence.Presence(1, 1))
             assert.are.equal(1, I.presence.covered)
+            rec(1, 1, 2)
             up(A) -- the Essential entry alone: still UP evidence (F6)
             ctl.ViewerClear(ctl.viewer.items.BuffIconCooldownViewer[1])
             sweep(3)
-            assert.are.same({ 2, 1, 1, 0, 2, 3 }, counts(1, 1)) -- until Task 3c a silent slot is NONE: the UP is older
+            assert.are.same({ 2, 1, 1, 0, 2, 3 }, counts(1, 1)) -- the Buff icon held this application: its NONE is newer
             assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
         end
     )
@@ -134,9 +138,13 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
             assert.are.equal(0, I.presence.covered)
             ctl.viewer.parentShown = true
             ctl.viewer.shown.BuffBarCooldownViewer = nil
-            down(A)
+            up(A)
             sweep(4)
-            assert.are.same({ 2, 0, 2, 0, 0, 4 }, counts(1, 1)) -- they count again, from this poll
+            assert.are.same({ 2, 2, 0, 0, 4, 0 }, counts(1, 1)) -- they count again, from this poll
+            rec(1, 1, 2)
+            down(A)
+            sweep(5)
+            assert.are.same({ 2, 0, 2, 0, 0, 5 }, counts(1, 1))
             assert.are.equal(I.DOWN, I.presence.Presence(1, 1))
         end
     )
@@ -163,9 +171,14 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         local b = ctl.ViewerItem("BuffIconCooldownViewer", 2, 503)
         start()
         up(A)
+        ctl.ViewerAura(b, "player")
         sweep(2)
+        rec(1, 1, 2)
+        rec(2, 1, 2)
+        ctl.ViewerClear(b)
+        sweep(2.5)
         assert.are.same({ 1, 1, 0, 0, 2, 0 }, counts(1, 1))
-        assert.are.same({ 1, 0, 1, 0, 0, 1 }, counts(2, 1)) -- b silent: NONE (until Task 3c)
+        assert.are.same({ 1, 0, 1, 0, 0, 2.5 }, counts(2, 1)) -- b silent after holding this application: NONE
         ctl.ViewerRelease(a) -- held: cooldownID nil first, then the clear
         ctl.ViewerRelease(b) -- silent
         sweep(3)
@@ -181,10 +194,11 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         start()
         up(A)
         sweep(2)
+        rec(2, 1, 1)
         ctl.ViewerRepoint(item, 503) -- now aura 2: the refresh finds no aura 2 on us, the item clears
         sweep(3)
         assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
-        assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(2, 1))
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(2, 1)) -- a re-point resets the slot: never seen holding aura 2
         up(C)
         sweep(4)
         assert.are.same({ 1, 1, 0, 0, 4, 0 }, counts(2, 1))
@@ -192,26 +206,30 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
     end)
 
-    it("items appearing (in combat, lit at once) and disappearing move the counts; a silent item is NONE", function()
-        ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
-        start()
-        ctl.combat = true
-        ctl.Fire("PLAYER_REGEN_DISABLED")
-        up(A)
-        sweep(2)
-        local b = ctl.ViewerAcquire("EssentialCooldownViewer", 501) -- the pool grows: lit at once (F13)
-        sweep(3)
-        assert.is_not_nil(Q.slotOf[b])
-        assert.are.same({ 2, 2, 0, 0, 3, 0 }, counts(1, 1))
-        local s = ctl.ViewerAcquire("UtilityCooldownViewer", 501, true) -- a silent item (F12)
-        sweep(4)
-        assert.are.same({ 3, 2, 1, 0, 3, 4 }, counts(1, 1)) -- until Task 3c the silent item answers NONE
-        assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1)) -- its NONE is the fresher
-        ctl.ViewerRemove("UtilityCooldownViewer", s)
-        sweep(5)
-        assert.are.same({ 2, 2, 0, 0, 3, 0 }, counts(1, 1))
-        assert.are.equal(I.UP, I.presence.Presence(1, 1))
-    end)
+    it(
+        "items appearing (in combat, lit at once) and disappearing move the counts; a never-lit item is not live",
+        function()
+            ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            start()
+            ctl.combat = true
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            up(A)
+            sweep(2)
+            local b = ctl.ViewerAcquire("EssentialCooldownViewer", 501) -- the pool grows: lit at once (F13)
+            sweep(3)
+            assert.is_not_nil(Q.slotOf[b])
+            assert.are.same({ 2, 2, 0, 0, 3, 0 }, counts(1, 1))
+            rec(1, 1, 2)
+            local s = ctl.ViewerAcquire("UtilityCooldownViewer", 501, true) -- a silent item (F12)
+            sweep(4)
+            assert.are.same({ 2, 2, 0, 0, 3, 0 }, counts(1, 1)) -- it never held this application: not live
+            assert.are.equal(I.UP, I.presence.Presence(1, 1))
+            ctl.ViewerRemove("UtilityCooldownViewer", s)
+            sweep(5)
+            assert.are.same({ 2, 2, 0, 0, 3, 0 }, counts(1, 1))
+            assert.are.equal(I.UP, I.presence.Presence(1, 1))
+        end
+    )
 
     it("target items answer for the target; a target NONE is no answer through the router", function()
         local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
@@ -221,6 +239,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         sweep(2)
         assert.are.same({ 1, 1, 0, 0, 2, 0 }, counts(2, 2))
         assert.are.equal(I.UP, I.presence.Presence(2, 2))
+        rec(2, 2, 2)
         down(C, "target")
         sweep(3)
         assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(2, 2)) -- its last held unit
@@ -247,6 +266,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         ctl.ViewerAura(a, "player")
         ctl.ViewerAura(b, "player")
         sweep(2)
+        rec(1, 1, 2)
         ctl.ViewerClear(b) -- b answers NONE from 3
         sweep(3)
         ctl.ViewerAura(c, "player") -- c answers UP from 4 ...
@@ -261,9 +281,14 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
 
     it("a later NONE that left does not block an older live UP", function()
         local a = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
-        ctl.ViewerItem("BuffIconCooldownViewer", 2, 502) -- b: silent from activation (1)
+        local b = ctl.ViewerItem("BuffIconCooldownViewer", 2, 502)
         local c = ctl.ViewerItem("BuffIconCooldownViewer", 3, 502)
         start()
+        ctl.ViewerAura(b, "player")
+        sweep(1.2)
+        rec(1, 1, 1.2)
+        ctl.ViewerClear(b) -- b answers NONE from 1.5
+        sweep(1.5)
         ctl.ViewerAura(a, "player")
         ctl.ViewerAura(c, "player")
         sweep(2)
@@ -271,7 +296,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         sweep(3)
         ctl.ViewerRelease(c) -- ... and leaves
         sweep(4)
-        assert.are.same({ 2, 1, 1, 0, 2, 1 }, counts(1, 1)) -- live: a UP since 2, b NONE since 1
+        assert.are.same({ 2, 1, 1, 0, 2, 1.5 }, counts(1, 1)) -- live: a UP since 2, b NONE since 1.5
         local st, agree = I.ReduceFact(Q.Counts(1, 1))
         assert.are.same({ I.UP, false }, { st, agree })
         assert.are.equal(I.UP, I.presence.Presence(1, 1))
@@ -287,6 +312,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         up(A)
         sweep(2)
         sweep(2.1) -- no change, no edge
+        rec(1, 1, 2)
         down(A)
         sweep(3)
         ctl.ViewerRelease(item) -- UNKNOWN: no edge
@@ -316,7 +342,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         assert.is_not_nil(Q.slotOf[b])
     end)
 
-    it("poll 15 sweeps before its covered guard; a raise in the sweep does not break the poll", function()
+    it("poll 15 sweeps before its covered guard", function()
         start()
         assert.are.equal(0, I.presence.covered)
         ctl.ViewerAura(ctl.ViewerAcquire("BuffIconCooldownViewer", 502), "player")
@@ -324,6 +350,20 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         I.Sources.RunPolls(2)
         assert.are.equal(1, I.presence.covered)
         assert.are.equal(I.UP, I.presence.Presence(1, 1))
+    end)
+
+    -- Task 3c (spec §3.5, decision 107; 3b review I-3): a raise must not freeze the last answer and re-apply it.
+    it("an error in the sweep turns the leaf off for the session with one def.error line", function()
+        local lines = {}
+        start()
+        I.def.error = function(fmt, ...)
+            lines[#lines + 1] = string.format(fmt, ...)
+        end
+        ctl.ViewerAura(ctl.ViewerAcquire("BuffIconCooldownViewer", 502), "player")
+        ctl.now = 2
+        I.Sources.RunPolls(2)
+        assert.are.equal(I.UP, I.presence.Presence(1, 1)) -- control: on and answering
+        local isVisible = api.BuffIconCooldownViewer.IsVisible
         api.BuffIconCooldownViewer.IsVisible = function()
             error("forbidden")
         end
@@ -331,8 +371,327 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         assert.has_no.errors(function()
             I.Sources.RunPolls(3)
         end)
-        assert.are.equal(I.UP, I.presence.Presence(1, 1)) -- the failed sweep moved nothing
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1)) -- not the frozen UP
+        assert.are.equal(0, I.presence.covered)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        assert.are.equal(1, #lines)
+        assert.is_truthy(lines[1]:find("Cooldown Manager", 1, true), lines[1])
+        assert.are.equal(1, Q.errors)
+        ctl.now = 4
+        I.Sources.RunPolls(4) -- off: no second line
+        assert.are.equal(1, #lines)
+        api.BuffIconCooldownViewer.IsVisible = isVisible
+        I.Build(d, 5) -- a rebuild does not turn it back on: off for the session
+        ctl.now = 5
+        I.Sources.RunPolls(5)
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
+        assert.are.equal(0, I.presence.covered)
+        assert.are.equal(1, #lines)
     end)
+
+    -- Task 3c, the seen rule per slot (spec §2.2a, decision 115): a silent slot closes only an application it was
+    -- seen holding. Each "not live" case has its positive control.
+    it("sSeen[s] is written at every sweep the slot is held for u, not only on a change", function()
+        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        start()
+        local s = Q.slotOf[item]
+        up(A)
+        sweep(2)
+        assert.are.equal(2, Q.seen[s])
+        rec(1, 1, 2)
+        sweep(3) -- no reading change
+        assert.are.equal(3, Q.seen[s])
+        rec(1, 1, 3.2) -- our refresh while the item stays held moves applied
+        up(A)
+        sweep(3.5)
+        assert.are.equal(3.5, Q.seen[s])
+        down(A)
+        sweep(4)
+        assert.are.same({ 1, 0, 1, 0, 0, 4 }, counts(1, 1)) -- seen holding this application (3.5 >= 3.2): live
+    end)
+
+    it(
+        "a silent item for an application it never held is not live; control: lit this application, then silent",
+        function()
+            local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            start()
+            rec(1, 1, 2) -- our cast at 2; the item never lights
+            sweep(3)
+            assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+            assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
+            ctl.ViewerAura(item, "player") -- control
+            sweep(4)
+            ctl.ViewerClear(item)
+            sweep(5)
+            assert.are.same({ 1, 0, 1, 0, 0, 5 }, counts(1, 1))
+            assert.are.equal(I.DOWN, I.presence.Presence(1, 1))
+        end
+    )
+
+    it(
+        "a never-lit cooldown entry (Essential, Utility) does not close a cast self-buff (L279); control: a lit one does",
+        function()
+            ctl.viewer.sets[1] = { 505 }
+            ctl.viewer.infos[505] = { spellID = A } -- a Utility entry for aura 1
+            local e = ctl.ViewerItem("EssentialCooldownViewer", 1, 501)
+            ctl.ViewerItem("UtilityCooldownViewer", 1, 505)
+            start()
+            ctl.combat = true
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            rec(1, 1, 2) -- our cast: the entries never show the aura
+            for t = 2, 4, 0.5 do
+                sweep(t)
+                assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+                assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
+            end
+            ctl.ViewerAura(e, "player") -- control: the Essential entry lights this application, then goes silent
+            sweep(5)
+            ctl.ViewerClear(e)
+            sweep(6)
+            assert.are.same({ 1, 0, 1, 0, 0, 6 }, counts(1, 1))
+            assert.are.equal(I.DOWN, I.presence.Presence(1, 1))
+        end
+    )
+
+    it("our new cast moves applied past sSeen: the silent item is not live until it lights again (I-B)", function()
+        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        start()
+        ctl.ViewerAura(item, "player")
+        sweep(2)
+        rec(1, 1, 2)
+        ctl.ViewerClear(item)
+        sweep(3)
+        assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(1, 1))
+        rec(1, 1, 4) -- our new cast, before the client's UNIT_AURA lights the item
+        sweep(4.1)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
+        ctl.ViewerAura(item, "player") -- control: it lights, then its silence is live
+        sweep(5)
+        ctl.ViewerClear(item)
+        sweep(6)
+        assert.are.same({ 1, 0, 1, 0, 0, 6 }, counts(1, 1))
+    end)
+
+    it("two items for one aura, B never lit: B is never live; A released mid-application: UNKNOWN, not DOWN", function()
+        local a = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        ctl.ViewerItem("EssentialCooldownViewer", 1, 501).silent = true -- B
+        start()
+        up(A)
+        sweep(2)
+        assert.are.same({ 1, 1, 0, 0, 2, 0 }, counts(1, 1))
+        assert.are.same({ I.UP, true }, { I.ReduceFact(Q.Counts(1, 1)) })
+        rec(1, 1, 2)
+        rec(1, 1, 3) -- our refresh while A is held: no flip
+        up(A)
+        sweep(3)
+        assert.are.same({ 1, 1, 0, 0, 2, 0 }, counts(1, 1))
+        assert.are.same({ I.UP, true }, { I.ReduceFact(Q.Counts(1, 1)) })
+        ctl.ViewerRelease(a)
+        sweep(4)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
+    end)
+
+    it("two items for one aura, B never lit; control: A stays and goes silent: live as NONE", function()
+        ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        ctl.ViewerItem("EssentialCooldownViewer", 1, 501).silent = true
+        start()
+        up(A)
+        sweep(2)
+        rec(1, 1, 2)
+        down(A)
+        sweep(3)
+        assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(1, 1))
+        assert.are.equal(I.DOWN, I.presence.Presence(1, 1))
+    end)
+
+    it("re-point resets the slot: to another aura, back, and to another cooldownID of the same aura", function()
+        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        start()
+        up(A)
+        sweep(2)
+        rec(1, 1, 2)
+        rec(2, 1, 2)
+        ctl.ViewerRepoint(item, 503) -- aura 2: the refresh finds none, the item clears
+        sweep(3)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(2, 1))
+        ctl.ViewerRepoint(item, 502) -- back to aura 1, silent: not live until it lights again
+        sweep(4)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        ctl.ViewerAura(item, "player", A)
+        sweep(5)
+        ctl.ViewerClear(item)
+        sweep(5.5)
+        assert.are.same({ 1, 0, 1, 0, 0, 5.5 }, counts(1, 1)) -- lit again, then silent: live
+        ctl.ViewerRepoint(item, 501) -- another cooldownID, the same aura (sCd moves, sJ does not)
+        sweep(6)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        ctl.ViewerAura(item, "player", A) -- control: it lights the aura, then goes silent: live
+        sweep(7)
+        ctl.ViewerClear(item)
+        sweep(8)
+        assert.are.same({ 1, 0, 1, 0, 0, 8 }, counts(1, 1))
+    end)
+
+    it(
+        "a held slot with a secret or nil unit, or another plain unit, then silent, is not live for either unit;"
+            .. " control: held for the target, then silent, is live for the target only",
+        function()
+            local a = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            local b = ctl.ViewerItem("BuffIconCooldownViewer", 2, 502)
+            local c = ctl.ViewerItem("BuffIconCooldownViewer", 3, 502)
+            local e = ctl.ViewerItem("BuffIconCooldownViewer", 4, 502)
+            start()
+            for _, item in ipairs({ a, b, c }) do
+                ctl.ViewerAura(item, "player") -- each first seen holding for the player ...
+            end
+            sweep(1.5)
+            rec(1, 1, 1.5)
+            rec(1, 2, 1.5)
+            ctl.ViewerAura(a, fake.SECRET) -- ... then held for no unit we track: a reset
+            ctl.ViewerAura(b, nil)
+            ctl.ViewerAura(c, "focus")
+            ctl.ViewerAura(e, "target")
+            sweep(2)
+            for _, item in ipairs({ a, b, c, e }) do
+                ctl.ViewerClear(item)
+            end
+            sweep(3)
+            assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+            assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(1, 2)) -- e alone
+        end
+    )
+
+    it("a reset of a slot counted as NONE (target switch, cooldownID change) un-counts it first", function()
+        local tItem = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
+        tItem.unit = "target"
+        local pItem = ctl.ViewerItem("BuffIconCooldownViewer", 2, 502)
+        start()
+        up(C, "target")
+        up(A)
+        sweep(2)
+        rec(2, 2, 2)
+        rec(1, 1, 2)
+        down(C, "target")
+        down(A)
+        sweep(3)
+        assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(2, 2))
+        assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(1, 1))
+        ctl.now = 4
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        local n = counts(2, 2) -- un-counted at the reset, before any sweep (tUp/tNone follow at the next reduce)
+        assert.are.same({ 0, 0, 0, 0 }, { n[1], n[2], n[3], n[4] })
+        ctl.ViewerRepoint(pItem, 501)
+        sweep(4.1)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(2, 2))
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        assert.are.equal(0, I.presence.covered)
+    end)
+
+    it("an ambiguous slot, held then silent, is never live; control: an unambiguous slot is", function()
+        ctl.viewer.sets[2] = { 502, 503, 506 }
+        ctl.viewer.infos[506] = { spellID = A, overrideSpellID = fs.SPENDER_C } -- names aura 1 and aura 2
+        local amb = ctl.ViewerItem("BuffIconCooldownViewer", 1, 506)
+        local one = ctl.ViewerItem("BuffIconCooldownViewer", 2, 502)
+        start()
+        ctl.ViewerAura(amb, "player")
+        sweep(2)
+        rec(1, 1, 2)
+        rec(2, 1, 2)
+        ctl.ViewerClear(amb)
+        sweep(3)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(2, 1))
+        ctl.ViewerAura(one, "player")
+        sweep(4)
+        ctl.ViewerClear(one)
+        sweep(5)
+        assert.are.same({ 1, 0, 1, 0, 0, 5 }, counts(1, 1))
+    end)
+
+    it("a rebuild resets every slot's sSeen", function()
+        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        start()
+        ctl.ViewerAura(item, "player")
+        sweep(2)
+        rec(1, 1, 2)
+        ctl.ViewerClear(item)
+        sweep(3)
+        assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(1, 1))
+        I.Build(d, 4) -- a rebuild: the map anew
+        rec(1, 1, 2)
+        sweep(5)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        ctl.ViewerAura(item, "player") -- control
+        sweep(6)
+        ctl.ViewerClear(item)
+        sweep(7)
+        assert.are.same({ 1, 0, 1, 0, 0, 7 }, counts(1, 1))
+    end)
+
+    it("a target switch resets the target-held slots' sSeen: not live for the new target until lit", function()
+        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
+        item.unit = "target"
+        start()
+        up(C, "target")
+        sweep(2)
+        ctl.now = 3
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        rec(2, 2, 1) -- the new target's remembered application, older than the item's last light
+        down(C, "target")
+        sweep(3.1)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(2, 2))
+        up(C, "target") -- control: lit for the new target, then silent: live
+        sweep(4)
+        down(C, "target")
+        sweep(5)
+        assert.are.same({ 1, 0, 1, 0, 0, 5 }, counts(2, 2))
+    end)
+
+    it("a record that closed makes its silent slots not live at the next sweep", function()
+        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        start()
+        ctl.ViewerAura(item, "player")
+        sweep(2)
+        rec(1, 1, 2)
+        ctl.ViewerClear(item)
+        sweep(3)
+        assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(1, 1)) -- control: live while the record is up
+        I.auras.exp0[1][1], I.auras.applied[1][1] = 0, 0 -- the record closes
+        sweep(3.5)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+    end)
+
+    -- Task 3c, the target settle (spec §3.4, decision 103).
+    it(
+        "target change: target and NONE slots settle for SETTLE as stale; settle end is a change at that poll",
+        function()
+            local tItem = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
+            tItem.unit = "target"
+            local pItem = ctl.ViewerItem("BuffIconCooldownViewer", 2, 502)
+            start()
+            up(C, "target")
+            ctl.ViewerAura(pItem, "player")
+            sweep(2)
+            rec(1, 1, 2)
+            ctl.ViewerClear(pItem)
+            sweep(2.5)
+            assert.are.same({ 1, 1, 0, 0, 2, 0 }, counts(2, 2))
+            assert.are.same({ 1, 0, 1, 0, 0, 2.5 }, counts(1, 1))
+            ctl.now = 3
+            ctl.Fire("PLAYER_TARGET_CHANGED") -- the target item still shows the old mob's light
+            sweep(3.01)
+            assert.are.same({ 0, 0, 0, 1, 0, 0 }, counts(2, 2))
+            assert.are.same({ 0, 0, 0, 1, 0, 0 }, counts(1, 1))
+            assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2))
+            sweep(3.06) -- settled: each a change at this poll
+            assert.are.same({ 1, 1, 0, 0, 3.06, 0 }, counts(2, 2))
+            assert.are.same({ 1, 0, 1, 0, 0, 3.06 }, counts(1, 1))
+            assert.are.equal(I.UP, I.presence.Presence(2, 2))
+        end
+    )
 end)
 
 -- The map and the collect (cdm-default spec §3.1-§3.2, decisions 97-98, 101; plan Task 3a), against the any-layout fake

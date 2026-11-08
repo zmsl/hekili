@@ -5,9 +5,11 @@
 -- to MAX_SLOTS; past that a child is ignored and counted (overflow). A new frame is a new slot; a slot is never reused.
 -- The sweep (§3.2): at poll 15, per viewer IsVisible and GetNumChildren once, per slot four rawgets; a reading change
 -- moves its thing's counters (aura j, unit u: nUp, nNone, nStale) in O(1); the moved things' tUp/tNone are recomputed
--- over the live slots (O(slots)); a reduced UP or DOWN change goes to onEdge. Until Task 3c's seen rule a silent mapped slot answers NONE for its last held unit (the player if it
--- held none). Read, never write: rawget on items, on Blizzard frames only GetChildren, GetNumChildren and IsVisible;
--- no hooks of any kind (§3.3, §3.5).
+-- over the live slots (O(slots)); a reduced UP or DOWN change goes to onEdge. The seen rule (§2.2a, decision 115): a
+-- silent slot answers NONE only for an application it was seen holding (its record up, sSeen >= applied, its last held
+-- unit). A target change makes target and NONE slots settle for SETTLE (§3.4). A raise in the sweep turns the leaf off
+-- for the session (§3.5). Read, never write: rawget on items, on Blizzard frames only GetChildren, GetNumChildren and
+-- IsVisible; no hooks of any kind (§3.3, §3.5).
 -- The idea of reading the viewer's items for presence, the all-viewers presence bit, the hidden-viewer rule and the
 -- spell mapping are TellMeWhen's (Cybeloras), GPL-3.0; ideas only, no code copied.
 
@@ -20,6 +22,8 @@ local Plain = S.Plain
 local VIEWERS =
     { "EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
 local MAX_SLOTS = 128
+local SETTLE = 0.05 -- shortcut: a guess until the CDM-O probe measures the target switch (spec D5)
+local STOPPED = "Forever: Cooldown Manager reading stopped for this session after an error: %s"
 
 local cdvToJ = {} -- cooldownID -> j, or -a (ambiguous: amb[a] lists its tracked js); built out of combat
 local amb = {} -- a -> { j, ... }
@@ -27,12 +31,14 @@ local mappable = {} -- j -> true when some cooldownID's candidates name it (alon
 local slotOf = setmetatable({}, { __mode = "k" }) -- child frame -> slot: the only in-combat insert (a new child)
 local known = { 0, 0, 0, 0 } -- children collected per viewer (GetNumChildren at the last collect)
 
--- The slots, preallocated: the frame, its viewer, the aura it is counted for (sJ, or sAmb the ambiguous a: Task 3c),
--- what it is counted as (sAns, sUnit) since sT, the seen rule's last held time and last plain cooldownID (sSeen, sCd:
--- Task 3c). sAns 0 not counted, else UP, NONE or STALE (a hidden viewer's slot: what it would answer, not live).
-local sFrame, sV, sJ, sAmb, sAns, sUnit, sT, sSeen, sCd = {}, {}, {}, {}, {}, {}, {}, {}, {}
+-- The slots, preallocated: the frame, its viewer, the aura it is counted for (sJ; sAmb unused), what it is counted as
+-- (sAns, sUnit: sUnit is also the last plain held unit, kept through silence) since sT, the seen rule's last held time
+-- and last plain cooldownID (sSeen, sCd, §2.2a), the end of a target settle (sSettle, §3.4). sAns 0 not counted, else
+-- UP, NONE or STALE (a hidden viewer's or a settling slot: what it would answer, not live).
+local sFrame, sV, sJ, sAmb, sAns, sUnit, sT, sSeen, sCd, sSettle = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
 for s = 1, MAX_SLOTS do
-    sFrame[s], sV[s], sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s], sSeen[s], sCd[s] = false, 0, 0, 0, 0, 0, 0, 0, 0
+    sFrame[s], sV[s], sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s] = false, 0, 0, 0, 0, 0, 0
+    sSeen[s], sCd[s], sSettle[s] = 0, 0, 0
 end
 
 local NOT, UP, NONE, STALE = 0, 1, 2, 3
@@ -52,11 +58,13 @@ local Q = {
     MAX_SLOTS = MAX_SLOTS,
     nSlots = 0,
     overflow = 0, -- children past MAX_SLOTS, ignored
+    errors = 0, -- sweeps that raised (the first turns the leaf off for the session)
     map = cdvToJ, -- read-only views for the tests and the snapshot
     amb = amb,
     slotOf = slotOf,
+    seen = sSeen,
 }
-local active, api0 = false, nil
+local active, api0, broken = false, nil, false
 
 -- One candidate spell into the item's set of js (0: untracked or secret; either makes the item ambiguous).
 local function note(api, byId, js, x)
@@ -250,11 +258,18 @@ local function count(s, j, u, a, t)
     end
 end
 
+-- The seen rule starts over for slot s (§2.2a): un-counted first, so no count is left with no live slot behind it.
+local function reset(s)
+    uncount(s)
+    sSeen[s], sUnit[s] = 0, 0
+end
+
 -- One sweep (§3.2), under one pcall: each viewer's visibility and growth, then every slot's reading against what it is
 -- counted as. Un-count before count, so a raise between the two leaves the slot not counted, never counted twice.
 local function sweep(t)
     local api = api0
     local issecret = api.issecretvalue
+    local U = I.auras
     for v = 1, #VIEWERS do
         local f = Plain(api, api[VIEWERS[v]])
         local n = f and f.GetNumChildren and Plain(api, f:GetNumChildren())
@@ -273,6 +288,10 @@ local function sweep(t)
         local item = sFrame[s]
         local j, u, a = 0, 0, NOT
         local id = Plain(api, rawget(item, "cooldownID"))
+        if (id or 0) ~= sCd[s] then -- (re)assigned, released or secret: a new mapping (same-aura re-points too)
+            reset(s)
+            sCd[s] = id or 0
+        end
         local m = id ~= nil and Plain(api, rawget(item, "layoutIndex")) ~= nil and cdvToJ[id]
         if m and m > 0 then -- configured and mapped to one aura (an ambiguous item counts for none)
             local aid = rawget(item, "auraInstanceID")
@@ -281,20 +300,25 @@ local function sweep(t)
                 u = unit ~= nil and UNIT[unit] or 0 -- a secret, nil or other unit: not live for either
                 if u > 0 then
                     j, a = m, UP
+                else
+                    reset(s) -- held for no unit we track: what it was seen holding says nothing now
                 end
-            else
-                j, u, a = m, sUnit[s], NONE -- the last held unit (Task 3c's seen rule gates this)
-                if u == 0 then
-                    u = 1
+            else -- silent: NONE only for the application this slot was seen holding (§2.2a)
+                j, u = m, sUnit[s]
+                if u > 0 and u <= U.n and sSeen[s] > 0 and U.exp0[u][m] > t and sSeen[s] >= U.applied[u][m] then
+                    a = NONE
                 end
             end
-            if a ~= NOT and not vis[sV[s]] then
+            if a ~= NOT and (not vis[sV[s]] or sSettle[s] > t) then
                 a = STALE
             end
         end
         if a ~= sAns[s] or j ~= sJ[s] or u ~= sUnit[s] then
             uncount(s)
             count(s, j, u, a, t)
+        end
+        if a == UP then -- every held sweep, not only a change: our refresh moves applied while the item stays held
+            sSeen[s] = t
         end
     end
 end
@@ -338,14 +362,27 @@ local function reduce(t)
     nTouched = 0
 end
 
---- The sweep at poll 15: reads every slot, moves the counters, then reduces what moved. A raise inside the sweep is
---- swallowed (the poll goes on; the slots read before it stand, the rest wait for the next sweep); Task 3c turns the
---- leaf off on one. Allocates nothing (a new child's slotOf entry aside).
+--- The sweep at poll 15: reads every slot, moves the counters, then reduces what moved. A raise inside the sweep turns
+--- the leaf off for the session (§3.5): it answers nothing from then on, so no frozen answer is applied again; one
+--- def.error line. Allocates nothing (a new child's slotOf entry aside; the error path formats once).
 function Q.Sweep(t)
     if not active then
         return
     end
-    pcall(sweep, t)
+    local ok, err = pcall(sweep, t)
+    if not ok then
+        broken, active, Q.covered = true, false, 0
+        Q.errors = Q.errors + 1
+        for i = 1, nTouched do
+            mark[touched[i]] = false
+        end
+        nTouched = 0
+        local def = I.def
+        if def and def.error then
+            def.error(STOPPED, tostring(err))
+        end
+        return
+    end
     reduce(t)
 end
 
@@ -360,7 +397,7 @@ end
 
 --- Builds the map and collects every viewer's children (out of combat), then sweeps once: the state now.
 function Q.Activate(api, t, def)
-    api0, active = api, api ~= nil
+    api0, active = api, api ~= nil and not broken -- off after an error until /reload
     Q.covered, nTouched = 0, 0
     for k in pairs(cUp) do
         cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], last[k], mark[k] = 0, 0, 0, 0, 0, I.UNDECIDED, false
@@ -368,8 +405,9 @@ function Q.Activate(api, t, def)
     for j in pairs(live) do
         live[j] = 0
     end
-    for s = 1, Q.nSlots do -- a new map: every slot counted afresh
+    for s = 1, Q.nSlots do -- a new map: every slot counted afresh, its seen rule started over (§2.2a)
         sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s] = 0, 0, NOT, 0, 0
+        sSeen[s], sCd[s], sSettle[s] = 0, 0, 0
     end
     local nAura = def and #def.auraIds or 0
     for j = 1, nAura do
@@ -380,7 +418,7 @@ function Q.Activate(api, t, def)
             touched[(u - 1) * nAura + j] = touched[(u - 1) * nAura + j] or 0
         end
     end
-    if api then
+    if active then
         if build(api, def) then
             collect(api, true)
             Q.Sweep(t)
@@ -415,6 +453,23 @@ function Q.Presence(j, u)
     end
     return I.UNDECIDED
 end
+
+-- A target change (§3.4): the slots last answering for the target, and every NONE slot, settle until t + SETTLE (stale);
+-- the target slots' seen rule starts over (mob A's light says nothing of mob B). Idempotent (it fires twice a swap).
+-- Allocates nothing.
+S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
+    if not active then
+        return
+    end
+    for s = 1, Q.nSlots do
+        if sUnit[s] == 2 or sAns[s] == NONE then
+            sSettle[s] = t + SETTLE
+        end
+        if sUnit[s] == 2 then
+            reset(s)
+        end
+    end
+end)
 
 -- Combat end: every child, so a pool grown in combat is complete (decision 101).
 S.On("PLAYER_REGEN_ENABLED", nil, function()

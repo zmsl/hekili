@@ -597,6 +597,8 @@ describe("auras", function()
         before_each(function()
             ctl.viewer.sets[2] = { 501 }
             ctl.viewer.infos[501] = { spellID = fs.SPENDER_A }
+            ctl.viewer.sets[0] = { 600 }
+            ctl.viewer.infos[600] = { spellID = fs.SPENDER_A } -- a cooldown entry (Essential) for the same aura
             item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 501)
             item.unit = "player"
             -- shortcut: stands in for Task 1's provider resolution in I.Build; Task 1 replaces it with `d.providers` alone
@@ -636,11 +638,25 @@ describe("auras", function()
             assert.are.same({ 1, 0 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
         end)
 
-        it("the poll takes a believed-up aura down when the viewer says down", function()
+        it("the poll takes a believed-up aura down when an item seen holding it goes silent", function()
             I.AuraModel(1, SHOUT, 10, 20, 1, 10, Obs.CastSuccess, false)
+            ctl.ViewerAura(item, "player")
+            poll(10.5) -- the item holds our application
+            ctl.ViewerClear(item)
             poll(11)
             assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
-            assert.are.same({ 1, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
+            assert.are.same({ 2, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
+        end)
+
+        it("a never-lit item, a cooldown entry (Essential) included, never closes our cast self-buff (L279)", function()
+            ctl.ViewerRelease(item) -- the Essential entry alone
+            ctl.ViewerAcquire("EssentialCooldownViewer", 600, true) -- grows in combat; never shows the aura (F12)
+            I.AuraModel(1, SHOUT, 10, 20, 1, 10, Obs.CastSuccess, false)
+            for t = 10.5, 14, 0.5 do
+                poll(t)
+                assert.are.equal(20, VS.Aura("player", fs.SPENDER_A, t).est)
+            end
+            assert.are.same({ 0, 0 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
         end)
 
         it("a plain walk wins: presence stages nothing", function()
