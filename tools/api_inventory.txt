@@ -31,6 +31,7 @@ C_PvP.IsWarModeDesired	passthrough
 C_SpecializationInfo.GetSpecialization	passthrough
 C_SpecializationInfo.GetSpecializationInfo	hybrid
 C_SpecializationInfo.GetTalentInfo	passthrough
+C_Spell.GetOverrideSpell	passthrough
 C_Spell.GetSpellCastCount	virtual
 C_Spell.GetSpellCharges	hybrid
 C_Spell.GetSpellCooldown	hybrid
