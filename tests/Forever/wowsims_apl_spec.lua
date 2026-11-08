@@ -2736,6 +2736,7 @@ describe("the wowsims APL translator on the Warlocks' assigned-curse check", fun
         local r = dofile("tools/wowsims/specs/warlock_demonology.lua")
         local set = require("Forever.helpers.engine").abilitySet(r.class)
         local player = { warlock = { options = { classOptions = {} } } } -- the zero value, Elements
+        r.select.castWarlockAssignedCurse.is = nil -- the shipped recipes name it now (CN3, the 0.7 re-pin): drop it for the "before"
         local before, omitted = apl.translate(rotation, apl.context(set, r, nil, player))
         assert.are.equal("", before)
         assert.are.same({

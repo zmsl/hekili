@@ -75,14 +75,18 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- ranges in the Feral world moved nothing), so 1.4. The gap to the oracle's 0.00 is untraced (L115).
     -- owner deviation R69 (no Prowl cancel line; Faerie Fire waits while a known Prowl is up): nothing moved (0.916
     -- (83), flicker 1.33/min, timing fixture identical): the replay's kit knows neither Prowl nor Ravage
+    -- 0.91 -> 0.96 (0.965, 82/85 decisions on-GCD; agreement 0.939) and flicker 1.4 -> 0.7 (0.67/min) on the 0.7 floors
+    -- run (integ/0.7 5deb101c4: CN8's cooldown countdown and steady icons as the default, over the pin-2 export; the
+    -- two are not separated). The 21.25, 39.88, 111.89, 140.38 and 162.38 never rows are gone; left: innervate ->
+    -- cat_form (the 0.04 s powershift tie), rake -> faerie_fire and shred -> faerie_fire
     it("Feral (wowsims.com) follows wowsims's casts", function()
         local r, line = ws.gate(
             "Feral (wowsims.com)",
             content("druid_feral", W.Feral, "Feral (wowsims.com)", 60),
             "druid_feral",
-            0.91
+            0.96
         )
-        assert.is_true(r.flicker <= 1.4, line)
+        assert.is_true(r.flicker <= 0.7, line)
     end)
     -- the pack's own worst idle at 60 (wowsims's energy pooling), seconds: 4.0 on central fix 22 round 1 (the live
     -- world's presses resolve from the driving instance, not the never-stepped oracle; L20 4.0 -> 3.0, L40 3.8 -> 3.4,

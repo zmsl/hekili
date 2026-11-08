@@ -1,5 +1,5 @@
-# wowsims e2842f0a784d2f329dde0bc682a6b84202a780f2 warrior_arms seed 101 180 s target 63
-# talents 12282=3@1 12286=3@1 12285=2@1 12295=5@1 12290=2@1 12296=1@1 12834=3@1 1310222=1@1 12163=3@1 16493=2@1 1289682=5@1 12292=1@1 1290261=5@1 12862=2@1 12294=1@1 12320=5@2 12322=5@2 12301=2@3
+# wowsims e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664 warrior_arms seed 101 180 s target 63
+# talents 12282=3@1 12286=3@1 12295=3@1 12290=2@1 12296=1@1 12834=3@1 1310222=1@1 12163=3@1 16493=2@1 1289682=2@1 12292=1@1 1290261=5@1 12862=2@1 12294=1@1 12321=5@2 12320=5@2 12322=5@2 20502=2@2 12301=2@3
 [0.00] [Arms (#1)] Aura gained: {SpellID: 1290261, Tag: 1}
 [0.00] [Arms (#1)] Aura gained: {SpellID: 2458}
 [-4.50] [Arms (#1)] Casting {SpellID: 18499} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: prepull 1
@@ -13,25 +13,26 @@
 [-3.00] [Arms (#1)] Casting {SpellID: 2687} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: prepull 3
 [-3.00] [Arms (#1)] Completed cast {SpellID: 2687}
 [-3.00] [Arms (#1)] Gained 15.000 rage from {SpellID: 2687} (25.000 --> 40.000) of 100 total.
-[-3.00] [Arms (#1)] Spent 337.800 health from {OtherID: 9} (4259.000 --> 3921.200) of 4259 total.
+[-3.00] [Arms (#1)] Spent 525.800 health from {SpellID: 2687} (4259.000 --> 3733.200) of 4259 total.
 [-3.00] [Arms (#1)] Aura gained: {SpellID: 29131}
-[-3.00] [Arms (#1)] Casting {SpellID: 25289} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: prepull 4
+[-3.00] [Arms (#1)] Casting {SpellID: 25289} (Cost = 7.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: prepull 4
 [-3.00] [Arms (#1)] Completed cast {SpellID: 25289}
-[-3.00] [Arms (#1)] Spent 10.000 rage from {SpellID: 25289} (40.000 --> 30.000) of 100 total.
+[-3.00] [Arms (#1)] Spent 7.500 rage from {SpellID: 25289} (40.000 --> 32.500) of 100 total.
 [-3.00] [Arms (#1)] [Target 1] {SpellID: 25289} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
 [-3.00] [Arms (#1)] Aura gained: {SpellID: 25289}
-[-2.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (30.000 --> 31.500) of 100 total.
-[-1.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (31.500 --> 33.000) of 100 total.
+[-2.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (32.500 --> 34.000) of 100 total.
+[-1.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (34.000 --> 35.500) of 100 total.
 [-0.90] [Arms (#1)] Casting {SpellID: 11578} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: prepull 5 > group 2.1
 [-0.90] [Arms (#1)] Completed cast {SpellID: 11578}
 [-0.90] [Arms (#1)] Aura gained: {SpellID: 11578}
-[-0.90] [Arms (#1)] Gained 21.000 rage from {SpellID: 11578} (33.000 --> 54.000) of 100 total.
+[-0.90] [Arms (#1)] Gained 15.000 rage from {SpellID: 11578} (35.500 --> 50.500) of 100 total.
 [-0.90] [Arms (#1)] Casting {OtherID: 20} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [-0.90] [Arms (#1)] Completed cast {OtherID: 20}
 [-0.90] [Arms (#1)] Aura gained: {OtherID: 20}
 [-0.90] [Arms (#1)] {OtherID: 20} stacks: 0 --> 25
+[-0.90] [Arms (#1)] Walking from 25.00 to 4.50 yards over 0.976s
 [0.00] [Arms (#1)] {OtherID: 20} stacks: 25 --> 6
-[0.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (54.000 --> 55.500) of 100 total.
+[0.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (50.500 --> 52.000) of 100 total.
 [0.00] [Arms (#1)] Casting {SpellID: 20572} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 11 > group 7.1
 [0.00] [Arms (#1)] Completed cast {SpellID: 20572}
 [0.00] [Arms (#1)] Aura gained: {SpellID: 20572}
@@ -42,11 +43,11 @@
 [0.05] [Arms (#1)] {OtherID: 20} stacks: 6 --> 4
 [0.05] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [0.05] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[0.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 527.749 damage (SpellSchool: 1). (Threat: 422.200)
-[0.05] [Arms (#1)] Gained 34.200 rage from {OtherID: 3, Tag: 14} (55.500 --> 89.700) of 100 total.
+[0.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 543.121 damage (SpellSchool: 1). (Threat: 434.497)
+[0.05] [Arms (#1)] Gained 34.200 rage from {OtherID: 3, Tag: 14} (52.000 --> 86.200) of 100 total.
 [0.05] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [0.05] [Arms (#1)] Completed cast {SpellID: 11597}
-[0.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (89.700 --> 74.700) of 100 total.
+[0.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (86.200 --> 71.200) of 100 total.
 [0.05] [Target 1] Aura gained: {SpellID: 11597}
 [0.05] [Target 1] {SpellID: 11597} stacks: 0 --> 1
 [0.05] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 201.540)
@@ -54,779 +55,738 @@
 [0.05] [Arms (#1)] Completed cast {SpellID: 412609}
 [0.05] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
 [0.05] [Target 1] Aura gained: {SpellID: 412609}
-[0.06] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (74.700 --> 75.700) of 100 total.
+[0.06] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (71.200 --> 72.200) of 100 total.
 [0.08] [Arms (#1)] Aura faded: {OtherID: 20}
 [0.08] [Arms (#1)] {OtherID: 20} stacks: 4 --> 0
+[0.08] [Arms (#1)] Stopped walking at 4.50 yards
 [0.08] [Arms (#1)] Aura faded: {SpellID: 11578}
-[1.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (75.700 --> 77.200) of 100 total.
+[1.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (72.200 --> 73.700) of 100 total.
 [1.55] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [1.55] [Arms (#1)] Completed cast {SpellID: 11597}
-[1.55] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (77.200 --> 62.200) of 100 total.
+[1.55] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (73.700 --> 58.700) of 100 total.
 [1.55] [Target 1] Aura refreshed: {SpellID: 11597}
 [1.55] [Target 1] {SpellID: 11597} stacks: 1 --> 2
 [1.55] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 201.540)
-[2.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (62.200 --> 63.700) of 100 total.
-[3.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (63.700 --> 65.200) of 100 total.
-[3.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
+[2.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (58.700 --> 60.200) of 100 total.
+[3.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (60.200 --> 61.700) of 100 total.
+[3.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
 [3.05] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [3.05] [Arms (#1)] Completed cast {SpellID: 11597}
-[3.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (65.200 --> 50.200) of 100 total.
+[3.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (61.700 --> 46.700) of 100 total.
 [3.05] [Target 1] Aura refreshed: {SpellID: 11597}
 [3.05] [Target 1] {SpellID: 11597} stacks: 2 --> 3
 [3.05] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 201.540)
 [3.85] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [3.85] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[3.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 179.628 damage (SpellSchool: 1). (Threat: 143.702)
-[3.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (50.200 --> 67.300) of 100 total.
-[4.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (67.300 --> 68.800) of 100 total.
+[3.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 184.860 damage (SpellSchool: 1). (Threat: 147.888)
+[3.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (46.700 --> 63.800) of 100 total.
+[4.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (63.800 --> 65.300) of 100 total.
 [4.55] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [4.55] [Arms (#1)] Completed cast {SpellID: 11597}
-[4.55] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (68.800 --> 53.800) of 100 total.
+[4.55] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (65.300 --> 50.300) of 100 total.
 [4.55] [Target 1] Aura refreshed: {SpellID: 11597}
 [4.55] [Target 1] {SpellID: 11597} stacks: 3 --> 4
 [4.55] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 201.540)
-[5.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (53.800 --> 55.300) of 100 total.
-[5.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (55.300 --> 56.800) of 100 total.
+[5.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (50.300 --> 51.800) of 100 total.
+[5.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (51.800 --> 53.300) of 100 total.
 [5.50] [Arms (#1)] Aura faded: {SpellID: 18499}
-[6.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (56.800 --> 58.300) of 100 total.
-[6.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
+[6.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (53.300 --> 54.800) of 100 total.
+[6.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
 [6.05] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [6.05] [Arms (#1)] Completed cast {SpellID: 11597}
-[6.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (58.300 --> 43.300) of 100 total.
+[6.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (54.800 --> 39.800) of 100 total.
 [6.05] [Target 1] Aura refreshed: {SpellID: 11597}
 [6.05] [Target 1] {SpellID: 11597} stacks: 4 --> 5
 [6.05] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 201.540)
 [7.00] [Arms (#1)] Aura faded: {SpellID: 29131}
-[7.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (43.300 --> 44.800) of 100 total.
-[7.55] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
+[7.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (39.800 --> 41.300) of 100 total.
+[7.55] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 20
 [7.55] [Arms (#1)] Completed cast {SpellID: 21553}
-[7.55] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (44.800 --> 14.800) of 100 total.
-[7.55] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 495.549 damage (SpellSchool: 1). (Threat: 396.439)
+[7.55] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (41.300 --> 11.300) of 100 total.
+[7.55] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 509.982 damage (SpellSchool: 1). (Threat: 407.986)
 [7.65] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [7.65] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[7.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 253.073 damage (SpellSchool: 1). (Threat: 202.458)
-[7.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (14.800 --> 31.900) of 100 total.
-[7.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (31.900 --> 32.900) of 100 total.
-[9.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
-[9.05] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 22
-[10.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (32.900 --> 34.400) of 100 total.
+[7.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 260.444 damage (SpellSchool: 1). (Threat: 208.355)
+[7.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (11.300 --> 28.400) of 100 total.
+[7.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (28.400 --> 29.400) of 100 total.
+[9.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
+[9.05] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
+[10.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (29.400 --> 30.900) of 100 total.
 [10.05] [Arms (#1)] Completed cast {SpellID: 11605}
-[10.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (34.400 --> 19.400) of 100 total.
+[10.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (30.900 --> 15.900) of 100 total.
 [10.05] [Arms (#1)] [Target 1] {SpellID: 11605} Dodge (SpellSchool: 1). (Threat: 0.000)
 [10.05] [Arms (#1)] Aura gained: {SpellID: 1282733}
-[10.05] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (19.400 --> 31.400) of 100 total.
-[10.05] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
+[10.05] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (15.900 --> 27.900) of 100 total.
+[10.05] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [10.05] [Arms (#1)] Completed cast {SpellID: 11585}
-[10.05] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (31.400 --> 26.400) of 100 total.
-[10.05] [Arms (#1)] [Target 1] {SpellID: 11585} Crit for 903.655 damage (SpellSchool: 1). (Threat: 722.924)
+[10.05] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (27.900 --> 22.900) of 100 total.
+[10.05] [Arms (#1)] [Target 1] {SpellID: 11585} Crit for 929.975 damage (SpellSchool: 1). (Threat: 557.985)
 [10.05] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [10.05] [Arms (#1)] Completed cast {SpellID: 412609}
 [10.05] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
 [10.05] [Arms (#1)] Aura faded: {SpellID: 1282733}
 [11.45] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [11.45] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[11.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 250.135 damage (SpellSchool: 1). (Threat: 200.108)
-[11.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (26.400 --> 43.500) of 100 total.
+[11.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 257.420 damage (SpellSchool: 1). (Threat: 205.936)
+[11.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (22.900 --> 40.000) of 100 total.
 [11.45] [Arms (#1)] Queueing up {SpellID: 11574} to cast at 11.552381953s.
-[11.55] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 24
+[11.55] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 23
 [11.55] [Arms (#1)] Completed cast {SpellID: 11574}
-[11.55] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (43.500 --> 33.500) of 100 total.
+[11.55] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (40.000 --> 30.000) of 100 total.
 [11.55] [Arms (#1)] [Target 1] {SpellID: 11574} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
 [11.55] [Target 1] Aura gained: {SpellID: 11574}
-[12.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 39.494 damage (SpellSchool: 1). (Threat: 31.595)
-[13.05] [Arms (#1)] Casting {SpellID: 1310222} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 26
+[12.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
+[13.05] [Arms (#1)] Casting {SpellID: 1310222} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 25
 [13.05] [Arms (#1)] Completed cast {SpellID: 1310222}
-[13.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 1310222} (33.500 --> 18.500) of 100 total.
-[13.05] [Arms (#1)] [Target 1] {SpellID: 1310222} Hit for 152.059 damage (SpellSchool: 1). (Threat: 121.647)
-[14.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 54.744 damage (SpellSchool: 1). (Threat: 43.795)
+[13.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 1310222} (30.000 --> 15.000) of 100 total.
+[13.05] [Arms (#1)] [Target 1] {SpellID: 1310222} Hit for 293.414 damage (SpellSchool: 1). (Threat: 234.731)
+[14.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 56.338 damage (SpellSchool: 1). (Threat: 45.071)
 [15.00] [Arms (#1)] Aura faded: {SpellID: 20572}
 [15.00] [Arms (#1)] Dynamic dep disabled (AttackPower *= 1.10): {"AttackPower": -83.500,}
 [15.00] [Arms (#1)] Dynamic dep disabled (RangedAttackPower *= 1.10): {}
 [15.00] [Arms (#1)] Dynamic dep disabled (SpellDamage *= 1.10): {"SpellDamage": -1.500,}
 [15.00] [Arms (#1)] Dynamic dep disabled (HealingPower *= 1.10): {"HealingPower": -4.400,}
-[15.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (18.500 --> 20.000) of 100 total.
-[15.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 39.494 damage (SpellSchool: 1). (Threat: 31.595)
+[15.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (15.000 --> 16.500) of 100 total.
+[15.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
 [15.25] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [15.25] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
 [15.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Miss (SpellSchool: 1). (Threat: 0.000)
-[17.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[18.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 39.494 damage (SpellSchool: 1). (Threat: 31.595)
+[17.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[18.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
 [19.05] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [19.05] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
 [19.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Miss (SpellSchool: 1). (Threat: 0.000)
-[20.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (20.000 --> 21.500) of 100 total.
-[20.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[19.65] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 20.052381953s.
+[19.75] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 20.052381953s.
+[19.85] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 20.052381953s.
+[19.95] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 20.052381953s.
+[20.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (16.500 --> 18.000) of 100 total.
+[20.05] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
+[20.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [21.05] [Target 1] Aura faded: {SpellID: 412609}
-[21.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 39.494 damage (SpellSchool: 1). (Threat: 31.595)
+[21.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
+[21.05] [Arms (#1)] Completed cast {SpellID: 11605}
+[21.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (18.000 --> 3.000) of 100 total.
+[21.05] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 432.696 damage (SpellSchool: 1). (Threat: 346.157)
 [22.85] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [22.85] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[22.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 226.128 damage (SpellSchool: 1). (Threat: 180.902)
-[22.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (21.500 --> 38.600) of 100 total.
-[22.85] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
-[22.85] [Arms (#1)] Completed cast {SpellID: 21553}
-[22.85] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (38.600 --> 8.600) of 100 total.
-[22.85] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 489.678 damage (SpellSchool: 1). (Threat: 391.743)
-[22.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (8.600 --> 9.600) of 100 total.
-[23.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[25.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (9.600 --> 11.100) of 100 total.
-[26.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[22.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 291.205 damage (SpellSchool: 1). (Threat: 232.964)
+[22.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (3.000 --> 20.100) of 100 total.
+[22.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (20.100 --> 21.100) of 100 total.
+[23.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[25.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (21.100 --> 22.600) of 100 total.
+[26.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [26.65] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [26.65] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[26.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 376.250 damage (SpellSchool: 1). (Threat: 301.000)
-[26.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (11.100 --> 28.200) of 100 total.
-[26.65] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 22
-[27.65] [Arms (#1)] Completed cast {SpellID: 11605}
-[27.65] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (28.200 --> 13.200) of 100 total.
-[27.65] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 425.070 damage (SpellSchool: 1). (Threat: 340.056)
-[29.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[30.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (13.200 --> 14.700) of 100 total.
+[26.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 387.208 damage (SpellSchool: 1). (Threat: 309.767)
+[26.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (22.600 --> 39.700) of 100 total.
+[26.65] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 20
+[26.65] [Arms (#1)] Completed cast {SpellID: 21553}
+[26.65] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (39.700 --> 9.700) of 100 total.
+[26.65] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 456.303 damage (SpellSchool: 1). (Threat: 365.042)
+[26.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (9.700 --> 10.700) of 100 total.
+[29.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[30.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (10.700 --> 12.200) of 100 total.
 [30.45] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [30.45] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[30.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 214.702 damage (SpellSchool: 1). (Threat: 171.762)
-[30.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (14.700 --> 31.800) of 100 total.
-[30.45] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
-[30.45] [Arms (#1)] Completed cast {SpellID: 21553}
-[30.45] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (31.800 --> 1.800) of 100 total.
-[30.45] [Arms (#1)] [Target 1] {SpellID: 21553} Crit for 989.774 damage (SpellSchool: 1). (Threat: 791.819)
-[30.45] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
-[30.45] [Arms (#1)] Completed cast {SpellID: 412609}
-[30.45] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[30.45] [Target 1] Aura gained: {SpellID: 412609}
-[32.55] [Target 1] Aura faded: {SpellID: 11574}
-[32.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[33.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
+[30.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 220.956 damage (SpellSchool: 1). (Threat: 176.765)
+[30.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (12.200 --> 29.300) of 100 total.
+[30.65] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 31.052381953s.
+[30.75] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 31.052381953s.
+[30.85] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 31.052381953s.
+[30.95] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 31.052381953s.
+[31.05] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
+[32.05] [Arms (#1)] Completed cast {SpellID: 11605}
+[32.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (29.300 --> 14.300) of 100 total.
+[32.05] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 390.774 damage (SpellSchool: 1). (Threat: 312.619)
+[32.05] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 23
+[32.05] [Arms (#1)] Completed cast {SpellID: 11574}
+[32.05] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (14.300 --> 4.300) of 100 total.
+[32.05] [Arms (#1)] [Target 1] {SpellID: 11574} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[32.05] [Target 1] Aura faded: {SpellID: 11574}
+[32.05] [Target 1] Aura gained: {SpellID: 11574}
 [34.25] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [34.25] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[34.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 235.075 damage (SpellSchool: 1). (Threat: 188.060)
-[34.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (1.800 --> 18.900) of 100 total.
-[34.25] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 24
-[34.25] [Arms (#1)] Completed cast {SpellID: 11574}
-[34.25] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (18.900 --> 8.900) of 100 total.
-[34.25] [Arms (#1)] [Target 1] {SpellID: 11574} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[34.25] [Target 1] Aura gained: {SpellID: 11574}
-[34.26] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (8.900 --> 9.900) of 100 total.
-[35.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (9.900 --> 11.400) of 100 total.
+[34.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 241.922 damage (SpellSchool: 1). (Threat: 193.538)
+[34.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (4.300 --> 21.400) of 100 total.
+[34.25] [Arms (#1)] Casting {SpellID: 1310222} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 25
+[34.25] [Arms (#1)] Completed cast {SpellID: 1310222}
+[34.25] [Arms (#1)] Spent 15.000 rage from {SpellID: 1310222} (21.400 --> 6.400) of 100 total.
+[34.25] [Arms (#1)] [Target 1] {SpellID: 1310222} Hit for 272.538 damage (SpellSchool: 1). (Threat: 218.031)
+[34.26] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (6.400 --> 7.400) of 100 total.
+[35.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (7.400 --> 8.900) of 100 total.
+[35.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [36.05] [Target 1] Aura faded: {SpellID: 11597}
 [36.05] [Target 1] {SpellID: 11597} stacks: 5 --> 0
-[36.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
-[37.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
 [38.05] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [38.05] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[38.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 258.397 damage (SpellSchool: 1). (Threat: 206.718)
-[38.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (11.400 --> 28.500) of 100 total.
+[38.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 269.302 damage (SpellSchool: 1). (Threat: 215.442)
+[38.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (8.900 --> 26.000) of 100 total.
 [38.05] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [38.05] [Arms (#1)] Completed cast {SpellID: 11597}
-[38.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (28.500 --> 13.500) of 100 total.
+[38.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (26.000 --> 11.000) of 100 total.
 [38.05] [Target 1] Aura gained: {SpellID: 11597}
 [38.05] [Target 1] {SpellID: 11597} stacks: 0 --> 1
 [38.05] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[39.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
-[40.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (13.500 --> 15.000) of 100 total.
-[40.05] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[40.05] [Arms (#1)] Completed cast {SpellID: 11597}
-[40.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (15.000 --> 0.000) of 100 total.
-[40.05] [Target 1] Aura refreshed: {SpellID: 11597}
-[40.05] [Target 1] {SpellID: 11597} stacks: 1 --> 2
-[40.05] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[40.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[38.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[40.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (11.000 --> 12.500) of 100 total.
+[41.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [41.85] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [41.85] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[41.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 169.805 damage (SpellSchool: 1). (Threat: 135.844)
-[41.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (0.000 --> 17.100) of 100 total.
+[41.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 164.291 damage (SpellSchool: 1). (Threat: 131.433)
+[41.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (12.500 --> 29.600) of 100 total.
 [41.85] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [41.85] [Arms (#1)] Completed cast {SpellID: 11597}
-[41.85] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (17.100 --> 2.100) of 100 total.
+[41.85] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (29.600 --> 14.600) of 100 total.
 [41.85] [Target 1] Aura refreshed: {SpellID: 11597}
-[41.85] [Target 1] {SpellID: 11597} stacks: 2 --> 3
+[41.85] [Target 1] {SpellID: 11597} stacks: 1 --> 2
 [41.85] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[42.45] [Target 1] Aura faded: {SpellID: 412609}
-[42.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
-[43.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[45.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (2.100 --> 3.600) of 100 total.
+[41.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (14.600 --> 15.600) of 100 total.
+[43.35] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[43.35] [Arms (#1)] Completed cast {SpellID: 11597}
+[43.35] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (15.600 --> 0.600) of 100 total.
+[43.35] [Target 1] Aura refreshed: {SpellID: 11597}
+[43.35] [Target 1] {SpellID: 11597} stacks: 2 --> 3
+[43.35] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
+[44.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[45.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (0.600 --> 2.100) of 100 total.
 [45.65] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [45.65] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[45.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 215.158 damage (SpellSchool: 1). (Threat: 172.126)
-[45.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (3.600 --> 20.700) of 100 total.
+[45.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 318.364 damage (SpellSchool: 1). (Threat: 254.692)
+[45.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (2.100 --> 19.200) of 100 total.
 [45.65] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [45.65] [Arms (#1)] Completed cast {SpellID: 11597}
-[45.65] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (20.700 --> 5.700) of 100 total.
+[45.65] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (19.200 --> 4.200) of 100 total.
 [45.65] [Target 1] Aura refreshed: {SpellID: 11597}
 [45.65] [Target 1] {SpellID: 11597} stacks: 3 --> 4
 [45.65] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[46.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[49.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[47.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [49.45] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [49.45] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[49.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 219.386 damage (SpellSchool: 1). (Threat: 175.508)
-[49.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (5.700 --> 22.800) of 100 total.
+[49.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 322.036 damage (SpellSchool: 1). (Threat: 257.629)
+[49.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (4.200 --> 21.300) of 100 total.
 [49.45] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [49.45] [Arms (#1)] Completed cast {SpellID: 11597}
-[49.45] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (22.800 --> 7.800) of 100 total.
+[49.45] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (21.300 --> 6.300) of 100 total.
 [49.45] [Target 1] Aura refreshed: {SpellID: 11597}
 [49.45] [Target 1] {SpellID: 11597} stacks: 4 --> 5
 [49.45] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[49.46] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (7.800 --> 8.800) of 100 total.
-[50.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (8.800 --> 10.300) of 100 total.
-[52.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[49.46] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (6.300 --> 7.300) of 100 total.
+[50.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (7.300 --> 8.800) of 100 total.
+[50.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[53.05] [Target 1] Aura faded: {SpellID: 11574}
+[53.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [53.25] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [53.25] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[53.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 355.340 damage (SpellSchool: 1). (Threat: 284.272)
-[53.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (10.300 --> 27.400) of 100 total.
-[53.25] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 22
-[53.26] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (27.400 --> 28.400) of 100 total.
+[53.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 228.033 damage (SpellSchool: 1). (Threat: 182.426)
+[53.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (8.800 --> 25.900) of 100 total.
+[53.25] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
 [54.25] [Arms (#1)] Completed cast {SpellID: 11605}
-[54.25] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (28.400 --> 13.400) of 100 total.
-[54.25] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 459.858 damage (SpellSchool: 1). (Threat: 367.887)
-[54.25] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 24
+[54.25] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (25.900 --> 10.900) of 100 total.
+[54.25] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 430.231 damage (SpellSchool: 1). (Threat: 344.185)
+[54.25] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 23
 [54.25] [Arms (#1)] Completed cast {SpellID: 11574}
-[54.25] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (13.400 --> 3.400) of 100 total.
+[54.25] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (10.900 --> 0.900) of 100 total.
 [54.25] [Arms (#1)] [Target 1] {SpellID: 11574} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[54.25] [Target 1] Aura faded: {SpellID: 11574}
 [54.25] [Target 1] Aura gained: {SpellID: 11574}
-[55.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (3.400 --> 4.900) of 100 total.
+[55.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (0.900 --> 2.400) of 100 total.
 [56.65] [Arms (#1)] Queueing up {SpellID: 2687} to cast at 57.000000001s.
 [56.75] [Arms (#1)] Queueing up {SpellID: 2687} to cast at 57.000000001s.
 [56.85] [Arms (#1)] Queueing up {SpellID: 2687} to cast at 57.000000001s.
 [56.95] [Arms (#1)] Queueing up {SpellID: 2687} to cast at 57.000000001s.
-[57.00] [Arms (#1)] Casting {SpellID: 2687} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 33
+[57.00] [Arms (#1)] Casting {SpellID: 2687} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 34
 [57.00] [Arms (#1)] Completed cast {SpellID: 2687}
-[57.00] [Arms (#1)] Gained 15.000 rage from {SpellID: 2687} (4.900 --> 19.900) of 100 total.
-[57.00] [Arms (#1)] Spent 337.800 health from {OtherID: 9} (3921.200 --> 3583.400) of 4259 total.
+[57.00] [Arms (#1)] Gained 15.000 rage from {SpellID: 2687} (2.400 --> 17.400) of 100 total.
+[57.00] [Arms (#1)] Spent 525.800 health from {SpellID: 2687} (3733.200 --> 3207.400) of 4259 total.
 [57.00] [Arms (#1)] Aura gained: {SpellID: 29131}
-[57.00] [Arms (#1)] Casting {SpellID: 1310222} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 26
+[57.00] [Arms (#1)] Casting {SpellID: 1310222} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 25
 [57.00] [Arms (#1)] Completed cast {SpellID: 1310222}
-[57.00] [Arms (#1)] Spent 15.000 rage from {SpellID: 1310222} (19.900 --> 4.900) of 100 total.
-[57.00] [Arms (#1)] [Target 1] {SpellID: 1310222} Hit for 125.634 damage (SpellSchool: 1). (Threat: 100.507)
+[57.00] [Arms (#1)] Spent 15.000 rage from {SpellID: 1310222} (17.400 --> 2.400) of 100 total.
+[57.00] [Arms (#1)] [Target 1] {SpellID: 1310222} Hit for 263.820 damage (SpellSchool: 1). (Threat: 211.056)
 [57.05] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [57.05] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[57.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 371.028 damage (SpellSchool: 1). (Threat: 296.822)
-[57.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (4.900 --> 22.000) of 100 total.
-[57.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[58.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (22.000 --> 23.500) of 100 total.
-[59.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (23.500 --> 25.000) of 100 total.
-[60.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (25.000 --> 26.500) of 100 total.
-[60.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (26.500 --> 28.000) of 100 total.
-[60.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[57.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 402.841 damage (SpellSchool: 1). (Threat: 322.273)
+[57.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (2.400 --> 19.500) of 100 total.
+[57.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[58.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (19.500 --> 21.000) of 100 total.
+[59.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (21.000 --> 22.500) of 100 total.
+[60.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (22.500 --> 24.000) of 100 total.
+[60.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (24.000 --> 25.500) of 100 total.
+[60.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [60.85] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [60.85] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[60.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 233.975 damage (SpellSchool: 1). (Threat: 187.180)
-[60.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (28.000 --> 45.100) of 100 total.
-[60.85] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
+[60.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 229.283 damage (SpellSchool: 1). (Threat: 183.427)
+[60.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (25.500 --> 42.600) of 100 total.
+[60.85] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 20
 [60.85] [Arms (#1)] Completed cast {SpellID: 21553}
-[60.85] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (45.100 --> 15.100) of 100 total.
-[60.85] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 454.988 damage (SpellSchool: 1). (Threat: 363.991)
-[61.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (15.100 --> 16.600) of 100 total.
-[62.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (16.600 --> 18.100) of 100 total.
-[63.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (18.100 --> 19.600) of 100 total.
-[63.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[64.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (19.600 --> 21.100) of 100 total.
+[60.85] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (42.600 --> 12.600) of 100 total.
+[60.85] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 488.856 damage (SpellSchool: 1). (Threat: 391.085)
+[60.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (12.600 --> 13.600) of 100 total.
+[61.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (13.600 --> 15.100) of 100 total.
+[62.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (15.100 --> 16.600) of 100 total.
+[63.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (16.600 --> 18.100) of 100 total.
+[63.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[63.85] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m4.252381953s.
+[63.95] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m4.252381953s.
+[64.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (18.100 --> 19.600) of 100 total.
+[64.05] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m4.252381953s.
+[64.15] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m4.252381953s.
+[64.25] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
 [64.65] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [64.65] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[64.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 206.070 damage (SpellSchool: 1). (Threat: 164.856)
-[64.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (21.100 --> 38.200) of 100 total.
-[64.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (38.200 --> 39.200) of 100 total.
-[65.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (39.200 --> 40.700) of 100 total.
-[65.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (40.700 --> 42.200) of 100 total.
-[66.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (42.200 --> 43.700) of 100 total.
-[66.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Crit for 115.328 damage (SpellSchool: 1). (Threat: 92.262)
-[66.45] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m6.852381953s.
-[66.55] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m6.852381953s.
-[66.65] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m6.852381953s.
-[66.75] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m6.852381953s.
-[66.85] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
-[66.85] [Arms (#1)] Completed cast {SpellID: 21553}
-[66.85] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (43.700 --> 13.700) of 100 total.
-[66.85] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 485.354 damage (SpellSchool: 1). (Threat: 388.284)
+[64.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 264.036 damage (SpellSchool: 1). (Threat: 211.229)
+[64.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (19.600 --> 36.700) of 100 total.
+[64.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (36.700 --> 37.700) of 100 total.
+[65.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (37.700 --> 39.200) of 100 total.
+[65.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (39.200 --> 40.700) of 100 total.
+[65.10] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m5.252381953s.
+[65.25] [Arms (#1)] Completed cast {SpellID: 11605}
+[65.25] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (40.700 --> 25.700) of 100 total.
+[65.25] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 463.431 damage (SpellSchool: 1). (Threat: 370.745)
+[65.25] [Arms (#1)] {SpellID: 11605} failed to cast: still on cooldown for 9.999999999s, curTime = 1m5.252381953s
+[66.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (25.700 --> 27.200) of 100 total.
+[66.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [67.00] [Arms (#1)] Aura faded: {SpellID: 29131}
-[67.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (13.700 --> 15.200) of 100 total.
+[67.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (27.200 --> 28.700) of 100 total.
 [68.45] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [68.45] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[68.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 323.415 damage (SpellSchool: 1). (Threat: 258.732)
-[68.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (15.200 --> 32.300) of 100 total.
-[68.46] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (32.300 --> 33.300) of 100 total.
-[68.85] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m9.252381953s.
-[68.95] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m9.252381953s.
-[69.05] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m9.252381953s.
-[69.15] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m9.252381953s.
-[69.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[69.25] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 22
-[70.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (33.300 --> 34.800) of 100 total.
-[70.10] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m10.252381953s.
-[70.25] [Arms (#1)] Completed cast {SpellID: 11605}
-[70.25] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (34.800 --> 19.800) of 100 total.
-[70.25] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 382.621 damage (SpellSchool: 1). (Threat: 306.096)
-[70.25] [Arms (#1)] {SpellID: 11605} failed to cast: still on cooldown for 14.999999999s, curTime = 1m10.252381953s
+[68.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 381.874 damage (SpellSchool: 1). (Threat: 305.499)
+[68.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (28.700 --> 45.800) of 100 total.
+[68.45] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 20
+[68.45] [Arms (#1)] Completed cast {SpellID: 21553}
+[68.45] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (45.800 --> 15.800) of 100 total.
+[68.45] [Arms (#1)] [Target 1] {SpellID: 21553} Crit for 1030.218 damage (SpellSchool: 1). (Threat: 824.175)
+[68.45] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
+[68.45] [Arms (#1)] Completed cast {SpellID: 412609}
+[68.45] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[68.45] [Target 1] Aura gained: {SpellID: 412609}
+[69.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[70.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (15.800 --> 17.300) of 100 total.
+[71.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
 [72.25] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [72.25] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[72.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 210.888 damage (SpellSchool: 1). (Threat: 168.710)
-[72.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (19.800 --> 36.900) of 100 total.
-[72.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[72.45] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m12.852381953s.
-[72.55] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m12.852381953s.
-[72.65] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m12.852381953s.
-[72.75] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m12.852381953s.
-[72.85] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
-[72.85] [Arms (#1)] Completed cast {SpellID: 21553}
-[72.85] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (36.900 --> 6.900) of 100 total.
-[72.85] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 478.033 damage (SpellSchool: 1). (Threat: 382.426)
-[75.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (6.900 --> 8.400) of 100 total.
-[75.25] [Target 1] Aura faded: {SpellID: 11574}
-[75.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Crit for 115.328 damage (SpellSchool: 1). (Threat: 92.262)
+[72.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 224.928 damage (SpellSchool: 1). (Threat: 179.942)
+[72.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (17.300 --> 34.400) of 100 total.
+[72.25] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[72.26] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (34.400 --> 35.400) of 100 total.
+[73.75] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 23
+[73.75] [Arms (#1)] Completed cast {SpellID: 11574}
+[73.75] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (35.400 --> 25.400) of 100 total.
+[73.75] [Arms (#1)] [Target 1] {SpellID: 11574} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[73.75] [Target 1] Aura faded: {SpellID: 11574}
+[73.75] [Target 1] Aura gained: {SpellID: 11574}
+[74.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
+[75.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (25.400 --> 26.900) of 100 total.
+[75.10] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m15.252381953s.
+[75.25] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
 [76.05] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [76.05] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[76.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 188.588 damage (SpellSchool: 1). (Threat: 150.871)
-[76.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (8.400 --> 25.500) of 100 total.
-[76.05] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 24
-[76.05] [Arms (#1)] Completed cast {SpellID: 11574}
-[76.05] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (25.500 --> 15.500) of 100 total.
-[76.05] [Arms (#1)] [Target 1] {SpellID: 11574} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[76.05] [Target 1] Aura gained: {SpellID: 11574}
-[77.55] [Arms (#1)] Casting {SpellID: 1310222} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 26
-[77.55] [Arms (#1)] Completed cast {SpellID: 1310222}
-[77.55] [Arms (#1)] Spent 15.000 rage from {SpellID: 1310222} (15.500 --> 0.500) of 100 total.
-[77.55] [Arms (#1)] [Target 1] {SpellID: 1310222} Hit for 117.337 damage (SpellSchool: 1). (Threat: 93.870)
-[79.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Crit for 115.328 damage (SpellSchool: 1). (Threat: 92.262)
+[76.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Miss (SpellSchool: 1). (Threat: 0.000)
+[76.05] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m16.252381953s.
+[76.15] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m16.252381953s.
+[76.25] [Arms (#1)] Completed cast {SpellID: 11605}
+[76.25] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (26.900 --> 11.900) of 100 total.
+[76.25] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 394.157 damage (SpellSchool: 1). (Threat: 315.326)
+[76.25] [Arms (#1)] {SpellID: 11605} failed to cast: still on cooldown for 9.999999999s, curTime = 1m16.252381953s
+[76.75] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[77.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
 [79.45] [Target 1] Aura faded: {SpellID: 11597}
 [79.45] [Target 1] {SpellID: 11597} stacks: 5 --> 0
+[79.75] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [79.85] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [79.85] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[79.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 258.980 damage (SpellSchool: 1). (Threat: 207.184)
-[79.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (0.500 --> 17.600) of 100 total.
-[79.85] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[79.85] [Arms (#1)] Completed cast {SpellID: 11597}
-[79.85] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (17.600 --> 2.600) of 100 total.
-[79.85] [Target 1] Aura gained: {SpellID: 11597}
-[79.85] [Target 1] {SpellID: 11597} stacks: 0 --> 1
-[79.85] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[79.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (2.600 --> 3.600) of 100 total.
-[80.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (3.600 --> 5.100) of 100 total.
-[82.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[79.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Dodge (SpellSchool: 1). (Threat: 0.000)
+[79.85] [Arms (#1)] Aura gained: {SpellID: 1282733}
+[79.85] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
+[79.85] [Arms (#1)] Completed cast {SpellID: 11585}
+[79.85] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (11.900 --> 6.900) of 100 total.
+[79.85] [Arms (#1)] [Target 1] {SpellID: 11585} Crit for 573.176 damage (SpellSchool: 1). (Threat: 343.905)
+[79.85] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
+[79.85] [Arms (#1)] Completed cast {SpellID: 412609}
+[79.85] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[79.85] [Arms (#1)] Aura faded: {SpellID: 1282733}
+[80.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (6.900 --> 8.400) of 100 total.
+[80.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
+[82.75] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[83.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
 [83.65] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [83.65] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[83.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 600.265 damage (SpellSchool: 1). (Threat: 480.212)
-[83.65] [Arms (#1)] Gained 34.200 rage from {OtherID: 3, Tag: 14} (5.100 --> 39.300) of 100 total.
+[83.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 282.908 damage (SpellSchool: 1). (Threat: 226.326)
+[83.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (8.400 --> 25.500) of 100 total.
 [83.65] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [83.65] [Arms (#1)] Completed cast {SpellID: 11597}
-[83.65] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (39.300 --> 24.300) of 100 total.
-[83.65] [Target 1] Aura refreshed: {SpellID: 11597}
-[83.65] [Target 1] {SpellID: 11597} stacks: 1 --> 2
+[83.65] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (25.500 --> 10.500) of 100 total.
+[83.65] [Target 1] Aura gained: {SpellID: 11597}
+[83.65] [Target 1] {SpellID: 11597} stacks: 0 --> 1
 [83.65] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[83.65] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
-[83.65] [Arms (#1)] Completed cast {SpellID: 412609}
-[83.65] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[83.65] [Target 1] Aura gained: {SpellID: 412609}
-[85.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (24.300 --> 25.800) of 100 total.
-[85.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[85.10] [Arms (#1)] Queueing up {SpellID: 11597} to cast at 1m25.152381953s.
-[85.15] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[85.15] [Arms (#1)] Completed cast {SpellID: 11597}
-[85.15] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (25.800 --> 10.800) of 100 total.
-[85.15] [Target 1] Aura refreshed: {SpellID: 11597}
-[85.15] [Target 1] {SpellID: 11597} stacks: 2 --> 3
-[85.15] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[86.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
+[83.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (10.500 --> 11.500) of 100 total.
+[85.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (11.500 --> 13.000) of 100 total.
+[85.75] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[86.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
 [87.45] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [87.45] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[87.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 216.422 damage (SpellSchool: 1). (Threat: 173.138)
-[87.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (10.800 --> 27.900) of 100 total.
+[87.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 293.912 damage (SpellSchool: 1). (Threat: 235.130)
+[87.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (13.000 --> 30.100) of 100 total.
 [87.45] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [87.45] [Arms (#1)] Completed cast {SpellID: 11597}
-[87.45] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (27.900 --> 12.900) of 100 total.
+[87.45] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (30.100 --> 15.100) of 100 total.
 [87.45] [Target 1] Aura refreshed: {SpellID: 11597}
-[87.45] [Target 1] {SpellID: 11597} stacks: 3 --> 4
+[87.45] [Target 1] {SpellID: 11597} stacks: 1 --> 2
 [87.45] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[87.46] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (12.900 --> 13.900) of 100 total.
-[88.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[89.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
-[90.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (13.900 --> 15.400) of 100 total.
-[90.05] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[90.05] [Arms (#1)] Completed cast {SpellID: 11597}
-[90.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (15.400 --> 0.400) of 100 total.
-[90.05] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (0.400 --> 12.400) of 100 total.
-[90.05] [Arms (#1)] [Target 1] {SpellID: 11597} Dodge (SpellSchool: 1). (Threat: 0.000)
-[90.05] [Arms (#1)] Aura gained: {SpellID: 1282733}
-[91.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[88.75] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[88.95] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[88.95] [Arms (#1)] Completed cast {SpellID: 11597}
+[88.95] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (15.100 --> 0.100) of 100 total.
+[88.95] [Target 1] Aura refreshed: {SpellID: 11597}
+[88.95] [Target 1] {SpellID: 11597} stacks: 2 --> 3
+[88.95] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
+[89.45] [Target 1] Aura faded: {SpellID: 412609}
+[89.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
+[90.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (0.100 --> 1.600) of 100 total.
 [91.25] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [91.25] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[91.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 332.163 damage (SpellSchool: 1). (Threat: 265.731)
-[91.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (12.400 --> 29.500) of 100 total.
-[91.25] [Arms (#1)] Queueing up {SpellID: 11597} to cast at 1m31.552381953s.
-[91.26] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (29.500 --> 30.500) of 100 total.
-[91.35] [Arms (#1)] Queueing up {SpellID: 11597} to cast at 1m31.552381953s.
-[91.55] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[91.55] [Arms (#1)] Completed cast {SpellID: 11597}
-[91.55] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (30.500 --> 15.500) of 100 total.
-[91.55] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (15.500 --> 27.500) of 100 total.
-[91.55] [Arms (#1)] [Target 1] {SpellID: 11597} Dodge (SpellSchool: 1). (Threat: 0.000)
-[91.55] [Arms (#1)] Aura refreshed: {SpellID: 1282733}
-[92.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
-[93.05] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[93.05] [Arms (#1)] Completed cast {SpellID: 11597}
-[93.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (27.500 --> 12.500) of 100 total.
-[93.05] [Target 1] Aura refreshed: {SpellID: 11597}
-[93.05] [Target 1] {SpellID: 11597} stacks: 4 --> 5
-[93.05] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[94.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[94.55] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
-[94.55] [Arms (#1)] Completed cast {SpellID: 11585}
-[94.55] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (12.500 --> 7.500) of 100 total.
-[94.55] [Arms (#1)] [Target 1] {SpellID: 11585} Hit for 371.835 damage (SpellSchool: 1). (Threat: 297.468)
-[94.55] [Arms (#1)] Aura faded: {SpellID: 1282733}
-[95.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (7.500 --> 9.000) of 100 total.
+[91.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 293.150 damage (SpellSchool: 1). (Threat: 234.520)
+[91.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (1.600 --> 18.700) of 100 total.
+[91.25] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[91.25] [Arms (#1)] Completed cast {SpellID: 11597}
+[91.25] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (18.700 --> 3.700) of 100 total.
+[91.25] [Target 1] Aura refreshed: {SpellID: 11597}
+[91.25] [Target 1] {SpellID: 11597} stacks: 3 --> 4
+[91.25] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
+[91.26] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (3.700 --> 4.700) of 100 total.
+[91.75] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[94.75] [Target 1] Aura faded: {SpellID: 11574}
+[94.75] [Arms (#1)] [Target 1] {SpellID: 11574} tick Crit for 118.687 damage (SpellSchool: 1). (Threat: 94.950)
+[95.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (4.700 --> 6.200) of 100 total.
 [95.05] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [95.05] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[95.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 390.438 damage (SpellSchool: 1). (Threat: 312.351)
-[95.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (9.000 --> 26.100) of 100 total.
-[95.06] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (26.100 --> 27.100) of 100 total.
-[95.65] [Target 1] Aura faded: {SpellID: 412609}
-[95.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
-[96.05] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 22
-[97.05] [Target 1] Aura faded: {SpellID: 11574}
-[97.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[97.05] [Arms (#1)] Completed cast {SpellID: 11605}
-[97.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (27.100 --> 12.100) of 100 total.
-[97.05] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 394.549 damage (SpellSchool: 1). (Threat: 315.639)
-[97.05] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 24
-[97.05] [Arms (#1)] Completed cast {SpellID: 11574}
-[97.05] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (12.100 --> 2.100) of 100 total.
-[97.05] [Arms (#1)] [Target 1] {SpellID: 11574} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[97.05] [Target 1] Aura gained: {SpellID: 11574}
+[95.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 635.901 damage (SpellSchool: 1). (Threat: 508.721)
+[95.05] [Arms (#1)] Gained 34.200 rage from {OtherID: 3, Tag: 14} (6.200 --> 40.400) of 100 total.
+[95.05] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[95.05] [Arms (#1)] Completed cast {SpellID: 11597}
+[95.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (40.400 --> 25.400) of 100 total.
+[95.05] [Target 1] Aura refreshed: {SpellID: 11597}
+[95.05] [Target 1] {SpellID: 11597} stacks: 4 --> 5
+[95.05] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
+[95.05] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
+[95.05] [Arms (#1)] Completed cast {SpellID: 412609}
+[95.05] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[95.05] [Target 1] Aura gained: {SpellID: 412609}
+[96.55] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
+[97.55] [Arms (#1)] Completed cast {SpellID: 11605}
+[97.55] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (25.400 --> 10.400) of 100 total.
+[97.55] [Arms (#1)] [Target 1] {SpellID: 11605} Dodge (SpellSchool: 1). (Threat: 0.000)
+[97.55] [Arms (#1)] Aura gained: {SpellID: 1282733}
+[97.55] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (10.400 --> 22.400) of 100 total.
+[97.55] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
+[97.55] [Arms (#1)] Completed cast {SpellID: 11585}
+[97.55] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (22.400 --> 17.400) of 100 total.
+[97.55] [Arms (#1)] [Target 1] {SpellID: 11585} Hit for 344.569 damage (SpellSchool: 1). (Threat: 206.741)
+[97.55] [Arms (#1)] Aura faded: {SpellID: 1282733}
+[98.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
 [98.85] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [98.85] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[98.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 346.116 damage (SpellSchool: 1). (Threat: 276.893)
-[98.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (2.100 --> 19.200) of 100 total.
-[98.85] [Arms (#1)] Casting {SpellID: 1310222} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 26
-[98.85] [Arms (#1)] Completed cast {SpellID: 1310222}
-[98.85] [Arms (#1)] Spent 15.000 rage from {SpellID: 1310222} (19.200 --> 4.200) of 100 total.
-[98.85] [Arms (#1)] [Target 1] {SpellID: 1310222} Hit for 145.015 damage (SpellSchool: 1). (Threat: 116.012)
-[98.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (4.200 --> 5.200) of 100 total.
-[100.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (5.200 --> 6.700) of 100 total.
-[100.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[98.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 362.762 damage (SpellSchool: 1). (Threat: 290.210)
+[98.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (17.400 --> 34.500) of 100 total.
+[98.85] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m39.052381953s.
+[98.95] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m39.052381953s.
+[99.05] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 20
+[99.05] [Arms (#1)] Completed cast {SpellID: 21553}
+[99.05] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (34.500 --> 4.500) of 100 total.
+[99.05] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 488.754 damage (SpellSchool: 1). (Threat: 391.003)
+[100.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (4.500 --> 6.000) of 100 total.
+[101.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
 [102.65] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [102.65] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[102.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 626.328 damage (SpellSchool: 1). (Threat: 501.062)
-[102.65] [Arms (#1)] Gained 34.200 rage from {OtherID: 3, Tag: 14} (6.700 --> 40.900) of 100 total.
-[102.65] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
-[102.65] [Arms (#1)] Completed cast {SpellID: 21553}
-[102.65] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (40.900 --> 10.900) of 100 total.
-[102.65] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 470.868 damage (SpellSchool: 1). (Threat: 376.694)
-[102.65] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
-[102.65] [Arms (#1)] Completed cast {SpellID: 412609}
-[102.65] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[102.65] [Target 1] Aura gained: {SpellID: 412609}
-[103.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Crit for 115.328 damage (SpellSchool: 1). (Threat: 92.262)
-[105.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (10.900 --> 12.400) of 100 total.
-[105.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
-[106.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[102.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 213.488 damage (SpellSchool: 1). (Threat: 170.791)
+[102.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (6.000 --> 23.100) of 100 total.
+[102.65] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 23
+[102.65] [Arms (#1)] Completed cast {SpellID: 11574}
+[102.65] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (23.100 --> 13.100) of 100 total.
+[102.65] [Arms (#1)] [Target 1] {SpellID: 11574} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[102.65] [Target 1] Aura gained: {SpellID: 11574}
+[102.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (13.100 --> 14.100) of 100 total.
+[104.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
+[105.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (14.100 --> 15.600) of 100 total.
+[105.05] [Arms (#1)] Casting {SpellID: 1310222} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 25
+[105.05] [Arms (#1)] Completed cast {SpellID: 1310222}
+[105.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 1310222} (15.600 --> 0.600) of 100 total.
+[105.05] [Arms (#1)] [Target 1] {SpellID: 1310222} Hit for 265.836 damage (SpellSchool: 1). (Threat: 212.669)
+[105.65] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [106.45] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [106.45] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[106.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 370.602 damage (SpellSchool: 1). (Threat: 296.482)
-[106.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (12.400 --> 29.500) of 100 total.
-[108.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
-[109.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[110.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (29.500 --> 31.000) of 100 total.
-[110.05] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
-[110.05] [Arms (#1)] Completed cast {SpellID: 21553}
-[110.05] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (31.000 --> 1.000) of 100 total.
-[110.05] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 473.291 damage (SpellSchool: 1). (Threat: 378.632)
+[106.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 276.337 damage (SpellSchool: 1). (Threat: 221.069)
+[106.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (0.600 --> 17.700) of 100 total.
+[106.46] [Arms (#1)] Aura gained: {SpellID: 1282733}
+[106.55] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
+[106.55] [Arms (#1)] Completed cast {SpellID: 11585}
+[106.55] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (17.700 --> 12.700) of 100 total.
+[106.55] [Arms (#1)] [Target 1] {SpellID: 11585} Crit for 836.422 damage (SpellSchool: 1). (Threat: 501.853)
+[106.55] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
+[106.55] [Arms (#1)] Completed cast {SpellID: 412609}
+[106.55] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[106.55] [Arms (#1)] Aura faded: {SpellID: 1282733}
+[107.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
+[108.65] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[110.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (12.700 --> 14.200) of 100 total.
+[110.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
 [110.25] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [110.25] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[110.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 670.507 damage (SpellSchool: 1). (Threat: 536.406)
-[110.25] [Arms (#1)] Gained 34.200 rage from {OtherID: 3, Tag: 14} (1.000 --> 35.200) of 100 total.
-[110.25] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
-[110.25] [Arms (#1)] Completed cast {SpellID: 412609}
-[110.25] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[110.26] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (35.200 --> 36.200) of 100 total.
-[111.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 47.393 damage (SpellSchool: 1). (Threat: 37.914)
-[111.65] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m52.052381953s.
-[111.75] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m52.052381953s.
-[111.85] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m52.052381953s.
-[111.95] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 1m52.052381953s.
-[112.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[112.05] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 22
-[113.05] [Arms (#1)] Completed cast {SpellID: 11605}
-[113.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (36.200 --> 21.200) of 100 total.
-[113.05] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 449.018 damage (SpellSchool: 1). (Threat: 359.214)
+[110.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Dodge (SpellSchool: 1). (Threat: 0.000)
+[110.25] [Arms (#1)] Aura gained: {SpellID: 1282733}
+[111.15] [Arms (#1)] Queueing up {SpellID: 11585} to cast at 1m51.552381953s.
+[111.25] [Arms (#1)] Queueing up {SpellID: 11585} to cast at 1m51.552381953s.
+[111.35] [Arms (#1)] Queueing up {SpellID: 11585} to cast at 1m51.552381953s.
+[111.45] [Arms (#1)] Queueing up {SpellID: 11585} to cast at 1m51.552381953s.
+[111.55] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
+[111.55] [Arms (#1)] Completed cast {SpellID: 11585}
+[111.55] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (14.200 --> 9.200) of 100 total.
+[111.55] [Arms (#1)] [Target 1] {SpellID: 11585} Hit for 351.100 damage (SpellSchool: 1). (Threat: 210.660)
+[111.55] [Arms (#1)] Aura faded: {SpellID: 1282733}
+[111.65] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[113.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
 [114.05] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [114.05] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[114.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 762.074 damage (SpellSchool: 1). (Threat: 609.660)
-[114.05] [Arms (#1)] Gained 34.200 rage from {OtherID: 3, Tag: 14} (21.200 --> 55.400) of 100 total.
-[114.05] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
-[114.05] [Arms (#1)] Completed cast {SpellID: 412609}
-[114.05] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[114.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 67.140 damage (SpellSchool: 1). (Threat: 53.712)
-[115.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (55.400 --> 56.900) of 100 total.
-[115.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[115.65] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m56.052381953s.
-[115.75] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m56.052381953s.
-[115.85] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m56.052381953s.
-[115.95] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 1m56.052381953s.
-[116.05] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
-[116.05] [Arms (#1)] Completed cast {SpellID: 21553}
-[116.05] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (56.900 --> 26.900) of 100 total.
-[116.05] [Arms (#1)] [Target 1] {SpellID: 21553} Dodge (SpellSchool: 1). (Threat: 0.000)
-[116.05] [Arms (#1)] Aura gained: {SpellID: 1282733}
-[116.05] [Arms (#1)] Gained 24.000 rage from {OtherID: 8} (26.900 --> 50.900) of 100 total.
-[117.55] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
-[117.55] [Arms (#1)] Completed cast {SpellID: 11585}
-[117.55] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (50.900 --> 45.900) of 100 total.
-[117.55] [Arms (#1)] [Target 1] {SpellID: 11585} Hit for 394.989 damage (SpellSchool: 1). (Threat: 315.991)
-[117.55] [Arms (#1)] Aura faded: {SpellID: 1282733}
-[117.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 67.140 damage (SpellSchool: 1). (Threat: 53.712)
+[114.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 394.508 damage (SpellSchool: 1). (Threat: 315.606)
+[114.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (9.200 --> 26.300) of 100 total.
+[114.05] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
+[114.65] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[115.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (26.300 --> 27.800) of 100 total.
+[115.05] [Arms (#1)] Completed cast {SpellID: 11605}
+[115.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (27.800 --> 12.800) of 100 total.
+[115.05] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 417.674 damage (SpellSchool: 1). (Threat: 334.139)
+[116.05] [Target 1] Aura faded: {SpellID: 412609}
+[116.05] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 40.644 damage (SpellSchool: 1). (Threat: 32.516)
+[116.65] [Arms (#1)] Queueing up {SpellID: 2687} to cast at 1m57.000000002s.
+[116.75] [Arms (#1)] Queueing up {SpellID: 2687} to cast at 1m57.000000002s.
+[116.85] [Arms (#1)] Queueing up {SpellID: 2687} to cast at 1m57.000000002s.
+[116.95] [Arms (#1)] Queueing up {SpellID: 2687} to cast at 1m57.000000002s.
+[117.00] [Arms (#1)] Casting {SpellID: 2687} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 34
+[117.00] [Arms (#1)] Completed cast {SpellID: 2687}
+[117.00] [Arms (#1)] Gained 15.000 rage from {SpellID: 2687} (12.800 --> 27.800) of 100 total.
+[117.00] [Arms (#1)] Spent 525.800 health from {SpellID: 2687} (3207.400 --> 2681.600) of 4259 total.
+[117.00] [Arms (#1)] Aura gained: {SpellID: 29131}
+[117.65] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [117.85] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [117.85] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[117.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 223.409 damage (SpellSchool: 1). (Threat: 178.727)
-[117.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (45.900 --> 63.000) of 100 total.
-[117.86] [Arms (#1)] Aura gained: {SpellID: 1282733}
-[118.05] [Target 1] Aura faded: {SpellID: 11574}
-[118.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[119.05] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 24
-[119.05] [Arms (#1)] Completed cast {SpellID: 11574}
-[119.05] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (63.000 --> 53.000) of 100 total.
-[119.05] [Arms (#1)] [Target 1] {SpellID: 11574} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[119.05] [Target 1] Aura gained: {SpellID: 11574}
-[120.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (53.000 --> 54.500) of 100 total.
-[120.55] [Arms (#1)] Casting {SpellID: 1310222} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 26
-[120.55] [Arms (#1)] Completed cast {SpellID: 1310222}
-[120.55] [Arms (#1)] Spent 15.000 rage from {SpellID: 1310222} (54.500 --> 39.500) of 100 total.
-[120.55] [Arms (#1)] [Target 1] {SpellID: 1310222} Hit for 116.367 damage (SpellSchool: 1). (Threat: 93.093)
-[120.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 67.140 damage (SpellSchool: 1). (Threat: 53.712)
+[117.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 330.142 damage (SpellSchool: 1). (Threat: 264.114)
+[117.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (27.800 --> 44.900) of 100 total.
+[117.85] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 20
+[117.85] [Arms (#1)] Completed cast {SpellID: 21553}
+[117.85] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (44.900 --> 14.900) of 100 total.
+[117.85] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 449.927 damage (SpellSchool: 1). (Threat: 359.941)
+[117.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (14.900 --> 15.900) of 100 total.
+[118.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (15.900 --> 17.400) of 100 total.
+[119.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (17.400 --> 18.900) of 100 total.
+[120.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (18.900 --> 20.400) of 100 total.
+[120.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (20.400 --> 21.900) of 100 total.
+[120.65] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[121.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (21.900 --> 23.400) of 100 total.
 [121.65] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [121.65] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[121.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 193.769 damage (SpellSchool: 1). (Threat: 155.015)
-[121.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (39.500 --> 56.600) of 100 total.
-[121.65] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 2m2.052381953s.
-[121.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (56.600 --> 57.600) of 100 total.
-[121.75] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 2m2.052381953s.
-[122.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[122.05] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
-[122.05] [Arms (#1)] Completed cast {SpellID: 21553}
-[122.05] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (57.600 --> 27.600) of 100 total.
-[122.05] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 436.788 damage (SpellSchool: 1). (Threat: 349.430)
-[123.05] [Target 1] Aura faded: {SpellID: 11597}
-[123.55] [Target 1] {SpellID: 11597} stacks: 5 --> 0
-[122.86] [Arms (#1)] Aura faded: {SpellID: 1282733}
-[123.55] [Arms (#1)] Casting {SpellID: 2687} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 33
-[123.55] [Arms (#1)] Completed cast {SpellID: 2687}
-[123.55] [Arms (#1)] Gained 15.000 rage from {SpellID: 2687} (27.600 --> 42.600) of 100 total.
-[123.55] [Arms (#1)] Spent 337.800 health from {OtherID: 9} (3583.400 --> 3245.600) of 4259 total.
-[123.55] [Arms (#1)] Aura gained: {SpellID: 29131}
-[123.65] [Target 1] Aura faded: {SpellID: 412609}
-[123.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 67.140 damage (SpellSchool: 1). (Threat: 53.712)
-[123.65] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[123.65] [Arms (#1)] Completed cast {SpellID: 11597}
-[123.65] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (42.600 --> 27.600) of 100 total.
-[123.65] [Target 1] Aura gained: {SpellID: 11597}
-[123.65] [Target 1] {SpellID: 11597} stacks: 0 --> 1
-[123.65] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[124.55] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (27.600 --> 29.100) of 100 total.
-[125.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (29.100 --> 30.600) of 100 total.
-[125.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[125.10] [Arms (#1)] Queueing up {SpellID: 11597} to cast at 2m5.152381953s.
-[125.15] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[125.15] [Arms (#1)] Completed cast {SpellID: 11597}
-[125.15] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (30.600 --> 15.600) of 100 total.
-[125.15] [Target 1] Aura refreshed: {SpellID: 11597}
-[125.15] [Target 1] {SpellID: 11597} stacks: 1 --> 2
-[125.15] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
+[121.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 207.406 damage (SpellSchool: 1). (Threat: 165.925)
+[121.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (23.400 --> 40.500) of 100 total.
+[121.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (40.500 --> 41.500) of 100 total.
+[122.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (41.500 --> 43.000) of 100 total.
+[122.15] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 23
+[122.15] [Arms (#1)] Completed cast {SpellID: 11574}
+[122.15] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (43.000 --> 33.000) of 100 total.
+[122.15] [Arms (#1)] [Target 1] {SpellID: 11574} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[122.15] [Target 1] Aura faded: {SpellID: 11574}
+[122.15] [Target 1] Aura gained: {SpellID: 11574}
+[123.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (33.000 --> 34.500) of 100 total.
+[123.65] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 2m3.852381953s.
+[123.75] [Arms (#1)] Queueing up {SpellID: 21553} to cast at 2m3.852381953s.
+[123.85] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 20
+[123.85] [Arms (#1)] Completed cast {SpellID: 21553}
+[123.85] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (34.500 --> 4.500) of 100 total.
+[123.85] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 478.418 damage (SpellSchool: 1). (Threat: 382.735)
+[124.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (4.500 --> 6.000) of 100 total.
+[125.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (6.000 --> 7.500) of 100 total.
+[125.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (7.500 --> 9.000) of 100 total.
+[125.05] [Target 1] Aura faded: {SpellID: 11597}
+[125.10] [Target 1] {SpellID: 11597} stacks: 5 --> 0
+[125.15] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
 [125.45] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [125.45] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[125.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 175.822 damage (SpellSchool: 1). (Threat: 140.657)
-[125.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (15.600 --> 32.700) of 100 total.
-[125.55] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (32.700 --> 34.200) of 100 total.
-[126.55] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (34.200 --> 35.700) of 100 total.
-[126.65] [Arms (#1)] Queueing up {SpellID: 11597} to cast at 2m6.652381954s.
-[126.65] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[126.65] [Arms (#1)] Completed cast {SpellID: 11597}
-[126.65] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (35.700 --> 20.700) of 100 total.
-[126.65] [Target 1] Aura refreshed: {SpellID: 11597}
-[126.65] [Target 1] {SpellID: 11597} stacks: 2 --> 3
-[126.65] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[127.55] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (20.700 --> 22.200) of 100 total.
-[128.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[128.15] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[128.15] [Arms (#1)] Completed cast {SpellID: 11597}
-[128.15] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (22.200 --> 7.200) of 100 total.
-[128.15] [Target 1] Aura refreshed: {SpellID: 11597}
-[128.15] [Target 1] {SpellID: 11597} stacks: 3 --> 4
-[128.15] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[128.55] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (7.200 --> 8.700) of 100 total.
+[125.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 169.830 damage (SpellSchool: 1). (Threat: 135.864)
+[125.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (9.000 --> 26.100) of 100 total.
+[125.45] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[125.45] [Arms (#1)] Completed cast {SpellID: 11597}
+[125.45] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (26.100 --> 11.100) of 100 total.
+[125.45] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (11.100 --> 23.100) of 100 total.
+[125.45] [Arms (#1)] [Target 1] {SpellID: 11597} Dodge (SpellSchool: 1). (Threat: 0.000)
+[125.45] [Arms (#1)] Aura gained: {SpellID: 1282733}
+[126.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (23.100 --> 24.600) of 100 total.
+[126.95] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[126.95] [Arms (#1)] Completed cast {SpellID: 11597}
+[126.95] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (24.600 --> 9.600) of 100 total.
+[126.95] [Target 1] Aura gained: {SpellID: 11597}
+[126.95] [Target 1] {SpellID: 11597} stacks: 0 --> 1
+[126.95] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
+[127.00] [Arms (#1)] Aura faded: {SpellID: 29131}
+[127.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 29131} (9.600 --> 11.100) of 100 total.
+[128.15] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[128.45] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
+[128.45] [Arms (#1)] Completed cast {SpellID: 11585}
+[128.45] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (11.100 --> 6.100) of 100 total.
+[128.45] [Arms (#1)] [Target 1] {SpellID: 11585} Crit for 577.729 damage (SpellSchool: 1). (Threat: 346.637)
+[128.45] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
+[128.45] [Arms (#1)] Completed cast {SpellID: 412609}
+[128.45] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[128.45] [Target 1] Aura gained: {SpellID: 412609}
+[128.45] [Arms (#1)] Aura faded: {SpellID: 1282733}
 [129.25] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [129.25] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[129.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 341.268 damage (SpellSchool: 1). (Threat: 273.014)
-[129.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (8.700 --> 25.800) of 100 total.
-[129.35] [Arms (#1)] Queueing up {SpellID: 11597} to cast at 2m9.652381955s.
-[129.55] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (25.800 --> 27.300) of 100 total.
-[129.65] [Arms (#1)] Queueing up {SpellID: 11597} to cast at 2m9.652381955s.
-[129.65] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[129.65] [Arms (#1)] Completed cast {SpellID: 11597}
-[129.65] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (27.300 --> 12.300) of 100 total.
-[129.65] [Target 1] Aura refreshed: {SpellID: 11597}
-[129.65] [Target 1] {SpellID: 11597} stacks: 4 --> 5
-[129.65] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[130.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (12.300 --> 13.800) of 100 total.
-[130.55] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (13.800 --> 15.300) of 100 total.
-[131.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[131.15] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 22
-[131.55] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (15.300 --> 16.800) of 100 total.
-[132.15] [Arms (#1)] Completed cast {SpellID: 11605}
-[132.15] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (16.800 --> 1.800) of 100 total.
-[132.15] [Arms (#1)] [Target 1] {SpellID: 11605} Hit for 399.351 damage (SpellSchool: 1). (Threat: 319.481)
-[132.55] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (1.800 --> 3.300) of 100 total.
+[129.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 184.326 damage (SpellSchool: 1). (Threat: 147.461)
+[129.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (6.100 --> 23.200) of 100 total.
+[129.26] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (23.200 --> 24.200) of 100 total.
+[129.95] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[129.95] [Arms (#1)] Completed cast {SpellID: 11597}
+[129.95] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (24.200 --> 9.200) of 100 total.
+[129.95] [Target 1] Aura refreshed: {SpellID: 11597}
+[129.95] [Target 1] {SpellID: 11597} stacks: 1 --> 2
+[129.95] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
+[130.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (9.200 --> 10.700) of 100 total.
+[131.15] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[131.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
 [133.05] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [133.05] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[133.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 352.957 damage (SpellSchool: 1). (Threat: 282.366)
-[133.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (3.300 --> 20.400) of 100 total.
-[133.06] [Arms (#1)] Aura gained: {SpellID: 1282733}
-[133.15] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
-[133.15] [Arms (#1)] Completed cast {SpellID: 11585}
-[133.15] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (20.400 --> 15.400) of 100 total.
-[133.15] [Arms (#1)] [Target 1] {SpellID: 11585} Hit for 365.995 damage (SpellSchool: 1). (Threat: 292.796)
-[133.15] [Arms (#1)] Aura faded: {SpellID: 1282733}
-[133.55] [Arms (#1)] Aura faded: {SpellID: 29131}
-[133.55] [Arms (#1)] Gained 1.500 rage from {SpellID: 2687} (15.400 --> 16.900) of 100 total.
-[134.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[135.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (16.900 --> 18.400) of 100 total.
+[133.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 180.943 damage (SpellSchool: 1). (Threat: 144.754)
+[133.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (10.700 --> 27.800) of 100 total.
+[133.05] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[133.05] [Arms (#1)] Completed cast {SpellID: 11597}
+[133.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (27.800 --> 12.800) of 100 total.
+[133.05] [Target 1] Aura refreshed: {SpellID: 11597}
+[133.05] [Target 1] {SpellID: 11597} stacks: 2 --> 3
+[133.05] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
+[133.06] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (12.800 --> 13.800) of 100 total.
+[134.15] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[134.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
+[135.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (13.800 --> 15.300) of 100 total.
+[135.05] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[135.05] [Arms (#1)] Completed cast {SpellID: 11597}
+[135.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (15.300 --> 0.300) of 100 total.
+[135.05] [Target 1] Aura refreshed: {SpellID: 11597}
+[135.05] [Target 1] {SpellID: 11597} stacks: 3 --> 4
+[135.05] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
 [136.85] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [136.85] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[136.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 178.284 damage (SpellSchool: 1). (Threat: 142.627)
-[136.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (18.400 --> 35.500) of 100 total.
-[136.85] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
-[136.85] [Arms (#1)] Completed cast {SpellID: 21553}
-[136.85] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (35.500 --> 5.500) of 100 total.
-[136.85] [Arms (#1)] [Target 1] {SpellID: 21553} Miss (SpellSchool: 1). (Threat: 0.000)
-[136.85] [Arms (#1)] Gained 24.000 rage from {OtherID: 8} (5.500 --> 29.500) of 100 total.
-[137.05] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[138.55] [Arms (#1)] Casting {SpellID: 11574} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 24
-[138.55] [Arms (#1)] Completed cast {SpellID: 11574}
-[138.55] [Arms (#1)] Spent 10.000 rage from {SpellID: 11574} (29.500 --> 19.500) of 100 total.
-[138.55] [Arms (#1)] [Target 1] {SpellID: 11574} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[138.55] [Target 1] Aura faded: {SpellID: 11574}
-[138.55] [Target 1] Aura gained: {SpellID: 11574}
-[140.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (19.500 --> 21.000) of 100 total.
-[140.15] [Arms (#1)] Queueing up {SpellID: 1310222} to cast at 2m20.552381953s.
-[140.25] [Arms (#1)] Queueing up {SpellID: 1310222} to cast at 2m20.552381953s.
-[140.35] [Arms (#1)] Queueing up {SpellID: 1310222} to cast at 2m20.552381953s.
-[140.45] [Arms (#1)] Queueing up {SpellID: 1310222} to cast at 2m20.552381953s.
-[140.55] [Arms (#1)] Casting {SpellID: 1310222} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 26
-[140.55] [Arms (#1)] Completed cast {SpellID: 1310222}
-[140.55] [Arms (#1)] Spent 15.000 rage from {SpellID: 1310222} (21.000 --> 6.000) of 100 total.
-[140.55] [Arms (#1)] [Target 1] {SpellID: 1310222} Hit for 113.564 damage (SpellSchool: 1). (Threat: 90.851)
+[136.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 351.208 damage (SpellSchool: 1). (Threat: 280.966)
+[136.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (0.300 --> 17.400) of 100 total.
+[136.85] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[136.85] [Arms (#1)] Completed cast {SpellID: 11597}
+[136.85] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (17.400 --> 2.400) of 100 total.
+[136.85] [Target 1] Aura refreshed: {SpellID: 11597}
+[136.85] [Target 1] {SpellID: 11597} stacks: 4 --> 5
+[136.85] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
+[136.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (2.400 --> 3.400) of 100 total.
+[137.15] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[137.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
+[140.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (3.400 --> 4.900) of 100 total.
+[140.15] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[140.45] [Target 1] Aura faded: {SpellID: 412609}
+[140.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
 [140.65] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [140.65] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[140.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 234.886 damage (SpellSchool: 1). (Threat: 187.908)
-[140.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (6.000 --> 23.100) of 100 total.
-[140.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (23.100 --> 24.100) of 100 total.
-[141.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[144.05] [Arms (#1)] Casting {SpellID: 20662} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 30
-[144.05] [Arms (#1)] Completed cast {SpellID: 20662}
-[144.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 20662} (24.100 --> 9.100) of 100 total.
-[144.05] [Arms (#1)] Spent 9.100 rage from {SpellID: 20662} (9.100 --> 0.000) of 100 total.
-[144.05] [Arms (#1)] [Target 1] {SpellID: 20662} Dodge (SpellSchool: 1). (Threat: 0.000)
-[144.05] [Arms (#1)] Aura gained: {SpellID: 1282733}
-[144.05] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (0.000 --> 12.000) of 100 total.
+[140.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 780.531 damage (SpellSchool: 1). (Threat: 624.425)
+[140.65] [Arms (#1)] Gained 34.200 rage from {OtherID: 3, Tag: 14} (4.900 --> 39.100) of 100 total.
+[140.65] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 20
+[140.65] [Arms (#1)] Completed cast {SpellID: 21553}
+[140.65] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (39.100 --> 9.100) of 100 total.
+[140.65] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 471.953 damage (SpellSchool: 1). (Threat: 377.562)
+[140.65] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
+[140.65] [Arms (#1)] Completed cast {SpellID: 412609}
+[140.65] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[140.65] [Target 1] Aura gained: {SpellID: 412609}
+[143.15] [Target 1] Aura faded: {SpellID: 11574}
+[143.15] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 53.949 damage (SpellSchool: 1). (Threat: 43.159)
+[143.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
 [144.45] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [144.45] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[144.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 678.747 damage (SpellSchool: 1). (Threat: 542.997)
-[144.45] [Arms (#1)] Gained 34.200 rage from {OtherID: 3, Tag: 14} (12.000 --> 46.200) of 100 total.
+[144.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 759.072 damage (SpellSchool: 1). (Threat: 607.257)
+[144.45] [Arms (#1)] Gained 34.200 rage from {OtherID: 3, Tag: 14} (9.100 --> 43.300) of 100 total.
+[144.45] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
 [144.45] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [144.45] [Arms (#1)] Completed cast {SpellID: 412609}
 [144.45] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[144.45] [Target 1] Aura gained: {SpellID: 412609}
-[144.46] [Arms (#1)] Aura refreshed: {SpellID: 1282733}
-[144.46] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (46.200 --> 47.200) of 100 total.
-[144.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[145.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (47.200 --> 48.700) of 100 total.
-[145.55] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
-[145.55] [Arms (#1)] Completed cast {SpellID: 11585}
-[145.55] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (48.700 --> 43.700) of 100 total.
-[145.55] [Arms (#1)] [Target 1] {SpellID: 11585} Hit for 320.304 damage (SpellSchool: 1). (Threat: 256.243)
-[145.55] [Arms (#1)] Aura faded: {SpellID: 1282733}
-[147.05] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 21
-[147.05] [Arms (#1)] Completed cast {SpellID: 21553}
-[147.05] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (43.700 --> 13.700) of 100 total.
-[147.05] [Arms (#1)] [Target 1] {SpellID: 21553} Crit for 943.502 damage (SpellSchool: 1). (Threat: 754.802)
-[147.05] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
-[147.05] [Arms (#1)] Completed cast {SpellID: 412609}
-[147.05] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[147.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 63.190 damage (SpellSchool: 1). (Threat: 50.552)
-[147.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[144.46] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (43.300 --> 44.300) of 100 total.
+[145.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (44.300 --> 45.800) of 100 total.
+[145.10] [Arms (#1)] Queueing up {SpellID: 11605} to cast at 2m25.452381953s.
+[145.45] [Arms (#1)] Completed cast {SpellID: 11605}
+[145.45] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (45.800 --> 30.800) of 100 total.
+[145.45] [Arms (#1)] [Target 1] {SpellID: 11605} Miss (SpellSchool: 1). (Threat: 0.000)
+[145.45] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (30.800 --> 42.800) of 100 total.
+[145.45] [Arms (#1)] Casting {SpellID: 1310222} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 25
+[145.45] [Arms (#1)] Completed cast {SpellID: 1310222}
+[145.45] [Arms (#1)] Spent 15.000 rage from {SpellID: 1310222} (42.800 --> 27.800) of 100 total.
+[145.45] [Arms (#1)] [Target 1] {SpellID: 1310222} Miss (SpellSchool: 1). (Threat: 0.000)
+[145.45] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (27.800 --> 39.800) of 100 total.
+[146.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 56.902 damage (SpellSchool: 1). (Threat: 45.522)
+[146.95] [Arms (#1)] Casting {SpellID: 21553} (Cost = 30.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 20
+[146.95] [Arms (#1)] Completed cast {SpellID: 21553}
+[146.95] [Arms (#1)] Spent 30.000 rage from {SpellID: 21553} (39.800 --> 9.800) of 100 total.
+[146.95] [Arms (#1)] [Target 1] {SpellID: 21553} Hit for 502.900 damage (SpellSchool: 1). (Threat: 402.320)
 [148.25] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [148.25] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[148.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 331.309 damage (SpellSchool: 1). (Threat: 265.047)
-[148.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (13.700 --> 30.800) of 100 total.
-[148.25] [Arms (#1)] Queueing up {SpellID: 20662} to cast at 2m28.552381953s.
-[148.26] [Arms (#1)] Aura gained: {SpellID: 1282733}
-[148.35] [Arms (#1)] Queueing up {SpellID: 20662} to cast at 2m28.552381953s.
-[148.55] [Arms (#1)] Casting {SpellID: 20662} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 30
-[148.55] [Arms (#1)] Completed cast {SpellID: 20662}
-[148.55] [Arms (#1)] Spent 15.000 rage from {SpellID: 20662} (30.800 --> 15.800) of 100 total.
-[148.55] [Arms (#1)] Spent 15.800 rage from {SpellID: 20662} (15.800 --> 0.000) of 100 total.
-[148.55] [Arms (#1)] [Target 1] {SpellID: 20662} Hit for 679.216 damage (SpellSchool: 1). (Threat: 543.373)
-[150.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (0.000 --> 1.500) of 100 total.
-[150.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 63.190 damage (SpellSchool: 1). (Threat: 50.552)
-[150.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[148.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Miss (SpellSchool: 1). (Threat: 0.000)
+[149.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 56.902 damage (SpellSchool: 1). (Threat: 45.522)
+[150.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (9.800 --> 11.300) of 100 total.
+[150.05] [Arms (#1)] Casting {SpellID: 20662} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 30
+[150.05] [Arms (#1)] Completed cast {SpellID: 20662}
+[150.05] [Arms (#1)] Spent 10.000 rage from {SpellID: 20662} (11.300 --> 1.300) of 100 total.
+[150.05] [Arms (#1)] Spent 1.300 rage from {SpellID: 20662} (1.300 --> 0.000) of 100 total.
+[150.05] [Arms (#1)] [Target 1] {SpellID: 20662} Hit for 517.359 damage (SpellSchool: 1). (Threat: 413.887)
 [152.05] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [152.05] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[152.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Dodge (SpellSchool: 1). (Threat: 0.000)
-[152.05] [Arms (#1)] Aura refreshed: {SpellID: 1282733}
-[153.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 63.190 damage (SpellSchool: 1). (Threat: 50.552)
-[153.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[155.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (1.500 --> 3.000) of 100 total.
+[152.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 241.727 damage (SpellSchool: 1). (Threat: 193.381)
+[152.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (0.000 --> 17.100) of 100 total.
+[152.05] [Arms (#1)] Casting {SpellID: 20662} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 30
+[152.05] [Arms (#1)] Completed cast {SpellID: 20662}
+[152.05] [Arms (#1)] Spent 10.000 rage from {SpellID: 20662} (17.100 --> 7.100) of 100 total.
+[152.05] [Arms (#1)] Spent 7.100 rage from {SpellID: 20662} (7.100 --> 0.000) of 100 total.
+[152.05] [Arms (#1)] [Target 1] {SpellID: 20662} Hit for 590.015 damage (SpellSchool: 1). (Threat: 472.012)
+[152.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 56.902 damage (SpellSchool: 1). (Threat: 45.522)
+[155.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (0.000 --> 1.500) of 100 total.
+[155.65] [Target 1] Aura faded: {SpellID: 412609}
+[155.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 56.902 damage (SpellSchool: 1). (Threat: 45.522)
 [155.85] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [155.85] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[155.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 208.951 damage (SpellSchool: 1). (Threat: 167.161)
-[155.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (3.000 --> 20.100) of 100 total.
-[155.85] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
-[155.85] [Arms (#1)] Completed cast {SpellID: 11585}
-[155.85] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (20.100 --> 15.100) of 100 total.
-[155.85] [Arms (#1)] [Target 1] {SpellID: 11585} Hit for 319.137 damage (SpellSchool: 1). (Threat: 255.309)
-[155.85] [Arms (#1)] Aura faded: {SpellID: 1282733}
-[155.86] [Arms (#1)] Aura gained: {SpellID: 1282733}
-[155.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (15.100 --> 16.100) of 100 total.
-[156.45] [Target 1] Aura faded: {SpellID: 412609}
-[156.45] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 63.190 damage (SpellSchool: 1). (Threat: 50.552)
-[156.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
-[157.35] [Arms (#1)] Casting {SpellID: 20662} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 30
-[157.35] [Arms (#1)] Completed cast {SpellID: 20662}
-[157.35] [Arms (#1)] Spent 15.000 rage from {SpellID: 20662} (16.100 --> 1.100) of 100 total.
-[157.35] [Arms (#1)] Spent 1.100 rage from {SpellID: 20662} (1.100 --> 0.000) of 100 total.
-[157.35] [Arms (#1)] [Target 1] {SpellID: 20662} Dodge (SpellSchool: 1). (Threat: 0.000)
-[157.35] [Arms (#1)] Aura refreshed: {SpellID: 1282733}
-[157.35] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (0.000 --> 12.000) of 100 total.
-[159.55] [Target 1] Aura faded: {SpellID: 11574}
-[159.55] [Arms (#1)] [Target 1] {SpellID: 11574} tick Hit for 52.422 damage (SpellSchool: 1). (Threat: 41.937)
+[155.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 218.139 damage (SpellSchool: 1). (Threat: 174.511)
+[155.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (1.500 --> 18.600) of 100 total.
+[155.85] [Arms (#1)] Casting {SpellID: 11605} (Cost = 15.000, Cast Time = 1s, GCD = 1s, Effective Time = 1s) APL: priority 21
+[155.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (18.600 --> 19.600) of 100 total.
+[156.85] [Arms (#1)] Completed cast {SpellID: 11605}
+[156.85] [Arms (#1)] Spent 15.000 rage from {SpellID: 11605} (19.600 --> 4.600) of 100 total.
+[156.85] [Arms (#1)] [Target 1] {SpellID: 11605} Crit for 951.804 damage (SpellSchool: 1). (Threat: 761.443)
+[156.85] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
+[156.85] [Arms (#1)] Completed cast {SpellID: 412609}
+[156.85] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[156.85] [Target 1] Aura gained: {SpellID: 412609}
 [159.65] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [159.65] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[159.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 334.052 damage (SpellSchool: 1). (Threat: 267.241)
-[159.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (12.000 --> 29.100) of 100 total.
-[159.65] [Arms (#1)] Casting {SpellID: 20662} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 30
+[159.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 323.863 damage (SpellSchool: 1). (Threat: 259.091)
+[159.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (4.600 --> 21.700) of 100 total.
+[159.65] [Arms (#1)] Casting {SpellID: 20662} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 30
 [159.65] [Arms (#1)] Completed cast {SpellID: 20662}
-[159.65] [Arms (#1)] Spent 15.000 rage from {SpellID: 20662} (29.100 --> 14.100) of 100 total.
-[159.65] [Arms (#1)] Spent 14.100 rage from {SpellID: 20662} (14.100 --> 0.000) of 100 total.
-[159.65] [Arms (#1)] [Target 1] {SpellID: 20662} Crit for 1448.750 damage (SpellSchool: 1). (Threat: 1159.000)
-[159.65] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
-[159.65] [Arms (#1)] Completed cast {SpellID: 412609}
-[159.65] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
-[159.65] [Target 1] Aura gained: {SpellID: 412609}
-[159.65] [Target 1] Aura faded: {SpellID: 11597}
-[159.66] [Target 1] {SpellID: 11597} stacks: 5 --> 0
+[159.65] [Arms (#1)] Spent 10.000 rage from {SpellID: 20662} (21.700 --> 11.700) of 100 total.
+[159.65] [Arms (#1)] Spent 11.700 rage from {SpellID: 20662} (11.700 --> 0.000) of 100 total.
+[159.65] [Arms (#1)] [Target 1] {SpellID: 20662} Hit for 647.639 damage (SpellSchool: 1). (Threat: 518.111)
 [159.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (0.000 --> 1.000) of 100 total.
+[159.85] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
 [160.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (1.000 --> 2.500) of 100 total.
-[162.35] [Arms (#1)] Aura faded: {SpellID: 1282733}
-[162.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
+[162.85] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
 [163.45] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [163.45] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[163.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 263.413 damage (SpellSchool: 1). (Threat: 210.730)
+[163.45] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 268.410 damage (SpellSchool: 1). (Threat: 214.728)
 [163.45] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (2.500 --> 19.600) of 100 total.
-[163.45] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[163.45] [Arms (#1)] Completed cast {SpellID: 11597}
-[163.45] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (19.600 --> 4.600) of 100 total.
-[163.45] [Target 1] Aura gained: {SpellID: 11597}
-[163.45] [Target 1] {SpellID: 11597} stacks: 0 --> 1
-[163.45] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 198.200)
-[163.46] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (4.600 --> 5.600) of 100 total.
-[165.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (5.600 --> 7.100) of 100 total.
+[163.45] [Arms (#1)] Casting {SpellID: 20662} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 30
+[163.45] [Arms (#1)] Completed cast {SpellID: 20662}
+[163.45] [Arms (#1)] Spent 10.000 rage from {SpellID: 20662} (19.600 --> 9.600) of 100 total.
+[163.45] [Arms (#1)] Spent 9.600 rage from {SpellID: 20662} (9.600 --> 0.000) of 100 total.
+[163.45] [Arms (#1)] [Target 1] {SpellID: 20662} Hit for 621.332 damage (SpellSchool: 1). (Threat: 497.066)
+[163.46] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (0.000 --> 1.000) of 100 total.
+[165.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (1.000 --> 2.500) of 100 total.
 [165.05] [Arms (#1)] Casting {SpellID: 20572} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 11 > group 7.1
 [165.05] [Arms (#1)] Completed cast {SpellID: 20572}
 [165.05] [Arms (#1)] Aura gained: {SpellID: 20572}
@@ -834,60 +794,80 @@
 [165.05] [Arms (#1)] Dynamic dep enabled (RangedAttackPower *= 1.10): {}
 [165.05] [Arms (#1)] Dynamic dep enabled (SpellDamage *= 1.10): {"SpellDamage": 1.500,}
 [165.05] [Arms (#1)] Dynamic dep enabled (HealingPower *= 1.10): {"HealingPower": 4.400,}
-[165.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
+[165.85] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
+[166.85] [Target 1] Aura faded: {SpellID: 11597}
+[166.85] [Target 1] {SpellID: 11597} stacks: 5 --> 0
 [167.25] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [167.25] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[167.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 300.586 damage (SpellSchool: 1). (Threat: 240.469)
-[167.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (7.100 --> 24.200) of 100 total.
+[167.25] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 196.401 damage (SpellSchool: 1). (Threat: 157.121)
+[167.25] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (2.500 --> 19.600) of 100 total.
 [167.25] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [167.25] [Arms (#1)] Completed cast {SpellID: 11597}
-[167.25] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (24.200 --> 9.200) of 100 total.
-[167.25] [Target 1] Aura refreshed: {SpellID: 11597}
-[167.25] [Target 1] {SpellID: 11597} stacks: 1 --> 2
-[167.25] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 201.540)
-[167.26] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (9.200 --> 10.200) of 100 total.
-[168.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
-[170.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (10.200 --> 11.700) of 100 total.
+[167.25] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (19.600 --> 4.600) of 100 total.
+[167.25] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (4.600 --> 16.600) of 100 total.
+[167.25] [Arms (#1)] [Target 1] {SpellID: 11597} Dodge (SpellSchool: 1). (Threat: 0.000)
+[167.25] [Arms (#1)] Aura gained: {SpellID: 1282733}
+[167.26] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (16.600 --> 17.600) of 100 total.
+[168.75] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[168.75] [Arms (#1)] Completed cast {SpellID: 11597}
+[168.75] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (17.600 --> 2.600) of 100 total.
+[168.75] [Target 1] Aura gained: {SpellID: 11597}
+[168.75] [Target 1] {SpellID: 11597} stacks: 0 --> 1
+[168.75] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 201.540)
+[168.85] [Target 1] Aura faded: {SpellID: 412609}
+[168.85] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 32.515 damage (SpellSchool: 1). (Threat: 26.012)
+[170.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (2.600 --> 4.100) of 100 total.
 [171.05] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [171.05] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[171.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 244.010 damage (SpellSchool: 1). (Threat: 195.208)
-[171.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (11.700 --> 28.800) of 100 total.
+[171.05] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 158.225 damage (SpellSchool: 1). (Threat: 126.580)
+[171.05] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (4.100 --> 21.200) of 100 total.
 [171.05] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [171.05] [Arms (#1)] Completed cast {SpellID: 11597}
-[171.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (28.800 --> 13.800) of 100 total.
-[171.05] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (13.800 --> 25.800) of 100 total.
-[171.05] [Arms (#1)] [Target 1] {SpellID: 11597} Miss (SpellSchool: 1). (Threat: 0.000)
-[171.65] [Target 1] Aura faded: {SpellID: 412609}
-[171.65] [Arms (#1)] [Target 1] {SpellID: 412609} tick Hit for 31.595 damage (SpellSchool: 1). (Threat: 25.276)
-[172.55] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
-[172.55] [Arms (#1)] Completed cast {SpellID: 11597}
-[172.55] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (25.800 --> 10.800) of 100 total.
-[172.55] [Target 1] Aura refreshed: {SpellID: 11597}
-[172.55] [Target 1] {SpellID: 11597} stacks: 2 --> 3
-[172.55] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 201.540)
+[171.05] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (21.200 --> 6.200) of 100 total.
+[171.05] [Target 1] Aura refreshed: {SpellID: 11597}
+[171.05] [Target 1] {SpellID: 11597} stacks: 1 --> 2
+[171.05] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 201.540)
+[172.25] [Arms (#1)] Aura faded: {SpellID: 1282733}
 [174.85] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [174.85] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[174.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 229.150 damage (SpellSchool: 1). (Threat: 183.320)
-[174.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (10.800 --> 27.900) of 100 total.
+[174.85] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 183.361 damage (SpellSchool: 1). (Threat: 146.689)
+[174.85] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (6.200 --> 23.300) of 100 total.
 [174.85] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [174.85] [Arms (#1)] Completed cast {SpellID: 11597}
-[174.85] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (27.900 --> 12.900) of 100 total.
-[174.85] [Target 1] Aura refreshed: {SpellID: 11597}
-[174.85] [Target 1] {SpellID: 11597} stacks: 3 --> 4
-[174.85] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 201.540)
-[174.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (12.900 --> 13.900) of 100 total.
-[175.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (13.900 --> 15.400) of 100 total.
+[174.85] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (23.300 --> 8.300) of 100 total.
+[174.85] [Arms (#1)] Gained 12.000 rage from {OtherID: 8} (8.300 --> 20.300) of 100 total.
+[174.85] [Arms (#1)] [Target 1] {SpellID: 11597} Dodge (SpellSchool: 1). (Threat: 0.000)
+[174.85] [Arms (#1)] Aura gained: {SpellID: 1282733}
+[174.86] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (20.300 --> 21.300) of 100 total.
+[175.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (21.300 --> 22.800) of 100 total.
 [176.35] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
 [176.35] [Arms (#1)] Completed cast {SpellID: 11597}
-[176.35] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (15.400 --> 0.400) of 100 total.
+[176.35] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (22.800 --> 7.800) of 100 total.
 [176.35] [Target 1] Aura refreshed: {SpellID: 11597}
-[176.35] [Target 1] {SpellID: 11597} stacks: 4 --> 5
+[176.35] [Target 1] {SpellID: 11597} stacks: 2 --> 3
 [176.35] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 201.540)
 [177.00] [Arms (#1)] Aura faded: {SpellID: 25289}
+[177.85] [Arms (#1)] Casting {SpellID: 11585} (Cost = 5.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
+[177.85] [Arms (#1)] Completed cast {SpellID: 11585}
+[177.85] [Arms (#1)] Spent 5.000 rage from {SpellID: 11585} (7.800 --> 2.800) of 100 total.
+[177.85] [Arms (#1)] [Target 1] {SpellID: 11585} Crit for 750.748 damage (SpellSchool: 1). (Threat: 450.449)
+[177.85] [Arms (#1)] Casting {SpellID: 412609} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
+[177.85] [Arms (#1)] Completed cast {SpellID: 412609}
+[177.85] [Arms (#1)] [Target 1] {SpellID: 412609} Hit for 0.000 damage (SpellSchool: 1). (Threat: 0.000)
+[177.85] [Target 1] Aura gained: {SpellID: 412609}
+[177.85] [Arms (#1)] Aura faded: {SpellID: 1282733}
 [178.65] [Arms (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [178.65] [Arms (#1)] Completed cast {OtherID: 3, Tag: 14}
-[178.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Miss (SpellSchool: 1). (Threat: 0.000)
-[180.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (0.400 --> 1.900) of 100 total.
+[178.65] [Arms (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 212.008 damage (SpellSchool: 1). (Threat: 169.607)
+[178.65] [Arms (#1)] Gained 17.100 rage from {OtherID: 3, Tag: 14} (2.800 --> 19.900) of 100 total.
+[178.66] [Arms (#1)] Gained 1.000 rage from {SpellID: 12964} (19.900 --> 20.900) of 100 total.
+[179.35] [Arms (#1)] Casting {SpellID: 11597} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6 > group 8.1
+[179.35] [Arms (#1)] Completed cast {SpellID: 11597}
+[179.35] [Arms (#1)] Spent 15.000 rage from {SpellID: 11597} (20.900 --> 5.900) of 100 total.
+[179.35] [Target 1] Aura refreshed: {SpellID: 11597}
+[179.35] [Target 1] {SpellID: 11597} stacks: 3 --> 4
+[179.35] [Arms (#1)] [Target 1] {SpellID: 11597} Hit for 0.000 damage (SpellSchool: 1). (Threat: 195.424)
+[180.00] [Arms (#1)] Gained 1.500 rage from {SpellID: 12296} (5.900 --> 7.400) of 100 total.
 [180.00] [Arms (#1)] Aura faded: {SpellID: 20572}
 [180.00] [Arms (#1)] Dynamic dep disabled (AttackPower *= 1.10): {"AttackPower": -69.600,}
 [180.00] [Arms (#1)] Dynamic dep disabled (RangedAttackPower *= 1.10): {}
@@ -895,5 +875,6 @@
 [180.00] [Arms (#1)] Dynamic dep disabled (HealingPower *= 1.10): {"HealingPower": -4.400,}
 [180.00] [Arms (#1)] Aura faded: {SpellID: 1290261, Tag: 1}
 [180.00] [Arms (#1)] Aura faded: {SpellID: 2457}
+[180.00] [Target 1] Aura faded: {SpellID: 412609}
 [180.00] [Target 1] Aura faded: {SpellID: 11597}
-[180.00] [Target 1] {SpellID: 11597} stacks: 5 --> 0
+[180.00] [Target 1] {SpellID: 11597} stacks: 4 --> 0

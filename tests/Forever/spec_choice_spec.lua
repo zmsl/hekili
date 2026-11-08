@@ -7,7 +7,7 @@ local ww = require("Forever.helpers.warrior_world")
 
 local ARMS, FURY, PROT = 100011, 100012, 100013
 local CHAR = "Player-Realm" -- the fake client's UnitName("player") .. "-" .. GetRealmName()
-local FURY_TALENTS = { [23881] = 1, [12319] = 5 } -- Bloodthirst, Flurry
+local FURY_TALENTS = { [23881] = 1, [12319] = 3 } -- Bloodthirst, Flurry
 
 -- The harness's C_Traits answer for a talent build (tests/Game/harness/headless.lua's login shape).
 local function traits(talents)

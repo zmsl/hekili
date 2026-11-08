@@ -841,8 +841,16 @@ describe("Forever Druid", function()
         }, yes)
     end)
 
+    it("declares Poised as a flat -10 cost modifier over the eight Feral abilities (one charge)", function()
+        local m = w.costMods[2]
+        assert.are.same(
+            { "poised", -10, 1, { 1082, 1822, 5221, 6785, 9005, 1079, 1328618, 8998 } },
+            { m.aura, m.flat, m.charges, m.spells }
+        )
+    end)
+
     it("declares Clearcasting as one cost modifier over the covered rank-1 IDs, and no `spend` reads it", function()
-        assert.are.equal(1, #w.costMods)
+        assert.are.equal(2, #w.costMods) -- Clearcasting, then Poised
         local m = w.costMods[1]
         assert.are.same({ "clearcasting", -1, 1, COVERED }, { m.aura, m.pct, m.charges, m.spells })
         local first = {}

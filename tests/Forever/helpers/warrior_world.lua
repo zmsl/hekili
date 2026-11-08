@@ -40,13 +40,13 @@ M.KIT = {
     "victory_rush",
     "whirlwind",
 }
--- An Arms build by definition spell (the SPIKE's): Mortal Strike, Anger Management, Deep Wounds 3, Tactical Mastery 5,
+-- An Arms build by definition spell (the SPIKE's): Mortal Strike, Anger Management, Deep Wounds 3, Improved Tactical Mastery 3 (its max at 4b0030a44b),
 -- Impale 2, Improved Rend 3, and Spearing Strike (the Arms talent the wowsims.com build takes).
-M.TALENTS = { [12294] = 1, [12296] = 1, [12834] = 3, [12295] = 5, [16493] = 2, [12163] = 3, [1310222] = 1 }
+M.TALENTS = { [12294] = 1, [12296] = 1, [12834] = 3, [12295] = 3, [16493] = 2, [12163] = 3, [1310222] = 1 }
 -- How many of an ability's rank list (`id`, then `copy`) the character knows when the list runs past its trained ranks:
 -- Slam's list ends in Improved Slam's override IDs, which this build (no Improved Slam) does not know.
 M.RANKS = { slam = 5 }
--- Forever's Tactical Mastery passive (the user's Warrior knows it): the stance keep is 85 (the class file's swap_stance).
+-- Forever's Tactical Mastery passive (the user's Warrior knows it): the stance keep is 25 (the class file's swap_stance: 10 + 5 a rank of 3).
 M.PASSIVES = { 1310185 }
 
 -- Every known rank's spell ID of each kit ability (the class file reads the usability of the highest rank known).
@@ -214,6 +214,14 @@ M.MAP = {
             end
         end,
     },
+    -- shortcut: the class file's own model restated (its `now`): four charges and their 20 rage at the cast; our swings do not
+    -- spend the charges (warrior-1). Upgrade with the belief's own-swing consumption.
+    reckless_swings = {
+        effect = function(W, e, _, X)
+            aura(W, X, e, "reckless_swings", 4)
+            W.gain(e, 20)
+        end,
+    },
     recklessness = selfAura("recklessness"),
     sweeping_strikes = selfAura("sweeping_strikes"),
     death_wish = selfAura("death_wish"),
@@ -374,7 +382,7 @@ function M.resolve(key, H)
         ids = ranks(key, a),
         cost = H.Hekili.State.action[key].cost or 0,
         cooldown = tonumber(a.cooldown) or 0,
-        gcd = 1.5,
+        gcd = type(a.gcdTime) == "number" and a.gcdTime or 1.5, -- Reckless Swings' 1 s (Slam's, a function, keeps 1.5)
         offGcd = a.gcd == "off",
         cast = tonumber(a.cast) or 0,
         onNextSwing = a.onNextSwing or a.nextSwing,
