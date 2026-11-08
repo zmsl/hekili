@@ -32,7 +32,7 @@ local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true 
 -- reads 3600, gap AN, API; 1 an unseen Rogue Armor Energize 27788 at log 79.25 (venom at 80.69, belief lo 13.1 vs truth 25);
 -- without the 3 fight-end misses 0.949, within max(0.02, 2/59) of base 0.982); LIVE60 5.0 measured. Combat 0.95 -> 0.97
 -- (0.973 of 73; LIVE60 4.0 -> 4.4 measured). Subtlety 0.96 -> 0.96 (0.964 of 83; LIVE60 4.2 measured).
--- Floors step on integ/0.7 5deb101c4 (CN8 cooldown probe + steady icons default; logs unchanged since pin move 2, R6 truncation):
+-- Floors step on integ/0.7 27add4428, identical to 5deb101c4 (the v0.6.2 melee-range fix moved no Rogue row; CN8 cooldown probe + steady icons default; logs unchanged since pin move 2, R6 truncation):
 -- Assassination 0.93 -> 0.97 (0.978 of 91 decisions on-GCD), LIVE60 5.0 -> 5.2 (L60 world re-rolled under the new cooldown
 -- handling and steady icons; still under the 6 s bar, which governs: max(6, LIVE60)). Combat 0.97 -> 0.99 (0.991 of 108),
 -- LIVE60 4.4 -> 3.0 (measured; same cause). Flicker 0.00/min (Assassination), 1.00/min (Combat), both inside the harness ceiling.
