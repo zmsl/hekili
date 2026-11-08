@@ -952,6 +952,20 @@ describe("auras", function()
             assert.is_nil(VS.Aura("player", fs.SPENDER_A, 16.2)) -- still ours: its NONE closes it
         end)
 
+        it("a target switch starts the fact over: mob B opens from its own light, not mob A's (review I1)", function()
+            cast(2, REND, 10, 15)
+            ctl.ViewerAura(ti, "target")
+            poll(10.2)
+            for t = 10.5, 19.5, 0.5 do
+                poll(t)
+            end
+            swap("Creature-2", 20)
+            ctl.ViewerAura(ti, "target") -- mob B carries our debuff too (an AoE): lit from the next frame
+            poll(20.2) -- the first drain after the switch lands past the settle window (no UNKNOWN sweep)
+            poll(20.5)
+            assert.are.equal(35.2, est("target", fs.SPENDER_C, 20.5)) -- from B's light at 20.2, not A's at 10.2
+        end)
+
         it("an UP with no numeric duration: HOLD on the target, -1 on the player closed by its NONE", function()
             local def = fs.def(fs.new(9))
             def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }
