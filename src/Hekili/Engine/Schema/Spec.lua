@@ -2708,7 +2708,7 @@ local function selectPack()
     local settings = Hekili.Engine.settings
     if not picked or picked.unsupported or not settings.specs then return false end
     if not ns.SelectPack( rawget( settings.specs, picked.id ), settings.packs, picked, pickedBy ) then return false end
-    Hekili:UpdateUseItems()
+    ns.queueGearUpdate() -- the gear re-read rebuilds the usable items for the new pack, as a spec change does
     Hekili:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
     local label = Hekili.Engine.Registry.PackLabel
     note = string.format( L["%s: the |cFFFFD100%s|r priority, picked from your talents."], picked.name, label( settings.specs[ picked.id ].package ) )
