@@ -91,6 +91,21 @@ describe("casts and cooldowns", function()
         end
     )
 
+    it(
+        "counts down a modelled end whose basis ties to pinned (a pin at the cast's own t): only a probe is frozen",
+        function()
+            I.Sample(I.ab.cd[REND], "pinned", 10, 10, Obs.Cooldown) -- a pin at t 10, then our cast's model at the same t
+            I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
+            assert.are.equal("pinned", I.ab.cd[REND].basis) -- the tie (I.Basis: pinned over modelled)
+            S.Direct(Obs.Cooldown, 10.1, REND, 0)
+            for _, now in ipairs({ 10.2, 39.6, 39.9 }) do
+                I.Fold(now, false)
+                I.Settle(now)
+                assert.are.equal(40, VS.Cooldown(fs.SPENDER_C, now).est)
+            end
+        end
+    )
+
     it("keeps a modelled end on the poll tick whose real end is a float ulp later (the flag still says no)", function()
         I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess) -- A2: the model ends on the poll tick, the world a ulp later
         S.Direct(Obs.Cooldown, 10.1, REND, 0)
