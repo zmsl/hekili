@@ -349,6 +349,24 @@ describe("the shipped selectors (headless)", function()
         end
     end)
 
+    it("keeps the last pack and gives no notice through a read with no points (a login walk, a talent wipe)", function()
+        local H = boot("mage", build("mage_frostfire", "mage"))
+        local n = #H.notes -- the login's own pack change
+        respec(H, {})
+        assert.are.same({ 100082, "Frostfire (wowsims.com)" }, { active(H) })
+        respec(H, build("mage_frostfire", "mage"))
+        assert.are.same({ 100082, "Frostfire (wowsims.com)" }, { active(H) })
+        assert.are.equal(n, #H.notes)
+        -- a Druid whose first settle read no points: Guardian once the ranks arrive, with no switch notice
+        local D = boot("druid", {})
+        respec(D, build("druid_guardian", "druid"))
+        assert.are.same({ 100113, "Guardian (wowsims.com)" }, { active(D) })
+        respec(D, {}) -- a wipe and back: no notice either way
+        respec(D, build("druid_guardian", "druid"))
+        assert.are.equal(100113, (active(D)))
+        assert.are.same({}, D.notes)
+    end)
+
     it("names the selector in the snapshot's spec line", function()
         local H = boot("druid", build("druid_guardian", "druid"))
         assert.are.equal("selector", H.Hekili.State.spec.source)

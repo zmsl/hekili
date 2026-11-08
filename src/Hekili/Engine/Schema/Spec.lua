@@ -2692,9 +2692,9 @@ local function charChoice( tree )
     return choice
 end
 
--- (selectors) The last settle's pick and selector, the spec it settled on (nil until the first: no notice at login),
--- and the notice due.
-local picked, pickedBy, settledID, note
+-- (selectors) The last settle's pick, selector and dominant tree (nil: no points or a tie, so the last pack holds),
+-- the spec it settled on with points (nil until then: no notice at login), and the notice due.
+local picked, pickedBy, pickedTree, settledID, note
 
 local function notifyPick()
     if note then
@@ -2706,7 +2706,8 @@ end
 -- The picked spec's pack as its selector (or none) asks (ns.SelectPack); true when it changed.
 local function selectPack()
     local settings = Hekili.Engine.settings
-    if not picked or picked.unsupported or not settings.specs then return false end
+    -- no points or a tie (a walk before the ranks arrive, a talent wipe): keep the last pack (review I2)
+    if not picked or not pickedTree or picked.unsupported or not settings.specs then return false end
     if not ns.SelectPack( rawget( settings.specs, picked.id ), settings.packs, picked, pickedBy ) then return false end
     ns.queueGearUpdate() -- the gear re-read rebuilds the usable items for the new pack, as a spec change does
     Hekili:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
@@ -2730,7 +2731,7 @@ function Hekili:SettleSpecChoice( clientID )
         self:SettingsChanged() -- the migrated settings reach the belief's plain copy (Engine/Schema/Tracked.lua)
     end
     ns.ResolvePackSpecs( settings.packs, class.specByShare )
-    picked, pickedBy = pick, sel
+    picked, pickedBy, pickedTree = pick, sel, tree
     local packChanged = selectPack()
     if pick.id ~= state.spec.id then
         self.PendingSpecializationChange = true
@@ -2743,7 +2744,7 @@ function Hekili:SettleSpecChoice( clientID )
         note = string.format( L["%s, picked from your talents."], pick.name )
         C_Timer.After( 5, notifyPick )
     end
-    settledID = pick.id
+    if tree then settledID = pick.id end
 end
 
 --- Activates a spec for this character's current dominant talent tree (kept until another is activated on that
