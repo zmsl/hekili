@@ -38,6 +38,7 @@ local A = {
     gcdKind = {}, -- 0 off the GCD, 1 spell (1.5 s / haste), 2 totem (Hekili's fixed 1.0 s)
     rMin = {}, -- the query ID's range in yards (C_Spell.GetSpellInfo's minRange/maxRange, Sources/Spellbook.lua);
     rMax = {}, -- rMax 0: no range check (self-cast, or on-next-swing: the client answers those in range at any distance)
+    rMelee = {}, -- true: rMax 5 taken for the client's maxRange 0 on a hostile spell (Sources/Spellbook.lua)
 }
 I.ab = A
 A.bySpell = {}
@@ -183,7 +184,7 @@ I.OnBuild(function(def, now)
         A.ready0[a], A.cdLen[a], A.castT[a], A.flag[a] = 0, 0, 0, UNKNOWN
         A.charges0[a], A.next0[a] = maxCharges(a), 0
         A.queued[a], A.castStartT[a] = false, 0
-        A.rMin[a], A.rMax[a] = 0, 0
+        A.rMin[a], A.rMax[a], A.rMelee[a] = 0, 0, false
         local g, extra = obj.gcd, type(obj.key) == "string" and obj.key:sub(1, 6) == "track_" -- a passive: no GCD
         A.gcdKind[a] = (g == "off" or extra) and 0 or (g == "totem" and 2 or 1) -- anything else: State.lua's "spell"
         A.cd[a] = I.NewBelief("cooldown " .. tostring(obj.key))

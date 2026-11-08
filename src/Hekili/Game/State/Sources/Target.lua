@@ -94,29 +94,41 @@ end)
 -- Poll 14: the target's distance bracket. An answer in range puts it within [min, max]; out of a range from 0 past
 -- max; out of a band (min > 0) on the side the others leave open (nearer than min when it is within max, else past
 -- max). Logged when it changes. Allocates nothing once `answer` has grown to the ability count.
+-- The maxRange-0 hostile spells read as melee (rMelee) count only when their answers agree: a self-centred one
+-- (Thunder Clap) answering true or false at any distance cannot put the target on the wrong side of 5 yd then.
 S.Poll(14, function(api, t)
     if I.curSlot == 0 then
         return
     end
     local A = I.ab
-    local lo, hi, seen, band = 0, HUGE, false, false
+    local lo, hi, seen, band, meleeIn, meleeOut = 0, HUGE, false, false, false, false
     for a = 1, A.n do
         local r
         if A.rMax[a] > 0 and A.known[a] then
             r = Plain(api, api.C_Spell.IsSpellInRange(A.qid[a], "target"))
-            if r == true then
+            if A.rMelee[a] then -- applied below the loop, when every melee answer agrees
+                meleeIn, meleeOut = meleeIn or r == true, meleeOut or r == false
+            elseif r == true then
                 lo, hi = math.max(lo, A.rMin[a]), math.min(hi, A.rMax[a])
             elseif r == false and A.rMin[a] == 0 then
                 lo = math.max(lo, A.rMax[a])
             elseif r == false then
                 band = true
             end
-            seen = seen or r ~= nil
+            seen = seen or (r ~= nil and not A.rMelee[a]) -- melee answers that disagree tell nothing
         end
         if r == nil then
             r = 0 -- never nil: a hole drops the key at the next rehash and re-adding it grows the table again (gap CD)
         end
         answer[a] = r
+    end
+    if meleeIn ~= meleeOut then
+        if meleeIn then
+            hi = math.min(hi, 5)
+        else
+            lo = math.max(lo, 5)
+        end
+        seen = true
     end
     if band then
         for a = 1, A.n do
