@@ -325,7 +325,6 @@ do
                     mode = {
                         key = "ALT-SHIFT-N",
                         value = "automatic",
-                        -- type = "AutoSingle",
                         automatic = true,
                         single = true,
                         reactive = "false",
@@ -1390,45 +1389,6 @@ return L["Position"] end,
                                 order = 10,
 
                                 args = {
-                                    --[[
-                                    relativeTo = {
-                                        type = "select",
-                                        name = "Anchored To",
-                                        values = {
-                                            SCREEN = "Screen",
-                                            PERSONAL = "Personal Resource Display",
-                                            CUSTOM = "Custom"
-                                        },
-                                        order = 1,
-                                        width = 1.49,
-                                    },
-
-                                    customFrame = {
-                                        type = "input",
-                                        name = "Custom Frame",
-                                        desc = "Specify the name of the frame to which this display will be anchored.\n" ..
-                                                "If the frame does not exist, the display will not be shown.",
-                                        order = 1.1,
-                                        width = 1.49,
-                                        hidden = function() return data.relativeTo ~= "CUSTOM" end,
-                                    },
-
-                                    setParent = {
-                                        type = "toggle",
-                                        name = "Set Parent to Anchor",
-                                        desc = "If checked, the display will be shown/hidden when the anchor is shown/hidden.",
-                                        order = 3.9,
-                                        width = 1.49,
-                                        hidden = function() return data.relativeTo == "SCREEN" end,
-                                    },
-
-                                    preXY = {
-                                        type = "description",
-                                        name = " ",
-                                        width = "full",
-                                        order = 97
-                                    }, ]]
-
                                     x = {
                                         type = "range",
                                         name = L["X"],
@@ -3643,7 +3603,6 @@ found = true end
                 local slot = i -- this spec's slot for the order function (`i` moves on)
                 local options = {
                     type = "group",
-                    -- name = specs[ id ],
                     -- the active spec in gold when the tree's mark cannot be placed (the FeedGroup wrapper not live)
                     name = function()
                         return feedDepth == nil and Status.specID == id and ( "|cFFFFD100" .. name .. "|r" ) or name
@@ -4096,7 +4055,6 @@ found = true end
 
                                         -- Safeguard: ensure FPS is reasonable (between 10 and 300)
                                         if fps < 10 then
-                                            -- print( "[Hekili Debug] WARNING: Unreasonable FPS value detected:", fps, "- using fallback" )
                                             fps = 60
                                         end
 
@@ -4512,7 +4470,6 @@ found = true end
         end
 
         if subcat == 'lists' then return self:SetActionOption( info, val ) end
-        -- if subcat == 'newActionGroup' or ( subcat == 'actionGroup' and subtype == 'entry' ) then self:SetActionOption( info, val ); return end
 
         local data = rawget( self.DB.profile.packs, category )
         if not data then return end
@@ -5133,7 +5090,6 @@ found = true end
                                         Hekili.Options.args.packs.plugins.packages[ pack ] = nil
                                         for _, nodes in pairs( packNodes ) do nodes[ pack ] = nil end
 
-                                        -- Hekili:EmbedPackOptions()
                                         ACD:SelectGroup( "Hekili", "packs" )
                                     end,
                                     hidden = function() return data.builtIn and Hekili.Version:sub(1, 3) ~= "Dev" end
@@ -5385,8 +5341,6 @@ break end
                                     order = 1.1,
                                     width = 0.15,
                                     image = "Interface\\AddOns\\Hekili\\Textures\\GreenPlus",
-                                    -- image = GetAtlasFile( "communities-icon-addgroupplus" ),
-                                    -- imageCoords = GetAtlasCoords( "communities-icon-addgroupplus" ),
                                     imageHeight = 20,
                                     imageWidth = 20,
                                     func = function ()
@@ -5401,8 +5355,6 @@ break end
                                     order = 1.2,
                                     width = 0.15,
                                     image = RedX,
-                                    -- image = GetAtlasFile( "common-icon-redx" ),
-                                    -- imageCoords = GetAtlasCoords( "common-icon-redx" ),
                                     imageHeight = 20,
                                     imageWidth = 20,
                                     confirm = function() return L["Delete this action list?"] end,
@@ -5574,8 +5526,6 @@ break end
                                     type = "execute",
                                     name = "",
                                     image = "Interface\\AddOns\\Hekili\\Textures\\WhiteUp",
-                                    -- image = GetAtlasFile( "hud-MainMenuBar-arrowup-up" ),
-                                    -- imageCoords = GetAtlasCoords( "hud-MainMenuBar-arrowup-up" ),
                                     imageHeight = 20,
                                     imageWidth = 20,
                                     width = 0.15,
@@ -5602,8 +5552,6 @@ break end
                                     type = "execute",
                                     name = "",
                                     image = "Interface\\AddOns\\Hekili\\Textures\\WhiteDown",
-                                    -- image = GetAtlasFile( "hud-MainMenuBar-arrowdown-up" ),
-                                    -- imageCoords = GetAtlasCoords( "hud-MainMenuBar-arrowdown-up" ),
                                     imageHeight = 20,
                                     imageWidth = 20,
                                     width = 0.15,
@@ -5631,8 +5579,6 @@ break end
                                     type = "execute",
                                     name = "",
                                     image = "Interface\\AddOns\\Hekili\\Textures\\GreenPlus",
-                                    -- image = GetAtlasFile( "communities-icon-addgroupplus" ),
-                                    -- imageCoords = GetAtlasCoords( "communities-icon-addgroupplus" ),
                                     imageHeight = 20,
                                     imageWidth = 20,
                                     width = 0.15,
@@ -5653,8 +5599,6 @@ break end
                                     type = "execute",
                                     name = "",
                                     image = RedX,
-                                    -- image = GetAtlasFile( "common-icon-redx" ),
-                                    -- imageCoords = GetAtlasCoords( "common-icon-redx" ),
                                     imageHeight = 20,
                                     imageWidth = 20,
                                     width = 0.15,
@@ -5807,7 +5751,6 @@ packControl.actionID = format( "%04d", id ) end
                                     type = "select",
                                     name = L["Potion"],
                                     order = 3.2,
-                                    -- width = "full",
                                     values = Registry.PotionList(),
                                     hidden = function ()
                                         local e = GetListEntry( pack )
@@ -6034,7 +5977,6 @@ n = tonumber( n ) + 1
                                     end,
                                     hidden = function ()
                                         local e = GetListEntry( pack )
-                                        -- if not e.criteria or e.criteria:trim() == "" then return true end
                                         return e.action ~= "variable" or e.op == "reset" or e.op == "ceil" or e.op == "floor"
                                     end,
                                 },
@@ -6440,14 +6382,6 @@ n = tonumber( n ) + 1
                         }
                     },
                 }
-
-                --[[ wipe( opts.args.lists.plugins.lists )
-
-                local n = 10
-                for list in pairs( data.lists ) do
-                    opts.args.lists.plugins.lists[ list ] = EmbedActionListOptions( n, pack, list )
-                    n = n + 1
-                end ]]
 
                 ( under or packs.plugins.packages )[ pack ] = opts
                 count = count + 1
@@ -7743,16 +7677,6 @@ do
     function Hekili:GetOptions()
         self:EmbedToggleOptions( Options )
 
-        --[[ self:EmbedDisplayOptions( Options )
-
-        self:EmbedPackOptions( Options )
-
-        self:EmbedAbilityOptions( Options )
-
-        self:EmbedItemOptions( Options )
-
-        self:EmbedSpecOptions( Options ) ]]
-
         self:EmbedSkeletonOptions( Options )
 
         self:EmbedErrorOptions( Options )
@@ -7783,7 +7707,6 @@ function Hekili:TotalRefresh( noOptions )
 
     self:RunOneTimeFixes()
 
-    -- self:LoadScripts()
     if Hekili.OptionsReady then
         if Hekili.Config then
             self:RefreshOptions()
@@ -8113,12 +8036,8 @@ do
         { "target%.1%.time_to_die"                          , "time_to_die"                             },
         { "time_to_pct_(%d+)%.remains"                      , "time_to_pct_%1"                          },
         { "trinket%.(%d)%.([%w%._]+)"                       , "trinket.t%1.%2"                          },
-        --[[ { "trinket%.(t?%d)%.stat%.([%w_]+)%.([%w%._]+)", -- Christ.
-                                                              "trinket.%1.has_stat.%2&trinket.%1.%3"    }, ]]
         { "trinket%.([%w_]+)%.cooldown"                     , "trinket.%1.cooldown.duration"            },
-        --[[ { "trinket%.([%w_]+)%.proc%.([%w_]+)%.duration"     , "trinket.%1.proc_duration"                }, ]]
         { "trinket%.([%w_]+)%.buff%.a?n?y?%.?duration"      , "trinket.%1.buff_duration"                },
-        -- { "trinket%.([%w_]+)%.proc%.([%w_]+)%.[%w_]+"       , "trinket.%1.has_use_buff"                 },
         { "trinket%.([%w_]+)%.has_buff%.([%w_]+)"           , "trinket.%1.has_use_buff"                 },
         { "trinket%.([%w_]+)%.has_use_buff%.([%w_]+)"       , "trinket.%1.has_use_buff"                 },
         { "min:([%w_]+)"                                    , "%1"                                      },
