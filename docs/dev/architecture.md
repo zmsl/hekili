@@ -310,7 +310,8 @@ class token, a missing pack, a mismatch or a failed pack load keeps one notice, 
 
 **What bumps what.** A class release bumps `## Version` in its pack's TOC. `CONTENT_API` and every content TOC's
 `## X-Hekili-ContentAPI` change together, only when the content surface changes: the Register* API, `Hekili.Client`,
-or the environment names above (10: `Hekili:GetLocale`, the packs' `Locales/`). `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
+or the environment names above (now 12: 10 added `Hekili:GetLocale` and the packs' `Locales/`, 11 the aura field
+`enchants`, 12 `kit:RegisterSelector`). `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
 
 **Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`,
 `Engine/Schema/Selectors.lua`; the tree arithmetic, ids, share keys and migration are `Engine/Schema/Trees.lua`'s) from
