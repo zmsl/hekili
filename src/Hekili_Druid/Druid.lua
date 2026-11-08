@@ -1606,7 +1606,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         refundOnAvoid = true, -- wowsims rake.go; DB2 Discount Power On Miss
         known = knows(RAKE),
-        -- a dodged, parried or missed cast leaves no debuff (core: Engine/Schema/Spec.lua trackMisses)
+        -- a dodged, parried or missed cast leaves no debuff (core: Engine/Schema/Spec/Abilities.lua trackMisses)
         missable = true,
         form = "cat_form",
 

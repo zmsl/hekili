@@ -63,7 +63,7 @@ local HANDS = { mainhand = 1, offhand = 2 }
 local ON_TARGET = { combo_points = true }
 -- a test's stand-in class may have no `pets`, `windows`, `reactions`, `gear` or `setBonuses`
 local NO_PETS, NO_WINDOWS, NO_GEAR = {}, {}, {}
--- The sim's own generated entries (Spec.lua RegisterResource: the stepped decay and the hits taken), reserved names
+-- The sim's own generated entries (Spec/Regen.lua RegisterResource: the stepped decay and the hits taken), reserved names
 -- the walk below skips: they are no regen entries of the belief.
 local DECAY, TAKEN = "__decay", "__taken"
 

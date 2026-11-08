@@ -75,7 +75,7 @@ describe("shared content", function()
     local all, ns, saved, debuffs, bags, controls
 
     -- Runs Engine/Schema/Races.lua, Engine/Schema/Shared.lua and the named shared files (default: every one Hekili_Shared.toc lists) against
-    -- a stand-in `all` that registers as Engine/Schema/Spec.lua's RegisterAbility/RegisterAura: under the key, its id and
+    -- a stand-in `all` that registers as Engine/Schema/Spec/ RegisterAbility/RegisterAura (Abilities.lua, Auras.lua): under the key, its id and
     -- every `copy` alias.
     local function load(files)
         all = { abilities = {}, auras = {}, exprs = {}, keys = { abilities = {}, auras = {} } }
@@ -303,7 +303,7 @@ describe("shared content", function()
         load({ "Consumables" })
         local usable = all.abilities.healthstone.usable
         local health = { current = 50, max = 100 }
-        setfenv(usable, { health = health }) -- Engine/Schema/Spec.lua runs an ability's functions in `state`
+        setfenv(usable, { health = health }) -- Engine/Schema/Spec/Abilities.lua runs an ability's functions in `state`
         assert.are.same({ false, "requires healthstone in bags" }, { usable() })
         bags[19004] = 1
         assert.is_true(usable())
@@ -377,10 +377,14 @@ describe("shared content", function()
     )
 
     it("leaves each key `all` gave up registered by its class or race file", function()
-        local spec = read("src/Hekili/Engine/Schema/Spec.lua")
         for k, owner in pairs(OWNERS) do
             assert.is_true(names(read("src/" .. owner), k), owner .. ": " .. k)
-            assert.is_false(names(spec, k), "Engine/Schema/Spec.lua: " .. k)
+            for _, file in ipairs({ "Spec.lua", "Spec/All.lua" }) do -- `all` is Spec/All.lua since the split
+                assert.is_false(
+                    names(read("src/Hekili/Engine/Schema/" .. file), k),
+                    "Engine/Schema/" .. file .. ": " .. k
+                )
+            end
         end
     end)
 

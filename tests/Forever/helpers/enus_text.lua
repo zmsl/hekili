@@ -198,7 +198,7 @@ local function contentNotices(out)
     _G.Hekili = saved
 end
 
--- Spec.lua's RestoreDefaults notices for `kind` (updated, reverted, retired) at 1, 2 and 3 names.
+-- Spec/Packs.lua's RestoreDefaults notices for `kind` (updated, reverted, retired) at 1, 2 and 3 names.
 local function restoreNotices(H, out)
     local hk, class = H.Hekili, H.Hekili.Class
     local p = hk.DB.profile

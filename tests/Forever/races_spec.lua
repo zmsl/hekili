@@ -71,8 +71,8 @@ describe("race packs", function()
             }),
             removeStack = removeStack,
         }
-        all = { abilities = seed or {}, auras = {} } -- `seed`: what Engine/Schema/Spec.lua's `all` already registered
-        -- as Engine/Schema/Spec.lua's RegisterAbility/RegisterAura: the entry under its key, its id and every `copy` alias
+        all = { abilities = seed or {}, auras = {} } -- `seed`: what Engine/Schema/Spec/All.lua's `all` already registered
+        -- as Engine/Schema/Spec/ RegisterAbility/RegisterAura (Abilities.lua, Auras.lua): the entry under its key, its id and every `copy` alias
         local function register(t, key, def)
             t[key] = def
             if def.id then
@@ -88,7 +88,7 @@ describe("race packs", function()
         function all:RegisterAura(key, def)
             register(self.auras, key, def)
         end
-        -- Engine/Schema/Spec.lua sets class.file before any race file runs
+        -- Engine/Schema/Spec/All.lua sets class.file before any race file runs
         hekili = { State = state, Class = { specs = { [0] = all }, abilities = {}, file = class or "WARRIOR" } }
         _G.Hekili = hekili
         ns = {}
@@ -122,7 +122,7 @@ describe("race packs", function()
         end
     end)
 
-    -- An ability as Engine/Schema/Spec.lua's RegisterAbility builds it: function fields in `funcs`, called on access, wrapped.
+    -- An ability as Engine/Schema/Spec/Abilities.lua's RegisterAbility builds it: function fields in `funcs`, called on access, wrapped.
     local function ability(key, data)
         local a = setmetatable({ funcs = {} }, {
             __index = function(t, k)
@@ -247,7 +247,7 @@ describe("race packs", function()
     it(
         "loads the race files after the core's `all` (Hekili_Shared depends on Hekili), each registering only its own",
         function()
-            -- a race entry replaces `all`'s under the same key, so it must register after Engine/Schema/Spec.lua; a
+            -- a race entry replaces `all`'s under the same key, so it must register after Engine/Schema/Spec/All.lua; a
             -- class pack registers into its own spec, and SpecializationChanged's ns.applyRace orders the two
             assert.are.equal("Hekili", addons.meta("Hekili_Shared").Dependencies)
             local files, want = {}, {}

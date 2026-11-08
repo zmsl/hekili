@@ -148,7 +148,7 @@ The last two reach the belief as fields of `def.providers`, the toggles' existin
   belief annotator (section 7); 4 slots. Not on the port until that feature exists.
 - `ns.EngineFrame`: the `HekiliEngine` frame (`Engine/Driver.lua`). Only engine files touch it: `Driver.lua` (the loop
   and `Hekili:ForceUpdate`, which the UI and the engine call), `Snapshot.lua`, `Sim/Core.lua`, `Sim/Targets.lua` and
-  `Schema/Spec.lua`; `tools/check_engine_reads.sh` keeps it out of UI, Options and `Hekili.lua`.
+  `Schema/Spec/Activation.lua`; `tools/check_engine_reads.sh` keeps it out of UI, Options and `Hekili.lua`.
 - `ns.LoadContent`, `ns.ContentNotice` (`Engine/Content.lua`): called by `OnInitialize` and `OnEnable` only.
 
 Output allocates nothing in `Begin`, `Publish`, `Subscribe` or `Unsubscribe` (`tests/Forever/output_spec.lua` checks
@@ -158,7 +158,7 @@ Output allocates nothing in `Begin`, `Publish`, `Subscribe` or `Unsubscribe` (`t
 
 What a content addon may use, and nothing else (`tests/boundary_spec.lua` enforces it):
 - `Hekili:NewClass(token, { specs = { ... } })`, `Hekili:NewShared(...)`, `Hekili:NewRace(...)` and the `Register*`
-  calls on the object they return (abilities, auras, hooks, settings, packs, ...). `NewClass` (`Engine/Schema/Spec.lua`)
+  calls on the object they return (abilities, auras, hooks, settings, packs, ...). `NewClass` (`Engine/Schema/Spec/Kits.lua`)
   returns the class's kit, or nil on another class (the pack then returns). The kit holds every ability, aura and talent;
   each entry of `specs` is one talent tree's spec: `{ key, name, tree (1-3), icon, role, ranged, package, unsupported }`
   (`package`: the default priority's name; `unsupported`: no priorities on Forever, its displays off and its page a
@@ -230,7 +230,7 @@ belief paired it to; a swing closing with no row runs nothing, and a spell of ou
 (`docs/dev/gaps.md` CO). The owner's order: an aura first, a usability flip where it works, a reaction only where only
 an outcome reveals the span.
 
-`RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec.lua`) is a spell the spellbook knows and the
+`RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec/Abilities.lua`) is a spell the spellbook knows and the
 player never casts. The belief tracks its known rank (the `now` context's `knownRank` reads it; the sim's asks the
 spellbook through the facade); the sim never sees it.
 

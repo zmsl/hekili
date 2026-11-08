@@ -1,5 +1,5 @@
 -- Hekili_Shared/Races/Orc.lua
--- `all` (Engine/Schema/Spec.lua) no longer registers this racial: the stock entry named below is what it used to register.
+-- `all` (Engine/Schema/Spec/All.lua) no longer registers this racial: the stock entry named below is what it used to register.
 -- The Orc's Forever racials (DB2 build 70707; Blood Fury's 120 s is that DB2 and the owner's ruling of 2026-11-02), for every class: Blood Fury (20572: +10% attack power and spell power
 -- for 15 s; 120 s, off the GCD), one ID for every class, which replaces `all`'s stock entry (its per-class IDs 33702
 -- and 33697 are absent on Forever; its aura, 20572 for 15 s, is right but registered here too, so the race owns it),

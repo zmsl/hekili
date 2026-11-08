@@ -9,7 +9,7 @@
 -- `known = false` and unlisted: a priority naming any race's racial reads `action.<racial>.known` false instead of
 -- indexing nothing; its modifiers stay inert.
 -- Abilities and auras go to the shared `all` spec (over `all`'s own entry for the same key), and ns.applyRace writes
--- them over the class's after Engine/Schema/Spec.lua's merge (which takes the class first and only adds missing keys), so a race
+-- them over the class's after Engine/Schema/Spec/Activation.lua's merge (which takes the class first and only adds missing keys), so a race
 -- registration wins a key clash with the class and with `all`. Resource and cost modifiers go to `ns.raceMods`, one
 -- declaration read by two layers:
 -- VirtualState's belief (Game/State/Families/Modifiers.lua, through Tracked.lua) and Hekili's simulation (below).
@@ -39,7 +39,7 @@ local function own(kind, key)
     end
 end
 
---- Engine/Schema/Spec.lua's SpecializationChanged, after merging the specs: the race's abilities and auras win over the class's.
+--- Engine/Schema/Spec/Activation.lua's SpecializationChanged, after merging the specs: the race's abilities and auras win over the class's.
 function ns.applyRace(class)
     local spec = all()
     for kind, keys in pairs(owned) do
@@ -94,7 +94,7 @@ function Race:RegisterCostMod(def)
     end
 end
 
---- { resource = key, aura = key, mult = n | spirit = m | share = s | mp5 = x }: a regen entry (Engine/Schema/Spec.lua's
+--- { resource = key, aura = key, mult = n | spirit = m | share = s | mp5 = x }: a regen entry (Engine/Schema/Spec/Regen.lua's
 --- rate fields) on the class's resource `resource` while the player's aura `aura` is up; a class without that resource
 --- ignores it (Tracked.lua). The belief's only: the sim's forecast reads the belief's rate.
 function Race:RegisterRegenMod(def)
@@ -224,7 +224,7 @@ local function shadowCheck(a, base, cost, resource)
     end
 end
 
---- Engine/Schema/Spec.lua's RegisterAbility: the ability's `spend` answers through the modifiers; `baseSpend` keeps the declared
+--- Engine/Schema/Spec/Abilities.lua's RegisterAbility: the ability's `spend` answers through the modifiers; `baseSpend` keeps the declared
 --- cost (VirtualState's belief applies the same modifiers to it itself). The answer is memoised per ability while the
 --- state's mutation count (`state.changes`: reset and every mutator in Engine/Sim/State.lua) and query_time stand: a
 --- cost-mod aura applied, consumed or expiring in the simulated future, the offset or delay moving, a form or stance

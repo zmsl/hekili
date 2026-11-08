@@ -10,7 +10,7 @@ local fs = require("Game.State.helpers.fake_spec")
 describe("the synthesized combat log", function()
     local api, ctl, ns, VS, I, L, Facade, saved, got, order, cleu
 
-    -- ns.callHook's rebuild (Engine/Schema/Spec.lua:1777-1789): load_args into a wiped table, then unpack( vars ).
+    -- ns.callHook's rebuild (Engine/Schema/Spec.lua): load_args into a wiped table, then unpack( vars ).
     local function viaCallHook(...)
         local vars = {}
         for i = 1, select("#", ...) do

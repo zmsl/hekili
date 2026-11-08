@@ -124,7 +124,7 @@ race:RegisterAura("escape_artist", {
 
 race:RegisterResourceMod({ max = 0.05 }) -- Expansive Mind: +5% maximum resources
 
--- The loaded class's scope (Engine/Schema/Spec.lua sets class.file before any race file runs); a class with no Eureka! (none
+-- The loaded class's scope (Engine/Schema/Spec/All.lua sets class.file before any race file runs); a class with no Eureka! (none
 -- exists for a Hunter, Shaman, Paladin or Druid) declares no cost modifier.
 local spells = EUREKA_SPELLS[Hekili.Class.file]
 if spells then

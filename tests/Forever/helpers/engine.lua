@@ -271,7 +271,7 @@ function M.load(classToken, race)
 
     local ns = vload.module() -- the real VirtualState (KnownRank, I.GCD_SPELL); Facade replaced below
     env.ns = ns
-    ns.L = english -- Spec.lua's pack notices (RestoreDefaults)
+    ns.L = english -- Spec/Packs.lua's pack notices (RestoreDefaults)
     local function spellInfo(id)
         return { name = "Spell " .. tostring(id), iconID = 0 }
     end
@@ -441,7 +441,7 @@ function M.load(classToken, race)
     return env
 end
 
--- Hekili.Class's abilities and auras after Engine/Schema/Spec.lua's SpecializationChanged merge of loaded `env`: the
+-- Hekili.Class's abilities and auras after Engine/Schema/Spec/Activation.lua's SpecializationChanged merge of loaded `env`: the
 -- kit's, then the shared `all` spec's for the keys the kit lacks, then the live race pack's over both (ns.applyRace).
 local function merged(env)
     local class = env.class

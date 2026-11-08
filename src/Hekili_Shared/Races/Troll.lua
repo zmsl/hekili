@@ -1,5 +1,5 @@
 -- Hekili_Shared/Races/Troll.lua
--- `all` (Engine/Schema/Spec.lua) no longer registers this racial: the stock entry named below is what it used to register.
+-- `all` (Engine/Schema/Spec/All.lua) no longer registers this racial: the stock entry named below is what it used to register.
 -- The Troll's Forever racials (DB2 build 70707, except where noted), for every class: Berserking (20554: +10% attack and casting speed
 -- for 15 s since the 27 Oct dev notes (wowsims racials.go; the DB2's 10 s), one flat value, no health scaling; 180 s,
 -- off the GCD), which replaces `all`'s stock entry and aura

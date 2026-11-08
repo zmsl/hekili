@@ -13,7 +13,7 @@
 -- version, spec }); with ("lib") the functions { parse, unparse, encode, decode, sync, load, write }, for the specs.
 -- The version is date * 1000 + a same-day sequence: `write` keeps a pack's version while its block is unchanged, and
 -- when it changed sets it to today * 1000 (PACK_DATE, else os.date) on a later day than the old version's, else the old
--- version + 1, so a version only ever rises (Engine/Schema/Spec.lua RestoreDefaults reloads on `~=` and reports
+-- version + 1, so a version only ever rises (Engine/Schema/Spec/Packs.lua RestoreDefaults reloads on `~=` and reports
 -- "reverted" only for a lower one) and a rebuild is a no-op.
 
 local function Class(class)
