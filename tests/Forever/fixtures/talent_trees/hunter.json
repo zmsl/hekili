@@ -1,0 +1,602 @@
+[
+  {
+    "name": "Beast Mastery",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/361.jpg",
+    "talents": [
+      {
+        "fieldName": "deadlyAspects",
+        "fancyName": "Deadly Aspects",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 19552,
+        "definitionId": 134422,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "enduranceTraining",
+        "fancyName": "Endurance Training",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 19583,
+        "definitionId": 134438,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "focusedFire",
+        "fancyName": "Focused Fire",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 1223755,
+        "definitionId": 134437,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "improvedAspectOfTheMonkey",
+        "fancyName": "Improved Aspect of the Monkey",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 19549,
+        "definitionId": 134436,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedRevivePet",
+        "fancyName": "Improved Revive Pet",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 24443,
+        "definitionId": 134434,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "pathfinding",
+        "fancyName": "Pathfinding",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 19559,
+        "definitionId": 134435,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "bestialSwiftness",
+        "fancyName": "Bestial Swiftness",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 19596,
+        "definitionId": 134432,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "unleashedFury",
+        "fancyName": "Unleashed Fury",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 19616,
+        "definitionId": 134431,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "improvedMendPet",
+        "fancyName": "Improved Mend Pet",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 19572,
+        "definitionId": 134430,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "ferocity",
+        "fancyName": "Ferocity",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 19598,
+        "definitionId": 134429,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "summonHawk",
+        "fancyName": "Summon Hawk",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 3
+        },
+        "spellId": 1293241,
+        "definitionId": 134428,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "spiritBond",
+        "fancyName": "Spirit Bond",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 19578,
+        "definitionId": 134427,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "intimidation",
+        "fancyName": "Intimidation",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 19577,
+        "definitionId": 134426,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 2,
+          "colIdx": 1
+        }
+      },
+      {
+        "fieldName": "bestialDiscipline",
+        "fancyName": "Bestial Discipline",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 3
+        },
+        "spellId": 19590,
+        "definitionId": 134425,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "frenzy",
+        "fancyName": "Frenzy",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 19621,
+        "definitionId": 134424,
+        "maxPoints": 5,
+        "prereqLocation": {
+          "rowIdx": 3,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "bestialWrath",
+        "fancyName": "Bestial Wrath",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 19574,
+        "definitionId": 134423,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "Marksmanship",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/363.jpg",
+    "talents": [
+      {
+        "fieldName": "hawkEye",
+        "fancyName": "Hawk Eye",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 0
+        },
+        "spellId": 19498,
+        "definitionId": 134478,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "improvedConcussiveShot",
+        "fancyName": "Improved Concussive Shot",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 19407,
+        "definitionId": 134477,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "lethalAttacks",
+        "fancyName": "Lethal Attacks",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 19426,
+        "definitionId": 134476,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "improvedStings",
+        "fancyName": "Improved Stings",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 1310661,
+        "definitionId": 142622,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "efficiency",
+        "fancyName": "Efficiency",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 19416,
+        "definitionId": 134474,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "carefulAim",
+        "fancyName": "Careful Aim",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 1223984,
+        "definitionId": 134473,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "rapidKilling",
+        "fancyName": "Rapid Killing",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 415405,
+        "definitionId": 134470,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "improvedArcaneShot",
+        "fancyName": "Improved Arcane Shot",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 19454,
+        "definitionId": 134471,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "loneWolf",
+        "fancyName": "Lone Wolf",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 3
+        },
+        "spellId": 415370,
+        "definitionId": 134472,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "trueshotAura",
+        "fancyName": "Trueshot Aura",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 1299346,
+        "definitionId": 134469,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "mortalShots",
+        "fancyName": "Mortal Shots",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 19485,
+        "definitionId": 134467,
+        "maxPoints": 5,
+        "prereqLocation": {
+          "rowIdx": 1,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "rapidRecuperation",
+        "fancyName": "Rapid Recuperation",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 1223987,
+        "definitionId": 134464,
+        "maxPoints": 2,
+        "prereqLocation": {
+          "rowIdx": 2,
+          "colIdx": 0
+        }
+      },
+      {
+        "fieldName": "barrage",
+        "fancyName": "Barrage",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 19461,
+        "definitionId": 134466,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "scatterShot",
+        "fancyName": "Scatter Shot",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 3
+        },
+        "spellId": 19503,
+        "definitionId": 134465,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "rangedWeaponSpecialization",
+        "fancyName": "Ranged Weapon Specialization",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 19507,
+        "definitionId": 134463,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "sniperShot",
+        "fancyName": "Sniper Shot",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 1310687,
+        "definitionId": 134462,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 3,
+          "colIdx": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "Survival",
+    "backgroundUrl": "https://wow.zamimg.com/images/wow/talents/backgrounds/tbc/362.jpg",
+    "talents": [
+      {
+        "fieldName": "improvedTracking",
+        "fancyName": "Improved Tracking",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 1
+        },
+        "spellId": 24293,
+        "definitionId": 134461,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "deflection",
+        "fancyName": "Deflection",
+        "location": {
+          "rowIdx": 0,
+          "colIdx": 2
+        },
+        "spellId": 19295,
+        "definitionId": 134460,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "entrapment",
+        "fancyName": "Entrapment",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 0
+        },
+        "spellId": 19184,
+        "definitionId": 134459,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "savageStrikes",
+        "fancyName": "Savage Strikes",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 1
+        },
+        "spellId": 19159,
+        "definitionId": 134458,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "survivalist",
+        "fancyName": "Survivalist",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 2
+        },
+        "spellId": 19255,
+        "definitionId": 134457,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "improvedWingClip",
+        "fancyName": "Improved Wing Clip",
+        "location": {
+          "rowIdx": 1,
+          "colIdx": 3
+        },
+        "spellId": 19228,
+        "definitionId": 134455,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "cleverTraps",
+        "fancyName": "Clever Traps",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 0
+        },
+        "spellId": 19239,
+        "definitionId": 134456,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "surefooted",
+        "fancyName": "Surefooted",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 1
+        },
+        "spellId": 19290,
+        "definitionId": 134452,
+        "maxPoints": 3
+      },
+      {
+        "fieldName": "deterrence",
+        "fancyName": "Deterrence",
+        "location": {
+          "rowIdx": 2,
+          "colIdx": 2
+        },
+        "spellId": 19263,
+        "definitionId": 134451,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "survivalTactics",
+        "fancyName": "Survival Tactics",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 0
+        },
+        "spellId": 19376,
+        "definitionId": 134453,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "predatorsEdge",
+        "fancyName": "Predator's Edge",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 1
+        },
+        "spellId": 1310627,
+        "definitionId": 142607,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "counterattack",
+        "fancyName": "Counterattack",
+        "location": {
+          "rowIdx": 3,
+          "colIdx": 2
+        },
+        "spellId": 19306,
+        "definitionId": 134454,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 2,
+          "colIdx": 2
+        }
+      },
+      {
+        "fieldName": "resourcefulness",
+        "fancyName": "Resourcefulness",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 0
+        },
+        "spellId": 440529,
+        "definitionId": 134448,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "exposePrey",
+        "fancyName": "Expose Prey",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 1
+        },
+        "spellId": 1310532,
+        "definitionId": 134450,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "survivalistsDiscipline",
+        "fancyName": "Survivalist's Discipline",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 2
+        },
+        "spellId": 1310496,
+        "definitionId": 142606,
+        "maxPoints": 2
+      },
+      {
+        "fieldName": "striderKick",
+        "fancyName": "Strider Kick",
+        "location": {
+          "rowIdx": 4,
+          "colIdx": 3
+        },
+        "spellId": 1317257,
+        "definitionId": 134446,
+        "maxPoints": 1
+      },
+      {
+        "fieldName": "lightningReflexes",
+        "fancyName": "Lightning Reflexes",
+        "location": {
+          "rowIdx": 5,
+          "colIdx": 2
+        },
+        "spellId": 19168,
+        "definitionId": 142605,
+        "maxPoints": 5
+      },
+      {
+        "fieldName": "laceratingStrikes",
+        "fancyName": "Lacerating Strikes",
+        "location": {
+          "rowIdx": 6,
+          "colIdx": 1
+        },
+        "spellId": 1310533,
+        "definitionId": 134449,
+        "maxPoints": 1,
+        "prereqLocation": {
+          "rowIdx": 4,
+          "colIdx": 1
+        }
+      }
+    ]
+  }
+]
