@@ -1,17 +1,25 @@
 -- Game/State/Sources/Presence/Router.lua
--- The Presence router (providers spec §2.5, decisions 88-90): only a map and delegation. At activation, out of combat,
--- it marks each aura the leaf can map as tracked (leaf.Mappable, cdm-default §3.1); a tracked aura is answered by the
--- viewer leaf (a fact), an untracked one I.UNDECIDED (the belief's modelled timer). The experimental switch
--- (cfg.viewer) decides whether it has the leaf: without it every answer is I.UNDECIDED. The tracked set and the leaf's
--- build change only out of combat (the leaf does not check combat itself). Knows the leaf only through the contract
--- (I.PRESENCE.viewer).
+-- The Presence router (providers spec §2.5, decisions 88-90; cdm-default §2.4, decisions 92-94). It hosts one reduced
+-- fact per aura and unit: the leaf's sweep calls back for every thing it moved, the router reduces its counts through
+-- I.ReduceFact and sends a reduced UP or DOWN change to onEdge. At activation, out of combat, it marks each aura the leaf
+-- can map as tracked (leaf.Mappable, cdm-default §3.1); a tracked aura is answered by its fact, an untracked one
+-- I.UNDECIDED (the belief's modelled timer). The experimental switch (cfg.viewer) decides whether it has the leaf:
+-- without it every answer is I.UNDECIDED. The tracked set and the leaf's build change only out of combat; a leaf that
+-- turned itself off (an error in its sweep, our reduction or onEdge: they run inside its one pcall) is dropped at once.
+-- Knows the leaf only through the contract (I.PRESENCE.viewer).
 
 local _, ns = ...
 local I = ns.VirtualStateInternal
 local S = I.Sources
 
-local R = { name = "router", scope = nil, covered = 0, onEdge = nil, tracked = {} } -- l10n: verbatim
-local tracked = R.tracked
+-- fact.* by k = (u - 1) * I.AURA_UNIT + j (§2.4): state (I.UP, I.DOWN or I.UNDECIDED), n (nLive of the deciding
+-- standing), agree, t (the last UNKNOWN/DOWN -> UP time), from (the deciding standing: 1 the viewer leaf, 0 none).
+-- disagree[k] and lost[k] are per fight. Preallocated for both units at activation.
+local fact = { state = {}, n = {}, agree = {}, t = {}, from = {} }
+local R =
+    { name = "router", scope = nil, covered = 0, onEdge = nil, tracked = {}, fact = fact, disagree = {}, lost = {} } -- l10n: verbatim
+local tracked, disagree, lost = R.tracked, R.disagree, R.lost
+local fState, fN, fAgree, fT, fFrom = fact.state, fact.n, fact.agree, fact.t, fact.from
 local leaf, want, api0, def0, pending = nil, nil, nil, nil, false
 local edges = { up = 0, down = 0 } -- the edges passed on this fight (Snapshot)
 I.presenceEdges = edges
@@ -22,7 +30,7 @@ local function selfDownOnTarget(u, up)
     return u == 2 and not up and R.scope == "self"
 end
 
--- The leaf's onEdge (a reduced change at its sweep): a tracked aura's edge only, counted. Allocates nothing.
+-- A tracked aura's edge only, counted. Allocates nothing.
 local function forward(j, u, up, t)
     if tracked[j] and not selfDownOnTarget(u, up) then
         if up then
@@ -36,8 +44,64 @@ local function forward(j, u, up, t)
     end
 end
 
--- Out of combat: takes the wanted leaf, clears the map (preallocated to the def's auras), marks it and activates the
--- leaf. In combat it changes nothing and waits for PLAYER_REGEN_ENABLED (decision 89: no path change mid-fight).
+-- One thing the leaf's sweep moved (§2.3-§2.4), called inside its pcall: its counts reduced; disagree counts a
+-- transition to disagreement; on a state change, t (to UP), lost (to UNKNOWN while the record is up) and the edge
+-- (UP or DOWN). Allocates nothing.
+local function thing(k, t)
+    local u = k > I.AURA_UNIT and 2 or 1
+    local j = k - (u - 1) * I.AURA_UNIT
+    local nLive, nUp, nNone, nStale, tUp, tNone = leaf.Counts(j, u)
+    local st, agree = I.ReduceFact(nLive, nUp, nNone, nStale, tUp, tNone)
+    fN[k] = nLive
+    fFrom[k] = nLive > 0 and 1 or 0
+    if fAgree[k] and not agree then
+        disagree[k] = disagree[k] + 1
+    end
+    fAgree[k] = agree
+    if st == fState[k] then
+        return
+    end
+    fState[k] = st
+    if st == I.UNDECIDED then
+        local U = I.auras
+        if u <= U.n and U.exp0[u][j] > t then -- it had a fact and lost it while its record is up
+            lost[k] = lost[k] + 1
+        end
+        return
+    end
+    if st == I.UP then
+        fT[k] = t
+    end
+    forward(j, u, st == I.UP, t)
+end
+
+-- Every fact UNKNOWN, the per-fight counters zeroed (preallocated for both units of the def's auras).
+local function clear()
+    for k in pairs(fState) do
+        fState[k], fN[k], fAgree[k], fT[k], fFrom[k], disagree[k], lost[k] = I.UNDECIDED, 0, true, 0, 0, 0, 0
+    end
+    for j = 1, def0 and #def0.auraIds or 0 do
+        for u = 1, 2 do
+            local k = (u - 1) * I.AURA_UNIT + j
+            fState[k], fN[k], fAgree[k], fT[k], fFrom[k], disagree[k], lost[k] = I.UNDECIDED, 0, true, 0, 0, 0, 0
+        end
+    end
+end
+
+-- The leaf turned itself off (§3.5): nothing it mapped is tracked any more, every fact UNKNOWN, at once.
+local function drop()
+    leaf, R.covered = nil, 0
+    for j = 1, #tracked do
+        tracked[j] = false
+    end
+    for k in pairs(fState) do
+        fState[k], fN[k], fFrom[k] = I.UNDECIDED, 0, 0
+    end
+end
+
+-- Out of combat: takes the wanted leaf, clears the map (preallocated to the def's auras) and the facts, activates the
+-- leaf (its first sweep reduces here) and marks the map. In combat it changes nothing and waits for
+-- PLAYER_REGEN_ENABLED (decision 89: no path change mid-fight).
 local function activate(t)
     if I.inCombat then
         pending = true
@@ -50,12 +114,18 @@ local function activate(t)
     for j = 1, def0 and #def0.auraIds or 0 do
         tracked[j] = false
     end
+    clear()
     R.covered, R.scope, pending = 0, nil, false
     if not leaf then
         return
     end
-    leaf.onEdge = forward
+    leaf.onThing = thing
+    local errors = leaf.errors
     leaf.Activate(api0, t, def0, nil)
+    if leaf.errors ~= errors then
+        drop()
+        return
+    end
     for j = 1, def0 and #def0.auraIds or 0 do
         tracked[j] = leaf.Mappable(j) -- the leaf's map (cdm-default §3.1): every candidate, ambiguous ones included
     end
@@ -95,20 +165,25 @@ function R.Deactivate(t)
     leaf, want, pending, R.covered, R.scope = nil, nil, false, 0, nil
 end
 
---- Poll 15's sweep: the leaf reads its items (cdm-default §3.2); covered follows it. Until Task 4a the leaf reduces and
---- sends the edges itself. Allocates nothing.
+--- Poll 15's sweep: the leaf reads its items (cdm-default §3.2) and the moved things are reduced here; covered follows
+--- it. A leaf that turned itself off in this sweep is dropped. Allocates nothing.
 function R.Sweep(t)
     if leaf then
+        local errors = leaf.errors
         leaf.Sweep(t)
-        R.covered = leaf.covered
+        if leaf.errors ~= errors then
+            drop()
+        else
+            R.covered = leaf.covered
+        end
     end
 end
 
---- The leaf's answer for a tracked aura, else I.UNDECIDED. Allocates nothing.
+--- A tracked aura's reduced fact as I.UP or I.DOWN, else I.UNDECIDED. Allocates nothing.
 function R.Presence(j, u)
     if leaf and tracked[j] then
-        local a = leaf.Presence(j, u)
-        if not selfDownOnTarget(u, a ~= I.DOWN) then
+        local a = fState[(u - 1) * I.AURA_UNIT + j]
+        if (a == I.UP or a == I.DOWN) and not selfDownOnTarget(u, a == I.UP) then
             return a
         end
     end
@@ -133,6 +208,9 @@ S.On("PLAYER_REGEN_ENABLED", nil, function(_, t)
 end)
 S.On("PLAYER_REGEN_DISABLED", nil, function()
     edges.up, edges.down = 0, 0
+    for k in pairs(disagree) do
+        disagree[k], lost[k] = 0, 0
+    end
 end)
 
 I.PRESENCE.router = R

@@ -145,7 +145,7 @@ describe("the Presence router", function()
         I.auras.exp0[2][2], I.auras.applied[2][2] = 1e6, 2 -- the record the item was seen holding (seen rule)
         ctl.ViewerClear(item)
         I.presence.Sweep(3)
-        assert.are.equal(I.DOWN, I.PRESENCE.viewer.Presence(2, 2)) -- the leaf's answer ...
+        assert.are.equal(I.DOWN, I.presence.fact.state[I.AURA_UNIT + 2]) -- the reduced fact ...
         assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2)) -- ... is none through the router
         assert.are.same({ 1, 1, 0 }, { n, I.presenceEdges.up, I.presenceEdges.down })
     end)
@@ -192,5 +192,262 @@ describe("the Presence router at VS.Start (a /reload in combat)", function()
         assert.is_true(I.presence.tracked[1])
         assert.are.equal(1, I.presence.covered)
         assert.are.equal(I.UP, I.presence.Presence(1, 1))
+    end)
+end)
+
+-- Task 4a (cdm-default §2.3-§2.4, decisions 92-94): the router hosts one reduced fact per aura and unit, from the leaf's
+-- counts through I.ReduceFact; onEdge comes from the router on a reduced change. Items for aura 1: a and b (Buff icon,
+-- cooldownID 501); aura 2: c (cooldownID 502).
+describe("the Presence router's reduced facts (Task 4a)", function()
+    local VS, I, ctl, api, d, R, Q
+    local a, b
+
+    before_each(function()
+        api, ctl = fake.new()
+        ctl.now = 1
+        ctl.viewer.sets[2] = { 501, 502 }
+        ctl.viewer.infos[501] = { spellID = fs.SPENDER_A }
+        ctl.viewer.infos[502] = { spellID = 9999, linkedSpellIDs = { fs.SPENDER_C_R2 } }
+        a = ctl.ViewerItem("BuffIconCooldownViewer", 1, 501)
+        b = ctl.ViewerItem("BuffIconCooldownViewer", 2, 501)
+        local ns = load.module()
+        VS = ns.VirtualState
+        I = ns.VirtualStateInternal
+        d = fs.def(fs.new(9))
+        d.providers = { presence = "router", viewer = true }
+        I.Build(d, 1)
+        VS.Start(api)
+        R, Q = I.presence, I.PRESENCE.viewer
+    end)
+    local function sweep(t)
+        ctl.now = t
+        R.Sweep(t)
+    end
+    local function rec(j, u, applied) -- the belief's record: up since `applied` (the seen rule's gate)
+        I.auras.exp0[u][j], I.auras.applied[u][j] = 1e6, applied
+    end
+
+    it("the reduced state per (aura, unit) from the leaf's counts through I.ReduceFact", function()
+        local function same(j, u)
+            local st, agree = I.ReduceFact(Q.Counts(j, u))
+            local k = (u - 1) * I.AURA_UNIT + j
+            assert.are.same({ st, agree, (Q.Counts(j, u)) }, { R.fact.state[k], R.fact.agree[k], R.fact.n[k] })
+        end
+        same(1, 1)
+        ctl.ViewerAura(a, "player")
+        sweep(2)
+        same(1, 1)
+        assert.are.equal(I.UP, R.fact.state[1])
+        rec(1, 1, 2)
+        ctl.ViewerAura(b, "player")
+        sweep(2.5)
+        ctl.ViewerClear(b) -- b held this application, then silent: a live NONE newer than a's UP
+        sweep(3)
+        same(1, 1)
+        assert.are.same({ I.UNDECIDED, false, 2 }, { R.fact.state[1], R.fact.agree[1], R.fact.n[1] })
+        ctl.ViewerClear(a)
+        sweep(4)
+        same(1, 1)
+        assert.are.equal(I.DOWN, R.fact.state[1])
+        assert.are.equal(I.DOWN, R.Presence(1, 1))
+    end)
+
+    it("the highest standing with nLive > 0 decides: the leaf (1) with live evidence, none (0) without", function()
+        assert.are.same({ 0, 0 }, { R.fact.from[1], R.fact.n[1] })
+        ctl.ViewerAura(a, "player")
+        sweep(2)
+        assert.are.same({ 1, 1 }, { R.fact.from[1], R.fact.n[1] })
+        ctl.ViewerRelease(a)
+        sweep(3)
+        assert.are.same({ 0, 0 }, { R.fact.from[1], R.fact.n[1] })
+        assert.are.equal(I.UNDECIDED, R.Presence(1, 1))
+    end)
+
+    it("onEdge fires on a reduced change only, from the router", function()
+        local edges = {}
+        R.onEdge = function(j, u, up, t)
+            edges[#edges + 1] = { j, u, up, t }
+        end
+        ctl.ViewerAura(a, "player")
+        sweep(2)
+        sweep(2.1) -- no change
+        ctl.ViewerAura(b, "player") -- a second UP: counts move, the state does not
+        sweep(2.2)
+        rec(1, 1, 2)
+        ctl.ViewerClear(a)
+        ctl.ViewerClear(b)
+        sweep(3)
+        ctl.ViewerRelease(a) -- one slot gone, the other still NONE: DOWN stays, no edge
+        sweep(3.5)
+        ctl.ViewerRelease(b) -- UNKNOWN: no edge
+        sweep(4)
+        assert.are.same({ { 1, 1, true, 2 }, { 1, 1, false, 3 } }, edges)
+        assert.is_nil(Q.onEdge) -- the leaf sends no edges (the 3b bridge is gone)
+        assert.is_nil(Q.Presence)
+    end)
+
+    it("disagree counts transitions to disagreement, not polls (M8)", function()
+        local c = ctl.ViewerItem("BuffIconCooldownViewer", 3, 501)
+        I.Build(d, 1) -- collect c
+        ctl.ViewerAura(b, "player")
+        ctl.ViewerAura(c, "player")
+        sweep(2)
+        rec(1, 1, 2)
+        ctl.ViewerClear(b) -- b NONE since 3
+        sweep(3)
+        ctl.ViewerAura(a, "player") -- a UP since 4 (fresher): UP, agree false
+        sweep(4)
+        assert.are.same({ I.UP, false, 1 }, { R.fact.state[1], R.fact.agree[1], R.disagree[1] })
+        sweep(4.1)
+        sweep(4.2)
+        assert.are.equal(1, R.disagree[1]) -- still disagreeing: not a new transition
+        ctl.ViewerAura(b, "player") -- all UP: agree again
+        sweep(5)
+        assert.is_true(R.fact.agree[1])
+        ctl.ViewerClear(b)
+        sweep(6) -- b's NONE is now newer: UNKNOWN, agree false: the second transition
+        assert.are.same({ I.UNDECIDED, false, 2 }, { R.fact.state[1], R.fact.agree[1], R.disagree[1] })
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        assert.are.equal(0, R.disagree[1]) -- per fight
+    end)
+
+    it("lost counts a fact gone UNKNOWN while its record is up; control: the record closed is not lost", function()
+        ctl.ViewerAura(a, "player")
+        sweep(2)
+        rec(1, 1, 2)
+        ctl.ViewerRelease(a) -- the item leaves mid-application: the record is up
+        sweep(3)
+        assert.are.equal(I.UNDECIDED, R.fact.state[1])
+        assert.are.equal(1, R.lost[1])
+        ctl.ViewerAura(ctl.ViewerAcquire("BuffIconCooldownViewer", 501), "player")
+        sweep(4)
+        assert.are.equal(I.UP, R.fact.state[1])
+        I.auras.exp0[1][1] = 4.5 -- control: the record closed (a normal aura end)
+        ctl.ViewerRelease(ctl.viewer.items.BuffIconCooldownViewer[3])
+        sweep(5)
+        assert.are.equal(I.UNDECIDED, R.fact.state[1])
+        assert.are.equal(1, R.lost[1])
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        assert.are.equal(0, R.lost[1]) -- per fight
+    end)
+
+    it("fact.t is the last UNKNOWN/DOWN->UP time (I3)", function()
+        assert.are.equal(0, R.fact.t[1])
+        ctl.ViewerAura(a, "player")
+        sweep(2)
+        assert.are.equal(2, R.fact.t[1])
+        sweep(3) -- UP stays: unchanged
+        ctl.ViewerAura(b, "player")
+        sweep(3.5)
+        assert.are.equal(2, R.fact.t[1])
+        rec(1, 1, 2)
+        ctl.ViewerClear(a)
+        ctl.ViewerClear(b)
+        sweep(4)
+        assert.are.equal(I.DOWN, R.fact.state[1])
+        ctl.ViewerAura(a, "player")
+        sweep(5) -- DOWN -> UP
+        assert.are.equal(5, R.fact.t[1])
+        ctl.ViewerRelease(a)
+        ctl.ViewerRelease(b)
+        sweep(6) -- UP -> UNKNOWN: t stays
+        assert.are.equal(5, R.fact.t[1])
+        ctl.ViewerAura(ctl.ViewerAcquire("BuffIconCooldownViewer", 501), "player")
+        sweep(7) -- UNKNOWN -> UP
+        assert.are.equal(7, R.fact.t[1])
+    end)
+
+    it("rebuild events in combat wait for combat end; evidence changes apply at once (decision 99)", function()
+        ctl.viewer.sets[2][#ctl.viewer.sets[2] + 1] = 503
+        ctl.viewer.infos[503] = { spellID = fs.SPENDER_M }
+        d.auras[3], d.auraIds[3] = { key = "spender_m", id = fs.SPENDER_M }, { fs.SPENDER_M }
+        I.Build(d, 1)
+        local m = ctl.ViewerItem("BuffIconCooldownViewer", 3, 503)
+        ctl.viewer.sets[2][3] = nil -- spender_m untracked until the set changes
+        I.Build(d, 1)
+        assert.is_false(R.tracked[3])
+        I.inCombat = true
+        ctl.viewer.sets[2][3] = 503
+        ctl.Fire("COOLDOWN_VIEWER_DATA_LOADED")
+        assert.is_false(R.tracked[3]) -- waits
+        ctl.ViewerAura(a, "player")
+        sweep(2)
+        assert.are.equal(I.UP, R.Presence(1, 1)) -- evidence: at once
+        I.inCombat = false
+        ctl.ViewerAura(m, "player")
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        assert.is_true(R.tracked[3])
+        assert.are.equal(I.UP, R.Presence(3, 1))
+    end)
+
+    it("activated with zero items, an item collected later is counted and followed", function()
+        ctl.ViewerRelease(a)
+        ctl.ViewerRelease(b)
+        local api2, ctl2 = fake.new()
+        ctl2.now = 1
+        ctl2.viewer.sets[2] = { 501 }
+        ctl2.viewer.infos[501] = { spellID = fs.SPENDER_A }
+        local ns = load.module()
+        local I2 = ns.VirtualStateInternal
+        local d2 = fs.def(fs.new(9))
+        d2.providers = { presence = "router", viewer = true }
+        I2.Build(d2, 1)
+        ns.VirtualState.Start(api2)
+        assert.are.equal(0, I2.PRESENCE.viewer.nSlots)
+        assert.are.equal(0, I2.presence.covered)
+        local item = ctl2.ViewerAcquire("BuffIconCooldownViewer", 501)
+        ctl2.ViewerAura(item, "player")
+        ctl2.now = 2
+        I2.Sources.RunPolls(2) -- poll 15 sweeps before its covered == 0 guard
+        assert.are.equal(1, I2.presence.covered)
+        assert.are.equal(I2.UP, I2.presence.Presence(1, 1))
+        I2.auras.exp0[1][1], I2.auras.applied[1][1] = 1e6, 2
+        ctl2.ViewerClear(item)
+        ctl2.now = 3
+        I2.Sources.RunPolls(3) -- followed: its silence for this application is DOWN
+        assert.are.equal(I2.DOWN, I2.presence.Presence(1, 1))
+    end)
+
+    it("a raise in the router's reduction or onEdge is a self-off: one def.error line, all reset at once", function()
+        local lines = {}
+        I.def.error = function(fmt, ...)
+            lines[#lines + 1] = string.format(fmt, ...)
+        end
+        ctl.ViewerAura(a, "player")
+        sweep(2)
+        assert.are.equal(I.UP, R.Presence(1, 1)) -- control: on and answering
+        R.onEdge = function()
+            error("consumer")
+        end
+        rec(1, 1, 2)
+        ctl.ViewerClear(a) -- DOWN: an edge, which raises
+        assert.has_no.errors(function()
+            sweep(3)
+        end)
+        assert.are.equal(1, #lines)
+        assert.are.equal(1, Q.errors)
+        assert.is_false(Q.Mappable(1))
+        assert.is_false(R.tracked[1]) -- at once, not at the next activation
+        assert.is_false(R.tracked[2])
+        assert.are.equal(I.UNDECIDED, R.fact.state[1])
+        assert.are.equal(I.UNDECIDED, R.Presence(1, 1))
+        assert.are.equal(0, R.covered)
+        ctl.ViewerAura(a, "player")
+        sweep(4) -- off: a no-op, no second line
+        assert.are.equal(1, #lines)
+        assert.are.equal(I.UNDECIDED, R.Presence(1, 1))
+    end)
+
+    it("after a sweep raise the router's tracked set is cleared at once", function()
+        ctl.ViewerAura(a, "player")
+        sweep(2)
+        assert.is_true(R.tracked[1])
+        api.BuffIconCooldownViewer.IsVisible = function()
+            error("forbidden")
+        end
+        sweep(3)
+        assert.is_false(R.tracked[1])
+        assert.are.equal(I.UNDECIDED, R.fact.state[1])
+        assert.are.equal(0, R.covered)
     end)
 end)

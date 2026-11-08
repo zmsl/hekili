@@ -155,7 +155,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         up(A)
         sweep(2)
         local edges = {}
-        Q.onEdge = function(j, u, isUp)
+        I.presence.onEdge = function(j, u, isUp)
             edges[#edges + 1] = { j, u, isUp }
         end
         local n = #item.writes
@@ -243,8 +243,8 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         down(C, "target")
         sweep(3)
         assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(2, 2)) -- its last held unit
-        assert.are.equal(I.DOWN, Q.Presence(2, 2))
-        assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2)) -- the router's self-scope rule
+        assert.are.equal(I.DOWN, (I.ReduceFact(Q.Counts(2, 2)))) -- the reduced fact ...
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2)) -- ... is no answer: the router's self-scope rule
     end)
 
     it("an ambiguous item counts for no aura", function()
@@ -306,7 +306,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
         start()
         local edges = {}
-        Q.onEdge = function(j, u, isUp, t)
+        I.presence.onEdge = function(j, u, isUp, t)
             edges[#edges + 1] = { j, u, isUp, t }
         end
         up(A)
@@ -751,7 +751,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
             assert.are.same({ 1, 1, 0, 0, 2, 0 }, counts(2, 2))
             assert.are.same({ 2, 0, 2, 0, 0, 2.5 }, counts(1, 1))
             local edges = {}
-            Q.onEdge = function(j, u, isUp)
+            I.presence.onEdge = function(j, u, isUp)
                 edges[#edges + 1] = { j, u, isUp }
             end
             ctl.now = 3
