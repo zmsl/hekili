@@ -617,43 +617,48 @@ spec:RegisterAbilities({
     },
 })
 
--- Talents: { talent tree (1 Arcane, 2 Fire, 3 Frost: the dominant tree picks the spec), rank 1's spell, max rank }: the
--- DB2's 49 nodes (`wowdb talents MAGE`; the tree is the DB2's Talent.TabID), keys the snake_case names. The cast times
--- read Improved Fireball and Improved Frostbolt, Fire Blast's cooldown Wake of Fire, Scorch Improved Scorch.
+-- Talents: { talent tree (1 Arcane, 2 Fire, 3 Frost: the dominant tree picks the spec), rank 1's spell, max rank }:
+-- Forever's tree as wowsims/forever's ui/sim/talents/trees/mage.json lists it (tools/wowsims/talents.lua writes it;
+-- tests/Forever/talent_trees_spec.lua checks it and the spec detection over it). A key is Classic's where the talent
+-- exists there (code reads `talent.<key>.rank`), else the snake_case of the node's name. The cast times read Improved
+-- Fireball and Improved Frostbolt, Fire Blast's cooldown Wake of Fire, Scorch Improved Scorch.
 spec:RegisterTalents({
     -- Arcane (tree 1)
-    arcane_subtlety = { 1, 11210, 2 },
-    arcane_focus = { 1, 11222, 5 },
-    improved_channeling = { 1, 11237, 5 },
     wand_specialization = { 1, 6057, 2 },
-    magic_absorption = { 1, 29441, 5 },
+    improved_channeling = { 1, 11237, 5 },
+    arcane_resilience = { 1, 28574, 3 },
+    arcane_subtlety = { 1, 11210, 2 },
+    magic_absorption = { 1, 29441, 2 },
     arcane_concentration = { 1, 11213, 5 },
+    missile_barrage = { 1, 400588, 2 },
     arcane_geometry = { 1, 11247, 2 },
     arcane_impact = { 1, 11242, 3 },
-    arcane_resilience = { 1, 28574, 1 },
+    arcane_blast = { 1, 400574, 1 },
     arcane_shielding = { 1, 11252, 2 },
     improved_counterspell = { 1, 11255, 2 },
     arcane_meditation = { 1, 18462, 3 },
+    arcane_wrath = { 1, 1326079, 1 },
     presence_of_mind = { 1, 12043, 1 },
     arcane_mind = { 1, 11232, 5 },
     arcane_instability = { 1, 15058, 3 },
     arcane_power = { 1, 12042, 1 },
     -- Fire (tree 2)
+    incineration = { 2, 18459, 5 },
     improved_fireball = { 2, 11069, 5 },
-    impact_talent = { 2, 11103, 5 }, -- `impact` is a core identifier (tests/boundary_spec.lua)
     ignite = { 2, 11119, 5 },
     flame_throwing = { 2, 11100, 2 },
-    wake_of_fire = { 2, 11078, 3 },
-    incineration = { 2, 18459, 2 },
+    impact_talent = { 2, 11103, 3 }, -- `impact` is a core identifier (tests/boundary_spec.lua)
+    burning_soul = { 2, 11083, 3 },
     improved_flamestrike = { 2, 11108, 3 },
     pyroblast = { 2, 11366, 1 },
-    burning_soul = { 2, 11083, 2 },
+    wake_of_fire = { 2, 11078, 2 },
     improved_scorch = { 2, 11095, 3 },
     improved_fire_ward = { 2, 11094, 2 },
+    heating_up = { 2, 400624, 1 },
     master_of_elements = { 2, 29074, 3 },
     critical_mass = { 2, 11115, 3 },
     blast_wave = { 2, 11113, 1 },
-    fire_power = { 2, 11124, 5 },
+    fire_power = { 2, 11124, 3 },
     combustion = { 2, 11129, 1 },
     -- Frost (tree 3)
     frost_warding = { 3, 11189, 2 },
@@ -663,25 +668,17 @@ spec:RegisterTalents({
     frostbite = { 3, 11071, 3 },
     improved_frost_nova = { 3, 11165, 2 },
     permafrost = { 3, 11175, 3 },
-    piercing_ice = { 3, 11151, 3 },
-    cold_snap = { 3, 12472, 1 },
-    improved_blizzard = { 3, 11185, 3 },
-    arctic_reach = { 3, 16757, 2 },
     frost_channeling = { 3, 11160, 3 },
-    shatter = { 3, 11170, 5 },
+    improved_blizzard = { 3, 11185, 3 },
+    ice_lance = { 3, 1312002, 1 },
+    arctic_reach = { 3, 16757, 2 },
     ice_block = { 3, 11958, 1 },
+    shatter = { 3, 11170, 3 },
     improved_cone_of_cold = { 3, 11190, 3 },
+    cold_snap = { 3, 12472, 1 },
+    fingers_of_frost = { 3, 400647, 2 },
     winters_chill_talent = { 3, 11180, 5 }, -- `winters_chill` is upstream's (Engine/Sim/Scripts.lua)
     ice_barrier = { 3, 11426, 1 },
-    -- Forever-only (tree 0: not in the DB2's Talent table; wowsims's tree places Missile Barrage, Arcane Blast and
-    -- Arcane Wrath in Arcane, Heating Up in Fire, Ice Lance and Fingers of Frost in Frost; its ranks). Arcane Wrath's
-    -- node spell is unknown: rank 1 of the spell it teaches (wowsims's) until the live export.
-    missile_barrage = { 0, 400588, 2 },
-    arcane_blast = { 0, 400574, 1 },
-    arcane_wrath = { 0, 1326079, 1 },
-    heating_up = { 0, 400624, 1 },
-    ice_lance = { 0, 1312002, 1 },
-    fingers_of_frost = { 0, 400647, 2 },
 })
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
