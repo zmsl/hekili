@@ -4,7 +4,6 @@
 local addon, ns = ...
 local L = ns.L
 local Facade = ns.Facade
-local CreateFrame = Facade.CreateFrame
 local GetFrameCPUUsage, GetTime = Facade.GetFrameCPUUsage, Facade.GetTime
 local GetItemInfoInstant, GetSpellTexture = Facade.C_Item.GetItemInfoInstant, Facade.C_Spell.GetSpellTexture
 local UnitPower = Facade.UnitPower
@@ -39,33 +38,11 @@ local EARLY_EXIT = 0.2 + 1e-6
 ns.EARLY_EXIT = EARLY_EXIT -- shared with tests/Forever/loop_priest_spec.lua
 
 
-local function EmbedBlizOptions()
-    local panel = CreateFrame( "Frame", "HekiliDummyPanel", UIParent )
-    panel.name = "Hekili Forever"
-
-    local open = CreateFrame( "Button", "HekiliOptionsButton", panel, "UIPanelButtonTemplate" )
-    open:SetPoint( "CENTER", panel, "CENTER", 0, 0 )
-    open:SetWidth( 250 )
-    open:SetHeight( 25 )
-    open:SetText( L["Open Hekili Forever Options"] )
-
-    open:SetScript( "OnClick", function ()
-        ns.StartConfiguration()
-    end )
-
-    Hekili:ProfileFrame( "OptionsEmbedFrame", open )
-
-    InterfaceOptions_AddCategory( panel )
-end
-
-
 -- OnInitialize()
 -- Addon has been loaded by the WoW client (1x).
 function Hekili:OnInitialize()
     ns.LoadContent() -- Engine/Content.lua: the class pack first, so the profile's defaults see its spec
     self:InitializeProfile() -- Options/Profile.lua: the AceDB profile, handed to the engine by Engine.Configure
-
-    -- EmbedBlizOptions()
 
     self:RegisterChatCommand( "hekili", "CmdLine" )
     self:RegisterChatCommand( "hek", "CmdLine" )
