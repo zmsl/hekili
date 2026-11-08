@@ -350,10 +350,11 @@ while the belief's target slot is still mob A (consistent), and the event then u
 router's facts and makes the next drain skip the target. A switch event that reaches `Game/` a frame after the viewer
 has already changed (never seen; CDM-O shows the viewer one frame behind the event) would let one drain read mob B's
 lights against mob A's slot; the old time rule had the same exposure (its window also started at the event).
-`PLAYER_TARGET_CHANGED` fires twice a swap (owner probes 2026-11-06, L90); whether both come in one frame is not
-measured. If the second comes a frame later it restarts the settle and resets the target slots again: a light trusted
-between the two is dropped and re-counted one frame later (one extra UNKNOWN -> UP, fact.t a frame later), never a
-wrong DOWN (the seen rule starts over). Replaces
+`PLAYER_TARGET_CHANGED` is assumed to fire twice a swap (assumed, unmeasured: a code comment in `Sources/Power.lua`
+and the old leaf comment, no probe found); whether both would come in one frame is not measured either (CDM-O saw
+no stale line after f=0). If a second came a frame later it would restart the settle and reset the target slots
+again: the target's presence dips to UNKNOWN for one frame and is UP again at the next sweep; the belief's record is
+not re-opened (its estimate does not move; review scratch run), never a wrong DOWN (the seen rule starts over). Replaces
 today's immediate re-read (`CooldownViewer.lua:161-168`).
 
 ### 3.5 Taint rule and internal safety (supersedes providers spec §2.4's rule)
@@ -512,7 +513,7 @@ flicker rise beyond seed noise (±0.3/min) on any spec in any viewer arm.
 | 108 | The coverage line is computed in `Options/` from the client API and `class.auras`; the CDM debug information is a section of the belief's own Snapshot, reaching the core through the SetLog logger: no new crossing | the border rule; owner Q5 |
 | 109 | The direct never-secret provider only if a pack aura reads flag 0 | 15 of 15 contextual so far |
 | 110 | The fake viewer models any layout and the client's order; the default arm stays viewer-off; viewer arms measured, not gated, except no flicker rise | the first loop A/B of the viewer |
-| 111 (amended 2026-11-08) | A DOWN, on the player **or the target**, closes a record only if the reduced state is DOWN (every live NONE passes the seen rule, decision 115; on the target with `sUnit` = target, `sSeen` reset at the switch, the switch frame covered by `SETTLE`, unchanged at 0.05 s) and our evidence opened this application (`ours[k]`: our cast, a CDM UP, an out-of-combat walk read with source player/pet; valid while the record's applied time is the one it was set for); after our cast, only once the fact read UP `REFRESH_LAG` (0.5 s) past the write (D14) | the viewer reads only our auras (C1); a silent item proves nothing (F12); owner direction 2026-11-08: the CDM's "now" state has precedence for the target (L289/L291); `ours` keeps a partner's shared debuff (CDM-P) open |
+| 111 (amended 2026-11-08) | A DOWN, on the player **or the target**, closes a record only if the reduced state is DOWN (every live NONE passes the seen rule, decision 115; on the target with `sUnit` = target, `sSeen` reset at the switch, the switch's own frame settling (§3.4, L299)) and our evidence opened this application (`ours[k]`: our cast, a CDM UP, an out-of-combat walk read with source player/pet; valid while the record's applied time is the one it was set for); after our cast, only once the fact read UP `REFRESH_LAG` (0.5 s) past the write (D14) | the viewer reads only our auras (C1); a silent item proves nothing (F12); owner direction 2026-11-08: the CDM's "now" state has precedence for the target (L289/L291); `ours` keeps a partner's shared debuff (CDM-P) open |
 | 112 | An UP with no model: registered duration from `max(fact.t, applied)`; past it a `HOLD` (1.0 s) re-staged when within `LAPSE` (0.5 s) of lapsing, about every `HOLD - LAPSE` and at most once per poll (every poll at 0.5 s or slower rates), while the fact stays UP (an `icd` aura in `AURA_REFRESH` steps, keeping its application); `math.huge` only for a player aura with no numeric duration | never stuck up on the target; bounded lapse; no churn beyond one re-stage per poll (C2; owner Q3) |
 | 113 | `apply` skips player form and enchant auras | their records belong to Forms/Enchants (M5) |
 | 114 | CN13 owns a generic `I.auraFloor[j]`; this lane writes it from the reduced fact | no one-update flash; `Families/` knows nothing of the router (owner Q4) |
