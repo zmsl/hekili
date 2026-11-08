@@ -24,8 +24,6 @@ L["off"] = true
 L["%s\n\nThe wowsims gate runs this as %s."] = true
 L[" and "] = true
 L["The %s priority was retired; a spec that used it now runs its default priority."] = true
-L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = true
-L["%s, picked from your talents."] = true
 L["The %s priorities were retired; a spec that used one now runs its default priority."] = true
 L["The |cFFFFD100%s|r priority was updated."] = true
 L["The |cFFFFD100%s|r and |cFFFFD100%s|r priorities were updated."] = true
@@ -33,6 +31,8 @@ L["The %s, and |cFFFFD100%s|r priorities were updated."] = true
 L["The |cFFFFD100%s|r priority was reverted."] = true
 L["The |cFFFFD100%s|r and |cFFFFD100%s|r priorities were reverted."] = true
 L["The %s, and |cFFFFD100%s|r priorities were reverted."] = true
+L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = true
+L["%s, picked from your talents."] = true
 
 -- Hekili/Options/ChatCommands.lua
 L["Invalid command. Type '/hekili help' to see the available commands."] = true
