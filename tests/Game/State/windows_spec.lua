@@ -20,7 +20,7 @@ describe("rotation windows (belief)", function()
     end
 
     -- the record Spec.lua's RegisterWindow stores (Engine/Schema/Spec.lua)
-    local function window(key, t)
+    local function declare(key, t)
         t.key = key
         t.on_deviation = t.on_deviation or "stay"
         h.Class.windows = h.Class.windows or {}
@@ -93,7 +93,7 @@ describe("rotation windows (belief)", function()
                 return on
             end
             t.duration = t.duration or 6
-            window(key, t)
+            declare(key, t)
         end
         before_each(function()
             on = false
@@ -283,7 +283,7 @@ describe("rotation windows (belief)", function()
         end)
 
         it("a raising evaluator counts in I.nowErrors and reads false", function()
-            window("w", {
+            declare("w", {
                 duration = 6,
                 evaluator = function()
                     error("boom")
@@ -307,7 +307,7 @@ describe("rotation windows (belief)", function()
         it(
             "a now() calling openWindow on a real cast opens it at the cast; closeWindow on a closed one is a no-op",
             function()
-                window("w", { duration = 6 })
+                declare("w", { duration = 6 })
                 register("w_opener", {
                     id = OPENER,
                     now = function()
@@ -323,7 +323,7 @@ describe("rotation windows (belief)", function()
         )
 
         it("a cast after the expiry but before its close opens it afresh", function()
-            window("w", { duration = 6, refresh = true })
+            declare("w", { duration = 6, refresh = true })
             register("w_opener", {
                 id = OPENER,
                 now = function()
@@ -341,7 +341,7 @@ describe("rotation windows (belief)", function()
         end)
 
         it("a cast after the expiry but before its close opens it afresh, without refresh too", function()
-            window("w", { duration = 6 })
+            declare("w", { duration = 6 })
             register("w_opener", {
                 id = OPENER,
                 now = function()
@@ -358,7 +358,7 @@ describe("rotation windows (belief)", function()
         end)
 
         it("are inert outside a cast", function()
-            window("w", { duration = 6 })
+            declare("w", { duration = 6 })
             start()
             I.nowCtx.openWindow("w")
             assert.is_false(W("w")[1])
@@ -368,7 +368,7 @@ describe("rotation windows (belief)", function()
     describe("the evaluator's reads", function()
         it("usable.<key> is the last plain IsSpellUsable answer; a secret one keeps it and raises nothing", function()
             local seen
-            window("w", {
+            declare("w", {
                 duration = 6,
                 close_on_false = true,
                 evaluator = function()
@@ -395,7 +395,7 @@ describe("rotation windows (belief)", function()
 
         it("reads now, lastSwing and nextSwing", function()
             local got = {}
-            window("w", {
+            declare("w", {
                 duration = 6,
                 evaluator = function()
                     got[1], got[2], got[3] = now, lastSwing(1), nextSwing(1)
@@ -418,7 +418,7 @@ describe("rotation windows (belief)", function()
             end
             t.duration = 30
             t.steps = { "w_one", "w_two", "w_three" }
-            window("w", t)
+            declare("w", t)
         end
         local function open(t)
             on = true
@@ -516,9 +516,133 @@ describe("rotation windows (belief)", function()
         end)
     end)
 
+    -- window.<name> (Families/Now.lua): the sim's state.window answers (Engine/Sim/State.lua mtWindow) at the context's
+    -- time, read-only; an unregistered name reads down
+    describe("the window reader", function()
+        local on
+        before_each(function()
+            on = false
+            declare("w", {
+                duration = 5,
+                close_on_false = true,
+                evaluator = function()
+                    return on
+                end,
+            })
+        end)
+        -- the shape of a pack's `usable` gated on a window (Rogue's Riposte)
+        local usable = function()
+            return window.w.up, "needs the window" -- luacheck: ignore 113 (the now context)
+        end
+        local function at(f, t)
+            local v, ok = I.Eval(f, t)
+            assert.is_true(ok, tostring(I.nowError))
+            return v
+        end
+
+        it("a usable reading window.<name>.up: true inside the open window, false outside and unregistered", function()
+            start()
+            drain(2)
+            assert.is_false(at(usable, 2))
+            on = true
+            drain(3)
+            assert.is_true(at(usable, 3))
+            assert.is_true(at(usable, 7.99))
+            assert.is_false(at(usable, 8)) -- expired, not yet closed by a Drain: down, as the sim's upAt
+            assert.is_false(at(function()
+                return window.nope.up -- luacheck: ignore 113
+            end, 4))
+            on = false
+            drain(4) -- close_on_false
+            assert.is_false(at(usable, 4))
+            assert.are.equal(0, I.nowErrors)
+        end)
+
+        it("answers down, remains, elapsed and step as the sim; 0 / true when down or unregistered", function()
+            start()
+            on = true
+            drain(3)
+            local got = at(function()
+                local r, n = window.w, window.nope -- luacheck: ignore 113
+                return { r.up, r.down, r.remains, r.elapsed, r.step, n.up, n.down, n.remains, n.elapsed, n.step }
+            end, 4)
+            assert.are.same({ true, false, 4, 1, 0, false, true, 0, 0, 0 }, got)
+        end)
+
+        it("is read-only: an assignment raises (counted) and changes nothing", function()
+            start()
+            on = true
+            drain(3)
+            local e = I.nowErrors
+            for _, f in ipairs({
+                function()
+                    window.w.up = false -- luacheck: ignore 112 113
+                end,
+                function()
+                    window.w.next.w_one = true -- luacheck: ignore 112 113
+                end,
+                function()
+                    window.nope = {} -- luacheck: ignore 112 113
+                end,
+            }) do
+                local _, ok = I.Eval(f, 4)
+                assert.is_false(ok)
+            end
+            assert.are.equal(e + 3, I.nowErrors)
+            assert.is_true(at(usable, 4))
+            assert.are.same(
+                { false, false }, -- a stored `window.nope = {}` would read nil here
+                at(function()
+                    return { window.w.next.w_one, window.nope.up } -- luacheck: ignore 113
+                end, 4)
+            )
+        end)
+
+        it("allocates nothing reading up, remains, next and an unregistered name", function()
+            start()
+            on = true
+            drain(3)
+            local f = function()
+                local w = window.w -- luacheck: ignore 113
+                return w.up and w.remains > 0 and not w.next.w_one and not window.nope.up -- luacheck: ignore 113
+            end
+            local bytes = alloc.bytes(function(i)
+                I.Eval(f, 3 + i * 0.001)
+            end, 1000)
+            assert.are.equal(0, bytes)
+            assert.is_true(at(f, 4))
+        end)
+    end)
+
+    describe("the window reader's steps", function()
+        it("step and next.<ability key> answer the due step of an up window; false for any other key", function()
+            local on = false
+            declare("s", {
+                duration = 30,
+                steps = { "w_one", "w_two" },
+                evaluator = function()
+                    return on
+                end,
+            })
+            start()
+            local f = function()
+                local s = window.s -- luacheck: ignore 113
+                return { s.step, s.next.w_one, s.next.w_two, s.next.nope }
+            end
+            drain(2)
+            assert.are.same({ 0, false, false, false }, (I.Eval(f, 2)))
+            on = true
+            drain(3)
+            assert.are.same({ 1, true, false, false }, (I.Eval(f, 3)))
+            cast(ONE, 4)
+            assert.are.same({ 2, false, true, false }, (I.Eval(f, 4.1)))
+            assert.are.same({ 0, false, false, false }, (I.Eval(f, 33))) -- expired
+        end)
+    end)
+
     it("allocates nothing across 1000 Drains with two windows", function()
         local on = false
-        window("a", {
+        declare("a", {
             duration = function()
                 return 0.5
             end,
@@ -530,7 +654,7 @@ describe("rotation windows (belief)", function()
                 return on and usable.spender_c and nextSwing(1) >= 0
             end,
         })
-        window("b", {
+        declare("b", {
             duration = 2,
             close_on_false = true,
             steps = { "w_one", "w_two" },
