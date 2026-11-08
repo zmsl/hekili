@@ -82,6 +82,7 @@ Engine\Schema\Trees.lua
 Engine\Schema\Selectors.lua
 Engine\Schema\Tracked.lua
 Engine\Schema\Spec.lua
+Engine\Schema\Spec\Abilities.lua
 Engine\Schema\Spec\All.lua
 Engine\Schema\Shared.lua
 Engine\Schema\Threat.lua
