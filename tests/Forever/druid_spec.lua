@@ -100,62 +100,6 @@ local KIT = {
     },
 }
 
--- key = { rank 1's spell, max rank }: the DB2's 47 Classic nodes (`wowdb talents DRUID`), then the two placeholders
--- the live export (checkpoint Q1) replaces.
-local TALENTS = {
-    improved_wrath = { 16814, 5 },
-    natures_grasp = { 16689, 1 },
-    improved_natures_grasp = { 17245, 4 },
-    improved_entangling_roots = { 16918, 3 },
-    improved_moonfire = { 16821, 5 },
-    natural_weapons = { 16902, 5 },
-    natural_shapeshifter = { 16833, 3 },
-    improved_thorns = { 16836, 3 },
-    omen_of_clarity = { 16864, 1 },
-    natures_reach = { 16819, 2 },
-    vengeance = { 16909, 5 },
-    improved_starfire = { 16850, 5 },
-    natures_grace = { 16880, 1 },
-    moonglow = { 16845, 3 },
-    moonfury = { 16896, 5 },
-    moonkin_form = { 24858, 1 },
-    ferocity = { 16934, 5 },
-    feral_aggression = { 16858, 5 },
-    feral_instinct = { 16947, 5 },
-    brutal_impact = { 16940, 2 },
-    thick_hide = { 16929, 5 },
-    feline_swiftness = { 17002, 2 },
-    feral_charge = { 16979, 1 },
-    sharpened_claws = { 16942, 3 },
-    improved_shred = { 16966, 3 }, -- wowsims/forever's 3 points (Shred 42 at 3/3; the DB2 node lists 2 rank spells)
-    predatory_strikes = { 16972, 3 },
-    blood_frenzy = { 16952, 2 },
-    primal_fury = { 16958, 2 },
-    savage_fury = { 16998, 2 },
-    faerie_fire_feral = { 16857, 1 },
-    heart_of_the_wild = { 17003, 5 },
-    leader_of_the_pack = { 17007, 1 },
-    predatory_discipline = { 1328613, 1 }, -- hotfix 113554
-    lacerate = { 1328617, 1 }, -- hotfix 113554
-    improved_mark_of_the_wild = { 17050, 5 },
-    furor = { 17056, 5 },
-    improved_healing_touch = { 17069, 5 },
-    natures_focus = { 17063, 5 },
-    improved_enrage = { 17079, 2 },
-    reflection = { 17106, 3 },
-    insect_swarm = { 5570, 1 },
-    subtlety = { 17118, 5 },
-    tranquil_spirit = { 24968, 5 },
-    improved_rejuvenation = { 17111, 3 },
-    natures_swiftness = { 17116, 1 },
-    gift_of_nature = { 17104, 5 },
-    improved_tranquility = { 17123, 2 },
-    improved_regrowth = { 17074, 5 },
-    swiftmend = { 18562, 1 },
-    natures_splendor = { 1223083, 1 },
-    eclipse = { 408248, 3 },
-}
-
 -- The abilities whose cast changes the now-state beyond its declared cost, cooldown and GCD (spec §4).
 local NOW = {
     "rake",
@@ -488,18 +432,6 @@ describe("Forever Druid", function()
             )
         end
     )
-
-    it("registers the DB2's 47 talent nodes and two placeholders, and no rank aliases", function()
-        local n, registered = 0, 0
-        for key, t in pairs(TALENTS) do
-            n = n + 1
-            assert.are.same({ t[1], t[2] }, { w.talents[key][2], w.talents[key][3] }, key) -- the tree: below
-        end
-        for _ in pairs(w.talents) do
-            registered = registered + 1
-        end
-        assert.are.same({ 51, 51 }, { n, registered })
-    end)
 
     it("reads only registered talent keys, in the class file and every race file", function()
         local files = { "src/Hekili_Druid/Druid.lua" }
@@ -993,12 +925,12 @@ describe("Forever Druid", function()
         assert.is_nil(w.options)
     end)
 
-    it("places each talent in its tree, the Forever-only placeholders at tree 0", function()
+    it("places each talent in its tree (Forever's: tests/Forever/talent_trees_spec.lua checks the nodes)", function()
         local n = { [0] = 0, 0, 0, 0 }
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 2, 16, 18, 15 }, n) -- hotfix 113554: furor to Feral, Heart of the Wild to Restoration
+        assert.are.same({ [0] = 0, 16, 20, 16 }, n) -- Forever's tree (trees/druid.json)
     end)
 end)
 

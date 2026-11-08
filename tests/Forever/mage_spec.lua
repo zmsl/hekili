@@ -97,14 +97,14 @@ describe("Forever Mage", function()
         end
     end)
 
-    it("places every DB2 talent in its tree and keeps the Forever-only ones at tree 0", function()
+    it("places every talent in its tree (Forever's)", function()
         local n = { [0] = 0, 0, 0, 0 }
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 6, 16, 16, 17 }, n)
-        assert.are.same({ 0, 400588, 2 }, w.talents.missile_barrage)
-        assert.are.same({ 0, 400624, 1 }, w.talents.heating_up)
+        assert.are.same({ [0] = 0, 18, 17, 18 }, n) -- Forever's tree (trees/mage.json)
+        assert.are.same({ 1, 400588, 2 }, w.talents.missile_barrage)
+        assert.are.same({ 2, 400624, 1 }, w.talents.heating_up)
     end)
 
     it(

@@ -115,7 +115,7 @@ describe("Forever Rogue", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 0, 15, 23, 20 }, n)
+        assert.are.same({ [0] = 0, 17, 19, 18 }, n) -- Forever's tree (trees/rogue.json)
     end)
 
     it("models the talent-modified costs, floored at 0", function()
