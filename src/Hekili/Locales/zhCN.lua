@@ -31,8 +31,6 @@ L["Hekili Forever is designed for level %s content.\nIt may not work as expected
 -- L["on"] = ""
 -- L["off"] = ""
 -- L["%s\n\nThe wowsims gate runs this as %s."] = ""
--- L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = ""
--- L["%s, picked from your talents."] = ""
 
 -- Hekili/Engine/Schema/Spec/Packs.lua
 L[" and "] = " 和 "

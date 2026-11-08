@@ -88,6 +88,7 @@ Engine\Schema\Spec\Abilities.lua
 Engine\Schema\Spec\Kits.lua
 Engine\Schema\Spec\All.lua
 Engine\Schema\Spec\Packs.lua
+Engine\Schema\Spec\Activation.lua
 Engine\Schema\Shared.lua
 Engine\Schema\Threat.lua
 Engine\Output.lua
