@@ -382,7 +382,7 @@ function M.resolve(key, H)
         ids = ranks(key, a),
         cost = H.Hekili.State.action[key].cost or 0,
         cooldown = tonumber(a.cooldown) or 0,
-        gcd = 1.5,
+        gcd = type(a.gcdTime) == "number" and a.gcdTime or 1.5, -- Reckless Swings' 1 s (Slam's, a function, keeps 1.5)
         offGcd = a.gcd == "off",
         cast = tonumber(a.cast) or 0,
         onNextSwing = a.onNextSwing or a.nextSwing,
