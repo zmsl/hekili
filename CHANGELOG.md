@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### New
-- Feral or Guardian (Druids), Fire or Frostfire (Mages), and Affliction or SM Ruin, Demonology or Shadow Brand (Warlocks) are now picked from your talents: a Guardian build (all three points of Thick Hide) runs Guardian, a Fire build with Ice Shards runs Frostfire, an Affliction build with Ruin and no Wrack runs SM Ruin, and a Demonology build with Improved Shadow Bolt runs Shadow Brand. A priority you chose yourself, a spec you activated, or a custom priority is never replaced; `/hekili priority default` hands the choice back. A notice tells you when it switches. Not yet checked in game.
+- Feral or Guardian (Druids), Fire or Frostfire (Mages), and Affliction or SM Ruin, Demonology or Shadow Brand (Warlocks) are now picked from your talents: a Guardian build (all three points of Thick Hide) runs Guardian, a Fire build with Ice Shards runs Frostfire, an Affliction build with Ruin and no Wrack runs SM Ruin, and a Demonology build with Improved Shadow Bolt runs Shadow Brand. A priority you chose yourself (picking it, its Active toggle, `/hekili priority`, or Activate on a spec page, which activates that spec's priority) or a custom priority is never replaced; `/hekili priority default` hands the choice back. A notice tells you when it switches. Not yet checked in game.
 - Shadow Priests: a new option, Prefer Starshards (off by default; it only matters if you know Starshards, the Night Elf racial). When enabled, the Shadow (wowsims.com) priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Not yet checked in game.
 - Paladin (wowsims.com) priorities follow the current wowsims (Retribution unchanged; Protection casts Holy Shield rank 4)
 

@@ -55,15 +55,19 @@ describe("Selectors.lua", function()
         end)
 
         it(
-            "lets the player's choice for the dominant tree fix the spec; that spec's selectors still pick its pack",
+            "lets a spec whose pack the player chose win; an older choice with no such pack yields to the selectors",
             function()
-                -- deep_d (two_b) holds first, but the stored spec is two: only two's selectors count (owner ruling I1)
+                local hand = { [100052] = { packManual = true } } -- two's pack is the player's
                 local s, source, _, picked =
-                    T.PickSpec(K, { [2] = "two", last = 2 }, ranks({ [201] = 3, [202] = 1 }), 60)
-                assert.are.same({ "two", "stored", "tree2" }, { s.key, source, picked and picked.key })
-                s, source, _, picked = T.PickSpec(K, { [2] = "one", last = 2 }, ranks({ [201] = 3, [202] = 1 }), 60)
-                assert.are.same({ "one", "stored" }, { s.key, source })
-                assert.is_nil(picked) -- no selector for one
+                    T.PickSpec(K, { [2] = "two", last = 2 }, ranks({ [201] = 3, [202] = 1 }), 60, hand)
+                assert.are.same({ "two", "stored" }, { s.key, source })
+                assert.is_nil(picked)
+                -- the same choice from before pack-level activation (owner 2026-11-08): the selectors pick spec and pack
+                s, source, _, picked = T.PickSpec(K, { [2] = "two", last = 2 }, ranks({ [201] = 3, [202] = 1 }), 60, {})
+                assert.are.same({ "two_b", "selector", "deep_d" }, { s.key, source, picked.key })
+                -- and with none holding, the stored spec stays the spec
+                s, source = T.PickSpec(K, { [1] = "two", last = 1 }, ranks({ [101] = 5 }), 60, {})
+                assert.are.same({ "two", "stored" }, { s.key, source })
             end
         )
 
@@ -398,27 +402,71 @@ describe("the shipped selectors (headless)", function()
         assert.is_truthy(H.Hekili:GenerateProfile():find("\nspec: guardian (selector guardian)", 1, true))
     end)
 
-    it("keeps a spec the player activated for the tree over the selector's", function()
+    -- A pack node's Active toggle (Options.lua's packs tree), as the player clicks it.
+    local function toggleActive(H, spec, pack)
+        H.Hekili:EmbedSpecOptions()
+        H.Hekili:EmbedPackOptions()
+        local function find(t)
+            if type(t) ~= "table" then
+                return nil
+            end
+            if t.args and t.args.toggleActive then
+                return t.args.toggleActive
+            end
+            for _, v in pairs(t.args or {}) do
+                local f = find(v)
+                if f then
+                    return f
+                end
+            end
+        end
+        local nodes = H.Hekili.Options.args.packs.plugins.specializations
+        local node = assert(find(nodes[spec].plugins.packs[pack]), "no Active toggle for " .. pack)
+        node.set()
+    end
+
+    it("lets a pack the player picked in another spec of the tree override the selector's spec and pack", function()
         local H = boot("druid", build("druid_guardian", "druid"))
-        assert.are.equal(100113, (active(H)))
-        assert.are.equal("feral", H.Hekili:SetSpecChoice("feral").key)
+        assert.are.same({ 100113, "Guardian (wowsims.com)" }, { active(H) })
+        H.Hekili:EmbedSpecOptions()
+        H.Hekili:SetSpecOption({ "packs", "feral", "core", "package" }, "Feral (wowsims.com)") -- Feral's page
         settle(H)
+        assert.are.same({ 100112, "Feral (wowsims.com)" }, { active(H) })
         respec(H, build("druid_guardian", "druid"))
-        assert.are.same({ 100112, "Feral (wowsims.com)" }, { active(H) }) -- no Guardian pack on Feral
+        assert.are.same({ 100112, "Feral (wowsims.com)" }, { active(H) })
+        -- Activate <Spec> (and /hekili spec) is pack-level: it activates that spec's pack in place
+        assert.are.equal("guardian", H.Hekili:SetSpecChoice("guardian").key)
+        settle(H)
+        assert.are.same({ 100113, "Guardian (wowsims.com)" }, { active(H) })
+        assert.is_true(H.Hekili.DB.profile.specs[100113].packManual)
     end)
 
-    it("keeps a selector's pack on a spec the player activated (Activate fixes the spec only)", function()
-        local H = boot("mage", build("mage_frostfire", "mage"))
+    it("leaves an automatic Frostfire alone until the player activates the Fire pack, then keeps Fire", function()
+        local H = boot("mage", build("mage_fire", "mage"))
+        respec(H, build("mage_frostfire", "mage")) -- the automatic Fire becomes Frostfire
         assert.are.same({ 100082, "Frostfire (wowsims.com)" }, { active(H) })
-        assert.are.equal("fire", H.Hekili:SetSpecChoice("fire").key)
+        respec(H, build("mage_frostfire", "mage")) -- no press: Frostfire stays
+        assert.are.same({ 100082, "Frostfire (wowsims.com)" }, { active(H) })
+        toggleActive(H, "fire", "Fire (wowsims.com)") -- the review's I1 press, on the pack
         settle(H)
-        respec(H, build("mage_frostfire", "mage"))
-        assert.are.same({ 100082, "Frostfire (wowsims.com)" }, { active(H) })
-        respec(H, build("mage_fire", "mage")) -- the stored spec's own selector no longer holds: back to the default
         assert.are.same({ 100082, "Fire (wowsims.com)" }, { active(H) })
         respec(H, build("mage_frostfire", "mage"))
-        assert.are.same({ 100082, "Frostfire (wowsims.com)" }, { active(H) })
+        assert.are.same({ 100082, "Fire (wowsims.com)" }, { active(H) })
     end)
+
+    it(
+        "loads an older stored spec choice: no manual pack, so the selectors apply and it stays the spec otherwise",
+        function()
+            local old = { profiles = { Default = { specChoice = { ["Player-Realm"] = { [2] = "feral", last = 2 } } } } }
+            local H = boot("druid", build("druid_guardian", "druid"), old)
+            assert.are.same({ 100113, "Guardian (wowsims.com)" }, { active(H) })
+            old = { profiles = { Default = { specChoice = { ["Player-Realm"] = { [2] = "guardian", last = 2 } } } } }
+            H = boot("druid", build("druid_feral", "druid"), old) -- no selector holds: the stored Guardian stays
+            assert.are.same({ 100113, "Guardian (wowsims.com)" }, { active(H) })
+            assert.is_nil(rawget(H.Hekili.DB.profile.specs[100113], "packManual"))
+            assert.are.same({}, H.errors)
+        end
+    )
 
     it("keeps a pack the player picked in the options or by command, and a reset hands it back", function()
         local H = boot("mage", build("mage_frostfire", "mage"))

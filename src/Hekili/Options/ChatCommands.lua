@@ -661,8 +661,7 @@ function Hekili:HandlePriorityCommand( args )
 
     for _, priority in ipairs( priorities ) do
         if priority:lower():match( pattern ) then
-            local sp = Hekili.DB.profile.specs[ spec ]
-            sp.package, sp.packManual, sp.packAuto = priority, true, nil -- the player's: no selector replaces it
+            self:ActivatePack( spec, priority ) -- the player's: no selector replaces it
             local output = format( L["Priority set to %s%s|r."], Hekili.DB.profile.packs[ priority ].builtIn and BlizzBlue or "|cFFFFD100", priority )
             self:Print( output )
             self:ForceUpdate( "CLI_TOGGLE" )

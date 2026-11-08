@@ -2844,8 +2844,8 @@ do
         self.DB.profile.specs[ spec ] = self.DB.profile.specs[ spec ] or {}
         self.DB.profile.specs[ spec ][ option ] = val
 
-        -- the player's pick: a selector never replaces it (Engine/Schema/Selectors.lua)
-        if option == "package" then self.DB.profile.specs[ spec ].packManual, self.DB.profile.specs[ spec ].packAuto = true, nil end
+        -- the player's pick: a selector never replaces it, and it activates its spec (Hekili:ActivatePack)
+        if option == "package" then self:ActivatePack( spec ) end
 
         if option == "package" then self:UpdateUseItems()
 self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
@@ -3586,7 +3586,8 @@ found = true end
     local tItems = {}
 
     -- (spec tree) The right half of a spec page's top row: "Activate <Spec>" while another spec is active (as
-    -- /hekili spec: kept for the current talent tree), else the gold "Active" marker.
+    -- /hekili spec: it activates the spec's pack in place, the player's from then on, kept for the current talent tree:
+    -- Hekili:ActivatePack), else the gold "Active" marker.
     local function AddActivateOptions( args, key, name, texture )
         args.activate = {
             type = "execute",
@@ -4990,8 +4991,9 @@ found = true end
                                     set = function ()
                                         local p = rawget( Hekili.DB.profile.packs, pack )
                                         local sp = Hekili.DB.profile.specs[ p.spec ]
-                                        -- a pick (and "(none)") is the player's; back to the default hands the pack
-                                        -- to the selectors again (Engine/Schema/Selectors.lua)
+                                        -- a pick (and "(none)") is the player's, a pick activating its spec
+                                        -- (Hekili:ActivatePack); back to the default hands the pack to the selectors
+                                        -- again (Engine/Schema/Selectors.lua)
                                         if sp.package == pack then
                                             if p.builtIn then
                                                 sp.package, sp.packManual, sp.packAuto = "(none)", true, nil
@@ -5002,7 +5004,7 @@ found = true end
                                                 end
                                             end
                                         else
-                                            sp.package, sp.packManual, sp.packAuto = pack, true, nil
+                                            Hekili:ActivatePack( p.spec, pack )
                                         end
                                     end,
                                 },

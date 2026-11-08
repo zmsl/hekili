@@ -3,7 +3,8 @@
 -- the Hekili classic branch's RegisterPackSelector, GPL-3.0, no code taken). Which of a class kit's specs
 -- (Hekili:NewClass, Spec.lua) runs: the character's choice for the dominant tree, else the first selector whose
 -- condition holds (a spec and its pack, from the talents), else the dominant tree's first spec, else the first
--- supported one; a chosen spec still takes its pack from its own selectors. And when a selector may set a spec's pack
+-- supported one. The choice is made at the pack level: a pack the player activated fixes its spec; a stored spec
+-- without one yields to the selectors. And when a selector may set a spec's pack
 -- (ns.SelectPack: the player's pick and custom priorities stay). Functions over a kit and the settings tables (tree
 -- points from Trees.lua), pure of Hekili state: they write only the engine's selector bookkeeping (a selector's
 -- `bound`, the kit's `selectorErrors`/`selectorError`) and, in SelectPack, the spec profile's `package`/`packAuto`.
@@ -42,8 +43,8 @@ local env = {
 
 -- The first of `kit`'s selectors (RegisterSelector's order) whose spec has priorities and whose condition, called with
 -- the points per tree, holds; a condition that raises counts as false and on `kit.selectorErrors` (its message in
--- `kit.selectorError`); with `only` (a spec key), only that spec's selectors count. Returns the selector and its spec.
-local function firstSelector(kit, p, rankOf, level, only)
+-- `kit.selectorError`). Returns the selector and its spec.
+local function firstSelector(kit, p, rankOf, level)
     local list = kit.selectors
     if not list then
         return nil
@@ -52,7 +53,7 @@ local function firstSelector(kit, p, rankOf, level, only)
     for i = 1, #list do
         local sel = list[i]
         local s = kit.specs[sel.spec]
-        if s and not s.unsupported and (only == nil or sel.spec == only) then
+        if s and not s.unsupported then
             if not sel.bound then
                 setfenv(sel.condition, env)
                 sel.bound = true
@@ -71,11 +72,12 @@ end
 
 --- The active spec of `kit` for a character's `choice`: { [tree] = spec key, last = tree } (a spec activated while
 --- that tree was dominant, and the last dominant tree seen), or a legacy scalar spec key (before its migration). On the
---- dominant tree (else the last one seen: no points or a tie): the spec chosen for it ("stored", with the first of
---- that spec's selectors that holds, for its pack); else the first selector that holds at `level` ("selector"); else the tree's first spec ("dominant"); else the first supported spec
---- ("default": no points yet). Returns the spec, the source, the dominant tree (nil on no points or a tie) and the
---- selector (nil unless the source is "selector" or "stored").
-function ns.PickSpec(kit, choice, rankOf, level)
+--- dominant tree (else the last one seen: no points or a tie): the spec chosen for it ("stored") when its profile in
+--- `specs` (the profile's specs table) carries the player's pack (`packManual`); else the first selector that holds at
+--- `level` ("selector"); else the spec chosen for the tree, if any ("stored"); else the tree's first spec
+--- ("dominant"); else the first supported spec ("default": no points yet). Returns the spec, the source, the dominant tree (nil on no points or a tie) and the
+--- selector (nil unless the source is "selector").
+function ns.PickSpec(kit, choice, rankOf, level, specs)
     local p = ns.TreePoints(kit.talents, rankOf)
     local dominant = ns.DominantTree(p)
     local tree, key = dominant, choice
@@ -84,14 +86,18 @@ function ns.PickSpec(kit, choice, rankOf, level)
         key = choice[tree or 0]
     end
     local s = type(key) == "string" and kit.specs[key]
-    if s then
-        -- the player's choice fixes the spec only: that spec's own selectors still pick its pack (owner ruling I1)
-        return s, "stored", dominant, (firstSelector(kit, p, rankOf, level, s.key))
+    -- activation is at the pack level (owner 2026-11-08): a stored spec whose pack the player chose is fixed; one
+    -- without (a choice from before, or a pack handed back to the default) yields to the selectors
+    local sp = s and specs and rawget(specs, s.id)
+    if type(sp) == "table" and sp.packManual then
+        return s, "stored", dominant
     end
-    local sel
-    sel, s = firstSelector(kit, p, rankOf, level)
+    local sel, ss = firstSelector(kit, p, rankOf, level)
+    if ss then
+        return ss, "selector", dominant, sel
+    end
     if s then
-        return s, "selector", dominant, sel
+        return s, "stored", dominant
     end
     s = tree and firstOn(kit, tree)
     if s then
