@@ -30,7 +30,8 @@ local IsCurrentSpell = C_Spell.IsCurrentSpell
 local floor, max, min = math.floor, math.max, math.min
 
 -- The class kit and its specs (ids the core's: Balance 100111, Feral 100112, Guardian 100113, Restoration 100114).
--- Feral and Guardian ride the Feral Combat tree: its points pick Feral; Guardian is chosen (/hekili spec guardian).
+-- Feral and Guardian ride the Feral Combat tree: its points pick Feral, with Thick Hide Guardian (the selector below
+-- RegisterTalents); /hekili spec guardian or feral keeps one for the tree.
 local spec = Hekili:NewClass("DRUID", {
     specs = {
         {
@@ -1922,7 +1923,7 @@ spec:RegisterSetting("maintain_demoralizing_roar", false, {
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc (a wowsims.com
 -- pack's from its recipe, `make wowsims-packs`); edit those and run it, never these blocks
--- (tests/Forever/druid_spec.lua checks they match). Pick one with /hekili priority <name>. Restoration is deferred.
+-- (tests/Forever/druid_spec.lua checks they match). Your talents pick one (the selector); /hekili priority <name> keeps another. Restoration is deferred.
 spec:RegisterPack(
     "Feral (wowsims.com)",
     20261108000,

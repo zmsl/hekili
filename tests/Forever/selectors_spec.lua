@@ -405,13 +405,14 @@ describe("the shipped selectors (headless)", function()
     it("rejects a selector for a spec the class does not have", function()
         local H = boot("druid", build("druid_feral", "druid"))
         local kit = H.Hekili.Class.kit
-        assert.has_error(function()
+        assert.error_matches(function()
             kit:RegisterSelector("bad", { spec = "nope", pack = "Feral (wowsims.com)" }, function()
                 return true
             end)
-        end)
-        assert.has_error(function()
+        end, "RegisterSelector: bad's spec is not one of the class's", 1, true)
+        assert.error_matches(function()
             kit:RegisterSelector("bad", { spec = "feral", pack = "Feral (wowsims.com)" }, "not a function")
-        end)
+        end, "RegisterSelector: bad's condition is not a function", 1, true)
+        assert.are.equal(1, #kit.selectors) -- Guardian's only
     end)
 end)
