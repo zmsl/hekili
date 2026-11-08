@@ -99,89 +99,107 @@ end)
 
 -- Gap 13 (wowsims unitDistance): the world at 25 yd, then in melee. Survival (wowsims.com)'s melee lines are the
 -- translator's `target.within5` (the weave's move variant's in-melee arm; the loops run Movement OFF), read against the
--- engine's range bracket.
+-- engine's range bracket. Twice: on the DB2's ranges (Combat Range 0-5), and live-shaped: the live client reads
+-- maxRange 0 for a melee strike and answers its range check against 5 yd (ForeverProbe dump 2026-11-07, Warrior).
 describe("the Hunter at range, then in melee", function()
-    it("brackets the distance from the kit's ranges and opens the melee list only in reach", function()
-        local loop = require("Game.harness.loop")
-        local fake = require("Game.State.helpers.fake_api")
-        local base = hw.Survival
-        local MOVE, SECRET = loop.PULL + 12, loop.PULL + 20
-        local C = setmetatable({}, { __index = base })
-        C.WORLD = setmetatable({
-            distance = 25,
-            script = function(W, us)
-                base.WORLD.script(W, us)
-                W.at(MOVE, function()
-                    W.moveTo(us, 5)
-                end)
-            end,
-        }, { __index = base.WORLD })
-        local L = loop.new(C)
-        local H = L.us
-        local pack = H.Hekili.Engine.settings.packs[C.PACK]
-        local gated = 0
-        for _, e in ipairs(pack.lists.default) do
-            -- the bracket is the variant's in-melee arm, its own line ending in the term (R51: the move arm,
-            -- `toggle.movement&(<the weave's move>)`, is a copy where the weave group is called; Wing Clip keeps its
-            -- Strider Kick condition before the term)
-            gated = gated + (("&" .. e.criteria):match("&target%.within5$") and 1 or 0)
-        end
-        assert.are.equal(5, gated) -- Raptor Strike, Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip
-        local MELEE = { mongoose_bite = true, strider_kick = true, immolation_trap = true, wing_clip = true }
-        local seen = { far = {}, near = {}, secret = {} }
-        local run = loop.run(L, 1, {
-            duration = 30,
-            on = function(r, steps, t)
-                if t < loop.PULL + 1 or (t >= MOVE and t < MOVE + 1) then -- the pull's and the move's first second
-                    return
-                end
-                local phase = t < MOVE and "far" or (t < SECRET and "near" or "secret")
-                if t >= SECRET then
-                    H.ctl.distance.target = fake.SECRET -- every range read secret from here
-                end
-                local tg = H.Hekili.State.target
-                local s = seen[phase]
-                -- each read's one value over the phase ("mixed" when it changed)
-                local S = H.Hekili.State
-                local ok, why = S:IsUsable("raptor_strike") -- on the next swing: the bracket's reach
-                local reads = {
-                    within = tg.within5,
-                    outside = tg.outside5,
-                    usable = ok or why ~= "target beyond melee range", -- (a queued strike refuses too)
-                    inRange = S.action.raptor_strike.in_range,
-                }
-                for key, v in pairs(reads) do
-                    if s[key] == nil then
-                        s[key] = v
-                    elseif s[key] ~= v then
-                        s[key] = "mixed"
+    for _, live in ipairs({ false, true }) do
+        it(
+            "brackets the distance from the kit's ranges and opens the melee list only in reach"
+                .. (live and ", live-shaped" or ""),
+            function()
+                local loop = require("Game.harness.loop")
+                local fake = require("Game.State.helpers.fake_api")
+                local base = hw.Survival
+                local MOVE, SECRET = loop.PULL + 12, loop.PULL + 20
+                local C = setmetatable({}, { __index = base })
+                function C.character()
+                    local c = base.character()
+                    for _, key in
+                        ipairs(live and { "raptor_strike", "mongoose_bite", "strider_kick", "wing_clip" } or {})
+                    do
+                        for _, id in ipairs(hw.Survival.IDS[key] or {}) do
+                            c.ranges[id] = { 0, 0, 5 }
+                        end
                     end
+                    return c
                 end
-                s.distance = tg.distance
-                local first = steps[1].q.name[1]
-                s.melee = (s.melee or 0) + (MELEE[first] and 1 or 0)
-            end,
-        }, { { H = H } })
-        local function view(x)
-            return { x.within, x.outside, x.usable, x.inRange, x.distance }
-        end
-        -- [8, 35]: in the shots' band; Raptor Strike out of reach
-        assert.are.same({ false, true, false, false, 21.5 }, view(seen.far))
-        assert.are.same({ true, false, true, true, 2.5 }, view(seen.near)) -- [0, 5]
-        assert.are.same({ true, false, true, true, 2.5 }, view(seen.secret)) -- the last plain bracket stays
-        assert.are.equal(0, seen.far.melee)
-        assert.is_true(seen.near.melee > 0)
-        assert.is_nil(run.refused.range) -- nothing recommended out of its range, Raptor Strike included
-        assert.are.same({}, H.errors)
-        -- a new target with every range read secret: unknown, and unknown never blocks
-        H.Fire("PLAYER_TARGET_CHANGED")
-        assert(headless.cycle(H, H.ctl.now + 0.2))
-        assert.are.equal("unknown", H.ns.VirtualState.TargetRange().basis)
-        local S = H.Hekili.State
-        local _, why = S:IsUsable("raptor_strike")
-        assert.are.same(
-            { true, true, true },
-            { why ~= "target beyond melee range", S.target.within5, S.target.outside5 }
+                C.WORLD = setmetatable({
+                    distance = 25,
+                    script = function(W, us)
+                        base.WORLD.script(W, us)
+                        W.at(MOVE, function()
+                            W.moveTo(us, 5)
+                        end)
+                    end,
+                }, { __index = base.WORLD })
+                local L = loop.new(C)
+                local H = L.us
+                local pack = H.Hekili.Engine.settings.packs[C.PACK]
+                local gated = 0
+                for _, e in ipairs(pack.lists.default) do
+                    -- the bracket is the variant's in-melee arm, its own line ending in the term (R51: the move arm,
+                    -- `toggle.movement&(<the weave's move>)`, is a copy where the weave group is called; Wing Clip keeps its
+                    -- Strider Kick condition before the term)
+                    gated = gated + (("&" .. e.criteria):match("&target%.within5$") and 1 or 0)
+                end
+                assert.are.equal(5, gated) -- Raptor Strike, Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip
+                local MELEE = { mongoose_bite = true, strider_kick = true, immolation_trap = true, wing_clip = true }
+                local seen = { far = {}, near = {}, secret = {} }
+                local run = loop.run(L, 1, {
+                    duration = 30,
+                    on = function(r, steps, t)
+                        if t < loop.PULL + 1 or (t >= MOVE and t < MOVE + 1) then -- the pull's and the move's first second
+                            return
+                        end
+                        local phase = t < MOVE and "far" or (t < SECRET and "near" or "secret")
+                        if t >= SECRET then
+                            H.ctl.distance.target = fake.SECRET -- every range read secret from here
+                        end
+                        local tg = H.Hekili.State.target
+                        local s = seen[phase]
+                        -- each read's one value over the phase ("mixed" when it changed)
+                        local S = H.Hekili.State
+                        local ok, why = S:IsUsable("raptor_strike") -- on the next swing: the bracket's reach
+                        local reads = {
+                            within = tg.within5,
+                            outside = tg.outside5,
+                            usable = ok or why ~= "target beyond melee range", -- (a queued strike refuses too)
+                            inRange = S.action.raptor_strike.in_range,
+                        }
+                        for key, v in pairs(reads) do
+                            if s[key] == nil then
+                                s[key] = v
+                            elseif s[key] ~= v then
+                                s[key] = "mixed"
+                            end
+                        end
+                        s.distance = tg.distance
+                        local first = steps[1].q.name[1]
+                        s.melee = (s.melee or 0) + (MELEE[first] and 1 or 0)
+                    end,
+                }, { { H = H } })
+                local function view(x)
+                    return { x.within, x.outside, x.usable, x.inRange, x.distance }
+                end
+                -- [8, 35]: in the shots' band; Raptor Strike out of reach
+                assert.are.same({ false, true, false, false, 21.5 }, view(seen.far))
+                assert.are.same({ true, false, true, true, 2.5 }, view(seen.near)) -- [0, 5]
+                assert.are.same({ true, false, true, true, 2.5 }, view(seen.secret)) -- the last plain bracket stays
+                assert.are.equal(0, seen.far.melee)
+                assert.is_true(seen.near.melee > 0)
+                assert.is_nil(run.refused.range) -- nothing recommended out of its range, Raptor Strike included
+                assert.are.same({}, H.errors)
+                -- a new target with every range read secret: unknown, and unknown never blocks
+                H.Fire("PLAYER_TARGET_CHANGED")
+                assert(headless.cycle(H, H.ctl.now + 0.2))
+                assert.are.equal("unknown", H.ns.VirtualState.TargetRange().basis)
+                local S = H.Hekili.State
+                local _, why = S:IsUsable("raptor_strike")
+                assert.are.same(
+                    { true, true, true },
+                    { why ~= "target beyond melee range", S.target.within5, S.target.outside5 }
+                )
+            end
         )
-    end)
+    end
 end)

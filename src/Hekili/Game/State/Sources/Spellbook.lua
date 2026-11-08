@@ -40,8 +40,13 @@ local function resolve(api)
         local info = Plain(api, api.C_Spell.GetSpellInfo(q)) -- secret: Plain next, then each field
         local lo = type(info) == "table" and Plain(api, info.minRange)
         local hi = type(info) == "table" and Plain(api, info.maxRange)
-        A.rMin[a] = type(lo) == "number" and lo or 0
-        A.rMax[a] = (type(hi) == "number" and not A.obj[a].onNextSwing) and hi or 0
+        -- the live client reads maxRange 0 for a melee strike and still answers its range check (ForeverProbe dump
+        -- 2026-11-07: Mortal Strike, Rend, Hamstring...): a hostile one is a 5 yd check, as LibRangeCheck reads 0.
+        -- A self-centred hostile spell (Thunder Clap) reads 0 too: its nil answer is skipped, and these answers count
+        -- only when they agree (poll 14, Sources/Target.lua)
+        local melee = hi == 0 and A.obj[a].startsCombat == true
+        A.rMin[a], A.rMelee[a] = type(lo) == "number" and lo or 0, melee
+        A.rMax[a] = (type(hi) == "number" and not A.obj[a].onNextSwing) and (melee and 5 or hi) or 0
         if not I.inCombat and A.slot[a] > 0 then
             local raw = api.C_Spell.GetSpellPowerCost(q) -- secret: Plain next, then each field
             local costs = Plain(api, raw)
