@@ -350,7 +350,10 @@ M.READY = {
     -- { 0.50, 9 } -> { 0.35, 10 } on the 0.7 floors run (integ/0.7 5deb101c4; R6): the never rows of the
     -- old log are gone (CN8's cooldown countdown, pin-2 export: not separated) but cost rows rake 25.14 and
     -- shifting_power 111.89 (0.47 / 0.45, the belief's lo under the truth) are now late; 10 real (early 2, late 8), median 0.350
-    druid_feral = { 0.35, 10 },
+    -- { 0.35, 10 } -> { 0.40, 10 } (CN8 I1, R6: a probe stands until the game says ready): decision 12, shifting_power
+    -- at 11.75, the model's end short of the flag's, reads 0.500 late (0.350 while the probe counted down); real 10
+    -- (early 2, late 8), median 0.400
+    druid_feral = { 0.40, 10 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone
