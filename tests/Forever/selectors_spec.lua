@@ -54,11 +54,18 @@ describe("Selectors.lua", function()
             assert.are.same({ "two", "selector", 2, "tree2" }, { s.key, source, tree, picked.key })
         end)
 
-        it("lets the player's choice for the dominant tree win (no selector runs)", function()
-            local s, source, _, picked = T.PickSpec(K, { [2] = "two", last = 2 }, ranks({ [201] = 3, [202] = 1 }), 60)
-            assert.are.same({ "two", "stored" }, { s.key, source })
-            assert.is_nil(picked)
-        end)
+        it(
+            "lets the player's choice for the dominant tree fix the spec; that spec's selectors still pick its pack",
+            function()
+                -- deep_d (two_b) holds first, but the stored spec is two: only two's selectors count (owner ruling I1)
+                local s, source, _, picked =
+                    T.PickSpec(K, { [2] = "two", last = 2 }, ranks({ [201] = 3, [202] = 1 }), 60)
+                assert.are.same({ "two", "stored", "tree2" }, { s.key, source, picked and picked.key })
+                s, source, _, picked = T.PickSpec(K, { [2] = "one", last = 2 }, ranks({ [201] = 3, [202] = 1 }), 60)
+                assert.are.same({ "one", "stored" }, { s.key, source })
+                assert.is_nil(picked) -- no selector for one
+            end
+        )
 
         it("falls back to today's rule when no selector is true", function()
             local s, source, _, picked = T.PickSpec(K, nil, ranks({ [101] = 5 }), 60)
@@ -354,7 +361,20 @@ describe("the shipped selectors (headless)", function()
         assert.are.equal("feral", H.Hekili:SetSpecChoice("feral").key)
         settle(H)
         respec(H, build("druid_guardian", "druid"))
-        assert.are.same({ 100112, "Feral (wowsims.com)" }, { active(H) })
+        assert.are.same({ 100112, "Feral (wowsims.com)" }, { active(H) }) -- no Guardian pack on Feral
+    end)
+
+    it("keeps a selector's pack on a spec the player activated (Activate fixes the spec only)", function()
+        local H = boot("mage", build("mage_frostfire", "mage"))
+        assert.are.same({ 100082, "Frostfire (wowsims.com)" }, { active(H) })
+        assert.are.equal("fire", H.Hekili:SetSpecChoice("fire").key)
+        settle(H)
+        respec(H, build("mage_frostfire", "mage"))
+        assert.are.same({ 100082, "Frostfire (wowsims.com)" }, { active(H) })
+        respec(H, build("mage_fire", "mage")) -- the stored spec's own selector no longer holds: back to the default
+        assert.are.same({ 100082, "Fire (wowsims.com)" }, { active(H) })
+        respec(H, build("mage_frostfire", "mage"))
+        assert.are.same({ 100082, "Frostfire (wowsims.com)" }, { active(H) })
     end)
 
     it("keeps a pack the player picked in the options or by command, and a reset hands it back", function()

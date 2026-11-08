@@ -39,8 +39,8 @@ local env = {
 
 -- The first of `kit`'s selectors (RegisterSelector's order) whose spec has priorities and whose condition, called with
 -- the points per tree, holds; a condition that raises counts as false and on `kit.selectorErrors` (its message in
--- `kit.selectorError`). Returns the selector and its spec.
-local function select(kit, p, rankOf, level)
+-- `kit.selectorError`); with `only` (a spec key), only that spec's selectors count. Returns the selector and its spec.
+local function select(kit, p, rankOf, level, only)
     local list = kit.selectors
     if not list then
         return nil
@@ -49,7 +49,7 @@ local function select(kit, p, rankOf, level)
     for i = 1, #list do
         local sel = list[i]
         local s = kit.specs[sel.spec]
-        if s and not s.unsupported then
+        if s and not s.unsupported and (only == nil or sel.spec == only) then
             if not sel.bound then
                 setfenv(sel.condition, env)
                 sel.bound = true
@@ -68,10 +68,10 @@ end
 
 --- The active spec of `kit` for a character's `choice`: { [tree] = spec key, last = tree } (a spec activated while
 --- that tree was dominant, and the last dominant tree seen), or a legacy scalar spec key (before its migration). On the
---- dominant tree (else the last one seen: no points or a tie): the spec chosen for it ("stored"); else the first
---- selector that holds at `level` ("selector"); else the tree's first spec ("dominant"); else the first supported spec
+--- dominant tree (else the last one seen: no points or a tie): the spec chosen for it ("stored", with the first of
+--- that spec's selectors that holds, for its pack); else the first selector that holds at `level` ("selector"); else the tree's first spec ("dominant"); else the first supported spec
 --- ("default": no points yet). Returns the spec, the source, the dominant tree (nil on no points or a tie) and the
---- selector (nil unless the source is "selector").
+--- selector (nil unless the source is "selector" or "stored").
 function ns.PickSpec(kit, choice, rankOf, level)
     local p = ns.TreePoints(kit.talents, rankOf)
     local dominant = ns.DominantTree(p)
@@ -82,7 +82,8 @@ function ns.PickSpec(kit, choice, rankOf, level)
     end
     local s = type(key) == "string" and kit.specs[key]
     if s then
-        return s, "stored", dominant
+        -- the player's choice fixes the spec only: that spec's own selectors still pick its pack (owner ruling I1)
+        return s, "stored", dominant, (select(kit, p, rankOf, level, s.key))
     end
     local sel
     sel, s = select(kit, p, rankOf, level)
