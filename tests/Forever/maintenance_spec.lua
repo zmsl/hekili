@@ -33,10 +33,10 @@ local PROT = ws.content(ww.Protection, {
 })
 
 describe("the maintenance-debuff settings #slow", function()
-    it("Guardian: in game no Demoralizing Roar and Berserk still comes; the harness casts both", function()
+    -- re-pin e5a9cd2a2d: wowsims's adaptive bear list has no Berserk line, so only the Roar differs
+    it("Guardian: in game no Demoralizing Roar; the harness casts it", function()
         local game, sim = shown(dw.Guardian, "game"), shown(dw.Guardian, "sim")
-        assert.are.same({ false, true }, { game.demoralizing_roar == true, game.berserk == true })
-        assert.are.same({ true, true }, { sim.demoralizing_roar == true, sim.berserk == true })
+        assert.are.same({ false, true }, { game.demoralizing_roar == true, sim.demoralizing_roar == true })
     end)
 
     it("Protection: in game no Demoralizing Shout, Thunder Clap as wowsims has it; the harness casts both", function()

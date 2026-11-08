@@ -357,7 +357,10 @@ M.READY = {
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone
-    druid_guardian = { 2.50, 10 }, -- was 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
+    -- { 2.50, 10 } -> { 1.76, 55 } (re-pin e5a9cd2a2d, floors step): 55 late GCD-chain rows (median 1.751): with no rage from hits
+    -- yet (CN7) Lacerate/Primal Bite show a GCD after wowsims casts them (24 lacerate -> primal_bite replay misses); the median falls (1.751 measured; a ceiling rounds up)
+    -- 2.50 -> 1.75, the count rises by the same cause (not by the metric)
+    druid_guardian = { 1.76, 55 }, -- was 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     -- re-pin 8b-2 (controller ruling, round 3): move-reached weave strikes show at the decision to walk (the Auto Shot that
     -- opens the weave window); wowsims logs the cast at arrival; the offset is the walk time, which Hekili does not model
     -- (owner rule: no movement in Hekili or the belief) and which is the lead a player needs to start walking. Every new

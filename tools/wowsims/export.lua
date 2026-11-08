@@ -36,7 +36,7 @@ M.SPEC_PIN = {
 
     druid_feral = NEW,
 
-    druid_guardian = OLD,
+    druid_guardian = NEW,
 
     hunter_beast_mastery = OLD,
 

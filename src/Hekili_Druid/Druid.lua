@@ -58,6 +58,7 @@ local spec = Hekili:NewClass("DRUID", {
             icon = 132276,
             role = "tank",
             package = "Guardian (wowsims.com)",
+            movement = true, -- the pack reads toggle.movement: the run into melee reaches the damage lines (R8)
         },
         { key = "restoration", name = L["Restoration"], tree = 3, icon = 136041, role = "healer", unsupported = true },
     },
@@ -217,6 +218,9 @@ spec:RegisterResource(
         -- `aura` gates it in both layers (the belief's swing entry, spec §0.3; Hekili's forecast); `stop` too.
         -- A white crit adds one more base swing (without the two-hand factor), as wowsims's, and Primal Fury's rage:
         -- `crit`. A yellow crit's Primal Fury is the strikes' `onCrit`.
+        -- NAMED GAP (owner 2026-11-07): no `taken` (rage from hits) until CN7 gives the belief its hook; the archived rule
+        -- (lane-feralguardian-taken-wip.patch) lifts the Guardian replay 0.632 -> 0.923 but with replay flicker 14.65/min: land it
+        -- only with CN7 + CN9, never blind.
         -- shortcut: misses, Natural Reaction and rage from damage taken are unmodelled; the belief's swing-scale
         -- calibration absorbs a steady bias. Upgrade from the combat-log rows once a non-cast `now` exists.
         mainhand = {
@@ -1923,8 +1927,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Guardian (wowsims.com)",
-    20261105000,
-    [[Hekili:LJvBVnQrq4Fl(lPGQfy7MCxAuisTkQT5u7PQY1VcSMDWERxyr7UCP5Kf)27SgS9ABW21nsPv9djb2DE5zEMxyuIgh9POqkrdrFCYOjVB84r3mA0OOq9lLquyjjDbzg(qbjh)9pwrKugPOoX5zXZkwUYlvK7AK7fUGqn2AAfJRFQiAANMvvcPrHp(B)(tpE3SwRffoNrPqJkGkTx)CxDIEouN0EMFMqcFgK1juiJuX11jF3V(Z1j4X1jwMOI5BCRYNkRyu)mqs4tbI0NuYv(ekPuZ(m4HV59hkrH7q0nssHIJWNIplmULPQtiuQO4RWhwaVO8QtEKOj31bCC(LN(eAK5ADP6oF)zm98QPMiWFprDrBIOgMC71tYgrE)Txt9qYukYyCKUjPAMOqfKs484MxI5mLEOjBeKkeCQ45cv9hAf8Rd8ZKqXxyanwcZGcmsnxmKLfmhiC9CVYu99tgzRr3gFbaLXvLNwqkjhlqSLlhtfdRuqSillEwkny8WmrALc)lIdjkThx8qWUOOxLMyuAqJGELswoHhpLPbVffySBBckKlWml7lSIzXsbrA0ubAn(UYlNWk04pXhi2vodOW0QSmVdUYRQ8Q1(Mtsn0zRJrL6dtlxNy25kjyqG6bm2qS8NlB5H77WkPcL21DNSkbKmioJjHv0rlETo(neP2a10wfJf35RG5kqU5ipRYjVnfVbtbPcKl2l5JQ706WwbAJMnqE9XsGqFzBqEyoSjupskE5GZOkX9I5XGRTsMBdCKTaEvbOWMPzZ1De)DtaTKAZrvLUlh0LywESTvoyDzHDJLJJtlXSPOblK2)iLg)mWdb34EWnTX49bJ9WBh0nID6eHl7ot6(V9u5HmBNZESi5ZasxDSrqBDyZW2alOT)Diw6kp))Imt9hIcXpQQq13BRdZNRuMLt209HV8XvR(afKPCGg99rHwDGMlB)8lUrtdlGAlrxkzKOWx3zthL3(NtCNM5I0iHDMSH9qRDOKZCCvpZRqiOnBmAkI7k5S29wHqxOElE(7vYF518V9jVnCZ6o)OWvT(g2PHvBwp(y06(l310Ze3S2)2UMoy81wOZnpTti7SbQXsFZLGL2zUg9V(s0VTcdv)MElDS2rDdvoU)ocZURgd(U(Rf7l9ALPoP5FFpH7b1t2E(mk)E13)98wR8K7vUAQ0T9vTTD13Di6xRnJFLIbti8T9ecBwmENa4GDMBAHxx23rlS9i43UT5(p8a0tnb9iFK5ma3rxT7ODX7mehRbiv65c88FcwW4S6eNFO9)IWQRJ(R]]
+    20261107001,
+    [[Hekili:nJ1AVTTnu0Fl5lE2yzswUZPRbXbydbBlfBfdZTFvs0IxzZzjrbsQyKIc9BFxQhomYsXpASDqqcu49bpN7v8YJTRJ7NDNsjkW9tJgo6khNHVF4qh3PQhtb3PPKGLK54djKy8V)rgrqzKKC)(R4RKSyPvapEG2VhJ4eQoxZYyrQ7tCN1AALPqG707(3VC)DxpVkBUtxWOuOmeqg05(CDUVAbK7xTMDixapaICFkesYIu5()6)8x5(4Y5(gPiJzR3wPnvKXO2HGGendicBsAK0MqjPk2dGf(Fw)NKNm4sCBeKezecFk(mxVTmzUpHs5j)a(Ws4rPvU)Def56wGt))((pJjzHsLkV22EotTiBMMb2nCDaMte1WyYhcOJiJOHbwyXuWdzry5MeOy8ePvQaWGNrut0W2ddo(sw4KlMLfgATEjRS08pUri)4e7TeuV(kseKOScZeCHfKqMfb0EcSVBfXVXz4G2tlKOD5Ymj4Xdd9MhqN4S2ZDgPyIkAiEbliIMPthRsVSYINPKmkm2mWzeXs5swI2TfajsTWknqDZKRgICIpFEeyfZFaIrYPj5ZYtV(xuMilZT3AzcFvY3c48ik(WZTjac9Xbd(wvMwHTvwY4bMicIYsaPxeB(c1MuPAdnDQCdpxWnuajFLbupbmhsWG1gAunhn(CHU2EbtdU(11Xc7vvq0kMZyclrEZeS)3V2Rublg32zmvTRRb7gMEcRMMQG6lfx9HLwCiGlvip7FXreqrKaDZRd0S2Aju0bEEAOHeqWaVqMam7JglxvqOqXadtdp1BpBWVUoEzipitozubh6xH11fzCGAZLKk8A0BNmEWgwwZQ3D2yffI5yeSVYsM7j4eHj9KGsHRlT0WuH)6TH7iQWFQi2gwn7BNuk(moAC4XyoClhepD4ZeEYvSuWtF946JfpaE4a5ygiVDYOEfcx8WRLXr1LwpP1YTEi48aLyuZxJBhkbv5TevtbX63WxAcB3JL7y2BX7Z36ynEWleB9U)tvEOXA583BB71VQjZNRMANvYI2BN1U8p6ofvXkrJnK5hXKkzXNSOuzo(4Nk(KgvQlD)TA1T4hyOwwO70abMBbJ4oDtfJUkCpAKcdiRZ)6uAYFZS2OyQt576cvvAlnd)vvJ5w6wnBxAS(Z7i9nfyAI)kW8QR)8aOY4ok7TQiTJEW3TY0da3xTRTGcTPMa)iQADhvj2sGBx36HkCDhXudLRhBPRhqh)9D9M6tItBRnFIf1Eae7xAqmdo8wru7(YQ1nNASGTj99y6Boqg)Hoz8BkDU7jRnO9gW6583zyhVlBCeTL7lET1jVN8Ra5DjE4jPZBCi8ylH(qOrtbmgq(KILTCqXPPQidCUJYQ)U0v)wty9ExERkMoDlqqJ7IsDtrDgAG7Qiy0S2w(v6d3vFNThjr47zk6T1VU52KLVfDwQsQsYul44KG)ewYIy5(9)9QVN9cZU))p]]
 )
 
 -- The hand-built lists the wowsims.com packs replace (wowsims packs plan, P9): a saved choice of one falls back to the
