@@ -1615,6 +1615,9 @@ local HekiliSpecMixin = {
     end,
 }
 
+-- The mixin crosses files: Engine/Schema/Spec/*.lua add their methods to it (before All.lua builds spec 0).
+ns.SpecMixin = HekiliSpecMixin
+
 
 --- A spec's default priority: the package its NewClass entry names (nil for none); load order never changes it.
 function ns.DefaultPackage( specID )
@@ -1866,7 +1869,7 @@ local function buildSpec( id, key, name, texture, role, pClass, melee )
 
     class.num = class.num + 1
 
-    for k, func in pairs( HekiliSpecMixin ) do
+    for k, func in pairs( ns.SpecMixin ) do
         spec[ k ] = func
     end
 

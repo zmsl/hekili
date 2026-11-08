@@ -85,6 +85,7 @@ local stateEnv = {
     "knownRank", "stat", "swingBase", "healthMax",
 }
 files["src/Hekili/Engine/Schema/Spec.lua"] = { globals = stateEnv }
+files["src/Hekili/Engine/Schema/Spec/"] = { globals = stateEnv }
 files["src/Hekili/Engine/Sim/"] = { globals = stateEnv }
 -- Options and Hekili.lua read no engine state either (Engine.Registry, the commands, Output.status); each keeps only
 -- upstream's stray global reads.
