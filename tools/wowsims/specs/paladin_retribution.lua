@@ -3,8 +3,8 @@
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/paladin/retribution/presets.ts:32-34
 -- (DefaultOptions), :37 (TwistOfLightTalents), :144-151 (OtherDefaults) at the pin; the APL and gear spec.ts's default
 -- (Twist of Light), at d33930d040. The re-pin (e2842f0a78) deletes the Twist of Light files: the APL moves to
--- apls/default.apl.json (presets.ts:17, :24 DefaultAplPreset, spec.ts:105; 1091 lines) and the gear to
--- gear_sets/default.gear.json (presets.ts:19, :37 DefaultGearPreset, spec.ts:81).
+-- apls/default.apl.siml (presets.ts:17, :24 DefaultAplPreset, spec.ts:105; 1091 lines) and the gear to
+-- gear_sets/default.gear.siml (presets.ts:19, :37 DefaultGearPreset, spec.ts:81).
 -- Re-pin e2842f0a78 (Task 17, fresh floor): the build is presets.ts DefaultBuild 'Unsealed Wrath' (TypeSimple; its
 -- simpleRotation writes the APL's own values, R29), talents 050250002-501-05233011201301351, 25 yd (OtherDefaults).
 -- Omitted 1 -> 6 (dry run): the pre-pull Pull range move (spec §2.3), the Prep Seal groups and move3 (each gated on
@@ -48,17 +48,19 @@
 -- Holy Strike (10 s) and Consecration (8 s) cooling, the seal up, Judgement off the GCD, Exorcism (879 ranks) unusable
 -- off Undead/Demon (the kit refuses; the harness world's missing creature-type check, paladin_world.lua:132, made it
 -- look castable); mana 70-92%, no gap-AB effect; reported, never gated (the gates sample L10/L40/L60).
+-- Re-pin 4b0030a44b (0.7): APL and gear are upstream's .siml files (translated the same as the .json), the log re-exported at
+-- the new pin; the pack lines are unchanged (SIML drops `rank` fields only).
 return {
     class = "PALADIN",
     pack = "Retribution (wowsims.com)",
     spec = "retribution",
     name = "Retribution",
     talentTree = "paladin",
-    apl = "ui/specs/paladin/retribution/apls/default.apl.json",
+    apl = "ui/specs/paladin/retribution/apls/default.apl.siml",
     player = {
         race = "RaceHuman",
         class = "ClassPaladin",
-        gear = "ui/specs/paladin/retribution/gear_sets/default.gear.json",
+        gear = "ui/specs/paladin/retribution/gear_sets/default.gear.siml",
         talentsString = "050250002-501-05233011201301351",
         specKey = "retributionPaladin",
         -- PaladinOptions is an empty message: an object, not dkjson's default empty array

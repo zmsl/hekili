@@ -50,9 +50,9 @@ M.SPEC_PIN = {
 
     mage_frostfire = OLD,
 
-    paladin_protection = OLD,
+    paladin_protection = NEW,
 
-    paladin_retribution = OLD,
+    paladin_retribution = NEW,
 
     priest_shadow = NEW,
 
