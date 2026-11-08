@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- Paladin (wowsims.com) priorities follow the current wowsims (Retribution unchanged; Protection casts Holy Shield rank 4)
 
 ### Changed
 - An ability waiting for mana, rage or energy now shows as ready only once the addon is sure you have enough. Before, it could show as ready a few hundredths of a second early, and pressing it then failed with not enough mana or rage. It can now light up one update (about 0.2 s) later at the moment you reach the cost. Not yet checked in game.
