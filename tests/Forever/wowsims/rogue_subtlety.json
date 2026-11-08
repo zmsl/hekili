@@ -19,12 +19,7 @@
         "players":[{
             "profession1":"Engineering",
             "distanceFromTarget":5,
-            "rogue":{
-              "options":{
-                "classOptions":{
-                }
-              }
-            },
+            "reactionTimeMs":100,
             "class":"ClassRogue",
             "equipment":{
               "items":[{
@@ -74,7 +69,7 @@
             },
             "race":"RaceHuman",
             "name":"Subtlety",
-            "talentsString":"005323101014--4323200300013211501",
+            "talentsString":"00530301-320003-305230031321001151",
             "rotation":{
               "type":"TypeAPL",
               "groups":[{
@@ -141,27 +136,12 @@
                     "condition":{
                       "and":{
                         "vals":[{
-                            "or":{
-                              "vals":[{
-                                  "auraIsActive":{
-                                    "includeReactionTime":true,
-                                    "auraId":{
-                                      "spellId":462707
-                                    }
-                                  }
-                                },{
-                                  "and":{
-                                    "vals":[{
-                                        "variableRef":{
-                                          "name":"Use Stealth/Vanish for Damage"
-                                        }
-                                      },{
-                                        "variableRef":{
-                                          "name":"Use Ambush Opener"
-                                        }
-                                      }]
-                                  }
-                                }]
+                            "variableRef":{
+                              "name":"Use Vanish for Damage"
+                            }
+                          },{
+                            "variableRef":{
+                              "name":"Use Ambush Opener"
                             }
                           },{
                             "variableRef":{
@@ -190,7 +170,7 @@
                             }
                           },{
                             "variableRef":{
-                              "name":"Use Stealth/Vanish for Damage"
+                              "name":"Use Vanish for Damage"
                             }
                           },{
                             "variableRef":{
@@ -254,7 +234,7 @@
                             }
                           },{
                             "variableRef":{
-                              "name":"Use Stealth/Vanish for Damage"
+                              "name":"Use Vanish for Damage"
                             }
                           },{
                             "variableRef":{
@@ -265,6 +245,19 @@
                               "val":{
                                 "variableRef":{
                                   "name":"SnD Fall Imminent"
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"1s"
+                                }
+                              },
+                              "lhs":{
+                                "currentTime":{
                                 }
                               }
                             }
@@ -303,7 +296,7 @@
                             }
                           },{
                             "variableRef":{
-                              "name":"Use Stealth/Vanish for Damage"
+                              "name":"Use Vanish for Damage"
                             }
                           },{
                             "variableRef":{
@@ -314,6 +307,19 @@
                               "val":{
                                 "variableRef":{
                                   "name":"SnD Fall Imminent"
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"1s"
+                                }
+                              },
+                              "lhs":{
+                                "currentTime":{
                                 }
                               }
                             }
@@ -353,6 +359,78 @@
                   }
                 },{
                   "action":{
+                    "condition":{
+                      "or":{
+                        "vals":[{
+                            "not":{
+                              "val":{
+                                "spellIsKnown":{
+                                  "spellId":{
+                                    "spellId":13877
+                                  }
+                                }
+                              }
+                            }
+                          },{
+                            "auraIsActive":{
+                              "auraId":{
+                                "spellId":13877
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":20572
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "spellIsReady":{
+                              "spellId":{
+                                "spellId":13877
+                              }
+                            }
+                          },{
+                            "spellIsKnown":{
+                              "spellId":{
+                                "spellId":20572
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "strictSequence":{
+                      "actions":[{
+                          "castSpell":{
+                            "spellId":{
+                              "spellId":20572
+                            }
+                          }
+                        },{
+                          "castSpell":{
+                            "spellId":{
+                              "spellId":13877
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "auraIsActive":{
+                        "includeReactionTime":true,
+                        "auraId":{
+                          "spellId":6774
+                        }
+                      }
+                    },
                     "autocastOtherCooldowns":{
                     }
                   }
@@ -360,6 +438,78 @@
                   "action":{
                     "groupReference":{
                       "groupName":"Energy Pooling Checks"
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "or":{
+                        "vals":[{
+                            "and":{
+                              "vals":[{
+                                  "variableRef":{
+                                    "name":"Boot Knife Known"
+                                  }
+                                },{
+                                  "cmp":{
+                                    "op":"OpLe",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"3"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentComboPoints":{
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "cmp":{
+                                    "op":"OpLe",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"80"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentEnergy":{
+                                      }
+                                    }
+                                  }
+                                }]
+                            }
+                          },{
+                            "and":{
+                              "vals":[{
+                                  "not":{
+                                    "val":{
+                                      "variableRef":{
+                                        "name":"Boot Knife Known"
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "cmp":{
+                                    "op":"OpLe",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"80"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentEnergy":{
+                                      }
+                                    }
+                                  }
+                                }]
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":1329549
+                      }
                     }
                   }
                 },{
@@ -546,31 +696,6 @@
                     },
                     "castSpell":{
                       "spellId":{
-                        "spellId":20572
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "cmp":{
-                        "op":"OpGe",
-                        "rhs":{
-                          "const":{
-                            "val":"1.9m"
-                          }
-                        },
-                        "lhs":{
-                          "spellTimeToReady":{
-                            "spellId":{
-                              "spellId":13750
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
                         "spellId":1259799
                       }
                     }
@@ -625,17 +750,32 @@
                         "vals":[{
                             "or":{
                               "vals":[{
-                                  "cmp":{
-                                    "op":"OpLe",
-                                    "rhs":{
-                                      "const":{
-                                        "val":"15"
-                                      }
-                                    },
-                                    "lhs":{
-                                      "currentEnergy":{
-                                      }
-                                    }
+                                  "and":{
+                                    "vals":[{
+                                        "cmp":{
+                                          "op":"OpLe",
+                                          "rhs":{
+                                            "const":{
+                                              "val":"15"
+                                            }
+                                          },
+                                          "lhs":{
+                                            "currentEnergy":{
+                                            }
+                                          }
+                                        }
+                                      },{
+                                        "not":{
+                                          "val":{
+                                            "talentIsKnown":{
+                                              "talentId":{
+                                                "spellId":1316709,
+                                                "rank":1
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }]
                                   }
                                 },{
                                   "and":{
@@ -659,10 +799,39 @@
                                           }
                                         }
                                       },{
-                                        "auraIsActive":{
-                                          "includeReactionTime":true,
-                                          "auraId":{
-                                            "spellId":1259812
+                                        "cmp":{
+                                          "op":"OpLe",
+                                          "rhs":{
+                                            "const":{
+                                              "val":"25"
+                                            }
+                                          },
+                                          "lhs":{
+                                            "currentEnergy":{
+                                            }
+                                          }
+                                        }
+                                      }]
+                                  }
+                                },{
+                                  "and":{
+                                    "vals":[{
+                                        "cmp":{
+                                          "op":"OpLe",
+                                          "rhs":{
+                                            "const":{
+                                              "val":"25"
+                                            }
+                                          },
+                                          "lhs":{
+                                            "currentEnergy":{
+                                            }
+                                          }
+                                        }
+                                      },{
+                                        "dotIsActive":{
+                                          "spellId":{
+                                            "spellId":1325758
                                           }
                                         }
                                       }]
@@ -709,27 +878,6 @@
                 },{
                   "action":{
                     "condition":{
-                      "and":{
-                        "vals":[{
-                            "not":{
-                              "val":{
-                                "variableRef":{
-                                  "name":"SnD Fall Imminent"
-                                }
-                              }
-                            }
-                          }]
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":13877
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
                       "cmp":{
                         "op":"OpLe",
                         "rhs":{
@@ -746,6 +894,117 @@
                     "castSpell":{
                       "spellId":{
                         "spellId":14183
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "const":{
+                                  "val":"4"
+                                }
+                              },
+                              "lhs":{
+                                "currentComboPoints":{
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":1325758
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "or":{
+                              "vals":[{
+                                  "talentIsKnown":{
+                                    "talentId":{
+                                      "spellId":1329256,
+                                      "rank":1
+                                    }
+                                  }
+                                },{
+                                  "talentIsKnown":{
+                                    "talentId":{
+                                      "spellId":16511,
+                                      "rank":1
+                                    }
+                                  }
+                                }]
+                            }
+                          },{
+                            "or":{
+                              "vals":[{
+                                  "cmp":{
+                                    "op":"OpGe",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"3"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "currentComboPoints":{
+                                      }
+                                    }
+                                  }
+                                }]
+                            }
+                          },{
+                            "not":{
+                              "val":{
+                                "dotIsActive":{
+                                  "spellId":{
+                                    "spellId":11275
+                                  }
+                                }
+                              }
+                            }
+                          },{
+                            "not":{
+                              "val":{
+                                "variableRef":{
+                                  "name":"Fight About to End"
+                                }
+                              }
+                            }
+                          },{
+                            "not":{
+                              "val":{
+                                "variableRef":{
+                                  "name":"Expose - Prevent Other Finishers"
+                                }
+                              }
+                            }
+                          },{
+                            "not":{
+                              "val":{
+                                "talentIsKnown":{
+                                  "talentId":{
+                                    "spellId":1310711,
+                                    "rank":1
+                                  }
+                                }
+                              }
+                            }
+                          }]
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":11275
                       }
                     }
                   }
@@ -784,119 +1043,6 @@
                       "spellId":{
                         "spellId":6774,
                         "rank":2
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "and":{
-                        "vals":[{
-                            "auraIsInactive":{
-                              "includeReactionTime":true,
-                              "auraId":{
-                                "spellId":1310703
-                              }
-                            }
-                          },{
-                            "cmp":{
-                              "op":"OpGe",
-                              "rhs":{
-                                "const":{
-                                  "val":"3"
-                                }
-                              },
-                              "lhs":{
-                                "currentComboPoints":{
-                                }
-                              }
-                            }
-                          },{
-                            "not":{
-                              "val":{
-                                "variableRef":{
-                                  "name":"Expose - Prevent Other Finishers"
-                                }
-                              }
-                            }
-                          }]
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":1310703
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "and":{
-                        "vals":[{
-                            "cmp":{
-                              "op":"OpGe",
-                              "rhs":{
-                                "const":{
-                                  "val":"3"
-                                }
-                              },
-                              "lhs":{
-                                "currentComboPoints":{
-                                }
-                              }
-                            }
-                          },{
-                            "not":{
-                              "val":{
-                                "dotIsActive":{
-                                  "spellId":{
-                                    "spellId":11275
-                                  }
-                                }
-                              }
-                            }
-                          },{
-                            "or":{
-                              "vals":[{
-                                  "auraIsKnown":{
-                                    "auraId":{
-                                      "spellId":1310723
-                                    }
-                                  }
-                                },{
-                                  "auraIsActive":{
-                                    "includeReactionTime":true,
-                                    "sourceUnit":{
-                                      "type":"CurrentTarget"
-                                    },
-                                    "auraId":{
-                                      "spellId":16511
-                                    }
-                                  }
-                                }]
-                            }
-                          },{
-                            "not":{
-                              "val":{
-                                "variableRef":{
-                                  "name":"Fight About to End"
-                                }
-                              }
-                            }
-                          },{
-                            "not":{
-                              "val":{
-                                "variableRef":{
-                                  "name":"Expose - Prevent Other Finishers"
-                                }
-                              }
-                            }
-                          }]
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":11275
                       }
                     }
                   }
@@ -1006,7 +1152,7 @@
                                         "spellIsKnown":{
                                           "spellId":{
                                             "spellId":1241584,
-                                            "rank":4
+                                            "rank":3
                                           }
                                         }
                                       }]
@@ -1076,49 +1222,21 @@
                                 }]
                             }
                           },{
-                            "or":{
-                              "vals":[{
-                                  "not":{
-                                    "val":{
-                                      "talentIsKnown":{
-                                        "talentId":{
-                                          "spellId":1310721,
-                                          "rank":1
-                                        }
-                                      }
-                                    }
-                                  }
-                                },{
-                                  "cmp":{
-                                    "op":"OpGe",
-                                    "rhs":{
-                                      "const":{
-                                        "val":"4"
-                                      }
-                                    },
-                                    "lhs":{
-                                      "dotRemainingTime":{
-                                        "spellId":{
-                                          "spellId":11275
-                                        }
-                                      }
-                                    }
-                                  }
-                                },{
-                                  "variableRef":{
-                                    "name":"In Danger of Energy Capping"
-                                  }
-                                },{
-                                  "variableRef":{
-                                    "name":"Fight About to End"
-                                  }
-                                }]
-                            }
-                          },{
                             "not":{
                               "val":{
                                 "variableRef":{
                                   "name":"Expose - Prevent Other Finishers"
+                                }
+                              }
+                            }
+                          },{
+                            "not":{
+                              "val":{
+                                "talentIsKnown":{
+                                  "talentId":{
+                                    "spellId":1316709,
+                                    "rank":1
+                                  }
                                 }
                               }
                             }
@@ -1134,8 +1252,43 @@
                 },{
                   "action":{
                     "condition":{
-                      "variableRef":{
-                        "name":"Current Points less than 5"
+                      "and":{
+                        "vals":[{
+                            "variableRef":{
+                              "name":"Current Points less than 5"
+                            }
+                          },{
+                            "or":{
+                              "vals":[{
+                                  "not":{
+                                    "val":{
+                                      "frontOfTarget":{
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "variableRef":{
+                                    "name":"Dirty Deeds Known"
+                                  }
+                                }]
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpLe",
+                              "rhs":{
+                                "const":{
+                                  "val":"4s"
+                                }
+                              },
+                              "lhs":{
+                                "dotRemainingTime":{
+                                  "spellId":{
+                                    "spellId":11290
+                                  }
+                                }
+                              }
+                            }
+                          }]
                       }
                     },
                     "castSpell":{
@@ -1189,7 +1342,7 @@
                                 "auraIsActive":{
                                   "includeReactionTime":true,
                                   "auraId":{
-                                    "spellId":462707
+                                    "spellId":1329326
                                   }
                                 }
                               }
@@ -1367,7 +1520,7 @@
                     "castSpell":{
                       "spellId":{
                         "spellId":1241584,
-                        "rank":4
+                        "rank":3
                       }
                     }
                   }
@@ -1458,6 +1611,37 @@
                             "variableRef":{
                               "name":"Gnome Eureka - Active or Not Ready"
                             }
+                          },{
+                            "or":{
+                              "vals":[{
+                                  "cmp":{
+                                    "op":"OpGe",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"8s"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "dotRemainingTime":{
+                                        "spellId":{
+                                          "spellId":11290
+                                        }
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "not":{
+                                    "val":{
+                                      "talentIsKnown":{
+                                        "talentId":{
+                                          "spellId":14278,
+                                          "rank":1
+                                        }
+                                      }
+                                    }
+                                  }
+                                }]
+                            }
                           }]
                       }
                     },
@@ -1477,7 +1661,7 @@
                                 "spellIsKnown":{
                                   "spellId":{
                                     "spellId":1241584,
-                                    "rank":4
+                                    "rank":3
                                   }
                                 }
                               }
@@ -1595,7 +1779,7 @@
                   },
                   "doAtValue":{
                     "const":{
-                      "val":"-2s"
+                      "val":"-3"
                     }
                   }
                 },{
@@ -1613,6 +1797,11 @@
                   }
                 },{
                   "action":{
+                    "condition":{
+                      "variableRef":{
+                        "name":"Start In Stealth"
+                      }
+                    },
                     "castSpell":{
                       "spellId":{
                         "spellId":1787,
@@ -1627,6 +1816,13 @@
                   }
                 }],
               "valueVariables":[{
+                  "name":"Start In Stealth",
+                  "value":{
+                    "const":{
+                      "val":"false"
+                    }
+                  }
+                },{
                   "name":"Use Backstab",
                   "value":{
                     "const":{
@@ -1641,7 +1837,7 @@
                     }
                   }
                 },{
-                  "name":"Use Stealth/Vanish for Damage",
+                  "name":"Use Vanish for Damage",
                   "value":{
                     "const":{
                       "val":"true"
@@ -1649,6 +1845,13 @@
                   }
                 },{
                   "name":"Use Ambush Opener",
+                  "value":{
+                    "const":{
+                      "val":"false"
+                    }
+                  }
+                },{
+                  "name":"Prio Slice and Dice",
                   "value":{
                     "const":{
                       "val":"false"
@@ -1673,20 +1876,28 @@
                 },{
                   "name":"SnD Fall Imminent",
                   "value":{
-                    "cmp":{
-                      "op":"OpLe",
-                      "rhs":{
-                        "const":{
-                          "val":"2s"
-                        }
-                      },
-                      "lhs":{
-                        "auraRemainingTime":{
-                          "auraId":{
-                            "spellId":6774
+                    "and":{
+                      "vals":[{
+                          "cmp":{
+                            "op":"OpLe",
+                            "rhs":{
+                              "const":{
+                                "val":"2s"
+                              }
+                            },
+                            "lhs":{
+                              "auraRemainingTime":{
+                                "auraId":{
+                                  "spellId":6774
+                                }
+                              }
+                            }
                           }
-                        }
-                      }
+                        },{
+                          "variableRef":{
+                            "name":"Prio Slice and Dice"
+                          }
+                        }]
                     }
                   }
                 },{
@@ -1708,17 +1919,25 @@
                 },{
                   "name":"Above SnD Point Threshold",
                   "value":{
-                    "cmp":{
-                      "op":"OpGe",
-                      "rhs":{
-                        "const":{
-                          "val":"1"
-                        }
-                      },
-                      "lhs":{
-                        "currentComboPoints":{
-                        }
-                      }
+                    "or":{
+                      "vals":[{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "const":{
+                                "val":"1"
+                              }
+                            },
+                            "lhs":{
+                              "currentComboPoints":{
+                              }
+                            }
+                          }
+                        },{
+                          "variableRef":{
+                            "name":"Prio Slice and Dice"
+                          }
+                        }]
                     }
                   }
                 },{
@@ -1993,9 +2212,66 @@
                         }]
                     }
                   }
+                },{
+                  "name":"Boot Knife Known",
+                  "value":{
+                    "or":{
+                      "vals":[{
+                          "talentIsKnown":{
+                            "talentId":{
+                              "spellId":1329286,
+                              "rank":5
+                            }
+                          }
+                        },{
+                          "talentIsKnown":{
+                            "talentId":{
+                              "spellId":1329286,
+                              "rank":4
+                            }
+                          }
+                        },{
+                          "talentIsKnown":{
+                            "talentId":{
+                              "spellId":1329286,
+                              "rank":3
+                            }
+                          }
+                        },{
+                          "talentIsKnown":{
+                            "talentId":{
+                              "spellId":1329286,
+                              "rank":2
+                            }
+                          }
+                        },{
+                          "talentIsKnown":{
+                            "talentId":{
+                              "spellId":1329286,
+                              "rank":1
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Dirty Deeds Known",
+                  "value":{
+                    "talentIsKnown":{
+                      "talentId":{
+                        "spellId":14082,
+                        "rank":2
+                      }
+                    }
+                  }
                 }]
             },
-            "reactionTimeMs":100
+            "rogue":{
+              "options":{
+                "classOptions":{
+                }
+              }
+            }
           }]
       }]
   },

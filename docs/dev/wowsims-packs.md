@@ -329,10 +329,13 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   breaks Prowl) behind Ravage while Prowled. No 'behind the target' signal and no fallback timer: Ravage stays the
   first icon while Prowl is up and the target is in range; Prowl ends when Ravage lands or the player attacks. The
   replay and loop worlds do not know Prowl or Ravage, so they do not see the deviation (unit-tested in druid_spec).
-- Rogue Combat, Riposte (owner R70, 2026-11-06): "add it to the apl and make it focus=1". A recipe `extra` line before
-  Ambush: `riposte,use_off_gcd=1,focus=1,if=buff.riposte_usable.up&energy.lo>=action.riposte.cost`. wowsims never plays
-  it (no parry on us in its fight), so it moves no replay or loop number; the window is the kit's `riposte_usable`
-  (Rogue.lua, from the client's usability answer; a window migration is planned, L138). Not checked in game.
+- Rogue Combat, Riposte (owner R70, 2026-11-06: "add it to the apl and make it focus=1"). A recipe `extra` line before
+  Garrote (the first line left once the new pin's APL dropped its Ambush opener: re-anchored, L143):
+  `riposte,use_off_gcd=1,focus=1,if=energy.lo>=action.riposte.cost`. The 5 s parry window is the kit's registered window
+  `riposte` (Rogue.lua, evaluator = the client's usability answer: L138 migrated), which Riposte's own `usable` reads, so
+  the line carries no window term (a recipe `extra` line cannot name a kit window: the translator treats `window.X` as a
+  sequence's). wowsims never plays it (no parry on us in its fight; at 4b0030a44b the Combat SS build does not take the
+  talent), so it moves no replay or loop number. Not checked in game.
 - Priest Shadow, Starshards (owner 2026-11-07: Starshards by user preference replaces spellExpectedDpet default #11): upstream's
   default #11 casts Starshards when its expected damage per execution time beats Mind Flay's and Mind Blast is 4 s or more from
   ready; the translator cannot compute the first term (CN5). A recipe `extra` line before Mind Flay,

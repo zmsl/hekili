@@ -22,10 +22,11 @@ local KIT = {
     riposte = { { 14251 }, 10, 6, "off" }, -- off the GCD (DB2); owner R70: on the Combat priority, in the parry window
     ambush = { { 8676, 8724, 8725, 11267, 11268, 11269 }, 60, 0, "totem" },
     garrote = { { 703, 8631, 8632, 8633, 11289, 11290 }, 50, 0, "totem" },
-    mutilate = { { 1310707, 399956, 1241582, 1241584 }, 60, 0, "totem" },
+    mutilate = { { 399956, 1241582, 1241584 }, 60, 0, "totem" },
     hemorrhage = { { 16511 }, 35, 0, "totem" },
     ghostly_strike = { { 14278 }, 40, 20, "totem" },
-    venom = { { 1310703 }, 25, 0, "totem" },
+    shank = { { 1329283, 1329549 }, 5, 10, "totem" },
+    death_mark = { { 1316709, 1325756, 1325757, 1325758 }, 25, 10, "totem" },
     adrenaline_rush = { { 13750 }, 0, 300, "totem" },
     blade_flurry = { { 13877 }, 25, 120, "totem" },
     cold_blood = { { 14177 }, 0, 180, "off" },
@@ -71,6 +72,7 @@ describe("Forever Rogue", function()
         assert.are.same({
             "ambush",
             "backstab",
+            "death_mark",
             "eviscerate",
             "expose_armor",
             "garrote",
@@ -92,11 +94,15 @@ describe("Forever Rogue", function()
                 n = n + 1
                 local want = assert(KIT[key], "unexpected ability " .. key)
                 assert.are.same(want[1], idsOf(a), key)
-                assert.are.same({ want[2], want[3], want[4] }, { ld.run(a.spend, e) or 0, a.cooldown, a.gcd }, key)
+                assert.are.same(
+                    { want[2], want[3], want[4] },
+                    { ld.run(a.spend, e) or 0, ld.run(a.cooldown, e), a.gcd },
+                    key
+                )
                 assert.are.equal("function", type(a.known), key)
             end
         end
-        assert.are.equal(21, n)
+        assert.are.equal(22, n)
         assert.are.same({ 8928, 8927, 8926, 6950, 6949, 6947 }, w.abilities.instant_poison.items)
         assert.are.same({ 20844, 8985, 8984, 2893, 2892 }, w.abilities.deadly_poison.items)
         assert.are.equal("cooldowns", w.abilities.vanish.toggle) -- the native Cooldowns toggle (APL usability audit B)
@@ -104,12 +110,12 @@ describe("Forever Rogue", function()
         assert.is_nil(w.options)
     end)
 
-    it("places every DB2 talent in a tree and keeps the Forever-only ones at tree 0", function()
+    it("places every talent in a tree (wowsims/forever's logs place the re-pin's new ones)", function()
         local n = { [0] = 0, 0, 0, 0 }
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 3, 15, 19, 17 }, n)
+        assert.are.same({ [0] = 0, 15, 23, 20 }, n)
     end)
 
     it("models the talent-modified costs, floored at 0", function()
@@ -117,10 +123,10 @@ describe("Forever Rogue", function()
         local function at(key)
             return ld.run(w.abilities[key].spend, e)
         end
-        -- rank 1's value x the rank: Flawless Execution -10, Improved Expose Armor -10; the DB2 value as the whole
-        -- talent's (wowsims/forever's casts at 2/2: Sinister Strike 40, Garrote 30): Improved Sinister Strike -5,
-        -- Dirty Deeds -20
-        local keys = { "sinister_strike", "eviscerate", "expose_armor", "garrote" }
+        -- Dirty Deeds -10 a rank; Flawless Execution -15 (one rank); Improved Expose Armor {-5, -10} and Efficient
+        -- Strikes {-3, -5} by rank, the latter on Sinister Strike and Hemorrhage (the logs: 40 and 30 at 2/2;
+        -- wowsims/forever 4b0030a44b)
+        local keys = { "sinister_strike", "eviscerate", "expose_armor", "garrote", "hemorrhage" }
         local function all()
             local out = {}
             for i, k in ipairs(keys) do
@@ -128,23 +134,47 @@ describe("Forever Rogue", function()
             end
             return out
         end
-        assert.are.same({ 40, 15, 5, 30 }, all())
+        assert.are.same({ 40, 5, 15, 30, 30 }, all()) -- Eviscerate: rank 2 is past Flawless Execution's max (1)
         e.talent = rank(1) -- RL5: no rank past a talent's max
-        assert.are.same({ 42.5, 25, 15, 40 }, all())
+        assert.are.same({ 42, 20, 20, 40, 32 }, all())
     end)
 
-    it("takes 3 energy a Thousand Cuts stack off Backstab and Hemorrhage (1310723: misc 14 -3)", function()
-        assert.are.same({ 10, 5 }, { w.auras.thousand_cuts.duration, w.auras.thousand_cuts.max_stack })
-        e.buff.thousand_cuts.stack = 2
-        assert.are.same({ 54, 29, 60 }, {
-            ld.run(w.abilities.backstab.spend, e),
-            ld.run(w.abilities.hemorrhage.spend, e),
-            ld.run(w.abilities.mutilate.spend, e),
-        })
+    it("makes Shank an energy strike with Flash of Steel's curve, Venom's buff, and no combo point", function()
+        local a = w.abilities.shank
+        assert.are.same({ 5, 10 }, { ld.run(a.spend, e), ld.run(a.cooldown, e) })
+        e.talent = rank(5)
+        assert.are.equal(8, ld.run(a.cooldown, e)) -- 10 s - 0.4 s a rank
+        for _, field in ipairs({ "now", "handler" }) do
+            for _, known in ipairs({ { 1329283 }, { 1329283, 1329549 } }) do
+                w.game.known = {}
+                for _, id in ipairs(known) do
+                    w.game.known[id] = true
+                end
+                local env = ld.env(w)
+                env.talent = rank(5)
+                ld.run(a[field], env)
+                -- 15 (rank 1) or 25 (rank 2) energy, +3 a Flash of Steel rank
+                assert.are.same({ { (#known == 2 and 25 or 15) + 15, "energy" } }, env.gained, field)
+                assert.are.same({ "venom" }, env.applied, field)
+            end
+        end
+        w.game.known = { [1329283] = true }
+        local env = ld.env(w)
+        env.talent = rank(0)
+        ld.run(a.now, env)
+        assert.are.same({ { 15, "energy" } }, env.gained)
+        assert.are.same({}, env.applied)
+    end)
+
+    it("makes Death Mark a finisher that marks the target for 6 s", function()
+        assert.are.same({ 6, 1325758 }, { w.auras.death_mark.duration, w.auras.death_mark.id })
+        assert.are.same({ 1325758, 1316709, 1325756, 1325757 }, idsOf(w.auras.death_mark))
+        assert.is_true(w.abilities.death_mark.missable)
+        assert.is_true(w.abilities.death_mark.refundOnAvoid)
     end)
 
     it("makes the finishers no ladder rungs, unusable without a combo point", function()
-        for _, key in ipairs({ "eviscerate", "slice_and_dice", "rupture", "expose_armor", "venom" }) do
+        for _, key in ipairs({ "eviscerate", "slice_and_dice", "rupture", "expose_armor", "death_mark" }) do
             local a = w.abilities[key]
             assert.is_false(a.ladder, key)
             e.combo_points.current = 0
@@ -155,30 +185,39 @@ describe("Forever Rogue", function()
         assert.is_nil(w.abilities.sinister_strike.ladder)
     end)
 
-    it("sets the finishers' durations by combo points; Relentless Strikes refunds 25 only at 5", function()
-        local function run(key, cp, field, talents)
-            local env = ld.env(w)
-            env.talent = talents or rank(0)
-            env.combo_points.current = cp
-            ld.run(w.abilities[key][field], env)
-            return env
+    it(
+        "sets the finishers' durations by combo points; Relentless Strikes refunds 25 only at 5 ranks and 5 points",
+        function()
+            local function run(key, cp, field, talents)
+                local env = ld.env(w)
+                env.talent = talents or rank(0)
+                env.combo_points.current = cp
+                ld.run(w.abilities[key][field], env)
+                return env
+            end
+            for _, field in ipairs({ "now", "handler" }) do
+                local s = run("slice_and_dice", 1, field)
+                assert.are.equal(9, s.durations.slice_and_dice, field)
+                local rs5 = setmetatable({}, { -- Improved Slice and Dice 1, Relentless Strikes 5
+                    __index = function(_, k)
+                        local n = k == "relentless_strikes" and 5 or 1
+                        return { rank = n, enabled = true }
+                    end,
+                })
+                s = run("slice_and_dice", 5, field, rs5)
+                assert.is_true(math.abs(s.durations.slice_and_dice - 21 * 1.15) < 1e-9, field)
+                assert.are.same({ { 25, "energy" } }, s.gained, field)
+                assert.are.same({}, run("slice_and_dice", 4, field, rs5).gained, field)
+                assert.are.same({}, run("slice_and_dice", 5, field, rank(4)).gained, field) -- 4 ranks: chance, not certain
+                assert.are.equal(16, run("rupture", 5, field).durations.rupture, field)
+            end
+            -- the sim spends the points; the belief's poll reads them (no `now` spend)
+            assert.are.same({ { 3, "combo_points" } }, run("eviscerate", 3, "handler").spent)
+            assert.are.same({}, run("eviscerate", 3, "now").spent)
         end
-        for _, field in ipairs({ "now", "handler" }) do
-            local s = run("slice_and_dice", 1, field)
-            assert.are.equal(9, s.durations.slice_and_dice, field)
-            s = run("slice_and_dice", 5, field, rank(1)) -- Improved Slice and Dice 1, Relentless Strikes
-            assert.is_true(math.abs(s.durations.slice_and_dice - 21 * 1.15) < 1e-9, field)
-            assert.are.same({ { 25, "energy" } }, s.gained, field)
-            assert.are.same({}, run("slice_and_dice", 4, field, rank(1)).gained, field)
-            assert.are.equal(16, run("rupture", 5, field).durations.rupture, field)
-            assert.are.equal(15, run("venom", 3, field).durations.venom, field)
-        end
-        -- the sim spends the points; the belief's poll reads them (no `now` spend)
-        assert.are.same({ { 3, "combo_points" } }, run("eviscerate", 3, "handler").spent)
-        assert.are.same({}, run("eviscerate", 3, "now").spent)
-    end)
+    )
 
-    it("opens from Stealth or Vanish only (Ambush also on Cutthroat), the opener breaking them", function()
+    it("opens from Stealth, Vanish or a Ghostly Strike, the opener breaking them", function()
         local function usable(key, up)
             local env = ld.env(w)
             env.buff = setmetatable({}, {
@@ -191,11 +230,11 @@ describe("Forever Rogue", function()
         assert.is_false(usable("ambush", {}))
         assert.is_true(usable("ambush", { stealth = true }))
         assert.is_true(usable("ambush", { vanish = true }))
-        assert.is_true(usable("ambush", { cutthroat = true }))
-        assert.is_false(usable("garrote", { cutthroat = true }))
+        assert.is_true(usable("ambush", { ghostly_strike_next = true }))
+        assert.is_true(usable("garrote", { ghostly_strike_next = true }))
         assert.is_true(usable("garrote", { vanish = true }))
         ld.run(w.abilities.ambush.now, e)
-        assert.are.same({ "stealth", "vanish", "cutthroat", "cold_blood" }, e.removed)
+        assert.are.same({ "stealth", "vanish", "ghostly_strike_next", "cold_blood" }, e.removed)
         assert.is_true(w.abilities.garrote.missable)
         assert.is_true(w.abilities.rupture.missable)
         assert.is_true(w.abilities.hemorrhage.missable)
@@ -204,26 +243,42 @@ describe("Forever Rogue", function()
         assert.are.same({ 11327, 11329 }, idsOf(w.auras.vanish))
     end)
 
-    it("puts Cutthroat up from Ambush's usability out of Stealth, timed from its flip", function()
-        w.game.known[11269] = true -- Ambush rank 6
-        local hook = w.hooks.reset_precast
-        local function reset(t, talentRank, usable)
-            w.game.usable[11269] = usable
-            w.game.now = t
+    it("gives the next Ambush or Garrote from a Ghostly Strike's cast, 7 s, one charge", function()
+        assert.are.same({ 1329326, 7, 1 }, {
+            w.auras.ghostly_strike_next.id,
+            w.auras.ghostly_strike_next.duration,
+            w.auras.ghostly_strike_next.max_stack,
+        })
+        for _, field in ipairs({ "now", "handler" }) do
             local env = ld.env(w)
-            env.talent = rank(talentRank)
-            env.now, env.query_time = t, t
-            ld.run(hook, env)
-            return env
+            ld.run(w.abilities.ghostly_strike[field], env)
+            assert.are.same({ "ghostly_strike", "ghostly_strike_next" }, env.applied, field)
         end
-        assert.are.same({}, reset(10, 1, { false, false }).applied)
-        w.events.SPELL_UPDATE_USABLE() -- the flip, at t = 10
-        assert.are.same({}, reset(11, 0, { true, false }).applied) -- no talent
-        w.game.now = 12
-        w.events.SPELL_UPDATE_USABLE() -- the flip, at t = 12
-        local env = reset(13, 1, { false, true }) -- short only of energy: the proc
-        assert.are.same({ "cutthroat" }, env.applied)
-        assert.are.equal(9, env.durations.cutthroat)
+        e.removed = {}
+        ld.run(w.abilities.garrote.now, e)
+        assert.are.same({ "stealth", "vanish", "ghostly_strike_next" }, e.removed)
+    end)
+
+    -- L139: the window the client's usability answer opens (Riposte usable only in the 5 s after a parry).
+    it("opens the Riposte window on the client's usability flip, 5 s, closing when it flips back", function()
+        local win = w.windows.riposte
+        assert.are.same({ 5, true }, { win.duration, win.close_on_false })
+        local function evaluates(usable)
+            w.game.usable[14251] = usable
+            return win.evaluator()
+        end
+        assert.is_false(evaluates({ true, false })) -- no talent: not known
+        w.game.known[14251] = true
+        assert.is_false(evaluates({ false, false }))
+        assert.is_true(evaluates({ true, false }))
+        assert.is_true(evaluates({ false, true })) -- short only of energy: still the window
+        assert.is_false(evaluates({ false, false }))
+        -- the cast closes it, in the belief (now) and in the forecast (handler)
+        for _, field in ipairs({ "now", "handler" }) do
+            local env = ld.env(w)
+            ld.run(w.abilities.riposte[field], env)
+            assert.are.same({ "riposte" }, env.closed, field)
+        end
     end)
 
     it("doubles energy regen while Adrenaline Rush is up (a regen mult), combo points and energy bare", function()
@@ -324,14 +379,13 @@ describe("Forever Rogue priorities", function()
         end
     end)
 
-    it("flags Slice and Dice at tier 1 in every pack; Subtlety's Rupture at 1, Ambush at none", function()
+    it("flags Slice and Dice at tier 1 in every pack, and Subtlety's Rupture", function()
         for _, name in ipairs(PACKS) do
             local _, snd = line(name, "slice_and_dice")
             assert.are.equal(1, snd.focus, name)
         end
-        local _, a = line("Subtlety (wowsims.com)", "ambush")
         local _, r = line("Subtlety (wowsims.com)", "rupture")
-        assert.are.same({ nil, 1 }, { a.focus, r.focus }) -- Rupture 1 in every pack (focus_roles_spec.lua)
+        assert.are.equal(1, r.focus) -- Rupture 1 in every pack (focus_roles_spec.lua)
     end)
 end)
 
