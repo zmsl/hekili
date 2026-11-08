@@ -310,15 +310,39 @@ class token, a missing pack, a mismatch or a failed pack load keeps one notice, 
 
 **What bumps what.** A class release bumps `## Version` in its pack's TOC. `CONTENT_API` and every content TOC's
 `## X-Hekili-ContentAPI` change together, only when the content surface changes: the Register* API, `Hekili.Client`,
-or the environment names above (10: `Hekili:GetLocale`, the packs' `Locales/`). `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
+or the environment names above (now 12: 10 added `Hekili:GetLocale` and the packs' `Locales/`, 11 the aura field
+`enchants`, 12 `kit:RegisterSelector`). `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
 
-**Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`) from the
-talent tree with the most points: the spec the character activated for that tree
-(`profile.specChoice["Name-Realm"] = { [tree] = key, last = tree }`), else the tree's first spec; on no points or a
-tie, the last dominant tree seen; with none seen, the first supported spec. A respec or dual-spec swap that moves the
-dominant tree therefore switches the spec, and two builds of one tree share its choice. The choice is written only by a
-spec page's "Activate <Spec>" button or `/hekili spec <name>`, for the current dominant tree (a pre-table scalar
-choice moves onto it once). On a class's first login after the update a one-time migration (`ns.MigrateTrees`, marked in
+**Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`,
+`Engine/Schema/Selectors.lua`; the tree arithmetic, ids, share keys and migration are `Engine/Schema/Trees.lua`'s) from
+the talent tree with the most points: the spec the character activated for that tree
+(`profile.specChoice["Name-Realm"] = { [tree] = key, last = tree }`) when the player activated one of its packs
+(`packManual`); else the first of the class's **selectors** that holds; else the spec stored for the tree (a choice from
+before pack-level activation, or one whose pack went back to the default); else the tree's first spec; on no points or a tie, the last dominant tree seen; with none seen, the first
+supported spec. A respec or dual-spec swap that moves the dominant tree therefore switches the spec, and two builds of
+one tree share its choice. Activation is at the pack level (owner 2026-11-08): `Hekili:ActivatePack` (the spec page's
+Priority, a pack's Active toggle, `/hekili priority <name>`, and the "Activate <Spec>" button and `/hekili spec <name>`,
+which activate that spec's pack in place) marks the pack the player's and writes its spec as the choice for the
+current dominant tree (a pre-table scalar choice moves onto it once).
+
+**Selectors** (after the Hekili classic branch's pack selectors; no user toggle). A class kit registers
+`spec:RegisterSelector(key, { spec = "<spec key>", pack = "<built-in pack>" }, function(tab1, tab2, tab3) ... end)`
+(Spec.lua stores them in order; specific before general). The condition gets the points per tree and runs in one reused
+environment: `talent.<name>.rank` (the kit's talents, the talent walk's ranks), `level`, `max`, `min`. They run on
+login, a talent change and a spec change (SpecializationChanged's pick and SettleSpecChoice), never per poll, each
+under `pcall`: one that raises counts as false and on `kit.selectorErrors` (the snapshot's `spec:` line shows the count
+and the last message; a selector pick shows as `(selector <key>)`). A selector whose spec is unsupported is skipped. The
+first that holds picks its spec, unless the player activated a pack for the tree, and, in SettleSpecChoice and again
+after
+RestoreDefaults (the built-ins exist only then at login), its pack (`ns.SelectPack`) on `profile.specs[id]`:
+`packManual = true` marks the player's pick (ActivatePack's callers; cleared by `/hekili priority default`, a toggle back to the default, a delete or retire fallback), and
+`packAuto = "<name>"` the pack a selector set. A selector writes only a built-in pack bound to that spec, and only over
+the default or its own `packAuto` pick: any other value (a custom priority, `(none)`, a profile's pick from before
+selectors) stays. With no selector holding, a pack still equal to `packAuto` goes back to the default; with no points or a
+tie (a walk before the ranks arrive, a talent wipe) the last spec settled with points (source `held`) and
+its pack hold, unless the player activated a pack for the tree; a first login or /reload with no settle yet falls to
+the rule above. One notice says so when a selector switches the
+pack, or the spec after the first settle with points (never at login). On a class's first login after the update a one-time migration (`ns.MigrateTrees`, marked in
 `profile.specMigrated[<TOKEN>]`) merges the legacy pseudo-spec profile (the client's id, now read for nothing else:
 Rogue 1488 and Warrior 1491 read in game; Druid 1483, Hunter 1484, Paladin 1486, Shaman 1489 assumed) into every
 supported spec, value by

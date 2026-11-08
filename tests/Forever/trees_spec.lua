@@ -1,10 +1,11 @@
 -- tests/Forever/trees_spec.lua (per-spec plan, docs/superpowers/plans/2026-10-19-forever-specs.md): the pure rules of
--- src/Hekili/Engine/Schema/Trees.lua (ids, points per talent tree, the active-spec pick, share keys), and
+-- src/Hekili/Engine/Schema/Trees.lua (ids, points per talent tree, share keys) and Selectors.lua (the active-spec pick), and
 -- Hekili:NewClass on the engine headless (tests/Forever/helpers/engine.lua).
 
 local function trees()
     local ns = {}
     assert(loadfile("src/Hekili/Engine/Schema/Trees.lua"))("Hekili", ns)
+    assert(loadfile("src/Hekili/Engine/Schema/Selectors.lua"))("Hekili", ns)
     return ns
 end
 

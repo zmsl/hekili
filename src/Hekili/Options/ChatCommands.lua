@@ -624,7 +624,8 @@ function Hekili:HandlePriorityCommand( args )
 
         -- Set the default priority if found
         if defaultPriority then
-            Hekili.DB.profile.specs[ spec ].package = defaultPriority
+            local sp = Hekili.DB.profile.specs[ spec ]
+            sp.package, sp.packManual, sp.packAuto = defaultPriority, nil, nil -- the selectors may pick again
             local output = format(L["Switched to the built-in default priority for your specialization: %s%s|r."], Hekili.DB.profile.packs[ defaultPriority ].builtIn and BlizzBlue or "|cFFFFD100", defaultPriority )
             self:Print( output )
             self:ForceUpdate( "CLI_TOGGLE" )
@@ -660,7 +661,7 @@ function Hekili:HandlePriorityCommand( args )
 
     for _, priority in ipairs( priorities ) do
         if priority:lower():match( pattern ) then
-            Hekili.DB.profile.specs[ spec ].package = priority
+            self:ActivatePack( spec, priority ) -- the player's: no selector replaces it
             local output = format( L["Priority set to %s%s|r."], Hekili.DB.profile.packs[ priority ].builtIn and BlizzBlue or "|cFFFFD100", priority )
             self:Print( output )
             self:ForceUpdate( "CLI_TOGGLE" )

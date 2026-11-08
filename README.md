@@ -67,6 +67,7 @@ See [DEVELOPMENT.md](https://github.com/zmsl/hekili/blob/forever/DEVELOPMENT.md)
 ## Credits
 Based on the original work by Hekili: https://github.com/Hekili/hekili (Hekili and its maintainers). Hekili Forever is
 published with the original author's explicit permission. Author: [defzach](https://github.com/zmsl).
+Choosing a priority from your talents follows the pack selectors of Hekili's classic branch (the idea and its shape).
 Bundled libraries (Ace3, LibStub, LibSharedMedia-3.0, LibDBIcon-1.0, LibDataBroker-1.1 and others) belong to their
 authors under [their own licences](https://github.com/zmsl/hekili/blob/forever/src/Hekili/Libs/CREDITS.md).
 

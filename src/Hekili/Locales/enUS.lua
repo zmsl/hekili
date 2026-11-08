@@ -31,6 +31,8 @@ L["The %s, and |cFFFFD100%s|r priorities were updated."] = true
 L["The |cFFFFD100%s|r priority was reverted."] = true
 L["The |cFFFFD100%s|r and |cFFFFD100%s|r priorities were reverted."] = true
 L["The %s, and |cFFFFD100%s|r priorities were reverted."] = true
+L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = true
+L["%s, picked from your talents."] = true
 
 -- Hekili/Options/ChatCommands.lua
 L["Invalid command. Type '/hekili help' to see the available commands."] = true

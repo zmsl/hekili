@@ -9,7 +9,7 @@ local Facade = ns.Facade
 local C_Item, C_SpecializationInfo, C_Spell = Facade.C_Item, Facade.C_SpecializationInfo, Facade.C_Spell
 local GetSpecializationInfoByID, GetTime, InCombatLockdown, UnitAttackSpeed = Facade.GetSpecializationInfoByID, Facade.GetTime, Facade.InCombatLockdown, Facade.UnitAttackSpeed
 local UnitCanAttack, UnitCastingInfo, UnitChannelInfo, UnitClassBase = Facade.UnitCanAttack, Facade.UnitCastingInfo, Facade.UnitChannelInfo, Facade.UnitClassBase
-local UnitClass, UnitGUID = Facade.UnitClass, Facade.UnitGUID
+local UnitClass, UnitGUID, UnitLevel = Facade.UnitClass, Facade.UnitGUID, Facade.UnitLevel
 local Hekili = _G[ addon ]
 
 -- The client's spell schools by name (unit-registry spec §5.1): a game concept, not class content. Packs declare an
@@ -1350,6 +1350,22 @@ local HekiliSpecMixin = {
         }
     end,
 
+    -- (selectors) A kit's spec and pack chooser, after the Hekili classic branch's RegisterPackSelector: `target` is
+    -- { spec = a spec key of this class, pack = a built-in priority of that spec }, `condition( tab1, tab2, tab3 )`
+    -- the points per tree, run in Selectors.lua's environment (`talent.<name>.rank`, `level`, `max`, `min`) on
+    -- login, a talent change and a spec change. Kept in registration order: put the specific before the general; the
+    -- first that holds picks its spec (unless the player activated another for the tree) and its pack (unless the
+    -- player picked one: ns.SelectPack).
+    RegisterSelector = function( self, key, target, condition )
+        assert( type( key ) == "string", "RegisterSelector: the key is not a string" )
+        assert( type( target ) == "table" and self.specs and self.specs[ target.spec ],
+            "RegisterSelector: " .. key .. "'s spec is not one of the class's" )
+        assert( type( target.pack ) == "string", "RegisterSelector: " .. key .. "'s pack is not a string" )
+        assert( type( condition ) == "function", "RegisterSelector: " .. key .. "'s condition is not a function" )
+        self.selectors = self.selectors or {}
+        insert( self.selectors, { key = key, spec = target.spec, pack = target.pack, condition = condition } )
+    end,
+
     -- Built-in packs the class no longer ships (wowsims packs plan, Task 1): RestoreDefaults drops their saved copies
     -- and points a spec that chose one back at its default.
     RetirePacks = function( self, names )
@@ -1621,7 +1637,7 @@ function Hekili:RestoreDefaults()
             for id, sp in pairs( p.specs ) do
                 -- AceDB copies a scalar default in (no __index), so nil would stay nil until the next login.
                 if type( sp ) == "table" and rawget( sp, "package" ) == k then
-                    sp.package = ns.DefaultPackage( id )
+                    sp.package, sp.packManual, sp.packAuto = ns.DefaultPackage( id ), nil, nil
                 end
             end
             insert( retired, k )
@@ -1665,9 +1681,13 @@ function Hekili:RestoreDefaults()
                 local def = ns.DefaultPackage( specID )
                 local defPack = def and rawget( p.packs, def )
                 spec.package = defPack and defPack.spec == specID and def or k
+                spec.packManual, spec.packAuto = nil, nil
             end
         end
     end
+
+    -- the selectors' pack (Selectors.lua): at login the settle ran before the built-ins above existed
+    ns.SelectPackForPick()
 
     if #changed > 0 or #reverted > 0 or #retired > 0 then
         self:LoadScripts()
@@ -2345,6 +2365,11 @@ end
 
 Hekili.SpecChangeHistory = {}
 
+-- (selectors) The last settle's pick, selector and dominant tree (nil: no points or a tie, so the last pack holds),
+-- the spec it settled on with points (nil until then: no notice at login; a read with no points
+-- keeps it: PickSpec's `held`), and the notice due.
+local picked, pickedBy, pickedTree, settledID, note
+
 function Hekili:SpecializationChanged()
     local currentSpec = GetSpecialization()
     if currentSpec == 5 then currentSpec = 1 end -- no specialization: the first
@@ -2357,11 +2382,14 @@ function Hekili:SpecializationChanged()
         return
     end
 
-    -- The class pack's spec: the one chosen for the dominant tree, else its first (Engine/Schema/Trees.lua). The ranks
+    -- The class pack's spec: the one chosen for the dominant tree, else its first (Engine/Schema/Selectors.lua). The ranks
     -- may be the last walk's here; SettleSpecChoice re-picks after this pass's walk.
     local kit = class.kit
     local tree, source
-    if kit then tree, source = ns.PickSpec( kit, Hekili.Engine.settings.specChoice[ ns.CharKey() ], talentRank ) end
+    local selector
+    if kit then
+        tree, source, _, selector = ns.PickSpec( kit, Hekili.Engine.settings.specChoice[ ns.CharKey() ], talentRank, UnitLevel( "player" ), Hekili.Engine.settings.specs, settledID and class.specs[ settledID ] )
+    end
     local currentID = tree and tree.id or clientID
 
     self.PendingSpecializationChange = false
@@ -2412,6 +2440,7 @@ function Hekili:SpecializationChanged()
     state.spec.clientID = clientID
     state.spec.kitID = kit and kit.id or currentID
     state.spec.source = source or "client"
+    state.spec.selector = selector and selector.key
 
     for k in pairs( state.role ) do
         state.role[ k ] = false
@@ -2656,7 +2685,7 @@ function Hekili:SpecializationChanged()
     self:UpdateDamageDetectionForCLEU()
 end
 
--- This character's spec choice table ({ [tree] = spec key, last = tree }; Trees.lua's PickSpec), made on first use;
+-- This character's spec choice table ({ [tree] = spec key, last = tree }; Selectors.lua's PickSpec), made on first use;
 -- a legacy scalar choice moves onto `tree` (the dominant tree now, else 0) once.
 local function charChoice( tree )
     local all, key = Hekili.Engine.settings.specChoice, ns.CharKey()
@@ -2668,25 +2697,81 @@ local function charChoice( tree )
     return choice
 end
 
+
+local function notifyPick()
+    if note then
+        Hekili:Notify( note, 6 )
+        note = nil
+    end
+end
+
+-- The picked spec's pack as its selector (or none) asks (ns.SelectPack); true when it changed.
+local function selectPack()
+    local settings = Hekili.Engine.settings
+    -- no points or a tie (a walk before the ranks arrive, a talent wipe): keep the last pack (review I2)
+    if not picked or not pickedTree or picked.unsupported or not settings.specs then return false end
+    if not ns.SelectPack( rawget( settings.specs, picked.id ), settings.packs, picked, pickedBy ) then return false end
+    ns.queueGearUpdate() -- the gear re-read rebuilds the usable items for the new pack, as a spec change does
+    Hekili:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
+    local label = Hekili.Engine.Registry.PackLabel
+    note = string.format( L["%s: the |cFFFFD100%s|r priority, picked from your talents."], picked.name, label( settings.specs[ picked.id ].package ) )
+    C_Timer.After( 5, notifyPick )
+    return true
+end
+ns.SelectPackForPick = selectPack -- RestoreDefaults: again once the built-in priorities exist
+
 --- (per-spec plan) After a spec change's talent walk: share keys of imported packs resolved, the dominant tree
---- remembered (a talent swap to another tree activates that tree's spec), and one more pass when this pass's pick
---- (made on the last walk's ranks) was not the settled one.
+--- remembered (a talent swap to another tree activates that tree's spec), the selectors' pack set (Selectors.lua), and
+--- one more pass when this pass's pick (made on the last walk's ranks) was not the settled one.
 function Hekili:SettleSpecChoice( clientID )
     local kit, settings = class.kit, Hekili.Engine.settings
     local tree = ns.DominantTree( ns.TreePoints( kit.talents, talentRank ) )
     local choice = charChoice( tree )
     if tree then choice.last = tree end
-    local pick = ns.PickSpec( kit, choice, talentRank )
+    local pick, source, _, sel = ns.PickSpec( kit, choice, talentRank, UnitLevel( "player" ), settings.specs, settledID and class.specs[ settledID ] )
     if ns.MigrateTrees( settings.specs, settings.packs, settings.specMigrated, kit, clientID, pick ) then
         self:SettingsChanged() -- the migrated settings reach the belief's plain copy (Engine/Schema/Tracked.lua)
     end
     ns.ResolvePackSpecs( settings.packs, class.specByShare )
-    if pick.id ~= state.spec.id then self.PendingSpecializationChange = true end
+    picked, pickedBy, pickedTree = pick, sel, tree
+    local packChanged = selectPack()
+    if pick.id ~= state.spec.id then
+        self.PendingSpecializationChange = true
+        return
+    end
+    -- settled: the pick's source is this walk's (the pass's own pick may have been on the last walk's ranks)
+    state.spec.source, state.spec.selector = source, sel and sel.key
+    -- a selector's spec switch (not the first settle: a login) gets the notice a pack change has not given, on this
+    -- pass or the last one (its notice, still pending, names the spec too)
+    if source == "selector" and not packChanged and not note and settledID and settledID ~= pick.id then
+        note = string.format( L["%s, picked from your talents."], pick.name )
+        C_Timer.After( 5, notifyPick )
+    end
+    if tree then settledID = pick.id end
 end
 
---- Activates a spec for this character's current dominant talent tree (kept until another is activated on that
---- tree) and switches to it at the next frame: `key` is a spec key, or a prefix of one spec's key or name
---- (case-insensitive). Returns the spec, or nil when no spec or more than one matches.
+--- (selectors) Activates a pack, the player's: `name` (nil: the one in place) becomes spec `specID`'s package, marked
+--- the player's (`packManual`: no selector replaces it), and the pack's spec this character's spec for the current
+--- dominant tree (activation is at the pack level, owner 2026-11-08: a spec is active through one of its packs).
+--- The spec page's Priority, a pack's Active toggle, /hekili priority and SetSpecChoice call it. Returns true when
+--- it activated the pack (false: no readable profile for the spec).
+function Hekili:ActivatePack( specID, name )
+    local sp = Hekili.Engine.settings.specs[ specID ]
+    if type( sp ) ~= "table" then return false end
+    if name ~= nil then sp.package = name end
+    sp.packManual, sp.packAuto = true, nil
+    local kit, s = class.kit, class.specs[ specID ]
+    if not kit or not s or rawget( s, "kit" ) ~= kit then return true end -- a spec outside the class kit
+    local tree = ns.DominantTree( ns.TreePoints( kit.talents, talentRank ) )
+    local choice = charChoice( tree )
+    choice[ tree or choice.last or 0 ] = s.key
+    self.PendingSpecializationChange = true
+    return true
+end
+
+--- Activates a spec for this character's current dominant talent tree through its pack in place (ActivatePack: kept
+--- until another pack is activated on that tree) and switches to it at the next frame: `key` is a spec key, or a
+--- prefix of one spec's key or name (case-insensitive). Returns the spec, or nil when no spec or more than one matches.
 function Hekili:SetSpecChoice( key )
     local kit = class.kit
     if not kit or type( key ) ~= "string" then return end
@@ -2701,10 +2786,7 @@ function Hekili:SetSpecChoice( key )
         end
     end
     if not s then return end
-    local tree = ns.DominantTree( ns.TreePoints( kit.talents, talentRank ) )
-    local choice = charChoice( tree )
-    choice[ tree or choice.last or 0 ] = s.key
-    self.PendingSpecializationChange = true
+    if not self:ActivatePack( s.id ) then return end
     return s
 end
 

@@ -681,6 +681,14 @@ spec:RegisterTalents({
     ice_barrier = { 3, 11426, 1 },
 })
 
+-- Pack from the talents (Engine/Schema/Selectors.lua; after the Hekili classic branch's pack selectors). Fire and
+-- Frostfire are both Fire's (the tree with the most points): wowsims's Frostfire build is 0/29/22, its Fire build
+-- 16/32/3, whose only Frost talent is Elemental Precision; Ice Shards (5/5 in the Frostfire build) marks Frost as the
+-- second tree. Any other Fire build runs Fire's default, Fire (wowsims.com).
+spec:RegisterSelector("frostfire", { spec = "fire", pack = "Frostfire (wowsims.com)" }, function(tab1, tab2, tab3)
+    return tab2 > tab1 and tab2 > tab3 and talent.ice_shards.rank > 0
+end)
+
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
 -- run it, never this block (tests/Forever/mage_spec.lua checks it matches). Each pack's .simc is generated from its
 -- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/mage_*.lua).

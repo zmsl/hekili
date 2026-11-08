@@ -30,7 +30,8 @@ local IsCurrentSpell = C_Spell.IsCurrentSpell
 local floor, max, min = math.floor, math.max, math.min
 
 -- The class kit and its specs (ids the core's: Balance 100111, Feral 100112, Guardian 100113, Restoration 100114).
--- Feral and Guardian ride the Feral Combat tree: its points pick Feral; Guardian is chosen (/hekili spec guardian).
+-- Feral and Guardian ride the Feral Combat tree: its points pick Feral, with Thick Hide 3/3 Guardian (the selector below
+-- RegisterTalents); /hekili spec guardian or feral keeps one for the tree.
 local spec = Hekili:NewClass("DRUID", {
     specs = {
         {
@@ -374,6 +375,15 @@ spec:RegisterTalents({
     improved_regrowth = { 3, 17074, 5 },
     wild_growth = { 3, 408120, 1 },
 })
+
+-- Spec and pack from the talents (Engine/Schema/Selectors.lua; after the Hekili classic branch's pack selectors).
+-- wowsims's Guardian and Feral builds both spend 32 points in Feral Combat; only Guardian takes Thick Hide (3/3, with
+-- Feral Instinct, Lacerate and Primal Bite), so Feral Combat ahead with all of Thick Hide is Guardian (one stray point
+-- does not turn a Feral build). Anything else on the tree is Feral (the tree's first spec), unless the player
+-- activated Guardian for it.
+spec:RegisterSelector("guardian", { spec = "guardian", pack = "Guardian (wowsims.com)" }, function(tab1, tab2, tab3)
+    return tab2 > tab1 and tab2 > tab3 and talent.thick_hide.rank >= 3
+end)
 
 spec:RegisterGear("swarming_idol", GEAR.swarming_idol)
 spec:RegisterGear("grovekeeper_eclipse", unpack(GEAR.grovekeeper_eclipse))
@@ -1914,7 +1924,7 @@ spec:RegisterSetting("maintain_demoralizing_roar", false, {
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc (a wowsims.com
 -- pack's from its recipe, `make wowsims-packs`); edit those and run it, never these blocks
--- (tests/Forever/druid_spec.lua checks they match). Pick one with /hekili priority <name>. Restoration is deferred.
+-- (tests/Forever/druid_spec.lua checks they match). Your talents pick one (the selector); /hekili priority <name> keeps another. Restoration is deferred.
 spec:RegisterPack(
     "Feral (wowsims.com)",
     20261108000,
