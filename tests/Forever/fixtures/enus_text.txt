@@ -5248,6 +5248,39 @@ options.abilities.ravage.toggle	values.interrupts	Interrupts
 options.abilities.ravage.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.ravage.toggle	values.none	None
 options.abilities.ravage.toggle	values.potions	Potions
+options.abilities.reckless_swings	name	Spell 1329555
+options.abilities.reckless_swings.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1329555 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1329555 can be recommended in any type of fight.
+options.abilities.reckless_swings.boss	name	Boss Encounter Only
+options.abilities.reckless_swings.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1329555 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.reckless_swings.clash	name	Clash
+options.abilities.reckless_swings.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1329555.
+options.abilities.reckless_swings.disabled	name	Disable |T136000:0|t Spell 1329555
+options.abilities.reckless_swings.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.reckless_swings.dotCap	name	Maximum Applications
+options.abilities.reckless_swings.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.reckless_swings.hasIcon	name	Icon Replacement
+options.abilities.reckless_swings.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.reckless_swings.keybind	name	Override Keybind Text
+options.abilities.reckless_swings.lineBreak1	name	\032
+options.abilities.reckless_swings.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.reckless_swings.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.reckless_swings.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.reckless_swings.noIcon	name	Icon Replacement
+options.abilities.reckless_swings.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1329555 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.reckless_swings.targetMax	name	Maximum Targets
+options.abilities.reckless_swings.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1329555 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.reckless_swings.targetMin	name	Minimum Targets
+options.abilities.reckless_swings.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.reckless_swings.toggle	name	Require Toggle
+options.abilities.reckless_swings.toggle	values.cooldowns	Cooldowns
+options.abilities.reckless_swings.toggle	values.custom1	Custom 1
+options.abilities.reckless_swings.toggle	values.custom2	Custom 2
+options.abilities.reckless_swings.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.reckless_swings.toggle	values.defensives	Defensives
+options.abilities.reckless_swings.toggle	values.interrupts	Interrupts
+options.abilities.reckless_swings.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.reckless_swings.toggle	values.none	None
+options.abilities.reckless_swings.toggle	values.potions	Potions
 options.abilities.recklessness	name	Spell 1719
 options.abilities.recklessness.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1719 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1719 can be recommended in any type of fight.
 options.abilities.recklessness.boss	name	Boss Encounter Only
@@ -14769,6 +14802,7 @@ options.packs.arms.Arms (wowsims.com).lists.action	values.piercing_howl	|T136000
 options.packs.arms.Arms (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.arms.Arms (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.arms.Arms (wowsims.com).lists.action	values.pummel	|T136000:0|t Spell 6552
+options.packs.arms.Arms (wowsims.com).lists.action	values.reckless_swings	|T136000:0|t Spell 1329555
 options.packs.arms.Arms (wowsims.com).lists.action	values.recklessness	|T136000:0|t Spell 1719
 options.packs.arms.Arms (wowsims.com).lists.action	values.rend	|T136000:0|t Spell 772
 options.packs.arms.Arms (wowsims.com).lists.action	values.retaliation	|T136000:0|t Spell 20230
@@ -14799,31 +14833,32 @@ options.packs.arms.Arms (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r 
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 12328 - |cFFFFD100|cffffd100(fight_remains<=buff.death_wish.duration||fight_remains>(cooldown.death_wish.duration+(buff.death_wish.duration/2)))|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1719 - |cFFFFD100|cffffd100((settings.wowsims_recklessness&settings.wowsims_stance_dance)&(fight_remains<=buff.recklessness.duration||fight_remains>(cooldown.recklessness.duration+(buff.recklessness.duration/2))))|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 12292 - |cFFFFD100|cffffd100active_enemies>1|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 2457 - |cFFFFD100|cffffd100(!settings.wowsims_stance_dance&!buff.battle_stance.up)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 402927
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 12294 - |cFFFFD100|cffffd100settings.wowsims_stance_dance|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2457 - |cFFFFD100|cffffd100((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known||cooldown.overpower.remains<=0))|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 7384 - |cFFFFD100|cffffd100((action.battle_stance.known&prev.1.battle_stance)||(!action.battle_stance.known&((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known||cooldown.overpower.remains<=0))))&(buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known||cooldown.overpower.remains<=0))|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 7384 - |cFFFFD100|cffffd100(!action.battle_stance.known||buff.battle_stance.up)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2458 - |cFFFFD100|cffffd100(!settings.wowsims_stance_dance&active_enemies>=3&rage.lo>=25&gcd.remains<=0&!buff.berserker_stance.up&(!action.whirlwind.known||cooldown.whirlwind.ready))|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1680 - |cFFFFD100|cffffd100(!settings.wowsims_stance_dance&active_enemies>=3)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 12294 - |cFFFFD100|cffffd100!settings.wowsims_stance_dance|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1240193 - |cFFFFD100|cffffd100(!execute_phase&(!action.mortal_strike.known||action.slam.cast<action.mortal_strike.gcd))|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 2457 - |cFFFFD100|cffffd100((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&(!action.rend.known||debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 772 - |cFFFFD100|cffffd100((action.battle_stance.known&prev.1.battle_stance)||(!action.battle_stance.known&((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&(!action.rend.known||debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)))&((!action.rend.known||debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 772 - |cFFFFD100|cffffd100(!execute_phase&(!action.battle_stance.known||buff.battle_stance.up)&debuff.rend.remains<=action.rend.gcd)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1240193 - |cFFFFD100|cffffd100(!execute_phase&(!action.mortal_strike.known||action.slam.cast>=action.mortal_strike.gcd)&mainhand_remains>=mainhand_speed-(0+0.3))|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 1310222 - |cFFFFD100|cffffd100(!execute_phase&(!action.battle_stance.known||buff.battle_stance.up))|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 402927
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 12294 - |cFFFFD100|cffffd100settings.wowsims_stance_dance|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 2457 - |cFFFFD100|cffffd100((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known||cooldown.overpower.remains<=0))|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 7384 - |cFFFFD100|cffffd100((action.battle_stance.known&prev.1.battle_stance)||(!action.battle_stance.known&((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known||cooldown.overpower.remains<=0))))&(buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known||cooldown.overpower.remains<=0))|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 7384 - |cFFFFD100|cffffd100(!action.battle_stance.known||buff.battle_stance.up)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 2458 - |cFFFFD100|cffffd100(((!settings.wowsims_stance_dance&active_enemies>=2)&(!action.whirlwind.known||cooldown.whirlwind.ready))&rage.lo>=25&gcd.remains<=0&!buff.berserker_stance.up)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1680 - |cFFFFD100|cffffd100(!settings.wowsims_stance_dance&active_enemies>=2)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 12294 - |cFFFFD100|cffffd100!settings.wowsims_stance_dance|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1240193 - |cFFFFD100|cffffd100(!action.mortal_strike.known||action.slam.cast<action.mortal_strike.gcd)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 2457 - |cFFFFD100|cffffd100((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&(!action.rend.known||debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 772 - |cFFFFD100|cffffd100((action.battle_stance.known&prev.1.battle_stance)||(!action.battle_stance.known&((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&(!action.rend.known||debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)))&((!action.rend.known||debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 772 - |cFFFFD100|cffffd100(!execute_phase&(!action.battle_stance.known||buff.battle_stance.up)&debuff.rend.remains<=action.rend.gcd)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 1240193 - |cFFFFD100|cffffd100(!execute_phase&(!action.mortal_strike.known||action.slam.cast>=action.mortal_strike.gcd)&mainhand_remains>=mainhand_speed-(0+0.3))|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1310222 - |cFFFFD100|cffffd100(!action.battle_stance.known||buff.battle_stance.up)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 2457 - |cFFFFD100|cffffd100(!settings.wowsims_stance_dance&!buff.battle_stance.up&!((!settings.wowsims_stance_dance&active_enemies>=2)&(!action.whirlwind.known||cooldown.whirlwind.ready)))|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 2458 - |cFFFFD100|cffffd100(settings.wowsims_stance_dance&(!action.battle_stance.known||buff.battle_stance.up)&!buff.overpower_ready.up&(execute_phase||(action.rend.known&debuff.rend.remains>action.rend.gcd)))|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 1680 - |cFFFFD100|cffffd100settings.wowsims_stance_dance|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 5308 - |cFFFFD100|cffffd100execute_phase|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 845 - |cFFFFD100|cffffd100(active_enemies>1&rage.lo>=40)|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 78 - |cFFFFD100|cffffd100(!execute_phase&rage.lo>=90&!talent.improved_slam.enabled)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 2687 - |cFFFFD100|cffffd100rage.lo<90|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 6673 - |cFFFFD100|cffffd100(((!action.mortal_strike.known||cooldown.mortal_strike.remains>=action.mortal_strike.gcd)&(!settings.wowsims_stance_dance||(action.whirlwind.known&cooldown.whirlwind.remains>=action.whirlwind.gcd)))&buff.battle_shout.remains<=10)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 78 - |cFFFFD100|cffffd100!action.mortal_strike.known&rage.lo>=30|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 6343 - |cFFFFD100|cffffd100settings.maintain_thunder_clap&!action.mortal_strike.known&!debuff.thunder_clap.up|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r Spell 7386 - |cFFFFD100|cffffd100!action.mortal_strike.known&debuff.sunder_armor.stack<5|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 2458 - |cFFFFD100|cffffd100(((!settings.wowsims_stance_dance&active_enemies>=2)&(!action.whirlwind.known||cooldown.whirlwind.ready))&!buff.berserker_stance.up&gcd.remains<=0)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 2687 - |cFFFFD100|cffffd100rage.lo<90|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 6673 - |cFFFFD100|cffffd100(((!action.mortal_strike.known||cooldown.mortal_strike.remains>=action.mortal_strike.gcd)&((!settings.wowsims_stance_dance&active_enemies<2)||(action.whirlwind.known&cooldown.whirlwind.remains>=action.whirlwind.gcd)))&buff.battle_shout.remains<=10)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 78 - |cFFFFD100|cffffd100!action.mortal_strike.known&rage.lo>=30|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r Spell 6343 - |cFFFFD100|cffffd100settings.maintain_thunder_clap&!action.mortal_strike.known&!debuff.thunder_clap.up|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r Spell 7386 - |cFFFFD100|cffffd100!action.mortal_strike.known&debuff.sunder_armor.stack<5|r|r
 options.packs.arms.Arms (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.arms.Arms (wowsims.com).lists.action_name	name	Action Name
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.battle_shout	|T136000:0|t Spell 6673
@@ -14863,6 +14898,7 @@ options.packs.arms.Arms (wowsims.com).lists.action_name	values.piercing_howl	|T1
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.pummel	|T136000:0|t Spell 6552
+options.packs.arms.Arms (wowsims.com).lists.action_name	values.reckless_swings	|T136000:0|t Spell 1329555
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.recklessness	|T136000:0|t Spell 1719
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.rend	|T136000:0|t Spell 772
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.retaliation	|T136000:0|t Spell 20230
@@ -14905,6 +14941,7 @@ options.packs.arms.Arms (wowsims.com).lists.buff_name	values.inspiration	|T13600
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.overpower_ready	|T136000:0|t Spell 1282733
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.piercing_howl	|T136000:0|t Spell 12323
+options.packs.arms.Arms (wowsims.com).lists.buff_name	values.reckless_swings	|T136000:0|t Spell 1329555
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.recklessness	|T136000:0|t Spell 1719
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.rend	|T136000:0|t Spell 772
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.retaliation	|T136000:0|t Spell 20230
@@ -19266,6 +19303,7 @@ options.packs.fury.Fury (wowsims.com).lists.action	values.piercing_howl	|T136000
 options.packs.fury.Fury (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.fury.Fury (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.fury.Fury (wowsims.com).lists.action	values.pummel	|T136000:0|t Spell 6552
+options.packs.fury.Fury (wowsims.com).lists.action	values.reckless_swings	|T136000:0|t Spell 1329555
 options.packs.fury.Fury (wowsims.com).lists.action	values.recklessness	|T136000:0|t Spell 1719
 options.packs.fury.Fury (wowsims.com).lists.action	values.rend	|T136000:0|t Spell 772
 options.packs.fury.Fury (wowsims.com).lists.action	values.retaliation	|T136000:0|t Spell 20230
@@ -19298,19 +19336,21 @@ options.packs.fury.Fury (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r 
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 12292 - |cFFFFD100|cffffd100active_enemies>1|r|r
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1680 - |cFFFFD100|cffffd100active_enemies>1|r|r
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffoverpower_weaving|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 5308 - |cFFFFD100|cffffd100execute_phase|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1680
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 402927
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 23881
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 78 - |cFFFFD100|cffffd100((active_enemies=1&!execute_phase&rage.lo>=40)||((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&rage.lo>60))|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 845 - |cFFFFD100|cffffd100(active_enemies>1&rage.lo>=40)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 2457 - |cFFFFD100|cffffd100((settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&(!action.overpower.known||(stance_rage_kept>=action.overpower.cost&cooldown.overpower.remains<buff.overpower_ready.remains))|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 772 - |cFFFFD100|cffffd100((action.battle_stance.known&prev.1.battle_stance)||(!action.battle_stance.known&((settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))))&(settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 772 - |cFFFFD100|cffffd100(settings.wowsims_rend_weave&!execute_phase&!debuff.rend.up&rage.lo>=10)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 2458 - |cFFFFD100|cffffd100((!action.battle_stance.known||buff.battle_stance.up)&!((buff.overpower_ready.up&rage.lo>=5&rage.lo<=73&(!action.overpower.known||cooldown.overpower.ready))||(settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)))|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 18499 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&talent.improved_berserker_rage.enabled)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 6673 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&buff.battle_shout.remains<=10)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 7386 - |cFFFFD100|cffffd100!action.bloodthirst.known&debuff.sunder_armor.stack<5|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1310222 - |cFFFFD100|cffffd100(!action.battle_stance.known||buff.battle_stance.up)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 5308 - |cFFFFD100|cffffd100execute_phase|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1680
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 845 - |cFFFFD100|cffffd100(active_enemies>1&rage.lo>=25)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 402927
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 23881
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 78 - |cFFFFD100|cffffd100((active_enemies=1&!execute_phase&rage.lo>=40)||((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&rage.lo>60))|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 2457 - |cFFFFD100|cffffd100(active_enemies=1&(settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&(!action.overpower.known||(stance_rage_kept>=action.overpower.cost&cooldown.overpower.remains<buff.overpower_ready.remains))|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 772 - |cFFFFD100|cffffd100((action.battle_stance.known&prev.1.battle_stance)||(!action.battle_stance.known&(active_enemies=1&(settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))))&(active_enemies=1&(settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10))|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 772 - |cFFFFD100|cffffd100(settings.wowsims_rend_weave&!execute_phase&!debuff.rend.up&rage.lo>=10)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 2458 - |cFFFFD100|cffffd100((!action.battle_stance.known||buff.battle_stance.up)&!((buff.overpower_ready.up&rage.lo>=5&rage.lo<=73&(!action.overpower.known||cooldown.overpower.ready))||(settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)))|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1329555
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 18499 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&talent.improved_berserker_rage.enabled)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 6673 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&buff.battle_shout.remains<=10)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 7386 - |cFFFFD100|cffffd100!action.bloodthirst.known&debuff.sunder_armor.stack<5|r|r
 options.packs.fury.Fury (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.fury.Fury (wowsims.com).lists.action_name	name	Action Name
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.battle_shout	|T136000:0|t Spell 6673
@@ -19350,6 +19390,7 @@ options.packs.fury.Fury (wowsims.com).lists.action_name	values.piercing_howl	|T1
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.pummel	|T136000:0|t Spell 6552
+options.packs.fury.Fury (wowsims.com).lists.action_name	values.reckless_swings	|T136000:0|t Spell 1329555
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.recklessness	|T136000:0|t Spell 1719
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.rend	|T136000:0|t Spell 772
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.retaliation	|T136000:0|t Spell 20230
@@ -19392,6 +19433,7 @@ options.packs.fury.Fury (wowsims.com).lists.buff_name	values.inspiration	|T13600
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.overpower_ready	|T136000:0|t Spell 1282733
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.piercing_howl	|T136000:0|t Spell 12323
+options.packs.fury.Fury (wowsims.com).lists.buff_name	values.reckless_swings	|T136000:0|t Spell 1329555
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.recklessness	|T136000:0|t Spell 1719
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.rend	|T136000:0|t Spell 772
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.retaliation	|T136000:0|t Spell 20230
@@ -20371,6 +20413,7 @@ options.packs.protection.Protection (wowsims.com).lists.action	values.piercing_h
 options.packs.protection.Protection (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.protection.Protection (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.protection.Protection (wowsims.com).lists.action	values.pummel	|T136000:0|t Spell 6552
+options.packs.protection.Protection (wowsims.com).lists.action	values.reckless_swings	|T136000:0|t Spell 1329555
 options.packs.protection.Protection (wowsims.com).lists.action	values.recklessness	|T136000:0|t Spell 1719
 options.packs.protection.Protection (wowsims.com).lists.action	values.rend	|T136000:0|t Spell 772
 options.packs.protection.Protection (wowsims.com).lists.action	values.retaliation	|T136000:0|t Spell 20230
@@ -20413,28 +20456,29 @@ options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cF
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 26573
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1311606 - |cFFFFD100|cffffd100(!talent.consecrated_ground.enabled||debuff.consecrated_ground.up)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.pct<=30|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 12328
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1329555
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 20925
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 12328
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 679
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcd_racials|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 2565 - |cFFFFD100|cffffd100(rage.lo>=40||(!buff.revenge_usable.up&(!action.revenge.known||cooldown.revenge.remains<=1.5)))|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 879
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 12292 - |cFFFFD100|cffffd100active_enemies>1|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>2|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 23922
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 402927
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 23881
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 12294
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 6572
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>1|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1160 - |cFFFFD100|cffffd100settings.maintain_demoralizing_shout&debuff.demoralizing_shout.remains<=6|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 6343 - |cFFFFD100|cffffd100debuff.thunder_clap.remains<=6|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 6673 - |cFFFFD100|cffffd100buff.battle_shout.remains<=10|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 772 - |cFFFFD100|cffffd100(!debuff.rend.up&(!(offhand_speed=0)||(offhand_speed=0&(!action.shield_slam.known||cooldown.shield_slam.remains>=1.5))))|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 7386 - |cFFFFD100|cffffd100(debuff.sunder_armor.stack<5||((!action.shield_slam.known||cooldown.shield_slam.remains>=1.5)&debuff.sunder_armor.remains<=10))|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 845 - |cFFFFD100|cffffd100(active_enemies>1&rage.lo>=40)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 78 - |cFFFFD100|cffffd100(active_enemies=1&rage.lo>=40)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 2687 - |cFFFFD100|cffffd100rage.lo<90|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcd_racials|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2565 - |cFFFFD100|cffffd100(rage.lo>=40||(!buff.revenge_usable.up&(!action.revenge.known||cooldown.revenge.remains<=1.5)))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 12292 - |cFFFFD100|cffffd100active_enemies>1|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>2|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 6572
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 23922
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 402927
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 23881
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 12294
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>1|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 1160 - |cFFFFD100|cffffd100settings.maintain_demoralizing_shout&debuff.demoralizing_shout.remains<=6|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 6343 - |cFFFFD100|cffffd100debuff.thunder_clap.remains<=6|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 6673 - |cFFFFD100|cffffd100buff.battle_shout.remains<=10|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 772 - |cFFFFD100|cffffd100(!debuff.rend.up&(!(offhand_speed=0)||(offhand_speed=0&(!action.shield_slam.known||cooldown.shield_slam.remains>=1.5))))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 7386 - |cFFFFD100|cffffd100(debuff.sunder_armor.stack<5||((!action.shield_slam.known||cooldown.shield_slam.remains>=1.5)&debuff.sunder_armor.remains<=10))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 78 - |cFFFFD100|cffffd100(active_enemies=1&rage.lo>=20)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 845 - |cFFFFD100|cffffd100(active_enemies>1&rage.lo>=40)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 2687 - |cFFFFD100|cffffd100rage.lo<90|r|r
 options.packs.protection.Protection (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.protection.Protection (wowsims.com).lists.action_name	name	Action Name
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.battle_shout	|T136000:0|t Spell 6673
@@ -20482,6 +20526,7 @@ options.packs.protection.Protection (wowsims.com).lists.action_name	values.pierc
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.pummel	|T136000:0|t Spell 6552
+options.packs.protection.Protection (wowsims.com).lists.action_name	values.reckless_swings	|T136000:0|t Spell 1329555
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.recklessness	|T136000:0|t Spell 1719
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.rend	|T136000:0|t Spell 772
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.retaliation	|T136000:0|t Spell 20230
@@ -20536,6 +20581,7 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.inspira
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.overpower_ready	|T136000:0|t Spell 1282733
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.piercing_howl	|T136000:0|t Spell 12323
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.reckless_swings	|T136000:0|t Spell 1329555
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.recklessness	|T136000:0|t Spell 1719
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.rend	|T136000:0|t Spell 772
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.retaliation	|T136000:0|t Spell 20230
