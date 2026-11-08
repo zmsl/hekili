@@ -112,10 +112,11 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- Re-pin e2842f0a78 (lane 14): 7.4 / 8.6 / 5.6 measured; L40 12.8 -> 8.6 (R6, R41: 37.4-45.4 s, Slam 8.5 s and
     -- Spearing Strike cooling, Rend up 8.1 s, five Sunders up, rage 12-28 pooling to the off-GCD Heroic Strike: nothing
     -- useful to cast); L10 and L60 stay
-    -- Re-pin 4b0030a44b (R6, R41): L40 14.0 from 8.6: Slam's cooldown is now 15 s (no Improved Slam at L40) and Mortal Strike is
-    -- not learned, so with Spearing Strike cooling, Rend and five Sunders up the rage waits for the off-GCD Heroic Strike:
-    -- nothing useful to cast
-    local ARMS_LIVE = { [10] = 7.4, [40] = 14.0, [60] = 6 } -- 7.4 / 14.0 / 5.6
+    -- Re-pin 4b0030a44b (R6, R41): L40 10.0 from 8.6 (measured 14.0 before the v0.6.2 melee-range
+    -- fix merged: Heroic Strike now hides out of melee): Slam's cooldown is now 15 s (no Improved Slam at L40) and Mortal Strike is
+    -- not learned. Traced (seed 1, 38.2-48.2 s): the only on-GCD ability the world would accept was Rend (772), whose debuff is
+    -- up, so the pack correctly does not recast it: nothing useful to cast (R41)
+    local ARMS_LIVE = { [10] = 7.4, [40] = 10.0, [60] = 6 } -- 7.4 / 10.0 / 6.0
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Arms (wowsims.com) stays live at level " .. level, function()
             ws.live(

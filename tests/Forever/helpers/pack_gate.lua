@@ -62,7 +62,13 @@ M.FLICKER = {
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
     -- flicker 0.9 -> 0.31 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); readyShort 116 -> 5 (C1, a resource wait inside READY reads 0.06); heldReady 226 -> 228 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
-    ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.2, readyShort = 5, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
+    -- 0.7 warrior lane (R6; re-pin 4b0030a44b/e5a9cd2a2d on integ/0.7 27add4428; seeds 1-20 / 21-40 / 41-60: readyShort 20 / 3 / 9, flicker
+    -- 0.16 / 0.30 / 0.30, heldReady 129 / 130 / 186, retracted 0.16 / 0.10 / -): readyShort 5 -> 20. Traced (seeds 1-20, 20 attempts; 21-40
+    -- seed 40: 9): every one is a Whirlwind (25) or Bloodthirst (30) pressed as ready 0.02-4.5 rage under its cost (pre 21.2-28.3),
+    -- repeated on the 1-3 ticks the first icon stayed ready before the GCD's end, with no cast or spend in flight; the shortfall is
+    -- the size of one forecast off-hand swing's rage (the loop world's off hand stays at FURY_SPEED 1.9 s, recipe header). Not traced
+    -- to the swing time itself: the off-hand forecast is the named class, not measured per event. heldReady/flicker keep their rows
+    ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.2, readyShort = 20, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -110,7 +116,10 @@ M.FLICKER = {
     -- 41-60 0.62 / 0.64 / 0.54, was 0.68 / 0.64 / 0.54)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.05 / 0.15 / 0.03, readyShort 0 / 0 / 0, heldReady 329 / 343 / 311):
     -- flicker 0.7 -> 0.16 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); readyShort 204 -> 0 (C1, a resource wait inside READY reads 0.06)
-    ["Warrior Protection"] = { flicker = 0.16, retracted = 0.1, readyShort = 0, heldReady = 383 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
+    -- 0.7 warrior lane (R6; seeds 1-20 / 21-40 / 41-60: readyShort 1 / 0 / 0, flicker 0.10 / 0.02 / 0.13, heldReady 320 / 331 / 330):
+    -- readyShort 0 -> 1, traced: one Shield Slam (17 rage) at 60.80 s pressed with the truth at 16.74, 0.26 short (the belief's lo
+    -- above the truth at the cost edge; no cooldown involved)
+    ["Warrior Protection"] = { flicker = 0.16, retracted = 0.1, readyShort = 1, heldReady = 383 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
