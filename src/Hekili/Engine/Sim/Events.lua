@@ -433,8 +433,6 @@ function ns.updateTalents()
         state.talent[ k ].enabled = false
     end
 
-    -- local specGroup = GetSpecialization()
-
     for k, v in pairs( class.talents ) do
         local _, name, _, enabled, _, sID, _, _, _, _, known, rank = GetTalentInfoByID( v, 1 )
 
@@ -855,7 +853,6 @@ RegisterEvent( "PLAYER_REGEN_DISABLED", function( event )
         Hekili:UpdateDisplayVisibility()
     end
 
-    -- Hekili:ExpireTTDs( true )
     Hekili:ForceUpdate( event ) -- Force update on entering combat since OOC refresh can be very slow (0.5s).
 end )
 
@@ -1489,7 +1486,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
     if death_events[ subtype ] then
         if ns.isTarget( destGUID ) then
             ns.eliminateUnit( destGUID, true )
-            -- Hekili:ForceUpdate( subtype )
 
         elseif ns.isMinion( destGUID ) then
             local npcid = destGUID:match("(%d+)-%x-$")
@@ -1636,11 +1632,9 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
                     if state:RemoveSpellEvent( ability.key, true, "CAST_FINISH" ) then -- remove next cast finish.
                         if ability.isProjectile then state:RemoveSpellEvent( ability.key, true, "PROJECTILE_IMPACT", true ) end -- remove last impact.
                     end
-                    -- Hekili:ForceUpdate( "SPELL_CAST_FAILED" ) ]]
 
                 elseif subtype == "SPELL_AURA_REMOVED" and ability.channeled then
                     state:RemoveSpellEvents( ability.key, true ) -- remove ticks, finish, impacts.
-                    -- Hekili:ForceUpdate( "SPELL_AURA_REMOVED_CHANNEL" )
 
                 elseif subtype == "SPELL_CAST_SUCCESS" then
                     state:RemoveSpellEvent( ability.key, true, "CAST_FINISH" ) -- remove next cast finish.
@@ -1706,7 +1700,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
             end
 
             state.gcd.lastStart = max( state.gcd.lastStart, ( GetSpellCooldown( ns.GCD_SPELL ) ) )
-            -- if subtype ~= "SPELL_DAMAGE" then Hekili:ForceUpdate( subtype, true ) end
         end
     end
 
@@ -1735,18 +1728,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
 
     -- Player/Minion Event
     elseif ( amSource or petSource or isSensePower ) or ( countPets and minion ) or ( sourceGUID == destGUID and sourceGUID == UnitGUID( 'target' ) ) then
-        --[[ if aura_events[ subtype ] then
-            if subtype == "SPELL_CAST_SUCCESS" or state.GUID == destGUID then
-                if class.abilities[ spellID ] or class.auras[ spellID ] then
-                    Hekili:ForceUpdate( subtype, true )
-                end
-            end
-
-            if UnitGUID( 'target' ) == destGUID then
-                if class.auras[ spellID ] then Hekili:ForceUpdate( subtype ) end
-            end
-        end ]]
-
         local aura = class.auras and class.auras[ spellID ]
 
         if aura then
@@ -1755,10 +1736,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
                 if subtype == 'SPELL_AURA_APPLIED' or subtype == 'SPELL_AURA_REFRESH' or subtype == 'SPELL_AURA_APPLIED_DOSE' then
                     ns.trackDebuff( spellID, destGUID, time, true )
                     if ( not minion or countPets ) and countDots then ns.updateTarget( destGUID, time, amSource, spellID ) end
-
-                    --[[ if spellID == 48108 or spellID == 48107 then
-                        Hekili:ForceUpdate( "SPELL_AURA_SUPER", true )
-                    end ]]
 
                 elseif subtype == 'SPELL_PERIODIC_DAMAGE' or subtype == 'SPELL_PERIODIC_MISSED' then
                     ns.trackDebuff( spellID, destGUID, time )
@@ -1792,7 +1769,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
             -- Interrupt is actually overkill.
             if not IsResting() and ( ( ( subtype == "SPELL_DAMAGE" or subtype == "SPELL_PERIODIC_DAMAGE" ) and interrupt > 0 ) or ( subtype == "SWING_DAMAGE" and spellName > 0 ) ) and ns.isTarget( destGUID ) then
                 ns.eliminateUnit( destGUID, true )
-                -- Hekili:ForceUpdate( "SPELL_DAMAGE_OVERKILL" )
             elseif not ( subtype == "SPELL_MISSED" and amount == "IMMUNE" ) then
                 ns.updateTarget( destGUID, time, amSource, spellID )
             end
@@ -2189,8 +2165,6 @@ RegisterEvent( "UPDATE_BINDINGS", DelayedUpdateKeybindings )
 RegisterEvent( "SPELLS_CHANGED", DelayedUpdateKeybindings )
 RegisterEvent( "ACTIONBAR_SHOWGRID", DelayedUpdateKeybindings )
 RegisterEvent( "ACTIONBAR_HIDEGRID", DelayedUpdateKeybindings )
--- RegisterEvent( "ACTIONBAR_PAGE_CHANGED", DelayedUpdateKeybindings )
--- RegisterEvent( "UPDATE_SHAPESHIFT_FORM", DelayedUpdateKeybindings )
 
 RegisterEvent( "ACTIVE_PLAYER_SPECIALIZATION_CHANGED", DelayedUpdateKeybindings )
 RegisterEvent( "TRAIT_CONFIG_UPDATED", DelayedUpdateKeybindings )
