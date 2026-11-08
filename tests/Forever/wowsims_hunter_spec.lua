@@ -84,9 +84,12 @@ local PACKS = {
         -- ON flicker 0 -> 1.0 (CN8 D2, 1.00 measured, the same with steady icons off): the not-ready flag keeps the
         -- modelled end, so Multi-Shot (n147) and Blood Fury (n631) lead for the tick before the log casts them; under the
         -- old probe their last 0.5 s read 0.50 and never led. A replay has no press exclusion (the log presses)
-        -- 0.7 floors (e5a9cd2a2d, steady icons on): 1.0 -> 3.4 (3.33 measured, 6 flips): the new weave's strike and shot
-        -- lines trade at the Auto Shot edge and the melee strike reads range unknown (wing_clip:unknown 40; dips top
-        -- [unknown 74]); probable cause hotfix-0.6.2's maxRange 0 bug, untraced here: re-measure after it lands
+        -- 0.7 floors (e5a9cd2a2d, steady icons on): 1.0 -> 3.4 (3.33 measured = 10 flips in the 180 s fight, the same with
+        -- the v0.6.2 melee-range fix merged). Traced per tick (ticks 37, 127, 146, 169, 227, 249, 374, 729, 769, 791): the
+        -- first icon sits on the weave filler (wing_clip, immolation_trap) and bounces for ONE tick to the ability the log
+        -- casts within the next 1-2 ticks (summon_hawk x5, multi_shot x3, immolation_trap/wing_clip x2), then back until the
+        -- log's press lands: the same lead-before-the-log-casts mechanism as the CN8 note above (a replay has no press
+        -- exclusion); the new weave's strike/filler lines make it more often than the old weave's
         3.4,
     },
     {
@@ -95,7 +98,9 @@ local PACKS = {
         "Marksmanship (wowsims.com)",
         0.98,
         { [10] = 6, [40] = 7.6, [60] = 15.4 },
-        -- 0 -> 1.0 (1.00 measured, 3 flips): the same new-weave edge as Beast Mastery
+        -- 0 -> 1.0 (1.00 measured = 3 flips; same with the v0.6.2 range fix): traced per tick (131, 429, 469): one-tick
+        -- bounce of the filler (wing_clip, immolation_trap) to arcane_shot / strider_kick, which the log casts 1-2 ticks
+        -- later: the replay's no-press-exclusion lead (BM's note)
         1.0,
     },
     {
