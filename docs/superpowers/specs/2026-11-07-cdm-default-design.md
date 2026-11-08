@@ -349,7 +349,11 @@ It fails safe when the order is the other way: a drain that runs earlier in the 
 while the belief's target slot is still mob A (consistent), and the event then un-counts the target slots, resets the
 router's facts and makes the next drain skip the target. A switch event that reaches `Game/` a frame after the viewer
 has already changed (never seen; CDM-O shows the viewer one frame behind the event) would let one drain read mob B's
-lights against mob A's slot; the old time rule had the same exposure (its window also started at the event). Replaces
+lights against mob A's slot; the old time rule had the same exposure (its window also started at the event).
+`PLAYER_TARGET_CHANGED` fires twice a swap (owner probes 2026-11-06, L90); whether both come in one frame is not
+measured. If the second comes a frame later it restarts the settle and resets the target slots again: a light trusted
+between the two is dropped and re-counted one frame later (one extra UNKNOWN -> UP, fact.t a frame later), never a
+wrong DOWN (the seen rule starts over). Replaces
 today's immediate re-read (`CooldownViewer.lua:161-168`).
 
 ### 3.5 Taint rule and internal safety (supersedes providers spec §2.4's rule)
