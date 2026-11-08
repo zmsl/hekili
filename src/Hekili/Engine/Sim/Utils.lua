@@ -76,7 +76,6 @@ ns.Error = function( output, ... )
             last = date( "%X", time() )
         }
         eIndex[ #eIndex + 1 ] = output
-        -- if Hekili.DB.profile.Verbose then Hekili:Print( output ) end
     else
         errors[ output ].n = errors[ output ].n + 1
         errors[ output ].last = date( "%X", time() )
