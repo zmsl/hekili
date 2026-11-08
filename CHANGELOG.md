@@ -3,63 +3,144 @@
 ## Unreleased
 
 ### New
-- The wowsims.com priorities now follow wowsims as it was on 2 November 2026. wowsims has changed since (class hotfixes and two new game builds), so updated priorities for every class follow in 0.6.1 and later; some (the Rogues, Warriors, Hunters, Warlocks, Elemental, Arcane, Shadow and Protection Paladin) have moved noticeably.
-- Known issue: Lava Burst has been removed from the game, but the Elemental (wowsims.com) priority still has a Lava Burst line. It is skipped because you do not know the spell, and the rest of the Elemental rotation is not yet re-tuned for its absence; an updated Elemental priority follows in 0.6.1 or later.
-- Rogues: Riposte is now an ability you can use in custom priorities (`riposte`, and `buff.riposte_usable` for its window after a parry), and the Combat priority casts it first when the window is open. Not yet checked in game.
-- Stoneskin Totem and the other Shaman totems now have their buffs registered, so custom priorities can use buff.stoneskin_totem.up and its siblings (also buff.stoneskin.up). The missing totems (Stoneskin, Healing Stream, the resistance totems, Windwall, Tremor, the cleansing totems, Sentry, Earthbind, Stoneclaw, Grounding) can be cast and tracked too; no built-in priority uses them.
-- A Movement toggle for priorities that move to reach the next ability: on, they show it out of range; off, they hide it until you are in range. It is on by default, so from your first login Hunters, Feral Druids, Retribution Paladins and Demonology and Shadow Brand Warlocks see out-of-range icons; to turn it off, open /hekili, then Toggles, Movement, and uncheck Enable Movement.
-- The engine supports rotation windows (spans the game shows no buff for), and the priority editor can add their Open Window and Close Window lines. No built-in priority uses them yet.
-- Weapon imbues and poisons: `buff.rockbiter_weapon`, `buff.flametongue_weapon`, `buff.windfury_weapon`, `buff.frostbrand_weapon` and the five Rogue poisons (`buff.instant_poison`, `buff.deadly_poison`, `buff.crippling_poison`, `buff.mind_numbing_poison`, `buff.wound_poison`) now follow the game, in combat too. `buff.main_hand_enchant` / `buff.off_hand_enchant` no longer count a sharpening stone or oil. An imbue or poison line in your precombat list is now also shown in combat while the buff is down. Tracking was checked in game once, on a Shaman with Rockbiter Weapon in the open world. Poisons (their durations and apply times follow the game's data), sharpening stones and oils, and reads in dungeons are not yet checked in game.
+- Paladin (wowsims.com) priorities follow the current wowsims (Retribution unchanged; Protection casts Holy Shield rank 4)
 
 ### Changed
 - An ability waiting for mana, rage or energy now shows as ready only once the addon is sure you have enough. Before, it could show as ready a few hundredths of a second early, and pressing it then failed with not enough mana or rage. It can now light up one update (about 0.2 s) later at the moment you reach the cost. Not yet checked in game.
 - Steady icons are now on by default (each specialization's Performance tab): when the first icon would swap between two abilities that are both still counting down, it keeps the shown one for one more update, so the icons flicker much less. Ready icons and anything after your own cast still show at once. Turn it off there if you prefer every swap at once. Not yet checked in game.
-- Hunters: the melee weave's strikes can show at range with the Movement toggle on, after whatever the rotation ranks above walking in (such as Hunter's Mark), from an Auto Shot whose next melee swing comes before your next shot until that swing (the weave window), and an open weave closes when you Raptor Strike. With it off, they show only in melee as before.
-- Hunters (wowsims.com): Beast Mastery, Marksmanship and Survival follow wowsims's build of 2 November: Orc, with its consumable lines, and Bestial Wrath on Beast Mastery's cooldown line. Shots show only outside 8 yd, and Wing Clip waits while Strider Kick is within 1.5 s of ready. Below level 25 Beast Mastery shows Arcane Shot (Summon Hawk is not learned yet). Known issue: with an empty mana pool in melee, Survival's first icon can switch between Raptor Strike and Strider Kick about once or twice a minute more than wowsims's does. Not yet checked in game.
-- Retribution (wowsims.com) follows wowsims's Unsealed Wrath priority: Judgement and Holy Strike are held 0.1 s around a swing, the pull opens with Judgement and then a seal while you close to melee (Movement toggle), and a fight started in melee kick-starts with Seal of Command. Not yet checked in game.
-- Feral Druids (wowsims.com) follow wowsims's adaptive list, with the Movement toggle, and Faerie Fire shows only while the debuff is down. Ravage is recommended when you open from Prowl (Faerie Fire waits while you are Prowled), and Prowl is no longer shown to cancel. Not yet checked in game.
-- Rogues (wowsims.com): Assassination, Combat and Subtlety follow wowsims's build of 2 November. Blood Fury and the new Elune's Light lines are lined up with Adrenaline Rush, and Cold Blood waits while Elune's Light is up. Eureka is used with Adrenaline Rush, or when Adrenaline Rush is further off than Eureka's cooldown, and the builders wait while Eureka is about to be used. Not yet checked in game.
-- Warriors (wowsims.com): Arms and Fury follow wowsims's build of 2 November. Hamstring no longer shows while levelling. Death Wish, Recklessness and the racials are used on cooldown. Fury's Whirlwind comes before Bloodthirst, and its Overpower weaving (a swap to Battle Stance for Overpower) is back. Arms holds Heroic Strike when you have Improved Slam. Not yet checked in game.
-- Elemental (wowsims.com): on-use items are used on cooldown, and Elemental Mastery, Blood Fury and Berserking wait for Flame Shock to be on the target. Not yet checked in game.
-- Guardian Druids (wowsims.com) follow wowsims's adaptive bear list as of its 4b0030a44b build, Tauren, with the Movement toggle: Bear Form first when you are out of it, Faerie Fire shown only while the debuff is down, Lacerate kept at 5 stacks, Barkskin, Enrage and Feral Charge. Berserk is no longer shown (it left the game). Guardian does not yet track the rage you gain from hits you take (the client hides the amounts; a later release adds an estimate), so Lacerate, Primal Bite and Maul show only when the client says you have the rage, and the icon can lag behind your real rage. Not yet checked in game.
-- Balance Druids: the built-in priority follows the latest wowsims.com rotation. Out of combat it shows Wrath to open after Moonkin Form, and Innervate shows only when your mana is under 40%.
-- Balance Druids: Insect Swarm's duration counts the Swarming Idol (+2 s) and the Grovekeeper Eclipse 5-piece (+3 s). Not yet checked in game: reading your equipped items has not been tested there.
-- Mages: the built-in priorities follow the latest wowsims.com rotations. Arcane uses Frostbolt as a filler only without the Arcane Instability talent, at any level, and adds Fire Blast, with Arcane Wrath to open and its cooldowns lined up with Missile Barrage or Arcane Wrath. Fire keeps Arcane Blast up, uses Scorch as a filler while Fire Blast is nearly ready, and opens with Pyroblast, as Frostfire does. Frostfire shows Fireball while leveling, until Frostfire Bolt.
-- Protection Paladins: the built-in priority follows the latest wowsims.com rotation. Before the pull it shows Righteous Fury, and Holy Shock waits for Consecration's mark when you have the Consecrated Ground talent.
-- Protection Paladins: Holy Shield has its four ranks, with the costs and levels the game's tooltips show: 100, 150, 195 and 240 mana, learned at 30, 40, 50 and 60. Rank 4 is new; ranks 1 and 2 were priced at 150 and 195.
-- Less memory churn in big pulls: the engine no longer builds its nameplate debug text on every update, only when you take a snapshot.
-- Less work per update, mostly for casters: the engine does less setup and bookkeeping each time the icons refresh, and works out an ability's cost once per moment instead of repeatedly. The recommendations are unchanged.
-- Auras on your target no longer trigger extra refreshes in combat, which matters most in raids.
-- Removed three bundled libraries the addon never used, so it no longer wakes up for addon messages in groups.
-- Aura changes no longer bring the next update forward, so busy fights cost less. Your buffs still show within about 0.2 s.
-- Out of combat with no hostile target, the icons refresh every 1.5 s instead of 0.5 s; changing target, casting and entering combat still refresh them at once.
-- The experimental options to use the damage meter for swing outcomes and the Cooldown Manager for aura presence are gone from normal builds, and both are now off even if you had turned them on.
-- Warlock: the Demonology, Shadow Brand, Destruction and SM Ruin (wowsims.com) priorities follow wowsims's new Human builds and Sesam's lists: Life Tap below 30% mana, Major Mana Potion and Demonic Rune lines.
-- Warlock: SM Ruin keeps Corruption, Siphon Life and Immolate up (cast when down or about to fall), standing in for wowsims's damage-per-cast-time choice the addon cannot read yet.
-- Warlock: Demonology and Shadow Brand get the Movement toggle (Hellfire on three or more enemies at range).
-- Enhancement (wowsims.com) follows wowsims's current build: Magma and Windfury Totems, Water Shield (only while it is down), Fire Nova as the filler, an AoE list. Magma Totem lasts 40 s with Trial by Fire 2/2. Fire Nova's mana costs are corrected and match the game at every rank (375 at rank 5, was 520). The weapon imbue reminder (Flametongue, Rockbiter before 10) leads the list while the main hand has none.
+- Guardian Druids (wowsims.com) follow wowsims's adaptive bear list as of its e5a9cd2a2d build, Tauren, with the Movement toggle: Bear Form first when you are out of it, Faerie Fire shown only while the debuff is down, Lacerate kept at 5 stacks, Barkskin, Enrage and Feral Charge. Berserk is no longer shown (it left the game). Guardian does not yet track the rage you gain from hits you take (the client hides the amounts; a later release adds an estimate), so Lacerate, Primal Bite and Maul show only when the client says you have the rage, and the icon can lag behind your real rage. Not yet checked in game.
 
 ### Fixed
 - Icons no longer flash to the next ability for a moment as a cooldown comes back: while the game still says an ability is not ready, the addon now counts down to the end it expects (when your global cooldown ends first, or the cooldown ends on the update itself) instead of pushing it half a second out. Not yet checked in game.
-- A display whose buttons fail to build no longer raises the same error on every redraw: the original error is reported once and that display stays blank until the next rebuild. (Cause of the build failure itself still being investigated.)
-- Rogues and Feral Druids: after you switch targets, finishers no longer show while the new target has no combo points. The addon now counts only the points on your current target, and they come back when you switch back to the target that holds them.
-- An ability a priority keeps away from your melee swing no longer disappears for a moment when it would be ready just before the swing: it now counts down to just after the swing, when the priority allows it.
-- Guardian Druids no longer recast Faerie Fire or Demoralizing Roar while the debuff is still on the target, at low levels. The Maintain Demoralizing Roar and Maintain Thunder Clap tooltips now say what the options do: they recast the debuff only when it is missing.
-- Low-level Paladins are no longer told to re-cast a seal that still has time left: Retribution shows Seal of Righteousness again only when it is down or about to run out (under two global cooldowns left), Protection only when Seal of Fury is down, and in between it shows Holy Strike or Judgement counting down.
-- Fewer one-moment flashes of a filler as a cooldown comes back: while a GCD or cast covers the cooldown's end, the icon now counts down to the believed end instead of stalling for its last half second.
-- Enemies you kill leave the target count at once, so AoE and cleave lines aren't held by a dead mob for a few seconds.
-- Elemental Shamans: Mana Spring Totem counts at your real rank from the first fight of a session.
-- Warriors: in Battle Stance, Overpower no longer shows on another player's dodge; it waits for the game to say the spell is usable.
-- A free-cast proc raised by the cast that just landed is no longer counted as spent at low frame rates, so your mana estimate stays right.
-- Shaman: Chain Lightning and Mana Tide Totem follow wowsims's spell data for costs and the levels their ranks are learned (Chain Lightning rank 4 is 315 mana, was 485); not yet checked in game.
-- No more Lua errors from nameplates and unit changes where the game hides who a unit is (likely in dungeons and raids). There, hits on a target the addon can't identify are no longer counted against your previous target.
 
 ### Known issues
-- Warlock: after a Demonic Rune or Major Mana Potion the packs may show Life Tap for up to 40 s while mana is in fact high (the refill is not seen in combat).
-- In dungeons and raids, where the game hides who a unit is, the addon no longer errors, but it counts only one enemy: area-of-effect abilities are not recommended there and nameplate target counting does not work. A fix is planned after this release.
 
 ### Upgrade notes
-- In a custom or imported priority, `energy.current` and `mana.pct` now mean the addon's best estimate, not its cautious floor. Add `.lo` or `.pct_lo` (`energy.lo`, `mana.pct_lo`) for the old meaning. The press check still protects you: a line can show a countdown earlier, never ready early.
+
+## v0.6.2
+
+_Released 2026-11-08_
+
+This hotfix makes Hekili Forever recognize when you are in melee range, so melee abilities now appear and disappear correctly for Druids, Hunters and Warriors.
+
+### Druid
+- Feral: Shred, Claw and your other damage abilities are now recommended in melee range; before, only Prowl or Faerie Fire was shown.
+- Maul is no longer recommended once your target is beyond melee range.
+
+### Hunter
+- Survival: Mongoose Bite, Wing Clip and Strider Kick should now be recommended correctly in melee range. This has not yet been confirmed in game.
+- Raptor Strike is no longer recommended once your target is beyond melee range.
+
+### Warrior
+- Heroic Strike is no longer recommended once your target is beyond melee range.
+
+### Known issues
+- Feral: when you stand in front of your target, Shred is still recommended even though the game refuses it, and Claw is not offered in its place.
+
+## v0.6.1
+
+_Released 2026-11-07_
+
+This small fix release stops the font outline setting "None" from breaking the display.
+
+### Core and display
+- Setting a font's outline Style to None no longer causes a Lua error that kept the display from appearing. The display now shows with plain, unoutlined text.
+
+## v0.6.0
+
+_Released 2026-11-06_
+
+This release updates most wowsims.com priorities to wowsims as it was on 2 November 2026 and adds a Movement toggle, weapon imbue and poison tracking, a combo point fix for target switches, and lighter CPU and memory use.
+
+### Druid
+- Balance: follows the latest wowsims.com rotation; out of combat it shows Wrath to open after Moonkin Form, and Innervate shows only below 40% mana.
+- Balance: Insect Swarm's duration now counts the Swarming Idol (+2 s) and the Grovekeeper Eclipse 5-piece (+3 s).
+- Feral (wowsims.com): follows wowsims's adaptive list with the Movement toggle, and Faerie Fire shows only while its debuff is down.
+- Feral: opening from Prowl now recommends Ravage, Faerie Fire waits while you are Prowled, and Prowl is no longer shown to cancel.
+- Feral: after you switch targets, finishers no longer show while the new target has no combo points, and they come back when you switch back.
+- Guardian: at low levels, Faerie Fire and Demoralizing Roar are no longer recast while the debuff is still on the target.
+- Guardian: the Maintain Demoralizing Roar and Maintain Thunder Clap tooltips now say they recast the debuff only when it is missing.
+
+### Hunter
+- Beast Mastery, Marksmanship and Survival (wowsims.com) follow wowsims's 2 November Orc build, with consumable lines and Bestial Wrath on cooldown.
+- Shots show only outside 8 yd, Wing Clip waits while Strider Kick is within 1.5 s of ready, and Beast Mastery below level 25 shows Arcane Shot.
+- With Movement on, melee weave strikes can show at range from an Auto Shot until your next melee swing, and Raptor Strike ends the weave. With Movement off, they show only in melee.
+- Strider Kick's cost now counts the Efficiency discount.
+
+### Mage
+- Arcane: uses Frostbolt as a filler only without Arcane Instability, adds Fire Blast, opens with Arcane Wrath and lines up cooldowns with Missile Barrage or Arcane Wrath.
+- Fire: keeps Arcane Blast up, uses Scorch as a filler while Fire Blast is nearly ready, and opens with Pyroblast.
+- Frostfire: opens with Pyroblast and shows Fireball while levelling until you learn Frostfire Bolt.
+- Arcane Blast stacks now add 100% cost each and last 18 s, and Read Ley Line casts in 0.5 s.
+
+### Paladin
+- Protection: follows the latest wowsims.com rotation; Righteous Fury shows before the pull, and with Consecrated Ground, Holy Shock waits for Consecration.
+- Protection: Holy Shield has four ranks costing 100, 150, 195 and 240 mana, learned at levels 30, 40, 50 and 60.
+- Retribution (wowsims.com) follows the Unsealed Wrath priority:
+  - Judgement and Holy Strike are held 0.1 s around a swing.
+  - The pull opens with Judgement, then a seal while you close to melee (Movement toggle).
+  - A fight started in melee kick-starts with Seal of Command.
+- Low levels: Retribution re-seals only when Seal of Righteousness is down or under two global cooldowns from ending, and Protection only when Seal of Fury is down.
+- Holy Strike's cooldown is 6 s with Shieldsworn, and Swift Judgement is a second Judgement on its own 60 s cooldown.
+
+### Rogue
+- Assassination, Combat and Subtlety (wowsims.com) follow wowsims's 2 November build; Combat builds with Sinister Strike and Subtlety with Hemorrhage again.
+- Blood Fury and Elune's Light line up with Adrenaline Rush, and Cold Blood waits while Elune's Light is up.
+- Eureka goes with Adrenaline Rush (or when Adrenaline Rush is further off than Eureka's cooldown), and builders wait while Eureka is about to be used.
+- Riposte can be used in custom priorities, and Combat casts it first in the window after you parry.
+- Your five poisons are now tracked on your weapons, in combat too, and a poison line in your precombat list also shows in combat while the poison is missing.
+- After you switch targets, finishers no longer show while the new target has no combo points.
+- Assassination no longer raises a Lua error after a /reload in combat.
+
+### Shaman
+- Enhancement (wowsims.com) follows wowsims's current build:
+  - Magma and Windfury Totems, Water Shield only while it is down, Fire Nova as the filler, and an AoE list.
+  - Magma Totem lasts 40 s with Trial by Fire 2/2.
+  - A weapon imbue reminder (Flametongue, or Rockbiter before level 10) leads the list while your main hand has none.
+- Elemental (wowsims.com): on-use items are used on cooldown, and Elemental Mastery, Blood Fury and Berserking wait for Flame Shock on the target.
+- Elemental: Mana Spring Totem counts at your real rank from the first fight of a session.
+- Fire Nova's mana cost now matches the game at every rank (375 at rank 5, was 520).
+- Chain Lightning and Mana Tide Totem costs and rank levels are corrected (Chain Lightning rank 4 is 315 mana, was 485).
+- Weapon imbues (Rockbiter, Flametongue, Windfury, Frostbrand) are tracked in combat too, and an imbue line in your precombat list also shows in combat while the imbue is missing.
+- Stoneskin, Healing Stream, the resistance totems, Windwall, Tremor, the cleansing totems, Sentry, Earthbind, Stoneclaw and Grounding can now be cast and tracked in custom priorities. Their buffs can be checked too.
+
+### Warlock
+- Demonology, Shadow Brand, Destruction and SM Ruin (wowsims.com) follow the new Human builds, with Life Tap below 30% mana and Major Mana Potion and Demonic Rune lines.
+- SM Ruin keeps Corruption, Siphon Life and Immolate up, casting each when it is down or about to fall off.
+- Demonology and Shadow Brand use the Movement toggle: Hellfire on three or more enemies can show at range.
+
+### Warrior
+- Arms and Fury (wowsims.com) follow wowsims's 2 November build; Death Wish, Recklessness and racials are used on cooldown, and Hamstring no longer shows while levelling.
+- Fury: Whirlwind comes before Bloodthirst, and Overpower weaving (a swap to Battle Stance for Overpower) is back.
+- Arms: Heroic Strike is held when you have Improved Slam.
+- In Battle Stance, Overpower no longer shows on another player's dodge.
+- Rage tracking now doubles rage from white critical hits and counts rage from hits taken in Defensive Stance and Shield Wall.
+
+### Core and display
+- New Movement toggle, on by default: supported priorities show the next ability while out of range. Turn it off under /hekili, Toggles, Movement.
+- Sharpening stones and weapon oils no longer count as a weapon imbue or poison.
+- The priority editor can add Open Window and Close Window lines; no built-in priority uses them yet.
+- An ability held back from your melee swing now counts down to just after the swing instead of briefly disappearing.
+- Fewer one-moment flashes of a filler as a cooldown comes back.
+- Enemies you kill leave the target count at once, so AoE and cleave lines are no longer held back.
+- Your mana estimate stays right at low frame rates when a cast grants a free-cast proc.
+- No more Lua errors from nameplates in dungeons and raids.
+- A display that fails to build reports its error once and stays blank instead of erroring on every redraw.
+- Import boxes reject broken strings with a message, and /hekili lock no longer errors before you have unlocked.
+- Lighter in big pulls and raids: less memory use, fewer refreshes from auras, and no listening to group addon messages. Buffs still show within about 0.2 s.
+- Out of combat with no hostile target, icons refresh every 1.5 s; changing target, casting or entering combat still refreshes them at once.
+- The Auto Snapshot option and the experimental damage meter and Cooldown Manager options are removed, and those experimental features are now off.
+
+### Known issues
+- Many updated priorities have not been checked in game yet, and more wowsims updates follow in 0.6.1 and later.
+- Elemental (wowsims.com) still has a Lava Burst line (it is skipped), and the rest of the rotation is not yet re-tuned for Lava Burst's removal.
+- Survival: with an empty mana pool in melee, the first icon can switch between Raptor Strike and Strider Kick about once or twice a minute.
+- Warlock: after a Demonic Rune or Major Mana Potion, Life Tap may show for up to 40 s even though your mana is high.
+- In dungeons and raids, only one enemy is counted, so AoE abilities are not recommended there.
+- A display can occasionally fail to build and stay blank; the cause is still being investigated.
+
+### Upgrade notes
+- In custom or imported priorities, `energy.current` and `mana.pct` now give the addon's best estimate. Use `energy.lo` or `mana.pct_lo` for the old cautious reading.
 
 ## v0.5.0
 
