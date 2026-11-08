@@ -852,15 +852,15 @@ describe("auras", function()
             ctl.ViewerAura(ti, "target")
             poll(10.5) -- lit on mob A
             swap("Creature-2", 11)
-            poll(11.01) -- f=0 (CDM-O): the item still shows A's debuff
+            poll(11) -- f=0 (CDM-O; the switch's own t): the item still shows A's debuff
             assert.are.equal(I.UNDECIDED, P.Presence(REND, 2))
-            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.01)) -- no UP on mob B
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11)) -- no UP on mob B
             ctl.ViewerClear(ti) -- right from f=1
             poll(11.1)
             assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.1))
             swap("Creature-1", 12)
-            poll(12.01) -- f=0 back on A: the item is still silent (not re-lit yet)
-            assert.are.equal(25, est("target", fs.SPENDER_C, 12.01)) -- no DOWN
+            poll(12) -- f=0 back on A: the item is still silent (not re-lit yet)
+            assert.are.equal(25, est("target", fs.SPENDER_C, 12)) -- no DOWN
             poll(12.1)
             assert.are.equal(25, est("target", fs.SPENDER_C, 12.1)) -- reset at the switch: no DOWN after it either
             ctl.ViewerAura(ti, "target") -- A's debuff lit again
@@ -962,10 +962,28 @@ describe("auras", function()
             end
             swap("Creature-2", 20)
             ctl.ViewerAura(ti, "target") -- mob B carries our debuff too (an AoE): lit from the next frame
-            poll(20.2) -- the first drain after the switch lands past the settle window (no UNKNOWN sweep)
+            poll(20.2) -- the first drain after the switch lands past its frame (no UNKNOWN sweep)
             poll(20.5)
             assert.are.equal(35.2, est("target", fs.SPENDER_C, 20.5)) -- from B's light at 20.2, not A's at 10.2
         end)
+
+        it(
+            "L299: the drain in the switch's frame is stale; the next frame's drain opens mob B from its light",
+            function()
+                cast(2, REND, 10, 15)
+                ctl.ViewerAura(ti, "target")
+                for t = 10.5, 19.5, 0.5 do
+                    poll(t)
+                end
+                swap("Creature-2", 20)
+                poll(20) -- f=0: the item still shows A's light; the fold takes the switch
+                assert.are.equal(I.UNDECIDED, P.Presence(REND, 2))
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 20)) -- nothing on mob B
+                poll(20.006) -- f=1 (CDM-O: ~6 ms): mob B carries our debuff too, the item shows it
+                assert.are.equal(I.UP, P.Presence(REND, 2))
+                assert.are.equal(35.006, est("target", fs.SPENDER_C, 20.006)) -- from B's first trusted light
+            end
+        )
 
         it(
             "the switch's drain applies nothing on the target: mob A's record never decides for mob B (review m3)",

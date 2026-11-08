@@ -221,8 +221,8 @@ S.On("PLAYER_REGEN_ENABLED", nil, function(_, t)
     end
 end)
 -- A target change (cdm-default §3.4): the target's facts start over, UNKNOWN, so the next sweep that sees mob B's
--- light is an UNKNOWN -> UP change with its own fact.t (rule 4's t0), even when no sweep falls inside the leaf's
--- settle window (review I1). The leaf has reset its target slots in the same event. Allocates nothing.
+-- light is an UNKNOWN -> UP change with its own fact.t (rule 4's t0), even when no sweep falls in the switch's frame
+-- (the leaf's settle; review I1). The leaf has reset its target slots in the same event. Allocates nothing.
 S.On("PLAYER_TARGET_CHANGED", nil, function()
     for j = 1, def0 and #def0.auraIds or 0 do
         local k = I.AURA_UNIT + j

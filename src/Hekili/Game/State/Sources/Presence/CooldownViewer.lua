@@ -7,7 +7,7 @@
 -- moves its thing's counters (aura j, unit u: nUp, nNone, nStale) in O(1); the moved things' tUp/tNone are recomputed
 -- over the live slots (O(slots)); each moved thing goes to Q.onThing (the router reduces it, §2.4). The seen rule
 -- (§2.2a, decision 115): a silent slot answers NONE only for an application it was seen holding (its record up, sSeen >= applied, its last held
--- unit). A target change makes target and NONE slots settle for SETTLE: their target answers are stale (§3.4). A raise
+-- unit). A target change makes target and NONE slots settle for its frame: target answers stale (§3.4). A raise
 -- in the sweep, or in the router's reduction it calls, turns the leaf off for the session (§3.5). Read, never write: rawget on items, on Blizzard frames only
 -- GetChildren, GetNumChildren and IsVisible; no hooks of any kind (§3.3, §3.5).
 -- The idea of reading the viewer's items for presence, the all-viewers presence bit, the hidden-viewer rule and the
@@ -22,9 +22,6 @@ local Plain = S.Plain
 local VIEWERS =
     { "EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
 local MAX_SLOTS = 128
--- CDM-O (owner probe 2026-11-08, cdm-o-probe-result.md): items are stale only in the switch's own frame, right from the
--- next (~6 ms); 0.05 s covers frames 0-3 (~45 ms).
-local SETTLE = 0.05
 local STOPPED = "Forever: Cooldown Manager reading stopped for this session after an error: %s"
 
 local cdvToJ = {} -- cooldownID -> j, or -a (ambiguous: amb[a] lists its tracked js); built out of combat
@@ -36,12 +33,12 @@ local known = { 0, 0, 0, 0 } -- children collected per viewer (GetNumChildren at
 -- The slots, preallocated: the frame, its viewer, the aura it is counted for (sJ; sAmb 1 while an ambiguous item is
 -- held: its lights are counted, never evidence), what it is counted as
 -- (sAns, sUnit: sUnit is also the last plain held unit, kept through silence) since sT, the seen rule's last held time
--- and last plain cooldownID (sSeen, sCd, §2.2a), the end of a target settle (sSettle, §3.4). sAns 0 not counted, else
+-- and last plain cooldownID (sSeen, sCd, §2.2a), the last target change's t (sSettle, §3.4). sAns 0 not counted, else
 -- UP, NONE or STALE (a hidden viewer's or a settling slot: what it would answer, not live).
 local sFrame, sV, sJ, sAmb, sAns, sUnit, sT, sSeen, sCd, sSettle = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
 for s = 1, MAX_SLOTS do
     sFrame[s], sV[s], sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s] = false, 0, 0, 0, 0, 0, 0
-    sSeen[s], sCd[s], sSettle[s] = 0, 0, 0
+    sSeen[s], sCd[s], sSettle[s] = 0, 0, -1
 end
 
 local NOT, UP, NONE, STALE = 0, 1, 2, 3
@@ -362,7 +359,7 @@ local function sweep(t)
                     a = NONE
                 end
             end
-            if a ~= NOT and (not vis[sV[s]] or u == 2 and sSettle[s] > t) then -- settling: target answers only (§2.2)
+            if a ~= NOT and (not vis[sV[s]] or u == 2 and sSettle[s] >= t) then -- settling: target answers only (§2.2)
                 a = STALE
             end
         elseif m and m < 0 and vis[sV[s]] then -- ambiguous: its lights counted (each once), never evidence (§2.2)
@@ -437,7 +434,7 @@ function Q.Activate(api, t, def)
     end
     for s = 1, Q.nSlots do -- a new map: every slot counted afresh, its seen rule started over (§2.2a)
         sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s] = 0, 0, NOT, 0, 0
-        sSeen[s], sCd[s], sSettle[s] = 0, 0, 0
+        sSeen[s], sCd[s], sSettle[s] = 0, 0, -1
     end
     local nAura = def and #def.auraIds or 0
     for j = 1, nAura do
@@ -505,16 +502,17 @@ function Q.Collect()
     end
 end
 
--- A target change (§3.4): the slots last answering for the target, and every NONE slot, settle until t + SETTLE (stale);
--- the target slots' seen rule starts over (mob A's light says nothing of mob B). Idempotent (it fires twice a swap).
--- Allocates nothing.
+-- A target change (§3.4): the slots last answering for the target, and every NONE slot, settle for this frame: a sweep
+-- at t <= the switch's t is stale (t is GetTime(), one value per frame; CDM-O, owner 2026-11-08: the viewer is stale
+-- only in the event's frame, right from the next); the target slots' seen rule starts over (mob A's light says nothing
+-- of mob B). Idempotent (it fires twice a swap). Allocates nothing.
 S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
     if not active then
         return
     end
     for s = 1, Q.nSlots do
         if sUnit[s] == 2 or sAns[s] == NONE then
-            sSettle[s] = t + SETTLE
+            sSettle[s] = t
         end
         if sUnit[s] == 2 then
             reset(s)
