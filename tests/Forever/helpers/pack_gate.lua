@@ -134,7 +134,11 @@ M.FLICKER = {
     -- seeds 1-20; neither bar is loosened for it.
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.07 / 0.05, readyShort 0 / 0 / 0, heldReady 325 / 288 / 305):
     -- flicker 1.1 -> 0.08 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); readyShort 190 -> 0 (C1, a resource wait inside READY reads 0.06)
-    ["Guardian"] = { flicker = 0.08, retracted = 0.7, readyShort = 0, heldReady = 330 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- flicker 0.08 -> 0.23 (floors step, re-pin e5a9cd2a2d; seeds 1-20 / 21-40 / 41-60 read 0.22 / 0.14 / 0.09, retracted 0 / 0 / 0, heldReady
+    -- 284 / 308 / 298; the worst + 0.01): TRACED by A/B on one tree: the old-pin Guardian pack gives 0.00 at seeds 1-20, the new adaptive list
+    -- (rage-gated Primal Bite / Lacerate / Enrage lines, no rage from hits yet, CN7) 0.22; the Movement opt-in is not it (off: identical 0.22).
+    -- The flicker pairs are primal_bite <-> lacerate (929 / 476 ticks), the swing-paid rage class the row already names
+    ["Guardian"] = { flicker = 0.23, retracted = 0.7, readyShort = 0, heldReady = 330 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     ["Assassination"] = { flicker = 0, retracted = 0, heldReady = 329 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either

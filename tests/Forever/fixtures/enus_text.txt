@@ -15607,6 +15607,7 @@ options.packs.balance.Balance (wowsims.com).lists.buff_name	values.lacerate	|T13
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
+options.packs.balance.Balance (wowsims.com).lists.buff_name	values.pounce_bleed	|T136000:0|t Spell 9007
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079
@@ -18520,6 +18521,7 @@ options.packs.feral.Feral (wowsims.com).lists.buff_name	values.lacerate	|T136000
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
+options.packs.feral.Feral (wowsims.com).lists.buff_name	values.pounce_bleed	|T136000:0|t Spell 9007
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079
@@ -19674,15 +19676,20 @@ options.packs.guardian.Guardian (wowsims.com).lists.action	values.wait	|T136243:
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.wrath	|T136000:0|t Spell 5176
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	name	Entry
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 22842 - |cFFFFD100|cffffd100health.pct<20|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffkeep_up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffdamage|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 6807 - |cFFFFD100|cffffd100rage.lo>=20|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 6807 - |cFFFFD100|cffffd100!action.primal_bite.known|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 99 - |cFFFFD100|cffffd100settings.maintain_demoralizing_roar&(!debuff.demoralizing_roar.up&!action.lacerate.known&(!action.primal_bite.known||cooldown.primal_bite.remains>gcd.max||rage.lo<action.primal_bite.cost))|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 770 - |cFFFFD100|cffffd100!debuff.faerie_fire.up&!action.lacerate.known&(!action.primal_bite.known||cooldown.primal_bite.remains>gcd.max||rage.lo<action.primal_bite.cost)|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 5487 - |cFFFFD100|cffffd100!buff.bear_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 5487 - |cFFFFD100|cffffd100!buff.bear_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1238122 - |cFFFFD100|cffffd100target.outside5|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 22812 - |cFFFFD100|cffffd100health.pct<=60&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1259799 - |cFFFFD100|cffffd100action.elunes_light.known&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 22842 - |cFFFFD100|cffffd100health.pct<25&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 5229 - |cFFFFD100|cffffd100(action.enrage.known&gcd.remains<=0&(((action.primal_bite.known&(!action.primal_bite.known||cooldown.primal_bite.ready))&(!action.primal_bite.known||rage.lo<action.primal_bite.cost))||(!(action.primal_bite.known&(!action.primal_bite.known||cooldown.primal_bite.ready))&(!action.lacerate.known||rage.lo<action.lacerate.cost))))&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 770 - |cFFFFD100|cffffd100(action.faerie_fire.known&debuff.faerie_fire.remains<=0)&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1328617 - |cFFFFD100|cffffd100((debuff.lacerate.up&debuff.lacerate.stack>=5)&debuff.lacerate.remains<=3)&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 99 - |cFFFFD100|cffffd100settings.maintain_demoralizing_roar&(!(!(debuff.demoralizing_roar.remains<=0))&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5))|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 407995 - |cFFFFD100|cffffd100action.primal_bite.known&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 779 - |cFFFFD100|cffffd100(active_enemies>=2&druid_bleed_active)&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1328617 - |cFFFFD100|cffffd100(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 6807 - |cFFFFD100|cffffd100(rage.lo>=20&(!action.primal_bite.known||(action.primal_bite.known&cooldown.primal_bite.remains>1.5)||(action.primal_bite.known&(rage.lo-action.maul.cost)>=action.primal_bite.cost)))&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 6807 - |cFFFFD100|cffffd100!action.primal_bite.known|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	name	Action Name
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.aquatic_form	|T136000:0|t Spell 1066
@@ -19772,6 +19779,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.lacerate	|T
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
+options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.pounce_bleed	|T136000:0|t Spell 9007
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079
@@ -19789,14 +19797,10 @@ options.packs.guardian.Guardian (wowsims.com).lists.enabled	desc	If disabled, th
 options.packs.guardian.Guardian (wowsims.com).lists.enabled	name	Enabled
 options.packs.guardian.Guardian (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.guardian.Guardian (wowsims.com).lists.listName	name	Action List
-options.packs.guardian.Guardian (wowsims.com).lists.listName	values.cooldowns	cooldowns
-options.packs.guardian.Guardian (wowsims.com).lists.listName	values.damage	damage
 options.packs.guardian.Guardian (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
-options.packs.guardian.Guardian (wowsims.com).lists.listName	values.keep_up	keep_up
+options.packs.guardian.Guardian (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.guardian.Guardian (wowsims.com).lists.list_name	name	Action List
-options.packs.guardian.Guardian (wowsims.com).lists.list_name	values.cooldowns	cooldowns
-options.packs.guardian.Guardian (wowsims.com).lists.list_name	values.damage	damage
-options.packs.guardian.Guardian (wowsims.com).lists.list_name	values.keep_up	keep_up
+options.packs.guardian.Guardian (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.guardian.Guardian (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.guardian.Guardian (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.guardian.Guardian (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
@@ -19826,7 +19830,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.modMoving.moving	values.1	Mo
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.guardian.Guardian (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 22842)
+options.packs.guardian.Guardian (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 1238122)
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.guardian.Guardian (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
