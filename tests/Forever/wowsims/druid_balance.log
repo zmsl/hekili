@@ -1,4 +1,4 @@
-# wowsims e2842f0a784d2f329dde0bc682a6b84202a780f2 druid_balance seed 101 180 s target 63
+# wowsims e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664 druid_balance seed 101 180 s target 63
 # talents 16814=5@1 1223081=2@1 16845=3@1 16821=2@1 1223082=2@1 16819=2@1 1223083=1@1 5570=1@1 16909=5@1 16850=5@1 16880=1@1 408248=3@1 16896=5@1 24858=1@1 17063=5@3 17069=5@3 17106=3@3
 [0.00] [Balance (#1)] Aura gained: {SpellID: 1291061}
 [0.00] [Balance (#1)] Aura gained: {SpellID: 24907, Tag: -1}
@@ -142,7 +142,7 @@
 [7.90] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (2959.878 --> 2961.139) of 3709 total.
 [7.95] [Balance (#1)] Completed cast {SpellID: 9876}
 [7.95] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (2961.139 --> 2724.889) of 3709 total.
-[7.95] [Balance (#1)] [Target 1] {SpellID: 9876} Crit for 1862.786 damage (SpellSchool: 64). (Threat: 1862.786)
+[7.95] [Balance (#1)] [Target 1] {SpellID: 9876} Crit for 2172.945 damage (SpellSchool: 64). (Threat: 2172.945)
 [7.95] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
 [7.95] [Balance (#1)] Casting {SpellID: 9876} (Cost = 236.250, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
 [7.96] [Balance (#1)] Aura gained: {SpellID: 16886}
@@ -175,7 +175,7 @@
 [10.40] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (2755.159 --> 2756.420) of 3709 total.
 [10.45] [Balance (#1)] Completed cast {SpellID: 9876}
 [10.45] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (2756.420 --> 2520.170) of 3709 total.
-[10.45] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 979.169 damage (SpellSchool: 64). (Threat: 979.169)
+[10.45] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1142.204 damage (SpellSchool: 64). (Threat: 1142.204)
 [10.45] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
 [10.45] [Balance (#1)] Aura faded: {SpellID: 408255}
 [10.45] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.364s, GCD = 1.227s, Effective Time = 1.364s) APL: priority 7
@@ -253,7 +253,7 @@
 [15.80] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (2497.016 --> 2498.278) of 3709 total.
 [15.82] [Balance (#1)] Completed cast {SpellID: 9876}
 [15.82] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (2498.278 --> 2262.028) of 3709 total.
-[15.82] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1024.802 damage (SpellSchool: 64). (Threat: 1024.802)
+[15.82] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1195.435 damage (SpellSchool: 64). (Threat: 1195.435)
 [15.82] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
 [15.82] [Balance (#1)] Casting {SpellID: 9876} (Cost = 236.250, Cast Time = 2.273s, GCD = 1.227s, Effective Time = 2.273s) APL: priority 6
 [15.90] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (2262.028 --> 2263.289) of 3709 total.
@@ -284,7 +284,7 @@
 [18.00] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (2288.514 --> 2289.775) of 3709 total.
 [18.09] [Balance (#1)] Completed cast {SpellID: 9876}
 [18.09] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (2289.775 --> 2053.525) of 3709 total.
-[18.09] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1053.429 damage (SpellSchool: 64). (Threat: 1053.429)
+[18.09] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1228.828 damage (SpellSchool: 64). (Threat: 1228.828)
 [18.09] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
 [18.09] [Balance (#1)] Aura faded: {SpellID: 408255}
 [18.09] [Balance (#1)] Casting {SpellID: 9835} (Cost = 281.250, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 3
@@ -389,7 +389,7 @@
 [24.80] [Balance (#1)] Gained 1.711 mana from {OtherID: 2, Tag: 1} (1708.019 --> 1709.731) of 3709 total.
 [24.86] [Balance (#1)] Completed cast {SpellID: 9876}
 [24.86] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (1709.731 --> 1473.481) of 3709 total.
-[24.86] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1053.429 damage (SpellSchool: 64). (Threat: 1053.429)
+[24.86] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1228.828 damage (SpellSchool: 64). (Threat: 1228.828)
 [24.86] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
 [24.86] [Balance (#1)] Casting {SpellID: 29166} (Cost = 62.000, Cast Time = 0s, GCD = 1.364s, Effective Time = 1.364s) APL: priority 2
 [24.86] [Balance (#1)] Completed cast {SpellID: 29166}
@@ -442,7 +442,7 @@
 [28.70] [Balance (#1)] Gained 16.393 mana from {OtherID: 2, Tag: 1} (2025.000 --> 2041.392) of 3709 total.
 [28.73] [Balance (#1)] Completed cast {SpellID: 9876}
 [28.73] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (2041.392 --> 1805.142) of 3709 total.
-[28.73] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1010.419 damage (SpellSchool: 64). (Threat: 1010.419)
+[28.73] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1178.657 damage (SpellSchool: 64). (Threat: 1178.657)
 [28.73] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
 [28.73] [Balance (#1)] Aura faded: {SpellID: 408255}
 [28.73] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
@@ -497,7 +497,7 @@
 [32.70] [Balance (#1)] Gained 16.393 mana from {OtherID: 2, Tag: 1} (2399.450 --> 2415.842) of 3709 total.
 [32.73] [Balance (#1)] Completed cast {SpellID: 9876}
 [32.73] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (2415.842 --> 2179.592) of 3709 total.
-[32.73] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1014.860 damage (SpellSchool: 64). (Threat: 1014.860)
+[32.73] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1183.837 damage (SpellSchool: 64). (Threat: 1183.837)
 [32.73] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
 [32.73] [Balance (#1)] Casting {SpellID: 9876} (Cost = 236.250, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
 [32.74] [Balance (#1)] Aura gained: {SpellID: 16870}
@@ -531,7 +531,7 @@
 [35.10] [Balance (#1)] Gained 16.393 mana from {OtherID: 2, Tag: 1} (2556.619 --> 2573.012) of 3709 total.
 [35.20] [Balance (#1)] Gained 16.393 mana from {OtherID: 2, Tag: 1} (2573.012 --> 2589.404) of 3709 total.
 [35.23] [Balance (#1)] Completed cast {SpellID: 9876}
-[35.23] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1012.379 damage (SpellSchool: 64). (Threat: 1012.379)
+[35.23] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1180.943 damage (SpellSchool: 64). (Threat: 1180.943)
 [35.23] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
 [35.23] [Balance (#1)] Aura faded: {SpellID: 408255}
 [35.23] [Balance (#1)] Aura faded: {SpellID: 16870}
@@ -666,7 +666,7 @@
 [44.70] [Balance (#1)] Gained 11.893 mana from {OtherID: 2, Tag: 1} (3065.299 --> 3077.192) of 3709 total.
 [44.73] [Balance (#1)] Completed cast {SpellID: 9876}
 [44.73] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (3077.192 --> 2840.942) of 3709 total.
-[44.73] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 982.179 damage (SpellSchool: 64). (Threat: 982.179)
+[44.73] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1145.715 damage (SpellSchool: 64). (Threat: 1145.715)
 [44.73] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
 [44.73] [Balance (#1)] Aura faded: {SpellID: 408255}
 [44.73] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
@@ -722,7 +722,7 @@
 [48.70] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (2866.393 --> 2867.654) of 3709 total.
 [48.73] [Balance (#1)] Completed cast {SpellID: 9876}
 [48.73] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (2867.654 --> 2631.404) of 3709 total.
-[48.73] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1012.740 damage (SpellSchool: 64). (Threat: 1012.740)
+[48.73] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1181.364 damage (SpellSchool: 64). (Threat: 1181.364)
 [48.73] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
 [48.73] [Balance (#1)] Casting {SpellID: 9876} (Cost = 236.250, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
 [48.80] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (2631.404 --> 2632.666) of 3709 total.
@@ -755,7 +755,7 @@
 [51.20] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (2661.674 --> 2662.936) of 3709 total.
 [51.23] [Balance (#1)] Completed cast {SpellID: 9876}
 [51.23] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (2662.936 --> 2426.686) of 3709 total.
-[51.23] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 939.702 damage (SpellSchool: 64). (Threat: 939.702)
+[51.23] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1096.165 damage (SpellSchool: 64). (Threat: 1096.165)
 [51.23] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
 [51.23] [Balance (#1)] Aura faded: {SpellID: 408255}
 [51.23] [Balance (#1)] Casting {SpellID: 9835} (Cost = 281.250, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 3
@@ -875,7 +875,7 @@
 [59.70] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (2041.381 --> 2042.642) of 3709 total.
 [59.73] [Balance (#1)] Completed cast {SpellID: 9876}
 [59.73] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (2042.642 --> 1806.392) of 3709 total.
-[59.73] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 989.839 damage (SpellSchool: 64). (Threat: 989.839)
+[59.73] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1154.650 damage (SpellSchool: 64). (Threat: 1154.650)
 [59.73] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
 [59.73] [Balance (#1)] Casting {SpellID: 9876} (Cost = 236.250, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
 [59.80] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (1806.392 --> 1807.653) of 3709 total.
@@ -907,7 +907,7 @@
 [62.20] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (1836.662 --> 1837.923) of 3709 total.
 [62.23] [Balance (#1)] Completed cast {SpellID: 9876}
 [62.23] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (1837.923 --> 1601.673) of 3709 total.
-[62.23] [Balance (#1)] [Target 1] {SpellID: 9876} Crit for 1927.218 damage (SpellSchool: 64). (Threat: 1927.218)
+[62.23] [Balance (#1)] [Target 1] {SpellID: 9876} Crit for 2248.106 damage (SpellSchool: 64). (Threat: 2248.106)
 [62.23] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
 [62.23] [Balance (#1)] Aura faded: {SpellID: 408255}
 [62.23] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
@@ -962,7 +962,7 @@
 [65.90] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (1602.078 --> 1603.339) of 3709 total.
 [66.00] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (1603.339 --> 1604.601) of 3709 total.
 [66.00] [Balance (#1)] Completed cast {SpellID: 9876}
-[66.00] [Balance (#1)] [Target 1] {SpellID: 9876} Crit for 1898.520 damage (SpellSchool: 64). (Threat: 1898.520)
+[66.00] [Balance (#1)] [Target 1] {SpellID: 9876} Crit for 2214.630 damage (SpellSchool: 64). (Threat: 2214.630)
 [66.00] [Balance (#1)] Aura faded: {SpellID: 16870}
 [66.00] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
 [66.00] [Balance (#1)] Casting {SpellID: 9876} (Cost = 236.250, Cast Time = 2.5s, GCD = 1.5s, Effective Time = 2.5s) APL: priority 6
@@ -998,7 +998,7 @@
 [68.50] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (1634.871 --> 1636.132) of 3709 total.
 [68.50] [Balance (#1)] Completed cast {SpellID: 9876}
 [68.50] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (1636.132 --> 1399.882) of 3709 total.
-[68.50] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1007.698 damage (SpellSchool: 64). (Threat: 1007.698)
+[68.50] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1175.483 damage (SpellSchool: 64). (Threat: 1175.483)
 [68.50] [Balance (#1)] {SpellID: 408255} stacks: 1 --> 0
 [68.50] [Balance (#1)] Aura faded: {SpellID: 408255}
 [68.50] [Balance (#1)] Casting {SpellID: 9835} (Cost = 281.250, Cast Time = 0s, GCD = 1.227s, Effective Time = 1.227s) APL: priority 3
@@ -1116,7 +1116,7 @@
 [76.70] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (774.543 --> 775.804) of 3709 total.
 [76.73] [Balance (#1)] Completed cast {SpellID: 9876}
 [76.73] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (775.804 --> 539.554) of 3709 total.
-[76.73] [Balance (#1)] [Target 1] {SpellID: 9876} Crit for 2058.200 damage (SpellSchool: 64). (Threat: 2058.200)
+[76.73] [Balance (#1)] [Target 1] {SpellID: 9876} Crit for 2400.897 damage (SpellSchool: 64). (Threat: 2400.897)
 [76.73] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
 [76.73] [Balance (#1)] Casting {SpellID: 9876} (Cost = 236.250, Cast Time = 2.273s, GCD = 1.227s, Effective Time = 2.273s) APL: priority 6
 [76.74] [Balance (#1)] Aura refreshed: {SpellID: 16886}
@@ -1201,7 +1201,7 @@
 [82.80] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (333.979 --> 335.241) of 3709 total.
 [82.86] [Balance (#1)] Completed cast {SpellID: 9876}
 [82.86] [Balance (#1)] Spent 236.250 mana from {SpellID: 9876} (335.241 --> 98.991) of 3709 total.
-[82.86] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1024.660 damage (SpellSchool: 64). (Threat: 1024.660)
+[82.86] [Balance (#1)] [Target 1] {SpellID: 9876} Hit for 1195.270 damage (SpellSchool: 64). (Threat: 1195.270)
 [82.86] [Balance (#1)] {SpellID: 408255} stacks: 2 --> 1
 [82.86] [Balance (#1)] Casting {SpellID: 9912} (Cost = 45.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
 [82.90] [Balance (#1)] Gained 1.261 mana from {OtherID: 2, Tag: 1} (98.991 --> 100.252) of 3709 total.

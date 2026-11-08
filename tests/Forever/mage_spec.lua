@@ -307,10 +307,11 @@ describe("Forever Mage", function()
                 spells[#spells + 1] = id
             end
             table.sort(spells)
-            by[m.aura] = { m.pct, m.charges or false, spells }
+            by[m.aura .. (m.unless and (" unless " .. m.unless) or "")] = { m.pct, m.charges or false, spells }
         end
         assert.are.same({
-            clearcasting = { -1, 1, { 116, 133, 2136, 2948, 5143, 11366, 400574, 401502, 1326079 } },
+            clearcasting = { -1, 1, { 116, 133, 2136, 2948, 11366, 400574, 401502, 1326079 } },
+            ["clearcasting unless missile_barrage"] = { -1, 1, { 5143 } },
             missile_barrage = { -1, 1, { 5143 } },
             -- Arcane Wrath too: wowsims's mask (0x9000 of word 1 covers its 0x8000), its log's 513.5 = 395 x 1.3
             arcane_power = { 0.3, false, { 116, 133, 2136, 2948, 5143, 11366, 400574, 401502, 1326079 } },
@@ -435,28 +436,7 @@ describe("Forever Mage through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
-    -- CN11 parity: the cost modifier's `unless`, in the belief and the simulation alike. The registrations are the
-    -- split the Mage lane adopts at a pin with wowsims ef6fb99ee1 (an Arcane Missiles that Missile Barrage pays for
-    -- keeps Clearcasting), set here in the test only: the kit still spends both, as the pinned wowsims does.
-    local function splitClearcasting(H)
-        local list = H.ns.raceMods.costMods
-        for i, m in ipairs(list) do
-            if m.aura == "clearcasting" then
-                local rest = {}
-                for _, id in ipairs(m.spells) do
-                    if id ~= 5143 then
-                        rest[#rest + 1] = id
-                    end
-                end
-                list[i] = { aura = "clearcasting", pct = -1, charges = 1, spells = rest }
-            end
-        end
-        -- last, after Missile Barrage's own: the spend decides `unless` before either charge goes
-        list[#list + 1] =
-            { aura = "clearcasting", pct = -1, charges = 1, spells = { 5143 }, unless = "missile_barrage" }
-        H.ns.BuildTracked()
-    end
-
+    -- CN11 parity: the cost modifier's `unless`, in the belief and the simulation alike (the kit's split Clearcasting).
     for _, case in ipairs({
         { 5143, "arcane_missiles", true, { 0, 0, true, false } },
         { 5143, "arcane_missiles", false, { 0, 0, false, false } },
@@ -471,7 +451,6 @@ describe("Forever Mage through the engine", function()
                 .. (barrage and "up" or "down"),
             function()
                 local H = headless.new({ character = character() })
-                splitClearcasting(H)
                 local I, VS, S = H.ns.VirtualStateInternal, H.ns.VirtualState, H.Hekili.State
                 local t = H.ctl.now + 1
                 H.ctl.now = t

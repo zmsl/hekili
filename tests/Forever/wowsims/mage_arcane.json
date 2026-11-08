@@ -194,7 +194,7 @@
                         "math":{
                           "op":"OpAdd",
                           "rhs":{
-                            "spellCastTime":{
+                            "spellGcdHastedDuration":{
                               "spellId":{
                                 "spellId":1259705
                               }

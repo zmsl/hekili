@@ -32,9 +32,9 @@ M.OLD_PIN, M.NEW_PIN = OLD, NEW
 --- line to NEW; once every line says NEW, OLD and its patch set go. One spec per line, a blank line between: two
 --- lanes flipping neighbours then merge without a conflict.
 M.SPEC_PIN = {
-    druid_balance = OLD,
+    druid_balance = NEW,
 
-    druid_feral = OLD,
+    druid_feral = NEW,
 
     druid_guardian = OLD,
 
@@ -44,19 +44,19 @@ M.SPEC_PIN = {
 
     hunter_survival = OLD,
 
-    mage_arcane = OLD,
+    mage_arcane = NEW,
 
-    mage_fire = OLD,
+    mage_fire = NEW,
 
-    mage_frostfire = OLD,
+    mage_frostfire = NEW,
 
-    paladin_protection = OLD,
+    paladin_protection = NEW,
 
-    paladin_retribution = OLD,
+    paladin_retribution = NEW,
 
-    priest_shadow = OLD,
+    priest_shadow = NEW,
 
-    priest_smite = OLD,
+    priest_smite = NEW,
 
     rogue_assassination = OLD,
 

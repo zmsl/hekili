@@ -347,7 +347,10 @@ M.READY = {
     -- { 0.50, 5 } -> { 0.50, 9 } re-pin e2842f0a78 (adaptive list, 82 on-GCD decisions): median 0.500, 9 real (early 2,
     -- late 7); top shifting_power 4 (max 0.50: a not-ready flag's CD_PROBE push, shared), rake 2, rip 2 (energy is
     -- secret: the belief's lo under the truth at the cost)
-    druid_feral = { 0.50, 9 },
+    -- { 0.50, 9 } -> { 0.35, 10 } on the 0.7 floors run (integ/0.7 5deb101c4; R6): the never rows of the
+    -- old log are gone (CN8's cooldown countdown, pin-2 export: not separated) but cost rows rake 25.14 and
+    -- shifting_power 111.89 (0.47 / 0.45, the belief's lo under the truth) are now late; 10 real (early 2, late 8), median 0.350
+    druid_feral = { 0.35, 10 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone
@@ -387,7 +390,9 @@ M.READY = {
     -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
     mage_frostfire = { 0.42, 9 }, -- 0.420, 9 (Task FFB, ruling M13)
     -- { 0.86, 7 } -> { 0.00, 0 } re-pin e2842f0a78: real 0 once Holy Shield's block hits are procs (PROT_REPLAY)
-    paladin_protection = { 0.00, 0 }, -- 0.000, 0
+    -- { 0.00, 0 } -> { 0.43, 1 } pin move 2 on CN8 (rank 4 log, PROT_REPLAY's rank-4 procs, steady icons): one row, holy_strike
+    -- late 0.43 s, cost class: lo under the truth at the cost (-208 mana, the unmodelled Shieldsworn return, gaps.md CU)
+    paladin_protection = { 0.43, 1 }, -- 0.430, 1
     -- { 0.29, 10 } -> { 0.10, 7 } re-pin e2842f0a78 (fresh floor, Task 17: the Unsealed Wrath APL and the opener move):
     -- holy_strike 5 (max 0.10), seal_of_command 1 (0.23), seal_of_righteousness 1 (0.17)
     paladin_retribution = { 0.10, 7 }, -- 0.100, 7

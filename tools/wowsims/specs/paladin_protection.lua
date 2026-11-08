@@ -55,23 +55,27 @@
 -- mana 70-92%, no gap-AB effect; reported, never gated (the gates sample L10/L40/L60). L40 8.4 s (R28): out of mana
 -- (86), nothing castable; the band L32 11.0, L35-L40 8.4 has the same cause, gated at L40 only; L41 on 4.4
 -- (Shieldsworn's Holy Strike every 6 s).
+-- Re-pin 4b0030a44b (0.7): APL and gear are upstream's .siml files (translated the same as the .json), the log re-exported at
+-- the new pin; Holy Shield now casts rank 4 (1239570, 240 mana: R31 retired, owner tooltips 100/150/195/240) and the replay world no longer drops it (L120).
 return {
     class = "PALADIN",
     pack = "Protection (wowsims.com)",
     spec = "protection",
     name = "Protection",
     talentTree = "paladin",
-    apl = "ui/specs/paladin/protection/apls/default.apl.json",
+    apl = "ui/specs/paladin/protection/apls/default.apl.siml",
     player = {
         race = "RaceHuman",
         class = "ClassPaladin",
-        gear = "ui/specs/paladin/protection/gear_sets/default.gear.json",
+        gear = "ui/specs/paladin/protection/gear_sets/default.gear.siml",
         talentsString = "050050002-05302102213301531-502",
         specKey = "protectionPaladin",
         -- PaladinOptions is an empty message: an object, not dkjson's default empty array
         options = { classOptions = setmetatable({}, { __jsontype = "object" }) },
         profession1 = "Engineering",
         profession2 = "Enchanting",
+        reactionTimeMs = 100, -- defaults.siml: reaction_time 100ms, in_front_of_target
+        inFrontOfTarget = true,
         distanceFromTarget = 5,
     },
     -- a tank: the raid's tank (the target swings at it) and presets.ts:92-99's healing model (apply_defaults.ts:108-122)
