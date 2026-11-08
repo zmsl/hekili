@@ -1168,6 +1168,7 @@ local PASSTHROUGH = {
     { "C_PvP.IsWarModeDesired", "plain [W sweep 2026-10-16]" },
     { "C_SpecializationInfo.GetSpecialization", "plain [W PR15]" },
     { "C_SpecializationInfo.GetTalentInfo", "plain [W sweep 2026-10-16]" },
+    { "C_Spell.GetOverrideSpell", "out of combat only; Plain-gated (Presence/CooldownViewer.lua's map)" },
     { "C_Spell.GetSpellDescription", "plain [W sweep 2026-10-16]" },
     { "C_Spell.GetSpellInfo", "plain [W sweep 2026-10-16]; table fields unverified" },
     { "C_Spell.GetSpellPowerCost", "plain [W §4]" },

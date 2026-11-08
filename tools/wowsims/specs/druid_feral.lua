@@ -6,8 +6,9 @@
 -- 2250 lines); the gear stays gear_sets/pre_raid.gear.json (presets.ts:11, spec.ts:65).
 -- Replay (re-pin e2842f0a78, Movement on): decisions on-GCD 0.916 (76/83), flicker 1.33/min (oracle 0.00). The
 -- request follows the preset build (Tauren, 25 yd, CatTalents); assumeBleedActive only moves wowsims's own damage for
--- Feral (no Feral line reads druid_bleed_active). Since R52 the Rip line's "two Blood Frenzy points with Shifting Power" reads
--- `action.shifting_power.known` (Shifting Power is a kit ability, a talent in wowsims's tree).
+-- Feral (no Feral line reads druid_bleed_active). The Rip line's "two Blood Frenzy points with Shifting Power" read
+-- `action.shifting_power.known` under R52 until central-talents registered Shifting Power as a Forever talent (Druid.lua's
+-- talent table, 1322605); it now reads `talent.shifting_power.enabled` (the build takes it: 1322605=1@2).
 -- Misses (log times), none content: 21.25 shred -> rip and 39.88 shred -> faerie_fire (energy is secret: the belief's
 -- lo 3.2 and 1.0 under the truth at Rip's 62 threshold and Shred's 42 cost); 140.38 shred -> rip (Rip fades in the
 -- instant wowsims Shreds); 19.25 shifting_power -> shred (a not-ready flag 0.05 s before the ready pushes it to now +
