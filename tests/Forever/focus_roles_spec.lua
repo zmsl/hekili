@@ -99,16 +99,18 @@ local PACKS = {
     ["Mage/APLs/Fire"] = { "pyroblast=1", "scorch=2", "arcane_missiles=1" },
     -- the DoTs, Banes, curses and Searing Pain's Demonic Brand upkeep at 2; Shadow Bolt on Shadow Trance and Soul Fire on
     -- Decimation at 1; Affliction's first Shadow Bolt keeps Shadow Vulnerability up (2); Amplify Curse a cooldown (none)
+    -- 0.7 re-pin (e5a9cd2a2d): the rewritten build's lists; the Siphon Life line is omitted (CN14 spellIsChanneling), so
+    -- siphon_life and immolate no longer appear
     ["Warlock/APLs/Affliction"] = {
-        "bane_of_agony=2",
-        "corruption=2",
-        "siphon_life=2",
+        "shadow_bolt=2",
+        "shadow_bolt=1",
         "curse_of_the_elements=2",
         "curse_of_recklessness=2",
         "curse_of_weakness=2",
-        "immolate=2",
-        "shadow_bolt=2",
-        "shadow_bolt=1",
+        "bane_of_agony=2",
+        "corruption=2",
+        "bane_of_agony=2",
+        "corruption=2",
     },
     ["Warlock/APLs/SM Ruin"] = {
         "curse_of_the_elements=2",
@@ -122,14 +124,21 @@ local PACKS = {
     },
     ["Warlock/APLs/Demonology"] = WARLOCK_DEMO,
     ["Warlock/APLs/Shadow Brand"] = WARLOCK_SHADOW_BRAND,
+    -- 0.7 re-pin (e5a9cd2a2d): the rewritten rotation (Bane of Doom first, the dot groups, Immolate in the cooldowns and
+    -- as the Incinerate-cast refresh)
     ["Warlock/APLs/Destruction"] = {
+        "bane_of_doom=2",
+        "immolate=2",
         "curse_of_the_elements=2",
         "curse_of_recklessness=2",
         "curse_of_weakness=2",
-        "bane_of_doom=2",
         "bane_of_agony=2",
         "immolate=2",
         "corruption=2",
+        "bane_of_agony=2",
+        "immolate=2",
+        "corruption=2",
+        "immolate=2",
     },
 }
 

@@ -78,6 +78,7 @@ local spec = Hekili:NewClass("WARLOCK", {
             role = "attack",
             ranged = true,
             package = "Destruction (wowsims.com)",
+            movement = true, -- the Destruction pack's Hellfire line reads toggle.movement (re-pin e5a9cd2a2d, R8)
         },
     },
 })
