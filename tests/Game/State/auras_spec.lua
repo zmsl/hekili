@@ -925,6 +925,33 @@ describe("auras", function()
             assert.is_nil(VS.Aura("target", fs.SPENDER_C, 31.3)) -- lapsed within HOLD
         end)
 
+        it("a hold re-stage of a record believed up keeps its stacks (rule 3: the model's stacks stand)", function()
+            I.AuraModel(2, REND, 10, 25, 3, 10, Obs.CastSuccess, true) -- our 3-stack debuff
+            I.AuraOurs(2, REND)
+            ctl.ViewerAura(ti, "target")
+            for t = 10.5, 26, 0.5 do
+                poll(t) -- from 24.5 on, within LAPSE of its expiry: re-staged
+            end
+            local rec, stacks = VS.Aura("target", fs.SPENDER_C, 26)
+            assert.is_truthy(rec)
+            assert.are.equal(3, stacks)
+        end)
+
+        it("an icd aura's hold keeps the application: its ICD does not restart and it stays ours", function()
+            local def = fs.def(fs.new(9))
+            def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, duration = 3, icd = 10 }
+            start(def)
+            cast(1, SHOUT, 10, 3)
+            ctl.ViewerAura(pi, "player")
+            for t = 10.2, 16, 0.2 do
+                poll(t)
+                assert.are.equal(10, select(3, VS.Aura("player", fs.SPENDER_A, t)), t) -- applied (the ICD's start)
+            end
+            ctl.ViewerClear(pi)
+            poll(16.2)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 16.2)) -- still ours: its NONE closes it
+        end)
+
         it("an UP with no numeric duration: HOLD on the target, -1 on the player closed by its NONE", function()
             local def = fs.def(fs.new(9))
             def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }

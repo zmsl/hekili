@@ -41,7 +41,9 @@ local OVL_J, OVL_ID, OVL_N = {}, {}, 0
 -- target: the provider's facts the consumer took and those that contradicted the belief. Preallocated at OnBuild,
 -- zeroed at each fight's start.
 local facts, disagree = {}, {}
-local staged = {} -- by the same key: 1 up or 2 down staged and not yet folded into the belief, else 0
+-- By the same key: the time of the last Read staged (the drain's fold takes it), 0 none. Only a second stage in the
+-- same drain (an edge, then the poll) is held back: a hold re-stage can be due at two polls in a row.
+local staged = {}
 -- By the same key: 1 when the first plain walk after combat corrected the believed presence (spec §2.6, decision 105),
 -- per fight. At most one count per key: exp0 moves only at the fold, so every walk of the exit frame (a UNIT_AURA one,
 -- then poll 10's) sees the same stale belief.
@@ -65,6 +67,9 @@ local HOLD, LAPSE = 1.0, 0.5
 -- item still showing the old application inside the client's latency says nothing of the new one.
 -- shortcut: 0.5 s is unmeasured; the LAT probe (cast success vs the item's light) sets it.
 local REFRESH_LAG = 0.5
+-- A hold re-stage of an `icd` aura moves its expiry by at most this (I.AURA_REFRESH less a float margin), so the fold
+-- keeps the application (its ICD and applied time; ours stays valid).
+local REFRESH_HOLD = I.AURA_REFRESH * 0.99
 local DUR = {}
 -- Decision 114: 1 while the player's reduced fact is UP, else 0 (CN13's Obs.PlayerHit keeps one stack while it is 1).
 local floor = I.auraFloor or {}
@@ -319,8 +324,7 @@ local function apply(j, u, up, t, edge)
         upAt[k] = t
     end
     if not I.inCombat and ((u == 1 and playerPlain) or (u == 2 and targetPlain)) then
-        staged[k] = 0 -- the walk answers now; a read staged before it turned plain must not block a later edge
-        return false
+        return false -- the walk answers
     end
     if u == 1 and (I.formAura[j] or I.enchantAura[j]) then
         return false -- Sources/Forms.lua's and Sources/Enchants.lua's records
@@ -335,24 +339,29 @@ local function apply(j, u, up, t, edge)
     else
         stage = e > t and closes(k, u, j)
     end
-    local v = up and 1 or 2
     if not stage then
-        staged[k] = 0
         if edge then
             facts[k] = facts[k] + 1
         end
         return false
-    elseif staged[k] == v then
-        return false -- staged already (an edge earlier this frame): the fold has not taken it yet
+    elseif staged[k] == t then
+        return false -- staged already in this drain (an edge, then the poll): the fold has not taken it yet
     end
-    facts[k], staged[k] = facts[k] + 1, v
+    facts[k], staged[k] = facts[k] + 1, t
     if (e > t) ~= up then
         disagree[k] = disagree[k] + 1
     end
+    local stacks = 0
     if up and e <= t then
         ours[k], oursAp[k] = BY_CDM, foldApplied(u, j, t) -- a CDM UP opened it
+    elseif up then -- a hold re-stage: the model's stacks stand (rule 3)
+        stacks = U.stacks[u][j]
+        if U.icd[j] > 0 and rem > e + REFRESH_HOLD - t then
+            -- an icd aura's later expiry past AURA_REFRESH reads as a re-application (Families/Auras.lua): stay short
+            rem = e + REFRESH_HOLD - t
+        end
     end
-    Direct(Obs.Read, t, k, rem, ReadOf.Aura)
+    Direct(Obs.Read, t, k, rem, ReadOf.Aura + stacks * I.AURA_STACK)
     return true
 end
 local function onEdge(j, u, up, t)
