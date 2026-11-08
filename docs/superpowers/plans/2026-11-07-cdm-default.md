@@ -255,7 +255,8 @@ Task 3a rewrites them.
 **Files:** `Presence/CooldownViewer.lua`, `tests/Game/State/viewer_spec.lua`, `alloc_spec.lua`.
 
 - [ ] **Step 1: Failing tests** (counts read through `Q.Counts`; each "not live" test has its positive control):
-  1. "target change: target and NONE slots settle for SETTLE as stale; settle end is a change at that poll"
+  1. "target change: target and NONE slots settle for SETTLE as stale; settle end is a change at that poll" (L299
+     renamed it: "... are stale in the switch's frame; the next frame's sweep is a change")
   2. "an error in the sweep turns the leaf off for the session with one def.error line"
   3. **seen** "sSeen[s] is written at every sweep the slot is held for u, not only on a change" (a refresh that keeps
      the item held moves `applied`; the next sweep's `sSeen >= applied`)
@@ -480,15 +481,16 @@ snapshot's `presence` section.
   update; target changes we did not cause: up to 0.5 s).
 - [ ] **CDM-I:** dungeon and boss: no `fact=down` for an aura that is up; secret fields not live.
 - [ ] **CDM-P:** in a party, a partner's copy of a buff we track: our item stays dark and the record is not closed.
-- [ ] **CDM-O:** `/fprobe cdm target`, our debuff on mob A only, switch B then A: the settle time for `SETTLE`; a second
-  mob with the same debuff (D2T).
+- [x] **CDM-O:** `/fprobe cdm target`, our debuff on mob A only, switch B then A: done 2026-11-08 (the event's frame
+  only; the settle became the frame rule, L299). Still open: a second mob with the same debuff (D2T).
 - [ ] **Shaman flag run (e1-e3):** `/fprobe aurasec` for every Lightning Shield and Water Shield rank, then
   `/fprobe aurawatch` in combat. Any 0: Task 11 go; else Task 11 dropped (ledger).
 - [ ] **Coverage:** the options line on a Druid and a Warrior matches the bars.
 - [ ] **Silent item (F12):** a Druid with Mark of the Wild up and its item in a bar: in combat the record stays up (no
   "rebuff"); the snapshot shows the aura `fact=unknown` while the item is silent. Run `/fprobe cdm sets` on the Mark of
   the Wild entry (spellID, override, linkedSpellIDs) so its cause is recorded once (D15).
-- [ ] Results into `docs/dev/ingame-ledger.md` (controller); `SETTLE` (and any `IsVisible` fallback) in one commit.
+- [ ] Results into `docs/dev/ingame-ledger.md` (controller); any `IsVisible` fallback in one commit (the settle is
+  done: L299's frame rule).
 
 ### Task 11 [belief], CONDITIONAL: the direct never-secret provider
 

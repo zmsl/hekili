@@ -687,7 +687,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
     )
 
     it(
-        "a player slot lighting for the new target inside the settle window does not lend its sSeen to the target",
+        "a player slot lighting for the new target in the switch's frame does not lend its sSeen to the target",
         function()
             local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
             start()
@@ -700,7 +700,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
             ctl.now = 3
             ctl.Fire("PLAYER_TARGET_CHANGED")
             ctl.ViewerAura(item, "target")
-            sweep(3.01) -- held for the target while settling: stale, no sSeen write
+            sweep(3) -- the switch's own frame: held for the target while settling, stale, no sSeen write
             ctl.ViewerClear(item)
             sweep(3.1) -- settled, silent
             assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 2))
@@ -736,7 +736,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
 
     -- Task 3c, the target settle (spec §3.4, decision 103).
     it(
-        "target change: target and NONE slots settle for SETTLE as stale; settle end is a change at that poll",
+        "target change: target and NONE slots are stale in the switch's frame; the next frame's sweep is a change",
         function()
             local tItem = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
             tItem.unit = "target"
@@ -759,22 +759,95 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
             end
             ctl.now = 3
             ctl.Fire("PLAYER_TARGET_CHANGED") -- the target item still shows the old mob's light
-            sweep(3.01)
+            sweep(3) -- the switch's own frame (t == the switch's t)
             assert.are.same({ 0, 0, 0, 1, 0, 0 }, counts(2, 2))
             assert.are.same({ 2, 0, 2, 0, 0, 2.5 }, counts(1, 1)) -- a player answer does not settle (§2.2)
             assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2))
-            ctl.ViewerAura(p2, "target") -- a NONE slot lights for the new target inside the window: settling
-            sweep(3.03)
+            ctl.ViewerAura(p2, "target") -- a NONE slot lights for the new target in the same frame: settling
+            sweep(3)
             assert.are.same({ 0, 0, 0, 1, 0, 0 }, counts(1, 2))
             assert.are.same({ 1, 0, 1, 0, 0, 2.5 }, counts(1, 1))
-            sweep(3.06) -- settled: each a change at this poll
-            assert.are.same({ 1, 1, 0, 0, 3.06, 0 }, counts(2, 2))
-            assert.are.same({ 1, 1, 0, 0, 3.06, 0 }, counts(1, 2))
+            sweep(3.001) -- the next frame: settled, each a change at this poll
+            assert.are.same({ 1, 1, 0, 0, 3.001, 0 }, counts(2, 2))
+            assert.are.same({ 1, 1, 0, 0, 3.001, 0 }, counts(1, 2))
             assert.are.same({ 1, 0, 1, 0, 0, 2.5 }, counts(1, 1))
             assert.are.equal(I.UP, I.presence.Presence(2, 2))
             assert.are.same({ { 2, 2, true }, { 1, 2, true } }, edges) -- no second player DOWN edge
         end
     )
+
+    -- L299 (owner 2026-11-08, CDM-O): the settle is the switch's own frame (the belief clock t, constant in a frame).
+    local function lit(tItem) -- the target item lit for mob A at 2; the switch at 3; edges recorded from then on
+        start()
+        up(C, "target")
+        sweep(2)
+        rec(2, 2, 2)
+        assert.are.same({ 1, 1, 0, 0, 2, 0 }, counts(2, 2))
+        local edges = {}
+        I.presence.onEdge = function(j, u, isUp)
+            edges[#edges + 1] = { j, u, isUp }
+        end
+        ctl.now = 3
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        return edges
+    end
+
+    it("a target answer read in the switch's frame (t == the switch's t) is stale: no UP, no DOWN", function()
+        local tItem = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
+        tItem.unit = "target"
+        local edges = lit(tItem)
+        sweep(3) -- f=0: the item still shows mob A's light
+        assert.are.same({ 0, 0, 0, 1, 0, 0 }, counts(2, 2))
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2))
+        ctl.ViewerClear(tItem) -- and silent in the same frame: no DOWN either
+        sweep(3)
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(2, 2))
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2))
+        assert.are.same({}, edges)
+    end)
+
+    it("the first sweep after the switch's frame is trusted: a real UP lit after the switch applies", function()
+        local tItem = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
+        tItem.unit = "target"
+        local edges = lit(tItem)
+        sweep(3) -- f=0: stale
+        assert.are.same({ 0, 0, 0, 1, 0, 0 }, counts(2, 2))
+        sweep(3.001) -- f=1 (~6 ms in CDM-O): mob B carries the debuff too, the item shows it
+        assert.are.same({ 1, 1, 0, 0, 3.001, 0 }, counts(2, 2))
+        assert.are.equal(I.UP, I.presence.Presence(2, 2))
+        assert.are.same({ { 2, 2, true } }, edges)
+        assert.are.equal(3.001, Q.seen[1]) -- a trusted light writes the seen rule's time
+    end)
+
+    it("a switch and a re-light inside the same frame stay stale until the next frame", function()
+        local tItem = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
+        tItem.unit = "target"
+        local edges = lit(tItem)
+        ctl.ViewerClear(tItem)
+        sweep(3) -- f=0: cleared
+        ctl.ViewerAura(tItem, "target") -- and re-lit in the same frame
+        sweep(3)
+        assert.are.same({ 0, 0, 0, 1, 0, 0 }, counts(2, 2))
+        assert.are.equal(0, Q.seen[1]) -- stale: no sSeen write
+        assert.are.same({}, edges)
+        sweep(3.001)
+        assert.are.same({ 1, 1, 0, 0, 3.001, 0 }, counts(2, 2))
+        assert.are.same({ { 2, 2, true } }, edges)
+    end)
+
+    it("a switch with no sweep for 0.5 s: the first sweep after it is trusted", function()
+        local tItem = ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
+        tItem.unit = "target"
+        local edges = lit(tItem)
+        ctl.ViewerClear(tItem)
+        ctl.ViewerAura(tItem, "target") -- mob B's light, shown from the next frame
+        sweep(3.5)
+        assert.are.same({ 1, 1, 0, 0, 3.5, 0 }, counts(2, 2))
+        assert.are.same({ { 2, 2, true } }, edges)
+        ctl.ViewerClear(tItem) -- control: seen after the switch, then silent, it is live (NONE)
+        sweep(4)
+        assert.are.same({ 1, 0, 1, 0, 0, 4 }, counts(2, 2))
+    end)
 end)
 
 -- The map and the collect (cdm-default spec §3.1-§3.2, decisions 97-98, 101; plan Task 3a), against the any-layout fake

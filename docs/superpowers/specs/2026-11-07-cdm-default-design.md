@@ -219,8 +219,8 @@ One rule set, in `Sources/Auras.lua` `apply` (`:218-243`), plus one array CN13 r
    `Obs.Read` 0), on the player **and on the target**, only when all hold:
    - the reduced state is DOWN: every live NONE slot passes the seen rule (§2.2a). On the target that means
      `sUnit == target` and a light of this application seen after the switch: `sSeen` is reset at
-     `PLAYER_TARGET_CHANGED`, and the switch's own frame is covered by `SETTLE` (0.05 s, measured safe by CDM-O:
-     the viewer is stale only in the event's frame), so mob A's light never closes mob B's record;
+     `PLAYER_TARGET_CHANGED`, and the switch's own frame is settling (§3.4; CDM-O: the viewer is stale only in the
+     event's frame), so mob A's light never closes mob B's record;
    - `ours[k]`: our evidence opened this application. `ours[k]` (preallocated, `Sources/Auras.lua`, exposed as
      `I.auraOurs`) is set by our cast opening or refreshing the record (`Families/Now.lua`, the `aura()` writer: one
      line, `I.AuraOurs(u, j)`), by a CDM UP that opened it, and by an out-of-combat walk read whose `sourceUnit` is
@@ -325,12 +325,32 @@ Blizzard frames spreading taint; and it never sees Essential/Utility changes), a
 ### 3.4 The target
 
 Target evidence is presence **on the current target only**, never per GUID (P0 result 8). On `PLAYER_TARGET_CHANGED`
-every slot whose last answer was for the target, and every NONE slot, is **settling** until `t + SETTLE` (0.05 s until
-CDM-O measures it), and every slot whose `sUnit` is the target has its `sSeen` reset (§2.2a); settling slots count as
-`nStale`, so the target's thing is UNKNOWN meanwhile and the per-target
-memory (`Families/Auras.lua:255-264`) gets no old-target state. Settle end is a reading change (§2.3). An
-Essential/Utility NONE may stay stale after the switch (BV:483-485, M3): the fresher-UP rule covers it. Replaces today's
-immediate re-read (`CooldownViewer.lua:161-168`).
+every slot whose last answer was for the target, and every NONE slot, is **settling for the switch's own frame**
+(L299, owner 2026-11-08: "track frames", no time constant): the leaf stores the event's belief-clock `t` (`GetTime()`,
+the same value for the whole client frame, and the same clock as the drain's cut-off that every sweep reads at), and a
+target answer is stale while the sweep's `t <=` that value; the first sweep with a larger `t` (the next frame or any
+later one) is trusted. Every slot whose `sUnit` is the target also has its `sSeen` reset (§2.2a); settling slots count
+as `nStale`, so the target's thing is UNKNOWN meanwhile and the per-target memory (`Families/Auras.lua:255-264`) gets no
+old-target state. Settle end is a reading change (§2.3). Independently, the router sets the target's facts UNKNOWN
+(fact.t 0) at the same event and the apply skips the target for the drain that folds the switch (4b fix round, I1/m3):
+neither depends on the settle.
+
+Basis: CDM-O (owner, Druid Feral, in combat, 2026-11-08): items **with a target aura unit** are stale only in the
+event's own dispatch (f=0) and right from the next frame (f=1, about 4-7 ms), switching to and away from a debuffed mob,
+Essential and Buff icon alike. **Unmeasured**: items with no target aura unit (an Essential/Utility NONE may stay stale
+after the switch, BV:483-485, M3: the fresher-UP rule covers it, and the seen-rule reset means such a slot answers
+nothing for the new target until lit), out of combat, a second mob carrying the same debuff (D2T), and instances.
+
+Ordering (design review 4's assumption, not verified in game): the rule needs the switch to reach `Game/` before any
+sweep of the same frame reads the viewer. The code guarantees what it can: the leaf's handler is an `S.On` source,
+run synchronously by the event facade's `onEvent` (`S.Run`) before any subscriber, so every drain after the event in
+that frame (including one Hekili's own handler forces) sees `sSettle == t`; `PLAYER_TARGET_CHANGED` is not dormant.
+It fails safe when the order is the other way: a drain that runs earlier in the switch's frame reads mob A's state
+while the belief's target slot is still mob A (consistent), and the event then un-counts the target slots, resets the
+router's facts and makes the next drain skip the target. A switch event that reaches `Game/` a frame after the viewer
+has already changed (never seen; CDM-O shows the viewer one frame behind the event) would let one drain read mob B's
+lights against mob A's slot; the old time rule had the same exposure (its window also started at the event). Replaces
+today's immediate re-read (`CooldownViewer.lua:161-168`).
 
 ### 3.5 Taint rule and internal safety (supersedes providers spec §2.4's rule)
 
@@ -456,7 +476,7 @@ flicker rise beyond seed noise (±0.3/min) on any spec in any viewer arm.
 | CDM-T | Does the rawget sweep leave `taint.log` clean for Hekili, the viewer and the damage meter after a pull? | `/console taintLog 1`, a pull with procs, ForeverProbe hooks off | release held; `Hekili.cdmOff` for a player |
 | e4b | `IsVisible()`/`GetNumChildren()` plain and taint-clean in combat? Alt-Z reads not visible? | `/fprobe cdm items` with Alt-Z | if not plain: liveness out of combat only |
 | ACQ | Frames created in combat (a viewer set to "In Combat")? | `/fprobe cdm hooks` with such a viewer, first fight after login | the `GetNumChildren` collect |
-| CDM-O | Target switch: how long until target items are right? | `/fprobe cdm target` | `SETTLE` = 0.05 s |
+| CDM-O | Target switch: how long until target items are right? | `/fprobe cdm target` | DONE 2026-11-08: the event's frame only; the settle is that frame (§3.4) |
 | CDM-I | Instances: item fields plain/nil-or-secret? availability? | `/fprobe cdm items` in a dungeon, on a boss | secret field = not live; UNKNOWN |
 | CDM-P | A partner's copy of our buff: confirm it never lights or drops our item | `/fprobe cdm items` in a party | rule 2.5.1 (`ours`) |
 | CDM-M | `GetCooldownViewerCooldownInfo` in combat | `/fprobe cdm sets` in combat | never called in combat |
@@ -480,7 +500,7 @@ flicker rise beyond seed noise (±0.3/min) on any spec in any viewer arm.
 | 100 (supersedes 79) | Presence is read by a rawget sweep at poll 15, run before the `covered` guard | the refresh pair, release order and always-shown items vanish |
 | 101 | No hooks; children collected at activation, rebuild, combat end and on `GetNumChildren` growth in combat | a hook buys no player latency (perf 2.1a); target-side 0.5 s accepted (D8); smallest taint surface |
 | 102 | An invisible viewer (`IsVisible()`, parent-aware) gives no evidence | it stops updating (BV:1746-1751) |
-| 103 | Target presence is the current target's only; a switch makes target slots settle for `SETTLE` | no per-GUID fact |
+| 103 | Target presence is the current target's only; a switch makes target slots settle for the switch's own frame (L299) | no per-GUID fact |
 | 104 (amends 80) | Reconciliation in `Sources/Auras.lua` `apply`, rules 2.5.1-8 | one rule set outside CN13's file |
 | 105 | The combat-exit walk's corrections are counted (`exitFix`) | P0 result 2's fact kind |
 | 106 | Only aura presence is ingested from the CDM (§5) | "only where it adds information" |
@@ -508,7 +528,7 @@ needed, §3.3), GPL-3.0 like Hekili Forever; ideas only, re-implemented, no code
 | D1 | The direct never-secret provider (§3.6) | 15 of 15 auras contextual so far | the Shaman `aurasec` run finds a flag 0 |
 | D3 | Item `cooldownIsActive` secrecy as a corroboration counter | redundant with the NeverSecret spell API | the spell API's flags read secret somewhere |
 | D4 | `ADDON_RESTRICTION_STATE_CHANGED` instead of combat flags | the walk's own result gates it | probe e6 shows a restriction outside combat the walk mis-reads |
-| D5 | `SETTLE` from CDM-O; `IsVisible`/`GetNumChildren` from e4b | in game only | the owner's probe session |
+| D5 | `IsVisible`/`GetNumChildren` from e4b (the settle half is CLOSED: CDM-O measured, the time constant replaced by the frame rule, §3.4, L299) | in game only | the owner's probe session |
 | D6 | Coverage fixtures for classes other than Warrior and Druid | in game only | each class's `/fprobe cdm sets` |
 | D8 | Target-side changes we did not cause wait up to 0.5 s (no hooks; the target's `UNIT_AURA` is not delivered in combat); upgrade: deliver it inside `Game/` while target coverage > 0 | small impact; a late target NONE only delays a close of ours | the A/B or a player shows late target edges |
 | D9 | `HOLD` = 1.0 s is a guess | no measurement | Task 9's target-DoT-past-duration flicker row |
