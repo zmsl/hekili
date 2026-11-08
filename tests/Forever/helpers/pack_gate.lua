@@ -320,22 +320,27 @@ M.FLICKER = {
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996
     -- on seeds 21-40); controller rule, the measured values beside the line
-    ["Affliction"] = { flicker = 0, retracted = 0, heldReady = 5 }, -- 0 / 0 / 0, 0
+    -- 0.7 re-pin (e5a9cd2a2d, merged tree 27add4428+, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
+    -- heldReady 5 -> 0 (the rewritten list, steady icons and C1)
+    ["Affliction"] = { flicker = 0, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
     -- heldReady 6 -> 8 (re-pin e2842f0a78, Task 16, R6, R49; seeds 1-20 / 21-40 / 41-60: 7 / 8 / 2, flicker 0.17 / 0.17 /
     -- 0.05, oracle 0): traced at 21-40, all 8 the stand-in Siphon Life after a hard cast, ours 0.10 s vs the oracle's
     -- 0.00 (the same icon one poll late; mana est within 2 of the truth): the wait class above
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 3 / 5 / 2):
     -- flicker 0.3 -> 0 (S, steady icons on by default)
-    ["SM Ruin"] = { flicker = 0, retracted = 0, heldReady = 8 }, -- 0.17 / 0.17 / 0.05, 0; heldReady ON THE BAR (max of 7 / 8 / 2): re-measure at integration
+    -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 3 / 5 / 2): heldReady 8 -> 5 (the worst set)
+    ["SM Ruin"] = { flicker = 0, retracted = 0, heldReady = 5 }, -- 0 / 0 / 0, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 2 / 0):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
-    ["Demonology"] = { flicker = 0, retracted = 0, heldReady = 4 }, -- 0.02 / 0.05 / 0, 0
+    -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0): heldReady 4 -> 0
+    ["Demonology"] = { flicker = 0, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
     -- heldReady 3 -> 6 (re-pin e2842f0a78, Task 16, R6; seeds 1-20 / 21-40 / 41-60: 6 / 6 / 6, flicker 0.03 / 0.02 /
     -- 0.02, oracle 0): traced at 1-20, each the same icon (Searing Pain 4, Life Tap, Bane of Agony) at 0.10-0.11 s vs
     -- the oracle's 0.00-0.01, mana est within 2-29 of the truth: the wait class above, more often in the new list
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 6 / 5 / 6):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
-    ["Shadow Brand"] = { flicker = 0, retracted = 0, heldReady = 6 }, -- 0.03 / 0.02 / 0.02, 0; heldReady ON THE BAR (6 / 6 / 6): re-measure at integration
+    -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 6 / 5 / 6): unchanged, still ON THE BAR (the wait class above)
+    ["Shadow Brand"] = { flicker = 0, retracted = 0, heldReady = 6 }, -- 0 / 0 / 0, 0
     -- the excess over the oracle (0 / 0 / 0) is at Conflagrate's and Shadowburn's cooldown ends, as Fire's Fire Blast
     -- (the not-ready flag's CD_PROBE, central). 0.4 -> 0.2 (Task 10b, gap CQ: the flag keeps a modelled end the GCD or a
     -- hard cast covers; 0.13 / 0.17 / 0.07, was 0.23 / 0.40 / 0.25; agreement .995 / .992 / .996); the rest is the probe
@@ -348,7 +353,9 @@ M.FLICKER = {
     -- conflagrate > incinerate / life_tap). Central (belief casts), existing; PROPOSED-warlock-5
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 2):
     -- flicker 0.5 -> 0 (S, steady icons on by default)
-    ["Destruction"] = { flicker = 0, retracted = 0, heldReady = 8 }, -- 0.50 / 0.30 / 0.30, 0; flicker ON THE BAR at seeds 1-20 and fragile (R58): re-measure at integration
+    -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 readyShort 0 / 0 / 0, heldReady 1 / 2 / 3, the ledger flicker 0.02 / 0.00 / 0.02 vs
+    -- the oracle 0.02 / 0.02 / 0.03; the gate's own first-set flicker reads 0 under the row): heldReady 8 -> 3 (the worst set)
+    ["Destruction"] = { flicker = 0, retracted = 0, heldReady = 3 }, -- 0 / 0 / 0, 0
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. It tightens the bar when a change lowers the oracle's own flicker. 1.8 -> 0.5 (forever-gap-bd,
