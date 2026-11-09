@@ -698,15 +698,37 @@ function M.run(L, seed, o, drivers)
             run.secrets[name] = (run.secrets[name] or 0) + n
         end
         if st.layout then -- a viewer arm: the layout's coverage at the fight's end, a line in the arm's .ab file
-            local ctl, Q = st.H.ctl, st.H.ns.VirtualStateInternal.PRESENCE.viewer
+            local VI = st.H.ns.VirtualStateInternal
+            local ctl, Q, P = st.H.ctl, VI.PRESENCE.viewer, VI.presence
             local who = tostring(ctl.class) .. " " .. tostring(st.H.Hekili.State.spec.key)
-            local line = ("%s seed %d covered %d overflow %d slots %d lag %s"):format(
+            -- the fight's CDM audit (Sources/Auras.lua's snapshot counters, per fight) as player/target sums (Task 9)
+            local function sum(c)
+                local p, tg = 0, 0
+                for k, n in pairs(c or {}) do
+                    if k > VI.AURA_UNIT then
+                        tg = tg + n
+                    else
+                        p = p + n
+                    end
+                end
+                return p .. "/" .. tg
+            end
+            local line = (
+                "%s seed %d covered %d overflow %d slots %d lag %s facts %s beliefDisagree %s itemDisagree %s"
+                .. " lost %s exitFix %s ambiguous %d"
+            ):format(
                 who,
                 seed,
                 Q.covered,
                 Q.overflow,
                 Q.nSlots,
-                tostring(ctl.viewer.lag)
+                tostring(ctl.viewer.lag),
+                sum(VI.presenceFacts),
+                sum(VI.presenceDisagree),
+                sum(P and P.disagree),
+                sum(P and P.lost),
+                sum(VI.auraExitFix),
+                Q.ambiguous
             )
             ab.check(Q.overflow == 0, "layout", line)
         end
