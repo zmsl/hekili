@@ -79,7 +79,12 @@ M.FLICKER = {
     -- repeated on the 1-3 ticks the first icon stayed ready before the GCD's end, with no cast or spend in flight; the shortfall is
     -- the size of one forecast off-hand swing's rage (the loop world's off hand stays at FURY_SPEED 1.9 s, recipe header). Not traced
     -- to the swing time itself: the off-hand forecast is the named class, not measured per event. heldReady/flicker keep their rows
-    ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.2, readyShort = 20, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
+    -- translator-2 (autoTimeToNext: the Bloodrage line), seeds 1-20: readyShort 20 -> 26; every event traced (25 of 25,
+    -- base 19 of 19) is the class above, Bloodthirst 12 / Whirlwind 13 shown ready a few rage short on a forecast swing,
+    -- on fights Bloodrage's rage re-times; heldReady 129 -> 150 inside its bar; retracted 0.2 -> 0.21 (0.16 -> 0.20x/min,
+    -- the oracle 0.26 -> 0.47 on the same fights): the flicker ledger's credit/cost class, bloodthirst 3 + whirlwind 3
+    -- (base 1 + 2), the same forecast-swing credit
+    ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.21, readyShort = 26, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -375,7 +380,9 @@ M.FLICKER = {
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 6 / 5 / 6):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 6 / 5 / 6): unchanged, still ON THE BAR (the wait class above)
-    ["Shadow Brand"] = { flicker = 0, retracted = 0, heldReady = 6 }, -- 0 / 0 / 0, 0
+    -- translator-2 (the pre-pull Shadow Bolt, travel-time fold), seeds 1-20: heldReady 6 -> 7; all 7 ticks (base: all 6)
+    -- are one shape, searing_pain@0.11 against the oracle's @0.01 at its ready edge (one poll), on re-timed fights
+    ["Shadow Brand"] = { flicker = 0, retracted = 0, heldReady = 7 }, -- 0 / 0 / 0, 0
     -- the excess over the oracle (0 / 0 / 0) is at Conflagrate's and Shadowburn's cooldown ends, as Fire's Fire Blast
     -- (the not-ready flag's CD_PROBE, central). 0.4 -> 0.2 (Task 10b, gap CQ: the flag keeps a modelled end the GCD or a
     -- hard cast covers; 0.13 / 0.17 / 0.07, was 0.23 / 0.40 / 0.25; agreement .995 / .992 / .996); the rest is the probe
