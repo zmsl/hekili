@@ -88,7 +88,6 @@ local methods = {
 
         if a.id then
             if a.id > 0 then
-                -- Hekili:ContinueOnSpellLoad( a.id, function( success )
                 a.onLoad = function( a )
                     local d = GetSpellInfo( a.id )
                     a.name = d and d.name
