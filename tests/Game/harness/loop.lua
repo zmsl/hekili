@@ -730,7 +730,9 @@ function M.viewerLayout(H, preset, seed, wo)
     local ev = scenarios.viewerLayout(ctl, I.def, preset, seed, o)
     if ev == nil and not ctl.viewer.skipNoted then
         ctl.viewer.skipNoted = true
-        ab.check(true, "layout " .. preset, who .. " skipped: no tools/data/cooldownviewer fixture")
+        local line = who .. " skipped: no tools/data/cooldownviewer fixture"
+        print("\n" .. preset .. " layout: " .. line) -- once a boot, in the log too (review m3)
+        ab.check(true, "layout " .. preset, line)
     end
     return ev
 end
