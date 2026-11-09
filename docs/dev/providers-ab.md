@@ -13,7 +13,8 @@ launch-day probes in `docs/dev/ingame-ledger.md` (DM-P, DM-M, CDM-T, CDM-E, CDM-
 | --- | --- | --- | --- |
 | `default` | Outcomes "default", presence "router" without the viewer leaf | today's stream | `make gate`, `make gate-ab` |
 | `meter` | Outcomes "meter" | the meter's events (a group 0-11 ms after each hitting swing of the group, 3-14 ms after a spell, 1-2 ms after a tick, type 7 at a hit on a group member) and the hit row on us 0.48 ±0.09 s after its taken group | `make gate-ab` |
-| `viewer` | presence "router" with the viewer leaf | `@viewer` events 3-5 ms after each aura edge of ours | `make gate-ab` |
+| `viewer-none`, `viewer-buffs`, `viewer-fixture`, `viewer-mixed` | presence "router" with the viewer leaf (cdm-default decision 110) | the loops' Cooldown Manager layout (`scenarios.viewerLayout`): none, one Buff icon item per pack aura, the class fixture plus an Essential entry per ability, or the mixed layout (0-3 items per aura over the four viewers, silent items, a hidden viewer, a re-point, pool growth, lag on even seeds) | `make gate-ab` |
+| `secret` | the Default providers | live UNIT_COMBAT: amounts secret (2026-11-08 dump) | by hand |
 | `lagged` | the Default providers | the meter arm's 0.48 s taken lead only | by hand |
 
 The meter arm changes two things at once: the provider, and the rows on us arriving 0.48 s late (DM §3's measured lead,
@@ -204,19 +205,119 @@ Reading, with the seed noise in mind:
 - The oracle shadow follows the arm's profile toggles too; the Fury probe showed that the oracle's own flicker moving
   (0.47 -> 0.59) is run A's shadowing of a world our presses drive, not a change of reference.
 
-## Viewer arm
+## Viewer arms: the Cooldown Manager always on (cdm-default Task 9, 2026-11-09)
 
-The viewer arm is identical to the default on every gate line (407 of 407 normalised gate lines): every detection cell,
-fights gate, loop and replay line, and 0 MISS in `.ab/viewer.tsv`. That is not a measured "no effect": the harness loops
-(Druid and Warrior included) build no Cooldown Manager items. The fake's category sets start empty (`fake_api.lua`
-`ctl.viewer`), so the router tracks nothing, `covered` is 0, the `@viewer` events find no item, and the per-aura `facts`
-and `disagree` counts are 0 for every aura in every loop. Per-aura facts and disagreements are measured only by the unit
-specs (`viewer_spec`, `router_spec`, `auras_spec`) on fixture items. Feeding the loops' fake viewer from
-`tools/data/cooldownviewer/WARRIOR.lua` is the next harness step if the owner wants a loop number before launch; the
-real answer is the launch-day checkpoint CDM-T with the Warrior re-capture CDM-R.
+Measured, not gated (decisions 86, 110). Acceptance: no flicker rise beyond ±0.3/min on any spec.
 
-Coverage (`make cdv-coverage`): Warrior 4 of 42 pack auras answered by the viewer (demoralizing_shout, sunder_armor,
-sweeping_strikes, victorious), a lower bound; every other class has no fixture.
+Branch `cdm-t9-ab` (integ/0.7 with CDM Tasks 1-8, the L310 hold, kind-only rows, Tasks 6-7). `make -i gate-ab` on the
+gate's seeds 1-20 (`-i`: check-full carries the two known baseline failures, enus_text and wowsims_rogue, which stop a
+plain `make gate-ab` after its first gate), then the loop stage (`scripts/busted_parallel.sh` with the gate's tags) on
+four more seed sets, seeds 21-40 / 41-60 / 61-80 / 81-100 (a scratch busted helper adding 20/40/60/80 to every
+`loop.tally`'s `seed0`), for `default`, `viewer-buffs`, `viewer-fixture` and `viewer-mixed`; `viewer-none` and `meter`
+on seeds 1-20 only. Every viewer run 42 successes / 0 failures / 0 errors (no error, raise, allocation or CPU miss);
+the default arm's extra sets miss some of their seeds-1-20 floors (Feral, Guardian flicker; Marksmanship, Elemental,
+Enhancement held while ready; Arms), as the seed-noise rule expects. The rise is the mean over the five sets of (arm
+minus default) on the same seeds; "worst" is the largest single-set rise.
+
+**Verdict: no spec over the band.** The largest pooled rise is +0.03/min (Fury L24, buffs and fixture); the largest
+single-set rise +0.11 (Fury L60, buffs and fixture, seeds 61-80: 0.20 -> 0.31). `viewer-none` equals the default on
+every line. Every spec not listed reads 0.00 in every arm and set or rises by +0.00 (Affliction, Arcane,
+Assassination, Balance, Beast Mastery, Combat, Demonology, Destruction, Elemental, Enhancement, Fire, Frostfire,
+Marksmanship, Protection, Retribution, SM Ruin, Shadow, Shadow Brand, Smite, Subtlety, Survival).
+
+| Spec | default flicker/min, sets 1-5 (mean) | buffs: rise (worst) | fixture: rise (worst) | mixed: rise (worst) |
+| --- | --- | --- | --- | --- |
+| Arms | 0.04 / 0.04 / 0.06 / 0.04 / 0.00 (0.04) | -0.00 (+0.00) | -0.00 (+0.00) | -0.00 (+0.00) |
+| Feral | 0.02 / 0.00 / 0.02 / 0.02 / 0.04 (0.02) | -0.00 (+0.02) | -0.00 (+0.02) | -0.00 (+0.02) |
+| Fury L24 | 0.26 / 0.29 / 0.20 / 0.47 / 0.27 (0.30) | +0.03 (+0.05) | +0.03 (+0.05) | +0.02 (+0.05) |
+| Fury L60 | 0.24 / 0.35 / 0.40 / 0.20 / 0.28 (0.29) | +0.02 (+0.11) | +0.02 (+0.11) | +0.00 (+0.00) |
+| Guardian | 0.22 / 0.16 / 0.10 / 0.12 / 0.26 (0.17) | +0.00 (+0.02) | +0.00 (+0.02) | +0.00 (+0.02) |
+| Warrior Protection | 0.10 / 0.02 / 0.13 / 0.12 / 0.07 (0.09) | +0.00 (+0.00) | +0.00 (+0.00) | +0.00 (+0.00) |
+
+The two rows the release gate names:
+
+- **Shaman `consumedBy` (buffs layout)**: Enhancement 0.00 / 0.00 / 0.02 / 0.00 / 0.00 in both the default and
+  `viewer-buffs`, Elemental 0.00 in every set of both: no rise.
+- **Target DoTs past their duration (mixed layout)**: Affliction, SM Ruin, Shadow, Shadow Brand, Demonology and
+  Balance 0.00 in every set of both arms; Destruction 0.02 / 0.07 / 0.02 / 0.02 / 0.00 in both; Feral 0.02 / 0.02 /
+  0.00 / 0.02 / 0.02 against 0.02 / 0.00 / 0.02 / 0.02 / 0.04; Guardian 0.24 / 0.16 / 0.10 / 0.11 / 0.26 against
+  0.22 / 0.16 / 0.10 / 0.12 / 0.26. The number of records held past their registered duration (the LONG
+  re-establish) is not counted by the harness (its state is local to `Sources/Auras.lua`); the flicker is the measure.
+
+Agreement (mean of the five sets) is within ±0.001 of the default on every spec in `viewer-fixture`; in
+`viewer-mixed` too but Subtlety (0.985 against 0.987, -0.002); in `viewer-buffs` Subtlety reads 0.979 against 0.987
+(-0.008), Arms 0.962 against 0.961, every other spec within ±0.001. Ready while short is identical to the default in every viewer arm (Fury L60 72 over 100 fights,
+Survival 2, Elemental 1, Enhancement 1, Warrior Protection 1).
+
+### The CDM audit counters
+
+Per fight, each viewer arm's `.ab/<arm>.tsv` carries a `layout` line with the leaf's coverage and the belief's
+per-fight counters (`tests/Game/harness/loop.lua`; the snapshot's `presence` lines, summed over auras, player/target):
+`facts` (CDM answers the belief took), `beliefDisagree` (of those, ones that found the belief on the other side),
+`itemDisagree` (the router's transitions of its items to disagreement), `lost` (a fact that went UNKNOWN while its
+record was up), `exitFix` (the combat-exit walk's corrections), `ambiguous` (ambiguous items' lights) and the slot
+`overflow`. Summed over the five sets (100 fights a spec key; more where loop files share one: WARRIOR fury 300,
+MAGE fire, WARLOCK affliction and demonology 200, WARRIOR arms 160, PRIEST discipline and ROGUE combat 110):
+
+- `itemDisagree` 0, `ambiguous` 0 and `overflow` 0 in every fight of every arm (largest layout 97 slots of 128). A
+  silent item beside a working one is never live (the per-slot seen rule), so it adds no item disagreement, as
+  designed. The mixed layout's items each map to one aura, so no item is ambiguous: `ambiguous` is unexercised by the
+  loops (the unit specs pin it).
+- `lost` is 0 in `viewer-buffs` and `viewer-fixture`; in `viewer-mixed` it is consistent with the layout's own churn
+  (the hidden viewer, the re-point, a release mid-application; not traced per event): e.g. Enhancement 50/4, Affliction 6/63, Demonology 17/53, Fire
+  35/18, Feral 0/21, Guardian 2/27. A normal aura end is not `lost` (spec §2.4).
+- `exitFix` stays at the viewer-off rate (`viewer-none`, 20 fights): Subtlety 51/204 over 100 fights (buffs) against
+  8/40 over 20, Feral 1/86 against 0/25: the walk's corrections at combat end come from the model's in-combat
+  estimates, not from the viewer.
+- `beliefDisagree` is high wherever the layout covers an aura (Warrior fury 1962/1214 of 1962/1219 facts in buffs;
+  Affliction target 5959 of 6384): a CDM UP that stages counts as a fact, and it stages only on a record the belief
+  holds down at that poll, so nearly every staged UP is a disagreement by construction. Mixed lowers both (Affliction
+  target 1883 of 4313). Not traced per event here: whether these are the same-drain race with our own cast's write
+  (F3: the cast wins at the fold) or real model misses is a follow-up; flicker and agreement show no cost from them.
+
+| class spec | buffs: facts | buffs: beliefDisagree | buffs: exitFix | mixed: facts | mixed: beliefDisagree | mixed: lost | mixed: exitFix |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| DRUID balance | 991/587 | 608/585 | 1/1 | 382/534 | 178/278 | 9/7 | 1/1 |
+| DRUID feral | 1340/2192 | 667/2187 | 1/86 | 550/2372 | 157/1093 | 0/21 | 1/86 |
+| DRUID guardian | 1589/657 | 846/654 | 2/0 | 644/692 | 167/273 | 2/27 | 2/0 |
+| HUNTER beast_mastery | 511/195 | 235/195 | 11/0 | 286/109 | 64/57 | 27/4 | 11/0 |
+| HUNTER marksmanship | 466/145 | 208/145 | 11/0 | 274/79 | 69/39 | 26/3 | 11/0 |
+| HUNTER survival | 220/5 | 219/5 | 0/0 | 198/5 | 88/1 | 29/2 | 0/0 |
+| MAGE arcane | 3563/0 | 2212/0 | 8/0 | 1948/0 | 811/0 | 12/0 | 8/0 |
+| MAGE fire | 2780/257 | 1765/257 | 3/0 | 1813/128 | 612/54 | 35/18 | 3/0 |
+| PALADIN protection | 39/5 | 39/5 | 0/0 | 33/4 | 18/4 | 10/0 | 24/0 |
+| PALADIN retribution | 1799/22 | 1434/22 | 0/0 | 1233/17 | 618/17 | 30/0 | 0/0 |
+| PRIEST discipline | 0/7815 | 0/7021 | 0/12 | 0/5979 | 0/2269 | 0/12 | 0/12 |
+| PRIEST shadow | 190/4737 | 146/4737 | 12/6 | 77/3782 | 52/1848 | 10/20 | 12/6 |
+| ROGUE assassination | 1687/99 | 1594/99 | 9/0 | 961/59 | 481/32 | 11/1 | 9/0 |
+| ROGUE combat | 910/106 | 860/105 | 0/0 | 555/67 | 304/39 | 7/0 | 0/0 |
+| ROGUE subtlety | 1594/970 | 1594/966 | 51/204 | 1011/638 | 663/289 | 13/14 | 51/208 |
+| SHAMAN elemental | 537/788 | 307/788 | 2/0 | 475/471 | 142/229 | 14/6 | 2/0 |
+| SHAMAN enhancement | 2009/788 | 1139/788 | 5/2 | 1627/468 | 453/229 | 50/4 | 5/2 |
+| WARLOCK affliction | 1431/6384 | 385/5959 | 6/11 | 1373/4313 | 197/1883 | 6/63 | 6/12 |
+| WARLOCK demonology | 200/5442 | 0/4521 | 0/9 | 157/3548 | 0/1429 | 17/53 | 0/9 |
+| WARLOCK destruction | 42/2305 | 41/2305 | 0/1 | 32/1484 | 24/746 | 0/22 | 0/1 |
+| WARRIOR arms | 278/915 | 278/910 | 0/84 | 238/503 | 118/265 | 15/5 | 0/84 |
+| WARRIOR fury | 1962/1219 | 1962/1214 | 0/122 | 1037/689 | 491/301 | 29/6 | 0/130 |
+| WARRIOR protection | 1352/1048 | 1352/1048 | 0/1 | 926/682 | 429/329 | 12/20 | 0/1 |
+
+`viewer-fixture` runs only Druid and Warrior (the other classes have no `tools/data/cooldownviewer` fixture and skip,
+one line each); their counters equal `viewer-buffs` but for Balance (facts 554/587, beliefDisagree 284/585).
+
+### The other arms on seeds 1-20 (not viewer arms)
+
+- `meter`: the largest rise Fury L24 +0.18 (0.26 -> 0.44), Arms +0.08; compare it with `lagged`, not the default.
+- `secret` (live UNIT_COMBAT, amounts secret; `HEKILI_AB=secret`, loop stage by hand): no rise over +0.11 (Fury L24
+  0.26 -> 0.37); Guardian 0.22 -> 0.07. Agreement falls where rage or mana is read from hit amounts: Fury L24 0.938 ->
+  0.879, Fury L60 0.922 -> 0.891, Feral 0.980 -> 0.946, Destruction 0.987 -> 0.966; Guardian rises 0.890 -> 0.931. The
+  Druid harness gates (bear, decay, shift) assert directly and fail under it (3 failures): it is not a gated arm.
+
+### Earlier measurements (superseded)
+
+Task 8 (2026-11-08) measured Feral +0.61, Guardian +0.42 and Destruction +0.31 over the band in `viewer-buffs` under
+the 4b hold; the hold fix (the owner's rule L310, variant C) brought them back to +0.02 at most on seeds 1-20, and
+this section is its five-set confirmation. The hold's alternatives (variants A and B) were measured there and removed
+after this run (review S2).
 
 ## For the owner's decision
 
@@ -224,8 +325,9 @@ sweeping_strikes, victorious), a lower bound; every other class has no fixture.
   attacker clocks), equal on detection recall, and one loop cost within noise after the fix (Fury L60 flicker 1.84
   against 1.74 on seeds 1-20; 1.83 against 1.78 over 100 fights). Its in-game behaviour is unmeasured until DM-M and
   DM-P (launch day). Our pet's hits are its known weakness (K14p, DM-PET).
-- **Viewer**: unmeasured in the loops (no fake items); taint (CDM-T) and coverage (CDM-R) decide it in game. Warrior
-  coverage is 4 of 42 auras today.
+- **Viewer**: measured in the loops on four layouts and five seed sets (above): no flicker rise beyond +0.03/min on
+  any spec. Taint (CDM-T), CDM-I, CDM-O, CDM-P and the coverage rows (`docs/dev/ingame-ledger.md`) decide the release
+  in game.
 - Ruled 2026-11-07/08: the viewer is always on (cdm-default decision 107); the meter is not used in game (its
   setting removed, the provider kept for the A/B arm).
 
@@ -278,14 +380,16 @@ own state: how wrong the modelled timer was.
 ### `make gate-ab`
 
 ```bash
-make gate-ab                          # make gate three times: HEKILI_AB unset (default), meter, viewer
+make gate-ab                          # make gate six times: default, meter, viewer-none, -buffs, -fixture, -mixed
 make gate AB_ARM=lagged               # the meter arm's baseline, by hand
 ```
 
 `tests/Game/harness/ab.lua` chooses the arm. The default arm asserts every floor as `make gate` does. A provider arm
 records each floor check as `label TAB ok|MISS TAB line` in `.ab/<arm>.tsv` and never fails (decision 86); health
 checks (errors, secrets, allocation, CPU) assert in every arm. Detection cells write `cell ...` and `audit ...` lines.
-`make gate-ab` starts with `rm -rf .ab`: copy `.ab/lagged.tsv` aside first. The meter arm also turns on a 0.48 s taken
+`make gate-ab` starts with `rm -rf .ab`: copy `.ab/lagged.tsv` aside first. While `make check` carries known failures,
+run `make -i gate-ab` (a failing check-full otherwise stops it after the first gate) and read each arm's verdict from
+its log. A viewer arm's `layout` lines carry the CDM audit counters (above). The meter arm also turns on a 0.48 s taken
 lead (rows on us arrive late, as measured), so compare it with `lagged`, not with `default`. One arm's spec file:
 `HEKILI_AB=meter .lua/bin/busted --tags=loop tests/Forever/loop_warrior_fury_spec.lua`. A loop verdict needs several
 seed sets (the seed-noise rule, `docs/dev/gaps.md` "A/B seed noise").
