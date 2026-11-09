@@ -234,7 +234,6 @@ all:RegisterAbilities( {
             if not args.buff_name then return 134400 end
 
             local a = class.auras[ args.buff_name ]
-            -- if not a then return 134400 end
             if a.texture then return a.texture end
 
             a = a and a.id

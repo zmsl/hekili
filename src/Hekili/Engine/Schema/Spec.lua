@@ -196,8 +196,6 @@ local HekiliSpecMixin = {
 
                     if state.time == 0 and not InCombatLockdown() then
                         phase.real[ d ] = false
-                        -- Hekili:Print( format( "[ %s ] Phase '%s' set to '%s' (%s) - out of combat.", self.name or "Unspecified", key, tostring( phase.real[ d ] ), hook ) )
-                        -- if Hekili.ActiveDebug then Hekili:Debug( "[ %s ] Phase '%s' set to '%s' (%s) - out of combat.", self.name or "Unspecified", key, tostring( phase.virtual[ display or "Primary" ] ), hook ) end
                     end
 
                     if not phase.real[ d ] and phase.activate() then
@@ -207,10 +205,6 @@ local HekiliSpecMixin = {
                     if phase.real[ d ] and phase.deactivate() then
                         phase.real[ d ] = false
                     end
-
-                    --[[ if phase.real[ d ] ~= original then
-                        if d == "Primary" then Hekili:Print( format( "Phase change for %s [ %s ] (from %s to %s).", key, d, tostring( original ), tostring( phase.real[ d ] ) ) ) end
-                    end ]]
 
                     phase.virtual[ d ] = phase.real[ d ]
 
@@ -354,9 +348,6 @@ local HekiliSpecMixin = {
 
             return
         end
-
-        -- Debug print if needed
-        -- Hekili:Print( "|cFFFF0000[Hekili]|r Invalid input passed to RegisterGear." )
     end,
 
 
@@ -851,7 +842,6 @@ end
 
 ns.setClass = function( name )
     -- deprecated.
-    --class.file = name
 end
 
 

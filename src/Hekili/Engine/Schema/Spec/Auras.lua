@@ -8,38 +8,10 @@ local C_Spell = Facade.C_Spell
 local Hekili = _G[ addon ]
 local class = Hekili.Class
 local state = Hekili.State
-local CommitKey, FindUnitBuffByID, FindUnitDebuffByID = ns.commitKey, ns.FindUnitBuffByID, ns.FindUnitDebuffByID
+local CommitKey = ns.commitKey
 local GetSpellDescription = C_Spell.GetSpellDescription
 local GetSpellTexture = C_Spell.GetSpellTexture
 local GetSpellInfo = C_Spell.GetSpellInfo
-
-local function Aura_DetectSharedAura( t, type )
-    if not t then return end
-    local finder = type == "debuff" and FindUnitDebuffByID or FindUnitBuffByID
-    local aura = class.auras[ t.key ]
-
-    local name, _, count, _, duration, expirationTime, caster = finder( aura.shared, aura.id )
-
-    if name then
-        t.count = count > 0 and count or 1
-
-        if expirationTime > 0 then
-            t.applied = expirationTime - duration
-            t.expires = expirationTime
-        else
-            t.applied = state.query_time
-            t.expires = state.query_time + t.duration
-        end
-        t.caster = caster
-        return
-    end
-
-    t.count = 0
-    t.applied = 0
-    t.expires = 0
-    t.caster = "nobody"
-end
-
 
 local methods = {
     -- A content field beside Hekili's own: `overlay = spellID` on a player proc aura (C2). While the player aura walk is
@@ -82,11 +54,6 @@ local methods = {
         data.duration  = data.duration or 30
         data.max_stack = data.max_stack or 1
 
-        -- This is a shared buff that can come from anyone, give it a special generator.
-        --[[ if data.shared then
-            a.generate = Aura_DetectSharedAura
-        end ]]
-
         for element, value in pairs( data ) do
             if type( value ) == "function" then
                 setfenv( value, state )
@@ -121,7 +88,6 @@ local methods = {
 
         if a.id then
             if a.id > 0 then
-                -- Hekili:ContinueOnSpellLoad( a.id, function( success )
                 a.onLoad = function( a )
                     local d = GetSpellInfo( a.id )
                     a.name = d and d.name

@@ -176,11 +176,6 @@ local methods = {
         a.realCast = 0
 
         if item then
-            --[[ local name, link, _, _, _, _, _, _, _, texture = GetItemInfo( item )
-
-            a.name = name or ability
-            a.link = link or ability ]]
-
             class.itemMap[ item ] = ability
 
             -- Register the item if it doesn't already exist.
@@ -319,7 +314,6 @@ local methods = {
         end
 
         if a.id and a.id > 0 then
-            -- Hekili:ContinueOnSpellLoad( a.id, function( success )
             a.onLoad = function()
                 local spellInfo = GetSpellInfo( a.id )
 
