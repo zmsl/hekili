@@ -10,6 +10,7 @@ local headless = require("Game.harness.headless")
 local observer = require("Game.harness.observer")
 local scenarios = require("Game.harness.scenarios")
 local drive = require("Game.harness.drive")
+local fake = require("Game.State.helpers.fake_api")
 local flicker = require("Game.harness.flicker")
 local timing = require("Game.harness.timing")
 
@@ -119,6 +120,8 @@ local function feed(H, obs, t, base, sink)
                 a3 = base + a3
             end
             drive.op(sink, ctl, ev, a1, a2, a3, a4, s.a5[i])
+        elseif s.secretAmount and ev == "UNIT_COMBAT" then -- the secret arm (observer.secretAmount): as live
+            H.Fire(ev, s.a1[i], s.a2[i], s.a3[i], fake.SECRET, s.a5[i])
         else
             H.Fire(ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
         end
