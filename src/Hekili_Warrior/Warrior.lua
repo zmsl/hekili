@@ -484,6 +484,7 @@ spec:RegisterAuras({
     },
     bloodrage = {
         id = 29131,
+        copy = { 2687 }, -- the viewer's Bloodrage entry names the cast, links the buff
         duration = 10,
         tick_time = 1,
         max_stack = 1,
@@ -594,6 +595,7 @@ spec:RegisterAuras({
     },
     last_stand = {
         id = 12976,
+        copy = { 12975 }, -- as Bloodrage: the viewer entry names the cast, links the buff
         duration = 20,
         max_stack = 1,
     },
