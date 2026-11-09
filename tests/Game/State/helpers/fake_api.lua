@@ -689,6 +689,8 @@ function M.new()
         applied = {}, -- the auras up on us: { unit, spellID }, for an item acquired while one is still running
         pending = {}, -- the lagged lights: { item, unit, up }
         hookCalls = {}, -- every HookScript / hooksecurefunc call (the leaf is asserted to make none)
+        reshuffle = false, -- true: ViewerRetarget also reshuffles every viewer's frames (ViewerReshuffle)
+        reshuffleN = 0, -- the counter ViewerRetarget passes ViewerReshuffle (the caller may seed it per fight)
     }
     ctl.overrides = {} -- [spellID] = C_Spell.GetOverrideSpell's answer (default: the ID itself)
     api.C_CooldownViewer = {
@@ -953,8 +955,47 @@ function M.new()
         end
     end
     ctl.ViewerFlush = flushLag -- the loop harness never calls ctl.Tick: its cycle calls this
+    local FRAME_OWN = { isItem = true, hooks = true, writes = true, HookScript = true } -- the rest is the item's
+    --- The full UNIT_AURA update's release and re-acquire (verdict spec §1, §2.4): in each viewer the configured items
+    --- move to other frames, a rotation by 1 + n % (count - 1) (deterministic from the caller's counter `n`, never
+    --- the identity). An item carries everything but the frame itself: its cooldownID, layoutIndex, flags and aura
+    --- state (a lit item stays lit on its new frame, as the client's refresh re-lights it); a pending light follows it.
+    function ctl.ViewerReshuffle(n)
+        local moved = {} -- old frame -> new frame
+        for _, name in ipairs(M.VIEWERS) do
+            local frames, items = {}, {}
+            for _, f in ipairs(ctl.viewer.items[name]) do
+                if f.isItem and f.cooldownID ~= nil then
+                    local b = {}
+                    for k, v in pairs(f) do
+                        if not FRAME_OWN[k] then
+                            b[k] = v
+                        end
+                    end
+                    for k in pairs(b) do
+                        f[k] = nil
+                    end
+                    frames[#frames + 1], items[#items + 1] = f, b
+                end
+            end
+            local c = #frames
+            local r = c > 1 and 1 + n % (c - 1) or 0
+            for i, f in ipairs(frames) do
+                local from = frames[(i - 1 + r) % c + 1]
+                for k, v in pairs(items[(i - 1 + r) % c + 1]) do
+                    f[k] = v
+                end
+                moved[from] = f
+                write(f, "reshuffle")
+            end
+        end
+        for _, p in ipairs(ctl.viewer.pending) do
+            p[1] = moved[p[1]] or p[1]
+        end
+    end
     --- Our target changed (the client re-reads its target items): every item held for the target clears (a noUnit one
     --- by the unit it was lit for), the target's applied auras and pending lights go; the caller lights the new target's.
+    --- With ctl.viewer.reshuffle the full update also re-points every frame in all four viewers (ViewerReshuffle).
     function ctl.ViewerRetarget()
         for _, name in ipairs(M.VIEWERS) do
             for _, item in ipairs(ctl.viewer.items[name]) do
@@ -970,6 +1011,10 @@ function M.new()
                     table.remove(list, i)
                 end
             end
+        end
+        if ctl.viewer.reshuffle then
+            ctl.viewer.reshuffleN = ctl.viewer.reshuffleN + 1
+            ctl.ViewerReshuffle(ctl.viewer.reshuffleN)
         end
     end
     --- A fresh fight (the loops): every item's aura cleared, no aura applied, no light pending; the frames stay.
