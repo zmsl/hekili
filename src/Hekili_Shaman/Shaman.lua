@@ -808,6 +808,40 @@ spec:RegisterTalents({
     riptide = { 3, 408521, 1 },
 })
 
+-- The time to each hand's next swing (Hekili_Warrior/Warrior.lua's, after Hekili's Classic profile): Enhancement's AoE
+-- Chain Lightning reads wowsims's AnyAuto, the earlier hand (translator-5); a Shaman has no ranged auto. With no
+-- off-hand weapon that hand never swings: false, which the APL's min() skips.
+spec:RegisterStateExpr("mainhand_remains", function()
+    -- out of combat no swing runs (nextMH is 0): anchor it at this evaluation, or its phase free-runs with the clock
+    local mh = (nextMH == 0 and combat == 0) and now or nextMH
+    if now == query_time then
+        local real = mh - now
+        return real > 0 and real or 0
+    end
+    if query_time <= mh then
+        return mh - query_time
+    end
+    if mainhand_speed <= 0 then
+        return 0
+    end -- no swing speed read yet
+    return mainhand_speed - (query_time - mh) % mainhand_speed
+end)
+
+spec:RegisterStateExpr("offhand_remains", function()
+    if offhand_speed <= 0 then
+        return false
+    end
+    local oh = (nextOH == 0 and combat == 0) and now or nextOH
+    if now == query_time then
+        local real = oh - now
+        return real > 0 and real or 0
+    end
+    if query_time <= oh then
+        return oh - query_time
+    end
+    return offhand_speed - (query_time - oh) % offhand_speed
+end)
+
 -- The priority, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run
 -- it, never this block (tests/Forever/shaman_spec.lua checks it matches).
 spec:RegisterPack(
@@ -817,8 +851,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Enhancement (wowsims.com)",
-    20261108000,
-    [[Hekili:DJvuVTTnq4Fl9LUeSajBVLM0G6cKHTH2H1Gb4(SKPLozXAjsbsQyKx0V9DK21MIIuwyDRpSxALfV77o(Dhp(PKmp5ZjRYjki5PfZw8M5ZND)SzZswPEPbsw1qY2r2IpWi14)(BSscldQbMQB9v757L0AzugV(ATPVuXj5A420sRuFKLSXlYYgilz1Qp84NE8PhGZiMSQKMNdhCdKzJfUh6wRkHU1hFxCbxapdIU15qbPTcn)X)6p7wJVUBDFuAPX6eqgllj1ewSvceRZ7CzScKkkBBK5NrFrYzxFdgpbHjRWTto(mxhFQSBnjpNZ(b8HDWlYOU1)krrEWtED1N(4NrqkvQg5dXXBPQY2n6TsSJPxJyI5jCl5Tz5lilYlYIqYvWlOvyfGKPOCMmQraOZBiQLfvyPrXzBBH09aPHZUHwS8vBAlkIQjuwkU)Ytbwg()QO2MU)yag)4YybpB3gQcetcJx)Qdyenm4r7y89m)bzprhazjfQYpha73gm)2tz5fTIxsvCfuBC28ueHkc6ewFjPYgbwmh4NjQb9uQeaBRQmLxKceb(GR)M3osK3wtg4tbva2U8pV29FyfZK9FHlsnSxdx)YBALasffPBZYxoxhj9IrnzQ0k(7UFMTZ5qnNrZsfTmyC)URNF9Aok4zTYLlUCtI3wJZDgcqtgY3TCHThJuDTlU(D2BtLDpvi361ry1q43EnZHv3AzFoSxhaozwVfWjHPfeHearyJZivvPh(zAfvQUrprFPe3fvqQIi2cQubxrmLBmb1M(mGDqqnfKtblchgbH33dHk62sfttHB4vktz(y)PuXf1ybIUdChL4pzpCicBnWZd29n5GPXXA1Zm9SlbQPj5uImbRD2qhYdth)vksfE5cEQeQq441F9yhWiBQG8xF8mRZQsfE17YBVEcX(qlSzlobR19CPm(ZKZ2Ax5wEH11i8nr4oG5LMDS57a56eXEuAYk8EzjUGJqgDRVuR3X2z83pz0uDmds(LVEPDYQtuBIcHYXOmHEyoLOf)mcrAH251XFO5enOiY)uGWBr1AZ(5GjW3iREoI9lCNYY56WFBGS0I6rZqN83j7JN)3JcDlobOqxM(7mf6wb9tHbzA72rLMZmsNhTbEG4b79Cy1hJrPU6yMgIxupJVYJ1LJ694PuyGEh7COVshF0EiyTvcfcX7M5Rc5YaoQFohc7f63b)Ma0DF1s2HYNQjns3f8SGxvudH0vnLg07da6a1vdHZvLLgU3geUtQUgcKJ6lnoZNnXA7j5zgVCpVeYlpk2m(h(UaTN2YWoJLRiSd3hLE4d1dmZuhRWZS6hR3p1y172pDecnwYDuMvx(XdZde)DyY0PVS6)XZM8FI(sdcg5sGWh079LZJDbXOhgD(o6XM5mHjfoFv9yZDcCMU)3yBACWwhsRQKlsw9byhTI2T(QF)4FMfZYj)9p]]
+    20261108001,
+    [[Hekili:DJvBVTTnq4Fl9lz2ybYV0LM0G6a0HTH2H1GbO(zjtlDYM1sKcKuXiad(3(os7ArrrkBSS2p0VKOxU75E75oEwjZs(CsCorbjpoF683mB207MoDwsS65AijUMKTLSgVGrQW)(7Snewgubm1(LJ2X3jPvYOmE1yTOpxYj5A4w1qlvFKLSYlYYAiljo(dV)tV)X7HwetI3qZZHdQbYSHm397xQ2a7xE8ztk4c4jqSFzouqAkrXF)F)x7xIpE)YUO0qNODa5e5gsfHnXYbMO97C5efivu26iZTrFrYzJVgTNGWKLy4KJxZ12Nk3VKKNZz)eEXw4zz0(L)grrU3JFn6tF8ZiiBuQA59tMSMQ20SshktCeDmIj6NWnK3MLpNmpVilctUcEbTeRaKmfLZKr1cavEfrTOOelnkoBDdKUdi1C210IfVAvtrrufHYsX4lpfyz4)vrn17)ZEy8ZlMi4zBxrvG4IW4QxDaJO(gpAlJVJ53i7iAdi3qHY8wdy)0G(3oklVOr8CQIRGkJYMRIiurqLW6ljvwlWIzp9mwnOMsLayRvBs5fParGx4QV5Pdy51vKE6uqfGTk)3RDFdRygV)lCrQj7vZ1p86gjGPII01z5lMPTK(Lr1zQ0s(7UBQTY5qfNrZsfnmyy9UTJEDihf8Sg5I5NNK4LA0YmeGoziF3I52Amq11U46xzVKkBovi16WiSie(LxN5WQBLSBoSddaNmRdbCsyAbribqew4mszz6HBtlPs116j6lKyuucPkIynOsfCfXuUrhul6taYGGkkiVeSiCyaeEOdcL01BumDkCfVuzkZh5NsfxuHfi6wWDuIFN9qtesnW(bBEtoyiowVTntp9CGAijNCKlqANa6GFyy8JuKs8WfSRekr44vFTTdyKvLq(vh7zDERuHh9U4MXxGTpqHnH4fiTMZLY4prAL1UYTaNyq1L1JXJDiaLMZjjyXVKKjOQNJWdf3(WIxF1OG1V)5yHW(fn1JVQIYgPlhMbvhRmxJux77h)WruDCQOmIun2FaC(qulXlIZ4aMxMIJmFh4howSdRijgxTqIVWzxmD3RuVYMTY49pAwl8OhK8RFDVJKyNcb(aH(mikjj(LXs(2rtsuyqhiCoXu0c9AhHAdTb5fwO1(E8gDjwBze5FjG5TcwTy3e0bEHKKwl2LhEYlNPn)Bc4Lwmjumuj)Zw8rB()lfgQc6Kcdxd)UKcdvO7Mc7vO9rhv6CM5hZmu)y)15SJ5W7douk1DZYldXZUHPVYJ16k6y8Kl0BduBFO7UN(s7HG1E30qiE70HBf9UpARjSFrxgCO2RU7VABkF7XQr62G9cE3RTpKU73Qb9UaG2BF3(W5U3RgU3geUt7b3hiN9H14mB6fwBpTWSrl3(LqA5zhAJ(U9gTEQwt7fJToB0zT4dhVME4tNeyMP2wHNz11wpCP2QZH5AleASK7OmlwEOdQpmz60V19h4zt(7Op3GGboeiCJENVLXqhqmyZOZx2yOzoxWKcNVZXqZDc0t39REyioi1H0O2WfjXFa2slP7xo6po(HVmVo5F)]]
 )
 
 -- The hand-built Enhancement list, replaced by Enhancement (wowsims.com): a saved choice of it falls back to the default.

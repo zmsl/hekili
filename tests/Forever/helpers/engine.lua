@@ -464,11 +464,12 @@ end
 --- items, auras) and the engine's own, a race pack's over both), each its registered object (gcd, cooldown, cast,
 --- known and the rest as registered). `race`: one race token (UnitRace's second return), that race's racials; nil:
 --- every race the registry holds (a pack's priority serves every race). Returns { abilities, auras (keyed like
---- Hekili.Class's: keys, names, IDs), talents (the kit's), racial = { [key] = race token } }.
+--- Hekili.Class's: keys, names, IDs), talents (the kit's), racial = { [key] = race token }, stateExprs (the kit's) }.
 function M.abilitySet(classToken, race)
     local base = M.load(classToken, race or "")
     local set = merged(base)
-    set.talents, set.racial = base.class.kit.talents, {}
+    -- stateExprs: the kit's state expressions (the translator's autoTimeToNext reads which hand clocks the kit has)
+    set.talents, set.racial, set.stateExprs = base.class.kit.talents, {}, base.class.kit.stateExprs
     for _, r in ipairs(race and { race } or base.races) do
         local env = race and base or M.load(classToken, r)
         local t = merged(env)

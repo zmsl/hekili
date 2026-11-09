@@ -113,7 +113,7 @@ files["tests/Forever/"] = { std = "+busted" }
 -- further `state` names they use.
 local warriorEnv = {
     "rage", "cooldown", "combat", "active_enemies", "active_dot", "setDistance", "interrupt", "swap_stance",
-    "mainhand_remains", "nextMH", "mainhand_speed", "offhand_speed", "weapon", "level",
+    "mainhand_remains", "nextMH", "nextOH", "mainhand_speed", "offhand_speed", "weapon", "level",
 }
 for _, k in ipairs(stateEnv) do
     warriorEnv[#warriorEnv + 1] = k
@@ -143,7 +143,7 @@ for _, k in ipairs(stateEnv) do
 end
 files["src/Hekili_Paladin/Paladin.lua"] = { globals = paladinEnv }
 -- The Shaman's further `state` names.
-local shamanEnv = { "totem", "summonTotem" }
+local shamanEnv = { "totem", "summonTotem", "combat", "nextMH", "nextOH", "mainhand_speed", "offhand_speed" }
 for _, k in ipairs(stateEnv) do
     shamanEnv[#shamanEnv + 1] = k
 end
