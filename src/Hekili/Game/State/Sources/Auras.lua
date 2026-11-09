@@ -58,11 +58,19 @@ local KEY = {} -- aura index -> its key, for the Snapshot lines
 local BY_CAST, BY_CDM, BY_WALK = 1, 2, 3
 local ours, oursAp, upAt = {}, {}, {}
 I.auraOurs = ours
--- Rule 4 (C2, decision 112): a CDM UP with no model behind it runs its registered duration (DUR[j], -1 none) from
--- max(fact.t, applied), then holds HOLD, re-staged when it would lapse before the slowest in-combat drain (LAPSE,
--- Engine/Driver.lua restRate's 0.5 s): about every HOLD - LAPSE while the fact stays UP, never per poll.
--- shortcut: HOLD 1.0 s is a guess (spec D9); Task 9's target-DoT-past-duration row measures it.
-local HOLD, LAPSE = 1.0, 0.5
+-- Rules 3-4 (C2, decision 112 as amended by the owner's rule, L310: trust the belief's duration). A CDM UP with no model
+-- record behind it opens one at once: its registered duration (DUR[j], -1 none) from max(fact.t, applied) when that
+-- outlasts HOLD, else LONG. A record believed up is never extended: at the model's expiry it goes down on its own;
+-- only an item lit continuously HOLD past that expiry re-establishes it, once, LONG (a permanent player aura: -1, as
+-- before; LONG is finite where a duration exists: inf - inf is NaN), closed by the observed down (rule 1). A LONG
+-- record whose CDM stops answering UP (UNKNOWN, a hidden viewer, the leaf off, a target change) is clamped to HOLD
+-- once.
+-- shortcut: HOLD 1.0 s is a guess (spec D9; the owner's 0.6/1.0/1.5); Task 9's variant arms measure it.
+-- I.cdmHoldRule and I.cdmHold: the harness's variant switch only (Task 9's A/B; never a user option): "C" the rule
+-- above, "A" the 4b hold (re-staged to HOLD ahead within LAPSE of the expiry, LAPSE the slowest in-combat drain,
+-- Engine/Driver.lua restRate's 0.5 s), "B" L309 (that re-stage writes LONG once).
+local LAPSE, LONG = 0.5, 3600
+I.cdmHoldRule, I.cdmHold = "C", 1.0
 -- D14: after our cast wrote an application, its NONE closes it only once the fact read UP REFRESH_LAG after the write: an
 -- item still showing the old application inside the client's latency says nothing of the new one.
 -- shortcut: 0.5 s is unmeasured; the LAT probe (cast success vs the item's light) sets it.
@@ -72,6 +80,11 @@ local REFRESH_LAG = 0.5
 local REFRESH_HOLD = I.AURA_REFRESH * 0.99
 local ICD_STEPS = 4 -- at most this many extra Reads per hold re-stage of an icd aura (HOLD + LAPSE fits in 3)
 local DUR = {}
+-- By key (rule C): lastE the model's expiry the last time an UP answer found the record up (0: none, or the item went
+-- dark since), lastSt its stacks; longE the expiry of the LONG write still standing (0 none). anyLong, anyLast: some
+-- longE, lastE set since the last poll with no live slot.
+local lastE, lastSt, longE = {}, {}, {}
+local anyLong, anyLast = false, false
 -- Decision 114: 1 while the player's reduced fact is UP, else 0 (CN13's Obs.PlayerHit keeps one stack while it is 1).
 local floor = I.auraFloor or {}
 I.auraFloor = floor
@@ -103,8 +116,9 @@ I.OnBuild(function(def)
         facts[j], disagree[j], staged[j], exitFix[j], ours[j], oursAp[j], upAt[j] = 0, 0, 0, 0, 0, 0, 0
         local k = I.AURA_UNIT + j
         facts[k], disagree[k], staged[k], exitFix[k], ours[k], oursAp[k], upAt[k] = 0, 0, 0, 0, 0, 0, 0
+        lastE[j], lastSt[j], longE[j], lastE[k], lastSt[k], longE[k] = 0, 0, 0, 0, 0, 0
     end
-    floorSet = false
+    floorSet, anyLong, anyLast = false, false, false
     exiting = false -- a walk after a build finds every record cleared: no correction to count
     pending = true -- a build cleared every record: walk the player at the next out-of-combat poll 10 (gear-aware spec §2)
 end)
@@ -282,23 +296,30 @@ function I.AuraOurs(u, j)
     end
 end
 
--- Rule 4's remaining for an UP of (j, u) at t (decision 112): never math.huge on the target or with a duration.
-local function hold(j, u, k, t)
-    local F = I.presence.fact
-    local ft = F and F.t[k] or 0
-    local ap = I.auras.applied[u][j]
-    local t0 = ft > ap and ft or ap
-    if DUR[j] >= 0 then
-        local r = t0 + DUR[j] - t
-        if r > HOLD then
-            return r
-        end
-        return HOLD
-    end
-    if u == 1 then
+-- The LONG write's remaining for (j, u): -1 (math.huge) only for a player aura with no numeric duration (as before).
+local function long(j, u)
+    if u == 1 and DUR[j] < 0 then
         return -1 -- closed by rule 1's NONE: a CDM UP made it ours
     end
-    return HOLD
+    return LONG
+end
+
+-- Rule 4's remaining for an UP of (j, u) at t (decision 112): never math.huge on the target or with a duration.
+local function hold(j, u, k, t)
+    local H, A = I.cdmHold, I.cdmHoldRule == "A"
+    if DUR[j] >= 0 then
+        local F = I.presence.fact
+        local ft = F and F.t[k] or 0
+        local ap = I.auras.applied[u][j]
+        local r = (ft > ap and ft or ap) + DUR[j] - t
+        if r > H then
+            return r
+        end
+        return A and H or long(j, u)
+    elseif not A or u == 1 then
+        return long(j, u)
+    end
+    return H
 end
 
 -- Rule 1 (decision 111 as amended): a reduced DOWN closes the record only if our evidence opened this application;
@@ -335,11 +356,26 @@ local function apply(j, u, up, t, edge)
         return false
     end
     local e = U.exp0[u][j]
-    local stage, rem = false, 0
-    if up then
+    local stage, rem, kind, rule = false, 0, ReadOf.Aura, I.cdmHoldRule
+    if up and rule == "A" then
         stage = e <= t or (e ~= HUGE and e - t <= LAPSE)
         if stage then
             rem = hold(j, u, k, t)
+        end
+    elseif up and e > t then
+        if rule == "B" then
+            stage, rem, kind = e ~= HUGE and e - t <= LAPSE, long(j, u), ReadOf.AuraHeld
+        elseif e ~= HUGE then
+            lastE[k], lastSt[k], anyLast = e, U.stacks[u][j], true -- the model's expiry stands: the debounce counts from it
+        end
+    elseif up then
+        kind = ReadOf.AuraOpen -- our cast's write folded first in this drain wins (F3)
+        if rule == "C" and lastE[k] > 0 then -- lit through the model's expiry: overridden only once lit HOLD past it
+            local F = I.presence.fact
+            local ft = F and F.t[k] or 0
+            stage, rem = t - (ft > lastE[k] and ft or lastE[k]) >= I.cdmHold, long(j, u)
+        else
+            stage, rem = true, hold(j, u, k, t)
         end
     else
         stage = e > t and closes(k, u, j)
@@ -359,15 +395,16 @@ local function apply(j, u, up, t, edge)
     local stacks = 0
     if up and e <= t then
         ours[k], oursAp[k] = BY_CDM, foldApplied(u, j, t) -- a CDM UP opened it
+        stacks = lastSt[k] -- C re-established: the model's last stacks (else 0)
     elseif up then -- a hold re-stage: the model's stacks stand (rule 3)
         stacks = U.stacks[u][j]
     end
-    local c = ReadOf.Aura + stacks * I.AURA_STACK
-    if up and e > 0 and U.icd[j] > 0 and e + REFRESH_HOLD > t then
+    local c = kind + stacks * I.AURA_STACK
+    if rule ~= "C" and up and e > 0 and U.icd[j] > 0 and e + REFRESH_HOLD > t then
         -- an icd aura still on record: a Read more than AURA_REFRESH past its expiry is a re-application to
         -- Families/Auras.lua (ICD restart, applied moves, ours lost), so the hold steps there, each Read at most
         -- REFRESH_HOLD past the one before (the fold takes them in order), whatever the poll gap (review m2)
-        local goal, x, n = t + (rem > 0 and rem or HOLD), e, 0
+        local goal, x, n = t + (rem > 0 and rem or I.cdmHold), e, 0
         while x + REFRESH_HOLD < goal and n < ICD_STEPS do
             x, n = x + REFRESH_HOLD, n + 1
             Direct(Obs.Read, t, k, x - t, c)
@@ -375,7 +412,22 @@ local function apply(j, u, up, t, edge)
         rem = (goal < x + REFRESH_HOLD and goal or x + REFRESH_HOLD) - t
     end
     Direct(Obs.Read, t, k, rem, c)
+    if up and rule ~= "A" and (rem == LONG or rem < 0) then
+        longE[k], anyLong = rem < 0 and HUGE or t + rem, true -- the fold's expiry (Families/Auras.lua: o.t + o.b)
+    end
     return true
+end
+
+-- One clamp of a LONG record whose CDM stopped answering UP: HOLD from t, once (the record's expiry no longer the
+-- LONG write's, by a cast, a walk or a close, needs none). Allocates nothing.
+local function clamp(j, u, t)
+    local k = (u - 1) * I.AURA_UNIT + j
+    local e = I.auras.exp0[u][j]
+    if longE[k] == e and e > t + I.cdmHold and staged[k] ~= t then
+        staged[k] = t
+        Direct(Obs.Read, t, k, I.cdmHold, ReadOf.AuraHeld + I.auras.stacks[u][j] * I.AURA_STACK)
+    end
+    longE[k] = 0
 end
 local function onEdge(j, u, up, t)
     if apply(j, u, up, t, true) then
@@ -405,6 +457,18 @@ S.Poll(15, function(_, t)
             end
             floorSet = false
         end
+        if anyLong or anyLast then -- no live slot (the leaf off, every viewer hidden, nothing lit): no answer at all
+            for u = 1, (U.n < 2 and U.n or 2) do
+                for j = 1, U.nAura do
+                    local k = (u - 1) * I.AURA_UNIT + j
+                    if longE[k] > 0 then
+                        clamp(j, u, t)
+                    end
+                    lastE[k], lastSt[k] = 0, 0 -- not lit continuously: a record still up sets it again
+                end
+            end
+            anyLong, anyLast = false, false
+        end
         return
     end
     for u = 1, (U.n < 2 and U.n or 2) do
@@ -417,14 +481,41 @@ S.Poll(15, function(_, t)
             if a ~= I.UNDECIDED then
                 apply(j, u, a == I.UP, t, false)
             end
+            local k = (u - 1) * I.AURA_UNIT + j
+            if a ~= I.UP and longE[k] > 0 then
+                clamp(j, u, t)
+            end
+            if a ~= I.UP and lastE[k] > 0 and U.exp0[u][j] <= t then
+                -- dark past the model's expiry (a NONE counts only for a record up: UNKNOWN here): no debounce, a
+                -- later light is a new application
+                lastE[k], lastSt[k] = 0, 0
+            end
         end
+    end
+end)
+
+-- A target change, before Sources/Target.lua's swap logs its TargetSwap (Hekili.toc order): mob A's LONG record is
+-- clamped while it is still the target's (it folds before the swap's save, so mob A is not remembered up for an hour),
+-- and the debounce starts over. Allocates nothing.
+S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
+    if not I.built or I.auras.n < 2 then
+        return
+    end
+    for j = 1, I.auras.nAura do
+        local k = I.AURA_UNIT + j
+        if longE[k] > 0 and I.targetSlot == I.curSlot then -- a second change in one drain: the first one clamped
+            clamp(j, 2, t)
+        end
+        longE[k], lastE[k], lastSt[k] = 0, 0, 0
     end
 end)
 
 S.On("PLAYER_REGEN_DISABLED", nil, function()
     for k in pairs(facts) do
         facts[k], disagree[k], staged[k], exitFix[k] = 0, 0, 0, 0
+        lastE[k], lastSt[k], longE[k] = 0, 0, 0 -- out of combat the walk answered
     end
+    anyLong, anyLast = false, false
     exiting = false
 end)
 

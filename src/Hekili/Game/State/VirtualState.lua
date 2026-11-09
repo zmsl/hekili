@@ -73,8 +73,20 @@ I.HitName = { "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS", "HEAL", "DE
 
 --- What a `Read` observation read (its `c`): TDF's Enum.ReadOf integers (5 and 7-9 reserved), plus Health = 10 and
 --- RegenSpirit = 11 (an `fsr` slot's spirit part: the not-casting rate less the casting one), VirtualState kinds past
---- TDF's range.
-I.ReadOf = { Resource = 1, Aura = 2, TargetAura = 3, Max = 4, Regen = 6, Health = 10, RegenSpirit = 11 }
+--- TDF's range. AuraOpen = 12 and AuraHeld = 13 are the Cooldown Manager's presence writes (Sources/Auras.lua; below
+--- I.AURA_STACK, so they pack stacks like Aura): no client expiry behind them, so no plain read our cast's write yields
+--- to (Families/Auras.lua); AuraOpen also opens only a record still down when it folds (our cast's write wins).
+I.ReadOf = {
+    Resource = 1,
+    Aura = 2,
+    TargetAura = 3,
+    Max = 4,
+    Regen = 6,
+    Health = 10,
+    RegenSpirit = 11,
+    AuraOpen = 12,
+    AuraHeld = 13,
+}
 
 --- What a `TargetCast` observation reports (its `a`): TDF's Enum.TargetCastOf integers.
 I.TargetCastOf = { Start = 1, ChannelStart = 2, End = 3, Interrupted = 4, Kickable = 5 }

@@ -193,14 +193,19 @@ end
 
 I.On(Obs.Read, function(o, t)
     local c = o.c
-    if c % I.AURA_STACK ~= ReadOf.Aura then
+    local kind = c % I.AURA_STACK
+    if kind ~= ReadOf.Aura and kind ~= ReadOf.AuraOpen and kind ~= ReadOf.AuraHeld then
         return
     end
     local u = (o.a - o.a % I.AURA_UNIT) / I.AURA_UNIT + 1 -- nonzero: AURA_UNIT is a constant
     local j = o.a % I.AURA_UNIT
-    local stacks = (c - ReadOf.Aura) / I.AURA_STACK -- nonzero: AURA_STACK is a constant
+    local stacks = (c - kind) / I.AURA_STACK -- nonzero: AURA_STACK is a constant
+    -- a Cooldown Manager write is sampled with no event: I.AuraModel's "the read wins" is for a client expiry only
+    local event = kind == ReadOf.Aura and Obs.Read or 0
     if o.b == 0 then
-        set(u, j, 0, 0, 0, t, "observed", Obs.Read)
+        set(u, j, 0, 0, 0, t, "observed", event)
+    elseif kind == ReadOf.AuraOpen and U.exp0[u][j] > o.t then
+        return -- a CDM UP staged while the record was down; our cast's write, folded first in this drain, stands (F3)
     else
         local expires = o.b < 0 and HUGE or o.t + o.b
         local was, icd = U.exp0[u][j], U.icd[j]
@@ -217,7 +222,7 @@ I.On(Obs.Read, function(o, t)
         else
             applied = o.t
         end
-        set(u, j, expires, applied, stacks > 0 and stacks or 1, t, "observed", Obs.Read)
+        set(u, j, expires, applied, stacks > 0 and stacks or 1, t, "observed", event)
     end
 end)
 

@@ -902,6 +902,7 @@ describe("auras", function()
         end)
 
         it("a target UP past its registered duration holds within HOLD, not per poll; lost, it lapses", function()
+            I.cdmHoldRule = "A" -- the 4b hold (variant A, the Task 9 arm): its own behaviour
             ctl.ViewerAura(ti, "target")
             poll(10) -- opened: expires 25
             local last, stages, t = est("target", fs.SPENDER_C, 10), 0, 20
@@ -927,6 +928,7 @@ describe("auras", function()
         end)
 
         it("a hold re-stage of a record believed up keeps its stacks (rule 3: the model's stacks stand)", function()
+            I.cdmHoldRule = "A" -- the 4b hold (variant A, the Task 9 arm): its own behaviour
             I.AuraModel(2, REND, 10, 25, 3, 10, Obs.CastSuccess, true) -- our 3-stack debuff
             I.AuraOurs(2, REND)
             ctl.ViewerAura(ti, "target")
@@ -939,6 +941,7 @@ describe("auras", function()
         end)
 
         it("an icd aura's hold keeps the application: its ICD does not restart and it stays ours", function()
+            I.cdmHoldRule = "A" -- the 4b hold (variant A, the Task 9 arm): its own behaviour
             local def = fs.def(fs.new(9))
             def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, duration = 3, icd = 10 }
             start(def)
@@ -988,24 +991,31 @@ describe("auras", function()
         it(
             "the switch's drain applies nothing on the target: mob A's record never decides for mob B (review m3)",
             function()
-                cast(2, REND, 10, 15) -- mob A's record expires at 25
-                ctl.ViewerAura(ti, "target")
-                for t = 10.5, 24.5, 0.5 do
-                    poll(t)
+                -- A: held past its duration (the 4b re-stage); C: the model's own expiry stands (L310)
+                for rule, held in pairs({ A = 25.5, C = 25 }) do
+                    ctl.guid.target = "Creature-1"
+                    start(fs.def(fs.new(9)))
+                    I.cdmHoldRule = rule
+                    cast(2, REND, 10, 15) -- mob A's record expires at 25
+                    ctl.ViewerAura(ti, "target")
+                    for t = 10.5, 24.5, 0.5 do
+                        poll(t)
+                    end
+                    assert.are.equal(held, est("target", fs.SPENDER_C, 24.5), rule)
+                    swap("Creature-2", 25)
+                    ctl.ViewerAura(ti, "target") -- mob B carries our debuff too: lit from the next frame
+                    poll(25.1) -- the switch's drain: its polls run before the fold takes the switch (A's record near lapse)
+                    poll(25.3)
+                    assert.are.equal(40.1, est("target", fs.SPENDER_C, 25.3), rule) -- opened on B from B's light
+                    ctl.ViewerClear(ti)
+                    poll(25.6)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 25.6), rule) -- a CDM UP opened it on B: ours, so its NONE closes
                 end
-                assert.are.equal(25.5, est("target", fs.SPENDER_C, 24.5)) -- held past its duration (rule 4)
-                swap("Creature-2", 25)
-                ctl.ViewerAura(ti, "target") -- mob B carries our debuff too: lit from the next frame
-                poll(25.1) -- the switch's drain: its polls run before the fold takes the switch (A's record near lapse)
-                poll(25.3)
-                assert.are.equal(40.1, est("target", fs.SPENDER_C, 25.3)) -- opened on B from B's light
-                ctl.ViewerClear(ti)
-                poll(25.6)
-                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 25.6)) -- a CDM UP opened it on B: ours, so its NONE closes
             end
         )
 
         it("an icd aura's hold keeps the application at slow polls and with no numeric duration (review m2)", function()
+            I.cdmHoldRule = "A" -- the 4b hold (variant A, the Task 9 arm): its own behaviour
             for _, dur in ipairs({ 3, false }) do
                 local def = fs.def(fs.new(9))
                 def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, duration = dur or nil, icd = 10 }
@@ -1029,6 +1039,7 @@ describe("auras", function()
         end)
 
         it("an UP with no numeric duration: HOLD on the target, -1 on the player closed by its NONE", function()
+            I.cdmHoldRule = "A" -- the 4b hold (variant A, the Task 9 arm): its own behaviour
             local def = fs.def(fs.new(9))
             def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }
             def.auras[REND] = { key = "spender_c", id = fs.SPENDER_C }
@@ -1042,6 +1053,199 @@ describe("auras", function()
             poll(11)
             assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
         end)
+
+        -- The owner's rule (L310, decision 112 as amended; variant C, the default): trust the belief's duration. No
+        -- extension before the model's expiry; past it, the CDM overrides only once its item stayed lit HOLD, then
+        -- once, long (3600 s; -1 for a player aura with no numeric duration), closed by the observed down.
+        it("C: a lit item at a correct expiry adds nothing: the record goes down at its own expiry (L310)", function()
+            cast(2, REND, 10, 15)
+            ctl.ViewerAura(ti, "target")
+            for t = 10.5, 24.5, 0.5 do
+                poll(t)
+                assert.are.equal(25, est("target", fs.SPENDER_C, t), t) -- the 4b hold re-staged at 24.5: 25.5
+            end
+            poll(24.9)
+            assert.are.equal(25, est("target", fs.SPENDER_C, 24.9))
+            poll(25.1) -- the item still lit a poll past the end (its latency)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 25.1))
+            ctl.ViewerClear(ti)
+            for t = 25.3, 27.3, 0.5 do
+                poll(t)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, t), t)
+            end
+        end)
+
+        it("C: lit HOLD past the model's expiry, the CDM re-establishes it once, long; its NONE closes it", function()
+            cast(2, REND, 10, 15)
+            ctl.ViewerAura(ti, "target")
+            for t = 10.5, 24.5, 0.5 do
+                poll(t)
+            end
+            for _, t in ipairs({ 25, 25.4, 25.8 }) do
+                poll(t)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, t), t) -- the debounce: down for up to HOLD
+            end
+            poll(26.2)
+            local long = est("target", fs.SPENDER_C, 26.2)
+            assert.is_true(math.abs(long - 3626.2) < 1e-9, long) -- finite: inf - inf is NaN
+            for t = 26.6, 30.2, 0.4 do
+                poll(t)
+                assert.are.equal(long, est("target", fs.SPENDER_C, t), t) -- written once, no renewal
+            end
+            ctl.ViewerClear(ti)
+            poll(30.6)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 30.6)) -- the observed down closes it (a CDM UP's: ours)
+        end)
+
+        it("C: the debounce needs the item lit continuously; a dark sweep after the expiry starts it over", function()
+            cast(2, REND, 10, 15)
+            ctl.ViewerAura(ti, "target")
+            for t = 10.5, 24.5, 0.5 do
+                poll(t)
+            end
+            poll(25.2)
+            ctl.ViewerClear(ti)
+            poll(25.6) -- dark: the aura ended
+            ctl.ViewerAura(ti, "target") -- lit again: a new application (someone's), the model has none
+            poll(25.8)
+            assert.is_true(math.abs(est("target", fs.SPENDER_C, 25.8) - 40.8) < 1e-9) -- opened at once from its light
+        end)
+
+        it("C: a CDM UP with no model record opens at once; no numeric duration: long on the target too", function()
+            local def = fs.def(fs.new(9))
+            def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }
+            def.auras[REND] = { key = "spender_c", id = fs.SPENDER_C }
+            start(def)
+            ctl.ViewerAura(ti, "target")
+            ctl.ViewerAura(pi, "player")
+            poll(10.5)
+            assert.are.equal(3610.5, est("target", fs.SPENDER_C, 10.5)) -- not math.huge on the target
+            assert.are.equal(math.huge, est("player", fs.SPENDER_A, 10.5)) -- a permanent player aura: as before
+            poll(11)
+            assert.are.equal(3610.5, est("target", fs.SPENDER_C, 11)) -- no re-stage
+            ctl.ViewerClear(pi)
+            ctl.ViewerClear(ti)
+            poll(11.5)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11.5))
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.5))
+        end)
+
+        it(
+            "C: a long record whose CDM stops answering (UNKNOWN, every viewer hidden) is clamped to HOLD once",
+            function()
+                local def = fs.def(fs.new(9))
+                def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }
+                def.auras[REND] = { key = "spender_c", id = fs.SPENDER_C }
+                start(def)
+                ctl.ViewerAura(ti, "target")
+                ctl.ViewerAura(pi, "player")
+                poll(10.5)
+                ctl.ViewerRelease(ti) -- the target's evidence goes away: UNKNOWN
+                poll(11)
+                assert.are.equal(I.UNDECIDED, P.Presence(REND, 2))
+                assert.are.equal(12, est("target", fs.SPENDER_C, 11)) -- one HOLD write
+                poll(11.5)
+                assert.are.equal(12, est("target", fs.SPENDER_C, 11.5)) -- once
+                poll(12.1)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12.1))
+                ctl.viewer.parentShown = false -- every viewer hidden: covered 0
+                poll(12.5)
+                assert.are.equal(13.5, est("player", fs.SPENDER_A, 12.5)) -- the player's -1 record too
+                poll(13.6)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 13.6))
+            end
+        )
+
+        it(
+            "C: a target switch clamps mob A's long record before it is remembered (Count.WithAura, swap back)",
+            function()
+                local def = fs.def(fs.new(9))
+                def.auras[REND] = { key = "spender_c", id = fs.SPENDER_C }
+                start(def)
+                ctl.ViewerAura(ti, "target")
+                poll(10.5)
+                assert.are.equal(3610.5, est("target", fs.SPENDER_C, 10.5))
+                swap("Creature-2", 11)
+                ctl.ViewerClear(ti) -- mob B has none: dark from the next frame
+                poll(11.1)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.1))
+                assert.are.equal(1, VS.Count.WithAura(fs.SPENDER_C, 11.5)) -- mob A's, remembered for HOLD
+                assert.are.equal(0, VS.Count.WithAura(fs.SPENDER_C, 12.1))
+                swap("Creature-1", 13)
+                poll(13.1)
+                poll(13.5)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13.5)) -- not restored for an hour
+            end
+        )
+
+        -- F3 (cdm-task8-report.md): a CDM UP in the drain of our cast's write. Both orders: the poll's Read before the
+        -- fold has the cast (the cast logged first folds first), and a light folded just before the cast (SAME_FRAME).
+        it("F3: a CDM UP in our cast's drain never replaces the cast's expiry (a function duration)", function()
+            local def = fs.def(fs.new(9))
+            def.auras[REND] = {
+                key = "spender_c",
+                id = fs.SPENDER_C,
+                duration = function() -- the pack's: no number here
+                    return 18
+                end,
+            }
+            start(def)
+            ctl.ViewerAura(ti, "target")
+            ctl.now = 10
+            ctl.Tick(10)
+            S.RunPolls(10) -- the record is down: the CDM UP stages
+            cast(2, REND, 10, 18) -- the cast's write, logged before the poll's Read, folds first
+            I.Fold(10, false)
+            I.Settle(10)
+            for t = 10, 13.6, 0.2 do
+                if t > 10 then
+                    poll(t)
+                end
+                assert.are.equal(28, est("target", fs.SPENDER_C, t), t) -- the 4b hold: 11, re-staged near 1 s
+            end
+            -- the other order: the light folds first, our cast's write lands 0.02 s later (inside SAME_FRAME)
+            ctl.guid.target = "Creature-1"
+            start(def)
+            ctl.ViewerAura(ti, "target")
+            poll(20)
+            cast(2, REND, 20.02, 18)
+            for t = 20.2, 23.6, 0.2 do
+                poll(t)
+                assert.is_true(math.abs(est("target", fs.SPENDER_C, t) - 38.02) < 1e-9, t)
+            end
+        end)
+
+        it("F3 control: a numeric duration's cast keeps its own expiry, not the light's t0 (+0.1 s before)", function()
+            ctl.ViewerAura(ti, "target")
+            ctl.now = 10.1
+            ctl.Tick(10.1)
+            S.RunPolls(10.1) -- the light stages from fact.t
+            cast(2, REND, 10, 15) -- our cast's write at 10 folds first
+            I.Fold(10.1, false)
+            I.Settle(10.1)
+            assert.are.equal(25, est("target", fs.SPENDER_C, 10.1))
+        end)
+
+        it(
+            "C: an icd aura re-established after its expiry is a new application (its ICD restarts: L310 limit)",
+            function()
+                local def = fs.def(fs.new(9))
+                def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, duration = 3, icd = 10 }
+                start(def)
+                cast(1, SHOUT, 10, 3)
+                ctl.ViewerAura(pi, "player")
+                for t = 10.2, 12.9, 0.2 do
+                    poll(t)
+                    assert.are.equal(10, select(3, VS.Aura("player", fs.SPENDER_A, t)), t)
+                end
+                poll(13.4)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 13.4)) -- down at its 3 s, lit: the debounce
+                poll(14.2)
+                local rec, _, applied = VS.Aura("player", fs.SPENDER_A, 14.2)
+                assert.is_true(math.abs(rec.est - 3614.2) < 1e-9, rec.est)
+                assert.are_not.equal(10, applied) -- a limit, pinned: the 4b step cap kept 10; C restarts the ICD
+            end
+        )
 
         it("in combat, a walk with nil at index 1 does not suppress the facts (I7)", function()
             ctl.auras.player.HELPFUL[1] = nil
