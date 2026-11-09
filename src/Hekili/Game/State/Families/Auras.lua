@@ -10,6 +10,7 @@ local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local Obs, ReadOf = VS.Obs, I.ReadOf
 local HUGE = math.huge
+local CDM_OPEN = -ReadOf.AuraOpen -- the sample event of a Cooldown Manager open (no Obs kind is negative)
 
 --- An aura Read's `a` packs the unit index and the aura index; its `c` packs ReadOf.Aura and the stacks.
 I.AURA_UNIT = 4096 -- a = (unit - 1) * AURA_UNIT + aura (Hekili registers hundreds of auras)
@@ -38,6 +39,7 @@ local U = {
     mem = {},
     icd = {}, -- by aura: its RegisterAura `icd` (seconds), 0 none
     firstWalk = {}, -- by unit: the time of its first clean walk (Sources/Auras.lua), 0 none yet
+    openFold = {}, -- by unit and aura: the I.folds of its last Cooldown Manager open (I.CastAura), 0 none
 }
 I.auras = U
 -- The believed delta since the drain last delivered it (see `set` below); I.auraDelta for Game/API/Facade.lua.
@@ -88,6 +90,11 @@ I.OnBuild(function(def, now)
         U.exp0[u], U.applied[u], U.stacks[u], U.inst[u], U.harm[u], U.seq[u], U.rec[u] = e, ap, st, ins, hm, sq, rc
         U.ord[u], U.ordN[u], U.gen[u] = ord, 0, 0
         U.firstWalk[u] = 0
+        local of = {}
+        for j = 1, U.nAura do
+            of[j] = 0
+        end
+        U.openFold[u] = of
         local add, upd, rem = {}, {}, {}
         for j = 1, U.nAura do
             add[j], upd[j], rem[j] = 0, 0, 0
@@ -193,14 +200,20 @@ end
 
 I.On(Obs.Read, function(o, t)
     local c = o.c
-    if c % I.AURA_STACK ~= ReadOf.Aura then
+    local kind = c % I.AURA_STACK
+    if kind ~= ReadOf.Aura and kind ~= ReadOf.AuraOpen and kind ~= ReadOf.AuraHeld then
         return
     end
     local u = (o.a - o.a % I.AURA_UNIT) / I.AURA_UNIT + 1 -- nonzero: AURA_UNIT is a constant
     local j = o.a % I.AURA_UNIT
-    local stacks = (c - ReadOf.Aura) / I.AURA_STACK -- nonzero: AURA_STACK is a constant
+    local stacks = (c - kind) / I.AURA_STACK -- nonzero: AURA_STACK is a constant
+    -- a Cooldown Manager write is sampled with no read event (I.AuraModel's "the read wins" is for a client expiry
+    -- only); an open with its own mark, for I.CastAura
+    local event = kind == ReadOf.Aura and Obs.Read or kind == ReadOf.AuraOpen and CDM_OPEN or 0
     if o.b == 0 then
-        set(u, j, 0, 0, 0, t, "observed", Obs.Read)
+        set(u, j, 0, 0, 0, t, "observed", event)
+    elseif kind == ReadOf.AuraOpen and U.exp0[u][j] > o.t then
+        return -- a CDM UP staged while the record was down; our cast's write, folded first in this drain, stands (F3)
     else
         local expires = o.b < 0 and HUGE or o.t + o.b
         local was, icd = U.exp0[u][j], U.icd[j]
@@ -217,11 +230,30 @@ I.On(Obs.Read, function(o, t)
         else
             applied = o.t
         end
-        set(u, j, expires, applied, stacks > 0 and stacks or 1, t, "observed", Obs.Read)
+        set(u, j, expires, applied, stacks > 0 and stacks or 1, t, "observed", event)
+        if kind == ReadOf.AuraOpen then
+            U.openFold[u][j] = I.folds
+        end
     end
 end)
 
 I.auraReadsWon = 0
+
+--- VS.Aura for our cast's own handler at t (Families/Now.lua's reads): a record a Cooldown Manager light opened in this
+--- drain's fold or the one just before, with no model since, is the cast's own application seen early (the light polled
+--- a drain before the cast's event was logged), so it reads down: a handler's `stack + 1` or addStack does not count
+--- it twice. Drains, not seconds (review S3). Allocates nothing.
+function I.CastAura(unit, spellID, t)
+    local u, j = U.index[unit], U.bySpell[spellID]
+    if u and j then
+        local last = U.rec[u][j].last
+        local o = last.observed
+        if o.event == CDM_OPEN and U.openFold[u][j] >= I.folds - 1 and o.t >= last.modelled.t and U.exp0[u][j] > t then
+            return nil
+        end
+    end
+    return VS.Aura(unit, spellID, t)
+end
 
 --- Our own cast changed aura j on unit u (spec §5.3): a `modelled` expiry with its stacks and applied time. A plain
 --- read that saw the aura up in the cast's frame or later already includes the cast (its stack, say): the read wins

@@ -236,27 +236,48 @@ One rule set, in `Sources/Auras.lua` `apply` (`:218-243`), plus one array CN13 r
    recast loop.
 2. **A fact beats the model for presence.** UP while believed down stages `Obs.Read` (rule 4 gives the time); a
    closing DOWN (rule 1) while believed up stages `Obs.Read` 0.
-3. **Between facts the model runs.** UP while believed up stages nothing: the modelled expiry, stacks and consumption
-   stand. The one exception is rule 4's hold: an UP for a record about to lapse (`exp0 - now <= LAPSE`, not
-   `math.huge`) is re-staged.
-4. **An UP with no model behind it (C2; owner Q3).** Let `d` be the aura's numeric registered duration
-   (`def.auras[j].duration`, cached at build) and `t0 = max(fact.t[k], U.applied[u][j])` (our cast's refresh moves
-   `applied`, so refreshes count).
-   - `d` known and `t0 + d - now > HOLD`: remaining = `t0 + d - now`.
-   - `d` known and that remaining `<= HOLD`: remaining = `HOLD` (1.0 s), staged **only when the record is down or
-     within one slow poll of lapsing** (`LAPSE` = 0.5 s, the slowest in-combat drain, `Engine/Driver.lua` restRate),
-     so a fact that stays UP past the duration is re-staged about every `HOLD - LAPSE` (0.5 s) and at most once per
-     poll: at the 0.2 s rate every second or third poll, at 0.5 s or slower rates every poll (review m1); the record
-     never lapses between two polls up to that rate (no one-update flicker). An `icd` aura's re-stage moves its expiry
-     in steps of at most `AURA_REFRESH` per Read (several Reads in one poll), so the fold keeps the application, its
-     ICD and `ours` (review m2).
-     When the item clears, nothing re-stages and the record lapses within `HOLD`, even where the NONE may not close it (a record not ours)
-     (the target). Remains stays at or below `HOLD`, so `refreshable` reads true throughout and does not flip.
-   - `d` unknown, player: -1 (`math.huge`, `Families/Auras.lua:205`); rule 1's NONE closes it (a CDM UP sets `ours`).
-   - `d` unknown, target: remaining = `HOLD`, same re-stage rule. **Never `math.huge` on the target or with a numeric
-     duration.**
+3. **Between facts the model runs (amended 2026-11-09, the owner's rule L310: trust the belief's duration).** UP while
+   believed up stages nothing: the modelled expiry, stacks and consumption stand, with no exception: the 4b near-lapse
+   re-stage (an UP within `LAPSE` of the expiry re-staged `HOLD` ahead) is gone, because `LAPSE` equals the slowest
+   in-combat drain, so it extended every correct expiry by up to a poll (L310) and, over a cast's same-drain write, cut a
+   function-duration DoT to `HOLD` all fight (F3, cdm-task8-report.md). At the model's expiry the record goes down on
+   its own.
+4. **Past the model, and with no model (C2; owner Q3; L310).** Let `d` be the aura's numeric registered duration
+   (`def.auras[j].duration`, cached at build) and `t0 = max(fact.t[k], U.applied[u][j])`.
+   - An UP for a record the model has up remembers its expiry (`lastE[k]`) and stacks. An UP past that expiry stages
+     only once the item stayed lit continuously `HOLD` (1.0 s, tunable; D9) after it (`now - max(lastE, fact.t) >=
+     HOLD`); it then re-establishes the record ONCE with `LONG` (3600 s: finite where a duration exists, since
+     `inf - inf` is NaN; a player aura with no numeric duration keeps -1, `math.huge`, as before), the model's last
+     stacks, `ours` = the CDM's, so the observed down closes it (rule 1). No renewal while lit. Model right: no
+     override, no lag; model short: down for up to `HOLD`, then one flip.
+   - A dark poll past the expiry is the CDM's fact that the aura is gone (the seen rule gives no NONE for a record
+     already down, so a dark item reads UNKNOWN there; no live slot at all: `covered` 0). It restarts nothing: the
+     debounce memory is dropped, and the next light is a new application, opened at once like any UP with no model
+     record (controller ruling on review S1, 2026-11-09).
+   - An UP with no model record (none since the item went dark, a target switch, combat start): opens at once,
+     `t0 + d - now` when `d` is known and that outlasts `HOLD`, else `LONG` (on the target too, where 4b wrote `HOLD`).
+   - The CDM's writes never displace our cast's (F3): they are their own Read kinds (`ReadOf.AuraOpen`,
+     `ReadOf.AuraHeld`, `VirtualState.lua`), sampled with no event, so `I.AuraModel`'s "a plain read wins" does not
+     drop our cast's write after a light; and an open staged while the record was down does nothing if our cast's
+     write folded first in the same drain (polls stage before the fold; the cast's event is in the log before them).
+     No pack duration function is called from `Game/` (that would be a new border crossing). And a CDM open folded in
+     the cast's drain or the drain just before it (no model since) is the cast's own application seen early: the
+     cast's handler reads it down (`I.CastAura`), so `stack + 1` / `addStack` do not count it twice (drains, not a
+     time window: review S3).
+   - A `LONG` record whose CDM stops answering UP (UNKNOWN, a DOWN that does not close, a hidden viewer, the leaf off,
+     a rebuild in combat, a provider switch) is clamped to `HOLD` once, so a stuck record is bounded by one or two
+     polls; at a target switch the clamp runs in `PLAYER_TARGET_CHANGED` before `Sources/Target.lua`'s swap logs the
+     `TargetSwap` (Hekili.toc order), so mob A's record is not remembered up for an hour (`Count.WithAura`, a swap
+     back). A record whose expiry moved (our cast, a walk, a close) needs no clamp.
+   - An `icd` aura re-established after its expiry is a new application (its ICD restarts from the re-establish):
+     the 4b `AURA_REFRESH` step cap kept the application through the old re-stage and is dead under this rule (a
+     limit; `auras_spec` pins it).
+   - The test harness keeps the old rules as variant arms (the 4b hold, and L309's long-while-lit at the near-lapse
+     re-stage) for Task 9's A/B; not an option. DELETE them (variants A and B, `LAPSE`, the icd step loop,
+     `ICD_STEPS`, `REFRESH_HOLD`, the A-pinned tests, the rule letter of the harness switch; `HOLD` may stay
+     harness-settable) before Task 6 ships default-on or before the release tag, whichever comes first (review S2).
 5. **UNKNOWN leaves the model untouched.** A thing that had a fact and loses it (item released, viewer hidden, target
-   settling) keeps its belief; rule 4's bounded expiries make that safe.
+   settling) keeps its belief; the model's own expiries and rule 4's clamp of a `LONG` record make that safe.
 6. **A plain out-of-combat walk wins** (standing 3, §2.1).
 7. **Forms and enchants are skipped** on the player, as the walk does (`Sources/Auras.lua:140`; M5): those records belong
    to `Sources/Forms.lua` and `Sources/Enchants.lua` (an ambiguous "Druid Forms" entry would otherwise write them).
@@ -513,8 +534,8 @@ flicker rise beyond seed noise (±0.3/min) on any spec in any viewer arm.
 | 108 | The coverage line is computed in `Options/` from the client API and `class.auras`; the CDM debug information is a section of the belief's own Snapshot, reaching the core through the SetLog logger: no new crossing | the border rule; owner Q5 |
 | 109 | The direct never-secret provider only if a pack aura reads flag 0 | 15 of 15 contextual so far |
 | 110 | The fake viewer models any layout and the client's order; the default arm stays viewer-off; viewer arms measured, not gated, except no flicker rise | the first loop A/B of the viewer |
-| 111 (amended 2026-11-08) | A DOWN, on the player **or the target**, closes a record only if the reduced state is DOWN (every live NONE passes the seen rule, decision 115; on the target with `sUnit` = target, `sSeen` reset at the switch, the switch's own frame settling (§3.4, L299)) and our evidence opened this application (`ours[k]`: our cast, a CDM UP, an out-of-combat walk read with source player/pet; valid while the record's applied time is the one it was set for); after our cast, only once the fact read UP `REFRESH_LAG` (0.5 s) past the write (D14) | the viewer reads only our auras (C1); a silent item proves nothing (F12); owner direction 2026-11-08: the CDM's "now" state has precedence for the target (L289/L291); `ours` keeps a partner's shared debuff (CDM-P) open |
-| 112 | An UP with no model: registered duration from `max(fact.t, applied)`; past it a `HOLD` (1.0 s) re-staged when within `LAPSE` (0.5 s) of lapsing, about every `HOLD - LAPSE` and at most once per poll (every poll at 0.5 s or slower rates), while the fact stays UP (an `icd` aura in `AURA_REFRESH` steps, keeping its application); `math.huge` only for a player aura with no numeric duration | never stuck up on the target; bounded lapse; no churn beyond one re-stage per poll (C2; owner Q3) |
+| 111 (amended 2026-11-08) | A DOWN, on the player **or the target**, closes a record only if the reduced state is DOWN (every live NONE passes the seen rule, decision 115; on the target with `sUnit` = target, `sSeen` reset at the switch, the switch's own frame settling (§3.4, L299)) and our evidence opened this application (`ours[k]`: our cast, a CDM UP, an out-of-combat walk read with source player/pet; valid while the record's applied time is the one it was set for); after our cast, only once the fact read UP `REFRESH_LAG` (0.5 s) past the write (D14); (2026-11-09) unchanged by L310, whose `LONG` records are CDM-opened (`ours`), so the observed NONE closes them | the viewer reads only our auras (C1); a silent item proves nothing (F12); owner direction 2026-11-08: the CDM's "now" state has precedence for the target (L289/L291); `ours` keeps a partner's shared debuff (CDM-P) open |
+| 112 (amended 2026-11-09, L310) | Trust the belief's duration: no extension of a record believed up; past the model's expiry an item lit continuously `HOLD` (1.0 s) re-establishes it once with `LONG` (3600 s; -1 only for a player aura with no numeric duration), closed by the observed down, clamped to `HOLD` once when its CDM stops answering UP (target switch included); an UP with no model record opens at once (registered duration from `max(fact.t, applied)` when it outlasts `HOLD`, else `LONG`); the CDM's writes never displace our cast's (F3: own Read kinds, an open yields to a cast folded first) | model right: no override, no lag (the 4b re-stage lagged every correct expiry and cut function-duration DoTs to `HOLD`, F3; F1); model short: one flip after `HOLD`; never stuck up (C2; owner Q3; L309/L310) |
 | 113 | `apply` skips player form and enchant auras | their records belong to Forms/Enchants (M5) |
 | 114 | CN13 owns a generic `I.auraFloor[j]`; this lane writes it from the reduced fact | no one-update flash; `Families/` knows nothing of the router (owner Q4) |
 | 115 | **The seen rule, per slot**: a silent slot counts as NONE for (j, u) only for an application that slot was seen holding: the record is up (`U.exp0[u][j] > t`), `sSeen[s] >= U.applied[u][j]` and `sUnit[s] == u`; `sSeen` is written at every sweep the slot is held for u (unambiguous), reset (after un-counting the slot) at a `cooldownID` change (`sCd`, same-aura re-points included), a rebuild, a held sweep whose unit is not a plain player or target and, for a target slot, a target switch; otherwise not live, so UNKNOWN | an item can stay silent while its aura is up (F12); also closes the cast-before-`UNIT_AURA` flash (I-B) and the item-stops-following loop (I-A) for a fresh application (a refresh before expiry leaves one wrong close: §2.2a Residual, D14); per slot, not per thing, so a silent item never borrows another item's light (review 3); a new frame table is a new slot (F13); one number per slot (`MAX_SLOTS`), the leaf's own, no per-entry or per-thing state |
@@ -536,7 +557,7 @@ needed, §3.3), GPL-3.0 like Hekili Forever; ideas only, re-implemented, no code
 | D5 | `IsVisible`/`GetNumChildren` from e4b (the settle half is CLOSED: CDM-O measured, the time constant replaced by the frame rule, §3.4, L299) | in game only | the owner's probe session |
 | D6 | Coverage fixtures for classes other than Warrior and Druid | in game only | each class's `/fprobe cdm sets` |
 | D8 | Target-side changes we did not cause wait up to 0.5 s (no hooks; the target's `UNIT_AURA` is not delivered in combat); upgrade: deliver it inside `Game/` while target coverage > 0 | small impact; a late target NONE only delays a close of ours | the A/B or a player shows late target edges |
-| D9 | `HOLD` = 1.0 s is a guess | no measurement | Task 9's target-DoT-past-duration flicker row |
+| D9 | `HOLD` = 1.0 s is a guess (since L310: the debounce past the model's expiry and the clamp's length) | no measurement: the cdm-hold lane ran 0.6/1.0/1.5 in the viewer arms with identical results, because no loop world makes the model underestimate (the debounce never decides there; cdm-hold-report.md) | Task 10's in-game rows (an expiry the model gets short), or a loop world that shortens a duration |
 | D13 | A player aura with no numeric duration whose item is lost mid-fight (viewer hidden, Alt-Z) stays up (-1) until combat ends and the exit walk closes it | rare: such auras are mostly permanent | Task 9 or a player report |
 | D14 | The latency window between our cast's record write and the item lighting is unmeasured. Safe for a fresh cast (UNKNOWN until the item lights). A refresh before expiry whose new application the item does not light is **guarded** since task 4b (a NONE after our cast closes only once the fact read UP `REFRESH_LAG` = 0.5 s past the write); the guard's lag is a guess, and an aura that ends within it is closed by the model only. Still unguarded: one close for a re-application the model does not see (a combat proc, `applied` unmoved) that the item does not light; with a second item that keeps following, that application reads UNKNOWN (floor 0) instead of closing | needs the game | the LAT probe (cast success vs `OnAuraInstanceInfoSet` timestamps) sets `REFRESH_LAG`, or a report of a single mid-fight rebuff |
 | D15 | The cause of the silent Mark of the Wild item (F12) | needs the game | Task 10's `/fprobe cdm sets` on that entry |

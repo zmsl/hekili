@@ -45,11 +45,13 @@ local function advance(t)
     end
 end
 
+I.folds = 0
 --- Folds the log in order (spec §5.2 step 2): everything stamped at or before `upto`; an own cast's effects are
 --- written by its appliers (Families/Now.lua). An observation older than the clock is applied at the clock with
 --- `lag`. Allocates nothing.
 ---@param upto number
 function I.Fold(upto)
+    I.folds = I.folds + 1 -- one per drain: Families/Auras.lua's I.CastAura counts drains, not seconds
     local log = I.log
     if not I.started then
         -- The clock starts at the first thing heard, not at 0 (TDF Belief.lua:723-728).

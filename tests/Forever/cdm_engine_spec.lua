@@ -167,15 +167,62 @@ describe("Cooldown Manager facts through the engine #slow", function()
         end
     end)
 
-    -- CDM Task 8 FINDING F1 (cdm-task8-report.md), a belief defect this harness found, pinned as PRESENT (review m1: a
-    -- pending body never runs) until a belief task fixes it and flips this test: back on mob 1 at 40 s, the item re-read gives fact.t 40.2 (4b's I1 reset), so near the end of
-    -- our old Sunder Armor (applied 18.6) the hold re-stages it from 40.2 for a full 30 s (est 70.2), and the item's NONE
-    -- at 48.6 cannot close it (`ours` did not survive the swaps): seed 2, 72 ticks of false UP, 0 with the viewer off.
-    it("KNOWN DEFECT F1: a target swap back adds false UP on the mob we return to (seed 2; flip when fixed)", function()
+    -- CDM Task 8 FINDING F1 (cdm-task8-report.md), fixed by the owner's rule (L310): back on mob 1 at 40 s, the item
+    -- re-read gave fact.t 40.2 (4b's I1 reset), and the 4b hold re-staged our old Sunder Armor (applied 18.6) near its
+    -- end at 48.6 from 40.2 for a full 30 s; its NONE could not close it (`ours` did not survive the swaps): seed 2, 72
+    -- ticks of false UP, 0 with the viewer off. Under the rule the model's expiry stands: no re-stage near it.
+    it("F1: a target swap back adds no false UP on the mob we return to (seed 2)", function()
         local off = fight("default", 2, KEYS, nil, swaps())
         local on = fight("viewer-buffs", 2, KEYS, nil, swaps())
-        local msg = ("%s (false UP %d vs %d off)"):format(FLIP:format("F1"), on.falseUp, off.falseUp)
-        assert.is_true(on.falseUp > off.falseUp, msg)
+        assert.is_true(on.falseUp <= off.falseUp, ("false UP %d vs %d off"):format(on.falseUp, off.falseUp))
+    end)
+
+    -- CDM Task 8 FINDING F3 (cdm-task8-report.md): a CDM UP staged in the drain of our cast's write replaced the
+    -- cast's expiry with HOLD for an aura whose pack duration is a function (Corruption, `duration =
+    -- corruptionDuration`), re-staged near 1 s all fight. SM Ruin seed 1: believed remaining at 3.6 s >= 17 (truth 17.8),
+    -- and over the first 14 s the believed remaining time of Corruption and of Immolate (numeric 15 s, the control)
+    -- is the viewer-off run's.
+    it("F3: a CDM UP in our cast's drain keeps the cast's expiry (SM Ruin seed 1: Corruption, Immolate)", function()
+        local w = require("Forever.helpers.warlock_world")
+        local function remains(arm)
+            local L = loop.new(w.SMRuin)
+            local out = {}
+            loop.run(L, 1, {
+                duration = 15,
+                arm = arm,
+                on = function(_, steps, t)
+                    local H = steps[1].H
+                    local I, VS = H.ns.VirtualStateInternal, H.ns.VirtualState
+                    local now = steps[1].base + t
+                    for _, key in ipairs({ "corruption", "immolate" }) do
+                        local j = jOf(H, key)
+                        local r = false
+                        for _, id in ipairs(I.def.auraIds[j]) do
+                            if VS.Aura("target", id, now) then
+                                r = I.auras.exp0[I.auras.index.target][j] - now
+                            end
+                        end
+                        out[("%s %.1f"):format(key, t)] = r
+                    end
+                end,
+            }, { { H = L.us } })
+            return out
+        end
+        local off, on = remains("default"), remains("viewer-buffs")
+        local at = on["corruption 3.6"]
+        assert.is_true(at and at >= 17, "believed Corruption remaining at 3.6 s: " .. tostring(at))
+        local n = 0
+        for k, r in pairs(off) do
+            local s = on[k]
+            if r then
+                n = n + 1
+            end
+            assert.is_true(
+                r == s or (r and s and math.abs(r - s) < 1e-6),
+                ("%s: %s on vs %s off"):format(k, tostring(s), tostring(r))
+            )
+        end
+        assert.is_true(n > 20, "too few believed-up ticks: " .. n)
     end)
 
     -- Not a D14 test (review m2): the faithful fake keeps a refresh held, so REFRESH_LAG is never exercised here (a
