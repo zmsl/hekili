@@ -1,6 +1,8 @@
 # Cooldown Manager facts, always on: one reduced fact per tracked thing (spec amendment, 2026-11-07)
 
-Status: DESIGN (being built: tasks 1-4b), review rounds 1-4 applied; decision 111 amended 2026-11-08 (owner: the
+Status: BUILT through plan Task 9 (2026-11-09; Task 4c and 11 conditional, Task 10 the owner's in-game checklist
+open). Task 9's A/B: no flicker rise beyond +0.03/min on any spec over five seed sets, four layouts
+(`docs/dev/providers-ab.md`); the hold is the owner's rule L310 only (variants A and B removed). Review rounds 1-4 applied; decision 111 amended 2026-11-08 (owner: the
 CDM's "now" state has precedence on the target), with D14 guarded (task 4b) (round 3: the seen rule, review 2 §3; round 4: the seen rule per slot, review 3) (`~/src/hekili-central-needs/cdm-design-review.md`). Plan:
 `docs/superpowers/plans/2026-11-07-cdm-default.md`.
 Amends `docs/superpowers/specs/2026-10-23-providers-design.md` ("the providers spec", decisions 65-91). New decisions
