@@ -128,6 +128,31 @@ describe("the world's resources", function()
         end
     )
 
+    it(
+        "auraOnAvoid (default true): false skips a press's aura when its hit was avoided, not when it had none",
+        function()
+            local function aura(onAvoid, dodge, hit)
+                setup()
+                W.auraOnAvoid = onAvoid
+                mob.avoid.dodge = dodge
+                W.press(us, "x", {
+                    spell = 1,
+                    gcd = 0,
+                    aura = { id = 77, duration = 10 },
+                    effect = hit and function(w, e)
+                        w.hit(e, e.target, 10, 1)
+                    end or nil,
+                })
+                return us.auras[77] ~= nil
+            end
+            assert.is_true(world.new(3).auraOnAvoid)
+            assert.is_true(aura(true, 1, true)) -- today's: applied though dodged
+            assert.is_false(aura(false, 1, true))
+            assert.is_true(aura(false, 0, true)) -- landed
+            assert.is_true(aura(false, 1, false)) -- no hit: nothing was avoided
+        end
+    )
+
     it("regenerates at its rate every tick, capped, and by the ramp after its seconds in one form", function()
         setup()
         W.startRegen(us, { [POOL] = 10 }, 0.1, { s = 5, k = 1.25 })
