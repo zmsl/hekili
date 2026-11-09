@@ -131,8 +131,9 @@ M.MAP = {
         effect = function(W, e, _, X)
             drop(W, e, X, "ghostly_strike_next")
             if W.hit(e, e.target, nil, 1).act == "WOUND" then
-                aura(W, X, e.target, "garrote")
-                W.dot(e, e.target, 3, 6, 50, 1)
+                -- Blood Splatter (1329256): +9 s, three more 3 s ticks (wowsims's logs: 27 s)
+                aura(W, X, e.target, "garrote", 18 + 9 * X.bs)
+                W.dot(e, e.target, 3, 6 + 3 * X.bs, 50, 1)
             end
         end,
         points = 1,
@@ -163,8 +164,8 @@ M.MAP = {
     },
     rupture = finisher(function(W, e, cp, X)
         if W.hit(e, e.target, nil, 1).act == "WOUND" then
-            aura(W, X, e.target, "rupture", 6 + 2 * cp)
-            W.dot(e, e.target, 2, 3 + cp, 60, 1)
+            aura(W, X, e.target, "rupture", 6 + 2 * cp + 6 * X.bs) -- Blood Splatter: +6 s, three more 2 s ticks
+            W.dot(e, e.target, 2, 3 + cp + 3 * X.bs, 60, 1)
         end
     end),
     expose_armor = finisher(function(W, e, _, X)
@@ -297,6 +298,7 @@ local function classData(H)
     X.fos = talent.flash_of_steel.rank or 0
     X.venom = talent.venom.enabled == true
     X.isnd = talent.improved_slice_and_dice.rank or 0
+    X.bs = talent.blood_splatter.rank or 0
     return X
 end
 

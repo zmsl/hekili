@@ -248,7 +248,9 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 3. An all-empty group is an ON/OFF switch: `settings.wowsims_<name>`, its wowsims default; the header lists it only
    when an emitted line reads it (ruling L14), and the class registers exactly those (with the recipe's `settings`).
 4. `auraIsKnown`: a talent's `enabled`, an ability's `known`, else `true`; another unit's or player's aura is false.
-5. Keys from the character's ability set (kit, shared, every race): `map`, `auras`, then the set. Ignores
+5. Keys from the character's ability set (kit, shared, every race): `map`, `auras`, then the set (an ability's key
+   reads as an aura only where the kit registers an aura under it, else rule 12's nil: Enhancement's Stormstrike
+   debuff 17364). Ignores
    `includeReactionTime`, `rank` and tags.
 6. The leveling guard: a read of an unlearned ability is wowsims's nil and drops its term, as wowsims's nil
    propagation does; `tools/check_pack_levels.lua` checks every pack for it. `min` / `max` values are the engine's
@@ -288,7 +290,7 @@ the request's constants, `inFrontOfTarget` (absent: false, behind the target) an
 no facing and the target's creature type is not read (CN16: Subtlety's Ghostly Strike, Fury's Dragonkin/Giant Spearing
 Strike weave, which folds false on the Mechanical target); `autoTimeToNext` MeleeAuto is `min(mainhand_remains,
 offhand_remains)` and AnyAuto adds `ranged_remains` where the kit registers it (translator-5: Fury's Bloodrage,
-Enhancement's AoE Chain Lightning; a hand with no weapon reads false, which `min` skips; a kit without both hand
+Enhancement's AoE Chain Lightning; a hand with no weapon reads 3600 s, never; a kit without both hand
 clocks leaves the entry unsupported). The weave's `wait` rows stay omitted (CN19): a `wait X if C` holds wowsims's
 rotation for X, but the engine already times each line at its own ready moment, so a hold for the GCD (weave #2) is
 what it does anyway, and a hold for Strider Kick (weave #3) only matters against a line below it in wowsims's order

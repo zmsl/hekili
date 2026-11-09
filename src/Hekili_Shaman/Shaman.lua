@@ -810,7 +810,7 @@ spec:RegisterTalents({
 
 -- The time to each hand's next swing (Hekili_Warrior/Warrior.lua's, after Hekili's Classic profile): Enhancement's AoE
 -- Chain Lightning reads wowsims's AnyAuto, the earlier hand (translator-5); a Shaman has no ranged auto. With no
--- off-hand weapon that hand never swings: false, which the APL's min() skips.
+-- off-hand weapon that hand never swings: 3600 s, so min() takes the main hand.
 spec:RegisterStateExpr("mainhand_remains", function()
     -- out of combat no swing runs (nextMH is 0): anchor it at this evaluation, or its phase free-runs with the clock
     local mh = (nextMH == 0 and combat == 0) and now or nextMH
@@ -829,7 +829,7 @@ end)
 
 spec:RegisterStateExpr("offhand_remains", function()
     if offhand_speed <= 0 then
-        return false
+        return 3600 -- no off-hand weapon: that hand never swings (wowsims's NeverExpires)
     end
     local oh = (nextOH == 0 and combat == 0) and now or nextOH
     if now == query_time then
@@ -851,8 +851,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Enhancement (wowsims.com)",
-    20261108001,
-    [[Hekili:DJvBVTTnq4Fl9lz2ybYV0LM0G6a0HTH2H1GbO(zjtlDYM1sKcKuXiad(3(os7ArrrkBSS2p0VKOxU75E75oEwjZs(CsCorbjpoF683mB207MoDwsS65AijUMKTLSgVGrQW)(7Snewgubm1(LJ2X3jPvYOmE1yTOpxYj5A4w1qlvFKLSYlYYAiljo(dV)tV)X7HwetI3qZZHdQbYSHm397xQ2a7xE8ztk4c4jqSFzouqAkrXF)F)x7xIpE)YUO0qNODa5e5gsfHnXYbMO97C5efivu26iZTrFrYzJVgTNGWKLy4KJxZ12Nk3VKKNZz)eEXw4zz0(L)grrU3JFn6tF8ZiiBuQA59tMSMQ20SshktCeDmIj6NWnK3MLpNmpVilctUcEbTeRaKmfLZKr1cavEfrTOOelnkoBDdKUdi1C210IfVAvtrrufHYsX4lpfyz4)vrn17)ZEy8ZlMi4zBxrvG4IW4QxDaJO(gpAlJVJ53i7iAdi3qHY8wdy)0G(3oklVOr8CQIRGkJYMRIiurqLW6ljvwlWIzp9mwnOMsLayRvBs5fParGx4QV5Pdy51vKE6uqfGTk)3RDFdRygV)lCrQj7vZ1p86gjGPII01z5lMPTK(Lr1zQ0s(7UBQTY5qfNrZsfnmyy9UTJEDihf8Sg5I5NNK4LA0YmeGoziF3I52Amq11U46xzVKkBovi16WiSie(LxN5WQBLSBoSddaNmRdbCsyAbribqew4mszz6HBtlPs116j6lKyuucPkIynOsfCfXuUrhul6taYGGkkiVeSiCyaeEOdcL01BumDkCfVuzkZh5NsfxuHfi6wWDuIFN9qtesnW(bBEtoyiowVTntp9CGAijNCKlqANa6GFyy8JuKs8WfSRekr44vFTTdyKvLq(vh7zDERuHh9U4MXxGTpqHnH4fiTMZLY4prAL1UYTaNyq1L1JXJDiaLMZjjyXVKKjOQNJWdf3(WIxF1OG1V)5yHW(fn1JVQIYgPlhMbvhRmxJux77h)WruDCQOmIun2FaC(qulXlIZ4aMxMIJmFh4howSdRijgxTqIVWzxmD3RuVYMTY49pAwl8OhK8RFDVJKyNcb(aH(mikjj(LXs(2rtsuyqhiCoXu0c9AhHAdTb5fwO1(E8gDjwBze5FjG5TcwTy3e0bEHKKwl2LhEYlNPn)Bc4Lwmjumuj)Zw8rB()lfgQc6Kcdxd)UKcdvO7Mc7vO9rhv6CM5hZmu)y)15SJ5W7douk1DZYldXZUHPVYJ16k6y8Kl0BduBFO7UN(s7HG1E30qiE70HBf9UpARjSFrxgCO2RU7VABkF7XQr62G9cE3RTpKU73Qb9UaG2BF3(W5U3RgU3geUt7b3hiN9H14mB6fwBpTWSrl3(LqA5zhAJ(U9gTEQwt7fJToB0zT4dhVME4tNeyMP2wHNz11wpCP2QZH5AleASK7OmlwEOdQpmz60V19h4zt(7Op3GGboeiCJENVLXqhqmyZOZx2yOzoxWKcNVZXqZDc0t39REyioi1H0O2WfjXFa2slP7xo6po(HVmVo5F)]]
+    20261109000,
+    [[Hekili:DJ13VTTnq4)w6lz2ygs2Ulnnb1bidBdTdRbdq9zjtlDYI1uKgKuXiV4)23rAxBkkrfJ1T8qFjr)G33D8((UJNv6S0VKMuq0q6JZNo)DZMn92PtNMMOFElKMSLKVHSgVGtQX)(78kcphQbUE)Yr7e7u0AvuUOESzPpZeKcdCRAOm9N4PR6fz1wipnj5Jp85hE8o4mIPjv0Ic4GzGkFi3D3(L6ky)YJplUuiHNa5(LfqjPHHl)H)(V2VeF8(LTrPHgBcavSQIut4XobqSjUluXAqPP81r2BJ(QsWhpb9NKWvmC7uGxlm(NQ2VKuui4)eEXg4zv0(L)grtURN4A0N)0xqqQ06TQ7IJxt1vnRmBLyVLogXeJt4AYT5fZjZlkZJWKRuuszidqY1ubxfTvcOXRi6fLmKA0c(6giBhq2k4tOLlEZQMYYOAcLNH7VImGNJ)xh1SD)F2bJFErSuKVzfvdYlcJREZbmI668OnCXoE)ozhX4avffyfNDG7tdgF7O8IYg5ZzAHgQTgBVkIqLbnc5xsMARejZo2z9AqlvAjWxRRYeLzarIx4BV9Pd4511Ko2usLGRj)75U)hzmB0)vHmZM92kmpCsJcWurz268IfZmEY8YOT56mM4dVFQRXfqTGtZZKnCyy7UPLDTehLI8g1I5VSiPxPXzLHemjd1hwm31IbyxxYTFJ7vu5QPczwlfHJGO)1BYCi7wRANdBPaWoZMTa2jmRKivaidV4CcJLD42mgvPNy6OVqH7cgKPjY1Gotk0elDJbOzPpbOccQPG6sWIiGbq4(wiWORR0CtkCLGPT08r9PslK1ibr3a(Ts6pypueHsdSEWv3uawHJZBpNPN(sGAfjNcKly1EBOdXHvXpsty4HlyvjWq4e1FRSd4KvmO4QJ1SEVvPXJExC94lW3hKW2T4fSAJMlJlEICETUm3cSJb1qRh3pUBbGzpNKGKpJKlP6NJWdf3C)I3EvnLpYKCTTDoMNNGcr37hF)ro2Zfr5eLEC)HZlhWMv8DPa8aRxE3BnVcSTNhBXXPj4Gck8fEtwzQfvMbWCngV)r7qEhJG0F9BtrKM4re4dKMtuOK0KxfopvJ7GaX2jA3SO36TOZX5GKSdANFpEJHVmEgr(xc4EhzGzzxhma(oz8ZESTO6uuoZ4(3fikDKf4YqJ6VSVpnW)DPWqmOxkmmh(QKcdr0TtHDi6(KJAtoZ(7mgQ4Q7KwU75WJQnuk1FOVldXxC4V(OhNjjm7XtHqNHdDJH2Jf2xApeSUJngcXBMoCPyVJkE2fUVOTcou5v7rlDDvFJyAq6MG1c9oYzxi9h90a67daANrr7cN)iPg4UniCNgrTlqEJQAWz20lKBpnlR1k)6Lqw1Z4Tw79RnohPglDNz15GoVjwpCwz2HVQrGEMgFfUNvBFD)L6RwNmB8qO2s(TYCu5hlM7mP8HotN(zO)a3BQ)k6xQrWahceUqV1NzyOdigSy07JomupNlOtH3NGyO(obQPB)bjSchu6qA0vczAYhHnugD)Yr)XXVjL91P)d]]
 )
 
 -- The hand-built Enhancement list, replaced by Enhancement (wowsims.com): a saved choice of it falls back to the default.

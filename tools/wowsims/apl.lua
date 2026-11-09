@@ -49,7 +49,8 @@
 --    content and every race's racials, as the engine merges them): a spell ID maps through the recipe's `map`, else
 --    an ability's `id` and `copy`, auras by the recipe's aura-only `auras` map ({ [aura ID] = key }: an aura wowsims
 --    keys by an ability's own spell ID, where `map` would also turn that ability's casts) then `map` then the set's
---    auras then abilities, items by an ability's `item` or `items` (the APLs at the pin that read such an aura: the
+--    auras then abilities (an ability's key only where the kit registers an aura under it: else rule 12's nil, as an
+--    unregistered `debuff.<ability>` is an unknown aura to the engine), items by an ability's `item` or `items` (the APLs at the pin that read such an aura: the
 --    CHANGELOG's central fix 13 developer note);
 --    `includeReactionTime`, `rank` and a `tag` other than -1 (rule 4) are ignored. An aura's `sourceUnit` Self (or none) reads `buff.`,
 --    CurrentTarget or Target `debuff.`; a resource's current value on the Pet (`currentMana`) reads `pet.<resource>`
@@ -108,7 +109,7 @@
 --    `cancel_buff,buff_name=<key>`; `autoSwingTime` MainHand / OffHand is `mainhand_speed` / `offhand_speed`;
 --    `autoSwingTime` Ranged is `ranged_speed`; `autoTimeToNext` MainHandAuto / RangedAuto is `mainhand_remains` /
 --    `ranged_remains` (the kits' clocks), MeleeAuto `min(mainhand_remains,offhand_remains)` (wowsims's earlier hand;
---    a hand with no weapon reads false, which `min` skips) and AnyAuto that with `ranged_remains` where the kit has it
+--    a hand with no weapon reads 3600 s, never) and AnyAuto that with `ranged_remains` where the kit has it
 --    (translator-5; a kit without both hand clocks: unsupported), and a comparison on `autoTimeSinceLast` (since = speed - remains) is written
 --    on the clock: `since<x` is `<hand>_remains><hand>_speed-x` (the recheck parser forecasts a clock's `<` and its `>`
 --    wrap). A variable the recipe's `windowVars` ({ [variable name] = window }) names reads that window instead (§3a:
@@ -612,8 +613,15 @@ local function spellKey(c, s)
     return x or unsupported(what)
 end
 
+-- An aura ID's key (rule 5): the recipe's maps, the set's auras, then an ability's key where the kit registers an aura
+-- under it (else no aura reads it: an unregistered `debuff.<ability>` is an unknown aura to the engine; rule 12's nil).
+local function auraOfId(c, id)
+    local k = c.keyOf[id]
+    return c.auraMap[id] or c.map[id] or c.auraOf[id] or (k and c.set.auras[k] ~= nil and k or nil)
+end
+
 local function auraKey(c, id)
-    return c.auraMap[id] or c.map[id] or c.auraOf[id] or c.keyOf[id] or unsupported("aura " .. tostring(id))
+    return auraOfId(c, id) or unsupported("aura " .. tostring(id))
 end
 
 local function drop(c, what) -- each ID once an entry
@@ -635,7 +643,7 @@ local function readSpell(c, s)
 end
 
 local function readAura(c, id)
-    local x = c.auraMap[id] or c.map[id] or c.auraOf[id] or c.keyOf[id]
+    local x = auraOfId(c, id)
     if not x then
         drop(c, "aura " .. tostring(id))
     end
@@ -1049,8 +1057,8 @@ local function value(c, n, pct)
         return "ranged_remains", false
     elseif k == "autoTimeToNext" and (v.autoType == "MeleeAuto" or v.autoType == "AnyAuto") then
         -- translator-5: wowsims's earlier hand (NextAttackAt), AnyAuto with the ranged shot too (NextAnyAttackAt), each
-        -- the kit's clock; a hand with no weapon never swings (wowsims's NeverExpires): its clock reads false, which
-        -- min() skips; AnyAuto's ranged clock only where the kit has one (no ranged auto: never)
+        -- the kit's clock; a hand with no weapon never swings (wowsims's NeverExpires): its clock reads 3600 s, so
+        -- min() takes the other; AnyAuto's ranged clock only where the kit has one (no ranged auto: never)
         local clocks, hands = c.set.stateExprs or {}, { "mainhand_remains", "offhand_remains" }
         for _, h in ipairs(hands) do
             if not clocks[h] then

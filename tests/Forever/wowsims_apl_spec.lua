@@ -1497,8 +1497,10 @@ describe("the wowsims APL translator", function()
             local hit = { auraIsActive = { auraId = { spellId = 200 } } } -- wowsims's window aura under big_hit's own ID
             local rot =
                 { priorityList = { cast(200, hit), cast(100, { auraIsKnown = { auraId = { spellId = 200 } } }) } }
+            -- no aura registered under big_hit: an ability's key is an aura read only where the kit has that aura
+            -- (rule 12's nil, its branch dropped); its auraIsKnown stays the ability's known test (rule 4)
             assert.are.equal(
-                "actions=big_hit,if=buff.big_hit.up\nactions+=/strike,focus=1,if=action.big_hit.known",
+                "actions=big_hit\nactions+=/strike,focus=1,if=action.big_hit.known",
                 (apl.translate(rot, ctx({ focus = { strike = 1 } })))
             )
             assert.are.equal( -- the cast is still big_hit; the aura reads stance (registered: known, true)
@@ -2908,6 +2910,18 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
             "actions.precombat=big_hit\nactions=big_hit,focus=1\nactions+=/strike\nactions+=/big_hit,focus=2",
             text
         )
+    end)
+
+    -- Enhancement's AoE line reads Stormstrike's debuff (17364), which the Shaman kit does not register: the ID resolves
+    -- to the ability's key, and `debuff.stormstrike.up` was an unknown aura (shaman_spec's registered-names check)
+    it("reads an aura through an ability's key only where the kit registers that aura; else rule 12's nil", function()
+        local function on(id)
+            return { auraIsActive = { auraId = { spellId = id }, sourceUnit = { type = "CurrentTarget" } } }
+        end
+        local text, omitted = one(AND(on(200), inRange))
+        assert.are.equal("actions=strike,if=action.strike.in_range", text)
+        assert.are.same({ "default #1: dropped the unresolved aura 200 (its branch only)" }, omitted)
+        assert.are.equal("actions=strike,if=(!action.dot.known|debuff.dot.up)", (one(on(400)))) -- dot: both
     end)
 
     -- translator-5.md: Fury #29's Bloodrage (MeleeAuto) and Enhancement's AoE Chain Lightning (AnyAuto)

@@ -145,6 +145,17 @@ describe("Forever Shaman", function()
         assert.are.equal("cooldowns", w.abilities.elemental_mastery.toggle)
     end)
 
+    -- translator-5: Enhancement's AoE Chain Lightning reads min(mainhand_remains,offhand_remains) (wowsims's AnyAuto)
+    it("times each hand's next swing; with no off-hand weapon that hand never swings", function()
+        local e = ld.env(w)
+        e.combat, e.now, e.query_time = 1, 0, 5
+        e.nextMH, e.mainhand_speed, e.nextOH, e.offhand_speed = 1, 3.6, 0.5, 0
+        assert.is_true(math.abs(ld.run(w.exprs.mainhand_remains, e) - 3.2) < 1e-9) -- 3.6 - (5 - 1) % 3.6
+        assert.are.equal(3600, ld.run(w.exprs.offhand_remains, e)) -- a two-hander: wowsims's NeverExpires
+        e.offhand_speed = 2
+        assert.is_true(math.abs(ld.run(w.exprs.offhand_remains, e) - 1.5) < 1e-9) -- 2 - 4.5 % 2
+    end)
+
     it("places every talent in a tree (Forever's)", function()
         local n = { [0] = 0, 0, 0, 0 }
         for _, t in pairs(w.talents) do

@@ -1958,10 +1958,10 @@ spec:RegisterStateExpr("mainhand_remains", function()
 end)
 
 -- The time to the next off-hand swing (translator-5: wowsims's MeleeAuto is the earlier hand), mainhand_remains's clock
--- on the off hand; with no off-hand weapon that hand never swings: false, which the APL's min() skips.
+-- on the off hand; with no off-hand weapon that hand never swings: 3600 s, so min() takes the main hand.
 spec:RegisterStateExpr("offhand_remains", function()
     if offhand_speed <= 0 then
-        return false
+        return 3600 -- no off-hand weapon: that hand never swings (wowsims's NeverExpires)
     end
     local oh = (nextOH == 0 and combat == 0) and now or nextOH
     if now == query_time then

@@ -118,7 +118,8 @@ local function knows(ids)
 end
 
 -- The finishers' durations by combo points (DB2 durations and per-point steps): Slice and Dice 6 + 3 a point,
--- Improved Slice and Dice +15% a rank (14165 aura 108 base 15); Rupture 6 + 2 a point. Read at the
+-- Improved Slice and Dice +15% a rank (14165 aura 108 base 15); Rupture 6 + 2 a point. Blood Splatter (1329256: duration
+-- +6000 ms on Rupture's class mask, +9000 ms on Garrote's) adds 6 s to Rupture and 9 s to Garrote. Read at the
 -- cast, so `now` and `handler` pass them (the auras' registered durations are the 5-point ones).
 local function sndDuration(cp, rank)
     return (6 + 3 * cp) * (1 + 0.15 * rank)
@@ -600,12 +601,12 @@ spec:RegisterAbilities({
             removeBuff("stealth")
             removeBuff("vanish")
             removeBuff("ghostly_strike_next")
-            applyDebuff("target", "garrote")
+            applyDebuff("target", "garrote", 18 + 9 * talent.blood_splatter.rank)
         end,
 
         handler = function()
             removeBuff("ghostly_strike_next")
-            applyDebuff("target", "garrote")
+            applyDebuff("target", "garrote", 18 + 9 * talent.blood_splatter.rank)
             gain(1, "combo_points")
         end,
     },
@@ -803,14 +804,14 @@ spec:RegisterAbilities({
         usable = finisherUsable,
 
         now = function()
-            applyDebuff("target", "rupture", 6 + 2 * combo_points.current)
+            applyDebuff("target", "rupture", 6 + 2 * combo_points.current + 6 * talent.blood_splatter.rank)
             if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
                 gain(RELENTLESS_ENERGY, "energy")
             end
         end,
 
         handler = function()
-            applyDebuff("target", "rupture", 6 + 2 * combo_points.current)
+            applyDebuff("target", "rupture", 6 + 2 * combo_points.current + 6 * talent.blood_splatter.rank)
             if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
                 gain(RELENTLESS_ENERGY, "energy")
             end
