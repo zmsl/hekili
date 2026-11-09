@@ -14,12 +14,14 @@ local function idsOf(a)
     return set
 end
 
+-- The leaf's own candidate rule (Presence/CooldownViewer.lua candidates()): the entry's linkedSpellIDs when it has any,
+-- else its spellID and overrideSpellID. An entry that links the buff and names the cast or a passive as spellID (Omen of
+-- Clarity 16864 -> 16870) needs only the links in the pack: a passive in `copy` could match the aura walk wrongly.
 local function fixtureIds(e)
-    local ids = { e[2], e[3] }
-    for _, l in ipairs(e[4] or {}) do
-        ids[#ids + 1] = l
+    if type(e[4]) == "table" and #e[4] > 0 then
+        return e[4]
     end
-    return ids
+    return { e[2], e[3] }
 end
 
 -- entries (by cooldownID) that touch an aura but are not fully covered, with the reason they are accepted

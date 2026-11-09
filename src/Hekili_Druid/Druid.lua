@@ -461,7 +461,6 @@ spec:RegisterAuras({
     -- wowsims names by 16864.
     clearcasting = {
         id = 16870,
-        copy = { 16864 }, -- the viewer's Omen of Clarity entry names the passive, links the buff
         duration = 15,
         max_stack = 1,
         icd = 10,
