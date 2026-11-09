@@ -85,23 +85,22 @@ local floor = I.auraFloor or {}
 I.auraFloor = floor
 local floorSet = false -- some floor[j] is 1
 -- The edge (owner rulings L345-L351): the router's fact.edge is the t of an observed dark -> lit flip (an EDGE, 0 a
--- SEED). By key: anAp the applied time of the cast-opened application last matched to an edge (once each); anchN its
--- anchors this fight; emcN/emcSum/emcLast the edge minus our cast's start; cyT/cyD/cyAp/cyE the open cycle (edge, the
+-- SEED). By key: anAp the applied time of the cast-opened application last matched to an edge (once each);
+-- emcN/emcSum/emcLast the edge minus our cast's start; cyT/cyD/cyAp/cyE the open cycle (edge, the
 -- record's own duration, applied, expiry), cyN/cySum/cyObs/cyMod the closed cycles (observed dark - edge against the
 -- modelled duration); seedAp the applied time of a record a SEED opened (unknown age while it is still the record's).
--- I.cdmEdge (harness-only arm switch, never a player option): true moves the matched application's expiry to the edge
--- + its duration; false (today) keeps the cast's start. Both keep the diagnostics.
+-- Diagnostics only: the cast's start stands (L347). Anchoring the expiry at the edge was measured and lost on agreement
+-- (cdm-edge-anchor lane: the edge is a sweep's t, late against the truth by the viewer's latency and up to a poll).
 -- shortcut: EDGE_WIN 1.0 s bounds edge-cast adjacency (cast events late up to 0.3 s, viewer lag up to 0.5 s, a poll
--- gap); a refresh cast within it of a fresh light is anchored too; set it from the LAT probe (Task 10).
+-- gap); a refresh cast within it of a fresh light is matched too; set it from the LAT probe (Task 10).
 local EDGE_WIN = 1.0
-I.cdmEdge = I.cdmEdge or false
-local anAp, anchN, emcN, emcSum, emcLast = {}, {}, {}, {}, {}
+local anAp, emcN, emcSum, emcLast = {}, {}, {}, {}
 local cyT, cyD, cyAp, cyE, cyN, cySum, cyObs, cyMod, seedAp = {}, {}, {}, {}, {}, {}, {}, {}, {}
--- Per fight: polls an UP waited on the debounce past the model's expiry, re-establishes it made, anchors (edge arm).
-local holdN = { waits = 0, fires = 0, anchors = 0 }
+-- Per fight: polls an UP waited on the debounce past the model's expiry, and the re-establishes it made.
+local holdN = { waits = 0, fires = 0 }
 I.presenceHold = holdN
 local function zeroEdge(k)
-    anAp[k], anchN[k], emcN[k], emcSum[k], emcLast[k] = 0, 0, 0, 0, 0
+    anAp[k], emcN[k], emcSum[k], emcLast[k] = 0, 0, 0, 0
     cyT[k], cyD[k], cyAp[k], cyE[k], cyN[k], cySum[k], cyObs[k], cyMod[k], seedAp[k] = 0, 0, 0, 0, 0, 0, 0, 0, 0
 end
 
@@ -136,7 +135,7 @@ I.OnBuild(function(def)
         zeroEdge(k)
     end
     floorSet, anyLong, anyLast = false, false, false
-    holdN.waits, holdN.fires, holdN.anchors = 0, 0, 0
+    holdN.waits, holdN.fires = 0, 0
     exiting = false -- a walk after a build finds every record cleared: no correction to count
     pending = true -- a build cleared every record: walk the player at the next out-of-combat poll 10 (gear-aware spec §2)
 end)
@@ -435,13 +434,12 @@ local function clamp(j, u, t)
     longE[k] = 0
 end
 -- The edge for an UP of aura j on unit u at t (te: the edge's t, L346-L348): a cast-opened application whose start lies
--- within EDGE_WIN of the edge is matched once (anAp): edge minus cast counted, the cycle opened; in the edge arm its
--- expiry moves to te + the record's own duration (no pack call), as AuraHeld (applied, ours and the tick phase stay;
--- an icd aura is left alone: its fold would take a later expiry for a new application). Allocates nothing.
+-- within EDGE_WIN of the edge is matched once (anAp): edge minus cast counted, the cycle opened (its modelled duration:
+-- the record's own, no pack call). Diagnostics only. Allocates nothing.
 local function edgeMatch(j, u, k, te, t)
     local U = I.auras
     local e, ap = U.exp0[u][j], U.applied[u][j]
-    if e <= t or e == HUGE or longE[k] == e or ap == anAp[k] or staged[k] == t then
+    if e <= t or e == HUGE or longE[k] == e or ap == anAp[k] then
         return
     elseif ours[k] ~= BY_CAST or oursAp[k] ~= ap or ap == te or ap - te > EDGE_WIN or te - ap > EDGE_WIN then
         return
@@ -449,11 +447,6 @@ local function edgeMatch(j, u, k, te, t)
     local dur = e - ap
     anAp[k], emcN[k], emcSum[k], emcLast[k] = ap, emcN[k] + 1, emcSum[k] + te - ap, te - ap
     cyT[k], cyD[k], cyAp[k], cyE[k] = te, dur, ap, e
-    if I.cdmEdge and U.icd[j] == 0 and te + dur > t then
-        staged[k], cyE[k] = t, te + dur
-        Direct(Obs.Read, t, k, te + dur - t, ReadOf.AuraHeld + U.stacks[u][j] * I.AURA_STACK)
-        anchN[k], holdN.anchors = anchN[k] + 1, holdN.anchors + 1
-    end
 end
 
 -- The open cycle of key k closes at its thing's first dark after the edge (the leaf's darkT through fact.dark): the
@@ -569,10 +562,9 @@ S.On("PLAYER_REGEN_DISABLED", nil, function()
     for k in pairs(facts) do
         facts[k], disagree[k], staged[k], exitFix[k] = 0, 0, 0, 0
         lastE[k], lastSt[k], longE[k] = 0, 0, 0 -- out of combat the walk answered
-        anchN[k], emcN[k], emcSum[k], emcLast[k], cyT[k], cyN[k], cySum[k], cyObs[k], cyMod[k] =
-            0, 0, 0, 0, 0, 0, 0, 0, 0
+        emcN[k], emcSum[k], emcLast[k], cyT[k], cyN[k], cySum[k], cyObs[k], cyMod[k] = 0, 0, 0, 0, 0, 0, 0, 0
     end
-    holdN.waits, holdN.fires, holdN.anchors = 0, 0, 0
+    holdN.waits, holdN.fires = 0, 0
     anyLong, anyLast = false, false
     exiting = false
 end)
@@ -641,14 +633,13 @@ I.OnSnapshot(function(out, now)
             local unknown = seedAp[k] ~= 0 and seedAp[k] == U.applied[u][j] and U.exp0[u][j] > now
             if sN + eN + emcN[k] + cyN[k] > 0 or unknown then
                 out[#out + 1] = string.format(
-                    "presence-edge %s unit=%s seeds=%d edges=%d age=%s anchored=%d edgeMinusCast n=%d mean=%.3f"
+                    "presence-edge %s unit=%s seeds=%d edges=%d age=%s edgeMinusCast n=%d mean=%.3f"
                         .. " last=%.3f cycles=%d observed=%.2f modeled=%.2f diffMean=%.3f",
                     KEY[j],
                     u == 1 and "player" or "target",
                     sN,
                     eN,
                     unknown and "unknown" or "known",
-                    anchN[k],
                     emcN[k],
                     emcN[k] > 0 and emcSum[k] / emcN[k] or 0,
                     emcLast[k],
@@ -672,11 +663,5 @@ I.OnSnapshot(function(out, now)
     if not leaf then
         return
     end
-    out[#out + 1] = string.format(
-        "presence-edge mode=%s anchors=%d debounceWaits=%d debounceFires=%d",
-        I.cdmEdge and "edge" or "cast",
-        holdN.anchors,
-        holdN.waits,
-        holdN.fires
-    )
+    out[#out + 1] = string.format("presence-edge debounceWaits=%d debounceFires=%d", holdN.waits, holdN.fires)
 end)

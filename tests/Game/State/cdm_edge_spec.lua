@@ -2,8 +2,8 @@
 -- rule: an EDGE is a light after the same slot was seen lit, then dark, by sweeps under continuous monitoring (viewer
 -- visible, same cooldownID, same unit, no reset between); any other first light is a SEED (unknown age). The router
 -- classifies each reduced UNKNOWN/DOWN -> UP change (fact.edge: the edge's t, 0 a seed) and counts them per fight. The
--- belief's harness-only switch I.cdmEdge ("edge" arm) anchors a cast-opened application's expiry at the edge (edge +
--- the record's own duration); the "cast" arm (today) keeps the cast's start. Both arms keep the diagnostics.
+-- belief keeps the cast's start (L347; an edge anchor was measured and lost on agreement, cdm-edge-anchor lane) and
+-- adds the diagnostics: unknown age, edge minus cast, the observed cycle against the model.
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
@@ -159,9 +159,9 @@ describe("CDM edges: seed or edge per thing (L348-L351, conservative rule)", fun
     end)
 end)
 
--- The belief with the edge (Sources/Auras.lua), both arms. "cast" is today's rule (the cast's start stands, L347);
--- "edge" anchors a cast-opened application at its edge: expiry = edge + the record's own duration (L346/L348).
-describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (both arms)", function()
+-- The belief with the edge (Sources/Auras.lua): the cast's start stands (L347) in every order of cast and light, an
+-- edge with no model record opens from the edge (today's open), and the diagnostics.
+describe("CDM edges in the belief: the cast's start stands; the diagnostics", function()
     local VS, I, S, Obs, ctl, api, P, pi, ti
     local SHOUT, REND = 1, 2
 
@@ -220,7 +220,7 @@ describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (bo
         poll(12.2)
     end
 
-    -- name, then a function(arm) of the scenario returning the believed expiry it checks, and the expected expiry per arm
+    -- name, then a function of the scenario returning the believed expiry it checks, and the expected expiry
     local ROWS = {
         {
             "our cast, its light 0.3 s later (an edge): the edge's start",
@@ -234,10 +234,9 @@ describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (bo
                 return est("target", fs.SPENDER_C, 20.5)
             end,
             35,
-            35.3,
         },
         {
-            "F3 shape, the cast logged before the drain that sees the edge: anchored at the next poll",
+            "F3 shape, the cast logged before the drain that sees the edge: the cast's start",
             function()
                 prime(ti, "target")
                 ctl.ViewerAura(ti, "target")
@@ -252,10 +251,9 @@ describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (bo
                 return est("target", fs.SPENDER_C, 20.6)
             end,
             35,
-            35.2,
         },
         {
-            "F3 reverse order, the cast event late: the light opens, the late cast's write is anchored back",
+            "F3 reverse order, the cast event late: the light opens, the late cast's write stands",
             function()
                 prime(ti, "target")
                 ctl.ViewerAura(ti, "target")
@@ -266,10 +264,9 @@ describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (bo
                 return est("target", fs.SPENDER_C, 20.8)
             end,
             35.4,
-            35.2,
         },
         {
-            "a seed (the first light ever): the cast's start in both arms",
+            "a seed (the first light ever): the cast's start",
             function()
                 cast(2, REND, 20, 15)
                 poll(20)
@@ -278,7 +275,6 @@ describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (bo
                 poll(20.5)
                 return est("target", fs.SPENDER_C, 20.5)
             end,
-            35,
             35,
         },
         {
@@ -295,10 +291,9 @@ describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (bo
                 return est("target", fs.SPENDER_C, 25.4)
             end,
             40,
-            40,
         },
         {
-            "a proc with no cast of ours (an edge): opened from the edge in both arms",
+            "a proc with no cast of ours (an edge): opened from the edge",
             function()
                 prime(ti, "target")
                 ctl.ViewerAura(ti, "target")
@@ -307,10 +302,9 @@ describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (bo
                 return est("target", fs.SPENDER_C, 20.5)
             end,
             35.3,
-            35.3,
         },
         {
-            "an icd aura: no anchor (its fold would take a later expiry as a new application)",
+            "an icd aura: the cast's start",
             function()
                 local def = fs.def(fs.new(9))
                 def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, duration = 10, icd = 30 }
@@ -323,7 +317,6 @@ describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (bo
                 poll(20.5)
                 return est("player", fs.SPENDER_A, 20.5)
             end,
-            30,
             30,
         },
         {
@@ -347,10 +340,9 @@ describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (bo
                 return est("target", fs.SPENDER_C, 20.5)
             end,
             38,
-            38.3,
         },
         {
-            "swap away and back mid-application: the remembered record, no new anchor",
+            "swap away and back mid-application: the remembered record, a seed",
             function()
                 prime(ti, "target")
                 cast(2, REND, 20, 15)
@@ -374,37 +366,16 @@ describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (bo
                 return est("target", fs.SPENDER_C, 24.5)
             end,
             35,
-            35.3,
         },
     }
 
     for _, row in ipairs(ROWS) do
-        for _, arm in ipairs({ "cast", "edge" }) do
-            it(arm .. " arm: " .. row[1], function()
-                start(fs.def(fs.new(9)))
-                I.cdmEdge = arm == "edge"
-                local got = row[2]()
-                local want = arm == "cast" and row[3] or row[4]
-                assert.is_true(near(got, want), ("%s: %s, want %s"):format(arm, tostring(got), tostring(want)))
-            end)
-        end
+        it(row[1], function()
+            start(fs.def(fs.new(9)))
+            local got = row[2]()
+            assert.is_true(near(got, row[3]), ("%s, want %s"):format(tostring(got), tostring(row[3])))
+        end)
     end
-
-    it("edge arm: a CDM down before the anchored expiry still closes our application (rule 1)", function()
-        start(fs.def(fs.new(9)))
-        I.cdmEdge = true
-        prime(ti, "target")
-        cast(2, REND, 20, 15)
-        poll(20)
-        ctl.ViewerAura(ti, "target")
-        poll(20.3)
-        poll(20.5)
-        assert.is_true(near(est("target", fs.SPENDER_C, 20.5), 35.3))
-        ctl.ViewerClear(ti) -- dispelled at 30
-        poll(30)
-        poll(30.2)
-        assert.is_nil(VS.Aura("target", fs.SPENDER_C, 30.2))
-    end)
 
     it("swap onto a half-expired debuff of ours the model never saw: a seed, the upper bound, age unknown", function()
         start(fs.def(fs.new(9)))
@@ -419,40 +390,35 @@ describe("CDM edges in the belief: the anchor (edge arm) and the diagnostics (bo
         assert.is_truthy(snap:find("presence-edge spender_c unit=target seeds=1 edges=0 age=unknown", 1, true), snap)
     end)
 
-    it("the snapshot: seeds, edges, edge minus cast and one observed cycle against the model, both arms", function()
-        for _, arm in ipairs({ "cast", "edge" }) do
-            start(fs.def(fs.new(9)))
-            I.cdmEdge = arm == "edge"
-            prime(ti, "target")
-            cast(2, REND, 20, 15)
-            poll(20)
-            ctl.ViewerAura(ti, "target")
-            poll(20.3)
-            poll(20.5)
-            ctl.ViewerClear(ti) -- the item goes dark at 34.0: observed 13.7 s against the modelled 15
-            poll(34)
-            local snap = VS.Snapshot()
-            assert.is_truthy(
-                snap:find(
-                    "presence-edge spender_c unit=target seeds=1 edges=1 age=known anchored="
-                        .. (arm == "edge" and 1 or 0)
-                        .. " edgeMinusCast n=1 mean=0.300 last=0.300 cycles=1 observed=13.70 modeled=15.00",
-                    1,
-                    true
-                ),
-                arm .. "\n" .. snap
-            )
-            assert.is_truthy(snap:find("presence-edge mode=" .. arm, 1, true), snap)
-            for line in snap:gmatch("[^\n]+") do
-                assert.is_true(#line < 255, line)
-            end
+    it("the snapshot: seeds, edges, edge minus cast and one observed cycle against the model", function()
+        start(fs.def(fs.new(9)))
+        prime(ti, "target")
+        cast(2, REND, 20, 15)
+        poll(20)
+        ctl.ViewerAura(ti, "target")
+        poll(20.3)
+        poll(20.5)
+        ctl.ViewerClear(ti) -- the item goes dark at 34.0: observed 13.7 s against the modelled 15
+        poll(34)
+        local snap = VS.Snapshot()
+        assert.is_truthy(
+            snap:find(
+                "presence-edge spender_c unit=target seeds=1 edges=1 age=known"
+                    .. " edgeMinusCast n=1 mean=0.300 last=0.300 cycles=1 observed=13.70 modeled=15.00",
+                1,
+                true
+            ),
+            snap
+        )
+        assert.is_truthy(snap:find("presence-edge debounceWaits=0 debounceFires=0", 1, true), snap)
+        for line in snap:gmatch("[^\n]+") do
+            assert.is_true(#line < 255, line)
         end
     end)
 
-    it("allocates nothing over 1000 polls of lights, darks, casts and anchors (edge arm)", function()
+    it("allocates nothing over 1000 polls of lights, darks, casts and their matches", function()
         local alloc = require("Game.State.helpers.alloc")
         start(fs.def(fs.new(9)))
-        I.cdmEdge = true
         prime(ti, "target")
         local t = 20
         assert.are.equal(

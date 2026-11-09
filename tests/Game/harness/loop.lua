@@ -70,10 +70,6 @@ M.HOLD = os.getenv("HEKILI_LOOP_HOLD") == "1"
 -- The shipped steady icons (Engine/Output.lua, always on for players) on our instance: o.steady, else this switch
 -- (1, what players see, so the gates and make accuracy measure it; the oracle shadow stays plain). o.steady is true (hold 1) or the updates to hold (1 to 3); HEKILI_LOOP_STEADY=N sets the switch to N, 0 off.
 M.STEADY = tonumber(os.getenv("HEKILI_LOOP_STEADY")) or os.getenv("HEKILI_LOOP_HOLD") == "3" or 1
--- The belief's Cooldown Manager edge arm (cdm-edge-anchor lane; harness-only, never a user option): HEKILI_CDM_EDGE=1
--- sets I.cdmEdge on the driving instance (Sources/Auras.lua: an application's expiry anchored at its observed edge);
--- unset leaves the source's default (the cast's start) untouched
-M.CDM_EDGE = os.getenv("HEKILI_CDM_EDGE") == "1"
 -- The oracle's facade rows answered by the client (§4's override): the target's health, and the debuff row Hekili's
 -- aura scan reads (raw since VirtualState counted a modelled stack on top of a plain read that arrived before the
 -- cast's drain, fixed in Auras.lua's I.AuraModel and pinned in loop_warrior_spec). The buff row stays VirtualState's: our
@@ -354,9 +350,6 @@ function M.run(L, seed, o, drivers)
         local VI = d.H.ns.VirtualStateInternal
         if VI and VI.def then -- (loop_spec's fake drivers have no belief)
             VI.def.providers.outcomes = arm.outcomes
-        end
-        if M.CDM_EDGE and VI and not d.plain then
-            VI.cdmEdge = true
         end
         if first and layout then -- the viewer is on from boot (no option), so its map predates the instance's first
             -- layout: the client's data-loaded event, once (as at login; later fights reuse the frames and the map)

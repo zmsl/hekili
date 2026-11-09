@@ -1,7 +1,7 @@
 -- tests/Game/harness/edgestats.lua (cdm-edge-anchor lane, harness only): per fight of a viewer arm, the driver's
 -- believed expiry against the Cooldown Manager's own down (each item's dark edge, from the fake's ViewerAuraBySpell),
 -- the seconds the belief is up while the viewer is dark (staleUp) and down while it is lit (earlyDown), over the
--- router's tracked auras in combat, and the router's seeds and edges, the belief's anchors and debounce counts. One
+-- router's tracked auras in combat, and the router's seeds and edges and the belief's debounce counts. One
 -- line per fight for the arm's .ab file (loop.lua). Class-neutral: aura indices and the client's units only.
 local M = {}
 
@@ -125,14 +125,9 @@ function M.line(H, VI)
     for i, x in ipairs(em.errs) do
         errs[i] = ("%.3f"):format(x)
     end
-    return (
-        "mode %s seeds %s edges %s anchors %d waits %d fires %d downs %d staleUp %.2f earlyDown %.2f missed %d"
-        .. " long %d errs %s"
-    ):format(
-        VI.cdmEdge and "edge" or "cast",
+    return ("seeds %s edges %s waits %d fires %d downs %d staleUp %.2f earlyDown %.2f missed %d" .. " long %d errs %s"):format(
         sum(P and P.seedN),
         sum(P and P.edgeN),
-        hold.anchors or 0,
         hold.waits or 0,
         hold.fires or 0,
         em.downs,

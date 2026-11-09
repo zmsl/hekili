@@ -18,7 +18,7 @@ M.ARMS = {
     lagged = { outcomes = "default", presence = "router", viewer = false, observe = { takenLag = 0.48 } },
     -- the edge-anchor stress worlds (cdm-edge-anchor lane, harness only): the buffs layout, the viewer's light and dark
     -- `viewerLag` s late on both edges (0.1/0.3/0.5), our cast events late by up to 0.3 s, every aura's true duration
-    -- +-10% of the pack's (loop.lua sets the world knobs from `world`); HEKILI_CDM_EDGE=1 runs the belief's edge arm
+    -- +-10% of the pack's (loop.lua sets the world knobs from `world`)
     ["viewer-lag1"] = {
         outcomes = "default",
         presence = "router",
