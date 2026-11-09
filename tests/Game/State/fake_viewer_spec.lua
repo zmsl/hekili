@@ -324,15 +324,18 @@ describe("the any-layout Cooldown Manager fake", function()
         assert.is_nil(item.cooldownID)
     end)
 
-    it("an item flagged noUnit lights with auraDataUnit nil (an entry with no target aura unit)", function()
-        ctl.viewer.infos[501] = { spellID = 77 }
-        local item = ctl.ViewerItem(ESS, 1, 501)
-        item.noUnit = true
-        ctl.ViewerAuraBySpell("target", 77, true, "player")
-        assert.are.same({ SECRET, nil }, { item.auraInstanceID, item.auraDataUnit })
-        ctl.ViewerAuraBySpell("target", 77, false, "player")
-        assert.is_nil(item.auraInstanceID)
-    end)
+    it(
+        "an item flagged noUnit lights with auraDataUnit nil (a stress flag: the client always records the unit)",
+        function()
+            ctl.viewer.infos[501] = { spellID = 77 }
+            local item = ctl.ViewerItem(ESS, 1, 501)
+            item.noUnit = true
+            ctl.ViewerAuraBySpell("target", 77, true, "player")
+            assert.are.same({ SECRET, nil }, { item.auraInstanceID, item.auraDataUnit })
+            ctl.ViewerAuraBySpell("target", 77, false, "player")
+            assert.is_nil(item.auraInstanceID)
+        end
+    )
 
     it("ViewerAcquire with a released frame reuses it (the pool) and lights it like a new one", function()
         ctl.viewer.infos[501] = { spellID = 77 }
@@ -382,6 +385,16 @@ describe("the any-layout Cooldown Manager fake", function()
         assert.is_nil(late.auraInstanceID)
         ctl.Tick()
         assert.are.equal(SECRET, late.auraInstanceID)
+    end)
+
+    it("a re-point's refresh scans the player's auras before the target's, as the client (review m4)", function()
+        ctl.viewer.infos[501] = { spellID = 76 }
+        ctl.viewer.infos[502] = { spellID = 77 }
+        ctl.ViewerAuraBySpell("target", 77, true, "player") -- applied first
+        ctl.ViewerAuraBySpell("player", 77, true, "player")
+        local item = ctl.ViewerItem(ICON, 1, 501)
+        ctl.ViewerRepoint(item, 502)
+        assert.are.same({ SECRET, "player" }, { item.auraInstanceID, item.auraDataUnit })
     end)
 
     it("ViewerRetarget: our target changed: every item held for the target clears, a player item stays", function()

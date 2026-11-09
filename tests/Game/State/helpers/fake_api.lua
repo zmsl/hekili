@@ -781,7 +781,8 @@ function M.new()
             clearAura(item)
         end
         item.auraInstanceID, item.auraDataUnit, item.litBy, item.litUnit = SECRET, unit, spellID, unit
-        if item.noUnit then -- an entry with no target aura unit (BV:483-485): held, its unit unread
+        if item.noUnit then -- a STRESS flag, not a client state (BD:368-379 always records the unit): held with
+            -- auraDataUnit nil, the shape of a secret or unread unit, which the leaf must never count as live (§2.2a)
             item.auraDataUnit = nil
         end
         item.auraSpellID = ctl.viewer.plainSpell and spellID or SECRET
@@ -820,6 +821,7 @@ function M.new()
             or (b ~= nil and ctl.overrides[b] == spellID)
             or (c ~= nil and ctl.overrides[c] == spellID)
     end
+    local REFRESH_UNITS = { "player", "target" }
     --- Re-point (BV:137-147): the cooldownID, then the refresh (a held aura clears, then sets again).
     function ctl.ViewerRepoint(item, id)
         item.cooldownID = id
@@ -833,16 +835,23 @@ function M.new()
             end
         end
         local info = ctl.viewer.infos[id]
-        if item.auraInstanceID == nil and info and not item.silent then -- the refresh finds an aura of the new entry
-            for _, a in ipairs(ctl.viewer.applied) do
-                if (item.unit == nil or item.unit == a[1]) and names(info, a[2]) then
-                    if ctl.viewer.lag then
-                        local p = ctl.viewer.pending
-                        p[#p + 1] = { item, a[1], true, a[2] }
-                    else
-                        ctl.ViewerAura(item, a[1], a[2])
+        if item.auraInstanceID == nil and info and not item.silent then -- the refresh finds an aura of the new entry,
+            -- the player's before the target's (the client's scan order; CooldownViewerItemData.lua:16-79)
+            for _, unit in ipairs(REFRESH_UNITS) do
+                for _, a in ipairs(ctl.viewer.applied) do
+                    if
+                        item.auraInstanceID == nil
+                        and a[1] == unit
+                        and (item.unit == nil or item.unit == unit)
+                        and names(info, a[2])
+                    then
+                        if ctl.viewer.lag then
+                            local p = ctl.viewer.pending
+                            p[#p + 1] = { item, a[1], true, a[2] }
+                        else
+                            ctl.ViewerAura(item, a[1], a[2])
+                        end
                     end
-                    break
                 end
             end
         end

@@ -345,8 +345,9 @@ local CD0 = 910000 -- the layouts' own cooldownIDs (a fixture's keep theirs)
 --- `none` no item; `buffs` one Buff icon item per pack aura; `fixture` the class fixture's entries (by category) plus
 --- an Essential entry per ability whose aura the pack registers (F6); `mixed` 0-3 items an aura over the four viewers
 --- (at least one), two unconfigured Buff bar slots, a silent item (F12) beside a working one of the same aura, an
---- Essential item with no target aura unit, and per fight one viewer hidden for 10 s and one re-point, the Utility
---- pool growing in the first fight only, and `ctl.viewer.lag = 1` on even seeds (the seen rule's lagging item, I-B).
+--- Essential item held with no unit (a stress flag, not a client state: BD:368-379 records the unit), and per fight
+--- one viewer hidden for 10 s and one re-point, the Utility pool growing in the first fight only, and
+--- `ctl.viewer.lag = 1` on even seeds (the seen rule's lagging item, I-B).
 --- Every item names all of its aura's IDs (linkedSpellIDs), so any rank the world applies lights it.
 function M.viewerLayout(ctl, def, preset, seed, o)
     local V = ctl.viewer
@@ -440,7 +441,7 @@ function M.viewerLayout(ctl, def, preset, seed, o)
             end
             if L.mapped[1] then
                 add(2, cdFor(L.mapped[1][3], 2)).silent = true -- never lights (F12), beside a working item of its aura
-                add(0, cdFor(r.pick(auras), 0)).noUnit = true -- held with no target aura unit (BV:483-485)
+                add(0, cdFor(r.pick(auras), 0)).noUnit = true -- held, unit nil: a stress of the leaf, not a client state
                 L.grow = cdFor(r.pick(auras), 1)
             end
             add(3, nil) -- two unconfigured slots
