@@ -249,16 +249,21 @@ One rule set, in `Sources/Auras.lua` `apply` (`:218-243`), plus one array CN13 r
      HOLD`); it then re-establishes the record ONCE with `LONG` (3600 s: finite where a duration exists, since
      `inf - inf` is NaN; a player aura with no numeric duration keeps -1, `math.huge`, as before), the model's last
      stacks, `ours` = the CDM's, so the observed down closes it (rule 1). No renewal while lit. Model right: no
-     override, no lag; model short: down for up to `HOLD`, then one flip. Any answer but UP past the expiry (the seen
-     rule gives no NONE for a record already down, so a dark item reads UNKNOWN; no live slot at all: `covered` 0)
-     ends the debounce: a later light is a new application.
+     override, no lag; model short: down for up to `HOLD`, then one flip.
+   - A dark poll past the expiry is the CDM's fact that the aura is gone (the seen rule gives no NONE for a record
+     already down, so a dark item reads UNKNOWN there; no live slot at all: `covered` 0). It restarts nothing: the
+     debounce memory is dropped, and the next light is a new application, opened at once like any UP with no model
+     record (controller ruling on review S1, 2026-11-09).
    - An UP with no model record (none since the item went dark, a target switch, combat start): opens at once,
      `t0 + d - now` when `d` is known and that outlasts `HOLD`, else `LONG` (on the target too, where 4b wrote `HOLD`).
    - The CDM's writes never displace our cast's (F3): they are their own Read kinds (`ReadOf.AuraOpen`,
      `ReadOf.AuraHeld`, `VirtualState.lua`), sampled with no event, so `I.AuraModel`'s "a plain read wins" does not
      drop our cast's write after a light; and an open staged while the record was down does nothing if our cast's
      write folded first in the same drain (polls stage before the fold; the cast's event is in the log before them).
-     No pack duration function is called from `Game/` (that would be a new border crossing).
+     No pack duration function is called from `Game/` (that would be a new border crossing). And a CDM open folded in
+     the cast's drain or the drain just before it (no model since) is the cast's own application seen early: the
+     cast's handler reads it down (`I.CastAura`), so `stack + 1` / `addStack` do not count it twice (drains, not a
+     time window: review S3).
    - A `LONG` record whose CDM stops answering UP (UNKNOWN, a DOWN that does not close, a hidden viewer, the leaf off,
      a rebuild in combat, a provider switch) is clamped to `HOLD` once, so a stuck record is bounded by one or two
      polls; at a target switch the clamp runs in `PLAYER_TARGET_CHANGED` before `Sources/Target.lua`'s swap logs the
@@ -268,7 +273,9 @@ One rule set, in `Sources/Auras.lua` `apply` (`:218-243`), plus one array CN13 r
      the 4b `AURA_REFRESH` step cap kept the application through the old re-stage and is dead under this rule (a
      limit; `auras_spec` pins it).
    - The test harness keeps the old rules as variant arms (the 4b hold, and L309's long-while-lit at the near-lapse
-     re-stage) for Task 9's A/B; not an option.
+     re-stage) for Task 9's A/B; not an option. DELETE them (variants A and B, `LAPSE`, the icd step loop,
+     `ICD_STEPS`, `REFRESH_HOLD`, the A-pinned tests, the rule letter of the harness switch; `HOLD` may stay
+     harness-settable) before Task 6 ships default-on or before the release tag, whichever comes first (review S2).
 5. **UNKNOWN leaves the model untouched.** A thing that had a fact and loses it (item released, viewer hidden, target
    settling) keeps its belief; the model's own expiries and rule 4's clamp of a `LONG` record make that safe.
 6. **A plain out-of-combat walk wins** (standing 3, §2.1).
