@@ -226,29 +226,28 @@ sweeping_strikes, victorious), a lower bound; every other class has no fixture.
   DM-P (launch day). Our pet's hits are its known weakness (K14p, DM-PET).
 - **Viewer**: unmeasured in the loops (no fake items); taint (CDM-T) and coverage (CDM-R) decide it in game. Warrior
   coverage is 4 of 42 auras today.
-- Both stay off by default until the owner rules.
+- Ruled 2026-11-07/08: the viewer is always on (cdm-default decision 107); the meter is not used in game (its
+  setting removed, the provider kept for the A/B arm).
 
 ## Using the providers (developer guide)
 
-### The two experimental options
+### No options (cdm-default Task 6, decision 107)
 
-Options > Performance > Experimental, both off by default, profile-wide (`profile.performance.damageMeter`,
-`profile.performance.cooldownViewer`; defaults in `src/Hekili/Options/Options.lua`).
+The two experimental options are gone (owner 2026-11-08: no player toggles for adaptive providers); a saved
+`profile.performance.damageMeter` or `cooldownViewer` is ignored. `providersOf` (`Engine/Schema/Tracked.lua`) gives:
 
-- **"use the damage meter for swing outcomes"** injects `def.providers.outcomes = "meter"`
-  (`Game/State/Sources/Outcomes/Meter.lua`). It reads only `DAMAGE_METER_COMBAT_SESSION_UPDATED (type, sessionID)` in
-  combat (plain) and the meter's totals out of combat (the audit). It works with the Damage Meter window hidden or
-  disabled.
-- **"use the Cooldown Manager for aura presence"** gives the presence router (`Sources/Presence/Router.lua`, always
-  injected) the viewer leaf (`Sources/Presence/CooldownViewer.lua`). It needs the Cooldown Manager enabled in the
-  game options (`C_CooldownViewer.IsCooldownViewerAvailable()`); without it the router covers nothing.
+- `def.providers.outcomes = "default"` always. The meter provider (`Game/State/Sources/Outcomes/Meter.lua`) stays for
+  the harness: the `meter` A/B arm (`make gate-ab`) writes `def.providers.outcomes = "meter"` after
+  `Hekili:ProvidersChanged()` in `tests/Game/harness/loop.lua`, and the detection fights take `ab.providers()`. It reads
+  only `DAMAGE_METER_COMBAT_SESSION_UPDATED (type, sessionID)` in combat (plain) and the meter's totals out of combat.
+- the presence router (`Sources/Presence/Router.lua`) with the viewer leaf (`Sources/Presence/CooldownViewer.lua`)
+  unless `Hekili.cdmOff == true`, the debug-only session switch (`DEVELOPMENT.md` §6) and the loops' viewer-arm switch.
+  Without the Cooldown Manager enabled in the game options the router covers nothing.
 
-Each setter writes the profile and calls `Hekili:ProvidersChanged()` (`Engine/Schema/Tracked.lua`), which rewrites the
-build's `def.providers` from `Engine.settings.performance`. The belief's `Drain` compares those names with its active
-providers on every update and swaps (`I.SetProviders`): at once out of combat; in combat the names are stored and
-applied at `PLAYER_REGEN_ENABLED`. A provider never changes mid-fight, and a toggle never rebuilds the belief (its
-records stay). A profile switch rebuilds through `buildDef`, which reads both options. The engine never reads the
-profile; Options never names the belief (border batch 3, E17).
+`Hekili:ProvidersChanged()` rewrites the build's `def.providers`. The belief's `Drain` compares those names with its
+active providers on every update and swaps (`I.SetProviders`): at once out of combat; in combat the names are stored
+and applied at `PLAYER_REGEN_ENABLED`. A provider never changes mid-fight, and a swap never rebuilds the belief (its
+records stay). The engine never reads the profile for them; Options never names the belief (border batch 3, E17).
 
 ### The audit lines
 

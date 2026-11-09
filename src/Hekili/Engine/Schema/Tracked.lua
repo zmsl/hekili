@@ -217,11 +217,9 @@ local function providersOf()
     local e = Hekili.Engine
     -- a non-dev build hides these switches (Options.lua) and ignores a saved value: each reads as its default, off
     local p = Hekili.IsDev and e and e.settings.performance or NO_PERF
-    return p.damageMeter == true and "meter" or "default",
-        "router",
-        p.cooldownViewer == true,
-        p.coalesceCooldown == true,
-        p.narrowUnitAura == true
+    -- no option for the adaptive providers (cdm-default decision 107): the Outcomes provider is the default one and the
+    -- Cooldown Manager is on unless the debug-only session switch Hekili.cdmOff is true; a saved value is ignored
+    return "default", "router", Hekili.cdmOff ~= true, p.coalesceCooldown == true, p.narrowUnitAura == true
 end
 
 local function buildDef()

@@ -331,14 +331,22 @@ function M.run(L, seed, o, drivers)
         out.hold = type(steady) == "number" and steady or 1
         -- Movement ON in a replay (wowsims's rotation moves: tested as it runs), OFF in a loop and ws.live
         d.H.Hekili.DB.profile.toggles.movement.value = (R ~= nil)
-        -- the A/B arm's experimental toggles (providers decision 82), applied out of combat as the option does; the
-        -- viewer arms' Cooldown Manager is the driver's only: the plain oracle shadow stays the viewer-off reference
+        -- the A/B arm's providers, applied out of combat (no option since cdm-default Task 6): the viewer through the
+        -- debug session switch Hekili.cdmOff, the driver's only (the plain oracle shadow stays the viewer-off
+        -- reference); the meter, which no build selects any more, written into the build's providers (harness only)
         local ctl = d.H.ctl -- a fresh world: the client's answers about it start fresh too
         local cdm = arm.viewer and not d.plain
         local layout = cdm and M.viewerLayout(d.H, arm.layout, seed, wo) or nil
-        local perf = d.H.Hekili.DB.profile.performance
-        perf.damageMeter, perf.cooldownViewer = arm.outcomes == "meter", cdm
+        d.H.Hekili.cdmOff = not cdm
         d.H.Hekili:ProvidersChanged()
+        local VI = d.H.ns.VirtualStateInternal
+        if VI and VI.def then -- (loop_spec's fake drivers have no belief)
+            VI.def.providers.outcomes = arm.outcomes
+        end
+        if cdm then -- the viewer is on from boot (no option), so its map predates this layout: the client's own
+            -- rebuild event after a layout change (Router.lua), out of combat at the next drain
+            d.H.Fire("COOLDOWN_VIEWER_DATA_LOADED")
+        end
         if M.CDM_RULE then
             local VI = d.H.ns.VirtualStateInternal
             VI.cdmHoldRule, VI.cdmHold = M.CDM_RULE, M.CDM_HOLD

@@ -1,105 +1,122 @@
--- tests/Forever/providers_option_spec.lua (providers plan, Tasks 4 and 7; border batch 3, E17): the experimental
--- damage-meter switch (profile.performance.damageMeter) and the Cooldown Manager switch (cooldownViewer) reach the
--- build's def.providers through Hekili:ProvidersChanged (the core's, Engine/Schema/Tracked.lua); the belief swaps at
--- its next drain out of combat, at the fight's end in combat, and never rebuilds (its records stay).
+-- tests/Forever/providers_option_spec.lua (providers plan, Tasks 4 and 7; cdm-default plan Task 6, decision 107): the
+-- Cooldown Manager is always on and the damage meter is never the Outcomes provider; neither has an option and a saved
+-- value of either is ignored. Hekili.cdmOff (debug-only, undocumented in the panel) turns the viewer off for the
+-- session through Hekili:ProvidersChanged (the core's, Engine/Schema/Tracked.lua); the belief swaps at its next drain
+-- out of combat, at the fight's end in combat, and never rebuilds (its records stay).
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
-describe("the providers options", function()
+describe("the providers, always on (no option)", function()
     local H, I, perf
-
-    before_each(function()
-        H = headless.new({ character = ww.character(), pack = ww.PACK })
-        I = H.ns.VirtualStateInternal
-        perf = H.Hekili.DB.profile.performance
-    end)
 
     local function drain()
         H.ns.VirtualState.Drain(H.ctl.now)
     end
 
-    it("the setters write the profile and tell the core; the belief swaps at its next drain", function()
+    local function boot(dev, saved)
+        H = headless.new({ character = ww.character(), pack = ww.PACK })
+        H.Hekili.IsDev = dev
+        I = H.ns.VirtualStateInternal
+        perf = H.Hekili.DB.profile.performance
+        for k, v in pairs(saved or {}) do
+            perf[k] = v -- a profile saved by an older build
+        end
+        H.Hekili:ProvidersChanged()
+        drain()
+    end
+
+    local function perfArgs()
         H.Hekili:EmbedSpecOptions()
         H.Hekili:EmbedPackOptions()
         local key = H.Hekili.State.spec.key
-        local args = H.Hekili.Options.args.packs.plugins.specializations[key].args.performance.args
-        args.damageMeter.set(nil, true)
-        args.cooldownViewer.set(nil, true)
-        local pv = I.def.providers
-        assert.are.same({ "meter", "router", true }, { pv.outcomes, pv.presence, pv.viewer })
-        assert.are.same({ "default", false }, { I.outcomes.name, I.presenceViewer }) -- not before the drain
-        drain()
-        assert.are.same(
-            { "meter", true, true, true },
-            { I.outcomes.name, I.presenceViewer, perf.damageMeter, perf.cooldownViewer }
-        )
+        return H.Hekili.Options.args.packs.plugins.specializations[key].args.performance.args
+    end
+
+    it("providersOf gives viewer true in a release build with any saved value", function()
+        for _, dev in ipairs({ false, true }) do
+            for _, saved in ipairs({ true, false }) do
+                boot(dev or nil, { cooldownViewer = saved })
+                assert.is_true(I.def.providers.viewer, tostring(dev) .. "/" .. tostring(saved))
+                assert.are.same({ "router", true }, { I.presence.name, I.presenceViewer })
+            end
+        end
     end)
 
-    it("default off: the build injects the Default outcomes and the router with no leaf", function()
-        assert.are.same(
-            { "default", false, "router", false },
-            { I.outcomes.name, perf.damageMeter, I.presence.name, I.presenceViewer }
-        )
+    it("no Cooldown Manager option exists in the options table", function()
+        boot(true)
+        local args = perfArgs()
+        assert.is_nil(args.cooldownViewer)
+        assert.is_nil(H.Hekili.DB.defaults.profile.performance.cooldownViewer)
     end)
 
-    it("on, out of combat: the meter at the next drain; in combat: at combat end", function()
-        perf.damageMeter = true
-        H.Hekili:ProvidersChanged()
-        assert.are.equal("default", I.outcomes.name)
-        drain()
-        assert.are.equal("meter", I.outcomes.name)
-        perf.damageMeter = false
-        I.inCombat = true
-        H.Hekili:ProvidersChanged()
-        drain()
-        assert.are.equal("meter", I.outcomes.name)
-        I.inCombat = false
-        H.Fire("PLAYER_REGEN_ENABLED")
-        assert.are.equal("default", I.outcomes.name)
+    it("a saved performance.cooldownViewer = false is ignored", function()
+        boot(nil, { cooldownViewer = false })
+        assert.are.same({ true, true, false }, { I.def.providers.viewer, I.presenceViewer, perf.cooldownViewer })
     end)
+
+    it("no damage meter option exists in the options table", function()
+        boot(true)
+        local args = perfArgs()
+        assert.is_nil(args.damageMeter)
+        assert.is_nil(H.Hekili.DB.defaults.profile.performance.damageMeter)
+    end)
+
+    it("a saved performance.damageMeter = true is ignored without an error", function()
+        for _, dev in ipairs({ true, false }) do
+            boot(dev or nil, { damageMeter = true })
+            assert.are.same(
+                { "default", "default", true },
+                { I.def.providers.outcomes, I.outcomes.name, perf.damageMeter }
+            )
+            assert.are.same({}, H.errors)
+        end
+    end)
+
+    it(
+        "Hekili.cdmOff = true then ProvidersChanged gives viewer false (out of combat at once, else at combat end)",
+        function()
+            boot(nil)
+            assert.is_true(I.presenceViewer)
+            H.Hekili.cdmOff = true
+            H.Hekili:ProvidersChanged()
+            assert.is_false(I.def.providers.viewer)
+            drain()
+            assert.are.same({ "router", false }, { I.presence.name, I.presenceViewer })
+            H.Hekili.cdmOff = nil
+            I.inCombat = true
+            H.Hekili:ProvidersChanged()
+            drain()
+            assert.is_false(I.presenceViewer) -- in combat: waits for the fight's end
+            I.inCombat = false
+            H.Fire("PLAYER_REGEN_ENABLED")
+            assert.are.same({ "router", true }, { I.presence.name, I.presenceViewer })
+        end
+    )
 
     it("a toggle back before the fight ends cancels the pending swap", function()
+        boot(nil)
         I.inCombat = true
-        perf.damageMeter = true
+        H.Hekili.cdmOff = true
         H.Hekili:ProvidersChanged()
         drain()
-        perf.damageMeter = false
+        H.Hekili.cdmOff = nil
         H.Hekili:ProvidersChanged()
         drain()
         I.inCombat = false
         H.Fire("PLAYER_REGEN_ENABLED")
-        assert.are.equal("default", I.outcomes.name)
+        assert.is_true(I.presenceViewer)
     end)
 
     it("a swap keeps the belief's records: no rebuild", function()
+        boot(nil)
         local clears, clear = 0, I.ClearRecords
         I.ClearRecords = function()
             clears = clears + 1
             return clear()
         end
-        perf.damageMeter = true
+        H.Hekili.cdmOff = true
         H.Hekili:ProvidersChanged()
         drain()
-        assert.are.same({ "meter", 0 }, { I.outcomes.name, clears })
+        assert.are.same({ false, 0 }, { I.presenceViewer, clears })
     end)
-
-    it(
-        "the viewer switch gives the router its leaf at the next drain out of combat; in combat at combat end",
-        function()
-            assert.are.same({ "router", false, false }, { I.presence.name, perf.cooldownViewer, I.presenceViewer })
-            perf.cooldownViewer = true
-            H.Hekili:ProvidersChanged()
-            drain()
-            assert.is_true(I.presenceViewer)
-            perf.cooldownViewer = false
-            I.inCombat = true
-            H.Hekili:ProvidersChanged()
-            drain()
-            assert.is_true(I.presenceViewer)
-            I.inCombat = false
-            H.Fire("PLAYER_REGEN_ENABLED")
-            assert.are.equal("router", I.presence.name)
-            assert.is_false(I.presenceViewer)
-        end
-    )
 end)

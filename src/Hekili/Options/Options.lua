@@ -308,8 +308,6 @@ do
                 performance = {
                     frameBudget = 0.7,
                     forecastWindow = 15, -- Forever E9
-                    damageMeter = false, -- experimental (providers spec decision 82): the meter as the Outcomes provider
-                    cooldownViewer = false, -- experimental: the Cooldown Manager as the presence leaf (providers Task 7)
                     coalesceCooldown = false, -- perf 2.2: SPELL_UPDATE_COOLDOWN once per frame (EventFacade.lua)
                     narrowUnitAura = false, -- perf 2.3: UNIT_AURA for player and target only (Sources.lua)
                 },
@@ -4125,39 +4123,6 @@ found = true end
                                     hidden = not Hekili.IsDev, -- only the dev-build switches below remain under it
                                     name = L["Experimental"],
                                     order = 20,
-                                },
-                                damageMeter = {
-                                    type = "toggle",
-                                    hidden = not Hekili.IsDev, -- dev builds only; providersOf (Tracked.lua) ignores it otherwise
-                                    name = L["Experimental: use the damage meter for swing outcomes"],
-                                    desc = L["Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know "
-                                        .. "at once whether your white swing hit, and that another player's hit was not yours.\n\n"
-                                        .. "Changes apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n"
-                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
-                                    get = function() return Hekili.DB.profile.performance.damageMeter == true end,
-                                    set = function( _, v )
-                                        Hekili.DB.profile.performance.damageMeter = v
-                                        Hekili:ProvidersChanged()
-                                    end,
-                                    order = 22,
-                                    width = "full",
-                                },
-                                cooldownViewer = {
-                                    type = "toggle",
-                                    hidden = not Hekili.IsDev, -- dev builds only; providersOf (Tracked.lua) ignores it otherwise
-                                    name = L["Experimental: use the Cooldown Manager for aura presence"],
-                                    desc = L["Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, "
-                                        .. "for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. "
-                                        .. "Shows presence only (no durations or stacks), and only auras you applied.\n\n"
-                                        .. "Changes apply at once out of combat, otherwise when the fight ends.\n\n"
-                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
-                                    get = function() return Hekili.DB.profile.performance.cooldownViewer == true end,
-                                    set = function( _, v )
-                                        Hekili.DB.profile.performance.cooldownViewer = v
-                                        Hekili:ProvidersChanged()
-                                    end,
-                                    order = 23,
-                                    width = "full",
                                 },
                                 coalesceCooldown = {
                                     type = "toggle",
