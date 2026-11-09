@@ -43,7 +43,7 @@ local OVL_J, OVL_ID, OVL_N = {}, {}, 0
 local facts, disagree = {}, {}
 -- By the same key: the time of the last Read staged (the drain's fold takes it), 0 none. Only a second stage in the
 -- same drain (an edge, then the poll, or a clamp) is held back: a stage can be due at two polls in a row (a debounce
--- that elapsed, then a re-open after a close; under variant A a hold re-stage).
+-- that elapsed, then a re-open after a close).
 local staged = {}
 -- By the same key: 1 when the first plain walk after combat corrected the believed presence (spec §2.6, decision 105),
 -- per fight. At most one count per key: exp0 moves only at the fold, so every walk of the exit frame (a UNIT_AURA one,
@@ -66,22 +66,16 @@ I.auraOurs = ours
 -- before; LONG is finite where a duration exists: inf - inf is NaN), closed by the observed down (rule 1). A LONG
 -- record whose CDM stops answering UP (UNKNOWN, a hidden viewer, the leaf off, a target change) is clamped to HOLD
 -- once.
--- shortcut: HOLD 1.0 s is a guess (spec D9; the owner's 0.6/1.0/1.5); Task 9's variant arms measure it.
--- I.cdmHoldRule and I.cdmHold: the harness's variant switch only (Task 9's A/B; never a user option): "C" the rule
--- above, "A" the 4b hold (re-staged to HOLD ahead within LAPSE of the expiry, LAPSE the slowest in-combat drain,
--- Engine/Driver.lua restRate's 0.5 s), "B" L309 (that re-stage writes LONG once).
-local LAPSE, LONG = 0.5, 3600
-I.cdmHoldRule, I.cdmHold = "C", 1.0
+-- shortcut: HOLD 1.0 s is a guess (spec D9; the owner's 0.6/1.0/1.5): set it from the LAT probe (ledger CDM-LAT).
+-- The rule's alternatives (4b's re-stage within LAPSE of the expiry, L309's LONG re-stage) were measured and removed
+-- (cdm-default Task 9, review S2).
+local HOLD, LONG = 1.0, 3600
 -- D14: after our cast wrote an application, its NONE closes it only once the fact read UP REFRESH_LAG after the write: an
 -- item still showing the old application inside the client's latency says nothing of the new one.
 -- shortcut: 0.5 s is unmeasured; the LAT probe (cast success vs the item's light) sets it.
 local REFRESH_LAG = 0.5
--- Each Read of a hold re-stage of an `icd` aura moves its expiry by at most this (I.AURA_REFRESH less a float margin),
--- so the fold keeps the application (its ICD and applied time; ours stays valid).
-local REFRESH_HOLD = I.AURA_REFRESH * 0.99
-local ICD_STEPS = 4 -- at most this many extra Reads per hold re-stage of an icd aura (HOLD + LAPSE fits in 3)
 local DUR = {}
--- By key (rule C): lastE the model's expiry the last time an UP answer found the record up (0: none, or the item went
+-- By key (L310): lastE the model's expiry the last time an UP answer found the record up (0: none, or the item went
 -- dark since), lastSt its stacks; longE the expiry of the LONG write still standing (0 none). anyLong, anyLast: some
 -- longE, lastE set since the last poll with no live slot.
 local lastE, lastSt, longE = {}, {}, {}
@@ -307,20 +301,16 @@ end
 
 -- Rule 4's remaining for an UP of (j, u) at t (decision 112): never math.huge on the target or with a duration.
 local function hold(j, u, k, t)
-    local H, A = I.cdmHold, I.cdmHoldRule == "A"
     if DUR[j] >= 0 then
         local F = I.presence.fact
         local ft = F and F.t[k] or 0
         local ap = I.auras.applied[u][j]
         local r = (ft > ap and ft or ap) + DUR[j] - t
-        if r > H then
+        if r > HOLD then
             return r
         end
-        return A and H or long(j, u)
-    elseif not A or u == 1 then
-        return long(j, u)
     end
-    return H
+    return long(j, u)
 end
 
 -- Rule 1 (decision 111 as amended): a reduced DOWN closes the record only if our evidence opened this application;
@@ -335,7 +325,7 @@ end
 
 -- Rules 2.5.1-7 for one reduced fact (UP or DOWN) of aura j on unit u: a plain walk wins out of combat (I7); forms and
 -- enchants are skipped on the player (M5); an UP stages only while the record is down: at once with no model record,
--- after HOLD lit past the model's expiry otherwise (rules 3-4, L310; variant A also within LAPSE of lapsing); a DOWN
+-- after HOLD lit past the model's expiry otherwise (rules 3-4, L310); a DOWN
 -- closes only by rule 1. An edge is a fact; a poll answer is one only when it stages (spec §4.3). Returns whether
 -- it staged. Allocates nothing.
 local function apply(j, u, up, t, edge)
@@ -358,24 +348,17 @@ local function apply(j, u, up, t, edge)
         return false
     end
     local e = U.exp0[u][j]
-    local stage, rem, kind, rule = false, 0, ReadOf.Aura, I.cdmHoldRule
-    if up and rule == "A" then
-        stage = e <= t or (e ~= HUGE and e - t <= LAPSE)
-        if stage then
-            rem = hold(j, u, k, t)
-        end
-    elseif up and e > t then
-        if rule == "B" then
-            stage, rem, kind = e ~= HUGE and e - t <= LAPSE, long(j, u), ReadOf.AuraHeld
-        elseif e ~= HUGE then
+    local stage, rem, kind = false, 0, ReadOf.Aura
+    if up and e > t then
+        if e ~= HUGE then
             lastE[k], lastSt[k], anyLast = e, U.stacks[u][j], true -- the model's expiry stands: the debounce counts from it
         end
     elseif up then
         kind = ReadOf.AuraOpen -- our cast's write folded first in this drain wins (F3)
-        if rule == "C" and lastE[k] > 0 then -- lit through the model's expiry: overridden only once lit HOLD past it
+        if lastE[k] > 0 then -- lit through the model's expiry: overridden only once lit HOLD past it
             local F = I.presence.fact
             local ft = F and F.t[k] or 0
-            stage, rem = t - (ft > lastE[k] and ft or lastE[k]) >= I.cdmHold, long(j, u)
+            stage, rem = t - (ft > lastE[k] and ft or lastE[k]) >= HOLD, long(j, u)
         else
             stage, rem = true, hold(j, u, k, t)
         end
@@ -395,26 +378,12 @@ local function apply(j, u, up, t, edge)
         disagree[k] = disagree[k] + 1
     end
     local stacks = 0
-    if up and e <= t then
+    if up then -- an UP stages only on a record still down
         ours[k], oursAp[k] = BY_CDM, foldApplied(u, j, t) -- a CDM UP opened it
-        stacks = lastSt[k] -- C re-established: the model's last stacks (else 0)
-    elseif up then -- a hold re-stage: the model's stacks stand (rule 3)
-        stacks = U.stacks[u][j]
+        stacks = lastSt[k] -- re-established: the model's last stacks (else 0)
     end
-    local c = kind + stacks * I.AURA_STACK
-    if rule ~= "C" and up and e > 0 and U.icd[j] > 0 and e + REFRESH_HOLD > t then
-        -- an icd aura still on record: a Read more than AURA_REFRESH past its expiry is a re-application to
-        -- Families/Auras.lua (ICD restart, applied moves, ours lost), so the hold steps there, each Read at most
-        -- REFRESH_HOLD past the one before (the fold takes them in order), whatever the poll gap (review m2)
-        local goal, x, n = t + (rem > 0 and rem or I.cdmHold), e, 0
-        while x + REFRESH_HOLD < goal and n < ICD_STEPS do
-            x, n = x + REFRESH_HOLD, n + 1
-            Direct(Obs.Read, t, k, x - t, c)
-        end
-        rem = (goal < x + REFRESH_HOLD and goal or x + REFRESH_HOLD) - t
-    end
-    Direct(Obs.Read, t, k, rem, c)
-    if up and rule ~= "A" and (rem == LONG or rem < 0) then
+    Direct(Obs.Read, t, k, rem, kind + stacks * I.AURA_STACK)
+    if up and (rem == LONG or rem < 0) then
         longE[k], anyLong = rem < 0 and HUGE or t + rem, true -- the fold's expiry (Families/Auras.lua: o.t + o.b)
     end
     return true
@@ -425,9 +394,9 @@ end
 local function clamp(j, u, t)
     local k = (u - 1) * I.AURA_UNIT + j
     local e = I.auras.exp0[u][j]
-    if longE[k] == e and e > t + I.cdmHold and staged[k] ~= t then
+    if longE[k] == e and e > t + HOLD and staged[k] ~= t then
         staged[k] = t
-        Direct(Obs.Read, t, k, I.cdmHold, ReadOf.AuraHeld + I.auras.stacks[u][j] * I.AURA_STACK)
+        Direct(Obs.Read, t, k, HOLD, ReadOf.AuraHeld + I.auras.stacks[u][j] * I.AURA_STACK)
     end
     longE[k] = 0
 end

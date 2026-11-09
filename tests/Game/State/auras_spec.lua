@@ -901,61 +901,6 @@ describe("auras", function()
             assert.is_nil(VS.Aura("target", fs.SPENDER_C, 10.7))
         end)
 
-        it("a target UP past its registered duration holds within HOLD, not per poll; lost, it lapses", function()
-            I.cdmHoldRule = "A" -- the 4b hold (variant A, the Task 9 arm): its own behaviour
-            ctl.ViewerAura(ti, "target")
-            poll(10) -- opened: expires 25
-            local last, stages, t = est("target", fs.SPENDER_C, 10), 0, 20
-            for i = 1, 34 do
-                t = 20 + i * 0.3 -- to 30.2, past the registered duration; 0.3 s polls (the in-combat rates are 0.2-0.5)
-                poll(t)
-                local e = est("target", fs.SPENDER_C, t)
-                assert.is_truthy(VS.Aura("target", fs.SPENDER_C, t + 0.29), t) -- never down, not even between polls
-                if t > 24.6 then
-                    assert.is_true(e - t <= 1.0 + 1e-9) -- at most HOLD: refreshable throughout
-                end
-                if e ~= last then
-                    stages = stages + 1
-                end
-                last = e
-            end
-            assert.is_true(stages >= 5 and stages <= 12, "stages " .. stages) -- about every HOLD - LAPSE, not 17 polls
-            ctl.ViewerRelease(ti) -- the evidence goes away (UNKNOWN): nothing re-stages
-            poll(30.3)
-            assert.is_truthy(VS.Aura("target", fs.SPENDER_C, 30.3))
-            poll(31.3)
-            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 31.3)) -- lapsed within HOLD
-        end)
-
-        it("a hold re-stage of a record believed up keeps its stacks (rule 3: the model's stacks stand)", function()
-            I.cdmHoldRule = "A" -- the 4b hold (variant A, the Task 9 arm): its own behaviour
-            I.AuraModel(2, REND, 10, 25, 3, 10, Obs.CastSuccess, true) -- our 3-stack debuff
-            I.AuraOurs(2, REND)
-            ctl.ViewerAura(ti, "target")
-            for t = 10.5, 26, 0.5 do
-                poll(t) -- from 24.5 on, within LAPSE of its expiry: re-staged
-            end
-            local rec, stacks = VS.Aura("target", fs.SPENDER_C, 26)
-            assert.is_truthy(rec)
-            assert.are.equal(3, stacks)
-        end)
-
-        it("an icd aura's hold keeps the application: its ICD does not restart and it stays ours", function()
-            I.cdmHoldRule = "A" -- the 4b hold (variant A, the Task 9 arm): its own behaviour
-            local def = fs.def(fs.new(9))
-            def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, duration = 3, icd = 10 }
-            start(def)
-            cast(1, SHOUT, 10, 3)
-            ctl.ViewerAura(pi, "player")
-            for t = 10.2, 16, 0.2 do
-                poll(t)
-                assert.are.equal(10, select(3, VS.Aura("player", fs.SPENDER_A, t)), t) -- applied (the ICD's start)
-            end
-            ctl.ViewerClear(pi)
-            poll(16.2)
-            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 16.2)) -- still ours: its NONE closes it
-        end)
-
         it("a target switch starts the fact over: mob B opens from its own light, not mob A's (review I1)", function()
             cast(2, REND, 10, 15)
             ctl.ViewerAura(ti, "target")
@@ -991,11 +936,10 @@ describe("auras", function()
         it(
             "the switch's drain applies nothing on the target: mob A's record never decides for mob B (review m3)",
             function()
-                -- A: held past its duration (the 4b re-stage); C: the model's own expiry stands (L310)
-                for rule, held in pairs({ A = 25.5, C = 25 }) do
+                do -- the model's own expiry stands (L310)
+                    local rule, held = "C", 25
                     ctl.guid.target = "Creature-1"
                     start(fs.def(fs.new(9)))
-                    I.cdmHoldRule = rule
                     cast(2, REND, 10, 15) -- mob A's record expires at 25
                     ctl.ViewerAura(ti, "target")
                     for t = 10.5, 24.5, 0.5 do
@@ -1014,46 +958,6 @@ describe("auras", function()
             end
         )
 
-        it("an icd aura's hold keeps the application at slow polls and with no numeric duration (review m2)", function()
-            I.cdmHoldRule = "A" -- the 4b hold (variant A, the Task 9 arm): its own behaviour
-            for _, dur in ipairs({ 3, false }) do
-                local def = fs.def(fs.new(9))
-                def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, duration = dur or nil, icd = 10 }
-                start(def)
-                cast(1, SHOUT, 10, 3)
-                ctl.ViewerAura(pi, "player")
-                local t = 10
-                for i = 1, 38 do
-                    t = 10 + i * 0.52 -- slower than the 0.5 s in-combat rate (the reviewer's probe: lost at 21.44)
-                    poll(t)
-                    local rec, _, applied = VS.Aura("player", fs.SPENDER_A, t)
-                    assert.is_truthy(rec, t)
-                    assert.is_truthy(VS.Aura("player", fs.SPENDER_A, t + 0.51), t) -- not down until the next poll
-                    assert.are.equal(10, applied, t) -- the same application: its ICD does not restart
-                    assert.is_true(t < 12.5 or rec.est - t <= 1.0 + 1e-9, t) -- past its 3 s: held, never math.huge
-                end
-                ctl.ViewerClear(pi)
-                poll(t + 0.2)
-                assert.is_nil(VS.Aura("player", fs.SPENDER_A, t + 0.2)) -- still ours: its NONE closes it
-            end
-        end)
-
-        it("an UP with no numeric duration: HOLD on the target, -1 on the player closed by its NONE", function()
-            I.cdmHoldRule = "A" -- the 4b hold (variant A, the Task 9 arm): its own behaviour
-            local def = fs.def(fs.new(9))
-            def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }
-            def.auras[REND] = { key = "spender_c", id = fs.SPENDER_C }
-            start(def)
-            ctl.ViewerAura(ti, "target")
-            ctl.ViewerAura(pi, "player")
-            poll(10.5)
-            assert.are.equal(11.5, est("target", fs.SPENDER_C, 10.5))
-            assert.are.equal(math.huge, est("player", fs.SPENDER_A, 10.5))
-            ctl.ViewerClear(pi) -- the CDM UP opened it: ours, so its NONE closes
-            poll(11)
-            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
-        end)
-
         -- The owner's rule (L310, decision 112 as amended; variant C, the default): trust the belief's duration. No
         -- extension before the model's expiry; past it, the CDM overrides only once its item stayed lit HOLD, then
         -- once, long (3600 s; -1 for a player aura with no numeric duration), closed by the observed down.
@@ -1062,7 +966,7 @@ describe("auras", function()
             ctl.ViewerAura(ti, "target")
             for t = 10.5, 24.5, 0.5 do
                 poll(t)
-                assert.are.equal(25, est("target", fs.SPENDER_C, t), t) -- (variant A, the 4b hold, re-staged it at 24.5: 25.5)
+                assert.are.equal(25, est("target", fs.SPENDER_C, t), t)
             end
             poll(24.9)
             assert.are.equal(25, est("target", fs.SPENDER_C, 24.9))
@@ -1206,7 +1110,7 @@ describe("auras", function()
                 if t > 10 then
                     poll(t)
                 end
-                assert.are.equal(28, est("target", fs.SPENDER_C, t), t) -- (variant A, the 4b hold: 11, re-staged near 1 s)
+                assert.are.equal(28, est("target", fs.SPENDER_C, t), t)
             end
             -- the other order: the light folds first, our cast's write lands 0.02 s later (inside SAME_FRAME)
             ctl.guid.target = "Creature-1"
