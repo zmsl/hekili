@@ -62,7 +62,8 @@ accuracy:
 	$(LUA) tools/accuracy/report.lua
 
 # The A/B (providers spec §4.1): the gate once per arm on the same seeds; the provider arms record in .ab/<arm>.tsv.
-# The four viewer arms (cdm-default decision 110) differ by the Cooldown Manager layout (scenarios.viewerLayout).
+# The four viewer arms (cdm-default decision 110) differ by the Cooldown Manager layout (scenarios.viewerLayout); the
+# CDM verdict's five worlds (verdict spec §5) follow, each with its verdict-off twin (-novd).
 gate-ab:
 	rm -rf .ab
 	$(MAKE) gate
@@ -71,6 +72,16 @@ gate-ab:
 	$(MAKE) gate AB_ARM=viewer-buffs
 	$(MAKE) gate AB_ARM=viewer-fixture
 	$(MAKE) gate AB_ARM=viewer-mixed
+	$(MAKE) gate AB_ARM=viewer-reshuffle
+	$(MAKE) gate AB_ARM=viewer-reshuffle-novd
+	$(MAKE) gate AB_ARM=viewer-nonland
+	$(MAKE) gate AB_ARM=viewer-nonland-novd
+	$(MAKE) gate AB_ARM=secret-viewer-buffs
+	$(MAKE) gate AB_ARM=secret-viewer-buffs-novd
+	$(MAKE) gate AB_ARM=secret-viewer-mixed
+	$(MAKE) gate AB_ARM=secret-viewer-mixed-novd
+	$(MAKE) gate AB_ARM=viewer-swap
+	$(MAKE) gate AB_ARM=viewer-swap-novd
 	@wc -l .ab/*.tsv
 
 $(LOOPS): test-%:
