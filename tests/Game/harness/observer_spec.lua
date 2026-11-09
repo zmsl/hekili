@@ -405,6 +405,26 @@ describe("the observer", function()
         end
     end)
 
+    it("scenarios' swapEvery cycles our target through the mobs: one @viewerRetarget a swap", function()
+        local function swaps(every)
+            local s = scenarios.stream({ duration = 30, extraMobs = 2, swapEvery = every, viewer = true }, 7)
+            local guids, n = {}, 0
+            for i = 1, s.n do
+                n = n + (s.ev[i] == "@viewerRetarget" and 1 or 0)
+                if s.ev[i] == "@guid" and s.a1[i] == "target" then
+                    guids[#guids + 1] = s.a2[i]
+                end
+            end
+            return n, guids
+        end
+        local n, guids = swaps(5) -- the prepull's target, then a swap at 6, 11, 16, 21, 26
+        assert.are.equal(6, n)
+        assert.are.same({ "Creature-1", "Creature-2", "Creature-3", "Creature-1", "Creature-2", "Creature-3" }, guids)
+        n = swaps({ 4, 8 }) -- a drawn gap each swap
+        assert.is_true(n >= 1 + 3 and n <= 1 + 7, tostring(n))
+        assert.are.equal(1, (swaps(nil))) -- no knob: no swap
+    end)
+
     it("steps to the batch's stream in 0.2 s steps, and draws nothing from the world's generator", function()
         local o = scenarios.oracle({ duration = 40, others = { "melee", "caster" } })
         local k = setmetatable({ usable = true }, { __index = observer.DEFAULTS })
