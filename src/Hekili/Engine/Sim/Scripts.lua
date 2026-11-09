@@ -58,10 +58,6 @@ local function forgetMeNots( str )
    while( str:find("!") ) do
       local start = str:find("!")
 
-      --while str:sub( start, start ):match("%s") do
-      --   start = start + 1
-      --      end
-
       local parens = 0
       local finish = -1
 
@@ -118,10 +114,6 @@ local function atToAbs( str )
 
     while( str:find("@") ) do
        local start = str:find("@")
-
-       --while str:sub( start, start ):match("%s") do
-       --   start = start + 1
-       --      end
 
        local parens = 0
        local finish = -1
@@ -190,7 +182,6 @@ local rightBreak = {
 }
 
 local function HandleDeprecatedOperators( str, opStr, prefix )
-    --str = str:gsub("%s", "")
     for left, op, right in str:gmatch("(.+)(" .. opStr .. ")(.+)") do
         local leftLen, rightLen = left:len(), right:len()
         local val1, val2, len1, len2, b1, b2
@@ -334,13 +325,11 @@ local function HandleLanguageIncompatibilities( str )
     str = str:gsub("imps_spawned_during%.([^!=<>&|]+)", "imps_spawned_during['%1'] ")
     str = str:gsub("time_to_imps%.(%b()).remains", "time_to_imps[%1].remains")
     str = str:gsub("time_to_imps%.(%d+).remains", "time_to_imps[%1].remains")
-    -- str = str:gsub("incanters_flow_time_to%.(%d+)[.any]?", "incanters_flow_time_to[%1]")
     str = str:gsub("prev%.(%d+)", "prev[%1]")
     str = str:gsub("prev_gcd%.(%d+)", "prev_gcd[%1]")
     str = str:gsub("prev_off_gcd%.(%d+)", "prev_off_gcd[%1]")
     str = str:gsub("time_to_sht%.(%d+)", "time_to_sht[%1]")
     str = str:gsub("time_to_sht_plus%.(%d+)", "time_to_sht_plus[%1]")
-    -- str = str:gsub("([a-z0-9_]+)%.(%d+)", "%1[%2]")
 
     return str
 end
@@ -372,12 +361,6 @@ local function SimToLua( str, modifier )
     if str:find(">%?") then str = HandleDeprecatedOperators( str, ">%?", "min" ) end
 
     str = SimcWithResources( str )
-
-    -- Replace '%' for division with actual division operator '/'.
-    -- str = str:gsub("([^%%])[ ]+%%[ ]+([^%%])", "%1/%2")
-
-    -- Replace '%%' for modulus with '%'.
-    -- str = str:gsub( "%%%%", "%%" )
 
     -- Replace '&' with ' and '.
     str = str:gsub("&", " and ")
@@ -1176,9 +1159,6 @@ do
         if nots then output = output:gsub( "!", " not " ) end
         if abss then output = output:gsub( "@", " abs" ) end
 
-        -- output = output:gsub( "  ", " " )
-        -- output = output:gsub( "not (safenum(", "safenum(not (" )
-        -- output = output:gsub( "not safebool(", "safebool(not " )
         output = output:gsub( "!safenum(%b())", "safenum(!%1)" )
         output = output:gsub( "@safebool", "@safenum" )
         output = output:gsub( "!%(%s*(%b())%s*%)", "!%1" )
@@ -1191,71 +1171,6 @@ do
 end
 
 
--- Convert SimC syntax to Lua conditionals.
-local function SimCToSnapshot( str, modifier )
-    -- If no conditions were provided, function should return true.
-    if not str or str == '' then return nil end
-    if type( str ) == 'number' then return str end
-
-    str = str:trim()
-
-    -- Strip comments.
-    str = str:gsub("^%-%-.-\n", "")
-
-    -- Replace '!' with ' not '.
-    -- str = forgetMeNots( str )
-
-    str = SimcWithResources( str )
-
-    -- Replace '%' for division with actual division operator '/'.
-    -- str = str:gsub("%%", "/")
-
-    -- Replace '&' with ' and '.
-    -- str = str:gsub("&", " and ")
-
-    -- Replace '|' with ' or '.
-    -- str = str:gsub("||", " or "):gsub("|", " or ")
-
-    --[[ if not modifier then
-        -- Replace assignment '=' with comparison '=='
-        str = str:gsub("([^=])=([^=])", "%1==%2" )
-
-        -- Fix any conditional '==' that got impacted by previous.
-        str = str:gsub("==+", "==")
-        str = str:gsub(">=+", ">=")
-        str = str:gsub("<=+", "<=")
-        str = str:gsub("!=+", "~=")
-        str = str:gsub("~=+", "~=")
-    end
-
-    -- Condense whitespace.
-    str = str:gsub("%s%s", " ")
-
-    -- Condense parenthetical spaces.
-    str = str:gsub("[(][%s+]", "("):gsub("[%s+][)]", ")") ]]
-
-    -- Address equipped.number => equipped[number]
-    str = str:gsub("equipped%.(%d+)", "equipped[%1]")
-    str = str:gsub("main_hand%.(%d[a-zA-Z0-9_]+)", "main_hand['%1']")
-    str = str:gsub("off_hand%.(%d[a-zA-Z0-9_]+)", "off_hand['%1']")
-    str = str:gsub("equipped%.(%d+)", "equipped[%1]")
-    str = str:gsub("lowest_vuln_within%.(%d+)", "lowest_vuln_within[%1]")
-    str = str:gsub("%.in([^a-zA-Z0-9_])", "['in']%1" )
-    str = str:gsub("%.in$", "['in']" )
-
-    str = str:gsub("imps_spawned_during%.([^<>=!&|]+)", "imps_spawned_during[%1]")
-
-    str = str:gsub("prev%.(%d+)", "prev[%1]")
-    str = str:gsub("prev_gcd%.(%d+)", "prev_gcd[%1]")
-    str = str:gsub("prev_off_gcd%.(%d+)", "prev_off_gcd[%1]")
-    str = str:gsub("time_to_sht%.(%d+)", "time_to_sht[%1]")
-    str = str:gsub("time_to_sht_plus%.(%d+)", "time_to_sht_plus[%1]")
-
-    return str
-
-end
-
-
 local function stripScript( str, thorough )
   if not str then return 'true' end
   if type( str ) == 'number' then return str end
@@ -1264,7 +1179,6 @@ local function stripScript( str, thorough )
   str = str:gsub("^return ", "")
 
   -- Remove min/max/safenum/safebool/abs.
-  -- str = str:gsub("([^%a%w_%.])min([^%a%w_)]+)%s?%(?", "%1%2 "):gsub("([^%a%w_%.])max([^%a%w_)]+)%s?%(?", "%1%2 "):gsub("([^%a%w_%.])safebool([^%a%w_)]+)%s?%(?", "%1%2 "):gsub("([^%a%w_%.])safenum([^%a%w_)]+)%s?%(?", "%1%2 ")
   str = str:gsub( "abs(%b())", "%1" ):gsub( "min(%b())", "%1" ):gsub( "max(%b())", "%1" ):gsub( "safebool(%b())", "%1" ):gsub( "safenum(%b())", "%1" )
 
   -- Remove comments.
@@ -1412,14 +1326,6 @@ local valueModifiers = {
 }
 
 
---[[ local nameMap = {
-    call_action_list = "list_name",
-    run_action_list = "list_name",
-    variable = "var_name",
-    cancel_buff = "buff_name",
-} ]]
-
-
 local isString = {
     op = true,
 }
@@ -1509,11 +1415,6 @@ local function ConvertScript( node, hasModifiers, header )
 
     if t then sf, e = Hekili:Loadstring( "-- " .. header .. "\nreturn safebool( " .. t .. " )" ) end
     if sf then setfenv( sf, state ) end
-
-    --[[ if sf and not e then
-        local pass, val = pcall( sf )
-        if not pass then e = val end
-    end ]]
 
     if sf and not e then
         state:SetDefaultVariable( 1 )
@@ -1621,15 +1522,9 @@ local function ConvertScript( node, hasModifiers, header )
                 elseif value == 'raw' then
                     emulated = node[ m ] ~= "" and node[ m ]
                     emulated = SimToLua( scripts:EmulateSyntax( emulated, true ) )
-
-                    --[[ if modChecks then modChecks = modChecks .. " | " .. node[ m ]
-                    else modChecks = node[ m ] end ]]
                 else -- string
                     o = "'" .. o .. "'"
                     emulated = o
-
-                    --[[ if modChecks then modChecks = modChecks .. " | " .. node[ m ]
-                    else modChecks = node[ m ] end ]]
                 end
 
                 if emulated then
@@ -1659,23 +1554,6 @@ local function ConvertScript( node, hasModifiers, header )
                 end
             end
         end
-
-        --[[ if modChecks then
-            local mcString = scripts:BuildRecheck( modChecks )
-            if mcString then
-                local mcTimes, emsg = Hekili:Loadstring( "-- var " .. header .. " mod recheck\n return " .. mcString )
-                if mcTimes then setfenv( mcTimes, state ) end
-
-                if type( mcTimes ) ~= "function" then
-                    Hekili:Error( "Modifier recheck function for " .. modChecks .. " ( " .. ( mcString or "nil" ) .. ") was unsuccessful somehow." )
-                    mcTimes = nil
-                end
-
-                output.VarRecheck = mcTimes
-                output.VarRecheckScript = mcString
-                output.VarRecheckError = emsg
-            end
-        end ]]
     end
 
     output.Modifiers = hasModifiers and modifiers
@@ -1873,7 +1751,6 @@ end
 function Hekili:LoadScripts()
     self.Scripts:LoadScripts()
     self:UpdateUseItems()
-    -- self:UpdateDisplayVisibility()
 end
 
 
@@ -2168,7 +2045,6 @@ local function embedConditionsAndValues( source, elements )
                     local key = key_cache[ k ]
                     local success, value = pcall( v, true )
 
-                    -- if emsg then value = emsg end
                     if type( value ) == "number" then
                         if source == key then
                             source = source .. "[" .. tostring( value ) .. "]"
@@ -2177,7 +2053,6 @@ local function embedConditionsAndValues( source, elements )
                             source = source:gsub( "^("..key..")([^a-z0-9_.[])", format( "%%1[%.2f]%%2", value ) )
                             source = source:gsub( "([^a-z0-9_.[])("..key..")$", format( "%%1%%2[%.2f]", value ) )
                         end
-                        -- source = source:gsub( "^("..key..")", format( "%%1[%.2f]", value ) )
                     elseif type( value ) == "boolean" then
                         if source == key then
                             source = source .. "[" .. tostring( value ) .. "]"
@@ -2243,7 +2118,6 @@ function scripts:GetModifierValues( modifier, scriptID, listName, actID )
                 local key = key_cache[ k ]
                 local success, value = pcall( v )
 
-                -- if emsg then value = emsg end
                 if type( value ) == 'number' then
                     if output == key then
                         output = output .. "[" .. tostring( value ) .. "]"
@@ -2252,7 +2126,6 @@ function scripts:GetModifierValues( modifier, scriptID, listName, actID )
                         output = output:gsub( "^("..key..")([^a-z0-9_.[])", format( "%%1[%.2f]%%2", value ) )
                         output = output:gsub( "([^a-z0-9_.[])("..key..")$", format( "%%1%%2[%.2f]", value ) )
                     end
-                    -- output = output:gsub( "^("..key..")", format( "%%1[%.2f]", value ) )
                 else
                     if output == key then
                         output = output .. "[" .. tostring( value ) .. "]"

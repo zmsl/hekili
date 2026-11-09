@@ -1023,5 +1023,4 @@ L["The picks on the lane."] = true
 L["The lane's time axis, the ruler and the focus zone."] = true
 
 -- Hekili/Engine/Sim/Core.lua
-L["Open Hekili Forever Options"] = true
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = true

@@ -391,16 +391,8 @@ do
         local FriendCheck = inRaid and UnitInRaid or UnitInParty
 
         local checkPets = showNPs and spec and spec.petbased and Hekili:PetBasedTargetDetectionIsReady()
-        -- local filterPlates = showNPs and spec and spec.rangeFilter and class.specs[ state.spec.id ].rangeFilter
 
         local checkPlates = showNPs and spec and spec.nameplates and ( spec.nameplateRange or class.specs[ state.spec.id ].nameplateRange or 10 )
-
-        --[[ if rangeCheck == "Auto" then
-            rangeChecker = spec.ranges.Auto[2]
-            rangeCheck = true
-        else
-            rangeChecker = spec.ranges[ rangeCheck ][ 1 ]
-        end ]]
 
         if spec then
             if checkPets or checkPlates then
@@ -1068,7 +1060,6 @@ do
                 if now - entry.last_seen > window then
                     ns.trackDebuff( aura, unit )
                 elseif special == "combatExit" and not friendly then
-                    -- Hekili:Error( format( "Auditor removed an aura %d from %s after exiting combat.", aura, unit ) )
                     ns.trackDebuff( aura, unit )
                 end
             end
@@ -1110,9 +1101,6 @@ do
         wipe(enemy)
         insert( recycle, enemy )
 
-        --[[ for k, v in pairs( debuffs ) do
-            if v[ guid ] then ns.trackDebuff( k, guid ) end
-        end ]]
     end
 
 
@@ -1525,14 +1513,12 @@ do
             if guid and not seen[guid] then
                 if db[ guid ] and ( not UnitExists(unit) or UnitIsDead(unit) or not UnitCanAttack("player", unit) or ( UnitHealth(unit) <= 1 and UnitHealthMax(unit) > 1 ) ) then
                     EliminateEnemy( guid )
-                    -- deletions = deletions + 1
                 else
                     local health, healthMax = UnitHealth(unit), UnitHealthMax(unit)
                     health = health + UnitGetTotalAbsorbs(unit)
                     healthMax = max( 1, healthMax )
 
                     UpdateEnemy( guid, health / healthMax, unit, now )
-                    -- updates = updates + 1
                 end
                 seen[ guid ] = true
             end
@@ -1541,11 +1527,9 @@ do
         for unit, guid in pairs(npGUIDs) do
             if db[guid] and (not UnitExists(unit) or UnitIsDead(unit) or not UnitCanAttack("player", unit)) then
                 EliminateEnemy(guid)
-                -- deletions = deletions + 1
             elseif not seen[guid] then
                 local health, healthMax = UnitHealth(unit), UnitHealthMax(unit)
                 UpdateEnemy(guid, health / healthMax, unit, now)
-                -- updates = updates + 1
             end
             seen[ guid ] = true
         end

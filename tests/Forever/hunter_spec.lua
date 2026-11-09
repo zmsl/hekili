@@ -356,15 +356,6 @@ describe("Forever Hunter priorities", function()
         end
     end)
 
-    local function line(pack, list, action, criteria)
-        for i, e in ipairs(packs[pack].lists[list]) do
-            if e.action == action and (criteria == nil or e.criteria == criteria) then
-                return i, e
-            end
-        end
-        error(pack .. ": no " .. action .. " if " .. tostring(criteria))
-    end
-
     it("keeps the class file's generated blocks in step with APLs/ and retires the hand-built lists", function()
         local mp = assert(loadfile("tools/make_pack.lua"))("lib")
         local f = assert(io.open(FILE))

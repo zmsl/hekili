@@ -715,7 +715,6 @@ function M.new(o)
     env.SlashCmdList, env.hash_SlashCmdList, env.UISpecialFrames, env.StaticPopupDialogs = {}, {}, {}, {}
     local noop = function() end
     for _, k in ipairs({
-        "InterfaceOptions_AddCategory",
         "UIDropDownMenu_AddButton",
         "UIDropDownMenu_AddSeparator",
         "UIDropDownMenu_SetDisplayMode",

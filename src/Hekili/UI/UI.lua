@@ -121,7 +121,6 @@ local function Button_OnMouseUp( self, btn )
             stopScreenMovement(mover)
         end
         ns.UI.Notification:EnableMouse( Hekili.Config )
-        -- Hekili:SetOption( { "locked" }, true )
         GameTooltip:Hide()
 
     end
@@ -221,7 +220,6 @@ function ns.StartConfiguration( external )
         end
 
         if ns.UI.Buttons[ i ] and ns.UI.Buttons[ i ][ 1 ] and Hekili.DB.profile.displays[ i ] then
-            -- if not Hekili:IsDisplayActive( i ) then v:Show() end
 
             v.Backdrop = v.Backdrop or CreateFrame( "Frame", v:GetName().. "_Backdrop", UIParent, "BackdropTemplate" )
             v.Backdrop:ClearAllPoints()
@@ -364,7 +362,6 @@ function ns.StopConfiguration()
         display:EnableMouse( false )
         if not display:IsAnchoringRestricted() then display:SetMovable( true ) end
 
-        -- v:SetBackdrop( nil )
         if display.Header then
             display.Header:Hide()
         end
@@ -384,7 +381,6 @@ function ns.StopConfiguration()
     HekiliNotification:SetMovable( false )
     -- StartConfiguration makes the Mover: absent when /hekili lock comes before any unlock.
     if HekiliNotification.Mover then HekiliNotification.Mover:Hide() end
-    -- HekiliNotification.Mover.Header:Hide()
 end
 
 
@@ -756,46 +752,6 @@ do
 
                                     insert( submenu.menuList, slider )
 
-                                    --[[ local low, high, step = setting.info.min, setting.info.max, setting.info.step
-                                    local fractional, factor = step < 1, 1 / step
-
-                                    if fractional then
-                                        low = low * factor
-                                        high = high * factor
-                                        step = step * factor
-                                    end
-
-                                    if ceil( ( high - low ) / step ) > 20 then
-                                        step = ceil( ( high - low ) / 20 )
-                                        if step % ( setting.info.step or 1 ) ~= 0 then
-                                            step = step - ( step % ( setting.info.step or 1 ) )
-                                        end
-                                    end
-
-                                    for j = low, high, step do
-                                        local actual = j / factor
-                                        insert( submenu.menuList, {
-                                            text = tostring( actual ),
-                                            func = function ()
-                                                menu.args[1] = setting.name
-                                                setting.info.set( menu.args, actual )
-
-                                                local name = type( setting.info.name ) == "function" and setting.info.name() or setting.info.name
-
-                                                if Hekili.DB.profile.notifications.enabled then
-                                                    Hekili:Notify( name .. " set to |cFF00FF00" .. actual .. "|r." )
-                                                else
-                                                    Hekili:Print( name .. " set to |cFF00FF00" .. actual .. "|r." )
-                                                end
-                                            end,
-                                            checked = function ()
-                                                menu.args[1] = setting.name
-                                                return setting.info.get( menu.args ) == actual
-                                            end,
-                                            hidden = function () return Status.specID ~= i end,
-                                        } )
-                                    end ]]
-
                                     insert( menuData, submenu )
                                 end
                             end
@@ -953,7 +909,6 @@ do
         UPDATE_OVERRIDE_ACTIONBAR = 1,
         CLIENT_SCENE_OPENED = 1,
         CLIENT_SCENE_CLOSED = 1,
-        -- UNIT_FLAGS = 1,
 
         PLAYER_TARGET_CHANGED = 1,
 
@@ -975,7 +930,6 @@ do
     }
 
     local kbEvents = {
-        -- ACTIONBAR_SLOT_CHANGED = 1,
         ACTIONBAR_PAGE_CHANGED = 1,
         ACTIONBAR_UPDATE_STATE = 1,
         SPELLS_CHANGED = 1,
@@ -1127,8 +1081,6 @@ do
         d.numIcons = conf.numIcons
 
         -- the style's Build sizes the frame
-        --[[ d:SetIgnoreParentScale( true )
-        d:SetScale( UIParent:GetScale() ) ]]
         d:ClearAllPoints()
 
         d:SetPoint( "CENTER", UIParent, "CENTER", conf.x or 0, conf.y or -225 )
@@ -1192,7 +1144,6 @@ do
             local newAlpha = CalculateAlpha( self.id )
 
             if preAlpha > 0 and newAlpha == 0 then
-                -- self:Deactivate()
                 self:SetAlpha( 0 )
                 self.alphaCheck = 0.5
             else
@@ -1261,12 +1212,6 @@ do
                 self:SetScript( "OnEvent", self.OnEvent )
 
                 if not self.Initialized then
-                    -- Update Cooldown Wheels.
-                    -- self:RegisterEvent( "ACTIONBAR_UPDATE_USABLE" )
-                    -- self:RegisterEvent( "ACTIONBAR_UPDATE_COOLDOWN" )
-                    -- self:RegisterEvent( "SPELL_UPDATE_COOLDOWN" )
-                    -- self:RegisterEvent( "SPELL_UPDATE_USABLE" )
-
                     -- Show/Hide Overlay Glows.
                     self:RegisterEvent( "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW" )
                     self:RegisterEvent( "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE" )
@@ -1292,7 +1237,6 @@ do
                     self.Initialized = true
                 end
 
-                -- Hekili:ProcessHooks( self.id )
             end
         end
 
@@ -1499,7 +1443,6 @@ function Hekili:BuildUI()
         self:CreateDisplay( disp )
     end
 
-    --if Hekili.Config then ns.StartConfiguration() end
     if MasqueGroup then
         MasqueGroup:ReSkin()
     end

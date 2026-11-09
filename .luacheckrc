@@ -34,10 +34,7 @@ globals = {
     "HekiliDisplayDefensives", "HekiliDisplayInterrupts", "HekiliNotification", "HekiliNotificationMover",
     "HekiliNotificationText", "HekiliTooltip", "HekiliCustomEditorInsertLink", "Hekili_Keyhandler",
     "Hekili_OnAddonCompartmentClick", "Hekili_OnAddonCompartmentEnter",
-    "Hekili_OnAddonCompartmentLeave", "Hekili_ToggleOptions", "Hekili_ToggleMode", "Hekili_TogglePause",
-    "Hekili_SnapshotMode", "Hekili_ToggleCooldowns", "Hekili_ToggleDefensives", "Hekili_ToggleInterrupts",
-    "Hekili_TogglePotions", "Hekili_ToggleEssences", "Hekili_ToggleCustom1", "Hekili_ToggleCustom2",
-    "Hekili_ToggleDisplayMode", "Hekili_FixSpecialization", "HandleSpellData", "BlizzBlue",
+    "Hekili_OnAddonCompartmentLeave", "HandleSpellData", "BlizzBlue",
     "HekiliPopupDropdownMixin", "HekiliPopupDropdownSliderMixin",
 }
 
@@ -60,7 +57,7 @@ read_globals = {
     "UIDropDownMenu_AddButton", "ToggleDropDownMenu", "UIFrameFadeOut", "PixelUtil", "PlayerUtil", "ExportUtil",
     "ClassTalentImportExportMixin", "Item", "ItemLocation", "Mixin", "hooksecurefunc", "CreateAtlasMarkup",
     "BackdropTemplateMixin", "AddonCompartmentFrame", "DEFAULT_CHAT_FRAME", "ChatFontNormal", "DevTools_Dump",
-    "InterfaceOptions_AddCategory", "Screenshot", "SetCVar", "SetOverrideBindingClick", "ClearOverrideBindings",
+    "Screenshot", "SetCVar", "SetOverrideBindingClick", "ClearOverrideBindings",
     "ClearCursor", "C_Timer", "Enum", "RAID_CLASS_COLORS", "NORMAL_FONT_COLOR", "TOOLTIP_UPDATE_TIME",
     "MAX_PLAYER_LEVEL", "LOCALIZED_CLASS_NAMES_MALE", "LOCALIZED_CLASS_NAMES_FEMALE", "ACCEPT",
     "INVTYPE_WEAPONMAINHAND", "INVSLOT_NECK", "INVSLOT_LAST_EQUIPPED", "ITEM_SPELL_TRIGGER_ONEQUIP",

@@ -101,9 +101,6 @@ do
 
         elvuiCooldown = false,
 
-        --[[ font = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
-        fontSize = 12,
-        fontStyle = "OUTLINE" ]]
     }
 
     -- what only classic's buttons draw: the border inside the button and the delay indicator
@@ -298,7 +295,6 @@ local function CreateButton( dispID, id )
 
     local framelevel = b:GetFrameLevel()
     if framelevel > 0 then
-        -- b.Backdrop:SetFrameStrata( "MEDIUM" )
         b.Backdrop:SetFrameLevel( framelevel - 1 )
     else
         local lowerStrata = frameStratas[ b:GetFrameStrata() ]
@@ -365,27 +361,6 @@ local function CreateButton( dispID, id )
         b.Targets:SetText( nil )
         b.Targets:SetText( tText )
 
-        -- Aura Counter
-        -- Disabled for Now
-        --[[ b.Auras = b.Auras or b:CreateFontString(bName .. "_Auras", "OVERLAY")
-
-        local auraFont = conf.auraFont or (ElvUI and "PT Sans Narrow" or "Arial Narrow")
-        b.Auras:SetFont(LSM:Fetch("font", auraFont), conf.auraFontSize or 12, ns.UI.FontFlags( conf.auraFontStyle or "OUTLINE" ))
-        b.Auras:SetSize(b:GetWidth(), b:GetHeight() / 2)
-
-        local auraAnchor = conf.auraAnchor or "BOTTOM"
-        b.Auras:ClearAllPoints()
-        b.Auras:SetPoint(auraAnchor, b, auraAnchor, conf.xOffsetAuras or 0, conf.yOffsetAuras or 0)
-
-        b.Auras:SetJustifyH(
-            auraAnchor:match("RIGHT") and "RIGHT" or (auraAnchor:match("LEFT") and "LEFT" or "CENTER")
-        )
-        b.Auras:SetJustifyV(
-            auraAnchor:match("TOP") and "TOP" or (auraAnchor:match("BOTTOM") and "BOTTOM" or "MIDDLE")
-        )
-        b.Auras:SetTextColor(1, 1, 1, 1) ]]
-
-
         -- Delay Counter
         b.DelayText = b.DelayText or b:CreateFontString( bName .. "_DelayText", "OVERLAY" )
 
@@ -422,7 +397,6 @@ local function CreateButton( dispID, id )
         b.Overlay:SetAllPoints( b )
         b.Overlay:SetAtlas( "creditsscreen-assets-buttons-pause" )
         b.Overlay:SetVertexColor( 1, 1, 1, 1 )
-        -- b.Overlay:SetTexCoord( unpack( b.texCoords ) )
         b.Overlay:Hide()
 
     elseif id == 2 then
@@ -471,16 +445,6 @@ local function CreateButton( dispID, id )
     b:SetScript( "OnEnter", function( self )
         local H = Hekili
 
-        --[[ if H.Config then
-            Tooltip:SetOwner( self, "ANCHOR_TOPRIGHT" )
-            Tooltip:SetBackdropColor( 0, 0, 0, 0.8 )
-
-            Tooltip:SetText( "Hekili: " .. dispID  )
-            Tooltip:AddLine( "Left-click and hold to move.", 1, 1, 1 )
-            Tooltip:Show()
-            self:SetMovable( true )
-
-        else ]]
         if ( H.Pause and st.HasRecommendations and b.Recommendation ) then
             H:ShowDiagnosticTooltip( b.Recommendation )
         end
@@ -593,7 +557,6 @@ function ns.UI.FlashRecommendation( st, flash, a, elapsed )
                 LSF.FlashItem( iname, st.flashColor, flash.size, flash.brightness, flash.blink, nil, profile.flashTexture, flash.fixedSize, flash.fixedBrightness )
             elseif flash.suppress and not st.flashWarnings[ iname ] then
                 st.flashWarnings[ iname ] = true
-                -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended item '" .. iname .. "' (" .. self.id .. ")." )
             end
         else
             local aFlash = ability.flash
@@ -618,7 +581,6 @@ function ns.UI.FlashRecommendation( st, flash, a, elapsed )
                     LSF.FlashAction( aFlash, st.flashColor, flash.size, flash.brightness, flash.blink, nil, profile.flashTexture, flash.fixedSize, flash.fixedBrightness )
                 elseif flash.suppress and not st.flashWarnings[ aFlash ] then
                     st.flashWarnings[ aFlash ] = true
-                    -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended action '" .. aFlash .. "' (" .. self.id .. ")." )
                 end
             else
                 local id = ability.known
@@ -634,7 +596,6 @@ function ns.UI.FlashRecommendation( st, flash, a, elapsed )
                         LSF.FlashAction( sname, st.flashColor, flash.size, flash.brightness, flash.blink, nil, profile.flashTexture, flash.fixedSize, flash.fixedBrightness )
                     elseif not st.flashWarnings[ sname ] then
                         st.flashWarnings[ sname ] = true
-                        -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended ability '" .. sname .. "' (" .. self.id .. ")." )
                     end
                 end
             end
@@ -780,10 +741,6 @@ function Classic.Draw( d, conf, out, status )
                 if ability then
                     if ( conf.classic.flash.enabled and conf.classic.flash.suppress ) then b:Hide()
                     else b:Show() end
-
-                    --[[ if i == 1 then
-                        -- print( "Changing", GetTime() )
-                    end ]]
 
                     local image = ability.texture -- texture to be shown on the button for the current action
 

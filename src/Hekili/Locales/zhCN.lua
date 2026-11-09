@@ -1032,10 +1032,10 @@ L["The picks on the lane."] = "轨道上的推荐。"
 L["The lane's time axis, the ruler and the focus zone."] = "轨道的时间轴、标尺和焦点区域。"
 
 -- Hekili/Engine/Sim/Core.lua
-L["Open Hekili Forever Options"] = "打开 Hekili Forever 选项"
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000警告|r：此版本的 Hekili Forever 适用于更新的 WoW Forever 客户端；你应重新安装适用于 %s 的版本。"
 
 -- No longer used (the English changed or went away): reuse or delete
+L["Open Hekili Forever Options"] = "打开 Hekili Forever 选项"
 L["Toggle Options:\n - |cFFFFD100cooldowns|r, |cFFFFD100potions|r, |cFFFFD100interrupts|r, etc.\n - Example commands:\n   - Enable Cooldowns: |cFFFFD100/hek set cooldowns on|r\n   - Disable Interrupts: |cFFFFD100/hek set interrupts off|r\n   - Toggle Defensives: |cFFFFD100/hek set defensives|r\n\n"] = "开关选项：\n - |cFFFFD100cooldowns|r、|cFFFFD100potions|r、|cFFFFD100interrupts|r 等\n - 命令示例：\n   - 启用主要冷却：|cFFFFD100/hek set cooldowns on|r\n   - 禁用打断：|cFFFFD100/hek set interrupts off|r\n   - 切换防御技能：|cFFFFD100/hek set defensives|r\n\n"
 L["Auto Snapshot"] = "自动快照"
 L["If checked, the addon will automatically create a snapshot whenever it failed to generate a recommendation.\n\nThis automatic snapshot can only occur once per episode of combat."] = "勾选后，每当插件未能生成推荐时，都会自动创建快照。\n\n每场战斗只会自动创建一次快照。"

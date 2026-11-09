@@ -447,7 +447,6 @@ state.FindLowHpPlayerWithoutBuffByID = ns.FindLowHpPlayerWithoutBuffByID
 state.GetActiveLossOfControlData = C_LossOfControl.GetActiveLossOfControlData
 state.GetActiveLossOfControlDataCount = C_LossOfControl.GetActiveLossOfControlDataCount
 state.GetNumGroupMembers = GetNumGroupMembers
--- state.GetItemCooldown = GetItemCooldown
 state.GetItemCount = C_Item.GetItemCount
 state.GetItemGem = Facade.GetItemGem
 state.GetItemInfo = Facade.GetItemInfo
@@ -861,8 +860,6 @@ local function applyBuff( aura, duration, stacks, value, v2, v3, applied )
         b.applied = applied or state.query_time
         b.last_application = b.applied or 0
 
-        -- b.duration = duration
-
         b.expires = b.applied + duration
         b.last_expiry = b.expires
 
@@ -1005,7 +1002,6 @@ local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
         -- state.debuff[ aura ] = state.debuff[ aura ] or {}
         if not noPandemic then duration = min( 1.3 * duration, d.remains + duration ) end
 
-        -- d.duration = duration
         d.expires = state.query_time + duration
 
         d.lastCount = d.count or 0
@@ -1760,8 +1756,6 @@ do
             if type( x ) == "number" then
                 if x > 0 and x >= state.delayMin and x <= state.delayMax then
                     t[ x ] = true
-                -- elseif Hekili.ActiveDebug and x < 60 then
-                --    Hekili:Debug( "Excluded %.2f recheck time as it is outside our constraints ( %.2f - %.2f ).", x, state.delayMin or -1, state.delayMax or -1 )
                 end
             end
         end
@@ -1793,9 +1787,6 @@ do
         local times = state.recheckTimes
         wipe( workTable )
 
-        -- local debug = Hekili.ActiveDebug
-        -- local steps = {}
-
         if script then
             if script.Recheck then
                 recheckHelper( workTable, script.Recheck() )
@@ -1818,8 +1809,6 @@ do
             if script.ReadsWindow then state.WindowRecheck( recheckHelper, workTable ) end
         end
 
-        -- if Hekili.ActiveDebug then table.insert( steps, debugprofilestop() ) end
-
         local data = class.abilities[ ability ]
         if data and data.aura then
             local a = state.buff[ data.aura ]
@@ -1832,8 +1821,6 @@ do
                 recheckHelper( workTable, a.remains )
             end
         end
-
-        -- if Hekili.ActiveDebug then table.insert( steps, debugprofilestop() ) end
 
         if stack and #stack > 0 then
             for i, caller in ipairs( stack ) do
@@ -1892,7 +1879,6 @@ do
         wipe( times )
 
         for k, v in pairs( workTable ) do
-            -- if Hekili.ActiveDebug then Hekili:Debug( "%s - %s", tostring( k ), tostring( v ) ) end
             times[ #times + 1 ] = k
         end
 
@@ -2280,13 +2266,8 @@ do
                 -- So the reason we're stuck here is that we may need "cycle_enemies" when we *aren't* cycling targets.
                 -- I.e., we would cycle Festering Strike (festering_wound) but if we've already dotted our valid adds, we'd hit Death and Decay.
 
-                -- testing: don't force minimum targets for cycling purposes, since they may objectively not exist.
-                -- if t.min_targets > 0 then targets = max( t.min_targets, targets ) end
-
                 -- cap cycle_targets if forced into single-target model.
                 if t.max_targets > 0 then targets = min( t.max_targets, targets ) end
-
-                -- if Hekili.ActiveDebug then Hekili:Debug( "cycle min:%.2f, max:%.2f, ae:%d, before:%d, after:%d, cycle_enemies:%d", minTTD or 0, maxTTD or 0, t.active_enemies, minTTD and Hekili:GetNumTTDsBefore( minTTD ) or 0, maxTTD and Hekili:GetNumTTDsAfter( maxTTD ) or 0, max( 1, targets ) ) end
 
                 return max( 1, targets )
 
@@ -2352,7 +2333,6 @@ do
 
                 if not time then
                     return 0
-                    -- Error("ERR: " .. remains )
                 end
 
                 time = tonumber( time )
@@ -2371,7 +2351,6 @@ do
 
                 if not time then
                     return 0
-                    -- Error("ERR: " .. remains )
                 end
 
                 time = tonumber( time )
@@ -2390,7 +2369,6 @@ do
 
                 if not time then
                     return 0
-                    -- Error("ERR: " .. remains )
                 end
 
                 time = tonumber( time )
@@ -2409,7 +2387,6 @@ do
 
                 if not time then
                     return 0
-                    -- Error("ERR: " .. remains)
                 end
 
                 time = tonumber( time )
@@ -2515,24 +2492,11 @@ do
                 value = app and app[ k ]
                 if value ~= nil then return value end
 
-                -- This uses the default aura duration (if available) to keep pandemic windows accurate.
-                -- local duration = aura and aura.duration or 15
-
-                -- This allows for overridden tick times on a particular application of an aura (i.e., Exsanguinate).
-                -- local tick_time = app and app.tick_time or ( aura and aura.tick_time ) or ( 3 * t.haste )
-
                 if k == "up" or k == "ticking" then return false
                 elseif k == "down" then return true
                 elseif k == "duration" then return ( aura.duration or 15 )
                 elseif k == "refreshable" then return true
-                    -- When cycling targets, we want to consider that there may be a valid other target.
-                    -- if t.isCyclingTargets( action, aura_name ) then return true end
-                    -- if app then return app.remains < 0.3 * ( aura.duration or 15 ) end
-                    -- return true
-
                 elseif k == "remains" then return 0
-                    -- if app then return app.remains end
-                    -- return 0
                 elseif k == "tick_time" then return aura.tick_time or ( 3 * state.haste )
                 elseif k == "tick_time_remains" then return 0
                 elseif k == "ticks" then return ( aura.duration or 15 ) / ( aura.tick_time or ( 3 * haste ) )
@@ -3956,7 +3920,6 @@ local default_buff_values = {
     lastApplied = 0,
     expires = 0,
     applied = 0,
-    -- duration = 15,
     caster = "nobody",
     timeMod = 1,
     v1 = 0,
@@ -4012,7 +3975,6 @@ do
         applied = 1,
         caster = 1,
         count = 1,
-        -- duration = 1,
         expires = 1,
         last_application = 1,
         last_expiry = 1,
@@ -4108,7 +4070,6 @@ do
                     buff.id = spellID
                     buff.name = name
                     buff.count = count > 0 and count or 1
-                    -- buff.duration = duration
                     buff.expires = expires
                     buff.caster = caster
                     buff.applied = expires - duration
@@ -4155,7 +4116,6 @@ do
                     t.count = real.count
                     t.lastCount = real.lastCount or 0
                     t.lastApplied = real.lastApplied or 0
-                    -- t.duration = real.duration
                     t.expires = real.expires
                     t.applied = real.applied
                     t.caster = real.caster
@@ -4190,7 +4150,6 @@ do
                 return t.remains == 0
 
             elseif k == "remains" then
-                -- if state.IsCycling( t.key ) then return 0 end
                 return t.applied <= state.query_time and max( 0, t.expires - state.query_time ) or 0
 
             elseif k == "duration" then
@@ -4256,8 +4215,6 @@ do
 
             elseif k == "ticks" then
                 if t.remains == 0 then return 0 end
-                -- if t.applied <= state.query_time and state.query_time < t.expires then return t.duration / t.tick_time - t.ticks_remain end
-                -- if t.up then return 1 + ( ( class.auras[ t.key ].duration or ( 30 * state.haste ) ) / ( class.auras[ t.key ].tick_time or ( 3 * t.haste ) ) ) - t.ticks_remain end
                 return t.duration / t.tick_time - t.ticks_remain
 
             elseif k == "tick_time" then
@@ -4312,7 +4269,6 @@ do
         count = 0,
         lastCount = 0,
         lastApplied = 0,
-        -- duration = 30,
         expires = 0,
         applied = 0,
         caster = "nobody",
@@ -4379,7 +4335,6 @@ do
                 buff.count = real.count
                 buff.lastCount = real.lastCount or 0
                 buff.lastApplied = real.lastApplied or 0
-                -- buff.duration = real.duration
                 buff.expires = real.expires
                 buff.applied = real.applied
                 buff.caster = real.caster
@@ -4593,7 +4548,6 @@ do
     local pathState = {}
 
     state.varDB = db
-    -- state.varCache = cache
     state.varPaths = pathState
 
 
@@ -4609,7 +4563,6 @@ do
 
         local entry = remove( entryPool ) or {
             mustPass = {},
-            -- mustFail = {}
         }
 
         entry.id = scriptID
@@ -4649,7 +4602,6 @@ do
             for i = #v, 1, -1 do
                 local x = remove( v, i )
                 wipe( x.mustPass )
-                -- wipe( x.mustFail )
                 insert( entryPool, x )
             end
             wipe( cache[ k ] )
@@ -4848,7 +4800,6 @@ ns.metatables.mt_set_bonuses = mt_set_bonuses
 
 local mt_equipped = {
     __index = function(t, k)
-        -- if not class.artifacts[ k ] and ( state.bg or state.arena ) then return false end
         return state.set_bonus[k] > 0
     end
 }
@@ -4864,7 +4815,6 @@ do
         applied = 1,
         caster = 1,
         count = 1,
-        -- duration = 1,
         expires = 1,
         last_application = 1,
         last_expiry = 1,
@@ -4948,7 +4898,6 @@ local default_debuff_values = {
     lastApplied = 0,
     expires = 0,
     applied = 0,
-    -- duration = 15,
     caster = "nobody",
     timeMod = 1,
     v1 = 0,
@@ -4965,7 +4914,6 @@ local cycle_debuff = {
     lastApplied = 0,
     expires = 0,
     applied = 0,
-    -- duration = 0,
     caster = "nobody",
     timeMod = 1,
     v1 = 0,
@@ -5000,7 +4948,6 @@ do
         applied = 1,
         caster = 1,
         count = 1,
-        -- duration = 1,
         expires = 1,
         lastApplied = 1,
         lastCount = 1,
@@ -5077,7 +5024,6 @@ do
                     t.count = real.count
                     t.lastCount = real.lastCount or 0
                     t.lastApplied = real.lastApplied or 0
-                    -- t.duration = real.duration
                     t.expires = real.expires or 0
                     t.applied = real.applied or 0
                     t.caster = real.caster
@@ -5195,7 +5141,6 @@ do
         count = 0,
         lastCount = 0,
         lastApplied = 0,
-        -- duration = 30,
         expires = 0,
         applied = 0,
         caster = "nobody",
@@ -5259,7 +5204,6 @@ do
                 debuff.count = real.count
                 debuff.lastCount = real.lastCount or 0
                 debuff.lastApplied = real.lastApplied or 0
-                -- debuff.duration = real.duration
                 debuff.expires = real.expires
                 debuff.applied = real.applied
                 debuff.caster = real.caster
@@ -5276,11 +5220,9 @@ do
                 debuff.count = 0
                 debuff.lastCount = 0
                 debuff.lastApplied = 0
-                -- debuff.duration = aura and aura.duration or 30
                 debuff.expires = 0
                 debuff.applied = 0
                 debuff.caster = "nobody"
-                -- debuff.id = nil
                 debuff.timeMod = 1
                 debuff.v1 = 0
                 debuff.v2 = 0
@@ -5611,7 +5553,6 @@ setmetatable( state.dot, mt_dot )
 setmetatable( state.equipped, mt_equipped )
 setmetatable( state.main_hand, mt_weapon_type )
 setmetatable( state.off_hand, mt_weapon_type )
--- setmetatable( state.health, mt_resource )
 setmetatable( state.pet, mt_pets )
 setmetatable( state.pet.fake_pet, mt_default_pet )
 setmetatable( state.prev, mt_prev )
@@ -5716,7 +5657,6 @@ do
             a.count            = 0
             a.expires          = 0
             a.applied          = 0
-            -- a.duration         = aura.duration or a.duration
             a.caster           = "nobody"
             a.timeMod          = 1
             a.v1               = 0
@@ -5743,7 +5683,6 @@ do
 
                 a.name     = name
                 a.count    = count > 0 and count or 1
-                -- a.duration = duration
                 a.expires  = expires
                 a.applied  = expires - duration
                 a.caster   = caster
@@ -5781,7 +5720,6 @@ do
             v.count = 0
             v.expires = 0
             v.applied = 0
-            -- v.duration = class.auras[ k ] and class.auras[ k ].duration or v.duration
             v.caster = "nobody"
             v.timeMod = 1
             v.v1 = 0
@@ -5797,7 +5735,6 @@ do
             v.count = 0
             v.expires = 0
             v.applied = 0
-            -- v.duration = class.auras[ k ] and class.auras[ k ].duration or v.duration
             v.caster = "nobody"
             v.timeMod = 1
             v.v1 = 0
@@ -5841,7 +5778,6 @@ do
                     buff.expires = expires
                 end
                 buff.applied = expires - duration
-                -- buff.duration = duration
                 buff.caster = caster
                 buff.timeMod = timeMod
                 buff.v1 = v1
@@ -5883,7 +5819,6 @@ do
                 debuff.name = name
                 debuff.count = count > 0 and count or 1
                 debuff.expires = expires
-                -- debuff.duration = duration
                 debuff.applied = expires - duration
                 debuff.caster = caster
                 debuff.timeMod = timeMod
@@ -6255,7 +6190,6 @@ do
             local cooldown = ability.cooldown
 
             -- Put the action on cooldown. (It's slightly premature, but addresses CD resets like Echo of the Elements.)
-            -- if ability.charges and ability.charges > 1 and ability.recharge > 0 then
             if ability.charges and ( ability.recharge or ability.cooldown ) > 0 then
                 self.spendCharges( action, 1 )
 
@@ -6457,7 +6391,6 @@ function state:RunHandler( key, noStart )
     local ability = class.abilities[ key ]
 
     if not ability then
-        -- ns.Error( "runHandler() attempting to run handler for non-existant ability '" .. key .. "'." )
         return
     end
 
@@ -6497,7 +6430,6 @@ function state:RunHandler( key, noStart )
         ns.callHook( "runHandler_startCombat", key )
     end
 
-    -- state.cast_start = 0
     ns.callHook( "runHandler", key )
 end
 
@@ -6581,8 +6513,6 @@ do
             if rawget( state[ k ], "onReset" ) then state[ k ].onReset( state[ k ] ) end
         end
 
-        -- Hekili:Yield( "Reset Post-States" )
-
         for i = 1, 5 do
             local _, _, start, duration, icon = GetTotemInfo( i )
             if icon and class.totems[ icon ] then
@@ -6606,8 +6536,6 @@ do
         end
 
         local foundResource = false
-
-        -- Hekili:Yield( "Reset Pre-Powers" )
 
         -- before the forecasts: the previous pass's StartCombat anchor must not seed this pass's swing forecast (Forever E3)
         state.swings.mh_pseudo = nil
@@ -6680,8 +6608,6 @@ do
             return false, "no available resources"
         end
 
-        -- Hekili:Yield( "Reset Post-Powers" )
-
         -- Setting this here because the metatable would pull from UnitPower.
         if not state.health.initialized then
             state.health.resource = "health"
@@ -6735,15 +6661,11 @@ do
             state.setCooldown( "ascendance", state.buff.ascendance.remains + 165 )
         end
 
-        -- Hekili:Yield( "Reset Pre-Cast Hook" )
         ns.callHook( "reset_precast" )
-        -- Hekili:Yield( "Reset Pre-Casting" )
 
         -- TODO: All of this cast-queuing seems like it should be simpler, but that's for another time.
         local cast_time, casting, ability = 0, nil, nil
         state.buff.casting.generate( state.buff.casting, "buff" )
-
-        -- print( state.display, GetTime(), "Casting: ", state.buff.casting.name, state.buff.casting.applied, state.buff.casting.expires, state.buff.casting.remains )
 
         if state.buff.casting.up then
             cast_time = state.buff.casting.remains
@@ -6774,7 +6696,6 @@ do
                 -- Projectile spells have two handlers, effectively.  An onCast handler, and then an onImpact handler.
                 if ability and ability.isProjectile then
                     state:QueueEvent( ability.key, state.buff.casting.expires, nil, "PROJECTILE_IMPACT", destGUID )
-                    -- state:QueueEvent( action, "projectile", true )
                 end
 
             elseif not state:IsChanneling() and channeled then
@@ -6796,7 +6717,6 @@ do
                         -- Projectile spells have two handlers, effectively.  An onCast handler, and then an onImpact handler.
                     if ability.isProjectile then
                         state:QueueEvent( ability.key, state.buff.casting.expires, nil, "PROJECTILE_IMPACT", destGUID )
-                        -- state:QueueEvent( action, "projectile", true )
                     end
                 end
             end
@@ -6819,8 +6739,6 @@ do
 
             state.resetType = "none"
         end
-
-        -- Hekili:Yield( "Reset Post-Casting" )
 
         state.resetting = false
         return true

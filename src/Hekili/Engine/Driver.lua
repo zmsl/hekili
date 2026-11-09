@@ -57,17 +57,12 @@ end
 local function calculateFrameBudget()
     local smoothedFPS = updateSmoothedFPS()
     local frameBudget = Hekili.Engine.settings.performance.frameBudget or 0.7
-    -- local rawFPS = GetFramerate()
 
     -- Calculate frame time
     local frameTime = 1000 / math.max(smoothedFPS, 30) -- min 30 FPS
 
     -- Apply user percentage directly to frame time
     local userBudget = frameTime * frameBudget
-
-    -- Debug output
-    -- print(string.format("[Hekili Budget] Setting: %d%%, Raw FPS: %.1f, Smoothed FPS: %.1f, Frame Time: %.2fms, Budget: %.2fms",
-    --     frameBudget, rawFPS, smoothedFPS, frameTime, userBudget))
 
     return userBudget
 end
@@ -194,7 +189,6 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
             self.activeThreadFrames = self.activeThreadFrames + 1
             Hekili.activeFrameStart = debugprofilestop()
 
-            -- if ns.EngineFrame.threadUpdates then print( 1000 * elapsed, Hekili.maxFrameTime, ns.EngineFrame.threadUpdates.meanWorkTime, ns.EngineFrame.threadUpdates.meanFrames ) end
             local ok, err = coroutine.resume(thread)
 
             if not ok then

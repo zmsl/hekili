@@ -325,12 +325,6 @@ function Hekili:HandleFixCommand( args )
         return true
     end
 
-    --[[if fixtype == "lowdps" then
-        if profile.notifications.enabled then
-            Hekili:Notify( "skill issue", 6 )
-        end
-    end--]]
-
 end
 
 function Hekili:HandleSpecSetting( specSetting, specValue )

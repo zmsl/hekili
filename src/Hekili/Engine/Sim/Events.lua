@@ -433,8 +433,6 @@ function ns.updateTalents()
         state.talent[ k ].enabled = false
     end
 
-    -- local specGroup = GetSpecialization()
-
     for k, v in pairs( class.talents ) do
         local _, name, _, enabled, _, sID, _, _, _, _, known, rank = GetTalentInfoByID( v, 1 )
 
@@ -855,7 +853,6 @@ RegisterEvent( "PLAYER_REGEN_DISABLED", function( event )
         Hekili:UpdateDisplayVisibility()
     end
 
-    -- Hekili:ExpireTTDs( true )
     Hekili:ForceUpdate( event ) -- Force update on entering combat since OOC refresh can be very slow (0.5s).
 end )
 
@@ -1489,7 +1486,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
     if death_events[ subtype ] then
         if ns.isTarget( destGUID ) then
             ns.eliminateUnit( destGUID, true )
-            -- Hekili:ForceUpdate( subtype )
 
         elseif ns.isMinion( destGUID ) then
             local npcid = destGUID:match("(%d+)-%x-$")
@@ -1636,11 +1632,9 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
                     if state:RemoveSpellEvent( ability.key, true, "CAST_FINISH" ) then -- remove next cast finish.
                         if ability.isProjectile then state:RemoveSpellEvent( ability.key, true, "PROJECTILE_IMPACT", true ) end -- remove last impact.
                     end
-                    -- Hekili:ForceUpdate( "SPELL_CAST_FAILED" ) ]]
 
                 elseif subtype == "SPELL_AURA_REMOVED" and ability.channeled then
                     state:RemoveSpellEvents( ability.key, true ) -- remove ticks, finish, impacts.
-                    -- Hekili:ForceUpdate( "SPELL_AURA_REMOVED_CHANNEL" )
 
                 elseif subtype == "SPELL_CAST_SUCCESS" then
                     state:RemoveSpellEvent( ability.key, true, "CAST_FINISH" ) -- remove next cast finish.
@@ -1706,7 +1700,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
             end
 
             state.gcd.lastStart = max( state.gcd.lastStart, ( GetSpellCooldown( ns.GCD_SPELL ) ) )
-            -- if subtype ~= "SPELL_DAMAGE" then Hekili:ForceUpdate( subtype, true ) end
         end
     end
 
@@ -1735,18 +1728,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
 
     -- Player/Minion Event
     elseif ( amSource or petSource or isSensePower ) or ( countPets and minion ) or ( sourceGUID == destGUID and sourceGUID == UnitGUID( 'target' ) ) then
-        --[[ if aura_events[ subtype ] then
-            if subtype == "SPELL_CAST_SUCCESS" or state.GUID == destGUID then
-                if class.abilities[ spellID ] or class.auras[ spellID ] then
-                    Hekili:ForceUpdate( subtype, true )
-                end
-            end
-
-            if UnitGUID( 'target' ) == destGUID then
-                if class.auras[ spellID ] then Hekili:ForceUpdate( subtype ) end
-            end
-        end ]]
-
         local aura = class.auras and class.auras[ spellID ]
 
         if aura then
@@ -1755,10 +1736,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
                 if subtype == 'SPELL_AURA_APPLIED' or subtype == 'SPELL_AURA_REFRESH' or subtype == 'SPELL_AURA_APPLIED_DOSE' then
                     ns.trackDebuff( spellID, destGUID, time, true )
                     if ( not minion or countPets ) and countDots then ns.updateTarget( destGUID, time, amSource, spellID ) end
-
-                    --[[ if spellID == 48108 or spellID == 48107 then
-                        Hekili:ForceUpdate( "SPELL_AURA_SUPER", true )
-                    end ]]
 
                 elseif subtype == 'SPELL_PERIODIC_DAMAGE' or subtype == 'SPELL_PERIODIC_MISSED' then
                     ns.trackDebuff( spellID, destGUID, time )
@@ -1792,7 +1769,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
             -- Interrupt is actually overkill.
             if not IsResting() and ( ( ( subtype == "SPELL_DAMAGE" or subtype == "SPELL_PERIODIC_DAMAGE" ) and interrupt > 0 ) or ( subtype == "SWING_DAMAGE" and spellName > 0 ) ) and ns.isTarget( destGUID ) then
                 ns.eliminateUnit( destGUID, true )
-                -- Hekili:ForceUpdate( "SPELL_DAMAGE_OVERKILL" )
             elseif not ( subtype == "SPELL_MISSED" and amount == "IMMUNE" ) then
                 ns.updateTarget( destGUID, time, amSource, spellID )
             end
@@ -2176,163 +2152,6 @@ local function ReadKeybindings( event )
 end
 ns.ReadKeybindings = ReadKeybindings
 
-local function ReadOneKeybinding( event, slot )
-    if not Hekili:IsValidSpec() then return end
-    if not slot or slot == 0 then return end
-
-    local actionBarNumber = ceil( slot / 12 )
-    local keyNumber = slot - ( 12 * ( actionBarNumber - 1 ) )
-
-    local ability
-    local completed = false
-
-    -- Bartender4 support; if BT4 bindings are set, use them, otherwise fall back on default UI bindings below.
-    -- This will still get viewed as misleading...
-    if _G["Bartender4"] then
-        local keybind = "CLICK BT4Button" .. slot .. ":Keybind"
-
-        if GetBindingKey( keybind ) then
-            StoreKeybindInfo( actionBarNumber, GetBindingKey( keybind ), GetActionInfo( slot ) )
-            completed = true
-        end
-
-    -- Dominos support
-    elseif C_AddOns.IsAddOnLoaded("Dominos") then
-        local bar = _G["DominosFrame" .. actionBarNumber]
-        local button = bar.buttons[keyNumber]
-
-        if button.action then
-            local keybind
-            local action = button.action
-
-            if action <= 0 then
-                keybind = "CLICK " .. button:GetName() .. ":HOTKEY"
-            elseif action <= 12 then
-                keybind = "ACTIONBUTTON" .. action
-            elseif action <= 24 then
-                keybind = "CLICK " .. button:GetName() .. ":HOTKEY"
-            elseif action <= 36 then
-                keybind = "MULTIACTIONBAR3BUTTON" .. (action - 24)
-            elseif action <= 48 then
-                keybind = "MULTIACTIONBAR4BUTTON" .. (action - 36)
-            elseif action <= 60 then
-                keybind = "MULTIACTIONBAR2BUTTON" .. (action - 48)
-            elseif action <= 72 then
-                keybind = "MULTIACTIONBAR1BUTTON" .. (action - 60)
-            elseif action <= 132 then
-                keybind = "CLICK " .. button:GetName() .. ":HOTKEY"
-            elseif action <= 144 then
-                keybind = "MULTIACTIONBAR5BUTTON" .. (action - 132)
-            elseif action <= 156 then
-                keybind = "MULTIACTIONBAR6BUTTON" .. (action - 144)
-            elseif action <= 168 then
-                keybind = "MULTIACTIONBAR7BUTTON" .. (action - 156)
-            end
-
-            if keybind and GetBindingKey( keybind ) then
-                StoreKeybindInfo( actionBarNumber, GetBindingKey( keybind ), GetActionInfo( slot ) )
-                completed = true
-            end
-        end
-
-    elseif _G["ElvUI"] and _G["ElvUI_Bar1Button1"] then
-        local btn = _G[ "ElvUI_Bar" .. actionBarNumber .. "Button" .. keyNumber ]
-
-        if btn then
-            local binding = btn.bindstring or btn.keyBoundTarget or ( " CLICK " .. btn:GetName() .. ":LeftButton" )
-
-            if actionBarNumber > 6 then
-                -- Checking whether bar is active.
-                local bar = _G[ "ElvUI_Bar" .. actionBarNumber ]
-
-                if not bar or not bar.db.enabled then
-                    binding = "ACTIONBUTTON" .. keyNumber
-                end
-            end
-
-            local action, aType = btn._state_action, "spell"
-
-            if action and type( action ) == "number" then
-                binding = GetBindingKey( binding )
-                action, aType = GetActionInfo( action )
-                if binding then StoreKeybindInfo( actionBarNumber, binding, action, aType ) end
-            end
-        end
-    end
-
-    if not completed then
-        if actionBarNumber == 1 or actionBarNumber == 2 or ( actionBarNumber > 6  and actionBarNumber < 13 ) then
-            ability = StoreKeybindInfo( keyNumber, GetBindingKey( "ACTIONBUTTON" .. keyNumber ), GetActionInfo( slot ) )
-
-        elseif actionBarNumber > 2 and actionBarNumber < 5 then
-            ability = StoreKeybindInfo( actionBarNumber, GetBindingKey( "MULTIACTIONBAR" .. actionBarNumber .. "BUTTON" .. keyNumber ), GetActionInfo( slot ) )
-
-        elseif actionBarNumber == 5 then
-            ability = StoreKeybindInfo( actionBarNumber, GetBindingKey( "MULTIACTIONBAR2BUTTON" .. keyNumber ), GetActionInfo( slot ) )
-
-        elseif actionBarNumber == 6 then
-            ability = StoreKeybindInfo( actionBarNumber, GetBindingKey( "MULTIACTIONBAR1BUTTON" .. keyNumber ), GetActionInfo( slot ) )
-
-        elseif actionBarNumber == 13 then
-            ability = StoreKeybindInfo( actionBarNumber, GetBindingKey( "MULTIACTIONBAR5BUTTON" .. keyNumber ), GetActionInfo( slot ) )
-
-        elseif actionBarNumber == 14 then
-            ability = StoreKeybindInfo( actionBarNumber, GetBindingKey( "MULTIACTIONBAR6BUTTON" .. keyNumber ), GetActionInfo( slot ) )
-
-        elseif actionBarNumber == 15 then
-            ability = StoreKeybindInfo( actionBarNumber, GetBindingKey( "MULTIACTIONBAR7BUTTON" .. keyNumber ), GetActionInfo( slot ) )
-
-        end
-    end
-
-    if _G.ConsolePort then
-        local action, id = GetActionInfo( slot )
-
-        if action and id then
-            local bind = ConsolePort:GetActionBinding( slot )
-            local key, mod = ConsolePort:GetCurrentBindingOwner( bind )
-
-            if key then
-                ability = StoreKeybindInfo( actionBarNumber, ConsolePort:GetFormattedButtonCombination( key, mod ), action, id, "cPort" )
-            end
-        end
-    end
-
-    ability = ability and class.abilities[ ability ]
-
-    if ability and ability.bind then
-        if type( ability.bind ) == 'table' then
-            for _, b in ipairs( ability.bind ) do
-                for page, value in pairs( v.lower ) do
-                    keys[ b ] = keys[ b ] or {
-                        lower = {},
-                        upper = {},
-                        console = {}
-                    }
-                    keys[ b ].lower[ page ] = value
-                    keys[ b ].upper[ page ] = v.upper[ page ]
-                    keys[ b ].console[ page ] = v.console[ page ]
-                end
-            end
-        else
-            for page, value in pairs( v.lower ) do
-                keys[ ability.bind ] = keys[ ability.bind ] or {
-                    lower = {},
-                    upper = {},
-                    console = {}
-                }
-                keys[ ability.bind ].lower[ page ] = value
-                keys[ ability.bind ].upper[ page ] = v.upper[ page ]
-                keys[ ability.bind ].console[ page ] = v.console[ page ]
-            end
-        end
-    end
-
-    -- This is also the right time to update pet-based target detection.
-    Hekili:SetupPetBasedTargetDetection()
-end
-
-
 local allTimer
 
 local function DelayedUpdateKeybindings( event )
@@ -2342,17 +2161,10 @@ local function DelayedUpdateKeybindings( event )
     end )
 end
 
---[[ local function DelayedUpdateOneKeybinding( event, slot )
-    if oneTimer and not oneTimer:IsCancelled() then oneTimer:Cancel() end
-    oneTimer = C_Timer.After( 0.2, function() ReadOneKeybinding( event, slot ) end )
-end ]]
-
 RegisterEvent( "UPDATE_BINDINGS", DelayedUpdateKeybindings )
 RegisterEvent( "SPELLS_CHANGED", DelayedUpdateKeybindings )
 RegisterEvent( "ACTIONBAR_SHOWGRID", DelayedUpdateKeybindings )
 RegisterEvent( "ACTIONBAR_HIDEGRID", DelayedUpdateKeybindings )
--- RegisterEvent( "ACTIONBAR_PAGE_CHANGED", DelayedUpdateKeybindings )
--- RegisterEvent( "UPDATE_SHAPESHIFT_FORM", DelayedUpdateKeybindings )
 
 RegisterEvent( "ACTIVE_PLAYER_SPECIALIZATION_CHANGED", DelayedUpdateKeybindings )
 RegisterEvent( "TRAIT_CONFIG_UPDATED", DelayedUpdateKeybindings )
