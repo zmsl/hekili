@@ -477,6 +477,14 @@ function Q.Activate(api, t, def)
     end
 end
 
+--- Every slot's edge state starts over (the viewer's data reloaded; the router calls it even while its rebuild waits
+--- for combat end): the next light of each is a SEED. Allocates nothing.
+function Q.ForgetEdges()
+    for s = 1, Q.nSlots do
+        sLit[s], sDark[s] = 0, 0
+    end
+end
+
 --- Stops answering; the slots stay (a frame is never given another slot).
 function Q.Deactivate()
     active, Q.covered = false, 0

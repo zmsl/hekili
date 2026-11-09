@@ -62,7 +62,9 @@ local function thing(k, t)
     local nLive, nUp, nNone, nStale, tUp, tNone = leaf.Counts(j, u)
     local st, agree = I.ReduceFact(nLive, nUp, nNone, nStale, tUp, tNone)
     fN[k] = nLive
-    fDark[k] = leaf.darkT[k] or 0
+    if nUp == 0 then -- the thing is dark only once none of its slots is lit (a cycle closes on the last dark)
+        fDark[k] = leaf.darkT[k] or 0
+    end
     fFrom[k] = nLive > 0 and 1 or 0
     if fAgree[k] and not agree then
         disagree[k] = disagree[k] + 1
@@ -85,7 +87,7 @@ local function thing(k, t)
     end
     if st == I.UP then
         fT[k] = t
-        if leaf.edgeT[k] == t then -- one of its slots had an edge in this sweep
+        if (leaf.edgeT[k] or 0) == t then -- one of its slots had an edge in this sweep
             fEdge[k], edgeN[k] = t, edgeN[k] + 1
         else
             seedN[k] = seedN[k] + 1
@@ -231,6 +233,9 @@ end
 
 -- The viewer's sets changed (CV §3): rebuild out of combat, else at combat end (decision 89: no change mid-fight).
 local function changed(_, t)
+    if leaf and leaf.ForgetEdges then -- the data reloaded: every slot's lit/dark starts over, even while the rebuild waits
+        leaf.ForgetEdges()
+    end
     if want and I.presence == R then
         activate(t)
     end

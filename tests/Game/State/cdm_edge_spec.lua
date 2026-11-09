@@ -223,7 +223,7 @@ describe("CDM edges in the belief: the cast's start stands; the diagnostics", fu
     -- name, then a function of the scenario returning the believed expiry it checks, and the expected expiry
     local ROWS = {
         {
-            "our cast, its light 0.3 s later (an edge): the edge's start",
+            "our cast, its light 0.3 s later (an edge): the cast's start stands",
             function()
                 prime(ti, "target")
                 cast(2, REND, 20, 15)
@@ -320,7 +320,7 @@ describe("CDM edges in the belief: the cast's start stands; the diagnostics", fu
             30,
         },
         {
-            "a function duration: the record's own duration from the edge (no pack call)",
+            "a function duration: the cast's start stands",
             function()
                 local def = fs.def(fs.new(9))
                 def.auras[REND] = {
@@ -414,6 +414,86 @@ describe("CDM edges in the belief: the cast's start stands; the diagnostics", fu
         for line in snap:gmatch("[^\n]+") do
             assert.is_true(#line < 255, line)
         end
+    end)
+
+    -- The diagnostics' exclusions (review S3): what the owner reads in Task 10.
+    local function edgeLine(snap)
+        return snap:match("presence%-edge spender_c unit=target [^\n]*") or ""
+    end
+    it("a cast outside EDGE_WIN of the edge is not matched; a cast stamped at the edge's own t neither", function()
+        start(fs.def(fs.new(9)))
+        prime(ti, "target")
+        cast(2, REND, 20, 15)
+        poll(20)
+        ctl.ViewerAura(ti, "target")
+        poll(21.5) -- the edge 1.5 s after the cast
+        poll(21.7)
+        assert.is_truthy(edgeLine(VS.Snapshot()):find("edges=1 age=known edgeMinusCast n=0 ", 1, true), VS.Snapshot())
+        start(fs.def(fs.new(9)))
+        prime(ti, "target")
+        ctl.ViewerAura(ti, "target")
+        cast(2, REND, 20.3, 15) -- stamped at the edge's sweep: ap == te
+        poll(20.3)
+        poll(20.5)
+        assert.is_truthy(edgeLine(VS.Snapshot()):find("edges=1 age=known edgeMinusCast n=0 ", 1, true), VS.Snapshot())
+    end)
+
+    it("one match per application: later polls and a refresh 5 s on add none; the refresh drops the cycle", function()
+        start(fs.def(fs.new(9)))
+        prime(ti, "target")
+        cast(2, REND, 20, 15)
+        poll(20)
+        ctl.ViewerAura(ti, "target")
+        for t = 20.3, 22.3, 0.5 do
+            poll(t)
+        end
+        cast(2, REND, 25, 15) -- a refresh while lit: no edge, the cast's start (40)
+        poll(25.2)
+        ctl.ViewerClear(ti)
+        poll(34) -- dark: the open cycle's application was refreshed, so it is dropped, not closed
+        local line = edgeLine(VS.Snapshot())
+        assert.is_truthy(line:find("edgeMinusCast n=1 mean=0.300 last=0.300 cycles=0 ", 1, true), line)
+    end)
+
+    it("the debounce counters: an item lit HOLD past the model's expiry waits, then fires once", function()
+        start(fs.def(fs.new(9)))
+        cast(2, REND, 10, 15)
+        ctl.ViewerAura(ti, "target")
+        for t = 10.5, 26.5, 0.5 do
+            poll(t)
+        end
+        local w, f = VS.Snapshot():match("presence%-edge debounceWaits=(%d+) debounceFires=(%d+)")
+        assert.is_true(tonumber(w) >= 1, w)
+        assert.are.equal("1", f)
+    end)
+
+    it("two items for one aura, one dark while the other is lit: the cycle never closes short (dropped)", function()
+        local second = ctl.ViewerItem("BuffBarCooldownViewer", 1, 502)
+        start(fs.def(fs.new(9)))
+        prime(ti, "target")
+        ctl.ViewerClear(second)
+        poll(12.4)
+        cast(2, REND, 20, 15)
+        poll(20)
+        ctl.ViewerAura(ti, "target")
+        ctl.ViewerAura(second, "target")
+        poll(20.3)
+        ctl.ViewerClear(ti) -- one item dark at 30, the other still lit: the items disagree (UNKNOWN)
+        poll(30)
+        ctl.ViewerClear(second)
+        poll(34)
+        local line = edgeLine(VS.Snapshot())
+        assert.is_truthy(line:find("cycles=0 ", 1, true), line) -- not 9.70 from the first item's dark
+    end)
+
+    it("the viewer's data reloads in combat (rebuild pending): the next light is a seed, not an edge", function()
+        start(fs.def(fs.new(9)))
+        prime(ti, "target")
+        ctl.Fire("COOLDOWN_VIEWER_DATA_LOADED") -- in combat: the rebuild waits, the edge state starts over now
+        ctl.ViewerAura(ti, "target")
+        poll(20.3)
+        assert.are.equal(0, P.fact.edge[I.AURA_UNIT + REND])
+        assert.is_truthy(edgeLine(VS.Snapshot()):find("seeds=2 edges=0", 1, true), VS.Snapshot())
     end)
 
     it("allocates nothing over 1000 polls of lights, darks, casts and their matches", function()

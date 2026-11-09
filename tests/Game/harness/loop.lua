@@ -427,7 +427,7 @@ function M.run(L, seed, o, drivers)
             hold = (hold and not d.plain) and flicker.newHold() or nil,
             layout = layout, -- the viewer arm's fight events and the next one's index (M.viewerLayout)
             li = 1,
-            edge = layout and VI and VI.presence and edgestats.start(d.H, VI) or nil, -- the arm's expiry record
+            edge = arm.world and layout and VI and VI.presence and edgestats.start(d.H, VI) or nil, -- a stress arm's record
         }
     end
     local errors0 = {}

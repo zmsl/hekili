@@ -384,7 +384,7 @@ local function apply(j, u, up, t, edge)
             stage, rem, deb = t - (ft > lastE[k] and ft or lastE[k]) >= HOLD, long(j, u), true
         else
             local F = I.presence.fact
-            stage, rem, seed = true, hold(j, u, k, t), not (F and F.edge and F.edge[k] > 0)
+            stage, rem, seed = true, hold(j, u, k, t), not (F and F.edge and (F.edge[k] or 0) > 0)
         end
     else
         stage = e > t and closes(k, u, j)
@@ -441,6 +441,7 @@ local function edgeMatch(j, u, k, te, t)
     local e, ap = U.exp0[u][j], U.applied[u][j]
     if e <= t or e == HUGE or longE[k] == e or ap == anAp[k] then
         return
+    -- ap == te: a cast stamped at the edge's own sweep (or an applied the CDM open set): no lag to measure
     elseif ours[k] ~= BY_CAST or oursAp[k] ~= ap or ap == te or ap - te > EDGE_WIN or te - ap > EDGE_WIN then
         return
     end
