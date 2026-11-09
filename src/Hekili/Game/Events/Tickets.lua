@@ -524,7 +524,14 @@ local function teachFrom(i, t, isAvoid, amount, flag, clean)
     if clean and k == X.FLIGHT then
         T.Learn(guid[i], T.speed[i], t - at[i], t)
     end
-    if clean and not isAvoid and a > 0 and A.expDeclared[a] and (k == X.FRAME or k == X.FLIGHT or k == X.STRIKE) then
+    if
+        clean
+        and not isAvoid
+        and amount -- nil: a secret crit's (Rows' kind-only routing) teaches no band
+        and a > 0
+        and A.expDeclared[a]
+        and (k == X.FRAME or k == X.FLIGHT or k == X.STRIKE)
+    then
         teach(a, amount, flag)
     end
 end
@@ -553,7 +560,9 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
         T.overpaid = T.overpaid + 1 -- never: a ticket is paid at most `owed` times (the sweep asserts it)
     end
     if k == X.TICKS and not isAvoid then -- the owner's soft band: the last paid tick's amount (a crit halved)
-        T.tickAmt[i] = flag == "CRITICAL" and amount / 2 or amount
+        if amount then -- nil: a secret crit's; the last known amount stays the band
+            T.tickAmt[i] = flag == "CRITICAL" and amount / 2 or amount
+        end
         if done[i] == 1 then -- the first tick confirms the application
             refresh(a, guid[i], t, i)
         end

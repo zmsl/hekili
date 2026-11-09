@@ -155,6 +155,7 @@ end)
 -- The target's damage taken (target-health design §2.3c): the registry's rows about the current target's unit, any
 -- token (every attacker's hits count). A dead unit's memory slot forgets it at its death (unit-registry spec §4.3),
 -- from whichever tell came first. Registered at Start: Rows' listener (loaded later) must see each row first.
+-- A secret amount (live, L67): no TargetDamage; the health estimate moves only on its plain reads, never a guess.
 local function damage(t, g, uid, act, flag, amount)
     if act == "WOUND" and type(amount) == "number" and amount > 0 and uid == I.Units.Uid(1) then
         Direct(Obs.TargetDamage, t, 0, amount) -- logged straight, as the swap: a same-frame WOUND keeps its target

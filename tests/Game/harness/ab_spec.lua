@@ -25,6 +25,16 @@ describe("the A/B harness", function()
         assert.is_nil(ab.ARMS.viewer) -- the layout-less arm is viewer-none now
     end)
 
+    it("the secret arm makes UNIT_COMBAT's amount secret (live), never on the plain oracle", function()
+        assert.are.same({ secretAmount = true }, ab.ARMS.secret.observe)
+        assert.are.same({ outcomes = "default", presence = "router", viewer = false }, ab.providers("secret"))
+        local o = { duration = 10, observe = { secretAmount = true } }
+        assert.is_true(scenarios.stream(o, 7).secretAmount)
+        o.observe.plain = true
+        assert.is_false(scenarios.stream(o, 7).secretAmount)
+        assert.is_false(scenarios.stream({ duration = 10 }, 7).secretAmount)
+    end)
+
     local function count(s, ev)
         local n = 0
         for i = 1, s.n do

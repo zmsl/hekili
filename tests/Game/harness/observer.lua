@@ -67,6 +67,10 @@ M.DEFAULTS = {
     viewer = false,
     takenLag = 0,
     group = true,
+    -- Live (owner's /vslog dump 2026-11-08): UNIT_COMBAT's amount (slot 4) is secret, its action, flag and school
+    -- plain; the October beta's rows were all plain. On: the stream says so (`s.secretAmount`) and the drive fires
+    -- every UNIT_COMBAT amount as fake_api's SECRET; a4 keeps the truth for the metrics. Never on the plain oracle.
+    secretAmount = false,
 }
 
 M.COMBAT_END = 1.0 -- s from a kill to PLAYER_REGEN_ENABLED when no attacker is left (Rogue kill-events capture)
@@ -179,6 +183,7 @@ function M.new(W, k)
     end
     local s = { n = 0, t = {}, ev = {}, a1 = {}, a2 = {}, a3 = {}, a4 = {}, a5 = {} }
     s.src, s.hand, s.swingT, s.actor, s.castT = {}, {}, {}, {}, {}
+    s.secretAmount = k.secretAmount and not k.plain or false
     local obs = { s = s }
     local list, seq = {}, 0
     local function push(t, ev, a1, a2, a3, a4, a5, src, hand, swingT, actor, castT)

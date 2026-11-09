@@ -2873,6 +2873,23 @@ describe("resources", function()
         end)
 
         it(
+            "runs no `taken` for a wound or partial block whose amount is unknown (b = -1); an avoid still runs",
+            function()
+                taken(function(kind, amount)
+                    calls[#calls + 1] = kind .. " " .. amount
+                    return 2, 0
+                end)
+                local before = VS.Power(fs.RAGE, 10).est
+                hit(11, WOUND, -1)
+                hit(12, BLOCKED, -1)
+                assert.are.same({}, calls)
+                assert.are.equal(before, VS.Power(fs.RAGE, 12).est)
+                hit(13, DODGE)
+                assert.are.same({ "DODGE 0" }, calls)
+            end
+        )
+
+        it(
             "lets a short answer right after a hit's rage cap it: an estimate, not a declared gain (I.GAIN_SHOWS)",
             function()
                 taken(function()

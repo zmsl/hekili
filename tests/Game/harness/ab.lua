@@ -16,6 +16,8 @@ M.ARMS = {
     -- the meter arm's baseline (measured by hand, not by make gate-ab): the Default with the meter arm's taken lead, so
     -- the two differ only by the leaf and its assumptions
     lagged = { outcomes = "default", presence = "router", viewer = false, observe = { takenLag = 0.48 } },
+    -- live UNIT_COMBAT (2026-11-08 dump): the amount secret, action, flag and school plain (observer.secretAmount)
+    secret = { outcomes = "default", presence = "router", viewer = false, observe = { secretAmount = true } },
 }
 
 function M.arm()

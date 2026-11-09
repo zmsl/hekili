@@ -620,7 +620,11 @@ function M.run(c, s, offset)
             end
             local avoids = c.L.avoids
             local vetoed = c.L.oracle.vetoed
-            ctl.Fire(ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
+            local a4 = s.a4[i] -- the secret arm (observer.secretAmount) fires the amount as live: secret
+            if s.secretAmount and ev == "UNIT_COMBAT" then
+                a4 = SECRET
+            end
+            ctl.Fire(ev, s.a1[i], s.a2[i], s.a3[i], a4, s.a5[i])
             if c.L.oracle.vetoed > vetoed then
                 c.vetoHand[c.cur], c.vetoAt[c.cur] = c.L.vetoX, c.L.vetoAt
             end
