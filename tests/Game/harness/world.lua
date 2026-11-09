@@ -59,6 +59,10 @@ function M.new(seed)
     -- fn(us, preArmor, attackerLevel, flag) -> the swing-paid power a landed wound on us pays (scenarios' `takenRage`;
     -- nil: none, every world before it)
     W.takenRage = nil
+    -- The edge-anchor stress knobs (cdm-edge-anchor lane; nil in every world but its stress arms, loop.lua): castJitter,
+    -- our casts' events late by up to that many seconds (ev.jitter, the observer's cast-event latency; drawn from jrng);
+    -- durScale(id), the factor the truth applies to aura `id`'s duration (a talent or gear error the pack's model lacks)
+    W.castJitter, W.durScale = nil, nil
 
     --- Runs `fn(W)` at time `t` (after everything already queued for `t`).
     function W.at(t, fn)
@@ -91,6 +95,9 @@ function M.new(seed)
             for _, e in ipairs(W.ents) do
                 ev.targets[e] = e.target or false
             end
+        end
+        if W.castJitter and ev.kind == "cast" and ev.src == me and me then
+            ev.jitter = W.jrng.next() * W.castJitter
         end
         if ev.kind == "prepull" and me then -- our form at the start (the client's first form answer)
             ev.form = me.form
@@ -599,6 +606,9 @@ function M.new(seed)
     --- Puts aura `id` on `dst` (ours, from the player) for `duration` s, adding `stacks` [1] up to `maxStacks` [1];
     --- it expires on the world clock unless refreshed. Truth events "aura" { dst, aura, stacks (0: gone), expires }.
     function W.applyAura(dst, id, duration, stacks, maxStacks)
+        if W.durScale then
+            duration = duration * W.durScale(id)
+        end
         local a = dst.auras[id] or { stacks = 0 }
         a.stacks = math.min(maxStacks or 1, a.stacks + (stacks or 1))
         a.expires, a.duration = W.t + duration, duration

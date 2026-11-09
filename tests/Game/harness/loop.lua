@@ -13,6 +13,8 @@ local drive = require("Game.harness.drive")
 local fake = require("Game.State.helpers.fake_api")
 local flicker = require("Game.harness.flicker")
 local timing = require("Game.harness.timing")
+local rng = require("Game.harness.rng")
+local edgestats = require("Game.harness.edgestats")
 
 local M = {}
 
@@ -68,6 +70,10 @@ M.HOLD = os.getenv("HEKILI_LOOP_HOLD") == "1"
 -- The shipped steady icons (Engine/Output.lua, always on for players) on our instance: o.steady, else this switch
 -- (1, what players see, so the gates and make accuracy measure it; the oracle shadow stays plain). o.steady is true (hold 1) or the updates to hold (1 to 3); HEKILI_LOOP_STEADY=N sets the switch to N, 0 off.
 M.STEADY = tonumber(os.getenv("HEKILI_LOOP_STEADY")) or os.getenv("HEKILI_LOOP_HOLD") == "3" or 1
+-- The belief's Cooldown Manager edge arm (cdm-edge-anchor lane; harness-only, never a user option): HEKILI_CDM_EDGE=1
+-- sets I.cdmEdge on the driving instance (Sources/Auras.lua: an application's expiry anchored at its observed edge);
+-- unset leaves the source's default (the cast's start) untouched
+M.CDM_EDGE = os.getenv("HEKILI_CDM_EDGE") == "1"
 -- The oracle's facade rows answered by the client (§4's override): the target's health, and the debuff row Hekili's
 -- aura scan reads (raw since VirtualState counted a modelled stack on top of a plain read that arrived before the
 -- cast's drain, fixed in Auras.lua's I.AuraModel and pinned in loop_warrior_spec). The buff row stays VirtualState's: our
@@ -320,6 +326,16 @@ function M.run(L, seed, o, drivers)
     local pollEv, tickEv, nextEv = {}, {}, 1
     local steps = {}
     local arm = ab.ARMS[o.arm or ab.arm()] -- o.arm: a spec's own arm (its shapes; the floors stay the env's)
+    if arm.world then -- an edge-anchor stress arm's world knobs (ab.lua), each from its own draw
+        local jit, dur, drng, scale = arm.world.castJitter, arm.world.durError, rng.new(seed + 86028121), {}
+        W.castJitter, W.jrng = jit, rng.new(seed + 49979687)
+        W.durScale = dur
+                and function(id) -- per aura and fight, the truth's duration 1 - dur or 1 + dur of the pack's
+                    scale[id] = scale[id] or (drng.next() < 0.5 and 1 - dur or 1 + dur)
+                    return scale[id]
+                end
+            or nil
+    end
     for i, d in ipairs(drivers) do
         local out = d.H.ns.Output -- the steady icons (no player setting): this instance's measurement arm
         out.steady = (steady and not d.plain) and true or false -- the oracle shadow never holds
@@ -338,6 +354,9 @@ function M.run(L, seed, o, drivers)
         local VI = d.H.ns.VirtualStateInternal
         if VI and VI.def then -- (loop_spec's fake drivers have no belief)
             VI.def.providers.outcomes = arm.outcomes
+        end
+        if M.CDM_EDGE and VI and not d.plain then
+            VI.cdmEdge = true
         end
         if first and layout then -- the viewer is on from boot (no option), so its map predates the instance's first
             -- layout: the client's data-loaded event, once (as at login; later fights reuse the frames and the map)
@@ -415,6 +434,7 @@ function M.run(L, seed, o, drivers)
             hold = (hold and not d.plain) and flicker.newHold() or nil,
             layout = layout, -- the viewer arm's fight events and the next one's index (M.viewerLayout)
             li = 1,
+            edge = layout and VI and VI.presence and edgestats.start(d.H, VI) or nil, -- the arm's expiry record
         }
     end
     local errors0 = {}
@@ -496,6 +516,9 @@ function M.run(L, seed, o, drivers)
                 run.raises = run.raises + 1
             end
             queue(st.H, st.q, 3, res)
+            if st.edge then
+                edgestats.tick(st.H, st.H.ns.VirtualStateInternal, st.base + tc, tick, tc >= wo.pull)
+            end
             if st.hold then
                 flicker.hold(st.hold, st.q, o.react or M.REACT, pollEv.cast)
             end
@@ -722,6 +745,10 @@ function M.run(L, seed, o, drivers)
                 Q.ambiguous
             )
             ab.check(Q.overflow == 0, "layout", line)
+            local el = st.edge and edgestats.line(st.H, VI)
+            if el then
+                ab.check(true, "edge", who .. " seed " .. seed .. " " .. el)
+            end
         end
     end
     run.damage = 0 -- our true damage dealt (white wounds count at their land)
