@@ -461,6 +461,7 @@ spec:RegisterAuras({
     -- wowsims names by 16864.
     clearcasting = {
         id = 16870,
+        copy = { 16864 }, -- the viewer's Omen of Clarity entry names the passive, links the buff
         duration = 15,
         max_stack = 1,
         icd = 10,
@@ -549,7 +550,8 @@ spec:RegisterAuras({
     },
     hurricane = {
         id = 16914,
-        copy = rest(HURRICANE),
+        -- 1278965/1278968/1278759: Forever's own ranks 1-3 (levels 40/50/60), same names; the viewer follows the rank
+        copy = { 17401, 17402, 1278965, 1278968, 1278759 },
         duration = 10,
         tick_time = 1,
         max_stack = 1,
@@ -575,14 +577,15 @@ spec:RegisterAuras({
     },
     lacerate = {
         id = 1328617,
-        copy = rest(LACERATE),
+        copy = { 1328616, 414644, 1235826, 1235827, 414647 }, -- 414647: the viewer's Lacerate (no rank text)
         duration = 15,
         tick_time = 3,
         max_stack = 5,
     },
     mark_of_the_wild = {
         id = 1126,
-        copy = rest(MARK_OF_THE_WILD),
+        -- 1291335/1310503: Forever's own rank 7 (level 60) beside 9885, same name
+        copy = { 5232, 6756, 5234, 8907, 9884, 9885, 1291335, 1310503 },
         duration = 3600,
         max_stack = 1,
     },
