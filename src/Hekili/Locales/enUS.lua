@@ -434,6 +434,11 @@ L["If specified, the addon will show this text in place of the auto-detected key
 L["Default |cffffd100(none)|r"] = true
 L["If set above zero, the addon will only allow %s to be recommended via [Use Items] if there are at least this many detected enemies.\nSet to zero to ignore."] = true
 L["If set above zero, the addon will only allow %s to be recommended via [Use Items] if there are this many detected enemies (or fewer).\nSet to zero to ignore."] = true
+L["Cooldown Manager coverage: updates after combat."] = true
+L["Turn on the Cooldown Manager in the game options: it tells Hekili when your buffs and debuffs are up."] = true
+L["%d of %d tracked auras have an item in a Cooldown Manager bar."] = true
+L[" and %d more"] = true
+L["To cover %s, add them to any bar in the Cooldown Manager settings."] = true
 L["Activate %s"] = true
 L["Recommend for %s from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r)."] = true
 L["|cFFFFD100Active|r"] = true
