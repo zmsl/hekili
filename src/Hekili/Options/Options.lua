@@ -308,8 +308,6 @@ do
                 performance = {
                     frameBudget = 0.7,
                     forecastWindow = 15, -- Forever E9
-                    damageMeter = false, -- experimental (providers spec decision 82): the meter as the Outcomes provider
-                    cooldownViewer = false, -- experimental: the Cooldown Manager as the presence leaf (providers Task 7)
                     coalesceCooldown = false, -- perf 2.2: SPELL_UPDATE_COOLDOWN once per frame (EventFacade.lua)
                     narrowUnitAura = false, -- perf 2.3: UNIT_AURA for player and target only (Sources.lua)
                 },
@@ -3541,6 +3539,132 @@ found = true end
     local tAbilities = {}
     local tItems = {}
 
+    -- The Cooldown Manager coverage line (cdm-default spec §6, decision 108): which of the active spec's auras have an
+    -- item in any Cooldown Manager bar, by the belief's own match (§3.1, Presence/CooldownViewer.lua: an entry's
+    -- linkedSpellIDs, else its spell, override and tooltip spells, each also through GetOverrideSpell; an entry that
+    -- also names another aura, an untracked or a secret spell covers nothing). Read from the client out of combat, never
+    -- from the belief. Allocates: on draw only.
+    local CDM_VIEWERS = { "EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
+
+    local function CdmPlain( v )
+        if not Facade.issecretvalue( v ) then return v end
+    end
+
+    local function CdmNote( byId, keys, x )
+        if Facade.issecretvalue( x ) then keys[ 0 ] = true
+        elseif x ~= nil then keys[ byId[ x ] or 0 ] = true end
+    end
+
+    local function CdmNoteOver( byId, keys, x )
+        CdmNote( byId, keys, x )
+        x = CdmPlain( x )
+        local over = C_Spell and C_Spell.GetOverrideSpell
+        if x ~= nil and over then
+            local ok, o = pcall( over, x )
+            if ok then CdmNote( byId, keys, o ) end
+        end
+    end
+
+    local function CdmCoverage()
+        if InCombatLockdown() then return L["Cooldown Manager coverage: updates after combat."] end
+        local CV = Facade.C_CooldownViewer
+        local ok, avail, reason = false, nil, nil
+        if CV and CV.IsCooldownViewerAvailable then ok, avail, reason = pcall( CV.IsCooldownViewerAvailable ) end
+        if not ok or CdmPlain( avail ) ~= true then -- not available to this player: the game's reason, no advice
+            reason = ok and CdmPlain( reason )
+            if type( reason ) == "string" and reason ~= "" then
+                return format( L["The Cooldown Manager is not available: %s"], reason )
+            end
+            return L["The Cooldown Manager is not available."]
+        end
+        if CdmPlain( GetCVar( "cooldownViewerEnabled" ) ) ~= "1" then -- available, but the player turned it off
+            return L["Turn on the Cooldown Manager in the game options: it tells Hekili when your buffs and debuffs are up."]
+        end
+
+        local byId, auras = {}, Registry.Auras()
+        for k, a in orderedPairs( auras ) do -- the belief's order (Tracked.lua: sorted keys, the later key wins an ID)
+            if a.key == k then
+                if type( a.id ) == "number" and a.id > 0 then byId[ a.id ] = k end
+                local copy = a.copy
+                if type( copy ) == "number" and copy > 0 then byId[ copy ] = k
+                elseif type( copy ) == "table" then
+                    for _, v in ipairs( copy ) do
+                        if type( v ) == "number" and v > 0 then byId[ v ] = k end
+                    end
+                end
+            end
+        end
+
+        local toKey, mappable = {}, {} -- cooldownID -> aura key, or false (names more than one); key -> true
+        for c = 0, 8 do
+            local okS, set = pcall( CV.GetCooldownViewerCategorySet, c, true )
+            set = okS and CdmPlain( set )
+            if type( set ) == "table" then
+                for n = 1, #set do
+                    local id = CdmPlain( set[ n ] )
+                    local okI, info = pcall( CV.GetCooldownViewerCooldownInfo, id )
+                    info = okI and CdmPlain( info )
+                    if id ~= nil and type( info ) == "table" and toKey[ id ] == nil then
+                        local keys = {}
+                        local links = CdmPlain( info.linkedSpellIDs )
+                        if type( links ) == "table" and #links > 0 then
+                            for i = 1, #links do CdmNote( byId, keys, links[ i ] ) end
+                        else
+                            CdmNoteOver( byId, keys, info.spellID )
+                            CdmNoteOver( byId, keys, info.overrideSpellID )
+                            CdmNoteOver( byId, keys, info.overrideTooltipSpellID )
+                        end
+                        local one, many = nil, false
+                        for k in pairs( keys ) do
+                            if k ~= 0 then
+                                mappable[ k ] = true
+                                many = many or one ~= nil
+                                one = one or k
+                            end
+                        end
+                        if one then toKey[ id ] = not ( many or keys[ 0 ] ) and one end
+                    end
+                end
+            end
+        end
+
+        local covered = {}
+        for _, name in ipairs( CDM_VIEWERS ) do
+            local f = CdmPlain( _G[ name ] )
+            local n = type( f ) == "table" and f.GetNumChildren and CdmPlain( f:GetNumChildren() )
+            if type( n ) == "number" and n > 0 then
+                local kids = { f:GetChildren() }
+                for i = 1, n do
+                    local c = CdmPlain( kids[ i ] )
+                    if type( c ) == "table" then
+                        local id = CdmPlain( rawget( c, "cooldownID" ) )
+                        local k = id ~= nil and CdmPlain( rawget( c, "layoutIndex" ) ) ~= nil and toKey[ id ]
+                        if k then covered[ k ] = true end
+                    end
+                end
+            end
+        end
+
+        local total, have, missing = 0, 0, {}
+        for k in pairs( mappable ) do
+            total = total + 1
+            if covered[ k ] then have = have + 1
+            else
+                local name = auras[ k ].name
+                missing[ #missing + 1 ] = type( name ) == "string" and name or k
+            end
+        end
+        sort( missing )
+
+        local text = format( L["%d of %d tracked auras have an item in a Cooldown Manager bar."], have, total )
+        if #missing > 0 then
+            local list = table.concat( missing, ", ", 1, min( 5, #missing ) )
+            if #missing > 5 then list = list .. format( L[" and %d more"], #missing - 5 ) end
+            text = text .. " " .. format( L["To cover %s, add them to any bar in the Cooldown Manager settings."], list )
+        end
+        return text
+    end
+
     -- (spec tree) The right half of a spec page's top row: "Activate <Spec>" while another spec is active (as
     -- /hekili spec: it activates the spec's pack in place, the player's from then on, kept for the current talent tree:
     -- Hekili:ActivatePack), else the gold "Active" marker.
@@ -4120,44 +4244,18 @@ found = true end
                                     order = 12,
                                     width = "full",
                                 },
+                                cdmCoverage = {
+                                    type = "description",
+                                    name = function() return "\n" .. CdmCoverage() end,
+                                    fontSize = "medium",
+                                    order = 15,
+                                    width = "full",
+                                },
                                 experimentalHeader = {
                                     type = "header",
                                     hidden = not Hekili.IsDev, -- only the dev-build switches below remain under it
                                     name = L["Experimental"],
                                     order = 20,
-                                },
-                                damageMeter = {
-                                    type = "toggle",
-                                    hidden = not Hekili.IsDev, -- dev builds only; providersOf (Tracked.lua) ignores it otherwise
-                                    name = L["Experimental: use the damage meter for swing outcomes"],
-                                    desc = L["Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know "
-                                        .. "at once whether your white swing hit, and that another player's hit was not yours.\n\n"
-                                        .. "Changes apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n"
-                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
-                                    get = function() return Hekili.DB.profile.performance.damageMeter == true end,
-                                    set = function( _, v )
-                                        Hekili.DB.profile.performance.damageMeter = v
-                                        Hekili:ProvidersChanged()
-                                    end,
-                                    order = 22,
-                                    width = "full",
-                                },
-                                cooldownViewer = {
-                                    type = "toggle",
-                                    hidden = not Hekili.IsDev, -- dev builds only; providersOf (Tracked.lua) ignores it otherwise
-                                    name = L["Experimental: use the Cooldown Manager for aura presence"],
-                                    desc = L["Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, "
-                                        .. "for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. "
-                                        .. "Shows presence only (no durations or stacks), and only auras you applied.\n\n"
-                                        .. "Changes apply at once out of combat, otherwise when the fight ends.\n\n"
-                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
-                                    get = function() return Hekili.DB.profile.performance.cooldownViewer == true end,
-                                    set = function( _, v )
-                                        Hekili.DB.profile.performance.cooldownViewer = v
-                                        Hekili:ProvidersChanged()
-                                    end,
-                                    order = 23,
-                                    width = "full",
                                 },
                                 coalesceCooldown = {
                                     type = "toggle",

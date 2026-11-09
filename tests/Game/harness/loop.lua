@@ -331,14 +331,23 @@ function M.run(L, seed, o, drivers)
         out.hold = type(steady) == "number" and steady or 1
         -- Movement ON in a replay (wowsims's rotation moves: tested as it runs), OFF in a loop and ws.live
         d.H.Hekili.DB.profile.toggles.movement.value = (R ~= nil)
-        -- the A/B arm's experimental toggles (providers decision 82), applied out of combat as the option does; the
-        -- viewer arms' Cooldown Manager is the driver's only: the plain oracle shadow stays the viewer-off reference
+        -- the A/B arm's providers, applied out of combat (no option since cdm-default Task 6): the viewer through the
+        -- debug session switch Hekili.cdmOff, the driver's only (the plain oracle shadow stays the viewer-off
+        -- reference); the meter, which no build selects any more, written into the build's providers (harness only)
         local ctl = d.H.ctl -- a fresh world: the client's answers about it start fresh too
         local cdm = arm.viewer and not d.plain
+        local first = cdm and ctl.viewer.layout == nil -- this call builds the instance's frames (scenarios.viewerLayout)
         local layout = cdm and M.viewerLayout(d.H, arm.layout, seed, wo) or nil
-        local perf = d.H.Hekili.DB.profile.performance
-        perf.damageMeter, perf.cooldownViewer = arm.outcomes == "meter", cdm
+        d.H.Hekili.cdmOff = not cdm
         d.H.Hekili:ProvidersChanged()
+        local VI = d.H.ns.VirtualStateInternal
+        if VI and VI.def then -- (loop_spec's fake drivers have no belief)
+            VI.def.providers.outcomes = arm.outcomes
+        end
+        if first and layout then -- the viewer is on from boot (no option), so its map predates the instance's first
+            -- layout: the client's data-loaded event, once (as at login; later fights reuse the frames and the map)
+            d.H.Fire("COOLDOWN_VIEWER_DATA_LOADED")
+        end
         if M.CDM_RULE then
             local VI = d.H.ns.VirtualStateInternal
             VI.cdmHoldRule, VI.cdmHold = M.CDM_RULE, M.CDM_HOLD
@@ -711,6 +720,9 @@ function M.run(L, seed, o, drivers)
     run.errors, run.misses = 0, {}
     for i, st in ipairs(steps) do
         run.errors = run.errors + #st.H.errors - errors0[i]
+        local VI = st.H.ns.VirtualStateInternal -- the arm's Outcomes provider ran (the meter arm's write above is not
+        -- reverted by a rebuild: buildDef gives "default")
+        assert(not (VI and VI.outcomes) or VI.outcomes.name == arm.outcomes, "outcomes provider is not the arm's")
         for _, name in ipairs(headless.unexpected(st.H, "run")) do
             run.misses[#run.misses + 1] = name
         end

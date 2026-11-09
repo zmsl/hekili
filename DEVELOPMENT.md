@@ -360,6 +360,10 @@ Changes in those areas need an in-game check. Forever has no target dummies, so 
   what to report. Today they are listed under "In game" in [docs/dev/layout.md](docs/dev/layout.md).
 - **Probe addons.** A question about the client itself, such as whether a value is secret in combat, is answered with
   a small throwaway probe addon, not with Hekili. Its findings become facts that the belief and the harness rely on.
+- **Cooldown Manager off for a session.** The belief always reads aura presence from the game's Cooldown Manager
+  (no option). To rule it out while debugging, type `/run Hekili.cdmOff = true; Hekili:ProvidersChanged()`: out of
+  combat it stops at once, in combat at the fight's end; `/reload` turns it back on. It is a debug switch, not a
+  player setting: do not document it in the options or the changelog.
 
 An in-game answer that differs from the model is a gap. Record it in [docs/dev/gaps.md](docs/dev/gaps.md).
 

@@ -1,10 +1,11 @@
--- tests/Forever/dev_switches_spec.lua: the four experimental provider switches (damageMeter, cooldownViewer,
--- coalesceCooldown, narrowUnitAura) are dev-build only. A non-dev build (Hekili.IsDev unset) hides them in Options and
--- ignores a saved value: def.providers sees each off. The harness loads as a dev build (the TOC's @project-version@).
+-- tests/Forever/dev_switches_spec.lua: the two experimental provider switches (coalesceCooldown, narrowUnitAura) are
+-- dev-build only. A non-dev build (Hekili.IsDev unset) hides them in Options and ignores a saved value: def.providers
+-- sees each off. The harness loads as a dev build (the TOC's @project-version@). The damage meter and Cooldown Manager
+-- switches are gone (cdm-default Task 6): the Outcomes provider is the default one, the viewer always on.
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
-local NAMES = { "damageMeter", "cooldownViewer", "coalesceCooldown", "narrowUnitAura" }
+local NAMES = { "coalesceCooldown", "narrowUnitAura" }
 
 describe("the dev-only switches", function()
     local H, pv, perf
@@ -28,13 +29,13 @@ describe("the dev-only switches", function()
         return { pv.outcomes, pv.viewer, pv.coalesceCooldown, pv.narrowUnitAura }
     end
 
-    it("a non-dev build hides all four and treats a saved true as off, without rewriting it", function()
+    it("a non-dev build hides both and treats a saved true as off, without rewriting it", function()
         local args = setup(nil)
         for _, name in ipairs(NAMES) do
             assert.is_true(args[name].hidden, name)
             assert.is_true(perf[name], name)
         end
-        assert.are.same({ "default", false, false, false }, seen())
+        assert.are.same({ "default", true, false, false }, seen())
         assert.is_true(args.experimentalHeader.hidden) -- nothing under it outside a dev build (steady icons have no setting)
         assert.is_nil(args.steadyIcons)
     end)
@@ -45,6 +46,6 @@ describe("the dev-only switches", function()
             assert.is_false(args[name].hidden, name)
         end
         assert.is_false(args.experimentalHeader.hidden)
-        assert.are.same({ "meter", true, true, true }, seen())
+        assert.are.same({ "default", true, true, true }, seen())
     end)
 end)

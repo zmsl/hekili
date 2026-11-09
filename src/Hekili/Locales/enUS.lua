@@ -434,6 +434,13 @@ L["If specified, the addon will show this text in place of the auto-detected key
 L["Default |cffffd100(none)|r"] = true
 L["If set above zero, the addon will only allow %s to be recommended via [Use Items] if there are at least this many detected enemies.\nSet to zero to ignore."] = true
 L["If set above zero, the addon will only allow %s to be recommended via [Use Items] if there are this many detected enemies (or fewer).\nSet to zero to ignore."] = true
+L["Cooldown Manager coverage: updates after combat."] = true
+L["The Cooldown Manager is not available: %s"] = true
+L["The Cooldown Manager is not available."] = true
+L["Turn on the Cooldown Manager in the game options: it tells Hekili when your buffs and debuffs are up."] = true
+L["%d of %d tracked auras have an item in a Cooldown Manager bar."] = true
+L[" and %d more"] = true
+L["To cover %s, add them to any bar in the Cooldown Manager settings."] = true
 L["Activate %s"] = true
 L["Recommend for %s from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r)."] = true
 L["|cFFFFD100Active|r"] = true
@@ -503,10 +510,6 @@ L["How far ahead the recommendations look for the next affordable action. A reso
 L["\nThis setting determines how far ahead the Primary and AOE recommendations look for the next affordable action, and how far the resource forecast runs.\n\n|cFFFFD100• Higher values|r show the next action while a resource paid by swings is still building, so the queue |cFF00FF00stays filled at the pull|r, at a small cost per recommendation that grows with the window.\n|cFFFFD100• Lower values|r |cFF00FF00cost less|r and suit a resource that regenerates steadily.\n\nThe other displays (Cooldowns, Defensives, Interrupts) keep their own |cFFFFD100Forecast Period|r in their display settings.\n\n|cFF00B4FFDefault|r: |cFFFFD10015 s|r\n\n"] = true
 L["Current window: |cFF00FF00%s s|r"] = true
 L["Experimental"] = true
-L["Experimental: use the damage meter for swing outcomes"] = true
-L["Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested."] = true
-L["Experimental: use the Cooldown Manager for aura presence"] = true
-L["Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested."] = true
 L["Experimental: read cooldown changes once per frame"] = true
 L["When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested."] = true
 L["Experimental: listen for aura changes on you and your target only"] = true
