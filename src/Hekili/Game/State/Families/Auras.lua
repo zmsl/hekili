@@ -39,6 +39,7 @@ local U = {
     mem = {},
     icd = {}, -- by aura: its RegisterAura `icd` (seconds), 0 none
     firstWalk = {}, -- by unit: the time of its first clean walk (Sources/Auras.lua), 0 none yet
+    openFold = {}, -- by unit and aura: the I.folds of its last Cooldown Manager open (I.CastAura), 0 none
 }
 I.auras = U
 -- The believed delta since the drain last delivered it (see `set` below); I.auraDelta for Game/API/Facade.lua.
@@ -89,6 +90,11 @@ I.OnBuild(function(def, now)
         U.exp0[u], U.applied[u], U.stacks[u], U.inst[u], U.harm[u], U.seq[u], U.rec[u] = e, ap, st, ins, hm, sq, rc
         U.ord[u], U.ordN[u], U.gen[u] = ord, 0, 0
         U.firstWalk[u] = 0
+        local of = {}
+        for j = 1, U.nAura do
+            of[j] = 0
+        end
+        U.openFold[u] = of
         local add, upd, rem = {}, {}, {}
         for j = 1, U.nAura do
             add[j], upd[j], rem[j] = 0, 0, 0
@@ -225,20 +231,24 @@ I.On(Obs.Read, function(o, t)
             applied = o.t
         end
         set(u, j, expires, applied, stacks > 0 and stacks or 1, t, "observed", event)
+        if kind == ReadOf.AuraOpen then
+            U.openFold[u][j] = I.folds
+        end
     end
 end)
 
 I.auraReadsWon = 0
 
---- VS.Aura for our cast's own handler at t (Families/Now.lua's reads): a record a Cooldown Manager light opened within
---- I.SAME_FRAME before t, with no model since, is the cast's own application seen early, so it reads down (a handler's
---- `stack + 1` or addStack does not count it twice), as a plain read in the frame wins in I.AuraModel. Allocates nothing.
+--- VS.Aura for our cast's own handler at t (Families/Now.lua's reads): a record a Cooldown Manager light opened in this
+--- drain's fold or the one just before, with no model since, is the cast's own application seen early (the light polled
+--- a drain before the cast's event was logged), so it reads down: a handler's `stack + 1` or addStack does not count
+--- it twice. Drains, not seconds (review S3). Allocates nothing.
 function I.CastAura(unit, spellID, t)
     local u, j = U.index[unit], U.bySpell[spellID]
     if u and j then
         local last = U.rec[u][j].last
         local o = last.observed
-        if o.event == CDM_OPEN and o.t >= t - I.SAME_FRAME and o.t >= last.modelled.t and U.exp0[u][j] > t then
+        if o.event == CDM_OPEN and U.openFold[u][j] >= I.folds - 1 and o.t >= last.modelled.t and U.exp0[u][j] > t then
             return nil
         end
     end

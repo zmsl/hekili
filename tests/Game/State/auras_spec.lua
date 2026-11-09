@@ -1062,7 +1062,7 @@ describe("auras", function()
             ctl.ViewerAura(ti, "target")
             for t = 10.5, 24.5, 0.5 do
                 poll(t)
-                assert.are.equal(25, est("target", fs.SPENDER_C, t), t) -- the 4b hold re-staged at 24.5: 25.5
+                assert.are.equal(25, est("target", fs.SPENDER_C, t), t) -- (variant A, the 4b hold, re-staged it at 24.5: 25.5)
             end
             poll(24.9)
             assert.are.equal(25, est("target", fs.SPENDER_C, 24.9))
@@ -1097,7 +1097,12 @@ describe("auras", function()
             assert.is_nil(VS.Aura("target", fs.SPENDER_C, 30.6)) -- the observed down closes it (a CDM UP's: ours)
         end)
 
-        it("C: the debounce needs the item lit continuously; a dark sweep after the expiry starts it over", function()
+        -- review S1 (kept by the controller's ruling): a dark poll past the model's expiry is the CDM's fact that the
+        -- aura is gone; the next light restarts nothing, it is a new application and opens at once. Not red under A (A
+        -- also opens a new light at once); red-first against C without the dark reset (the first green run of this
+        -- lane, before Sources/Auras.lua reset lastE on a non-UP poll past the expiry: est nil at 25.8, the light
+        -- waited HOLD as if the old application still ran).
+        it("C: an item dark past the model's expiry, then lit again: a new application, opened at once", function()
             cast(2, REND, 10, 15)
             ctl.ViewerAura(ti, "target")
             for t = 10.5, 24.5, 0.5 do
@@ -1201,7 +1206,7 @@ describe("auras", function()
                 if t > 10 then
                     poll(t)
                 end
-                assert.are.equal(28, est("target", fs.SPENDER_C, t), t) -- the 4b hold: 11, re-staged near 1 s
+                assert.are.equal(28, est("target", fs.SPENDER_C, t), t) -- (variant A, the 4b hold: 11, re-staged near 1 s)
             end
             -- the other order: the light folds first, our cast's write lands 0.02 s later (inside SAME_FRAME)
             ctl.guid.target = "Creature-1"
@@ -1232,6 +1237,11 @@ describe("auras", function()
                 local def = fs.def(fs.new(9))
                 def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, duration = 3, icd = 10 }
                 start(def)
+                -- a clean walk first, as at login (firstWalk set; else the fold's first-walk sentinel moves applied)
+                ctl.auras.player.HELPFUL[1] = nil
+                ctl.Fire("UNIT_AURA", "player")
+                ctl.auras.player.HELPFUL[1] = fake.SECRET
+                ctl.Fire("UNIT_AURA", "player")
                 cast(1, SHOUT, 10, 3)
                 ctl.ViewerAura(pi, "player")
                 for t = 10.2, 12.9, 0.2 do
@@ -1243,9 +1253,27 @@ describe("auras", function()
                 poll(14.2)
                 local rec, _, applied = VS.Aura("player", fs.SPENDER_A, 14.2)
                 assert.is_true(math.abs(rec.est - 3614.2) < 1e-9, rec.est)
-                assert.are_not.equal(10, applied) -- a limit, pinned: the 4b step cap kept 10; C restarts the ICD
+                assert.is_true(math.abs(applied - 14.2) < 1e-9, applied) -- a limit, pinned: the ICD restarts here
+                ctl.ViewerClear(pi) -- (the 4b step cap kept 10)
+                poll(14.6)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 14.6)) -- a CDM re-establish is ours: its NONE closes it
             end
         )
+
+        it("C: a re-establish carries the model's last stacks (rule 3), not one", function()
+            I.AuraModel(2, REND, 10, 25, 3, 10, Obs.CastSuccess, true) -- our 3-stack debuff, expires 25
+            I.AuraOurs(2, REND)
+            ctl.ViewerAura(ti, "target")
+            for t = 10.5, 24.5, 0.5 do
+                poll(t)
+            end
+            poll(25.2)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 25.2)) -- the debounce
+            poll(26.2)
+            local rec, stacks = VS.Aura("target", fs.SPENDER_C, 26.2)
+            assert.is_truthy(rec)
+            assert.are.equal(3, stacks)
+        end)
 
         it("in combat, a walk with nil at index 1 does not suppress the facts (I7)", function()
             ctl.auras.player.HELPFUL[1] = nil
