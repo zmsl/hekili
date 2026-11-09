@@ -89,6 +89,9 @@ function K.Accepts(i, act, flag, amount, sch, isAvoid)
     if not (s == ANY or (s > 0 and s == sch)) then
         return false
     end
+    if amount == nil then
+        return true, false -- a secret amount (Rows' kind-only crit): no band can test it or rank it
+    end
     if k == TICKS then -- owner ruling 2026-10-22: no band before the first paid tick, then [0.5x, 2x] of the last one
         local m = T.tickAmt[i]
         if m <= 0 then

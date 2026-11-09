@@ -1567,6 +1567,8 @@ I.On(Obs.PlayerHit, function(o, t)
     local kind = o.a
     if kind < I.HitKind.WOUND or kind > I.HitKind.MISS then
         return
+    elseif kind <= I.HitKind.BLOCKED and o.b < 0 then
+        return -- a wound's secret amount (b = -1, Sources/Player.lua): its rage is the estimate path (L128), not built
     end
     for r = 1, R.n do
         local f = R.taken[r]

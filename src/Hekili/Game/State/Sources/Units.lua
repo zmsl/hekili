@@ -294,7 +294,9 @@ function U.OnCombat(api, t, unit, act, flag, amount, school)
     if not g then
         return
     end
-    local fk, ak, sk = flag or false, amount or false, school or false -- a secret slot (nil) never equals a plain one
+    -- a secret slot (nil) never equals a plain one; two secret amounts equal (live: the amount alone is secret), so
+    -- two rows of one action, flag and school on one unit within DUP_WINDOW on different tokens read as one fan-out
+    local fk, ak, sk = flag or false, amount or false, school or false
     if dupOf(i, t, u, act, fk, ak, sk, swapped) then
         U.dup = U.dup + 1
         return

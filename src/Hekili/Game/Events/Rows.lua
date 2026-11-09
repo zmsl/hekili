@@ -273,9 +273,12 @@ local function paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
         S.Stage(Obs.Crit, t, T.ab[p], at0, 0) -- our cast's own crit (the target's row carries the flag plain): GAP T
     end
     L.credited[3] = L.credited[3] + 1
-    L.fight.paid = L.fight.paid + amount
+    if amount then -- nil: a secret crit's (route), never guessed
+        L.fight.paid = L.fight.paid + amount
+    end
     if not held and not (divergent and avoid) then
-        emit(kk, xx, dst, act, flag, amount, (kk == TICKS or kk == CHANNEL) and t or at0, sch > 0 and sch or school)
+        local at = (kk == TICKS or kk == CHANNEL) and t or at0
+        emit(kk, xx, dst, act, flag, amount or 0, at, sch > 0 and sch or school) -- 0: unknown, as Attackers' rows
     end
 end
 
@@ -339,7 +342,9 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
     local tent =
         T.PayTentative(credited, t, false, amount, flag, second < L.THETA, (core and not rerouting) and 1 or 2, act, 1)
     L.credited[xx] = L.credited[xx] + 1
-    f.paid = f.paid + amount
+    if amount then -- nil: a secret crit's (route), never guessed
+        f.paid = f.paid + amount
+    end
     S.Stage(Obs.Swing, at0, xx, id, confirm and 7 or 1) -- landed (or confirmed), at the swing's time: its rage
     if flag == "CRITICAL" then
         S.Stage(Obs.Swing, t, xx, id, 3) -- the same record: a retraction takes the crit back too
@@ -347,7 +352,7 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
     -- final (pass 1: T.PayTentative): no row can displace it, so the swing is settled: its row, its crit and
     -- SwingSettled (reactions), once per swing; a TENT one at T.onFinal
     if not tent and settle(xx, at0) then
-        emit(MELEE, xx, dst, act, flag, amount, at0, 1)
+        emit(MELEE, xx, dst, act, flag, amount or 0, at0, 1)
         if flag == "CRITICAL" then
             S.Stage(Obs.Crit, t, 0, at0, 0)
         end
@@ -374,6 +379,7 @@ local function reroute(i, now)
     local credited, lr, ref, lag, second, k = nil, 0, 0, 0, 0, 1
     local unknown = false
     if p == 0 and white and (AVOIDS[act] or not avoid) then
+        -- a secret crit's (route: amount nil) classes 0 here, so only the timing-alone pass below can take it
         credited, lr, ref, lag, second, k = M.score(t, g, amount, flag, avoid, false)
         if credited and lr < (avoid and L.THETA or L.theta[k]) then
             credited = nil
@@ -433,7 +439,7 @@ T.onFinal = function(i)
     local t, k = T.rowT[i], T.kind[i]
     if k == MELEE then -- a landed swing (an avoid is PROV, never TENT): settled now
         if settle(T.x[i], T.at[i]) then
-            emit(MELEE, T.x[i], T.guid[i], T.rowAct[i], T.rowFlag[i], T.rowAmt[i], T.at[i], 1)
+            emit(MELEE, T.x[i], T.guid[i], T.rowAct[i], T.rowFlag[i], T.rowAmt[i] or 0, T.at[i], 1) -- nil: secret
             if T.rowFlag[i] == "CRITICAL" then
                 S.Stage(Obs.Crit, t, 0, T.at[i], 0)
             end
@@ -454,7 +460,7 @@ T.onFinal = function(i)
             T.guid[i],
             T.rowAct[i],
             T.rowFlag[i],
-            T.rowAmt[i],
+            T.rowAmt[i] or 0, -- nil: a secret crit's (route)
             (k == TICKS or k == CHANNEL) and t or T.at[i],
             sch > 0 and sch or T.rowSch[i]
         )
@@ -474,7 +480,7 @@ T.onReplace = function(i, t)
     else
         L.credited[3] = L.credited[3] - 1
     end
-    L.fight.paid = L.fight.paid - T.rowAmt[i] -- re-paid if reroute places it
+    L.fight.paid = L.fight.paid - (T.rowAmt[i] or 0) -- re-paid if reroute places it (nil: a secret crit's, unpaid)
     L.background = L.background + 1
     return reroute(i, t)
 end
@@ -526,14 +532,24 @@ local function route(t, g, uid, act, flag, amount, school)
         return
     end
     M.advance(t)
-    if type(amount) ~= "number" or type(flag) ~= "string" or type(school) ~= "number" then
-        if U.IsTarget(uid, t) then -- a secret slot (never seen in game): only counted
-            M.background(act, 0, "", false, act ~= "WOUND", false)
+    local white, avoid = school == 1, act ~= "WOUND"
+    -- Live (owner's /vslog dump 2026-11-08, D1): the amount alone is secret (the facade passes it as nil), the action,
+    -- flag and school plain. An avoid routes by its kind: its amount is 0 on a plain client and no avoid path reads it.
+    -- A crit routes by kind, flag and school with its amount unknown (`secret`, never guessed): no band tests or learns
+    -- it, the swing LR scores it on timing alone, the rows it emits carry 0. A plain wound with a secret amount may be
+    -- WOUND 0 (the white swing an on-next-swing strike replaced; captures G 177249, DM research :72: never CRITICAL),
+    -- and a secret flag or school (unseen live) hides the row's kind: both only counted, as before.
+    local secret = type(amount) ~= "number"
+    if type(flag) ~= "string" or type(school) ~= "number" or (secret and not avoid and flag ~= "CRITICAL") then
+        if U.IsTarget(uid, t) then
+            M.background(act, 0, "", false, avoid, false)
         end
         return
     end
-    local white, avoid = school == 1, act ~= "WOUND"
-    if act == "WOUND" and amount <= 0 then
+    if secret and avoid then
+        amount, secret = 0, false
+    end
+    if not secret and act == "WOUND" and amount <= 0 then
         lastW0 = t
         return
     end
@@ -600,7 +616,7 @@ local function route(t, g, uid, act, flag, amount, school)
         if not avoid then
             local _, maxMain = VS.Stat("UnitDamage")
             local form = Plain(I.api, I.api.GetShapeshiftForm()) -- secret: Plain; plain in combat (Facade's stance row)
-            unknown = maxMain <= 0 or form ~= I.damageForm
+            unknown = secret or maxMain <= 0 or form ~= I.damageForm -- a secret crit: its timing alone
         end
         credited, lr, ref, lag, second, k = M.score(t, g, amount, flag, avoid, unknown)
         if credited and lr < (avoid and L.THETA or L.theta[k]) then
@@ -628,7 +644,7 @@ local function route(t, g, uid, act, flag, amount, school)
             k = M.thetaIndex(h, (avoid or unknown) and 4 or M.classOf(h, amount, flag), rr, rr == 3 and t - rf or lag)
         end
     end
-    if p == 0 and not credited and white and not avoid then
+    if p == 0 and not credited and white and not avoid and not secret then -- its own wound: by its amount class
         local i = tieHolder(t, g, amount, flag)
         if i then -- its own wound: the avoid it held by the tie was the cast's
             local h = T.x[i]
@@ -743,6 +759,7 @@ end
 U.OnRow(function(t, g, uid, act, flag, amount, school)
     local f0, a0 = T.foreign, T.absorbed
     route(t, g, uid, act, flag, amount, school)
+    -- a secret amount (live) is never asked about: RowOwner matches the meter by amount
     if I.outcomes.ROW_DELAY > 0 and (act == "WOUND" or MISSES[act]) and type(amount) == "number" then
         if type(school) == "number" and (amount > 0 or act ~= "WOUND") then
             if aN >= ASK then -- full: the oldest goes unasked (counted)

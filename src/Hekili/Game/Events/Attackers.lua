@@ -321,7 +321,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
             Bands.Learn(atkLo, atkHi, atkN, k, a, 0)
         end
     end
-    local amt = type(amount) == "number" and amount or 0
+    local amt = type(amount) == "number" and amount or 0 -- a secret amount (live, L67): 0, never guessed
     if act == "WOUND" and melee then
         L.Swing(t, "onus", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS, amt, flag, false)
     elseif act == "WOUND" then

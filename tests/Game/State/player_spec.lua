@@ -190,24 +190,29 @@ describe("player start", function()
             assert.are.same({ 20, 23, 20, 0 }, { seen[1][3], seen[2][3], seen[3][3], seen[4][3] })
         end)
 
-        it("drops a wound whose amount is not plain, with a note, and allocates nothing", function()
-            fire("player", "WOUND", "", nil, 1) -- the event facade passes a secret slot as nil
-            assert.are.same({}, seen)
-            assert.equal("secret", S.status["UNIT_COMBAT player amount"])
-            assert.are.equal(
-                0,
-                alloc.bytes(function()
-                    ctl.Fire("UNIT_COMBAT", "player", "WOUND", "BLOCK", 12, 1)
-                    ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", nil, 1) -- the drop and its note
-                    S.Flush()
-                end, 2000)
-            )
-        end)
+        it(
+            "stages a wound whose amount is not plain as unknown (b = -1), with a note, and allocates nothing",
+            function()
+                fire("player", "WOUND", "", nil, 1) -- the event facade passes a secret slot as nil
+                assert.are.same({ { 1, -1, 20 } }, seen)
+                assert.equal("secret", S.status["UNIT_COMBAT player amount"])
+                assert.are.equal(
+                    0,
+                    alloc.bytes(function()
+                        ctl.Fire("UNIT_COMBAT", "player", "WOUND", "BLOCK", 12, 1)
+                        ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", nil, 1) -- the drop and its note
+                        S.Flush()
+                    end, 2000)
+                )
+            end
+        )
 
-        it("drops a wound whose amount is a secret value, with a note", function()
+        it("stages a wound whose amount is a secret value as unknown (CN13, L152), with a note", function()
             fire("player", "WOUND", "", fake.SECRET, 1)
             fire("player", "WOUND", fake.SECRET, 12, 1) -- a secret flag: a plain wound, not BLOCKED
-            assert.are.same({ { 1, 12, 20 } }, seen)
+            fire("player", "WOUND", "BLOCK_REDUCED", fake.SECRET, 1)
+            fire("player", "MISS", "", fake.SECRET, 1)
+            assert.are.same({ { 1, -1, 20 }, { 1, 12, 20 }, { 2, -1, 20 }, { 6, 0, 20 } }, seen)
             assert.equal("secret", S.status["UNIT_COMBAT player amount"])
         end)
 
