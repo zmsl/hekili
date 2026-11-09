@@ -441,6 +441,11 @@ L["Turn on the Cooldown Manager in the game options: it tells Hekili when your b
 L["%d of %d tracked auras have an item in a Cooldown Manager bar."] = true
 L[" and %d more"] = true
 L["To cover %s, add them to any bar in the Cooldown Manager settings."] = true
+L["Cooldown Manager"] = true
+L["Hekili reads the Cooldown Manager to see when your buffs and debuffs are up. Turn a switch off and Hekili ignores that aura's items there. |cffffd100Gold|r: on a bar. |cff808080Grey|r: not on a bar; its switch applies when you add it."] = true
+L["Changes apply after combat."] = true
+L["Buffs on you"] = true
+L["Debuffs on your target"] = true
 L["Activate %s"] = true
 L["Recommend for %s from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r)."] = true
 L["|cFFFFD100Active|r"] = true

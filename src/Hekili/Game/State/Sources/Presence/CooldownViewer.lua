@@ -140,8 +140,12 @@ local function build(api, def)
     end
     local byId = {}
     for j = 1, #def.auraIds do
-        for _, sid in ipairs(def.auraIds[j]) do
-            byId[sid] = j
+        -- (cdm-panel) a switched-off aura (def.auras[j].cdm == false, Tracked.lua) is no candidate: its items stay
+        -- unmapped, the aura pure belief
+        if not (def.auras[j] and def.auras[j].cdm == false) then
+            for _, sid in ipairs(def.auraIds[j]) do
+                byId[sid] = j
+            end
         end
     end
     for c = 0, 8 do

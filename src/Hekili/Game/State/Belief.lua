@@ -100,7 +100,11 @@ end
 I.UNDECIDED, I.HIT, I.AVOID, I.OURS, I.FOREIGN, I.UP, I.DOWN = 0, 1, 2, 1, 2, 1, 2
 I.OUTCOMES, I.PRESENCE = {}, {}
 I.outcomes, I.presence, I.presenceViewer, I.restartProviders = nil, nil, nil, false
+local NO_PV = {}
 local wantO, wantP, wantV -- a swap asked for in combat (I.SetProviders): applied at combat end
+-- (cdm-panel) def.providers.cdmGen at the presence provider's last activation: a moved one (a Cooldown Manager switch,
+-- Tracked.lua Hekili:CdmSwitchChanged) re-activates it, so the leaf rebuilds its map; never mid-fight
+local presenceGen
 
 -- Activates the named providers (spec §3.1): unknown names are "default"; only a changed choice is swapped, except
 -- that a build (`def`) re-activates the presence provider (its map names the new set's auras).
@@ -114,7 +118,10 @@ local function provide(oName, pName, viewer, now, def)
         I.outcomes = O
         O.Activate(I.api, now)
     end
-    if P ~= I.presence or viewer ~= I.presenceViewer or def then
+    local gen = (def or I.def or NO_PV).providers
+    gen = gen and gen.cdmGen
+    if P ~= I.presence or viewer ~= I.presenceViewer or def or gen ~= presenceGen then
+        presenceGen = gen
         if I.presence then
             I.presence.Deactivate(now)
         end
