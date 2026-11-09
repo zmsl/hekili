@@ -834,6 +834,17 @@ describe("now handlers", function()
             assert.are.equal(0, I.auraReadsWon)
         end)
 
+        it("a Cooldown Manager light folded just before the cast is its own application: no double stack", function()
+            stackCast()
+            -- the CDM's open of a record believed down (Sources/Auras.lua apply), a frame before the cast's event
+            I.Sources.Direct(VS.Obs.Read, 4.98, j, 3600, I.ReadOf.AuraOpen)
+            cast(7387, 5)
+            local rec, n = VS.Aura("player", 7386, 5.1)
+            assert.are.same({ 1, 35 }, { n, rec.est }) -- addStack read it down: one stack, the cast's 30 s (F3)
+            cast(7387, 6) -- the next cast stacks on our own record
+            assert.are.equal(2, stacks(6.1))
+        end)
+
         it("lets a read after the modelled change win, as before", function()
             stackCast()
             cast(7387, 5)

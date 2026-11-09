@@ -10,6 +10,7 @@ local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local Obs, ReadOf = VS.Obs, I.ReadOf
 local HUGE = math.huge
+local CDM_OPEN = -ReadOf.AuraOpen -- the sample event of a Cooldown Manager open (no Obs kind is negative)
 
 --- An aura Read's `a` packs the unit index and the aura index; its `c` packs ReadOf.Aura and the stacks.
 I.AURA_UNIT = 4096 -- a = (unit - 1) * AURA_UNIT + aura (Hekili registers hundreds of auras)
@@ -200,8 +201,9 @@ I.On(Obs.Read, function(o, t)
     local u = (o.a - o.a % I.AURA_UNIT) / I.AURA_UNIT + 1 -- nonzero: AURA_UNIT is a constant
     local j = o.a % I.AURA_UNIT
     local stacks = (c - kind) / I.AURA_STACK -- nonzero: AURA_STACK is a constant
-    -- a Cooldown Manager write is sampled with no event: I.AuraModel's "the read wins" is for a client expiry only
-    local event = kind == ReadOf.Aura and Obs.Read or 0
+    -- a Cooldown Manager write is sampled with no read event (I.AuraModel's "the read wins" is for a client expiry
+    -- only); an open with its own mark, for I.CastAura
+    local event = kind == ReadOf.Aura and Obs.Read or kind == ReadOf.AuraOpen and CDM_OPEN or 0
     if o.b == 0 then
         set(u, j, 0, 0, 0, t, "observed", event)
     elseif kind == ReadOf.AuraOpen and U.exp0[u][j] > o.t then
@@ -227,6 +229,21 @@ I.On(Obs.Read, function(o, t)
 end)
 
 I.auraReadsWon = 0
+
+--- VS.Aura for our cast's own handler at t (Families/Now.lua's reads): a record a Cooldown Manager light opened within
+--- I.SAME_FRAME before t, with no model since, is the cast's own application seen early, so it reads down (a handler's
+--- `stack + 1` or addStack does not count it twice), as a plain read in the frame wins in I.AuraModel. Allocates nothing.
+function I.CastAura(unit, spellID, t)
+    local u, j = U.index[unit], U.bySpell[spellID]
+    if u and j then
+        local last = U.rec[u][j].last
+        local o = last.observed
+        if o.event == CDM_OPEN and o.t >= t - I.SAME_FRAME and o.t >= last.modelled.t and U.exp0[u][j] > t then
+            return nil
+        end
+    end
+    return VS.Aura(unit, spellID, t)
+end
 
 --- Our own cast changed aura j on unit u (spec §5.3): a `modelled` expiry with its stacks and applied time. A plain
 --- read that saw the aura up in the cast's frame or later already includes the cast (its stack, say): the read wins

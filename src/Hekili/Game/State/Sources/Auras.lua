@@ -42,7 +42,8 @@ local OVL_J, OVL_ID, OVL_N = {}, {}, 0
 -- zeroed at each fight's start.
 local facts, disagree = {}, {}
 -- By the same key: the time of the last Read staged (the drain's fold takes it), 0 none. Only a second stage in the
--- same drain (an edge, then the poll) is held back: a hold re-stage can be due at two polls in a row.
+-- same drain (an edge, then the poll, or a clamp) is held back: a stage can be due at two polls in a row (a debounce
+-- that elapsed, then a re-open after a close; under variant A a hold re-stage).
 local staged = {}
 -- By the same key: 1 when the first plain walk after combat corrected the believed presence (spec §2.6, decision 105),
 -- per fight. At most one count per key: exp0 moves only at the fold, so every walk of the exit frame (a UNIT_AURA one,
@@ -333,8 +334,9 @@ local function closes(k, u, j)
 end
 
 -- Rules 2.5.1-7 for one reduced fact (UP or DOWN) of aura j on unit u: a plain walk wins out of combat (I7); forms and
--- enchants are skipped on the player (M5); an UP stages only while the record is down or about to lapse (rules 3-4); a
--- DOWN closes only by rule 1. An edge is a fact; a poll answer is one only when it stages (spec §4.3). Returns whether
+-- enchants are skipped on the player (M5); an UP stages only while the record is down: at once with no model record,
+-- after HOLD lit past the model's expiry otherwise (rules 3-4, L310; variant A also within LAPSE of lapsing); a DOWN
+-- closes only by rule 1. An edge is a fact; a poll answer is one only when it stages (spec §4.3). Returns whether
 -- it staged. Allocates nothing.
 local function apply(j, u, up, t, edge)
     local U = I.auras

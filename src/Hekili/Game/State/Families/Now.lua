@@ -108,7 +108,7 @@ local abByKey, auraByKey, auraSpell, auraDur, auraFn, auraMax, resByKey = {}, {}
 -- Reads: proxies built at SpecChanged, answered from the belief at the cast's time.
 
 local function auraField(r, f)
-    local rec, stacks, applied = VS.Aura(rawget(r, "unit"), rawget(r, "spell"), T)
+    local rec, stacks, applied = I.CastAura(rawget(r, "unit"), rawget(r, "spell"), T)
     if f == "up" then
         return rec ~= nil
     elseif f == "down" then
@@ -344,7 +344,7 @@ function NAMES.addStack(aura_, duration, stacks)
     if not live or not j then
         return
     end
-    local _, have = VS.Aura("player", auraSpell[j], T)
+    local _, have = I.CastAura("player", auraSpell[j], T)
     local n = (have or 0) + (stacks or 1)
     aura(1, aura_, duration, n < auraMax[j] and n or auraMax[j]) -- Hekili's max_stack clamp (State.lua:837-852)
 end
