@@ -16,6 +16,33 @@ M.ARMS = {
     -- the meter arm's baseline (measured by hand, not by make gate-ab): the Default with the meter arm's taken lead, so
     -- the two differ only by the leaf and its assumptions
     lagged = { outcomes = "default", presence = "router", viewer = false, observe = { takenLag = 0.48 } },
+    -- the edge-anchor stress worlds (cdm-edge-anchor lane, harness only): the buffs layout, the viewer's light and dark
+    -- `viewerLag` s late on both edges (0.1/0.3/0.5), our cast events late by up to 0.3 s, every aura's true duration
+    -- +-10% of the pack's (loop.lua sets the world knobs from `world`)
+    ["viewer-lag1"] = {
+        outcomes = "default",
+        presence = "router",
+        viewer = true,
+        layout = "buffs",
+        observe = { viewerLag = 0.1 },
+        world = { castJitter = 0.3, durError = 0.1 },
+    },
+    ["viewer-lag3"] = {
+        outcomes = "default",
+        presence = "router",
+        viewer = true,
+        layout = "buffs",
+        observe = { viewerLag = 0.3 },
+        world = { castJitter = 0.3, durError = 0.1 },
+    },
+    ["viewer-lag5"] = {
+        outcomes = "default",
+        presence = "router",
+        viewer = true,
+        layout = "buffs",
+        observe = { viewerLag = 0.5 },
+        world = { castJitter = 0.3, durError = 0.1 },
+    },
     -- live UNIT_COMBAT (2026-11-08 dump): the amount secret, action, flag and school plain (observer.secretAmount)
     secret = { outcomes = "default", presence = "router", viewer = false, observe = { secretAmount = true } },
 }

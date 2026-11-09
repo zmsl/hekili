@@ -84,6 +84,25 @@ local anyLong, anyLast = false, false
 local floor = I.auraFloor or {}
 I.auraFloor = floor
 local floorSet = false -- some floor[j] is 1
+-- The edge (owner rulings L345-L351): the router's fact.edge is the t of an observed dark -> lit flip (an EDGE, 0 a
+-- SEED). By key: anAp the applied time of the cast-opened application last matched to an edge (once each);
+-- emcN/emcSum/emcLast the edge minus our cast's start; cyT/cyD/cyAp/cyE the open cycle (edge, the
+-- record's own duration, applied, expiry), cyN/cySum/cyObs/cyMod the closed cycles (observed dark - edge against the
+-- modelled duration); seedAp the applied time of a record a SEED opened (unknown age while it is still the record's).
+-- Diagnostics only: the cast's start stands (L347). Anchoring the expiry at the edge was measured and lost on agreement
+-- (cdm-edge-anchor lane: the edge is a sweep's t, late against the truth by the viewer's latency and up to a poll).
+-- shortcut: EDGE_WIN 1.0 s bounds edge-cast adjacency (cast events late up to 0.3 s, viewer lag up to 0.5 s, a poll
+-- gap); a refresh cast within it of a fresh light is matched too; set it from the LAT probe (Task 10).
+local EDGE_WIN = 1.0
+local anAp, emcN, emcSum, emcLast = {}, {}, {}, {}
+local cyT, cyD, cyAp, cyE, cyN, cySum, cyObs, cyMod, seedAp = {}, {}, {}, {}, {}, {}, {}, {}, {}
+-- Per fight: polls an UP waited on the debounce past the model's expiry, and the re-establishes it made.
+local holdN = { waits = 0, fires = 0 }
+I.presenceHold = holdN
+local function zeroEdge(k)
+    anAp[k], emcN[k], emcSum[k], emcLast[k] = 0, 0, 0, 0
+    cyT[k], cyD[k], cyAp[k], cyE[k], cyN[k], cySum[k], cyObs[k], cyMod[k], seedAp[k] = 0, 0, 0, 0, 0, 0, 0, 0, 0
+end
 
 I.OnBuild(function(def)
     local U = I.auras
@@ -112,8 +131,11 @@ I.OnBuild(function(def)
         local k = I.AURA_UNIT + j
         facts[k], disagree[k], staged[k], exitFix[k], ours[k], oursAp[k], upAt[k] = 0, 0, 0, 0, 0, 0, 0
         lastE[j], lastSt[j], longE[j], lastE[k], lastSt[k], longE[k] = 0, 0, 0, 0, 0, 0
+        zeroEdge(j)
+        zeroEdge(k)
     end
     floorSet, anyLong, anyLast = false, false, false
+    holdN.waits, holdN.fires = 0, 0
     exiting = false -- a walk after a build finds every record cleared: no correction to count
     pending = true -- a build cleared every record: walk the player at the next out-of-combat poll 10 (gear-aware spec §2)
 end)
@@ -349,6 +371,7 @@ local function apply(j, u, up, t, edge)
     end
     local e = U.exp0[u][j]
     local stage, rem, kind = false, 0, ReadOf.Aura
+    local deb, seed = false, false -- the debounce decided; a SEED opens (unknown age)
     if up and e > t then
         if e ~= HUGE then
             lastE[k], lastSt[k], anyLast = e, U.stacks[u][j], true -- the model's expiry stands: the debounce counts from it
@@ -358,9 +381,10 @@ local function apply(j, u, up, t, edge)
         if lastE[k] > 0 then -- lit through the model's expiry: overridden only once lit HOLD past it
             local F = I.presence.fact
             local ft = F and F.t[k] or 0
-            stage, rem = t - (ft > lastE[k] and ft or lastE[k]) >= HOLD, long(j, u)
+            stage, rem, deb = t - (ft > lastE[k] and ft or lastE[k]) >= HOLD, long(j, u), true
         else
-            stage, rem = true, hold(j, u, k, t)
+            local F = I.presence.fact
+            stage, rem, seed = true, hold(j, u, k, t), not (F and F.edge and (F.edge[k] or 0) > 0)
         end
     else
         stage = e > t and closes(k, u, j)
@@ -368,6 +392,9 @@ local function apply(j, u, up, t, edge)
     if not stage then
         if edge then
             facts[k] = facts[k] + 1
+        end
+        if deb then
+            holdN.waits = holdN.waits + 1
         end
         return false
     elseif staged[k] == t then
@@ -381,6 +408,12 @@ local function apply(j, u, up, t, edge)
     if up then -- an UP stages only on a record still down
         ours[k], oursAp[k] = BY_CDM, foldApplied(u, j, t) -- a CDM UP opened it
         stacks = lastSt[k] -- re-established: the model's last stacks (else 0)
+        if seed then
+            seedAp[k] = oursAp[k]
+        end
+        if deb then
+            holdN.fires = holdN.fires + 1
+        end
     end
     Direct(Obs.Read, t, k, rem, kind + stacks * I.AURA_STACK)
     if up and (rem == LONG or rem < 0) then
@@ -400,6 +433,41 @@ local function clamp(j, u, t)
     end
     longE[k] = 0
 end
+-- The edge for an UP of aura j on unit u at t (te: the edge's t, L346-L348): a cast-opened application whose start lies
+-- within EDGE_WIN of the edge is matched once (anAp): edge minus cast counted, the cycle opened (its modelled duration:
+-- the record's own, no pack call). Diagnostics only. Allocates nothing.
+local function edgeMatch(j, u, k, te, t)
+    local U = I.auras
+    local e, ap = U.exp0[u][j], U.applied[u][j]
+    if e <= t or e == HUGE or longE[k] == e or ap == anAp[k] then
+        return
+    -- ap == te: a cast stamped at the edge's own sweep (or an applied the CDM open set): no lag to measure
+    elseif ours[k] ~= BY_CAST or oursAp[k] ~= ap or ap == te or ap - te > EDGE_WIN or te - ap > EDGE_WIN then
+        return
+    end
+    local dur = e - ap
+    anAp[k], emcN[k], emcSum[k], emcLast[k] = ap, emcN[k] + 1, emcSum[k] + te - ap, te - ap
+    cyT[k], cyD[k], cyAp[k], cyE[k] = te, dur, ap, e
+end
+
+-- The open cycle of key k closes at its thing's first dark after the edge (the leaf's darkT through fact.dark): the
+-- observed duration against the modelled one, when it is still the matched application (unchanged, or ended by the
+-- model first, or re-established long); a reading that is no UP without a dark drops it. Allocates nothing.
+local function cycle(j, u, k, a, F)
+    local dk = F.dark[k] or 0
+    if dk > cyT[k] then
+        local U = I.auras
+        local e, ap = U.exp0[u][j], U.applied[u][j]
+        if e <= dk or longE[k] == e or ap == cyAp[k] and e - cyE[k] < 1e-6 and cyE[k] - e < 1e-6 then
+            local obs = dk - cyT[k]
+            cyN[k], cySum[k], cyObs[k], cyMod[k] = cyN[k] + 1, cySum[k] + obs - cyD[k], obs, cyD[k]
+        end
+        cyT[k] = 0
+    elseif a ~= I.UP then
+        cyT[k] = 0
+    end
+end
+
 local function onEdge(j, u, up, t)
     if apply(j, u, up, t, true) then
         -- the aura event the client would have fired (the unit's full update): Hekili's handler forces a cycle
@@ -453,6 +521,16 @@ S.Poll(15, function(_, t)
                 apply(j, u, a == I.UP, t, false)
             end
             local k = (u - 1) * I.AURA_UNIT + j
+            local F = P.fact
+            if F and F.edge then
+                local te = F.edge[k] or 0
+                if a == I.UP and te > 0 then
+                    edgeMatch(j, u, k, te, t)
+                end
+                if cyT[k] > 0 then
+                    cycle(j, u, k, a, F)
+                end
+            end
             if a ~= I.UP and longE[k] > 0 then
                 clamp(j, u, t)
             end
@@ -477,7 +555,7 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
         if longE[k] > 0 and I.targetSlot == I.curSlot then -- a second change in one drain: the first one clamped
             clamp(j, 2, t)
         end
-        longE[k], lastE[k], lastSt[k] = 0, 0, 0
+        longE[k], lastE[k], lastSt[k], cyT[k] = 0, 0, 0, 0
     end
 end)
 
@@ -485,7 +563,9 @@ S.On("PLAYER_REGEN_DISABLED", nil, function()
     for k in pairs(facts) do
         facts[k], disagree[k], staged[k], exitFix[k] = 0, 0, 0, 0
         lastE[k], lastSt[k], longE[k] = 0, 0, 0 -- out of combat the walk answered
+        emcN[k], emcSum[k], emcLast[k], cyT[k], cyN[k], cySum[k], cyObs[k], cyMod[k] = 0, 0, 0, 0, 0, 0, 0, 0
     end
+    holdN.waits, holdN.fires = 0, 0
     anyLong, anyLast = false, false
     exiting = false
 end)
@@ -548,6 +628,29 @@ I.OnSnapshot(function(out, now)
         if tracked and #out == lines then
             out[#out + 1] = string.format("presence %s unit=- fact=unknown", KEY[j])
         end
+        for u = 1, (U.n < 2 and U.n or 2) do -- the edge (L345-L351): seeds, edges, age, edge minus cast, cycles
+            local k = (u - 1) * I.AURA_UNIT + j
+            local sN, eN = P.seedN and P.seedN[k] or 0, P.edgeN and P.edgeN[k] or 0
+            local unknown = seedAp[k] ~= 0 and seedAp[k] == U.applied[u][j] and U.exp0[u][j] > now
+            if sN + eN + emcN[k] + cyN[k] > 0 or unknown then
+                out[#out + 1] = string.format(
+                    "presence-edge %s unit=%s seeds=%d edges=%d age=%s edgeMinusCast n=%d mean=%.3f"
+                        .. " last=%.3f cycles=%d observed=%.2f modeled=%.2f diffMean=%.3f",
+                    KEY[j],
+                    u == 1 and "player" or "target",
+                    sN,
+                    eN,
+                    unknown and "unknown" or "known",
+                    emcN[k],
+                    emcN[k] > 0 and emcSum[k] / emcN[k] or 0,
+                    emcLast[k],
+                    cyN[k],
+                    cyObs[k],
+                    cyMod[k],
+                    cyN[k] > 0 and cySum[k] / cyN[k] or 0
+                )
+            end
+        end
     end
     out[#out + 1] = string.format(
         "presence covered=%d/%d unmapped=%d ambiguous=%d overflow=%d leaf=%s",
@@ -558,4 +661,8 @@ I.OnSnapshot(function(out, now)
         leaf and leaf.overflow or 0,
         P.LeafState and P.LeafState() or "on"
     )
+    if not leaf then
+        return
+    end
+    out[#out + 1] = string.format("presence-edge debounceWaits=%d debounceFires=%d", holdN.waits, holdN.fires)
 end)

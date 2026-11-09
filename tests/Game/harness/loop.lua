@@ -13,6 +13,8 @@ local drive = require("Game.harness.drive")
 local fake = require("Game.State.helpers.fake_api")
 local flicker = require("Game.harness.flicker")
 local timing = require("Game.harness.timing")
+local rng = require("Game.harness.rng")
+local edgestats = require("Game.harness.edgestats")
 
 local M = {}
 
@@ -320,6 +322,16 @@ function M.run(L, seed, o, drivers)
     local pollEv, tickEv, nextEv = {}, {}, 1
     local steps = {}
     local arm = ab.ARMS[o.arm or ab.arm()] -- o.arm: a spec's own arm (its shapes; the floors stay the env's)
+    if arm.world then -- an edge-anchor stress arm's world knobs (ab.lua), each from its own draw
+        local jit, dur, drng, scale = arm.world.castJitter, arm.world.durError, rng.new(seed + 86028121), {}
+        W.castJitter, W.jrng = jit, rng.new(seed + 49979687)
+        W.durScale = dur
+                and function(id) -- per aura and fight, the truth's duration 1 - dur or 1 + dur of the pack's
+                    scale[id] = scale[id] or (drng.next() < 0.5 and 1 - dur or 1 + dur)
+                    return scale[id]
+                end
+            or nil
+    end
     for i, d in ipairs(drivers) do
         local out = d.H.ns.Output -- the steady icons (no player setting): this instance's measurement arm
         out.steady = (steady and not d.plain) and true or false -- the oracle shadow never holds
@@ -415,6 +427,7 @@ function M.run(L, seed, o, drivers)
             hold = (hold and not d.plain) and flicker.newHold() or nil,
             layout = layout, -- the viewer arm's fight events and the next one's index (M.viewerLayout)
             li = 1,
+            edge = arm.world and layout and VI and VI.presence and edgestats.start(d.H, VI) or nil, -- a stress arm's record
         }
     end
     local errors0 = {}
@@ -496,6 +509,9 @@ function M.run(L, seed, o, drivers)
                 run.raises = run.raises + 1
             end
             queue(st.H, st.q, 3, res)
+            if st.edge then
+                edgestats.tick(st.H, st.H.ns.VirtualStateInternal, st.base + tc, tick, tc >= wo.pull)
+            end
             if st.hold then
                 flicker.hold(st.hold, st.q, o.react or M.REACT, pollEv.cast)
             end
@@ -722,6 +738,10 @@ function M.run(L, seed, o, drivers)
                 Q.ambiguous
             )
             ab.check(Q.overflow == 0, "layout", line)
+            local el = st.edge and edgestats.line(st.H, VI)
+            if el then
+                ab.check(true, "edge", who .. " seed " .. seed .. " " .. el)
+            end
         end
     end
     run.damage = 0 -- our true damage dealt (white wounds count at their land)

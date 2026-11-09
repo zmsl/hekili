@@ -609,7 +609,8 @@ function M.new(W, k)
                 if k.viewer then -- the Cooldown Manager's item shows or hides 3-5 ms later (CV §2); a partner's copy
                     -- (an aura event with another source) lights none of our items (F10, CDM-P)
                     local src = (ev.src == nil or ev.src == us) and "player" or "party1"
-                    local vk, vt = unit .. ev.aura, t + W.mrng.int(3, 5) / 1000 -- the same draw as before
+                    -- the same draw as before; viewerLag (the edge-anchor stress arms only) on both edges
+                    local vk, vt = unit .. ev.aura, t + W.mrng.int(3, 5) / 1000 + (k.viewerLag or 0)
                     if viewerLast[vk] and vt <= viewerLast[vk] then -- a set and a clear at one instant stay in order
                         vt = viewerLast[vk] + 1e-6
                     end

@@ -15,11 +15,25 @@ local S = I.Sources
 -- fact.* by k = (u - 1) * I.AURA_UNIT + j (§2.4): state (I.UP, I.DOWN or I.UNDECIDED), n (nLive of the deciding
 -- standing), agree, t (the last UNKNOWN/DOWN -> UP time), from (the deciding standing: 1 the viewer leaf, 0 none).
 -- disagree[k] and lost[k] are per fight. Preallocated for both units at activation.
-local fact = { state = {}, n = {}, agree = {}, t = {}, from = {} }
-local R =
-    { name = "router", scope = nil, covered = 0, onEdge = nil, tracked = {}, fact = fact, disagree = {}, lost = {} } -- l10n: verbatim
-local tracked, disagree, lost = R.tracked, R.disagree, R.lost
-local fState, fN, fAgree, fT, fFrom = fact.state, fact.n, fact.agree, fact.t, fact.from
+-- The edge (owner rulings L348-L351): fact.edge[k] the t of the UP change when one of the thing's slots had an edge in
+-- that sweep (lit -> dark -> lit on one unit, each seen: the leaf's eT), 0 for a SEED (any other first light: unknown
+-- age); fact.dark[k] the leaf's last dark-after-light t; seedN[k] and edgeN[k] count the UP changes per fight.
+local fact = { state = {}, n = {}, agree = {}, t = {}, from = {}, edge = {}, dark = {} }
+local R = {
+    name = "router", -- l10n: verbatim
+    scope = nil,
+    covered = 0,
+    onEdge = nil,
+    tracked = {},
+    fact = fact,
+    disagree = {},
+    lost = {},
+    seedN = {},
+    edgeN = {},
+}
+local tracked, disagree, lost, seedN, edgeN = R.tracked, R.disagree, R.lost, R.seedN, R.edgeN
+local fState, fN, fAgree, fT, fFrom, fEdge, fDark =
+    fact.state, fact.n, fact.agree, fact.t, fact.from, fact.edge, fact.dark
 local leaf, want, api0, def0, pending = nil, nil, nil, nil, false
 local edges = { up = 0, down = 0 } -- the edges passed on this fight (Snapshot)
 I.presenceEdges = edges
@@ -48,6 +62,9 @@ local function thing(k, t)
     local nLive, nUp, nNone, nStale, tUp, tNone = leaf.Counts(j, u)
     local st, agree = I.ReduceFact(nLive, nUp, nNone, nStale, tUp, tNone)
     fN[k] = nLive
+    if nUp == 0 then -- the thing is dark only once none of its slots is lit (a cycle closes on the last dark)
+        fDark[k] = leaf.darkT[k] or 0
+    end
     fFrom[k] = nLive > 0 and 1 or 0
     if fAgree[k] and not agree then
         disagree[k] = disagree[k] + 1
@@ -57,6 +74,9 @@ local function thing(k, t)
         return
     end
     fState[k] = st
+    if st ~= I.UP then
+        fEdge[k] = 0
+    end
     if st == I.UNDECIDED then
         local U = I.auras
         -- it had a fact and lost it while its record is up; (4a review m5) an in-combat rebuild may shrink the set
@@ -67,6 +87,11 @@ local function thing(k, t)
     end
     if st == I.UP then
         fT[k] = t
+        if (leaf.edgeT[k] or 0) == t then -- one of its slots had an edge in this sweep
+            fEdge[k], edgeN[k] = t, edgeN[k] + 1
+        else
+            seedN[k] = seedN[k] + 1
+        end
     end
     forward(j, u, st == I.UP, t)
 end
@@ -75,11 +100,13 @@ end
 local function clear()
     for k in pairs(fState) do
         fState[k], fN[k], fAgree[k], fT[k], fFrom[k], disagree[k], lost[k] = I.UNDECIDED, 0, true, 0, 0, 0, 0
+        fEdge[k], fDark[k], seedN[k], edgeN[k] = 0, 0, 0, 0
     end
     for j = 1, def0 and #def0.auraIds or 0 do
         for u = 1, 2 do
             local k = (u - 1) * I.AURA_UNIT + j
             fState[k], fN[k], fAgree[k], fT[k], fFrom[k], disagree[k], lost[k] = I.UNDECIDED, 0, true, 0, 0, 0, 0
+            fEdge[k], fDark[k], seedN[k], edgeN[k] = 0, 0, 0, 0
         end
     end
 end
@@ -91,7 +118,7 @@ local function drop()
         tracked[j] = false
     end
     for k in pairs(fState) do
-        fState[k], fN[k], fFrom[k] = I.UNDECIDED, 0, 0
+        fState[k], fN[k], fFrom[k], fEdge[k] = I.UNDECIDED, 0, 0, 0
     end
 end
 
@@ -206,6 +233,9 @@ end
 
 -- The viewer's sets changed (CV §3): rebuild out of combat, else at combat end (decision 89: no change mid-fight).
 local function changed(_, t)
+    if leaf and leaf.ForgetEdges then -- the data reloaded: every slot's lit/dark starts over, even while the rebuild waits
+        leaf.ForgetEdges()
+    end
     if want and I.presence == R then
         activate(t)
     end
@@ -227,14 +257,14 @@ S.On("PLAYER_TARGET_CHANGED", nil, function()
     for j = 1, def0 and #def0.auraIds or 0 do
         local k = I.AURA_UNIT + j
         if fState[k] ~= nil then
-            fState[k], fT[k] = I.UNDECIDED, 0
+            fState[k], fT[k], fEdge[k] = I.UNDECIDED, 0, 0
         end
     end
 end)
 S.On("PLAYER_REGEN_DISABLED", nil, function()
     edges.up, edges.down = 0, 0
     for k in pairs(disagree) do
-        disagree[k], lost[k] = 0, 0
+        disagree[k], lost[k], seedN[k], edgeN[k] = 0, 0, 0, 0
     end
 end)
 
