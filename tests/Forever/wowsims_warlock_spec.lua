@@ -58,15 +58,22 @@ end
 --   Destruction 0.90 -> 0.89 (0.899, 109): the rewritten list (Immolate refresh inside Incinerate's cast, new
 --   cooldowns group), A and C; top [incinerate -> life_tap 6; immolate -> life_tap 2; incinerate -> immolate 2].
 --   LIVE60 Destruction 0.2 -> 0.4 (worst idle 0.4 s at 60 with a usable ability, not traced; limit is still 6 s).
+-- Second translator lane (translator-2, R6 raises, DECISIONS on-GCD; replay flicker 0.00/min unchanged):
+--   Affliction 0.73 -> 0.83 (0.833, 60): CN14 restores the Siphon Life line (its 7 casts now in grain) and the
+--   travel-time fold shows the pre-pull Shadow Bolt; two Wrack decisions (35.77, 145.25) are lost: Siphon Life fades
+--   0.11 s after the GCD there and the engine ranks that higher line, ready 0.11 s later, over Wrack ready now.
+--   Demonology 0.86 -> 0.87 (0.872, 117) and Destruction 0.89 -> 0.90 (0.908, 109): the pre-pull Soul Fire (the
+--   travel-time fold) is shown. Shadow Brand 0.71 (0.718) unchanged: its pre-pull Shadow Bolt is shown, the
+--   corruption pre-pull line after it is not (the hardcast runs into it); no decision moved.
 -- The replay flicker ceiling (per minute, the last column): plain flicker bars, 0 in all five, measured 0.00/min (oracle
 -- 0.00) at the re-pin e2842f0a78. They say nothing about Movement: Demonology and Shadow Brand replay with it ON (R8) but
 -- every replay is single-target and the Hellfire line needs active_enemies>=3.
 local PACKS = {
-    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.73, 0.2, 0 },
+    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.83, 0.2, 0 },
     { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.78, 0.2, 0 },
-    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.86, 0.2, 0 },
+    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.87, 0.2, 0 },
     { "warlock_shadow_brand", "ShadowBrand", "Shadow Brand (wowsims.com)", 0.71, 0.2, 0 },
-    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.89, 0.4, 0 },
+    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.90, 0.4, 0 },
 }
 
 describe("the Warlock wowsims.com packs #slow #wowsims", function()
