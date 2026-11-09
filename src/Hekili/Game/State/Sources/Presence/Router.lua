@@ -19,8 +19,8 @@ local S = I.Sources
 -- that sweep (lit -> dark -> lit on one unit, each seen: the leaf's eT), 0 for a SEED (any other first light: unknown
 -- age); fact.dark[k] the leaf's last dark-after-light t; seedN[k] and edgeN[k] count the UP changes per fight.
 local fact = { state = {}, n = {}, agree = {}, t = {}, from = {}, edge = {}, dark = {} }
-local R = { -- l10n: verbatim
-    name = "router",
+local R = {
+    name = "router", -- l10n: verbatim
     scope = nil,
     covered = 0,
     onEdge = nil,
