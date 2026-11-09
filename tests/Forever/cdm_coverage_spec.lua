@@ -111,10 +111,54 @@ describe("the Cooldown Manager coverage line", function()
         assert.falsy(text:find(" of 3", 1, true), text)
     end)
 
-    it("with the Cooldown Manager off in the game options the line says how to turn it on", function()
+    it("with the Cooldown Manager off in the game options (its CVar) the line says how to turn it on", function()
         layout(3, 1)
-        ctl.viewer.available = false
-        assert.truthy(line():find("Cooldown Manager in the game options", 1, true))
+        ctl.cvars.cooldownViewerEnabled = "0" -- the feature is available, the player turned it off
+        local text = line()
+        assert.truthy(text:find("Turn on the Cooldown Manager in the game options", 1, true), text)
+        assert.falsy(text:find(" of 3", 1, true), text)
+    end)
+
+    it("not available to the player: the game's reason, never the turn-it-on advice", function()
+        layout(3, 1)
+        ctl.viewer.available, ctl.viewer.failureReason = false, "Requires level 10"
+        local text = line()
+        assert.truthy(text:find("Requires level 10", 1, true), text)
+        assert.falsy(text:find("Turn on", 1, true), text)
+        ctl.viewer.failureReason = nil -- no reason given
+        text = line()
+        assert.truthy(text:find("not available", 1, true), text)
+        assert.falsy(text:find("Turn on", 1, true), text)
+    end)
+
+    it("parity with the belief on linked, ambiguous, secret and override entries", function()
+        picked = auras(8)
+        local SECRET = require("Game.State.helpers.fake_api").SECRET
+        local id = function(i)
+            return picked[i].id
+        end
+        local infos = {
+            { spellID = id(1) }, -- covers 1
+            { linkedSpellIDs = { id(2) } }, -- covers 2 (linked)
+            { linkedSpellIDs = { id(3), id(4) } }, -- ambiguous: 3 and 4 tracked, neither covered
+            { spellID = id(5), overrideSpellID = SECRET }, -- a secret candidate: 5 tracked, not covered
+            { spellID = id(6) }, -- GetOverrideSpell names 7 too: 6 and 7 tracked, neither covered
+            { spellID = id(8) }, -- no item: tracked, uncovered
+        }
+        ctl.overrides[id(6)] = id(7)
+        for i, info in ipairs(infos) do
+            local cd = 900 + i
+            local set = ctl.viewer.sets[2]
+            set[#set + 1] = cd
+            ctl.viewer.infos[cd] = info
+            if i < #infos then
+                ctl.ViewerAura(ctl.ViewerItem("BuffIconCooldownViewer", i, cd), "player", info.spellID or id(i))
+            end
+        end
+        local n, m = belief()
+        assert.are.same({ 2, 8 }, { n, m })
+        local text = line()
+        assert.truthy(text:find("2 of 8 tracked auras", 1, true), text)
     end)
 
     it("Options code reads no belief (the border: tools/check_border.sh)", function()

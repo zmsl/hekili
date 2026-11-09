@@ -336,6 +336,7 @@ function M.run(L, seed, o, drivers)
         -- reference); the meter, which no build selects any more, written into the build's providers (harness only)
         local ctl = d.H.ctl -- a fresh world: the client's answers about it start fresh too
         local cdm = arm.viewer and not d.plain
+        local first = cdm and ctl.viewer.layout == nil -- this call builds the instance's frames (scenarios.viewerLayout)
         local layout = cdm and M.viewerLayout(d.H, arm.layout, seed, wo) or nil
         d.H.Hekili.cdmOff = not cdm
         d.H.Hekili:ProvidersChanged()
@@ -343,8 +344,8 @@ function M.run(L, seed, o, drivers)
         if VI and VI.def then -- (loop_spec's fake drivers have no belief)
             VI.def.providers.outcomes = arm.outcomes
         end
-        if cdm then -- the viewer is on from boot (no option), so its map predates this layout: the client's own
-            -- rebuild event after a layout change (Router.lua), out of combat at the next drain
+        if first and layout then -- the viewer is on from boot (no option), so its map predates the instance's first
+            -- layout: the client's data-loaded event, once (as at login; later fights reuse the frames and the map)
             d.H.Fire("COOLDOWN_VIEWER_DATA_LOADED")
         end
         if M.CDM_RULE then
@@ -719,6 +720,9 @@ function M.run(L, seed, o, drivers)
     run.errors, run.misses = 0, {}
     for i, st in ipairs(steps) do
         run.errors = run.errors + #st.H.errors - errors0[i]
+        local VI = st.H.ns.VirtualStateInternal -- the arm's Outcomes provider ran (the meter arm's write above is not
+        -- reverted by a rebuild: buildDef gives "default")
+        assert(not (VI and VI.outcomes) or VI.outcomes.name == arm.outcomes, "outcomes provider is not the arm's")
         for _, name in ipairs(headless.unexpected(st.H, "run")) do
             run.misses[#run.misses + 1] = name
         end

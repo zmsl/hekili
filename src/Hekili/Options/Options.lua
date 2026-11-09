@@ -3568,8 +3568,16 @@ found = true end
     local function CdmCoverage()
         if InCombatLockdown() then return L["Cooldown Manager coverage: updates after combat."] end
         local CV = Facade.C_CooldownViewer
-        local ok, avail = pcall( CV.IsCooldownViewerAvailable )
-        if not ok or CdmPlain( avail ) ~= true then
+        local ok, avail, reason = false, nil, nil
+        if CV and CV.IsCooldownViewerAvailable then ok, avail, reason = pcall( CV.IsCooldownViewerAvailable ) end
+        if not ok or CdmPlain( avail ) ~= true then -- not available to this player: the game's reason, no advice
+            reason = ok and CdmPlain( reason )
+            if type( reason ) == "string" and reason ~= "" then
+                return format( L["The Cooldown Manager is not available: %s"], reason )
+            end
+            return L["The Cooldown Manager is not available."]
+        end
+        if CdmPlain( GetCVar( "cooldownViewerEnabled" ) ) ~= "1" then -- available, but the player turned it off
             return L["Turn on the Cooldown Manager in the game options: it tells Hekili when your buffs and debuffs are up."]
         end
 

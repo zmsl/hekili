@@ -417,7 +417,11 @@ function M.new()
     function api.GetLocale()
         return "enUS"
     end
-    api.GetCVar, api.GetCursorInfo, api.GetActionInfo, api.GetBindingKey = none, none, none, none
+    ctl.cvars = { cooldownViewerEnabled = "1" } -- GetCVar's answers (the game options' Cooldown Manager on)
+    function api.GetCVar(name)
+        return ctl.cvars[name]
+    end
+    api.GetCursorInfo, api.GetActionInfo, api.GetBindingKey = none, none, none
     api.GetSpecializationInfoByID, api.GetStablePetInfo = none, none
     function api.GetInventoryItemID(_, slot)
         return ctl.inventory[slot]
@@ -689,7 +693,7 @@ function M.new()
     ctl.overrides = {} -- [spellID] = C_Spell.GetOverrideSpell's answer (default: the ID itself)
     api.C_CooldownViewer = {
         IsCooldownViewerAvailable = function()
-            return ctl.viewer.available
+            return ctl.viewer.available, ctl.viewer.failureReason -- (isAvailable, failureReason)
         end,
         GetCooldownViewerCategorySet = function(category, allowUnlearned)
             local set = ctl.viewer.sets[category]
