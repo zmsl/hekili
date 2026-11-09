@@ -1067,7 +1067,7 @@ describe("Forever Warrior", function()
                 end
             end
         end
-        for _, name in ipairs({ "execute_phase", "mainhand_remains", "stance_rage_kept" }) do
+        for _, name in ipairs({ "execute_phase", "mainhand_remains", "offhand_remains", "stance_rage_kept" }) do
             assert.are.equal("function", type(w.exprs[name]), name)
         end
     end)
@@ -1078,6 +1078,14 @@ describe("Forever Warrior", function()
         assert.are.equal(2, lw.run(w.exprs.mainhand_remains, e))
         e.mainhand_speed = 0
         assert.are.equal(0, lw.run(w.exprs.mainhand_remains, e))
+    end)
+    -- translator-5: Fury's Bloodrage line reads min(mainhand_remains,offhand_remains) (wowsims's MeleeAuto)
+    it("times the next off-hand swing like the main hand's; with no off-hand weapon that hand never swings", function()
+        local e = lw.env(w)
+        e.now, e.query_time, e.nextOH, e.offhand_speed = 0, 5, 1, 3
+        assert.are.equal(2, lw.run(w.exprs.offhand_remains, e))
+        e.offhand_speed = 0 -- a two-hander: wowsims's NeverExpires, so min() reads the main hand
+        assert.are.equal(3600, lw.run(w.exprs.offhand_remains, e))
     end)
     it("anchors the next swing at the evaluation out of combat, so its phase does not run with the clock", function()
         local e = lw.env(w)

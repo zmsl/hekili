@@ -32,14 +32,15 @@ end
 
 local function dry(ex, apl, root, spec)
     local r = ex.recipe(spec)
-    local player = ex.request(r, root, spec).raid.parties[1].players[1]
+    local req = ex.request(r, root, spec)
+    local player = req.raid.parties[1].players[1]
     local lf = io.open(ex.OUT .. spec .. ".log", "rb")
     local log = lf and lf:read("*a")
     if lf then
         lf:close()
     end
     local set = require("Forever.helpers.engine").abilitySet(r.class)
-    local text, omitted = apl.translate(player.rotation, apl.context(set, r, log, player))
+    local text, omitted = apl.translate(player.rotation, apl.context(set, r, log, player, req.encounter))
     local lines = 0
     for _ in text:gmatch("[^\n]+") do
         lines = lines + 1

@@ -38,10 +38,15 @@ local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true 
 -- LIVE60 4.4 -> 3.0 (measured; same cause). Flicker 0.00/min (Assassination), 1.00/min (Combat), both inside the harness ceiling.
 -- Subtlety unchanged and BLOCKED by CN16 (frontOfTarget, rogue-1.md): measured 0.670 (CN8 moved it from the 0.976 the
 -- coordinator quotes; the missing Ghostly Strike line is the cause), idle 99.6/84.8 s at L40/L60: fails until CN16 lands.
+-- Second translator lane (translator-2): Subtlety UNBLOCKED, 0.96 -> 0.98 (0.980 of 100 decisions on-GCD; was 0.670):
+-- CN16 restores the Ghostly Strike line (frontOfTarget folds to the build's behind-the-target) and the kit now applies
+-- Blood Splatter (Garrote 27 s, Rupture +6 s: wowsims's logs), so Ghostly Strike's `garrote.remains<=4` and Hemorrhage's
+-- `garrote.remains>=8` gates turn at wowsims's times; LIVE60 4.2 -> 3.6 (measured, under the 6 s bar). Assassination and
+-- Combat unchanged (0.978 / 0.991; their builds take no Ghostly Strike; Assassination's Blood Splatter moved no row).
 local PACKS = {
     { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.97, 5.2, MUTILATE_HANDS },
     { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.99, 3.0 },
-    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.96, 4.2 },
+    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.98, 3.6 },
 }
 
 describe("the Rogue wowsims.com packs #slow #wowsims", function()

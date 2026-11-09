@@ -10,11 +10,10 @@
 # Omitted: default #1: hidden
 # Omitted: default #7: hidden
 # Omitted: default #8: other OtherActionOffensivePotion
-# Omitted: default #15: targetIsMobType
+# Omitted: default #15: never: targetIsMobType is the request's target type (mechanical); the client's creature type is not read.
 # Omitted: default #25: never
 # Omitted: default #26: other OtherActionResourcePotion
 # Omitted: default #27: other OtherActionOffensivePotion
-# Omitted: default #29: autoTimeToNext
 # Omitted: default #32: hidden
 # Omitted: default #33: hidden
 # Omitted: default #34: hidden
@@ -57,6 +56,7 @@ actions+=/rend,focus=2,if=((action.battle_stance.known&prev.1.battle_stance)|(!a
 actions+=/rend,focus=2,if=(settings.wowsims_rend_weave&!execute_phase&!debuff.rend.up&rage.lo>=10)
 actions+=/berserker_stance,use_off_gcd=1,if=((!action.battle_stance.known|buff.battle_stance.up)&!((buff.overpower_ready.up&rage.lo>=5&rage.lo<=73&(!action.overpower.known|cooldown.overpower.ready))|(settings.wowsims_rend_weave&!execute_phase&(!action.rend.known|!debuff.rend.up)&rage.lo>=10)))
 actions+=/reckless_swings
+actions+=/bloodrage,use_off_gcd=1,if=((fight_remains>cooldown.bloodrage.duration&rage.lo<90)|fight_remains<2|(execute_phase&(!action.execute.known|(rage.lo+10)>=action.execute.cost)&(!action.execute.known|!action.execute.ready)&min(mainhand_remains,offhand_remains)>0.5&(!action.berserker_stance.known|buff.berserker_stance.up)))
 actions+=/berserker_rage,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known|cooldown.whirlwind.remains>=action.whirlwind.gcd)))&talent.improved_berserker_rage.enabled)
 actions+=/battle_shout,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known|cooldown.whirlwind.remains>=action.whirlwind.gcd)))&buff.battle_shout.remains<=10)
 actions+=/sunder_armor,if=!action.bloodthirst.known&debuff.sunder_armor.stack<5

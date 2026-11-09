@@ -101,8 +101,8 @@ local PACKS = {
     ["Mage/APLs/Fire"] = { "pyroblast=1", "scorch=2", "arcane_missiles=1" },
     -- the DoTs, Banes, curses and Searing Pain's Demonic Brand upkeep at 2; Shadow Bolt on Shadow Trance and Soul Fire on
     -- Decimation at 1; Affliction's first Shadow Bolt keeps Shadow Vulnerability up (2); Amplify Curse a cooldown (none)
-    -- 0.7 re-pin (e5a9cd2a2d): the rewritten build's lists; the Siphon Life line is omitted (CN14 spellIsChanneling), so
-    -- siphon_life and immolate no longer appear
+    -- 0.7 re-pin (e5a9cd2a2d): the rewritten build's lists (immolate no longer appears); the Siphon Life line is back
+    -- with CN14 (spellIsChanneling); the pre-pull Shadow Bolt (travel fold) takes no tier
     ["Warlock/APLs/Affliction"] = {
         "shadow_bolt=2",
         "shadow_bolt=1",
@@ -113,6 +113,7 @@ local PACKS = {
         "corruption=2",
         "bane_of_agony=2",
         "corruption=2",
+        "siphon_life=2",
     },
     ["Warlock/APLs/SM Ruin"] = {
         "curse_of_the_elements=2",

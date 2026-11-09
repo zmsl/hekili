@@ -9,7 +9,9 @@
 --    constants, `math` and `spellCastTime`, the kit ability's `cast` (a function read in the kit's stub state, as the
 --    pre-pull guard below; re-pin plan Task 4), so `-spellCastTime(X)` is `-<X's cast>`: a `# Deviation:` line, as
 --    wowsims folds the hasted cast; `spellGcdHastedDuration` folds the kit ability's unhasted GCD, `gcdTime` else 0 off
---    the GCD, 1 a totem, 1.5 a spell: its own `# Deviation:` line, CN4), `priorityList` -> `actions`,
+--    the GCD, 1 a totem, 1.5 a spell: its own `# Deviation:` line, CN4; `spellTravelTime` the kit ability's
+--    `flightTime`, else the request's `distanceFromTarget` over its `velocity`, else 0: wowsims's distance over the
+--    missile speed, translator-2), `priorityList` -> `actions`,
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
 --    order as first called; `valueVariables` are inlined where referenced.
 --    The pre-pull guard (owner ruling 2026-10-21: a guard against recasting, the player decides when to press): each
@@ -29,7 +31,8 @@
 --    false; entries whose action or condition uses a node the fork lacks (`schedule`, `itemSwap`, `wait`,
 --    `activeItemSwapSet`, `selectedConjured`), or whose own action is an unmapped spell, item or other ID (an unmapped
 --    read drops only its branch: rule 12); a call of a group whose every entry was omitted. Also listed: rule 12's
---    dropped reads and rule 13's unmapped cooldowns, by entry.
+--    dropped reads and rule 13's unmapped cooldowns, by entry. A `wait` stays omitted (CN19, docs/dev/wowsims-packs.md):
+--    the engine times each line at its own ready moment, so a hold only matters against a later line ready sooner.
 -- 3. Toggles: a group whose actions are all empty is a wowsims ON/OFF switch: `actionGroupUsed` of it reads
 --    `settings.wowsims_<snake of the name without " ON/OFF">`, its default on exactly when the APL's reference to it is
 --    not hidden; the class registers that setting for the spec (named "<Group> (wowsims.com)"). The header lists a
@@ -46,7 +49,8 @@
 --    content and every race's racials, as the engine merges them): a spell ID maps through the recipe's `map`, else
 --    an ability's `id` and `copy`, auras by the recipe's aura-only `auras` map ({ [aura ID] = key }: an aura wowsims
 --    keys by an ability's own spell ID, where `map` would also turn that ability's casts) then `map` then the set's
---    auras then abilities, items by an ability's `item` or `items` (the APLs at the pin that read such an aura: the
+--    auras then abilities (an ability's key only where the kit registers an aura under it: else rule 12's nil, as an
+--    unregistered `debuff.<ability>` is an unknown aura to the engine), items by an ability's `item` or `items` (the APLs at the pin that read such an aura: the
 --    CHANGELOG's central fix 13 developer note);
 --    `includeReactionTime`, `rank` and a `tag` other than -1 (rule 4) are ignored. An aura's `sourceUnit` Self (or none) reads `buff.`,
 --    CurrentTarget or Target `debuff.`; a resource's current value on the Pet (`currentMana`) reads `pet.<resource>`
@@ -104,7 +108,9 @@
 --    `|...stack<max_stack` for a stacking aura, guarded (rule 6); `cancelAura` is the action
 --    `cancel_buff,buff_name=<key>`; `autoSwingTime` MainHand / OffHand is `mainhand_speed` / `offhand_speed`;
 --    `autoSwingTime` Ranged is `ranged_speed`; `autoTimeToNext` MainHandAuto / RangedAuto is `mainhand_remains` /
---    `ranged_remains` (the kits' clocks), and a comparison on `autoTimeSinceLast` (since = speed - remains) is written
+--    `ranged_remains` (the kits' clocks), MeleeAuto `min(mainhand_remains,offhand_remains)` (wowsims's earlier hand;
+--    a hand with no weapon reads 3600 s, never) and AnyAuto that with `ranged_remains` where the kit has it
+--    (translator-5; a kit without both hand clocks: unsupported), and a comparison on `autoTimeSinceLast` (since = speed - remains) is written
 --    on the clock: `since<x` is `<hand>_remains><hand>_speed-x` (the recheck parser forecasts a clock's `<` and its `>`
 --    wrap). A variable the recipe's `windowVars` ({ [variable name] = window }) names reads that window instead (§3a:
 --    a span the kit registers, `RegisterWindow`): its comparison on a time since is `window.<w>.up&window.<w>.elapsed
@@ -266,7 +272,11 @@
 --    the Druid kit's state expression `druid_bleed_active`. Re-pin plan Task 4: `spellIsCasting` is
 --    `action.<key>.executing` when the kit ability has a cast time (its `cast` above 0 or unreadable), else false;
 --    `spellInRange` is `action.<key>.in_range` (both rule 6 guarded, rule 12 dropped); `dotIsActiveOnAllTargets` is
---    `dotIsActive` on the current target, with rule 17's `# Deviation:` line. `spellExpectedDpet` stays unsupported (no damage model: CN5, docs/dev/wowsims-packs.md), as
+--    `dotIsActive` on the current target, with rule 17's `# Deviation:` line. The second translator lane:
+--    `spellIsChanneling` is `action.<key>.channeling` for a kit ability declared `channeled`, else false (CN14);
+--    `frontOfTarget` and `targetIsMobType` are the request's constants, `inFrontOfTarget` (absent: false) and the
+--    encounter target's `mobType` (absent: unknown, every type false), each a `# Deviation:` line where its entry
+--    emits: the client gives no facing and the creature type is not read (CN16). `spellExpectedDpet` stays unsupported (no damage model: CN5, docs/dev/wowsims-packs.md), as
 --    does a class's own "on all targets" read with no recipe `select` field (rule 16's `activeAll`).
 --    CN4 (upstream's values after the pin): `auraIsActiveOnAllTargets` / `auraIsActiveOnAnyTarget` are the target's
 --    `debuff.<key>.up` and `dotIsActiveOnAnyTarget` is `dotIsActive`, each on the current target with a `# Deviation:`
@@ -425,8 +435,14 @@ end
 --- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, levelingFirst, extra,
 --- settings, exclusive, requires, guard, condition, maintenance, select, auras), the spec's exported log text `log` (rule 13; nil: the
 --- automatic actions are unsupported) and the request's player `player` (rule 16's option values).
-function M.context(set, r, log, player)
+function M.context(set, r, log, player, encounter)
+    local target = type(encounter) == "table" and type(encounter.targets) == "table" and encounter.targets[1] or {}
     local c = {
+        -- CN16 and the travel fold: the request's constants (protojson omits a zero: false, 0, MobTypeUnknown)
+        inFront = type(player) == "table" and player.inFrontOfTarget == true,
+        folds = {}, -- S4: this entry's CN16 fold texts (reset per entry), named on a `never` omission
+        distance = type(player) == "table" and tonumber(player.distanceFromTarget) or 0,
+        mobType = target.mobType,
         set = set,
         effects = {},
         autocast = log and M.autocasts(log),
@@ -598,8 +614,15 @@ local function spellKey(c, s)
     return x or unsupported(what)
 end
 
+-- An aura ID's key (rule 5): the recipe's maps, the set's auras, then an ability's key where the kit registers an aura
+-- under it (else no aura reads it: an unregistered `debuff.<ability>` is an unknown aura to the engine; rule 12's nil).
+local function auraOfId(c, id)
+    local k = c.keyOf[id]
+    return c.auraMap[id] or c.map[id] or c.auraOf[id] or (k and c.set.auras[k] ~= nil and k or nil)
+end
+
 local function auraKey(c, id)
-    return c.auraMap[id] or c.map[id] or c.auraOf[id] or c.keyOf[id] or unsupported("aura " .. tostring(id))
+    return auraOfId(c, id) or unsupported("aura " .. tostring(id))
 end
 
 local function drop(c, what) -- each ID once an entry
@@ -621,7 +644,7 @@ local function readSpell(c, s)
 end
 
 local function readAura(c, id)
-    local x = c.auraMap[id] or c.map[id] or c.auraOf[id] or c.keyOf[id]
+    local x = auraOfId(c, id)
     if not x then
         drop(c, "aura " .. tostring(id))
     end
@@ -775,6 +798,16 @@ local function folded(c, n)
         local x = spellLookup(c, v.spellId)
         c.castFolded = true -- rule 1's deviation: the kit's base cast, where wowsims folds the hasted one
         return x and castTime(c, x)
+    elseif k == "spellTravelTime" then
+        -- wowsims: the request's distance over the spell's missile speed (0 with none); the kit's flightTime or
+        -- velocity, as the engine's travel_time (State.lua), at the request's distance
+        local a = c.set.abilities[spellLookup(c, v.spellId) or ""]
+        if not a then
+            return nil
+        elseif type(a.flightTime) == "number" then
+            return a.flightTime
+        end
+        return type(a.velocity) == "number" and a.velocity > 0 and c.distance / a.velocity or 0
     elseif k == "spellGcdHastedDuration" then
         local a = c.set.abilities[spellLookup(c, v.spellId) or ""]
         if not a then
@@ -802,6 +835,17 @@ local function folded(c, n)
     end
 end
 
+-- An entry folded to never: "never", with the request constants it folded (CN16), so the header keeps the reason.
+local function never(c)
+    local seen, out = {}, {}
+    for _, d in ipairs(c.folds or {}) do
+        if not seen[d] then
+            seen[d], out[#out + 1] = true, (d:gsub("%.$", ""))
+        end
+    end
+    return #out > 0 and "never: " .. table.concat(out, "; ") .. "." or "never"
+end
+
 -- Records deviation `d` for the entry once (rule 17).
 local function deviate(c, d)
     for _, x in ipairs(c.deviations) do
@@ -821,6 +865,8 @@ local function currentTarget(k, v)
         unsupported(k .. " of " .. tostring(u))
     end
 end
+local FACING = "frontOfTarget is the request's in-front setting (%s the target); the client gives no facing."
+local MOB_TYPE = "targetIsMobType is the request's target type (%s); the client's creature type is not read."
 local PREPULL_CAST = "the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast."
 local PREPULL_GCD =
     "the pre-pull time uses the kit's unhasted GCD (1 s off the GCD, wowsims's floor); wowsims uses the hasted GCD."
@@ -1021,6 +1067,20 @@ local function value(c, n, pct)
         return "mainhand_remains", false
     elseif k == "autoTimeToNext" and v.autoType == "RangedAuto" then -- the ranged auto-shot clock (C7)
         return "ranged_remains", false
+    elseif k == "autoTimeToNext" and (v.autoType == "MeleeAuto" or v.autoType == "AnyAuto") then
+        -- translator-5: wowsims's earlier hand (NextAttackAt), AnyAuto with the ranged shot too (NextAnyAttackAt), each
+        -- the kit's clock; a hand with no weapon never swings (wowsims's NeverExpires): its clock reads 3600 s, so
+        -- min() takes the other; AnyAuto's ranged clock only where the kit has one (no ranged auto: never)
+        local clocks, hands = c.set.stateExprs or {}, { "mainhand_remains", "offhand_remains" }
+        for _, h in ipairs(hands) do
+            if not clocks[h] then
+                unsupported("autoTimeToNext " .. v.autoType .. ": the kit has no " .. h)
+            end
+        end
+        if v.autoType == "AnyAuto" and clocks.ranged_remains then
+            hands[3] = "ranged_remains"
+        end
+        return "min(" .. table.concat(hands, ",") .. ")", false
     elseif k == "autoTimeSinceLast" and SINCE[v.autoType] then -- inside math; compared, cmp's remains form
         return "(" .. SINCE[v.autoType] .. "_speed-" .. SINCE[v.autoType] .. "_remains)", false
     elseif k == "timeUntilTargetActive" then -- CN4: the current target is up while a line reads it
@@ -1319,14 +1379,29 @@ local function bool(c, n)
     elseif k == "targetIsActive" then -- CN4: the current target is up while a line reads it
         currentTarget(k, v)
         return nil, true, false
-    elseif SPELL_TEST[k] or k == "spellIsCasting" then
+    elseif SPELL_TEST[k] or k == "spellIsCasting" or k == "spellIsChanneling" then
         local x = readSpell(c, v.spellId)
         if not x then
             return nil, nil, true
         elseif k == "spellIsCasting" and castTime(c, x) == 0 then
             return nil, false, false -- an instant is never mid-cast
+        elseif k == "spellIsChanneling" and not c.set.abilities[x].channeled then
+            return nil, false, false -- CN14: only a channeled spell is ever channeling
         end
-        return (SPELL_TEST[k] or "action.%s.executing"):format(x), nil, reads(c, x)
+        local f = SPELL_TEST[k] or (k == "spellIsCasting" and "action.%s.executing" or "action.%s.channeling")
+        return f:format(x), nil, reads(c, x)
+    elseif k == "frontOfTarget" then -- CN16: the request's setting, a constant (the client gives no facing)
+        local d = FACING:format(c.inFront and "in front of" or "behind")
+        deviate(c, d)
+        c.folds[#c.folds + 1] = d -- S4: an entry this fold empties keeps the reason on its `never`
+        return nil, c.inFront, false
+    elseif k == "targetIsMobType" then -- CN16: the request's target type, a constant (creature type is not read)
+        if c.mobType then
+            local d = MOB_TYPE:format((tostring(c.mobType):gsub("^MobType", ""):lower()))
+            deviate(c, d)
+            c.folds[#c.folds + 1] = d
+        end
+        return nil, c.mobType ~= nil and v.mobType == c.mobType, false
     elseif k == "spellIsKnown" then -- wowsims: a constant, false for a spell it lacks; ours for an ID nothing resolves
         local x = spellLookup(c, v.spellId)
         if not x then
@@ -1512,7 +1587,11 @@ local entry, guard, terms
 -- Rule 7's cast line of key `x`, without its condition: off-GCD and focus flags.
 local function castBody(c, x)
     local tier = c.focus[x]
-    if type(tier) == "table" then
+    if type(tier) == "table" and c.listName == "precombat" then
+        -- a pre-pull line takes no tier and no occurrence: the list's tiers are the rotation's lines (the travel fold
+        -- put Shadow Bolt in Affliction's precombat). shortcut: a list only precombat calls still counts; none at the pin
+        tier = nil
+    elseif type(tier) == "table" then
         c.seen[x] = (c.seen[x] or 0) + 1
         tier = tier[c.seen[x]] or tier[#tier]
     end
@@ -1677,7 +1756,7 @@ local function windowed(c, a)
     local cond = a.condition and condition(c, a.condition)
     c.ownSeq = nil
     if cond == false then
-        return nil, "never"
+        return nil, never(c)
     end
     local bad = cond and unreadable(cond)
     if bad then
@@ -1778,7 +1857,7 @@ function entry(c, e)
             end
         end
         if #out == 0 then
-            return nil, "never"
+            return nil, never(c)
         end
         return out
     elseif kind == "groupReference" then
@@ -1811,7 +1890,7 @@ function entry(c, e)
     end
     local cond = a.condition and condition(c, a.condition)
     if cond == false and c.condition[key] == nil then -- L11: a recipe condition replaces an APL one that folds false
-        return nil, "never"
+        return nil, never(c)
     end
     if seq then
         return sequence(c, seq, cond, a.condition)
@@ -2456,7 +2535,7 @@ function M.translate(rotation, c)
             elseif type(when) == "string" then
                 omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, when)
             else
-                c.notes, c.dropped, c.deviations, c.moves = {}, {}, {}, {}
+                c.notes, c.dropped, c.deviations, c.moves, c.folds = {}, {}, {}, {}, {}
                 c.entryNo, c.ownSeq = i, nil
                 if at and castAt[i] then
                     deviate(c, PREPULL_CAST)
@@ -2696,7 +2775,7 @@ function M.write(spec, ex)
         lf:close()
     end
     local player = req.raid.parties[1].players[1]
-    local text, omitted, toggles, header = M.translate(player.rotation, M.context(set, r, log, player))
+    local text, omitted, toggles, header = M.translate(player.rotation, M.context(set, r, log, player, req.encounter))
     local Class = r.class:sub(1, 1) .. r.class:sub(2):lower()
     local out = {
         ("# %s: the wowsims/forever default APL for %s (%s), translated to this addon's keys."):format(

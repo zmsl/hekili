@@ -214,8 +214,8 @@ end
 
 M.newRequest = newRequest -- tests/Forever/wowsims_siml_spec.lua
 
-local function translate(apl, set, r, log, player)
-    local text, omitted = apl.translate(player.rotation, apl.context(set, r, log, player))
+local function translate(apl, set, r, log, player, encounter)
+    local text, omitted = apl.translate(player.rotation, apl.context(set, r, log, player, encounter))
     return text, omitted
 end
 
@@ -279,7 +279,7 @@ function M.spec(ctx, spec)
     emit("\n### Pack lines (translator on both revs)")
     local set = require("Forever.helpers.engine").abilitySet(r.class)
     local log = slurp(ex.OUT .. spec .. ".log")
-    local ok, old, oldOmit = pcall(translate, apl, set, r, log, player)
+    local ok, old, oldOmit = pcall(translate, apl, set, r, log, player, req.encounter)
     if not ok then
         emit("- pin translation error: %s", tostring(old))
         old = nil
@@ -303,8 +303,9 @@ function M.spec(ctx, spec)
         if pa.talentsString ~= pb.talentsString then
             emit("- request talents differ: `%s` -> `%s`", tostring(pa.talentsString), tostring(pb.talentsString))
         end
-        local oka, ta, oa = pcall(translate, apl, set, r, log, pa)
-        local okb, tb, ob = pcall(translate, apl, set, r, log, pb)
+        -- the encounter is export.lua's M.ENCOUNTER on every side: the checked-in request's
+        local oka, ta, oa = pcall(translate, apl, set, r, log, pa, req.encounter)
+        local okb, tb, ob = pcall(translate, apl, set, r, log, pb, req.encounter)
         if not (oka and okb) then
             emit("- TRANSLATION ERROR: %s", tostring(oka and tb or ta))
         else

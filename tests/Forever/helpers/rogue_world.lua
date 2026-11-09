@@ -131,8 +131,9 @@ M.MAP = {
         effect = function(W, e, _, X)
             drop(W, e, X, "ghostly_strike_next")
             if W.hit(e, e.target, nil, 1).act == "WOUND" then
-                aura(W, X, e.target, "garrote")
-                W.dot(e, e.target, 3, 6, 50, 1)
+                -- Blood Splatter (1329256): +9 s, three more 3 s ticks (wowsims's logs: 27 s)
+                aura(W, X, e.target, "garrote", 18 + 9 * X.bs)
+                W.dot(e, e.target, 3, 6 + 3 * X.bs, 50, 1)
             end
         end,
         points = 1,
@@ -163,8 +164,8 @@ M.MAP = {
     },
     rupture = finisher(function(W, e, cp, X)
         if W.hit(e, e.target, nil, 1).act == "WOUND" then
-            aura(W, X, e.target, "rupture", 6 + 2 * cp)
-            W.dot(e, e.target, 2, 3 + cp, 60, 1)
+            aura(W, X, e.target, "rupture", 6 + 2 * cp + 6 * X.bs) -- Blood Splatter: +6 s, three more 2 s ticks
+            W.dot(e, e.target, 2, 3 + cp + 3 * X.bs, 60, 1)
         end
     end),
     expose_armor = finisher(function(W, e, _, X)
@@ -252,14 +253,14 @@ local PACKS = {
         uptime = { "rupture", "garrote" },
     },
     -- Asn Muti: Efficient Strikes 2, Improved Slice and Dice 3, Relentless Strikes 5, Flawless Execution, Cold Blood,
-    -- Mutilate, Venom.
+    -- Mutilate, Venom, Blood Splatter (Garrote and Rupture longer: the kit reads it).
     Assassination = {
         kit = kit({ "mutilate", "cold_blood" }),
-        talents = { [13732] = 2, [14165] = 3, [14179] = 5, [1310711] = 1, [1329328] = 1 },
+        talents = { [13732] = 2, [14165] = 3, [14179] = 5, [1310711] = 1, [1329328] = 1, [1329256] = 1 },
         uptime = { "rupture", "garrote" },
     },
     -- Subtlety Hemo: Efficient Strikes 2, Improved Slice and Dice 3, Setup 3, Dirty Deeds 2, Hemorrhage, Premeditation,
-    -- Preparation, Ghostly Strike, Death Mark (no Cold Blood, no Relentless Strikes).
+    -- Preparation, Ghostly Strike, Death Mark, Blood Splatter (no Cold Blood, no Relentless Strikes).
     Subtlety = {
         kit = kit({ "hemorrhage", "premeditation", "preparation", "ghostly_strike", "death_mark" }),
         talents = {
@@ -272,6 +273,7 @@ local PACKS = {
             [14185] = 1,
             [14278] = 1,
             [1316709] = 1,
+            [1329256] = 1,
         },
         uptime = { "rupture", "hemorrhage" },
     },
@@ -297,6 +299,7 @@ local function classData(H)
     X.fos = talent.flash_of_steel.rank or 0
     X.venom = talent.venom.enabled == true
     X.isnd = talent.improved_slice_and_dice.rank or 0
+    X.bs = talent.blood_splatter.rank or 0
     return X
 end
 

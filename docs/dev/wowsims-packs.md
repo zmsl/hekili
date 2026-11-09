@@ -234,8 +234,10 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 
 1. One line per entry; `prepullActions` -> `actions.precombat`, in wowsims's `doAtValue` order (earliest first); groups
    -> called lists; variables inlined. Omits a prepull entry with no constant `doAtValue` or one after the pull (a time folds from
-   constants, `math`, the kit's base cast time and its unhasted GCD, each a `# Deviation:` line; a spell's travel time
-   does not fold yet: blocker note translator-2). Each
+   constants, `math`, the kit's base cast time and its unhasted GCD, each a `# Deviation:` line, and a spell's travel
+   time: the request's `distanceFromTarget` over the kit's `velocity`, its `flightTime` if it has one, 0 with neither, as
+   wowsims's distance over missile speed; translator-2: the Warlocks' Shadow Bolt / Soul Fire opener: a hardcast with
+   no aura of its own gets no guard, so in game it shows until cast and the pre-pull line after it waits). Each
    pre-pull cast (precombat and the lists only it calls) gets a guard against recasting, a mechanical derivation from
    its ability's handler (recorded once): its own aura `!buff.<key>.up` / `!debuff.<key>.up` (none when the aura's
    duration is at most the cooldown: Bloodrage), its totem `!totem.<element>.up`, else none (Charge); a mutually
@@ -247,7 +249,9 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 3. An all-empty group is an ON/OFF switch: `settings.wowsims_<name>`, its wowsims default; the header lists it only
    when an emitted line reads it (ruling L14), and the class registers exactly those (with the recipe's `settings`).
 4. `auraIsKnown`: a talent's `enabled`, an ability's `known`, else `true`; another unit's or player's aura is false.
-5. Keys from the character's ability set (kit, shared, every race): `map`, `auras`, then the set. Ignores
+5. Keys from the character's ability set (kit, shared, every race): `map`, `auras`, then the set (an ability's key
+   reads as an aura only where the kit registers an aura under it, else rule 12's nil: Enhancement's Stormstrike
+   debuff 17364). Ignores
    `includeReactionTime`, `rank` and tags.
 6. The leveling guard: a read of an unlearned ability is wowsims's nil and drops its term, as wowsims's nil
    propagation does; `tools/check_pack_levels.lua` checks every pack for it. `min` / `max` values are the engine's
@@ -279,6 +283,24 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
     setting term. Unsupported: an "is" with no field (protojson's zero value) or an unknown option value.
 17. `multidot`: the DoT's cast while its DoT has at most `maxOverlap` left, on the current target only (`maxDots` is
     a `# Deviation:` header line per entry; no `cycle_targets`: other targets' DoTs are not readable on Forever).
+
+The second translator lane (0.7): `spellIsChanneling` is `action.<key>.channeling` for a kit ability declared
+`channeled`, false for any other (CN14: Affliction's Siphon Life line); `frontOfTarget` and `targetIsMobType` fold to
+the request's constants, `inFrontOfTarget` (absent: false, behind the target) and the encounter target's `mobType`
+(absent: unknown, so every type test is false), each a `# Deviation:` line where its entry emits, since the client gives
+no facing and the target's creature type is not read (CN16: Subtlety's Ghostly Strike, Fury's Dragonkin/Giant Spearing
+Strike weave, which folds false on the Mechanical target); `autoTimeToNext` MeleeAuto is `min(mainhand_remains,
+offhand_remains)` and AnyAuto adds `ranged_remains` where the kit registers it (translator-5: Fury's Bloodrage,
+Enhancement's AoE Chain Lightning; a hand with no weapon reads 3600 s, never; a kit without both hand
+clocks leaves the entry unsupported). The weave's `wait` rows stay omitted (CN19): a `wait X if C` holds wowsims's
+rotation for X, but the engine already times each line at its own ready moment, so a hold for the GCD (weave #2) is
+what it does anyway, and a hold for Strider Kick (weave #3) only matters against a line below it in wowsims's order
+that is ready sooner: those are the move arms of weave #4/#5 (with the Movement toggle on), which rule 19 places at
+the weave call, where its held-gate carry (lines whose entry comes after the call) does not reach; a hold would need
+that carry extended. The display difference
+the re-pin triage found (Immolation Trap shown where wowsims kicks, repin-triage-report.md case 1) is not reproduced
+by a hold: the trap's own line ranks above the weave, so its cause is untraced (the walk-in Hekili does not forecast is
+the candidate); a deferral, revisited with a traced tick.
 
 Upstream's newer values (CN4): the "on all/any targets" aura and DoT reads are the current target's, each a
 `# Deviation:` line; of the current target, "is active" is true, "time until active" 0 and "time until it dies"

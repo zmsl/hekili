@@ -217,6 +217,24 @@ describe("Forever Rogue", function()
         end
     )
 
+    -- Blood Splatter (1329256, DB2 effects: duration +9000 ms on Garrote's class mask 256, +6000 ms on Rupture's 1048576;
+    -- wowsims's logs: Garrote 27 s in Assassination and Subtlety, a 3-point Rupture 18 s in Subtlety)
+    it("lengthens Garrote by 9 s and Rupture by 6 s with Blood Splatter", function()
+        local function run(key, cp, field, n)
+            local env = ld.env(w)
+            env.talent = rank(n)
+            env.combo_points.current = cp
+            ld.run(w.abilities[key][field], env)
+            return env.durations
+        end
+        for _, field in ipairs({ "now", "handler" }) do
+            assert.are.equal(18, run("garrote", 0, field, 0).garrote, field)
+            assert.are.equal(27, run("garrote", 0, field, 1).garrote, field)
+            assert.are.equal(12, run("rupture", 3, field, 0).rupture, field)
+            assert.are.equal(18, run("rupture", 3, field, 1).rupture, field)
+        end
+    end)
+
     it("opens from Stealth, Vanish or a Ghostly Strike, the opener breaking them", function()
         local function usable(key, up)
             local env = ld.env(w)

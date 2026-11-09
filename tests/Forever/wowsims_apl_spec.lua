@@ -2,7 +2,7 @@
 -- wowsims/forever's JSON shape (MIT) with a stand-in class context.
 local apl = require("tools.wowsims.apl")
 
-local function ctx(r, player)
+local function ctx(r, player, encounter)
     local kit = {
         abilities = {
             strike = { key = "strike", id = 100, copy = { 101 }, gcd = "spell" },
@@ -18,6 +18,8 @@ local function ctx(r, player)
                     return 6
                 end,
             },
+            drain = { key = "drain", id = 700, cast = 5, channeled = true, gcd = "spell" },
+            bolt = { key = "bolt", id = 800, cast = 2.5, velocity = 20, gcd = "spell" },
             trinket = { key = "trinket", id = -1, item = 555, gcd = "off" },
             stone = { key = "stone", id = -2, items = { 556, 557 }, gcd = "off" },
         },
@@ -30,7 +32,7 @@ local function ctx(r, player)
         },
         talents = { furious = { 2, 900, 1 }, cuts = { 1, 950, 1 } },
     }
-    return apl.context(kit, r or { executePhase = "execute_phase", focus = { strike = 1 } }, nil, player)
+    return apl.context(kit, r or { executePhase = "execute_phase", focus = { strike = 1 } }, nil, player, encounter)
 end
 local function cast(id, cond)
     return { action = { castSpell = { spellId = { spellId = id } }, condition = cond } }
@@ -1495,8 +1497,10 @@ describe("the wowsims APL translator", function()
             local hit = { auraIsActive = { auraId = { spellId = 200 } } } -- wowsims's window aura under big_hit's own ID
             local rot =
                 { priorityList = { cast(200, hit), cast(100, { auraIsKnown = { auraId = { spellId = 200 } } }) } }
+            -- no aura registered under big_hit: an ability's key is an aura read only where the kit has that aura
+            -- (rule 12's nil, its branch dropped); its auraIsKnown stays the ability's known test (rule 4)
             assert.are.equal(
-                "actions=big_hit,if=buff.big_hit.up\nactions+=/strike,focus=1,if=action.big_hit.known",
+                "actions=big_hit\nactions+=/strike,focus=1,if=action.big_hit.known",
                 (apl.translate(rot, ctx({ focus = { strike = 1 } })))
             )
             assert.are.equal( -- the cast is still big_hit; the aura reads stance (registered: known, true)
@@ -1904,7 +1908,7 @@ describe("the wowsims APL translator's casting, range, curse and cast-time pre-p
                 at(300, "-10s"),
                 at(200, mul({ math = { op = "OpAdd", lhs = castTime(500), rhs = castTime(600) } }, "-1")), -- -9
                 at(400, mul(castTime(100), "-1")), -- an instant: at the pull
-                at(500, mul(spell("spellTravelTime", 600), "-1")), -- no kit constant
+                at(500, mul(spell("spellTravelTime", 600), "-1")), -- no velocity: wowsims's 0 s travel, at the pull
                 at(500, mul(castTime(999), "-1")), -- an unresolved spell
             },
         }, ctx())
@@ -1915,11 +1919,11 @@ describe("the wowsims APL translator's casting, range, curse and cast-time pre-p
                 "actions.precombat+=/pyroblast",
                 "actions.precombat+=/strike",
                 "actions.precombat+=/dot",
+                "actions.precombat+=/starfire",
             }, "\n"),
             text
         )
         assert.are.same({
-            "precombat #6: doAtValue not a constant",
             "precombat #7: doAtValue not a constant",
         }, omitted)
     end)
@@ -2828,5 +2832,181 @@ describe("the wowsims APL translator's recipe keys", function()
         assert.has_error(function()
             apl.translate(rotation, ctx({ windowVars = { ["Just shot"] = "weave" } }))
         end, "windowVars: no Just shot read")
+    end)
+end)
+
+describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel-time fold)", function()
+    local function spell(k, id)
+        return { [k] = { spellId = { spellId = id } } }
+    end
+    local function one(cond, player, encounter)
+        return apl.translate({ priorityList = { cast(100, cond) } }, ctx({}, player, encounter))
+    end
+    local inRange = spell("spellInRange", 100)
+    local FACING = "frontOfTarget is the request's in-front setting (behind the target); the client gives no facing."
+
+    -- CN16 (rogue-1.md): Ghostly Strike's `not frontOfTarget | Dirty Deeds Known`
+    it("frontOfTarget folds to the request's inFrontOfTarget (absent: false, behind), noted", function()
+        local text, omitted, _, header = one(AND(NOT({ frontOfTarget = {} }), inRange))
+        assert.are.equal("actions=strike,if=action.strike.in_range", text)
+        assert.are.same({}, omitted)
+        assert.are.same({ "# Deviation: default #1: " .. FACING }, header)
+        local text2, omitted2 = one(AND(NOT({ frontOfTarget = {} }), inRange), { inFrontOfTarget = true })
+        assert.are.equal("", text2)
+        assert.are.same({
+            "default #1: never: frontOfTarget is the request's in-front setting (in front of the target);"
+                .. " the client gives no facing.",
+        }, omitted2)
+        local _, _, _, header3 = one(AND({ frontOfTarget = {} }, inRange), { inFrontOfTarget = true })
+        assert.are.same({
+            "# Deviation: default #1: frontOfTarget is the request's in-front setting (in front of the target);"
+                .. " the client gives no facing.",
+        }, header3)
+    end)
+
+    -- CN16 (warrior-2.md): Fury #15's Spearing Strike weave for Dragonkin or Giants
+    it("targetIsMobType folds against the request's target mob type, noted; no encounter: unknown", function()
+        local enc = { targets = { { mobType = "MobTypeGiant" } } }
+        local dragon = { targetIsMobType = { mobType = "MobTypeDragonkin" } }
+        local giant = { targetIsMobType = { mobType = "MobTypeGiant" } }
+        local text, omitted, _, header = one(AND(OR(dragon, giant), inRange), nil, enc)
+        assert.are.equal("actions=strike,if=action.strike.in_range", text)
+        assert.are.same({}, omitted)
+        assert.are.same({
+            "# Deviation: default #1: targetIsMobType is the request's target type (giant); the client's creature"
+                .. " type is not read.",
+        }, header)
+        local text2, omitted2 = one(AND(OR(dragon, giant), inRange), nil, {
+            targets = { { mobType = "MobTypeMechanical" } },
+        })
+        assert.are.equal("", text2)
+        assert.are.same({
+            "default #1: never: targetIsMobType is the request's target type (mechanical); the client's"
+                .. " creature type is not read.",
+        }, omitted2)
+        local text3, omitted3 = one(AND(dragon, inRange)) -- protojson's zero: MobTypeUnknown
+        assert.are.equal("", text3)
+        assert.are.same({ "default #1: never" }, omitted3)
+    end)
+
+    -- CN14 (lane-warlock-report.md): Affliction's Siphon Life `not spellIsChanneling(Wrack)`
+    it("spellIsChanneling is the ability's channeling for a channeled spell, false otherwise, guarded", function()
+        assert.are.equal(
+            "actions=strike,if=(!action.drain.known|!action.drain.channeling)",
+            (one(NOT(spell("spellIsChanneling", 700))))
+        )
+        local text = apl.translate({ priorityList = { cast(700, spell("spellIsChanneling", 700)) } }, ctx({}))
+        assert.are.equal("actions=drain,if=action.drain.channeling", text)
+        assert.are.equal("actions=strike", (one(NOT(spell("spellIsChanneling", 500))))) -- a hard cast: never
+        assert.are.equal("actions=strike", (one(NOT(spell("spellIsChanneling", 100))))) -- an instant: never
+        local text2, omitted = one(spell("spellIsChanneling", 999))
+        assert.are.equal("actions=strike", text2)
+        assert.are.same({ "default #1: dropped the unresolved spell 999 (its branch only)" }, omitted)
+    end)
+
+    -- the travel fold puts Shadow Bolt in Affliction's precombat: its per-occurrence tiers are the role lines'
+    it("a recipe's per-occurrence focus tiers count the rotation's lines, not a pre-pull one", function()
+        local pre = cast(200)
+        pre.doAtValue = const("-1s")
+        local text = apl.translate(
+            { prepullActions = { pre }, priorityList = { cast(200), cast(100), cast(200) } },
+            ctx({ focus = { big_hit = { 1, 2 } } })
+        )
+        assert.are.equal(
+            "actions.precombat=big_hit\nactions=big_hit,focus=1\nactions+=/strike\nactions+=/big_hit,focus=2",
+            text
+        )
+    end)
+
+    -- Enhancement's AoE line reads Stormstrike's debuff (17364), which the Shaman kit does not register: the ID resolves
+    -- to the ability's key, and `debuff.stormstrike.up` was an unknown aura (shaman_spec's registered-names check)
+    it("reads an aura through an ability's key only where the kit registers that aura; else rule 12's nil", function()
+        local function on(id)
+            return { auraIsActive = { auraId = { spellId = id }, sourceUnit = { type = "CurrentTarget" } } }
+        end
+        local text, omitted = one(AND(on(200), inRange))
+        assert.are.equal("actions=strike,if=action.strike.in_range", text)
+        assert.are.same({ "default #1: dropped the unresolved aura 200 (its branch only)" }, omitted)
+        assert.are.equal("actions=strike,if=(!action.dot.known|debuff.dot.up)", (one(on(400)))) -- dot: both
+    end)
+
+    -- translator-5.md: Fury #29's Bloodrage (MeleeAuto) and Enhancement's AoE Chain Lightning (AnyAuto)
+    it(
+        "autoTimeToNext MeleeAuto / AnyAuto is the min of the kit's hand clocks (AnyAuto: and its ranged one)",
+        function()
+            local function auto(t)
+                return cmp("OpGt", { autoTimeToNext = { autoType = t } }, const("0.5s"))
+            end
+            local c = ctx({})
+            c.set.stateExprs = { mainhand_remains = true, offhand_remains = true }
+            local function at(t)
+                return (apl.translate({ priorityList = { cast(100, auto(t)) } }, c))
+            end
+            assert.are.equal("actions=strike,if=min(mainhand_remains,offhand_remains)>0.5", at("MeleeAuto"))
+            assert.are.equal("actions=strike,if=min(mainhand_remains,offhand_remains)>0.5", at("AnyAuto")) -- no ranged clock
+            c.set.stateExprs.ranged_remains = true
+            assert.are.equal(
+                "actions=strike,if=min(mainhand_remains,offhand_remains,ranged_remains)>0.5",
+                at("AnyAuto")
+            )
+            c.set.stateExprs = { mainhand_remains = true } -- a kit with no off-hand clock: unsupported, as before
+            local text, omitted = apl.translate({ priorityList = { cast(100, auto("MeleeAuto")) } }, c)
+            assert.are.equal("", text)
+            assert.are.same({ "default #1: autoTimeToNext MeleeAuto: the kit has no offhand_remains" }, omitted)
+        end
+    )
+
+    -- translator-2.md: the Warlocks' `-0.9 * (cast + travel)` pre-pull opener
+    it("a doAtValue folds a spell's travel time as the request's distance over the kit's velocity", function()
+        local function at(id, v)
+            local e = cast(id)
+            e.doAtValue = v
+            return e
+        end
+        local opener = {
+            math = {
+                op = "OpMul",
+                lhs = {
+                    math = { op = "OpAdd", lhs = spell("spellCastTime", 800), rhs = spell("spellTravelTime", 800) },
+                },
+                rhs = const("-0.9"),
+            },
+        }
+        local rot = {
+            prepullActions = {
+                at(200, const("-2.5s")), -- between: -(2.5 + 20/20) * 0.9 = -3.15 at 20 yd, -2.25 at 0 yd
+                at(800, opener),
+                at(100, { math = { op = "OpMul", lhs = spell("spellTravelTime", 100), rhs = const("-1") } }),
+            },
+        }
+        local text, omitted, _, header = apl.translate(rot, ctx({}, { distanceFromTarget = 20 }))
+        assert.are.equal(
+            table.concat({
+                "actions.precombat=bolt",
+                "actions.precombat+=/big_hit",
+                "actions.precombat+=/strike", -- no velocity: wowsims's 0 s travel, at the pull
+            }, "\n"),
+            text
+        )
+        assert.are.same({}, omitted)
+        assert.are.same({
+            "# Deviation: precombat #2: the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast.",
+        }, header)
+        local c = ctx({}, { distanceFromTarget = 20 })
+        c.set.abilities.bolt.flightTime = 0.5 -- a kit flight time wins over distance / velocity
+        assert.are.equal( -- -(2.5 + 0.5) * 0.9 = -2.7: still before big_hit's -2.5
+            "actions.precombat=bolt\nactions.precombat+=/big_hit\nactions.precombat+=/strike",
+            (apl.translate(rot, c))
+        )
+        c.set.abilities.bolt.flightTime = 0 -- -(2.5 + 0) * 0.9 = -2.25: after big_hit (distance / velocity unused)
+        assert.are.equal(
+            "actions.precombat=big_hit\nactions.precombat+=/bolt\nactions.precombat+=/strike",
+            (apl.translate(rot, c))
+        )
+        c.set.abilities.bolt.flightTime = nil
+        assert.are.equal( -- protojson omits a 0 distance: the travel time is 0
+            "actions.precombat=big_hit\nactions.precombat+=/bolt\nactions.precombat+=/strike",
+            (apl.translate(rot, ctx({})))
+        )
     end)
 end)
