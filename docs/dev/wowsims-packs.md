@@ -294,7 +294,9 @@ Enhancement's AoE Chain Lightning; a hand with no weapon reads 3600 s, never; a 
 clocks leaves the entry unsupported). The weave's `wait` rows stay omitted (CN19): a `wait X if C` holds wowsims's
 rotation for X, but the engine already times each line at its own ready moment, so a hold for the GCD (weave #2) is
 what it does anyway, and a hold for Strider Kick (weave #3) only matters against a line below it in wowsims's order
-that is ready sooner, and none follows it (the move arms stand at the weave call, rule 19). The display difference
+that is ready sooner: those are the move arms of weave #4/#5 (with the Movement toggle on), which rule 19 places at
+the weave call, where its held-gate carry (lines whose entry comes after the call) does not reach; a hold would need
+that carry extended. The display difference
 the re-pin triage found (Immolation Trap shown where wowsims kicks, repin-triage-report.md case 1) is not reproduced
 by a hold: the trap's own line ranks above the weave, so its cause is untraced (the walk-in Hekili does not forecast is
 the candidate); a deferral, revisited with a traced tick.

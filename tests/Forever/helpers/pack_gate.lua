@@ -81,9 +81,9 @@ M.FLICKER = {
     -- to the swing time itself: the off-hand forecast is the named class, not measured per event. heldReady/flicker keep their rows
     -- translator-2 (autoTimeToNext: the Bloodrage line), seeds 1-20: readyShort 20 -> 26; every event traced (25 of 25,
     -- base 19 of 19) is the class above, Bloodthirst 12 / Whirlwind 13 shown ready a few rage short on a forecast swing,
-    -- on fights Bloodrage's rage re-times; heldReady 129 -> 150 inside its bar; retracted 0.2 -> 0.21 (0.16 -> 0.20x/min,
-    -- the oracle 0.26 -> 0.47 on the same fights): the flicker ledger's credit/cost class, bloodthirst 3 + whirlwind 3
-    -- (base 1 + 2), the same forecast-swing credit
+    -- on fights Bloodrage's rage re-times; heldReady 129 -> 150 inside its bar; retracted 0.2 -> 0.21 (measured 0.16 ->
+    -- 0.20 printed, over the 0.2 bar; the oracle 0.26 -> 0.47 on the same fights): the flicker ledger classes all six
+    -- credit/cost (bloodthirst 3 + whirlwind 3; base 1 + 2), the forecast-swing credit; classified, not traced per event
     ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.21, readyShort = 26, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
