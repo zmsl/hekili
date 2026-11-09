@@ -361,10 +361,6 @@ local function CreateButton( dispID, id )
         b.Targets:SetText( nil )
         b.Targets:SetText( tText )
 
-        -- Aura Counter
-        -- Disabled for Now
-
-
         -- Delay Counter
         b.DelayText = b.DelayText or b:CreateFontString( bName .. "_DelayText", "OVERLAY" )
 

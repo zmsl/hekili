@@ -64,8 +64,6 @@ local function calculateFrameBudget()
     -- Apply user percentage directly to frame time
     local userBudget = frameTime * frameBudget
 
-    -- Debug output
-
     return userBudget
 end
 

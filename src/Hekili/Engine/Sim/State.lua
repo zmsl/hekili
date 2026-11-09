@@ -2266,8 +2266,6 @@ do
                 -- So the reason we're stuck here is that we may need "cycle_enemies" when we *aren't* cycling targets.
                 -- I.e., we would cycle Festering Strike (festering_wound) but if we've already dotted our valid adds, we'd hit Death and Decay.
 
-                -- testing: don't force minimum targets for cycling purposes, since they may objectively not exist.
-
                 -- cap cycle_targets if forced into single-target model.
                 if t.max_targets > 0 then targets = min( t.max_targets, targets ) end
 
@@ -2494,16 +2492,10 @@ do
                 value = app and app[ k ]
                 if value ~= nil then return value end
 
-                -- This uses the default aura duration (if available) to keep pandemic windows accurate.
-
-                -- This allows for overridden tick times on a particular application of an aura (i.e., Exsanguinate).
-
                 if k == "up" or k == "ticking" then return false
                 elseif k == "down" then return true
                 elseif k == "duration" then return ( aura.duration or 15 )
                 elseif k == "refreshable" then return true
-                    -- When cycling targets, we want to consider that there may be a valid other target.
-
                 elseif k == "remains" then return 0
                 elseif k == "tick_time" then return aura.tick_time or ( 3 * state.haste )
                 elseif k == "tick_time_remains" then return 0

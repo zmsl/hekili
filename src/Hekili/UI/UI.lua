@@ -1212,8 +1212,6 @@ do
                 self:SetScript( "OnEvent", self.OnEvent )
 
                 if not self.Initialized then
-                    -- Update Cooldown Wheels.
-
                     -- Show/Hide Overlay Glows.
                     self:RegisterEvent( "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW" )
                     self:RegisterEvent( "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE" )
