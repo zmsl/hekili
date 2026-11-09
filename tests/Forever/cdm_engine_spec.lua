@@ -1,6 +1,6 @@
 -- tests/Forever/cdm_engine_spec.lua (cdm-default plan Tasks 4b and 8; 4b review m4): the Cooldown Manager facts through
 -- the whole engine, on the Arms loop world with the viewer arms' layouts (scenarios.viewerLayout): an item that flaps,
--- a layout re-mapped mid-fight, a target swap, and refreshes before expiry with the item one poll late (D14, I-B). Each
+-- a layout re-mapped mid-fight, a target swap, refreshes before expiry one poll late (I-B) and D14's worst case. Each
 -- compares a fight with the viewer to the same seed without it (or without the event), per tick.
 local loop = require("Game.harness.loop")
 local ww = require("Forever.helpers.warrior_world")
@@ -97,6 +97,8 @@ local function fight(arm, seed, keys, act, content)
     return r
 end
 
+local FLIP =
+    "DEFECT %s NO LONGER REPRODUCES: the belief was fixed? Flip this test to assert the fixed behaviour (cdm-task8-report.md)"
 local KEYS = { { "battle_shout", "player" }, { "rend", "target" }, { "sunder_armor", "target" } }
 
 describe("Cooldown Manager facts through the engine #slow", function()
@@ -165,48 +167,46 @@ describe("Cooldown Manager facts through the engine #slow", function()
         end
     end)
 
-    -- CDM Task 8 FINDING F1 (cdm-task8-report.md), a belief defect this harness found, kept visible as pending until a
-    -- belief task fixes it: back on mob 1 at 40 s, the item re-read gives fact.t 40.2 (4b's I1 reset), so near the end of
+    -- CDM Task 8 FINDING F1 (cdm-task8-report.md), a belief defect this harness found, pinned as PRESENT (review m1: a
+    -- pending body never runs) until a belief task fixes it and flips this test: back on mob 1 at 40 s, the item re-read gives fact.t 40.2 (4b's I1 reset), so near the end of
     -- our old Sunder Armor (applied 18.6) the hold re-stages it from 40.2 for a full 30 s (est 70.2), and the item's NONE
     -- at 48.6 cannot close it (`ours` did not survive the swaps): seed 2, 72 ticks of false UP, 0 with the viewer off.
-    pending(
-        "a target swap: the viewer adds no false UP on the mob we come back to (F1: fails at seed 2, 72 > 0)",
+    it("KNOWN DEFECT F1: a target swap back adds false UP on the mob we return to (seed 2; flip when fixed)", function()
+        local off = fight("default", 2, KEYS, nil, swaps())
+        local on = fight("viewer-buffs", 2, KEYS, nil, swaps())
+        local msg = ("%s (false UP %d vs %d off)"):format(FLIP:format("F1"), on.falseUp, off.falseUp)
+        assert.is_true(on.falseUp > off.falseUp, msg)
+    end)
+
+    -- Not a D14 test (review m2): the faithful fake keeps a refresh held, so REFRESH_LAG is never exercised here (a
+    -- mutation removing it passes); the worst-case shape below is the D14 one.
+    it(
+        "refreshes before expiry, the item one poll late (I-B, not D14): no wrong DOWN the model alone does not make",
         function()
-            for _, seed in ipairs({ 1, 2, 3 }) do
-                local off = fight("default", seed, KEYS, nil, swaps())
-                local on = fight("viewer-buffs", seed, KEYS, nil, swaps())
-                assert.is_true(
-                    on.falseUp <= off.falseUp,
-                    ("seed %d false UP %d > %d"):format(seed, on.falseUp, off.falseUp)
-                )
+            local function lag(H)
+                H.ctl.viewer.lag = 1
             end
+            local refreshed = 0
+            for _, seed in ipairs({ 1, 2, 3 }) do
+                local off = fight("default", seed, KEYS)
+                local on = fight("viewer-buffs", seed, KEYS, lag)
+                refreshed = refreshed + on.refresh
+                local msg = ("seed %d wrong DOWN %d > %d"):format(seed, on.wrongDown, off.wrongDown)
+                assert.is_true(on.wrongDown <= off.wrongDown, msg)
+            end
+            assert.is_true(refreshed > 0, "no refresh before expiry in the fights")
         end
     )
-
-    it("refreshes before expiry, the item one poll late (I-B): no wrong DOWN the model alone does not make", function()
-        local function lag(H)
-            H.ctl.viewer.lag = 1
-        end
-        local refreshed = 0
-        for _, seed in ipairs({ 1, 2, 3 }) do
-            local off = fight("default", seed, KEYS)
-            local on = fight("viewer-buffs", seed, KEYS, lag)
-            refreshed = refreshed + on.refresh
-            local msg = ("seed %d wrong DOWN %d > %d"):format(seed, on.wrongDown, off.wrongDown)
-            assert.is_true(on.wrongDown <= off.wrongDown, msg)
-        end
-        assert.is_true(refreshed > 0, "no refresh before expiry in the fights")
-    end)
 
     -- D14's window, the worst case: under lag (I-B) a refresh's light lands a poll late, and here its clear lands at once
     -- (the client's pair is one call, BD:368-380, so the fake keeps a refresh held; this wraps it to show the one-poll
     -- silence D14's REFRESH_LAG guards). Each refresh of ours before expiry: a NONE at the next sweep, after our cast.
-    -- CDM Task 8 FINDING F2 (cdm-task8-report.md), pending: the guard compares the fact's last UP with the record's
+    -- CDM Task 8 FINDING F2 (cdm-task8-report.md), pinned as PRESENT (review m1): the guard compares the fact's last UP with the record's
     -- APPLICATION (oursAp), and a refresh that keeps its application time (Sunder Armor's stack) moves neither, so the
     -- NONE closes for a poll at every such refresh (seed 1: 13 wrong-DOWN ticks vs 4 viewer off, the same with the
     -- guard removed). Only a client that shows the refresh's clear a poll before its set reaches it (the fake does not).
-    pending(
-        "refreshes before expiry, the item one poll late and silent between (D14): no wrong DOWN the model alone does not make",
+    it(
+        "KNOWN DEFECT F2: D14 worst case, a refresh's item silent for a poll closes the record (seed 1; flip when fixed)",
         function()
             local VIEWERS = require("Game.State.helpers.fake_api").VIEWERS
             local function worst(H)
@@ -228,15 +228,11 @@ describe("Cooldown Manager facts through the engine #slow", function()
                     return by(unit, id, up, src)
                 end
             end
-            local refreshed = 0
-            for _, seed in ipairs({ 1, 2, 3 }) do
-                local off = fight("default", seed, KEYS)
-                local on = fight("viewer-buffs", seed, KEYS, worst)
-                refreshed = refreshed + on.refresh
-                local msg = ("seed %d wrong DOWN %d > %d"):format(seed, on.wrongDown, off.wrongDown)
-                assert.is_true(on.wrongDown <= off.wrongDown, msg)
-            end
-            assert.is_true(refreshed > 0, "no refresh before expiry in the fights")
+            local off = fight("default", 1, KEYS)
+            local on = fight("viewer-buffs", 1, KEYS, worst)
+            assert.is_true(on.refresh > 0, "no refresh before expiry in the fight")
+            local msg = ("%s (wrong DOWN %d vs %d off)"):format(FLIP:format("F2"), on.wrongDown, off.wrongDown)
+            assert.is_true(on.wrongDown > off.wrongDown, msg)
         end
     )
 end)
