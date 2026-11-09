@@ -69,6 +69,22 @@ describe("rows with a secret amount (kind-only routing)", function()
         assert.are.same({ "SPELL_MISSED", fs.SPENDER_F, "DODGE" }, { got[#got][2], got[#got][12], got[#got][15] })
     end)
 
+    -- live, a landed instant's own wound is unseen (a plain wound's amount is secret), so its ticket stays open through
+    -- its landing window: a secret avoid past its own frame is most likely another's (secret arm, Feral: 15 of 16 false
+    -- refunds were late, 3 of 143 right ones). A plain one keeps today's bands.
+    it("gives an instant cast a secret avoid only in its own frame; a plain one in its landing window too", function()
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)
+        ctl.now = 10.2 -- past the frame, inside the landing window
+        ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+        assert.are.same({ 0, 0 }, { T.paid[X.FRAME], count(VS.Obs.Avoided) })
+        ctl.now = 20
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_F)
+        ctl.now = 20.2
+        ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+        assert.are.same({ 1, 1 }, { T.paid[X.FRAME], count(VS.Obs.Avoided) })
+    end)
+
     it("pays a cast its own crit by kind, flag and school: Obs.Crit, SPELL_DAMAGE with amount 0", function()
         ctl.now = 10
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)

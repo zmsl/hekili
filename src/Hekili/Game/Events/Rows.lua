@@ -546,7 +546,8 @@ local function route(t, g, uid, act, flag, amount, school)
         end
         return
     end
-    if secret and avoid then
+    local kindOnly = secret and avoid -- an avoid with a secret amount: its own frame only on an instant (below)
+    if kindOnly then
         amount, secret = 0, false
     end
     if not secret and act == "WOUND" and amount <= 0 then
@@ -570,6 +571,12 @@ local function route(t, g, uid, act, flag, amount, school)
         if p == 0 then
             p, n = T.Pick(t, g, 3, act, flag, amount, school, true)
             pass = 3
+        end
+        -- live, a landed instant's own wound is unseen (its amount is secret, so it stays background above) and its
+        -- ticket stays open through its landing window: a secret avoid past its own frame is then most likely another's
+        -- (secret arm, Feral 20 fights: 15 of 16 false refunds were past the frame, 3 of 143 right ones)
+        if kindOnly and p > 0 and (T.kind[p] == X.FRAME or T.kind[p] == X.STRIKE) then
+            p = 0
         end
     end
     if p > 0 and white and (avoid or crit) then
