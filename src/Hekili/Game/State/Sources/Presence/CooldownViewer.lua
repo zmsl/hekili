@@ -35,10 +35,16 @@ local known = { 0, 0, 0, 0 } -- children collected per viewer (GetNumChildren at
 -- (sAns, sUnit: sUnit is also the last plain held unit, kept through silence) since sT, the seen rule's last held time
 -- and last plain cooldownID (sSeen, sCd, §2.2a), the last target change's t (sSettle, §3.4). sAns 0 not counted, else
 -- UP, NONE or STALE (a hidden viewer's or a settling slot: what it would answer, not live).
+-- The edge (owner rulings L348-L351; the conservative rule, L351: no positive dark for a never-lit slot, F12): sLit 1
+-- while the slot's last monitored sweep (viewer visible, not settling) saw it held for sUnit; sDark the t of the first
+-- monitored dark sweep after that, kept while it stays dark and monitored. A light for the same unit with sDark > 0 is
+-- an EDGE; every reset, a hidden or settling sweep, a held sweep for no unit and a rebuild zero both, so a first light
+-- after any of them is a SEED.
 local sFrame, sV, sJ, sAmb, sAns, sUnit, sT, sSeen, sCd, sSettle = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+local sLit, sDark = {}, {}
 for s = 1, MAX_SLOTS do
     sFrame[s], sV[s], sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s] = false, 0, 0, 0, 0, 0, 0
-    sSeen[s], sCd[s], sSettle[s] = 0, 0, -1
+    sSeen[s], sCd[s], sSettle[s], sLit[s], sDark[s] = 0, 0, -1, 0, 0
 end
 
 local NOT, UP, NONE, STALE = 0, 1, 2, 3
@@ -47,6 +53,9 @@ local UNIT = { player = 1, target = 2 }
 -- The things' counters, by k = (u - 1) * AURA_UNIT + j, zeroed for both units at activation (preallocated: the
 -- target's keys are in the hash part); live slots per aura (covered).
 local cUp, cNone, cStale, tUp, tNone, live = {}, {}, {}, {}, {}, {}
+-- By the same k: the t of the last sweep where one of the thing's slots had an edge (eT) and where one went dark after a
+-- monitored light (dT); 0 none. Read by the router (fact.edge, fact.dark).
+local eT, dT = {}, {}
 local ambC = {} -- by k: the per-fight lights of ambiguous items naming aura j on unit u (§2.2; the snapshot's)
 local VBIT = { 1, 2, 4, 8 } -- a viewer's bit in Q.Via (§2.4)
 local touched, mark, nTouched = {}, {}, 0 -- the things a sweep moved, each once
@@ -66,6 +75,8 @@ local Q = {
     amb = amb,
     slotOf = slotOf,
     seen = sSeen,
+    edgeT = eT, -- by k: the last sweep's t with an edge of the thing (the router's fact.edge)
+    darkT = dT, -- by k: the last sweep's t one of its slots went dark after a monitored light
 }
 local active, api0, broken = false, nil, false
 
@@ -264,7 +275,7 @@ end
 -- The seen rule starts over for slot s (§2.2a): un-counted first, so no count is left with no live slot behind it.
 local function reset(s)
     uncount(s)
-    sSeen[s], sUnit[s] = 0, 0
+    sSeen[s], sUnit[s], sLit[s], sDark[s] = 0, 0, 0, 0
 end
 
 -- The things a sweep moved: tUp/tNone recomputed as the latest begin (sT) of a live slot (§2.3: a slot that left takes
@@ -324,6 +335,7 @@ local function sweep(t)
     for s = 1, Q.nSlots do
         local item = sFrame[s]
         local j, u, a = 0, 0, NOT
+        local seenAs = 0 -- the edge's reading (sLit, sDark): 1 held for a unit we track, 2 silent, 0 neither
         local wasAmb = sAmb[s]
         sAmb[s] = 0
         local id = Plain(api, rawget(item, "cooldownID"))
@@ -341,12 +353,12 @@ local function sweep(t)
                     if u ~= sUnit[s] then -- sSeen pairs with sUnit: a stale light for another unit must not inherit it
                         sSeen[s] = 0
                     end
-                    j, a = m, UP
+                    j, a, seenAs = m, UP, 1
                 else
                     reset(s) -- held for no unit we track: what it was seen holding says nothing now
                 end
             else -- silent: NONE only for the application this slot was seen holding (§2.2a)
-                j, u = m, sUnit[s]
+                j, u, seenAs = m, sUnit[s], 2
                 -- (4a review m5) m <= U.nAura: an in-combat rebuild may shrink the set under this map
                 if
                     u > 0
@@ -377,6 +389,17 @@ local function sweep(t)
                     end
                 end
             end
+        end
+        if seenAs == 0 or not vis[sV[s]] or u == 2 and sSettle[s] >= t then -- not monitored: the edge starts over
+            sLit[s], sDark[s] = 0, 0
+        elseif seenAs == 1 then
+            if sDark[s] > 0 and u == sUnit[s] then -- lit -> dark -> lit on one unit, each seen: an edge
+                eT[(u - 1) * I.AURA_UNIT + j] = t
+            end
+            sLit[s], sDark[s] = 1, 0
+        elseif sLit[s] == 1 and u > 0 then -- silent after a monitored light: the dark baseline
+            sLit[s], sDark[s] = 0, t
+            dT[(u - 1) * I.AURA_UNIT + j] = t
         end
         if a ~= sAns[s] or j ~= sJ[s] or u ~= sUnit[s] then
             uncount(s)
@@ -426,7 +449,7 @@ function Q.Activate(api, t, def)
     api0, active = api, api ~= nil and not broken -- off after an error until /reload
     Q.covered, nTouched = 0, 0
     for k in pairs(cUp) do
-        cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k], ambC[k] = 0, 0, 0, 0, 0, false, 0
+        cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k], ambC[k], eT[k], dT[k] = 0, 0, 0, 0, 0, false, 0, 0, 0
     end
     Q.ambiguous = 0
     for j in pairs(live) do
@@ -434,14 +457,15 @@ function Q.Activate(api, t, def)
     end
     for s = 1, Q.nSlots do -- a new map: every slot counted afresh, its seen rule started over (§2.2a)
         sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s] = 0, 0, NOT, 0, 0
-        sSeen[s], sCd[s], sSettle[s] = 0, 0, -1
+        sSeen[s], sCd[s], sSettle[s], sLit[s], sDark[s] = 0, 0, -1, 0, 0
     end
     local nAura = def and #def.auraIds or 0
     for j = 1, nAura do
         live[j] = 0
         for u = 1, 2 do
             local k = (u - 1) * I.AURA_UNIT + j
-            cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k], ambC[k] = 0, 0, 0, 0, 0, false, 0
+            cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k], ambC[k], eT[k], dT[k] =
+                0, 0, 0, 0, 0, false, 0, 0, 0
             touched[(u - 1) * nAura + j] = touched[(u - 1) * nAura + j] or 0
         end
     end
