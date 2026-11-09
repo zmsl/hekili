@@ -253,14 +253,14 @@ local PACKS = {
         uptime = { "rupture", "garrote" },
     },
     -- Asn Muti: Efficient Strikes 2, Improved Slice and Dice 3, Relentless Strikes 5, Flawless Execution, Cold Blood,
-    -- Mutilate, Venom.
+    -- Mutilate, Venom, Blood Splatter (Garrote and Rupture longer: the kit reads it).
     Assassination = {
         kit = kit({ "mutilate", "cold_blood" }),
-        talents = { [13732] = 2, [14165] = 3, [14179] = 5, [1310711] = 1, [1329328] = 1 },
+        talents = { [13732] = 2, [14165] = 3, [14179] = 5, [1310711] = 1, [1329328] = 1, [1329256] = 1 },
         uptime = { "rupture", "garrote" },
     },
     -- Subtlety Hemo: Efficient Strikes 2, Improved Slice and Dice 3, Setup 3, Dirty Deeds 2, Hemorrhage, Premeditation,
-    -- Preparation, Ghostly Strike, Death Mark (no Cold Blood, no Relentless Strikes).
+    -- Preparation, Ghostly Strike, Death Mark, Blood Splatter (no Cold Blood, no Relentless Strikes).
     Subtlety = {
         kit = kit({ "hemorrhage", "premeditation", "preparation", "ghostly_strike", "death_mark" }),
         talents = {
@@ -273,6 +273,7 @@ local PACKS = {
             [14185] = 1,
             [14278] = 1,
             [1316709] = 1,
+            [1329256] = 1,
         },
         uptime = { "rupture", "hemorrhage" },
     },

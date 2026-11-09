@@ -2853,7 +2853,10 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
         assert.are.same({ "# Deviation: default #1: " .. FACING }, header)
         local text2, omitted2 = one(AND(NOT({ frontOfTarget = {} }), inRange), { inFrontOfTarget = true })
         assert.are.equal("", text2)
-        assert.are.same({ "default #1: never" }, omitted2)
+        assert.are.same({
+            "default #1: never: frontOfTarget is the request's in-front setting (in front of the target);"
+                .. " the client gives no facing.",
+        }, omitted2)
         local _, _, _, header3 = one(AND({ frontOfTarget = {} }, inRange), { inFrontOfTarget = true })
         assert.are.same({
             "# Deviation: default #1: frontOfTarget is the request's in-front setting (in front of the target);"
@@ -2877,7 +2880,10 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
             targets = { { mobType = "MobTypeMechanical" } },
         })
         assert.are.equal("", text2)
-        assert.are.same({ "default #1: never" }, omitted2)
+        assert.are.same({
+            "default #1: never: targetIsMobType is the request's target type (mechanical); the client's"
+                .. " creature type is not read.",
+        }, omitted2)
         local text3, omitted3 = one(AND(dragon, inRange)) -- protojson's zero: MobTypeUnknown
         assert.are.equal("", text3)
         assert.are.same({ "default #1: never" }, omitted3)
@@ -2986,6 +2992,18 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
         assert.are.same({
             "# Deviation: precombat #2: the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast.",
         }, header)
+        local c = ctx({}, { distanceFromTarget = 20 })
+        c.set.abilities.bolt.flightTime = 0.5 -- a kit flight time wins over distance / velocity
+        assert.are.equal( -- -(2.5 + 0.5) * 0.9 = -2.7: still before big_hit's -2.5
+            "actions.precombat=bolt\nactions.precombat+=/big_hit\nactions.precombat+=/strike",
+            (apl.translate(rot, c))
+        )
+        c.set.abilities.bolt.flightTime = 0 -- -(2.5 + 0) * 0.9 = -2.25: after big_hit (distance / velocity unused)
+        assert.are.equal(
+            "actions.precombat=big_hit\nactions.precombat+=/bolt\nactions.precombat+=/strike",
+            (apl.translate(rot, c))
+        )
+        c.set.abilities.bolt.flightTime = nil
         assert.are.equal( -- protojson omits a 0 distance: the travel time is 0
             "actions.precombat=big_hit\nactions.precombat+=/bolt\nactions.precombat+=/strike",
             (apl.translate(rot, ctx({})))

@@ -10,7 +10,7 @@
 # Omitted: default #1: hidden
 # Omitted: default #7: hidden
 # Omitted: default #8: other OtherActionOffensivePotion
-# Omitted: default #15: never
+# Omitted: default #15: never: targetIsMobType is the request's target type (mechanical); the client's creature type is not read.
 # Omitted: default #25: never
 # Omitted: default #26: other OtherActionResourcePotion
 # Omitted: default #27: other OtherActionOffensivePotion

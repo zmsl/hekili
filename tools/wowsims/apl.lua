@@ -440,6 +440,7 @@ function M.context(set, r, log, player, encounter)
     local c = {
         -- CN16 and the travel fold: the request's constants (protojson omits a zero: false, 0, MobTypeUnknown)
         inFront = type(player) == "table" and player.inFrontOfTarget == true,
+        folds = {}, -- S4: this entry's CN16 fold texts (reset per entry), named on a `never` omission
         distance = type(player) == "table" and tonumber(player.distanceFromTarget) or 0,
         mobType = target.mobType,
         set = set,
@@ -832,6 +833,17 @@ local function folded(c, n)
             return l / r
         end
     end
+end
+
+-- An entry folded to never: "never", with the request constants it folded (CN16), so the header keeps the reason.
+local function never(c)
+    local seen, out = {}, {}
+    for _, d in ipairs(c.folds or {}) do
+        if not seen[d] then
+            seen[d], out[#out + 1] = true, (d:gsub("%.$", ""))
+        end
+    end
+    return #out > 0 and "never: " .. table.concat(out, "; ") .. "." or "never"
 end
 
 -- Records deviation `d` for the entry once (rule 17).
@@ -1379,11 +1391,15 @@ local function bool(c, n)
         local f = SPELL_TEST[k] or (k == "spellIsCasting" and "action.%s.executing" or "action.%s.channeling")
         return f:format(x), nil, reads(c, x)
     elseif k == "frontOfTarget" then -- CN16: the request's setting, a constant (the client gives no facing)
-        deviate(c, FACING:format(c.inFront and "in front of" or "behind"))
+        local d = FACING:format(c.inFront and "in front of" or "behind")
+        deviate(c, d)
+        c.folds[#c.folds + 1] = d -- S4: an entry this fold empties keeps the reason on its `never`
         return nil, c.inFront, false
     elseif k == "targetIsMobType" then -- CN16: the request's target type, a constant (creature type is not read)
         if c.mobType then
-            deviate(c, MOB_TYPE:format((tostring(c.mobType):gsub("^MobType", ""):lower())))
+            local d = MOB_TYPE:format((tostring(c.mobType):gsub("^MobType", ""):lower()))
+            deviate(c, d)
+            c.folds[#c.folds + 1] = d
         end
         return nil, c.mobType ~= nil and v.mobType == c.mobType, false
     elseif k == "spellIsKnown" then -- wowsims: a constant, false for a spell it lacks; ours for an ID nothing resolves
@@ -1740,7 +1756,7 @@ local function windowed(c, a)
     local cond = a.condition and condition(c, a.condition)
     c.ownSeq = nil
     if cond == false then
-        return nil, "never"
+        return nil, never(c)
     end
     local bad = cond and unreadable(cond)
     if bad then
@@ -1841,7 +1857,7 @@ function entry(c, e)
             end
         end
         if #out == 0 then
-            return nil, "never"
+            return nil, never(c)
         end
         return out
     elseif kind == "groupReference" then
@@ -1874,7 +1890,7 @@ function entry(c, e)
     end
     local cond = a.condition and condition(c, a.condition)
     if cond == false and c.condition[key] == nil then -- L11: a recipe condition replaces an APL one that folds false
-        return nil, "never"
+        return nil, never(c)
     end
     if seq then
         return sequence(c, seq, cond, a.condition)
@@ -2519,7 +2535,7 @@ function M.translate(rotation, c)
             elseif type(when) == "string" then
                 omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, when)
             else
-                c.notes, c.dropped, c.deviations, c.moves = {}, {}, {}, {}
+                c.notes, c.dropped, c.deviations, c.moves, c.folds = {}, {}, {}, {}, {}
                 c.entryNo, c.ownSeq = i, nil
                 if at and castAt[i] then
                     deviate(c, PREPULL_CAST)

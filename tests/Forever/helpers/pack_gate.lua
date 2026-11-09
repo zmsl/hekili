@@ -79,11 +79,11 @@ M.FLICKER = {
     -- repeated on the 1-3 ticks the first icon stayed ready before the GCD's end, with no cast or spend in flight; the shortfall is
     -- the size of one forecast off-hand swing's rage (the loop world's off hand stays at FURY_SPEED 1.9 s, recipe header). Not traced
     -- to the swing time itself: the off-hand forecast is the named class, not measured per event. heldReady/flicker keep their rows
-    -- translator-2 (autoTimeToNext: the Bloodrage line), seeds 1-20: readyShort 20 -> 26; every event traced (25 of 25,
-    -- base 19 of 19) is the class above, Bloodthirst 12 / Whirlwind 13 shown ready a few rage short on a forecast swing,
-    -- on fights Bloodrage's rage re-times; heldReady 129 -> 150 inside its bar; retracted 0.2 -> 0.21 (measured 0.16 ->
-    -- 0.20 printed, over the 0.2 bar; the oracle 0.26 -> 0.47 on the same fights): the flicker ledger classes all six
-    -- credit/cost (bloodthirst 3 + whirlwind 3; base 1 + 2), the forecast-swing credit; classified, not traced per event
+    -- translator-2 (autoTimeToNext: the Bloodrage line), seeds 1-20 ONLY re-measured (not 21-40 / 41-60): readyShort 20 ->
+    -- 26 (counter 20 -> 26), every event the class above (Bloodthirst / Whirlwind shown ready a few rage short on a
+    -- forecast swing), on fights Bloodrage's rage re-times; heldReady 129 -> 150 inside its bar; retracted 0.2 -> 0.21
+    -- (0.16 -> 0.20+/min, the oracle 0.26 -> 0.47): each of the six unjustified retractions (bloodthirst 3, whirlwind 3,
+    -- ledger cause credit, reason cost) has one of those readyShort presses inside its ready window (traced per event)
     ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.21, readyShort = 26, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.

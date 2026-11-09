@@ -236,7 +236,8 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
    -> called lists; variables inlined. Omits a prepull entry with no constant `doAtValue` or one after the pull (a time folds from
    constants, `math`, the kit's base cast time and its unhasted GCD, each a `# Deviation:` line, and a spell's travel
    time: the request's `distanceFromTarget` over the kit's `velocity`, its `flightTime` if it has one, 0 with neither, as
-   wowsims's distance over missile speed; translator-2: the Warlocks' Shadow Bolt / Soul Fire opener). Each
+   wowsims's distance over missile speed; translator-2: the Warlocks' Shadow Bolt / Soul Fire opener: a hardcast with
+   no aura of its own gets no guard, so in game it shows until cast and the pre-pull line after it waits). Each
    pre-pull cast (precombat and the lists only it calls) gets a guard against recasting, a mechanical derivation from
    its ability's handler (recorded once): its own aura `!buff.<key>.up` / `!debuff.<key>.up` (none when the aura's
    duration is at most the cooldown: Bloodrage), its totem `!totem.<element>.up`, else none (Charge); a mutually
