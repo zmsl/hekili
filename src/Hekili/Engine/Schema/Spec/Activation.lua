@@ -279,7 +279,6 @@ function Hekili:SpecializationChanged()
                     else
                         class.stateFuncs[ name ] = func
                         rawset( state, name, func )
-                        -- Hekili:Error( "Not real error, registered " .. name .. " for " .. spec.name .. " (RSF)." )
                     end
                 end
             end
@@ -291,7 +290,6 @@ function Hekili:SpecializationChanged()
                     else
                         class.stateTables[ name ] = t
                         rawset( state, name, t )
-                        -- Hekili:Error( "Not real error, registered " .. name .. " for " .. spec.name .. " (RST)." )
                     end
                 end
             end
