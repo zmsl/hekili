@@ -1,0 +1,55 @@
+-- tests/Forever/cdm_verdict_arms_spec.lua (CDM verdict spec §5): the verdict's harness arms resolve on the Arms loop
+-- world: their world knobs reach the fight (avoided presses, target swaps with a frame reshuffle each), the *-novd arm
+-- turns the belief's verdict off on the driver only, and each fight writes its layout and edgestats lines.
+local loop = require("Game.harness.loop")
+local ab = require("Game.harness.ab")
+local ww = require("Forever.helpers.warrior_world")
+
+local function fight(arm, seed, L)
+    L = L or loop.new(ww)
+    local lines, check = {}, ab.check
+    ab.check = function(ok, label, line) -- the lines a provider arm writes to .ab/<arm>.tsv
+        lines[label] = line
+        return check(ok, label, line, "default")
+    end
+    local ok, run = pcall(loop.run, L, seed, { duration = 40, arm = arm }, { { H = L.us } })
+    ab.check = check
+    assert(ok, run)
+    assert.are.same({ 0, 0 }, { run.errors, run.raises })
+    return run, L.us, lines
+end
+
+describe("the CDM verdict's harness arms #slow", function()
+    it("viewer-swap: our target cycles every 4-8 s, every swap reshuffles the frames; edgestats on", function()
+        local run, H, lines = fight("viewer-swap", 3)
+        local swaps = 0
+        for _, ev in ipairs(run.W.truth) do
+            swaps = swaps + (ev.kind == "target" and 1 or 0)
+        end
+        assert.is_true(swaps >= 4, "target events " .. swaps)
+        assert.is_true(#run.W.ents >= 4) -- us and three mobs
+        assert.is_true(H.ctl.viewer.reshuffle)
+        assert.is_true(H.ctl.viewer.reshuffleN - 3 >= swaps - 1, "reshuffles " .. (H.ctl.viewer.reshuffleN - 3))
+        assert.is_nil(H.ns.VirtualStateInternal.verdictOff)
+        assert.is_truthy(lines.layout)
+        assert.is_truthy(lines.edge and lines.edge:match("staleUp %d"), tostring(lines.edge))
+    end)
+
+    it("viewer-nonland: the mobs avoid our hits by the arm's table, no press aura applied on an avoid", function()
+        local run, H, lines = fight("viewer-nonland", 1)
+        assert.is_false(run.W.auraOnAvoid)
+        assert.are.equal(ab.ARMS["viewer-nonland"].world.mobAvoid, run.us.target.avoid)
+        assert.is_false(H.ctl.viewer.reshuffle)
+        assert.is_truthy(lines.edge)
+    end)
+
+    it("a -novd arm sets the belief's verdictOff on the driver; the next fight's arm clears it", function()
+        local L = loop.new(ww)
+        local _, H = fight("viewer-reshuffle-novd", 1, L)
+        assert.is_true(H.ns.VirtualStateInternal.verdictOff)
+        assert.is_true(H.ctl.viewer.reshuffle)
+        fight("viewer-reshuffle", 2, L) -- the same boot, the verdict on again
+        assert.is_nil(H.ns.VirtualStateInternal.verdictOff)
+        assert.is_true(H.ctl.viewer.reshuffle)
+    end)
+end)

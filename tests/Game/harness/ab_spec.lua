@@ -25,6 +25,32 @@ describe("the A/B harness", function()
         assert.is_nil(ab.ARMS.viewer) -- the layout-less arm is viewer-none now
     end)
 
+    it("the verdict arms (verdict spec §5), each with edgestats and a -novd twin that differs only by novd", function()
+        local names = {
+            "viewer-reshuffle",
+            "viewer-nonland",
+            "secret-viewer-buffs",
+            "secret-viewer-mixed",
+            "viewer-swap",
+        }
+        assert.are.same(names, ab.VERDICT)
+        for _, name in ipairs(names) do
+            local a, off = ab.ARMS[name], ab.ARMS[name .. "-novd"]
+            assert.is_true(a.viewer and a.edge)
+            assert.is_nil(a.novd)
+            local twin = { novd = true }
+            for k, v in pairs(a) do
+                twin[k] = v
+            end
+            assert.are.same(twin, off)
+            assert.are.same({ outcomes = "default", presence = "router", viewer = true }, ab.providers(name))
+        end
+        assert.is_true(ab.ARMS["viewer-reshuffle"].reshuffle and ab.ARMS["viewer-swap"].reshuffle)
+        assert.is_false(ab.ARMS["viewer-nonland"].world.auraOnAvoid)
+        assert.are.same({ 4, 8 }, ab.ARMS["viewer-swap"].world.swapEvery)
+        assert.is_true(ab.ARMS["secret-viewer-mixed"].observe.secretAmount)
+    end)
+
     it("the secret arm makes UNIT_COMBAT's amount secret (live), never on the plain oracle", function()
         assert.are.same({ secretAmount = true }, ab.ARMS.secret.observe)
         assert.are.same({ outcomes = "default", presence = "router", viewer = false }, ab.providers("secret"))
