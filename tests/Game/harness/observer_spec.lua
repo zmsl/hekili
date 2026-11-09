@@ -363,6 +363,25 @@ describe("the observer", function()
         end
     )
 
+    it("a (unit, aura)'s @viewer edges keep their world order: a set and a clear at one instant (review I1)", function()
+        setup(0)
+        for i = 0, 19 do -- each instant: the aura set, then cleared (a proc consumed in its own frame)
+            W.emit({ t = 3 + i, kind = "aura", dst = us, aura = 77, stacks = 1, expires = 13 + i, duration = 10 })
+            W.emit({ t = 3 + i, kind = "aura", dst = us, aura = 77, stacks = 0, expires = 0, duration = 0 })
+        end
+        local s = observer.observe(W, setmetatable({ viewer = true }, { __index = observer.DEFAULTS }))
+        local got = {}
+        for i = 1, s.n do
+            if s.ev[i] == "@viewer" then
+                got[#got + 1] = s.a3[i]
+            end
+        end
+        assert.are.equal(40, #got)
+        for i = 1, 40, 2 do
+            assert.are.same({ true, false }, { got[i], got[i + 1] }, "pair " .. (i + 1) / 2)
+        end
+    end)
+
     it("under k.viewer our target change re-reads the target items: a retarget, then the new target's auras", function()
         setup(0)
         local mob2 = W.add(entities.new({ guid = "Creature-2", kind = "mob", weapons = { { 10, 14, 2 } } }))

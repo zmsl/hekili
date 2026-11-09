@@ -327,6 +327,7 @@ function M.new(W, k)
     end
     -- the viewer arms: our auras on each entity (aura -> expires), and the target the items last read (CDM Task 8)
     local mine, viewerTarget = {}, false
+    local viewerLast = {} -- (unit .. aura) -> its last @viewer edge's time: the client takes them in order (review I1)
     local function retarget(t, tgt) -- the client re-reads its target items the frame after a change (CDM-O: f=1)
         if k.viewer and tgt ~= viewerTarget then
             viewerTarget = tgt
@@ -603,7 +604,12 @@ function M.new(W, k)
                 if k.viewer then -- the Cooldown Manager's item shows or hides 3-5 ms later (CV §2); a partner's copy
                     -- (an aura event with another source) lights none of our items (F10, CDM-P)
                     local src = (ev.src == nil or ev.src == us) and "player" or "party1"
-                    push(t + W.mrng.int(3, 5) / 1000, "@viewer", unit, ev.aura, ev.stacks > 0, src)
+                    local vk, vt = unit .. ev.aura, t + W.mrng.int(3, 5) / 1000 -- the same draw as before
+                    if viewerLast[vk] and vt <= viewerLast[vk] then -- a set and a clear at one instant stay in order
+                        vt = viewerLast[vk] + 1e-6
+                    end
+                    viewerLast[vk] = vt
+                    push(vt, "@viewer", unit, ev.aura, ev.stacks > 0, src)
                 end
             end
         elseif kind == "item" and ev.src == us then -- a bag count, plain [W PR13]; nothing reads its BAG_UPDATE
