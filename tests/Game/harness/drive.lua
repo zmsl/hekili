@@ -454,20 +454,36 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         ctl.exists.pet, ctl.dead.pet, ctl.petPowerType, ctl.petPower = a1 or nil, nil, a2, a3
     elseif ev == "@petPower" then
         ctl.petPower = a1
-    elseif ev == "@viewer" then -- unit, spellID, up: the viewer item tracking that spell lights or clears (providers
-        -- §4.2); the client's order (a held item clears, then sets); the leaf reads it at the next drain's sweep
-        local V = ctl.viewer
-        for _, name in ipairs(fake.VIEWERS) do
-            for _, item in ipairs(V.items[name]) do
-                local info = V.infos[item.cooldownID]
-                if info and info.spellID == a2 then
-                    if a3 then
-                        ctl.ViewerAura(item, a1, a2)
-                    else
-                        ctl.ViewerClear(item)
-                    end
-                end
+    elseif ev == "@viewer" then -- unit, spellID, up, source (nil: "player"): every item in any viewer naming the
+        -- spell lights or clears, cooldown entries included, our auras only (fake_api's ViewerAuraBySpell; CDM Task 8);
+        -- the client's order (a held item clears, then sets); the leaf reads it at the next drain's sweep
+        ctl.ViewerAuraBySpell(a1, a2, a3, a4 or "player")
+    elseif ev == "@viewerLayout" then -- op, viewer, cooldownID[, new cooldownID]: "acquire" (a released frame of that
+        -- viewer comes back first: the pool), "release" or "repoint" the first item of that cooldownID (also in combat)
+        local list, hit, free = ctl.viewer.items[a2], nil, nil
+        for _, item in ipairs(list) do
+            if item.isItem and item.cooldownID == a3 then
+                hit = hit or item
+            elseif item.isItem and item.cooldownID == nil and item.layoutIndex == nil then
+                free = free or item
             end
+        end
+        if a1 == "acquire" then
+            ctl.ViewerAcquire(a2, a3, nil, free)
+        elseif hit and a1 == "release" then
+            ctl.ViewerRelease(hit)
+        elseif hit and a1 == "repoint" then
+            ctl.ViewerRepoint(hit, a4)
+        end
+    elseif ev == "@viewerRetarget" then -- our target changed: the items held for the target clear (fake_api)
+        ctl.ViewerRetarget()
+    elseif ev == "@viewerShown" then -- viewer (nil: their parent), shown
+        if a1 == nil then
+            ctl.viewer.parentShown = a2
+        elseif a2 then
+            ctl.viewer.shown[a1] = nil
+        else
+            ctl.viewer.shown[a1] = false
         end
     elseif ev == "@casting" or ev == "@channel" then -- our cast bar's start and end in ms (nil: none), plain [W PR9]
         local key = ev == "@casting" and "casting" or "channel"

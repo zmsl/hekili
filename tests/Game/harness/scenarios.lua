@@ -6,6 +6,7 @@ local entities = require("Game.harness.entities")
 local behaviours = require("Game.harness.behaviours")
 local observer = require("Game.harness.observer")
 local ab = require("Game.harness.ab")
+local rng = require("Game.harness.rng")
 
 local M = {}
 
@@ -329,6 +330,145 @@ function M.stream(o, seed)
     end
     setmetatable(k, { __index = o.lag or observer.DEFAULTS })
     return observer.observe(W, k), W
+end
+
+-- The Cooldown Manager's four viewers (fake_api.VIEWERS order: category 0 Essential, 1 Utility, 2 Buff icon, 3 Buff bar).
+local VIEWERS =
+    { "EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
+local CD0 = 910000 -- the layouts' own cooldownIDs (a fixture's keep theirs)
+
+--- The Cooldown Manager layout `preset` (cdm-default plan Task 8, decision 110) on an instance's fake `ctl`, for the
+--- fight of `seed`; `o` { pull, duration, fixture }. The frames are built ONCE an instance (the leaf gives each frame a
+--- slot for the session, MAX_SLOTS 128): a later fight clears every aura, undoes the re-point and the hidden viewer,
+--- and adds no frame. Returns the fight's layout events { t, ev, a1, a2, a3, a4 } (drive.op's `@viewerLayout` and
+--- `@viewerShown`), or nil for "fixture" with no fixture (the arm is skipped). Presets:
+--- `none` no item; `buffs` one Buff icon item per pack aura; `fixture` the class fixture's entries (by category) plus
+--- an Essential entry per ability whose aura the pack registers (F6); `mixed` 0-3 items an aura over the four viewers
+--- (at least one), two unconfigured Buff bar slots, a silent item (F12) beside a working one of the same aura, an
+--- Essential item held with no unit (a stress flag, not a client state: BD:368-379 records the unit), and per fight
+--- one viewer hidden for 10 s and one re-point, the Utility pool growing in the first fight only, and
+--- `ctl.viewer.lag = 1` on even seeds (the seen rule's lagging item, I-B).
+--- Every item names all of its aura's IDs (linkedSpellIDs), so any rank the world applies lights it.
+function M.viewerLayout(ctl, def, preset, seed, o)
+    local V = ctl.viewer
+    V.log = false -- no write log in the loops (L279: one entry a light, unbounded over a boot)
+    local L = V.layout
+    if L then -- a later fight: the same frames, reset
+        ctl.ViewerReset()
+        for _, name in ipairs(VIEWERS) do
+            for _, item in ipairs(V.items[name]) do
+                if item.base then
+                    item.cooldownID = item.base
+                end
+            end
+        end
+        V.shown, V.parentShown = {}, true
+    elseif preset == "fixture" and not o.fixture then
+        return nil
+    else
+        L = { cds = {}, n = 0, mapped = {} }
+        V.layout = L
+        local function cdFor(j, category) -- aura j's entry in category category: one cooldownID, in that category's set
+            local key = j * 4 + category
+            if not L.cds[key] then
+                L.n = L.n + 1
+                local id = CD0 + L.n
+                L.cds[key] = id
+                local ids = def.auraIds[j]
+                V.infos[id] = { spellID = ids[1], linkedSpellIDs = ids }
+                V.sets[category][#V.sets[category] + 1] = id
+            end
+            return L.cds[key]
+        end
+        local function add(category, id)
+            local list = V.items[VIEWERS[category + 1]]
+            local item = ctl.ViewerItem(VIEWERS[category + 1], #list + 1, id)
+            item.base = id
+            return item
+        end
+        local auras = {} -- the pack's auras with a spell ID (an id-less enchant's pseudo-ID is negative)
+        for j = 1, #def.auraIds do
+            if def.auraIds[j][1] > 0 then
+                auras[#auras + 1] = j
+            end
+        end
+        L.auras = auras
+        if preset == "buffs" then
+            for _, j in ipairs(auras) do
+                add(2, cdFor(j, 2))
+            end
+        elseif preset == "fixture" then
+            local ids = {}
+            for id in pairs(o.fixture) do
+                ids[#ids + 1] = id
+            end
+            table.sort(ids) -- pairs order is not stable: the layout must be
+            for _, id in ipairs(ids) do
+                local e = o.fixture[id]
+                V.infos[id] = { spellID = e[2], overrideSpellID = e[3], linkedSpellIDs = e[4] }
+                V.sets[e[1]][#V.sets[e[1]] + 1] = id
+                if e[1] <= 3 then
+                    add(e[1], id)
+                end
+            end
+            local byKey = {}
+            for _, j in ipairs(auras) do
+                byKey[def.auras[j].key] = j
+            end
+            for i, a in ipairs(def.abilities) do
+                local j = byKey[a.key]
+                if j then -- the ability's cooldown entry holds its aura (F6)
+                    L.n = L.n + 1
+                    local id = CD0 + L.n
+                    V.infos[id] = { spellID = def.abilityIds[i][1], linkedSpellIDs = def.auraIds[j] }
+                    V.sets[0][#V.sets[0] + 1] = id
+                    add(0, id)
+                end
+            end
+        elseif preset == "mixed" then
+            local r = rng.new(seed + 70001) -- the layout's own draws: no other draw moves
+            for _, j in ipairs(auras) do
+                for category = 0, 3 do -- every aura's entry in every category is in the sets (a re-point stays mapped)
+                    cdFor(j, category)
+                end
+                for _ = 1, r.int(0, 3) do
+                    local category = r.int(0, 3)
+                    L.mapped[#L.mapped + 1] = { add(category, cdFor(j, category)), category, j }
+                end
+            end
+            if not L.mapped[1] and auras[1] then -- at least one item
+                L.mapped[1] = { add(2, cdFor(auras[1], 2)), 2, auras[1] }
+            end
+            if L.mapped[1] then
+                add(2, cdFor(L.mapped[1][3], 2)).silent = true -- never lights (F12), beside a working item of its aura
+                add(0, cdFor(r.pick(auras), 0)).noUnit = true -- held, unit nil: a stress of the leaf, not a client state
+                L.grow = cdFor(r.pick(auras), 1)
+            end
+            add(3, nil) -- two unconfigured slots
+            add(3, nil)
+        end
+    end
+    V.lag = preset == "mixed" and seed % 2 == 0 and 1 or false
+    local ev = {}
+    if preset == "mixed" and L.mapped[1] then
+        local r = rng.new(seed + 70003)
+        local t = o.pull + r.next() * math.max(0, o.duration - 10)
+        local name = VIEWERS[r.int(1, 4)]
+        ev[#ev + 1] = { t, "@viewerShown", name, false }
+        ev[#ev + 1] = { t + 10, "@viewerShown", name, true }
+        local m = L.mapped[r.int(1, #L.mapped)]
+        local a = L.auras[r.int(1, #L.auras)] -- another aura's entry in the same viewer (its own when drawn again)
+        local to = L.cds[a * 4 + m[2]]
+        ev[#ev + 1] = { o.pull + r.next() * o.duration, "@viewerLayout", "repoint", VIEWERS[m[2] + 1], m[1].base, to }
+        if not L.grown then
+            L.grown = true
+            ev[#ev + 1] = { o.pull + r.next() * o.duration, "@viewerLayout", "acquire", VIEWERS[2], L.grow }
+        end
+        table.sort(ev, function(x, y)
+            return x[1] < y[1]
+        end)
+    end
+    return ev
 end
 
 --- The oracle's scenario knobs over `o`: usability answered from our true power (rage capped at 100) and a 10-rage

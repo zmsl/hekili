@@ -332,6 +332,79 @@ describe("the observer", function()
         end
     )
 
+    it(
+        'a @viewer edge carries its source: ours (no src, or us) "player", a partner\'s copy on our target "party1"',
+        function()
+            setup(1)
+            local partner = W.ents[3]
+            W.emit({ t = 3, kind = "aura", src = us, dst = mob, aura = 77, stacks = 1, expires = 13, duration = 10 })
+            W.emit({
+                t = 4,
+                kind = "aura",
+                src = partner,
+                dst = mob,
+                aura = 77,
+                stacks = 1,
+                expires = 14,
+                duration = 10,
+            })
+            W.emit({ t = 5, kind = "aura", dst = us, aura = 9078, stacks = 1, expires = 15, duration = 10 })
+            local s = observer.observe(W, setmetatable({ viewer = true }, { __index = observer.DEFAULTS }))
+            local got = {}
+            for i = 1, s.n do
+                if s.ev[i] == "@viewer" then
+                    got[#got + 1] = { s.a1[i], s.a2[i], s.a4[i] }
+                end
+            end
+            assert.are.same(
+                { { "target", 77, "player" }, { "target", 77, "party1" }, { "player", 9078, "player" } },
+                got
+            )
+        end
+    )
+
+    it("a (unit, aura)'s @viewer edges keep their world order: a set and a clear at one instant (review I1)", function()
+        setup(0)
+        for i = 0, 19 do -- each instant: the aura set, then cleared (a proc consumed in its own frame)
+            W.emit({ t = 3 + i, kind = "aura", dst = us, aura = 77, stacks = 1, expires = 13 + i, duration = 10 })
+            W.emit({ t = 3 + i, kind = "aura", dst = us, aura = 77, stacks = 0, expires = 0, duration = 0 })
+        end
+        local s = observer.observe(W, setmetatable({ viewer = true }, { __index = observer.DEFAULTS }))
+        local got = {}
+        for i = 1, s.n do
+            if s.ev[i] == "@viewer" then
+                got[#got + 1] = s.a3[i]
+            end
+        end
+        assert.are.equal(40, #got)
+        for i = 1, 40, 2 do
+            assert.are.same({ true, false }, { got[i], got[i + 1] }, "pair " .. (i + 1) / 2)
+        end
+    end)
+
+    it("under k.viewer our target change re-reads the target items: a retarget, then the new target's auras", function()
+        setup(0)
+        local mob2 = W.add(entities.new({ guid = "Creature-2", kind = "mob", weapons = { { 10, 14, 2 } } }))
+        W.emit({ t = 3, kind = "aura", dst = mob2, aura = 77, stacks = 1, expires = 30, duration = 27 })
+        W.at(5, function()
+            us.target = mob2
+            W.emit({ kind = "target" })
+        end)
+        W.run(6)
+        local s = observer.observe(W, setmetatable({ viewer = true }, { __index = observer.DEFAULTS }))
+        local got = {}
+        for i = 1, s.n do
+            if s.ev[i] == "@viewerRetarget" or (s.ev[i] == "@viewer" and s.t[i] > 5) then
+                got[#got + 1] = { s.ev[i], s.a1[i], s.a2[i], s.a3[i] }
+            end
+        end
+        assert.are.same({ { "@viewerRetarget" }, { "@viewer", "target", 77, true } }, got)
+        local plain = observer.observe(W, observer.DEFAULTS) -- the default arm: no viewer op
+        for i = 1, plain.n do
+            assert.is_true(plain.ev[i] ~= "@viewerRetarget")
+        end
+    end)
+
     it("steps to the batch's stream in 0.2 s steps, and draws nothing from the world's generator", function()
         local o = scenarios.oracle({ duration = 40, others = { "melee", "caster" } })
         local k = setmetatable({ usable = true }, { __index = observer.DEFAULTS })

@@ -681,6 +681,7 @@ function M.new()
         parentShown = true, -- false: no viewer is visible (their parent is hidden)
         plainSpell = false, -- an applied item's auraSpellID is plain (out of combat, probed) instead of SECRET
         lag = false, -- ViewerAuraBySpell lights its items at the NEXT ctl.Tick, not in the same call
+        log = true, -- items record their writes (the order tests); the loops turn it off (bounded memory, L279)
         applied = {}, -- the auras up on us: { unit, spellID }, for an item acquired while one is still running
         pending = {}, -- the lagged lights: { item, unit, up }
         hookCalls = {}, -- every HookScript / hooksecurefunc call (the leaf is asserted to make none)
@@ -744,7 +745,9 @@ function M.new()
         h[#h + 1] = fn
     end
     local function write(item, what) -- the client's write order, recorded for the order tests
-        item.writes[#item.writes + 1] = what
+        if ctl.viewer.log then
+            item.writes[#item.writes + 1] = what
+        end
     end
     --- A child of viewer `name` tracking cooldown `id` at `layoutIndex` (`id` nil: an unconfigured slot), hidden.
     function ctl.ViewerItem(name, layoutIndex, id)
@@ -768,7 +771,7 @@ function M.new()
         return child
     end
     local function clearAura(item)
-        item.auraInstanceID, item.auraSpellID, item.auraDataUnit, item.litBy = nil, nil, nil, nil
+        item.auraInstanceID, item.auraSpellID, item.auraDataUnit, item.litBy, item.litUnit = nil, nil, nil, nil, nil
         item.shown = false
         write(item, "clear")
     end
@@ -777,7 +780,11 @@ function M.new()
         if item.auraInstanceID ~= nil then
             clearAura(item)
         end
-        item.auraInstanceID, item.auraDataUnit, item.litBy = SECRET, unit, spellID
+        item.auraInstanceID, item.auraDataUnit, item.litBy, item.litUnit = SECRET, unit, spellID, unit
+        if item.noUnit then -- a STRESS flag, not a client state (BD:368-379 always records the unit): held with
+            -- auraDataUnit nil, the shape of a secret or unread unit, which the leaf must never count as live (§2.2a)
+            item.auraDataUnit = nil
+        end
         item.auraSpellID = ctl.viewer.plainSpell and spellID or SECRET
         item.shown = true
         write(item, "set")
@@ -814,6 +821,7 @@ function M.new()
             or (b ~= nil and ctl.overrides[b] == spellID)
             or (c ~= nil and ctl.overrides[c] == spellID)
     end
+    local REFRESH_UNITS = { "player", "target" }
     --- Re-point (BV:137-147): the cooldownID, then the refresh (a held aura clears, then sets again).
     function ctl.ViewerRepoint(item, id)
         item.cooldownID = id
@@ -824,6 +832,27 @@ function M.new()
                 clearAura(item) -- the new cooldownID does not name the aura it held: the refresh finds none
             else
                 ctl.ViewerAura(item, item.auraDataUnit, item.litBy)
+            end
+        end
+        local info = ctl.viewer.infos[id]
+        if item.auraInstanceID == nil and info and not item.silent then -- the refresh finds an aura of the new entry,
+            -- the player's before the target's (the client's scan order; CooldownViewerItemData.lua:16-79)
+            for _, unit in ipairs(REFRESH_UNITS) do
+                for _, a in ipairs(ctl.viewer.applied) do
+                    if
+                        item.auraInstanceID == nil
+                        and a[1] == unit
+                        and (item.unit == nil or item.unit == unit)
+                        and names(info, a[2])
+                    then
+                        if ctl.viewer.lag then
+                            local p = ctl.viewer.pending
+                            p[#p + 1] = { item, a[1], true, a[2] }
+                        else
+                            ctl.ViewerAura(item, a[1], a[2])
+                        end
+                    end
+                end
             end
         end
     end
@@ -866,13 +895,19 @@ function M.new()
     end
     --- The pool grows (also in combat): a NEW frame table each time (an item can come back as a different frame for the
     --- same cooldownID), at the next layout index. An aura of its spell still up lights it at once (F13) unless `silent`
-    --- (3rd argument) or ctl.viewer.lag (then at the next Tick).
-    function ctl.ViewerAcquire(name, id, silent)
+    --- (3rd argument) or ctl.viewer.lag (then at the next Tick). `frame`: a released child of `name` comes back from
+    --- the pool instead (the same table, no new child).
+    function ctl.ViewerAcquire(name, id, silent, frame)
         local top = 0 -- max + 1: a removal must not make a live index repeat
         for _, c in ipairs(ctl.viewer.items[name]) do
             top = math.max(top, c.layoutIndex or 0)
         end
-        local item = ctl.ViewerItem(name, top + 1, id)
+        local item = frame
+        if item then
+            item.cooldownID, item.layoutIndex = id, top + 1
+        else
+            item = ctl.ViewerItem(name, top + 1, id)
+        end
         item.silent = silent or nil
         local info = ctl.viewer.infos[id]
         for _, a in ipairs(ctl.viewer.applied) do
@@ -914,6 +949,36 @@ function M.new()
         end
     end
     ctl.ViewerFlush = flushLag -- the loop harness never calls ctl.Tick: its cycle calls this
+    --- Our target changed (the client re-reads its target items): every item held for the target clears (a noUnit one
+    --- by the unit it was lit for), the target's applied auras and pending lights go; the caller lights the new target's.
+    function ctl.ViewerRetarget()
+        for _, name in ipairs(M.VIEWERS) do
+            for _, item in ipairs(ctl.viewer.items[name]) do
+                if item.isItem and item.auraInstanceID ~= nil and item.litUnit == "target" then
+                    clearAura(item)
+                end
+            end
+        end
+        for _, list in ipairs({ ctl.viewer.applied, ctl.viewer.pending }) do
+            local u = list == ctl.viewer.applied and 1 or 2
+            for i = #list, 1, -1 do
+                if list[i][u] == "target" then
+                    table.remove(list, i)
+                end
+            end
+        end
+    end
+    --- A fresh fight (the loops): every item's aura cleared, no aura applied, no light pending; the frames stay.
+    function ctl.ViewerReset()
+        for _, name in ipairs(M.VIEWERS) do
+            for _, item in ipairs(ctl.viewer.items[name]) do
+                if item.isItem and item.auraInstanceID ~= nil then
+                    clearAura(item)
+                end
+            end
+        end
+        ctl.viewer.applied, ctl.viewer.pending = {}, {}
+    end
     function ctl.ViewerShow(item, up)
         item.shown = up
         if up then

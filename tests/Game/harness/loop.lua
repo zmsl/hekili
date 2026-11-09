@@ -229,7 +229,7 @@ end
 --- first one's first icon pressed, each press resolved from the run's truth instance (the oracle when it is driven,
 --- else the first driver). `o`: duration (combat seconds [180]), mobHealth, hz [5], react [REACT], reaction
 --- (seconds an icon shows ready before the press [0]), others (archetypes on our target), trace (the facade's trace
---- each tick), on(run, steps, t) (a per-tick hook). Returns the run { W, us, ticks, presses, pressedBy (by key), refused (by reason),
+--- each tick), on(run, steps, t) (a per-tick hook), arm (an ab.ARMS name over HEKILI_AB's: a spec's own). Returns the run { W, us, ticks, presses, pressedBy (by key), refused (by reason),
 --- attempts, episodes, errors, raises, misses (unexpected run names), secrets (Facade.secrets), selfCheck (ticks where
 --- the oracle's belief missed the truth, by field), combat, full, idle, up (by debuff key: in-combat ticks), ours and
 --- theirs (first icons by in-combat tick), pressed and shadowPress (the driver's press, the shadow's would-be press, by
@@ -316,18 +316,21 @@ function M.run(L, seed, o, drivers)
     local res = L.power.token and L.power.token:lower()
     local pollEv, tickEv, nextEv = {}, {}, 1
     local steps = {}
-    local arm = ab.ARMS[ab.arm()]
+    local arm = ab.ARMS[o.arm or ab.arm()] -- o.arm: a spec's own arm (its shapes; the floors stay the env's)
     for i, d in ipairs(drivers) do
         local out = d.H.ns.Output -- the steady icons (no player setting): this instance's measurement arm
         out.steady = (steady and not d.plain) and true or false -- the oracle shadow never holds
         out.hold = type(steady) == "number" and steady or 1
         -- Movement ON in a replay (wowsims's rotation moves: tested as it runs), OFF in a loop and ws.live
         d.H.Hekili.DB.profile.toggles.movement.value = (R ~= nil)
-        -- the A/B arm's experimental toggles (providers decision 82), applied out of combat as the option does
-        local perf = d.H.Hekili.DB.profile.performance
-        perf.damageMeter, perf.cooldownViewer = arm.outcomes == "meter", arm.viewer
-        d.H.Hekili:ProvidersChanged()
+        -- the A/B arm's experimental toggles (providers decision 82), applied out of combat as the option does; the
+        -- viewer arms' Cooldown Manager is the driver's only: the plain oracle shadow stays the viewer-off reference
         local ctl = d.H.ctl -- a fresh world: the client's answers about it start fresh too
+        local cdm = arm.viewer and not d.plain
+        local layout = cdm and M.viewerLayout(d.H, arm.layout, seed, wo) or nil
+        local perf = d.H.Hekili.DB.profile.performance
+        perf.damageMeter, perf.cooldownViewer = arm.outcomes == "meter", cdm
+        d.H.Hekili:ProvidersChanged()
         ctl.combat, ctl.form, ctl.stealthed = false, L.form, false
         local fresh = {
             ctl.dead,
@@ -360,7 +363,7 @@ function M.run(L, seed, o, drivers)
         }, {
             __index = observer.DEFAULTS,
         })
-        k.meter, k.viewer = arm.outcomes == "meter", arm.viewer -- the arm's shapes (none in the default arm)
+        k.meter, k.viewer = arm.outcomes == "meter", cdm -- the arm's shapes (none in the default arm)
         ab.observe(k) -- and its other knobs (the meter arm's taken lead, as the gates' streams)
         for key, v in pairs(content.OBSERVE or {}) do -- the content's client knobs (other powers' reads, forms)
             k[key] = v
@@ -398,6 +401,8 @@ function M.run(L, seed, o, drivers)
             q = { name = {}, time = {}, cost = {} },
             plain = d.plain,
             hold = (hold and not d.plain) and flicker.newHold() or nil,
+            layout = layout, -- the viewer arm's fight events and the next one's index (M.viewerLayout)
+            li = 1,
         }
     end
     local errors0 = {}
@@ -443,6 +448,18 @@ function M.run(L, seed, o, drivers)
             end
         end
         for i, st in ipairs(steps) do
+            local lay = st.layout
+            if lay then -- a viewer arm (outside the sampled bytes): the last poll's lagged lights land now (one poll
+                -- late, I-B), then the layout's own events up to this poll
+                if st.H.ctl.viewer.pending[1] then
+                    st.H.ctl.ViewerFlush()
+                end
+                while lay[st.li] and lay[st.li][1] <= tc do
+                    local e = lay[st.li]
+                    drive.op(st.sink, st.H.ctl, e[2], e[3], e[4], e[5], e[6])
+                    st.li = st.li + 1
+                end
+            end
             feed(st.H, st.obs, tc, st.base, st.sink)
             st.H.Hekili.ActiveDebug = o.trace or false
             local counted = i == 1 and not o.trace -- the traced fight's debug pass is not runtime cost
@@ -659,6 +676,19 @@ function M.run(L, seed, o, drivers)
         for name, n in pairs(st.H.ns.Facade.secrets) do
             run.secrets[name] = (run.secrets[name] or 0) + n
         end
+        if st.layout then -- a viewer arm: the layout's coverage at the fight's end, a line in the arm's .ab file
+            local ctl, Q = st.H.ctl, st.H.ns.VirtualStateInternal.PRESENCE.viewer
+            local who = tostring(ctl.class) .. " " .. tostring(st.H.Hekili.State.spec.key)
+            local line = ("%s seed %d covered %d overflow %d slots %d lag %s"):format(
+                who,
+                seed,
+                Q.covered,
+                Q.overflow,
+                Q.nSlots,
+                tostring(ctl.viewer.lag)
+            )
+            ab.check(Q.overflow == 0, "layout", line)
+        end
     end
     run.damage = 0 -- our true damage dealt (white wounds count at their land)
     for _, ev in ipairs(W.truth) do
@@ -683,6 +713,28 @@ function M.run(L, seed, o, drivers)
         L.carry[drivers[1].H] = c
     end
     return run
+end
+
+--- A viewer arm's Cooldown Manager layout on driver H for the fight of `seed` (scenarios.viewerLayout over the
+--- belief's def; the fixture by the character's class from tools/data/cooldownviewer): its layout events. A class with
+--- no fixture runs viewer-fixture with no item and says so once in the arm's .ab file.
+function M.viewerLayout(H, preset, seed, wo)
+    local ctl, I = H.ctl, H.ns.VirtualStateInternal
+    local who = tostring(ctl.class) .. " " .. tostring(H.Hekili.State.spec.key)
+    local fixture
+    if preset == "fixture" then
+        local f = loadfile("tools/data/cooldownviewer/" .. tostring(ctl.class):upper() .. ".lua")
+        fixture = f and f()
+    end
+    local o = { pull = wo.pull, duration = wo.duration, fixture = fixture }
+    local ev = scenarios.viewerLayout(ctl, I.def, preset, seed, o)
+    if ev == nil and not ctl.viewer.skipNoted then
+        ctl.viewer.skipNoted = true
+        local line = who .. " skipped: no tools/data/cooldownviewer fixture"
+        print("\n" .. preset .. " layout: " .. line) -- once a boot, in the log too (review m3)
+        ab.check(true, "layout " .. preset, line)
+    end
+    return ev
 end
 
 --- Fight `seed`: run A (ours drives, the oracle shadows) and run B (the oracle drives a fresh world of the same seed).
