@@ -37,8 +37,9 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         ctl.now = t
         I.presence.Sweep(t)
     end
-    local function counts(j, u)
-        return { Q.Counts(j, u) }
+    local function counts(j, u) -- the first six (nDark, the 7th, is read by dark())
+        local a, b, c, d6, e, f = Q.Counts(j, u)
+        return { a, b, c, d6, e, f }
     end
     local function up(spell, unit)
         ctl.ViewerAuraBySpell(unit or "player", spell, true, "player")
@@ -210,6 +211,8 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         "items appearing (in combat, lit at once) and disappearing move the counts; a never-lit item is not live",
         function()
             ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            ctl.viewer.sets[1] = { 505 } -- (cdm-verdict §2.4a) its own cooldownID: 501's seen memory is the item's
+            ctl.viewer.infos[505] = { spellID = A }
             start()
             ctl.combat = true
             ctl.Fire("PLAYER_REGEN_DISABLED")
@@ -220,7 +223,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
             assert.is_not_nil(Q.slotOf[b])
             assert.are.same({ 2, 2, 0, 0, 3, 0 }, counts(1, 1))
             rec(1, 1, 2)
-            local s = ctl.ViewerAcquire("UtilityCooldownViewer", 501, true) -- a silent item (F12)
+            local s = ctl.ViewerAcquire("UtilityCooldownViewer", 505, true) -- a silent item (F12)
             sweep(4)
             assert.are.same({ 2, 2, 0, 0, 3, 0 }, counts(1, 1)) -- it never held this application: not live
             assert.are.equal(I.UP, I.presence.Presence(1, 1))
@@ -521,10 +524,11 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
         assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(2, 1))
         item.silent = true -- (CDM Task 8: a re-point's refresh now lights an aura that is up; silent keeps it dark here)
-        ctl.ViewerRepoint(item, 502) -- back to aura 1, silent: not live until it lights again
+        ctl.ViewerRepoint(item, 502) -- back to aura 1, silent
         item.silent = nil
         sweep(4)
-        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        -- (cdm-verdict §2.4a) the frame is item 502 again, which held this application at 2: its seen memory comes back
+        assert.are.same({ 1, 0, 1, 0, 0, 4 }, counts(1, 1))
         ctl.ViewerAura(item, "player", A)
         sweep(5)
         ctl.ViewerClear(item)
@@ -851,6 +855,147 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         ctl.ViewerClear(tItem) -- control: seen after the switch, then silent, it is live (NONE)
         sweep(4)
         assert.are.same({ 1, 0, 1, 0, 0, 4 }, counts(2, 2))
+    end)
+
+    -- The verdict's leaf side (cdm-verdict §2.1-§2.5, decisions 117-118, 121-122).
+    local function dark(j, u)
+        return (select(7, Q.Counts(j, u)))
+    end
+
+    it(
+        "proof: a lit sweep of a visible viewer proves the cooldownID, with its unit; a hidden one proves nothing",
+        function()
+            ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            ctl.viewer.shown.BuffIconCooldownViewer = false
+            start()
+            assert.is_true(Q.NeverLit(1))
+            up(A, "target")
+            sweep(2)
+            assert.is_false(Q.proven[502])
+            ctl.viewer.shown.BuffIconCooldownViewer = nil
+            sweep(3)
+            assert.is_true(Q.proven[502])
+            assert.are.equal(2, Q.provenU[502])
+            assert.is_false(Q.NeverLit(1))
+            assert.is_true(Q.NeverLit(2)) -- 503 maps aura 2, never lit
+            assert.is_false(Q.proven[501]) -- per cooldownID, never per aura
+        end
+    )
+
+    it("the dark count: only after 2 monitored sweeps, never live, for the unit the item last lit for", function()
+        ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        start()
+        up(A, "target")
+        sweep(2)
+        down(A, "target")
+        sweep(3)
+        assert.are.equal(0, dark(1, 2)) -- the first dark sweep counts 1
+        sweep(4)
+        assert.are.equal(1, dark(1, 2))
+        assert.are.equal(0, dark(1, 1))
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 2)) -- not live: no record, so no NONE either
+        assert.are.equal(0, I.presence.covered)
+        up(A, "target") -- a light restarts it
+        sweep(5)
+        assert.are.equal(0, dark(1, 2))
+        down(A, "target")
+        sweep(6)
+        assert.are.equal(0, dark(1, 2))
+        ctl.viewer.shown.BuffIconCooldownViewer = false -- not monitored: restarts
+        sweep(7)
+        assert.are.equal(0, dark(1, 2))
+        ctl.viewer.shown.BuffIconCooldownViewer = nil
+        sweep(8)
+        assert.are.equal(0, dark(1, 2))
+        sweep(9)
+        assert.are.equal(1, dark(1, 2))
+        local item = ctl.viewer.items.BuffIconCooldownViewer[1]
+        item.auraInstanceID, item.auraDataUnit = fake.SECRET, "focus" -- held for no unit we track: restarts
+        sweep(10)
+        assert.are.equal(0, dark(1, 2))
+    end)
+
+    it("an unproven item is never dark", function()
+        ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        start()
+        for t = 2, 5 do
+            sweep(t)
+            assert.are.equal(0, dark(1, 1))
+            assert.are.equal(0, dark(1, 2))
+        end
+    end)
+
+    it("a re-point: the frame inherits its new cooldownID's seen memory and restarts its dark count", function()
+        local x = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        local y = ctl.ViewerItem("EssentialCooldownViewer", 1, 501)
+        start()
+        ctl.ViewerAura(x, "player", A)
+        sweep(2)
+        rec(1, 1, 2)
+        ctl.ViewerClear(x)
+        sweep(3)
+        sweep(4)
+        assert.are.equal(1, dark(1, 1))
+        assert.are.same({ 1, 0, 1, 0, 0, 3 }, counts(1, 1))
+        Q.repoints = 0
+        x.silent, y.silent = true, true -- the reshuffle swaps the two frames' items, both dark
+        ctl.ViewerRepoint(x, 501)
+        ctl.ViewerRepoint(y, 502)
+        sweep(5)
+        assert.are.equal(2, Q.repoints)
+        assert.are.equal(2, Q.seen[Q.slotOf[y]]) -- 502's memory moved to y
+        assert.are.equal(0, Q.seen[Q.slotOf[x]]) -- 501 has none
+        assert.are.same({ 1, 0, 1, 0, 0, 5 }, counts(1, 1)) -- y answers the seen rule's NONE at once
+        assert.are.equal(0, dark(1, 1)) -- y settles: its count restarted
+        sweep(6)
+        assert.are.equal(1, dark(1, 1))
+    end)
+
+    it("a target swap zeroes the target's seen memory and dark counts, then settles", function()
+        ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        start()
+        up(A, "target")
+        sweep(2)
+        assert.are.same({ 2, 2 }, { Q.seenCd[502], Q.seenUnitCd[502] })
+        down(A, "target")
+        sweep(3)
+        sweep(4)
+        assert.are.equal(1, dark(1, 2))
+        ctl.now = 4.5
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        assert.are.equal(0, Q.seenCd[502])
+        assert.are.equal(0, dark(1, 2))
+        sweep(4.5) -- the swap's own frame: settling
+        assert.are.equal(0, dark(1, 2))
+        sweep(5)
+        assert.are.equal(0, dark(1, 2))
+        sweep(6)
+        assert.are.equal(1, dark(1, 2))
+        assert.is_true(Q.proven[502]) -- the proof stays (per cooldownID, per build)
+    end)
+
+    it("strikes: two drop the proof of every item lit for (j, u), and it cannot be re-proven this build", function()
+        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        ctl.ViewerItem("EssentialCooldownViewer", 1, 501).silent = true -- not lit: never struck
+        start()
+        up(A)
+        sweep(2)
+        Q.Strike(1, 2) -- another unit: nothing
+        assert.are.equal(0, Q.strikes[502])
+        Q.Strike(1, 1)
+        assert.are.same({ 1, true, 0 }, { Q.strikes[502], Q.proven[502], Q.struck })
+        Q.Strike(1, 1)
+        assert.are.same({ 2, false, 1 }, { Q.strikes[502], Q.proven[502], Q.struck })
+        assert.are.equal(0, Q.strikes[501])
+        sweep(3) -- still lit: no re-proof
+        assert.is_false(Q.proven[502])
+        ctl.ViewerClear(item)
+        for t = 4, 6 do
+            sweep(t)
+            assert.are.equal(0, dark(1, 1))
+        end
+        Q.Activate(api, 7, d) -- a new build: proof and strikes start over
+        assert.are.same({ 0, 0 }, { Q.strikes[502], Q.struck })
     end)
 end)
 
