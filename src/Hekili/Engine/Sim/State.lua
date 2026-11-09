@@ -2031,12 +2031,22 @@ do
 
         -- ???
         -- Information may be "real" and durable, so we want to leave it be.
+        -- active = 1,
+        -- hardcast = 1,
+        -- miss_react = 1,
+        -- ranged = 1,
+        -- wait_for_gcd = 1,
 
         -- Spec State Expressions (probably redundant here).
         effective_combo_points = 1,
         prowling = 1,
 
         -- Real incoming damage/healing information (handled by autoReset metatable).
+        -- incoming_damage = 1,
+        -- incoming_heal = 1,
+        -- incoming_magic = 1,
+        -- incoming_physical = 1,
+        -- time_to_pct = 1,
 
         -- Channels.
         channel = 1,
