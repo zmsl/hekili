@@ -3,16 +3,46 @@
 ## Unreleased
 
 ### New
-- Druid: the Feral and Guardian priorities now follow your form. Feral in Bear Form suggests what Guardian would, and Guardian in Cat Form suggests what Feral would. In caster form each suggests its own form. The setting each borrowed priority uses shows on your specialization's page too, under its own heading.
 
 ### Changed
-- The wowsims.com priorities for Hunter, Mage, Rogue, Shadow Priest, Enhancement Shaman, Affliction and SM Ruin Warlock, and Protection Paladin now suggest your race's cooldown (Blood Fury, Berserking, Elune's Light, Eureka! or Stoneform) the way wowsims uses it, whatever your race; before, only the race wowsims was tested with got it.
 
 ### Fixed
 
 ### Known issues
 
 ### Upgrade notes
+
+## v0.7.2
+
+_Released 2026-11-10_
+
+Feral and Guardian Druids now get suggestions that follow their current form, and several wowsims.com priorities now use your race's cooldown whatever your race.
+
+### Druid
+- Feral (wowsims.com): in Bear Form you now get the Guardian suggestions; in caster form you still get Feral's.
+- Guardian (wowsims.com): in Cat Form you now get the Feral suggestions; in caster form you still get Guardian's.
+- The settings for the other form's suggestions now appear on your specialization's page under their own heading, and each specialization keeps its own values.
+
+### Hunter
+- All three wowsims.com priorities now suggest your race's cooldown the way wowsims uses it, whatever your race; before, only one race got it.
+
+### Mage
+- All three wowsims.com priorities now suggest your race's cooldown the way wowsims uses it, whatever your race; before, only one race got it.
+
+### Paladin
+- Protection (wowsims.com) now suggests your race's cooldown, such as Stoneform, the way wowsims uses it, whatever your race; before, only one race got it.
+
+### Priest
+- Shadow (wowsims.com) now suggests your race's cooldown the way wowsims uses it, whatever your race; before, only one race got it.
+
+### Rogue
+- All three wowsims.com priorities now suggest your race's cooldown the way wowsims uses it, whatever your race; before, only one race got it.
+
+### Shaman
+- Enhancement (wowsims.com) now suggests your race's cooldown the way wowsims uses it, whatever your race; before, only one race got it.
+
+### Warlock
+- Affliction and SM Ruin (wowsims.com) now suggest your race's cooldown the way wowsims uses it, whatever your race; before, only one race got it.
 
 ## v0.7.1
 
