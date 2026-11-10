@@ -1,0 +1,335 @@
+-- tests/Forever/gamepad_keybinds_spec.lua: Forever's native gamepad action bars on Hekili's icons. The reader
+-- (Engine/Sim/Events.lua, ns.Gamepad) turns storage slots 181+ into (page, bar, position), reads the buttons and
+-- modifier keys at runtime and stores the controller pictures per ability; a pad key on a normal bar becomes a picture
+-- too; the classic and timeline styles put a gamepad binding outside the icon (UI.SetKeybindingText).
+local headless = require("Game.harness.headless")
+local ww = require("Forever.helpers.warrior_world")
+local fake = require("Game.State.helpers.fake_api")
+
+-- The fake client's gamepad side, one table the tests edit: action ids by slot, binding keys by command.
+local world
+
+local fakeNew = fake.new
+local function install()
+    fake.new = function(...)
+        local api, ctl = fakeNew(...)
+        api.GetActionInfo = function(slot)
+            local id = world.actions[slot]
+            if id then
+                return "spell", id
+            end
+        end
+        api.GetBindingKey = function(command)
+            return world.keys[command]
+        end
+        api.C_GamepadUI.GetFirstGamepadActionStorageSlotIndex = function()
+            return world.first
+        end
+        api.C_GamepadUI.GetFirstGamepadActionBarStorageSlotIndexForActiveStance = function()
+            return world.formBase
+        end
+        api.C_ActionBar.HasBonusActionBar = function()
+            return world.bonus
+        end
+        api.InputDeviceIconSetManager = {
+            GetActiveInputDeviceIconSet = function()
+                return world.set
+            end,
+        }
+        return api, ctl
+    end
+end
+
+local BUTTON = { "PADDLEFT", "PADDUP", "PADDRIGHT", "PADDDOWN", "PAD3", "PAD4", "PAD2", "PAD1" } -- the owner's, measured
+
+local function reset()
+    world = { actions = {}, keys = {}, first = 181, bonus = false, formBase = nil, set = "Letters" }
+    for pos, key in ipairs(BUTTON) do
+        world.keys["GAMEPADACTIONBUTTON" .. pos] = key
+    end
+    world.keys.GAMEPADLEFTMOD, world.keys.GAMEPADRIGHTMOD = "PADLTRIGGER", "PADRTRIGGER"
+end
+
+local function glyphs(H, set)
+    local e = H.env
+    for _, key in ipairs({ "PADDLEFT", "PADDUP", "PADLTRIGGER", "PADRTRIGGER", "PAD1" }) do
+        e["KEY_ABBR_" .. key .. "_LTR"] = "|A:Gamepad_Ltr_" .. key .. "_32:14:14|a"
+        e["KEY_ABBR_" .. key] = "|A:Gamepad_Gen_" .. key .. "_32:14:14|a"
+    end
+    e.Enum = {
+        GamepadStanceBarOverride = {
+            None = 0,
+            Page1TopBar = 1,
+            Page1LeftBar = 2,
+            Page1RightBar = 3,
+            Page1BottomBar = 4,
+        },
+    }
+end
+
+local function boot()
+    install()
+    local H = headless.new({ character = ww.character(), pack = ww.PACK })
+    fake.new = fakeNew
+    assert.are.same({}, H.loadErrors)
+    glyphs(H)
+    return H
+end
+
+local function id(H, name)
+    return H.Hekili.Engine.Registry.Abilities()[name].id
+end
+
+local function read(H)
+    H.ns.ReadKeybindings()
+    return H.Hekili.KeybindInfo
+end
+
+local function L(key, size)
+    return "|A:Gamepad_Ltr_" .. key .. "_32:" .. (size or 14) .. ":" .. (size or 14) .. "|a"
+end
+local function G(key)
+    return "|A:Gamepad_Gen_" .. key .. "_32:14:14|a"
+end
+
+describe("gamepad keybinds", function()
+    before_each(reset)
+
+    it("maps a storage slot to page, bar and position", function()
+        local H = boot()
+        local slot = H.ns.Gamepad.Slot
+        local function at(n)
+            local page, bar, pos = slot(n, 181)
+            return { page, bar, pos }
+        end
+        assert.are.same({ 1, 1, 1 }, at(181)) -- top bar, d-pad left
+        assert.are.same({ 1, 1, 4 }, at(184))
+        assert.are.same({ 1, 2, 1 }, at(185)) -- left bar
+        assert.are.same({ 1, 2, 8 }, at(192))
+        assert.are.same({ 1, 3, 1 }, at(193)) -- right bar
+        assert.are.same({ 1, 4, 1 }, at(201)) -- bottom bar
+        assert.are.same({ 1, 4, 8 }, at(208))
+        assert.are.same({ 2, 2, 3 }, at(181 + 28 + 6)) -- page 2, left bar, position 3
+        assert.is_nil(slot(180, 181))
+        assert.is_nil(slot(181 + 84, 181)) -- past the three standard pages
+    end)
+
+    it("shows the left trigger and the d-pad picture for an action at 186, in the player's controller style", function()
+        local H = boot()
+        world.actions[186] = id(H, "mortal_strike")
+        local info = read(H)
+        assert.are.equal(L("PADLTRIGGER") .. L("PADDUP"), info.mortal_strike.pad[1])
+        -- no _LTR global for the button: the generic one stands in
+        H.env.KEY_ABBR_PADDUP_LTR = nil
+        info = read(H)
+        assert.are.equal(L("PADLTRIGGER") .. G("PADDUP"), info.mortal_strike.pad[1])
+        -- neither: readable text
+        H.env.KEY_ABBR_PADDUP = nil
+        info = read(H)
+        assert.are.equal(L("PADLTRIGGER") .. "Up", info.mortal_strike.pad[1])
+        -- Generic: the bare names
+        world.set = "Generic"
+        H.env.KEY_ABBR_PADDUP = G("PADDUP")
+        assert.are.equal(G("PADLTRIGGER") .. G("PADDUP"), read(H).mortal_strike.pad[1])
+        -- no modifier on the top bar, both on the bottom bar
+        world.set = "Letters"
+        H.env.KEY_ABBR_PADDUP_LTR = L("PADDUP")
+        world.actions = { [182] = id(H, "mortal_strike"), [201] = id(H, "overpower") }
+        info = read(H)
+        assert.are.equal(L("PADDUP"), info.mortal_strike.pad[1])
+        assert.are.equal(L("PADLTRIGGER") .. L("PADRTRIGGER") .. L("PADDLEFT"), info.overpower.pad[1])
+    end)
+
+    it("reads nothing without the gamepad action bars", function()
+        local H = boot()
+        world.actions[186] = id(H, "mortal_strike")
+        world.first = nil
+        local info = read(H)
+        assert.are.same({}, info.mortal_strike and info.mortal_strike.pad or {})
+        -- and the keyboard path is untouched
+        world.keys.ACTIONBUTTON1 = "SHIFT-1"
+        world.actions[1] = id(H, "mortal_strike")
+        assert.are.equal("S1", read(H).mortal_strike.upper[1])
+    end)
+
+    describe("the form bar", function()
+        it(
+            "replaces the bar the CVar names: the form slot takes its modifier, the bar's own slots are not offered",
+            function()
+                local H = boot()
+                H.ctl.cvars.GamepadStanceBarOverride = "2" -- Page1LeftBar
+                world.bonus, world.formBase = true, 265
+                world.actions[265 + 1] = id(H, "mortal_strike") -- form slot 2 = d-pad up
+                world.actions[186] = id(H, "overpower") -- the replaced left bar
+                local info = read(H)
+                assert.are.equal(L("PADLTRIGGER") .. L("PADDUP"), info.mortal_strike.pad[1])
+                assert.is_nil(info.overpower and info.overpower.pad[1])
+                -- off the form, the left bar is offered again
+                world.bonus = false
+                info = read(H)
+                assert.is_nil(info.mortal_strike.pad[1])
+                assert.are.equal(L("PADLTRIGGER") .. L("PADDUP"), info.overpower.pad[1])
+            end
+        )
+
+        it("ignores the form bar when the override is None", function()
+            local H = boot()
+            H.ctl.cvars.GamepadStanceBarOverride = "0"
+            world.bonus, world.formBase = true, 265
+            world.actions[266] = id(H, "mortal_strike")
+            world.actions[186] = id(H, "overpower")
+            local info = read(H)
+            assert.is_nil(info.mortal_strike and info.mortal_strike.pad[1])
+            assert.are.equal(L("PADLTRIGGER") .. L("PADDUP"), info.overpower.pad[1])
+        end)
+
+        it("offers nothing for the replaced right bar while an empty form bar shows", function()
+            local H = boot()
+            H.ctl.cvars.GamepadStanceBarOverride = "3" -- Page1RightBar, the owner's
+            world.bonus, world.formBase = true, 265 -- slots 265-272 hold nothing
+            world.actions[193] = id(H, "mortal_strike") -- right bar, position 1
+            world.actions[200] = id(H, "overpower") -- right bar, position 8
+            world.actions[185] = id(H, "slam") -- the left bar stays
+            local info = read(H)
+            assert.is_nil(info.mortal_strike and info.mortal_strike.pad[1])
+            assert.is_nil(info.overpower and info.overpower.pad[1])
+            assert.are.equal(L("PADLTRIGGER") .. L("PADDLEFT"), info.slam.pad[1])
+        end)
+    end)
+
+    it("renders a pad key on a normal bar as its picture, not as abbreviated text", function()
+        local H = boot()
+        world.keys.ACTIONBUTTON1, world.keys.ACTIONBUTTON2 = "SHIFT-PADDLEFT", "PAD1"
+        world.actions[1], world.actions[2] = id(H, "mortal_strike"), id(H, "overpower")
+        local info = read(H)
+        assert.are.equal("S" .. L("PADDLEFT"), info.mortal_strike.upper[1])
+        assert.are.equal("S" .. L("PADDLEFT"), info.mortal_strike.lower[1]) -- markup is case-sensitive
+        assert.are.equal(L("PAD1"), info.overpower.upper[1])
+        assert.is_nil(tostring(info.mortal_strike.upper[1]):find("PADDDn", 1, true))
+        -- a keyboard binding with no pad key reads as before
+        world.keys.ACTIONBUTTON1 = "ALT-DOWN"
+        assert.are.equal("ADn", read(H).mortal_strike.upper[1])
+    end)
+
+    it("answers the gamepad text (sized to the font) in place of keyboard text; an override still wins", function()
+        local H = boot()
+        world.keys.ACTIONBUTTON1 = "5"
+        world.actions[1], world.actions[186] = id(H, "mortal_strike"), id(H, "mortal_strike")
+        read(H)
+        local conf = H.Hekili.DB.profile.displays.Primary
+        conf.classic.keybindings.fontSize = 20
+        local text = H.Hekili:GetBindingForAction("mortal_strike", conf, 1)
+        assert.are.equal(L("PADLTRIGGER", 20) .. L("PADDUP", 20), text)
+        assert.is_true(H.ns.Gamepad.Is(text))
+        assert.is_false(H.ns.Gamepad.Is("5"))
+        -- without a gamepad binding: the keyboard text
+        world.actions[186] = nil
+        read(H)
+        assert.are.equal("5", H.Hekili:GetBindingForAction("mortal_strike", conf, 1))
+        -- a per-ability override beats both
+        world.actions[186] = id(H, "mortal_strike")
+        read(H)
+        local spec = H.Hekili.Engine.settings.specs[H.Hekili.State.spec.id]
+        spec.abilities.mortal_strike.keybind = "F9"
+        assert.are.equal("F9", H.Hekili:GetBindingForAction("mortal_strike", conf, 1))
+        spec.abilities.mortal_strike.keybind = nil
+    end)
+end)
+
+-- A font string that records what the styles do to it.
+local function fs()
+    local f = { points = {} }
+    function f:ClearAllPoints()
+        self.points = {}
+    end
+    function f:SetPoint(...)
+        self.points[#self.points + 1] = { ... }
+    end
+    function f:SetJustifyH(v)
+        self.h = v
+    end
+    function f:SetJustifyV(v)
+        self.v = v
+    end
+    function f:GetJustifyV()
+        return self.v or "MIDDLE"
+    end
+    function f:SetText(t)
+        self.text = t
+    end
+    return f
+end
+
+describe("gamepad keybinds on the icons", function()
+    before_each(reset)
+
+    local function setup(style)
+        local H = boot()
+        world.actions[186] = id(H, "mortal_strike")
+        world.keys.ACTIONBUTTON1 = "5"
+        world.actions[1] = id(H, "overpower")
+        read(H)
+        local conf = H.Hekili.DB.profile.displays.Primary
+        conf.style = style
+        conf.numIcons = 6
+        H.Hekili:BuildUI()
+        local d = rawget(H.env, "HekiliDisplayPrimary")
+        return H, d, conf
+    end
+
+    it("anchors a gamepad binding below the classic icon, above with Top; keyboard text keeps its anchor", function()
+        local H, d, conf = setup("classic")
+        local kb = conf.classic.keybindings
+        assert.are.equal("BOTTOM", kb.gamepadPosition)
+        local b1, b2 = d.Buttons[1], d.Buttons[2]
+        b1.Keybinding, b2.Keybinding = fs(), fs()
+        b1.Action, b2.Action = "mortal_strike", "overpower"
+        d.style.UpdateKeybindings(d)
+        assert.is_true(H.ns.Gamepad.Is(b1.Keybinding.text))
+        assert.are.same({ { "TOP", b1, "BOTTOM", 0, -1 } }, b1.Keybinding.points)
+        assert.are.equal("CENTER", b1.Keybinding.h)
+        assert.are.equal("5", b2.Keybinding.text) -- keyboard text: the configured anchor, untouched
+        assert.are.same({}, b2.Keybinding.points)
+        kb.gamepadPosition = "TOP"
+        b1.Keybinding.padPos = nil -- a changed option redraws through a rebuild; here, the stored kind
+        d.style.UpdateKeybindings(d)
+        assert.are.same({ { "BOTTOM", b1, "TOP", 0, 1 } }, b1.Keybinding.points)
+        -- the ability loses its gamepad binding: back to the keyboard anchor
+        world.actions[186] = nil
+        read(H)
+        d.style.UpdateKeybindings(d)
+        assert.are.same({ { kb.anchor, b1, kb.anchor, kb.x, kb.y } }, b1.Keybinding.points)
+    end)
+
+    it(
+        "shows gamepad pictures on the timeline's now circle and next box only; keyboard text stays off a focus",
+        function()
+            local H, d, conf = setup("timeline")
+            local T = d.styleFrames.timeline
+            local kb = conf.timeline.keybindings
+            for c = 1, 3 do
+                T.cells[c].Keybinding = fs()
+                T.cells[c].Action = c == 3 and "overpower" or "mortal_strike"
+                T.rec[c] = c
+            end
+            T.cells[3].Action = "mortal_strike" -- same gamepad ability in the lane
+            T.focused = false
+            d.style.UpdateKeybindings(d)
+            assert.is_true(H.ns.Gamepad.Is(T.cells[1].Keybinding.text))
+            assert.is_true(H.ns.Gamepad.Is(T.cells[2].Keybinding.text))
+            assert.is_nil(T.cells[3].Keybinding.text) -- never on a lane record
+            assert.are.same({ { "TOP", T.cells[1], "BOTTOM", 0, -1 } }, T.cells[1].Keybinding.points)
+            -- a focus record on cell 1: the picture still shows (keyboard text would not)
+            T.focused, T.rec[1] = true, 2 -- a focus record (not the first pick) holds the circle
+            d.style.UpdateKeybindings(d)
+            assert.is_true(H.ns.Gamepad.Is(T.cells[1].Keybinding.text))
+            T.cells[1].Action = "overpower"
+            d.style.UpdateKeybindings(d)
+            assert.is_nil(T.cells[1].Keybinding.text) -- keyboard text on a focus: none
+            T.cells[3].Action = "overpower"
+            d.style.UpdateKeybindings(d)
+            assert.are.equal("5", T.cells[3].Keybinding.text) -- keyboard text on the lane: as before
+            assert.is_true(kb.enabled)
+        end
+    )
+end)

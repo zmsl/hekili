@@ -8066,6 +8066,10 @@ options.displays.AOE.classic.keybindings.cPort.cPortOverride	name	Use ConsolePor
 options.displays.AOE.classic.keybindings.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.AOE.classic.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.AOE.classic.keybindings.enabled	name	Enabled
+options.displays.AOE.classic.keybindings.gamepad	name	Gamepad
+options.displays.AOE.classic.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.AOE.classic.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.AOE.classic.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.AOE.classic.keybindings.lowercase	name	Use Lowercase
 options.displays.AOE.classic.keybindings.pos	name	Position
 options.displays.AOE.classic.keybindings.pos.anchor	name	Anchor Point
@@ -8593,6 +8597,10 @@ options.displays.AOE.timeline.tab_now.keybindings.cPort.cPortOverride	name	Use C
 options.displays.AOE.timeline.tab_now.keybindings.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.AOE.timeline.tab_now.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.AOE.timeline.tab_now.keybindings.enabled	name	Enabled
+options.displays.AOE.timeline.tab_now.keybindings.gamepad	name	Gamepad
+options.displays.AOE.timeline.tab_now.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.AOE.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.AOE.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.AOE.timeline.tab_now.keybindings.lowercase	name	Use Lowercase
 options.displays.AOE.timeline.tab_now.keybindings.pos	name	Position
 options.displays.AOE.timeline.tab_now.keybindings.pos.anchor	name	Anchor Point
@@ -9000,6 +9008,10 @@ options.displays.Cooldowns.classic.keybindings.cPort.cPortOverride	name	Use Cons
 options.displays.Cooldowns.classic.keybindings.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Cooldowns.classic.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Cooldowns.classic.keybindings.enabled	name	Enabled
+options.displays.Cooldowns.classic.keybindings.gamepad	name	Gamepad
+options.displays.Cooldowns.classic.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.Cooldowns.classic.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.Cooldowns.classic.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.Cooldowns.classic.keybindings.lowercase	name	Use Lowercase
 options.displays.Cooldowns.classic.keybindings.pos	name	Position
 options.displays.Cooldowns.classic.keybindings.pos.anchor	name	Anchor Point
@@ -9527,6 +9539,10 @@ options.displays.Cooldowns.timeline.tab_now.keybindings.cPort.cPortOverride	name
 options.displays.Cooldowns.timeline.tab_now.keybindings.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Cooldowns.timeline.tab_now.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Cooldowns.timeline.tab_now.keybindings.enabled	name	Enabled
+options.displays.Cooldowns.timeline.tab_now.keybindings.gamepad	name	Gamepad
+options.displays.Cooldowns.timeline.tab_now.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.Cooldowns.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.Cooldowns.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.Cooldowns.timeline.tab_now.keybindings.lowercase	name	Use Lowercase
 options.displays.Cooldowns.timeline.tab_now.keybindings.pos	name	Position
 options.displays.Cooldowns.timeline.tab_now.keybindings.pos.anchor	name	Anchor Point
@@ -9934,6 +9950,10 @@ options.displays.Defensives.classic.keybindings.cPort.cPortOverride	name	Use Con
 options.displays.Defensives.classic.keybindings.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Defensives.classic.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Defensives.classic.keybindings.enabled	name	Enabled
+options.displays.Defensives.classic.keybindings.gamepad	name	Gamepad
+options.displays.Defensives.classic.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.Defensives.classic.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.Defensives.classic.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.Defensives.classic.keybindings.lowercase	name	Use Lowercase
 options.displays.Defensives.classic.keybindings.pos	name	Position
 options.displays.Defensives.classic.keybindings.pos.anchor	name	Anchor Point
@@ -10461,6 +10481,10 @@ options.displays.Defensives.timeline.tab_now.keybindings.cPort.cPortOverride	nam
 options.displays.Defensives.timeline.tab_now.keybindings.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Defensives.timeline.tab_now.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Defensives.timeline.tab_now.keybindings.enabled	name	Enabled
+options.displays.Defensives.timeline.tab_now.keybindings.gamepad	name	Gamepad
+options.displays.Defensives.timeline.tab_now.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.Defensives.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.Defensives.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.Defensives.timeline.tab_now.keybindings.lowercase	name	Use Lowercase
 options.displays.Defensives.timeline.tab_now.keybindings.pos	name	Position
 options.displays.Defensives.timeline.tab_now.keybindings.pos.anchor	name	Anchor Point
@@ -10868,6 +10892,10 @@ options.displays.Interrupts.classic.keybindings.cPort.cPortOverride	name	Use Con
 options.displays.Interrupts.classic.keybindings.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Interrupts.classic.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Interrupts.classic.keybindings.enabled	name	Enabled
+options.displays.Interrupts.classic.keybindings.gamepad	name	Gamepad
+options.displays.Interrupts.classic.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.Interrupts.classic.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.Interrupts.classic.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.Interrupts.classic.keybindings.lowercase	name	Use Lowercase
 options.displays.Interrupts.classic.keybindings.pos	name	Position
 options.displays.Interrupts.classic.keybindings.pos.anchor	name	Anchor Point
@@ -11395,6 +11423,10 @@ options.displays.Interrupts.timeline.tab_now.keybindings.cPort.cPortOverride	nam
 options.displays.Interrupts.timeline.tab_now.keybindings.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Interrupts.timeline.tab_now.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Interrupts.timeline.tab_now.keybindings.enabled	name	Enabled
+options.displays.Interrupts.timeline.tab_now.keybindings.gamepad	name	Gamepad
+options.displays.Interrupts.timeline.tab_now.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.Interrupts.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.Interrupts.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.Interrupts.timeline.tab_now.keybindings.lowercase	name	Use Lowercase
 options.displays.Interrupts.timeline.tab_now.keybindings.pos	name	Position
 options.displays.Interrupts.timeline.tab_now.keybindings.pos.anchor	name	Anchor Point
@@ -11823,6 +11855,11 @@ options.displays.Multi.classic.keybindings.cPort.cPortZoom	desc	The ConsolePort 
 options.displays.Multi.classic.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Multi.classic.keybindings.enabled	desc	|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFF00FF00Checked|r\n|cFF00B4FFDefensives:|r |cFF00FF00Checked|r\n|cFF00B4FFInterrupts:|r |cFF00FF00Checked|r
 options.displays.Multi.classic.keybindings.enabled	name	Enabled
+options.displays.Multi.classic.keybindings.gamepad	name	Gamepad
+options.displays.Multi.classic.keybindings.gamepad.gamepadPosition	desc	|cFF00B4FFPrimary:|r |cFFFFD100Bottom|r\n|cFF00B4FFAOE:|r |cFFFFD100Bottom|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Bottom|r\n|cFF00B4FFDefensives:|r |cFFFFD100Bottom|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Bottom|r
+options.displays.Multi.classic.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.Multi.classic.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.Multi.classic.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.Multi.classic.keybindings.lowercase	desc	|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
 options.displays.Multi.classic.keybindings.lowercase	name	Use Lowercase
 options.displays.Multi.classic.keybindings.pos	name	Position
@@ -12404,6 +12441,11 @@ options.displays.Multi.timeline.tab_now.keybindings.cPort.cPortZoom	desc	The Con
 options.displays.Multi.timeline.tab_now.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Multi.timeline.tab_now.keybindings.enabled	desc	|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFF00FF00Checked|r\n|cFF00B4FFDefensives:|r |cFF00FF00Checked|r\n|cFF00B4FFInterrupts:|r |cFF00FF00Checked|r
 options.displays.Multi.timeline.tab_now.keybindings.enabled	name	Enabled
+options.displays.Multi.timeline.tab_now.keybindings.gamepad	name	Gamepad
+options.displays.Multi.timeline.tab_now.keybindings.gamepad.gamepadPosition	desc	|cFF00B4FFPrimary:|r |cFFFFD100Bottom|r\n|cFF00B4FFAOE:|r |cFFFFD100Bottom|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Bottom|r\n|cFF00B4FFDefensives:|r |cFFFFD100Bottom|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Bottom|r
+options.displays.Multi.timeline.tab_now.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.Multi.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.Multi.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.Multi.timeline.tab_now.keybindings.lowercase	desc	|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
 options.displays.Multi.timeline.tab_now.keybindings.lowercase	name	Use Lowercase
 options.displays.Multi.timeline.tab_now.keybindings.pos	name	Position
@@ -12824,6 +12866,10 @@ options.displays.Primary.classic.keybindings.cPort.cPortOverride	name	Use Consol
 options.displays.Primary.classic.keybindings.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Primary.classic.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Primary.classic.keybindings.enabled	name	Enabled
+options.displays.Primary.classic.keybindings.gamepad	name	Gamepad
+options.displays.Primary.classic.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.Primary.classic.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.Primary.classic.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.Primary.classic.keybindings.lowercase	name	Use Lowercase
 options.displays.Primary.classic.keybindings.pos	name	Position
 options.displays.Primary.classic.keybindings.pos.anchor	name	Anchor Point
@@ -13351,6 +13397,10 @@ options.displays.Primary.timeline.tab_now.keybindings.cPort.cPortOverride	name	U
 options.displays.Primary.timeline.tab_now.keybindings.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Primary.timeline.tab_now.keybindings.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Primary.timeline.tab_now.keybindings.enabled	name	Enabled
+options.displays.Primary.timeline.tab_now.keybindings.gamepad	name	Gamepad
+options.displays.Primary.timeline.tab_now.keybindings.gamepad.gamepadPosition	name	Position
+options.displays.Primary.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.BOTTOM	Bottom
+options.displays.Primary.timeline.tab_now.keybindings.gamepad.gamepadPosition	values.TOP	Top
 options.displays.Primary.timeline.tab_now.keybindings.lowercase	name	Use Lowercase
 options.displays.Primary.timeline.tab_now.keybindings.pos	name	Position
 options.displays.Primary.timeline.tab_now.keybindings.pos.anchor	name	Anchor Point

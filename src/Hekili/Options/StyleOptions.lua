@@ -184,6 +184,8 @@ local function base()
             cPortOverride = true,
             cPortZoom = 0.6,
 
+            gamepadPosition = "BOTTOM",
+
             color = { 1, 1, 1, 1 },
         },
     }
@@ -362,6 +364,22 @@ return L["Position"] end,
                 },
             },
             disabled = function() return ConsolePort == nil end,
+        },
+
+        gamepad = {
+            name = L["Gamepad"],
+            type = "group",
+            inline = true,
+            order = 4.1,
+            args = {
+                gamepadPosition = {
+                    type = "select",
+                    name = L["Position"],
+                    order = 1,
+                    width = 1,
+                    values = { BOTTOM = L["Bottom"], TOP = L["Top"] },
+                },
+            },
         },
     }
 

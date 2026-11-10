@@ -15,6 +15,7 @@ local SpellIsSelfBuff, UnitAttackSpeed, UnitCastingInfo, UnitChannelInfo = Facad
 local UnitClass, UnitExists, UnitGUID, UnitInParty = Facade.UnitClass, Facade.UnitExists, Facade.UnitGUID, Facade.UnitInParty
 local UnitInRaid, UnitIsPlayer, UnitLevel, UnitName = Facade.UnitInRaid, Facade.UnitIsPlayer, Facade.UnitLevel, Facade.UnitName
 local UnitPower = Facade.UnitPower
+local C_ActionBar, C_GamepadUI, GetCVar = Facade.C_ActionBar, Facade.C_GamepadUI, Facade.GetCVar
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
@@ -1817,14 +1818,142 @@ local bindingSubs = {
     { "CAPSLOCK", "CAPS" },
 }
 
-local function improvedGetBindingText( binding )
-    if not binding then return "" end
+-- Native gamepad bars (Blizzard_GamepadActionBars): button pictures from the client's own KEY_ABBR_* markup, in the
+-- player's controller style. Facade rows absent on a client without the gamepad UI answer nothing.
+local Pad = {}
+ns.Gamepad = Pad
 
+local ICON_SUFFIX = { Letters = "_LTR", Shapes = "_SHP", Reverse = "_REV" } -- "Generic": the bare name
+local PAD_TEXT = { PADLTRIGGER = "LT", PADRTRIGGER = "RT", PADLSHOULDER = "LB", PADRSHOULDER = "RB",
+    PADDUP = "Up", PADDDOWN = "Dn", PADDLEFT = "Lf", PADDRIGHT = "Rt", PAD1 = "A", PAD2 = "B", PAD3 = "X", PAD4 = "Y" }
+local PAD_BARS = { Top = 1, Left = 2, Right = 3, Bottom = 4 }
+local PAGE_SIZE, PAGES = 28, 3
+local isPad, sized = {}, {} -- text -> true for a gamepad binding; size -> text -> text resized
+
+--- The picture markup of binding key `key` (PADDUP...) in the active controller style; readable text when the client
+--- has neither the styled nor the generic global.
+function Pad.Glyph( key )
+    local set = _G.InputDeviceIconSetManager
+    local name = set and set.GetActiveInputDeviceIconSet and set:GetActiveInputDeviceIconSet()
+    local suffix = name and ICON_SUFFIX[ name ]
+    return suffix and _G[ "KEY_ABBR_" .. key .. suffix ] or _G[ "KEY_ABBR_" .. key ] or PAD_TEXT[ key ] or key:gsub( "^PAD", "" )
+end
+
+--- Storage slot `slot` as page, bar (1 top, 2 left, 3 right, 4 bottom), position (1-8; GAMEPADACTIONBUTTONn), given the
+--- first gamepad storage slot; nil outside the three standard pages. Offsets 0-3 of a page are the top bar's d-pad,
+--- 4-11 the left bar, 12-19 the right, 20-27 the bottom.
+function Pad.Slot( slot, first )
+    local off = slot - first
+    if off < 0 or off >= PAGE_SIZE * PAGES then return end
+    local page = floor( off / PAGE_SIZE ) + 1
+    off = off % PAGE_SIZE
+    if off < 4 then return page, 1, off + 1 end
+    return page, 2 + floor( ( off - 4 ) / 8 ), ( off - 4 ) % 8 + 1
+end
+
+-- The bar the active form bar replaces (page, bar), or nil for None / an unknown value.
+local function stanceOverride()
+    local E = Enum and Enum.GamepadStanceBarOverride
+    local v = tonumber( GetCVar( "GamepadStanceBarOverride" ) )
+    if not E or not v then return end
+    for name, n in pairs( E ) do
+        if n == v then
+            local page, bar = name:match( "^Page(%d)(%a+)Bar$" )
+            bar = bar and PAD_BARS[ bar ]
+            if bar then return tonumber( page ), bar end
+        end
+    end
+end
+
+--- Calls store( page, markup, type, id ) for every gamepad-bar slot holding an action whose button can be pressed.
+--- The modifiers' keys are read now, never named here.
+function Pad.Read( store )
+    local first = C_GamepadUI.GetFirstGamepadActionStorageSlotIndex()
+    if not first then return end
+
+    local left, right = GetBindingKey( "GAMEPADLEFTMOD" ), GetBindingKey( "GAMEPADRIGHTMOD" )
+    left, right = left and Pad.Glyph( left ), right and Pad.Glyph( right )
+    local mods = { "", left, right, left and right and left .. right } -- by bar: top, left, right, bottom
+
+    -- the form bar replaces one bar while it shows: its 8 slots take that bar's modifiers, the bar's own are not offered
+    local formBase, fpage, fbar
+    if C_ActionBar.HasBonusActionBar() then
+        formBase = C_GamepadUI.GetFirstGamepadActionBarStorageSlotIndexForActiveStance()
+        if formBase then
+            fpage, fbar = stanceOverride()
+            if not fpage then formBase = nil end
+        end
+    end
+
+    local buttons = {}
+    for pos = 1, 8 do
+        local key = GetBindingKey( "GAMEPADACTIONBUTTON" .. pos )
+        buttons[ pos ] = key and Pad.Glyph( key )
+    end
+
+    for page = 1, PAGES do
+        for off = 0, PAGE_SIZE - 1 do
+            local _, bar, pos = Pad.Slot( first + ( page - 1 ) * PAGE_SIZE + off, first )
+            if not ( formBase and page == fpage and bar == fbar ) then
+                local aType, id = GetActionInfo( first + ( page - 1 ) * PAGE_SIZE + off )
+                if aType and id and mods[ bar ] and buttons[ pos ] then store( page, mods[ bar ] .. buttons[ pos ], aType, id ) end
+            end
+        end
+    end
+
+    if formBase then
+        for pos = 1, 8 do
+            local aType, id = GetActionInfo( formBase + pos - 1 )
+            if aType and id and mods[ fbar ] and buttons[ pos ] then store( fpage, mods[ fbar ] .. buttons[ pos ], aType, id ) end
+        end
+    end
+end
+
+--- The gamepad text for an ability's `pad` table (page -> markup), pictures sized to `size`, or nil; the second value
+--- is its page. Cached by size: no allocation once seen.
+function Pad.Pick( db, size )
+    for page = 1, PAGES do
+        local text = db[ page ]
+        if text then
+            size = size or 14
+            local cache = sized[ size ]
+            if not cache then cache = {}; sized[ size ] = cache end
+            local out = cache[ text ]
+            if not out then
+                out = text:gsub( ":%d+:%d+|a", ":" .. size .. ":" .. size .. "|a" )
+                cache[ text ] = out
+                isPad[ out ] = true
+            end
+            return out, page
+        end
+    end
+end
+
+--- True for text Pick produced (the displays anchor it under or over the icon).
+function Pad.Is( text )
+    return isPad[ text ] == true
+end
+
+local function subs( binding )
     for i, rep in ipairs( bindingSubs ) do
         binding = binding:gsub( rep[1], rep[2] )
     end
-
     return binding
+end
+
+local function improvedGetBindingText( binding )
+    if not binding then return "" end
+    if not binding:find( "PAD", 1, true ) then return subs( binding ) end
+
+    -- a gamepad key on a normal bar: its picture, the rest abbreviated as ever
+    local out, pos = "", 1
+    while true do
+        local s, e = binding:find( "PAD%w+", pos )
+        if not s then break end
+        out = out .. subs( binding:sub( pos, s - 1 ) ) .. Pad.Glyph( binding:sub( s, e ) )
+        pos = e + 1
+    end
+    return out .. subs( binding:sub( pos ) )
 end
 
 
@@ -1866,15 +1995,19 @@ local function StoreKeybindInfo( page, key, aType, id, console )
         keys[ action ] = keys[ action ] or {
             lower = {},
             upper = {},
-            console = {}
+            console = {},
+            pad = {}
         }
 
         if console == "cPort" then
             local newKey = key:gsub( ":%d+:%d+:0:0", ":0:0:0:0" )
             keys[ action ].console[ page ] = newKey
+        elseif console == "pad" then
+            keys[ action ].pad[ page ] = key
         else
             keys[ action ].upper[ page ] = improvedGetBindingText( key )
-            keys[ action ].lower[ page ] = lower( keys[ action ].upper[ page ] )
+            -- a gamepad picture's markup is case-sensitive
+            keys[ action ].lower[ page ] = key:find( "PAD", 1, true ) and keys[ action ].upper[ page ] or lower( keys[ action ].upper[ page ] )
         end
         updatedKeys[ action ] = true
 
@@ -1886,12 +2019,14 @@ local function StoreKeybindInfo( page, key, aType, id, console )
                     keys[ b ] = keys[ b ] or {
                         lower = {},
                         upper = {},
-                        console = {}
+                        console = {},
+                        pad = {}
                     }
 
                     keys[ b ].lower[ page ] = keys[ action ].lower[ page ]
                     keys[ b ].upper[ page ] = keys[ action ].upper[ page ]
                     keys[ b ].console[ page ] = keys[ action ].console[ page ]
+                    keys[ b ].pad[ page ] = keys[ action ].pad[ page ]
 
                     updatedKeys[ b ] = true
                 end
@@ -1899,12 +2034,14 @@ local function StoreKeybindInfo( page, key, aType, id, console )
                 keys[ bind ] = keys[ bind ] or {
                     lower = {},
                     upper = {},
-                    console = {}
+                    console = {},
+                    pad = {}
                 }
 
                 keys[ bind ].lower[ page ] = keys[ action ].lower[ page ]
                 keys[ bind ].upper[ page ] = keys[ action ].upper[ page ]
                 keys[ bind ].console[ page ] = keys[ action ].console[ page ]
+                keys[ bind ].pad[ page ] = keys[ action ].pad[ page ]
 
                 updatedKeys[ bind ] = true
             end
@@ -1938,11 +2075,16 @@ local defaultBarMap = {
 
 local slotsUsed = {}
 
+local function padStore( page, key, aType, id )
+    StoreKeybindInfo( page, key, aType, id, "pad" )
+end
+
 local function ReadKeybindings( event )
         if not Hekili:IsValidSpec() then return end
 
         for k, v in pairs( keys ) do
             wipe( v.console )
+            wipe( v.pad )
             wipe( v.upper )
             wipe( v.lower )
         end
@@ -2100,6 +2242,8 @@ local function ReadKeybindings( event )
                 end
             end
 
+        Pad.Read( padStore )
+
         if _G.ConsolePort then
             for i = 1, 180 do
                 local action, id = GetActionInfo( i )
@@ -2125,11 +2269,13 @@ local function ReadKeybindings( event )
                             keys[ b ] = keys[ b ] or {
                                 lower = {},
                                 upper = {},
-                                console = {}
+                                console = {},
+                                pad = {}
                             }
                             keys[ b ].lower[ page ] = value
                             keys[ b ].upper[ page ] = v.upper[ page ]
                             keys[ b ].console[ page ] = v.console[ page ]
+                            keys[ b ].pad[ page ] = v.pad[ page ]
                         end
                     end
                 else
@@ -2137,11 +2283,13 @@ local function ReadKeybindings( event )
                         keys[ ability.bind ] = keys[ ability.bind ] or {
                             lower = {},
                             upper = {},
-                            console = {}
+                            console = {},
+                            pad = {}
                         }
                         keys[ ability.bind ].lower[ page ] = value
                         keys[ ability.bind ].upper[ page ] = v.upper[ page ]
                         keys[ ability.bind ].console[ page ] = v.console[ page ]
+                        keys[ ability.bind ].pad[ page ] = v.pad[ page ]
                     end
                 end
             end
@@ -2165,6 +2313,11 @@ RegisterEvent( "UPDATE_BINDINGS", DelayedUpdateKeybindings )
 RegisterEvent( "SPELLS_CHANGED", DelayedUpdateKeybindings )
 RegisterEvent( "ACTIONBAR_SHOWGRID", DelayedUpdateKeybindings )
 RegisterEvent( "ACTIONBAR_HIDEGRID", DelayedUpdateKeybindings )
+RegisterEvent( "UPDATE_BONUS_ACTIONBAR", DelayedUpdateKeybindings ) -- a form change swaps the gamepad form bar
+-- a keyboard slot edit already raises SHOWGRID/HIDEGRID; only the gamepad storage slots (181 up) and "all" (0) matter here
+RegisterEvent( "ACTIONBAR_SLOT_CHANGED", function( event, slot )
+    if slot == nil or slot == 0 or slot > 180 then DelayedUpdateKeybindings( event ) end
+end )
 
 RegisterEvent( "ACTIVE_PLAYER_SPECIALIZATION_CHANGED", DelayedUpdateKeybindings )
 RegisterEvent( "TRAIT_CONFIG_UPDATED", DelayedUpdateKeybindings )
@@ -2201,6 +2354,9 @@ if select( 2, UnitClass( "player" ) ) == "DRUID" then
 
         local kb = StyleGroup( display, "keybindings" )
         local queued = ( i or 1 ) > 1 and kb.separateQueueStyle
+
+        local pad, page = Pad.Pick( keys[ key ].pad, queued and kb.queuedFontSize or kb.fontSize )
+        if pad then return pad, page end
 
         if display then
             caps = not ( queued and kb.queuedLowercase or kb.lowercase )
@@ -2272,6 +2428,9 @@ elseif select( 2, UnitClass( "player" ) ) == "ROGUE" then
         local kb = StyleGroup( display, "keybindings" )
         local queued = ( i or 1 ) > 1 and kb.separateQueueStyle
 
+        local pad, page = Pad.Pick( keys[ key ].pad, queued and kb.queuedFontSize or kb.fontSize )
+        if pad then return pad, page end
+
         local caps, console = true, false
         if display then
             caps = not ( queued and kb.queuedLowercase or kb.lowercase )
@@ -2328,6 +2487,9 @@ else
 
         local kb = StyleGroup( display, "keybindings" )
         local queued = ( i or 1 ) > 1 and kb.separateQueueStyle
+
+        local pad, page = Pad.Pick( keys[ key ].pad, queued and kb.queuedFontSize or kb.fontSize )
+        if pad then return pad, page end
 
         local caps, console = true, false
         if display then

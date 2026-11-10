@@ -1,6 +1,7 @@
 AuraUtil.FindAura	virtual
 AuraUtil.ForEachAura	virtual
 AuraUtil.UnpackAuraData	passthrough
+C_ActionBar.HasBonusActionBar	passthrough
 C_AddOns.GetAddOnMetadata	passthrough
 C_AddOns.IsAddOnLoaded	passthrough
 C_AddOns.LoadAddOn	passthrough
@@ -12,6 +13,8 @@ C_CooldownViewer.GetCooldownViewerCooldownInfo	passthrough
 C_CooldownViewer.IsCooldownViewerAvailable	passthrough
 C_DamageMeter.GetCombatSessionFromType	passthrough
 C_DamageMeter.IsDamageMeterAvailable	passthrough
+C_GamepadUI.GetFirstGamepadActionBarStorageSlotIndexForActiveStance	passthrough
+C_GamepadUI.GetFirstGamepadActionStorageSlotIndex	passthrough
 C_Item.GetDetailedItemLevelInfo	passthrough
 C_Item.GetItemCooldown	passthrough
 C_Item.GetItemCount	passthrough

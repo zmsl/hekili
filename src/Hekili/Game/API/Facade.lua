@@ -1201,6 +1201,15 @@ local PASSTHROUGH = {
     { "C_Traits.GetSubTreeInfo", "plain, walk identical in combat [W PR5]" },
     { "C_Traits.GetTreeCurrencyInfo", "plain, walk identical in combat [W PR5]" },
     { "C_Traits.GetTreeNodes", "plain, walk identical in combat [W PR5]" },
+    { "C_ActionBar.HasBonusActionBar", "plain [W gamepad keybinds, owner 2026-11-10]" },
+    {
+        "C_GamepadUI.GetFirstGamepadActionBarStorageSlotIndexForActiveStance",
+        "plain, nil outside a form [W gamepad keybinds, owner 2026-11-10]",
+    },
+    {
+        "C_GamepadUI.GetFirstGamepadActionStorageSlotIndex",
+        "plain; nil without the gamepad action bars [W gamepad keybinds, owner 2026-11-10]",
+    },
     { "C_VideoOptions.GetCurrentGameWindowSize", "plain [W sweep 2026-10-16]; table fields unverified" },
     { "GetActionInfo", "plain [W PR10]" },
     { "GetBindingKey", "plain [W PR10]" },

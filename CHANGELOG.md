@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- Keybinds now show on the icons for the game's own gamepad action bars: each recommendation shows the controller buttons that cast it, as the game's button pictures in your controller style, under the icon (or above it: Keybindings, Gamepad, Position). Gamepad keys on normal bars show as pictures too.
 
 ### Changed
 

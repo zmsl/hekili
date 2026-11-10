@@ -621,6 +621,12 @@ function M.new()
     api.C_LossOfControl = { GetActiveLossOfControlData = none, GetActiveLossOfControlDataCount = zero }
     api.C_PetBattles = { IsInBattle = no }
     api.C_PvP = { IsWarModeDesired = no }
+    -- the gamepad action bars: no storage slots on this client, so Hekili's gamepad keybind reader is a no-op
+    api.C_ActionBar = { HasBonusActionBar = no }
+    api.C_GamepadUI = {
+        GetFirstGamepadActionStorageSlotIndex = none,
+        GetFirstGamepadActionBarStorageSlotIndexForActiveStance = none,
+    }
     api.C_PlayerInfo = { IsPlayerInTimerunningHeroicWorldTier = no }
     api.C_SpecializationInfo = {
         GetSpecialization = function()
