@@ -95,13 +95,28 @@ class Delta(unittest.TestCase):
         self.assertNotIn("vacuous", rows["DRUID feral"])
         self.assertNotIn("viewer-late-novd (novd", out)
 
-    def test_a_spec_on_one_side_only_is_reported(self):
+    def test_a_spec_the_head_lost_fails_and_a_new_one_is_reported(self):
         self.write(self.base, "meter", summary("Arms", 0.95, 0.1))
         self.write(self.head, "meter", summary("Fury L24", 0.93, 0.1))
         rc, out = self.run_delta()
-        self.assertEqual(rc, 0, out)
-        self.assertIn("meter\tArms\tonly in old\n", out)
+        self.assertEqual(rc, 1, out)  # a cut-short head run is never a pass (batch review Should 1)
+        self.assertIn("meter\tArms\tonly in old FAIL missing\n", out)
         self.assertIn("meter\tFury L24\tonly in new\n", out)
+
+    def test_a_spec_only_the_head_has_passes(self):
+        self.write(self.base, "meter", summary("Arms", 0.95, 0.1))
+        self.write(self.head, "meter", summary("Arms", 0.95, 0.1) + summary("Fury L24", 0.93, 0.1))
+        rc, out = self.run_delta()
+        self.assertEqual(rc, 0, out)
+        self.assertIn("meter\tFury L24\tonly in new\n", out)
+
+    def test_a_base_arm_the_head_never_wrote_fails(self):
+        self.write(self.base, "meter", summary("Arms", 0.95, 0.1))
+        self.write(self.base, "viewer-buffs", summary("Arms", 0.95, 0.1))
+        self.write(self.head, "meter", summary("Arms", 0.95, 0.1))
+        rc, out = self.run_delta()
+        self.assertEqual(rc, 1, out)
+        self.assertIn("viewer-buffs\t-\tonly in old FAIL missing arm\n", out)
 
 
 if __name__ == "__main__":

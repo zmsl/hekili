@@ -3,7 +3,8 @@
 # (base -> head), and per verdict arm against its -novd twin in the head dir (novd -> on): per spec the agreement and
 # flicker/min of its summary row (the label column, `fights=` rows), and per character (the `layout`/`edge` fight rows)
 # the summed staleUp (player/target), verdicts and strikes. Exit 1 when a flicker rises by more than 0.3/min or an
-# agreement falls (both comparisons); a twin pair whose character has 0 verdicts on both sides is marked "vacuous".
+# agreement falls (both comparisons), or when the new side lacks a spec or an arm the old side has (a failed or
+# cut-short run is never a pass); a twin pair whose character has 0 verdicts on both sides is marked "vacuous".
 set -euo pipefail
 [ $# -eq 2 ] && [ -d "$1" ] && [ -d "$2" ] || {
     echo "usage: $0 <base .ab dir> <head .ab dir>" >&2
@@ -45,7 +46,12 @@ compare() {
         for (i = 1; i <= n; i++) {
             s = specs[i]
             if (!((s, 1) in A) || !((s, 2) in A)) {
-                printf "%s\t%s\tonly in %s\n", title, s, ((s, 1) in A) ? "old" : "new"
+                if ((s, 1) in A) { # a spec the old side has and the new lost: its rows are missing, never a pass
+                    printf "%s\t%s\tonly in old FAIL missing\n", title, s
+                    bad = 1
+                } else {
+                    printf "%s\t%s\tonly in new\n", title, s
+                }
                 continue
             }
             da = A[s, 2] - A[s, 1]
@@ -79,6 +85,15 @@ for new in "$2"/*.tsv; do
     fi
     if [ "${arm%-novd}" = "$arm" ] && [ -f "$2/$arm-novd.tsv" ]; then
         compare "$arm (novd -> on)" 1 "$2/$arm-novd.tsv" "$new" || rc=1
+    fi
+done
+for old in "$1"/*.tsv; do # a base arm the head never wrote (its run failed or was cut short)
+    [ -e "$old" ] || continue
+    arm=$(basename "$old" .tsv)
+    [ "$arm" = abspec ] && continue
+    if [ ! -f "$2/$arm.tsv" ]; then
+        printf '%s\t-\tonly in old FAIL missing arm\n' "$arm"
+        rc=1
     fi
 done
 exit $rc
