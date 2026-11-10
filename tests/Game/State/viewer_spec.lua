@@ -858,6 +858,9 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
     local function dark(j, u)
         return (select(7, Q.Counts(j, u)))
     end
+    local function since(j, u) -- the latest start of a dark slot of the thing (review M2), 0 none
+        return (select(8, Q.Counts(j, u)))
+    end
 
     it(
         "proof: a lit sweep of a visible viewer proves the cooldownID, with its unit; a hidden one proves nothing",
@@ -879,37 +882,59 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         end
     )
 
-    it("the dark count: only after 2 monitored sweeps, never live, for the unit the item last lit for", function()
-        ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+    it(
+        "the dark (review M2): from the first monitored dark sweep, with its start; never live; for the unit the"
+            .. " item last lit for; a light, a hidden sweep and a held sweep for no unit restart it",
+        function()
+            ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            start()
+            up(A, "target")
+            sweep(2)
+            assert.are.same({ 0, 0 }, { dark(1, 2), since(1, 2) })
+            down(A, "target")
+            sweep(3)
+            assert.are.same({ 1, 3 }, { dark(1, 2), since(1, 2) })
+            sweep(4)
+            assert.are.same({ 1, 3 }, { dark(1, 2), since(1, 2) }) -- continuous: the start stands
+            assert.are.same({ 0, 0 }, { dark(1, 1), since(1, 1) })
+            assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 2)) -- not live: no record, so no NONE either
+            assert.are.equal(0, I.presence.covered)
+            up(A, "target") -- a light restarts it
+            sweep(5)
+            assert.are.same({ 0, 0 }, { dark(1, 2), since(1, 2) })
+            down(A, "target")
+            sweep(6)
+            assert.are.same({ 1, 6 }, { dark(1, 2), since(1, 2) })
+            ctl.viewer.shown.BuffIconCooldownViewer = false -- not monitored: restarts
+            sweep(7)
+            assert.are.same({ 0, 0 }, { dark(1, 2), since(1, 2) })
+            ctl.viewer.shown.BuffIconCooldownViewer = nil
+            sweep(8)
+            sweep(9)
+            assert.are.same({ 1, 8 }, { dark(1, 2), since(1, 2) })
+            local item = ctl.viewer.items.BuffIconCooldownViewer[1]
+            item.auraInstanceID, item.auraDataUnit = fake.SECRET, "focus" -- held for no unit we track: restarts
+            sweep(10)
+            assert.are.same({ 0, 0 }, { dark(1, 2), since(1, 2) })
+        end
+    )
+
+    it("the dark's start is the LATEST among the thing's dark slots (review M2)", function()
+        local x = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        local y = ctl.ViewerItem("EssentialCooldownViewer", 1, 501) -- another cooldownID of the same aura
         start()
-        up(A, "target")
+        ctl.ViewerAura(x, "player", A)
+        ctl.ViewerAura(y, "player", A)
         sweep(2)
-        down(A, "target")
+        ctl.ViewerClear(x)
         sweep(3)
-        assert.are.equal(0, dark(1, 2)) -- the first dark sweep counts 1
-        sweep(4)
-        assert.are.equal(1, dark(1, 2))
-        assert.are.equal(0, dark(1, 1))
-        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 2)) -- not live: no record, so no NONE either
-        assert.are.equal(0, I.presence.covered)
-        up(A, "target") -- a light restarts it
+        assert.are.same({ 1, 3 }, { dark(1, 1), since(1, 1) })
+        ctl.ViewerClear(y)
         sweep(5)
-        assert.are.equal(0, dark(1, 2))
-        down(A, "target")
+        assert.are.same({ 2, 5 }, { dark(1, 1), since(1, 1) }) -- y has been watched dark since 5 only
+        ctl.ViewerAura(y, "player", A)
         sweep(6)
-        assert.are.equal(0, dark(1, 2))
-        ctl.viewer.shown.BuffIconCooldownViewer = false -- not monitored: restarts
-        sweep(7)
-        assert.are.equal(0, dark(1, 2))
-        ctl.viewer.shown.BuffIconCooldownViewer = nil
-        sweep(8)
-        assert.are.equal(0, dark(1, 2))
-        sweep(9)
-        assert.are.equal(1, dark(1, 2))
-        local item = ctl.viewer.items.BuffIconCooldownViewer[1]
-        item.auraInstanceID, item.auraDataUnit = fake.SECRET, "focus" -- held for no unit we track: restarts
-        sweep(10)
-        assert.are.equal(0, dark(1, 2))
+        assert.are.same({ 1, 3 }, { dark(1, 1), since(1, 1) }) -- y left: x's start is the latest again
     end)
 
     it("an unproven item is never dark", function()
@@ -957,9 +982,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         Q.ForgetEdges()
         assert.are.equal(0, dark(1, 1))
         sweep(5)
-        assert.are.equal(0, dark(1, 1))
-        sweep(6)
-        assert.are.equal(1, dark(1, 1))
+        assert.are.same({ 1, 5 }, { dark(1, 1), since(1, 1) }) -- dark again, since 5
     end)
 
     it("a target swap zeroes the target's dark counts, then settles", function()
@@ -970,16 +993,14 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         down(A, "target")
         sweep(3)
         sweep(4)
-        assert.are.equal(1, dark(1, 2))
+        assert.are.same({ 1, 3 }, { dark(1, 2), since(1, 2) })
         ctl.now = 4.5
         ctl.Fire("PLAYER_TARGET_CHANGED")
         assert.are.equal(0, dark(1, 2))
         sweep(4.5) -- the swap's own frame: settling
         assert.are.equal(0, dark(1, 2))
         sweep(5)
-        assert.are.equal(0, dark(1, 2))
-        sweep(6)
-        assert.are.equal(1, dark(1, 2))
+        assert.are.same({ 1, 5 }, { dark(1, 2), since(1, 2) }) -- dark for mob B since the first sweep after the settle
         assert.is_true(Q.proven[502]) -- the proof stays (per cooldownID, per build)
     end)
 

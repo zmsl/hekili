@@ -42,17 +42,18 @@ local known = { 0, 0, 0, 0 } -- children collected per viewer (GetNumChildren at
 -- after any of them is a SEED.
 local sFrame, sV, sJ, sAmb, sAns, sUnit, sT, sSeen, sCd, sSettle = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
 local sLit, sDark = {}, {}
--- The verdict's dark count (cdm-verdict §2.2, decision 118): sDarkN consecutive monitored dark sweeps of a proven item;
--- sDk the k its dark is counted for (0 none). Never live: nLive, covered and the reducer do not see it.
-local sDarkN, sDk = {}, {}
+-- The verdict's dark (cdm-verdict §2.2, decision 118 as amended): sDk the k a proven item's slot is counted dark for
+-- (0 none), sDarkT the t of its first monitored dark sweep (0 none): the two move together (darkTo), so every point
+-- where the monitoring restarts restarts the start. Never live: nLive, covered and the reducer do not see it.
+local sDarkT, sDk = {}, {}
 for s = 1, MAX_SLOTS do
     sFrame[s], sV[s], sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s] = false, 0, 0, 0, 0, 0, 0
-    sSeen[s], sCd[s], sSettle[s], sLit[s], sDark[s], sDarkN[s], sDk[s] = 0, 0, -1, 0, 0, 0, 0
+    sSeen[s], sCd[s], sSettle[s], sLit[s], sDark[s], sDarkT[s], sDk[s] = 0, 0, -1, 0, 0, 0, 0
 end
 
 local NOT, UP, NONE, STALE = 0, 1, 2, 3
--- shortcut: DARK_SWEEPS 2 (one poll gap) and STRIKES_MAX 2 are the spec's guesses (§6); Task 10's P1/P3 tune them.
-local DARK_SWEEPS, STRIKES_MAX = 2, 2
+-- shortcut: STRIKES_MAX 2 is the spec's guess (§6); Task 10 tunes it.
+local STRIKES_MAX = 2
 local UNIT = { player = 1, target = 2 }
 
 -- The things' counters, by k = (u - 1) * AURA_UNIT + j, zeroed for both units at activation (preallocated: the
@@ -61,7 +62,9 @@ local cUp, cNone, cStale, tUp, tNone, live = {}, {}, {}, {}, {}, {}
 -- By the same k: the t of the last sweep where one of the thing's slots had an edge (eT) and where one went dark after a
 -- monitored light (dT); 0 none. Read by the router (fact.edge, fact.dark).
 local eT, dT = {}, {}
-local cDark = {} -- by k: the slots counted dark for the thing (cdm-verdict §2.2), preallocated beside cUp
+-- By k (cdm-verdict §2.2), preallocated beside cUp: cDark the slots counted dark for the thing, tDark the LATEST start
+-- (sDarkT) among them, 0 none: the thing has been watched dark continuously since then (Fable 5.2 review M2).
+local cDark, tDark = {}, {}
 -- Per cooldownID (cdm-verdict §2.1, §2.4; decisions 117, 121), preallocated at build() to the map's keys, out of combat:
 -- proven (lit once this build), the unit it last lit for (1 player, 2 target) and strikes. The item is the cooldownID,
 -- never the frame. The seen rule's memory stays per slot: a re-pointed frame starts with none (Fable 5.2 review S1).
@@ -298,14 +301,14 @@ local function count(s, j, u, a, t)
     end
 end
 
--- Moves slot s's dark count to thing k (0: none), marking both things for the router (cdm-verdict §2.2). Allocates
--- nothing.
-local function darkTo(s, k)
+-- Moves slot s's dark count to thing k (0: none) at t, its start, marking both things for the router (cdm-verdict
+-- §2.2): the sweep's reduction recomputes their tDark. Allocates nothing.
+local function darkTo(s, k, t)
     local o = sDk[s]
     if o == k then
         return
     end
-    sDk[s] = k
+    sDk[s], sDarkT[s] = k, k > 0 and t or 0
     for i = 1, 2 do
         local x = i == 1 and o or k
         if x > 0 then
@@ -319,24 +322,28 @@ local function darkTo(s, k)
 end
 
 -- The seen rule starts over for slot s (§2.2a): un-counted first, so no count is left with no live slot behind it. Its
--- dark count restarts too (cdm-verdict §2.4c).
+-- dark restarts too (cdm-verdict §2.4c).
 local function reset(s)
     uncount(s)
     darkTo(s, 0)
-    sSeen[s], sUnit[s], sLit[s], sDark[s], sDarkN[s] = 0, 0, 0, 0, 0
+    sSeen[s], sUnit[s], sLit[s], sDark[s] = 0, 0, 0, 0
 end
 
 -- The things a sweep moved: tUp/tNone recomputed as the latest begin (sT) of a live slot (§2.3: a slot that left takes
--- its time with it), O(slots); then each goes to Q.onThing. Allocates nothing.
+-- its time with it), tDark as the latest start of a dark slot, O(slots); then each goes to Q.onThing. Allocates nothing.
 local function reduce(t)
     if nTouched == 0 then
         return
     end
     for i = 1, nTouched do
         local k = touched[i]
-        tUp[k], tNone[k] = 0, 0
+        tUp[k], tNone[k], tDark[k] = 0, 0, 0
     end
     for s = 1, Q.nSlots do
+        local dk = sDk[s]
+        if dk > 0 and mark[dk] and sDarkT[s] > tDark[dk] then
+            tDark[dk] = sDarkT[s]
+        end
         local a = sAns[s]
         if a == UP or a == NONE then
             local k = (sUnit[s] - 1) * I.AURA_UNIT + sJ[s]
@@ -459,20 +466,13 @@ local function sweep(t)
             sLit[s], sDark[s] = 0, t
             dT[(u - 1) * I.AURA_UNIT + j] = t
         end
-        -- the dark count (cdm-verdict §2.2): a proven item silent on a monitored sweep, DARK_SWEEPS in a row, counted for
-        -- the unit it last lit for; anything else restarts it
+        -- the dark (cdm-verdict §2.2): a proven item silent on a monitored sweep, counted for the unit it last lit for
+        -- from its first such sweep (darkTo keeps that t while it stays so); anything else restarts it
         local dk = 0
         if seenAs == 2 and provenCd[id] and vis[sV[s]] and not (provenU[id] == 2 and sSettle[s] >= t) then
-            if sDarkN[s] < DARK_SWEEPS then
-                sDarkN[s] = sDarkN[s] + 1
-            end
-            if sDarkN[s] >= DARK_SWEEPS then
-                dk = (provenU[id] - 1) * I.AURA_UNIT + m
-            end
-        else
-            sDarkN[s] = 0
+            dk = (provenU[id] - 1) * I.AURA_UNIT + m
         end
-        darkTo(s, dk)
+        darkTo(s, dk, t)
         if a ~= sAns[s] or j ~= sJ[s] or u ~= sUnit[s] then
             uncount(s)
             count(s, j, u, a, t)
@@ -507,14 +507,14 @@ function Q.Sweep(t)
     end
 end
 
---- nLive, nUp, nNone, nStale, tUp, tNone, nDark (cdm-verdict §2.2: proven slots dark DARK_SWEEPS monitored sweeps,
---- never live) for aura `j` on unit `u`. Allocates nothing.
+--- nLive, nUp, nNone, nStale, tUp, tNone, nDark, tDark (cdm-verdict §2.2: the proven slots dark on a monitored sweep,
+--- never live, and the latest of their first such sweeps) for aura `j` on unit `u`. Allocates nothing.
 function Q.Counts(j, u)
     local k = (u - 1) * I.AURA_UNIT + j
     if not active or not cUp[k] then
-        return 0, 0, 0, 0, 0, 0, 0
+        return 0, 0, 0, 0, 0, 0, 0, 0
     end
-    return cUp[k] + cNone[k], cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], cDark[k]
+    return cUp[k] + cNone[k], cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], cDark[k], tDark[k]
 end
 
 --- A wrong verdict for (j, u) (cdm-verdict §2.5): every slot counted UP for it now has its cooldownID struck; at
@@ -553,7 +553,7 @@ function Q.Activate(api, t, def)
     Q.covered, nTouched = 0, 0
     for k in pairs(cUp) do
         cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k], ambC[k], eT[k], dT[k] = 0, 0, 0, 0, 0, false, 0, 0, 0
-        cDark[k] = 0
+        cDark[k], tDark[k] = 0, 0
     end
     Q.ambiguous = 0
     for j in pairs(live) do
@@ -561,7 +561,7 @@ function Q.Activate(api, t, def)
     end
     for s = 1, Q.nSlots do -- a new map: every slot counted afresh, its seen rule started over (§2.2a)
         sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s] = 0, 0, NOT, 0, 0
-        sSeen[s], sCd[s], sSettle[s], sLit[s], sDark[s], sDarkN[s], sDk[s] = 0, 0, -1, 0, 0, 0, 0
+        sSeen[s], sCd[s], sSettle[s], sLit[s], sDark[s], sDarkT[s], sDk[s] = 0, 0, -1, 0, 0, 0, 0
     end
     Q.repoints = 0
     local nAura = def and #def.auraIds or 0
@@ -571,7 +571,7 @@ function Q.Activate(api, t, def)
             local k = (u - 1) * I.AURA_UNIT + j
             cUp[k], cNone[k], cStale[k], tUp[k], tNone[k], mark[k], ambC[k], eT[k], dT[k] =
                 0, 0, 0, 0, 0, false, 0, 0, 0
-            cDark[k] = 0
+            cDark[k], tDark[k] = 0, 0
             touched[(u - 1) * nAura + j] = touched[(u - 1) * nAura + j] or 0
         end
     end
@@ -584,12 +584,12 @@ function Q.Activate(api, t, def)
 end
 
 --- Every slot's edge state starts over (the viewer's data reloaded; the router calls it even while its rebuild waits
---- for combat end): the next light of each is a SEED, and its dark count restarts. Called from an event, never
+--- for combat end): the next light of each is a SEED, and its dark restarts. Called from an event, never
 --- inside the sweep's reduction (it marks things). Allocates nothing.
 function Q.ForgetEdges()
     for s = 1, Q.nSlots do
-        sLit[s], sDark[s], sDarkN[s] = 0, 0, 0
-        darkTo(s, 0) -- (review m5) the dark count starts over too
+        sLit[s], sDark[s] = 0, 0
+        darkTo(s, 0) -- (review m5) the dark starts over too
     end
 end
 
@@ -646,7 +646,7 @@ end
 -- at t <= the switch's t is stale (t is GetTime(), one value per frame; CDM-O, owner 2026-11-08: the viewer is stale
 -- only in the event's frame, right from the next); the target slots' seen rule starts over (mob A's light says nothing
 -- of mob B). Idempotent (it fires twice a swap). The verdict (cdm-verdict §2.4): every item proven for the target
--- settles with its dark count restarted. Allocates nothing.
+-- settles with its dark restarted. Allocates nothing.
 S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
     if not active then
         return
@@ -659,7 +659,6 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
             reset(s)
         elseif provenU[sCd[s]] == 2 then
             darkTo(s, 0)
-            sDarkN[s] = 0
         end
     end
 end)

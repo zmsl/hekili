@@ -100,7 +100,8 @@ local cyT, cyD, cyAp, cyE, cyN, cySum, cyObs, cyMod, seedAp = {}, {}, {}, {}, {}
 local holdN = { waits = 0, fires = 0 }
 I.presenceHold = holdN
 -- The verdict (cdm-verdict §2.3-§2.5, decisions 119-122): an up record our evidence opened, its proven item dark
--- (fact.pdark) and not UP for W past the later of the write and the last UP, is closed once. By key: W[k] its window
+-- (fact.pdark) and not UP for W past the latest of the write, the last UP and the dark's start (fact.pdarkT), is
+-- closed once. By key: W[k] its window
 -- (W0 for a walk or CDM opener, max(W0, travel + TOL) for our cast), verdictAt[k] the last verdict's t while a light
 -- within STRIKE_WIN may still prove it wrong (0 none); per fight verdictN, strikeN, and darkN (1: pdark seen).
 -- shortcut: W0 1.0 s, TOL 0.3 s and STRIKE_WIN 2.0 s are the spec's (§6) from the 2026-11-09 sample; Task 10's P1 tunes them.
@@ -504,8 +505,8 @@ local function cycle(j, u, k, a, F)
 end
 
 -- The verdict for (j, u) at poll t (cdm-verdict §2.3), `a` its reduced answer: a record up that our evidence opened,
--- not UP, its proven item dark (fact.pdark), W past the later of the write and the last UP: closed once (no refund).
--- Allocates nothing.
+-- not UP, its proven item dark (fact.pdark), W past the latest of the write, the last UP and the start of the watched
+-- dark (fact.pdarkT: continuously dark for W, Fable 5.2 review M2): closed once (no refund). Allocates nothing.
 local function verdict(j, u, k, a, t, F)
     if strikePend[k] > 0 and t > strikePend[k] then -- the light a drain ago: wrong unless our cast came since (§2.5)
         if not (ours[k] == BY_CAST and oursAp[k] > verdictAt[k]) then
@@ -531,7 +532,10 @@ local function verdict(j, u, k, a, t, F)
     if U.exp0[u][j] <= t or ours[k] == 0 or oursAp[k] ~= ap or staged[k] == t then
         return
     end
-    local from = upAt[k] > ap and upAt[k] or ap
+    local from, since = upAt[k] > ap and upAt[k] or ap, F.pdarkT[k]
+    if since > from then
+        from = since -- a swap back, a viewer shown again, a re-point: W counts from when the watching began
+    end
     if t >= from + W[k] then
         staged[k], verdictAt[k], verdictN[k] = t, t, verdictN[k] + 1
         Direct(Obs.Read, t, k, 0, ReadOf.Aura)

@@ -1440,7 +1440,7 @@ describe("auras", function()
             end)
 
             it(
-                "a swap inside W: no verdict on mob B; mob A's record closes after the swap back and the settle",
+                "a swap inside W: no verdict on mob B; mob A's record closes W after monitoring resumed (review M2)",
                 function()
                     prove()
                     cast(2, REND, 11, 15)
@@ -1452,15 +1452,19 @@ describe("auras", function()
                     assert.are.equal(0, I.auraVerdict.n[kT()]) -- B has no record of ours
                     swap("Creature-1", 13)
                     poll(13) -- the swap's frame: settling
-                    poll(13.2) -- one dark sweep after the settle
-                    assert.are.equal(26, est("target", fs.SPENDER_C, 13.2))
-                    poll(13.4)
-                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13.4)) -- dark means dark
+                    poll(13.2) -- the first monitored dark sweep: dark since 13.2
+                    assert.are.equal(13.2, P.fact.pdarkT[kT()])
+                    for _, t in ipairs({ 13.4, 13.8, 14.1 }) do
+                        poll(t)
+                        assert.are.equal(26, est("target", fs.SPENDER_C, t), t) -- W counts from 13.2, not the cast
+                    end
+                    poll(14.2)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 14.2)) -- continuously dark for W: dark means dark
                     assert.are.equal(1, I.auraVerdict.n[kT()])
                 end
             )
 
-            it("a hidden viewer restarts the dark count", function()
+            it("a hidden viewer restarts the dark: the record closes W after it is shown again (review M2)", function()
                 prove()
                 cast(2, REND, 11, 15)
                 poll(11.5)
@@ -1468,11 +1472,60 @@ describe("auras", function()
                 poll(12)
                 assert.are.equal(26, est("target", fs.SPENDER_C, 12))
                 ctl.viewer.shown.BuffIconCooldownViewer = nil
-                poll(12.2)
-                assert.are.equal(26, est("target", fs.SPENDER_C, 12.2)) -- one dark sweep
-                poll(12.4)
-                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12.4))
+                for _, t in ipairs({ 12.2, 12.4, 13.1 }) do -- dark since 12.2
+                    poll(t)
+                    assert.are.equal(26, est("target", fs.SPENDER_C, t), t)
+                end
+                poll(13.2)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13.2))
             end)
+
+            it(
+                "F52-B (review M2): swapped back to a mob whose real dot re-lights late: no verdict, no strike;"
+                    .. " a truly dark one closes W after the swap back",
+                function()
+                    prove()
+                    cast(2, REND, 11, 15)
+                    ctl.ViewerAura(ti, "target") -- landed, lit
+                    poll(11.2)
+                    poll(11.7)
+                    ctl.ViewerClear(ti)
+                    swap("Creature-2", 13)
+                    poll(13)
+                    poll(13.2)
+                    poll(13.7)
+                    swap("Creature-1", 14) -- back to A: its dot is really up, the item re-lights late
+                    poll(14)
+                    poll(14.02) -- dark since here: applied (11) and upAt (11.7) are old, the monitoring is not
+                    poll(14.04)
+                    assert.are.same(
+                        { 26, 0, true, 14.02 },
+                        { est("target", fs.SPENDER_C, 14.04), I.auraVerdict.n[kT()], P.fact.pdark[kT()], P.fact.pdarkT[kT()] }
+                    )
+                    ctl.ViewerAura(ti, "target")
+                    poll(14.06)
+                    poll(14.08)
+                    poll(14.5)
+                    assert.are.same({ 26, 0, 0, 0 }, {
+                        est("target", fs.SPENDER_C, 14.5), -- the cast's own expiry, never re-opened from the light
+                        I.auraVerdict.n[kT()],
+                        I.auraVerdict.strikes[kT()],
+                        I.PRESENCE.viewer.strikes[502],
+                    })
+                    ctl.ViewerClear(ti) -- A's dot is dispelled while we look at B
+                    swap("Creature-2", 15)
+                    poll(15)
+                    swap("Creature-1", 16)
+                    poll(16)
+                    for _, t in ipairs({ 16.2, 16.6, 17.1 }) do -- dark since 16.2
+                        poll(t)
+                        assert.are.equal(26, est("target", fs.SPENDER_C, t), t)
+                    end
+                    poll(17.2)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 17.2))
+                    assert.are.equal(1, I.auraVerdict.n[kT()])
+                end
+            )
 
             it(
                 "a light within STRIKE_WIN of a verdict is a strike; two strikes retire the item for the build",
