@@ -274,6 +274,9 @@ function M.run(L, seed, o, drivers)
         end
         wo.res = res
     end
+    local arm = ab.ARMS[o.arm or ab.arm()] -- o.arm: a spec's own arm (its shapes; the floors stay the env's)
+    local aw = arm.world or {} -- a verdict arm's world knobs that shape the world's build (ab.lua; not a replay's)
+    wo.mobAvoid, wo.swapEvery, wo.extraMobs = aw.mobAvoid, aw.swapEvery, aw.extraMobs
     local W = R and R.world(wo, seed) or scenarios.world(wo, seed)
     local us = W.ents[1]
     local run = {
@@ -321,8 +324,8 @@ function M.run(L, seed, o, drivers)
     local res = L.power.token and L.power.token:lower()
     local pollEv, tickEv, nextEv = {}, {}, 1
     local steps = {}
-    local arm = ab.ARMS[o.arm or ab.arm()] -- o.arm: a spec's own arm (its shapes; the floors stay the env's)
     if arm.world then -- an edge-anchor stress arm's world knobs (ab.lua), each from its own draw
+        W.auraOnAvoid = arm.world.auraOnAvoid ~= false
         local jit, dur, drng, scale = arm.world.castJitter, arm.world.durError, rng.new(seed + 86028121), {}
         W.castJitter, W.jrng = jit, rng.new(seed + 49979687)
         W.durScale = dur
@@ -351,6 +354,11 @@ function M.run(L, seed, o, drivers)
         if VI and VI.def then -- (loop_spec's fake drivers have no belief)
             VI.def.providers.outcomes = arm.outcomes
         end
+        if VI then -- a *-novd verdict arm's driver: the belief's verdict off (verdict spec §6; harness only)
+            VI.verdictOff = (cdm and arm.novd) or nil
+        end
+        -- a verdict arm's full-update reshuffle at each target change (fake_api), its counter seeded by the fight
+        ctl.viewer.reshuffle, ctl.viewer.reshuffleN = (cdm and arm.reshuffle) or false, seed
         if first and layout then -- the viewer is on from boot (no option), so its map predates the instance's first
             -- layout: the client's data-loaded event, once (as at login; later fights reuse the frames and the map)
             d.H.Fire("COOLDOWN_VIEWER_DATA_LOADED")
@@ -427,7 +435,7 @@ function M.run(L, seed, o, drivers)
             hold = (hold and not d.plain) and flicker.newHold() or nil,
             layout = layout, -- the viewer arm's fight events and the next one's index (M.viewerLayout)
             li = 1,
-            edge = arm.world and layout and VI and VI.presence and edgestats.start(d.H, VI) or nil, -- a stress arm's record
+            edge = (arm.world or arm.edge) and layout and VI and VI.presence and edgestats.start(d.H, VI) or nil, -- a stress arm's record
         }
     end
     local errors0 = {}
@@ -737,6 +745,9 @@ function M.run(L, seed, o, drivers)
                 sum(VI.auraExitFix),
                 Q.ambiguous
             )
+            if VI.presenceVerdict or VI.presenceStrike then -- the verdict's per-fight counters, once the belief has them
+                line = line .. " verdicts " .. sum(VI.presenceVerdict) .. " strikes " .. sum(VI.presenceStrike)
+            end
             ab.check(Q.overflow == 0, "layout", line)
             local el = st.edge and edgestats.line(st.H, VI)
             if el then
