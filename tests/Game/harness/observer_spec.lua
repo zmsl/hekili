@@ -425,6 +425,39 @@ describe("the observer", function()
         assert.are.equal(1, (swaps(nil))) -- no knob: no swap
     end)
 
+    -- viewer-swap's self-check misses (4235 ticks, Feral seeds 1-3): the "target" list kept the old mob's auras
+    it("a swap re-lists the target's auras: the old mob's cleared, the new mob's live ones set", function()
+        setup(0)
+        local mob2 = W.add(entities.new({ guid = "Creature-2", kind = "mob", weapons = { { 10, 14, 2 } } }))
+        W.emit({ t = 1, kind = "aura", dst = mob, aura = 55, stacks = 2, expires = 20, duration = 19 })
+        W.emit({ t = 2, kind = "aura", dst = mob2, aura = 77, stacks = 1, expires = 30, duration = 28 })
+        W.emit({ t = 3, kind = "aura", dst = mob2, aura = 66, stacks = 1, expires = 4, duration = 1 })
+        W.emit({ t = 4, kind = "aura", dst = mob2, aura = 66, stacks = 0, expires = 0, duration = 0 })
+        for _, sw in ipairs({ { 5, mob2 }, { 7, mob2 }, { 8, mob } }) do -- 7: no change, no op
+            W.at(sw[1], function()
+                us.target = sw[2]
+                W.emit({ kind = "target", relist = true }) -- swapEvery's events (switchTo's keep the old list)
+            end)
+        end
+        W.run(9)
+        local s = observer.observe(W, observer.DEFAULTS)
+        local got = {}
+        for _, e in ipairs(events(s, 4.5)) do
+            if e[2] == "@aura" or e[2] == "PLAYER_TARGET_CHANGED" then
+                got[#got + 1] = { e[1], e[2], e[3], e[4], e[5], e[6], e[7] }
+            end
+        end
+        assert.are.same({
+            { 5, "@aura", "target", 55, 0, 0, 0 },
+            { 5, "@aura", "target", 77, 1, 30, 28 },
+            { 5, "PLAYER_TARGET_CHANGED" },
+            { 7, "PLAYER_TARGET_CHANGED" },
+            { 8, "@aura", "target", 77, 0, 0, 0 },
+            { 8, "@aura", "target", 55, 2, 20, 19 },
+            { 8, "PLAYER_TARGET_CHANGED" },
+        }, got)
+    end)
+
     it("steps to the batch's stream in 0.2 s steps, and draws nothing from the world's generator", function()
         local o = scenarios.oracle({ duration = 40, others = { "melee", "caster" } })
         local k = setmetatable({ usable = true }, { __index = observer.DEFAULTS })

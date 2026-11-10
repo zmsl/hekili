@@ -4,6 +4,7 @@
 local loop = require("Game.harness.loop")
 local ab = require("Game.harness.ab")
 local ww = require("Forever.helpers.warrior_world")
+local dlw = require("Forever.helpers.druid_loop_world")
 
 local function fight(arm, seed, L)
     L = L or loop.new(ww)
@@ -33,6 +34,19 @@ describe("the CDM verdict's harness arms #slow", function()
         assert.is_nil(H.ns.VirtualStateInternal.verdictOff)
         assert.is_truthy(lines.layout)
         assert.is_truthy(lines.edge and lines.edge:match("staleUp %d"), tostring(lines.edge))
+    end)
+
+    -- the client's "target" auras follow each swap (observer relist); before it the Feral smoke read self-check 4235
+    it("viewer-swap: the oracle's self-check holds under swaps (Feral, rake and rip on the target)", function()
+        for _, arm in ipairs({ "viewer-swap", "viewer-swap-dark" }) do
+            local L = loop.new(dlw.Feral)
+            local ok, run = pcall(loop.run, L, 1, { duration = 40, arm = arm }, {
+                { H = L.us },
+                { H = L.oracle, plain = true },
+            })
+            assert(ok, run)
+            assert.are.same({}, run.selfCheck, arm)
+        end
     end)
 
     it("viewer-nonland: the mobs avoid our hits by the arm's table, no press aura applied on an avoid", function()

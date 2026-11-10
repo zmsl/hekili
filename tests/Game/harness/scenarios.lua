@@ -297,7 +297,7 @@ function M.world(o, seed)
                     end
                 end
                 us.target = mobs[i]
-                W.emit({ kind = "target" })
+                W.emit({ kind = "target", relist = true }) -- the client's "target" auras follow (observer relist)
             end)
         end
     end

@@ -349,6 +349,30 @@ function M.new(W, k)
             end
         end
     end
+    -- the "target" aura list follows our target (the client answers the new mob's auras): each mob's live aura events,
+    -- and the mob the list holds now
+    local onMob, auraTarget = {}, nil
+    local function sortedIds(e)
+        local ids = {}
+        for id in pairs(e and onMob[e] or {}) do
+            ids[#ids + 1] = id
+        end
+        table.sort(ids) -- pairs order is not stable: the stream must be
+        return ids
+    end
+    local function relist(t, tgt)
+        if tgt == auraTarget then
+            return
+        end
+        for _, id in ipairs(sortedIds(auraTarget)) do
+            push(t, "@aura", "target", id, 0, 0, 0)
+        end
+        auraTarget = tgt
+        for _, id in ipairs(sortedIds(tgt)) do
+            local a = onMob[tgt][id]
+            push(t, "@aura", "target", id, a.stacks, a.expires, a.duration)
+        end
+    end
     local function targets(t, ev)
         local tt = ev.targets
         for _, e in ipairs(mobs) do
@@ -374,6 +398,10 @@ function M.new(W, k)
         push(t, "@unitIs", "targettarget", tgt and tt[tgt] == us and "player" or nil)
         if k.plainSpeed and tgt then
             push(t, "@speed", "target", tgt.weapons[1][3])
+        end
+        if ev.relist then -- shortcut: swapEvery's swaps only, so switchTo's default-arm streams stay as they were;
+            -- set it on switchTo too when a switchTo world reads the target's auras after its switch
+            relist(t, tgt or nil)
         end
         push(t, "PLAYER_TARGET_CHANGED")
         retarget(t, tgt)
@@ -598,12 +626,19 @@ function M.new(W, k)
                 push(t, "@current", id, kind == "queue")
             end
         elseif kind == "aura" then -- ours on the player (plain), ours on the target (raising in combat)
+            if ev.dst ~= us then
+                onMob[ev.dst] = onMob[ev.dst] or {}
+                onMob[ev.dst][ev.aura] = ev.stacks > 0 and ev or nil
+            end
             if k.viewer and (ev.src == nil or ev.src == us) then
                 mine[ev.dst] = mine[ev.dst] or {}
                 mine[ev.dst][ev.aura] = ev.stacks > 0 and ev.expires or nil
             end
             local unit = ev.dst == us and "player" or (ev.dst == ev.ourTarget and "target" or nil)
             if unit then
+                if unit == "target" then -- a world without a prepull's target event (the unit specs)
+                    auraTarget = ev.dst
+                end
                 push(t, "@aura", unit, ev.aura, ev.stacks, ev.expires, ev.duration)
                 push(t, "UNIT_AURA", unit)
                 if k.viewer then -- the Cooldown Manager's item shows or hides 3-5 ms later (CV §2); a partner's copy
