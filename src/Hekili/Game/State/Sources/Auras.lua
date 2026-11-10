@@ -107,6 +107,7 @@ I.presenceHold = holdN
 local W0, TOL, STRIKE_WIN = 1.0, 0.3, 2.0
 local W, verdictAt, verdictN, strikeN, darkN = {}, {}, {}, {}, {}
 I.auraVerdict = { W = W, at = verdictAt, n = verdictN, strikes = strikeN } -- read-only views for the tests
+I.presenceVerdict, I.presenceStrike = verdictN, strikeN -- the harness's names (loop.lua sums them per unit)
 local function zeroVerdict(k)
     W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k] = W0, 0, 0, 0, 0
 end
