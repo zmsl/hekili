@@ -651,7 +651,10 @@ return end
     -- presentational and must use keys the config does not (e.g. sec_now).
     local function optionConf( conf, info )
         local n, category = #info, info[ 3 ]
-        if ns.UI.Styles[ category ] then
+        local at = info.option and info.option.storeIn -- an option stored in another group of its style (StyleOptions: ConsolePort)
+        if at and ns.UI.Styles[ category ] and type( conf[ category ] ) == "table" and type( conf[ category ][ at ] ) == "table" then
+            conf = conf[ category ][ at ]
+        elseif ns.UI.Styles[ category ] then
             for i = 3, n - 1 do
                 local sub = conf[ info[ i ] ]
                 if type( sub ) == "table" then conf = sub end

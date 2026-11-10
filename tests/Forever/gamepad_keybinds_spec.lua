@@ -222,7 +222,8 @@ describe("gamepad keybinds", function()
         world.actions[1], world.actions[186] = id(H, "mortal_strike"), id(H, "mortal_strike")
         read(H)
         local conf = H.Hekili.DB.profile.displays.Primary
-        conf.classic.keybindings.fontSize = 20
+        conf.classic.keybindings.fontSize = 33 -- the keyboard font does not size the pictures
+        conf.classic.gamepad.size = 20
         local text = H.Hekili:GetBindingForAction("mortal_strike", conf, 1)
         assert.are.equal(L("PADLTRIGGER", 20) .. L("PADDUP", 20), text)
         assert.is_true(H.ns.Gamepad.Is(text))
@@ -284,8 +285,9 @@ describe("gamepad keybinds on the icons", function()
 
     it("anchors a gamepad binding below the classic icon, above with Top; keyboard text keeps its anchor", function()
         local H, d, conf = setup("classic")
-        local kb = conf.classic.keybindings
-        assert.are.equal("BOTTOM", kb.gamepadPosition)
+        local kb, g = conf.classic.keybindings, conf.classic.gamepad
+        assert.are.same({ position = "BOTTOM", size = 12, offset = 1 }, g) -- today's look
+        assert.is_nil(kb.gamepadPosition)
         local b1, b2 = d.Buttons[1], d.Buttons[2]
         b1.Keybinding, b2.Keybinding = fs(), fs()
         b1.Action, b2.Action = "mortal_strike", "overpower"
@@ -295,10 +297,17 @@ describe("gamepad keybinds on the icons", function()
         assert.are.equal("CENTER", b1.Keybinding.h)
         assert.are.equal("5", b2.Keybinding.text) -- keyboard text: the configured anchor, untouched
         assert.are.same({}, b2.Keybinding.points)
-        kb.gamepadPosition = "TOP"
-        b1.Keybinding.padPos = nil -- a changed option redraws through a rebuild; here, the stored kind
+        g.position = "TOP"
         d.style.UpdateKeybindings(d)
         assert.are.same({ { "BOTTOM", b1, "TOP", 0, 1 } }, b1.Keybinding.points)
+        -- Offset: away from the icon, in the direction Position picks, both ways
+        g.offset = 7
+        d.style.UpdateKeybindings(d)
+        assert.are.same({ { "BOTTOM", b1, "TOP", 0, 7 } }, b1.Keybinding.points)
+        g.position, g.offset = "BOTTOM", 5
+        d.style.UpdateKeybindings(d)
+        assert.are.same({ { "TOP", b1, "BOTTOM", 0, -5 } }, b1.Keybinding.points)
+        g.offset = 1
         -- the ability loses its gamepad binding: back to the keyboard anchor
         world.actions[186] = nil
         read(H)
@@ -337,4 +346,113 @@ describe("gamepad keybinds on the icons", function()
             assert.is_true(kb.enabled)
         end
     )
+end)
+
+describe("the Gamepad options tab", function()
+    before_each(reset)
+
+    local function tabs(H, style)
+        H.Hekili:EmbedDisplayOptions()
+        return H.Hekili.Options.args.displays.plugins.Primary.Primary.args[style].args
+    end
+
+    local function opt(H, style, path)
+        local node = { args = tabs(H, style) }
+        local info = { "displays", "Primary", style }
+        for _, k in ipairs(path) do
+            node = node.args[k]
+            info[#info + 1] = k
+        end
+        info.option = node
+        return node, info
+    end
+
+    it(
+        "sizes the pictures from Size alone: the primary icon, classic's queued icons, the timeline's next box",
+        function()
+            local H = boot()
+            world.actions[186] = id(H, "mortal_strike")
+            read(H)
+            local conf = H.Hekili.DB.profile.displays.Primary
+            conf.classic.keybindings.separateQueueStyle, conf.classic.keybindings.queuedFontSize = true, 40
+            conf.classic.gamepad.size = 18
+            for i = 1, 2 do
+                assert.are.equal(
+                    L("PADLTRIGGER", 18) .. L("PADDUP", 18),
+                    H.Hekili:GetBindingForAction("mortal_strike", conf, i)
+                )
+            end
+            conf.style = "timeline"
+            conf.timeline.keybindings.nextFontSize, conf.timeline.keybindings.fontSize = 40, 41
+            conf.timeline.gamepad.size = 25
+            for i = 1, 2 do
+                assert.are.equal(
+                    L("PADLTRIGGER", 25) .. L("PADDUP", 25),
+                    H.Hekili:GetBindingForAction("mortal_strike", conf, i)
+                )
+            end
+            assert.are.same({ position = "BOTTOM", size = 12, offset = 1 }, H.ns.UI.Styles.timeline.defaults.gamepad)
+        end
+    )
+
+    it("offsets the timeline's pictures from the box, both ways", function()
+        local H = boot()
+        world.actions[186] = id(H, "mortal_strike")
+        read(H)
+        local conf = H.Hekili.DB.profile.displays.Primary
+        conf.style, conf.numIcons = "timeline", 6
+        H.Hekili:BuildUI()
+        local d = rawget(H.env, "HekiliDisplayPrimary")
+        local T = d.styleFrames.timeline
+        local b = T.cells[2]
+        b.Keybinding, b.Action, T.rec[2], T.focused = fs(), "mortal_strike", 2, false
+        conf.timeline.gamepad.position, conf.timeline.gamepad.offset = "TOP", 9
+        d.style.UpdateKeybindings(d)
+        assert.are.same({ { "BOTTOM", b, "TOP", 0, 9 } }, b.Keybinding.points)
+        conf.timeline.gamepad.position, conf.timeline.gamepad.offset = "BOTTOM", 4
+        d.style.UpdateKeybindings(d)
+        assert.are.same({ { "TOP", b, "BOTTOM", 0, -4 } }, b.Keybinding.points)
+    end)
+
+    it("exists in both styles; Keybinds is keyboard-only", function()
+        local H = boot()
+        for _, style in ipairs({ "classic", "timeline" }) do
+            local t = tabs(H, style)
+            local host = style == "classic" and t or t.tab_now.args -- the timeline's shared groups sit in its zone tabs
+            assert.truthy(host.gamepad, style)
+            assert.truthy(host.gamepad.args.position)
+            assert.truthy(host.gamepad.args.size)
+            assert.truthy(host.gamepad.args.offset)
+            assert.truthy(host.gamepad.args.cPort.args.cPortOverride)
+            assert.truthy(host.gamepad.args.cPort.args.cPortZoom)
+            assert.is_nil(host.keybindings.args.cPort)
+            assert.is_nil(host.keybindings.args.gamepad)
+            assert.is_nil(host.keybindings.args.gamepadPosition)
+        end
+    end)
+
+    it("keeps the ConsolePort options on the saved values they always used", function()
+        local H = boot()
+        local kb = H.Hekili.DB.profile.displays.Primary.classic.keybindings
+        kb.cPortOverride, kb.cPortZoom = false, 0.25 -- a player's saved settings
+        local _, io = opt(H, "classic", { "gamepad", "cPort", "cPortOverride" })
+        local _, iz = opt(H, "classic", { "gamepad", "cPort", "cPortZoom" })
+        assert.is_false(H.Hekili:GetDisplayOption(io))
+        assert.are.equal(0.25, H.Hekili:GetDisplayOption(iz))
+        H.Hekili.BuildUI = function() end
+        H.Hekili:SetDisplayOption(io, true)
+        H.Hekili:SetDisplayOption(iz, 0.9)
+        assert.is_true(kb.cPortOverride)
+        assert.are.equal(0.9, kb.cPortZoom)
+        assert.is_nil(H.Hekili.DB.profile.displays.Primary.classic.gamepad.cPortZoom)
+        -- the timeline's, too
+        local tk = H.Hekili.DB.profile.displays.Primary.timeline.keybindings
+        local _, it = opt(H, "timeline", { "tab_now", "gamepad", "cPort", "cPortZoom" })
+        tk.cPortZoom = 0.3
+        assert.are.equal(0.3, H.Hekili:GetDisplayOption(it))
+        -- and Position lives in the gamepad group
+        local _, ip = opt(H, "classic", { "gamepad", "position" })
+        H.Hekili:SetDisplayOption(ip, "TOP")
+        assert.are.equal("TOP", H.Hekili.DB.profile.displays.Primary.classic.gamepad.position)
+    end)
 end)

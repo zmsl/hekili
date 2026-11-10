@@ -2358,7 +2358,7 @@ if select( 2, UnitClass( "player" ) ) == "DRUID" then
         local kb = StyleGroup( display, "keybindings" )
         local queued = ( i or 1 ) > 1 and kb.separateQueueStyle
 
-        local pad, page = Pad.Pick( keys[ key ].pad, queued and kb.queuedFontSize or kb.fontSize )
+        local pad, page = Pad.Pick( keys[ key ].pad, StyleGroup( display, "gamepad" ).size )
         if pad then return pad, page end
 
         if display then
@@ -2431,7 +2431,7 @@ elseif select( 2, UnitClass( "player" ) ) == "ROGUE" then
         local kb = StyleGroup( display, "keybindings" )
         local queued = ( i or 1 ) > 1 and kb.separateQueueStyle
 
-        local pad, page = Pad.Pick( keys[ key ].pad, queued and kb.queuedFontSize or kb.fontSize )
+        local pad, page = Pad.Pick( keys[ key ].pad, StyleGroup( display, "gamepad" ).size )
         if pad then return pad, page end
 
         local caps, console = true, false
@@ -2491,7 +2491,7 @@ else
         local kb = StyleGroup( display, "keybindings" )
         local queued = ( i or 1 ) > 1 and kb.separateQueueStyle
 
-        local pad, page = Pad.Pick( keys[ key ].pad, queued and kb.queuedFontSize or kb.fontSize )
+        local pad, page = Pad.Pick( keys[ key ].pad, StyleGroup( display, "gamepad" ).size )
         if pad then return pad, page end
 
         local caps, console = true, false

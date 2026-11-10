@@ -148,16 +148,18 @@ end
 ns.UI.FontFlags = fontFlags
 
 --- Sets keybinding text `text` on font string `fs` of icon `b`. A gamepad binding's pictures sit outside the icon,
---- centred (`position` "TOP": above it, else below), ignoring the keyboard anchor `anchor` and offsets `x`, `y`; any
---- other text keeps that anchor. The points change only when the kind of text does.
-function ns.UI.SetKeybindingText( fs, b, text, anchor, x, y, position )
+--- centred, `g.offset` px from its edge (`g.position` "TOP": above it, else below), ignoring the keyboard anchor
+--- `anchor` and offsets `x`, `y`; any other text keeps that anchor. The points change only when the kind of text,
+--- the side or the offset does.
+function ns.UI.SetKeybindingText( fs, b, text, anchor, x, y, g )
     local pad = text ~= nil and ns.Gamepad.Is( text )
-    local want = pad and ( position == "TOP" and "TOP" or "BOTTOM" ) or false
-    if ( fs.padPos or false ) ~= want then
+    local want = pad and ( g and g.position == "TOP" and "TOP" or "BOTTOM" ) or false
+    local off = pad and g and g.offset or 1
+    if ( fs.padPos or false ) ~= want or ( want and fs.padOff ~= off ) then
         fs:ClearAllPoints()
         if want then
             fs.kbJustifyV = fs.kbJustifyV or fs:GetJustifyV()
-            if want == "TOP" then fs:SetPoint( "BOTTOM", b, "TOP", 0, 1 ) else fs:SetPoint( "TOP", b, "BOTTOM", 0, -1 ) end
+            if want == "TOP" then fs:SetPoint( "BOTTOM", b, "TOP", 0, off ) else fs:SetPoint( "TOP", b, "BOTTOM", 0, -off ) end
             fs:SetJustifyH( "CENTER" )
             fs:SetJustifyV( want == "TOP" and "BOTTOM" or "TOP" )
         else
@@ -165,7 +167,7 @@ function ns.UI.SetKeybindingText( fs, b, text, anchor, x, y, position )
             fs:SetJustifyH( anchor:match( "RIGHT" ) and "RIGHT" or ( anchor:match( "LEFT" ) and "LEFT" or "CENTER" ) )
             if fs.kbJustifyV then fs:SetJustifyV( fs.kbJustifyV ) end
         end
-        fs.padPos = want
+        fs.padPos, fs.padOff = want, off
     end
     fs:SetText( text )
 end

@@ -167,6 +167,14 @@ local function base()
             fade = false,
         },
 
+        -- The gamepad pictures (Engine/Sim/Events.lua ns.Gamepad): beside the icon, `size` px, `offset` px off its edge.
+        -- The ConsolePort options of this tab stay stored in `keybindings` (cPortOverride, cPortZoom).
+        gamepad = {
+            position = "BOTTOM",
+            size = 12,
+            offset = 1,
+        },
+
         keybindings = {
             enabled = true,
             queued = true,
@@ -183,8 +191,6 @@ local function base()
 
             cPortOverride = true,
             cPortZoom = 0.6,
-
-            gamepadPosition = "BOTTOM",
 
             color = { 1, 1, 1, 1 },
         },
@@ -337,50 +343,6 @@ return L["Position"] end,
             order = 5.1,
             width = "full",
         },
-
-        cPort = {
-            name = "ConsolePort", -- l10n: verbatim
-            type = "group",
-            inline = true,
-            order = 4,
-            args = {
-                cPortOverride = {
-                    type = "toggle",
-                    name = L["Use ConsolePort Buttons"],
-                    order = 6,
-                    width = 1.49,
-                },
-
-                cPortZoom = {
-                    type = "range",
-                    name = L["ConsolePort Button Zoom"],
-                    desc = L["The ConsolePort button textures generally have a significant amount of blank padding around them. " ..
-                        "Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r."],
-                    order = 7,
-                    min = 0,
-                    max = 1,
-                    step = 0.01,
-                    width = 1.49,
-                },
-            },
-            disabled = function() return ConsolePort == nil end,
-        },
-
-        gamepad = {
-            name = L["Gamepad"],
-            type = "group",
-            inline = true,
-            order = 4.1,
-            args = {
-                gamepadPosition = {
-                    type = "select",
-                    name = L["Position"],
-                    order = 1,
-                    width = 1,
-                    values = { BOTTOM = L["Bottom"], TOP = L["Top"] },
-                },
-            },
-        },
     }
 
     if #zones > 1 then
@@ -430,6 +392,80 @@ return L["Position"] end,
         type = "group",
         name = L["Keybinds"],
         desc = L["Options for keybinding text on displayed icons."],
+        order = order,
+        args = args,
+    }
+end
+
+function SO.gamepad( styleKey, zones, order, id, conf )
+    local args = {
+        position = {
+            type = "select",
+            name = L["Position"],
+            desc = L["Where the controller button pictures sit: below the icon or above it."],
+            order = 1,
+            width = 1,
+            values = { BOTTOM = L["Bottom"], TOP = L["Top"] },
+        },
+
+        size = {
+            type = "range",
+            name = L["Size"],
+            desc = L["The size of the controller button pictures, in pixels."],
+            order = 2,
+            min = 8,
+            max = 64,
+            step = 1,
+            width = 0.99,
+        },
+
+        offset = {
+            type = "range",
+            name = L["Offset"],
+            desc = L["The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r."],
+            order = 3,
+            min = -20,
+            max = 40,
+            step = 1,
+            width = 0.99,
+        },
+
+        cPort = {
+            name = "ConsolePort", -- l10n: verbatim
+            type = "group",
+            inline = true,
+            order = 4,
+            args = {
+                cPortOverride = {
+                    storeIn = "keybindings",
+                    type = "toggle",
+                    name = L["Use ConsolePort Buttons"],
+                    order = 6,
+                    width = 1.49,
+                },
+
+                cPortZoom = {
+                    storeIn = "keybindings",
+                    type = "range",
+                    name = L["ConsolePort Button Zoom"],
+                    desc = L["The ConsolePort button textures generally have a significant amount of blank padding around them. " ..
+                        "Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r."],
+                    order = 7,
+                    min = 0,
+                    max = 1,
+                    step = 0.01,
+                    width = 1.49,
+                },
+            },
+            disabled = function() return ConsolePort == nil end,
+        },
+
+    }
+
+    return {
+        type = "group",
+        name = L["Gamepad"],
+        desc = L["Options for the controller button pictures shown for the game's gamepad action bars."],
         order = order,
         args = args,
     }

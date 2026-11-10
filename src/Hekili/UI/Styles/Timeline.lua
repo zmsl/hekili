@@ -68,7 +68,7 @@ end
 
 -- Its icon zones for the shared option builders: cell 1, cell 2, the lane (the alternatives use the lane's text).
 local ZONES = { "now", "next", "lane" }
-local SHARED = { "border", "range", "glow", "flash", "captions", "indicators", "targets", "delays", "keybindings" }
+local SHARED = { "border", "range", "glow", "flash", "captions", "indicators", "targets", "delays", "keybindings", "gamepad" }
 
 -- Per zone (1 now, 2 next, 3 lane) the shared groups' field names (StyleOptions: a later zone prefixes its own).
 local function zkey( z, field )
@@ -78,7 +78,7 @@ end
 
 -- Keybinding text for cell `c` (1 the now circle, 2 the next box, 3 up the lane). Keyboard text: none on a focus (`focus`),
 -- queued records by the queued toggle. A gamepad binding's pictures: the now circle and the next box only, focus included.
-local function setKeybinding( b, kb, c, queued, focus, text )
+local function setKeybinding( b, kb, g, c, queued, focus, text )
     local show = false
     if text and kb.enabled then
         if ns.Gamepad.Is( text ) then
@@ -87,7 +87,7 @@ local function setKeybinding( b, kb, c, queued, focus, text )
             show = not queued or ( kb.queued and not focus )
         end
     end
-    ns.UI.SetKeybindingText( b.Keybinding, b, show and text or nil, kb.anchor, kb.x, kb.y, kb.gamepadPosition )
+    ns.UI.SetKeybindingText( b.Keybinding, b, show and text or nil, kb.anchor, kb.x, kb.y, g )
 end
 
 local Timeline = {
@@ -695,7 +695,7 @@ local function assign( d, T, tl, conf, out, now, combat )
             else
                 b.Caption:SetText( nil )
             end
-            setKeybinding( b, kb, c, queued, c == 1, r.keybind )
+            setKeybinding( b, kb, tl.gamepad, c, queued, c == 1, r.keybind )
 
             -- the gate: the resource's believed floor at the start of the pick's wait below its cost
             local rt = r.resource_type
@@ -938,9 +938,9 @@ function Timeline.UpdateKeybindings( d )
         local a, i = b.Action, T.rec[ c ]
         if a then
             b.Keybind, b.KeybindFrom = Hekili:GetBindingForAction( a, conf, i )
-            setKeybinding( b, kb, c, i > 1, c == 1 and T.focused, b.Keybind )
+            setKeybinding( b, kb, conf.timeline.gamepad, c, i > 1, c == 1 and T.focused, b.Keybind )
         else
-            setKeybinding( b, kb, c, false, false, nil )
+            setKeybinding( b, kb, conf.timeline.gamepad, c, false, false, nil )
         end
     end
 end
