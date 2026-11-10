@@ -49,6 +49,29 @@ describe("the CDM verdict's harness arms #slow", function()
         end
     end)
 
+    -- the truth check (loop.verdictTruth) on a real close: Marksmanship's pre-pull Hunter's Mark (0.2 s) is lit, then
+    -- cleared by the prepull's own retarget (0.205 s; the observer's re-light list is read at 0.1 s), so the verdict
+    -- closes it at the pull of fight 3 while the world still has it: one wrong close (the retarget gap, report
+    -- 2026-11-10; with that gap fixed this reads wrong 0/0)
+    it("viewer-reshuffle: a close of an aura the world still has counts on the layout line's wrong p/t", function()
+        local hw = require("Forever.helpers.hunter_world")
+        local function layout(arm)
+            local L, line, check = loop.new(hw.Marksmanship), nil, ab.check
+            ab.check = function(ok, label, l)
+                line = label == "layout" and l or line
+                return check(ok, label, l, "default")
+            end
+            -- three fights on one boot as the gate: the item is proven over the first two (no verdict before)
+            local ok, err = pcall(loop.tally, L, 3, { arm = arm })
+            ab.check = check
+            assert(ok, err)
+            return line
+        end
+        local line = layout("viewer-reshuffle")
+        assert.is_truthy(line:match(" verdicts 0/1 strikes 0/0 wrong 0/1$"), line)
+        assert.is_nil(layout("viewer-buffs"):match(" wrong ")) -- a non-verdict arm's line is as before
+    end)
+
     it("viewer-nonland: the mobs avoid our hits by the arm's table, no press aura applied on an avoid", function()
         local run, H, lines = fight("viewer-nonland", 1)
         assert.is_false(run.W.auraOnAvoid)

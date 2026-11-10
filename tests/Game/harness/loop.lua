@@ -41,9 +41,10 @@ function M.verdictTruth(vt, run, us, t)
     end
 end
 
---- Whether `e` (an entity, or nil) carries one of `ids` (a belief aura's IDs) at world time `t` (expires 0: none).
+--- Whether `e` (an entity, or nil) carries one of `ids` (a belief aura's IDs) at world time `t` (expires 0: none); a
+--- dead mob carries none (the world leaves its auras to expire).
 function M.auraUp(e, ids, t)
-    for _, id in ipairs(e and ids or {}) do
+    for _, id in ipairs((e and not e.dead) and ids or {}) do
         local a = e.auras[id]
         if a and (a.stacks or 1) > 0 and (a.expires == 0 or a.expires > t) then
             return true
@@ -612,6 +613,17 @@ function M.run(L, seed, o, drivers)
         end
         t = t + tick
         step(t)
+        if vt then -- this tick's closes against the world as the drain saw it: before this tick's press
+            if not vt.pulled and t >= wo.pull then -- the belief zeroed its counts at this tick's PLAYER_REGEN_DISABLED:
+                -- a close in the same drain would leave the count where the last fight left it
+                vt.pulled = true
+                for k in pairs(vt.seen) do
+                    vt.seen[k] = 0
+                end
+                run.verdictsWrong[1], run.verdictsWrong[2] = 0, 0
+            end
+            M.verdictTruth(vt, run, us, t)
+        end
         if R then
             lastGcd, tickPolled = firstGcd(steps[1].H), true
         end
@@ -757,9 +769,6 @@ function M.run(L, seed, o, drivers)
                 run.gap[#run.gap + 1] = VS.Power(L.power.type, steps[1].base + t).est - us.power
             end
         end
-        if vt then
-            M.verdictTruth(vt, run, us, t)
-        end
         if o.on then
             o.on(run, steps, t)
         end
@@ -779,6 +788,9 @@ function M.run(L, seed, o, drivers)
         st.H.ctl.now = st.base + tEnd
         if not headless.cycle(st.H, st.H.ctl.now) then
             run.raises = run.raises + 1
+        end
+        if vt and i == 1 then -- a close in the gap's drain (after a kill) is checked too
+            M.verdictTruth(vt, run, us, tEnd)
         end
         if traced[i] then
             st.H.Hekili.Debug, st.H.Hekili.SaveDebugSnapshot = traced[i][1], traced[i][2]
