@@ -3539,11 +3539,11 @@ found = true end
     local tAbilities = {}
     local tItems = {}
 
-    -- The Cooldown Manager coverage line (cdm-default spec §6, decision 108): which of the active spec's auras have an
-    -- item in any Cooldown Manager bar, by the belief's own match (§3.1, Presence/CooldownViewer.lua: an entry's
-    -- linkedSpellIDs, else its spell, override and tooltip spells, each also through GetOverrideSpell; an entry that
-    -- also names another aura, an untracked or a secret spell covers nothing). Read from the client out of combat, never
-    -- from the belief. Allocates: on draw only.
+    -- The Cooldown Manager panel's walk: which item names which of the active spec's auras, by the belief's own match
+    -- (§3.1, Presence/CooldownViewer.lua: an entry's linkedSpellIDs, else its spell, override and tooltip spells, each
+    -- also through GetOverrideSpell; an entry that also names another aura, an untracked or a secret spell maps
+    -- nothing), and which items are on a bar. Read from the client out of combat, never from the belief. Allocates: on
+    -- draw only. (The Performance tab's coverage line was removed 2026-11-10, owner: the panel shows the same.)
     local CDM_VIEWERS = { "EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
 
     local function CdmPlain( v )
@@ -3565,12 +3565,10 @@ found = true end
         end
     end
 
-    -- The shared walk (the coverage line below, the Cooldown Manager panel): out of combat, from the client. nil and
-    -- the reason when it cannot read (in combat: "combat"; not available: the game's reason, or the plain text).
-    -- Else { auras, toKey (cooldownID -> aura key, or false: names several), mappable (key -> true: some item names it
-    -- alone), covered (key ->
-    -- true: some item of the key on a bar), onBar (cooldownID -> true), pool (cooldownIDs in category order), info
-    -- (cooldownID -> its info), off (the player turned the Cooldown Manager off) }. Allocates: on draw only.
+    -- The walk: out of combat, from the client. nil and the reason when it cannot read (in combat: "combat"; not
+    -- available: the game's reason, or the plain text). Else { auras, toKey (cooldownID -> aura key, or false: names
+    -- several), onBar (cooldownID -> true), pool (cooldownIDs in category order), info (cooldownID -> its info), off
+    -- (the player turned the Cooldown Manager off) }. Allocates: on draw only.
     local function CdmWalk()
         if InCombatLockdown() then return nil, "combat" end
         local CV = Facade.C_CooldownViewer
@@ -3598,7 +3596,7 @@ found = true end
             end
         end
 
-        local toKey, mappable, pool, infos = {}, {}, {}, {} -- cooldownID -> aura key, or false (names more than one)
+        local toKey, pool, infos = {}, {}, {} -- cooldownID -> aura key, or false (names more than one)
         for c = 0, 8 do
             local okS, set = pcall( CV.GetCooldownViewerCategorySet, c, true )
             set = okS and CdmPlain( set )
@@ -3627,16 +3625,13 @@ found = true end
                         if one then
                             toKey[ id ] = not ( many or keys[ 0 ] ) and one
                             pool[ #pool + 1 ], infos[ id ] = id, info
-                            -- only an item naming its aura alone can cover it: a shared item (the Druid forms' one)
-                            -- on a bar still covers nothing, so the line neither counts nor lists those auras
-                            if toKey[ id ] then mappable[ one ] = true end
                         end
                     end
                 end
             end
         end
 
-        local covered, onBar = {}, {}
+        local onBar = {}
         for _, name in ipairs( CDM_VIEWERS ) do
             local f = CdmPlain( _G[ name ] )
             local n = type( f ) == "table" and f.GetNumChildren and CdmPlain( f:GetNumChildren() )
@@ -3648,45 +3643,14 @@ found = true end
                         local id = CdmPlain( rawget( c, "cooldownID" ) )
                         if id ~= nil and CdmPlain( rawget( c, "layoutIndex" ) ) ~= nil then
                             onBar[ id ] = true
-                            local k = toKey[ id ]
-                            if k then covered[ k ] = true end
                         end
                     end
                 end
             end
         end
 
-        return { auras = auras, toKey = toKey, mappable = mappable, covered = covered, onBar = onBar, pool = pool,
-            info = infos, off = CdmPlain( GetCVar( "cooldownViewerEnabled" ) ) ~= "1" }
-    end
-
-    local function CdmCoverage()
-        local W, why = CdmWalk()
-        if why == "combat" then return L["Cooldown Manager coverage: updates after combat."] end
-        if not W then return why end
-        if W.off then -- available, but the player turned it off
-            return L["Turn on the Cooldown Manager in the game options: it tells Hekili when your buffs and debuffs are up."]
-        end
-        local auras, mappable, covered = W.auras, W.mappable, W.covered
-
-        local total, have, missing = 0, 0, {}
-        for k in pairs( mappable ) do
-            total = total + 1
-            if covered[ k ] then have = have + 1
-            else
-                local name = auras[ k ].name
-                missing[ #missing + 1 ] = type( name ) == "string" and name or k
-            end
-        end
-        sort( missing )
-
-        local text = format( L["%d of %d tracked auras have an item in a Cooldown Manager bar."], have, total )
-        if #missing > 0 then
-            local list = table.concat( missing, ", ", 1, min( 5, #missing ) )
-            if #missing > 5 then list = list .. format( L[" and %d more"], #missing - 5 ) end
-            text = text .. " " .. format( L["To cover %s, add them to any bar in the Cooldown Manager settings."], list )
-        end
-        return text
+        return { auras = auras, toKey = toKey, onBar = onBar, pool = pool, info = infos,
+            off = CdmPlain( GetCVar( "cooldownViewerEnabled" ) ) ~= "1" }
     end
 
     -- (cdm-panel, owner 2026-11-09) The Cooldown Manager panel: one switch per pack aura that an item of the class's
@@ -4349,13 +4313,6 @@ found = true end
                                     end,
                                     fontSize = "medium",
                                     order = 12,
-                                    width = "full",
-                                },
-                                cdmCoverage = {
-                                    type = "description",
-                                    name = function() return "\n" .. CdmCoverage() end,
-                                    fontSize = "medium",
-                                    order = 15,
                                     width = "full",
                                 },
                                 experimentalHeader = {

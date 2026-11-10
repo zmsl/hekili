@@ -32,7 +32,7 @@ TellMeWhen research (`~/src/hekili-central-needs/tmw-research.md`, "TMW"), the 2
 4. Mid-fight changes allowed (decision 89 amended, owner question 2026-11-07).
 5. A direct never-secret read in the same release, CONDITIONAL on a Shaman finding an aura with secrecy flag 0.
 6. The CDM debug information lives only in the existing debug snapshot (owner answer Q5): no slash command, nothing
-   new in the options panel but the coverage line.
+   new in the options panel but the coverage line (removed 2026-11-10, owner: the Cooldown Manager panel shows the same).
 
 ## 1. Measured facts this rests on
 
@@ -445,11 +445,10 @@ The only fact kind is aura presence (self and current target, procs through link
 - **The harness** keeps choosing per arm: `def.providers.viewer` from `ab.providers()` (`tests/Game/harness/detect.lua:155`),
   and the loops set `Hekili.cdmOff` from the arm instead of the removed profile value (`loop.lua:333`), so the `default`
   arm stays viewer-off and the first gate holds.
-- **The coverage line** (information, not a switch; Options' Performance tab): "N of M tracked auras have an item in a
+- **The coverage line** (REMOVED 2026-11-10 by the owner: "redundant to the CDM options view"; the panel's gold/grey
+  shows which auras have an item on a bar. As built until then; information, not a switch; Options' Performance tab): "N of M tracked auras have an item in a
   Cooldown Manager bar; to cover X, Y and Z, add them to any bar in the Cooldown Manager settings." Computed in
-  `Options/` (client API + `class.auras`, the §3.1 match, out of combat on draw): **no belief read**. M counts only
-  auras some item names ALONE (in game 2026-11-10: the Druid forms share one item on a bar, which covers none of them,
-  so the line advised adding Bear Form to a bar); the snapshot's `covered=N/M` keeps every aura an item names.
+  `Options/` (client API + `class.auras`, the §3.1 match, out of combat on draw): **no belief read**.
 - **The debug snapshot** (owner Q5). Players attach the file `Hekili:SaveDebugSnapshot` writes (`Engine/Snapshot.lua:81`);
   each display's log opens with `log.onOpen()` (`Hekili.lua:238`), which the belief fills itself through the approved
   `SetLog` (`Game/API/Facade.lua:68-75`) to write `VS.Snapshot()` (`Game/State/Snapshot.lua:17`, the `I.OnSnapshot`

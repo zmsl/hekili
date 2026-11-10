@@ -7,7 +7,6 @@
 - Shadow Priests: a new option, Prefer Starshards (off by default; it only matters if you know Starshards, the Night Elf racial). When enabled, the Shadow (wowsims.com) priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Not yet checked in game.
 - Cooldown Manager options panel: one switch per aura Hekili can read from the Cooldown Manager. Turn a switch off and Hekili ignores that aura there. A gold switch means the aura is on a Cooldown Manager bar; a grey one means it is not (the switch applies once you add it). Changes apply after combat. Not yet checked in game.
 - Paladin (wowsims.com) priorities follow the current wowsims (Retribution unchanged; Protection casts Holy Shield rank 4)
-- The Performance tab shows your Cooldown Manager coverage: how many of the auras Hekili tracks have an item in a Cooldown Manager bar, and the first few that do not (add them to any bar to cover them). If the Cooldown Manager is off or unavailable, the line says so. Not yet checked in game.
 
 ### Changed
 - Hunters (wowsims.com): Beast Mastery, Marksmanship and Survival follow wowsims's current weave: the melee strikes show once an Auto Shot has gone off since your last swing (instead of the older timing window) and the shots show otherwise; Survival's talents are re-spec'd. Not yet checked in game.

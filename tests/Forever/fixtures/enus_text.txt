@@ -14421,7 +14421,6 @@ options.packs.affliction.core.potion	values.default	|T967533:0|t |cFFFFD100Defau
 options.packs.affliction.core.prefHeader	name	|W|T136145:0::::64:64:4:60:4:60|t Affliction|w Preferences
 options.packs.affliction.core.prefSpacer	name	\032
 options.packs.affliction.performance	name	Performance
-options.packs.affliction.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.affliction.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.affliction.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.affliction.performance.experimentalHeader	name	Experimental
@@ -14701,7 +14700,6 @@ options.packs.arcane.core.potion	desc	Unless otherwise specified in the priority
 options.packs.arcane.core.potion	name	Potion
 options.packs.arcane.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.arcane.performance	name	Performance
-options.packs.arcane.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.arcane.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.arcane.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.arcane.performance.experimentalHeader	name	Experimental
@@ -15092,7 +15090,6 @@ options.packs.arms.core.wowsims_recklessness	name	Recklessness (wowsims.com)
 options.packs.arms.core.wowsims_stance_dance	desc	The wowsims.com priority's Stance Dance ON/OFF switch (its default in wowsims's own APL).
 options.packs.arms.core.wowsims_stance_dance	name	Stance Dance (wowsims.com)
 options.packs.arms.performance	name	Performance
-options.packs.arms.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.arms.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.arms.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.arms.performance.experimentalHeader	name	Experimental
@@ -15407,7 +15404,6 @@ options.packs.assassination.core.potion	desc	Unless otherwise specified in the p
 options.packs.assassination.core.potion	name	Potion
 options.packs.assassination.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.assassination.performance	name	Performance
-options.packs.assassination.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.assassination.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.assassination.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.assassination.performance.experimentalHeader	name	Experimental
@@ -15767,7 +15763,6 @@ options.packs.balance.core.potion	values.default	|T967533:0|t |cFFFFD100Default|
 options.packs.balance.core.prefHeader	name	|W|T136096:0::::64:64:4:60:4:60|t Balance|w Preferences
 options.packs.balance.core.prefSpacer	name	\032
 options.packs.balance.performance	name	Performance
-options.packs.balance.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.balance.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.balance.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.balance.performance.experimentalHeader	name	Experimental
@@ -16078,7 +16073,6 @@ options.packs.beast_mastery.core.potion	desc	Unless otherwise specified in the p
 options.packs.beast_mastery.core.potion	name	Potion
 options.packs.beast_mastery.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.beast_mastery.performance	name	Performance
-options.packs.beast_mastery.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.beast_mastery.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.beast_mastery.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.beast_mastery.performance.experimentalHeader	name	Experimental
@@ -16394,7 +16388,6 @@ options.packs.combat.core.potion	desc	Unless otherwise specified in the priority
 options.packs.combat.core.potion	name	Potion
 options.packs.combat.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.combat.performance	name	Performance
-options.packs.combat.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.combat.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.combat.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.combat.performance.experimentalHeader	name	Experimental
@@ -16993,7 +16986,6 @@ options.packs.demonology.core.potion	values.default	|T967533:0|t |cFFFFD100Defau
 options.packs.demonology.core.prefHeader	name	|W|T136172:0::::64:64:4:60:4:60|t Demonology|w Preferences
 options.packs.demonology.core.prefSpacer	name	\032
 options.packs.demonology.performance	name	Performance
-options.packs.demonology.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.demonology.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.demonology.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.demonology.performance.experimentalHeader	name	Experimental
@@ -17331,7 +17323,6 @@ options.packs.destruction.core.potion	values.default	|T967533:0|t |cFFFFD100Defa
 options.packs.destruction.core.prefHeader	name	|W|T136186:0::::64:64:4:60:4:60|t Destruction|w Preferences
 options.packs.destruction.core.prefSpacer	name	\032
 options.packs.destruction.performance	name	Performance
-options.packs.destruction.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.destruction.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.destruction.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.destruction.performance.experimentalHeader	name	Experimental
@@ -17620,7 +17611,6 @@ options.packs.discipline.core.potion	desc	Unless otherwise specified in the prio
 options.packs.discipline.core.potion	name	Potion
 options.packs.discipline.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.discipline.performance	name	Performance
-options.packs.discipline.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.discipline.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.discipline.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.discipline.performance.experimentalHeader	name	Experimental
@@ -17943,7 +17933,6 @@ options.packs.elemental.core.potion	desc	Unless otherwise specified in the prior
 options.packs.elemental.core.potion	name	Potion
 options.packs.elemental.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.elemental.performance	name	Performance
-options.packs.elemental.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.elemental.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.elemental.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.elemental.performance.experimentalHeader	name	Experimental
@@ -18268,7 +18257,6 @@ options.packs.enhancement.core.potion	desc	Unless otherwise specified in the pri
 options.packs.enhancement.core.potion	name	Potion
 options.packs.enhancement.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.enhancement.performance	name	Performance
-options.packs.enhancement.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.enhancement.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.enhancement.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.enhancement.performance.experimentalHeader	name	Experimental
@@ -18634,7 +18622,6 @@ options.packs.feral.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.feral.core.prefHeader	name	|W|T132115:0::::64:64:4:60:4:60|t Feral|w Preferences
 options.packs.feral.core.prefSpacer	name	\032
 options.packs.feral.performance	name	Performance
-options.packs.feral.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.feral.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.feral.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.feral.performance.experimentalHeader	name	Experimental
@@ -19125,7 +19112,6 @@ options.packs.fire.core.potion	desc	Unless otherwise specified in the priority, 
 options.packs.fire.core.potion	name	Potion
 options.packs.fire.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.fire.performance	name	Performance
-options.packs.fire.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.fire.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.fire.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.fire.performance.experimentalHeader	name	Experimental
@@ -19512,7 +19498,6 @@ options.packs.fury.core.wowsims_recklessness	name	Recklessness (wowsims.com)
 options.packs.fury.core.wowsims_rend_weave	desc	The wowsims.com priority's Rend Weave ON/OFF switch (its default in wowsims's own APL).
 options.packs.fury.core.wowsims_rend_weave	name	Rend Weave (wowsims.com)
 options.packs.fury.performance	name	Performance
-options.packs.fury.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.fury.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.fury.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.fury.performance.experimentalHeader	name	Experimental
@@ -19880,7 +19865,6 @@ options.packs.guardian.core.potion	values.default	|T967533:0|t |cFFFFD100Default
 options.packs.guardian.core.prefHeader	name	|W|T132276:0::::64:64:4:60:4:60|t Guardian|w Preferences
 options.packs.guardian.core.prefSpacer	name	\032
 options.packs.guardian.performance	name	Performance
-options.packs.guardian.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.guardian.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.guardian.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.guardian.performance.experimentalHeader	name	Experimental
@@ -20185,7 +20169,6 @@ options.packs.marksmanship.core.potion	desc	Unless otherwise specified in the pr
 options.packs.marksmanship.core.potion	name	Potion
 options.packs.marksmanship.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.marksmanship.performance	name	Performance
-options.packs.marksmanship.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.marksmanship.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.marksmanship.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.marksmanship.performance.experimentalHeader	name	Experimental
@@ -20647,7 +20630,6 @@ options.packs.protection.core.potion	values.default	|T967533:0|t |cFFFFD100Defau
 options.packs.protection.core.prefHeader	name	|W|T134952:0::::64:64:4:60:4:60|t Protection|w Preferences
 options.packs.protection.core.prefSpacer	name	\032
 options.packs.protection.performance	name	Performance
-options.packs.protection.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.protection.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.protection.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.protection.performance.experimentalHeader	name	Experimental
@@ -20947,7 +20929,6 @@ options.packs.retribution.core.potion	desc	Unless otherwise specified in the pri
 options.packs.retribution.core.potion	name	Potion
 options.packs.retribution.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.retribution.performance	name	Performance
-options.packs.retribution.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.retribution.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.retribution.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.retribution.performance.experimentalHeader	name	Experimental
@@ -21248,7 +21229,6 @@ options.packs.shadow.core.prefSpacer	name	\032
 options.packs.shadow.core.prefer_starshards	desc	Shadow only, and only when you know Starshards (the Night Elf racial). When enabled, the priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Off: the priority never shows Starshards.
 options.packs.shadow.core.prefer_starshards	name	Prefer Starshards
 options.packs.shadow.performance	name	Performance
-options.packs.shadow.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.shadow.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.shadow.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.shadow.performance.experimentalHeader	name	Experimental
@@ -21612,7 +21592,6 @@ options.packs.subtlety.core.potion	desc	Unless otherwise specified in the priori
 options.packs.subtlety.core.potion	name	Potion
 options.packs.subtlety.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.subtlety.performance	name	Performance
-options.packs.subtlety.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.subtlety.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.subtlety.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.subtlety.performance.experimentalHeader	name	Experimental
@@ -21918,7 +21897,6 @@ options.packs.survival.core.potion	desc	Unless otherwise specified in the priori
 options.packs.survival.core.potion	name	Potion
 options.packs.survival.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.survival.performance	name	Performance
-options.packs.survival.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.survival.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.survival.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
 options.packs.survival.performance.experimentalHeader	name	Experimental
