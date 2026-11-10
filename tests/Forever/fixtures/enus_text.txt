@@ -7847,6 +7847,10 @@ options.abilities.wrath.toggle	values.interrupts	Interrupts
 options.abilities.wrath.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.wrath.toggle	values.none	None
 options.abilities.wrath.toggle	values.potions	Potions
+options.cdm	name	Cooldown Manager
+options.cdm.combat	name	Changes apply after combat.
+options.cdm.intro	name	Hekili reads the Cooldown Manager to see when your buffs and debuffs are up. Turn a switch off and Hekili ignores that aura's items there. |cffffd100Gold|r: on a bar. |cff808080Grey|r: not on a bar; its switch applies when you add it.
+options.cdm.reset	name	Reset
 options.displays	name	Displays
 options.displays.AOE	name	|cFF00B4FFAOE|r
 options.displays.AOE.MultiModAOE	desc	Changes |cFF00FF00will|r be applied to the AOE display.
@@ -13943,21 +13947,18 @@ options.packs.affliction.Affliction (wowsims.com).lists.actionID	desc	Select the
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	name	Entry
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Use Items]|r
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r [Item 12662]
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffboosts|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 18288 - |cFFFFD100|cffffd100((!action.bane_of_agony.known||!debuff.bane_of_agony.up)&!buff.amplify_curse.up)|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 980 - |cFFFFD100|cffffd100!debuff.bane_of_agony.up|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 172 - |cFFFFD100|cffffd100!debuff.corruption.up|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 18265 - |cFFFFD100|cffffd100!debuff.siphon_life.up|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Curse of the Elements - |cFFFFD100|cffffd100settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Curse of Recklessness - |cFFFFD100|cffffd100settings.assigned_curse='recklessness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Curse of Weakness - |cFFFFD100|cffffd100settings.assigned_curse='weakness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 348 - |cFFFFD100|cffffd100!debuff.immolate.up|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 20554 - |cFFFFD100|cffffd100((!action.bane_of_agony.known||debuff.bane_of_agony.up)&(!action.corruption.known||debuff.corruption.up)&(!action.siphon_life.known||debuff.siphon_life.up)&(!action.immolate.known||debuff.immolate.up)&((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 686 - |cFFFFD100|cffffd100!debuff.shadow_vulnerability.up|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 686 - |cFFFFD100|cffffd100buff.shadow_trance.up|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1316697 - |cFFFFD100|cffffd100(!(action.corruption.known||action.bane_of_agony.known)||min((action.corruption.known&debuff.corruption.remains),(action.bane_of_agony.known&debuff.bane_of_agony.remains))>=4)|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 686
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1454
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r [Item 13444]
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_multi_target_curse_logic|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 603 - |cFFFFD100|cffffd100fight_remains>debuff.bane_of_doom.duration|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 686 - |cFFFFD100|cffffd100buff.shadow_trance.up|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 686 - |cFFFFD100|cffffd100buff.shadow_trance.up|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100(!action.bane_of_doom.known||((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||(action.bane_of_doom.known&debuff.bane_of_doom.up)))|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 6789 - |cFFFFD100|cffffd100(!action.shadow_bolt.known||(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1316697
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	name	Action Name
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
@@ -14038,10 +14039,18 @@ options.packs.affliction.Affliction (wowsims.com).lists.enabled	desc	If disabled
 options.packs.affliction.Affliction (wowsims.com).lists.enabled	name	Enabled
 options.packs.affliction.Affliction (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.affliction.Affliction (wowsims.com).lists.listName	name	Action List
-options.packs.affliction.Affliction (wowsims.com).lists.listName	values.boosts	boosts
+options.packs.affliction.Affliction (wowsims.com).lists.listName	values.cooldowns	cooldowns
 options.packs.affliction.Affliction (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
+options.packs.affliction.Affliction (wowsims.com).lists.listName	values.multi_target_dot_logic	multi_target_dot_logic
+options.packs.affliction.Affliction (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
+options.packs.affliction.Affliction (wowsims.com).lists.listName	values.single_multi_target_curse_logic	single_multi_target_curse_logic
+options.packs.affliction.Affliction (wowsims.com).lists.listName	values.single_target_dot_logic	single_target_dot_logic
 options.packs.affliction.Affliction (wowsims.com).lists.list_name	name	Action List
-options.packs.affliction.Affliction (wowsims.com).lists.list_name	values.boosts	boosts
+options.packs.affliction.Affliction (wowsims.com).lists.list_name	values.cooldowns	cooldowns
+options.packs.affliction.Affliction (wowsims.com).lists.list_name	values.multi_target_dot_logic	multi_target_dot_logic
+options.packs.affliction.Affliction (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
+options.packs.affliction.Affliction (wowsims.com).lists.list_name	values.single_multi_target_curse_logic	single_multi_target_curse_logic
+options.packs.affliction.Affliction (wowsims.com).lists.list_name	values.single_target_dot_logic	single_target_dot_logic
 options.packs.affliction.Affliction (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.affliction.Affliction (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.affliction.Affliction (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
@@ -14412,12 +14421,9 @@ options.packs.affliction.core.potion	values.default	|T967533:0|t |cFFFFD100Defau
 options.packs.affliction.core.prefHeader	name	|W|T136145:0::::64:64:4:60:4:60|t Affliction|w Preferences
 options.packs.affliction.core.prefSpacer	name	\032
 options.packs.affliction.performance	name	Performance
+options.packs.affliction.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.affliction.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.affliction.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.affliction.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.affliction.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.affliction.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.affliction.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.affliction.performance.experimentalHeader	name	Experimental
 options.packs.affliction.performance.forecastHeader	name	Forecast
 options.packs.affliction.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -14695,12 +14701,9 @@ options.packs.arcane.core.potion	desc	Unless otherwise specified in the priority
 options.packs.arcane.core.potion	name	Potion
 options.packs.arcane.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.arcane.performance	name	Performance
+options.packs.arcane.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.arcane.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.arcane.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.arcane.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.arcane.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.arcane.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.arcane.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.arcane.performance.experimentalHeader	name	Experimental
 options.packs.arcane.performance.forecastHeader	name	Forecast
 options.packs.arcane.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -15089,12 +15092,9 @@ options.packs.arms.core.wowsims_recklessness	name	Recklessness (wowsims.com)
 options.packs.arms.core.wowsims_stance_dance	desc	The wowsims.com priority's Stance Dance ON/OFF switch (its default in wowsims's own APL).
 options.packs.arms.core.wowsims_stance_dance	name	Stance Dance (wowsims.com)
 options.packs.arms.performance	name	Performance
+options.packs.arms.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.arms.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.arms.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.arms.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.arms.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.arms.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.arms.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.arms.performance.experimentalHeader	name	Experimental
 options.packs.arms.performance.forecastHeader	name	Forecast
 options.packs.arms.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -15217,9 +15217,10 @@ options.packs.assassination.Assassination (wowsims.com).lists.actionID	values.00
 options.packs.assassination.Assassination (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 5171 - |cFFFFD100|cffffd100(buff.slice_and_dice.remains<=0&combo_points.current>=1&!(fight_remains<=6))|r|r
 options.packs.assassination.Assassination (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 14177 - |cFFFFD100|cffffd100(combo_points.current=5&(!action.eviscerate.known||energy.lo>=action.eviscerate.cost)&(!action.elunes_light.known||!buff.elunes_light.up))|r|r
 options.packs.assassination.Assassination (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 2098 - |cFFFFD100|cffffd100((combo_points.current>=5||(combo_points.current=4&action.mutilate.known)||(combo_points.current>=4&(!action.slice_and_dice.known||buff.slice_and_dice.remains<=6))||(combo_points.current>=3&fight_remains<=6))&!talent.death_mark.enabled)|r|r
-options.packs.assassination.Assassination (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 399956 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
-options.packs.assassination.Assassination (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 16511 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration)))))&((action.garrote.known&debuff.garrote.remains>=8)||!talent.ghostly_strike.enabled))|r|r
-options.packs.assassination.Assassination (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 1752 - |cFFFFD100|cffffd100(!action.mutilate.known&!action.hemorrhage.known&combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
+options.packs.assassination.Assassination (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 14278 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.garrote.known||debuff.garrote.remains<=4))|r|r
+options.packs.assassination.Assassination (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 399956 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
+options.packs.assassination.Assassination (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 16511 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration)))))&((action.garrote.known&debuff.garrote.remains>=8)||!talent.ghostly_strike.enabled))|r|r
+options.packs.assassination.Assassination (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 1752 - |cFFFFD100|cffffd100(!action.mutilate.known&!action.hemorrhage.known&combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	name	Action Name
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.adrenaline_rush	|T136000:0|t Spell 13750
@@ -15406,12 +15407,9 @@ options.packs.assassination.core.potion	desc	Unless otherwise specified in the p
 options.packs.assassination.core.potion	name	Potion
 options.packs.assassination.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.assassination.performance	name	Performance
+options.packs.assassination.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.assassination.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.assassination.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.assassination.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.assassination.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.assassination.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.assassination.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.assassination.performance.experimentalHeader	name	Experimental
 options.packs.assassination.performance.forecastHeader	name	Forecast
 options.packs.assassination.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -15631,6 +15629,7 @@ options.packs.balance.Balance (wowsims.com).lists.buff_name	values.moonfire	|T13
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328827
+options.packs.balance.Balance (wowsims.com).lists.buff_name	values.pounce_bleed	|T136000:0|t Spell 9007
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079
@@ -15768,12 +15767,9 @@ options.packs.balance.core.potion	values.default	|T967533:0|t |cFFFFD100Default|
 options.packs.balance.core.prefHeader	name	|W|T136096:0::::64:64:4:60:4:60|t Balance|w Preferences
 options.packs.balance.core.prefSpacer	name	\032
 options.packs.balance.performance	name	Performance
+options.packs.balance.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.balance.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.balance.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.balance.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.balance.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.balance.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.balance.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.balance.performance.experimentalHeader	name	Experimental
 options.packs.balance.performance.forecastHeader	name	Forecast
 options.packs.balance.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -15874,38 +15870,37 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.00
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Open Window]|r - |cFFFFD100|cffffd100ranged_remains>ranged_speed-0.1&mainhand_remains<ranged_remains|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1293241 - |cFFFFD100|cffffd100window.hha.next.summon_hawk|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&target.outside8|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))&time>=5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 19574 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&time>=5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0032	|cFFFFD10032.|r Spell 19574 - |cFFFFD100|cffffd100time>=5&toggle.movement|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0033	|cFFFFD10033.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0034	|cFFFFD10034.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0035	|cFFFFD10035.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0036	|cFFFFD10036.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&toggle.movement|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0037	|cFFFFD10037.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0038	|cFFFFD10038.|r Spell 3044 - |cFFFFD100|cffffd100!action.summon_hawk.known&target.outside8|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1293241 - |cFFFFD100|cffffd100window.hha.next.summon_hawk|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&target.outside8|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))&time>=5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 19574 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))&time>=5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 19574 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0032	|cFFFFD10032.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0033	|cFFFFD10033.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0034	|cFFFFD10034.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0035	|cFFFFD10035.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0036	|cFFFFD10036.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0037	|cFFFFD10037.|r Spell 3044 - |cFFFFD100|cffffd100!action.summon_hawk.known&target.outside8|r|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	name	Action Name
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -16083,12 +16078,9 @@ options.packs.beast_mastery.core.potion	desc	Unless otherwise specified in the p
 options.packs.beast_mastery.core.potion	name	Potion
 options.packs.beast_mastery.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.beast_mastery.performance	name	Performance
+options.packs.beast_mastery.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.beast_mastery.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.beast_mastery.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.beast_mastery.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.beast_mastery.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.beast_mastery.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.beast_mastery.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.beast_mastery.performance.experimentalHeader	name	Experimental
 options.packs.beast_mastery.performance.forecastHeader	name	Forecast
 options.packs.beast_mastery.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -16212,9 +16204,10 @@ options.packs.combat.Combat (wowsims.com).lists.actionID	values.0019	|cFFFFD1001
 options.packs.combat.Combat (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 5171 - |cFFFFD100|cffffd100(buff.slice_and_dice.remains<=0&combo_points.current>=1&!(fight_remains<=6))|r|r
 options.packs.combat.Combat (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 14177 - |cFFFFD100|cffffd100(combo_points.current=5&(!action.eviscerate.known||energy.lo>=action.eviscerate.cost)&(!action.elunes_light.known||!buff.elunes_light.up))|r|r
 options.packs.combat.Combat (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 2098 - |cFFFFD100|cffffd100((combo_points.current>=5||(combo_points.current=4&action.mutilate.known)||(combo_points.current>=4&(!action.slice_and_dice.known||buff.slice_and_dice.remains<=6))||(combo_points.current>=3&fight_remains<=6))&!talent.death_mark.enabled)|r|r
-options.packs.combat.Combat (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 399956 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
-options.packs.combat.Combat (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 16511 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration)))))&((action.garrote.known&debuff.garrote.remains>=8)||!talent.ghostly_strike.enabled))|r|r
-options.packs.combat.Combat (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 1752 - |cFFFFD100|cffffd100(!action.mutilate.known&!action.hemorrhage.known&combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
+options.packs.combat.Combat (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 14278 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.garrote.known||debuff.garrote.remains<=4))|r|r
+options.packs.combat.Combat (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 399956 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
+options.packs.combat.Combat (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 16511 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration)))))&((action.garrote.known&debuff.garrote.remains>=8)||!talent.ghostly_strike.enabled))|r|r
+options.packs.combat.Combat (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 1752 - |cFFFFD100|cffffd100(!action.mutilate.known&!action.hemorrhage.known&combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.combat.Combat (wowsims.com).lists.action_name	name	Action Name
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.adrenaline_rush	|T136000:0|t Spell 13750
@@ -16401,12 +16394,9 @@ options.packs.combat.core.potion	desc	Unless otherwise specified in the priority
 options.packs.combat.core.potion	name	Potion
 options.packs.combat.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.combat.performance	name	Performance
+options.packs.combat.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.combat.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.combat.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.combat.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.combat.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.combat.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.combat.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.combat.performance.experimentalHeader	name	Experimental
 options.packs.combat.performance.forecastHeader	name	Forecast
 options.packs.combat.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -16525,8 +16515,8 @@ options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0009	|cF
 options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||((action.bane_of_doom.known&debuff.bane_of_doom.up)||(active_enemies>=3&target.within5)))|r|r
 options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
 options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 6353 - |cFFFFD100|cffffd100((!(active_enemies>=3)||target.outside5)&buff.decimation.up&fight_remains>(action.soul_fire.cast+action.soul_fire.travel_time)&!action.soul_fire.executing)|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||(action.searing_pain.cast+action.searing_pain.travel_time)>fight_remains)|r|r
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<35&fight_remains>60)|r|r
 options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 5676
 options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
@@ -16786,7 +16776,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0009	|
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||((action.bane_of_doom.known&debuff.bane_of_doom.up)||(active_enemies>=3&target.within5)))|r|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 5676 - |cFFFFD100|cffffd100(!action.shadow_bolt.known||(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||(action.searing_pain.cast+action.searing_pain.travel_time)>fight_remains)|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 686
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454
@@ -17003,12 +16993,9 @@ options.packs.demonology.core.potion	values.default	|T967533:0|t |cFFFFD100Defau
 options.packs.demonology.core.prefHeader	name	|W|T136172:0::::64:64:4:60:4:60|t Demonology|w Preferences
 options.packs.demonology.core.prefSpacer	name	\032
 options.packs.demonology.performance	name	Performance
+options.packs.demonology.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.demonology.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.demonology.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.demonology.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.demonology.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.demonology.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.demonology.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.demonology.performance.experimentalHeader	name	Experimental
 options.packs.demonology.performance.forecastHeader	name	Forecast
 options.packs.demonology.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -17117,19 +17104,21 @@ options.packs.destruction.Destruction (wowsims.com).lists.actionID	name	Entry
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Use Items]|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r [Item 12662]
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r [Item 13444]
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Curse of the Elements - |cFFFFD100|cffffd100settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Curse of Recklessness - |cFFFFD100|cffffd100settings.assigned_curse='recklessness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Curse of Weakness - |cFFFFD100|cffffd100settings.assigned_curse='weakness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)||(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)||(settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 603 - |cFFFFD100|cffffd100fight_remains>60|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 18288 - |cFFFFD100|cffffd100(!(action.bane_of_doom.known||action.bane_of_agony.known)||((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&(!action.bane_of_agony.known||!debuff.bane_of_agony.up)))|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 980 - |cFFFFD100|cffffd100(((!action.bane_of_doom.known||!debuff.bane_of_doom.up)&!debuff.bane_of_agony.up)&debuff.bane_of_agony.remains<=action.bane_of_agony.cast)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 348 - |cFFFFD100|cffffd100debuff.immolate.remains<=action.immolate.cast|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 172 - |cFFFFD100|cffffd100debuff.corruption.remains<=action.corruption.cast|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1293817 - |cFFFFD100|cffffd100(!action.immolate.known||debuff.immolate.up)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 17877
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 412758
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_multi_target_curse_logic|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&toggle.movement&(active_enemies>=3&target.outside5)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 603 - |cFFFFD100|cffffd100fight_remains>debuff.bane_of_doom.duration|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1293817 - |cFFFFD100|cffffd100(!action.immolate.known||debuff.immolate.up)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 17877
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||((action.bane_of_doom.known&debuff.bane_of_doom.up)||(active_enemies>=3&target.within5)))|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 5676 - |cFFFFD100|cffffd100(!action.incinerate.known||(action.incinerate.cast+action.incinerate.travel_time)>fight_remains)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<35&fight_remains>60)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 348 - |cFFFFD100|cffffd100(!action.incinerate.known||debuff.immolate.remains<action.incinerate.cast)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 412758
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 1454
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	name	Action Name
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
@@ -17210,10 +17199,18 @@ options.packs.destruction.Destruction (wowsims.com).lists.enabled	desc	If disabl
 options.packs.destruction.Destruction (wowsims.com).lists.enabled	name	Enabled
 options.packs.destruction.Destruction (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.destruction.Destruction (wowsims.com).lists.listName	name	Action List
+options.packs.destruction.Destruction (wowsims.com).lists.listName	values.cooldowns	cooldowns
 options.packs.destruction.Destruction (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
+options.packs.destruction.Destruction (wowsims.com).lists.listName	values.multi_target_dot_logic	multi_target_dot_logic
 options.packs.destruction.Destruction (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
+options.packs.destruction.Destruction (wowsims.com).lists.listName	values.single_multi_target_curse_logic	single_multi_target_curse_logic
+options.packs.destruction.Destruction (wowsims.com).lists.listName	values.single_target_dot_logic	single_target_dot_logic
 options.packs.destruction.Destruction (wowsims.com).lists.list_name	name	Action List
+options.packs.destruction.Destruction (wowsims.com).lists.list_name	values.cooldowns	cooldowns
+options.packs.destruction.Destruction (wowsims.com).lists.list_name	values.multi_target_dot_logic	multi_target_dot_logic
 options.packs.destruction.Destruction (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
+options.packs.destruction.Destruction (wowsims.com).lists.list_name	values.single_multi_target_curse_logic	single_multi_target_curse_logic
+options.packs.destruction.Destruction (wowsims.com).lists.list_name	values.single_target_dot_logic	single_target_dot_logic
 options.packs.destruction.Destruction (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.destruction.Destruction (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.destruction.Destruction (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
@@ -17334,12 +17331,9 @@ options.packs.destruction.core.potion	values.default	|T967533:0|t |cFFFFD100Defa
 options.packs.destruction.core.prefHeader	name	|W|T136186:0::::64:64:4:60:4:60|t Destruction|w Preferences
 options.packs.destruction.core.prefSpacer	name	\032
 options.packs.destruction.performance	name	Performance
+options.packs.destruction.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.destruction.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.destruction.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.destruction.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.destruction.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.destruction.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.destruction.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.destruction.performance.experimentalHeader	name	Experimental
 options.packs.destruction.performance.forecastHeader	name	Forecast
 options.packs.destruction.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -17626,12 +17620,9 @@ options.packs.discipline.core.potion	desc	Unless otherwise specified in the prio
 options.packs.discipline.core.potion	name	Potion
 options.packs.discipline.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.discipline.performance	name	Performance
+options.packs.discipline.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.discipline.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.discipline.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.discipline.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.discipline.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.discipline.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.discipline.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.discipline.performance.experimentalHeader	name	Experimental
 options.packs.discipline.performance.forecastHeader	name	Forecast
 options.packs.discipline.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -17952,12 +17943,9 @@ options.packs.elemental.core.potion	desc	Unless otherwise specified in the prior
 options.packs.elemental.core.potion	name	Potion
 options.packs.elemental.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.elemental.performance	name	Performance
+options.packs.elemental.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.elemental.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.elemental.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.elemental.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.elemental.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.elemental.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.elemental.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.elemental.performance.experimentalHeader	name	Experimental
 options.packs.elemental.performance.forecastHeader	name	Forecast
 options.packs.elemental.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -18280,12 +18268,9 @@ options.packs.enhancement.core.potion	desc	Unless otherwise specified in the pri
 options.packs.enhancement.core.potion	name	Potion
 options.packs.enhancement.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.enhancement.performance	name	Performance
+options.packs.enhancement.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.enhancement.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.enhancement.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.enhancement.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.enhancement.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.enhancement.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.enhancement.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.enhancement.performance.experimentalHeader	name	Experimental
 options.packs.enhancement.performance.forecastHeader	name	Forecast
 options.packs.enhancement.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -18416,7 +18401,7 @@ options.packs.feral.Feral (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1322605 - |cFFFFD100|cffffd100((!action.cat_form.known||buff.cat_form.up)&energy.lo<=57&action.shifting_power.ready)&(toggle.movement&target.outside5||target.within5)|r|r
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1328618 - |cFFFFD100|cffffd100((!action.cat_form.known||buff.cat_form.up)&combo_points.current>=5&(talent.predatory_discipline.enabled||energy.lo<=55)&fight_remains<8)&(toggle.movement&target.outside5||target.within5)|r|r
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 5221 - |cFFFFD100|cffffd100(((!action.cat_form.known||buff.cat_form.up)&buff.clearcasting.up)&!((talent.predatory_discipline.enabled&(!action.cat_form.known||buff.cat_form.up)&combo_points.current>=4&(!action.rip.known||debuff.rip.remains>=2))&!((talent.predatory_discipline.enabled&(!action.cat_form.known||buff.cat_form.up)&combo_points.current>=4&(!action.rip.known||debuff.rip.remains>=2))&(((buff.clearcasting.up&energy.lo>=60)||(!buff.clearcasting.up&energy.lo>=85))||(combo_points.current>=5&((!buff.clearcasting.up&energy.lo>=70)||(buff.clearcasting.up&energy.lo>=50)))))))&(toggle.movement&target.outside5||target.within5)|r|r
-options.packs.feral.Feral (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1079 - |cFFFFD100|cffffd100((!action.cat_form.known||buff.cat_form.up)&((combo_points.current>=4&(!(talent.primal_fury.rank=0||(talent.primal_fury.rank>=2&action.shifting_power.known))||combo_points.current>=5||!((!action.shred.known||action.shred.ready)&fight_remains>=(8+1)&(!action.shred.known||(energy.lo+10)>=(action.shred.cost+action.rip.cost)))))&!debuff.rip.up&fight_remains>=8))&(toggle.movement&target.outside5||target.within5)|r|r
+options.packs.feral.Feral (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1079 - |cFFFFD100|cffffd100((!action.cat_form.known||buff.cat_form.up)&((combo_points.current>=4&(!(talent.primal_fury.rank=0||(talent.primal_fury.rank>=2&talent.shifting_power.enabled))||combo_points.current>=5||!((!action.shred.known||action.shred.ready)&fight_remains>=(8+1)&(!action.shred.known||(energy.lo+10)>=(action.shred.cost+action.rip.cost)))))&!debuff.rip.up&fight_remains>=8))&(toggle.movement&target.outside5||target.within5)|r|r
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1822 - |cFFFFD100|cffffd100((!action.cat_form.known||buff.cat_form.up)&(!debuff.rake.up&fight_remains>6))&(toggle.movement&target.outside5||target.within5)|r|r
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 5221 - |cFFFFD100|cffffd100(((!action.cat_form.known||buff.cat_form.up)&energy.lo>=action.shred.cost)&!((talent.predatory_discipline.enabled&(!action.cat_form.known||buff.cat_form.up)&combo_points.current>=4&(!action.rip.known||debuff.rip.remains>=2))&!((talent.predatory_discipline.enabled&(!action.cat_form.known||buff.cat_form.up)&combo_points.current>=4&(!action.rip.known||debuff.rip.remains>=2))&(((buff.clearcasting.up&energy.lo>=60)||(!buff.clearcasting.up&energy.lo>=85))||(combo_points.current>=5&((!buff.clearcasting.up&energy.lo>=70)||(buff.clearcasting.up&energy.lo>=50)))))))&(toggle.movement&target.outside5||target.within5)|r|r
 options.packs.feral.Feral (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1082 - |cFFFFD100|cffffd100(((!(action.cat_form.known||action.shred.known)||((!action.cat_form.known||buff.cat_form.up)&(!action.shred.known||!action.shred.ready)&(!action.shred.known||energy.lo>=action.shred.cost)))&energy.lo>=action.claw.cost)&!((talent.predatory_discipline.enabled&(!action.cat_form.known||buff.cat_form.up)&combo_points.current>=4&(!action.rip.known||debuff.rip.remains>=2))&!((talent.predatory_discipline.enabled&(!action.cat_form.known||buff.cat_form.up)&combo_points.current>=4&(!action.rip.known||debuff.rip.remains>=2))&(((buff.clearcasting.up&energy.lo>=60)||(!buff.clearcasting.up&energy.lo>=85))||(combo_points.current>=5&((!buff.clearcasting.up&energy.lo>=70)||(buff.clearcasting.up&energy.lo>=50)))))))&(toggle.movement&target.outside5||target.within5)|r|r
@@ -18511,6 +18496,7 @@ options.packs.feral.Feral (wowsims.com).lists.buff_name	values.moonfire	|T136000
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328827
+options.packs.feral.Feral (wowsims.com).lists.buff_name	values.pounce_bleed	|T136000:0|t Spell 9007
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079
@@ -18648,12 +18634,9 @@ options.packs.feral.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.feral.core.prefHeader	name	|W|T132115:0::::64:64:4:60:4:60|t Feral|w Preferences
 options.packs.feral.core.prefSpacer	name	\032
 options.packs.feral.performance	name	Performance
+options.packs.feral.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.feral.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.feral.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.feral.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.feral.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.feral.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.feral.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.feral.performance.experimentalHeader	name	Experimental
 options.packs.feral.performance.forecastHeader	name	Forecast
 options.packs.feral.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -19142,12 +19125,9 @@ options.packs.fire.core.potion	desc	Unless otherwise specified in the priority, 
 options.packs.fire.core.potion	name	Potion
 options.packs.fire.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.fire.performance	name	Performance
+options.packs.fire.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.fire.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.fire.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.fire.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.fire.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.fire.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.fire.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.fire.performance.experimentalHeader	name	Experimental
 options.packs.fire.performance.forecastHeader	name	Forecast
 options.packs.fire.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -19292,9 +19272,10 @@ options.packs.fury.Fury (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 772 - |cFFFFD100|cffffd100(settings.wowsims_rend_weave&!execute_phase&!debuff.rend.up&rage.lo>=10)|r|r
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 2458 - |cFFFFD100|cffffd100((!action.battle_stance.known||buff.battle_stance.up)&!((buff.overpower_ready.up&rage.lo>=5&rage.lo<=73&(!action.overpower.known||cooldown.overpower.ready))||(settings.wowsims_rend_weave&!execute_phase&(!action.rend.known||!debuff.rend.up)&rage.lo>=10)))|r|r
 options.packs.fury.Fury (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1329555
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 18499 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&talent.improved_berserker_rage.enabled)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 6673 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&buff.battle_shout.remains<=10)|r|r
-options.packs.fury.Fury (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 7386 - |cFFFFD100|cffffd100!action.bloodthirst.known&debuff.sunder_armor.stack<5|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 2687 - |cFFFFD100|cffffd100((fight_remains>cooldown.bloodrage.duration&rage.lo<90)||fight_remains<2||(execute_phase&(!action.execute.known||(rage.lo+10)>=action.execute.cost)&(!action.execute.known||!action.execute.ready)&min(mainhand_remains,offhand_remains)>0.5&(!action.berserker_stance.known||buff.berserker_stance.up)))|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 18499 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&talent.improved_berserker_rage.enabled)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 6673 - |cFFFFD100|cffffd100((!(action.bloodthirst.known||action.whirlwind.known)||((!action.bloodthirst.known||cooldown.bloodthirst.remains>=action.bloodthirst.gcd)&(!action.whirlwind.known||cooldown.whirlwind.remains>=action.whirlwind.gcd)))&buff.battle_shout.remains<=10)|r|r
+options.packs.fury.Fury (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 7386 - |cFFFFD100|cffffd100!action.bloodthirst.known&debuff.sunder_armor.stack<5|r|r
 options.packs.fury.Fury (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.fury.Fury (wowsims.com).lists.action_name	name	Action Name
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.battle_shout	|T136000:0|t Spell 6673
@@ -19531,12 +19512,9 @@ options.packs.fury.core.wowsims_recklessness	name	Recklessness (wowsims.com)
 options.packs.fury.core.wowsims_rend_weave	desc	The wowsims.com priority's Rend Weave ON/OFF switch (its default in wowsims's own APL).
 options.packs.fury.core.wowsims_rend_weave	name	Rend Weave (wowsims.com)
 options.packs.fury.performance	name	Performance
+options.packs.fury.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.fury.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.fury.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.fury.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.fury.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.fury.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.fury.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.fury.performance.experimentalHeader	name	Experimental
 options.packs.fury.performance.forecastHeader	name	Forecast
 options.packs.fury.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -19658,15 +19636,20 @@ options.packs.guardian.Guardian (wowsims.com).lists.action	values.wait	|T136243:
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.wrath	|T136000:0|t Spell 5176
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	name	Entry
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 22842 - |cFFFFD100|cffffd100health.pct<20|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffkeep_up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffdamage|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 6807 - |cFFFFD100|cffffd100rage.lo>=20|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 6807 - |cFFFFD100|cffffd100!action.primal_bite.known|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 99 - |cFFFFD100|cffffd100settings.maintain_demoralizing_roar&(!debuff.demoralizing_roar.up&!action.lacerate.known&(!action.primal_bite.known||cooldown.primal_bite.remains>gcd.max||rage.lo<action.primal_bite.cost))|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 770 - |cFFFFD100|cffffd100!debuff.faerie_fire.up&!action.lacerate.known&(!action.primal_bite.known||cooldown.primal_bite.remains>gcd.max||rage.lo<action.primal_bite.cost)|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 5487 - |cFFFFD100|cffffd100!buff.bear_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 5487 - |cFFFFD100|cffffd100!buff.bear_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1238122 - |cFFFFD100|cffffd100target.outside5|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 22812 - |cFFFFD100|cffffd100health.pct<=60&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1259799 - |cFFFFD100|cffffd100action.elunes_light.known&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 22842 - |cFFFFD100|cffffd100health.pct<25&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 5229 - |cFFFFD100|cffffd100(action.enrage.known&gcd.remains<=0&(((action.primal_bite.known&(!action.primal_bite.known||cooldown.primal_bite.ready))&(!action.primal_bite.known||rage.lo<action.primal_bite.cost))||(!(action.primal_bite.known&(!action.primal_bite.known||cooldown.primal_bite.ready))&(!action.lacerate.known||rage.lo<action.lacerate.cost))))&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 770 - |cFFFFD100|cffffd100(action.faerie_fire.known&debuff.faerie_fire.remains<=0)&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1328617 - |cFFFFD100|cffffd100((debuff.lacerate.up&debuff.lacerate.stack>=5)&debuff.lacerate.remains<=3)&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 99 - |cFFFFD100|cffffd100settings.maintain_demoralizing_roar&(!(!(debuff.demoralizing_roar.remains<=0))&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5))|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 407995 - |cFFFFD100|cffffd100action.primal_bite.known&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 779 - |cFFFFD100|cffffd100(active_enemies>=2&druid_bleed_active)&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1328617 - |cFFFFD100|cffffd100(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 6807 - |cFFFFD100|cffffd100(rage.lo>=20&(!action.primal_bite.known||(action.primal_bite.known&cooldown.primal_bite.remains>1.5)||(action.primal_bite.known&(rage.lo-action.maul.cost)>=action.primal_bite.cost)))&(toggle.movement&(target.outside5&(!action.feral_charge.known||cooldown.feral_charge.ready))||target.within5)|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 6807 - |cFFFFD100|cffffd100!action.primal_bite.known|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	name	Action Name
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.aquatic_form	|T136000:0|t Spell 1066
@@ -19757,6 +19740,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.moonfire	|T
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328827
+options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.pounce_bleed	|T136000:0|t Spell 9007
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.rake	|T136000:0|t Spell 1822
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.rip	|T136000:0|t Spell 1079
@@ -19774,14 +19758,10 @@ options.packs.guardian.Guardian (wowsims.com).lists.enabled	desc	If disabled, th
 options.packs.guardian.Guardian (wowsims.com).lists.enabled	name	Enabled
 options.packs.guardian.Guardian (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.guardian.Guardian (wowsims.com).lists.listName	name	Action List
-options.packs.guardian.Guardian (wowsims.com).lists.listName	values.cooldowns	cooldowns
-options.packs.guardian.Guardian (wowsims.com).lists.listName	values.damage	damage
 options.packs.guardian.Guardian (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
-options.packs.guardian.Guardian (wowsims.com).lists.listName	values.keep_up	keep_up
+options.packs.guardian.Guardian (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.guardian.Guardian (wowsims.com).lists.list_name	name	Action List
-options.packs.guardian.Guardian (wowsims.com).lists.list_name	values.cooldowns	cooldowns
-options.packs.guardian.Guardian (wowsims.com).lists.list_name	values.damage	damage
-options.packs.guardian.Guardian (wowsims.com).lists.list_name	values.keep_up	keep_up
+options.packs.guardian.Guardian (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.guardian.Guardian (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
 options.packs.guardian.Guardian (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.guardian.Guardian (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
@@ -19811,7 +19791,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.modMoving.moving	values.1	Mo
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.guardian.Guardian (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 22842)
+options.packs.guardian.Guardian (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 1238122)
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.guardian.Guardian (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
@@ -19900,12 +19880,9 @@ options.packs.guardian.core.potion	values.default	|T967533:0|t |cFFFFD100Default
 options.packs.guardian.core.prefHeader	name	|W|T132276:0::::64:64:4:60:4:60|t Guardian|w Preferences
 options.packs.guardian.core.prefSpacer	name	\032
 options.packs.guardian.performance	name	Performance
+options.packs.guardian.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.guardian.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.guardian.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.guardian.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.guardian.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.guardian.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.guardian.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.guardian.performance.experimentalHeader	name	Experimental
 options.packs.guardian.performance.forecastHeader	name	Forecast
 options.packs.guardian.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -20011,27 +19988,26 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0002
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r |cff00ccff[Open Window]|r - |cFFFFD100|cffffd100ranged_remains>ranged_speed-0.1&mainhand_remains<ranged_remains|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 3044 - |cFFFFD100|cffffd100target.outside8|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 3044 - |cFFFFD100|cffffd100target.outside8|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	name	Action Name
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -20209,12 +20185,9 @@ options.packs.marksmanship.core.potion	desc	Unless otherwise specified in the pr
 options.packs.marksmanship.core.potion	name	Potion
 options.packs.marksmanship.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.marksmanship.performance	name	Performance
+options.packs.marksmanship.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.marksmanship.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.marksmanship.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.marksmanship.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.marksmanship.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.marksmanship.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.marksmanship.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.marksmanship.performance.experimentalHeader	name	Experimental
 options.packs.marksmanship.performance.forecastHeader	name	Forecast
 options.packs.marksmanship.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -20674,12 +20647,9 @@ options.packs.protection.core.potion	values.default	|T967533:0|t |cFFFFD100Defau
 options.packs.protection.core.prefHeader	name	|W|T134952:0::::64:64:4:60:4:60|t Protection|w Preferences
 options.packs.protection.core.prefSpacer	name	\032
 options.packs.protection.performance	name	Performance
+options.packs.protection.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.protection.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.protection.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.protection.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.protection.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.protection.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.protection.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.protection.performance.experimentalHeader	name	Experimental
 options.packs.protection.performance.forecastHeader	name	Forecast
 options.packs.protection.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -20977,12 +20947,9 @@ options.packs.retribution.core.potion	desc	Unless otherwise specified in the pri
 options.packs.retribution.core.potion	name	Potion
 options.packs.retribution.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.retribution.performance	name	Performance
+options.packs.retribution.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.retribution.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.retribution.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.retribution.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.retribution.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.retribution.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.retribution.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.retribution.performance.experimentalHeader	name	Experimental
 options.packs.retribution.performance.forecastHeader	name	Forecast
 options.packs.retribution.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -21281,12 +21248,9 @@ options.packs.shadow.core.prefSpacer	name	\032
 options.packs.shadow.core.prefer_starshards	desc	Shadow only, and only when you know Starshards (the Night Elf racial). When enabled, the priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Off: the priority never shows Starshards.
 options.packs.shadow.core.prefer_starshards	name	Prefer Starshards
 options.packs.shadow.performance	name	Performance
+options.packs.shadow.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.shadow.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.shadow.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.shadow.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.shadow.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.shadow.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.shadow.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.shadow.performance.experimentalHeader	name	Experimental
 options.packs.shadow.performance.forecastHeader	name	Forecast
 options.packs.shadow.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -21458,9 +21422,10 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.actionID	values.0018	|cFFFFD
 options.packs.subtlety.Subtlety (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 5171 - |cFFFFD100|cffffd100(buff.slice_and_dice.remains<=0&combo_points.current>=1&!(fight_remains<=6))|r|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 14177 - |cFFFFD100|cffffd100(combo_points.current=5&(!action.eviscerate.known||energy.lo>=action.eviscerate.cost)&(!action.elunes_light.known||!buff.elunes_light.up))|r|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 2098 - |cFFFFD100|cffffd100((combo_points.current>=5||(combo_points.current=4&action.mutilate.known)||(combo_points.current>=4&(!action.slice_and_dice.known||buff.slice_and_dice.remains<=6))||(combo_points.current>=3&fight_remains<=6))&!talent.death_mark.enabled)|r|r
-options.packs.subtlety.Subtlety (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 399956 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
-options.packs.subtlety.Subtlety (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 16511 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration)))))&((action.garrote.known&debuff.garrote.remains>=8)||!talent.ghostly_strike.enabled))|r|r
-options.packs.subtlety.Subtlety (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 1752 - |cFFFFD100|cffffd100(!action.mutilate.known&!action.hemorrhage.known&combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
+options.packs.subtlety.Subtlety (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 14278 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.garrote.known||debuff.garrote.remains<=4))|r|r
+options.packs.subtlety.Subtlety (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 399956 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
+options.packs.subtlety.Subtlety (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 16511 - |cFFFFD100|cffffd100(combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration)))))&((action.garrote.known&debuff.garrote.remains>=8)||!talent.ghostly_strike.enabled))|r|r
+options.packs.subtlety.Subtlety (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 1752 - |cFFFFD100|cffffd100(!action.mutilate.known&!action.hemorrhage.known&combo_points.current<5&(!action.eureka.known||(action.eureka.known&buff.eureka.up)||(action.eureka.known&!cooldown.eureka.ready)||(action.eureka.known&((!action.eureka.known||cooldown.eureka.ready)&(!action.eureka.known||(!action.adrenaline_rush.known||cooldown.adrenaline_rush.remains<=cooldown.eureka.duration))))))|r|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	name	Action Name
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.adrenaline_rush	|T136000:0|t Spell 13750
@@ -21647,12 +21612,9 @@ options.packs.subtlety.core.potion	desc	Unless otherwise specified in the priori
 options.packs.subtlety.core.potion	name	Potion
 options.packs.subtlety.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.subtlety.performance	name	Performance
+options.packs.subtlety.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.subtlety.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.subtlety.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.subtlety.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.subtlety.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.subtlety.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.subtlety.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.subtlety.performance.experimentalHeader	name	Experimental
 options.packs.subtlety.performance.forecastHeader	name	Forecast
 options.packs.subtlety.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -21752,34 +21714,33 @@ options.packs.survival.Survival (wowsims.com).lists.actionID	values.0002	|cFFFFD
 options.packs.survival.Survival (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
 options.packs.survival.Survival (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
 options.packs.survival.Survival (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r |cff00ccff[Open Window]|r - |cFFFFD100|cffffd100ranged_remains>ranged_speed-0.1&mainhand_remains<ranged_remains|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 3044 - |cFFFFD100|cffffd100target.outside8|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))&time>=5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&(ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains))))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&(((mainhand_remains-0)<=0&(ranged_remains+max(2.4,min(4,(((mainhand_remains+(max(0,0.25)+0))-ranged_speed)+1))))>=(mainhand_remains+(max(0,0.25)+0))&ranged_remains>0.5&target.outside5)&window.weave.up)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&time>=5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0032	|cFFFFD10032.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0033	|cFFFFD10033.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 3044 - |cFFFFD100|cffffd100target.outside8|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))&time>=5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))&time>=5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0032	|cFFFFD10032.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.survival.Survival (wowsims.com).lists.action_name	name	Action Name
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -21957,12 +21918,9 @@ options.packs.survival.core.potion	desc	Unless otherwise specified in the priori
 options.packs.survival.core.potion	name	Potion
 options.packs.survival.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.survival.performance	name	Performance
+options.packs.survival.performance.cdmCoverage	name	\n0 of 0 tracked auras have an item in a Cooldown Manager bar.
 options.packs.survival.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
 options.packs.survival.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.survival.performance.cooldownViewer	desc	Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. Shows presence only (no durations or stacks), and only auras you applied.\n\nChanges apply at once out of combat, otherwise when the fight ends.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.survival.performance.cooldownViewer	name	Experimental: use the Cooldown Manager for aura presence
-options.packs.survival.performance.damageMeter	desc	Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.survival.performance.damageMeter	name	Experimental: use the damage meter for swing outcomes
 options.packs.survival.performance.experimentalHeader	name	Experimental
 options.packs.survival.performance.forecastHeader	name	Forecast
 options.packs.survival.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.

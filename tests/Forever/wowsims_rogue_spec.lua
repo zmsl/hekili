@@ -43,22 +43,26 @@ local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true 
 -- Blood Splatter (Garrote 27 s, Rupture +6 s: wowsims's logs), so Ghostly Strike's `garrote.remains<=4` and Hemorrhage's
 -- `garrote.remains>=8` gates turn at wowsims's times; LIVE60 4.2 -> 3.6 (measured, under the 6 s bar). Assassination and
 -- Combat unchanged (0.978 / 0.991; their builds take no Ghostly Strike; Assassination's Blood Splatter moved no row).
+-- LIVE40 (Subtlety only; the others keep the 6 s bar): 6.4 measured at L40 on integ/0.7 a9c8a44c0, Hemorrhage usable.
+-- Cause: wowsims's own gates (Garrote remaining 6.6 -> 0.6 s, Ghostly Strike likely cooling; translator-2 review S3).
+-- Owner ruling Q11 2026-11-09 (ledger L342): accepted as faithful to wowsims. A larger idle still fails.
 local PACKS = {
     { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.97, 5.2, MUTILATE_HANDS },
     { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.99, 3.0 },
-    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.98, 3.6 },
+    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.98, 3.6, nil, 6.4 },
 }
 
 describe("the Rogue wowsims.com packs #slow #wowsims", function()
     for _, p in ipairs(PACKS) do
-        local pack, spec, base, FLOOR, LIVE60, knobs = p[1], p[2], p[3], p[4], p[5], p[6]
+        local pack, spec, base, FLOOR, LIVE60, knobs, LIVE40 = p[1], p[2], p[3], p[4], p[5], p[6], p[7]
         it(pack .. " follows wowsims's casts", function()
             ws.gate(pack, content(spec, base, pack, 60), spec, FLOOR, knobs)
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()
-                -- R22a: L10/L40 keep the 6 s bar; only L60 may follow the pack's LIVE60
-                ws.live(pack, content(spec, base, pack, level), level == 60 and math.max(6, LIVE60) or 6)
+                -- R22a: L10 keeps the 6 s bar; L60 may follow the pack's LIVE60, L40 a named-cause LIVE40
+                local limit = level == 60 and math.max(6, LIVE60) or level == 40 and LIVE40 or 6
+                ws.live(pack, content(spec, base, pack, level), limit)
             end)
         end
     end
