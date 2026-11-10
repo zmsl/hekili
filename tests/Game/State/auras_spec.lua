@@ -1590,6 +1590,31 @@ describe("auras", function()
                 end
             )
 
+            -- review S3, spec §2.7 V1 widened: a proven item that does not light an application (F12 silence, the
+            -- Nature's Grasp 1 in ~30, an item that stops following, a downrank) closes it after W, every time, by design
+            -- (L364 "dark means dark"); no light follows, so no strike ever retires it. Pinned so a change is deliberate.
+            it(
+                "V1 (review S3): a proven item silent for each application: one verdict per application, no strike",
+                function()
+                    prove()
+                    for _, c in ipairs({ 11, 14, 17 }) do
+                        cast(2, REND, c, 15)
+                        for t = c + 0.25, c + 0.75, 0.25 do
+                            poll(t)
+                            assert.are.equal(c + 15, est("target", fs.SPENDER_C, t), t)
+                        end
+                        poll(c + 1)
+                        assert.is_nil(VS.Aura("target", fs.SPENDER_C, c + 1), c)
+                        poll(c + 2.5) -- past STRIKE_WIN
+                    end
+                    assert.are.same({ 3, 0, true }, {
+                        I.auraVerdict.n[kT()],
+                        I.auraVerdict.strikes[kT()],
+                        I.PRESENCE.viewer.proven[502],
+                    })
+                end
+            )
+
             it("the verdict off switch", function()
                 I.verdictOff = true
                 prove()
