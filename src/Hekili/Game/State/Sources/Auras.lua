@@ -510,7 +510,9 @@ end
 -- dark (fact.pdarkT: continuously dark for W, Fable 5.2 review M2): closed once (no refund). Allocates nothing.
 local function verdict(j, u, k, a, t, F)
     if strikePend[k] > 0 and t > strikePend[k] then -- the light a drain ago: wrong unless our cast came since (§2.5)
-        if not (ours[k] == BY_CAST and oursAp[k] > verdictAt[k]) then
+        -- >=: a cast stamped at the verdict's own time (its event in the frame of the closing poll, staged after
+        -- that drain) is a new cast too; the judged application is at least W older than verdictAt, never equal
+        if not (ours[k] == BY_CAST and oursAp[k] >= verdictAt[k]) then
             strikeN[k] = strikeN[k] + 1
             local P = I.presence
             if P.Strike then

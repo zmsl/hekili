@@ -139,7 +139,9 @@ verdict finds the record closed and does nothing (§2.3 keys on the record's app
 ### 2.5 Strikes (decision 122)
 
 A wrong verdict: a verdict close at `verdictAt[k]` followed by an UP `apply` for the same k within `STRIKE_WIN` (2.0 s)
-with no new cast of ours since (`not (ours[k] == BY_CAST and oursAp[k] > verdictAt[k])`). Then `P.Strike(j, u)` (router ->
+with no new cast of ours since (`not (ours[k] == BY_CAST and oursAp[k] >= verdictAt[k])`; `>=`, amended 2026-11-10: a
+recast stamped at the verdict's own time is a new cast, the judged application being at least W older; gate arm
+viewer-recast, Feral seed 3). Then `P.Strike(j, u)` (router ->
 `leaf.Strike(j, u)`): every slot counted UP for (j, u) this sweep has its cooldownID struck (`strikesCd[id] += 1`); at
 `STRIKES_MAX` (2) `provenCd[id] = false` and it cannot be re-proven until the next build. `verdictAt[k] = 0` after the
 check or after `STRIKE_WIN`. The late UP re-opens the record as a CDM open (rule 3, `hold()`): one flip, as today for any

@@ -1590,6 +1590,26 @@ describe("auras", function()
                 assert.are.equal(0, I.auraVerdict.strikes[kT()])
             end)
 
+            -- gate arm viewer-recast, Feral seed 3 (2026-11-09): the recast is stamped at the verdict's own time (a cast
+            -- event in the frame of the poll that closed, staged after that drain: one GetTime per frame), so its
+            -- applied time EQUALS verdictAt. It is still a new cast of ours: its light is no strike.
+            it("a recast stamped at the verdict's own time is a new cast: its light is no strike", function()
+                prove()
+                cast(2, REND, 11, 15)
+                poll(11.5)
+                poll(12) -- the verdict: verdictAt 12
+                assert.are.equal(12, I.auraVerdict.at[kT()])
+                cast(2, REND, 12, 15) -- our recast, written at 12 after that drain
+                ctl.ViewerAura(ti, "target")
+                poll(12.2)
+                poll(12.4)
+                assert.are.same({ 0, 0, true }, {
+                    I.auraVerdict.strikes[kT()],
+                    I.PRESENCE.viewer.strikes[502],
+                    I.PRESENCE.viewer.proven[502],
+                })
+            end)
+
             -- review M2: the drain runs the polls before the fold, so our recast's write (Now.lua's I.AuraOurs) lands
             -- after poll 15 saw its light; the strike is judged at the next poll.
             local function drain(t) -- VS.Drain's order (Sources.lua): staged, polls, fold, settle
