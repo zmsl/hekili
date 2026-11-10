@@ -97,7 +97,21 @@ class Delta(unittest.TestCase):
         self.assertNotIn("vacuous", rows["DRUID feral"])
         self.assertNotIn("viewer-late-novd (novd", out)
 
-    def test_wrong_closes_sum_per_character_reported_not_gated(self):
+    def test_a_late_twin_counts_its_wrong_closes_without_failing(self):
+        self.write(self.head, "viewer-late", summary("Feral", 0.97, 0.2) + fight("DRUID feral", 1, "0/1", "0/2", "0/0", "0/2"))
+        self.write(self.head, "viewer-late-novd", summary("Feral", 0.97, 0.2) + fight("DRUID feral", 1, "0/1", "0/0"))
+        rc, out = self.run_delta()
+        self.assertEqual(rc, 0, out)  # late lights make wrong closes by design
+        self.assertIn("\twrong 0/0 -> 0/2\n", out)
+
+    def test_a_character_without_old_edge_rows_prints_staleup_na(self):
+        self.write(self.base, "viewer-buffs", summary("Feral", 0.97, 0.2))
+        self.write(self.head, "viewer-buffs", summary("Feral", 0.97, 0.2) + fight("DRUID feral", 1, "1.00/2.00"))
+        rc, out = self.run_delta()
+        self.assertEqual(rc, 0, out)
+        self.assertIn("viewer-buffs\tDRUID feral\tfights 0 -> 1\tstaleUp n/a -> 1.00/2.00\tverdicts", out)
+
+    def test_wrong_closes_sum_per_character_and_fail_a_twin(self):
         self.write(
             self.head,
             "viewer-swap",
@@ -113,8 +127,8 @@ class Delta(unittest.TestCase):
             + fight("DRUID feral", 2, "0.00/2.00", "0/0", "0/0", "0/0"),
         )
         rc, out = self.run_delta()
-        self.assertEqual(rc, 0, out)
-        self.assertIn("\tverdicts 0/0 -> 1/5\tstrikes 0/0 -> 0/0\twrong 0/0 -> 1/2\n", out)
+        self.assertEqual(rc, 1, out)
+        self.assertIn("\tverdicts 0/0 -> 1/5\tstrikes 0/0 -> 0/0\twrong 0/0 -> 1/2 FAIL wrong\n", out)
 
     def test_a_spec_the_head_lost_fails_and_a_new_one_is_reported(self):
         self.write(self.base, "meter", summary("Arms", 0.95, 0.1))
