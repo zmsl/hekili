@@ -637,6 +637,7 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
             clamp(j, 2, t)
         end
         longE[k], lastE[k], lastSt[k], cyT[k] = 0, 0, 0, 0
+        verdictAt[k], strikePend[k] = 0, 0 -- (review S1) a light on the next mob says nothing of mob A's verdict
     end
 end)
 

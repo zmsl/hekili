@@ -1574,6 +1574,22 @@ describe("auras", function()
                 assert.are.same({ 1, 1 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
             end)
 
+            it(
+                "review S1: a verdict on mob A, a swap to mob B whose dot of ours is lit within 2 s: no strike",
+                function()
+                    prove()
+                    cast(2, REND, 11, 15)
+                    poll(11.5)
+                    poll(12) -- the verdict on A (correct)
+                    swap("Creature-2", 12.3)
+                    ctl.ViewerAura(ti, "target") -- B carries our debuff: lit from the next frame
+                    for t = 12.4, 13.2, 0.2 do
+                        poll(t)
+                    end
+                    assert.are.same({ 0, 0 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
+                end
+            )
+
             it("the verdict off switch", function()
                 I.verdictOff = true
                 prove()
