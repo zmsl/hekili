@@ -1359,6 +1359,23 @@ describe("auras", function()
                 end
             )
 
+            it("review M1: an in-combat rebuild leaves no stale pdark: no leaf, no verdict", function()
+                prove()
+                cast(2, REND, 11, 15)
+                poll(11.5)
+                assert.is_true(P.fact.pdark[kT()])
+                P.Deactivate(11.6) -- a build in combat (I.Build -> provide): the leaf goes, its activation waits
+                P.Activate(api, 11.6, I.def, { viewer = true })
+                assert.is_nil(P.Leaf())
+                assert.is_false(P.fact.pdark[kT()])
+                P.fact.pdark[kT()] = true -- even a stale one: the verdict needs the leaf
+                for t = 11.8, 14, 0.2 do
+                    poll(t)
+                    assert.are.equal(26, est("target", fs.SPENDER_C, t), t)
+                end
+                assert.are.equal(0, I.auraVerdict.n[kT()])
+            end)
+
             it("an item never lit (unproven) gives no verdict", function()
                 cast(2, REND, 11, 15)
                 for t = 11.5, 14, 0.5 do
@@ -1468,6 +1485,8 @@ describe("auras", function()
                     ctl.ViewerAura(ti, "target") -- the late light (a lag spike): re-opens as a CDM open, one strike
                     poll(12.5)
                     assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 12.5))
+                    assert.are.equal(0, I.auraVerdict.strikes[kT()]) -- (review M2) judged at the next poll
+                    poll(12.7)
                     assert.are.same({ 1, 1, 0 }, {
                         I.auraVerdict.strikes[kT()],
                         I.PRESENCE.viewer.strikes[502],
@@ -1482,6 +1501,7 @@ describe("auras", function()
                     assert.is_nil(VS.Aura("target", fs.SPENDER_C, 16)) -- the second verdict
                     ctl.ViewerAura(ti, "target")
                     poll(16.5)
+                    poll(16.7)
                     assert.are.same({ 2, false, 1 }, {
                         I.auraVerdict.strikes[kT()],
                         I.PRESENCE.viewer.proven[502],
@@ -1506,8 +1526,94 @@ describe("auras", function()
                 cast(2, REND, 12.3, 15) -- our recast lands and lights
                 ctl.ViewerAura(ti, "target")
                 poll(12.5)
+                poll(12.7)
                 assert.are.equal(0, I.auraVerdict.strikes[kT()])
             end)
+
+            -- review M2: the drain runs the polls before the fold, so our recast's write (Now.lua's I.AuraOurs) lands
+            -- after poll 15 saw its light; the strike is judged at the next poll.
+            local function drain(t) -- VS.Drain's order (Sources.lua): staged, polls, fold, settle
+                ctl.now = t
+                ctl.Tick(t)
+                S.Flush()
+                S.RunPolls(t)
+                I.Fold(t)
+                I.Settle(t)
+            end
+            it("review M2: a verdict, then our logged recast whose light the same drain polls: no strike", function()
+                local def = fs.def(fs.new(9))
+                for _, ab in ipairs(def.abilities) do -- the plain record's `now` (Engine/Schema/Tracked.lua flattens it)
+                    ab.now = ab.funcs and ab.funcs.now
+                end
+                start(def)
+                prove()
+                cast(2, REND, 11, 15) -- dodged
+                drain(11.5)
+                drain(12)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12)) -- the verdict (correct)
+                ctl.now = 12.8
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- logged, folded by the drain
+                ctl.ViewerAura(ti, "target") -- it lands and lights ~10 ms later, before the drain
+                drain(13)
+                assert.are.equal(1, I.auraOurs[kT()]) -- BY_CAST: the fold ran the recast's write after poll 15
+                drain(13.2)
+                drain(13.5)
+                assert.are.same({ 0, 0 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
+                assert.is_true(I.PRESENCE.viewer.proven[502])
+            end)
+
+            it("review M2: a verdict, then a light with no cast of ours: the strike comes at the next poll", function()
+                prove()
+                cast(2, REND, 11, 15)
+                drain(11.5)
+                drain(12)
+                ctl.ViewerAura(ti, "target")
+                drain(12.5)
+                assert.are.equal(0, I.auraVerdict.strikes[kT()])
+                drain(12.7)
+                assert.are.same({ 1, 1 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
+            end)
+
+            it(
+                "review S1: a verdict on mob A, a swap to mob B whose dot of ours is lit within 2 s: no strike",
+                function()
+                    prove()
+                    cast(2, REND, 11, 15)
+                    poll(11.5)
+                    poll(12) -- the verdict on A (correct)
+                    swap("Creature-2", 12.3)
+                    ctl.ViewerAura(ti, "target") -- B carries our debuff: lit from the next frame
+                    for t = 12.4, 13.2, 0.2 do
+                        poll(t)
+                    end
+                    assert.are.same({ 0, 0 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
+                end
+            )
+
+            -- review S3, spec §2.7 V1 widened: a proven item that does not light an application (F12 silence, the
+            -- Nature's Grasp 1 in ~30, an item that stops following, a downrank) closes it after W, every time, by design
+            -- (L364 "dark means dark"); no light follows, so no strike ever retires it. Pinned so a change is deliberate.
+            it(
+                "V1 (review S3): a proven item silent for each application: one verdict per application, no strike",
+                function()
+                    prove()
+                    for _, c in ipairs({ 11, 14, 17 }) do
+                        cast(2, REND, c, 15)
+                        for t = c + 0.25, c + 0.75, 0.25 do
+                            poll(t)
+                            assert.are.equal(c + 15, est("target", fs.SPENDER_C, t), t)
+                        end
+                        poll(c + 1)
+                        assert.is_nil(VS.Aura("target", fs.SPENDER_C, c + 1), c)
+                        poll(c + 2.5) -- past STRIKE_WIN
+                    end
+                    assert.are.same({ 3, 0, true }, {
+                        I.auraVerdict.n[kT()],
+                        I.auraVerdict.strikes[kT()],
+                        I.PRESENCE.viewer.proven[502],
+                    })
+                end
+            )
 
             it("the verdict off switch", function()
                 I.verdictOff = true

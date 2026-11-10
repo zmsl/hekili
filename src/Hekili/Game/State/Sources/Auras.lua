@@ -105,11 +105,13 @@ I.presenceHold = holdN
 -- within STRIKE_WIN may still prove it wrong (0 none); per fight verdictN, strikeN, and darkN (1: pdark seen).
 -- shortcut: W0 1.0 s, TOL 0.3 s and STRIKE_WIN 2.0 s are the spec's (§6) from the 2026-11-09 sample; Task 10's P1 tunes them.
 local W0, TOL, STRIKE_WIN = 1.0, 0.3, 2.0
-local W, verdictAt, verdictN, strikeN, darkN = {}, {}, {}, {}, {}
+-- strikePend[k]: the t of a light within STRIKE_WIN of a verdict (0 none), decided at the next poll, after this drain's
+-- fold has run our recast's write (review M2: the polls run before the fold).
+local W, verdictAt, verdictN, strikeN, darkN, strikePend = {}, {}, {}, {}, {}, {}
 I.auraVerdict = { W = W, at = verdictAt, n = verdictN, strikes = strikeN } -- read-only views for the tests
 I.presenceVerdict, I.presenceStrike = verdictN, strikeN -- the harness's names (loop.lua sums them per unit)
 local function zeroVerdict(k)
-    W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k] = W0, 0, 0, 0, 0
+    W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k] = W0, 0, 0, 0, 0, 0
 end
 local function zeroEdge(k)
     anAp[k], emcN[k], emcSum[k], emcLast[k] = 0, 0, 0, 0
@@ -395,15 +397,12 @@ local function apply(j, u, up, t, edge)
     if not judgeable(j, u) then
         return false
     end
-    if up and verdictAt[k] > 0 then -- a light after a verdict (cdm-verdict §2.5): wrong unless our cast came since
-        if t - verdictAt[k] <= STRIKE_WIN and not (ours[k] == BY_CAST and oursAp[k] > verdictAt[k]) then
-            strikeN[k] = strikeN[k] + 1
-            local P = I.presence
-            if P.Strike then
-                P.Strike(j, u)
-            end
+    if up and verdictAt[k] > 0 and strikePend[k] == 0 then -- a light after a verdict (cdm-verdict §2.5)
+        if t - verdictAt[k] <= STRIKE_WIN then
+            strikePend[k] = t -- judged at the next poll, once this drain's fold wrote any recast of ours (review M2)
+        else
+            verdictAt[k] = 0
         end
-        verdictAt[k] = 0
     end
     local e = U.exp0[u][j]
     local stage, rem, kind = false, 0, ReadOf.Aura
@@ -508,7 +507,16 @@ end
 -- not UP, its proven item dark (fact.pdark), W past the later of the write and the last UP: closed once (no refund).
 -- Allocates nothing.
 local function verdict(j, u, k, a, t, F)
-    if verdictAt[k] > 0 and t - verdictAt[k] > STRIKE_WIN then
+    if strikePend[k] > 0 and t > strikePend[k] then -- the light a drain ago: wrong unless our cast came since (§2.5)
+        if not (ours[k] == BY_CAST and oursAp[k] > verdictAt[k]) then
+            strikeN[k] = strikeN[k] + 1
+            local P = I.presence
+            if P.Strike then
+                P.Strike(j, u)
+            end
+        end
+        strikePend[k], verdictAt[k] = 0, 0
+    elseif strikePend[k] == 0 and verdictAt[k] > 0 and t - verdictAt[k] > STRIKE_WIN then
         verdictAt[k] = 0
     end
     if not F.pdark[k] then
@@ -552,7 +560,8 @@ S.Poll(15, function(_, t)
     P.Sweep(t)
     local U = I.auras
     local F = P.fact
-    local vF = F and F.pdark and F -- the router's facts carry pdark (cdm-verdict §2.3); Default has none
+    -- the router's facts carry pdark (cdm-verdict §2.3); Default has none; (review M1) no leaf, no verdict
+    local vF = F and F.pdark and P.Leaf and P.Leaf() ~= nil and F
     if P.covered == 0 then
         -- a dark item is never live: with no live slot the verdict still runs (cdm-verdict §2.2)
         for u = 1, vF and (U.n < 2 and U.n or 2) or 0 do
@@ -628,6 +637,7 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
             clamp(j, 2, t)
         end
         longE[k], lastE[k], lastSt[k], cyT[k] = 0, 0, 0, 0
+        verdictAt[k], strikePend[k] = 0, 0 -- (review S1) a light on the next mob says nothing of mob A's verdict
     end
 end)
 
@@ -636,7 +646,7 @@ S.On("PLAYER_REGEN_DISABLED", nil, function()
         facts[k], disagree[k], staged[k], exitFix[k] = 0, 0, 0, 0
         lastE[k], lastSt[k], longE[k] = 0, 0, 0 -- out of combat the walk answered
         emcN[k], emcSum[k], emcLast[k], cyT[k], cyN[k], cySum[k], cyObs[k], cyMod[k] = 0, 0, 0, 0, 0, 0, 0, 0
-        verdictAt[k], verdictN[k], strikeN[k], darkN[k] = 0, 0, 0, 0
+        verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k] = 0, 0, 0, 0, 0
     end
     holdN.waits, holdN.fires = 0, 0
     anyLong, anyLast = false, false
