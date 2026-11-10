@@ -20,10 +20,12 @@ def summary(label, agreement, flicker, prefix=""):
     )
 
 
-def fight(who, seed, stale, verdicts=None, strikes="0/0"):
+def fight(who, seed, stale, verdicts=None, strikes="0/0", wrong=None):
     rows = "layout\tok\t%s seed %d covered 3 overflow 0 slots 3 lag false facts 1/1 ambiguous 0" % (who, seed)
     if verdicts is not None:
         rows += " verdicts %s strikes %s" % (verdicts, strikes)
+    if wrong is not None:
+        rows += " wrong %s" % wrong
     rows += "\nedge\tok\t%s seed %d seeds 0/0 edges 0/0 waits 0 fires 0 downs 1 staleUp %s earlyDown 0.00/0.00" % (
         who,
         seed,
@@ -94,6 +96,25 @@ class Delta(unittest.TestCase):
         self.assertTrue(rows["DRUID guardian"].endswith("\tvacuous"), out)  # 0 verdicts in both twins
         self.assertNotIn("vacuous", rows["DRUID feral"])
         self.assertNotIn("viewer-late-novd (novd", out)
+
+    def test_wrong_closes_sum_per_character_reported_not_gated(self):
+        self.write(
+            self.head,
+            "viewer-swap",
+            summary("Feral", 0.97, 0.2)
+            + fight("DRUID feral", 1, "0.00/1.00", "0/3", "0/0", "0/1")
+            + fight("DRUID feral", 2, "0.00/1.00", "1/2", "0/0", "1/1"),
+        )
+        self.write(
+            self.head,
+            "viewer-swap-novd",
+            summary("Feral", 0.97, 0.2)
+            + fight("DRUID feral", 1, "0.00/2.00", "0/0", "0/0", "0/0")
+            + fight("DRUID feral", 2, "0.00/2.00", "0/0", "0/0", "0/0"),
+        )
+        rc, out = self.run_delta()
+        self.assertEqual(rc, 0, out)
+        self.assertIn("\tverdicts 0/0 -> 1/5\tstrikes 0/0 -> 0/0\twrong 0/0 -> 1/2\n", out)
 
     def test_a_spec_the_head_lost_fails_and_a_new_one_is_reported(self):
         self.write(self.base, "meter", summary("Arms", 0.95, 0.1))

@@ -588,3 +588,27 @@ describe("the headless loop's flicker counter (loop.flips)", function()
         assert.are.equal(1, loop.flips(seq, 4, { "a", "c", "a", false }))
     end)
 end)
+
+describe("the headless loop's verdict truth check (loop.verdictTruth)", function()
+    it("counts a close of an aura the world still has as wrong, a close of an absent one not", function()
+        local VI = { AURA_UNIT = 100, presenceVerdict = { [3] = 0, [103] = 0 }, def = { auraIds = { [3] = { 11 } } } }
+        local mob = { auras = { [11] = { stacks = 1, expires = 10 } } }
+        local us = { auras = {}, target = mob }
+        local run, vt = { verdictsWrong = { 0, 0 } }, { VI = VI, seen = { [3] = 0, [103] = 0 } }
+        VI.presenceVerdict[103] = 1 -- a target close at 5: the mob still carries 11 (up to 10)
+        loop.verdictTruth(vt, run, us, 5)
+        assert.are.same({ 0, 1 }, run.verdictsWrong)
+        VI.presenceVerdict[103] = 2 -- at 12: expired in the world, a correct close
+        loop.verdictTruth(vt, run, us, 12)
+        VI.presenceVerdict[3] = 1 -- the player's: 11 is not on us
+        loop.verdictTruth(vt, run, us, 12)
+        assert.are.same({ 0, 1 }, run.verdictsWrong)
+        loop.verdictTruth(vt, run, us, 13) -- no count rose: nothing
+        assert.are.same({ 0, 1 }, run.verdictsWrong)
+        VI.presenceVerdict[103] = 0 -- the belief's per-fight reset resets the tally
+        loop.verdictTruth(vt, run, us, 14)
+        assert.are.same({ 0, 0 }, run.verdictsWrong)
+        assert.is_true(loop.auraUp(mob, { 12, 11 }, 9.9) and not loop.auraUp(nil, { 11 }, 1))
+        assert.is_true(loop.VERDICT_ARM["viewer-swap"] and not loop.VERDICT_ARM["viewer-buffs"])
+    end)
+end)

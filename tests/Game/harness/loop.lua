@@ -17,6 +17,40 @@ local rng = require("Game.harness.rng")
 local edgestats = require("Game.harness.edgestats")
 
 local M = {}
+M.VERDICT_ARM = {} -- the verdict arms (ab.VERDICT; a -novd twin by its base name): their layout line adds `wrong`
+for _, name in ipairs(ab.VERDICT) do
+    M.VERDICT_ARM[name] = true
+end
+
+--- The truth check of one tick (`vt` = { VI, seen }): each key whose verdict count rose since the last tick is a close
+--- folded in this tick's drain; one of an aura the world still has on that unit (us, or our target now) counts in
+--- run.verdictsWrong[u]. The belief's per-fight reset (a count falling) resets the tally with it.
+function M.verdictTruth(vt, run, us, t)
+    local VI = vt.VI
+    for k, n in pairs(VI.presenceVerdict) do
+        local was = vt.seen[k] or 0
+        if n < was then
+            run.verdictsWrong[1], run.verdictsWrong[2] = 0, 0
+        elseif n > was then
+            local u = k > VI.AURA_UNIT and 2 or 1
+            if M.auraUp(u == 1 and us or us.target, VI.def.auraIds[k - (u - 1) * VI.AURA_UNIT], t) then
+                run.verdictsWrong[u] = run.verdictsWrong[u] + n - was
+            end
+        end
+        vt.seen[k] = n
+    end
+end
+
+--- Whether `e` (an entity, or nil) carries one of `ids` (a belief aura's IDs) at world time `t` (expires 0: none).
+function M.auraUp(e, ids, t)
+    for _, id in ipairs(e and ids or {}) do
+        local a = e.auras[id]
+        if a and (a.stacks or 1) > 0 and (a.expires == 0 or a.expires > t) then
+            return true
+        end
+    end
+    return false
+end
 
 -- The CPU calibration (pack_gate.CPU_RATIO): a fixed pure-Lua workload, hash reads through a metatable chain over a
 -- preallocated working set (the engine's state reads, in miniature), timed once per counted run in the same process,
@@ -274,7 +308,8 @@ function M.run(L, seed, o, drivers)
         end
         wo.res = res
     end
-    local arm = ab.ARMS[o.arm or ab.arm()] -- o.arm: a spec's own arm (its shapes; the floors stay the env's)
+    local armName = o.arm or ab.arm()
+    local arm = ab.ARMS[armName] -- o.arm: a spec's own arm (its shapes; the floors stay the env's)
     local aw = arm.world or {} -- a verdict arm's world knobs that shape the world's build (ab.lua; not a replay's)
     wo.mobAvoid, wo.swapEvery, wo.extraMobs = aw.mobAvoid, aw.swapEvery, aw.extraMobs
     local W = R and R.world(wo, seed) or scenarios.world(wo, seed)
@@ -458,6 +493,17 @@ function M.run(L, seed, o, drivers)
         end
     end
     run.recasts = 0
+    -- a verdict arm's truth check: each close the driver's belief folds, against the world's aura at that tick
+    -- (run.verdictsWrong[u]: closes of an aura truly up; the layout line's `wrong p/t`)
+    run.verdictsWrong = { 0, 0 }
+    local vt = nil
+    local VI1 = steps[1].H.ns.VirtualStateInternal
+    if steps[1].layout and VI1 and VI1.presenceVerdict and M.VERDICT_ARM[(armName:gsub("%-novd$", ""))] then
+        vt = { VI = VI1, seen = {} }
+        for k, n in pairs(VI1.presenceVerdict) do
+            vt.seen[k] = n
+        end
+    end
     local traced = {}
     run.cal = not o.trace and M.calibrate() or nil
     run.bytes, run.sampled = 0, 0
@@ -711,6 +757,9 @@ function M.run(L, seed, o, drivers)
                 run.gap[#run.gap + 1] = VS.Power(L.power.type, steps[1].base + t).est - us.power
             end
         end
+        if vt then
+            M.verdictTruth(vt, run, us, t)
+        end
         if o.on then
             o.on(run, steps, t)
         end
@@ -775,6 +824,9 @@ function M.run(L, seed, o, drivers)
             )
             if VI.presenceVerdict or VI.presenceStrike then -- the verdict's per-fight counters, once the belief has them
                 line = line .. " verdicts " .. sum(VI.presenceVerdict) .. " strikes " .. sum(VI.presenceStrike)
+            end
+            if vt and i == 1 then -- verdict arms only: the closes of an aura truly up (M.verdictTruth)
+                line = line .. " wrong " .. run.verdictsWrong[1] .. "/" .. run.verdictsWrong[2]
             end
             ab.check(Q.overflow == 0, "layout", line)
             local el = st.edge and edgestats.line(st.H, VI)

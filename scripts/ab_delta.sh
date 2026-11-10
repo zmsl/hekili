@@ -2,7 +2,8 @@
 # The A/B's comparison (cdm-verdict review M4): ab_delta.sh <base .ab dir> <head .ab dir>. Per arm file in both dirs
 # (base -> head), and per verdict arm against its -novd twin in the head dir (novd -> on): per spec the agreement and
 # flicker/min of its summary row (the label column, `fights=` rows), and per character (the `layout`/`edge` fight rows)
-# the summed staleUp (player/target), verdicts and strikes. Exit 1 when a flicker rises by more than 0.3/min or an
+# the summed staleUp (player/target), verdicts and strikes, and (verdict arms) the closes of an aura truly up (`wrong`,
+# reported, not gated). Exit 1 when a flicker rises by more than 0.3/min or an
 # agreement falls (both comparisons), or when the new side lacks a spec or an arm the old side has (a failed or
 # cut-short run is never a pass); a twin pair whose character has 0 verdicts on both sides is marked "vacuous".
 set -euo pipefail
@@ -30,6 +31,10 @@ compare() {
                 N[who, side]++
                 if (match(line, /verdicts [0-9.]+\/[0-9.]+/)) add(V, who SUBSEP side, substr(line, RSTART + 9, RLENGTH - 9))
                 if (match(line, /strikes [0-9.]+\/[0-9.]+/)) add(K, who SUBSEP side, substr(line, RSTART + 8, RLENGTH - 8))
+                if (match(line, / wrong [0-9.]+\/[0-9.]+/)) { # verdict arms: closes of an aura truly up (loop.verdictTruth)
+                    add(R, who SUBSEP side, substr(line, RSTART + 7, RLENGTH - 7))
+                    HASR[who] = 1
+                }
             } else if (match(line, /staleUp [0-9.]+(\/[0-9.]+)?/)) {
                 add(S, who SUBSEP side, substr(line, RSTART + 8, RLENGTH - 8))
             }
@@ -65,11 +70,12 @@ compare() {
             w = whos[i]
             v1 = V[w, 1, 1] + V[w, 1, 2]
             v2 = V[w, 2, 1] + V[w, 2, 2]
-            printf "%s\t%s\tfights %d -> %d\tstaleUp %.2f/%.2f -> %.2f/%.2f (%+.2f/%+.2f)\tverdicts %d/%d -> %d/%d\tstrikes %d/%d -> %d/%d%s\n",
+            wr = (w in HASR) ? sprintf("\twrong %d/%d -> %d/%d", R[w, 1, 1], R[w, 1, 2], R[w, 2, 1], R[w, 2, 2]) : ""
+            printf "%s\t%s\tfights %d -> %d\tstaleUp %.2f/%.2f -> %.2f/%.2f (%+.2f/%+.2f)\tverdicts %d/%d -> %d/%d\tstrikes %d/%d -> %d/%d%s%s\n",
                 title, w, N[w, 1], N[w, 2], S[w, 1, 1], S[w, 1, 2], S[w, 2, 1], S[w, 2, 2],
                 S[w, 2, 1] - S[w, 1, 1], S[w, 2, 2] - S[w, 1, 2],
                 V[w, 1, 1], V[w, 1, 2], V[w, 2, 1], V[w, 2, 2], K[w, 1, 1], K[w, 1, 2], K[w, 2, 1], K[w, 2, 2],
-                (twin && v1 == 0 && v2 == 0) ? "\tvacuous" : ""
+                wr, (twin && v1 == 0 && v2 == 0) ? "\tvacuous" : ""
         }
         exit bad
     }' "$3" "$4"
