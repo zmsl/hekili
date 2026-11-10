@@ -80,7 +80,8 @@ local DUR = {}
 -- longE, lastE set since the last poll with no live slot.
 local lastE, lastSt, longE = {}, {}, {}
 local anyLong, anyLast = false, false
--- Decision 114: 1 while the player's reduced fact is UP, else 0 (CN13's Obs.PlayerHit keeps one stack while it is 1).
+-- Decision 114: 1 while the player's reduced fact is UP, else 0. Its one reader is the hit consumer (Families/Auras.lua's
+-- Obs.PlayerHit handler): a `consumedBy` aura keeps its last stack while it is 1.
 local floor = I.auraFloor or {}
 I.auraFloor = floor
 local floorSet = false -- some floor[j] is 1
