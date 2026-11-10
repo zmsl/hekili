@@ -1946,6 +1946,73 @@ describe("auras", function()
             assert.are.equal(0, I.auraFloor[SHOUT])
         end)
 
+        describe("the floor read by the hit consumer (decision 114, Task 4c)", function()
+            local function hit(t)
+                S.Direct(Obs.PlayerHit, t, I.HitKind.BLOCK, 0, 20)
+                I.Fold(t, false)
+            end
+            -- Our cast of the 3-charge shield at t (600 s).
+            local function shield(t)
+                I.AuraModel(1, SHOUT, t, t + 600, 3, t, Obs.CastSuccess, false)
+                I.AuraOurs(1, SHOUT)
+            end
+            local function stacks(t)
+                return (select(2, VS.Aura("player", fs.SPENDER_A, t)))
+            end
+
+            before_each(function()
+                local def = fs.def(fs.new(9))
+                def.auras[SHOUT] =
+                    { key = "spender_a", id = fs.SPENDER_A, max_stack = 3, consumedBy = { BLOCK = true } }
+                start(def)
+            end)
+
+            it("the fact UP: three hits leave ONE stack; the fact DOWN, the silent item closes it (rule 1)", function()
+                shield(10)
+                ctl.ViewerAura(pi, "player")
+                poll(10.5)
+                poll(11)
+                assert.are.equal(1, I.auraFloor[SHOUT])
+                hit(11.1)
+                hit(11.2)
+                assert.are.equal(1, stacks(11.2))
+                hit(11.3) -- the hit that would spend the last charge: the item is still lit
+                hit(11.4)
+                assert.are.same({ 610, 1 }, { est("player", fs.SPENDER_A, 11.4), stacks(11.4) })
+                poll(11.5)
+                assert.are.same({ 610, 1 }, { est("player", fs.SPENDER_A, 11.5), stacks(11.5) })
+                ctl.ViewerClear(pi) -- the game spent the last charge: the item goes silent
+                poll(12)
+                assert.are.equal(0, I.auraFloor[SHOUT])
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 12))
+            end)
+
+            it("the fact not UP (unknown, DOWN): the third hit closes it as before", function()
+                shield(10)
+                poll(10.5) -- its item never lit: UNKNOWN
+                assert.are.same({ I.UNDECIDED, 0 }, { P.Presence(SHOUT, 1), I.auraFloor[SHOUT] })
+                hit(10.6)
+                hit(10.7)
+                assert.are.equal(1, stacks(10.7))
+                hit(10.8)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 10.8))
+                shield(11)
+                ctl.ViewerAura(pi, "player")
+                poll(11.5)
+                poll(12)
+                shield(20) -- our refresh; the item goes silent inside the refresh lag: DOWN, the record stays (D14)
+                poll(20.1)
+                ctl.ViewerClear(pi)
+                poll(20.3)
+                assert.are.same({ I.DOWN, 0 }, { P.Presence(SHOUT, 1), I.auraFloor[SHOUT] })
+                assert.are.equal(3, stacks(20.3))
+                hit(20.4)
+                hit(20.5)
+                hit(20.6)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 20.6))
+            end)
+        end)
+
         it("out of combat, a walk turning plain then secret again leaves no stale staged read (L281)", function()
             ctl.now = 10
             ctl.Fire("PLAYER_REGEN_ENABLED")

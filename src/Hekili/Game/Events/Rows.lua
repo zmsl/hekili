@@ -574,7 +574,7 @@ local function route(t, g, uid, act, flag, amount, school)
         end
         -- live, a landed instant's own wound is unseen (its amount is secret, so it stays background above) and its
         -- ticket stays open through its landing window: a secret avoid past its own frame is then most likely another's
-        -- (secret arm, Feral 20 fights: 15 of 16 false refunds were past the frame, 3 of 143 right ones)
+        -- (secret arm, 20 fights of one melee spec: 15 of 16 false refunds were past the frame, 3 of 143 right ones)
         if kindOnly and p > 0 and (T.kind[p] == X.FRAME or T.kind[p] == X.STRIKE) then
             p = 0
         end

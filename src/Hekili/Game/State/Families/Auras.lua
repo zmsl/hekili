@@ -278,7 +278,10 @@ function I.AuraModel(u, j, applied, expires, stacks, t, event, harmful)
 end
 
 -- A hit of a listed kind spends one stack of each `consumedBy` player aura believed up (a modelled sample at the hit),
--- and takes it down at 0. Allocates nothing.
+-- and takes it down at 0. The floor (decision 114): a generic input by aura, default 0; while floor[j] is 1 the last
+-- stack is kept (its writer says the aura is seen up: the hit count is not what closes it). Allocates nothing.
+local floor = I.auraFloor or {}
+I.auraFloor = floor
 I.On(Obs.PlayerHit, function(o, t)
     for k = 1, CONS.n do
         local j = CONS[k]
@@ -286,7 +289,7 @@ I.On(Obs.PlayerHit, function(o, t)
             local n = U.stacks[1][j] - 1
             if n > 0 then
                 set(1, j, U.exp0[1][j], U.applied[1][j], n, t, "modelled", Obs.PlayerHit)
-            else
+            elseif floor[j] ~= 1 then
                 set(1, j, 0, 0, 0, t, "modelled", Obs.PlayerHit)
             end
         end

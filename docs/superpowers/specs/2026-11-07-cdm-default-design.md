@@ -474,6 +474,12 @@ as a generic input, an array `I.auraFloor[j]` (default 0) that `Obs.PlayerHit` h
 this lane's Task 4b writes it from the reduced fact (1 while the player fact is UP). `Families/` needs no router
 knowledge. If CN13 merges without it, Task 4c adds the three-line read (one `Families/Auras.lua` diff, accepted).
 
+**Built (2026-11-10, Task 4c).** CN13 merged without the read, so Task 4c added it: the reader is the `Obs.PlayerHit`
+handler in `Families/Auras.lua` (the hit consumer). While `I.auraFloor[j] == 1` the hit that would spend the last stack
+of a `consumedBy` aura writes nothing, so the record keeps one stack; the fact's DOWN then closes it by rule 1 (§2.5).
+With the floor 0 (the fact DOWN or UNKNOWN, no provider) hits spend and close as before. Case:
+`tests/Game/State/auras_spec.lua`, "the floor read by the hit consumer".
+
 ## 8. Secrets and allocation
 
 - `auraInstanceID` only through `issecretvalue(x) or x ~= nil`; everything else through `S.Plain`; a secret
