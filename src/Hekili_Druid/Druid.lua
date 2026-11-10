@@ -549,7 +549,7 @@ spec:RegisterAuras({
     },
     hurricane = {
         id = 16914,
-        -- 1278965/1278968/1278759: Forever's own ranks 1-3 (levels 40/50/60), same names; the viewer follows the rank
+        -- 1278965/1278968/1278759: the debuff each rank's tick puts on the target (ranks 1-3), the IDs the viewer reports
         copy = { 17401, 17402, 1278965, 1278968, 1278759 },
         duration = 10,
         tick_time = 1,

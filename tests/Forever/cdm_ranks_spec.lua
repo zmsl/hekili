@@ -1,8 +1,12 @@
 -- tests/Forever/cdm_ranks_spec.lua (cdm-verdict spec §4, decision 124): the Cooldown Manager item follows the player's
 -- current rank, each rank its own spell ID, so a pack aura's id/copy must name every ID the viewer can report.
--- (1) Every captured viewer entry (tools/data/cooldownviewer/<CLASS>.lua) that touches a pack aura has ALL its IDs
--- (spellID, overrideSpellID, linkedSpellIDs) in that aura's id/copy. (2) The Druid rank families checked against the DB2
--- (build 70707: same name, class set 7, "Rank N", SpellLevels 1-60) are listed here so CI needs no DB2.
+-- What it checks: (1) every captured viewer entry (tools/data/cooldownviewer/<CLASS>.lua) that already shares at least
+-- one ID with a pack aura has ALL its candidate IDs (the leaf's rule below) in that aura's id/copy; (2) the Druid rank
+-- families checked by hand against the DB2 (build 70707: same name, class set 7, "Rank N", SpellLevels 1-60) are listed
+-- here so CI needs no DB2.
+-- What it cannot catch: an ID the viewer reports that no aura has at all (an entry sharing no ID with any aura is never
+-- looked at: Lacerate's 414647 was missing that way), and every class without a fixture (only Druid and Warrior have
+-- one) or a FAMILIES list (Druid only).
 local loader = require("Forever.helpers.load_druid")
 local warrior = require("Forever.helpers.load_warrior")
 
@@ -24,10 +28,6 @@ local function fixtureIds(e)
     return { e[2], e[3] }
 end
 
--- entries (by cooldownID) that touch an aura but are not fully covered, with the reason they are accepted
--- (pack cannot own the ID: it is another spell's, not a rank of the aura)
-local ACCEPTED = {}
-
 local function missing(w, fix)
     local out, seen = {}, {}
     for cdID, e in pairs(fix) do
@@ -38,7 +38,7 @@ local function missing(w, fix)
                 for _, id in ipairs(ids) do
                     touched = touched or set[id]
                 end
-                if touched and not ACCEPTED[cdID] then
+                if touched then
                     for _, id in ipairs(ids) do
                         if not set[id] and not seen[key .. id] then
                             seen[key .. id] = true
@@ -74,7 +74,7 @@ describe("the pack auras cover the ranks the Cooldown Manager reports", function
         demoralizing_roar = { 99, 1735, 9490, 9747, 9898 },
         faerie_fire = { 770, 778, 9749, 9907 },
         gift_of_the_wild = { 21849, 21850 },
-        hurricane = { 16914, 17401, 17402, 1278965, 1278968, 1278759 },
+        hurricane = { 16914, 17401, 17402, 1278965, 1278968, 1278759 }, -- the last three: the tick's target debuff
         insect_swarm = { 5570, 24974, 24975, 24976, 24977 },
         lacerate = { 414644, 414647, 1235826, 1235827 },
         mark_of_the_wild = { 1126, 5232, 5234, 6756, 8907, 9884, 9885, 1291335, 1310503 },
