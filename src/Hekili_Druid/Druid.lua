@@ -554,9 +554,6 @@ spec:RegisterAuras({
         duration = 10,
         tick_time = 1,
         max_stack = 1,
-        -- the item lights at the first TICK's debuff, a second or more after the cast this aura is written at: off for
-        -- the Cooldown Manager by default (the panel can turn it on) until the delay is measured in game (Task 10)
-        cdm = false,
     },
     innervate = {
         id = 29166,

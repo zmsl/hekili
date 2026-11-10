@@ -67,6 +67,25 @@ class Delta(unittest.TestCase):
         self.assertIn("Feral\tagreement 0.980 -> 0.980 (+0.000)\tflicker 0.10 -> 0.45 (+0.35) FAIL flicker", out)
         self.assertIn("Guardian\tagreement 0.900 -> 0.899 (-0.001)\tflicker 0.20 -> 0.20 (+0.00) FAIL agreement", out)
 
+    def test_a_head_log_with_failed_spec_files_fails_the_arm(self):
+        rows = summary("Feral", 0.98, 0.1)
+        self.write(self.base, "viewer-buffs", rows)
+        self.write(self.head, "viewer-buffs", rows)
+        log = os.path.join(self.head, "viewer-buffs.log")
+        with open(log, "w", encoding="utf-8") as f:
+            f.write("all files: 39 successes / 0 failures / 0 errors / 0 pending\n")
+        self.assertEqual(self.run_delta()[0], 0)  # a clean log passes
+        with open(log, "w", encoding="utf-8") as f:
+            f.write("all files: 39 successes / 3 failures / 0 errors / 0 pending\n")
+        rc, out = self.run_delta()
+        self.assertEqual(rc, 1, out)
+        self.assertIn("viewer-buffs\t-\tFAIL specs all files: 39 successes / 3 failures / 0 errors / 0 pending\n", out)
+        with open(log, "w", encoding="utf-8") as f:
+            f.write("all files: 39 successes / 0 failures / 1 errors / 0 pending\n")
+        self.assertEqual(self.run_delta()[0], 1)
+        os.remove(log)  # a missing log is not a failure (older runs)
+        self.assertEqual(self.run_delta()[0], 0)
+
     def test_twins_sum_per_character_and_mark_vacuous(self):
         self.write(
             self.head,

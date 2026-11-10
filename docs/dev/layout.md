@@ -163,7 +163,7 @@ lines (the mana regen plan's gate on 0ce56d64f; central fix 23, the pre-pull gua
 ```
 Arms solo: fights=3 agreement 0.967 (2399 ticks); react median 0 p90 1 never 0.032; refused per 100 [cost 10.9 (oracle 13.8, unmatched 3.6)], episodes 1.75/min; dps A/B 0.984; ... [seeds 1-3]
 Arms solo: fights=3 agreement 0.976 (2452 ticks); react median 0 p90 1 never 0.009; refused per 100 [cost 14.4 (oracle 19.9, unmatched 0.0)], episodes 3.18/min; dps A/B 1.014; ... [seeds 4-6]
-Arms solo: fights=20 agreement 0.956 (16342 ticks); react median 0 p90 0 never 0.032; refused per 100 [cost 13.5 (oracle 17.7, unmatched 2.7)], episodes 2.55/min; dps A/B 0.979; ...
+Arms solo: fights=20 agreement 0.957 (15575 ticks); react median 0 p90 1 never 0.036; ready while short 0; held while ready 285; refused per 100 [], episodes 0.00/min; dps A/B 0.995; ...
 Arms party: fights=10 agreement 0.942 (4293 ticks); react median 0 p90 0 never 0.036; refused per 100 [cost 2.7 (oracle 4.5, unmatched 0.0), requires:no dodge 1.7 (oracle 1.7, unmatched 0.0)], episodes 0.63/min; dps A/B 0.942; ...
 ```
 
@@ -222,9 +222,9 @@ place. Current lines (the mana regen plan's gate on 0ce56d64f):
 Feral solo: fights=3 agreement 0.942 (2370 ticks); react median 0 p90 0 never 0.014; refused per 100 [], episodes 0.00/min; dps A/B 1.063; ... [seeds 1-3]
 Guardian solo: fights=3 agreement 0.915 (2566 ticks); react median 0 p90 1 never 0.007; refused per 100 [cost 7.3 (oracle 8.3, unmatched 0.0)], episodes 1.64/min; dps A/B 0.987; ...
 Balance solo: fights=3 agreement 1.000 (2611 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 5.3 (oracle 4.8, unmatched 0.0)], episodes 0.57/min; dps A/B 1.013; ... [seeds 1-3]
-Feral solo: fights=20 agreement 0.963 (16606 ticks); react median 0 p90 0 never 0.031; refused per 100 [], episodes 0.00/min; dps A/B 0.991; ...
-Guardian solo: fights=20 agreement 0.900 (17064 ticks); react median 0 p90 1 never 0.012; refused per 100 [cost 13.6 (oracle 12.2, unmatched 2.3)], episodes 3.29/min; dps A/B 0.979; ...
-Balance solo: fights=20 agreement 1.000 (17524 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 5.0 (oracle 4.7, unmatched 0.5), cost 1.2 (oracle 9.9, unmatched 0.2)], episodes 0.62/min; dps A/B 0.997; ...
+Feral solo: fights=20 agreement 0.980 (16632 ticks); react median 0 p90 0 never 0.007; ready while short 0; held while ready 200; refused per 100 [], episodes 0.00/min; dps A/B 1.001; ...
+Guardian solo: fights=20 agreement 0.890 (17354 ticks); react median 0 p90 1 never 0.023; ready while short 0; held while ready 284; refused per 100 [], episodes 0.00/min; dps A/B 0.992; ...
+Balance solo: fights=20 agreement 1.000 (17520 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 133; refused per 100 [casting 4.9 (oracle 4.7, unmatched 0.0)], episodes 0.48/min; dps A/B 1.028; ...
 ```
 
 The Feral and Balance worlds keep the wowsims logs' mana pools and five-second rule (22 a second outside it).
@@ -239,9 +239,9 @@ leveling gates are `tests/Forever/wowsims_rogue_spec.lua`. The lines (the mana r
 Combat solo: fights=3 agreement 0.991 (2237 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.927; ... [seeds 1-3]
 Assassination solo: fights=3 agreement 1.000 (2282 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.010; ... [seeds 1-3]
 Subtlety solo: fights=3 agreement 0.991 (2043 ticks); react median 0 p90 0 never 0.011; refused per 100 [], episodes 0.00/min; dps A/B 0.979; ... [seeds 1-3]
-Combat solo: fights=20 agreement 0.987 (14145 ticks); react median 0 p90 0 never 0.006; refused per 100 [], episodes 0.00/min; dps A/B 0.980; ...
-Assassination solo: fights=20 agreement 1.000 (15091 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.992; ...
-Subtlety solo: fights=20 agreement 0.980 (13319 ticks); react median 0 p90 0 never 0.030; refused per 100 [], episodes 0.00/min; dps A/B 0.996; ...
+Combat solo: fights=20 agreement 0.993 (10043 ticks); react median 0 p90 0 never 0.005; ready while short 0; held while ready 175; refused per 100 [], episodes 0.00/min; dps A/B 1.025; ...
+Assassination solo: fights=20 agreement 0.989 (10460 ticks); react median 0 p90 0 never 0.014; ready while short 0; held while ready 189; refused per 100 [], episodes 0.00/min; dps A/B 0.973; ...
+Subtlety solo: fights=20 agreement 0.986 (10526 ticks); react median 0 p90 0 never 0.009; ready while short 0; held while ready 182; refused per 100 [], episodes 0.00/min; dps A/B 1.000; ...
 ```
 
 `tests/Forever/loop_paladin_spec.lua` runs 3 fights a Paladin pack in `make check` (seeds 1-3, `#slow`) and 20 in
@@ -259,8 +259,8 @@ window is not exercised by the solo worlds. The runs (the mana regen plan's gate
 ```
 Retribution solo: fights=3 agreement 0.994 (2174 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.997; ... [seeds 1-3]
 Protection solo: fights=3 agreement 0.933 (2519 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.982; ... [seeds 1-3]
-Retribution solo: fights=20 agreement 0.986 (15465 ticks); react median 0 p90 0 never 0.004; refused per 100 [], episodes 0.00/min; dps A/B 0.996; ...
-Protection solo: fights=20 agreement 0.917 (17754 ticks); react median 0 p90 0 never 0.021; refused per 100 [], episodes 0.00/min; dps A/B 1.010; ...
+Retribution solo: fights=20 agreement 0.999 (15566 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 98; refused per 100 [], episodes 0.00/min; dps A/B 0.994; ...
+Protection solo: fights=20 agreement 1.000 (17459 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 118; refused per 100 [], episodes 0.00/min; dps A/B 0.986; ...
 ```
 
 Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):
@@ -310,17 +310,17 @@ The imbues are not in the solo world's kit (it has no weapon enchant read). The 
 with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever's), and the shocks' cooldown and Flame
 Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,
 the forever gate on 51a0b1ac: Fire Nova at the DB2's 520). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's
-own fight (floor 0.98; 0.989 of 88 with Rage of the Farseer, held) and runs the levels 10, 40 and 60 (40 pending: GAP AB, the secret-mana floor's last mana).
+own fight (floor 0.96, the table below) and runs the levels 10, 40 and 60 (40 pending: GAP AB, the secret-mana floor's last mana).
 Elemental (wowsims.com) (Task 14) runs the same gates on the Elemental world (20 yd, wowsims's 5650 mana and regen:
 26.13 a second casting without Mana Spring Totem's buff, 31.13 with it, 45.25 outside the five-second rule; re-pin
-e2842f0a78): replay floor 0.92 (0.928 of 97, ruling R26), live L10 0.2,
+e2842f0a78): replay floor 0.89 (the table below), live L10 0.2,
 L40 0.0, L60 5.0 s (LIVE60 5.0), flicker floor 0.6. The lines:
 
 ```
 Enhancement solo: fights=3 agreement 0.997 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.027; ... [seeds 1-3]
-Enhancement solo: fights=20 agreement 0.995 (18040 ticks); react median 0 p90 0 never 0.004; refused per 100 [cost 0.1 (oracle 3.2, unmatched 0.0)], episodes 0.02/min; dps A/B 1.004; ... flicker 0.10/min (oracle 0.13); ... top [lightning_shield -> stormstrike 53; stormstrike -> lightning_shield 37; earth_shock -> stormstrike 1]; ...
+Enhancement solo: fights=20 agreement 0.912 (18040 ticks); react median 0 p90 8 never 0.016; ready while short 0; held while ready 152; refused per 100 [], episodes 0.00/min; dps A/B 0.996; ...
 Elemental solo: fights=3 agreement 0.985 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 4.2 (oracle 3.8, unmatched 0.0)], episodes 0.67/min; dps A/B 0.990; ... [seeds 1-3]
-Elemental solo: fights=20 agreement 0.981 (18040 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 1.1 (oracle 1.0, unmatched 0.0), cost 0.3 (oracle 12.7, unmatched 0.0)], episodes 0.18/min; dps A/B 1.000; ... flicker 0.13/min (oracle 0.05); ...
+Elemental solo: fights=20 agreement 0.993 (18040 ticks); react median 0 p90 1 never 0.013; ready while short 0; held while ready 284; refused per 100 [casting 0.5 (oracle 0.2, unmatched 0.0)], episodes 0.07/min; dps A/B 0.997; ...
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
@@ -385,9 +385,9 @@ lines (the mana regen plan's gate on 0ce56d64f; the hand-built lists' were 0.983
 Beast Mastery solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.994; ... [seeds 1-3]
 Marksmanship solo: fights=3 agreement 1.000 (2503 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.000; ... [seeds 1-3]
 Survival solo: fights=3 agreement 0.976 (2706 ticks); react median 0 p90 1 never 0.008; refused per 100 [], episodes 0.00/min; dps A/B 0.968; ... [seeds 1-3]
-Beast Mastery solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.019; refused per 100 [], episodes 0.00/min; dps A/B 1.004; ...
-Marksmanship solo: fights=20 agreement 1.000 (16797 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.000; ...
-Survival solo: fights=20 agreement 0.987 (18040 ticks); react median 0 p90 1 never 0.029; refused per 100 [], episodes 0.00/min; dps A/B 0.990; ...
+Beast Mastery solo: fights=20 agreement 0.996 (16722 ticks); react median 0 p90 1 never 0.004; ready while short 0; held while ready 151; refused per 100 [cost 0.0 (oracle 13.8, unmatched 0.0)], episodes 0.00/min; dps A/B 0.994; ...
+Marksmanship solo: fights=20 agreement 1.000 (16624 ticks); react median 0 p90 1 never 0.000; ready while short 0; held while ready 111; refused per 100 [], episodes 0.00/min; dps A/B 1.000; ...
+Survival solo: fights=20 agreement 0.958 (18040 ticks); react median 0 p90 1 never 0.007; ready while short 0; held while ready 323; refused per 100 [cost 0.0 (oracle 0.4, unmatched 0.0)], episodes 0.00/min; dps A/B 1.013; ...
 ```
 
 Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter
@@ -466,10 +466,10 @@ reported). The lines (the mana regen plan's gate on 0ce56d64f):
 ```
 Arcane solo: fights=3 agreement 0.984 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 1.4 (oracle 1.3, unmatched 0.0)], episodes 0.22/min; dps A/B 0.948; ... [seeds 1-3]
 Fire solo: fights=3 agreement 0.999 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 7.1 (oracle 8.1, unmatched 0.0)], episodes 1.00/min; dps A/B 0.964; ... [seeds 1-3]
-Arcane solo: fights=20 agreement 0.993 (18040 ticks); react median 0 p90 0 never 0.003; refused per 100 [casting 2.1 (oracle 1.9, unmatched 0.0), cost 0.3 (oracle 4.0, unmatched 0.2)], episodes 0.35/min; dps A/B 0.978; ...
-Fire solo: fights=20 agreement 0.994 (18040 ticks); react median 0 p90 0 never 0.009; refused per 100 [casting 7.6 (oracle 9.5, unmatched 0.0)], episodes 0.96/min; dps A/B 0.984; ...
+Arcane solo: fights=20 agreement 0.990 (18040 ticks); react median 0 p90 0 never 0.005; ready while short 0; held while ready 95; refused per 100 [casting 0.9 (oracle 2.2, unmatched 0.0)], episodes 0.13/min; dps A/B 0.977; ...
+Fire solo: fights=20 agreement 0.995 (18040 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 171; refused per 100 [casting 1.3 (oracle 2.3, unmatched 0.0)], episodes 0.20/min; dps A/B 1.002; ...
 Frostfire solo: fights=3 agreement 0.947 (2706 ticks); react median 0 p90 0 never 0.093; refused per 100 [], episodes 0.00/min; dps A/B 1.026; ... [seeds 1-3]
-Frostfire solo: fights=20 agreement 0.934 (18040 ticks); react median 0 p90 0 never 0.030; refused per 100 [], episodes 0.00/min; dps A/B 0.997; ...
+Frostfire solo: fights=20 agreement 0.919 (18040 ticks); react median 0 p90 0 never 0.005; ready while short 0; held while ready 110; refused per 100 [casting 1.1 (oracle 2.8, unmatched 0.0)], episodes 0.12/min; dps A/B 0.975; ...
 ```
 
 `tests/Forever/loop_priest_spec.lua` runs 3 fights of each Priest pack in `make check` (seeds 1-3, `#slow`) and 20 in
@@ -488,8 +488,8 @@ Flicker floors (pack_gate `FLICKER`): Shadow 0.1 (0.03 / 0.02 / 0.02 over seeds 
 ```
 Shadow solo: fights=3 agreement 0.993 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 6.7 (oracle 6.3, unmatched 0.0)], episodes 1.44/min; dps A/B 0.987; ... [seeds 1-3]
 Smite solo: fights=3 agreement 0.958 (2706 ticks); react median 0 p90 0 never 0.007; refused per 100 [casting 27.1 (oracle 27.3, unmatched 0.8)], episodes 14.75/min; dps A/B 1.025; ... [seeds 1-3]
-Shadow solo: fights=20 agreement 0.989 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 7.1 (oracle 6.7, unmatched 0.0), cost 0.1 (oracle 5.2, unmatched 0.0)], episodes 1.46/min; dps A/B 0.993; ...
-Smite solo: fights=20 agreement 0.934 (18040 ticks); react median 0 p90 1 never 0.026; refused per 100 [casting 27.6 (oracle 27.6, unmatched 1.6)], episodes 15.47/min; dps A/B 1.005; ...
+Shadow solo: fights=20 agreement 0.999 (18040 ticks); react median 0 p90 0 never 0.003; ready while short 0; held while ready 396; refused per 100 [casting 7.1 (oracle 7.1, unmatched 0.0)], episodes 1.46/min; dps A/B 0.999; ...
+Smite solo: fights=20 agreement 0.936 (18040 ticks); react median 0 p90 1 never 0.017; ready while short 0; held while ready 0; refused per 100 [casting 27.7 (oracle 27.7, unmatched 1.2)], episodes 15.57/min; dps A/B 1.003; ...
 ```
 
 `tests/Forever/loop_warlock_<pack>_spec.lua` runs 3 fights of its Warlock pack in `make check` (seeds 1-3, `#slow`) and
@@ -511,11 +511,11 @@ SM Ruin solo: fights=3 agreement 0.992 (2706 ticks); react median 0 p90 0 never 
 Demonology solo: fights=3 agreement 0.997 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.4 (oracle 3.4, unmatched 0.0)], episodes 1.33/min; dps A/B 0.993; ... [seeds 1-3]
 Shadow Brand solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.4 (oracle 3.4, unmatched 0.0)], episodes 1.11/min; dps A/B 1.000; ... [seeds 1-3]
 Destruction solo: fights=3 agreement 0.980 (2706 ticks); react median 0 p90 0 never 0.003; refused per 100 [casting 12.2 (oracle 12.1, unmatched 0.6)], episodes 4.77/min; dps A/B 1.028; ... [seeds 1-3]
-Affliction solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.001; refused per 100 [casting 3.5 (oracle 4.1, unmatched 0.0), cost 0.1 (oracle 0.0, unmatched 0.1)], episodes 0.98/min; dps A/B 1.020; ...
-SM Ruin solo: fights=20 agreement 0.994 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.995; ...
-Demonology solo: fights=20 agreement 0.997 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.2 (oracle 3.4, unmatched 0.0)], episodes 1.21/min; dps A/B 0.999; ...
-Shadow Brand solo: fights=20 agreement 0.997 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.5 (oracle 3.7, unmatched 0.0)], episodes 1.13/min; dps A/B 0.995; ...
-Destruction solo: fights=20 agreement 0.990 (18040 ticks); react median 0 p90 0 never 0.001; refused per 100 [casting 11.5 (oracle 11.4, unmatched 0.2)], episodes 4.49/min; dps A/B 1.013; ...
+Affliction solo: fights=20 agreement 0.995 (18040 ticks); react median 0 p90 0 never 0.001; ready while short 0; held while ready 0; refused per 100 [casting 11.4 (oracle 11.1, unmatched 0.0)], episodes 2.44/min; dps A/B 0.991; ...
+SM Ruin solo: fights=20 agreement 0.979 (18040 ticks); react median 0 p90 0 never 0.001; ready while short 0; held while ready 3; refused per 100 [], episodes 0.00/min; dps A/B 0.995; ...
+Demonology solo: fights=20 agreement 0.953 (18040 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 0; refused per 100 [casting 4.2 (oracle 4.2, unmatched 0.3)], episodes 1.63/min; dps A/B 1.002; ...
+Shadow Brand solo: fights=20 agreement 0.987 (18040 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 7; refused per 100 [casting 4.5 (oracle 4.1, unmatched 0.0)], episodes 1.48/min; dps A/B 0.995; ...
+Destruction solo: fights=20 agreement 0.987 (18040 ticks); react median 0 p90 0 never 0.002; ready while short 0; held while ready 1; refused per 100 [casting 9.2 (oracle 9.0, unmatched 0.2)], episodes 3.49/min; dps A/B 1.008; ...
 ```
 
 Priest checkpoints (a level 60 Priest; the `Hekili_Priest` mklink first):
@@ -588,59 +588,44 @@ the author's guide, the user's binding rules and the translator's rules: `docs/d
   `make gate` (local only, under a machine-wide lock) is the merge gate: `make check` then every 20-fight loop; a change
   touching no `src/` file merges on `make check` alone (loop lines cannot move).
 
-Every pack's current lines (the forever gate on 51a0b1ac; the replay's `agreement` counts ticks, the gate reads
-`decisions on-GCD`; Measured re-read on forever-readytime, where the replay's cooldown ends at its log timestamp:
-Retribution 0.877 -> 0.912, Guardian 0.782 -> 0.808, Enhancement 0.909 -> 0.989, Warrior Protection 0.904 -> 0.979,
-their floors ratcheted to 0.91, 0.80, 0.98 and 0.97). The Ready columns are each replay's `wowsims timing` line (the
-headless loop design §12): the shown offset |b| over the timed in-scope on-GCD decisions, the real ones outside every
-tolerance (the floored median and count, `ws.READY`), and the decisions whose key never showed first. Balance's,
-Feral's, Warrior Protection's and Combat's median floors rose in review round 1 (0.32 -> 0.71, 0.11 -> 0.26, 0.15 ->
-0.50, 0.20 -> 0.28) from the metric alone: the cost class now counts a crossing up to one tick before the cast, and an
-on-GCD decision's walk back is no longer cut by an off-GCD decision's poll; behaviour is unchanged. The Rogue
-decisions left real (0.26-0.30 s from the crossing: G7 + one tick + the tick phase) stay real by the specified window
-and are the harness's G7 measure until G7 is captured in game. "Limit" is what the spec file gates every bracket at,
-`max(6, LIVE60)` with the spec's LIVE60 constant in brackets; "Worst idle" is the measurement at each level, in seconds
-(the Arms, Fury, Guardian,
-Retribution, Paladin Protection and Survival idles re-measured in the final review fixes, on-GCD presses only):
+Every pack's current floors, as the specs in the tree set them (0.7, pins e5a9cd2a2d; the replay's `agreement`
+counts ticks, the gate reads `decisions on-GCD`). The Ready column is each replay's `wowsims timing` floor
+(`ws.READY` in `tests/Forever/helpers/wowsims.lua`, the floored median and count of the real decisions outside every
+tolerance, named cause beside each). The live idle limits (`LIVE60` and the L10/L40 brackets, `max(6, LIVE60)` at 60)
+sit in each `tests/Forever/wowsims_<class>_spec.lua` with their causes, the loop floors in
+`tests/Forever/helpers/pack_gate.lua` (`M.FLICKER`: flicker, retracted, readyShort and heldReady per pack); the measured values come from
+`make test-wowsims` and `make gate` and are not copied here, because a copy goes stale at the next pin. The solo
+lines above are the integ/0.7 gate log (38daebe33, default arm); the table's floors change only with a named cause
+beside the number (DEVELOPMENT.md).
 
-| Pack | Replay floor | Measured (decisions) | Limit (LIVE60 constant) | Worst idle (measured) | Ready \|b\| median / p90 | Ready real (median, count) | Never shown | Ready floor |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Arms (wowsims.com) | 0.91 | 0.910 (67) | 9.2 (9.2) | L10 5.6, L40 5.6, L60 9.2 | 0.000 / 0.200 | 0.800, 6 | 6 | 0.80, 6 |
-| Fury (wowsims.com) | 0.93 | 0.933 (60) | 6.8 (6.8); 7.6 below 60 (FURY_LIVE_LEVELING) | L10 7.6, L40 2.4, L60 6.8 | 0.190 / 1.490 | 0.480, 32 | 11 | 0.48, 32 |
-| Protection (wowsims.com), Warrior | 0.97 | 0.979 (94) | 6 (5.4) | L10 5.6, L40 5.4, L60 5.4 | 0.000 / 0.030 | 0.500, 5 | 2 | 0.50, 5 |
-| Feral (wowsims.com) | 0.95 | 0.955 (88) | 6 (4.2) | L20 4.0, L40 3.8, L60 3.8 | 0.000 / 0.160 | 0.260, 4 | 4 | 0.26, 4 |
-| Guardian (wowsims.com) | 0.80 | 0.808 (78) | 10.0 (10.0) | L10 10.0, L40 9.6, L60 8.4 | 0.440 / 2.500 | 0.540, 40 | 12 | 0.54, 40 |
-| Balance (wowsims.com) | 0.85 | 0.855 (55) | 6 (1.4) | L10 1.6, L40 1.4, L60 1.4 | 0.010 / 0.780 | 0.710, 17 | 5 | 0.71, 17 |
-| Assassination (wowsims.com) | 0.98 | 0.982 (57) | 6 (5.0) | L10 5.2, L40 5.0, L60 5.0 | 0.180 / 0.270 | 0.200, 30 | 1 | 0.20, 30 |
-| Combat (wowsims.com) | 0.95 | 0.972 (71) | 6 (4.8) | L10 5.6, L40 4.8, L60 4.0 | 0.150 / 0.280 | 0.280, 16 | 2 | 0.28, 16 |
-| Subtlety (wowsims.com) | 0.98 | 0.988 (82) | 6 (3.8) | L10 5.6, L40 4.6, L60 4.2 | 0.150 / 0.240 | 0.200, 45 | 1 | 0.20, 45 |
-| Retribution (wowsims.com) | 0.91 | 0.912 (57) | 8.4 (8.4) | L10 4.4, L40 7.0, L60 2.8 | 0.000 / 0.110 | 0.250, 1 | 5 | 0.25, 1 |
-| Protection (wowsims.com), Paladin | 0.62 | 0.625 (48) | 17.8 (17.8) | L10 8.6, L40 11.0, L60 11.8 | 0.000 / 1.040 | 0.540, 12 | 18 | 0.54, 12 |
-| Enhancement (wowsims.com) | 0.98 | 0.989 (88) | 8.0 (8.0) | L10 1.6, L40 pending (GAP AB), L60 8.0 | 0.000 / 0.000 | 0.960, 3 | 1 | 0.96, 3 |
-| Beast Mastery (wowsims.com) | 1.00 | 1.000 (27) | 6 (5.4) | L10 4.6, L40 4.6, L60 5.4 | 0.000 / 0.320 | 0.320, 5 | 0 | 0.32, 5 |
-| Marksmanship (wowsims.com) | 0.92 | 0.929 (42) | 12.8 (12.8) | L10 4.6, L40 3.6, L60 12.8 | 0.000 / 0.150 | 0.150, 8 | 3 | 0.15, 8 |
-| Survival (wowsims.com) | 0.97 | 0.976 (41) | 6 (0) | L10 4.6, L40 0.2, L60 0.2 | 0.000 / 0.360 | 0.140, 10 | 1 | 0.14, 10 |
-| Arcane (wowsims.com) | 0.81 | 0.814 (59) | 6 (0) | L10 0.0, L40 0.0, L60 0.0 | 0.100 / 0.970 | 0.450, 21 | 11 | 0.47, 21 |
-| Fire (wowsims.com) | 0.82 | 0.825 (63) | 12.6 (12.6) | L10 0.0, L40 0.2, L60 12.6 | 0.130 / 1.610 | 0.370, 30 | 11 | 0.37, 31 |
-| Frostfire (wowsims.com) | 0.89 | 0.891 (55) | 10.8 (10.8) | L10 5.6, L40 0.2, L60 10.8 | 0.300 / 1.010 | 0.380, 31 | 6 | 0.38, 31 |
-| Shadow (wowsims.com) | 1.00 | 1.000 (85) | 6 (1.8) | L10 0.0, L40 0.0, L60 1.8 | 0.000 / 1.600 | 1.500, 36 | 0 | 1.50, 36 |
-| Smite (wowsims.com) | 0.93 | 0.932 (44) | 6 (0.2) | L10 0.0, L40 0.2, L60 0.2 | 0.400 / 3.100 | 0.500, 27 | 3 | 0.50, 27 |
-| Elemental (wowsims.com) | 0.93 | 0.937 (95) | 6 (5.0) | L10 0.0, L40 0.0, L60 5.0 (Lava Burst r4 and Elemental Mastery learned at 1: not in the DB2) | 0.380 / 0.980 | 0.480, 54 | 6 | 0.48, 54 |
-| Affliction (wowsims.com) | 0.87 | 0.914 (81; 0.877 before the mana-regen plan's Task 10) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 1.000 | 1.000, 21 | 7 | 1.00, 23 |
-| SM Ruin (wowsims.com) | 0.70 | 0.702 (94) | 6 (0.2) | L10 0.0, L40 0.0, L60 0.2 | 0.000 / 1.000 | 0.900, 18 | 28 | 0.90, 18 |
-| Demonology (wowsims.com) | 0.77 | 0.776 (116) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 0.000 | 0.100, 3 | 26 | 0.10, 3 |
-| Shadow Brand (wowsims.com) | 0.73 | 0.735 (98) | 6 (0.2) | L10 0.0, L40 0.0, L60 0.2 | 0.000 / 1.000 | 0.900, 16 | 26 | 0.90, 16 |
-| Destruction (wowsims.com) | 0.74 | 0.743 (109) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 0.400 | 0.400, 17 | 28 | 0.40, 17 |
-
-A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,
-Retribution 8.4 vs 2.8 by ruling P6, Paladin Protection 17.8 vs 11.8 from the untanked fight); limits are not lowered
-in this task. Fury's 7.6 s below 60 and Guardian's 10.0 are leveling measurements above the L60 one
-(docs/dev/wowsims-packs.md's recorded exceptions). LIVE60s above
-6 s are wowsims's own play: Arms pools rage for Heroic Strike, Guardian waits on rage, Retribution and
-Marksmanship spend themselves out of mana as wowsims's own fights do (ruling P6), Paladin Protection waits on mana
-(the old untanked fight's 17.8 s), Enhancement's spending runs the mana out from 90 s, Fire's by 85 s (then waits on
-Fire Blast's 340; Evocation on its 8-minute cooldown counts as usable), Frostfire's by about 80 s (then waits on
-Frostfire Bolt's 314.5 and Fire Blast's 340).
+| Pack | Replay floor (decisions on-GCD) | Ready floor (median s, count) |
+| --- | --- | --- |
+| Arms (wowsims.com) | 0.88 | 1.81, 2 |
+| Fury (wowsims.com) | 0.86 | 0.42, 14 |
+| Protection (wowsims.com), Warrior | 0.92 | 0.37, 4 |
+| Feral (wowsims.com) | 0.96 | 0.40, 10 |
+| Guardian (wowsims.com) | 0.63 | 1.76, 55 |
+| Balance (wowsims.com) | 0.97 | 0.26, 22 |
+| Assassination (wowsims.com) | 0.97 | 0.20, 35 |
+| Combat (wowsims.com) | 0.99 | 0.24, 21 |
+| Subtlety (wowsims.com) | 0.98 | 0.17, 40 |
+| Retribution (wowsims.com) | 0.93 | 0.10, 7 |
+| Protection (wowsims.com), Paladin | 0.95 | 0.43, 1 |
+| Enhancement (wowsims.com) | 0.96 | 0.38, 34 |
+| Elemental (wowsims.com) | 0.89 | 2.20, 3 |
+| Beast Mastery (wowsims.com) | 0.95 | 0.46, 28 |
+| Marksmanship (wowsims.com) | 0.98 | 0.32, 22 |
+| Survival (wowsims.com) | 0.94 | 0.29, 22 |
+| Arcane (wowsims.com) | 0.95 | 0.76, 9 |
+| Fire (wowsims.com) | 0.96 | 0.45, 10 |
+| Frostfire (wowsims.com) | 0.96 | 0.42, 9 |
+| Shadow (wowsims.com) | 1.00 | 1.50, 36 |
+| Smite (wowsims.com) | 0.93 | 0.70, 11 |
+| Affliction (wowsims.com) | 0.83 | 0.00, 0 |
+| SM Ruin (wowsims.com) | 0.78 | 0.20, 8 |
+| Demonology (wowsims.com) | 0.87 | 0.00, 0 |
+| Shadow Brand (wowsims.com) | 0.71 | 0.20, 1 |
+| Destruction (wowsims.com) | 0.90 | 0.00, 0 |
 
 Recorded deviations (each one's reason in the named file):
 - Every pack (API-forced, `tools/wowsims/apl.lua` rules 10, 11, 13): `fight_remains` answers unknown (target health
