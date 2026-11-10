@@ -158,75 +158,73 @@ describe("the Cooldown Manager switches", function()
             return H.Hekili.Options.args.cdm.args
         end
 
-        it(
-            "lists only the items that name one pack aura, gold on a bar, grey in the pool, grouped by the item",
-            function()
-                layout(4, 2, { { selfAura = true }, { hasAura = true, selfAura = false }, {}, { hasAura = true } })
-                -- an item naming no pack aura, and one naming two: no card
-                ctl.viewer.sets[1] = { 960, 961 }
-                ctl.viewer.infos[960] = { spellID = 1 }
-                ctl.viewer.infos[961] = { linkedSpellIDs = { picked[1].id, picked[2].id } }
-                local args = panel()
-                local buffs, debuffs = args.buffs.args, args.debuffs.args
-                local k = function(i)
-                    return picked[i].key
-                end
-                assert.is_table(buffs[k(1)])
-                assert.is_table(debuffs[k(2)])
-                assert.is_table(buffs[k(3)]) -- neither flag: buffs
-                assert.is_table(debuffs[k(4)])
-                local n = 0
-                for _ in pairs(buffs) do
-                    n = n + 1
-                end
-                for _ in pairs(debuffs) do
-                    n = n + 1
-                end
-                assert.are.equal(4, n)
-                assert.are.equal("toggle", buffs[k(1)].type)
-                assert.truthy(buffs[k(1)].name:find("^|cffffd100")) -- on a bar
-                assert.truthy(debuffs[k(2)].name:find("^|cffffd100"))
-                assert.truthy(buffs[k(3)].name:find("^|cff808080")) -- in the pool only
-                assert.truthy(debuffs[k(4)].name:find("^|cff808080"))
-                assert.truthy(buffs[k(1)].name:find(picked[1].name, 1, true))
-                assert.is_nil(buffs[k(1)].label)
-                assert.are.equal("", args.state.name)
-
-                -- the switch: default on, a write goes to the profile by key and reaches the def
-                local info = { "cdm", "buffs", k(3) }
-                assert.is_true(buffs[k(3)].get(info))
-                buffs[k(3)].set(info, false)
-                assert.are.equal(false, spec().cdm[k(3)])
-                assert.is_false(buffs[k(3)].get(info))
-                assert.are.equal(false, I().def.auras[jOf(k(3))].cdm)
-                args.reset.func()
-                assert.is_true(buffs[k(3)].get(info))
-                assert.is_nil(I().def.auras[jOf(k(3))].cdm)
+        it("lists only the items that name one pack aura, gold on a bar, grey in the pool, in one grid", function()
+            layout(4, 2, { { selfAura = true }, { hasAura = true, selfAura = false }, {}, { hasAura = true } })
+            -- an item naming no pack aura, and one naming two: no card
+            ctl.viewer.sets[1] = { 960, 961 }
+            ctl.viewer.infos[960] = { spellID = 1 }
+            ctl.viewer.infos[961] = { linkedSpellIDs = { picked[1].id, picked[2].id } }
+            local args = panel()
+            local buffs = args.items.args -- one grid whatever the item's selfAura/hasAura say (owner 2026-11-09)
+            local debuffs = buffs
+            assert.is_nil(args.buffs)
+            assert.is_nil(args.debuffs)
+            assert.are.equal("", args.items.name)
+            local k = function(i)
+                return picked[i].key
             end
-        )
+            assert.is_table(buffs[k(1)])
+            assert.is_table(debuffs[k(2)])
+            assert.is_table(buffs[k(3)])
+            assert.is_table(debuffs[k(4)])
+            local n = 0
+            for _ in pairs(buffs) do
+                n = n + 1
+            end
+            assert.are.equal(4, n)
+            assert.are.equal("toggle", buffs[k(1)].type)
+            assert.truthy(buffs[k(1)].name:find("^|cffffd100")) -- on a bar
+            assert.truthy(debuffs[k(2)].name:find("^|cffffd100"))
+            assert.truthy(buffs[k(3)].name:find("^|cff808080")) -- in the pool only
+            assert.truthy(debuffs[k(4)].name:find("^|cff808080"))
+            assert.truthy(buffs[k(1)].name:find(picked[1].name, 1, true))
+            assert.is_nil(buffs[k(1)].label)
+            assert.are.equal("", args.state.name)
+
+            -- the switch: default on, a write goes to the profile by key and reaches the def
+            local info = { "cdm", "items", k(3) }
+            assert.is_true(buffs[k(3)].get(info))
+            buffs[k(3)].set(info, false)
+            assert.are.equal(false, spec().cdm[k(3)])
+            assert.is_false(buffs[k(3)].get(info))
+            assert.are.equal(false, I().def.auras[jOf(k(3))].cdm)
+            args.reset.func()
+            assert.is_true(buffs[k(3)].get(info))
+            assert.is_nil(I().def.auras[jOf(k(3))].cdm)
+        end)
 
         it("in combat the cards stay and the combat note shows; off and not available say so", function()
             layout(2, 1)
             local args = panel()
-            assert.is_table(args.buffs.args[picked[1].key])
+            assert.is_table(args.items.args[picked[1].key])
             assert.is_true(args.combat.hidden())
             ctl.combat = true
             args = panel()
-            assert.is_table(args.buffs.args[picked[1].key]) -- kept
+            assert.is_table(args.items.args[picked[1].key]) -- kept
             assert.is_false(args.combat.hidden())
             ctl.combat = false
 
             ctl.cvars.cooldownViewerEnabled = "0"
             args = panel()
             assert.truthy(args.state.name:find("Turn on the Cooldown Manager", 1, true))
-            assert.is_table(args.buffs.args[picked[1].key]) -- the switches stay usable
+            assert.is_table(args.items.args[picked[1].key]) -- the switches stay usable
 
             ctl.cvars.cooldownViewerEnabled = "1"
             ctl.viewer.available, ctl.viewer.failureReason = false, "Requires level 10"
             args = panel()
             assert.truthy(args.state.name:find("Requires level 10", 1, true))
-            assert.is_nil(next(args.buffs.args))
-            assert.is_true(args.buffs.hidden({ option = args.buffs }))
+            assert.is_nil(next(args.items.args))
+            assert.is_true(args.items.hidden({ option = args.items }))
         end)
     end)
 end)

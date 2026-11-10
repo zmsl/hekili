@@ -3689,8 +3689,8 @@ found = true end
     -- (cdm-panel, owner 2026-11-09) The Cooldown Manager panel: one switch per pack aura that an item of the class's
     -- Cooldown Manager pool names alone (the coverage walk's toKey), stored per aura key and per spec in the profile
     -- (profile.specs[ id ].cdm[ key ]; unset: the pack's `cdm`, else on) whether or not the item is on a bar. Gold: an
-    -- item of the aura on a bar; grey: in the pool only. Grouped by the item's info: selfAura "Buffs on you", hasAura
-    -- without selfAura "Debuffs on your target", neither: buffs. A change reaches the belief through
+    -- item of the aura on a bar; grey: in the pool only. One grid, as the game's own Cooldown Settings shows them (owner
+    -- 2026-11-09: the client's selfAura flag is no buff/debuff split, Thorns is not a self aura). A change reaches the belief through
     -- Hekili:CdmSwitchChanged (Tracked.lua): the leaf's map is rebuilt out of combat, at combat end otherwise.
     -- Rebuilt when the options open (ns.StartConfiguration), out of combat; in combat the last cards stay.
     local CDM_GOLD, CDM_GREY = "|cffffd100", "|cff808080"
@@ -3728,18 +3728,15 @@ found = true end
             or why ~= "combat" and why or ""
         if why == "combat" then return end -- keep the last cards
 
-        local buffs, debuffs = panel.args.buffs.args, panel.args.debuffs.args
-        wipe( buffs )
-        wipe( debuffs )
+        local args = panel.args.items.args
+        wipe( args )
         if not W then return end
         local auras, getName, getIcon = W.auras, C_Spell.GetSpellName, C_Spell.GetSpellTexture
         for _, id in ipairs( W.pool ) do
             local key, info = W.toKey[ id ], W.info[ id ]
             local aura = key and auras[ key ]
             if aura then
-                local self_, has = CdmPlain( info.selfAura ), CdmPlain( info.hasAura )
-                local args = ( has == true and self_ ~= true ) and debuffs or buffs
-                local card = args[ key ] or buffs[ key ] or debuffs[ key ]
+                local card = args[ key ]
                 if card then -- one card per aura: gold when any of its items is on a bar
                     if W.onBar[ id ] then card.name = CDM_GOLD .. card.label .. "|r" end
                 else
@@ -3766,13 +3763,11 @@ found = true end
                 end
             end
         end
-        for _, args in ipairs( { buffs, debuffs } ) do -- by name
-            local keys = {}
-            for k in pairs( args ) do keys[ #keys + 1 ] = k end
-            sort( keys, function( a, b ) return args[ a ].label < args[ b ].label end )
-            for i, k in ipairs( keys ) do
-                args[ k ].order, args[ k ].label = i, nil
-            end
+        local keys = {} -- by name
+        for k in pairs( args ) do keys[ #keys + 1 ] = k end
+        sort( keys, function( a, b ) return args[ a ].label < args[ b ].label end )
+        for i, k in ipairs( keys ) do
+            args[ k ].order, args[ k ].label = i, nil
         end
     end
 
@@ -7762,19 +7757,11 @@ do
                             Hekili:CdmSwitchChanged()
                         end,
                     },
-                    buffs = {
+                    items = { -- one grid, no heading (the game's Cooldown Settings groups them in one place)
                         type = "group",
                         inline = true,
-                        name = L["Buffs on you"],
+                        name = "",
                         order = 10,
-                        args = {},
-                        hidden = function( info ) return next( info.option.args ) == nil end,
-                    },
-                    debuffs = {
-                        type = "group",
-                        inline = true,
-                        name = L["Debuffs on your target"],
-                        order = 11,
                         args = {},
                         hidden = function( info ) return next( info.option.args ) == nil end,
                     },
