@@ -17,10 +17,19 @@ x/0 raises; dim never promote; no user toggles beyond the panel's per-aura switc
 | 7 ForeverProbe | ~/src/ForeverProbe-wt-cdm-verdict: DruidSession stages P1 (latency tail), P3 (reshuffle), P2 (resist rows), partner filter | wow_lua_lint | local branch only | lead |
 | 8 docs/report | this plan, the spec, cdm-fable-report.md | — | — | Fable batch review (controller) |
 
+Amended 2026-11-10 (the Fable 5.2 review's fix lanes and the batch review; the spec is the authority where this table
+differs): lane 0's panel is ONE grid with no groups (owner 2026-11-09) and its cards pass AceConfig's validation; lane
+1 has no `seenCd`/`seenUnitCd`, no `sDarkN` and no re-point inheritance: per slot `sDarkT` (the start of the watched
+dark), per thing `tDark`, per cooldownID `silentCd` (silent verdicts suspend a proof) and `builds`; lane 2 carries
+`fact.pdarkT` and `R.Silent`; lane 3's close is the read kind `ReadOf.AuraVerdict` naming its application, verdicts are
+counted at the fold, the strike test is `oursAp >= verdictAt`; lane 4 adds `viewer-late`, `viewer-recast`,
+`viewer-swap-dark` (+`-novd`), edgestats without forms, `gate-body` / `gate-ab-body`, `scripts/ab_delta.sh`; lane 6 is
+`make gate-ab-body` on the head, the six arms' bodies on the base, then `scripts/ab_delta.sh`. Acceptance: spec §5.
+
 Acceptance (ship): default arm identical to 38daebe33; viewer arms flicker within +-0.3/min and agreement no regression;
 `viewer-nonland` phantom seconds lower with the verdict on than `-novd`; strikes per fight <= 2 per item in every arm;
 `make check` at 3555+new ok / 1 failure / 1 error (known); border rc 0; alloc specs 0 bytes.
 
 Task 10 (owner, in game) gains: P1 latency tail (n >= 300, 99th percentile), P3 what a re-pointed frame reads in the swap
 frames and how often frames re-point, P2 RESIST row shape, P4 partner filter (one run), `presence-verdict` /
-`presence-proof` snapshot lines after three pulls, the options panel look (gold/grey, groups, Reset, states).
+`presence-proof` snapshot lines after three pulls, the options panel look (gold/grey, one grid, Reset, states).

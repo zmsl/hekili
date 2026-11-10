@@ -223,16 +223,33 @@ spell ID; the item follows the current rank). Druid first, then each class; a sp
 tables against `tools/data/cooldownviewer/<CLASS>.lua` where a fixture exists, and against the DB2 rank families where the
 `wowdb` tool answers. Clearly missing ranks are added; uncertain ones are logged, not changed.
 
-## 5. Harness and A/B
+## 5. Harness and A/B (amended 2026-11-10 after the Fable 5.2 review, M4/S6, and the batch review)
 
-Arms (harness only; `ab.lua`): `viewer-reshuffle` (the mixed layout + a full-update reshuffle of every viewer's frames at
-each target change), `viewer-nonland` (the buffs layout in a world where an avoided press applies no aura:
-`auraOnAvoid = false`, phantom seconds measured), `secret-viewer-buffs` / `secret-viewer-mixed` (the secret-amount stream
-crossed with the viewer), `viewer-swap` (several mobs, our target swapped every few seconds), and each of them with the
-verdict off (`I.verdictOff`, set by the harness only: `*-novd`). Metric "phantom seconds" = edgestats `staleUp` (the belief
-up while the viewer is dark, in combat, tracked auras) in the non-landing world. Gates: default arm IDENTICAL to
-38daebe33 (`scripts/results.sh`); the four existing viewer arms: flicker within +-0.3/min, agreement no regression; the
-new arms: phantom seconds fall with the verdict on, wrong verdicts (strikes) counted, no flicker rise beyond +0.3/min.
+Arms (harness only; `ab.lua`), each with a verdict-off twin (`I.verdictOff`, set by the harness only: `*-novd`, same
+seeds):
+- `viewer-reshuffle`: the mixed layout + a full-update reshuffle of every viewer's frames at each target change.
+- `viewer-nonland`: the buffs layout in a world with raised avoid rates (an avoided press applies no aura).
+- `secret-viewer-buffs` / `secret-viewer-mixed`: the secret-amount stream crossed with the viewer.
+- `viewer-swap`: several mobs, our target swapped every few seconds (a swap re-lists the fake client's target auras).
+- `viewer-late`: a seeded share of lights arrives 1.2-1.8 s late (later than W): strikes and the flicker of wrong
+  verdicts are exercised.
+- `viewer-recast`: the non-landing world where an avoided aura press is pressed again at the next free GCD (the recast
+  in or beside the verdict's drain: M1, and the `>=` tie).
+- `viewer-swap-dark`: `viewer-swap` with a non-atomic reshuffle (a moved lit frame reads dark until the next flush).
+
+Metric "phantom seconds" = edgestats `staleUp` (the belief up while the viewer is dark, in combat, tracked auras),
+WITHOUT form and enchant auras (the leaf never judges them), reported player/target.
+
+Running: `make gate-ab-body` on the head (the default arm's body, then every arm of `AB_ARMS`, logs and rows in `.ab/`;
+no check-full per arm); on the base the six arms it knows. Comparing: `scripts/results.sh` on the two `default.log`
+(IDENTICAL), then `scripts/ab_delta.sh <base .ab> <head .ab>`: per arm base -> head, and per verdict arm its `-novd`
+twin -> on. It exits 1 on a flicker rise beyond +0.3/min, an agreement fall, or a spec or arm the head lacks.
+
+Acceptance: default arm IDENTICAL to 38daebe33; the existing viewer arms within +-0.3/min flicker and no agreement
+fall against the base; per verdict arm and spec, "verdicts > 0 with the verdict on" is a PRECONDITION (`ab_delta` prints
+"vacuous" otherwise: no claim is made for that spec); where it holds, target phantom seconds fall against the twin and
+flicker stays within +0.3/min; `viewer-late`: strikes > 0 and at most `STRIKES_MAX` per item; `viewer-recast`: strikes 0
+on our own recasts; `viewer-swap` / `viewer-swap-dark`: no strike, no flicker rise.
 
 ## 6. Constants and switches
 
