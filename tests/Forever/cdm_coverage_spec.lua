@@ -131,7 +131,7 @@ describe("the Cooldown Manager coverage line", function()
         assert.falsy(text:find("Turn on", 1, true), text)
     end)
 
-    it("parity with the belief on linked, ambiguous, secret and override entries", function()
+    it("linked, ambiguous, secret and override entries: the line counts only auras an item names alone", function()
         picked = auras(8)
         local SECRET = require("Game.State.helpers.fake_api").SECRET
         local id = function(i)
@@ -156,9 +156,15 @@ describe("the Cooldown Manager coverage line", function()
             end
         end
         local n, m = belief()
-        assert.are.same({ 2, 8 }, { n, m })
+        assert.are.same({ 2, 8 }, { n, m }) -- the belief's own count keeps every aura some item names
+        -- (in game 2026-11-10: the Druid forms share one item, on a bar; the line told the player to add Bear Form to a
+        -- bar) the line counts and lists only auras an item names alone: adding a shared item to a bar cannot help
         local text = line()
-        assert.truthy(text:find("2 of 8 tracked auras", 1, true), text)
+        assert.truthy(text:find("2 of 3 tracked auras", 1, true), text)
+        assert.truthy(text:find(picked[8].name, 1, true), text)
+        for _, i in ipairs({ 3, 4, 5, 6, 7 }) do
+            assert.falsy(text:find(picked[i].name, 1, true), picked[i].name .. " | " .. text)
+        end
     end)
 
     it("Options code reads no belief (the border: tools/check_border.sh)", function()

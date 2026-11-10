@@ -447,7 +447,9 @@ The only fact kind is aura presence (self and current target, procs through link
   arm stays viewer-off and the first gate holds.
 - **The coverage line** (information, not a switch; Options' Performance tab): "N of M tracked auras have an item in a
   Cooldown Manager bar; to cover X, Y and Z, add them to any bar in the Cooldown Manager settings." Computed in
-  `Options/` (client API + `class.auras`, the §3.1 match, out of combat on draw): **no belief read**.
+  `Options/` (client API + `class.auras`, the §3.1 match, out of combat on draw): **no belief read**. M counts only
+  auras some item names ALONE (in game 2026-11-10: the Druid forms share one item on a bar, which covers none of them,
+  so the line advised adding Bear Form to a bar); the snapshot's `covered=N/M` keeps every aura an item names.
 - **The debug snapshot** (owner Q5). Players attach the file `Hekili:SaveDebugSnapshot` writes (`Engine/Snapshot.lua:81`);
   each display's log opens with `log.onOpen()` (`Hekili.lua:238`), which the belief fills itself through the approved
   `SetLog` (`Game/API/Facade.lua:68-75`) to write `VS.Snapshot()` (`Game/State/Snapshot.lua:17`, the `I.OnSnapshot`

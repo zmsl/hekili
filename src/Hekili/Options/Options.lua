@@ -3567,7 +3567,8 @@ found = true end
 
     -- The shared walk (the coverage line below, the Cooldown Manager panel): out of combat, from the client. nil and
     -- the reason when it cannot read (in combat: "combat"; not available: the game's reason, or the plain text).
-    -- Else { auras, toKey (cooldownID -> aura key, or false: names several), mappable (key -> true), covered (key ->
+    -- Else { auras, toKey (cooldownID -> aura key, or false: names several), mappable (key -> true: some item names it
+    -- alone), covered (key ->
     -- true: some item of the key on a bar), onBar (cooldownID -> true), pool (cooldownIDs in category order), info
     -- (cooldownID -> its info), off (the player turned the Cooldown Manager off) }. Allocates: on draw only.
     local function CdmWalk()
@@ -3619,7 +3620,6 @@ found = true end
                         local one, many = nil, false
                         for k in pairs( keys ) do
                             if k ~= 0 then
-                                mappable[ k ] = true
                                 many = many or one ~= nil
                                 one = one or k
                             end
@@ -3627,6 +3627,9 @@ found = true end
                         if one then
                             toKey[ id ] = not ( many or keys[ 0 ] ) and one
                             pool[ #pool + 1 ], infos[ id ] = id, info
+                            -- only an item naming its aura alone can cover it: a shared item (the Druid forms' one)
+                            -- on a bar still covers nothing, so the line neither counts nor lists those auras
+                            if toKey[ id ] then mappable[ one ] = true end
                         end
                     end
                 end
