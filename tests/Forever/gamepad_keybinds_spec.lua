@@ -209,6 +209,11 @@ describe("gamepad keybinds", function()
         -- a keyboard binding with no pad key reads as before
         world.keys.ACTIONBUTTON1 = "ALT-DOWN"
         assert.are.equal("ADn", read(H).mortal_strike.upper[1])
+        -- a number-pad key holds "PAD" inside a word: still keyboard text, lower-cased as before
+        world.keys.ACTIONBUTTON1 = "CTRL-NUMPAD1"
+        local np = read(H).mortal_strike
+        assert.are.equal("CN1", np.upper[1])
+        assert.are.equal("cn1", np.lower[1])
     end)
 
     it("answers the gamepad text (sized to the font) in place of keyboard text; an override still wins", function()

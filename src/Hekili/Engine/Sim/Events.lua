@@ -1836,7 +1836,7 @@ function Pad.Glyph( key )
     local set = _G.InputDeviceIconSetManager
     local name = set and set.GetActiveInputDeviceIconSet and set:GetActiveInputDeviceIconSet()
     local suffix = name and ICON_SUFFIX[ name ]
-    return suffix and _G[ "KEY_ABBR_" .. key .. suffix ] or _G[ "KEY_ABBR_" .. key ] or PAD_TEXT[ key ] or key:gsub( "^PAD", "" )
+    return suffix and _G[ "KEY_ABBR_" .. key .. suffix ] or _G[ "KEY_ABBR_" .. key ] or PAD_TEXT[ key ] or ( key:gsub( "^PAD", "" ) )
 end
 
 --- Storage slot `slot` as page, bar (1 top, 2 left, 3 right, 4 bottom), position (1-8; GAMEPADACTIONBUTTONn), given the
@@ -1941,14 +1941,17 @@ local function subs( binding )
     return binding
 end
 
+-- a pad key name starts a word: SHIFT-PADDUP, PAD1; never NUMPAD1
+local PAD_KEY = "%f[%w]PAD%w+"
+
 local function improvedGetBindingText( binding )
     if not binding then return "" end
-    if not binding:find( "PAD", 1, true ) then return subs( binding ) end
+    if not binding:find( PAD_KEY ) then return subs( binding ) end
 
     -- a gamepad key on a normal bar: its picture, the rest abbreviated as ever
     local out, pos = "", 1
     while true do
-        local s, e = binding:find( "PAD%w+", pos )
+        local s, e = binding:find( PAD_KEY, pos )
         if not s then break end
         out = out .. subs( binding:sub( pos, s - 1 ) ) .. Pad.Glyph( binding:sub( s, e ) )
         pos = e + 1
@@ -2007,7 +2010,7 @@ local function StoreKeybindInfo( page, key, aType, id, console )
         else
             keys[ action ].upper[ page ] = improvedGetBindingText( key )
             -- a gamepad picture's markup is case-sensitive
-            keys[ action ].lower[ page ] = key:find( "PAD", 1, true ) and keys[ action ].upper[ page ] or lower( keys[ action ].upper[ page ] )
+            keys[ action ].lower[ page ] = key:find( PAD_KEY ) and keys[ action ].upper[ page ] or lower( keys[ action ].upper[ page ] )
         end
         updatedKeys[ action ] = true
 
