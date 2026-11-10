@@ -308,8 +308,6 @@ do
                 performance = {
                     frameBudget = 0.7,
                     forecastWindow = 15, -- Forever E9
-                    coalesceCooldown = false, -- perf 2.2: SPELL_UPDATE_COOLDOWN once per frame (EventFacade.lua)
-                    narrowUnitAura = false, -- perf 2.3: UNIT_AURA for player and target only (Sources.lua)
                 },
                 toggles = {
                     pause = {
@@ -4313,44 +4311,6 @@ found = true end
                                     end,
                                     fontSize = "medium",
                                     order = 12,
-                                    width = "full",
-                                },
-                                experimentalHeader = {
-                                    type = "header",
-                                    hidden = not Hekili.IsDev, -- only the dev-build switches below remain under it
-                                    name = L["Experimental"],
-                                    order = 20,
-                                },
-                                coalesceCooldown = {
-                                    type = "toggle",
-                                    hidden = not Hekili.IsDev, -- dev builds only; providersOf (Tracked.lua) ignores it otherwise
-                                    name = L["Experimental: read cooldown changes once per frame"],
-                                    desc = L["When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. "
-                                        .. "Costs less in busy fights; a changed cooldown shows up to one frame later.\n\n"
-                                        .. "Applies at once to every specialization.\n\n"
-                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
-                                    get = function() return Hekili.DB.profile.performance.coalesceCooldown == true end,
-                                    set = function( _, v )
-                                        Hekili.DB.profile.performance.coalesceCooldown = v
-                                        Hekili:ProvidersChanged()
-                                    end,
-                                    order = 26,
-                                    width = "full",
-                                },
-                                narrowUnitAura = {
-                                    type = "toggle",
-                                    hidden = not Hekili.IsDev, -- dev builds only; providersOf (Tracked.lua) ignores it otherwise
-                                    name = L["Experimental: listen for aura changes on you and your target only"],
-                                    desc = L["Asks the game for buff and debuff changes on you and your target only, instead of every unit, "
-                                        .. "which matters most in raids.\n\n"
-                                        .. "Changes apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n"
-                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
-                                    get = function() return Hekili.DB.profile.performance.narrowUnitAura == true end,
-                                    set = function( _, v )
-                                        Hekili.DB.profile.performance.narrowUnitAura = v
-                                        Hekili:ProvidersChanged()
-                                    end,
-                                    order = 27,
                                     width = "full",
                                 },
                             }

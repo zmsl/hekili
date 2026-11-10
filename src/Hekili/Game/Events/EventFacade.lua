@@ -229,20 +229,10 @@ local function deliver(event, a1, a2, a3, a4, a5, a6, a7, a8)
 end
 E.Deliver = deliver
 
--- Perf 2.2: SPELL_UPDATE_COOLDOWN seen this frame and held for onUpdate, whose call passes no frame.
-local cooldownDue = false
-
 -- One client event: (1) the sources (once Start has run), (2) the payload, (3) every matching subscriber, (4) the
 -- combat-log rows it completed (CombatLog.lua). Each slot is gated into a local, so a nested client event is
 -- delivered in its own call with its own values. Allocates nothing.
 local function onEvent(frame, event, r1, r2, r3, r4, r5, r6, r7, r8)
-    if event == "SPELL_UPDATE_COOLDOWN" and frame then
-        local pv = I.def and I.def.providers
-        if pv and pv.coalesceCooldown then -- the core's toggle, in the build's `def` (Tracked.lua); no consumer reads the payload
-            cooldownDue = true
-            return
-        end
-    end
     local api = I.api or client
     local a1, a2, a3, a4 = Plain(api, r1), Plain(api, r2), Plain(api, r3), Plain(api, r4)
     local a5, a6, a7, a8 = Plain(api, r5), Plain(api, r6), Plain(api, r7), Plain(api, r8)
@@ -272,10 +262,6 @@ local function onEvent(frame, event, r1, r2, r3, r4, r5, r6, r7, r8)
 end
 
 local function onUpdate()
-    if cooldownDue then
-        cooldownDue = false
-        onEvent(nil, "SPELL_UPDATE_COOLDOWN")
-    end
     S.Flush()
     local api = I.api
     if api then

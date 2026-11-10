@@ -14421,9 +14421,6 @@ options.packs.affliction.core.potion	values.default	|T967533:0|t |cFFFFD100Defau
 options.packs.affliction.core.prefHeader	name	|W|T136145:0::::64:64:4:60:4:60|t Affliction|w Preferences
 options.packs.affliction.core.prefSpacer	name	\032
 options.packs.affliction.performance	name	Performance
-options.packs.affliction.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.affliction.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.affliction.performance.experimentalHeader	name	Experimental
 options.packs.affliction.performance.forecastHeader	name	Forecast
 options.packs.affliction.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.affliction.performance.forecastWindow	name	Forecast window (s)
@@ -14431,8 +14428,6 @@ options.packs.affliction.performance.forecastWindowInfo	name	\nThis setting dete
 options.packs.affliction.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.affliction.performance.frameBudget	name	Frame Budget
 options.packs.affliction.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.affliction.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.affliction.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.affliction.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.affliction.targets	name	Targeting
 options.packs.affliction.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -14700,9 +14695,6 @@ options.packs.arcane.core.potion	desc	Unless otherwise specified in the priority
 options.packs.arcane.core.potion	name	Potion
 options.packs.arcane.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.arcane.performance	name	Performance
-options.packs.arcane.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.arcane.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.arcane.performance.experimentalHeader	name	Experimental
 options.packs.arcane.performance.forecastHeader	name	Forecast
 options.packs.arcane.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.arcane.performance.forecastWindow	name	Forecast window (s)
@@ -14710,8 +14702,6 @@ options.packs.arcane.performance.forecastWindowInfo	name	\nThis setting determin
 options.packs.arcane.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.arcane.performance.frameBudget	name	Frame Budget
 options.packs.arcane.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.arcane.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.arcane.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.arcane.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.arcane.targets	name	Targeting
 options.packs.arcane.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -15090,9 +15080,6 @@ options.packs.arms.core.wowsims_recklessness	name	Recklessness (wowsims.com)
 options.packs.arms.core.wowsims_stance_dance	desc	The wowsims.com priority's Stance Dance ON/OFF switch (its default in wowsims's own APL).
 options.packs.arms.core.wowsims_stance_dance	name	Stance Dance (wowsims.com)
 options.packs.arms.performance	name	Performance
-options.packs.arms.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.arms.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.arms.performance.experimentalHeader	name	Experimental
 options.packs.arms.performance.forecastHeader	name	Forecast
 options.packs.arms.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.arms.performance.forecastWindow	name	Forecast window (s)
@@ -15100,8 +15087,6 @@ options.packs.arms.performance.forecastWindowInfo	name	\nThis setting determines
 options.packs.arms.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.arms.performance.frameBudget	name	Frame Budget
 options.packs.arms.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.arms.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.arms.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.arms.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.arms.targets	name	Targeting
 options.packs.arms.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -15404,9 +15389,6 @@ options.packs.assassination.core.potion	desc	Unless otherwise specified in the p
 options.packs.assassination.core.potion	name	Potion
 options.packs.assassination.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.assassination.performance	name	Performance
-options.packs.assassination.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.assassination.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.assassination.performance.experimentalHeader	name	Experimental
 options.packs.assassination.performance.forecastHeader	name	Forecast
 options.packs.assassination.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.assassination.performance.forecastWindow	name	Forecast window (s)
@@ -15414,8 +15396,6 @@ options.packs.assassination.performance.forecastWindowInfo	name	\nThis setting d
 options.packs.assassination.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.assassination.performance.frameBudget	name	Frame Budget
 options.packs.assassination.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.assassination.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.assassination.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.assassination.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.assassination.targets	name	Targeting
 options.packs.assassination.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -15763,9 +15743,6 @@ options.packs.balance.core.potion	values.default	|T967533:0|t |cFFFFD100Default|
 options.packs.balance.core.prefHeader	name	|W|T136096:0::::64:64:4:60:4:60|t Balance|w Preferences
 options.packs.balance.core.prefSpacer	name	\032
 options.packs.balance.performance	name	Performance
-options.packs.balance.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.balance.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.balance.performance.experimentalHeader	name	Experimental
 options.packs.balance.performance.forecastHeader	name	Forecast
 options.packs.balance.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.balance.performance.forecastWindow	name	Forecast window (s)
@@ -15773,8 +15750,6 @@ options.packs.balance.performance.forecastWindowInfo	name	\nThis setting determi
 options.packs.balance.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.balance.performance.frameBudget	name	Frame Budget
 options.packs.balance.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.balance.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.balance.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.balance.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.balance.targets	name	Targeting
 options.packs.balance.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -16073,9 +16048,6 @@ options.packs.beast_mastery.core.potion	desc	Unless otherwise specified in the p
 options.packs.beast_mastery.core.potion	name	Potion
 options.packs.beast_mastery.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.beast_mastery.performance	name	Performance
-options.packs.beast_mastery.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.beast_mastery.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.beast_mastery.performance.experimentalHeader	name	Experimental
 options.packs.beast_mastery.performance.forecastHeader	name	Forecast
 options.packs.beast_mastery.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.beast_mastery.performance.forecastWindow	name	Forecast window (s)
@@ -16083,8 +16055,6 @@ options.packs.beast_mastery.performance.forecastWindowInfo	name	\nThis setting d
 options.packs.beast_mastery.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.beast_mastery.performance.frameBudget	name	Frame Budget
 options.packs.beast_mastery.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.beast_mastery.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.beast_mastery.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.beast_mastery.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.beast_mastery.targets	name	Targeting
 options.packs.beast_mastery.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -16388,9 +16358,6 @@ options.packs.combat.core.potion	desc	Unless otherwise specified in the priority
 options.packs.combat.core.potion	name	Potion
 options.packs.combat.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.combat.performance	name	Performance
-options.packs.combat.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.combat.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.combat.performance.experimentalHeader	name	Experimental
 options.packs.combat.performance.forecastHeader	name	Forecast
 options.packs.combat.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.combat.performance.forecastWindow	name	Forecast window (s)
@@ -16398,8 +16365,6 @@ options.packs.combat.performance.forecastWindowInfo	name	\nThis setting determin
 options.packs.combat.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.combat.performance.frameBudget	name	Frame Budget
 options.packs.combat.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.combat.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.combat.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.combat.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.combat.targets	name	Targeting
 options.packs.combat.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -16986,9 +16951,6 @@ options.packs.demonology.core.potion	values.default	|T967533:0|t |cFFFFD100Defau
 options.packs.demonology.core.prefHeader	name	|W|T136172:0::::64:64:4:60:4:60|t Demonology|w Preferences
 options.packs.demonology.core.prefSpacer	name	\032
 options.packs.demonology.performance	name	Performance
-options.packs.demonology.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.demonology.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.demonology.performance.experimentalHeader	name	Experimental
 options.packs.demonology.performance.forecastHeader	name	Forecast
 options.packs.demonology.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.demonology.performance.forecastWindow	name	Forecast window (s)
@@ -16996,8 +16958,6 @@ options.packs.demonology.performance.forecastWindowInfo	name	\nThis setting dete
 options.packs.demonology.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.demonology.performance.frameBudget	name	Frame Budget
 options.packs.demonology.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.demonology.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.demonology.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.demonology.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.demonology.targets	name	Targeting
 options.packs.demonology.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -17323,9 +17283,6 @@ options.packs.destruction.core.potion	values.default	|T967533:0|t |cFFFFD100Defa
 options.packs.destruction.core.prefHeader	name	|W|T136186:0::::64:64:4:60:4:60|t Destruction|w Preferences
 options.packs.destruction.core.prefSpacer	name	\032
 options.packs.destruction.performance	name	Performance
-options.packs.destruction.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.destruction.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.destruction.performance.experimentalHeader	name	Experimental
 options.packs.destruction.performance.forecastHeader	name	Forecast
 options.packs.destruction.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.destruction.performance.forecastWindow	name	Forecast window (s)
@@ -17333,8 +17290,6 @@ options.packs.destruction.performance.forecastWindowInfo	name	\nThis setting det
 options.packs.destruction.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.destruction.performance.frameBudget	name	Frame Budget
 options.packs.destruction.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.destruction.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.destruction.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.destruction.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.destruction.targets	name	Targeting
 options.packs.destruction.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -17611,9 +17566,6 @@ options.packs.discipline.core.potion	desc	Unless otherwise specified in the prio
 options.packs.discipline.core.potion	name	Potion
 options.packs.discipline.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.discipline.performance	name	Performance
-options.packs.discipline.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.discipline.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.discipline.performance.experimentalHeader	name	Experimental
 options.packs.discipline.performance.forecastHeader	name	Forecast
 options.packs.discipline.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.discipline.performance.forecastWindow	name	Forecast window (s)
@@ -17621,8 +17573,6 @@ options.packs.discipline.performance.forecastWindowInfo	name	\nThis setting dete
 options.packs.discipline.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.discipline.performance.frameBudget	name	Frame Budget
 options.packs.discipline.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.discipline.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.discipline.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.discipline.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.discipline.targets	name	Targeting
 options.packs.discipline.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -17933,9 +17883,6 @@ options.packs.elemental.core.potion	desc	Unless otherwise specified in the prior
 options.packs.elemental.core.potion	name	Potion
 options.packs.elemental.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.elemental.performance	name	Performance
-options.packs.elemental.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.elemental.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.elemental.performance.experimentalHeader	name	Experimental
 options.packs.elemental.performance.forecastHeader	name	Forecast
 options.packs.elemental.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.elemental.performance.forecastWindow	name	Forecast window (s)
@@ -17943,8 +17890,6 @@ options.packs.elemental.performance.forecastWindowInfo	name	\nThis setting deter
 options.packs.elemental.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.elemental.performance.frameBudget	name	Frame Budget
 options.packs.elemental.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.elemental.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.elemental.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.elemental.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.elemental.targets	name	Targeting
 options.packs.elemental.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -18257,9 +18202,6 @@ options.packs.enhancement.core.potion	desc	Unless otherwise specified in the pri
 options.packs.enhancement.core.potion	name	Potion
 options.packs.enhancement.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.enhancement.performance	name	Performance
-options.packs.enhancement.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.enhancement.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.enhancement.performance.experimentalHeader	name	Experimental
 options.packs.enhancement.performance.forecastHeader	name	Forecast
 options.packs.enhancement.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.enhancement.performance.forecastWindow	name	Forecast window (s)
@@ -18267,8 +18209,6 @@ options.packs.enhancement.performance.forecastWindowInfo	name	\nThis setting det
 options.packs.enhancement.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.enhancement.performance.frameBudget	name	Frame Budget
 options.packs.enhancement.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.enhancement.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.enhancement.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.enhancement.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.enhancement.targets	name	Targeting
 options.packs.enhancement.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -18622,9 +18562,6 @@ options.packs.feral.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.feral.core.prefHeader	name	|W|T132115:0::::64:64:4:60:4:60|t Feral|w Preferences
 options.packs.feral.core.prefSpacer	name	\032
 options.packs.feral.performance	name	Performance
-options.packs.feral.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.feral.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.feral.performance.experimentalHeader	name	Experimental
 options.packs.feral.performance.forecastHeader	name	Forecast
 options.packs.feral.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.feral.performance.forecastWindow	name	Forecast window (s)
@@ -18632,8 +18569,6 @@ options.packs.feral.performance.forecastWindowInfo	name	\nThis setting determine
 options.packs.feral.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.feral.performance.frameBudget	name	Frame Budget
 options.packs.feral.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.feral.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.feral.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.feral.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.feral.targets	name	Targeting
 options.packs.feral.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -19112,9 +19047,6 @@ options.packs.fire.core.potion	desc	Unless otherwise specified in the priority, 
 options.packs.fire.core.potion	name	Potion
 options.packs.fire.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.fire.performance	name	Performance
-options.packs.fire.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.fire.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.fire.performance.experimentalHeader	name	Experimental
 options.packs.fire.performance.forecastHeader	name	Forecast
 options.packs.fire.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.fire.performance.forecastWindow	name	Forecast window (s)
@@ -19122,8 +19054,6 @@ options.packs.fire.performance.forecastWindowInfo	name	\nThis setting determines
 options.packs.fire.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.fire.performance.frameBudget	name	Frame Budget
 options.packs.fire.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.fire.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.fire.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.fire.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.fire.targets	name	Targeting
 options.packs.fire.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -19498,9 +19428,6 @@ options.packs.fury.core.wowsims_recklessness	name	Recklessness (wowsims.com)
 options.packs.fury.core.wowsims_rend_weave	desc	The wowsims.com priority's Rend Weave ON/OFF switch (its default in wowsims's own APL).
 options.packs.fury.core.wowsims_rend_weave	name	Rend Weave (wowsims.com)
 options.packs.fury.performance	name	Performance
-options.packs.fury.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.fury.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.fury.performance.experimentalHeader	name	Experimental
 options.packs.fury.performance.forecastHeader	name	Forecast
 options.packs.fury.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.fury.performance.forecastWindow	name	Forecast window (s)
@@ -19508,8 +19435,6 @@ options.packs.fury.performance.forecastWindowInfo	name	\nThis setting determines
 options.packs.fury.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.fury.performance.frameBudget	name	Frame Budget
 options.packs.fury.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.fury.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.fury.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.fury.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.fury.targets	name	Targeting
 options.packs.fury.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -19865,9 +19790,6 @@ options.packs.guardian.core.potion	values.default	|T967533:0|t |cFFFFD100Default
 options.packs.guardian.core.prefHeader	name	|W|T132276:0::::64:64:4:60:4:60|t Guardian|w Preferences
 options.packs.guardian.core.prefSpacer	name	\032
 options.packs.guardian.performance	name	Performance
-options.packs.guardian.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.guardian.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.guardian.performance.experimentalHeader	name	Experimental
 options.packs.guardian.performance.forecastHeader	name	Forecast
 options.packs.guardian.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.guardian.performance.forecastWindow	name	Forecast window (s)
@@ -19875,8 +19797,6 @@ options.packs.guardian.performance.forecastWindowInfo	name	\nThis setting determ
 options.packs.guardian.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.guardian.performance.frameBudget	name	Frame Budget
 options.packs.guardian.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.guardian.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.guardian.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.guardian.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.guardian.targets	name	Targeting
 options.packs.guardian.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -20169,9 +20089,6 @@ options.packs.marksmanship.core.potion	desc	Unless otherwise specified in the pr
 options.packs.marksmanship.core.potion	name	Potion
 options.packs.marksmanship.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.marksmanship.performance	name	Performance
-options.packs.marksmanship.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.marksmanship.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.marksmanship.performance.experimentalHeader	name	Experimental
 options.packs.marksmanship.performance.forecastHeader	name	Forecast
 options.packs.marksmanship.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.marksmanship.performance.forecastWindow	name	Forecast window (s)
@@ -20179,8 +20096,6 @@ options.packs.marksmanship.performance.forecastWindowInfo	name	\nThis setting de
 options.packs.marksmanship.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.marksmanship.performance.frameBudget	name	Frame Budget
 options.packs.marksmanship.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.marksmanship.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.marksmanship.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.marksmanship.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.marksmanship.targets	name	Targeting
 options.packs.marksmanship.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -20630,9 +20545,6 @@ options.packs.protection.core.potion	values.default	|T967533:0|t |cFFFFD100Defau
 options.packs.protection.core.prefHeader	name	|W|T134952:0::::64:64:4:60:4:60|t Protection|w Preferences
 options.packs.protection.core.prefSpacer	name	\032
 options.packs.protection.performance	name	Performance
-options.packs.protection.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.protection.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.protection.performance.experimentalHeader	name	Experimental
 options.packs.protection.performance.forecastHeader	name	Forecast
 options.packs.protection.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.protection.performance.forecastWindow	name	Forecast window (s)
@@ -20640,8 +20552,6 @@ options.packs.protection.performance.forecastWindowInfo	name	\nThis setting dete
 options.packs.protection.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.protection.performance.frameBudget	name	Frame Budget
 options.packs.protection.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.protection.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.protection.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.protection.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.protection.targets	name	Targeting
 options.packs.protection.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -20929,9 +20839,6 @@ options.packs.retribution.core.potion	desc	Unless otherwise specified in the pri
 options.packs.retribution.core.potion	name	Potion
 options.packs.retribution.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.retribution.performance	name	Performance
-options.packs.retribution.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.retribution.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.retribution.performance.experimentalHeader	name	Experimental
 options.packs.retribution.performance.forecastHeader	name	Forecast
 options.packs.retribution.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.retribution.performance.forecastWindow	name	Forecast window (s)
@@ -20939,8 +20846,6 @@ options.packs.retribution.performance.forecastWindowInfo	name	\nThis setting det
 options.packs.retribution.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.retribution.performance.frameBudget	name	Frame Budget
 options.packs.retribution.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.retribution.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.retribution.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.retribution.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.retribution.targets	name	Targeting
 options.packs.retribution.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -21229,9 +21134,6 @@ options.packs.shadow.core.prefSpacer	name	\032
 options.packs.shadow.core.prefer_starshards	desc	Shadow only, and only when you know Starshards (the Night Elf racial). When enabled, the priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Off: the priority never shows Starshards.
 options.packs.shadow.core.prefer_starshards	name	Prefer Starshards
 options.packs.shadow.performance	name	Performance
-options.packs.shadow.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.shadow.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.shadow.performance.experimentalHeader	name	Experimental
 options.packs.shadow.performance.forecastHeader	name	Forecast
 options.packs.shadow.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.shadow.performance.forecastWindow	name	Forecast window (s)
@@ -21239,8 +21141,6 @@ options.packs.shadow.performance.forecastWindowInfo	name	\nThis setting determin
 options.packs.shadow.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.shadow.performance.frameBudget	name	Frame Budget
 options.packs.shadow.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.shadow.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.shadow.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.shadow.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.shadow.targets	name	Targeting
 options.packs.shadow.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -21592,9 +21492,6 @@ options.packs.subtlety.core.potion	desc	Unless otherwise specified in the priori
 options.packs.subtlety.core.potion	name	Potion
 options.packs.subtlety.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.subtlety.performance	name	Performance
-options.packs.subtlety.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.subtlety.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.subtlety.performance.experimentalHeader	name	Experimental
 options.packs.subtlety.performance.forecastHeader	name	Forecast
 options.packs.subtlety.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.subtlety.performance.forecastWindow	name	Forecast window (s)
@@ -21602,8 +21499,6 @@ options.packs.subtlety.performance.forecastWindowInfo	name	\nThis setting determ
 options.packs.subtlety.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.subtlety.performance.frameBudget	name	Frame Budget
 options.packs.subtlety.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.subtlety.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.subtlety.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.subtlety.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.subtlety.targets	name	Targeting
 options.packs.subtlety.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
@@ -21897,9 +21792,6 @@ options.packs.survival.core.potion	desc	Unless otherwise specified in the priori
 options.packs.survival.core.potion	name	Potion
 options.packs.survival.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.survival.performance	name	Performance
-options.packs.survival.performance.coalesceCooldown	desc	When the game reports several cooldown changes in one frame, reads them once, at the end of the frame. Costs less in busy fights; a changed cooldown shows up to one frame later.\n\nApplies at once to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.survival.performance.coalesceCooldown	name	Experimental: read cooldown changes once per frame
-options.packs.survival.performance.experimentalHeader	name	Experimental
 options.packs.survival.performance.forecastHeader	name	Forecast
 options.packs.survival.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
 options.packs.survival.performance.forecastWindow	name	Forecast window (s)
@@ -21907,8 +21799,6 @@ options.packs.survival.performance.forecastWindowInfo	name	\nThis setting determ
 options.packs.survival.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
 options.packs.survival.performance.frameBudget	name	Frame Budget
 options.packs.survival.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
-options.packs.survival.performance.narrowUnitAura	desc	Asks the game for buff and debuff changes on you and your target only, instead of every unit, which matters most in raids.\n\nChanges apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n|cFFFF7F00Experimental|r: off by default while it is being play-tested.
-options.packs.survival.performance.narrowUnitAura	name	Experimental: listen for aura changes on you and your target only
 options.packs.survival.targets	desc	Settings related to how enemies are identified and counted.
 options.packs.survival.targets	name	Targeting
 options.packs.survival.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.

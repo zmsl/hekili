@@ -130,17 +130,13 @@ changes a trace; `tests/Forever/driver_rate_spec.lua` is their proof, through th
   (`Engine/Driver.lua`). A force keeps the 0.2 s wait, so a target change, a cast or combat wakes it. The belief drains at
   that rate too, so its 256-entry log holds 1.5 s of observations out of combat.
 
-**The rate switches** (perf phase 2; Options > Performance > Experimental, `profile.performance`, profile-wide). Dev
-builds only: a non-dev build (`Hekili.IsDev` unset) hides both and `providersOf` (`Engine/Schema/Tracked.lua`) reads
-each as off, whatever the saved profile says. These two are the only dev-only switches left: `damageMeter` and
-`cooldownViewer` are gone (cdm-default decision 107, owner 2026-11-08). The Outcomes provider is always the default one
-(the meter provider stays for the harness's `meter` A/B arm), and the Cooldown Manager leaf is always on unless the
-debug-only session switch `Hekili.cdmOff` is true (`DEVELOPMENT.md` §6); a saved value of either is ignored.
-- `coalesceCooldown`, default off: the event facade holds SPELL_UPDATE_COOLDOWN to its per-frame OnUpdate and runs it once.
-- `narrowUnitAura`, default off: UNIT_AURA is asked for only on `I.auras.token`, applied at a drain out of combat; a
-  general subscriber keeps it general. UNIT_TARGET stays general, because `Game/Events/Attackers.lua` reads the target,
-  the focus and 40 nameplate tokens and the facade registers at most two units.
-The last two reach the belief as fields of `def.providers`, the toggles' existing route (`Hekili:ProvidersChanged`).
+**The rate switches** (perf phase 2) `coalesceCooldown` and `narrowUnitAura` were removed with their code paths on
+2026-11-10 (owner ruling): the event facade runs each SPELL_UPDATE_COOLDOWN at once, and UNIT_AURA is registered for
+every unit. A saved value of either is ignored. `damageMeter` and `cooldownViewer` are gone too (cdm-default decision
+107, owner 2026-11-08). The Outcomes provider is always the default one (the meter provider stays for the harness's
+`meter` A/B arm), and the Cooldown Manager leaf is always on unless the debug-only session switch `Hekili.cdmOff` is
+true (`DEVELOPMENT.md` §6); a saved value of either is ignored. `providersOf` (`Engine/Schema/Tracked.lua`) hands them
+to the belief as `def.providers` (`Hekili:ProvidersChanged`).
 
 **Private, on `ns`**, because only the engine and its tests use them:
 - `ns.Output`: a separate table whose `__index` is `Engine.Output` (so `ns.Output.Primary` reads the display), holding

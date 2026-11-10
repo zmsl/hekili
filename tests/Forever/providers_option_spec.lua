@@ -72,6 +72,38 @@ describe("the providers, always on (no option)", function()
         end
     end)
 
+    -- the rate switches coalesceCooldown and narrowUnitAura, removed with their code paths (owner 2026-11-10)
+    it("a saved coalesceCooldown or narrowUnitAura is ignored: no option, every event runs at once", function()
+        for _, dev in ipairs({ true, false }) do
+            boot(dev or nil, { coalesceCooldown = true, narrowUnitAura = true })
+            local args, defaults = perfArgs(), H.Hekili.DB.defaults.profile.performance
+            for _, name in ipairs({ "coalesceCooldown", "narrowUnitAura" }) do
+                assert.is_nil(args[name], name)
+                assert.is_nil(defaults[name], name)
+                assert.is_nil(I.def.providers[name], name)
+            end
+            assert.is_nil(args.experimentalHeader)
+            assert.is_nil(I.Sources.UNITS.UNIT_AURA) -- UNIT_AURA stays registered for every unit
+            local C, read, reads = I.api.C_Spell, I.api.C_Spell.GetSpellCooldown, 0
+            C.GetSpellCooldown = function(spell)
+                reads = reads + 1
+                return read(spell)
+            end
+            H.Fire("SPELL_UPDATE_COOLDOWN") -- the boot's edges
+            reads = 0
+            H.Fire("SPELL_UPDATE_COOLDOWN")
+            local one = reads
+            assert.is_true(one > 0)
+            H.Fire("SPELL_UPDATE_COOLDOWN")
+            H.Fire("SPELL_UPDATE_COOLDOWN")
+            assert.are.equal(3 * one, reads) -- each event walks at once; the frame's OnUpdate walks none
+            local frame = I.Events.frame
+            frame.__scripts.OnUpdate(frame, 0.016)
+            assert.are.equal(3 * one, reads)
+            assert.are.same({}, H.errors)
+        end
+    end)
+
     it(
         "Hekili.cdmOff = true then ProvidersChanged gives viewer false (out of combat at once, else at combat end)",
         function()

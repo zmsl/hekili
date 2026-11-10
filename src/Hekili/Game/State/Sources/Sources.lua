@@ -111,7 +111,6 @@ end
 -- registers them with the client at Start.
 local HANDLERS, UNITS = {}, {}
 S.HANDLERS, S.UNITS = HANDLERS, UNITS
-S.auraNarrow = false
 
 --- Registers `fn(api, t, a1, a2, a3, a4, a5)` for `event`; `unit` ("player" or "target") makes it a unit event
 --- for that unit (the handler still checks a1). Every argument reaches the handler through Plain. Load time only.
@@ -216,14 +215,8 @@ function VS.Drain(cutoff)
     local t0 = debugprofilestop()
     local casts = I.castsRun
     local pv = I.def.providers
-    if pv then -- the core's experimental toggles (E17): a changed name swaps here, out of combat, else at combat end
+    if pv then -- the core's providers (E17): a changed name swaps here, out of combat, else at combat end
         I.SetProviders(pv.outcomes, pv.presence, pv.viewer)
-        -- perf 2.3: UNIT_AURA for the units the belief walks, or all; like the providers, never mid-fight
-        if (pv.narrowUnitAura == true) ~= S.auraNarrow and not I.inCombat then
-            S.auraNarrow = not S.auraNarrow
-            UNITS.UNIT_AURA = S.auraNarrow and I.auras.token or nil
-            I.Events.Sync("UNIT_AURA")
-        end
     end
     S.Flush() -- this frame's staged observations first, whichever OnUpdate runs first (poll 3's Queued(0) follows them)
     S.RunPolls(cutoff)
