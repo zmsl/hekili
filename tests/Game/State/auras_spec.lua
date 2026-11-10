@@ -1344,7 +1344,7 @@ describe("auras", function()
                     poll(12)
                     assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12))
                     assert.are.same({ 1, 12 }, { I.auraVerdict.n[kT()], I.auraVerdict.at[kT()] })
-                assert.are.same({ 1, 0 }, { I.presenceVerdict[kT()], I.presenceStrike[kT()] }) -- the harness's names
+                    assert.are.same({ 1, 0 }, { I.presenceVerdict[kT()], I.presenceStrike[kT()] }) -- the harness's names
                     local snap = VS.Snapshot()
                     assert.is_truthy(
                         snap:find(
