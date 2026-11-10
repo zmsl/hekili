@@ -49,11 +49,10 @@ describe("the CDM verdict's harness arms #slow", function()
         end
     end)
 
-    -- the truth check (loop.verdictTruth) on a real close: Marksmanship's pre-pull Hunter's Mark (0.2 s) is lit, then
-    -- cleared by the prepull's own retarget (0.205 s; the observer's re-light list is read at 0.1 s), so the verdict
-    -- closes it at the pull of fight 3 while the world still has it: one wrong close (the retarget gap, report
-    -- 2026-11-10; with that gap fixed this reads wrong 0/0)
-    it("viewer-reshuffle: a close of an aura the world still has counts on the layout line's wrong p/t", function()
+    -- the truth check (loop.verdictTruth) on the retarget gap: Marksmanship's pre-pull Hunter's Mark (0.2 s) falls
+    -- between the prepull's read (0.1 s) and its retarget (0.205 s); the retarget re-reads it, so the item stays lit and
+    -- the verdict does not close it at the pull of fight 3 (before the observer fix: verdicts 0/1 wrong 0/1)
+    it("viewer-reshuffle: a pre-pull debuff stays lit over the prepull's retarget, no wrong close", function()
         local hw = require("Forever.helpers.hunter_world")
         local function layout(arm)
             local L, line, check = loop.new(hw.Marksmanship), nil, ab.check
@@ -68,7 +67,7 @@ describe("the CDM verdict's harness arms #slow", function()
             return line
         end
         local line = layout("viewer-reshuffle")
-        assert.is_truthy(line:match(" verdicts 0/1 strikes 0/0 wrong 0/1$"), line)
+        assert.is_truthy(line:match(" verdicts 0/0 strikes 0/0 wrong 0/0$"), line)
         assert.is_nil(layout("viewer-buffs"):match(" wrong ")) -- a non-verdict arm's line is as before
     end)
 

@@ -405,6 +405,37 @@ describe("the observer", function()
         end
     end)
 
+    it(
+        "a retarget re-reads the target's auras at its push: an edge between the change's read and its push follows it",
+        function()
+            setup(0)
+            W.emit({ t = 1, kind = "aura", src = us, dst = mob, aura = 88, stacks = 1, expires = 30, duration = 29 })
+            W.emit({ t = 1.5, kind = "prepull" }) -- read at 1.5; its target change at 1.6, the retarget pushed at 1.605
+            W.emit({
+                t = 1.55,
+                kind = "aura",
+                src = us,
+                dst = mob,
+                aura = 77,
+                stacks = 1,
+                expires = 30,
+                duration = 28.45,
+            })
+            W.emit({ t = 1.55, kind = "aura", src = us, dst = mob, aura = 88, stacks = 0, expires = 0, duration = 0 })
+            local s = observer.observe(W, setmetatable({ viewer = true }, { __index = observer.DEFAULTS }))
+            local pushT, last = nil, {}
+            for i = 1, s.n do
+                if s.ev[i] == "@viewerRetarget" then
+                    pushT, last = s.t[i], {}
+                elseif s.ev[i] == "@viewer" and s.a1[i] == "target" then
+                    last[s.a2[i]] = s.a3[i]
+                end
+            end
+            assert.are.equal(1.605, pushT)
+            assert.are.same({ [77] = true, [88] = false }, last) -- the item's state after the push: the world's at it
+        end
+    )
+
     it("scenarios' swapEvery cycles our target through the mobs: one @viewerRetarget a swap", function()
         local function swaps(every)
             local s = scenarios.stream({ duration = 30, extraMobs = 2, swapEvery = every, viewer = true }, 7)

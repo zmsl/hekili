@@ -331,12 +331,12 @@ function M.new(W, k)
         end
     end
     -- the viewer arms: our auras on each entity (aura -> expires), and the target the items last read (CDM Task 8)
-    local mine, viewerTarget = {}, false
+    local mine, viewerTarget, retargetAt = {}, false, -math.huge
     local viewerLast = {} -- (unit .. aura) -> its last @viewer edge's time: the client takes them in order (review I1)
     local function retarget(t, tgt) -- the client re-reads its target items the frame after a change (CDM-O: f=1)
         if k.viewer and tgt ~= viewerTarget then
-            viewerTarget = tgt
-            push(t + 0.005, "@viewerRetarget")
+            viewerTarget, retargetAt = tgt, t + 0.005
+            push(retargetAt, "@viewerRetarget")
             local auras = {}
             for id, expires in pairs(tgt and mine[tgt] or {}) do
                 if expires == 0 or expires > t then -- 0: no expiry
@@ -649,6 +649,11 @@ function M.new(W, k)
                     local late = W.lateLight -- a verdict arm's late lights: { share, lo, hi } s, from W.lrng alone
                     if late and ev.stacks > 0 and W.lrng.next() < late[1] then
                         vt, W.lateN = vt + late[2] + W.lrng.next() * (late[3] - late[2]), (W.lateN or 0) + 1
+                    end
+                    -- an edge on the new target read after its change but falling before the re-read: the re-read
+                    -- sees it (the list above was taken at the change's read), so it follows the push
+                    if unit == "target" and ev.dst == viewerTarget and vt < retargetAt then
+                        vt = retargetAt + 1e-6
                     end
                     if viewerLast[vk] and vt <= viewerLast[vk] then -- a set and a clear at one instant stay in order
                         vt = viewerLast[vk] + 1e-6
