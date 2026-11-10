@@ -1503,10 +1503,12 @@ describe("auras", function()
                     poll(14)
                     poll(14.02) -- dark since here: applied (11) and upAt (11.7) are old, the monitoring is not
                     poll(14.04)
-                    assert.are.same(
-                        { 26, 0, true, 14.02 },
-                        { est("target", fs.SPENDER_C, 14.04), I.auraVerdict.n[kT()], P.fact.pdark[kT()], P.fact.pdarkT[kT()] }
-                    )
+                    assert.are.same({ 26, 0, true, 14.02 }, {
+                        est("target", fs.SPENDER_C, 14.04),
+                        I.auraVerdict.n[kT()],
+                        P.fact.pdark[kT()],
+                        P.fact.pdarkT[kT()],
+                    })
                     ctl.ViewerAura(ti, "target")
                     poll(14.06)
                     poll(14.08)
@@ -1760,7 +1762,10 @@ describe("auras", function()
                     assert.is_truthy(snap:find("presence-proof repoints=0 struck=0 suspended=1", 1, true), snap)
                     ctl.ViewerAura(ti, "target") -- any visible light re-proves it and zeroes the count
                     poll(21.2)
-                    assert.are.same({ true, 0, 32 }, { Q.proven[502], Q.silent[502], est("target", fs.SPENDER_C, 21.2) })
+                    assert.are.same(
+                        { true, 0, 32 },
+                        { Q.proven[502], Q.silent[502], est("target", fs.SPENDER_C, 21.2) }
+                    )
                     poll(21.8)
                     ctl.ViewerClear(ti)
                     poll(22) -- rule 1 (it was seen lit)

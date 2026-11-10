@@ -357,60 +357,63 @@ describe("zero allocation", function()
         assert.is_true(n > 100, "every call an edge")
     end)
 
-    it("the sweep, poll 15 and the fold allocate nothing with proof, dark starts, verdicts, strikes and suspensions", function()
-        local api, ctl = fake.new()
-        ctl.now = 1
-        ctl.viewer.sets[2] = { 502 }
-        ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
-        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
-        local ns = load.module()
-        local VS, I = ns.VirtualState, ns.VirtualStateInternal
-        local S, Q = I.Sources, I.PRESENCE.viewer
-        local def = fs.def(fs.new(9))
-        def.providers = { presence = "router", viewer = true }
-        I.Build(def, 1)
-        VS.Start(api)
-        ctl.now = 10
-        ctl.Fire("PLAYER_TARGET_CHANGED")
-        I.Fold(10, false)
-        ctl.Fire("PLAYER_REGEN_DISABLED")
-        ctl.auras.target.HARMFUL[1] = fake.SECRET -- the target walk secret: only the reduced facts speak
-        ctl.Fire("UNIT_AURA", "target")
-        local REND, k = 2, I.AURA_UNIT + 2
-        local t, maxDark, cycle, maxSince = 10, 0, 0, 0
-        -- a 12-poll cycle at 0.25 s: our cast (dark: dodged), the verdict at +1.0 (its close names the application,
-        -- counted at the fold), and every second cycle a late light at +1.5 (a strike) and dark again at +2.0 (rule 1
-        -- closes the CDM open). The cycle without a light leaves a silent verdict, so the next one's verdict suspends
-        -- the proof and its light re-proves it (review M3); the strikes reset each cycle so the item is never retired
-        local ok, bytes = pcall(alloc.bytes, function(i)
-            t = t + 0.25
-            ctl.now = t
-            local p = i % 12
-            if p == 0 then
-                cycle = cycle + 1
-                Q.strikes[502] = 0
-                I.AuraModel(2, REND, t, t + 15, 1, t, ns.VirtualState.Obs.CastSuccess, true)
-                I.AuraOurs(2, REND, 0)
-            elseif p == 6 and cycle % 2 == 0 then
-                hold(item, true, "target")
-            elseif p == 8 then
-                hold(item, false)
-            end
-            S.RunPolls(t)
-            I.Fold(t, false)
-            I.Settle(t)
-            local _, _, _, _, _, _, nd, since = Q.Counts(REND, 2)
-            maxDark = nd > maxDark and nd or maxDark
-            maxSince = since > maxSince and since or maxSince
-        end, 240)
-        assert.is_true(ok, tostring(bytes))
-        assert.are.equal(0, bytes)
-        assert.is_true(I.auraVerdict.n[k] > 20, "verdicts " .. I.auraVerdict.n[k])
-        assert.is_true(I.auraVerdict.strikes[k] > 10, "strikes " .. I.auraVerdict.strikes[k])
-        assert.is_true(Q.suspended > 10, "suspensions " .. Q.suspended)
-        assert.are.equal(1, maxDark)
-        assert.is_true(maxSince > 10, "the dark's start moved")
-    end)
+    it(
+        "the sweep, poll 15 and the fold allocate nothing with proof, dark starts, verdicts, strikes and suspensions",
+        function()
+            local api, ctl = fake.new()
+            ctl.now = 1
+            ctl.viewer.sets[2] = { 502 }
+            ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
+            local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            local ns = load.module()
+            local VS, I = ns.VirtualState, ns.VirtualStateInternal
+            local S, Q = I.Sources, I.PRESENCE.viewer
+            local def = fs.def(fs.new(9))
+            def.providers = { presence = "router", viewer = true }
+            I.Build(def, 1)
+            VS.Start(api)
+            ctl.now = 10
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            I.Fold(10, false)
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.auras.target.HARMFUL[1] = fake.SECRET -- the target walk secret: only the reduced facts speak
+            ctl.Fire("UNIT_AURA", "target")
+            local REND, k = 2, I.AURA_UNIT + 2
+            local t, maxDark, cycle, maxSince = 10, 0, 0, 0
+            -- a 12-poll cycle at 0.25 s: our cast (dark: dodged), the verdict at +1.0 (its close names the application,
+            -- counted at the fold), and every second cycle a late light at +1.5 (a strike) and dark again at +2.0 (rule 1
+            -- closes the CDM open). The cycle without a light leaves a silent verdict, so the next one's verdict suspends
+            -- the proof and its light re-proves it (review M3); the strikes reset each cycle so the item is never retired
+            local ok, bytes = pcall(alloc.bytes, function(i)
+                t = t + 0.25
+                ctl.now = t
+                local p = i % 12
+                if p == 0 then
+                    cycle = cycle + 1
+                    Q.strikes[502] = 0
+                    I.AuraModel(2, REND, t, t + 15, 1, t, ns.VirtualState.Obs.CastSuccess, true)
+                    I.AuraOurs(2, REND, 0)
+                elseif p == 6 and cycle % 2 == 0 then
+                    hold(item, true, "target")
+                elseif p == 8 then
+                    hold(item, false)
+                end
+                S.RunPolls(t)
+                I.Fold(t, false)
+                I.Settle(t)
+                local _, _, _, _, _, _, nd, since = Q.Counts(REND, 2)
+                maxDark = nd > maxDark and nd or maxDark
+                maxSince = since > maxSince and since or maxSince
+            end, 240)
+            assert.is_true(ok, tostring(bytes))
+            assert.are.equal(0, bytes)
+            assert.is_true(I.auraVerdict.n[k] > 20, "verdicts " .. I.auraVerdict.n[k])
+            assert.is_true(I.auraVerdict.strikes[k] > 10, "strikes " .. I.auraVerdict.strikes[k])
+            assert.is_true(Q.suspended > 10, "suspensions " .. Q.suspended)
+            assert.are.equal(1, maxDark)
+            assert.is_true(maxSince > 10, "the dark's start moved")
+        end
+    )
 
     it(
         "allocates nothing over 1000 meter events, 100 swings and their ticks with the Meter (providers spec §2.2)",

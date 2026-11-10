@@ -276,39 +276,42 @@ describe("the Presence router's reduced facts (Task 4a)", function()
         assert.are.equal(I.DOWN, R.Presence(1, 1))
     end)
 
-    it("fact.pdark and pdarkT (cdm-verdict §2.3): a proven dark with none lit and its start, no state change", function()
-        ctl.viewer.sets[2][3], ctl.viewer.infos[503] = 503, { spellID = fs.SPENDER_A }
-        b.cooldownID = 503 -- one frame per cooldownID, as the client keeps them (proof is per cooldownID)
-        R.Activate(api, 1.5, d, { viewer = true })
-        local edges = 0
-        R.onEdge = function()
-            edges = edges + 1
+    it(
+        "fact.pdark and pdarkT (cdm-verdict §2.3): a proven dark with none lit and its start, no state change",
+        function()
+            ctl.viewer.sets[2][3], ctl.viewer.infos[503] = 503, { spellID = fs.SPENDER_A }
+            b.cooldownID = 503 -- one frame per cooldownID, as the client keeps them (proof is per cooldownID)
+            R.Activate(api, 1.5, d, { viewer = true })
+            local edges = 0
+            R.onEdge = function()
+                edges = edges + 1
+            end
+            ctl.ViewerAura(a, "player")
+            sweep(2)
+            assert.are.same({ false, 0 }, { R.fact.pdark[1], R.fact.pdarkT[1] })
+            ctl.ViewerClear(a)
+            sweep(3)
+            assert.are.same({ true, 3 }, { R.fact.pdark[1], R.fact.pdarkT[1] }) -- from the first monitored dark sweep
+            local st, ft = R.fact.state[1], R.fact.t[1]
+            edges = 0
+            sweep(4)
+            assert.are.same({ true, 3 }, { R.fact.pdark[1], R.fact.pdarkT[1] })
+            assert.are.same({ st, ft, 0 }, { R.fact.state[1], R.fact.t[1], edges }) -- no state, no fact.t, no edge
+            ctl.ViewerAura(b, "player") -- b lit: nUp > 0, a still dark
+            sweep(5)
+            assert.are.equal(1, select(7, Q.Counts(1, 1)))
+            assert.is_false(R.fact.pdark[1])
+            ctl.ViewerClear(b)
+            sweep(6)
+            assert.are.same({ true, 6 }, { R.fact.pdark[1], R.fact.pdarkT[1] }) -- the latest start: b's
+            sweep(7)
+            assert.is_true(R.fact.pdark[1])
+            ctl.Fire("PLAYER_TARGET_CHANGED") -- a player item: its pdark stands
+            assert.is_true(R.fact.pdark[1])
+            R.Activate(api, 8, d, { viewer = true }) -- a rebuild clears it
+            assert.are.same({ false, 0 }, { R.fact.pdark[1], R.fact.pdarkT[1] })
         end
-        ctl.ViewerAura(a, "player")
-        sweep(2)
-        assert.are.same({ false, 0 }, { R.fact.pdark[1], R.fact.pdarkT[1] })
-        ctl.ViewerClear(a)
-        sweep(3)
-        assert.are.same({ true, 3 }, { R.fact.pdark[1], R.fact.pdarkT[1] }) -- from the first monitored dark sweep
-        local st, ft = R.fact.state[1], R.fact.t[1]
-        edges = 0
-        sweep(4)
-        assert.are.same({ true, 3 }, { R.fact.pdark[1], R.fact.pdarkT[1] })
-        assert.are.same({ st, ft, 0 }, { R.fact.state[1], R.fact.t[1], edges }) -- no state, no fact.t, no edge
-        ctl.ViewerAura(b, "player") -- b lit: nUp > 0, a still dark
-        sweep(5)
-        assert.are.equal(1, select(7, Q.Counts(1, 1)))
-        assert.is_false(R.fact.pdark[1])
-        ctl.ViewerClear(b)
-        sweep(6)
-        assert.are.same({ true, 6 }, { R.fact.pdark[1], R.fact.pdarkT[1] }) -- the latest start: b's
-        sweep(7)
-        assert.is_true(R.fact.pdark[1])
-        ctl.Fire("PLAYER_TARGET_CHANGED") -- a player item: its pdark stands
-        assert.is_true(R.fact.pdark[1])
-        R.Activate(api, 8, d, { viewer = true }) -- a rebuild clears it
-        assert.are.same({ false, 0 }, { R.fact.pdark[1], R.fact.pdarkT[1] })
-    end)
+    )
 
     it("R.Strike and R.Silent forward to the leaf while it has one", function()
         local got = {}
