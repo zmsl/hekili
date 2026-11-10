@@ -154,7 +154,10 @@ the count of every slot counted dark for (j, u). At `STRIKES_MAX` (2) the proof 
 `Q.suspended += 1`): no dark, no verdict from the item, the aura belief-only. ANY later visible light of the item
 re-proves it and zeroes the count (§2.1); strike retirement is unchanged (for the build). The loop is bounded at two
 casts and heals itself; against a truly immune mob Hekili stops asking for the aura a third time. Like a strike, an
-item with two dark frames is counted once per frame (conservative: it suspends sooner).
+item with two dark frames is counted once per frame (conservative: it suspends sooner). The cost: CORRECT verdicts feed the
+count too, so two genuinely avoided or immune casts with no light between them suspend the proof and a third such
+phantom lives its modelled duration (today's behaviour) until the item next lights. A dropped close (§2.3) counts
+nothing.
 
 ### 2.6 Interaction with the rules as built
 
@@ -248,7 +251,7 @@ verdict off for the A/B; `Hekili.cdmOff` remains the only global switch; the per
 | 120 | `W = max(W0 1.0, travel + TOL 0.3)` per record, travel from the pack's velocity and the ability's rMax at the cast's write; W0 for walk/CDM openers | measured tail 0.12 s, Rip 0.32 s, Feral Charge 0.86 s; a 0.5 s W would flip the Rip cast (Fable M5) |
 | 121 | Identity is the cooldownID: proof, strikes and the silent count carry across frame re-points; a re-pointed frame restarts its dark and starts with NO seen memory (amended 2026-11-10 after the Fable 5.2 review, S1: the inherited seen memory answered NONE with no settle); no "cooldownID changed since the cast" block | Blizzard reshuffles every frame at every full update; a frame-keyed rule is blind after every swap (L375 "too rigid"); the verdict covers the re-pointed dark after W |
 | 122 | Strikes per cooldownID: a verdict followed by an UP within 2.0 s with no new cast = wrong; 2 strikes drop the proof for the build. (amended 2026-11-10 after the Fable 5.2 review, M1/M3) A verdict is one whose close folded: the close names its application and a recast folded first drops it, uncounted. Silent verdicts per cooldownID: 2 since the item's last light suspend the proof until it lights again | caps a flaky item at one flip per cast, then silence (no-jitter rule); a strike needs a light, so only the silent count bounds an item that never lights for some casts |
-| 123 | Snapshot: verdicts, strikes, pdark, mapped-never-lit, re-points | Task 10 reads them; user reports show silent items |
+| 123 | Snapshot: verdicts, strikes, pdark, mapped-never-lit, re-points, struck, suspended, builds per session (amended 2026-11-10) | Task 10 reads them; user reports show silent items |
 | 124 | No rebuild on rank change; the pack audit covers ranks in id/copy; proof zeroes at every build | owner L375 |
 
 ## 8. Deferral candidates

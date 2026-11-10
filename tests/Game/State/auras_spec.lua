@@ -1658,6 +1658,7 @@ describe("auras", function()
                     I.auraVerdict.n[kT()], -- no close happened: none counted
                     I.auraVerdict.at[kT()], -- and no strike window left open
                 })
+                assert.are.equal(0, I.PRESENCE.viewer.silent[502]) -- (re-review minor 1) nor a silent verdict counted
                 ctl.ViewerAura(ti, "target") -- its light, a frame later
                 drain(12.2)
                 drain(12.4)
