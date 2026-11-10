@@ -5,7 +5,8 @@
 # the summed staleUp (player/target), verdicts and strikes, and (verdict arms) the closes of an aura truly up (`wrong`,
 # gated on the twins). Exit 1 when a flicker rises by more than 0.3/min or an agreement falls (both comparisons), when a
 # twin's ON side has a wrong close (except the viewer-late* arms, whose late lights make them by design: counted only),
-# or when the new side lacks a spec or an arm the old side has (a failed or cut-short run is never a pass); a twin pair
+# or when an arm's head log (.ab/<arm>.log, when present) has an "all files:" line with failures or errors, or when the
+# new side lacks a spec or an arm the old side has (a failed or cut-short run is never a pass); a twin pair
 # whose character has 0 verdicts on both sides is marked "vacuous"; a character with no edge rows on the old side
 # prints "staleUp n/a -> x/y".
 set -euo pipefail
@@ -94,6 +95,13 @@ for new in "$2"/*.tsv; do
     [ -e "$new" ] || continue
     arm=$(basename "$new" .tsv)
     [ "$arm" = abspec ] && continue
+    if [ -f "$2/$arm.log" ]; then # a spec file that failed outside ab.check leaves only its log (no log: an older run)
+        line=$(grep -m1 '^all files:' "$2/$arm.log" || true)
+        if [ -n "$line" ] && ! [[ "$line" =~ /\ 0\ failures\ /\ 0\ errors ]]; then
+            printf '%s\t-\tFAIL specs %s\n' "$arm" "$line"
+            rc=1
+        fi
+    fi
     if [ -f "$1/$arm.tsv" ]; then
         compare "$arm" 0 "$1/$arm.tsv" "$new" 0 || rc=1
     fi
