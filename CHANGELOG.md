@@ -3,39 +3,86 @@
 ## Unreleased
 
 ### New
-- Feral or Guardian (Druids), Fire or Frostfire (Mages), and Affliction or SM Ruin, Demonology or Shadow Brand (Warlocks) are now picked from your talents: a Guardian build (all three points of Thick Hide) runs Guardian, a Fire build with Ice Shards runs Frostfire, an Affliction build with Ruin and no Wrack runs SM Ruin, and a Demonology build with Improved Shadow Bolt runs Shadow Brand. A priority you chose yourself (picking it, its Active toggle, `/hekili priority`, or Activate on a spec page, which activates that spec's priority) or a custom priority is never replaced; `/hekili priority default` hands the choice back. A notice tells you when it switches. Not yet checked in game.
-- Shadow Priests: a new option, Prefer Starshards (off by default; it only matters if you know Starshards, the Night Elf racial). When enabled, the Shadow (wowsims.com) priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Not yet checked in game.
-- Cooldown Manager options panel: one switch per aura Hekili can read from the Cooldown Manager. Turn a switch off and Hekili ignores that aura there. A gold switch means the aura is on a Cooldown Manager bar; a grey one means it is not (the switch applies once you add it). Changes apply after combat. Not yet checked in game.
-- Paladin (wowsims.com) priorities follow the current wowsims (Retribution unchanged; Protection casts Holy Shield rank 4)
 
 ### Changed
-- Hunters (wowsims.com): Beast Mastery, Marksmanship and Survival follow wowsims's current weave: the melee strikes show once an Auto Shot has gone off since your last swing (instead of the older timing window) and the shots show otherwise; Survival's talents are re-spec'd. Not yet checked in game.
-- Shamans (wowsims.com): Elemental and Enhancement follow wowsims's current build. Lava Burst is gone from the game, so the Elemental priority no longer has it: Chain Lightning now also shows on a single target above 40% mana, Earth Shock waits for a single target, and Water Shield comes before Searing Totem. Chain Lightning costs about 70% more mana, and Stormstrike's cooldown is 6 seconds. Not yet checked in game.
-- Rogues (wowsims.com) follow the game's talent rework (wowsims as of 7 November 2026): Shank (Assassination, Combat and Subtlety) and Death Mark (Subtlety) are abilities now and on the priorities, Venom, Cutthroat, Thousand Cuts and Murder are gone, Ghostly Strike lets the next Ambush or Garrote skip Stealth, Preparation also resets Riposte, and costs follow the new talents (Flawless Execution -15 on Eviscerate, Efficient Strikes -3 or -5 on Sinister Strike and Hemorrhage, Mutilate has three ranks). Not yet checked in game. Riposte's window is now read as `window.riposte.up` in custom priorities (it was `buff.riposte_usable`).
-- The Cooldown Manager is always on: whenever one of its bars (any of them) shows an aura of yours, Hekili corrects whether it believes that buff or debuff is up. There is no on/off setting; each aura has its own switch in the new Cooldown Manager options panel. Not yet checked in game.
-- Mages (wowsims.com): Arcane Missiles cast under Missile Barrage no longer spends Clearcasting, and Arcane Missiles can give you Clearcasting when it starts and on each missile (at most one a second), as in wowsims. Arcane, Fire and Frostfire follow wowsims as of 7 November 2026.
-- Priests (wowsims.com): Shadow and Smite follow wowsims's build of 7 November. Shadow uses its new talent build, and its Night Elf (Elune's Light) and Gnome (Eureka!) racials are used when Shadow Word: Pain and Devouring Plague have 10 s (Eureka! 8 s) or more left, instead of on cooldown. Not yet checked in game.
-- An ability waiting for mana, rage or energy now shows as ready only once the addon is sure you have enough. Before, it could show as ready a few hundredths of a second early, and pressing it then failed with not enough mana or rage. It can now light up one update (about 0.2 s) later at the moment you reach the cost. Not yet checked in game.
-- Steady icons are on: when the first icon would swap between two abilities that are both still counting down, it keeps the shown one for one more update, so the icons flicker much less. Ready icons and anything after your own cast still show at once. Not yet checked in game.
-- Feral Druids: Poised (the Feral Combat passive) is modelled: out of combat at full energy, your next Claw, Rake, Shred, Ravage, Pounce, Rip, Ferocious Bite or Cower costs 10 less energy. Not yet checked in game.
-- Warriors (wowsims.com): Arms, Fury and Protection follow wowsims's build of 7 November. The talent trees changed: Flurry, Bloodthrill and Improved Tactical Mastery have fewer ranks, and Raging Blows is now Improved Whirlwind (Whirlwind's cooldown is 1 s shorter a rank, and Cleave and Whirlwind no longer cost 3 less). A stance swap keeps at most 25 rage, as wowsims counts it, and Piercing Howl's cost counts Focused Rage and Booming Voice. Arms Slams through the execute phase, uses Whirlwind from two targets and has a 15 s Slam cooldown (10 s with Improved Slam). Fury has the new Reckless Swings talent (before the pull and on its 15 s cooldown) and Cleave from 25 rage. Protection opens with Bloodrage, Battle Shout, Retaliation and Defensive Stance, uses Heroic Strike from 20 rage and Revenge earlier in the list, and Retaliation is under the Cooldowns toggle. Not yet checked in game.
-- Warlocks (wowsims.com): Affliction, Demonology, Destruction, Shadow Brand and SM Ruin follow wowsims's build of 7 November. Affliction uses Bane of Doom, Death Coil and a Life Tap line, with Shadow Bolt only on Shadow Trance. Destruction has new Hellfire, dot and cooldown groups, Immolate refreshes inside Incinerate's cast, and Searing Pain and Death Coil as end-of-fight fillers. Demonology, Shadow Brand and Destruction Life Tap below 35% mana (Shadow Brand and Affliction stay at 30%). SM Ruin keeps its DoT stand-in lines. Destruction now opts into the Movement toggle too (its Hellfire line moves you in range, as Demonology and Shadow Brand do). Not yet checked in game.
-- Guardian Druids (wowsims.com) follow wowsims's adaptive bear list as of 7 November 2026, Tauren, with the Movement toggle: Bear Form first when you are out of it, Faerie Fire shown only while the debuff is down, Lacerate kept at 5 stacks, Barkskin, Enrage and Feral Charge. Berserk is no longer shown (it left the game). Not yet checked in game.
-- wowsims.com priorities: lines the translator used to drop are back. Subtlety Rogues get Ghostly Strike (the priority assumes you stand behind the target, as wowsims's build does). Affliction Warlocks get Siphon Life again (not while channelling Wrack). Affliction, Demonology, Destruction and Shadow Brand open with a pre-pull hardcast (Shadow Bolt or Soul Fire). Fury Warriors get Bloodrage, and Enhancement Shamans get the AoE Chain Lightning line, both timed by your next weapon swing.
 
 ### Fixed
-- Spec detection follows Forever's talent trees: every class's talent list now matches the game's (Shaman, Paladin, Druid, Priest, Warrior, Rogue, Mage and Hunter had Classic nodes, missing nodes or nodes in the wrong tree), so a build's points per tree are counted right and a hybrid build near a tie gets the right spec's priority. Shipped builds are unchanged. Not yet checked in game.
-- Icons no longer flash to the next ability for a moment as a cooldown comes back: while the game still says an ability is not ready, the addon now counts down to the end it expects (when your global cooldown ends first, or the cooldown ends on the update itself) instead of pushing it half a second out. Not yet checked in game.
 - Paladins: in dungeons, where the game hides a target's creature type, Exorcism is no longer suggested on targets it cannot hit (Undead and Demon only). Not yet checked in game.
 
 ### Known issues
-- Guardian Druids: Hekili does not yet track the rage you gain from hits you take (the client hides the amounts; a later release adds an estimate), so Lacerate, Primal Bite and Maul show only when the client says you have the rage, and the icon can lag behind your real rage.
-- Fury Warriors: Reckless Swings' rage is added when you cast it.
-- Subtlety Rogues: Death Mark's payout and Boot Knife's combo-point chance are not modelled.
 
 ### Upgrade notes
-- Update the core addon (Hekili) together with its class addons. A mismatched pair loads no priorities and says "update the older one".
-- Druids: if you chose Feral yourself on 0.6.2 and have all three points of Thick Hide, the automatic choice may have switched you to Guardian at your first login, without a notice. Press "Activate Feral" on the Feral spec page once and your choice stays.
+
+## v0.7.0
+
+_Released 2026-11-10_
+
+Hekili Forever 0.7.0 picks some Druid, Mage and Warlock priorities from your talents, adds a Cooldown Manager options panel, reduces icon flicker and brings every class's wowsims.com priorities up to date.
+
+### Druid
+- A build with all three points of Thick Hide now runs the Guardian priority on its own, and a single stray point keeps a Feral build on Feral.
+- Feral: Poised is now counted, so out of combat at full energy your next Claw, Rake, Shred, Ravage, Pounce, Rip, Ferocious Bite or Cower costs 10 less energy.
+- Guardian follows the current wowsims bear priority (Tauren) and uses the Movement toggle: Bear Form first when you're out of it, Faerie Fire only while the debuff is down, Lacerate kept at 5 stacks, plus Barkskin, Enrage and Feral Charge. Berserk is no longer shown because it has left the game.
+
+### Hunter
+- Beast Mastery, Marksmanship and Survival show melee strikes once an Auto Shot has gone off since your last swing, replacing the old timing window, and show shots otherwise. Survival uses a new talent build.
+
+### Mage
+- A Fire build with Ice Shards now runs the Frostfire priority on its own.
+- Arcane Missiles under Missile Barrage no longer spends Clearcasting, and Arcane Missiles can now give Clearcasting when it starts and on each missile, at most once a second.
+- Arcane, Fire and Frostfire follow wowsims as of 7 November 2026.
+
+### Paladin
+- Retribution and Protection follow the current wowsims: Retribution is unchanged and Protection casts Holy Shield rank 4.
+
+### Priest
+- Shadow has a new Prefer Starshards option, off by default and only useful if you know Starshards. When on, it shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready.
+- Shadow and Smite follow the wowsims build of 7 November. Shadow uses its new talent build and casts Elune's Light (Night Elf) or Eureka! (Gnome) when Shadow Word: Pain and Devouring Plague have 10 s left (8 s for Eureka!) instead of on cooldown.
+
+### Rogue
+- All three specs follow the game's talent rework (wowsims as of 7 November 2026). Shank (all specs) and Death Mark (Subtlety) are now on the priorities, and Venom, Cutthroat, Thousand Cuts and Murder are gone.
+- Subtlety gets Ghostly Strike back, assuming you stand behind the target, and Ghostly Strike now lets your next Ambush or Garrote skip Stealth.
+- Preparation also resets Riposte. Flawless Execution makes Eviscerate cost 15 less, Efficient Strikes makes Sinister Strike and Hemorrhage cost 3 or 5 less, and Mutilate has three ranks.
+- If your custom priority checks whether Riposte is usable, copy the new Riposte check from the built-in Combat priority, because the old name no longer works.
+
+### Shaman
+- Elemental and Enhancement follow the current wowsims build: Chain Lightning costs about 70% more mana, Stormstrike's cooldown is 6 seconds, and Enhancement gets its area Chain Lightning back, timed by your next weapon swing.
+- Elemental: Lava Burst is gone from the game and the priority. Chain Lightning now also shows on a single target above 40% mana, Earth Shock waits for a single target, and Water Shield comes before Searing Totem.
+
+### Warlock
+- These priorities are now picked from your talents: an Affliction build with Ruin and no Wrack runs SM Ruin, and a Demonology build with Improved Shadow Bolt runs Shadow Brand.
+- All five priorities follow the wowsims build of 7 November. Affliction, Demonology, Destruction and Shadow Brand open with a pre-pull Shadow Bolt or Soul Fire, and Demonology and Destruction use Life Tap below 35% mana while Affliction stays at 30%.
+- Affliction uses Bane of Doom, Death Coil and Life Tap, uses Shadow Bolt only on Shadow Trance, and uses Siphon Life again (not while channelling Wrack).
+- Destruction has new Hellfire, damage-over-time and cooldown sections and refreshes Immolate during Incinerate's cast. It uses Searing Pain and Death Coil as end-of-fight fillers and now uses the Movement toggle for Hellfire.
+
+### Warrior
+- Arms, Fury and Protection follow the wowsims build of 7 November:
+  - Flurry, Bloodthrill and Improved Tactical Mastery have fewer ranks.
+  - Raging Blows is now Improved Whirlwind: Whirlwind's cooldown is 1 s shorter per rank, and Cleave and Whirlwind no longer cost 3 less rage.
+  - A stance swap keeps at most 25 rage, and Piercing Howl's cost now includes Focused Rage and Booming Voice.
+- Arms uses Slam through the execute phase and Whirlwind from two targets. Slam now has a 15 s cooldown (10 s with Improved Slam).
+- Fury uses the new Reckless Swings talent before the pull and on its 15 s cooldown. It uses Cleave from 25 rage and Bloodrage timed by your next weapon swing.
+- Protection opens with Bloodrage, Battle Shout, Retaliation and Defensive Stance. It uses Heroic Strike from 20 rage, moves Revenge earlier, and puts Retaliation under the Cooldowns toggle.
+
+### Core and display
+- Automatic picks never replace a priority you chose yourself or a custom priority. This covers picking it, its Active toggle, `/hekili priority` and Activate on a spec page. `/hekili priority default` hands the choice back, and a notice tells you when Hekili switches.
+- Every class's talent list now matches Forever's talent trees, so points per tree are counted correctly and a hybrid build close to a tie gets the right spec's priority.
+- Hekili now always uses the Cooldown Manager: whenever one of its bars shows one of your auras, Hekili corrects whether it thinks that buff or debuff is up. There is no on/off setting.
+- The new Cooldown Manager options panel has one switch per aura; turn one off and Hekili ignores that aura there.
+  - Gold means the aura is on a bar. Grey means it isn't, and the switch applies once you add it.
+  - Changes apply after combat.
+- An ability waiting for mana, rage or energy now shows as ready only once you surely have enough, so pressing it no longer fails. It can light up about 0.2 s later than before.
+- The first icon flickers much less: when it would swap between two abilities that are both still counting down, it keeps the current one for one more update. Ready abilities and anything after your own cast still show at once.
+- Icons no longer briefly flash to the next ability as a cooldown comes back.
+
+### Known issues
+- Guardian Druids: Hekili doesn't yet count the rage you gain from hits you take. Lacerate, Primal Bite and Maul show only once the game reports the rage, and the icon can lag behind your real rage.
+- Fury Warriors: the rage from Reckless Swings is counted the moment you cast it.
+- Subtlety Rogues: Death Mark's payout and Boot Knife's chance of a combo point aren't counted yet.
+
+### Upgrade notes
+- Update Hekili together with its class addons. A mismatched pair loads no priorities and says "update the older one".
+- Druids: if you chose Feral yourself on 0.6.2 and have all three points of Thick Hide, you may be switched to Guardian at first login without a notice. Press "Activate Feral" on the Feral spec page once and your choice stays.
 
 ## v0.6.2
 
