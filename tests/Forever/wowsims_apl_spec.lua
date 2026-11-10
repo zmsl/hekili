@@ -1651,6 +1651,131 @@ describe("the wowsims APL translator", function()
         local _, none = apl.translate({ priorityList = { { action = { autocastOtherCooldowns = {} } } } }, ctx())
         assert.are.same({ "default #1: autocastOtherCooldowns (no log)" }, none)
     end)
+
+    -- Rule 13's racials: wowsims's autocast uses every racial major cooldown the class can have (sim/core/racials.go),
+    -- not only the sampled race's; a defensive one only for a tank.
+    it("expands every racial the class can have that wowsims's autocast would use, at the racial's place", function()
+        local kit = {
+            abilities = {
+                roar = { key = "roar", id = 300, gcd = "off" },
+                trinket = { key = "trinket", id = -1, item = 555, gcd = "off" },
+                stoneform = { key = "stoneform", id = 20594, gcd = "spell" },
+                eureka = { key = "eureka", id = 1259813, copy = { 1259812, 1259817, 1259821, 1259823 }, gcd = "off" },
+                elunes_light = { key = "elunes_light", id = 1259799, gcd = "off" },
+                blood_fury = { key = "blood_fury", id = 20572, gcd = "off" },
+                shatter_curse = { key = "shatter_curse", id = 1299026, gcd = "spell" },
+                berserking = { key = "berserking", id = 20554, gcd = "off" },
+            },
+            auras = {},
+        }
+        local function log(...)
+            local out = { "# wowsims 0123 test seed 1 10 s target 63" }
+            for i, b in ipairs({ ... }) do
+                out[#out + 1] = ("[%d.00] [Tester (#1)] Major cooldown used: {%s}"):format(i, b)
+            end
+            return table.concat(out, "\n")
+        end
+        local orc = log("ItemID: 555", "SpellID: 20572", "SpellID: 300") -- the sampled Orc's Blood Fury second
+        local auto =
+            { action = { autocastOtherCooldowns = {}, condition = cmp("OpGe", { currentTime = {} }, const("5s")) } }
+        local function lines(class, text, tank, ...)
+            local rotation = { priorityList = { ... } }
+            rotation.priorityList[#rotation.priorityList + 1] = auto
+            return (apl.translate(rotation, apl.context(kit, {}, text, { class = class }, nil, tank)))
+        end
+        local function want(...)
+            local out = {}
+            for i, x in ipairs({ ... }) do
+                out[i] = (i == 1 and "actions=" or "actions+=/") .. x .. ",if=time>=5"
+            end
+            return table.concat(out, "\n")
+        end
+        -- every class racial in racials.go's order, where the sampled one was used; Stoneform and Shatter Curse
+        -- (defensive only) are a tank's
+        assert.are.equal(
+            want(
+                "trinket,use_off_gcd=1",
+                "eureka,use_off_gcd=1",
+                "elunes_light,use_off_gcd=1",
+                "blood_fury,use_off_gcd=1",
+                "berserking,use_off_gcd=1",
+                "roar,use_off_gcd=1"
+            ),
+            lines("ClassWarrior", orc)
+        )
+        assert.are.equal(
+            want(
+                "trinket,use_off_gcd=1",
+                "stoneform",
+                "eureka,use_off_gcd=1",
+                "elunes_light,use_off_gcd=1",
+                "blood_fury,use_off_gcd=1",
+                "shatter_curse",
+                "berserking,use_off_gcd=1",
+                "roar,use_off_gcd=1"
+            ),
+            lines("ClassWarrior", orc, true)
+        )
+        -- only the class's races (capabilities_auto_gen.ts CLASS_RACES): a Hunter is never a Gnome
+        assert.are.equal(
+            want(
+                "trinket,use_off_gcd=1",
+                "elunes_light,use_off_gcd=1",
+                "blood_fury,use_off_gcd=1",
+                "berserking,use_off_gcd=1",
+                "roar,use_off_gcd=1"
+            ),
+            lines("ClassHunter", orc)
+        )
+        -- a sample with no racial (a Human's): the racials lead (registered first, all ready at the pull)
+        assert.are.equal(
+            want(
+                "eureka,use_off_gcd=1",
+                "blood_fury,use_off_gcd=1",
+                "berserking,use_off_gcd=1",
+                "trinket,use_off_gcd=1",
+                "roar,use_off_gcd=1"
+            ),
+            lines("ClassMage", log("ItemID: 555", "SpellID: 300"))
+        )
+        -- a racial the APL casts itself is not wowsims's to autocast: its own line stands, not repeated, no note
+        local text, omitted = apl.translate({
+            priorityList = { cast(20572), cast(1259813), auto },
+        }, apl.context(kit, {}, orc, { class = "ClassWarrior" }))
+        assert.are.equal(
+            table.concat({
+                "actions=blood_fury,use_off_gcd=1",
+                "actions+=/eureka,use_off_gcd=1",
+                "actions+=/trinket,use_off_gcd=1,if=time>=5",
+                "actions+=/elunes_light,use_off_gcd=1,if=time>=5",
+                "actions+=/berserking,use_off_gcd=1,if=time>=5",
+                "actions+=/roar,use_off_gcd=1,if=time>=5",
+            }, "\n"),
+            text
+        )
+        assert.are.same(
+            { "default #3: autocastOtherCooldowns: spell 20572 is blood_fury, which the APL casts itself" },
+            omitted
+        )
+        -- a Paladin tank's only racial cooldown is the Dwarf's; no log line at all still gives it
+        assert.are.equal(want("stoneform"), lines("ClassPaladin", log(), true))
+        assert.are.equal("", lines("ClassPaladin", log()))
+        -- a defensive-health threshold or a cooldown timing (the player's `cooldowns`) is not modelled: an error
+        local ok, err = pcall(
+            apl.translate,
+            { priorityList = { auto } },
+            apl.context(
+                kit,
+                {},
+                orc,
+                { class = "ClassWarrior", cooldowns = { hpPercentForDefensives = 0.4 } },
+                nil,
+                true
+            )
+        )
+        assert.is_false(ok)
+        assert.matches("hpPercentForDefensives", err)
+    end)
 end)
 
 -- Re-pin Phase 2 (docs/superpowers/plans/2026-11-03-wowsims-repin.md, Task 3): the reads e2842f0a78's APLs add.
