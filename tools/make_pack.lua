@@ -4,6 +4,8 @@
 -- src/Hekili_<Class>/APLs/packs.lua ({ class, packs = { "<Pack>", ... } in block order,
 -- specs = { [<Pack>] = <spec key> } }) and one <Pack>.simc per pack beside it (dev-only: no TOC lists them): its
 -- leading `#` lines are the description, other `#` lines and blank lines are dropped, the rest is SimC-style text.
+-- The manifest's optional `imports = { [<Pack>] = { from = <Pack>, as = <prefix>, aura = <key> } }` merges another
+-- pack's lists in at every build (see import), so a re-generated source pack updates both.
 -- A pack's version has one source, its class file's block.
 -- Run from the repository root (the class defaults to warrior):
 --   lua5.1 tools/make_pack.lua [class]          prints "<version> <string>" per pack, in order
@@ -133,6 +135,57 @@ local function bump(old, today)
     return old + 1
 end
 
+local function copy(e)
+    local c = {}
+    for k, v in pairs(e) do
+        c[k] = v
+    end
+    return c
+end
+
+-- A manifest import ({ from = <pack>, as = <prefix>, aura = <key> }): `lists` plus `src`'s lists renamed (default ->
+-- as, precombat -> as_precombat, x -> as_x, their calls too); the host's default and precombat start with a call of
+-- the renamed one while buff.<aura>.up, and every host entry there gains !buff.<aura>.up, so in that aura only the
+-- imported lists run (call_action_list: never a Block, unlike a strict run_action_list in precombat). `clash(list, to)`
+-- raises when `to` is a list the host already has.
+local function import(lists, src, imp, clash)
+    local function rename(list)
+        return list == "default" and imp.as or imp.as .. "_" .. list
+    end
+    local up = "buff." .. imp.aura .. ".up"
+    local out = {}
+    for name, entries in pairs(lists) do
+        out[name] = entries
+    end
+    for name, entries in pairs(src) do
+        local to = rename(name)
+        if lists[to] then
+            clash(name, to)
+        end
+        out[to] = {}
+        for i, e in ipairs(entries) do
+            local c = copy(e)
+            if c.list_name and (c.action == "call_action_list" or c.action == "run_action_list") then
+                c.list_name = rename(c.list_name)
+            end
+            out[to][i] = c
+        end
+    end
+    for _, name in ipairs({ "default", "precombat" }) do
+        local guarded = {}
+        if src[name] then
+            guarded[1] = { action = "call_action_list", enabled = true, list_name = rename(name), criteria = up }
+        end
+        for _, e in ipairs(lists[name] or {}) do
+            local c = copy(e)
+            c.criteria = (c.criteria or "") ~= "" and "(" .. c.criteria .. ")&!" .. up or "!" .. up
+            guarded[#guarded + 1] = c
+        end
+        out[name] = guarded[1] and guarded or nil
+    end
+    return out
+end
+
 -- The class's pack records, in the manifest's order, each keeping the version the class file (`from.src`, default the
 -- file on disk) gives it; a pack in `from.bump` (a set of names) gets the next one for `from.today`, a new one
 -- `from.today` * 1000. A listed pack
@@ -193,6 +246,52 @@ local function load(class, root, from)
     local stray = next(files)
     if stray then
         error(root .. stray .. " is not in " .. root .. "packs.lua", 0)
+    end
+    -- the manifest's imports, each from the source pack's own lists (parsed above, never another import's result)
+    local own = {}
+    for _, p in ipairs(packs) do
+        own[p.name] = p.lists
+    end
+    for _, p in ipairs(packs) do
+        local imp = def.imports and def.imports[p.name]
+        if imp then
+            local src = own[imp.from]
+            if not src then
+                error(
+                    root
+                        .. "packs.lua: pack "
+                        .. p.name
+                        .. " imports "
+                        .. imp.from
+                        .. ", which the manifest does not list",
+                    0
+                )
+            end
+            p.lists = import(p.lists, src, imp, function(list, to)
+                error(
+                    root
+                        .. "packs.lua: pack "
+                        .. p.name
+                        .. " imports "
+                        .. imp.from
+                        .. "'s list "
+                        .. list
+                        .. " as "
+                        .. to
+                        .. ", a list it already has",
+                    0
+                )
+            end)
+            p.simc = unparse(p.lists)
+            p.desc = p.desc
+                .. " Imports "
+                .. imp.from
+                .. " as the "
+                .. imp.as
+                .. " lists, entered while buff."
+                .. imp.aura
+                .. ".up."
+        end
     end
     return packs
 end

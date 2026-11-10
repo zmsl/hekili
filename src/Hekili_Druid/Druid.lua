@@ -1906,31 +1906,64 @@ spec:RegisterAbilities({
     },
 })
 
--- The setting Shred's `usable` reads (TDF's name and default).
-spec:RegisterSetting("behind", false, {
+-- The setting Shred's `usable` reads (TDF's name and default); Guardian's is below (its imported cat lists).
+local behind = {
     type = "toggle",
     name = L["Always Behind"],
     desc = L["When enabled, Shred is recommended over Claw as if you always stand behind the target."],
     width = "full",
-})
+}
+spec:RegisterSetting("behind", false, behind, "feral", "balance")
 
 -- The maintenance debuff (tools/wowsims/apl.lua rule 15; the recipe's `maintenance`): a raid's debuff, off in game
 -- (open-world mobs die before it pays off), on under the harness (`sim`: wowsims's raid boss).
-spec:RegisterSetting("maintain_demoralizing_roar", false, {
+local roar = {
     type = "toggle",
     name = L["Maintain Demoralizing Roar"],
     desc = L["Keep Demoralizing Roar on the target, as a raid tank does, and recast it only when it is missing (that includes the levels before " .. "Lacerate). Off: the priority never shows it, and Berserk no longer waits for it."],
     width = "full",
     sim = true,
-}, "guardian")
+}
+spec:RegisterSetting("maintain_demoralizing_roar", false, roar, "guardian")
+
+-- The settings the imported lists read (APLs/packs.lua: Guardian's lists in Feral's pack for Bear Form, Feral's in
+-- Guardian's for Cat Form), on the importing spec's page too, below its own under a section. Each spec keeps its own
+-- value: `settings.x` reads the active spec's (sharing the other spec's would need a cross-spec read in the core).
+local function imported(option, name, desc)
+    local o = { section = { name = name, desc = desc } }
+    for k, v in pairs(option) do
+        o[k] = v
+    end
+    return o
+end
+spec:RegisterSetting(
+    "maintain_demoralizing_roar",
+    false,
+    imported(
+        roar,
+        L["Bear Form (Guardian)"],
+        L["These settings come from the Guardian priority. They apply only while you are in Bear Form."]
+    ),
+    "feral"
+)
+spec:RegisterSetting(
+    "behind",
+    false,
+    imported(
+        behind,
+        L["Cat Form (Feral)"],
+        L["These settings come from the Feral priority. They apply only while you are in Cat Form."]
+    ),
+    "guardian"
+)
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc (a wowsims.com
 -- pack's from its recipe, `make wowsims-packs`); edit those and run it, never these blocks
 -- (tests/Forever/druid_spec.lua checks they match). Your talents pick one (the selector); /hekili priority <name> keeps another. Restoration is deferred.
 spec:RegisterPack(
     "Feral (wowsims.com)",
-    20261108000,
-    [[Hekili:TRvBVTQnu4Fl5lmyTIqYAAZT6sL2u1vRtBxnTC3xjXbmjEHGr2MeLPi(TVJbkfiM2eOv3u11pur8lNZZ5vSFeodC(MZepKa781HwdVEWaRXwwwote7IWotIqURqlGhcrRH))fmdfKmtFlDlNSMB6sxBix0UakYtkO5XKaXdHoZvktEe21zY9)1F)W936lfLZKLeppC26XCx1A42KzIL4Kz5J13NYWBWSKzEyFuCGiz2p)N)EYmy4KzpU)ysFP2499yXeV(PAZfj6JIc49rEOibzd2e(L5)WPHgxcQGHc5baO9GNPsvs4jZqEE0WFaEyfEh3mz29ib6wfqr)pE4BGqwker8B73FbrSmEUe99RTudqMaIXJqFY1BiAONVRj4czuFsa4HrUccnKBgXWWMNJe2WuBdUmMJNs99NUW1ZEWLeF7EZJ99ntN0mok53oyJxy33dXxwDNfRZ2hHze8uFcdlfNE24MLg2CviDBOMhovtLNGHxJiH8pBBzOP3lFNzqjDp7RcoJcTcyIH2ajuPQu1oRUrnDbDXIaS5A6g8ACOqtGylWctASGt8WJ2N)7TG)MeoQIMGW9uWPV(jV1JJaIUtsgYMOUeAmF6CIiZwkmMcDuYEkPxdnFYILIPfUWbAYWfDAeLekG89ygdqZD2d7MXJdIdX8PbsLDyYtowlVO8ODx0Pk3IafasrMvc9dOSDt9iCxsuajeBIdrZdWEAhVVtTR6QNKaJeLV580w5a5(APpfCQ66zYnaJyUiUGeUqMpGdXSf7mdO3zFTLXE9EV0QgpYawMAencuZlkGBKQ5Lw0ild5FDkUWxs8LIgG5wm7etxlWYNThDJw(UQkrWbJ821nm2PsQgdchr23(Yg4O6LNJ7MvXxcA(sFQBmpRWt)eSkvPggA9odRPohX07Z68owPdEH8STHNyjKEdwO0N)uWLSgfm1pMTZeoS0kBR9nnfed0YNQwVI8KbWN2GlDFVNGDA9toMRmuEhNkfR3zRp(IbLors5DRx4RVyGLXDfN3jBnUuU4IsPwYFNfn6vk)cIy1u44UgVqRWTnGvGmqghcTR7iYY6CDIDSkLpFG798SlX5iM(q25YnaTT(lk1v70pS6gq5XhHu2EONQUlkx5ZMJBOQgqAA)FjWjHPpKLaKqqIBqT40V0apykZcbKLaRLzCP4K8Vqkka61OqK8OUdUYYQ4h6vE1XpcwJgCtXs3YV8La(jln1oTAVACWO24nCMSbZ4GzxJ5OacxWtzQkJYh4XVMYCvE6PZV8i1jotkXuHZexgCDcgb5m51LHJ6uC4iae3aGYO8OcwukYQs8L9E1DFsm8tnGHhZykJIwqkIkvEvtXHkxPRI53uY9BlDjQa)OAGVevjYmScJPmvjLnLC7OnmPOcox3cFzx6E3T23DT)9X2aVZDWp6w4TlQDtdrTQx9PTvaVMmWOc9JBro3XJ(oXnt3jNrLb)PAgCzd7eSmvPuD(4uhTh80kippr1722eTQrrP2cqmaQVK32r(sgiLCG1ZKtE8bLwYItNOXPrECAIiNoYKZ3tQCAoMccTiIomnIw)4PTmI(kqZZZGAqO1GDthInpPTL9kFtzg6nQ705jQ(y1ZuMrw)knvtbBGKiLSe1mnrhlprNarrFxzk6nk578evFSkjE6k9q2sTtr00vXlygQTVg6Dmhtk6PiKFWn5FMmQysQjsas5M5qguEKYgvCa1KOKFAoPibWckwSKcxp8xXRibKKz6Fj)tfkDAN)7p]]
+    20261110000,
+    [[Hekili:TVvBVTTUv4Fl(lEYlzYV042ClQdWUOOBz4UIH5UVAzgjkBUilzisfJue4F73dLOKOKiLLSLtCbsaABKi5HpNx15qE6IXl(XI5oigEX3NmAYhhpE8i4NfZzpVfVy(wK9JOvWV4J2a)93WHiV9ln2fSJs2qnTd2mGpPN9cqoCc9qeXJDV)Ihust6wS9I5F9)()U)RF2LtQfZxtCCWjZhtTvVdFE)s2A8(LI3n0nie)eoC)shSlkYJTF5F))8h7xcVE)Y01hrgY3n6qNWiIZW4DZgXgI26rhICqBzKNWMWtM)FAG)GRHTie5t9aq7a)EaFlj09lroob()f4xEe)m1C)YVIyOpRakg)77)bqK1m2w6NhoCfHTo6bo6hwAQdaAcigpf9B2otqtCCTbYE)MTbHmyB(hrOqhcYVKiawevifEaJG9ZJqzuydX(mCihY7wt84Jg56AYNIfSFBmJ2Ac6NWaxyWfZr2msGpDMnYZZk5bloHUMRDNXx11e3zviX()LyHxnBOlchsWwUKqmFUggjdzk9EZh9d2533bhti5bcXBqeF6xMnAqFJEIvcOBNxYAEPx8ssEt02bd63RwWeIEcmotWHkYvKA9nybRw5Hn3e8eEdi46ZqHRWmZGigL4GN(I45DGYJ4p9GBpypf)6yaKm10xbZSZ3oWgoWMeerTEGWeCDgBNTXsCUeyg03LSAnZktdmUpyw9qG12aIpdSXIcdbiE3SjDVyc7f5JPGHgaGRJOyRaxxRv2oZghZdcgqEwclOUgikfGmKhqAWkbdbSccF2YHqTjB9i(ytSp6bpSt)MlLvluVjNcHKTIfl8p4VqOv4sFq8ByKqxpGnSrugXFf3Cc7Jdx9SPxWDZ(4ObVKAWPFw3csKxmuJOPW2Cqc8j(2COjnD0a(pDUYIUM4Y3oa67WHT1ApdGFz20p1xSQIKeK6iNN7EGFAUPAvxnWo9fzUEAzx(B7EwLUgqZ1Ub2ruHZCByvvwwWoEb6sEjIPFndtCgcuasgHj4K26SzOHT5kICnozdYZYnk8ztidXhNn6fDdbkM(IHkfQryHacAnY5x6Ld7yVkbMl8kraRcU13nZ42RglLoL8QnYuaxnE0G7Y(wBYCSdOSRKS34pNOI6jz0bQXsB4TNdLi6r8rRfZGlqKQ49JNb4Me4RTb8KChQOiUmdYCjIP3d8jmcT9q7Q8Xxd1AIQbhaO3C1MYOl9ufCs5mR1WFGkhdoV9UFrRW07(fc)cIpSlpHoMCVd8CGHmZOqIvTy)Ibp5NGDlWjBq(iEI2JVz0OShmk8LN)kWI9H6CLo2d56s(WO(QLKL(C74PDSik(TZYgIlLo0StkRbY1XEnFJQwfFj8uz1pGcFK(iXNp31yKhBT5wB2xalYQ8MrjIL7eiJbHwmtNvySKGrdklwQaR6pAcXU2KtM4veZUGN4pjyhWczf3CcXhTKCDY03uiI9drQSsYoRN4XfYYsEigzhPOi9AEv0PI9E6gkhWYdjWBDRlgiG7OIjK81PxY)M6zaqEiBUgudAYgnn183uTA5J(nDFA9j)(gYdPs0I1AiaCM4gccx(vugYgkWdIfxEKmw7dVTSMdEtaSmYp5LDggGcL5rkMX)8c1KJvg8hRktNxZBVurrLrL1GVQ8zvgvYHskkTcNZxpqwbJ0DKTyR0Buj2v5jSfeUEdbZZxRF81szbzjcbYtg9vvQ2mhJ3q8Sbf5v6diYL6icucsYr1fewFKBnHNtY5AS50b1S20D)VjMbhRjHOVtL1yAvoxKIZyfTwbyr6ybf7WllaXAx2J5RJNjy9Rm7GUDJcdYo4S(PFyC8Ob1qBv5DKp9C0R)(pZjx93eQP82gFdJkY2P0TzwBo5Y0ZbrxxLCQw9I5pHdPabkDr7X3oC89Xdth(3VhFl)cH5IFp9MGtgpMClMBhcQ9qcAX8Q70cgSbCsiHkorLwujB58Tq2Evgdaj)GoujQwqM(DAvdhWBQS7ehR3up7l2RoVwH2I0mzOmskj2NQrSRSYcn6GtUcJ2YyaU)y9QGZy1fnmBEfl8W1xCSfy0qmvQcJZDjgTvTMBVgR1kzP(jDwQ5LwOYc4vUKK2YZaJDRgglvDuGRUuQpPT8584um4F5a44FtdhxPsdzw)IQSLwY(L4)XJ0iaK8Ev8bLUUSMwYeXixxYd5f5uXj8CxSZXWgtAJp3Rk6kAOuoRiju1WYEoP6EU0k85yfMJRMRqQgNJ7yr9nAf1AfUskRdrFMi)6SC77YmXpEsC4sSYYnxhdQ6J1mES84(XvfBMdOQSugzlxxwsHmwj9ECCCMA4ED5eC8jfKBdK3sPnPfvRR0MKwwTiavUpLQD8G3autUcOS6yuaS0BcRa06v(sY6oCOTiKcTpxrbvMKQ0v5DEB31MYrnT8KguI4rbHMu6N2eQRtQFkx19PDx3N6LD30B7(KVU7gFF3DKUUMsik26zhTdux2bTnLL0vJqhft4K6T2tV5ABQuqBLcXnntjUVfSVkl0tUvwASyUD(3xMO6x2OoDwCN8KRRRWqqWD0oPhzp5EsnLR2UYvxB5EI9L7BzJ52k18KAlCM3VThVEUd6A3JGx0Lx(jgB9S2AVNPOzxMO69ySQoyIuZuEFXwXkvtp)QSPF131VnTTFBrF)(M24VNj7Zltu9UxtXmt0D6czD27r)DRFHBs4gjhJpiVApXYU5O8Kov0d3CbnOvkKVqfywLo3dLNMzTNZA(fuHORlFsNa7GIyRdGYR)N4hjEK9ln(M4)F)XdV4p)]]
 )
 spec:RegisterPack(
     "Balance (wowsims.com)",
@@ -1939,8 +1972,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Guardian (wowsims.com)",
-    20261107001,
-    [[Hekili:nJ1AVTTnu0Fl5lE2yzswUZPRbXbydbBlfBfdZTFvs0IxzZzjrbsQyKIc9BFxQhomYsXpASDqqcu49bpN7v8YJTRJ7NDNsjkW9tJgo6khNHVF4qh3PQhtb3PPKGLK54djKy8V)rgrqzKKC)(R4RKSyPvapEG2VhJ4eQoxZYyrQ7tCN1AALPqG707(3VC)DxpVkBUtxWOuOmeqg05(CDUVAbK7xTMDixapaICFkesYIu5()6)8x5(4Y5(gPiJzR3wPnvKXO2HGGendicBsAK0MqjPk2dGf(Fw)NKNm4sCBeKezecFk(mxVTmzUpHs5j)a(Ws4rPvU)Def56wGt))((pJjzHsLkV22EotTiBMMb2nCDaMte1WyYhcOJiJOHbwyXuWdzry5MeOy8ePvQaWGNrut0W2ddo(sw4KlMLfgATEjRS08pUri)4e7TeuV(kseKOScZeCHfKqMfb0EcSVBfXVXz4G2tlKOD5Ymj4Xdd9MhqN4S2ZDgPyIkAiEbliIMPthRsVSYINPKmkm2mWzeXs5swI2TfajsTWknqDZKRgICIpFEeyfZFaIrYPj5ZYtV(xuMilZT3AzcFvY3c48ik(WZTjac9Xbd(wvMwHTvwY4bMicIYsaPxeB(c1MuPAdnDQCdpxWnuajFLbupbmhsWG1gAunhn(CHU2EbtdU(11Xc7vvq0kMZyclrEZeS)3V2Rublg32zmvTRRb7gMEcRMMQG6lfx9HLwCiGlvip7FXreqrKaDZRd0S2Aju0bEEAOHeqWaVqMam7JglxvqOqXadtdp1BpBWVUoEzipitozubh6xH11fzCGAZLKk8A0BNmEWgwwZQ3D2yffI5yeSVYsM7j4eHj9KGsHRlT0WuH)6TH7iQWFQi2gwn7BNuk(moAC4XyoClhepD4ZeEYvSuWtF946JfpaE4a5ygiVDYOEfcx8WRLXr1LwpP1YTEi48aLyuZxJBhkbv5TevtbX63WxAcB3JL7y2BX7Z36ynEWleB9U)tvEOXA583BB71VQjZNRMANvYI2BN1U8p6ofvXkrJnK5hXKkzXNSOuzo(4Nk(KgvQlD)TA1T4hyOwwO70abMBbJ4oDtfJUkCpAKcdiRZ)6uAYFZS2OyQt576cvvAlnd)vvJ5w6wnBxAS(Z7i9nfyAI)kW8QR)8aOY4ok7TQiTJEW3TY0da3xTRTGcTPMa)iQADhvj2sGBx36HkCDhXudLRhBPRhqh)9D9M6tItBRnFIf1Eae7xAqmdo8wru7(YQ1nNASGTj99y6Boqg)Hoz8BkDU7jRnO9gW6583zyhVlBCeTL7lET1jVN8Ra5DjE4jPZBCi8ylH(qOrtbmgq(KILTCqXPPQidCUJYQ)U0v)wty9ExERkMoDlqqJ7IsDtrDgAG7Qiy0S2w(v6d3vFNThjr47zk6T1VU52KLVfDwQsQsYul44KG)ewYIy5(9)9QVN9cZU))p]]
+    20261110000,
+    [[Hekili:TVvBVTTnq4Fl5lE2lzYV0600I6aSHIULHTIH5UVkzAjkBollzqsfJue4F77OKSSinPTSKDRkYArADejp(CVWJhFKPDF7pBp2dXX2FAqVb32VF)EWFShZFAf2E8kK7c0m4dHOLW)(RXiQhbfUzs71rRzKLml3OLDe97PGiKNqwtJjb8hcTNQvSSvyx7XF4V)Nh(W7MLjn7XZjEE40HGzUgNN3TzcFoEZKSN11pIIFet3mXd7JId4BM8Z)1FSzc84ntkiIysxX0Y66rJjED9XuuWumI2fTkG1f5HwXjpITGFZ6FzrHDUbMgkkKfaW3d(CKyAjSntqEErH)a8Hf4NywBM8beh9onWP9F(WNbHmNZxXEx3UZi85XtfAqxLU2bKjGA8q0BD9gGg457cI9HLRIOCyA(OaPk2ayeSmZGRySbegNbtgoKJPc4UEojaACASVVf0dhyQwAfVYcCs0iFOn7XixojkKnYffe4K(loc5CJWldpLFdXFKQa287zd76rDfwVKNl6y7Rs6A(ZG(2P1vhA4jEah35i6m8nXmStKVVZmxVr9tKhx8CUvumNr8WdpIWMIOlyliHjdDogfWNBTYL)(r32RvBE0SzbyRLrpIxcwOwQYUv7RsLKvrmzTimAD4ZUrrbEWhKBJIrEp1PZZzsAn4CjHd7CeuIdIdXmWkpBoxJkNbII9kfenivWNId)cb75qXZWHG8enOA1hmSbHyCifPncl3EN0Hmln0mmplrKq27hbXo59AfLSeGYucFBxZvG9AAh(l2ug8p04sasq0710b3igh092xDbbuaYv4rnGM8wtHIyGngNSpctjyhFcfl5Bl88mJKhorofByN)UjPsBn334h5gZgnivVANH)CNr8QwQpIXHnSVFeKZuTLCn9vnjn1dVmcec5lKWzo0ievsLzyohAGzjGoh(XzV(dif(BMYUxRf9VFDv7JO3fwlwm)VMf2FfX8HHmBnzf2rSl)ULzpIDGDcwsWS7hnOvs5votdWWEePT(11MxLfvng4TekGvzNQuGMTJvwgzWo37qz7nhjzyFGK1h333AyNdm2TZ(pL1dbyt3l4(rg3WQj58nADtddmAppKyfpCK6UpvEZNDqiADqMfiDUtFcuuT0mdkff9OO8gzfy3OLh8(odfFHQfvD22AceZ3EgLAlDWhh5sIIz7YjMRu5Ztb9QWC3PLVOEzNCZzFiwF50iNvrWUgWeetHkx5WkN6BeoCz8z4TmvXFIZRoZdhfasc8Wy4C2r0NC8imxYQasigkSfb5H9AvEBOEt2R3jbkzv2GZcLfpyB(dW22ruXCQCdGnjCrmXE3IydXHfM9usYRB7jQJ9y96UHIYD1JiiNXXfWBetZX60WED0xk7j6ByZj(cXdqDnMEIHU5459Jg(MwzJswIzP8QnoR1smJoJsef(CrLCO6Y17QVMXMdZU82LLxZ0fMaP9BGRVAIy67Z18NHv9GLqUsYsB1BBqlf29Do4Kcr8JPpzrrHlg17ztnjQ8oRjL8gzbeGD1Gz95R2b7K1qzyw6rzzFKw0E)O23DD)cvTuC0TZT3x3VhuGyBP(iQn86cHxBzuacVleJbEnLj8UZHpdTaxvNwo6azSp8U9mGU0SyNy2RcX27zMBMzmAIy6fBwm3a0A1noBR3WV)kDaPL3lPnvXv6Y0OTNhmoVJU1bcv7)xgCsy6f7Yasii1hrvOQ4mkkYfqAqCgRbjyL8fimfa(suisucC)x3Rx(V0wABKFe0i1xdrHANFvVw6nCkBv2FynTioqiPW5H4Js4py)t6kZmHHbl43fXMlp6D9D3Ky89qUtwh8nsAvCkRZ7M8Keu(zFGsXIYR2Q12xDs)EhKukPPY0lQsZWTh)iMYajO8I1tEpWI3)o0B4)(uY71pdt2)Y235R94ceqb9LcNeKsq2JpVexPYCLnhqRbaLYILew0kszjE8aC1iCbgELbmS1cxefvGJlDt5Rn5hKonUK6Bk)ZLL5lDGFOa8fIkfHvfqAgmRcFx7nB5gMIsROLdGZTvWwwNnzR3US1DB2YUpBT3OT070wb3k41EJbVM8PvR6kGZjbA6q)DviMR8OVw0QvFE10PWV1O7cWISEEckQUiSAxeCPnON26ZMjQ(UnRrLYBmo5qPI9BGqY(9mv7azvvx5vrw4QfnCg5HZerC1KjUVLuXz0JoiXJAQ8ub9Av2LEg4O7iW2urS1l54fLeVlu6OMjQEzLKuerA8inbO1QbKgy2tl1EM52RSK7DcS79nLEVluOyZevVSwGixfHPJINtExv3457yAa1KtHNYhso)u5SjzMiaz6E2zztEIYH4hOtuBhGGVq5(Zf3jKKB3HowT2bbvVsrYDKzxmLRmN0B0cmIdrovoFFY8tLmzhHuXC(MmB2u)6WPtkfpWz(3coftQPa7TxncP58SEfjoYxsVs8T0Re0mDXUDeNb0xlAR0DHkm5RQ9fR4mOSBjZ5aUQl4nROK3Kbnd843TIQE5kkjMuUDfx6RxXzWvVlUoXrQerBKumdVCHQ)2f(wBhoaHyB9Akvz3qULgNbDx(OVM4GzVlDHK9OrDfoovBYXnkMOXOq2aD7KDUVNhNQIPpq3m7g5x9J9xvFPVciNjvZ0XK1Vi(BnILdYulVRisl51cPw3lKM2fd5mAG7B(OicvjX8p0S53Ob)Wo1JnNCrce1tFDMp1tHZ3DHp)tneBRQ8vSi)erh78QLUENepckMppcsa(B4fKaYMjT)y2D4pPz7)l]]
 )
 
 -- The hand-built lists the wowsims.com packs replace (wowsims packs plan, P9): a saved choice of one falls back to the
