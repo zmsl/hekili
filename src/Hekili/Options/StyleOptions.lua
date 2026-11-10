@@ -437,7 +437,7 @@ function SO.gamepad( styleKey, zones, order, id, conf )
             order = 4,
             args = {
                 cPortOverride = {
-                    storeIn = "keybindings",
+                    arg = "keybindings",
                     type = "toggle",
                     name = L["Use ConsolePort Buttons"],
                     order = 6,
@@ -445,7 +445,7 @@ function SO.gamepad( styleKey, zones, order, id, conf )
                 },
 
                 cPortZoom = {
-                    storeIn = "keybindings",
+                    arg = "keybindings",
                     type = "range",
                     name = L["ConsolePort Button Zoom"],
                     desc = L["The ConsolePort button textures generally have a significant amount of blank padding around them. " ..

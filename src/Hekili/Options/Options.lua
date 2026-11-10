@@ -651,7 +651,7 @@ return end
     -- presentational and must use keys the config does not (e.g. sec_now).
     local function optionConf( conf, info )
         local n, category = #info, info[ 3 ]
-        local at = info.option and info.option.storeIn -- an option stored in another group of its style (StyleOptions: ConsolePort)
+        local at = info.arg -- an option stored in another group of its style: its `arg` names it (StyleOptions: ConsolePort)
         if at and ns.UI.Styles[ category ] and type( conf[ category ] ) == "table" and type( conf[ category ][ at ] ) == "table" then
             conf = conf[ category ][ at ]
         elseif ns.UI.Styles[ category ] then

@@ -22234,6 +22234,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili spec nope	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100discipline|r |cFF00FF00(current)|r\n - |cFFFFD100holy|r (no priorities on Forever)\n - |cFFFFD100shadow|r
 ~message	/hekili spec nope	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100elemental|r |cFF00FF00(current)|r\n - |cFFFFD100enhancement|r\n - |cFFFFD100restoration|r (no priorities on Forever)
 ~message	/hekili spec nope	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100holy|r (no priorities on Forever)\n - |cFFFFD100protection|r |cFF00FF00(current)|r\n - |cFFFFD100retribution|r
+~message	/hekili unlock	UI unlocked for movement.
 ~message	build warning	|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for 1.60.1.
 ~message	cast warnings	DRUID does not have any Hekili Forever modules loaded (yet).\nWatch for updates.
 ~message	cast warnings	HUNTER does not have any Hekili Forever modules loaded (yet).\nWatch for updates.

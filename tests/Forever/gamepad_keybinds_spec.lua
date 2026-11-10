@@ -363,7 +363,7 @@ describe("the Gamepad options tab", function()
             node = node.args[k]
             info[#info + 1] = k
         end
-        info.option = node
+        info.option, info.arg = node, node.arg -- AceConfig passes both
         return node, info
     end
 
