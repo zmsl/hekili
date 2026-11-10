@@ -7,11 +7,19 @@
 ### Changed
 
 ### Fixed
-- Paladins: in dungeons, where the game hides a target's creature type, Exorcism is no longer suggested on targets it cannot hit (Undead and Demon only). Not yet checked in game.
 
 ### Known issues
 
 ### Upgrade notes
+
+## v0.7.1
+
+_Released 2026-11-10_
+
+This release attempts to fix Paladin Exorcism suggestions in dungeons.
+
+### Paladin
+- In dungeons, where the game hides a target's creature type, Exorcism is no longer suggested on targets it cannot hit, since it only works on Undead and Demons. This is an experimental fix based on evidence gathered on a Druid and not yet been confirmed in game.
 
 ## v0.7.0
 
