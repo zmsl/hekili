@@ -201,11 +201,21 @@ end
 I.On(Obs.Read, function(o, t)
     local c = o.c
     local kind = c % I.AURA_STACK
-    if kind ~= ReadOf.Aura and kind ~= ReadOf.AuraOpen and kind ~= ReadOf.AuraHeld then
+    if kind ~= ReadOf.Aura and kind ~= ReadOf.AuraOpen and kind ~= ReadOf.AuraHeld and kind ~= ReadOf.AuraVerdict then
         return
     end
     local u = (o.a - o.a % I.AURA_UNIT) / I.AURA_UNIT + 1 -- nonzero: AURA_UNIT is a constant
     local j = o.a % I.AURA_UNIT
+    if kind == ReadOf.AuraVerdict then
+        -- the verdict's close names the application it judged (o.b: its applied time). Our recast's write, folded
+        -- first in this drain (the polls stage after the cast's event was logged), is another application and stands
+        -- (Fable 5.2 review M1; F3's pattern). Only a close that happened is counted (Sources/Auras.lua).
+        if U.exp0[u][j] > 0 and U.applied[u][j] == o.b then
+            set(u, j, 0, 0, 0, t, "observed", Obs.Read)
+            I.AuraVerdictClosed(o.a, o.t)
+        end
+        return
+    end
     local stacks = (c - kind) / I.AURA_STACK -- nonzero: AURA_STACK is a constant
     -- a Cooldown Manager write is sampled with no read event (I.AuraModel's "the read wins" is for a client expiry
     -- only); an open with its own mark, for I.CastAura

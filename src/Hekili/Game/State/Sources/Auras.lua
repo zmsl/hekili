@@ -103,7 +103,8 @@ I.presenceHold = holdN
 -- (fact.pdark) and not UP for W past the latest of the write, the last UP and the dark's start (fact.pdarkT), is
 -- closed once. By key: W[k] its window
 -- (W0 for a walk or CDM opener, max(W0, travel + TOL) for our cast), verdictAt[k] the last verdict's t while a light
--- within STRIKE_WIN may still prove it wrong (0 none); per fight verdictN, strikeN, and darkN (1: pdark seen).
+-- within STRIKE_WIN may still prove it wrong (0 none); per fight verdictN, strikeN, and darkN (1: pdark seen). A verdict
+-- is counted when its close folds (I.AuraVerdictClosed), never at the stage.
 -- shortcut: W0 1.0 s, TOL 0.3 s and STRIKE_WIN 2.0 s are the spec's (§6) from the 2026-11-09 sample; Task 10's P1 tunes them.
 local W0, TOL, STRIKE_WIN = 1.0, 0.3, 2.0
 -- strikePend[k]: the t of a light within STRIKE_WIN of a verdict (0 none), decided at the next poll, after this drain's
@@ -537,9 +538,18 @@ local function verdict(j, u, k, a, t, F)
         from = since -- a swap back, a viewer shown again, a re-point: W counts from when the watching began
     end
     if t >= from + W[k] then
-        staged[k], verdictAt[k], verdictN[k] = t, t, verdictN[k] + 1
-        Direct(Obs.Read, t, k, 0, ReadOf.Aura)
+        staged[k] = t
+        Direct(Obs.Read, t, k, ap, ReadOf.AuraVerdict) -- names the application judged; counted when it folds
     end
+end
+
+--- The fold closed record k by the verdict staged at t (Families/Auras.lua: the record was still the application the
+--- verdict judged). Counted here, not at the stage: a close the fold drops (our recast folded first in the same
+--- drain, Fable 5.2 review M1) is no verdict, opens no strike window and counts nothing. Like any close it drops the
+--- debounce's memory, so a late light re-opens at once (rule 4) instead of waiting on the old expiry. Allocates nothing.
+function I.AuraVerdictClosed(k, t)
+    verdictAt[k], verdictN[k] = t, verdictN[k] + 1
+    lastE[k], lastSt[k], longE[k] = 0, 0, 0
 end
 
 local function onEdge(j, u, up, t)

@@ -1627,6 +1627,79 @@ describe("auras", function()
                 assert.are.same({ 1, 1 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
             end)
 
+            it("F52-A (review M1): a recast folded in the verdict's own drain stands: no close, no strike", function()
+                local def = fs.def(fs.new(9))
+                for _, ab in ipairs(def.abilities) do
+                    ab.now = ab.funcs and ab.funcs.now
+                end
+                start(def)
+                prove()
+                ctl.now = 11
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- dodged: never lights
+                drain(11)
+                drain(11.2)
+                drain(11.7)
+                assert.are.same({ 26, 0 }, { est("target", fs.SPENDER_C, 11.7), I.auraVerdict.n[kT()] })
+                ctl.now = 12.0
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C) -- the recast at the GCD: it lands
+                -- its drain is also the first poll >= cast 1 + W: the poll judges the OLD application, the fold writes
+                -- the recast first (log order), and the close, naming the old one, is dropped
+                drain(12.0)
+                assert.are.same({ 27, 1, 0, 0 }, {
+                    est("target", fs.SPENDER_C, 12.0), -- the recast's own expiry
+                    I.auraOurs[kT()], -- BY_CAST
+                    I.auraVerdict.n[kT()], -- no close happened: none counted
+                    I.auraVerdict.at[kT()], -- and no strike window left open
+                })
+                ctl.ViewerAura(ti, "target") -- its light, a frame later
+                drain(12.2)
+                drain(12.4)
+                assert.are.same({ 27, 1, 0, 0, 0 }, {
+                    est("target", fs.SPENDER_C, 12.4),
+                    I.auraOurs[kT()],
+                    I.auraVerdict.n[kT()],
+                    I.auraVerdict.strikes[kT()],
+                    I.PRESENCE.viewer.strikes[502],
+                })
+                drain(12.6) -- lit REFRESH_LAG past the recast (D14)
+                ctl.ViewerClear(ti) -- control: this application is still judged (rule 1 here: it was seen lit)
+                drain(13)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13))
+            end)
+
+            it("the verdict's read closes only the application it names (ReadOf.AuraVerdict)", function()
+                cast(2, REND, 11, 15)
+                S.Direct(Obs.Read, 11.5, kT(), 10.5, I.ReadOf.AuraVerdict) -- another application's applied time
+                I.Fold(11.5, false)
+                assert.are.equal(26, est("target", fs.SPENDER_C, 11.5))
+                assert.are.equal(0, I.auraVerdict.n[kT()])
+                S.Direct(Obs.Read, 11.6, kT(), 11, I.ReadOf.AuraVerdict) -- this one's
+                I.Fold(11.6, false)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.6))
+                assert.are.same({ 1, 11.6 }, { I.auraVerdict.n[kT()], I.auraVerdict.at[kT()] })
+                S.Direct(Obs.Read, 11.7, kT(), 0, I.ReadOf.AuraVerdict) -- a record already down: nothing
+                I.Fold(11.7, false)
+                assert.are.equal(1, I.auraVerdict.n[kT()])
+            end)
+
+            it("a verdict close drops the debounce's memory: a light at the very next poll re-opens at once", function()
+                ctl.ViewerAura(ti, "target") -- a live slot throughout: poll 15's live branch
+                cast(1, SHOUT, 10.1, 120)
+                ctl.ViewerAura(pi, "player")
+                poll(10.2) -- UP on a record up: lastE is the model's expiry
+                poll(10.8)
+                ctl.ViewerRelease(pi) -- re-pointed to a dark frame: no seen memory, no NONE; dark since 11.0
+                local pi2 = ctl.ViewerItem("BuffIconCooldownViewer", 3, 501)
+                poll(11.0)
+                poll(11.5)
+                assert.are.equal(130.1, est("player", fs.SPENDER_A, 11.5))
+                poll(12.0)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 12.0)) -- the verdict
+                ctl.ViewerAura(pi2, "player") -- a wrong one: the item lights before any dark poll in between
+                poll(12.2)
+                assert.is_not_nil(VS.Aura("player", fs.SPENDER_A, 12.2)) -- not debounced against the old expiry
+            end)
+
             it(
                 "review S1: a verdict on mob A, a swap to mob B whose dot of ours is lit within 2 s: no strike",
                 function()

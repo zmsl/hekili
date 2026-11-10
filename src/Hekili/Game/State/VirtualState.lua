@@ -76,6 +76,8 @@ I.HitName = { "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS", "HEAL", "DE
 --- TDF's range. AuraOpen = 12 and AuraHeld = 13 are the Cooldown Manager's presence writes (Sources/Auras.lua; below
 --- I.AURA_STACK, so they pack stacks like Aura): no client expiry behind them, so no plain read our cast's write yields
 --- to (Families/Auras.lua); AuraOpen also opens only a record still down when it folds (our cast's write wins).
+--- AuraVerdict = 14 is the verdict's close (cdm-verdict §2.3): its `b` is the applied time of the application it judged,
+--- and the fold closes the record only while that is still its application (a recast folded first stands).
 I.ReadOf = {
     Resource = 1,
     Aura = 2,
@@ -86,6 +88,7 @@ I.ReadOf = {
     RegenSpirit = 11,
     AuraOpen = 12,
     AuraHeld = 13,
+    AuraVerdict = 14,
 }
 
 --- What a `TargetCast` observation reports (its `a`): TDF's Enum.TargetCastOf integers.
