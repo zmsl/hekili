@@ -66,9 +66,11 @@ local eT, dT = {}, {}
 -- (sDarkT) among them, 0 none: the thing has been watched dark continuously since then (Fable 5.2 review M2).
 local cDark, tDark = {}, {}
 -- Per cooldownID (cdm-verdict §2.1, §2.4; decisions 117, 121), preallocated at build() to the map's keys, out of combat:
--- proven (lit once this build), the unit it last lit for (1 player, 2 target) and strikes. The item is the cooldownID,
--- never the frame. The seen rule's memory stays per slot: a re-pointed frame starts with none (Fable 5.2 review S1).
-local provenCd, provenU, strikesCd = {}, {}, {}
+-- proven (lit once this build), the unit it last lit for (1 player, 2 target), strikes, and silentCd: the verdict
+-- closes of things it was dark for since its last visible light (Fable 5.2 review M3: at STRIKES_MAX its proof is
+-- suspended until it lights again). The item is the cooldownID, never the frame. The seen rule's memory stays per
+-- slot: a re-pointed frame starts with none (review S1).
+local provenCd, provenU, strikesCd, silentCd = {}, {}, {}, {}
 local ambC = {} -- by k: the per-fight lights of ambiguous items naming aura j on unit u (§2.2; the snapshot's)
 local VBIT = { 1, 2, 4, 8 } -- a viewer's bit in Q.Via (§2.4)
 local touched, mark, nTouched = {}, {}, 0 -- the things a sweep moved, each once
@@ -93,8 +95,10 @@ local Q = {
     proven = provenCd, -- by cooldownID (cdm-verdict §2.1): read-only views for the tests and the snapshot
     provenU = provenU,
     strikes = strikesCd,
+    silent = silentCd,
     repoints = 0, -- per fight: plain cooldownID changes of a slot that held another one (§2.4)
     struck = 0, -- per build: cooldownIDs whose proof the strikes dropped (§2.5)
+    suspended = 0, -- per build: the times silent verdicts suspended a cooldownID's proof (§2.5, review M3)
 }
 local active, api0, broken = false, nil, false
 
@@ -149,9 +153,9 @@ local function build(api, def)
         mappable[k] = nil
     end
     for id in pairs(provenCd) do -- zeroed at every build: a new rank's map starts unproven (decision 124)
-        provenCd[id], provenU[id], strikesCd[id] = nil, nil, nil
+        provenCd[id], provenU[id], strikesCd[id], silentCd[id] = nil, nil, nil, nil
     end
-    Q.struck = 0
+    Q.struck, Q.suspended = 0, 0
     local CV = api.C_CooldownViewer
     if not CV or not def then
         return false
@@ -202,7 +206,7 @@ local function build(api, def)
                         cdvToJ[id] = one
                     end
                     if cdvToJ[id] then -- every mapped key preallocated: the sweep writes existing keys only
-                        provenCd[id], provenU[id], strikesCd[id] = false, 0, 0
+                        provenCd[id], provenU[id], strikesCd[id], silentCd[id] = false, 0, 0, 0
                     end
                 end
             end
@@ -413,8 +417,9 @@ local function sweep(t)
                     end
                     j, a, seenAs = m, UP, 1
                     -- proof (cdm-verdict §2.1): a visible light for the item's one aura; none after STRIKES_MAX
+                    -- strikes. Any such light ends a suspension: the silent verdicts are counted since it (M3)
                     if vis[sV[s]] then
-                        provenU[id] = u
+                        provenU[id], silentCd[id] = u, 0
                         if strikesCd[id] < STRIKES_MAX then
                             provenCd[id] = true
                         end
@@ -532,13 +537,31 @@ function Q.Strike(j, u)
     end
 end
 
---- Whether aura j is mapped (alone) by some cooldownID and none of them is proven this build (the snapshot's
---- mappedNeverLit). Loops the map: debug only.
+--- A verdict closed the record of (j, u) (cdm-verdict §2.5, Fable 5.2 review M3): every slot counted dark for it has
+--- its cooldownID's silent count raised; at STRIKES_MAX the item's proof is suspended: no verdict from it until any
+--- visible light of it (the sweep's proof) re-proves it and zeroes the count. A strike needs a light, so an item
+--- silent for some applications (a rank or variant it does not follow) would otherwise close every one of them.
+--- Called from the fold, after the sweep, like Q.Strike: it touches no counter and marks no thing. Allocates nothing.
+function Q.Silent(j, u)
+    local k = (u - 1) * I.AURA_UNIT + j
+    for s = 1, active and Q.nSlots or 0 do
+        local id = sCd[s]
+        if sDk[s] == k and silentCd[id] then
+            silentCd[id] = silentCd[id] + 1
+            if silentCd[id] >= STRIKES_MAX and provenCd[id] then
+                provenCd[id], Q.suspended = false, Q.suspended + 1
+            end
+        end
+    end
+end
+
+--- Whether aura j is mapped (alone) by some cooldownID and none of them lit this build (the snapshot's
+--- mappedNeverLit; an item struck or suspended did light: provenU). Loops the map: debug only.
 function Q.NeverLit(j)
     local mapped = false
     for id, m in pairs(cdvToJ) do
         if m == j then
-            if provenCd[id] then
+            if provenCd[id] or provenU[id] ~= 0 then
                 return false
             end
             mapped = true

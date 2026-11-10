@@ -546,10 +546,16 @@ end
 --- The fold closed record k by the verdict staged at t (Families/Auras.lua: the record was still the application the
 --- verdict judged). Counted here, not at the stage: a close the fold drops (our recast folded first in the same
 --- drain, Fable 5.2 review M1) is no verdict, opens no strike window and counts nothing. Like any close it drops the
---- debounce's memory, so a late light re-opens at once (rule 4) instead of waiting on the old expiry. Allocates nothing.
+--- debounce's memory, so a late light re-opens at once (rule 4) instead of waiting on the old expiry. The provider
+--- counts it against the items dark for the thing (review M3: silent verdicts suspend a proof). Allocates nothing.
 function I.AuraVerdictClosed(k, t)
     verdictAt[k], verdictN[k] = t, verdictN[k] + 1
     lastE[k], lastSt[k], longE[k] = 0, 0, 0
+    local P = I.presence
+    if P and P.Silent then
+        local u = k > I.AURA_UNIT and 2 or 1
+        P.Silent(k - (u - 1) * I.AURA_UNIT, u)
+    end
 end
 
 local function onEdge(j, u, up, t)
@@ -784,5 +790,10 @@ I.OnSnapshot(function(out, now)
         end
     end
     out[#out + 1] = string.format("presence-proof mappedNeverLit=%s", never == "" and "-" or never)
-    out[#out + 1] = string.format("presence-proof repoints=%d struck=%d", leaf.repoints or 0, leaf.struck or 0)
+    out[#out + 1] = string.format(
+        "presence-proof repoints=%d struck=%d suspended=%d",
+        leaf.repoints or 0,
+        leaf.struck or 0,
+        leaf.suspended or 0
+    )
 end)

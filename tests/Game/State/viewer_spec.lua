@@ -1027,6 +1027,51 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         Q.Activate(api, 7, d) -- a new build: proof and strikes start over
         assert.are.same({ 0, 0 }, { Q.strikes[502], Q.struck })
     end)
+
+    it(
+        "silent verdicts (review M3): two for the thing an item is dark for suspend its proof; a visible light"
+            .. " re-proves it and zeroes the count; a struck item stays retired",
+        function()
+            ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            start()
+            up(A)
+            sweep(2)
+            Q.Silent(1, 1) -- lit, not dark: nothing
+            assert.are.equal(0, Q.silent[502])
+            down(A)
+            sweep(3)
+            assert.are.equal(1, dark(1, 1))
+            Q.Silent(1, 2) -- another unit: nothing
+            assert.are.equal(0, Q.silent[502])
+            Q.Silent(1, 1)
+            assert.are.same({ 1, true, 0 }, { Q.silent[502], Q.proven[502], Q.suspended })
+            Q.Silent(1, 1)
+            assert.are.same({ 2, false, 1 }, { Q.silent[502], Q.proven[502], Q.suspended })
+            assert.are.equal(0, Q.silent[501]) -- per cooldownID
+            sweep(4)
+            assert.are.equal(0, dark(1, 1)) -- suspended: no proof, never dark
+            assert.is_false(Q.NeverLit(1)) -- but it did light: not "mapped, never lit"
+            up(A)
+            sweep(5)
+            assert.are.same({ 0, true, 1 }, { Q.silent[502], Q.proven[502], Q.suspended })
+            down(A)
+            sweep(6)
+            assert.are.same({ 1, 6 }, { dark(1, 1), since(1, 1) })
+            Q.Silent(1, 1)
+            up(A) -- a light between two silent verdicts: the count starts over
+            sweep(7)
+            assert.are.equal(0, Q.silent[502])
+            Q.Strike(1, 1)
+            Q.Strike(1, 1) -- retired for the build (§2.5)
+            down(A)
+            sweep(8)
+            up(A)
+            sweep(9)
+            assert.are.same({ false, 1, 1 }, { Q.proven[502], Q.struck, Q.suspended }) -- a light does not undo strikes
+            Q.Activate(api, 10, d) -- a new build: the counts start over
+            assert.are.same({ 0, 0 }, { Q.silent[502], Q.suspended })
+        end
+    )
 end)
 
 -- The map and the collect (cdm-default spec §3.1-§3.2, decisions 97-98, 101; plan Task 3a), against the any-layout fake

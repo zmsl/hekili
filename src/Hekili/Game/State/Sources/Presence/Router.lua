@@ -215,6 +215,14 @@ function R.Strike(j, u)
     end
 end
 
+--- A verdict closed the record of aura j on unit u (cdm-verdict §2.5): the leaf counts it against the items dark for
+--- it (silent verdicts suspend a proof). Allocates nothing.
+function R.Silent(j, u)
+    if leaf then
+        leaf.Silent(j, u)
+    end
+end
+
 --- A tracked aura's reduced fact as I.UP or I.DOWN, else I.UNDECIDED. Allocates nothing.
 function R.Presence(j, u)
     if leaf and tracked[j] then

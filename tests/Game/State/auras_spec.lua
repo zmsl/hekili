@@ -1716,14 +1716,16 @@ describe("auras", function()
                 end
             )
 
-            -- review S3, spec §2.7 V1 widened: a proven item that does not light an application (F12 silence, the
-            -- Nature's Grasp 1 in ~30, an item that stops following, a downrank) closes it after W, every time, by design
-            -- (L364 "dark means dark"); no light follows, so no strike ever retires it. Pinned so a change is deliberate.
+            -- Fable 5.2 review M3 (it replaces the "V1 (review S3)" pin): a proven item silent for an application
+            -- (F12 silence, a rank or variant the item does not follow, an immune mob) gives a verdict and never a
+            -- strike (a strike needs a light). Two such verdicts with no light of the item between them suspend its
+            -- proof: belief-only until it lights again, then it is judged as before.
             it(
-                "V1 (review S3): a proven item silent for each application: one verdict per application, no strike",
+                "V1 (review M3): two silent verdicts suspend the proof; belief-only until the item lights; then judged",
                 function()
+                    local Q = I.PRESENCE.viewer
                     prove()
-                    for _, c in ipairs({ 11, 14, 17 }) do
+                    for _, c in ipairs({ 11, 14 }) do
                         cast(2, REND, c, 15)
                         for t = c + 0.25, c + 0.75, 0.25 do
                             poll(t)
@@ -1733,11 +1735,37 @@ describe("auras", function()
                         assert.is_nil(VS.Aura("target", fs.SPENDER_C, c + 1), c)
                         poll(c + 2.5) -- past STRIKE_WIN
                     end
-                    assert.are.same({ 3, 0, true }, {
+                    assert.are.same({ 2, 0, false, 2, 1, 0 }, {
                         I.auraVerdict.n[kT()],
                         I.auraVerdict.strikes[kT()],
-                        I.PRESENCE.viewer.proven[502],
+                        Q.proven[502],
+                        Q.silent[502],
+                        Q.suspended,
+                        Q.strikes[502],
                     })
+                    cast(2, REND, 17, 15) -- the third cast: belief-only, no recast loop
+                    for t = 17.5, 21, 0.5 do
+                        poll(t)
+                        assert.are.equal(32, est("target", fs.SPENDER_C, t), t)
+                    end
+                    assert.are.equal(2, I.auraVerdict.n[kT()])
+                    local snap = VS.Snapshot()
+                    -- suspended is not "never lit"
+                    assert.is_truthy(snap:find("presence-proof mappedNeverLit=spender_a\n", 1, true), snap)
+                    assert.is_truthy(snap:find("presence-proof repoints=0 struck=0 suspended=1", 1, true), snap)
+                    ctl.ViewerAura(ti, "target") -- any visible light re-proves it and zeroes the count
+                    poll(21.2)
+                    assert.are.same({ true, 0, 32 }, { Q.proven[502], Q.silent[502], est("target", fs.SPENDER_C, 21.2) })
+                    poll(21.8)
+                    ctl.ViewerClear(ti)
+                    poll(22) -- rule 1 (it was seen lit)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 22))
+                    cast(2, REND, 24, 15) -- silent again: judged again
+                    poll(24.5)
+                    assert.are.equal(39, est("target", fs.SPENDER_C, 24.5))
+                    poll(25)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 25))
+                    assert.are.same({ 3, 1, true }, { I.auraVerdict.n[kT()], Q.silent[502], Q.proven[502] })
                 end
             )
 

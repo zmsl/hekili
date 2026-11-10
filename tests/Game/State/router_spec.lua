@@ -310,17 +310,22 @@ describe("the Presence router's reduced facts (Task 4a)", function()
         assert.are.same({ false, 0 }, { R.fact.pdark[1], R.fact.pdarkT[1] })
     end)
 
-    it("R.Strike forwards to the leaf while it has one", function()
+    it("R.Strike and R.Silent forward to the leaf while it has one", function()
         local got = {}
-        local strike = Q.Strike
+        local strike, silent = Q.Strike, Q.Silent
         Q.Strike = function(j, u)
-            got[#got + 1] = { j, u }
+            got[#got + 1] = { "strike", j, u }
+        end
+        Q.Silent = function(j, u)
+            got[#got + 1] = { "silent", j, u }
         end
         R.Strike(1, 2)
+        R.Silent(2, 2)
         R.Deactivate(9)
         R.Strike(2, 1)
-        Q.Strike = strike
-        assert.are.same({ { 1, 2 } }, got)
+        R.Silent(2, 1)
+        Q.Strike, Q.Silent = strike, silent
+        assert.are.same({ { "strike", 1, 2 }, { "silent", 2, 2 } }, got)
     end)
 
     it("the highest standing with nLive > 0 decides: the leaf (1) with live evidence, none (0) without", function()
