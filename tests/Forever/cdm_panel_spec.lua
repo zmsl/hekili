@@ -2,7 +2,7 @@
 -- The profile's switch (per spec, by aura key) and a pack's `cdm = false` become def.auras[j].cdm (Tracked.lua); an
 -- aura switched off maps no item in the leaf (Presence/CooldownViewer.lua), applied out of combat, at combat end
 -- otherwise; the panel (Options.lua EmbedCdmOptions) lists only the items that name one pack aura, gold on a bar, grey
--- in the pool, grouped by the item's selfAura/hasAura. The auras are the pack's own, picked by sorted key.
+-- in the pool, in one grid (owner 2026-11-09). The auras are the pack's own, picked by sorted key.
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
@@ -157,6 +157,32 @@ describe("the Cooldown Manager switches", function()
             H.Hekili:EmbedCdmOptions()
             return H.Hekili.Options.args.cdm.args
         end
+        -- AceConfig's own validator (the vendored file behind a stub LibStub): what AceConfigDialog:Open runs on the
+        -- whole options table. A key it does not know on a card ("imageWidth" on a toggle) raises and no window opens.
+        local function aceValidate(options)
+            local libs = {
+                ["CallbackHandler-1.0"] = {
+                    New = function()
+                        return {}
+                    end,
+                },
+            }
+            local stub = setmetatable({
+                NewLibrary = function(_, major)
+                    libs[major] = {}
+                    return libs[major]
+                end,
+            }, {
+                __call = function(_, major)
+                    return libs[major]
+                end,
+            })
+            local chunk =
+                assert(loadfile("src/Hekili/Libs/AceConfig-3.0/AceConfigRegistry-3.0/AceConfigRegistry-3.0.lua"))
+            setfenv(chunk, setmetatable({ LibStub = stub }, { __index = _G }))
+            chunk()
+            libs["AceConfigRegistry-3.0"]:ValidateOptionsTable(options, "cdm")
+        end
 
         it("lists only the items that name one pack aura, gold on a bar, grey in the pool, in one grid", function()
             layout(4, 2, { { selfAura = true }, { hasAura = true, selfAura = false }, {}, { hasAura = true } })
@@ -190,6 +216,10 @@ describe("the Cooldown Manager switches", function()
             assert.truthy(buffs[k(1)].name:find(picked[1].name, 1, true))
             assert.is_nil(buffs[k(1)].label)
             assert.are.equal("", args.state.name)
+            -- (batch review Must 1) the panel with its cards passes AceConfig's validation: the options can open
+            assert.has_no.errors(function()
+                aceValidate(H.Hekili.Options.args.cdm)
+            end)
 
             -- the switch: default on, a write goes to the profile by key and reaches the def
             local info = { "cdm", "items", k(3) }
