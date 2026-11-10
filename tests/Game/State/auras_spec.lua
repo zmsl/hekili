@@ -1359,6 +1359,23 @@ describe("auras", function()
                 end
             )
 
+            it("review M1: an in-combat rebuild leaves no stale pdark: no leaf, no verdict", function()
+                prove()
+                cast(2, REND, 11, 15)
+                poll(11.5)
+                assert.is_true(P.fact.pdark[kT()])
+                P.Deactivate(11.6) -- a build in combat (I.Build -> provide): the leaf goes, its activation waits
+                P.Activate(api, 11.6, I.def, { viewer = true })
+                assert.is_nil(P.Leaf())
+                assert.is_false(P.fact.pdark[kT()])
+                P.fact.pdark[kT()] = true -- even a stale one: the verdict needs the leaf
+                for t = 11.8, 14, 0.2 do
+                    poll(t)
+                    assert.are.equal(26, est("target", fs.SPENDER_C, t), t)
+                end
+                assert.are.equal(0, I.auraVerdict.n[kT()])
+            end)
+
             it("an item never lit (unproven) gives no verdict", function()
                 cast(2, REND, 11, 15)
                 for t = 11.5, 14, 0.5 do

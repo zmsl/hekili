@@ -188,6 +188,9 @@ function R.Deactivate(t)
         leaf.Deactivate(t)
     end
     leaf, want, pending, R.covered, R.scope = nil, nil, false, 0, nil
+    for k in pairs(fPdark) do -- (review M1) no leaf, no positive dark: poll 15's verdict must not read a stale one
+        fPdark[k] = false
+    end
 end
 
 --- Poll 15's sweep: the leaf reads its items (cdm-default §3.2) and the moved things are reduced here; covered follows

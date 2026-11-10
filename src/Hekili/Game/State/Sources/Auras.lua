@@ -552,7 +552,8 @@ S.Poll(15, function(_, t)
     P.Sweep(t)
     local U = I.auras
     local F = P.fact
-    local vF = F and F.pdark and F -- the router's facts carry pdark (cdm-verdict §2.3); Default has none
+    -- the router's facts carry pdark (cdm-verdict §2.3); Default has none; (review M1) no leaf, no verdict
+    local vF = F and F.pdark and P.Leaf and P.Leaf() ~= nil and F
     if P.covered == 0 then
         -- a dark item is never live: with no live slot the verdict still runs (cdm-verdict §2.2)
         for u = 1, vF and (U.n < 2 and U.n or 2) or 0 do
