@@ -99,6 +99,7 @@ local Q = {
     repoints = 0, -- per fight: plain cooldownID changes of a slot that held another one (§2.4)
     struck = 0, -- per build: cooldownIDs whose proof the strikes dropped (§2.5)
     suspended = 0, -- per build: the times silent verdicts suspended a cooldownID's proof (§2.5, review M3)
+    builds = 0, -- per session, never reset: the map's builds; each one zeroes every proof (review S2)
 }
 local active, api0, broken = false, nil, false
 
@@ -143,6 +144,7 @@ end
 
 -- The map (§3.1), out of combat (allocates: the getters' tables, the candidate sets).
 local function build(api, def)
+    Q.builds = Q.builds + 1
     for k in pairs(cdvToJ) do
         cdvToJ[k] = nil
     end
@@ -523,8 +525,9 @@ function Q.Counts(j, u)
 end
 
 --- A wrong verdict for (j, u) (cdm-verdict §2.5): every slot counted UP for it now has its cooldownID struck; at
---- STRIKES_MAX its proof is dropped for the build. Called from inside the sweep's reduction (onEdge): it touches no
---- counter and marks no thing (the next sweep un-counts the dark of an unproven item). Allocates nothing.
+--- STRIKES_MAX its proof is dropped for the build. Called from poll 15 after the sweep (the verdict's strike check, a
+--- poll after the light): it touches no counter and marks no thing (the next sweep un-counts the dark of an unproven
+--- item). Allocates nothing.
 function Q.Strike(j, u)
     for s = 1, active and Q.nSlots or 0 do
         local id = sCd[s]

@@ -1072,6 +1072,16 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
             assert.are.same({ 0, 0 }, { Q.silent[502], Q.suspended })
         end
     )
+
+    it("builds are counted per session (review S2): one per build, never reset by a fight", function()
+        start()
+        local n = Q.builds
+        assert.is_true(n >= 1)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        Q.Activate(api, 5, d)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        assert.are.equal(n + 1, Q.builds)
+    end)
 end)
 
 -- The map and the collect (cdm-default spec §3.1-§3.2, decisions 97-98, 101; plan Task 3a), against the any-layout fake

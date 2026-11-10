@@ -1355,7 +1355,12 @@ describe("auras", function()
                         snap
                     )
                     assert.is_truthy(snap:find("presence-proof mappedNeverLit=spender_a", 1, true), snap)
-                    assert.is_truthy(snap:find("presence-proof repoints=0 struck=0", 1, true), snap)
+                    local builds = I.PRESENCE.viewer.builds -- per session (review S2)
+                    assert.is_true(builds >= 1)
+                    assert.is_truthy(
+                        snap:find("presence-proof repoints=0 struck=0 suspended=0 builds=" .. builds, 1, true),
+                        snap
+                    )
                 end
             )
 

@@ -791,9 +791,10 @@ I.OnSnapshot(function(out, now)
     end
     out[#out + 1] = string.format("presence-proof mappedNeverLit=%s", never == "" and "-" or never)
     out[#out + 1] = string.format(
-        "presence-proof repoints=%d struck=%d suspended=%d",
+        "presence-proof repoints=%d struck=%d suspended=%d builds=%d",
         leaf.repoints or 0,
         leaf.struck or 0,
-        leaf.suspended or 0
+        leaf.suspended or 0,
+        leaf.builds or 0
     )
 end)
