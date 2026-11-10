@@ -43,6 +43,26 @@ describe("the CDM verdict's harness arms #slow", function()
         assert.is_truthy(lines.edge)
     end)
 
+    it("viewer-late: a share of the viewer's lights lands late; the -novd twin draws the same world", function()
+        local run = fight("viewer-late", 2)
+        local late = run.W.lateN or 0
+        assert.is_true(late > 0, "late lights " .. late)
+        assert.are.equal(late, fight("viewer-late-novd", 2).W.lateN) -- the twins' seeds are the same
+    end)
+
+    it("viewer-recast: an avoided uptime press is pressed again at the next free GCD", function()
+        local run = fight("viewer-recast", 6) -- seed 6: three sunders avoided in 40 s
+        assert.is_true(run.recasts > 0, "recasts " .. run.recasts)
+        assert.are.equal(0, fight("viewer-nonland", 6).recasts) -- the knob's alone
+    end)
+
+    it("viewer-swap-dark: the reshuffle leaves re-pointed frames dark for a poll; viewer-swap stays atomic", function()
+        local _, H = fight("viewer-swap-dark", 3)
+        assert.is_true(H.ctl.viewer.reshuffleDark)
+        local _, H2 = fight("viewer-swap", 3)
+        assert.is_false(H2.ctl.viewer.reshuffleDark)
+    end)
+
     it("a -novd arm sets the belief's verdictOff on the driver; the next fight's arm clears it", function()
         local L = loop.new(ww)
         local _, H = fight("viewer-reshuffle-novd", 1, L)

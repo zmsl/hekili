@@ -1,9 +1,11 @@
 -- tests/Game/harness/edgestats.lua (cdm-edge-anchor lane, harness only): per fight of a viewer arm, the driver's
 -- believed expiry against the Cooldown Manager's own down (each item's dark edge, from the fake's ViewerAuraBySpell),
 -- the seconds the belief is up while the viewer is dark (staleUp) and down while it is lit (earlyDown), over the
--- router's tracked auras in combat, and the router's seeds and edges and the belief's debounce counts. One
+-- router's tracked auras in combat but the player's forms and enchants (the leaf never judges them), player and target
+-- apart, and the router's seeds and edges and the belief's debounce counts. One
 -- line per fight for the arm's .ab file (loop.lua). Class-neutral: aura indices and the client's units only.
 local M = {}
+local NONE = {}
 
 -- Wraps the fake's viewer drivers once per instance: each call reports to ctl.edgeEm (the running fight's, if any).
 local function attach(ctl)
@@ -33,7 +35,7 @@ function M.start(H, VI)
     local ctl = H.ctl
     attach(ctl)
     local U = VI.auras
-    local em = { vup = {}, lastUp = {}, errs = {}, stale = 0, early = 0, missed = 0, long = 0, downs = 0 }
+    local em = { vup = {}, lastUp = {}, errs = {}, stale = { 0, 0 }, early = { 0, 0 }, missed = 0, long = 0, downs = 0 }
     local function key(unit, spellID)
         local u, j = U.index[unit], U.bySpell[spellID]
         if u and j and u <= 2 then
@@ -83,6 +85,7 @@ function M.tick(H, VI, now, dt, inCombat)
     if not em or not U or not P or not P.tracked then
         return
     end
+    local form, enchant = VI.formAura or NONE, VI.enchantAura or NONE
     for u = 1, (U.n < 2 and U.n or 2) do
         for j = 1, U.nAura do
             local k = (u - 1) * VI.AURA_UNIT + j
@@ -90,12 +93,13 @@ function M.tick(H, VI, now, dt, inCombat)
             if em.vup[k] and e > 0 then
                 em.lastUp[k] = e
             end
-            if inCombat and P.tracked[j] then
+            -- a form or enchant is never judged by the leaf (Auras.lua's formAura/enchantAura): no phantom of the verdict's
+            if inCombat and P.tracked[j] and not (u == 1 and (form[j] or enchant[j])) then
                 local bel, vu = e > now, em.vup[k] == true
                 if bel and not vu then
-                    em.stale = em.stale + dt
+                    em.stale[u] = em.stale[u] + dt
                 elseif vu and not bel then
-                    em.early = em.early + dt
+                    em.early[u] = em.early[u] + dt
                 end
             end
         end
@@ -125,14 +129,19 @@ function M.line(H, VI)
     for i, x in ipairs(em.errs) do
         errs[i] = ("%.3f"):format(x)
     end
-    return ("seeds %s edges %s waits %d fires %d downs %d staleUp %.2f earlyDown %.2f missed %d" .. " long %d errs %s"):format(
+    return (
+        "seeds %s edges %s waits %d fires %d downs %d staleUp %.2f/%.2f earlyDown %.2f/%.2f missed %d"
+        .. " long %d errs %s"
+    ):format(
         sum(P and P.seedN),
         sum(P and P.edgeN),
         hold.waits or 0,
         hold.fires or 0,
         em.downs,
-        em.stale,
-        em.early,
+        em.stale[1],
+        em.stale[2],
+        em.early[1],
+        em.early[2],
         em.missed,
         em.long,
         #errs > 0 and table.concat(errs, ",") or "-"

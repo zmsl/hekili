@@ -32,6 +32,9 @@ describe("the A/B harness", function()
             "secret-viewer-buffs",
             "secret-viewer-mixed",
             "viewer-swap",
+            "viewer-late",
+            "viewer-recast",
+            "viewer-swap-dark",
         }
         assert.are.same(names, ab.VERDICT)
         for _, name in ipairs(names) do
@@ -49,6 +52,14 @@ describe("the A/B harness", function()
         assert.is_false(ab.ARMS["viewer-nonland"].world.auraOnAvoid)
         assert.are.same({ 4, 8 }, ab.ARMS["viewer-swap"].world.swapEvery)
         assert.is_true(ab.ARMS["secret-viewer-mixed"].observe.secretAmount)
+        assert.are.same({ 0.1, 1.2, 1.8 }, ab.ARMS["viewer-late"].world.lateLight) -- late past W (1.0)
+        local recast, nonland = ab.ARMS["viewer-recast"].world, ab.ARMS["viewer-nonland"].world
+        assert.is_true(recast.recast)
+        assert.are.same(nonland.mobAvoid, recast.mobAvoid) -- the non-landing world
+        local dark, swap = ab.ARMS["viewer-swap-dark"], ab.ARMS["viewer-swap"]
+        assert.is_true(dark.reshuffleDark)
+        assert.is_nil(swap.reshuffleDark) -- every older arm keeps the atomic reshuffle
+        assert.are.same(swap.world, dark.world)
     end)
 
     it("the secret arm makes UNIT_COMBAT's amount secret (live), never on the plain oracle", function()

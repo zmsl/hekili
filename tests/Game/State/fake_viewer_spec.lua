@@ -450,6 +450,34 @@ describe("the any-layout Cooldown Manager fake", function()
         assert.are.same({ [501] = true, [502] = true, [503] = true }, seen)
     end)
 
+    it("reshuffleDark: a moved lit item reads dark on its new frame until the next flush, then re-lights", function()
+        for id = 501, 503 do
+            ctl.viewer.infos[id] = { spellID = id - 400 }
+        end
+        local f = { ctl.ViewerItem(ICON, 1, 501), ctl.ViewerItem(ICON, 2, 502), ctl.ViewerItem(ICON, 3, 503) }
+        ctl.ViewerAuraBySpell("player", 101, true, "player")
+        ctl.ViewerAuraBySpell("target", 102, true, "player")
+        ctl.viewer.reshuffleDark = true
+        ctl.ViewerReshuffle(1)
+        local by = {}
+        for i = 1, 3 do
+            by[f[i].cooldownID] = f[i]
+            assert.is_nil(f[i].auraInstanceID) -- every frame dark for one flush
+        end
+        ctl.ViewerAuraBySpell("target", 102, false, "player") -- gone before the flush: stays dark
+        ctl.ViewerFlush()
+        assert.are.same({ SECRET, "player", 101 }, { by[501].auraInstanceID, by[501].auraDataUnit, by[501].litBy })
+        assert.is_nil(by[502].auraInstanceID)
+        assert.is_nil(by[503].auraInstanceID)
+        ctl.viewer.reshuffleDark = false -- the default: atomic, the lit item stays lit
+        ctl.ViewerReshuffle(2)
+        local lit = 0
+        for i = 1, 3 do
+            lit = lit + (f[i].auraInstanceID ~= nil and 1 or 0)
+        end
+        assert.are.equal(1, lit)
+    end)
+
     it("ViewerRetarget reshuffles every viewer when ctl.viewer.reshuffle is set (the full UNIT_AURA update)", function()
         ctl.viewer.infos[501] = { spellID = 101 }
         ctl.viewer.infos[502] = { spellID = 102 }
