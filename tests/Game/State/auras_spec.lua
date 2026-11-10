@@ -1485,6 +1485,8 @@ describe("auras", function()
                     ctl.ViewerAura(ti, "target") -- the late light (a lag spike): re-opens as a CDM open, one strike
                     poll(12.5)
                     assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 12.5))
+                    assert.are.equal(0, I.auraVerdict.strikes[kT()]) -- (review M2) judged at the next poll
+                    poll(12.7)
                     assert.are.same({ 1, 1, 0 }, {
                         I.auraVerdict.strikes[kT()],
                         I.PRESENCE.viewer.strikes[502],
@@ -1499,6 +1501,7 @@ describe("auras", function()
                     assert.is_nil(VS.Aura("target", fs.SPENDER_C, 16)) -- the second verdict
                     ctl.ViewerAura(ti, "target")
                     poll(16.5)
+                    poll(16.7)
                     assert.are.same({ 2, false, 1 }, {
                         I.auraVerdict.strikes[kT()],
                         I.PRESENCE.viewer.proven[502],
@@ -1523,7 +1526,52 @@ describe("auras", function()
                 cast(2, REND, 12.3, 15) -- our recast lands and lights
                 ctl.ViewerAura(ti, "target")
                 poll(12.5)
+                poll(12.7)
                 assert.are.equal(0, I.auraVerdict.strikes[kT()])
+            end)
+
+            -- review M2: the drain runs the polls before the fold, so our recast's write (Now.lua's I.AuraOurs) lands
+            -- after poll 15 saw its light; the strike is judged at the next poll.
+            local function drain(t) -- VS.Drain's order (Sources.lua): staged, polls, fold, settle
+                ctl.now = t
+                ctl.Tick(t)
+                S.Flush()
+                S.RunPolls(t)
+                I.Fold(t)
+                I.Settle(t)
+            end
+            it("review M2: a verdict, then our logged recast whose light the same drain polls: no strike", function()
+                local def = fs.def(fs.new(9))
+                for _, ab in ipairs(def.abilities) do -- the plain record's `now` (Engine/Schema/Tracked.lua flattens it)
+                    ab.now = ab.funcs and ab.funcs.now
+                end
+                start(def)
+                prove()
+                cast(2, REND, 11, 15) -- dodged
+                drain(11.5)
+                drain(12)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12)) -- the verdict (correct)
+                ctl.now = 12.8
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- logged, folded by the drain
+                ctl.ViewerAura(ti, "target") -- it lands and lights ~10 ms later, before the drain
+                drain(13)
+                assert.are.equal(1, I.auraOurs[kT()]) -- BY_CAST: the fold ran the recast's write after poll 15
+                drain(13.2)
+                drain(13.5)
+                assert.are.same({ 0, 0 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
+                assert.is_true(I.PRESENCE.viewer.proven[502])
+            end)
+
+            it("review M2: a verdict, then a light with no cast of ours: the strike comes at the next poll", function()
+                prove()
+                cast(2, REND, 11, 15)
+                drain(11.5)
+                drain(12)
+                ctl.ViewerAura(ti, "target")
+                drain(12.5)
+                assert.are.equal(0, I.auraVerdict.strikes[kT()])
+                drain(12.7)
+                assert.are.same({ 1, 1 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
             end)
 
             it("the verdict off switch", function()
