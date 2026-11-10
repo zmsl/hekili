@@ -359,6 +359,7 @@ function M.run(L, seed, o, drivers)
         end
         -- a verdict arm's full-update reshuffle at each target change (fake_api), its counter seeded by the fight
         ctl.viewer.reshuffle, ctl.viewer.reshuffleN = (cdm and arm.reshuffle) or false, seed
+        ctl.viewer.reshuffleDark = (cdm and arm.reshuffleDark) or false -- a re-pointed frame dark for one poll (fake_api)
         if first and layout then -- the viewer is on from boot (no option), so its map predates the instance's first
             -- layout: the client's data-loaded event, once (as at login; later fights reuse the frames and the map)
             d.H.Fire("COOLDOWN_VIEWER_DATA_LOADED")

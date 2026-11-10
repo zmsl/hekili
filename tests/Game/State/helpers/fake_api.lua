@@ -691,6 +691,7 @@ function M.new()
         hookCalls = {}, -- every HookScript / hooksecurefunc call (the leaf is asserted to make none)
         reshuffle = false, -- true: ViewerRetarget also reshuffles every viewer's frames (ViewerReshuffle)
         reshuffleN = 0, -- the counter ViewerRetarget passes ViewerReshuffle (the caller may seed it per fight)
+        reshuffleDark = false, -- true: a reshuffle is not atomic: a moved lit item reads dark until the next flush
     }
     ctl.overrides = {} -- [spellID] = C_Spell.GetOverrideSpell's answer (default: the ID itself)
     api.C_CooldownViewer = {
@@ -960,8 +961,10 @@ function M.new()
     --- move to other frames, a rotation by 1 + n % (count - 1) (deterministic from the caller's counter `n`, never
     --- the identity). An item carries everything but the frame itself: its cooldownID, layoutIndex, flags and aura
     --- state (a lit item stays lit on its new frame, as the client's refresh re-lights it); a pending light follows it.
+    --- With ctl.viewer.reshuffleDark a moved lit item clears on its new frame and re-lights at the next flush (the
+    --- verdict's settle under a non-atomic re-point; still applied then, else it stays dark).
     function ctl.ViewerReshuffle(n)
-        local moved = {} -- old frame -> new frame
+        local moved, order = {}, {} -- old frame -> new frame; the new frames in viewer order
         for _, name in ipairs(M.VIEWERS) do
             local frames, items = {}, {}
             for _, f in ipairs(ctl.viewer.items[name]) do
@@ -985,12 +988,22 @@ function M.new()
                 for k, v in pairs(items[(i - 1 + r) % c + 1]) do
                     f[k] = v
                 end
-                moved[from] = f
+                moved[from], order[#order + 1] = f, f
                 write(f, "reshuffle")
             end
         end
         for _, p in ipairs(ctl.viewer.pending) do
             p[1] = moved[p[1]] or p[1]
+        end
+        if ctl.viewer.reshuffleDark then
+            local p = ctl.viewer.pending
+            for _, f in ipairs(order) do
+                if f.auraInstanceID ~= nil then
+                    local unit, spellID = f.litUnit, f.litBy
+                    clearAura(f)
+                    p[#p + 1] = { f, unit, true, spellID }
+                end
+            end
         end
     end
     --- Our target changed (the client re-reads its target items): every item held for the target clears (a noUnit one
