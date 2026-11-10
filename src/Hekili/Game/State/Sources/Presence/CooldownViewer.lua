@@ -418,6 +418,7 @@ local function sweep(t)
                     end
                 else
                     reset(s) -- held for no unit we track: what it was seen holding says nothing now
+                    seenCd[id], seenUnitCd[id] = 0, 0 -- (review m1) nor for a frame the item moves to
                 end
             else -- silent: NONE only for the application this slot was seen holding (§2.2a)
                 j, u, seenAs = m, sUnit[s], 2
@@ -589,10 +590,12 @@ function Q.Activate(api, t, def)
 end
 
 --- Every slot's edge state starts over (the viewer's data reloaded; the router calls it even while its rebuild waits
---- for combat end): the next light of each is a SEED. Allocates nothing.
+--- for combat end): the next light of each is a SEED, and its dark count restarts. Called from an event, never
+--- inside the sweep's reduction (it marks things). Allocates nothing.
 function Q.ForgetEdges()
     for s = 1, Q.nSlots do
-        sLit[s], sDark[s] = 0, 0
+        sLit[s], sDark[s], sDarkN[s] = 0, 0, 0
+        darkTo(s, 0) -- (review m5) the dark count starts over too
     end
 end
 
