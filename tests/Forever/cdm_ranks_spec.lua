@@ -95,4 +95,12 @@ describe("the pack auras cover the ranks the Cooldown Manager reports", function
             end
         end)
     end
+
+    -- (batch review Should 2) Hurricane's item lights for the debuff a TICK applies, a second or more after the cast
+    -- the pack writes the aura at: inside W0 the verdict would close it, then strike its own late light. Its
+    -- Cooldown Manager switch is off by default (a pack `cdm = false`, the panel can turn it on) until Task 10
+    -- measures the delay.
+    it("Druid hurricane's Cooldown Manager switch is off by default", function()
+        assert.is_false(rawget(druid.auras.hurricane, "cdm"))
+    end)
 end)
