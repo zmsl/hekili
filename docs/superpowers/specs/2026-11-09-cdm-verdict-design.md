@@ -74,6 +74,9 @@ verdict finds the record closed and does nothing (§2.3 keys on the record's app
   3. the reduced state is not UP and `fact.pdark[k]` is true now;
   4. `t >= max(oursAp[k], upAt[k]) + W[k]`: W elapsed since the later of the write and the last UP read;
   5. `I.verdictOff` is not set (harness only, §6).
+  The verdict runs for every pair at every poll 15, INCLUDING the poll's no-live-slot branch (`P.covered == 0`): a dark
+  slot is never live, so a lone dodged aura has `covered` 0 and the verdict must not sit behind the live-slot guard
+  (implementer's finding; the rule is the same, only its placement).
   Then `Direct(Obs.Read, t, k, 0, ReadOf.Aura)` once (the `staged[k]` guard), `verdictAt[k] = t`, `verdictN[k] += 1`.
   No refund, no ticket change (brief-1 M1/N3: tickets expire on their own). The close label stays `expired`.
 - W per record: `I.AuraOurs(u, j, travel)` (Families/Now.lua passes `travel = rMax / velocity` seconds for an ability
@@ -206,3 +209,4 @@ verdict off for the A/B; `Hekili.cdmOff` remains the only global switch; the per
 | V4 | S1 (row before the cast event) and S2 (RESIST row shape) ticket-side items: NOT in this work | ticket side, needs P2/P6 data | P2/P6 results |
 | V5 | W0/TOL/DARK_SWEEPS untuned | need P1/P3 | Task 10 |
 | V6 | `I.verdictOff` harness switch left in Game/ | A/B needs it | delete after Task 10 or keep as debug like `cdmOff` (owner) |
+| V7 | Travel is `rMax / velocity` with the ability's rMax as read from the client; an ability whose range was never read has rMax 0, so a projectile falls back to W0 (Tickets.lua assumes 40 yd there) | no pack ability with velocity lacks a range read today | Task 10 shows a strike on a projectile aura |
