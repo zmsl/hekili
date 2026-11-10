@@ -147,7 +147,12 @@
 --    the GCD before an automatic cast, the fork shows an off-GCD cooldown as soon as it is ready; the replay scores
 --    on-GCD decisions only), under the entry's condition and
 --    the ability's own toggle (the engine gates `toggle = "cooldowns"`/`"defensives"` itself; a defensive one appears
---    only when wowsims fired it: its default is a tank's). `castAllStatBuffCooldowns` (every instant major cooldown
+--    only when wowsims fired it: its default is a tank's). The log samples one race, so `autocastOtherCooldowns` also
+--    takes every racial major cooldown of the request's class (M.RACIALS by M.CLASS_RACES, the defensive ones only for a
+--    tank, none the APL casts itself), as one block in racials.go's order where the log first used one, else first
+--    (racials register first, sim/core/character.go:304, all at priority 0); each other race's line is inert, its
+--    racial unknown (Engine/Schema/Races.lua). The player's cooldown timings or `hpPercentForDefensives`, which
+--    change when wowsims autocasts a racial, are an error (none at the pin). `castAllStatBuffCooldowns` (every instant major cooldown
 --    whose buff raises one of its stat types, out of the autocast list) is one line per instant cast (Effective Time 0s: off
 --    the GCD, as wowsims's EffectiveTime() == 0) in the log whose
 --    aura logged a "Gained {stats}" with one of those stats at the cast and that no "Major cooldown used" line or APL
@@ -382,6 +387,47 @@ for i, name in ipairs({
     M.STATS[i - 1] = name
 end
 
+-- Rule 13's racials: wowsims's racial major cooldowns (sim/core/racials.go, AddMajorCooldown), in its registration
+-- order (the race switch's), each { race, spell ID (Eureka!: by class, racials.go:349-363), defensive (Survival only:
+-- autocast for a tank alone, sim/core/major_cooldown.go:258-263) }. Read Ley Line and Elemental Blessing are APL-only
+-- (racials.go:261-264); the other races have no cooldown.
+M.RACIALS = {
+    { race = "RaceDwarf", id = 20594, defensive = true }, -- Stoneform, racials.go:18-48
+    {
+        race = "RaceGnome",
+        id = {
+            ClassRogue = 1259812,
+            ClassWarrior = 1259813,
+            ClassMage = 1259817,
+            ClassWarlock = 1259821,
+            ClassPriest = 1259823,
+        },
+    }, -- Eureka!, racials.go:344-417
+    { race = "RaceNightElf", id = 1259799 }, -- Elune's Light, racials.go:61-76 (DPS: aura_helpers.go:412-428)
+    { race = "RaceOrc", id = 20572 }, -- Blood Fury, racials.go:80-118
+    { race = "RaceOrc", id = 1299026, defensive = true }, -- Shatter Curse, racials.go:120-160
+    { race = "RaceTroll", id = 20554 }, -- Berserking, racials.go:166-197
+}
+
+-- The races each class can be (wowsims ui/sim/player/classes/capabilities_auto_gen.ts:58-68, CLASS_RACES).
+M.CLASS_RACES = {}
+for class, races in pairs({
+    ClassWarrior = "Human Dwarf NightElf Gnome HighOrderSkyborne Orc Undead Tauren Troll WindshaperSkyborne",
+    ClassPaladin = "Human Dwarf Undead",
+    ClassHunter = "Human Dwarf NightElf HighOrderSkyborne Orc Tauren Troll WindshaperSkyborne",
+    ClassRogue = "Human Dwarf NightElf Gnome HighOrderSkyborne Orc Undead Troll WindshaperSkyborne",
+    ClassPriest = "Human Dwarf NightElf Gnome Undead Troll",
+    ClassShaman = "Dwarf Orc Tauren Troll WindshaperSkyborne",
+    ClassMage = "Human Gnome HighOrderSkyborne Orc Undead Troll",
+    ClassWarlock = "Human Gnome Orc Undead Troll",
+    ClassDruid = "NightElf HighOrderSkyborne Tauren WindshaperSkyborne",
+}) do
+    M.CLASS_RACES[class] = {}
+    for race in races:gmatch("%a+") do
+        M.CLASS_RACES[class]["Race" .. race] = true
+    end
+end
+
 --- Rule 13's facts from an exported log (tools/wowsims/export.lua), our character's lines only: `mcd`, the major
 --- cooldowns wowsims's autocast used ("Major cooldown used: {...}"), and `buffs`, the instant casts whose own aura
 --- logged its stats ("Gained {...} from {...}." at the cast's time; instant: Effective Time 0s, off the GCD too) and that
@@ -434,10 +480,14 @@ end
 --- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
 --- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, levelingFirst, extra,
 --- settings, exclusive, requires, guard, condition, maintenance, select, auras), the spec's exported log text `log` (rule 13; nil: the
---- automatic actions are unsupported) and the request's player `player` (rule 16's option values).
-function M.context(set, r, log, player, encounter)
+--- automatic actions are unsupported), the request's player `player` (rule 16's option values; rule 13's class and
+--- cooldown settings) and `tank` (the player holds a raid tank slot: rule 13's defensive racials).
+function M.context(set, r, log, player, encounter, tank)
     local target = type(encounter) == "table" and type(encounter.targets) == "table" and encounter.targets[1] or {}
     local c = {
+        class = type(player) == "table" and player.class, -- rule 13's racials (none without a class)
+        cooldowns = type(player) == "table" and player.cooldowns or {},
+        tank = tank == true,
         -- CN16 and the travel fold: the request's constants (protojson omits a zero: false, 0, MobTypeUnknown)
         inFront = type(player) == "table" and player.inFrontOfTarget == true,
         folds = {}, -- S4: this entry's CN16 fold texts (reset per entry), named on a `never` omission
@@ -1568,9 +1618,40 @@ local function automatic(c, kind, v)
             end
         end
     end
+    -- the class's racial cooldowns autocast would use (M.RACIALS), placed as a block where the sampled race's racial
+    -- was first used, else first (racials register before any other cooldown, character.go:304, all priority 0)
+    local block, racial, placed = {}, {}, kind ~= "autocastOtherCooldowns" or not c.class
+    for _, rc in ipairs(placed and {} or M.RACIALS) do
+        local id = rc.id
+        if type(id) == "table" then
+            id = id[c.class]
+        end
+        local x, what
+        if id then
+            x, what = spellLookup(c, { spellId = id })
+        end
+        if (M.CLASS_RACES[c.class] or {})[rc.race] and id and (c.tank or not rc.defensive) then
+            if next(c.cooldowns.cooldowns or {}) then -- timings: autocast at those times only (major_cooldown.go:122)
+                error("rule 13: the player's cooldown timings are not modelled", 0)
+            elseif rc.defensive and (tonumber(c.cooldowns.hpPercentForDefensives) or 0) ~= 0 then -- :126-130
+                error("rule 13: the player's hpPercentForDefensives is not modelled", 0)
+            elseif not x then
+                c.notes[#c.notes + 1] = kind .. ": unmapped " .. what
+            elseif not c.namedKeys[x] then -- one the APL casts is no autocast cooldown (sim/core/apl.go:333-340)
+                block[#block + 1] = x
+            end
+        end
+        racial[x or ""] = true
+    end
     local keys, seen = {}, {}
     for _, s in ipairs(list) do
         local x, what = spellLookup(c, s)
+        if x and racial[x] and not placed then
+            placed = true
+            for _, y in ipairs(block) do
+                keys[#keys + 1], seen[y] = y, true
+            end
+        end
         if not x then
             c.notes[#c.notes + 1] = kind .. ": unmapped " .. what
         elseif c.namedKeys[x] then -- another ID of a key the APL casts itself: its own line stands
@@ -1578,6 +1659,9 @@ local function automatic(c, kind, v)
         elseif not seen[x] then
             keys[#keys + 1], seen[x] = x, true
         end
+    end
+    for i = placed and 0 or #block, 1, -1 do
+        table.insert(keys, 1, block[i])
     end
     return keys
 end
@@ -2775,7 +2859,12 @@ function M.write(spec, ex)
         lf:close()
     end
     local player = req.raid.parties[1].players[1]
-    local text, omitted, toggles, header = M.translate(player.rotation, M.context(set, r, log, player, req.encounter))
+    local tank = false -- wowsims's isTank: the player (raid index 0) in a tank slot (sim/core/environment.go:123-128)
+    for _, t in ipairs(req.raid.tanks or {}) do
+        tank = tank or (t.type == "Player" and (t.index or 0) == 0)
+    end
+    local text, omitted, toggles, header =
+        M.translate(player.rotation, M.context(set, r, log, player, req.encounter, tank))
     local Class = r.class:sub(1, 1) .. r.class:sub(2):lower()
     local out = {
         ("# %s: the wowsims/forever default APL for %s (%s), translated to this addon's keys."):format(

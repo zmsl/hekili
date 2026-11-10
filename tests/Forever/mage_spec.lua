@@ -545,13 +545,16 @@ describe("Forever Mage priorities", function()
         local cls = ld.load(nil, FILE, "MAGE")
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, action = cls.abilities }
         -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items and the mana gem, and the High Order Skyborne race
-        -- file's Read Ley Line and Energized (Hekili_Shared/Races/)
+        -- file's Read Ley Line and Energized, and the racials rule 13 adds (Hekili_Shared/Races/)
         local shared = {
             use_items = true,
             mana_gem = true,
             call_action_list = true,
             read_ley_line = true,
             energized = true,
+            eureka = true,
+            blood_fury = true,
+            berserking = true,
         }
         for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "mage")) do
             for list, entries in pairs(p.lists) do

@@ -26,6 +26,8 @@ actions+=/windfury_totem,if=totem.air.remains<=2
 actions+=/strength_of_earth_totem,if=totem.earth.remains<=2
 actions+=/mana_spring_totem,if=totem.water.remains<=2
 actions+=/magma_totem,if=totem.fire.remains<=2
+actions+=/blood_fury,use_off_gcd=1
+actions+=/berserking,use_off_gcd=1
 actions+=/use_items,use_off_gcd=1
 actions+=/rage_of_the_farseer,use_off_gcd=1
 actions+=/call_action_list,name=single_target_rotation,if=active_enemies=1

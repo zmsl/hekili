@@ -271,7 +271,9 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 12. An unresolvable read drops only its branch (a deviation when wowsims has the aura or spell and the fork does not;
     each such ID is listed).
 13. `autocastOtherCooldowns` / `castAllStatBuffCooldowns`: one line per cooldown the log shows wowsims using (an
-    off-GCD one shown as soon as ready: a documented deviation). Not modelled: explosives' after-GCD timing; an
+    off-GCD one shown as soon as ready: a documented deviation). `autocastOtherCooldowns` also takes every racial
+    cooldown the class can have (not only the sampled race's; defensive ones for a tank only), each inert for another
+    race. Not modelled: explosives' after-GCD timing; trinkets and explosives of other gear (one sampled gear set); an
     unmapped item is listed, not written.
 14. `strictSequence`: consecutive lines behind `prev.1`. Deviations: nothing else is held off between members, a later
     member re-reads the sequence's condition, an outside cast of a member opens the next.

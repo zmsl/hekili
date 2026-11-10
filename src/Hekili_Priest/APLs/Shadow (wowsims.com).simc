@@ -13,6 +13,7 @@ actions=shadowform,if=!buff.shadowform.up
 actions+=/dark_sacrifice,if=mana.lo<=2000
 actions+=/elunes_light,use_off_gcd=1,if=(action.elunes_light.known&(gcd.remains<=0&(!action.shadow_word_pain.known|debuff.shadow_word_pain.remains>=10)&(!action.devouring_plague.known|((action.devouring_plague.known&debuff.devouring_plague.remains>=10)|(action.devouring_plague.known&cooldown.devouring_plague.remains>=8)))))
 actions+=/eureka,use_off_gcd=1,if=(action.eureka.known&(gcd.remains<=0&(!action.shadow_word_pain.known|debuff.shadow_word_pain.remains>=8)&(!action.devouring_plague.known|((action.devouring_plague.known&debuff.devouring_plague.remains>=8)|(action.devouring_plague.known&cooldown.devouring_plague.remains>=8)))))
+actions+=/berserking,use_off_gcd=1
 actions+=/use_items,use_off_gcd=1
 actions+=/demonic_rune,use_off_gcd=1
 actions+=/major_mana_potion,use_off_gcd=1

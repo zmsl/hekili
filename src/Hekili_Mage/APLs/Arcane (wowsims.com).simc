@@ -9,6 +9,9 @@
 actions.precombat=read_ley_line
 actions.precombat+=/arcane_wrath
 actions=call_action_list,name=evocation,if=mana.pct_lo<=10
+actions+=/eureka,use_off_gcd=1,if=(buff.missile_barrage.up|(action.arcane_wrath.known&cooldown.arcane_wrath.ready))
+actions+=/blood_fury,use_off_gcd=1,if=(buff.missile_barrage.up|(action.arcane_wrath.known&cooldown.arcane_wrath.ready))
+actions+=/berserking,use_off_gcd=1,if=(buff.missile_barrage.up|(action.arcane_wrath.known&cooldown.arcane_wrath.ready))
 actions+=/use_items,use_off_gcd=1,if=(buff.missile_barrage.up|(action.arcane_wrath.known&cooldown.arcane_wrath.ready))
 actions+=/arcane_power,use_off_gcd=1,if=(buff.missile_barrage.up|(action.arcane_wrath.known&cooldown.arcane_wrath.ready))
 actions+=/mana_gem,use_off_gcd=1,if=(buff.missile_barrage.up|(action.arcane_wrath.known&cooldown.arcane_wrath.ready))

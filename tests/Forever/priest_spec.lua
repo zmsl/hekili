@@ -443,6 +443,7 @@ describe("Forever Priest priorities", function()
             major_mana_potion = true,
             elunes_light = true,
             eureka = true,
+            berserking = true, -- rule 13's Troll racial
             call_action_list = true,
         }
         for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "priest")) do

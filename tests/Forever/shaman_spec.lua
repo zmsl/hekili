@@ -581,8 +581,15 @@ describe("Forever Shaman priorities", function()
 
     it("names only registered abilities, auras, settings and totem elements", function()
         local cls = ld.load(nil, FILE, "SHAMAN")
-        -- Hekili_Shared's consumables and trinkets; the engine's own list call
-        local shared = { major_mana_potion = true, demonic_rune = true, use_items = true, call_action_list = true }
+        -- Hekili_Shared's consumables, trinkets and racials (rule 13's); the engine's own list call
+        local shared = {
+            major_mana_potion = true,
+            demonic_rune = true,
+            use_items = true,
+            call_action_list = true,
+            blood_fury = true,
+            berserking = true,
+        }
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, settings = cls.settings }
         local elements = { fire = true, earth = true, water = true, air = true, main_hand_enchant = true }
         for list, entries in pairs(packs[PACK].lists) do

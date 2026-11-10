@@ -10,7 +10,10 @@
 # Omitted: default #9: spellExpectedDpet
 # Omitted: default #10: spellExpectedDpet
 
-actions=use_items,use_off_gcd=1
+actions=eureka,use_off_gcd=1
+actions+=/blood_fury,use_off_gcd=1
+actions+=/berserking,use_off_gcd=1
+actions+=/use_items,use_off_gcd=1
 actions+=/demonic_rune,use_off_gcd=1
 actions+=/major_mana_potion,use_off_gcd=1
 actions+=/curse_of_the_elements,focus=2,if=settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)|(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)|(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))

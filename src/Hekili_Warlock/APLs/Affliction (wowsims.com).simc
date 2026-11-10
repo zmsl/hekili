@@ -13,7 +13,8 @@
 # Omitted: cooldowns #2: item 250937
 
 actions.precombat=shadow_bolt
-actions=use_items,use_off_gcd=1
+actions=berserking,use_off_gcd=1
+actions+=/use_items,use_off_gcd=1
 actions+=/demonic_rune,use_off_gcd=1
 actions+=/major_mana_potion,use_off_gcd=1
 actions+=/call_action_list,name=single_multi_target_curse_logic
