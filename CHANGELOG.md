@@ -26,6 +26,7 @@
 ### Fixed
 - Spec detection follows Forever's talent trees: every class's talent list now matches the game's (Shaman, Paladin, Druid, Priest, Warrior, Rogue, Mage and Hunter had Classic nodes, missing nodes or nodes in the wrong tree), so a build's points per tree are counted right and a hybrid build near a tie gets the right spec's priority. Shipped builds are unchanged. Not yet checked in game.
 - Icons no longer flash to the next ability for a moment as a cooldown comes back: while the game still says an ability is not ready, the addon now counts down to the end it expects (when your global cooldown ends first, or the cooldown ends on the update itself) instead of pushing it half a second out. Not yet checked in game.
+- Paladins: in dungeons, where the game hides a target's creature type, Exorcism is no longer suggested on targets it cannot hit (Undead and Demon only). Not yet checked in game.
 
 ### Known issues
 - Guardian Druids: Hekili does not yet track the rage you gain from hits you take (the client hides the amounts; a later release adds an estimate), so Lacerate, Primal Bite and Maul show only when the client says you have the rage, and the icon can lag behind your real rage.

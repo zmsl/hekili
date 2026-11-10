@@ -706,3 +706,43 @@ describe("Retribution (wowsims.com)'s opener and the Movement toggle", function(
         assert.are.same({ true, true }, { on.judgement ~= nil, off.judgement ~= nil })
     end)
 end)
+
+-- L237/L238: in a dungeon the client hides the target's creature type; Exorcism's 879 ranks (Undead and Demon only)
+-- then fall to the client's range answer, a plain nil on a target the spell cannot hit. Asked by the known rank.
+describe("Exorcism's 879 ranks with the creature type hidden", function()
+    local SECRET = require("Game.State.helpers.fake_api").SECRET
+
+    it("are refused on a plain nil range answer, usable on true; the type decides once known", function()
+        local H = headless.new({
+            character = {
+                class = "PALADIN",
+                classID = 2,
+                specID = 1486,
+                level = 60,
+                known = { 879, 5614, 5615, 10312, 10313, 10314 },
+                power = { type = 0, token = "MANA", max = 5000 },
+                speed = { 3.6 },
+            },
+            pack = "Retribution (wowsims.com)",
+        })
+        assert.are.same({}, H.loadErrors)
+        assert.are.equal(10314, H.ns.VirtualState.KnownID(879)) -- the facade asks the client by the known rank
+        H.ctl.level.target, H.ctl.distance.target, H.ctl.creature.target = 60, 3, SECRET
+        H.ctl.ranges[10314] = { 0, 0 } -- the client's plain nil
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now
+        local function usable()
+            t = t + 0.2
+            H.ctl.now = t
+            assert.is_true(headless.cycle(H, t))
+            return { H.Hekili.State:IsUsable("exorcism") }
+        end
+        assert.are.same({ false, "creature type unknown; range nil: wrong target type" }, usable())
+        H.ctl.creature.target = "undead"
+        assert.are.same({ true }, usable())
+        H.ctl.creature.target = SECRET
+        H.ctl.ranges[10314] = { 0, 30 } -- in range: true
+        assert.are.same({ true }, usable())
+        assert.are.same({}, H.errors)
+    end)
+end)

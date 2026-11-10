@@ -7349,8 +7349,9 @@ do
             return false, "not usable in combat"
         end
 
-        -- `usable_on`: the target creature types the ability works on (`target.creature_type`'s keys); an unknown type
-        -- never blocks it
+        -- `usable_on`: the target creature types the ability works on (`target.creature_type`'s keys). An unknown type
+        -- (secret in a restricted area) falls to the client's range answer on a hostile target: a plain nil is the
+        -- client's answer for a type the spell cannot hit (L238); true, false or secret keep it usable here.
         z = ability.usable_on
         if z then
             local ct = self.target.creature_type
@@ -7360,6 +7361,13 @@ do
                     if z[ i ] == ct then ok = true; break end
                 end
                 if not ok then return false, "target's creature type not in usable_on" end
+            else
+                local issecretvalue = Facade.issecretvalue
+                local e, hostile = UnitExists( "target" ), UnitCanAttack( "player", "target" )
+                if not issecretvalue( e ) and e and not issecretvalue( hostile ) and hostile then
+                    local r, secret = C_Spell.IsSpellInRange( ability.rangeSpell or ability.id, "target" )
+                    if r == nil and not secret then return false, "creature type unknown; range nil: wrong target type" end
+                end
             end
         end
 

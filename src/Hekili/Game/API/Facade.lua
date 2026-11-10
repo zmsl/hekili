@@ -1004,16 +1004,18 @@ kept("C_Spell.GetSpellCharges", "hybrid", function(spellID)
 end, "times secret in combat [W §4 cooldowns]; Charges()")
 
 -- Range by the known rank (audit H10): the engine asks by an ability's ID; the client is asked by the rank the
--- spellbook knows (an unknown rank or a spell without a range answers nil, read as in range).
+-- spellbook knows (an unknown rank or a spell without a range answers nil, read as in range). A secret answer is nil
+-- with a second value true, so a reader can tell it from the client's plain nil (which also answers a target of a type
+-- the spell cannot hit while the type reads secret, L238).
 local realIsSpellInRange = resolve("C_Spell.IsSpellInRange")
 kept("C_Spell.IsSpellInRange", "hybrid", function(spellID, unit)
     local r = realIsSpellInRange and realIsSpellInRange(VS.KnownID(spellID), unit)
     if issecretvalue(r) then
         modelled = true
-        return nil
+        return nil, true
     end
     return r
-end, "plain [W PR7]; asked by the known rank's ID (KnownID); a secret answer is nothing (in range)")
+end, "plain [W PR7]; asked by the known rank's ID (KnownID); a secret answer is nil, true (in range)")
 
 kept("C_Spell.GetSpellCastCount", "virtual", zero, "flagged SecretWhenCooldownsRestricted; unprobed, unused")
 kept("C_Spell.GetSpellLossOfControlCooldown", "virtual", nothing, "absent on Forever")
@@ -1239,7 +1241,10 @@ local PASSTHROUGH = {
     { "UnitClass", "plain in combat [W PR14; gate spike]" },
     { "UnitClassBase", "plain in combat [W PR14; gate spike]" },
     { "UnitClassification", "plain in combat [W PR14; gate spike]" },
-    { "UnitCreatureType", "plain in combat [W PR14; gate spike]" },
+    {
+        "UnitCreatureType",
+        "plain in combat [W PR14; gate spike]; secret under the Map restriction (recorder lines, 2026-11-07)",
+    },
     { "UnitEffectiveLevel", "plain [W sweep 2026-10-16]" },
     { "UnitFactionGroup", "plain [W sweep 2026-10-16]" },
     { "UnitHasVehicleUI", "plain [W sweep 2026-10-16]" },

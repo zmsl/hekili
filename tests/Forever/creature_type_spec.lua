@@ -52,6 +52,40 @@ describe("the target's creature type", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- L238 (owner's Druid, restricted area, type secret): the client answers a plain nil range for a spell aimed at a
+    -- target of a type it cannot hit, true or false for one it can. The pack's Exorcism case, on a generic ability.
+    it("usable_on with the type unknown: a plain nil range answer on a hostile target refuses it", function()
+        local hamstring = H.Hekili.Class.abilities.hamstring
+        local id = H.ns.VirtualState.KnownID(hamstring.id) -- the rank the facade asks the client by
+        hamstring.usable_on = { "undead", "demon" }
+        H.ctl.distance.target, H.ctl.ranges[id] = 3, { 0, 0 } -- maxRange 0: the client's plain nil
+        local refused = { false, "creature type unknown; range nil: wrong target type" }
+        assert.are.same(refused, { cycle(SECRET):IsUsable("hamstring") })
+        assert.are.same(refused, { cycle("unknown"):IsUsable("hamstring") })
+        assert.is_true(cycle("undead"):IsUsable("hamstring")) -- a known type decides
+        assert.are.same({ false, "target's creature type not in usable_on" }, { cycle("beast"):IsUsable("hamstring") })
+        H.ctl.exists.target = false -- no target: not this rule's
+        assert.is_true(cycle(SECRET):IsUsable("hamstring"))
+        H.ctl.exists.target, H.ctl.friendly.target = true, true -- not attackable: not this rule's
+        assert.is_true(cycle(SECRET):IsUsable("hamstring"))
+        H.ctl.friendly.target = nil
+
+        H.ctl.ranges[id] = nil -- 0-5 yd at 3: true
+        assert.is_true(cycle(SECRET):IsUsable("hamstring"))
+        H.ctl.distance.target = SECRET -- a secret answer: today's in range
+        assert.is_true(cycle(SECRET):IsUsable("hamstring"))
+        H.ctl.distance.target = 20 -- false: out of range, refused by the range filter alone (unchanged)
+        local st = cycle(SECRET)
+        assert.is_true(st:IsUsable("hamstring"))
+        st.rangefilter = true
+        assert.are.same({ false, "filtered out of range" }, { st:IsUsable("hamstring") })
+
+        hamstring.usable_on = nil -- no usable_on: a plain nil still reads in range
+        H.ctl.distance.target, H.ctl.ranges[id] = 3, { 0, 0 }
+        assert.is_true(cycle(SECRET):IsUsable("hamstring"))
+        assert.are.same({}, H.errors)
+    end)
+
     it("usable_on as a function: its list applies, its nil means any target", function()
         local list
         H.Hekili.Class.abilities.hamstring.funcs.usable_on = function()
