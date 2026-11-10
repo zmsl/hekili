@@ -108,7 +108,7 @@ I.presenceHold = holdN
 -- shortcut: W0 1.0 s, TOL 0.3 s and STRIKE_WIN 2.0 s are the spec's (§6) from the 2026-11-09 sample; Task 10's P1 tunes them.
 local W0, TOL, STRIKE_WIN = 1.0, 0.3, 2.0
 -- strikePend[k]: the t of a light within STRIKE_WIN of a verdict (0 none), decided at the next poll, after this drain's
--- fold has run our recast's write (review M2: the polls run before the fold).
+-- fold has run our recast's write (the first Opus round's M2: the polls run before the fold).
 local W, verdictAt, verdictN, strikeN, darkN, strikePend = {}, {}, {}, {}, {}, {}
 I.auraVerdict = { W = W, at = verdictAt, n = verdictN, strikes = strikeN } -- read-only views for the tests
 I.presenceVerdict, I.presenceStrike = verdictN, strikeN -- the harness's names (loop.lua sums them per unit)

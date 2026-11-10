@@ -192,7 +192,7 @@ nothing.
 | Form shift | player form auras skipped (`I.formAura`) |
 | Hidden viewer / `InCombat` setting | not monitored: the dark's start resets, `pdark` false; no verdict (and the walk/model run) |
 | A viewer shown again mid-fight (amended 2026-11-10, M2) | watched dark from its first visible sweep: W from there, whatever the age of the cast |
-| Multi-dot on several mobs | current target only; per record; memory keeps the others |
+| Multi-dot on several mobs | current target only; per record; memory keeps the others. `ours`/`oursAp` are per unit key, so after a cast on mob B, mob A's record is not judged again on a swap back (safe: belief-only) |
 | Partner overwrites our shared debuff | our item goes dark while the debuff is up: rule 1 closes (seen rule) or the verdict closes after W: one recast (owner accepted, L291/L375) |
 | Miss from a lit item (refresh dodged) | UP stands; the rows decide; no verdict |
 | Aura applies late (travel) | W per cast |
@@ -279,7 +279,7 @@ verdict off for the A/B; `Hekili.cdmOff` remains the only global switch; the per
 |---|---|---|---|
 | V1 | (amended 2026-11-10 after the Fable 5.2 review, M3: bounded) A cast a proven item stays silent for: two wrong verdicts, then the proof is suspended until the item lights | bounded at two casts, self-healing; an item that lights for one rank and never for another alternates between two wrong closes and belief-only | a `suspended` count > 0 in a Task 10 snapshot names the item: fix its pack IDs or switch it off |
 | V2 | Mob A's phantom while B is targeted | the item cannot see A | swap-heavy spec data |
-| V3 | Shared debuff partner overwrite = one recast | owner dropped `shared` from the slice | group report |
+| V3 | Shared debuff partner overwrite = one recast (two with a partner's stronger copy, then the suspension, M3) | owner dropped `shared` from the slice | group report |
 | V4 | S1 (row before the cast event) and S2 (RESIST row shape) ticket-side items: NOT in this work | ticket side, needs P2/P6 data | P2/P6 results |
 | V5 | W0/TOL untuned (`DARK_SWEEPS` is gone, M2) | need P1/P3 | Task 10 |
 | V6 | `I.verdictOff` harness switch left in Game/ | A/B needs it | delete after Task 10 or keep as debug like `cdmOff` (owner) |

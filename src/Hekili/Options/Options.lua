@@ -3690,7 +3690,7 @@ found = true end
     -- Cooldown Manager pool names alone (the coverage walk's toKey), stored per aura key and per spec in the profile
     -- (profile.specs[ id ].cdm[ key ]; unset: the pack's `cdm`, else on) whether or not the item is on a bar. Gold: an
     -- item of the aura on a bar; grey: in the pool only. One grid, as the game's own Cooldown Settings shows them (owner
-    -- 2026-11-09: the client's selfAura flag is no buff/debuff split, Thorns is not a self aura). A change reaches the belief through
+    -- 2026-11-09: the client's selfAura flag is no buff/debuff split). A change reaches the belief through
     -- Hekili:CdmSwitchChanged (Tracked.lua): the leaf's map is rebuilt out of combat, at combat end otherwise.
     -- Rebuilt when the options open (ns.StartConfiguration), out of combat; in combat the last cards stay.
     local CDM_GOLD, CDM_GREY = "|cffffd100", "|cff808080"
