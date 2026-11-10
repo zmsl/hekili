@@ -306,7 +306,9 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- rage 4-7, Shield Block and Sunder waiting on rage, only Shield Wall usable), 4.6 s longer on the re-timed fight
     -- 0.7 warrior lane (R6): CN8's steady-icons limits 21.8 at L40/L60 kept; this check's fight measures 10.2 / 14.6 at the new pin; the
     -- seeds 1-20 stretch the cause names is rage-starved (gap CK: rage 0.9-9, only Shield Wall usable), not re-swept here
-    local PROT_LIVE = { [10] = 6, [40] = 21.8, [60] = 21.8 }
+    -- Release fix (batch review B S5): 21.8 -> 10.2 (L40) / 14.6 (L60), the worst idle this check measures (seed 1) at the new pin; the older
+    -- 21.8 was the re-timed fight under CN8 D2 and no longer happens, so the limit follows the measurement (a larger idle fails)
+    local PROT_LIVE = { [10] = 6, [40] = 10.2, [60] = 14.6 }
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()
             ws.live(
