@@ -1615,6 +1615,21 @@ describe("auras", function()
                 end
             )
 
+            it("F52-C (review S1): a player item's frame re-pointed, dark for one sweep, closes nothing", function()
+                cast(1, SHOUT, 10.1, 120)
+                ctl.ViewerAura(pi, "player")
+                poll(10.2)
+                poll(10.8) -- upAt >= oursAp + REFRESH_LAG: a NONE would close by rule 1
+                ctl.ViewerRelease(pi) -- the reshuffle: 501 shows on a new frame, dark at its first sweep
+                local pi2 = ctl.ViewerItem("BuffIconCooldownViewer", 3, 501)
+                poll(11.0)
+                assert.are.equal(130.1, est("player", fs.SPENDER_A, 11.0)) -- no inherited seen memory: no NONE
+                assert.are.equal(0, I.auraVerdict.n[SHOUT])
+                ctl.ViewerAura(pi2, "player")
+                poll(11.2)
+                assert.are.same({ 130.1, 1 }, { est("player", fs.SPENDER_A, 11.2), I.auraOurs[SHOUT] })
+            end)
+
             it("the verdict off switch", function()
                 I.verdictOff = true
                 prove()

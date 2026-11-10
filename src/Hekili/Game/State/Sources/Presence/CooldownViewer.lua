@@ -63,9 +63,9 @@ local cUp, cNone, cStale, tUp, tNone, live = {}, {}, {}, {}, {}, {}
 local eT, dT = {}, {}
 local cDark = {} -- by k: the slots counted dark for the thing (cdm-verdict §2.2), preallocated beside cUp
 -- Per cooldownID (cdm-verdict §2.1, §2.4; decisions 117, 121), preallocated at build() to the map's keys, out of combat:
--- proven (lit once this build), the unit it last lit for (1 player, 2 target), strikes, and the seen rule's memory (the
--- last UP's t and unit) that a re-pointed frame inherits. The item is the cooldownID, never the frame.
-local provenCd, provenU, strikesCd, seenCd, seenUnitCd = {}, {}, {}, {}, {}
+-- proven (lit once this build), the unit it last lit for (1 player, 2 target) and strikes. The item is the cooldownID,
+-- never the frame. The seen rule's memory stays per slot: a re-pointed frame starts with none (Fable 5.2 review S1).
+local provenCd, provenU, strikesCd = {}, {}, {}
 local ambC = {} -- by k: the per-fight lights of ambiguous items naming aura j on unit u (§2.2; the snapshot's)
 local VBIT = { 1, 2, 4, 8 } -- a viewer's bit in Q.Via (§2.4)
 local touched, mark, nTouched = {}, {}, 0 -- the things a sweep moved, each once
@@ -90,8 +90,6 @@ local Q = {
     proven = provenCd, -- by cooldownID (cdm-verdict §2.1): read-only views for the tests and the snapshot
     provenU = provenU,
     strikes = strikesCd,
-    seenCd = seenCd,
-    seenUnitCd = seenUnitCd,
     repoints = 0, -- per fight: plain cooldownID changes of a slot that held another one (§2.4)
     struck = 0, -- per build: cooldownIDs whose proof the strikes dropped (§2.5)
 }
@@ -148,7 +146,7 @@ local function build(api, def)
         mappable[k] = nil
     end
     for id in pairs(provenCd) do -- zeroed at every build: a new rank's map starts unproven (decision 124)
-        provenCd[id], provenU[id], strikesCd[id], seenCd[id], seenUnitCd[id] = nil, nil, nil, nil, nil
+        provenCd[id], provenU[id], strikesCd[id] = nil, nil, nil
     end
     Q.struck = 0
     local CV = api.C_CooldownViewer
@@ -201,7 +199,7 @@ local function build(api, def)
                         cdvToJ[id] = one
                     end
                     if cdvToJ[id] then -- every mapped key preallocated: the sweep writes existing keys only
-                        provenCd[id], provenU[id], strikesCd[id], seenCd[id], seenUnitCd[id] = false, 0, 0, 0, 0
+                        provenCd[id], provenU[id], strikesCd[id] = false, 0, 0
                     end
                 end
             end
@@ -393,10 +391,8 @@ local function sweep(t)
             if id ~= nil and sCd[s] ~= 0 then
                 Q.repoints = Q.repoints + 1
             end
-            reset(s)
+            reset(s) -- with its seen memory: what the item was seen holding on another frame says nothing here (S1)
             sCd[s] = id or 0
-            -- cdm-verdict §2.4a: the item moved frame, its seen memory moves with it (keyed by cooldownID)
-            sSeen[s], sUnit[s] = id ~= nil and seenCd[id] or 0, id ~= nil and seenUnitCd[id] or 0
         end
         local m = id ~= nil and Plain(api, rawget(item, "layoutIndex")) ~= nil and cdvToJ[id]
         if m and m > 0 then -- configured and mapped to one aura (an ambiguous item counts for none)
@@ -418,7 +414,6 @@ local function sweep(t)
                     end
                 else
                     reset(s) -- held for no unit we track: what it was seen holding says nothing now
-                    seenCd[id], seenUnitCd[id] = 0, 0 -- (review m1) nor for a frame the item moves to
                 end
             else -- silent: NONE only for the application this slot was seen holding (§2.2a)
                 j, u, seenAs = m, sUnit[s], 2
@@ -484,7 +479,6 @@ local function sweep(t)
         end
         if a == UP then -- every held sweep, not only a change: our refresh moves applied while the item stays held
             sSeen[s] = t
-            seenCd[id], seenUnitCd[id] = t, u -- the item's memory (§2.4a), for a frame it moves to
         end
     end
     reduce(t) -- inside the pcall: a raise in the router's reduction or onEdge is a self-off too (§3.5)
@@ -651,16 +645,11 @@ end
 -- A target change (§3.4): the slots last answering for the target, and every NONE slot, settle for this frame: a sweep
 -- at t <= the switch's t is stale (t is GetTime(), one value per frame; CDM-O, owner 2026-11-08: the viewer is stale
 -- only in the event's frame, right from the next); the target slots' seen rule starts over (mob A's light says nothing
--- of mob B). Idempotent (it fires twice a swap). The verdict (cdm-verdict §2.4): the target's seen memory per
--- cooldownID is zeroed, and every item proven for the target settles with its dark count restarted. Allocates nothing.
+-- of mob B). Idempotent (it fires twice a swap). The verdict (cdm-verdict §2.4): every item proven for the target
+-- settles with its dark count restarted. Allocates nothing.
 S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
     if not active then
         return
-    end
-    for id, u in pairs(seenUnitCd) do
-        if u == 2 then
-            seenCd[id] = 0
-        end
     end
     for s = 1, Q.nSlots do
         if sUnit[s] == 2 or sAns[s] == NONE or provenU[sCd[s]] == 2 then

@@ -211,8 +211,6 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         "items appearing (in combat, lit at once) and disappearing move the counts; a never-lit item is not live",
         function()
             ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
-            ctl.viewer.sets[1] = { 505 } -- (cdm-verdict §2.4a) its own cooldownID: 501's seen memory is the item's
-            ctl.viewer.infos[505] = { spellID = A }
             start()
             ctl.combat = true
             ctl.Fire("PLAYER_REGEN_DISABLED")
@@ -223,7 +221,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
             assert.is_not_nil(Q.slotOf[b])
             assert.are.same({ 2, 2, 0, 0, 3, 0 }, counts(1, 1))
             rec(1, 1, 2)
-            local s = ctl.ViewerAcquire("UtilityCooldownViewer", 505, true) -- a silent item (F12)
+            local s = ctl.ViewerAcquire("UtilityCooldownViewer", 501, true) -- a silent item (F12)
             sweep(4)
             assert.are.same({ 2, 2, 0, 0, 3, 0 }, counts(1, 1)) -- it never held this application: not live
             assert.are.equal(I.UP, I.presence.Presence(1, 1))
@@ -524,11 +522,10 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
         assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(2, 1))
         item.silent = true -- (CDM Task 8: a re-point's refresh now lights an aura that is up; silent keeps it dark here)
-        ctl.ViewerRepoint(item, 502) -- back to aura 1, silent
+        ctl.ViewerRepoint(item, 502) -- back to aura 1, silent: not live until it lights again
         item.silent = nil
         sweep(4)
-        -- (cdm-verdict §2.4a) the frame is item 502 again, which held this application at 2: its seen memory comes back
-        assert.are.same({ 1, 0, 1, 0, 0, 4 }, counts(1, 1))
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
         ctl.ViewerAura(item, "player", A)
         sweep(5)
         ctl.ViewerClear(item)
@@ -925,7 +922,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         end
     end)
 
-    it("a re-point: the frame inherits its new cooldownID's seen memory and restarts its dark count", function()
+    it("a re-point: the frame starts with no seen memory (review S1) and its dark starts over", function()
         local x = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
         local y = ctl.ViewerItem("EssentialCooldownViewer", 1, 501)
         start()
@@ -943,30 +940,9 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         ctl.ViewerRepoint(y, 502)
         sweep(5)
         assert.are.equal(2, Q.repoints)
-        assert.are.equal(2, Q.seen[Q.slotOf[y]]) -- 502's memory moved to y
-        assert.are.equal(0, Q.seen[Q.slotOf[x]]) -- 501 has none
-        assert.are.same({ 1, 0, 1, 0, 0, 5 }, counts(1, 1)) -- y answers the seen rule's NONE at once
-        assert.are.equal(0, dark(1, 1)) -- y settles: its count restarted
-        sweep(6)
-        assert.are.equal(1, dark(1, 1))
-    end)
-
-    it("review m1: held for no unit we track drops the cooldownID's seen memory too, not only the slot's", function()
-        local x = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
-        local y = ctl.ViewerItem("EssentialCooldownViewer", 1, 501)
-        start()
-        ctl.ViewerAura(x, "player", A)
-        sweep(2)
-        rec(1, 1, 2)
-        assert.are.equal(2, Q.seenCd[502])
-        x.auraInstanceID, x.auraDataUnit = fake.SECRET, "focus"
-        sweep(3)
-        assert.are.same({ 0, 0 }, { Q.seenCd[502], Q.seenUnitCd[502] })
-        ctl.ViewerClear(x)
-        y.silent = true
-        ctl.ViewerRepoint(y, 502) -- the item moves frame: nothing to inherit, so no NONE for this application
-        sweep(4)
-        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1))
+        assert.are.same({ 0, 0 }, { Q.seen[Q.slotOf[x]], Q.seen[Q.slotOf[y]] }) -- nothing moves with the item
+        assert.are.same({ 0, 0, 0, 0, 0, 0 }, counts(1, 1)) -- so y answers no NONE for what x was seen holding
+        assert.is_nil(Q.seenCd)
     end)
 
     it("review m5: ForgetEdges (the viewer's data reloaded) restarts every dark count", function()
@@ -986,19 +962,17 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         assert.are.equal(1, dark(1, 1))
     end)
 
-    it("a target swap zeroes the target's seen memory and dark counts, then settles", function()
+    it("a target swap zeroes the target's dark counts, then settles", function()
         ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
         start()
         up(A, "target")
         sweep(2)
-        assert.are.same({ 2, 2 }, { Q.seenCd[502], Q.seenUnitCd[502] })
         down(A, "target")
         sweep(3)
         sweep(4)
         assert.are.equal(1, dark(1, 2))
         ctl.now = 4.5
         ctl.Fire("PLAYER_TARGET_CHANGED")
-        assert.are.equal(0, Q.seenCd[502])
         assert.are.equal(0, dark(1, 2))
         sweep(4.5) -- the swap's own frame: settling
         assert.are.equal(0, dark(1, 2))
