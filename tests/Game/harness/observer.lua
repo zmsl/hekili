@@ -611,6 +611,10 @@ function M.new(W, k)
                     local src = (ev.src == nil or ev.src == us) and "player" or "party1"
                     -- the same draw as before; viewerLag (the edge-anchor stress arms only) on both edges
                     local vk, vt = unit .. ev.aura, t + W.mrng.int(3, 5) / 1000 + (k.viewerLag or 0)
+                    local late = W.lateLight -- a verdict arm's late lights: { share, lo, hi } s, from W.lrng alone
+                    if late and ev.stacks > 0 and W.lrng.next() < late[1] then
+                        vt, W.lateN = vt + late[2] + W.lrng.next() * (late[3] - late[2]), (W.lateN or 0) + 1
+                    end
                     if viewerLast[vk] and vt <= viewerLast[vk] then -- a set and a clear at one instant stay in order
                         vt = viewerLast[vk] + 1e-6
                     end

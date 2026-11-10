@@ -328,6 +328,8 @@ function M.run(L, seed, o, drivers)
         W.auraOnAvoid = arm.world.auraOnAvoid ~= false
         local jit, dur, drng, scale = arm.world.castJitter, arm.world.durError, rng.new(seed + 86028121), {}
         W.castJitter, W.jrng = jit, rng.new(seed + 49979687)
+        W.lateLight = arm.world.lateLight -- a share of the viewer's lights late (observer.lua), its own draw
+        W.lrng = W.lateLight and rng.new(seed + 61031) or nil
         W.durScale = dur
                 and function(id) -- per aura and fight, the truth's duration 1 - dur or 1 + dur of the pack's
                     scale[id] = scale[id] or (drng.next() < 0.5 and 1 - dur or 1 + dur)
@@ -446,6 +448,16 @@ function M.run(L, seed, o, drivers)
     local stopAt = W.stopAt
     local t = 0
     local lastRefused, readySince = false, {}
+    -- a verdict arm's recast (ab.lua world.recast): an uptime aura's press whose hit was avoided is pressed again at
+    -- the next free GCD, whatever the driver shows (the recast inside the verdict's drain, review M1)
+    local recastOf, recastKey = nil, nil
+    if aw.recast then
+        recastOf = {}
+        for _, u in ipairs(L.uptime) do
+            recastOf[u[1]] = true
+        end
+    end
+    run.recasts = 0
     local traced = {}
     run.cal = not o.trace and M.calibrate() or nil
     run.bytes, run.sampled = 0, 0
@@ -605,11 +617,26 @@ function M.run(L, seed, o, drivers)
                 readySince[k] = nil
             end
         end
-        if shown and t - readySince[key] >= (o.reaction or 0) - 1e-9 then -- one attempt a tick
+        local press, forced = shown and t - readySince[key] >= (o.reaction or 0) - 1e-9, false -- one attempt a tick
+        if recastKey and gcdFree then -- one attempt, pressed or refused
+            key, press, forced, recastKey = recastKey, true, true, nil
+        end
+        if press then
             truth.Hekili.State.reset("Primary", true) -- Update leaves its last prediction (a predicted buff, query_time ahead of now)
             local p = content.resolve(key, truth)
             local pre = W.res(us, p.pt)
+            local n0 = #W.truth
             local ok, why = W.press(us, key, p)
+            if ok and forced then
+                run.recasts = run.recasts + 1
+            elseif ok and recastOf and recastOf[key] then
+                for i = n0 + 1, #W.truth do
+                    local ev = W.truth[i]
+                    if ev.kind == "spell" and ev.src == us and ev.act ~= "WOUND" then
+                        recastKey = key
+                    end
+                end
+            end
             if inCombat then
                 run.attempts = run.attempts + 1
                 if steps[2] and M.readyShort(pre, p, us, t) then

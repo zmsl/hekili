@@ -93,8 +93,51 @@ M.ARMS = {
         edge = true,
         world = { swapEvery = { 4, 8 }, extraMobs = 2 },
     },
+    -- the verdict's wrong-verdict worlds (review M4): `lateLight` { share, lo, hi } a seeded share of the viewer's
+    -- lights lands lo-hi s late, past W (observer.lua: strikes and the flicker of wrong verdicts); `recast` the
+    -- non-landing world with an avoided uptime press pressed again at the next free GCD (loop.lua: the recast in the
+    -- verdict's drain, review M1); `reshuffleDark` viewer-swap with a re-pointed lit frame dark for one poll (fake_api)
+    ["viewer-late"] = {
+        outcomes = "default",
+        presence = "router",
+        viewer = true,
+        layout = "buffs",
+        edge = true,
+        world = { lateLight = { 0.1, 1.2, 1.8 } },
+    },
+    ["viewer-recast"] = {
+        outcomes = "default",
+        presence = "router",
+        viewer = true,
+        layout = "buffs",
+        edge = true,
+        world = {
+            auraOnAvoid = false,
+            mobAvoid = { miss = 0.08, dodge = 0.08, parry = 0.04, block = 0, spellMiss = 0.2 },
+            recast = true,
+        },
+    },
+    ["viewer-swap-dark"] = {
+        outcomes = "default",
+        presence = "router",
+        viewer = true,
+        layout = "mixed",
+        reshuffle = true,
+        reshuffleDark = true,
+        edge = true,
+        world = { swapEvery = { 4, 8 }, extraMobs = 2 },
+    },
 }
-M.VERDICT = { "viewer-reshuffle", "viewer-nonland", "secret-viewer-buffs", "secret-viewer-mixed", "viewer-swap" }
+M.VERDICT = {
+    "viewer-reshuffle",
+    "viewer-nonland",
+    "secret-viewer-buffs",
+    "secret-viewer-mixed",
+    "viewer-swap",
+    "viewer-late",
+    "viewer-recast",
+    "viewer-swap-dark",
+}
 for _, name in ipairs(M.VERDICT) do -- each with the verdict off (`novd`: loop.lua sets VI.verdictOff on the driver)
     local a = { novd = true }
     for k, v in pairs(M.ARMS[name]) do
