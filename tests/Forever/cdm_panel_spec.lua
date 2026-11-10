@@ -183,6 +183,32 @@ describe("the Cooldown Manager switches", function()
             chunk()
             libs["AceConfigRegistry-3.0"]:ValidateOptionsTable(options, "cdm")
         end
+        -- AceConfigDialog's GetOptionsMemberValue for `hidden` and `disabled`: both are INHERITED, so a group's function
+        -- also runs for each of its children, with info.option = that child. Returns { [path] = value } for every node.
+        local function aceInherited(root, member)
+            local out = {}
+            local function walk(node, path, inherited)
+                if node[member] ~= nil then
+                    inherited = node[member]
+                end
+                if type(inherited) == "function" then
+                    local info = { option = node, type = node.type, uiType = "dialog" }
+                    for i = 1, #path do
+                        info[i] = path[i]
+                    end
+                    out[table.concat(path, ".")] = inherited(info)
+                else
+                    out[table.concat(path, ".")] = inherited
+                end
+                for key, child in pairs(node.args or {}) do
+                    local p = { unpack(path) }
+                    p[#p + 1] = key
+                    walk(child, p, inherited)
+                end
+            end
+            walk(root, { "cdm" }, nil)
+            return out
+        end
 
         it("lists only the items that name one pack aura, gold on a bar, grey in the pool, in one grid", function()
             layout(4, 2, { { selfAura = true }, { hasAura = true, selfAura = false }, {}, { hasAura = true } })
@@ -219,6 +245,17 @@ describe("the Cooldown Manager switches", function()
             -- (batch review Must 1) the panel with its cards passes AceConfig's validation: the options can open
             assert.has_no.errors(function()
                 aceValidate(H.Hekili.Options.args.cdm)
+            end)
+            -- (in game 2026-11-10) opening the panel: the grid's `hidden` is inherited by each card (info.option = the
+            -- card, which has no args); it must not raise, and the cards and the grid show
+            local hidden
+            assert.has_no.errors(function()
+                hidden = aceInherited(H.Hekili.Options.args.cdm, "hidden")
+            end)
+            assert.is_false(hidden["cdm.items"])
+            assert.is_false(hidden["cdm.items." .. k(1)])
+            assert.has_no.errors(function()
+                aceInherited(H.Hekili.Options.args.cdm, "disabled")
             end)
 
             -- the switch: default on, a write goes to the profile by key and reaches the def

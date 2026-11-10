@@ -7761,7 +7761,8 @@ do
                         name = "",
                         order = 10,
                         args = {},
-                        hidden = function( info ) return next( info.option.args ) == nil end,
+                        -- `hidden` is inherited: it also runs for each card (info.option = the card, no args)
+                        hidden = function( info ) local a = info.option.args return a ~= nil and next( a ) == nil end,
                     },
                 },
             },
