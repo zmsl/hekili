@@ -99,6 +99,18 @@ local cyT, cyD, cyAp, cyE, cyN, cySum, cyObs, cyMod, seedAp = {}, {}, {}, {}, {}
 -- Per fight: polls an UP waited on the debounce past the model's expiry, and the re-establishes it made.
 local holdN = { waits = 0, fires = 0 }
 I.presenceHold = holdN
+-- The verdict (cdm-verdict §2.3-§2.5, decisions 119-122): an up record our evidence opened, its proven item dark
+-- (fact.pdark) and not UP for W past the later of the write and the last UP, is closed once. By key: W[k] its window
+-- (W0 for a walk or CDM opener, max(W0, travel + TOL) for our cast), verdictAt[k] the last verdict's t while a light
+-- within STRIKE_WIN may still prove it wrong (0 none); per fight verdictN, strikeN, and darkN (1: pdark seen).
+-- shortcut: W0 1.0 s, TOL 0.3 s and STRIKE_WIN 2.0 s are the spec's (§6) from the 2026-11-09 sample; Task 10's P1 tunes them.
+local W0, TOL, STRIKE_WIN = 1.0, 0.3, 2.0
+local W, verdictAt, verdictN, strikeN, darkN = {}, {}, {}, {}, {}
+I.auraVerdict = { W = W, at = verdictAt, n = verdictN, strikes = strikeN } -- read-only views for the tests
+I.presenceVerdict, I.presenceStrike = verdictN, strikeN -- the harness's names (loop.lua sums them per unit)
+local function zeroVerdict(k)
+    W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k] = W0, 0, 0, 0, 0
+end
 local function zeroEdge(k)
     anAp[k], emcN[k], emcSum[k], emcLast[k] = 0, 0, 0, 0
     cyT[k], cyD[k], cyAp[k], cyE[k], cyN[k], cySum[k], cyObs[k], cyMod[k], seedAp[k] = 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -133,6 +145,8 @@ I.OnBuild(function(def)
         lastE[j], lastSt[j], longE[j], lastE[k], lastSt[k], longE[k] = 0, 0, 0, 0, 0, 0
         zeroEdge(j)
         zeroEdge(k)
+        zeroVerdict(j)
+        zeroVerdict(k)
     end
     floorSet, anyLong, anyLast = false, false, false
     holdN.waits, holdN.fires = 0, 0
@@ -202,7 +216,7 @@ local function walk(api, u, unit, t)
                     if u <= 2 and not I.inCombat then -- rule 2.5.1: its source says whose it is (out of combat only)
                         local src = Plain(api, data.sourceUnit)
                         if src == "player" or src == "pet" then
-                            ours[k], oursAp[k] = BY_WALK, foldApplied(u, j, t)
+                            ours[k], oursAp[k], W[k] = BY_WALK, foldApplied(u, j, t), W0
                         elseif not (again and ours[k] == BY_WALK) then -- ours and a partner's in one walk: ours
                             ours[k] = 0
                         end
@@ -305,11 +319,13 @@ S.Poll(11, function(api, t)
     end
 end)
 
---- Our cast wrote record (u, j) (Families/Now.lua's aura()): this application is ours (rule 2.5.1). Allocates nothing.
-function I.AuraOurs(u, j)
+--- Our cast wrote record (u, j) (Families/Now.lua's aura()): this application is ours (rule 2.5.1); `travel` (seconds,
+--- 0 or nil none) widens its verdict window (cdm-verdict §2.3). Allocates nothing.
+function I.AuraOurs(u, j, travel)
     if u <= 2 then
         local k = (u - 1) * I.AURA_UNIT + j
-        ours[k], oursAp[k] = BY_CAST, I.auras.applied[u][j]
+        local w = (travel or 0) + TOL
+        ours[k], oursAp[k], W[k] = BY_CAST, I.auras.applied[u][j], w > W0 and w or W0
     end
 end
 
@@ -345,6 +361,23 @@ local function closes(k, u, j)
     return c ~= BY_CAST or upAt[k] >= oursAp[k] + REFRESH_LAG
 end
 
+-- Whether a reduced fact may act on record (u, j) now: a plain walk wins out of combat (I7); forms and enchants are
+-- skipped on the player (M5); nothing on the target while a swap waits to fold (review m3). apply's and the verdict's
+-- guards (cdm-verdict §2.3). Allocates nothing.
+local function judgeable(j, u)
+    local U = I.auras
+    if u > U.n or j > U.nAura then -- (4a review m5) an in-combat rebuild may shrink the set under the router's map
+        return false
+    elseif not I.inCombat and ((u == 1 and playerPlain) or (u == 2 and targetPlain)) then
+        return false -- the walk answers
+    elseif u == 1 and (I.formAura[j] or I.enchantAura[j]) then
+        return false -- Sources/Forms.lua's and Sources/Enchants.lua's records
+    end
+    -- (review m3) a target change's TargetSwap folds after this drain's polls: until then the record is the old mob's,
+    -- so nothing is applied on the target; the next poll answers
+    return u ~= 2 or I.targetSlot == I.curSlot
+end
+
 -- Rules 2.5.1-7 for one reduced fact (UP or DOWN) of aura j on unit u: a plain walk wins out of combat (I7); forms and
 -- enchants are skipped on the player (M5); an UP stages only while the record is down: at once with no model record,
 -- after HOLD lit past the model's expiry otherwise (rules 3-4, L310); a DOWN
@@ -359,15 +392,18 @@ local function apply(j, u, up, t, edge)
     if up then
         upAt[k] = t
     end
-    if not I.inCombat and ((u == 1 and playerPlain) or (u == 2 and targetPlain)) then
-        return false -- the walk answers
-    end
-    if u == 1 and (I.formAura[j] or I.enchantAura[j]) then
-        return false -- Sources/Forms.lua's and Sources/Enchants.lua's records
-    elseif u == 2 and I.targetSlot ~= I.curSlot then
-        -- (review m3) a target change's TargetSwap folds after this drain's polls: until then the record is the old
-        -- mob's, so nothing is applied on the target; the next poll answers
+    if not judgeable(j, u) then
         return false
+    end
+    if up and verdictAt[k] > 0 then -- a light after a verdict (cdm-verdict §2.5): wrong unless our cast came since
+        if t - verdictAt[k] <= STRIKE_WIN and not (ours[k] == BY_CAST and oursAp[k] > verdictAt[k]) then
+            strikeN[k] = strikeN[k] + 1
+            local P = I.presence
+            if P.Strike then
+                P.Strike(j, u)
+            end
+        end
+        verdictAt[k] = 0
     end
     local e = U.exp0[u][j]
     local stage, rem, kind = false, 0, ReadOf.Aura
@@ -406,7 +442,7 @@ local function apply(j, u, up, t, edge)
     end
     local stacks = 0
     if up then -- an UP stages only on a record still down
-        ours[k], oursAp[k] = BY_CDM, foldApplied(u, j, t) -- a CDM UP opened it
+        ours[k], oursAp[k], W[k] = BY_CDM, foldApplied(u, j, t), W0 -- a CDM UP opened it
         stacks = lastSt[k] -- re-established: the model's last stacks (else 0)
         if seed then
             seedAp[k] = oursAp[k]
@@ -468,6 +504,32 @@ local function cycle(j, u, k, a, F)
     end
 end
 
+-- The verdict for (j, u) at poll t (cdm-verdict §2.3), `a` its reduced answer: a record up that our evidence opened,
+-- not UP, its proven item dark (fact.pdark), W past the later of the write and the last UP: closed once (no refund).
+-- Allocates nothing.
+local function verdict(j, u, k, a, t, F)
+    if verdictAt[k] > 0 and t - verdictAt[k] > STRIKE_WIN then
+        verdictAt[k] = 0
+    end
+    if not F.pdark[k] then
+        return
+    end
+    darkN[k] = 1
+    if I.verdictOff or a == I.UP or not judgeable(j, u) then
+        return
+    end
+    local U = I.auras
+    local ap = U.applied[u][j]
+    if U.exp0[u][j] <= t or ours[k] == 0 or oursAp[k] ~= ap or staged[k] == t then
+        return
+    end
+    local from = upAt[k] > ap and upAt[k] or ap
+    if t >= from + W[k] then
+        staged[k], verdictAt[k], verdictN[k] = t, t, verdictN[k] + 1
+        Direct(Obs.Read, t, k, 0, ReadOf.Aura)
+    end
+end
+
 local function onEdge(j, u, up, t)
     if apply(j, u, up, t, true) then
         -- the aura event the client would have fired (the unit's full update): Hekili's handler forces a cycle
@@ -489,7 +551,15 @@ S.Poll(15, function(_, t)
     end
     P.Sweep(t)
     local U = I.auras
+    local F = P.fact
+    local vF = F and F.pdark and F -- the router's facts carry pdark (cdm-verdict §2.3); Default has none
     if P.covered == 0 then
+        -- a dark item is never live: with no live slot the verdict still runs (cdm-verdict §2.2)
+        for u = 1, vF and (U.n < 2 and U.n or 2) or 0 do
+            for j = 1, U.nAura do
+                verdict(j, u, (u - 1) * I.AURA_UNIT + j, I.UNDECIDED, t, vF)
+            end
+        end
         if floorSet then
             for j = 1, U.nAura do
                 floor[j] = 0
@@ -521,7 +591,9 @@ S.Poll(15, function(_, t)
                 apply(j, u, a == I.UP, t, false)
             end
             local k = (u - 1) * I.AURA_UNIT + j
-            local F = P.fact
+            if vF then
+                verdict(j, u, k, a, t, vF)
+            end
             if F and F.edge then
                 local te = F.edge[k] or 0
                 if a == I.UP and te > 0 then
@@ -564,6 +636,7 @@ S.On("PLAYER_REGEN_DISABLED", nil, function()
         facts[k], disagree[k], staged[k], exitFix[k] = 0, 0, 0, 0
         lastE[k], lastSt[k], longE[k] = 0, 0, 0 -- out of combat the walk answered
         emcN[k], emcSum[k], emcLast[k], cyT[k], cyN[k], cySum[k], cyObs[k], cyMod[k] = 0, 0, 0, 0, 0, 0, 0, 0
+        verdictAt[k], verdictN[k], strikeN[k], darkN[k] = 0, 0, 0, 0
     end
     holdN.waits, holdN.fires = 0, 0
     anyLong, anyLast = false, false
@@ -665,4 +738,27 @@ I.OnSnapshot(function(out, now)
         return
     end
     out[#out + 1] = string.format("presence-edge debounceWaits=%d debounceFires=%d", holdN.waits, holdN.fires)
+    local never = "" -- the verdict (cdm-verdict §3): per thing with a verdict, a strike or a pdark this fight
+    for j = 1, U.nAura do
+        for u = 1, (U.n < 2 and U.n or 2) do
+            local k = (u - 1) * I.AURA_UNIT + j
+            if verdictN[k] + strikeN[k] + darkN[k] > 0 then
+                out[#out + 1] = string.format(
+                    "presence-verdict %s unit=%s W=%.2f verdicts=%d strikes=%d pdark=%s darkSlots=%d",
+                    KEY[j],
+                    u == 1 and "player" or "target",
+                    W[k],
+                    verdictN[k],
+                    strikeN[k],
+                    tostring(F and F.pdark and F.pdark[k] == true),
+                    select(7, leaf.Counts(j, u)) or 0
+                )
+            end
+        end
+        if leaf.NeverLit and leaf.NeverLit(j) then
+            never = never == "" and KEY[j] or never .. "," .. KEY[j]
+        end
+    end
+    out[#out + 1] = string.format("presence-proof mappedNeverLit=%s", never == "" and "-" or never)
+    out[#out + 1] = string.format("presence-proof repoints=%d struck=%d", leaf.repoints or 0, leaf.struck or 0)
 end)

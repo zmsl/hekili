@@ -94,6 +94,26 @@ describe("now handlers", function()
         assert.is_true(I.auraOurs[k] ~= 0)
     end)
 
+    it("our cast's write carries its travel (rMax / velocity) into the verdict's W (cdm-verdict §2.3)", function()
+        register("bolt_test", {
+            id = 2687,
+            expects = "travel",
+            school = "nature",
+            velocity = 20,
+            now = function()
+                applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
+            end,
+        })
+        start()
+        local a, k = I.ab.bySpell[2687], I.AURA_UNIT + I.auras.bySpell[fs.SPENDER_C]
+        assert.are.equal(20, I.ab.velocity[a])
+        I.ab.rMax[a] = 30 -- the range read's (Sources/Spellbook.lua)
+        cast(2687, 5)
+        assert.is_true(math.abs(I.auraVerdict.W[k] - 1.8) < 1e-9, I.auraVerdict.W[k]) -- 30 / 20 + TOL 0.3
+        cast(fs.SPENDER_C, 6) -- no velocity: W0
+        assert.are.equal(1.0, I.auraVerdict.W[k])
+    end)
+
     it("shifts a resource by `gain` (est, lo and hi) and writes its energize row back-dated to the cast", function()
         register("rage_test", {
             id = 2687,

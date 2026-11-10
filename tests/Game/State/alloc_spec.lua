@@ -357,6 +357,56 @@ describe("zero allocation", function()
         assert.is_true(n > 100, "every call an edge")
     end)
 
+    it("the sweep and poll 15 allocate nothing with proof, dark counts, verdicts and strikes (cdm-verdict)", function()
+        local api, ctl = fake.new()
+        ctl.now = 1
+        ctl.viewer.sets[2] = { 502 }
+        ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
+        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        local ns = load.module()
+        local VS, I = ns.VirtualState, ns.VirtualStateInternal
+        local S, Q = I.Sources, I.PRESENCE.viewer
+        local def = fs.def(fs.new(9))
+        def.providers = { presence = "router", viewer = true }
+        I.Build(def, 1)
+        VS.Start(api)
+        ctl.now = 10
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        I.Fold(10, false)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.auras.target.HARMFUL[1] = fake.SECRET -- the target walk secret: only the reduced facts speak
+        ctl.Fire("UNIT_AURA", "target")
+        local REND, k = 2, I.AURA_UNIT + 2
+        local t, maxDark = 10, 0
+        -- a 12-poll cycle at 0.25 s: our cast (dark: dodged), the verdict at +1.0, a late light at +1.5 (a strike),
+        -- dark again at +2.0 (rule 1 closes the CDM open); the strikes reset each cycle so the item stays proven
+        local ok, bytes = pcall(alloc.bytes, function(i)
+            t = t + 0.25
+            ctl.now = t
+            local p = i % 12
+            if p == 0 then
+                Q.strikes[502] = 0
+                I.AuraModel(2, REND, t, t + 15, 1, t, ns.VirtualState.Obs.CastSuccess, true)
+                I.AuraOurs(2, REND, 0)
+            elseif p == 6 then
+                hold(item, true, "target")
+            elseif p == 8 then
+                hold(item, false)
+            end
+            S.RunPolls(t)
+            I.Fold(t, false)
+            I.Settle(t)
+            local nd = select(7, Q.Counts(REND, 2))
+            maxDark = nd > maxDark and nd or maxDark
+        end, 240)
+        assert.is_true(ok, tostring(bytes))
+        assert.are.equal(0, bytes)
+        assert.is_true(I.auraVerdict.n[k] > 20, "verdicts " .. I.auraVerdict.n[k])
+        assert.is_true(I.auraVerdict.strikes[k] > 20, "strikes " .. I.auraVerdict.strikes[k])
+        assert.are.equal(1, maxDark)
+        assert.is_true(Q.proven[502])
+    end)
+
     it(
         "allocates nothing over 1000 meter events, 100 swings and their ticks with the Meter (providers spec §2.2)",
         function()

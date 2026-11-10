@@ -276,6 +276,52 @@ describe("the Presence router's reduced facts (Task 4a)", function()
         assert.are.equal(I.DOWN, R.Presence(1, 1))
     end)
 
+    it("fact.pdark (cdm-verdict §2.3): a proven dark with none lit, at every reduction, no state change", function()
+        ctl.viewer.sets[2][3], ctl.viewer.infos[503] = 503, { spellID = fs.SPENDER_A }
+        b.cooldownID = 503 -- one frame per cooldownID, as the client keeps them (proof is per cooldownID)
+        R.Activate(api, 1.5, d, { viewer = true })
+        local edges = 0
+        R.onEdge = function()
+            edges = edges + 1
+        end
+        ctl.ViewerAura(a, "player")
+        sweep(2)
+        assert.is_false(R.fact.pdark[1])
+        ctl.ViewerClear(a)
+        sweep(3)
+        assert.is_false(R.fact.pdark[1]) -- one dark sweep
+        local st, ft = R.fact.state[1], R.fact.t[1]
+        edges = 0
+        sweep(4)
+        assert.is_true(R.fact.pdark[1])
+        assert.are.same({ st, ft, 0 }, { R.fact.state[1], R.fact.t[1], edges }) -- no state, no fact.t, no edge
+        ctl.ViewerAura(b, "player") -- b lit: nUp > 0, a still dark
+        sweep(5)
+        assert.are.equal(1, select(7, Q.Counts(1, 1)))
+        assert.is_false(R.fact.pdark[1])
+        ctl.ViewerClear(b)
+        sweep(6)
+        sweep(7)
+        assert.is_true(R.fact.pdark[1])
+        ctl.Fire("PLAYER_TARGET_CHANGED") -- a player item: its pdark stands
+        assert.is_true(R.fact.pdark[1])
+        R.Activate(api, 8, d, { viewer = true }) -- a rebuild clears it
+        assert.is_false(R.fact.pdark[1])
+    end)
+
+    it("R.Strike forwards to the leaf while it has one", function()
+        local got = {}
+        local strike = Q.Strike
+        Q.Strike = function(j, u)
+            got[#got + 1] = { j, u }
+        end
+        R.Strike(1, 2)
+        R.Deactivate(9)
+        R.Strike(2, 1)
+        Q.Strike = strike
+        assert.are.same({ { 1, 2 } }, got)
+    end)
+
     it("the highest standing with nLive > 0 decides: the leaf (1) with live evidence, none (0) without", function()
         assert.are.same({ 0, 0 }, { R.fact.from[1], R.fact.n[1] })
         ctl.ViewerAura(a, "player")

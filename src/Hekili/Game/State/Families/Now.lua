@@ -323,7 +323,10 @@ local function aura(u, key, duration, stacks)
         end
     end
     I.AuraModel(u, j, T, after, stacks or 1, T, CAST, u == 2)
-    I.AuraOurs(u, j) -- cdm-default rule 2.5.1: this application is ours (Sources/Auras.lua)
+    -- cdm-default rule 2.5.1: this application is ours (Sources/Auras.lua); a projectile's travel widens the
+    -- verdict's window (cdm-verdict §2.3; velocity > 0 only: the client raises on x/0)
+    local v = A.velocity[curA] or 0
+    I.AuraOurs(u, j, v > 0 and (A.rMax[curA] or 0) / v or 0)
     I.Log.Aura(u, j, auraSpell[j], before, after, T)
 end
 -- Hekili's own signatures (State.lua), so a Classic handler's lines port by copying.
