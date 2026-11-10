@@ -107,6 +107,10 @@ local PACKS = {
         "hunter_survival",
         "Survival",
         "Survival (wowsims.com)",
+        -- 0.98 -> 0.94 (0.946 of 92 decisions on-GCD, measured at the 0.7 floors step): LOWERED with a named cause. 4 of the
+        -- 5 misses are Serpent Sting: the belief starts its debuff at the cast, about 0.33 s before it lands (central belief
+        -- work, no landing hook; not worked around); the 5th is the strike ordering (strider_kick -> multi_shot), the walk
+        -- the replay cannot forecast (omitted weave waits, CN19). Ledger L160.
         0.94,
         { [10] = 6, [40] = 7.6, [60] = 14.0 },
         -- 2.4 -> 0.7 (0.67 measured): R51's weave position bounces (above) are gone with the new weave

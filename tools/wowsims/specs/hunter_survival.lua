@@ -6,8 +6,8 @@
 -- consumables (flask, food, elixirs, Demonic Rune, the Major Mana and Major Frenzy potions, EZ-Thro Dynamite II, Goblin
 -- Sapper Charge), Kings, Might 2 and Wisdom 2, the top ranks: R25), converted by `make wowsims-siml`
 -- (tests/Forever/wowsims/hunter_survival.build.json). Raid buffs and debuffs stay unsent, as for every spec.
--- Disagreements below are the e2842f0a78 numbers, STALE until the 0.7 floors are re-measured (P7, after R51), decisions on-GCD 0.989 (90) top [serpent_sting ->
--- multi_shot 1]:
+-- Disagreements at e5a9cd2a2d (0.7 floors step): decisions on-GCD 0.946 (92); 4 of 5 misses are Serpent Sting believed up at the cast, about 0.33 s before it lands; the 5th is the strike ordering
+-- (strider_kick -> multi_shot, the walk the replay cannot forecast; CN19). The notes below are the older e2842f0a78 numbers (0.989 of 90):
 --   serpent_sting -> multi_shot (125.50): price. The replay's truth is 229.8 mana when wowsims stings and 4.95 after
 --   (it charged 224.9); the kit prices Serpent Sting at 250, so the belief holds it and shows Multi-Shot. The source
 --   of wowsims's 10% (a talent or an item) is not identified (deferral; wowsims's value wins once found).
