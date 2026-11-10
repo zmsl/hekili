@@ -58,7 +58,7 @@ Copied from the spec and the repo rules; every task's requirements include them.
 - `make test-fast` and `make check` green after every task; `make gate` before the merge. `make gate` takes its own lock
   (`flock` inside the Makefile): never wrap it in `flock`. Never `pkill -f`.
 - Every commit ends with the trailer:
-  `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>` and
+  `Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>` and
   `Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw`.
 
 **The golden check (used by every task after Task 1):**
@@ -581,7 +581,7 @@ Every name, desc and values string of the options tree for each class pack, plus
 contributor restructured (localization spec §8), dumped headless at 1ef1a63b before any L[...];
 the branch reproduces it byte for byte.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -858,7 +858,7 @@ AceLocale-3.0 fetched from Ace3 Release-r1403 (d295b12), the other Ace libs' pin
 through embeds.xml. tools/locales.py writes Locales/enUS.lua (every key = true, NewLocale silent and
 first in the block); ns.L is the app's table; ns.Locale and the GetLocale facade row go (spec §1).
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1232,7 +1232,7 @@ Each pack is its own AceLocale app (Hekili_<Class>), read through Hekili:GetLoca
 tools/locales.py writes every addon's enUS.lua and moved the nine pack sections out of the core's
 zhCN.lua, verbatim (localization spec §2-§3). CONTENT_API and the ten content TOCs go to 10.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1386,7 +1386,7 @@ The snapshot, Hekili:Error and DevTools name a spec by its key; the snapshot's a
 aura's key (spell <id> unmodelled) and drop the client-language Name column; DevTools' spellbook and
 talent-tree names become ids; the two snapshot chat lines are English literals again (spec §4).
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1492,7 +1492,7 @@ git commit -m "feat(locale): the assigned curses show the client's spell names
 Read once at registration from C_Spell.GetSpellInfo (already in the player's language, as the
 tooltip words it); the pack's L string when the client has none yet (spec §5).
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1779,7 +1779,7 @@ priority's name verbatim; the spec page's dropdown, the Priorities tree, the sha
 RestoreDefaults notices use it. tools/locales.py extracts RegisterPack names and flags a label that
 reads as another priority (spec §5b).
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -2058,7 +2058,7 @@ Option fields, values constructors and the SetText/AddLine/Notify/Print family, 
 55 keys, ids, data and product names marked -- l10n: verbatim (spec §7, §10); the wowsims gate note
 RegisterSetting appends is a format string.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -2171,7 +2171,7 @@ Expected: nothing.
 git add docs/dev/architecture.md docs/dev/layout.md
 git commit -m "docs(locale): the content surface's GetLocale, the checks, localization on AceLocale
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 

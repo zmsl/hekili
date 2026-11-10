@@ -70,7 +70,7 @@ says "amends"); research `docs/research/2026-10-23-parry-haste.md`. Line numbers
   (`make test-loop`, `make gate`) may move with this plan as the named cause, each moved cell listed in Task 4's commit
   message with the A/B that attributes it; flicker floors do not move up.
 - Every commit ends with the trailer:
-  `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>` and
+  `Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>` and
   `Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw`.
 
 ## Module Layout
@@ -339,7 +339,7 @@ Parry-haste decisions 57-59 under the owner's ruling of 2026-10-23 (wowsims's ru
 L.ParryPull(r, d) = min(0.4 d, r - 0.2 d) when r > 0.2 d; the main hand only. VS.SwingPull(1)
 returns the pull and the swing it was taken from, so a reader never applies it to a later swing.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -478,7 +478,7 @@ Parry-haste decision 59 with the plan's amendment 1: applied only while mh_actua
 pull was taken from, so one poll never reads an early nextMH from a stale pull (reviewer minor).
 mh_actual stays the real swing; the rage forecast steps from the pulled phase.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -617,7 +617,7 @@ Parry-haste decision 62: a PARRY row on a hostile's token moves its clock's anch
 L.ParryPull, once per GUID and row time, so its hastened hit stays on its clock with two or more
 hostiles on us.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -959,7 +959,7 @@ Parry lines on us (gap AH narrowed).
 Replay: <Warrior Protection before -> after>, <Paladin Protection before -> after> (rows on, pull off: <..>).
 Loop and detection, baseline / world off / world on: <every moved line and cell>.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1031,7 +1031,7 @@ git commit -m "docs: parry haste built; PHS1 a launch-day confirmation; gap AH n
 The spec's status and the plan's amendments (the keyed pull, the default world, the Parry lines only);
 the research's Paladin count corrected (11 Parry lines, 7 hastened).
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 

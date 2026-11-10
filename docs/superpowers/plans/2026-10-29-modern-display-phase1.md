@@ -102,7 +102,7 @@ are untouched. The rest are kept, renumbered:
 - Commit trailer on every commit, exactly:
 
   ```
-  Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+  Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
   Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw
   ```
 
@@ -274,7 +274,7 @@ hits=$(grep -nE '(Facade|Client)\.Display\b' "${files[@]}" | grep -v '^src/Hekil
 git add src/Hekili/Game/API/Facade.lua tools/api_inventory.txt tools/check_api_reads.sh tests/Game/API docs/dev/architecture.md
 git commit -m "feat(facade): the display class, Facade.Display, readable only from UI/Truth.lua
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -587,7 +587,7 @@ end)
 git add src/Hekili/UI/Styles.lua src/Hekili/UI/Styles/Classic.lua src/Hekili/UI/Styles/Timeline.lua tests/Forever/display_modern_spec.lua
 git commit -m "feat(styles): the optional button contract (recIndex, isFocus, round), set by classic and timeline
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -863,7 +863,7 @@ git commit -m "feat(display): the experimental Modern toggle attaches the truth 
 
 The English golden gains the Modern tab's strings.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1083,7 +1083,7 @@ end
 git add src/Hekili/UI/Truth.lua tests/Forever/display_modern_spec.lua docs/dev/ingame-ledger.md
 git commit -m "feat(modern): the game's own cooldown swipe over the style's while it runs
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1261,7 +1261,7 @@ end
 git add src/Hekili/UI/Truth.lua tests/Forever/display_modern_spec.lua docs/dev/ingame-ledger.md
 git commit -m "feat(modern): grey an icon on the game's usability edge, back only after the hold
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1399,7 +1399,7 @@ end)
 git add src/Hekili/UI/Truth.lua tests/Forever/display_modern_spec.lua CHANGELOG.md
 git commit -m "feat(modern): proc glow on the next and focus icons from the game's overlay, never on a greyed icon
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 

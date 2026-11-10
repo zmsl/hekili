@@ -45,7 +45,7 @@ record back: `lo` at once, `est` held to the next answer or spend), c = 7 (an as
   not move up; `make test-loop` loop floors do not move down; Fury L24 agreement is expected UP.
 - `make check` is green on every commit; `make gate` before the merge.
 - Every commit ends with the trailer:
-  `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>` and `Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw`.
+  `Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>` and `Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw`.
 
 ## Module Layout
 
@@ -317,7 +317,7 @@ Owner ruling 2026-10-23 (attribution-recovery decision 46, superseding decision 
 Overdue (decision 47).
 <every moved detection cell, before -> after, and any re-based group bar>
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -831,7 +831,7 @@ narrow-band row replaces the first row (re-labelled foreign); a swing credit is 
 record (Obs.Swing c = 6) with lo at once and est held to the next answer or spend.
 <moved detection cells and gate numbers>
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1167,7 +1167,7 @@ git commit -m "feat(tickets): assume a swing's hit past its lag tolerance; a lat
 Attribution-recovery decisions 51-52 (owner refinement 2026-10-23). Measured on the same seeds:
 <the four variants' rage gates, flicker, Fury L24 agreement, rageErr; the kept one>
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1247,7 +1247,7 @@ git commit -m "feat(tickets): the crowd gate ranks, never refuses; recovery coun
 Attribution-recovery decisions 53 and 56; the sweep's conservation counts confirmed, refunded,
 assumed and the TENT/ASSUMED open tickets.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1390,7 +1390,7 @@ git commit -m "test(detect): recovery and net-wash metrics; floors regenerated u
 Attribution-recovery decisions 54-56. Named cause: the owner's ruling (recall over precision).
 <moved cells; gate comparison: replay, loop, flicker, Fury L24 agreement, bench-ta>
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1448,6 +1448,6 @@ git add docs/research/2026-10-xx-parry-haste.md docs/superpowers/specs/2026-10-2
   docs/dev/ingame-ledger.md
 git commit -m "docs(research): parry haste on Forever, and the spec section for it
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```

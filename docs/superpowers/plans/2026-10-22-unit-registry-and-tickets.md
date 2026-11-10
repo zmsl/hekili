@@ -34,7 +34,7 @@ cited as "spec §N".
 - Hekili has no `tools/apiref_surface.lua` or `make apiref` (those are Taco Dog Forever's); the equivalent gate here is `make api-check` (`tools/check_api_reads.sh`, `tools/api_inventory.txt`) plus `make check`; every new `I.*` function carries a `---` doc comment.
 - `make check` (luacheck, StyLua, LuaLS, busted, syntax, api-check, packs-check, tools-test) is green on every commit; `make gate` before the merge.
 - Every commit ends with the trailer:
-  `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>` and `Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw`.
+  `Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>` and `Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw`.
 
 ## Module Layout
 
@@ -212,7 +212,7 @@ git add src/Hekili/Engine/Schema/Spec.lua src/Hekili_Shared/Shared/Auras.lua tes
   tests/Game/State/helpers/load.lua tests/Game/State/school_spec.lua
 git commit -m "feat(schema): ns.SCHOOL enum, published as Hekili.SCHOOL; Shared lockouts read it
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -994,7 +994,7 @@ value).
 git add src/Hekili/Game/State/Sources/Units.lua src/Hekili/Hekili.toc tests/Game/State/units_spec.lua
 git commit -m "feat(units): the unit registry: token to GUID, dedupe, dispatch, lifetimes, deaths, SENT pin
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1251,7 +1251,7 @@ git commit -m "refactor(units): Target, Attackers, Casts, Nameplates and Rows re
 
 No decision changes: every existing spec passes unchanged.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1658,7 +1658,7 @@ git add src/Hekili/Game/State/Families/Expect.lua src/Hekili/Hekili.toc tests/Ga
   tests/Game/State/expect_spec.lua
 git commit -m "feat(expect): compile expects, school, velocity, dot; ticking kinds read their aura; validate
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -2144,7 +2144,7 @@ git commit -m "refactor(rows): the pending ring becomes the ticket pool; the swi
 
 No decision changes: every existing spec passes unchanged.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -2284,7 +2284,7 @@ git add src/Hekili/Game/Events/CombatLog.lua src/Hekili/Game/Events/Rows.lua src
   tests/Game/Events/cleu_rows_spec.lua
 git commit -m "refactor(log): SWING/SPELL/MISS row builders in CombatLog; Rows and Attackers call them
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -2372,7 +2372,7 @@ git add src/Hekili/Game/Events/Attackers.lua src/Hekili/Game/State/Sources/Playe
   src/Hekili/Game/State/Sources/Casts.lua tests/Game/State/secrets_spec.lua
 git commit -m "refactor(sources): the facade gates event payloads once; handlers drop their re-Plain
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -3475,7 +3475,7 @@ git commit -m "feat(tickets): one ticket per commit, paid by pass in expected-cl
 
 FRAME, STRIKE, UNMAPPED and NONE as kinds (Kinds.lua); Rows keeps only rows and staging.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -3729,7 +3729,7 @@ git commit -m "refactor(tickets): the swing ticket owns the pending swing; the s
 
 Resources' pendT, LAND_CAP and the float-equality link are gone.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -3913,7 +3913,7 @@ git add src/Hekili/Game/State/Stats.lua src/Hekili/Hekili.toc src/Hekili/Game/St
   src/Hekili/Game/Events/Attackers.lua src/Hekili/Game/Events/Melee.lua tests/Game/State/stats_spec.lua
 git commit -m "refactor(stats): one EMA and one running median for the belief layer's statistics
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -4097,7 +4097,7 @@ git add src/Hekili/Game/Events/Bands.lua src/Hekili/Hekili.toc src/Hekili/Game/E
   src/Hekili/Game/Events/Attackers.lua tests/Game/Events/bands_spec.lua
 git commit -m "refactor(bands): one amount-band module; Melee's classes and Attackers' bands use it
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -4418,7 +4418,7 @@ git add src/Hekili/Game/Events/Tickets.lua src/Hekili/Game/Events/Kinds.lua test
   tests/Game/Events/tickets_spec.lua
 git commit -m "feat(tickets): FLIGHT kind: hard window, range bracket, learned per-GUID lag, amount band
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -4842,7 +4842,7 @@ git add src/Hekili/Game/Events/Tickets.lua src/Hekili/Game/Events/Kinds.lua src/
   src/Hekili/Game/Events/Rows.lua tests/Game/Events/tickets_spec.lua tests/Game/Events/kinds_spec.lua
 git commit -m "feat(tickets): TICKS (composed, refreshed, flight-anchored) and CHANNEL (untested in game) kinds
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -5012,7 +5012,7 @@ git add src/Hekili/Game/Events/Rows.lua src/Hekili/Game/State/Families/TargetHea
   tests/Game/Events/kills_spec.lua
 git commit -m "feat(rows): the first swing of a combat; kill rows pay after the clear; TargetHealth's note
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -5165,7 +5165,7 @@ git commit -m "feat(resources): an uncredited swing adds its expected rage to es
 
 <the rage metrics before -> after: over, err mean/max, danger, per gate>
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -5959,7 +5959,7 @@ git commit -m "test(harness): the 2026-10-22 client shapes: SENT, castBarIDs, ec
 Knobs for the detection suite: our scripted spells, switches, churn, Action Targeting, pushback, jitter, lockstep
 and cleave partners; drive captures each row's paying ticket.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -6458,7 +6458,7 @@ git add tools/vslog_fixture.lua tests/Game/harness/fixtures/capture_*.lua tests/
   tests/Game/harness/captures_spec.lua
 git commit -m "test(harness): the 2026-10-22 captures as fixtures, replayed with exact credits (K20)
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -6953,7 +6953,7 @@ git commit -m "test(harness): detection suite K1-K9 over solo, party, busy (gate
 
 Floors from the first clean run (detect_floors.lua).
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -7269,7 +7269,7 @@ git add src/Hekili/Game/Events/Tickets.lua src/Hekili/Game/Events/Rows.lua tests
 git commit -m "test(harness): detection suite K10-K19: lag, foreign kills, two targets, lockstep, twins, refusals,
 raid stress, combat end and reload, AoE, swaps
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -7442,7 +7442,7 @@ git add src/Hekili/Game/State/Sources/Units.lua src/Hekili/Game/Events/Tickets.l
   tests/Game/harness/detect_sweep_spec.lua
 git commit -m "test(harness): the invariant sweep over lag, jitter, density and partner phase
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -7726,7 +7726,7 @@ git add src/Hekili/Game/State/Sources/Units.lua src/Hekili/Game/State/Adapter.lu
   Makefile
 git commit -m "perf(units): memory ceiling, saturation and allocation specs; make bench-ta with its floor
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -7912,7 +7912,7 @@ git add src/Hekili_Druid/Druid.lua src/Hekili_Warlock/Warlock.lua \
   src/Hekili_Hunter/Hunter.lua docs/dev/wowsims-packs.md tests/Forever/expects_spec.lua
 git commit -m "feat(packs): casters and Hunter declare expects, velocity and school from DB2
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -8161,7 +8161,7 @@ covers every pack.
 git add tools/check_spell_data.lua tools/check_spell_data.py tests/tools/test_check_spell_data.py Makefile
 git commit -m "feat(tools): make spell-data-check: the packs' declared outcomes against DB2
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -8229,7 +8229,7 @@ git commit -m "test(wowsims): re-floor the casters on the unit registry and tick
 
 <each pack: old -> new floor (n/m), and any AoE line whose count moved, with its cause>
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -8332,6 +8332,6 @@ git add docs/dev/gaps.md docs/dev/ingame-ledger.md DEVELOPMENT.md \
   docs/superpowers/specs/2026-10-22-unit-registry-and-tickets-design.md
 git commit -m "docs: unit registry and tickets: gaps, in-game ledger, the expects guide, spec status
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```

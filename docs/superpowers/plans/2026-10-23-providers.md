@@ -44,7 +44,7 @@ extracts its inline assumption into `T.Assume`. If Task 3 is not merged when thi
 - Display only: nothing here presses, queues or casts anything.
 - `make check` green on every commit; `make gate` before the merge.
 - Every commit ends with the trailer:
-  `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>` and `Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw`.
+  `Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>` and `Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw`.
 
 **First gate (used by several tasks):**
 
@@ -601,7 +601,7 @@ Consumers (Rows' tick and row hold, Tickets, Melee, Attackers, the Auras overlay
 provider; the Default providers answer UNKNOWN and every gate is identical to the digit
 (providers spec decisions 65-70, 73, 80).
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -799,7 +799,7 @@ ab.check asserts in the default arm and records in a provider arm; the observer'
 the group) and viewer edges (3-5 ms) only add events, from their own generator (providers spec
 decisions 83-84). Every gate is identical.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1135,7 +1135,7 @@ live only after the fight's first group and until told avoids outrun avoid rows 
 iff no group behind the row; taken groups date hits on us solo; the getters read out of combat
 only for the audit (providers spec §2.2, decisions 71-76, 85). Dormant unless injected.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1252,7 +1252,7 @@ profile.performance.damageMeter (off by default) under Performance > Experimenta
 maps it to def.providers at build and through Hekili:ProvidersChanged (at once out of combat,
 else at combat end); the loops take the A/B arm's toggles (providers spec decision 82).
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1566,7 +1566,7 @@ only; the map from the client's category sets by spell, override and linked IDs,
 scope self (probe CDM-S); make cdv-coverage reports pack auras tracked vs modelled, never fails
 (providers spec §2.4, decisions 77-79, 81). Not injected yet.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1812,7 +1812,7 @@ combat, rebuilt on its set-change events only out of combat) and delegation to t
 switch off answers UNKNOWN everywhere, identical to the Default provider; per-aura audit lines
 (path, facts, disagreements with the modelled timer) (providers spec §2.5, decisions 88-90).
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1879,7 +1879,7 @@ git commit -m "feat(options): experimental Cooldown Manager switch: the presence
 profile.performance.cooldownViewer (off by default); off, the router covers nothing (the Default
 path) (providers spec decisions 82, 88).
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
 
@@ -1929,6 +1929,6 @@ git commit -m "docs(providers): the A/B measured on every gate, both arms record
 Default floors unchanged; the meter and viewer arms' numbers recorded beside them, not gated
 (providers spec decision 86); the owner decides.
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ```
