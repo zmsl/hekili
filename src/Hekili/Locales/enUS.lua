@@ -434,9 +434,9 @@ L["If specified, the addon will show this text in place of the auto-detected key
 L["Default |cffffd100(none)|r"] = true
 L["If set above zero, the addon will only allow %s to be recommended via [Use Items] if there are at least this many detected enemies.\nSet to zero to ignore."] = true
 L["If set above zero, the addon will only allow %s to be recommended via [Use Items] if there are this many detected enemies (or fewer).\nSet to zero to ignore."] = true
-L["Cooldown Manager coverage: updates after combat."] = true
 L["The Cooldown Manager is not available: %s"] = true
 L["The Cooldown Manager is not available."] = true
+L["Cooldown Manager coverage: updates after combat."] = true
 L["Turn on the Cooldown Manager in the game options: it tells Hekili when your buffs and debuffs are up."] = true
 L["%d of %d tracked auras have an item in a Cooldown Manager bar."] = true
 L[" and %d more"] = true
@@ -802,6 +802,9 @@ L["Edit specific items, such as disabling, assigning to a toggle, overriding the
 L["Disable Gear and Items"] = true
 L["If checked, no equipped trinkets, weapons, or armor with |cFF00FF00Use:|r effects will be recommended for |cFFFFD100%s|r, regardless of any other options selected below."] = true
 L["this specialization"] = true
+L["Cooldown Manager"] = true
+L["Hekili reads the Cooldown Manager to see when your buffs and debuffs are up. Turn a switch off and Hekili ignores that aura's items there. |cffffd100Gold|r: on a bar. |cff808080Grey|r: not on a bar; its switch applies when you add it."] = true
+L["Changes apply after combat."] = true
 L["Snapshots (Troubleshooting)"] = true
 L["Learn how to report an issue with the addon, such as incorrect recommendations or bugs."] = true
 L["Snapshots"] = true

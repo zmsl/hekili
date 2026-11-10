@@ -63,6 +63,9 @@ function M.new(seed)
     -- our casts' events late by up to that many seconds (ev.jitter, the observer's cast-event latency; drawn from jrng);
     -- durScale(id), the factor the truth applies to aura `id`'s duration (a talent or gear error the pack's model lacks)
     W.castJitter, W.durScale = nil, nil
+    -- false (the verdict's non-landing arm, loop.lua): a press's own `aura` (W.effects) is not applied when its hit was
+    -- avoided; true, every world before it: applied either way (a press with no hit always applies it)
+    W.auraOnAvoid = true
 
     --- Runs `fn(W)` at time `t` (after everything already queued for `t`).
     function W.at(t, fn)
@@ -388,7 +391,7 @@ function M.new(seed)
             W.emit({ kind = "gain", src = e, pt = p.drain, cost = W.res(e, p.drain) })
         end
         local a = p.aura
-        if a then
+        if a and (W.auraOnAvoid or not (e.lastHit and e.lastHit.act ~= "WOUND")) then
             W.applyAura(e, a.id, a.duration)
             local tk = a.tick
             -- shortcut: a refresh keeps the first application's ticks running beside its own (no content refreshes a

@@ -222,6 +222,24 @@ local function providersOf()
     return "default", "router", Hekili.cdmOff ~= true, p.coalesceCooldown == true, p.narrowUnitAura == true
 end
 
+-- (cdm-panel) The Cooldown Manager switch of aura record `rec` (the Cooldown Manager panel, Options.lua): the profile's
+-- per-spec value by aura key when set (profile.specs[id].cdm[key]), else the pack's `cdm = false` (RegisterAura data,
+-- copied raw by recordOf), else on (nil). False: the leaf maps none of the aura's items (Presence/CooldownViewer.lua).
+local function cdmOf(rec)
+    local e = Hekili.Engine
+    local specs = e and e.settings.specs
+    local spec = specs and state and state.spec and specs[state.spec.id]
+    local cdm = type(spec) == "table" and spec.cdm
+    if type(cdm) == "table" and type(cdm[rec.key]) == "boolean" then
+        return cdm[rec.key]
+    end
+    local aura = class.auras[rec.key]
+    if aura and rawget(aura, "cdm") == false then
+        return false
+    end
+    return nil
+end
+
 local function buildDef()
     for _, name in ipairs(LISTS) do
         wipe(def[name])
@@ -334,7 +352,9 @@ local function buildDef()
                 ids[1] = a.id -- an id-less weapon-enchant aura (C4): RegisterAura's negative pseudo-ID
             end
             if #ids > 0 then
-                insert(def.auras, recordOf(a))
+                local rec = recordOf(a)
+                rec.cdm = cdmOf(rec)
+                insert(def.auras, rec)
                 def.auraIds[#def.auras] = ids
             end
         end
@@ -395,6 +415,16 @@ end
 function Hekili:ProvidersChanged()
     local pv = def.providers
     pv.outcomes, pv.presence, pv.viewer, pv.coalesceCooldown, pv.narrowUnitAura = providersOf()
+end
+
+--- (cdm-panel) A Cooldown Manager switch changed (the Cooldown Manager panel's setters): each aura record's `cdm`
+--- follows the profile, and def.providers.cdmGen moves so the belief re-activates the presence provider at its next
+--- drain, out of combat (at combat end otherwise: Belief.lua I.SetProviders): the leaf rebuilds its map. Never a rebuild.
+function Hekili:CdmSwitchChanged()
+    for j = 1, #def.auras do
+        def.auras[j].cdm = cdmOf(def.auras[j])
+    end
+    def.providers.cdmGen = (def.providers.cdmGen or 0) + 1
 end
 
 --- Rebuilds the belief's tracked set from the active spec (decision 8). Called at the end of

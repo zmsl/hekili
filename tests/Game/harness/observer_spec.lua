@@ -405,6 +405,90 @@ describe("the observer", function()
         end
     end)
 
+    it(
+        "a retarget re-reads the target's auras at its push: an edge between the change's read and its push follows it",
+        function()
+            setup(0)
+            W.emit({ t = 1, kind = "aura", src = us, dst = mob, aura = 88, stacks = 1, expires = 30, duration = 29 })
+            W.emit({ t = 1.5, kind = "prepull" }) -- read at 1.5; its target change at 1.6, the retarget pushed at 1.605
+            W.emit({
+                t = 1.55,
+                kind = "aura",
+                src = us,
+                dst = mob,
+                aura = 77,
+                stacks = 1,
+                expires = 30,
+                duration = 28.45,
+            })
+            W.emit({ t = 1.55, kind = "aura", src = us, dst = mob, aura = 88, stacks = 0, expires = 0, duration = 0 })
+            local s = observer.observe(W, setmetatable({ viewer = true }, { __index = observer.DEFAULTS }))
+            local pushT, last = nil, {}
+            for i = 1, s.n do
+                if s.ev[i] == "@viewerRetarget" then
+                    pushT, last = s.t[i], {}
+                elseif s.ev[i] == "@viewer" and s.a1[i] == "target" then
+                    last[s.a2[i]] = s.a3[i]
+                end
+            end
+            assert.are.equal(1.605, pushT)
+            assert.are.same({ [77] = true, [88] = false }, last) -- the item's state after the push: the world's at it
+        end
+    )
+
+    it("scenarios' swapEvery cycles our target through the mobs: one @viewerRetarget a swap", function()
+        local function swaps(every)
+            local s = scenarios.stream({ duration = 30, extraMobs = 2, swapEvery = every, viewer = true }, 7)
+            local guids, n = {}, 0
+            for i = 1, s.n do
+                n = n + (s.ev[i] == "@viewerRetarget" and 1 or 0)
+                if s.ev[i] == "@guid" and s.a1[i] == "target" then
+                    guids[#guids + 1] = s.a2[i]
+                end
+            end
+            return n, guids
+        end
+        local n, guids = swaps(5) -- the prepull's target, then a swap at 6, 11, 16, 21, 26
+        assert.are.equal(6, n)
+        assert.are.same({ "Creature-1", "Creature-2", "Creature-3", "Creature-1", "Creature-2", "Creature-3" }, guids)
+        n = swaps({ 4, 8 }) -- a drawn gap each swap
+        assert.is_true(n >= 1 + 3 and n <= 1 + 7, tostring(n))
+        assert.are.equal(1, (swaps(nil))) -- no knob: no swap
+    end)
+
+    -- viewer-swap's self-check misses (4235 ticks, Feral seeds 1-3): the "target" list kept the old mob's auras
+    it("a swap re-lists the target's auras: the old mob's cleared, the new mob's live ones set", function()
+        setup(0)
+        local mob2 = W.add(entities.new({ guid = "Creature-2", kind = "mob", weapons = { { 10, 14, 2 } } }))
+        W.emit({ t = 1, kind = "aura", dst = mob, aura = 55, stacks = 2, expires = 20, duration = 19 })
+        W.emit({ t = 2, kind = "aura", dst = mob2, aura = 77, stacks = 1, expires = 30, duration = 28 })
+        W.emit({ t = 3, kind = "aura", dst = mob2, aura = 66, stacks = 1, expires = 4, duration = 1 })
+        W.emit({ t = 4, kind = "aura", dst = mob2, aura = 66, stacks = 0, expires = 0, duration = 0 })
+        for _, sw in ipairs({ { 5, mob2 }, { 7, mob2 }, { 8, mob } }) do -- 7: no change, no op
+            W.at(sw[1], function()
+                us.target = sw[2]
+                W.emit({ kind = "target", relist = true }) -- swapEvery's events (switchTo's keep the old list)
+            end)
+        end
+        W.run(9)
+        local s = observer.observe(W, observer.DEFAULTS)
+        local got = {}
+        for _, e in ipairs(events(s, 4.5)) do
+            if e[2] == "@aura" or e[2] == "PLAYER_TARGET_CHANGED" then
+                got[#got + 1] = { e[1], e[2], e[3], e[4], e[5], e[6], e[7] }
+            end
+        end
+        assert.are.same({
+            { 5, "@aura", "target", 55, 0, 0, 0 },
+            { 5, "@aura", "target", 77, 1, 30, 28 },
+            { 5, "PLAYER_TARGET_CHANGED" },
+            { 7, "PLAYER_TARGET_CHANGED" },
+            { 8, "@aura", "target", 77, 0, 0, 0 },
+            { 8, "@aura", "target", 55, 2, 20, 19 },
+            { 8, "PLAYER_TARGET_CHANGED" },
+        }, got)
+    end)
+
     it("steps to the batch's stream in 0.2 s steps, and draws nothing from the world's generator", function()
         local o = scenarios.oracle({ duration = 40, others = { "melee", "caster" } })
         local k = setmetatable({ usable = true }, { __index = observer.DEFAULTS })

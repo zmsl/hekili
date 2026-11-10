@@ -125,7 +125,8 @@ M.ARCHETYPES = ARCHETYPES
 --- the swing-paid power a landed wound on us pays [none]).
 --- The detection suite's (unit-registry spec §6.2): noMelee (no white swings of ours), spells ({ t, kind }:
 --- behaviours.ours, from the pull, with distance and jitter), switchTo ({ t, mob index }: our target changes), churn
---- ({ every, gap }: our target's plate leaves and comes back), extraMobs (mobs not on us, each with a plate), phase
+--- ({ every, gap }: our target's plate leaves and comes back), extraMobs (mobs not on us, each with a plate), swapEvery
+--- (s, or { lo, hi } drawn each time: our target moves to the next live mob that often from the pull), phase
 --- (the lockstep archetype's shift), hitAtSwing (false: our white wound takes health at its land, not the swing),
 --- actionTargeting and pushback (observer knobs, M.stream).
 --- Returns the world with every behaviour scheduled, not run (`M.build` runs it).
@@ -278,6 +279,27 @@ function M.world(o, seed)
             us.target = mobs[sw[2]]
             W.emit({ kind = "target" })
         end)
+    end
+    local every = o.swapEvery -- s or { lo, hi } (a drawn gap each): our target cycles through the live mobs
+    if every then
+        local r, i, t = rng.new(seed + 70011), 1, pull -- its own draws: no other draw moves
+        local lo, hi = type(every) == "table" and every[1] or every, type(every) == "table" and every[2] or every
+        while true do
+            t = t + lo + (hi - lo) * r.next()
+            if t >= stop then
+                break
+            end
+            W.at(t, function()
+                for _ = 1, #mobs do
+                    i = i % #mobs + 1
+                    if not mobs[i].dead then
+                        break
+                    end
+                end
+                us.target = mobs[i]
+                W.emit({ kind = "target", relist = true }) -- the client's "target" auras follow (observer relist)
+            end)
+        end
     end
     if o.churn then -- { every, gap }: our target's plate leaves and comes back (K7)
         for t = pull + o.churn[1], stop, o.churn[1] do

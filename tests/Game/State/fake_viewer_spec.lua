@@ -413,6 +413,85 @@ describe("the any-layout Cooldown Manager fake", function()
         assert.is_nil(a.auraInstanceID)
     end)
 
+    it("ViewerReshuffle: items move frames, keeping lit state, flags and layoutIndex", function()
+        for id = 501, 504 do
+            ctl.viewer.infos[id] = { spellID = id - 400 }
+        end
+        local f = {
+            ctl.ViewerItem(ICON, 1, 501),
+            ctl.ViewerItem(ICON, 2, 502),
+            ctl.ViewerItem(ICON, 3, 503),
+            ctl.ViewerItem(ICON, 4, nil), -- unconfigured: stays
+        }
+        f[3].silent = true
+        local e = ctl.ViewerItem(ESS, 1, 504)
+        ctl.ViewerAuraBySpell("player", 101, true, "player")
+        ctl.viewer.lag = 1
+        ctl.ViewerAuraBySpell("target", 102, true, "player") -- pending: lands on 502's frame, wherever it moves
+        ctl.ViewerReshuffle(1)
+        local by = {}
+        for i = 1, 3 do
+            assert.are_not.equal(500 + i, f[i].cooldownID) -- never the identity
+            by[f[i].cooldownID] = f[i]
+            assert.are.equal(f[i].cooldownID - 500, f[i].layoutIndex) -- the item's index moves with it
+        end
+        assert.are.same({ nil, 4 }, { f[4].cooldownID, f[4].layoutIndex })
+        assert.are.same({ 504, 1 }, { e.cooldownID, e.layoutIndex }) -- one item: nowhere to move
+        assert.are.same({ SECRET, "player", 101 }, { by[501].auraInstanceID, by[501].auraDataUnit, by[501].litBy })
+        assert.is_nil(by[502].auraInstanceID)
+        assert.is_true(by[503].silent)
+        ctl.ViewerFlush()
+        assert.are.same({ SECRET, "target" }, { by[502].auraInstanceID, by[502].auraDataUnit })
+        ctl.ViewerReshuffle(2) -- another counter, another permutation; still a bijection
+        local seen = {}
+        for i = 1, 3 do
+            seen[f[i].cooldownID] = true
+        end
+        assert.are.same({ [501] = true, [502] = true, [503] = true }, seen)
+    end)
+
+    it("reshuffleDark: a moved lit item reads dark on its new frame until the next flush, then re-lights", function()
+        for id = 501, 503 do
+            ctl.viewer.infos[id] = { spellID = id - 400 }
+        end
+        local f = { ctl.ViewerItem(ICON, 1, 501), ctl.ViewerItem(ICON, 2, 502), ctl.ViewerItem(ICON, 3, 503) }
+        ctl.ViewerAuraBySpell("player", 101, true, "player")
+        ctl.ViewerAuraBySpell("target", 102, true, "player")
+        ctl.viewer.reshuffleDark = true
+        ctl.ViewerReshuffle(1)
+        local by = {}
+        for i = 1, 3 do
+            by[f[i].cooldownID] = f[i]
+            assert.is_nil(f[i].auraInstanceID) -- every frame dark for one flush
+        end
+        ctl.ViewerAuraBySpell("target", 102, false, "player") -- gone before the flush: stays dark
+        ctl.ViewerFlush()
+        assert.are.same({ SECRET, "player", 101 }, { by[501].auraInstanceID, by[501].auraDataUnit, by[501].litBy })
+        assert.is_nil(by[502].auraInstanceID)
+        assert.is_nil(by[503].auraInstanceID)
+        ctl.viewer.reshuffleDark = false -- the default: atomic, the lit item stays lit
+        ctl.ViewerReshuffle(2)
+        local lit = 0
+        for i = 1, 3 do
+            lit = lit + (f[i].auraInstanceID ~= nil and 1 or 0)
+        end
+        assert.are.equal(1, lit)
+    end)
+
+    it("ViewerRetarget reshuffles every viewer when ctl.viewer.reshuffle is set (the full UNIT_AURA update)", function()
+        ctl.viewer.infos[501] = { spellID = 101 }
+        ctl.viewer.infos[502] = { spellID = 102 }
+        local a, b = ctl.ViewerItem(ICON, 1, 501), ctl.ViewerItem(ICON, 2, 502)
+        ctl.ViewerAuraBySpell("player", 101, true, "player")
+        ctl.ViewerAuraBySpell("target", 102, true, "player")
+        ctl.ViewerRetarget()
+        assert.are.same({ 501, 502 }, { a.cooldownID, b.cooldownID }) -- off by default
+        ctl.viewer.reshuffle = true
+        ctl.ViewerRetarget()
+        assert.are.same({ 502, 501 }, { a.cooldownID, b.cooldownID })
+        assert.are.same({ nil, SECRET }, { a.auraInstanceID, b.auraInstanceID }) -- the player item stays lit
+    end)
+
     it("the legacy ViewerShow still works and a fresh fake has no viewer layout (default arm: viewer off)", function()
         local item = ctl.ViewerItem(ICON, 1, 501)
         item.unit = "player"

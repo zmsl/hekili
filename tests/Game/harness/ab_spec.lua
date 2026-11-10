@@ -25,6 +25,43 @@ describe("the A/B harness", function()
         assert.is_nil(ab.ARMS.viewer) -- the layout-less arm is viewer-none now
     end)
 
+    it("the verdict arms (verdict spec §5), each with edgestats and a -novd twin that differs only by novd", function()
+        local names = {
+            "viewer-reshuffle",
+            "viewer-nonland",
+            "secret-viewer-buffs",
+            "secret-viewer-mixed",
+            "viewer-swap",
+            "viewer-late",
+            "viewer-recast",
+            "viewer-swap-dark",
+        }
+        assert.are.same(names, ab.VERDICT)
+        for _, name in ipairs(names) do
+            local a, off = ab.ARMS[name], ab.ARMS[name .. "-novd"]
+            assert.is_true(a.viewer and a.edge)
+            assert.is_nil(a.novd)
+            local twin = { novd = true }
+            for k, v in pairs(a) do
+                twin[k] = v
+            end
+            assert.are.same(twin, off)
+            assert.are.same({ outcomes = "default", presence = "router", viewer = true }, ab.providers(name))
+        end
+        assert.is_true(ab.ARMS["viewer-reshuffle"].reshuffle and ab.ARMS["viewer-swap"].reshuffle)
+        assert.is_false(ab.ARMS["viewer-nonland"].world.auraOnAvoid)
+        assert.are.same({ 4, 8 }, ab.ARMS["viewer-swap"].world.swapEvery)
+        assert.is_true(ab.ARMS["secret-viewer-mixed"].observe.secretAmount)
+        assert.are.same({ 0.1, 1.2, 1.8 }, ab.ARMS["viewer-late"].world.lateLight) -- late past W (1.0)
+        local recast, nonland = ab.ARMS["viewer-recast"].world, ab.ARMS["viewer-nonland"].world
+        assert.is_true(recast.recast)
+        assert.are.same(nonland.mobAvoid, recast.mobAvoid) -- the non-landing world
+        local dark, swap = ab.ARMS["viewer-swap-dark"], ab.ARMS["viewer-swap"]
+        assert.is_true(dark.reshuffleDark)
+        assert.is_nil(swap.reshuffleDark) -- every older arm keeps the atomic reshuffle
+        assert.are.same(swap.world, dark.world)
+    end)
+
     it("the secret arm makes UNIT_COMBAT's amount secret (live), never on the plain oracle", function()
         assert.are.same({ secretAmount = true }, ab.ARMS.secret.observe)
         assert.are.same({ outcomes = "default", presence = "router", viewer = false }, ab.providers("secret"))

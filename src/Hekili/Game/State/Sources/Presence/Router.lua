@@ -18,7 +18,10 @@ local S = I.Sources
 -- The edge (owner rulings L348-L351): fact.edge[k] the t of the UP change when one of the thing's slots had an edge in
 -- that sweep (lit -> dark -> lit on one unit, each seen: the leaf's eT), 0 for a SEED (any other first light: unknown
 -- age); fact.dark[k] the leaf's last dark-after-light t; seedN[k] and edgeN[k] count the UP changes per fight.
-local fact = { state = {}, n = {}, agree = {}, t = {}, from = {}, edge = {}, dark = {} }
+-- fact.pdark[k] (cdm-verdict §2.3, decision 119): a proven item of the thing dark on a monitored sweep and none lit;
+-- fact.pdarkT[k] since when (the leaf's tDark: the latest first dark sweep among its dark slots, 0 none). Both set at
+-- every reduction (no state change, no edge, no fact.t); read by poll 15's verdict only.
+local fact = { state = {}, n = {}, agree = {}, t = {}, from = {}, edge = {}, dark = {}, pdark = {}, pdarkT = {} }
 local R = {
     name = "router", -- l10n: verbatim
     scope = nil,
@@ -32,8 +35,8 @@ local R = {
     edgeN = {},
 }
 local tracked, disagree, lost, seedN, edgeN = R.tracked, R.disagree, R.lost, R.seedN, R.edgeN
-local fState, fN, fAgree, fT, fFrom, fEdge, fDark =
-    fact.state, fact.n, fact.agree, fact.t, fact.from, fact.edge, fact.dark
+local fState, fN, fAgree, fT, fFrom, fEdge, fDark, fPdark, fPdarkT =
+    fact.state, fact.n, fact.agree, fact.t, fact.from, fact.edge, fact.dark, fact.pdark, fact.pdarkT
 local leaf, want, api0, def0, pending = nil, nil, nil, nil, false
 local edges = { up = 0, down = 0 } -- the edges passed on this fight (Snapshot)
 I.presenceEdges = edges
@@ -59,9 +62,9 @@ end
 local function thing(k, t)
     local u = k > I.AURA_UNIT and 2 or 1
     local j = k - (u - 1) * I.AURA_UNIT
-    local nLive, nUp, nNone, nStale, tUp, tNone = leaf.Counts(j, u)
+    local nLive, nUp, nNone, nStale, tUp, tNone, nDark, tDark = leaf.Counts(j, u)
     local st, agree = I.ReduceFact(nLive, nUp, nNone, nStale, tUp, tNone)
-    fN[k] = nLive
+    fN[k], fPdark[k], fPdarkT[k] = nLive, (nDark or 0) > 0 and nUp == 0, tDark or 0
     if nUp == 0 then -- the thing is dark only once none of its slots is lit (a cycle closes on the last dark)
         fDark[k] = leaf.darkT[k] or 0
     end
@@ -100,13 +103,13 @@ end
 local function clear()
     for k in pairs(fState) do
         fState[k], fN[k], fAgree[k], fT[k], fFrom[k], disagree[k], lost[k] = I.UNDECIDED, 0, true, 0, 0, 0, 0
-        fEdge[k], fDark[k], seedN[k], edgeN[k] = 0, 0, 0, 0
+        fEdge[k], fDark[k], seedN[k], edgeN[k], fPdark[k], fPdarkT[k] = 0, 0, 0, 0, false, 0
     end
     for j = 1, def0 and #def0.auraIds or 0 do
         for u = 1, 2 do
             local k = (u - 1) * I.AURA_UNIT + j
             fState[k], fN[k], fAgree[k], fT[k], fFrom[k], disagree[k], lost[k] = I.UNDECIDED, 0, true, 0, 0, 0, 0
-            fEdge[k], fDark[k], seedN[k], edgeN[k] = 0, 0, 0, 0
+            fEdge[k], fDark[k], seedN[k], edgeN[k], fPdark[k], fPdarkT[k] = 0, 0, 0, 0, false, 0
         end
     end
 end
@@ -118,7 +121,7 @@ local function drop()
         tracked[j] = false
     end
     for k in pairs(fState) do
-        fState[k], fN[k], fFrom[k], fEdge[k] = I.UNDECIDED, 0, 0, 0
+        fState[k], fN[k], fFrom[k], fEdge[k], fPdark[k] = I.UNDECIDED, 0, 0, 0, false
     end
 end
 
@@ -186,6 +189,9 @@ function R.Deactivate(t)
         leaf.Deactivate(t)
     end
     leaf, want, pending, R.covered, R.scope = nil, nil, false, 0, nil
+    for k in pairs(fPdark) do -- (review M1) no leaf, no positive dark: poll 15's verdict must not read a stale one
+        fPdark[k] = false
+    end
 end
 
 --- Poll 15's sweep: the leaf reads its items (cdm-default §3.2) and the moved things are reduced here; covered follows
@@ -199,6 +205,21 @@ function R.Sweep(t)
         else
             R.covered = leaf.covered
         end
+    end
+end
+
+--- A wrong verdict for aura j on unit u (cdm-verdict §2.5): the leaf strikes the items lit for it now. Allocates nothing.
+function R.Strike(j, u)
+    if leaf then
+        leaf.Strike(j, u)
+    end
+end
+
+--- A verdict closed the record of aura j on unit u (cdm-verdict §2.5): the leaf counts it against the items dark for
+--- it (silent verdicts suspend a proof). Allocates nothing.
+function R.Silent(j, u)
+    if leaf then
+        leaf.Silent(j, u)
     end
 end
 
@@ -257,7 +278,7 @@ S.On("PLAYER_TARGET_CHANGED", nil, function()
     for j = 1, def0 and #def0.auraIds or 0 do
         local k = I.AURA_UNIT + j
         if fState[k] ~= nil then
-            fState[k], fT[k], fEdge[k] = I.UNDECIDED, 0, 0
+            fState[k], fT[k], fEdge[k], fPdark[k] = I.UNDECIDED, 0, 0, false
         end
     end
 end)

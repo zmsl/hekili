@@ -331,12 +331,12 @@ function M.new(W, k)
         end
     end
     -- the viewer arms: our auras on each entity (aura -> expires), and the target the items last read (CDM Task 8)
-    local mine, viewerTarget = {}, false
+    local mine, viewerTarget, retargetAt = {}, false, -math.huge
     local viewerLast = {} -- (unit .. aura) -> its last @viewer edge's time: the client takes them in order (review I1)
     local function retarget(t, tgt) -- the client re-reads its target items the frame after a change (CDM-O: f=1)
         if k.viewer and tgt ~= viewerTarget then
-            viewerTarget = tgt
-            push(t + 0.005, "@viewerRetarget")
+            viewerTarget, retargetAt = tgt, t + 0.005
+            push(retargetAt, "@viewerRetarget")
             local auras = {}
             for id, expires in pairs(tgt and mine[tgt] or {}) do
                 if expires == 0 or expires > t then -- 0: no expiry
@@ -347,6 +347,30 @@ function M.new(W, k)
             for _, id in ipairs(auras) do
                 push(t + 0.005, "@viewer", "target", id, true, "player")
             end
+        end
+    end
+    -- the "target" aura list follows our target (the client answers the new mob's auras): each mob's live aura events,
+    -- and the mob the list holds now
+    local onMob, auraTarget = {}, nil
+    local function sortedIds(e)
+        local ids = {}
+        for id in pairs(e and onMob[e] or {}) do
+            ids[#ids + 1] = id
+        end
+        table.sort(ids) -- pairs order is not stable: the stream must be
+        return ids
+    end
+    local function relist(t, tgt)
+        if tgt == auraTarget then
+            return
+        end
+        for _, id in ipairs(sortedIds(auraTarget)) do
+            push(t, "@aura", "target", id, 0, 0, 0)
+        end
+        auraTarget = tgt
+        for _, id in ipairs(sortedIds(tgt)) do
+            local a = onMob[tgt][id]
+            push(t, "@aura", "target", id, a.stacks, a.expires, a.duration)
         end
     end
     local function targets(t, ev)
@@ -374,6 +398,10 @@ function M.new(W, k)
         push(t, "@unitIs", "targettarget", tgt and tt[tgt] == us and "player" or nil)
         if k.plainSpeed and tgt then
             push(t, "@speed", "target", tgt.weapons[1][3])
+        end
+        if ev.relist then -- shortcut: swapEvery's swaps only, so switchTo's default-arm streams stay as they were;
+            -- set it on switchTo too when a switchTo world reads the target's auras after its switch
+            relist(t, tgt or nil)
         end
         push(t, "PLAYER_TARGET_CHANGED")
         retarget(t, tgt)
@@ -598,12 +626,19 @@ function M.new(W, k)
                 push(t, "@current", id, kind == "queue")
             end
         elseif kind == "aura" then -- ours on the player (plain), ours on the target (raising in combat)
+            if ev.dst ~= us then
+                onMob[ev.dst] = onMob[ev.dst] or {}
+                onMob[ev.dst][ev.aura] = ev.stacks > 0 and ev or nil
+            end
             if k.viewer and (ev.src == nil or ev.src == us) then
                 mine[ev.dst] = mine[ev.dst] or {}
                 mine[ev.dst][ev.aura] = ev.stacks > 0 and ev.expires or nil
             end
             local unit = ev.dst == us and "player" or (ev.dst == ev.ourTarget and "target" or nil)
             if unit then
+                if unit == "target" then -- a world without a prepull's target event (the unit specs)
+                    auraTarget = ev.dst
+                end
                 push(t, "@aura", unit, ev.aura, ev.stacks, ev.expires, ev.duration)
                 push(t, "UNIT_AURA", unit)
                 if k.viewer then -- the Cooldown Manager's item shows or hides 3-5 ms later (CV §2); a partner's copy
@@ -611,6 +646,15 @@ function M.new(W, k)
                     local src = (ev.src == nil or ev.src == us) and "player" or "party1"
                     -- the same draw as before; viewerLag (the edge-anchor stress arms only) on both edges
                     local vk, vt = unit .. ev.aura, t + W.mrng.int(3, 5) / 1000 + (k.viewerLag or 0)
+                    local late = W.lateLight -- a verdict arm's late lights: { share, lo, hi } s, from W.lrng alone
+                    if late and ev.stacks > 0 and W.lrng.next() < late[1] then
+                        vt, W.lateN = vt + late[2] + W.lrng.next() * (late[3] - late[2]), (W.lateN or 0) + 1
+                    end
+                    -- an edge on the new target read after its change but falling before the re-read: the re-read
+                    -- sees it (the list above was taken at the change's read), so it follows the push
+                    if unit == "target" and ev.dst == viewerTarget and vt < retargetAt then
+                        vt = retargetAt + 1e-6
+                    end
                     if viewerLast[vk] and vt <= viewerLast[vk] then -- a set and a clear at one instant stay in order
                         vt = viewerLast[vk] + 1e-6
                     end

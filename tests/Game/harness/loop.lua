@@ -17,6 +17,41 @@ local rng = require("Game.harness.rng")
 local edgestats = require("Game.harness.edgestats")
 
 local M = {}
+M.VERDICT_ARM = {} -- the verdict arms (ab.VERDICT; a -novd twin by its base name): their layout line adds `wrong`
+for _, name in ipairs(ab.VERDICT) do
+    M.VERDICT_ARM[name] = true
+end
+
+--- The truth check of one tick (`vt` = { VI, seen }): each key whose verdict count rose since the last tick is a close
+--- folded in this tick's drain; one of an aura the world still has on that unit (us, or our target now) counts in
+--- run.verdictsWrong[u]. The belief's per-fight reset (a count falling) resets the tally with it.
+function M.verdictTruth(vt, run, us, t)
+    local VI = vt.VI
+    for k, n in pairs(VI.presenceVerdict) do
+        local was = vt.seen[k] or 0
+        if n < was then
+            run.verdictsWrong[1], run.verdictsWrong[2] = 0, 0
+        elseif n > was then
+            local u = k > VI.AURA_UNIT and 2 or 1
+            if M.auraUp(u == 1 and us or us.target, VI.def.auraIds[k - (u - 1) * VI.AURA_UNIT], t) then
+                run.verdictsWrong[u] = run.verdictsWrong[u] + n - was
+            end
+        end
+        vt.seen[k] = n
+    end
+end
+
+--- Whether `e` (an entity, or nil) carries one of `ids` (a belief aura's IDs) at world time `t` (expires 0: none); a
+--- dead mob carries none (the world leaves its auras to expire).
+function M.auraUp(e, ids, t)
+    for _, id in ipairs((e and not e.dead) and ids or {}) do
+        local a = e.auras[id]
+        if a and (a.stacks or 1) > 0 and (a.expires == 0 or a.expires > t) then
+            return true
+        end
+    end
+    return false
+end
 
 -- The CPU calibration (pack_gate.CPU_RATIO): a fixed pure-Lua workload, hash reads through a metatable chain over a
 -- preallocated working set (the engine's state reads, in miniature), timed once per counted run in the same process,
@@ -274,6 +309,10 @@ function M.run(L, seed, o, drivers)
         end
         wo.res = res
     end
+    local armName = o.arm or ab.arm()
+    local arm = ab.ARMS[armName] -- o.arm: a spec's own arm (its shapes; the floors stay the env's)
+    local aw = arm.world or {} -- a verdict arm's world knobs that shape the world's build (ab.lua; not a replay's)
+    wo.mobAvoid, wo.swapEvery, wo.extraMobs = aw.mobAvoid, aw.swapEvery, aw.extraMobs
     local W = R and R.world(wo, seed) or scenarios.world(wo, seed)
     local us = W.ents[1]
     local run = {
@@ -321,10 +360,12 @@ function M.run(L, seed, o, drivers)
     local res = L.power.token and L.power.token:lower()
     local pollEv, tickEv, nextEv = {}, {}, 1
     local steps = {}
-    local arm = ab.ARMS[o.arm or ab.arm()] -- o.arm: a spec's own arm (its shapes; the floors stay the env's)
     if arm.world then -- an edge-anchor stress arm's world knobs (ab.lua), each from its own draw
+        W.auraOnAvoid = arm.world.auraOnAvoid ~= false
         local jit, dur, drng, scale = arm.world.castJitter, arm.world.durError, rng.new(seed + 86028121), {}
         W.castJitter, W.jrng = jit, rng.new(seed + 49979687)
+        W.lateLight = arm.world.lateLight -- a share of the viewer's lights late (observer.lua), its own draw
+        W.lrng = W.lateLight and rng.new(seed + 61031) or nil
         W.durScale = dur
                 and function(id) -- per aura and fight, the truth's duration 1 - dur or 1 + dur of the pack's
                     scale[id] = scale[id] or (drng.next() < 0.5 and 1 - dur or 1 + dur)
@@ -351,6 +392,12 @@ function M.run(L, seed, o, drivers)
         if VI and VI.def then -- (loop_spec's fake drivers have no belief)
             VI.def.providers.outcomes = arm.outcomes
         end
+        if VI then -- a *-novd verdict arm's driver: the belief's verdict off (verdict spec §6; harness only)
+            VI.verdictOff = (cdm and arm.novd) or nil
+        end
+        -- a verdict arm's full-update reshuffle at each target change (fake_api), its counter seeded by the fight
+        ctl.viewer.reshuffle, ctl.viewer.reshuffleN = (cdm and arm.reshuffle) or false, seed
+        ctl.viewer.reshuffleDark = (cdm and arm.reshuffleDark) or false -- a re-pointed frame dark for one poll (fake_api)
         if first and layout then -- the viewer is on from boot (no option), so its map predates the instance's first
             -- layout: the client's data-loaded event, once (as at login; later fights reuse the frames and the map)
             d.H.Fire("COOLDOWN_VIEWER_DATA_LOADED")
@@ -427,7 +474,7 @@ function M.run(L, seed, o, drivers)
             hold = (hold and not d.plain) and flicker.newHold() or nil,
             layout = layout, -- the viewer arm's fight events and the next one's index (M.viewerLayout)
             li = 1,
-            edge = arm.world and layout and VI and VI.presence and edgestats.start(d.H, VI) or nil, -- a stress arm's record
+            edge = (arm.world or arm.edge) and layout and VI and VI.presence and edgestats.start(d.H, VI) or nil, -- a stress arm's record
         }
     end
     local errors0 = {}
@@ -437,6 +484,27 @@ function M.run(L, seed, o, drivers)
     local stopAt = W.stopAt
     local t = 0
     local lastRefused, readySince = false, {}
+    -- a verdict arm's recast (ab.lua world.recast): an uptime aura's press whose hit was avoided is pressed again at
+    -- the next free GCD, whatever the driver shows (the recast inside the verdict's drain, review M1)
+    local recastOf, recastKey = nil, nil
+    if aw.recast then
+        recastOf = {}
+        for _, u in ipairs(L.uptime) do
+            recastOf[u[1]] = true
+        end
+    end
+    run.recasts = 0
+    -- a verdict arm's truth check: each close the driver's belief folds, against the world's aura at that tick
+    -- (run.verdictsWrong[u]: closes of an aura truly up; the layout line's `wrong p/t`)
+    run.verdictsWrong = { 0, 0 }
+    local vt = nil
+    local VI1 = steps[1].H.ns.VirtualStateInternal
+    if steps[1].layout and VI1 and VI1.presenceVerdict and M.VERDICT_ARM[(armName:gsub("%-novd$", ""))] then
+        vt = { VI = VI1, seen = {} }
+        for k, n in pairs(VI1.presenceVerdict) do
+            vt.seen[k] = n
+        end
+    end
     local traced = {}
     run.cal = not o.trace and M.calibrate() or nil
     run.bytes, run.sampled = 0, 0
@@ -545,6 +613,17 @@ function M.run(L, seed, o, drivers)
         end
         t = t + tick
         step(t)
+        if vt then -- this tick's closes against the world as the drain saw it: before this tick's press
+            if not vt.pulled and t >= wo.pull then -- the belief zeroed its counts at this tick's PLAYER_REGEN_DISABLED:
+                -- a close in the same drain would leave the count where the last fight left it
+                vt.pulled = true
+                for k in pairs(vt.seen) do
+                    vt.seen[k] = 0
+                end
+                run.verdictsWrong[1], run.verdictsWrong[2] = 0, 0
+            end
+            M.verdictTruth(vt, run, us, t)
+        end
         if R then
             lastGcd, tickPolled = firstGcd(steps[1].H), true
         end
@@ -596,11 +675,26 @@ function M.run(L, seed, o, drivers)
                 readySince[k] = nil
             end
         end
-        if shown and t - readySince[key] >= (o.reaction or 0) - 1e-9 then -- one attempt a tick
+        local press, forced = shown and t - readySince[key] >= (o.reaction or 0) - 1e-9, false -- one attempt a tick
+        if recastKey and gcdFree then -- one attempt, pressed or refused
+            key, press, forced, recastKey = recastKey, true, true, nil
+        end
+        if press then
             truth.Hekili.State.reset("Primary", true) -- Update leaves its last prediction (a predicted buff, query_time ahead of now)
             local p = content.resolve(key, truth)
             local pre = W.res(us, p.pt)
+            local n0 = #W.truth
             local ok, why = W.press(us, key, p)
+            if ok and forced then
+                run.recasts = run.recasts + 1
+            elseif ok and recastOf and recastOf[key] then
+                for i = n0 + 1, #W.truth do
+                    local ev = W.truth[i]
+                    if ev.kind == "spell" and ev.src == us and ev.act ~= "WOUND" then
+                        recastKey = key
+                    end
+                end
+            end
             if inCombat then
                 run.attempts = run.attempts + 1
                 if steps[2] and M.readyShort(pre, p, us, t) then
@@ -695,6 +789,9 @@ function M.run(L, seed, o, drivers)
         if not headless.cycle(st.H, st.H.ctl.now) then
             run.raises = run.raises + 1
         end
+        if vt and i == 1 then -- a close in the gap's drain (after a kill) is checked too
+            M.verdictTruth(vt, run, us, tEnd)
+        end
         if traced[i] then
             st.H.Hekili.Debug, st.H.Hekili.SaveDebugSnapshot = traced[i][1], traced[i][2]
         end
@@ -737,6 +834,12 @@ function M.run(L, seed, o, drivers)
                 sum(VI.auraExitFix),
                 Q.ambiguous
             )
+            if VI.presenceVerdict or VI.presenceStrike then -- the verdict's per-fight counters, once the belief has them
+                line = line .. " verdicts " .. sum(VI.presenceVerdict) .. " strikes " .. sum(VI.presenceStrike)
+            end
+            if vt and i == 1 then -- verdict arms only: the closes of an aura truly up (M.verdictTruth)
+                line = line .. " wrong " .. run.verdictsWrong[1] .. "/" .. run.verdictsWrong[2]
+            end
             ab.check(Q.overflow == 0, "layout", line)
             local el = st.edge and edgestats.line(st.H, VI)
             if el then
