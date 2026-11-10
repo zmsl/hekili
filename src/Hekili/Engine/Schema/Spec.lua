@@ -730,6 +730,9 @@ local HekiliSpecMixin = {
         -- `option.sim`: the harness's default (Engine.SettingDefault); taken out, AceConfig rejects unknown keys
         local sim = option.sim
         option.sim = nil -- the caller's own table on a direct spec call (the kit path passes each spec a copy)
+        -- `option.section` ({ name, desc }): the options page opens a section (a header and its text) before it
+        local section = option.section
+        option.section = nil
         -- a choice (`select`): its default and `sim` must be candidates (keys of `values`), the note names the choice
         local values = option.type == "select" and type( option.values ) == "table" and option.values
         if values then
@@ -748,6 +751,7 @@ local HekiliSpecMixin = {
             name = key,
             default = value,
             sim = sim,
+            section = section,
             info = option
         }
         table.insert( self.settings, entry )

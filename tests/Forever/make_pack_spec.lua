@@ -137,6 +137,85 @@ describe("tools/make_pack.lua", function()
         assert.are.equal(root .. "packs.lua: no class", err)
     end)
 
+    -- The manifest's `imports`: a pack takes another pack's own lists (never what that pack imports) under a prefix,
+    -- entered first in its default and precombat while buff.<aura>.up; its own default and precombat entries gain the
+    -- negated guard, and its text is rebuilt from the merged lists.
+    describe("imports", function()
+        local MANIFEST = 'return { class = "ZZZ", packs = { "Host", "Other" }, specs = { Host = "h", Other = "o" },\n'
+            .. '    imports = { Host = { from = "Other", as = "o", aura = "o_form" },\n'
+            .. '        Other = { from = "Host", as = "h", aura = "h_form" } } }\n'
+        local HOST = "# Host\nactions.precombat=a1\nactions=b1,if=x|y\n"
+            .. "actions+=/call_action_list,name=sub\nactions.sub=c1\n"
+        local OTHER = "# Other\nactions.precombat=p1\nactions=d1,use_off_gcd=1,if=z\n"
+            .. "actions+=/call_action_list,name=sub\nactions.sub=e1\n"
+        local function load(manifest, files)
+            files = files or {}
+            files["packs.lua"] = manifest
+            files["Host.simc"] = files["Host.simc"] or HOST
+            files["Other.simc"] = files["Other.simc"] or OTHER
+            local root = scratch(nil, files)
+            local ok, packs = pcall(mp.load, "zzz", root, { src = "" })
+            os.execute("rm -r " .. root)
+            return ok, packs
+        end
+
+        it("prefixes the other pack's lists, renames its calls and guards the host's default and precombat", function()
+            local ok, packs = load(MANIFEST)
+            assert.is_true(ok, packs)
+            assert.are.equal(
+                "actions=call_action_list,name=o,if=buff.o_form.up\n"
+                    .. "actions+=/b1,if=(x|y)&!buff.o_form.up\n"
+                    .. "actions+=/call_action_list,name=sub,if=!buff.o_form.up\n"
+                    .. "actions.o=d1,use_off_gcd=1,if=z\n"
+                    .. "actions.o+=/call_action_list,name=o_sub\n"
+                    .. "actions.o_precombat=p1\n"
+                    .. "actions.o_sub=e1\n"
+                    .. "actions.precombat=call_action_list,name=o_precombat,if=buff.o_form.up\n"
+                    .. "actions.precombat+=/a1,if=!buff.o_form.up\n"
+                    .. "actions.sub=c1\n",
+                packs[1].simc
+            )
+            -- the other way round from Host's own lists: no o_* list comes back as h_o_*
+            assert.are.equal(
+                "actions=call_action_list,name=h,if=buff.h_form.up\n"
+                    .. "actions+=/d1,use_off_gcd=1,if=(z)&!buff.h_form.up\n"
+                    .. "actions+=/call_action_list,name=sub,if=!buff.h_form.up\n"
+                    .. "actions.h=b1,if=x|y\n"
+                    .. "actions.h+=/call_action_list,name=h_sub\n"
+                    .. "actions.h_precombat=a1\n"
+                    .. "actions.h_sub=c1\n"
+                    .. "actions.precombat=call_action_list,name=h_precombat,if=buff.h_form.up\n"
+                    .. "actions.precombat+=/p1,if=!buff.h_form.up\n"
+                    .. "actions.sub=e1\n",
+                packs[2].simc
+            )
+            for _, p in ipairs(packs) do
+                assert.are.same(mp.parse(p.simc), p.lists, p.name) -- the profile text is the lists
+                assert.are.equal(p.simc, mp.unparse(p.lists), p.name)
+            end
+            assert.are.equal("Host Imports Other as the o lists, entered while buff.o_form.up.", packs[1].desc)
+        end)
+
+        it("leaves a pack without an import as its file wrote it", function()
+            local ok, packs = load(
+                'return { class = "ZZZ", packs = { "Host", "Other" }, specs = { Host = "h", Other = "o" },\n'
+                    .. '    imports = { Host = { from = "Other", as = "o", aura = "o_form" } } }\n'
+            )
+            assert.is_true(ok, packs)
+            assert.are.equal((OTHER:gsub("^# Other\n", "")), packs[2].simc)
+            assert.are.equal("Other", packs[2].desc)
+        end)
+
+        it("refuses an unknown source and a list name the host already has", function()
+            local ok, err = load((MANIFEST:gsub('from = "Other"', 'from = "Nope"')))
+            assert.is_false(ok)
+            assert.matches("packs%.lua: pack Host imports Nope, which the manifest does not list$", err)
+            ok, err = load(MANIFEST, { ["Host.simc"] = HOST .. "actions.o_sub=f1\n" })
+            assert.is_false(ok)
+            assert.matches("packs%.lua: pack Host imports Other's list sub as o_sub, a list it already has$", err)
+        end)
+    end)
+
     describe("write (the version changes only with the text)", function()
         local TODAY = 20991231
 

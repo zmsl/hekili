@@ -144,7 +144,15 @@ function M.load(vs, file, class)
     end
     w.settings = {}
     for _, call in ipairs(reg.RegisterSetting or {}) do
-        w.settings[call[1]] = { default = call[2], option = call[3], specs = call[4] and { unpack(call, 4) } or nil }
+        local prev, specs = w.settings[call[1]], call[4] and { unpack(call, 4) } or nil
+        -- the same key registered per spec (an imported list's setting): one entry, every spec; the first's default
+        if prev and prev.specs and specs then
+            for _, k in ipairs(specs) do
+                table.insert(prev.specs, k)
+            end
+        else
+            w.settings[call[1]] = { default = call[2], option = call[3], specs = specs }
+        end
     end
     w.totems = reg.RegisterTotems and reg.RegisterTotems[1][1]
     w.pets = reg.RegisterPets and reg.RegisterPets[1][1]

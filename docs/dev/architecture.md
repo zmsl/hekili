@@ -402,7 +402,10 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
 Default priorities are written as SimC text: `src/Hekili_<Class>/APLs/<Pack>.simc` (leading `#` lines are the
 description) and the manifest `src/Hekili_<Class>/APLs/packs.lua` (`{ class = "<TOKEN>", packs = { ... } in block
 order, specs = { [<Pack>] = <spec key> } }`; each pack's payload gets `spec = "<TOKEN>:<key>"`, a pack without a spec
-key errors). The TOC lists
+key errors). An optional `imports = { [<Pack>] = { from = <Pack>, as = <prefix>, aura = <key> } }` merges the other
+pack's own lists in at every build as `<prefix>*` (default -> `<prefix>`, precombat -> `<prefix>_precombat`), called
+first in default and precombat while `buff.<key>.up`, the host's own lines there gaining `!buff.<key>.up` (the Druid's
+form-following Feral and Guardian packs); the payload's text is then the merged lists. The TOC lists
 neither, so WoW never loads them, and `.pkgmeta` leaves them out of the zip. `make packs` runs
 `.lua/bin/lua tools/make_pack.lua write <class>` (`lua5.1` without `.lua/`) for each manifest. It parses the text, serializes and encodes it as the share
 string `RegisterPack` takes, and rewrites the generated `RegisterPack` blocks in `src/Hekili_<Class>/<Class>.lua`.

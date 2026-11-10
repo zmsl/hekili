@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- Druid: the Feral and Guardian priorities now follow your form. Feral in Bear Form suggests what Guardian would, and Guardian in Cat Form suggests what Feral would. In caster form each suggests its own form. The setting each borrowed priority uses shows on your specialization's page too, under its own heading.
 
 ### Changed
 

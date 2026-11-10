@@ -4346,6 +4346,22 @@ found = true end
                             }
                         end
 
+                        local section = option.section -- RegisterSetting's: a header and its text before it
+                        if section and section ~= ( specCfg[ i - 1 ] or {} ).section then
+                            options.args.core.plugins.settings[ sName .. "Section" .. i ] = {
+                                type = "header",
+                                name = section.name,
+                                order = option.info.order - 0.04
+                            }
+                            options.args.core.plugins.settings[ sName .. "SectionText" .. i ] = {
+                                type = "description",
+                                name = section.desc,
+                                fontSize = "medium",
+                                width = "full",
+                                order = option.info.order - 0.03
+                            }
+                        end
+
                         options.args.core.plugins.settings[ option.name ] = option.info
                         if self.DB.profile.specs[ id ].settings[ option.name ] == nil then
                             self.DB.profile.specs[ id ].settings[ option.name ] = Hekili.Engine.SettingDefault( option )
