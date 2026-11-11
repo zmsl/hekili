@@ -104,6 +104,25 @@ local function after(h, t)
     return p
 end
 
+--- A `swingHaste` aura's gain (f, its multiplier) or fall (1 / f) at t (Families/Auras.lua, aura audit C5): each
+--- hand's swing in flight lands after (its time left) / f and the speed is speed / f, as the client rescales a running
+--- swing; the next PLAYER_SWING's duration is then the hasted one as observed. shortcut: one multiplier for every hand
+--- (Rapid Fire's melee and ranged); a per-hand table when a pack needs one. Allocates nothing.
+function I.SwingHaste(f, t)
+    for h = 1, 3 do
+        local sp = speed[h]
+        if sp > 0 then
+            local nsp = sp / f -- nonzero: the caller passes f > 0
+            if anchorT[h] > 0 then
+                anchorT[h] = t + (after(h, t) - t) / f - nsp -- after() then answers t + left / f
+                I.Sample(swingRec[h], "modelled", anchorT[h] + nsp, t, 0)
+            end
+            speed[h] = nsp
+            I.Sample(speedRec[h], "modelled", nsp, t, 0)
+        end
+    end
+end
+
 -- Our parry (Obs.PlayerHit a = PARRY): the main hand's pending swing comes early by L.ParryPull; the anchor moves, so
 -- every later predicted swing does until the next PLAYER_SWING re-anchors. The pull is kept with the swing it was taken
 -- from (VS.SwingPull), and restarts when a parry comes after a newer swing. Off hand never. Allocates nothing.

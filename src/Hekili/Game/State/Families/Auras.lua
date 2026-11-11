@@ -38,6 +38,8 @@ local U = {
     gen = {},
     mem = {},
     icd = {}, -- by aura: its RegisterAura `icd` (seconds), 0 none
+    haste = {}, -- by aura: its RegisterAura `swingHaste` (the swing speed's multiplier while up), 0 none
+    hasteOn = {}, -- by aura: its `swingHaste` gain was applied and its fall not yet (pairs every gain with one fall)
     firstWalk = {}, -- by unit: the time of its first clean walk (Sources/Auras.lua), 0 none yet
     openFold = {}, -- by unit and aura: the I.folds of its last Cooldown Manager open (I.CastAura), 0 none
 }
@@ -72,6 +74,9 @@ I.OnBuild(function(def, now)
         U.id[j], U.obj[j] = ids[1], auras[j]
         local icd = rawget(auras[j], "icd")
         U.icd[j] = type(icd) == "number" and icd > 0 and icd or 0
+        local haste = rawget(auras[j], "swingHaste")
+        U.haste[j] = type(haste) == "number" and haste > 0 and haste or 0
+        U.hasteOn[j] = false
         if auras[j].key ~= nil then
             U.byKey[auras[j].key] = j
         end
@@ -190,6 +195,14 @@ local function set(u, j, expires, applied, stacks, t, origin, event, harmful)
         push(D.upd, D.nUpd, u, inst0)
     end
     e[j], U.applied[u][j], U.stacks[u][j] = expires, applied, stacks
+    local f = u == 1 and U.haste[j] or 0
+    if f > 0 and (expires > 0) ~= U.hasteOn[j] then -- a `swingHaste` aura's gain or fall (aura audit C5)
+        U.hasteOn[j] = expires > 0 -- an expired record recast before the sweep stays one application
+        local at = (expires <= 0 and was < t) and was or t -- a fall by time: when it ran out
+        if I.inCombat and at >= I.combatT then -- out of combat the client's plain speed reads say it
+            I.SwingHaste(expires > 0 and f or 1 / f, at) -- nonzero: f > 0
+        end
+    end
     if harmful ~= nil then
         U.harm[u][j] = harmful
     end
