@@ -409,7 +409,7 @@ describe("the timeline's option tabs", function()
                 "keybindings.fontSize",
                 "glow.highlight",
                 "targets.enabled",
-                "barGlow.enabled",
+                "glow.enabled",
                 "border.enabled",
             },
             tab_next = {

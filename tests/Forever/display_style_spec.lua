@@ -1899,7 +1899,6 @@ describe("the timeline display style", function()
             "border",
             "range",
             "glow",
-            "barGlow",
             "captions",
             "targets",
             "delays",

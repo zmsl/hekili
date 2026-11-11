@@ -2,17 +2,18 @@ local _, ns = ...
 -- UI/BarGlow.lua: the action bar glow. A display's first recommendation glows the real action buttons that cast it,
 -- its second (when the display shows one) glows in another colour, through LibCustomGlow's proc glow under Hekili's own
 -- keys. Never Blizzard's spell alert manager: that writes addon data into Blizzard's table (taint) and collides with a
--- real proc. Styles call Update from Draw and Clear from their own Clear; the settings are the style's `barGlow` group
--- (Options/StyleOptions.lua).
+-- real proc. It is its own subscriber to one display's recommendations (a sibling of the displays, not driven from a
+-- style); the settings are profile.barGlow, one options page (Options/Options.lua).
 --
 -- The buttons come from walking the bar frames (Blizzard's keyboard bars, Forever's gamepad bars, ElvUI, Bartender,
 -- Dominos) and reading each one's current action slot, so a paged or form bar follows; the ability behind a slot is the
 -- keybind reader's own lookup (ns.ResolveAction, Engine/Sim/Events.lua). The map is rebuilt on a bar event (debounced);
--- Update works only when the recommendation, the map or a colour changed, and allocates nothing otherwise.
+-- a publish does work only when the recommendation, the map or a colour changed, and allocates nothing otherwise.
 
 local Facade = ns.Facade
 local GetActionInfo, GetMacroSpell, GetMacroItem = Facade.GetActionInfo, Facade.GetMacroSpell, Facade.GetMacroItem
 local GetItemInfoInstant = Facade.C_Item.GetItemInfoInstant
+local InCombatLockdown = Facade.InCombatLockdown
 
 local BarGlow = {}
 ns.UI.BarGlow = BarGlow
@@ -151,15 +152,18 @@ local function stopRole( role )
     role.ability = nil
 end
 
-local function setRole( role, ability, c )
+-- Does the role need repainting for `ability` and colour `c`?
+local function changed( role, ability, c )
     local col = role.color
-    if ability == nil and role.ability == nil then return end
-    if ability == role.ability and role.version == version
-        and col[ 1 ] == c[ 1 ] and col[ 2 ] == c[ 2 ] and col[ 3 ] == c[ 3 ] and col[ 4 ] == ( c[ 4 ] or 1 ) then return end
+    if ability == nil and role.ability == nil then return false end
+    return not ( ability == role.ability and role.version == version
+        and col[ 1 ] == c[ 1 ] and col[ 2 ] == c[ 2 ] and col[ 3 ] == c[ 3 ] and col[ 4 ] == ( c[ 4 ] or 1 ) )
+end
 
-    stopRole( role )
+local function startRole( role, ability, c )
     if not ability then return end
 
+    local col = role.color
     role.ability, role.version = ability, version
     col[ 1 ], col[ 2 ], col[ 3 ], col[ 4 ] = c[ 1 ], c[ 2 ], c[ 3 ], c[ 4 ] or 1
 
@@ -174,45 +178,58 @@ local function setRole( role, ability, c )
     end
 end
 
-local function roles( d )
-    local st = d.styleState
-    local s = st.barGlow
-    if not s then
-        s = { now = newRole( "HkBarNow" .. d.id ), next = newRole( "HkBarNext" .. d.id ) }
-        st.barGlow = s
-    end
-    return s
-end
+-- The two glow roles, and the stream followed (nil: none).
+local roles = { now = newRole( "HkBarNow" ), next = newRole( "HkBarNext" ) }
+local followed, lastOut
 
---- From a style's Draw: glows `cfg`'s (the style's barGlow group) now and next colours on the buttons of the display's
---- first and second records. `shown` is how many records the display shows; a blank or hidden display glows nothing.
-function BarGlow.Update( d, cfg, out, shown )
-    local s = roles( d )
+--- Paints from the last publish and the settings (profile.barGlow): the first record's buttons in the now colour, the
+--- second's in the next colour unless it is the same ability. Nothing is started or stopped when nothing changed.
+local function refresh()
+    local c = Hekili.DB and Hekili.DB.profile.barGlow
+    local out = lastOut
     local nowKey, nextKey
-    if cfg.enabled and out.count > 0 and out.version ~= d.blankVersion then
+    if c and c.enabled and followed and out and out.count > 0 and ( not c.combatOnly or InCombatLockdown() ) then
         nowKey = out.recs[ 1 ].actionName
-        if cfg.glowNext and shown > 1 and out.count > 1 then
+        if c.glowNext and out.count > 1 then
             nextKey = out.recs[ 2 ].actionName
             if nextKey == nowKey then nextKey = nil end -- now wins
         end
     end
-    setRole( s.now, nowKey, cfg.colorNow or NOW )
-    setRole( s.next, nextKey, cfg.colorNext or NEXT )
+    local cNow, cNext = c and c.colorNow or NOW, c and c.colorNext or NEXT
+    local nowChanged, nextChanged = changed( roles.now, nowKey, cNow ), changed( roles.next, nextKey, cNext )
+    -- stop before start: a button moving from one role to the other never carries both glows
+    if nowChanged then stopRole( roles.now ) end
+    if nextChanged then stopRole( roles.next ) end
+    if nowChanged then startRole( roles.now, nowKey, cNow ) end
+    if nextChanged then startRole( roles.next, nextKey, cNext ) end
 end
 
---- Stops every glow of a display (hidden, disabled, a style switch).
-function BarGlow.Clear( d )
-    local s = d.styleState and d.styleState.barGlow
-    if s then
-        stopRole( s.now )
-        stopRole( s.next )
+local function onPublish( name, version, out )
+    lastOut = out
+    refresh()
+end
+BarGlow.OnPublish = onPublish
+
+--- Follows the display the settings name, while enabled: an active subscriber of its stream, so the engine computes
+--- it with every display hidden. Called when a setting or the profile changes; also repaints (a colour changed).
+function BarGlow.Apply()
+    local c = Hekili.DB and Hekili.DB.profile.barGlow
+    local want = c and c.enabled and ( c.follow or "Primary" ) or nil
+    local Engine = Hekili.Engine
+    if want and not Engine.Output[ want ] then want = nil end
+    if want ~= followed then
+        if followed then Engine.Unsubscribe( followed, onPublish ) end
+        followed, lastOut = nil, nil
+        if want and Engine.Subscribe( want, onPublish, false ) then followed = want end
     end
+    refresh()
 end
 
 local pending = false
 local function rescan()
     pending = false
     BarGlow.Rescan()
+    BarGlow.Apply() -- a changed map repaints
 end
 
 -- A bar event: one rescan after the burst (a page turn raises a slot event per button).
@@ -221,6 +238,10 @@ local function queue()
     pending = true
     C_Timer.After( 0.2, rescan )
 end
+
+ns.RegisterEvent( "PLAYER_ENTERING_WORLD", BarGlow.Apply )
+ns.RegisterEvent( "PLAYER_REGEN_DISABLED", refresh )
+ns.RegisterEvent( "PLAYER_REGEN_ENABLED", refresh )
 
 for _, event in ipairs( { "PLAYER_ENTERING_WORLD", "ACTIONBAR_SLOT_CHANGED", "ACTIONBAR_PAGE_CHANGED", "UPDATE_BONUS_ACTIONBAR",
     "UPDATE_OVERRIDE_ACTIONBAR", "UPDATE_SHAPESHIFT_FORM", "SPELLS_CHANGED", "UPDATE_MACROS",

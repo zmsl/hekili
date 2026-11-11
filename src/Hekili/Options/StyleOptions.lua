@@ -104,13 +104,6 @@ local function base()
             highlight = true
         },
 
-        barGlow = {
-            enabled = false, -- off on every display by default (owner 2026-11-11)
-            colorNow = { 1, 0.82, 0, 1 }, -- gold, like a proc
-            glowNext = true,
-            colorNext = { 0.3, 0.6, 1, 1 },
-        },
-
         captions = {
             enabled = false,
             queued = false,
@@ -667,53 +660,6 @@ function SO.glow( styleKey, zones, order, id, conf )
         desc = L["Preferences for Blizzard action button glows."],
         order = order,
         args = args,
-    }
-end
-
---- The action bar glow (UI/BarGlow.lua). Key names avoid a zone's prefix (next...): the timeline sorts options by it.
-function SO.barGlow( styleKey, zones, order, id, conf )
-    local function off() return conf[ styleKey ].barGlow.enabled == false end
-    return {
-        type = "group",
-        name = L["Action Bar Glow"],
-        desc = L["Preferences for the glow around your action bar buttons."],
-        order = order,
-        args = {
-            enabled = {
-                type = "toggle",
-                name = L["Enabled"],
-                desc = L["If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color."],
-                width = 1.49,
-                order = 1,
-            },
-
-            colorNow = {
-                type = "color",
-                name = L["Now Color"],
-                desc = L["The glow on the buttons of the first recommendation."],
-                width = 1.49,
-                order = 2,
-                disabled = off,
-            },
-
-            glowNext = {
-                type = "toggle",
-                name = L["Glow the next recommendation"],
-                desc = L["If enabled, the buttons of the second recommendation glow too, in the next color."],
-                width = 1.49,
-                order = 3,
-                disabled = off,
-            },
-
-            colorNext = {
-                type = "color",
-                name = L["Next Color"],
-                desc = L["The glow on the buttons of the second recommendation."],
-                width = 1.49,
-                order = 4,
-                disabled = function() return off() or conf[ styleKey ].barGlow.glowNext == false end,
-            },
-        },
     }
 end
 

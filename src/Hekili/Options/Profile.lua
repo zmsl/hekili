@@ -11,6 +11,7 @@ local Engine = Hekili.Engine
 function Hekili:ProfileChanged()
     Engine.Configure( self.DB.profile )
     self:TotalRefresh()
+    ns.UI.BarGlow.Apply()
 end
 
 

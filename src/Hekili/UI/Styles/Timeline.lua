@@ -67,7 +67,7 @@ end
 
 -- Its icon zones for the shared option builders: cell 1, cell 2, the lane (the alternatives use the lane's text).
 local ZONES = { "now", "next", "lane" }
-local SHARED = { "border", "range", "glow", "barGlow", "captions", "indicators", "targets", "delays", "keybindings", "gamepad" }
+local SHARED = { "border", "range", "glow", "captions", "indicators", "targets", "delays", "keybindings", "gamepad" }
 
 -- Per zone (1 now, 2 next, 3 lane) the shared groups' field names (StyleOptions: a later zone prefixes its own).
 local function zkey( z, field )
@@ -846,7 +846,6 @@ function Timeline.Draw( d, conf, out, status )
         d.NewRecommendations = nil
         assign( d, T, tl, conf, out, now, combat )
     end
-    ns.UI.BarGlow.Update( d, tl.barGlow, out, 2 ) -- before the blank return: a blank display glows nothing
     if not T.has then return end
     if fresh and not quiet then -- the sweeps, as classic's on a publish
         for i = 1, 2 do
@@ -932,7 +931,6 @@ end
 
 --- Hides every frame and region it built (unsubscribe, Deactivate, a style switch).
 function Timeline.Clear( d )
-    ns.UI.BarGlow.Clear( d )
     local T = d.styleFrames.timeline
     if not T then return end
     for _, b in ipairs( T.cells ) do

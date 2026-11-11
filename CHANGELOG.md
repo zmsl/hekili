@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### New
-- Your displays can now glow your real action bar buttons: the buttons that cast the first recommendation in a gold glow, and the second recommendation's in blue. It works on the game's keyboard and gamepad bars and on ElvUI, Bartender and Dominos. It is off by default; turn it on in the new Action Bar Glow tab in each display's style options.
+- A new Action Bar Glow page in the options can glow your real action bar buttons: the buttons that cast the first recommendation of a display in gold, and the second recommendation's in blue. It works on the game's keyboard and gamepad bars and on ElvUI, Bartender and Dominos, follows the display you choose, glows in combat only unless you change that, and works with the icons hidden. It is off by default.
 
 ### Changed
 - The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
