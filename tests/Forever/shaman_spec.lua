@@ -309,7 +309,7 @@ describe("Forever Shaman", function()
             for _, field in ipairs({ "now", "handler" }) do
                 e = ld.env(w)
                 ld.run(lb[field], e)
-                assert.are.same({ "maelstrom_weapon", "revelation", "stormstrike" }, e.removed, field)
+                assert.are.same({ "maelstrom_weapon", "revelation" }, e.removed, field)
             end
             assert.are.same({ 408505, 30, 5 }, {
                 w.auras.maelstrom_weapon.id,
@@ -346,9 +346,28 @@ describe("Forever Shaman", function()
     end)
 
     -- wowsims e5a9cd2a2d (spells_auto_gen.go:14299, stormstrike.go): spell 17364 lasts 12 s with one charge; effect 2's
-    -- class mask 1048579 = Lightning Bolt (1) | Chain Lightning (2) | Earth Shock (1048576); a landed hit of ours spends it.
+    -- class mask 1048579 = Lightning Bolt (1) | Chain Lightning (2) | Earth Shock (1048576); the next of them to LAND
+    -- spends it (OnSpellHitTaken, result.Landed). Chain Lightning and Earth Shock have no travel here: their hit is the
+    -- cast. Lightning Bolt flies (velocity 20): both layers cut the debuff to the flight.
+    local function upDebuff(remains)
+        return setmetatable({ stormstrike = { up = true, remains = remains } }, {
+            __index = function()
+                return { up = false, remains = 0 }
+            end,
+        })
+    end
+
+    local function removesStormstrike(e)
+        for _, r in ipairs(e.removed) do
+            if r == "stormstrike" then
+                return true
+            end
+        end
+        return false
+    end
+
     it(
-        "models Stormstrike's debuff: up for 12 s from the cast, spent by Lightning Bolt, Chain Lightning, Earth Shock",
+        "models Stormstrike's debuff: 12 s from the cast, spent at the hit of Chain Lightning and Earth Shock",
         function()
             local a = w.auras.stormstrike
             assert.are.same({ 17364, 12, 1 }, { a.id, a.duration, a.max_stack })
@@ -357,15 +376,11 @@ describe("Forever Shaman", function()
                 ld.run(w.abilities.stormstrike[field], e)
                 assert.are.same({ { "stormstrike" }, 12 }, { e.applied, e.durations.stormstrike }, field)
                 assert.are.same({}, e.removed, field)
-                for _, key in ipairs({ "lightning_bolt", "chain_lightning", "earth_shock" }) do
+                for _, key in ipairs({ "chain_lightning", "earth_shock" }) do
                     local f = ld.env(w)
                     f.setCooldown = function() end
                     ld.run(w.abilities[key][field], f)
-                    local n = 0
-                    for _, r in ipairs(f.removed) do
-                        n = n + (r == "stormstrike" and 1 or 0)
-                    end
-                    assert.are.equal(1, n, key .. " " .. field)
+                    assert.is_true(removesStormstrike(f), key .. " " .. field)
                 end
                 for _, key in ipairs({ "flame_shock", "fire_nova", "searing_totem" }) do
                     local f = ld.env(w)
@@ -373,13 +388,30 @@ describe("Forever Shaman", function()
                     if w.abilities[key][field] then
                         ld.run(w.abilities[key][field], f)
                     end
-                    for _, r in ipairs(f.removed) do
-                        assert.are_not.equal("stormstrike", r, key .. " " .. field)
-                    end
+                    assert.is_false(removesStormstrike(f), key .. " " .. field)
                 end
             end
         end
     )
+
+    it("leaves the debuff up while a Lightning Bolt flies, then gone: both layers cut it to the flight", function()
+        local lb = w.abilities.lightning_bolt
+        assert.is_nil(lb.impact) -- the engine's impact hook would make the bolt a tracked projectile
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = ld.env(w) -- up for the 12 s, then only for the flight (velocity 20, 40 yd)
+            e.debuff = upDebuff(12)
+            ld.run(lb[field], e)
+            assert.is_false(removesStormstrike(e), field)
+            assert.are.same({ { "stormstrike" }, 2 }, { e.applied, e.durations.stormstrike }, field)
+            e = ld.env(w) -- a debuff already nearer its end is not lengthened; one not up is not applied
+            e.debuff = upDebuff(1)
+            ld.run(lb[field], e)
+            assert.are.equal(1, e.durations.stormstrike, field)
+            e = ld.env(w)
+            ld.run(lb[field], e)
+            assert.are.same({}, e.applied, field)
+        end
+    end)
 
     -- wowsims spell data, absent from DB2 (wowdb effects 16038 has none): Call of Flame's effect 2, +3000 ms a rank on
     -- Flame Shock (its talent curve 3000/6000/9000); wowsims's log of the 3/3 build: Flame Shock 21 s.
@@ -871,5 +903,26 @@ describe("Forever Shaman through the engine", function()
             local first = out.recs[1] and out.recs[1].actionName
             assert.are.equal(on, first == "rage_of_the_farseer", tostring(first))
         end
+    end)
+
+    it("keeps Stormstrike's debuff up while a Lightning Bolt flies and ends it at the landing", function()
+        local VS = H.ns.VirtualState
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local id = H.Hekili.Class.auras.stormstrike.id
+        local t = H.ctl.now + 1
+        local function cast(spell, at)
+            H.ctl.now = at
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. spell, spell)
+            assert.is_true(headless.cycle(H, at + 0.01))
+        end
+        cast(17364, t)
+        assert.is_not_nil(VS.Aura("target", id, t + 0.02))
+        cast(15208, t + 1.5) -- Lightning Bolt: in flight for 2 s
+        assert.is_not_nil(VS.Aura("target", id, t + 2)) -- Chain Lightning right after the bolt still sees it
+        assert.is_nil(VS.Aura("target", id, t + 4))
+        assert.are.same({}, H.errors)
     end)
 end)

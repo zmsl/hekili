@@ -534,7 +534,8 @@ spec:RegisterAuras({
     },
     -- Stormstrike's debuff (17364; wowsims e5a9cd2a2d: 12 s, one charge): +20% nature damage from us to the target, spent
     -- by the next landed Lightning Bolt, Chain Lightning or Earth Shock of ours (effect 2's mask 1048579 = 1 | 2 | 1048576).
-    -- Modelled for the auras list; no priority reads it. shortcut: spent at the cast, not at impact; main target only.
+    -- Spent at the hit: Earth Shock's and Chain Lightning's (no travel modelled) at the cast, Lightning Bolt's when it lands (the flight);
+    -- the target aura only, so Chain Lightning's other targets never touch it.
     stormstrike = { id = 17364, duration = 12, max_stack = 1 },
     -- Rage of the Farseer (425336): +30% melee and ranged attack speed (DB2 aura 342) for 25 s; nothing reads it here.
     rage_of_the_farseer = { id = 425336, duration = 25, max_stack = 1 },
@@ -581,15 +582,25 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(LIGHTNING_BOLT),
 
+        -- Stormstrike's charge goes when the bolt LANDS (wowsims OnSpellHitTaken): both layers cut the debuff to the
+        -- flight, so it stays up for a Chain Lightning right after and is gone at the landing (a miss undoes it in the
+        -- belief: Obs.Avoided). The engine's `impact` hook is not used: it makes the bolt a tracked projectile, which
+        -- moved the Elemental loop's numbers.
+        -- shortcut: the flight is 40 yd / velocity 20 = 2 s, the simulation's own default; use the target's range when
+        -- a pack reads it.
         now = function()
             removeBuff("maelstrom_weapon")
             removeBuff("revelation")
-            removeDebuff("target", "stormstrike")
+            if debuff.stormstrike.up then
+                applyDebuff("target", "stormstrike", min(2, debuff.stormstrike.remains))
+            end
         end,
         handler = function()
             removeBuff("maelstrom_weapon")
             removeBuff("revelation")
-            removeDebuff("target", "stormstrike")
+            if debuff.stormstrike.up then
+                applyDebuff("target", "stormstrike", min(2, debuff.stormstrike.remains))
+            end
         end,
     },
 
