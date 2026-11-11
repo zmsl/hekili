@@ -20,13 +20,13 @@ local Plain, Stage, Direct = S.Plain, S.Stage, S.Direct
 
 -- By memory slot: its key and when it was last the target. The key: the target's GUID (a string) while it reads plain;
 -- under Map (the GUID secret) the index 1..40 of the plate that is the target (a number: never equal to a GUID, so the
--- two key spaces cannot collide); "" free; false: an orphan, the current target's slot whose plate left (no key finds
--- it again; forgotten at the next swap).
+-- two key spaces cannot collide; a friendly target read plain under Map is keyed by its GUID); "" free; false: an
+-- orphan, the current target's slot whose plate left (no key finds it again; forgotten at the next swap).
 local guid, used = {}, {}
 for s = 1, I.TARGET_CAP do
     guid[s], used[s] = "", 0
 end
-local tokenMode = false -- the key space of the last swap that had a target (true: plate indices)
+local tokenMode = false -- the key space (true: plate indices): set by a secret target, cleared by a hostile plain one
 local forgetN, noPlateN = 0, 0 -- slots forgotten by plate edges and flips; Map swaps no plate answered (snapshot)
 I.targetKeys = guid -- read-only, for tests
 
@@ -100,10 +100,12 @@ local function swap(api, t)
     local g = I.Units.Bound(1)
     local secret = g == "" and I.Units.Secret(api, 1) -- Map: a target is there, its GUID unreadable
     local mode = tokenMode -- no target: the key space stands
-    if g ~= "" then
-        mode = false
-    elseif secret then
+    if secret then
         mode = true
+    elseif g ~= "" and (not tokenMode or Plain(api, api.UnitCanAttack("player", "target")) == true) then
+        -- (review m1) under Map only a hostile plain GUID leaves the plate keys: self or a party member (if plain,
+        -- probe TP6) keeps them, keyed by its GUID string
+        mode = false
     end
     if mode ~= tokenMode then -- (review F6) the key spaces never meet: a flip forgets every slot
         forgetAll(t)
@@ -146,6 +148,9 @@ I.OnBuild(function(def, now)
             guid[s] = ""
         end
     end
+    -- the build cleared the log: no swap waits. Set here, before this hook's swap bumps I.targetSwapN, so it holds
+    -- whatever order the build hooks run in (review m6)
+    I.curSwapN = I.targetSwapN
     if I.api then
         swap(I.api, now)
     end

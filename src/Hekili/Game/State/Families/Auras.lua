@@ -113,7 +113,7 @@ I.OnBuild(function(def, now)
         end
         memExp[s], memApplied[s], memStacks[s], memInst[s] = e, ap, st, ins
     end
-    I.curSlot, I.curSwapN = 0, I.targetSwapN -- the build cleared the log: no swap waits (Target.lua's hook logs its own)
+    I.curSlot = 0 -- the build cleared the log (Sources/Target.lua's hook resets I.curSwapN and logs its own swap)
     CONS.n = 0
     for j = 1, U.nAura do
         local by = rawget(auras[j], "consumedBy")
@@ -341,8 +341,8 @@ end)
 I.On(Obs.TargetGone, function(o)
     local s = o.a
     if s > 0 then
-        for j = 1, U.nAura do
-            memExp[s][j] = 0
+        for j = 1, U.nAura do -- all four (review m2): a reused slot's load must bring no old mob's stacks
+            memExp[s][j], memApplied[s][j], memStacks[s][j], memInst[s][j] = 0, 0, 0, 0
         end
         if s == I.curSlot then
             load(0)

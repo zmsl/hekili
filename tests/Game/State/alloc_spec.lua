@@ -509,10 +509,17 @@ describe("zero allocation", function()
             end
             local function step(i)
                 ctl.now = ctl.now + 0.1
+                -- now and then a plain hostile GUID: a flip to the GUID key space, and back at the next step (review m3)
+                ctl.guid.target = i % 10 == 3 and "Creature-1" or fake.SECRET
                 ctl.unitIs.target = TOK[i % 20 + 1] -- 20 mobs in turn: slots taken, kept and evicted
                 ctl.Fire("PLAYER_TARGET_CHANGED")
-                ctl.Fire("NAME_PLATE_UNIT_REMOVED", TOK[(i + 7) % 40 + 1])
-                ctl.Fire("NAME_PLATE_UNIT_ADDED", TOK[(i + 7) % 40 + 1])
+                -- every 5th step the edge is the new target's own plate, before the fold: an orphan (review m3)
+                local edge = i % 5 == 0 and TOK[i % 20 + 1] or TOK[(i + 7) % 40 + 1]
+                ctl.Fire("NAME_PLATE_UNIT_REMOVED", edge)
+                ctl.Fire("NAME_PLATE_UNIT_ADDED", edge)
+                if i % 10 == 7 then
+                    ctl.Fire("PLAYER_ENTERING_WORLD") -- a world entry: every plate key forgotten
+                end
                 ctl.Tick()
                 VS.Drain(ctl.now)
             end

@@ -118,6 +118,7 @@ ends 2026-10-22). Each row: what to look for, why it matters, its status. Answer
 | TP3 | Core | in a dungeon, one target kept 2 minutes while moving and turning, the TP3 ticker (plan §2): every TOKEN_MOVE after the first has a REMOVED and an ADDED before it | a plate token that changes mob with no event would load one mob's debuffs onto another: a move with no event means T2m must not ship | open (T2m merge waits for it) |
 | TP4 | Core | a debuffed hostile target under Map, out of combat then in combat: the TP4 line (plan §2), the target's aura walk | whether a walk under Map can confirm a remembered record (today a raising walk writes nothing and the memory stands) | open |
 | TP5 | Core | optional, in a dungeon: the TP5 line (plan §2), plates behind the camera | how often a target's plate is missing for reasons other than range | open |
+| TP6 | Core | in a dungeon, target yourself, then a party member: `/run VSCopy(issecretvalue(UnitGUID("target")))` for each (also `UnitCanAttack("player","target")`) | under Map a target whose GUID reads plain moves the memory to GUID keys only when it is hostile (Sources/Target.lua, review m1): a plain read on self or a party member means that guard keeps plate memory for healers and hybrids; a secret read makes the guard moot | open |
 
 ## Findings (unit registry and tickets, 2026-10-22)
 

@@ -47,6 +47,14 @@ describe("token-keyed target memory (lane T2m)", function()
     local function near(want, got, label)
         assert.is_true(got ~= nil and math.abs(got - want) < 1e-9, (label or "") .. " " .. tostring(got))
     end
+    -- The target's AuraGen moves over n folds from t on, 0.02 s apart, with no cast and no edge (flicker: review m4).
+    local function quiet(t, n)
+        local gen = VS.AuraGen("target")
+        for k = 0, (n or 4) - 1 do
+            fold(t + k * 0.02)
+        end
+        return VS.AuraGen("target") - gen
+    end
     local function keys()
         local n = 0
         for s = 1, I.TARGET_CAP do
@@ -125,12 +133,14 @@ describe("token-keyed target memory (lane T2m)", function()
         tab(2, 10.5)
         tab(1, 10.7)
         near(25.1, est(10.8), "control: remembered while plate 1 stayed up")
+        assert.are.equal(0, quiet(10.8), "no flicker on the remembered record")
         tab(2, 11)
         plate("NAME_PLATE_UNIT_REMOVED", 1, 11.5)
         plate("NAME_PLATE_UNIT_ADDED", 1, 11.6) -- another mob took plate 1
         fold(11.7)
         tab(1, 12)
         assert.is_nil(est(12.1), "REMOVED then ADDED")
+        assert.are.equal(0, quiet(12.1), "no flicker on the forgotten record")
         castX(12.2, 15)
         tab(2, 13)
         plate("NAME_PLATE_UNIT_ADDED", 1, 13.5) -- an ADDED with no REMOVED: a new mob all the same
@@ -158,6 +168,7 @@ describe("token-keyed target memory (lane T2m)", function()
             plate("NAME_PLATE_UNIT_REMOVED", 1, 11)
             fold(11.1)
             near(25.1, est(11.1), "the live record stands")
+            assert.are.equal(0, quiet(11.2), "no flicker on the orphan")
             if not dies then
                 assert.is_true(VS.Health("target", 11.1).est > 0)
             end
@@ -170,6 +181,7 @@ describe("token-keyed target memory (lane T2m)", function()
             assert.are.same({ slot }, gone) -- forgotten at the tab away
             tab(1, 14)
             assert.is_nil(est(14.1), "the orphan was forgotten")
+            assert.are.equal(0, quiet(14.1), "no flicker after the release")
         end
     end)
 
@@ -181,6 +193,7 @@ describe("token-keyed target memory (lane T2m)", function()
         tab(2, 13)
         tab(1, 17)
         assert.is_nil(est(17.1))
+        assert.are.equal(0, quiet(17.1), "no flicker on slot 0")
         start("token") -- plates up, UnitIsUnit answers for none
         ctl.guid.target, ctl.unitIs.target = fake.SECRET, nil
         ctl.Fire("PLAYER_TARGET_CHANGED")
@@ -214,9 +227,11 @@ describe("token-keyed target memory (lane T2m)", function()
             got[w] = { est(13.1) or "down", I.curSlot }
             tab(17, 13.5)
             got[w][3] = est(13.6) or "down"
+            got[w][4] = quiet(13.6) -- no flicker
         end
         assert.are.equal("down", got.token[1])
         near(27.6, got.token[3], "mob 17 remembered")
+        assert.are.equal(0, got.token[4])
         assert.are.same(got.guid, got.token)
     end)
 
@@ -230,6 +245,7 @@ describe("token-keyed target memory (lane T2m)", function()
         world = "guid"
         tab(1, 12) -- plain again: every plate slot is forgotten
         assert.is_nil(est(12.1), "Creature-1 forgotten at the first flip")
+        assert.are.equal(0, quiet(12.1), "no flicker after a flip")
         world = "token"
         tab(2, 13)
         assert.is_nil(est(13.1), "plate 2 forgotten at the second flip")
@@ -242,6 +258,7 @@ describe("token-keyed target memory (lane T2m)", function()
         tab(2, 11)
         assert.are.equal(2, keys())
         I.Build(def, 12) -- the memory arrays are new; the build's swap keys the current target again
+        assert.are_not.equal(I.targetSwapN, I.curSwapN, "the build's own swap waits for its fold (review m6)")
         fold(12.1)
         assert.are.equal(1, keys())
         assert.are.equal(I.targetSwapN, I.curSwapN)
@@ -368,5 +385,66 @@ describe("token-keyed target memory (lane T2m)", function()
         ctl.Fire("PLAYER_TARGET_CHANGED")
         fold(13)
         assert.are.equal("target slots mode=token cur=0 keys=1 orphan=0 forget=2 noPlate=1", line())
+    end)
+
+    it("a friendly target read plain (self, a party member) keeps the plate memory (review m1)", function()
+        for _, who in ipairs({ "Player-1", "Player-2" }) do -- Player-1 is the fake's own GUID
+            start("token")
+            tab(1, 10)
+            castX(10.1, 15)
+            tab(2, 11)
+            ctl.now = 12
+            ctl.guid.target, ctl.unitIs.target, ctl.friendly.target = who, nil, true
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            fold(12.05)
+            assert.are.equal(2, keys(), who .. ": no flip, both plate keys kept")
+            ctl.friendly.target = nil
+            tab(1, 13)
+            near(25.1, est(13.1), who .. ": mob A remembered")
+        end
+    end)
+
+    it("a forgotten slot taken again through the free path loads nothing of its old mob (review m2)", function()
+        start("token")
+        tab(1, 10)
+        castX(10.1, 15, 3)
+        local slot = I.curSlot
+        tab(2, 11)
+        plate("NAME_PLATE_UNIT_REMOVED", 1, 11.5) -- plate 1's slot is forgotten and freed
+        fold(11.6)
+        tab(3, 12)
+        assert.are.equal(slot, I.curSlot, "the free slot was taken again")
+        local A = I.auras
+        assert.are.same({ 0, 0, 0, 0 }, { A.exp0[2][REND], A.applied[2][REND], A.stacks[2][REND], A.inst[2][REND] })
+    end)
+
+    -- "Not the old mob's": not A's, the target before the tab. The target is still B; only its plate went.
+    it("a plate edge between a tab and its fold: B's record stands, its slot an orphan (review m3)", function()
+        start("token")
+        local gone = {}
+        I.On(Obs.TargetGone, function(o)
+            gone[#gone + 1] = o.a
+        end)
+        tab(1, 10)
+        castX(10.1, 15) -- A: 25.1
+        tab(2, 11)
+        castX(11.1, 20) -- B: 31.1
+        tab(1, 12)
+        ctl.now = 13
+        ctl.unitIs.target = "nameplate2" -- the tab to B (its GUID secret)
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        local slot = I.targetSlot
+        plate("NAME_PLATE_UNIT_REMOVED", 2, 13.01) -- before the swap folds
+        plate("NAME_PLATE_UNIT_ADDED", 2, 13.02)
+        fold(13.05)
+        near(31.1, est(13.05), "B's record, not A's")
+        assert.are.equal(false, I.targetKeys[slot], "B's slot is an orphan")
+        assert.are.same({}, gone)
+        assert.is_true(VS.Health("target", 13.05).est > 0)
+        tab(1, 14)
+        near(25.1, est(14.1), "A still remembered")
+        assert.are.same({ slot }, gone) -- released at the next swap
+        tab(2, 15)
+        assert.is_nil(est(15.1), "plate 2's memory was forgotten")
     end)
 end)
