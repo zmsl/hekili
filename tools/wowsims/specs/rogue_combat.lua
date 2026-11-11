@@ -10,8 +10,7 @@
 -- has Use Backstab true since upstream 0dbe35317d, a Backstab rotation unlike the build). The talents and the build's `vars` pick the lines.
 -- Translation: the APL's "Use X" variables are constants (inlined and folded, rule 1); omitted (rule 2): Maintain
 -- Expose (its call folds to never: "Use Expose Armor" false; its strictSequence, RL3, never reached), autocastOtherCooldowns (#7: rule
--- 13 finds no "Major cooldown used" in the log, so no line), the potion; Thousand Cuts's buff (1310723) resolves from
--- the kit's aura, so `auraIsKnown` of it is the talent. Known deviations (Forever API): remainingTime reads 3600 (time
+-- 13 finds no "Major cooldown used" in the log, so no line), the potion; the pin's APL no longer reads Thousand Cuts's buff (1310723), and the pack has neither it nor the talent. Known deviations (Forever API): remainingTime reads 3600 (time
 -- to die unknown), so the "Fight About to End" terms never fire; energy is secret in combat, so an unannounced energize
 -- (Rogue Armor Energize 27788, +20) is invisible to the belief until the next read.
 -- At the old pin d33930d0, disagreements worked (P7; decisions on-GCD 0.944, n 71): sinister_strike -> slice_and_dice 2 (replay limit: Slice and

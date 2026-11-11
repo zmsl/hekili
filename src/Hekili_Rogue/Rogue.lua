@@ -98,6 +98,16 @@ local RELENTLESS_ENERGY = 25
 local IMPROVED_EXPOSE_ARMOR = { [0] = 0, 5, 10 }
 -- Efficient Strikes (13732, Sinister Strike and Hemorrhage): the rank curve {-3, -5}, by rank.
 local EFFICIENT_STRIKES = { [0] = 0, 3, 5 }
+-- Composure (1329265, the rank curve {-5, -10}): joins Poised's own discount, on the abilities the buff names (wowsims
+-- poised.go). The -10 is the cost modifier below; this is the talent's part, a cost step the abilities' `spend` takes
+-- while the aura is up (`buff` and `talent` are the caller's: the sim's state or the belief's).
+local COMPOSURE = { [0] = 0, 5, 10 }
+local function poised(buff, talent, cost)
+    if buff.poised.up then
+        cost = cost - COMPOSURE[talent.composure.rank]
+    end
+    return max(0, cost)
+end
 
 local function rest(ids)
     local out = {}
@@ -196,7 +206,7 @@ spec:RegisterTalents({
     heightened_senses = { 3, 30894, 2 },
     preparation = { 3, 14185, 1 },
     hemorrhage = { 3, 16511, 1 },
-    boot_knife = { 3, 1329286, 5 }, -- Shank's chance of 2 combo points (20% a rank; not modelled)
+    boot_knife = { 3, 1329286, 5 }, -- Shank's chance of 2 combo points (20% a rank): the certain 5/5 part only
     death_mark = { 3, 1316709, 1 },
 })
 
@@ -289,12 +299,32 @@ spec:RegisterAuras({
         max_stack = 1,
         isStealthed = true,
     },
+    -- Poised (passive 1328825, buff 1328826; wowsims poised.go): out of combat at full energy the next Ambush, Backstab,
+    -- Blade Flurry, Eviscerate, Expose Armor, Garrote, Ghostly Strike, Hemorrhage, Kick, Mutilate, Riposte, Rupture,
+    -- Sinister Strike or Slice and Dice costs 10 less (the cost modifier below; Composure adds to it in `spend`). One
+    -- charge. Read from the client out of combat (the player aura walk), carried by the belief in combat. Not yet
+    -- checked in game (the Druid's Poised is the same shape).
+    poised = {
+        id = 1328826,
+        duration = 3600,
+        max_stack = 1,
+    },
     -- Venom (talent 1329328): Shank gives +30% poison damage for 6 s.
     venom = {
         id = 1310703,
         duration = 6,
         max_stack = 1,
     },
+})
+
+-- Poised's discount: aura 107 misc 14 -10 flat Energy on the class mask {255727518, 2099456, 67108864} against
+-- SpellClassSet 8, read off the pin's class flags (the kit's rank-1 IDs, the ranks through each ability's `copy`;
+-- Shank, Death Mark, Vanish and Premeditation are not in it); one charge.
+spec:RegisterCostMod({
+    aura = "poised",
+    flat = -10,
+    charges = 1,
+    spells = { 8676, 53, 13877, 2098, 8647, 703, 14278, 16511, 1766, 399956, 14251, 1943, 1752, 5171 },
 })
 
 -- Stealth by kind (Hekili's Classic table, Forever's two auras): the APLs and Hekili's keybinding order read `.all`.
@@ -416,7 +446,9 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "totem",
 
-        spend = 60,
+        spend = function()
+            return poised(buff, talent, 60)
+        end,
         spendType = "energy",
 
         startsCombat = true,
@@ -449,7 +481,9 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "totem",
 
-        spend = 60,
+        spend = function()
+            return poised(buff, talent, 60)
+        end,
         spendType = "energy",
 
         startsCombat = true,
@@ -472,7 +506,9 @@ spec:RegisterAbilities({
         cooldown = 120,
         gcd = "totem",
 
-        spend = 25,
+        spend = function()
+            return poised(buff, talent, 25)
+        end,
         spendType = "energy",
 
         startsCombat = false,
@@ -515,7 +551,7 @@ spec:RegisterAbilities({
         gcd = "totem",
 
         spend = function()
-            return max(0, 35 - 15 * talent.flawless_execution.rank) -- 1310711's -15 (4b0030a44b; the log's 20)
+            return poised(buff, talent, max(0, 35 - 15 * talent.flawless_execution.rank)) -- 1310711's -15 (4b0030a44b; the log's 20)
         end,
         spendType = "energy",
 
@@ -550,7 +586,7 @@ spec:RegisterAbilities({
         gcd = "totem",
 
         spend = function()
-            return max(0, 25 - IMPROVED_EXPOSE_ARMOR[talent.improved_expose_armor.rank]) -- the curve {-5, -10}
+            return poised(buff, talent, max(0, 25 - IMPROVED_EXPOSE_ARMOR[talent.improved_expose_armor.rank])) -- the curve {-5, -10}
         end,
         spendType = "energy",
 
@@ -584,7 +620,7 @@ spec:RegisterAbilities({
         gcd = "totem",
 
         spend = function() -- Dirty Deeds (14082: aura 107 misc 14 -20, the talent's whole)
-            return max(0, 50 - 10 * talent.dirty_deeds.rank)
+            return poised(buff, talent, max(0, 50 - 10 * talent.dirty_deeds.rank))
         end,
         spendType = "energy",
 
@@ -617,7 +653,9 @@ spec:RegisterAbilities({
         cooldown = 20,
         gcd = "totem",
 
-        spend = 40,
+        spend = function()
+            return poised(buff, talent, 40)
+        end,
         spendType = "energy",
 
         startsCombat = true,
@@ -643,7 +681,7 @@ spec:RegisterAbilities({
         gcd = "totem",
 
         spend = function()
-            return max(0, 35 - EFFICIENT_STRIKES[talent.efficient_strikes.rank]) -- the log's 30 at rank 2
+            return poised(buff, talent, max(0, 35 - EFFICIENT_STRIKES[talent.efficient_strikes.rank])) -- the log's 30 at rank 2
         end,
         spendType = "energy",
 
@@ -669,7 +707,9 @@ spec:RegisterAbilities({
         cooldown = 10,
         gcd = "totem",
 
-        spend = 25,
+        spend = function()
+            return poised(buff, talent, 25)
+        end,
         spendType = "energy",
 
         startsCombat = true,
@@ -693,7 +733,9 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "off",
 
-        spend = 10,
+        spend = function()
+            return poised(buff, talent, 10)
+        end,
         spendType = "energy",
 
         startsCombat = true,
@@ -719,7 +761,9 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "totem",
 
-        spend = 60,
+        spend = function()
+            return poised(buff, talent, 60)
+        end,
         spendType = "energy",
 
         startsCombat = true,
@@ -793,7 +837,9 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "totem",
 
-        spend = 25,
+        spend = function()
+            return poised(buff, talent, 25)
+        end,
         spendType = "energy",
 
         startsCombat = true,
@@ -827,7 +873,7 @@ spec:RegisterAbilities({
         gcd = "totem",
 
         spend = function()
-            return max(0, 45 - EFFICIENT_STRIKES[talent.efficient_strikes.rank])
+            return poised(buff, talent, max(0, 45 - EFFICIENT_STRIKES[talent.efficient_strikes.rank]))
         end,
         spendType = "energy",
 
@@ -852,7 +898,9 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "totem",
 
-        spend = 25,
+        spend = function()
+            return poised(buff, talent, 25)
+        end,
         spendType = "energy",
 
         startsCombat = false,
@@ -923,7 +971,8 @@ spec:RegisterAbilities({
 
     -- Forever-only (levels 24 and 44, 5 energy, 10 s): an off-hand strike that gives 15 (rank 1) or 25 (rank 2) energy
     -- and 3 more a Flash of Steel rank, which also shortens its cooldown 0.4 s a rank; with Venom it gives the poison
-    -- bonus. No combo point: wowsims's Shank is no builder (Boot Knife's 2-point chance is not modelled).
+    -- bonus. No combo point of its own (wowsims's Shank is no builder); Boot Knife at 5/5 gives 2 for certain (the log:
+    -- 17 of 17 Shanks), ranks 1-4 are a chance that is not modelled.
     shank = {
         id = 1329283,
         copy = { 1329549 },
@@ -944,12 +993,18 @@ spec:RegisterAbilities({
             if talent.venom.enabled then
                 applyBuff("venom")
             end
+            if talent.boot_knife.rank >= 5 then
+                gain(2, "combo_points")
+            end
         end,
 
         handler = function()
             gain((knownRank(SHANK) >= 2 and 25 or 15) + 3 * talent.flash_of_steel.rank, "energy")
             if talent.venom.enabled then
                 applyBuff("venom")
+            end
+            if talent.boot_knife.rank >= 5 then
+                gain(2, "combo_points")
             end
         end,
     },

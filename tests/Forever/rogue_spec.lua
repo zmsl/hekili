@@ -153,8 +153,11 @@ describe("Forever Rogue", function()
                 local env = ld.env(w)
                 env.talent = rank(5)
                 ld.run(a[field], env)
-                -- 15 (rank 1) or 25 (rank 2) energy, +3 a Flash of Steel rank
-                assert.are.same({ { (#known == 2 and 25 or 15) + 15, "energy" } }, env.gained, field)
+                -- 15 (rank 1) or 25 (rank 2) energy, +3 a Flash of Steel rank; Boot Knife at 5/5 (certain) +2 combo points
+                assert.are.same({
+                    { (#known == 2 and 25 or 15) + 15, "energy" },
+                    { 2, "combo_points" },
+                }, env.gained, field)
                 assert.are.same({ "venom" }, env.applied, field)
             end
         end
@@ -164,6 +167,76 @@ describe("Forever Rogue", function()
         ld.run(a.now, env)
         assert.are.same({ { 15, "energy" } }, env.gained)
         assert.are.same({}, env.applied)
+    end)
+
+    it("gives Shank's 2 combo points only at Boot Knife 5/5 (the chance at ranks 1-4 is not modelled)", function()
+        local a = w.abilities.shank
+        w.game.known = { [1329283] = true }
+        for _, field in ipairs({ "now", "handler" }) do
+            for n = 0, 5 do
+                local env = ld.env(w)
+                env.talent = rank(n)
+                ld.run(a[field], env)
+                local cp = 0
+                for _, g in ipairs(env.gained) do
+                    cp = cp + (g[2] == "combo_points" and g[1] or 0)
+                end
+                assert.are.equal(n >= 5 and 2 or 0, cp, field .. " at rank " .. n)
+            end
+        end
+    end)
+
+    it("registers Poised (1328826) with a one-charge flat cost mod over the class-set mask", function()
+        assert.are.same({ 1328826, 3600, 1 }, { w.auras.poised.id, w.auras.poised.duration, w.auras.poised.max_stack })
+        assert.are.equal(1, #w.costMods)
+        local m = w.costMods[1]
+        assert.are.same({ "poised", -10, 1 }, { m.aura, m.flat, m.charges })
+        -- every kit ability the mask covers is scoped by its rank-1 ID; Shank, Death Mark, Vanish are out of it
+        local scoped = {}
+        for _, id in ipairs(m.spells) do
+            scoped[id] = true
+        end
+        local covered = {
+            "ambush",
+            "backstab",
+            "blade_flurry",
+            "eviscerate",
+            "expose_armor",
+            "garrote",
+            "ghostly_strike",
+            "hemorrhage",
+            "kick",
+            "mutilate",
+            "riposte",
+            "rupture",
+            "sinister_strike",
+            "slice_and_dice",
+        }
+        for _, key in ipairs(covered) do
+            assert.is_true(scoped[w.abilities[key].id] == true, key)
+        end
+        for _, key in ipairs({ "shank", "death_mark", "vanish", "premeditation" }) do
+            assert.is_nil(scoped[w.abilities[key].id], key)
+        end
+    end)
+
+    it("adds Composure's 5 / 10 to Poised's discount in the covered costs, only while the aura is up", function()
+        local function cost(key, composure, up)
+            local env = ld.env(w)
+            env.talent = rank(composure)
+            env.buff = setmetatable({ poised = { up = up } }, {
+                __index = function()
+                    return { up = false }
+                end,
+            })
+            return ld.run(w.abilities[key].spend, env)
+        end
+        -- Blade Flurry 25: the cost mod takes its 10 on top (at Composure 2/2: 5, the Combat log's 110 -> 105)
+        assert.are.equal(25, cost("blade_flurry", 0, true))
+        assert.are.equal(20, cost("blade_flurry", 1, true))
+        assert.are.equal(15, cost("blade_flurry", 2, true))
+        assert.are.equal(25, cost("blade_flurry", 2, false)) -- no aura, no talent share
+        assert.are.equal(0, cost("riposte", 2, true)) -- floored at 0
     end)
 
     it("makes Death Mark a finisher that marks the target for 6 s", function()
