@@ -16,11 +16,14 @@ local S = I.Sources
 local Obs, Of = VS.Obs, I.TargetCastOf
 local Plain, Stage, Direct = S.Plain, S.Stage, S.Direct
 
--- By memory slot: the GUID it holds ("" free) and when it was last the target.
+-- By memory slot: its key and when it was last the target. The key: the target's GUID (a string) while it reads plain;
+-- under Map (the GUID secret) the index 1..40 of the plate that is the target (a number: never equal to a GUID, so the
+-- two key spaces cannot collide); "" free.
 local guid, used = {}, {}
 for s = 1, I.TARGET_CAP do
     guid[s], used[s] = "", 0
 end
+local tokenMode = false -- the key space of the last swap that had a target (true: plate indices)
 local dead = false
 local HUGE = math.huge
 local lastLo, lastHi = -1, -1 -- the bracket last logged (-1: none since the swap)
@@ -49,6 +52,18 @@ local function slotFor(g, t)
     return s, true -- newly taken: a GUID not held before (or forgotten)
 end
 
+-- The index of the active plate whose unit is the target (a plain UnitIsUnit true), 0 none. At most 40 reads, once per
+-- target change, never in a poll; a secret or false answer is "not this one".
+local function plateOfTarget(api)
+    local P = I.Plates
+    for k = 1, #P.token do
+        if P.active[k] and Plain(api, api.UnitIsUnit("target", P.token[k])) == true then
+            return k
+        end
+    end
+    return 0
+end
+
 -- A target swap: the new target's memory slot, then a walk of its auras. Also at Start and at each rebuild, so a
 -- target already held at a /reload gets its slot (poll 4 then sees its death, a swap away keeps what was believed).
 -- No "built" guard: in game Start (PLAYER_LOGIN) comes before the first build (PLAYER_ENTERING_WORLD), and I.Build
@@ -59,13 +74,24 @@ local function swap(api, t)
     -- build before Start (headless), and its soft-enemy fallback never reaches token 1
     I.Units.Pin(api, t)
     local g = I.Units.Bound(1)
-    local s, fresh = 0, false
+    local secret = g == "" and I.Units.Secret(api, 1) -- Map: a target is there, its GUID unreadable
     if g ~= "" then
-        s, fresh = slotFor(g, t)
+        tokenMode = false
+    elseif secret then
+        tokenMode = true
+    end -- no target: the key space stands
+    local key = g
+    if secret then
+        key = plateOfTarget(api) -- 0: no plate answers (plates off, out of plate range): no memory
+    end
+    local s, fresh = 0, false
+    if key ~= "" and key ~= 0 then
+        s, fresh = slotFor(key, t)
     end
     local attackable = s > 0 and Plain(api, api.UnitCanAttack("player", "target")) == true
     dead, lastLo, lastHi = false, -1, -1
-    Direct(Obs.TargetSwap, t, s, fresh and 1 or 0, attackable and 1 or 0)
+    -- (review F11) a plate slot is never "fresh": a plate index newly keyed says nothing of the mob's health
+    Direct(Obs.TargetSwap, t, s, fresh and not tokenMode and 1 or 0, attackable and 1 or 0)
     I.targetSlot = s -- the slot this swap names; I.curSlot follows at its fold
     I.targetSwapN = I.targetSwapN + 1 -- I.curSwapN copies it at the fold (Sources/Auras.lua waits for it)
     if s > 0 and I.auras.n >= 2 then
