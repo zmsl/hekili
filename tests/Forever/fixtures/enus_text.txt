@@ -8025,10 +8025,10 @@ options.displays.AOE.classic.gamepad.pos.anchor	values.RIGHT	Right
 options.displays.AOE.classic.gamepad.pos.anchor	values.TOP	Top
 options.displays.AOE.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.AOE.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.AOE.classic.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.
+options.displays.AOE.classic.gamepad.pos.size	name	Size
 options.displays.AOE.classic.gamepad.pos.x	name	X Offset
 options.displays.AOE.classic.gamepad.pos.y	name	Y Offset
-options.displays.AOE.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.
-options.displays.AOE.classic.gamepad.size	name	Size
 options.displays.AOE.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.AOE.classic.glow	name	Glows
 options.displays.AOE.classic.glow.break01	name	\032
@@ -8573,10 +8573,10 @@ options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Right
 options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
 options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.AOE.timeline.tab_now.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.
+options.displays.AOE.timeline.tab_now.gamepad.pos.size	name	Size
 options.displays.AOE.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.AOE.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.AOE.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.
-options.displays.AOE.timeline.tab_now.gamepad.size	name	Size
 options.displays.AOE.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.AOE.timeline.tab_now.glow	name	Glows
 options.displays.AOE.timeline.tab_now.glow.break01	name	\032
@@ -8993,10 +8993,10 @@ options.displays.Cooldowns.classic.gamepad.pos.anchor	values.RIGHT	Right
 options.displays.Cooldowns.classic.gamepad.pos.anchor	values.TOP	Top
 options.displays.Cooldowns.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.Cooldowns.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Cooldowns.classic.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.
+options.displays.Cooldowns.classic.gamepad.pos.size	name	Size
 options.displays.Cooldowns.classic.gamepad.pos.x	name	X Offset
 options.displays.Cooldowns.classic.gamepad.pos.y	name	Y Offset
-options.displays.Cooldowns.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.
-options.displays.Cooldowns.classic.gamepad.size	name	Size
 options.displays.Cooldowns.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.Cooldowns.classic.glow	name	Glows
 options.displays.Cooldowns.classic.glow.break01	name	\032
@@ -9541,10 +9541,10 @@ options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Righ
 options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
 options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.size	name	Size
 options.displays.Cooldowns.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.Cooldowns.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.Cooldowns.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.
-options.displays.Cooldowns.timeline.tab_now.gamepad.size	name	Size
 options.displays.Cooldowns.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.Cooldowns.timeline.tab_now.glow	name	Glows
 options.displays.Cooldowns.timeline.tab_now.glow.break01	name	\032
@@ -9961,10 +9961,10 @@ options.displays.Defensives.classic.gamepad.pos.anchor	values.RIGHT	Right
 options.displays.Defensives.classic.gamepad.pos.anchor	values.TOP	Top
 options.displays.Defensives.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.Defensives.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Defensives.classic.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.
+options.displays.Defensives.classic.gamepad.pos.size	name	Size
 options.displays.Defensives.classic.gamepad.pos.x	name	X Offset
 options.displays.Defensives.classic.gamepad.pos.y	name	Y Offset
-options.displays.Defensives.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.
-options.displays.Defensives.classic.gamepad.size	name	Size
 options.displays.Defensives.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.Defensives.classic.glow	name	Glows
 options.displays.Defensives.classic.glow.break01	name	\032
@@ -10509,10 +10509,10 @@ options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Rig
 options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
 options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Defensives.timeline.tab_now.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.
+options.displays.Defensives.timeline.tab_now.gamepad.pos.size	name	Size
 options.displays.Defensives.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.Defensives.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.Defensives.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.
-options.displays.Defensives.timeline.tab_now.gamepad.size	name	Size
 options.displays.Defensives.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.Defensives.timeline.tab_now.glow	name	Glows
 options.displays.Defensives.timeline.tab_now.glow.break01	name	\032
@@ -10929,10 +10929,10 @@ options.displays.Interrupts.classic.gamepad.pos.anchor	values.RIGHT	Right
 options.displays.Interrupts.classic.gamepad.pos.anchor	values.TOP	Top
 options.displays.Interrupts.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.Interrupts.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Interrupts.classic.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.
+options.displays.Interrupts.classic.gamepad.pos.size	name	Size
 options.displays.Interrupts.classic.gamepad.pos.x	name	X Offset
 options.displays.Interrupts.classic.gamepad.pos.y	name	Y Offset
-options.displays.Interrupts.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.
-options.displays.Interrupts.classic.gamepad.size	name	Size
 options.displays.Interrupts.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.Interrupts.classic.glow	name	Glows
 options.displays.Interrupts.classic.glow.break01	name	\032
@@ -11477,10 +11477,10 @@ options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Rig
 options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
 options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.size	name	Size
 options.displays.Interrupts.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.Interrupts.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.Interrupts.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.
-options.displays.Interrupts.timeline.tab_now.gamepad.size	name	Size
 options.displays.Interrupts.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.Interrupts.timeline.tab_now.glow	name	Glows
 options.displays.Interrupts.timeline.tab_now.glow.break01	name	\032
@@ -11914,12 +11914,12 @@ options.displays.Multi.classic.gamepad.pos.anchor	values.RIGHT	Right
 options.displays.Multi.classic.gamepad.pos.anchor	values.TOP	Top
 options.displays.Multi.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.Multi.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Multi.classic.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.\n\n|cFF00B4FFPrimary:|r |cFFFFD10012|r\n|cFF00B4FFAOE:|r |cFFFFD10012|r\n|cFF00B4FFCooldowns:|r |cFFFFD10012|r\n|cFF00B4FFDefensives:|r |cFFFFD10012|r\n|cFF00B4FFInterrupts:|r |cFFFFD10012|r
+options.displays.Multi.classic.gamepad.pos.size	name	Size
 options.displays.Multi.classic.gamepad.pos.x	desc	|cFF00B4FFPrimary:|r |cFFFFD1001|r\n|cFF00B4FFAOE:|r |cFFFFD1001|r\n|cFF00B4FFCooldowns:|r |cFFFFD1001|r\n|cFF00B4FFDefensives:|r |cFFFFD1001|r\n|cFF00B4FFInterrupts:|r |cFFFFD1001|r
 options.displays.Multi.classic.gamepad.pos.x	name	X Offset
 options.displays.Multi.classic.gamepad.pos.y	desc	|cFF00B4FFPrimary:|r |cFFFFD100-1|r\n|cFF00B4FFAOE:|r |cFFFFD100-1|r\n|cFF00B4FFCooldowns:|r |cFFFFD100-1|r\n|cFF00B4FFDefensives:|r |cFFFFD100-1|r\n|cFF00B4FFInterrupts:|r |cFFFFD100-1|r
 options.displays.Multi.classic.gamepad.pos.y	name	Y Offset
-options.displays.Multi.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.\n\n|cFF00B4FFPrimary:|r |cFFFFD10012|r\n|cFF00B4FFAOE:|r |cFFFFD10012|r\n|cFF00B4FFCooldowns:|r |cFFFFD10012|r\n|cFF00B4FFDefensives:|r |cFFFFD10012|r\n|cFF00B4FFInterrupts:|r |cFFFFD10012|r
-options.displays.Multi.classic.gamepad.size	name	Size
 options.displays.Multi.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.Multi.classic.glow	name	Glows
 options.displays.Multi.classic.glow.break01	name	\032
@@ -12518,12 +12518,12 @@ options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Right
 options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
 options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Multi.timeline.tab_now.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.\n\n|cFF00B4FFPrimary:|r |cFFFFD10012|r\n|cFF00B4FFAOE:|r |cFFFFD10012|r\n|cFF00B4FFCooldowns:|r |cFFFFD10012|r\n|cFF00B4FFDefensives:|r |cFFFFD10012|r\n|cFF00B4FFInterrupts:|r |cFFFFD10012|r
+options.displays.Multi.timeline.tab_now.gamepad.pos.size	name	Size
 options.displays.Multi.timeline.tab_now.gamepad.pos.x	desc	|cFF00B4FFPrimary:|r |cFFFFD1001|r\n|cFF00B4FFAOE:|r |cFFFFD1001|r\n|cFF00B4FFCooldowns:|r |cFFFFD1001|r\n|cFF00B4FFDefensives:|r |cFFFFD1001|r\n|cFF00B4FFInterrupts:|r |cFFFFD1001|r
 options.displays.Multi.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.Multi.timeline.tab_now.gamepad.pos.y	desc	|cFF00B4FFPrimary:|r |cFFFFD100-1|r\n|cFF00B4FFAOE:|r |cFFFFD100-1|r\n|cFF00B4FFCooldowns:|r |cFFFFD100-1|r\n|cFF00B4FFDefensives:|r |cFFFFD100-1|r\n|cFF00B4FFInterrupts:|r |cFFFFD100-1|r
 options.displays.Multi.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.Multi.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.\n\n|cFF00B4FFPrimary:|r |cFFFFD10012|r\n|cFF00B4FFAOE:|r |cFFFFD10012|r\n|cFF00B4FFCooldowns:|r |cFFFFD10012|r\n|cFF00B4FFDefensives:|r |cFFFFD10012|r\n|cFF00B4FFInterrupts:|r |cFFFFD10012|r
-options.displays.Multi.timeline.tab_now.gamepad.size	name	Size
 options.displays.Multi.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.Multi.timeline.tab_now.glow	name	Glows
 options.displays.Multi.timeline.tab_now.glow.break01	name	\032
@@ -12957,10 +12957,10 @@ options.displays.Primary.classic.gamepad.pos.anchor	values.RIGHT	Right
 options.displays.Primary.classic.gamepad.pos.anchor	values.TOP	Top
 options.displays.Primary.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.Primary.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Primary.classic.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.
+options.displays.Primary.classic.gamepad.pos.size	name	Size
 options.displays.Primary.classic.gamepad.pos.x	name	X Offset
 options.displays.Primary.classic.gamepad.pos.y	name	Y Offset
-options.displays.Primary.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.
-options.displays.Primary.classic.gamepad.size	name	Size
 options.displays.Primary.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.Primary.classic.glow	name	Glows
 options.displays.Primary.classic.glow.break01	name	\032
@@ -13505,10 +13505,10 @@ options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Right
 options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
 options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
 options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Primary.timeline.tab_now.gamepad.pos.size	desc	The size of the controller button pictures, in pixels.
+options.displays.Primary.timeline.tab_now.gamepad.pos.size	name	Size
 options.displays.Primary.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.Primary.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.Primary.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.
-options.displays.Primary.timeline.tab_now.gamepad.size	name	Size
 options.displays.Primary.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
 options.displays.Primary.timeline.tab_now.glow	name	Glows
 options.displays.Primary.timeline.tab_now.glow.break01	name	\032

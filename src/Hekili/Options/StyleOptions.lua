@@ -436,18 +436,19 @@ return L["Position"] end,
                     max = spanH( s ),
                     step = 1,
                 },
-            },
-        },
 
-        size = {
-            type = "range",
-            name = L["Size"],
-            desc = L["The size of the controller button pictures, in pixels."],
-            order = 2,
-            min = 8,
-            max = 64,
-            step = 1,
-            width = 0.99,
+                -- inside the group: a loose slider after an inline group drew over Y Offset (in game 2026-11-10)
+                size = {
+                    type = "range",
+                    name = L["Size"],
+                    desc = L["The size of the controller button pictures, in pixels."],
+                    order = 5,
+                    min = 8,
+                    max = 64,
+                    step = 1,
+                    width = 0.99,
+                },
+            },
         },
 
         cPort = {
