@@ -185,6 +185,15 @@ L["If enabled, the addon will apply the default highlight when the first recomme
 L["If enabled, abilities that have active glows (or overlays) will also glow in your queue.\n\nThis may not be ideal, the glow may no longer be correct by that point in the future."] = true
 L["Glows"] = true
 L["Preferences for Blizzard action button glows (not SpellFlash)."] = true
+L["Action Bar Glow"] = true
+L["Preferences for the glow around your action bar buttons."] = true
+L["If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color."] = true
+L["Now Color"] = true
+L["The glow on the buttons of the first recommendation."] = true
+L["Glow the next recommendation"] = true
+L["If enabled, the buttons of the second recommendation glow too, in the next color."] = true
+L["Next Color"] = true
+L["The glow on the buttons of the second recommendation."] = true
 L["If enabled, the addon can highlight abilities on your action bars when they are recommended for use."] = true
 L["This feature requires the SpellFlashCore addon or library to function properly."] = true
 L["These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled."] = true

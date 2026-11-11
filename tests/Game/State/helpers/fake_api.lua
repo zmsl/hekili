@@ -422,6 +422,7 @@ function M.new()
         return ctl.cvars[name]
     end
     api.GetCursorInfo, api.GetActionInfo, api.GetBindingKey = none, none, none
+    api.GetMacroSpell, api.GetMacroItem = none, none
     api.GetSpecializationInfoByID, api.GetStablePetInfo = none, none
     function api.GetInventoryItemID(_, slot)
         return ctl.inventory[slot]

@@ -1988,10 +1988,9 @@ local itemToAbility = {
 }
 
 
-local function StoreKeybindInfo( page, key, aType, id, console )
-
-    if not key or not aType or not id then return end
-
+--- The ability key (and its registry entry) an action slot's (type, id) casts, or nil. The keybind reader and the
+--- action bar glow (UI/BarGlow.lua) share it: one spell-to-ability mapping.
+local function ResolveAction( aType, id )
     local action, ability
 
     if aType == "item" then
@@ -2015,6 +2014,17 @@ local function StoreKeybindInfo( page, key, aType, id, console )
         ability = class.abilities[ id ]
         action = ability and ability.key
     end
+
+    return action, ability
+end
+ns.ResolveAction = ResolveAction
+
+
+local function StoreKeybindInfo( page, key, aType, id, console )
+
+    if not key or not aType or not id then return end
+
+    local action, ability = ResolveAction( aType, id )
 
     if action then
         keys[ action ] = keys[ action ] or {

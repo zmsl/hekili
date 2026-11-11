@@ -102,6 +102,8 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `GetInventoryItemID` | undocumented C global | plain [W PR13] | passthrough | — | State.lua, Events.lua |
 | `GetItemGem` | absent | n/a | stub | `nil` | State.lua |
 | `GetItemInfo` | absent | n/a | stub | `nil` | State.lua |
+| `GetMacroItem` | present | unprobed; plain by the secrecy rule [W action bar glow] | passthrough | — | BarGlow.lua |
+| `GetMacroSpell` | present | unprobed; plain by the secrecy rule [W action bar glow] | passthrough | — | BarGlow.lua |
 | `GetManaRegen` | present | secret in combat [W PR16] | stub | `0, 0` | State.lua |
 | `GetMasteryEffect` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |
 | `GetMeleeHaste` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |

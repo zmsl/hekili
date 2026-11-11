@@ -95,6 +95,8 @@ GetInstanceInfo	passthrough
 GetInventoryItemID	passthrough
 GetItemGem	virtual
 GetItemInfo	virtual
+GetMacroItem	passthrough
+GetMacroSpell	passthrough
 GetManaRegen	hybrid
 GetMasteryEffect	hybrid
 GetMeleeHaste	hybrid

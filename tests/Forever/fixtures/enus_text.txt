@@ -7864,6 +7864,16 @@ options.displays.AOE.MultiModInterrupts	name	voicechat-icon-speaker-mute |cFFFF0
 options.displays.AOE.MultiModPrimary	desc	Changes |cFF00FF00will|r be applied to the Primary display.
 options.displays.AOE.MultiModPrimary	name	|cFF00FF00Primary|r
 options.displays.AOE.classic	name	Style
+options.displays.AOE.classic.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.AOE.classic.barGlow	name	Action Bar Glow
+options.displays.AOE.classic.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
+options.displays.AOE.classic.barGlow.colorNext	name	Next Color
+options.displays.AOE.classic.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
+options.displays.AOE.classic.barGlow.colorNow	name	Now Color
+options.displays.AOE.classic.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.
+options.displays.AOE.classic.barGlow.enabled	name	Enabled
+options.displays.AOE.classic.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
+options.displays.AOE.classic.barGlow.glowNext	name	Glow the next recommendation
 options.displays.AOE.classic.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.AOE.classic.border	name	Border
 options.displays.AOE.classic.border.break01	name	\032
@@ -8425,6 +8435,16 @@ options.displays.AOE.timeline.tab_next.nextSize	desc	The size of the next box (w
 options.displays.AOE.timeline.tab_next.nextSize	name	Size
 options.displays.AOE.timeline.tab_now	desc	The now circle: a focus ability coming up.
 options.displays.AOE.timeline.tab_now	name	Now
+options.displays.AOE.timeline.tab_now.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.AOE.timeline.tab_now.barGlow	name	Action Bar Glow
+options.displays.AOE.timeline.tab_now.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
+options.displays.AOE.timeline.tab_now.barGlow.colorNext	name	Next Color
+options.displays.AOE.timeline.tab_now.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
+options.displays.AOE.timeline.tab_now.barGlow.colorNow	name	Now Color
+options.displays.AOE.timeline.tab_now.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.
+options.displays.AOE.timeline.tab_now.barGlow.enabled	name	Enabled
+options.displays.AOE.timeline.tab_now.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
+options.displays.AOE.timeline.tab_now.barGlow.glowNext	name	Glow the next recommendation
 options.displays.AOE.timeline.tab_now.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.AOE.timeline.tab_now.border	name	Border
 options.displays.AOE.timeline.tab_now.border.break01	name	\032
@@ -8832,6 +8852,16 @@ options.displays.Cooldowns.MultiModInterrupts	name	voicechat-icon-speaker-mute |
 options.displays.Cooldowns.MultiModPrimary	desc	Changes |cFF00FF00will|r be applied to the Primary display.
 options.displays.Cooldowns.MultiModPrimary	name	|cFF00FF00Primary|r
 options.displays.Cooldowns.classic	name	Style
+options.displays.Cooldowns.classic.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.Cooldowns.classic.barGlow	name	Action Bar Glow
+options.displays.Cooldowns.classic.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
+options.displays.Cooldowns.classic.barGlow.colorNext	name	Next Color
+options.displays.Cooldowns.classic.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
+options.displays.Cooldowns.classic.barGlow.colorNow	name	Now Color
+options.displays.Cooldowns.classic.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.
+options.displays.Cooldowns.classic.barGlow.enabled	name	Enabled
+options.displays.Cooldowns.classic.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
+options.displays.Cooldowns.classic.barGlow.glowNext	name	Glow the next recommendation
 options.displays.Cooldowns.classic.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.Cooldowns.classic.border	name	Border
 options.displays.Cooldowns.classic.border.break01	name	\032
@@ -9393,6 +9423,16 @@ options.displays.Cooldowns.timeline.tab_next.nextSize	desc	The size of the next 
 options.displays.Cooldowns.timeline.tab_next.nextSize	name	Size
 options.displays.Cooldowns.timeline.tab_now	desc	The now circle: a focus ability coming up.
 options.displays.Cooldowns.timeline.tab_now	name	Now
+options.displays.Cooldowns.timeline.tab_now.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.Cooldowns.timeline.tab_now.barGlow	name	Action Bar Glow
+options.displays.Cooldowns.timeline.tab_now.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
+options.displays.Cooldowns.timeline.tab_now.barGlow.colorNext	name	Next Color
+options.displays.Cooldowns.timeline.tab_now.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
+options.displays.Cooldowns.timeline.tab_now.barGlow.colorNow	name	Now Color
+options.displays.Cooldowns.timeline.tab_now.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.
+options.displays.Cooldowns.timeline.tab_now.barGlow.enabled	name	Enabled
+options.displays.Cooldowns.timeline.tab_now.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
+options.displays.Cooldowns.timeline.tab_now.barGlow.glowNext	name	Glow the next recommendation
 options.displays.Cooldowns.timeline.tab_now.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.Cooldowns.timeline.tab_now.border	name	Border
 options.displays.Cooldowns.timeline.tab_now.border.break01	name	\032
@@ -9800,6 +9840,16 @@ options.displays.Defensives.MultiModInterrupts	name	voicechat-icon-speaker-mute 
 options.displays.Defensives.MultiModPrimary	desc	Changes |cFF00FF00will|r be applied to the Primary display.
 options.displays.Defensives.MultiModPrimary	name	|cFF00FF00Primary|r
 options.displays.Defensives.classic	name	Style
+options.displays.Defensives.classic.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.Defensives.classic.barGlow	name	Action Bar Glow
+options.displays.Defensives.classic.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
+options.displays.Defensives.classic.barGlow.colorNext	name	Next Color
+options.displays.Defensives.classic.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
+options.displays.Defensives.classic.barGlow.colorNow	name	Now Color
+options.displays.Defensives.classic.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.
+options.displays.Defensives.classic.barGlow.enabled	name	Enabled
+options.displays.Defensives.classic.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
+options.displays.Defensives.classic.barGlow.glowNext	name	Glow the next recommendation
 options.displays.Defensives.classic.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.Defensives.classic.border	name	Border
 options.displays.Defensives.classic.border.break01	name	\032
@@ -10361,6 +10411,16 @@ options.displays.Defensives.timeline.tab_next.nextSize	desc	The size of the next
 options.displays.Defensives.timeline.tab_next.nextSize	name	Size
 options.displays.Defensives.timeline.tab_now	desc	The now circle: a focus ability coming up.
 options.displays.Defensives.timeline.tab_now	name	Now
+options.displays.Defensives.timeline.tab_now.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.Defensives.timeline.tab_now.barGlow	name	Action Bar Glow
+options.displays.Defensives.timeline.tab_now.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
+options.displays.Defensives.timeline.tab_now.barGlow.colorNext	name	Next Color
+options.displays.Defensives.timeline.tab_now.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
+options.displays.Defensives.timeline.tab_now.barGlow.colorNow	name	Now Color
+options.displays.Defensives.timeline.tab_now.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.
+options.displays.Defensives.timeline.tab_now.barGlow.enabled	name	Enabled
+options.displays.Defensives.timeline.tab_now.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
+options.displays.Defensives.timeline.tab_now.barGlow.glowNext	name	Glow the next recommendation
 options.displays.Defensives.timeline.tab_now.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.Defensives.timeline.tab_now.border	name	Border
 options.displays.Defensives.timeline.tab_now.border.break01	name	\032
@@ -10768,6 +10828,16 @@ options.displays.Interrupts.MultiModInterrupts	name	voicechat-icon-speaker-mute 
 options.displays.Interrupts.MultiModPrimary	desc	Changes |cFF00FF00will|r be applied to the Primary display.
 options.displays.Interrupts.MultiModPrimary	name	|cFF00FF00Primary|r
 options.displays.Interrupts.classic	name	Style
+options.displays.Interrupts.classic.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.Interrupts.classic.barGlow	name	Action Bar Glow
+options.displays.Interrupts.classic.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
+options.displays.Interrupts.classic.barGlow.colorNext	name	Next Color
+options.displays.Interrupts.classic.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
+options.displays.Interrupts.classic.barGlow.colorNow	name	Now Color
+options.displays.Interrupts.classic.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.
+options.displays.Interrupts.classic.barGlow.enabled	name	Enabled
+options.displays.Interrupts.classic.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
+options.displays.Interrupts.classic.barGlow.glowNext	name	Glow the next recommendation
 options.displays.Interrupts.classic.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.Interrupts.classic.border	name	Border
 options.displays.Interrupts.classic.border.break01	name	\032
@@ -11329,6 +11399,16 @@ options.displays.Interrupts.timeline.tab_next.nextSize	desc	The size of the next
 options.displays.Interrupts.timeline.tab_next.nextSize	name	Size
 options.displays.Interrupts.timeline.tab_now	desc	The now circle: a focus ability coming up.
 options.displays.Interrupts.timeline.tab_now	name	Now
+options.displays.Interrupts.timeline.tab_now.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.Interrupts.timeline.tab_now.barGlow	name	Action Bar Glow
+options.displays.Interrupts.timeline.tab_now.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
+options.displays.Interrupts.timeline.tab_now.barGlow.colorNext	name	Next Color
+options.displays.Interrupts.timeline.tab_now.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
+options.displays.Interrupts.timeline.tab_now.barGlow.colorNow	name	Now Color
+options.displays.Interrupts.timeline.tab_now.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.
+options.displays.Interrupts.timeline.tab_now.barGlow.enabled	name	Enabled
+options.displays.Interrupts.timeline.tab_now.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
+options.displays.Interrupts.timeline.tab_now.barGlow.glowNext	name	Glow the next recommendation
 options.displays.Interrupts.timeline.tab_now.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.Interrupts.timeline.tab_now.border	name	Border
 options.displays.Interrupts.timeline.tab_now.border.break01	name	\032
@@ -11737,6 +11817,14 @@ options.displays.Multi.MultiModInterrupts	name	voicechat-icon-speaker-mute |cFFF
 options.displays.Multi.MultiModPrimary	desc	Changes |cFF00FF00will|r be applied to the Primary display.
 options.displays.Multi.MultiModPrimary	name	|cFF00FF00Primary|r
 options.displays.Multi.classic	name	Style
+options.displays.Multi.classic.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.Multi.classic.barGlow	name	Action Bar Glow
+options.displays.Multi.classic.barGlow.colorNext	name	Next Color
+options.displays.Multi.classic.barGlow.colorNow	name	Now Color
+options.displays.Multi.classic.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
+options.displays.Multi.classic.barGlow.enabled	name	Enabled
+options.displays.Multi.classic.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFF00FF00Checked|r\n|cFF00B4FFDefensives:|r |cFF00FF00Checked|r\n|cFF00B4FFInterrupts:|r |cFF00FF00Checked|r
+options.displays.Multi.classic.barGlow.glowNext	name	Glow the next recommendation
 options.displays.Multi.classic.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.Multi.classic.border	name	Border
 options.displays.Multi.classic.border.break01	name	\032
@@ -12358,6 +12446,14 @@ options.displays.Multi.timeline.tab_next.nextSize	desc	The size of the next box 
 options.displays.Multi.timeline.tab_next.nextSize	name	Size
 options.displays.Multi.timeline.tab_now	desc	The now circle: a focus ability coming up.
 options.displays.Multi.timeline.tab_now	name	Now
+options.displays.Multi.timeline.tab_now.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.Multi.timeline.tab_now.barGlow	name	Action Bar Glow
+options.displays.Multi.timeline.tab_now.barGlow.colorNext	name	Next Color
+options.displays.Multi.timeline.tab_now.barGlow.colorNow	name	Now Color
+options.displays.Multi.timeline.tab_now.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
+options.displays.Multi.timeline.tab_now.barGlow.enabled	name	Enabled
+options.displays.Multi.timeline.tab_now.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFF00FF00Checked|r\n|cFF00B4FFDefensives:|r |cFF00FF00Checked|r\n|cFF00B4FFInterrupts:|r |cFF00FF00Checked|r
+options.displays.Multi.timeline.tab_now.barGlow.glowNext	name	Glow the next recommendation
 options.displays.Multi.timeline.tab_now.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.Multi.timeline.tab_now.border	name	Border
 options.displays.Multi.timeline.tab_now.border.break01	name	\032
@@ -12796,6 +12892,16 @@ options.displays.Primary.MultiModInterrupts	name	voicechat-icon-speaker-mute |cF
 options.displays.Primary.MultiModPrimary	desc	Changes |cFF00FF00will|r be applied to the Primary display.
 options.displays.Primary.MultiModPrimary	name	|cFF00FF00Primary|r
 options.displays.Primary.classic	name	Style
+options.displays.Primary.classic.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.Primary.classic.barGlow	name	Action Bar Glow
+options.displays.Primary.classic.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
+options.displays.Primary.classic.barGlow.colorNext	name	Next Color
+options.displays.Primary.classic.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
+options.displays.Primary.classic.barGlow.colorNow	name	Now Color
+options.displays.Primary.classic.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.
+options.displays.Primary.classic.barGlow.enabled	name	Enabled
+options.displays.Primary.classic.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
+options.displays.Primary.classic.barGlow.glowNext	name	Glow the next recommendation
 options.displays.Primary.classic.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.Primary.classic.border	name	Border
 options.displays.Primary.classic.border.break01	name	\032
@@ -13357,6 +13463,16 @@ options.displays.Primary.timeline.tab_next.nextSize	desc	The size of the next bo
 options.displays.Primary.timeline.tab_next.nextSize	name	Size
 options.displays.Primary.timeline.tab_now	desc	The now circle: a focus ability coming up.
 options.displays.Primary.timeline.tab_now	name	Now
+options.displays.Primary.timeline.tab_now.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.Primary.timeline.tab_now.barGlow	name	Action Bar Glow
+options.displays.Primary.timeline.tab_now.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
+options.displays.Primary.timeline.tab_now.barGlow.colorNext	name	Next Color
+options.displays.Primary.timeline.tab_now.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
+options.displays.Primary.timeline.tab_now.barGlow.colorNow	name	Now Color
+options.displays.Primary.timeline.tab_now.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.
+options.displays.Primary.timeline.tab_now.barGlow.enabled	name	Enabled
+options.displays.Primary.timeline.tab_now.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
+options.displays.Primary.timeline.tab_now.barGlow.glowNext	name	Glow the next recommendation
 options.displays.Primary.timeline.tab_now.border	desc	Enable/disable or set the color for icon borders.\n\nYou may want to disable this if you use Masque or other tools to skin your Hekili icons.
 options.displays.Primary.timeline.tab_now.border	name	Border
 options.displays.Primary.timeline.tab_now.border.break01	name	\032

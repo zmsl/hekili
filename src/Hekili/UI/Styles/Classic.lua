@@ -75,7 +75,7 @@ local Glower = LibStub("LibCustomGlow-1.0")
 -- Its icon zones for the shared option builders (Options/StyleOptions.lua, Task 3d): the primary icon and the queue,
 -- marked legacy so the queue keeps classic's shape (queued* keybinding fields behind separateQueueStyle).
 local ZONES = { "primary", "queued", legacy = true }
-local SHARED = { "border", "range", "glow", "flash", "captions", "indicators", "targets", "delays", "keybindings", "gamepad" }
+local SHARED = { "border", "range", "glow", "barGlow", "flash", "captions", "indicators", "targets", "delays", "keybindings", "gamepad" }
 
 local Classic = {
     label = L["Classic"],
@@ -884,6 +884,7 @@ function Classic.Draw( d, conf, out, status )
         end
 
         ns.UI.FlashRecommendation( st, conf.classic.flash, self.Buttons[ 1 ].Action, elapsed )
+        ns.UI.BarGlow.Update( self, conf.classic.barGlow, out, conf.numIcons )
 
         if fullUpdate then
             local b = self.Buttons[ 1 ]
@@ -1121,6 +1122,7 @@ end
 --- Hides every button and forgets what it showed (unsubscribe, Deactivate, a style switch). Its own frames, not
 --- d.Buttons, which a switch hands to the next style.
 function Classic.Clear( d )
+    ns.UI.BarGlow.Clear( d )
     for _, b in ipairs( d.styleFrames.classic ) do
         b:Hide()
         b.Action = nil
@@ -1482,6 +1484,7 @@ return L["Position"] end,
         border = border,
         range = SO.range( "classic", ZONES, 5, id, conf ),
         glow = SO.glow( "classic", ZONES, 6, id, conf ),
+        barGlow = SO.barGlow( "classic", ZONES, 8.5, id, conf ),
         flash = SO.flash( "classic", ZONES, 8, id, conf ),
         captions = SO.captions( "classic", ZONES, 9, id, conf ),
         targets = SO.targets( "classic", ZONES, 10, id, conf ),

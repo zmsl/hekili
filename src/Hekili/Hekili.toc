@@ -106,6 +106,7 @@ Engine\Content.lua
 UI\UI.lua
 UI\Resolve.lua
 UI\Styles.lua
+UI\BarGlow.lua
 UI\Styles\Classic.lua
 UI\Styles\Timeline.lua
 UI\Truth.lua

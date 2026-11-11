@@ -1221,6 +1221,8 @@ local PASSTHROUGH = {
     { "GetFramerate", "plain [W sweep 2026-10-16]" },
     { "GetInstanceInfo", "plain [W sweep 2026-10-16]" },
     { "GetInventoryItemID", "plain [W PR13]" },
+    { "GetMacroItem", "unprobed; plain by the secrecy rule [W action bar glow]" },
+    { "GetMacroSpell", "unprobed; plain by the secrecy rule [W action bar glow]" },
     { "GetNetStats", "plain [W sweep 2026-10-16]" },
     { "GetNumClasses", "plain [W sweep 2026-10-16]" },
     { "GetNumGroupMembers", "plain [W sweep 2026-10-16]" },

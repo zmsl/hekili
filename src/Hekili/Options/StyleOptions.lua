@@ -104,6 +104,13 @@ local function base()
             highlight = true
         },
 
+        barGlow = {
+            enabled = false, -- the Primary display turns it on (Options.lua)
+            colorNow = { 1, 0.82, 0, 1 }, -- gold, like a proc
+            glowNext = true,
+            colorNext = { 0.3, 0.6, 1, 1 },
+        },
+
         flash = {
             enabled = false,
             color = { 255/255, 215/255, 0, 1 }, -- gold.
@@ -678,11 +685,59 @@ function SO.glow( styleKey, zones, order, id, conf )
     }
 end
 
+--- The action bar glow (UI/BarGlow.lua). Key names avoid a zone's prefix (next...): the timeline sorts options by it.
+function SO.barGlow( styleKey, zones, order, id, conf )
+    local function off() return conf[ styleKey ].barGlow.enabled == false end
+    return {
+        type = "group",
+        name = L["Action Bar Glow"],
+        desc = L["Preferences for the glow around your action bar buttons."],
+        order = order,
+        args = {
+            enabled = {
+                type = "toggle",
+                name = L["Enabled"],
+                desc = L["If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color."],
+                width = 1.49,
+                order = 1,
+            },
+
+            colorNow = {
+                type = "color",
+                name = L["Now Color"],
+                desc = L["The glow on the buttons of the first recommendation."],
+                width = 1.49,
+                order = 2,
+                disabled = off,
+            },
+
+            glowNext = {
+                type = "toggle",
+                name = L["Glow the next recommendation"],
+                desc = L["If enabled, the buttons of the second recommendation glow too, in the next color."],
+                width = 1.49,
+                order = 3,
+                disabled = off,
+            },
+
+            colorNext = {
+                type = "color",
+                name = L["Next Color"],
+                desc = L["The glow on the buttons of the second recommendation."],
+                width = 1.49,
+                order = 4,
+                disabled = function() return off() or conf[ styleKey ].barGlow.glowNext == false end,
+            },
+        },
+    }
+end
+
 function SO.flash( styleKey, zones, order, id, conf )
     local SF = SpellFlashCore
     return {
         type = "group",
         name = "SpellFlash", -- l10n: verbatim
+        hidden = function () return SF == nil end, -- its library exits on this client: the tab would do nothing
         desc = function ()
             if SF then
                 return L["If enabled, the addon can highlight abilities on your action bars when they are recommended for use."]
