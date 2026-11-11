@@ -1832,9 +1832,18 @@ local isPad, sized = {}, {} -- text -> true for a gamepad binding; size -> text 
 
 --- The picture markup of binding key `key` (PADDUP...) in the active controller style; readable text when the client
 --- has neither the styled nor the generic global.
-function Pad.Glyph( key )
+local function iconSet()
     local set = _G.InputDeviceIconSetManager
-    local name = set and set.GetActiveInputDeviceIconSet and set:GetActiveInputDeviceIconSet()
+    return set and set.GetActiveInputDeviceIconSet and set:GetActiveInputDeviceIconSet() or false
+end
+
+-- The style the stored pictures were made in, and the re-read Pick asks for when it changes (right after login the
+-- game may not have reported it yet: the generic pictures, '3' for X, in game 2026-11-10). Polled, not a Blizzard
+-- callback, so no addon code runs inside Blizzard's gamepad callbacks.
+local readSet, reread = false, nil
+
+function Pad.Glyph( key )
+    local name = iconSet()
     local suffix = name and ICON_SUFFIX[ name ]
     return suffix and _G[ "KEY_ABBR_" .. key .. suffix ] or _G[ "KEY_ABBR_" .. key ] or PAD_TEXT[ key ] or ( key:gsub( "^PAD", "" ) )
 end
@@ -1876,6 +1885,7 @@ end
 function Pad.Read( store )
     local first = C_GamepadUI.GetFirstGamepadActionStorageSlotIndex()
     if not first then return end
+    readSet = iconSet()
 
     local left, right = padKey( "GAMEPADLEFTMOD" ), padKey( "GAMEPADRIGHTMOD" )
     left, right = left and Pad.Glyph( left ), right and Pad.Glyph( right )
@@ -1918,6 +1928,10 @@ end
 --- The gamepad text for an ability's `pad` table (page -> markup), pictures sized to `size`, or nil; the second value
 --- is its page. Cached by size: no allocation once seen.
 function Pad.Pick( db, size )
+    if reread and next( db ) and iconSet() ~= readSet then
+        readSet = iconSet()
+        reread()
+    end
     for page = 1, PAGES do
         local text = db[ page ]
         if text then
@@ -2317,6 +2331,7 @@ local function DelayedUpdateKeybindings( event )
         ReadKeybindings( event )
     end )
 end
+reread = function() DelayedUpdateKeybindings( "GAMEPAD_ICON_SET" ) end
 
 RegisterEvent( "UPDATE_BINDINGS", DelayedUpdateKeybindings )
 RegisterEvent( "SPELLS_CHANGED", DelayedUpdateKeybindings )

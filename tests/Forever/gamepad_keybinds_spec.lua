@@ -227,6 +227,20 @@ describe("gamepad keybinds", function()
         assert.are.equal("cn1", np.lower[1])
     end)
 
+    it("re-reads once the controller style is known when it was not at the first read (in game: '3' for X)", function()
+        local H = boot()
+        world.set = nil -- right after login the game has not reported the style yet: the generic pictures
+        world.actions[186] = id(H, "mortal_strike")
+        read(H)
+        local conf = H.Hekili.DB.profile.displays.Primary
+        conf.classic.gamepad.size = 14
+        assert.are.equal(G("PADLTRIGGER") .. G("PADDUP"), H.Hekili:GetBindingForAction("mortal_strike", conf, 1))
+        world.set = "Letters" -- the style arrives: the next answer schedules a re-read
+        H.Hekili:GetBindingForAction("mortal_strike", conf, 1)
+        H.RunTimers(H.ctl.now + 1)
+        assert.are.equal(L("PADLTRIGGER") .. L("PADDUP"), H.Hekili:GetBindingForAction("mortal_strike", conf, 1))
+    end)
+
     it("answers the gamepad text (sized to the font) in place of keyboard text; an override still wins", function()
         local H = boot()
         world.keys.ACTIONBUTTON1 = "5"
