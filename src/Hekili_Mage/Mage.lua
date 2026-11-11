@@ -20,7 +20,7 @@
 -- the DB2's 70338); the in-game cast bar is the check.
 -- Unmodelled: the procs' rolls (Missile Barrage, Heating Up, Clearcasting, Fingers of Frost: crits and procs are
 -- unseen; the player aura walk reads them where plain), Combustion's crits, the DoTs and chills on the target (no
--- priority reads them), Master of Elements' refunds, pushback.
+-- priority reads them), Master of Elements' refunds where no crit is seen (a seen crit refunds: `onCrit`), pushback.
 -- Credits: Hekili (registration API and pack format). wowsims/forever (MIT, ui/specs/mage/dps/apls/*.apl.json and
 -- sim/mage/) is the reference for the abilities and the charge, proc, Evocation and gem rules; no code is copied.
 
@@ -135,6 +135,19 @@ local function frostChanneled(values, ids)
     end
 end
 
+-- Master of Elements (29074, 3 ranks; wowsims talents_fire.go registerMasterOfElements): a Fire or Frost cast's crit
+-- refunds 10% a rank of its base cost (the rank's cost before Frost Channeling). Crits are seen only through the cast's
+-- own (`onCrit`, Families/Now.lua), so the belief is a lower bound where none is seen: no expected value is added
+-- (a read of the crit chance would be, if it proves plain in combat: needs in-game check). A closure per ability.
+local function mastered(costs, ids)
+    return function()
+        local r = talent.master_of_elements.rank
+        if r > 0 then
+            gain(0.1 * r * (costs[knownRank(ids)] or costs[1]), "mana")
+        end
+    end
+end
+
 -- Each spell refuses while an interrupt has its school locked out (Hekili_Shared's locked_out_<school>, C10). A new
 -- closure per ability: each field function runs in the environment the engine gives it (in the belief's `now` context
 -- the names are absent: never locked).
@@ -176,8 +189,11 @@ end
 -- rule in every build): Arcane all of it while casting (Arcane Meditation 50% + Mage Armor 50%: share 1), so spirit 0
 -- and mp5 29.13; Fire and Frostfire half (Mage Armor's 50%: share 0.5), 14.57 / 14.56 (the logs' Tag 2 / Tag 1).
 -- Forever's Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76). UNMEASURED in game.
--- shortcut: Mage Armor assumed up, as every wowsims export pre-buffs it (30 min); a Mage without it has a 0 share and
--- Evocation counts double: upgrade by reading the armor when such a build matters (docs/dev/gaps.md BX).
+-- shortcut: Mage Armor assumed up, as every wowsims export pre-buffs it (30 min): its aura is registered (below) but the
+-- share does not read it. A share function is read once at the build with no belief (Engine/Schema/Tracked.lua), and a
+-- regen entry on the aura would stop the out-of-combat read from calibrating the split (Resources.lua readAt: a share
+-- entry up is a mixed pair, never stored): a Mage in Ice Armor still has its Evocation counted double (gaps.md BX).
+-- Upgrade with a core static share the belief re-reads (needs a central item) when such a build matters.
 -- Evocation (12051, 8 s): spirit regen +1500% (aura 110) and all of it while casting (aura 134): the learned spirit
 -- regen x 16 in and out of the rule (wowsims evocation.go:11-27; its logs 466 a second).
 -- state.spec: the functions run in the state's environment (the file's `spec` is the class).
@@ -231,12 +247,20 @@ spec:RegisterAuras({
     -- Pyroblast's cast -25% a stack; the next 2 spells as if the target were Frozen; the next spell free.
     missile_barrage = { id = 400589, duration = 15, max_stack = 1 },
     heating_up = { id = 400625, duration = 20, max_stack = 3 },
-    fingers_of_frost = { id = 400669, duration = 15, max_stack = 2 },
+    -- 400670: the id the client's Cooldown Manager links for the talent's item (audit A1; the pin registers 400669 only)
+    fingers_of_frost = { id = 400669, copy = { 400670 }, duration = 15, max_stack = 2 },
     clearcasting = { id = 12536, duration = 15, max_stack = 1 },
     arcane_power = { id = 12042, duration = 15, max_stack = 1 },
     presence_of_mind = { id = 12043, duration = 3600, max_stack = 1 }, -- until the next cast (DB2 -1)
-    combustion = { id = 11129, duration = 3600, max_stack = 1 }, -- until 3 crits (DB2 -1; unseen)
+    -- until 3 crits (DB2 -1; unseen): the Cooldown Manager's item links 28682 (the crit counter, 10 stacks, applied and
+    -- removed with 11129: wowsims combustion.go), so its loss ends the belief's aura where the 3 crits are unseen
+    combustion = { id = 11129, copy = { 28682 }, duration = 3600, max_stack = 1 },
     evocation = { id = 12051, duration = 8, tick_time = 1, max_stack = 1 },
+    -- The armors (audit B2; the pin's rank lists, one up at a time): only Mage Armor's 50% regen while casting matters
+    -- to the mana model; a rank's aura carries its spell's id.
+    mage_armor = { id = 6117, copy = { 22782, 22783 }, duration = 1800, max_stack = 1 },
+    ice_armor = { id = 7302, copy = { 7320, 10219, 10220 }, duration = 1800, max_stack = 1 },
+    frost_armor = { id = 168, copy = { 7300, 7301 }, duration = 1800, max_stack = 1 },
     -- The target's (unreadable in combat), modelled from our Scorches: Improved Scorch's 3% more Fire damage from us a
     -- stack, 5 at most, 30 s (wowsims: each Mage's own).
     fire_vulnerability = { id = 22959, duration = 30, max_stack = 5 },
@@ -403,6 +427,7 @@ spec:RegisterAbilities({
 
         now = casts(),
         handler = casts(true),
+        onCrit = mastered(FROSTBOLT_COST, FROSTBOLT),
     },
 
     fireball = {
@@ -427,6 +452,7 @@ spec:RegisterAbilities({
 
         now = casts(),
         handler = casts(true),
+        onCrit = mastered(FIREBALL_COST, FIREBALL),
     },
 
     scorch = {
@@ -447,6 +473,7 @@ spec:RegisterAbilities({
 
         now = scorched(),
         handler = scorched(true),
+        onCrit = mastered(SCORCH_COST, SCORCH),
     },
 
     -- 6 s, -25% a Heating Up stack (DB2 400625 aura 108 misc 10): 1.5 s at three.
@@ -471,6 +498,7 @@ spec:RegisterAbilities({
 
         now = pyroblasted(),
         handler = pyroblasted(true),
+        onCrit = mastered(PYROBLAST_COST, PYROBLAST),
     },
 
     fire_blast = {
@@ -492,6 +520,7 @@ spec:RegisterAbilities({
 
         -- no `now`: removeStack is no `now` verb; the belief takes the charges from the aura walk
         handler = fingered(),
+        onCrit = mastered(FIRE_BLAST_COST, FIRE_BLAST),
     },
 
     -- Frostfire: locked out by either school's lockout. Improved Fireball's -0.1 s a rank reaches it (DB2 11069's mask
@@ -516,6 +545,7 @@ spec:RegisterAbilities({
 
         now = casts(),
         handler = casts(true),
+        onCrit = mastered(FROSTFIRE_BOLT_COST, FROSTFIRE_BOLT),
     },
 
     -- A channel of 8 s; its mana is the mana resource's evocation regen entry (spirit x 16, all of it while casting)
