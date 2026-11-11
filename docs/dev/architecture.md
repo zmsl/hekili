@@ -191,7 +191,12 @@ Two environments have them:
   or its hybrid's out-of-combat cache when the read is secret);
 - the belief's `now` context (`Game/State/Families/Now.lua`, `NAMES`): the same names, where `stat` is only the
   plain function `stat(name, arg)` and the gear comes from the belief's own read of the weapon slots
-  (`Sources/Player.lua`). A `now` handler cannot read `stat.crit`, and `equipped` holds `shield` alone.
+  (`Sources/Player.lua`). A `now` handler cannot read `stat.crit`, and `equipped` holds `shield` alone. Three names
+  are the `now` context's alone (aura audit C8; the sim's `state` answers none of them): `instant` (true inside an
+  instant cast's `now`: no start seen; false elsewhere), `cast_start` (the cast's start time, 0 for an instant) and
+  `target.health` (`known`, and the percent bounds `lo` and `hi` of the belief's target health interval,
+  `Families/TargetHealth.lua`; 0 and 100 while unknown). There is no `target.health.pct`: secret health is unknown,
+  never 100 or 0, so a `now` tests a bound (`target.health.hi < 35`: proven below 35%).
 
 A file-level helper keeps its file's environment, so these names do not resolve there: a pack function passes what it
 read. A file's `state.knownRank` local is the facade's function, safe in a helper on either side.
@@ -311,6 +316,30 @@ inverse, as the client rescales a running swing. The next PLAYER_SWING's duratio
 is never divided again; out of combat (or for a fall before the pull) nothing is rescaled: the plain speed reads say
 it. One multiplier for every hand; the sim's own forecast of a haste cast inside its window is not rescaled.
 
+**What only a landed hit or a full channel gives** (aura audit C10, C11). An ability's `onLand` (bound like `onCrit`)
+runs in the `now` context once its cast is settled as landed: `Game/Events/Rows.lua` stages `Obs.Landed` once per
+direct-hit ticket (not a tick's or a swing's), when a wound or crit is paid to it, when a provisional payment is final,
+or when its window closes with no row (presumed landed, as a white swing's `land`: live, only avoids are plain). An
+avoid never runs it, and an ability whose `expects` is NONE (no ticket) never lands. A channeled ability's
+`now_finish` is the belief's twin of the sim's `finish` (run at CHANNEL_FINISH, `Engine/Sim/State.lua`): it runs at
+the channel's stop when that stop is within 0.05 s of the channel's believed end (its start's plain end, moved by
+pushbacks); a broken channel, or one whose times were secret, runs nothing. Both write `modelled` samples no avoid
+undoes.
+
+**A GCD modifier.** `spec:RegisterGcdMod({ aura = <key>, pct = <n>, spells = { <ids> } | nil })` (aura audit C12;
+the cost modifier's shape and scope: `spells` nil is every ability, a listed ID matches the ability's `id` or a `copy`
+rank) makes a spell-kind GCD (1 + pct) as long while the player's aura is up, before the floor, as wowsims's
+GCDMultiplier does (then the haste, then the 1.0 s minimum). The sim applies it in `state.gcd` (`execute`, and
+`max`/`duration` for `this_action`; `Engine/Schema/Races.lua` `GcdMult`), the belief in `Families/Casts.lua`'s
+`GcdLen` on top of the learned spell-kind length (floored at 1.0); a GCD a modifier cut teaches no length, and a
+declared `gcdTime` still wins.
+
+**A regen-while-casting share.** A regen entry `{ aura = <key>, share = s }` with no `spirit` multiple (aura audit
+C9) adds s of the spirit regen inside the five-second window while the aura is believed up. Its out-of-combat read is
+unmixed, not dropped: the client's casting rate is M + (c + s)S and the rest (1 - c - s)S, so the stored parts become
+M + cS and (1 - c)S; when c + s reaches all of it the pair holds only the total, which rescales the stored split. An
+entry with a `spirit` multiple (Evocation) still makes the pair no news.
+
 **Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Shared`
 (`## Dependencies: Hekili`, `## LoadOnDemand: 1`; Shared auras, consumables, items, and the race packs), then one pack
 per class: `Hekili_Warrior`, `Hekili_Druid`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman`, `Hekili_Hunter`, `Hekili_Mage`, `Hekili_Priest`, `Hekili_Warlock` (`## Dependencies: Hekili, Hekili_Shared`,
@@ -325,9 +354,10 @@ class token, a missing pack, a mismatch or a failed pack load keeps one notice, 
 
 **What bumps what.** A class release bumps `## Version` in its pack's TOC. `CONTENT_API` and every content TOC's
 `## X-Hekili-ContentAPI` change together, only when the content surface changes: the Register* API, `Hekili.Client`,
-or the environment names above (now 13: 10 added `Hekili:GetLocale` and the packs' `Locales/`, 11 the aura field
+or the environment names above (now 14: 10 added `Hekili:GetLocale` and the packs' `Locales/`, 11 the aura field
 `enchants`, 12 `kit:RegisterSelector`, 13 the `now` verb `removeStack`, the aura fields `consumeIcd` and `swingHaste`
-and the reaction outcome `land`). `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
+and the reaction outcome `land`, 14 the `now` names `instant`, `cast_start` and `target.health`, the ability fields
+`onLand` and `now_finish` and `spec:RegisterGcdMod`). `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
 
 **Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`,
 `Engine/Schema/Selectors.lua`; the tree arithmetic, ids, share keys and migration are `Engine/Schema/Trees.lua`'s) from
