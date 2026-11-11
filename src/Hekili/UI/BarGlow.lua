@@ -107,12 +107,12 @@ function BarGlow.Rescan()
     signature, count = 0, 0
 
     for i = 1, #names do
-        local b = _G[ names[ i ] ]
+        local b = rawget( _G, names[ i ] )
         if b then add( b ) end
     end
 
     for i = 1, 14 do
-        local bar = _G[ "DominosFrame" .. i ]
+        local bar = rawget( _G, "DominosFrame" .. i )
         local buttons = bar and bar.buttons
         if buttons then
             for b = 1, 12 do
@@ -121,7 +121,7 @@ function BarGlow.Rescan()
         end
     end
 
-    local pad = _G.GamepadMainActionBarFrame
+    local pad = rawget( _G, "GamepadMainActionBarFrame" )
     local unit = pad and pad.PageUnit
     if unit and unit.GetChildren then walk( 3, unit:GetChildren() ) end
 
