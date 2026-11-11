@@ -131,10 +131,12 @@ describe("gamepad keybinds", function()
         H.env.KEY_ABBR_PADDUP = nil
         info = read(H)
         assert.are.equal(L("PADLTRIGGER") .. "Up", info.mortal_strike.pad[1])
-        -- Generic: the bare names
+        -- Generic: as Blizzard's own gamepad bars draw it (the Xbox letters, ActionBarButton.lua:45-82), not the numbered
+        -- generic key names (in game: '3' for X); the generic picture still stands in where no letters one exists
         world.set = "Generic"
         H.env.KEY_ABBR_PADDUP = G("PADDUP")
-        assert.are.equal(G("PADLTRIGGER") .. G("PADDUP"), read(H).mortal_strike.pad[1])
+        assert.are.equal(L("PADLTRIGGER") .. G("PADDUP"), read(H).mortal_strike.pad[1])
+        assert.are.equal(L("PAD1"), H.ns.Gamepad.Glyph("PAD1"))
         -- no modifier on the top bar, both on the bottom bar
         world.set = "Letters"
         H.env.KEY_ABBR_PADDUP_LTR = L("PADDUP")

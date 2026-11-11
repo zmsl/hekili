@@ -1823,7 +1823,9 @@ local bindingSubs = {
 local Pad = {}
 ns.Gamepad = Pad
 
-local ICON_SUFFIX = { Letters = "_LTR", Shapes = "_SHP", Reverse = "_REV" } -- "Generic": the bare name
+-- "Generic" draws as Blizzard's own gamepad bars draw it, the Xbox letters (Blizzard_GamepadActionBars/
+-- ActionBarButton.lua:45-82), not the numbered generic key names ('3' for X, in game 2026-11-10); an unknown style: bare
+local ICON_SUFFIX = { Generic = "_LTR", Letters = "_LTR", Shapes = "_SHP", Reverse = "_REV" }
 local PAD_TEXT = { PADLTRIGGER = "LT", PADRTRIGGER = "RT", PADLSHOULDER = "LB", PADRSHOULDER = "RB",
     PADDUP = "Up", PADDDOWN = "Dn", PADDLEFT = "Lf", PADDRIGHT = "Rt", PAD1 = "A", PAD2 = "B", PAD3 = "X", PAD4 = "Y" }
 local PAD_BARS = { Top = 1, Left = 2, Right = 3, Bottom = 4 }
