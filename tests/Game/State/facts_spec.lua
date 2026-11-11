@@ -206,38 +206,43 @@ describe("facts and polls", function()
         assert.is_false(I.Units.IsDead(I.Units.Uid(3)))
     end)
 
-    it(
-        "brackets the target's distance from the abilities' own ranges, keeping the last through secret reads",
-        function()
-            ctl.known[fs.SPENDER_A], ctl.known[fs.SPENDER_C] = true, true
-            ctl.ranges[fs.SPENDER_A], ctl.ranges[fs.SPENDER_C] = { 0, 5 }, { 8, 35 } -- a melee strike, a band
-            ctl.Fire("SPELLS_CHANGED")
-            assert.are.same({ 0, 5, 8, 35 }, { I.ab.rMin[1], I.ab.rMax[1], I.ab.rMin[3], I.ab.rMax[3] })
-            assert.are.equal(0, I.ab.rMax[2]) -- on the next swing: never asked
-            ctl.distance.target = fake.SECRET
-            ctl.Fire("PLAYER_TARGET_CHANGED")
-            drain(2)
-            assert.are.equal("unknown", VS.TargetRange().basis) -- a target, no plain answer yet
-            local function bracket(d, t)
-                ctl.distance.target = d
-                drain(t)
-                local r = VS.TargetRange()
-                return { r.lo, r.hi, r.est, r.basis }
-            end
-            assert.are.same({ 0, 5, 2.5, "observed" }, bracket(2, 3)) -- in melee, so nearer than the band
-            assert.are.same({ 8, 35, 21.5, "observed" }, bracket(20, 4))
-            -- past the strike (strictly: lo 5 is beyond 5 yd), either side of the band: no upper bound, est up to 40
-            assert.are.same({ 5, math.huge, 22.5, "observed" }, bracket(6, 5))
-            assert.are.same({ 5, math.huge, 22.5, "observed" }, bracket(40, 6))
-            assert.are.same({ 5, math.huge, 22.5, "observed" }, bracket(fake.SECRET, 7)) -- secret: the last bracket stays
-            ctl.Fire("PLAYER_TARGET_CHANGED")
-            drain(8)
-            assert.are.equal("unknown", VS.TargetRange().basis) -- a swap forgets it until the next plain answer
-            assert.are.same({ 0, 5, 2.5, "observed" }, bracket(3, 9))
-            ctl.ranges[fs.SPENDER_C] = { 0, 35 } -- the client now answers the band in melee too (the resolved 8 stays)
-            assert.are.same({ 5, 5, 5, "observed" }, bracket(3, 10)) -- lo 8 over hi 5: the upper bound wins
+    -- range plan R2 (owner amendment 2026-11-11): the bracket is LibRangeCheck's (fake_api's double: 5 yd steps)
+    it("brackets the target's distance from LibRangeCheck, keeping the last through secret and silent reads", function()
+        ctl.known[fs.SPENDER_A], ctl.known[fs.SPENDER_C] = true, true
+        ctl.ranges[fs.SPENDER_A], ctl.ranges[fs.SPENDER_C] = { 0, 5 }, { 8, 35 } -- a melee strike, a band
+        ctl.Fire("SPELLS_CHANGED")
+        assert.are.same({ 5, 35 }, { I.ab.rMax[1], I.ab.rMax[3] })
+        assert.are.equal(0, I.ab.rMax[2]) -- on the next swing: never asked
+        ctl.distance.target = fake.SECRET
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        drain(2)
+        assert.are.equal("unknown", VS.TargetRange().basis) -- a target, no plain answer yet
+        local function bracket(d, t)
+            ctl.distance.target = d
+            drain(t)
+            local r = VS.TargetRange()
+            return { r.lo, r.hi, r.est, r.basis }
         end
-    )
+        assert.are.same({ 0, 5, 2.5, "observed" }, bracket(2, 3))
+        assert.are.same({ 15, 20, 17.5, "observed" }, bracket(20, 4))
+        assert.are.equal(4, VS.TargetRange().last.observed.t) -- when it was read (Events/Kinds.lua's rangeLow)
+        assert.are.same({ 5, 10, 7.5, "observed" }, bracket(6, 5))
+        assert.are.same({ 100, math.huge, 100, "observed" }, bracket(150, 6)) -- past the last check: no upper bound
+        assert.are.same({ 100, math.huge, 100, "observed" }, bracket(fake.SECRET, 7)) -- secret: the last stays
+        ctl.rangeLib = "none"
+        assert.are.same({ 100, math.huge, 100, "observed" }, bracket(20, 8)) -- silent: the last stays
+        assert.are.equal(6, VS.TargetRange().last.observed.t)
+        ctl.rangeLib, ctl.distance.target = nil, fake.SECRET
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        drain(9)
+        assert.are.equal("unknown", VS.TargetRange().basis) -- a swap forgets it until the next plain answer
+        assert.are.same({ 0, 5, 2.5, "observed" }, bracket(3, 10))
+        -- the Map restriction: a secret GUID takes no memory slot, and the library still answers for the target
+        ctl.guid.target = fake.SECRET
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        drain(11)
+        assert.are.same({ 15, 20, 17.5, "observed" }, bracket(18, 12))
+    end)
 
     it("reads the live client's maxRange 0 on a hostile strike as melee, never a self-centred spell's", function()
         I.Build(fs.def(fs.new(9, false, false, true)), 1) -- 1 spender_a (friendly), 3 spender_c, 4 spender_f, 6 spender_m
@@ -250,32 +255,18 @@ describe("facts and polls", function()
         ctl.Fire("SPELLS_CHANGED")
         -- a: not hostile, never asked; f: asked as melee, but its nil answer is skipped (no range check)
         assert.are.same({ 0, 5, 5, 30 }, { I.ab.rMax[1], I.ab.rMax[3], I.ab.rMax[4], I.ab.rMax[6] })
-        local function bracket(d, t)
+        -- the per-ability answers (action.<key>.in_range): 0 for none, else the client's plain answer
+        local function answers(d, t)
             ctl.distance.target = d
             drain(t)
-            local r = VS.TargetRange()
-            return { r.lo, r.hi }
+            local A = I.rangeAnswer
+            return { A[1], A[3], A[4], A[6] }
         end
         ctl.Fire("PLAYER_TARGET_CHANGED")
         drain(2)
-        assert.are.same({ 0, 5 }, bracket(3, 3))
-        assert.are.same({ 5, 30 }, bracket(20, 4))
-        -- were the client to answer the self-centred spell at any distance (unchecked live), true or false, the melee
-        -- answers disagree on one side of 5 yd and tell nothing there: never the wrong side
-        ctl.ranges[fs.SPENDER_F] = { 0, 0, 100 } -- true at any distance
-        ctl.Fire("SPELLS_CHANGED")
-        assert.are.equal(5, I.ab.rMax[4])
-        assert.are.same({ 0, 5 }, bracket(3, 5))
-        assert.are.same({ 0, 30 }, bracket(20, 6))
-        ctl.ranges[fs.SPENDER_F] = { 0, 0, -1 } -- false at any distance
-        assert.are.same({ 0, 30 }, bracket(3, 7))
-        assert.are.same({ 5, 30 }, bracket(20, 8))
-        -- a kit whose only range answers are melee ones that disagree: unknown, never blocking
-        ctl.known[fs.SPENDER_M] = false
-        ctl.Fire("SPELLS_CHANGED")
-        ctl.Fire("PLAYER_TARGET_CHANGED")
-        bracket(3, 9)
-        assert.are.equal("unknown", VS.TargetRange().basis)
+        assert.are.same({ 0, true, 0, true }, answers(3, 3))
+        assert.are.same({ 0, false, 0, true }, answers(20, 4))
+        assert.are.same({ 15, 20 }, { VS.TargetRange().lo, VS.TargetRange().hi }) -- the library's bracket
     end)
 
     it("reads the player's health when plain and caches the stats out of combat", function()

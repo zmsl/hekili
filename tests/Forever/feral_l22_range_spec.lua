@@ -110,8 +110,9 @@ describe("Feral level 22 in melee (owner snapshots 2026-11-07)", function()
         assert.is_true(has(list, "shred", "claw"), table.concat(list, " "))
     end)
 
-    it("at 20 yd: the strikes' false puts the target past melee; the roar's and Cat Form's nil say nothing", function()
+    -- range plan R2: the bracket is LibRangeCheck's (the harness double's 5 yd steps), no longer the kit's answers
+    it("at 20 yd: the library's bracket puts the target past melee", function()
         local _, r = recs(true, 20)
-        assert.are.same({ 5, 30 }, { r.lo, r.hi })
+        assert.are.same({ 15, 20 }, { r.lo, r.hi })
     end)
 end)

@@ -110,6 +110,18 @@ describe("the kinds", function()
             assert.is_true(math.abs(lo - (100 + 20 / 27 - 0.15)) < 1e-9)
         end)
 
+        it("raises the lower bound from the library-fed bracket the range poll logged, at its read's time", function()
+            ctl.distance.target = 20 -- LibRangeCheck's double: [15, 20]
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.Tick(100)
+            I.Sources.RunPolls(100)
+            I.Fold(100, false)
+            assert.are.same({ 15, 100 }, { VS.TargetRange().lo, VS.TargetRange().last.observed.t })
+            local i = open(fs.SPENDER_P, 100)
+            local lo = K.Band(i, 3, 101, false, "WOUND", 8)
+            assert.is_true(math.abs(lo - (100 + 15 / 27 - 0.15)) < 1e-9) -- 15 / (20 + CLOSE 7) - TOL after the success
+        end)
+
         it("ignores a range bracket logged after the success", function()
             VS.TargetRange = function()
                 return { lo = 20, hi = 30, last = { observed = { t = 100.2 } } }

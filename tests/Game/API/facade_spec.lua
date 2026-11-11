@@ -117,7 +117,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 125, hybrid = 42, virtual = 26, display = 1 }, count)
+        assert.are.same({ passthrough = 125, hybrid = 44, virtual = 25, display = 1 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -625,17 +625,12 @@ describe("ns.Facade", function()
         assert.are.same({ ctl.ranged[1], ctl.ranged[2], ctl.ranged[3], shot, shotSpeed }, { speed, lo, hi, s7, s8 })
     end)
 
+    -- range plan R2 (owner amendment 2026-11-11): LibRangeCheck feeds the belief's bracket; the row answers it for
+    -- the target and the library's own answer for any other unit with a plain GUID
     it(
-        "LibRangeCheck.GetRange answers the target's believed bracket; no upper bound and unknown read as nil",
+        "LibRangeCheck.GetRange answers the target's believed bracket, fed by the library; no upper bound and unknown read as nil",
         function()
             local RC = Facade.LibRangeCheck
-            ctl.known[fs.SPENDER_A], ctl.known[fs.SPENDER_C] = true, true
-            ctl.ranges[fs.SPENDER_A], ctl.ranges[fs.SPENDER_C] = { 0, 5 }, { 8, 35 } -- a melee strike, a band
-            api.C_Spell.GetSpellInfo = function(id) -- the ranges the resolve reads (the before_each's has none)
-                local r = ctl.ranges[id]
-                return { name = "Spell " .. id, iconID = 1, minRange = r and r[1] or 0, maxRange = r and r[2] or 5 }
-            end
-            ctl.Fire("SPELLS_CHANGED")
             local function at(d, t)
                 ctl.distance.target = d
                 ctl.Tick(t)
@@ -646,13 +641,45 @@ describe("ns.Facade", function()
             end
             ctl.Fire("PLAYER_TARGET_CHANGED")
             assert.are.same({}, at(fake.SECRET, 2)) -- a target, no plain range answer yet: unknown
-            assert.are.same({ 8, 35 }, at(20, 3))
+            assert.are.same({ 15, 20 }, at(20, 3)) -- the library double's 5 yd bracket
             assert.are.same({ 0, 5 }, at(2, 4))
-            assert.are.same({ 5 }, at(40, 5)) -- past every range answered: a lower bound only
-            assert.are.same({}, { RC:GetRange("focus") }) -- only the target is bracketed
+            assert.are.same({ 100 }, at(150, 5)) -- past the library's last check: a lower bound only
+            local n = ctl.rangeLibCalls
+            assert.are.same({ 100 }, { RC:GetRange("target") }) -- the belief's answer: the library is not asked again
+            assert.are.equal(n, ctl.rangeLibCalls)
             ctl.Fire("PLAYER_TARGET_CHANGED")
             assert.are.same({}, at(fake.SECRET, 6)) -- a new target, every read secret: unknown again
-            assert.are.same({}, calls)
         end
     )
+
+    it(
+        "LibRangeCheck.GetRange asks the library for a plate with a plain GUID, never for one whose GUID is secret",
+        function()
+            local RC = Facade.LibRangeCheck
+            answers.UnitGUID = function(unit)
+                return unit == "nameplate1" and "Creature-9" or fake.SECRET
+            end
+            ctl.distance.nameplate1, ctl.distance.nameplate2 = 12, 12
+            ctl.exists.nameplate1, ctl.exists.nameplate2 = true, true
+            assert.are.same({ 10, 15 }, { RC:GetRange("nameplate1") })
+            local n = ctl.rangeLibCalls
+            assert.are.same({}, { RC:GetRange("nameplate2") }) -- the Map restriction: not asked until probe G2 (R3)
+            assert.are.equal(n, ctl.rangeLibCalls)
+            ctl.distance.nameplate1 = fake.SECRET -- a secret answer: nothing
+            assert.are.same({}, { RC:GetRange("nameplate1") })
+        end
+    )
+
+    it("RangeLib answers nothing, never an error, when the library raises on the target", function()
+        ctl.distance.target = 7
+        assert.are.same({ 5, 10 }, { Facade.RangeLib("target") })
+        ctl.rangeLib = "raise"
+        local got
+        assert.has_no.errors(function()
+            got = { Facade.RangeLib("target") }
+        end)
+        assert.are.same({}, got)
+        ctl.rangeLib, ctl.distance.target = nil, fake.SECRET
+        assert.are.same({}, { Facade.RangeLib("target") })
+    end)
 end)

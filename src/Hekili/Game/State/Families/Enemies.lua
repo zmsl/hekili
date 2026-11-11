@@ -1,9 +1,9 @@
 -- Game/State/Families/Enemies.lua
 -- Enemies (spec §6.9): the target's range. The belief keeps no plate count: Hekili's enemy scan counts plates through
 -- the UnitHealth policy (spec §7.4).
--- The target's range (gap 13, wowsims unitDistance): Sources/Target.lua's poll 14 brackets the distance in yards
--- [lo, hi] from the tracked abilities' own ranges (plain C_Spell.IsSpellInRange); the last bracket stays believed
--- through polls with no plain answer (a secret or nil read), a target swap forgets it (unknown).
+-- The target's range (gap 13, wowsims unitDistance): the bracket in yards [lo, hi] is LibRangeCheck-3.0's (range plan
+-- R2: Sources/Target.lua's poll 14 reads it through the facade's RangeLib); the last bracket stays believed through
+-- polls with no plain answer (a secret, raising or silent library), a target swap forgets it (unknown).
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Targets.lua (Applier Enemies :184).
 
 local _, ns = ...

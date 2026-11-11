@@ -59,6 +59,20 @@ describe("Engine/Sim/Targets.lua's nameplate log", function()
         assert.are.same({ 0, 0, 0 }, got, "bytes per count at 0/5/15 plates")
     end)
 
+    -- range plan R2: the plates' range reads go through the facade row; counts and bytes as at the base (982b7d2f0)
+    it("counts 0, 5 and 15 plain-GUID plates as before, allocating nothing per count", function()
+        local counts, got = {}, {}
+        H.Hekili.ActiveDebug = false
+        for _, n in ipairs({ 0, 5, 15 }) do
+            plates(n) -- re-adding a plate already up changes nothing
+            counts[#counts + 1] = H.ns.getNumberTargets(true)
+            got[#got + 1] = bytes()
+        end
+        print("counts at 0/5/15 plates: " .. table.concat(counts, "/"))
+        assert.are.same({ 1, 6, 16 }, counts)
+        assert.are.same({ 0, 0, 0 }, got, "bytes per count at 0/5/15 plates")
+    end)
+
     it("keeps the log, a line per plate, while debug is on", function()
         plates(15)
         H.Hekili.ActiveDebug = true

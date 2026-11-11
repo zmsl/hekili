@@ -26,14 +26,14 @@ local GetSpellCooldown = function( spellID )
     return 0, 0, false, 0
 end
 
-local LRC = LibStub( "LibRangeCheck-3.0" )
+local RC = Facade.LibRangeCheck -- the one range source (range plan R2): LibRangeCheck through the facade
 local LSR = LibStub( "SpellRange-1.0" )
 local max, min = math.max, math.min
 
 local SLOTS = 12 -- Output's records per display
 
 --- Fills d.resolved[ 1 .. out.count ] (preallocated on the first call), per record: `inRange` (the ability's range),
---- `inMelee` (the target within 7 yd, asked only while the bound style's range check is `melee`, true otherwise),
+--- `inMelee` (the target within 7 yd or its range unknown, asked only while the bound style's range check is `melee`, true otherwise),
 --- `usable`, `delay` (exact_time - now), `earliest` (when the GCD, the cast and the ability's cooldown allow it, from
 --- now), `desaturate` (delay past earliest: a wait to show), `targets` (the count shown, clamped by the toggle mode),
 --- `detected` (the count seen), `single` (clamped to one) and `glow` (overlayed). Classic's spirals reuse this frame's
@@ -72,7 +72,8 @@ function ns.UI.Resolve( d, conf, out, now )
     local range = StyleGroup( conf, "range" )
     local inMelee = true
     if hostile and range.enabled and range.type == "melee" then -- the only range check that asks LibRangeCheck
-        inMelee = ( LRC:GetRange( "target" ) or 10 ) <= 7
+        local lo = RC:GetRange( "target" )
+        inMelee = lo == nil or lo <= 7 -- unknown never blocks: in melee
     end
 
     local gStart, gDuration = GetSpellCooldown( Registry.GCD_SPELL )

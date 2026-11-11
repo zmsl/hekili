@@ -71,6 +71,26 @@ describe("the shared resolve", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- range plan R2: the melee range check reads the facade's target bracket (LibRangeCheck through the belief);
+    -- within 7 yd is in melee, and so is an unknown range (unknown never blocks)
+    it("shows the target in melee within 7 yd and while its range is unknown, out of melee past it", function()
+        local H, d = boot()
+        H.Hekili.DB.profile.displays.Primary.classic.range.type = "melee"
+        local function inMelee(yd)
+            H.ctl.distance.target = yd
+            assert(headless.cycle(H, H.ctl.now + 0.2))
+            publish(H)
+            frame(H, d, 0.3)
+            return d.resolved[1].inMelee
+        end
+        assert.is_true(inMelee(3))
+        assert.is_false(inMelee(20))
+        H.ctl.rangeLib = "none"
+        H.Fire("PLAYER_TARGET_CHANGED") -- a new target the library cannot range: unknown
+        assert.is_true(inMelee(20))
+        assert.are.same({}, H.errors)
+    end)
+
     -- Perf 1.3: Classic's spirals reuse what Resolve asked this frame, so a publish asks the client once per spell.
     local function countAsks(H)
         local cs, asks = H.ns.Facade.C_Spell, {}

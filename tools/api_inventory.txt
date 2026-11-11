@@ -137,7 +137,8 @@ IsSpellKnown	passthrough
 IsSpellKnownOrOverridesKnown	passthrough
 IsStealthed	hybrid
 IsUsableSpell	passthrough
-LibRangeCheck.GetRange	virtual
+LibRangeCheck.GetRange	hybrid
+RangeLib	hybrid
 SecureCmdOptionParse	passthrough
 SpellIsSelfBuff	passthrough
 UnitAffectingCombat	passthrough

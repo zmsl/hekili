@@ -286,7 +286,7 @@ RegisterEvent( "UNIT_FLAGS", function( event, unit )
 end )
 
 
-local RC = LibStub( "LibRangeCheck-3.0" )
+local RC = Facade.LibRangeCheck -- the one range source (range plan R2): LibRangeCheck through the facade
 local LSR = LibStub( "SpellRange-1.0" )
 
 local lastCount = 1

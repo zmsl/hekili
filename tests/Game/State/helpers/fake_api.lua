@@ -147,8 +147,43 @@ function M.new()
         inventory = {}, -- [slot] = itemID (GetInventoryItemID("player", slot))
         items = {}, -- [itemID] = { name, equipLoc } (C_Item.GetItemInfo's first and ninth returns)
         tooltips = {}, -- [spellID] = C_TooltipInfo.GetSpellByID's data ({ lines = { { leftText }... } }; nil: none)
+        -- LibRangeCheck-3.0's double (api.LibStub; the harness puts its GetRange on the vendored library): "none"
+        -- answers nothing, "raise" raises; else 5 yd brackets from `distance` (see rangeBracket)
+        rangeLib = nil,
+        rangeLibCalls = 0,
     }
     local api = { ctl = ctl }
+
+    -- The library's answer from the distance the range checks see: (lo, hi] in 5 yd steps, [0, 5] at 5 yd or nearer
+    -- (the in-range test is inclusive, as the client's checks); past 100 yd 100 and no upper bound; a secret distance
+    -- answers secret; no distance: [0, 5] when every check is in range (`inRange`), else nothing; no unit: nothing.
+    local rangeLib = {}
+    function rangeLib.GetRange(_, unit)
+        ctl.rangeLibCalls = ctl.rangeLibCalls + 1
+        if ctl.rangeLib == "raise" then
+            error("LibRangeCheck-3.0: a secret range answer tested")
+        elseif ctl.rangeLib == "none" or ctl.exists[unit] ~= true then -- the library's own UnitExists test
+            return nil
+        end
+        local d = ctl.distance[unit]
+        if d == SECRET then
+            return SECRET, SECRET
+        elseif d == nil then
+            if ctl.inRange[unit] == true then
+                return 0, 5
+            end
+            return nil
+        elseif d > 100 then
+            return 100, nil
+        end
+        local hi = math.max(5, math.ceil(d / 5) * 5)
+        return hi - 5, hi
+    end
+    function api.LibStub(name)
+        if name == "LibRangeCheck-3.0" then
+            return rangeLib
+        end
+    end
 
     function api.issecretvalue(v)
         return v == SECRET -- rawequal semantics: the proxy's __eq only fires between two proxies

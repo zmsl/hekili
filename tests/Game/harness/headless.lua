@@ -291,7 +291,7 @@ function M.new(o)
     end
     -- the client: fake_api's functions, namespaces copied so an instance's writes stay its own
     for k, v in pairs(api) do
-        if k ~= "ctl" then
+        if k ~= "ctl" and k ~= "LibStub" then -- the vendored LibStub loads with the TOC; the range double joins it below
             local mt = { __index = v }
             if k:match("^C_") then -- an absent member read through a namespace counts as a miss (§1.4)
                 function mt.__index(_, key)
@@ -958,6 +958,12 @@ function M.new(o)
     end
     env.HekiliDB = o.saved -- saved variables, as the client sets them before the addon's ADDON_LOADED (nil: fresh)
     loadAddon(addons.CORE)
+    -- the vendored LibRangeCheck-3.0 stays loaded but answers through fake_api's double (5 yd brackets from the
+    -- distance the belief's range checks see); H.realGetRange keeps the library's own GetRange
+    local lrc = rawget(env, "LibStub") and env.LibStub("LibRangeCheck-3.0", true)
+    if lrc then
+        H.realGetRange, lrc.GetRange = lrc.GetRange, api.LibStub("LibRangeCheck-3.0").GetRange
+    end
     -- the scenario the settings' defaults are for (Engine.SettingDefault: "sim" for the harness's own, nil in game),
     -- set before ADDON_LOADED fills the profile
     local core = rawget(env, "Hekili")

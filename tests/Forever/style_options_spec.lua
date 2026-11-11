@@ -310,9 +310,9 @@ describe("the engine's and the shared resolve's range, flash and keybinding sett
         assert.are.same({}, H.errors)
     end)
 
-    it("ask LibRangeCheck only while the range check is melee", function()
+    it("ask the facade's LibRangeCheck row only while the range check is melee", function()
         local H = boot()
-        local LRC = H.env.LibStub("LibRangeCheck-3.0")
+        local LRC = H.ns.Facade.LibRangeCheck
         local calls, getRange = 0, LRC.GetRange
         LRC.GetRange = function(...)
             calls = calls + 1
@@ -346,6 +346,12 @@ describe("the engine's and the shared resolve's range, flash and keybinding sett
             H.ns.UI.Resolve(d, conf, H.Hekili.Engine.Output.Primary, H.ctl.now)
         end)
         assert.are.same({}, H.errors)
+        -- the vendored library itself (the harness answers through a double; H.realGetRange is the library's own)
+        local LRC = H.env.LibStub("LibRangeCheck-3.0")
+        assert.are.equal(39, select(2, H.env.LibStub:GetLibrary("LibRangeCheck-3.0")))
+        assert.has_no.errors(function()
+            H.realGetRange(LRC, "target")
+        end)
     end)
 end)
 

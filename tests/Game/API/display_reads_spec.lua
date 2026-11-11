@@ -20,6 +20,15 @@ describe("tools/check_api_reads.sh's display rule", function()
     end)
 end)
 
+-- range plan R2: one range source; only the facade fetches LibRangeCheck (Facade.RangeLib, Facade.LibRangeCheck)
+describe("tools/check_api_reads.sh's range library rule", function()
+    it("fails a file outside Game/API/Facade.lua that fetches LibRangeCheck-3.0, naming the line", function()
+        local rc, out = run("tests/Game/API/fixtures/range_lib_outside_facade.lua")
+        assert.are.equal(1, rc, out)
+        assert.is_truthy(out:find("range_lib_outside_facade.lua:3:", 1, true), out)
+    end)
+end)
+
 describe("tools/check_api_reads.sh's _G rule", function()
     for _, name in ipairs({ "g_spaced_double", "g_spaced_single" }) do
         it("fails fixtures/" .. name .. ".lua, a spaced _G string key, on line 3", function()
