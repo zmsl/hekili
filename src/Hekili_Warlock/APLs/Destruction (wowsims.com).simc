@@ -9,7 +9,7 @@
 # Movement: default #3 reaches default: hellfire
 # Omitted: precombat #2: petAttack
 # Omitted: default #3: move
-# Omitted: default #5: spell 1225228
+# Omitted: default #5: castSpell on another target (Target index 1)
 # Omitted: default #6: changeTarget
 # Omitted: default #9: dropped the unresolved aura 1293816 (its branch only)
 # Omitted: single_multi_target_curse_logic #2: changeTarget

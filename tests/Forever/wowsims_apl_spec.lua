@@ -732,6 +732,24 @@ describe("the wowsims APL translator", function()
         )
     end)
 
+    it("omits a cast aimed at another target (castSpell target index 1), never on the current one", function()
+        local function at(target)
+            return { action = { castSpell = { spellId = { spellId = 100 }, target = target } } }
+        end
+        local text, omitted = apl.translate({
+            priorityList = {
+                at({ index = 1, type = "Target" }), -- wowsims's second target (Bane of Havoc): aura audit C7
+                at({ type = "Target" }), -- index 0: the encounter's first target, read as the current one
+                { action = { changeTarget = { newTarget = { type = "NextTarget" } } } }, -- never a current-target line
+            },
+        }, ctx())
+        assert.are.equal("actions=strike,focus=1", text) -- ctx()'s recipe gives strike focus tier 1
+        assert.are.same(
+            { "default #1: castSpell on another target (Target index 1)", "default #3: changeTarget" },
+            omitted
+        )
+    end)
+
     it("omits a line whose recipe `condition` is false (owner deviation R69)", function()
         local text, omitted = apl.translate({
             priorityList = {

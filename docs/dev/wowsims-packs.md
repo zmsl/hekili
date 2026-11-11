@@ -245,7 +245,8 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
    raises gives no guard and a header note.
 2. Omitted (and listed in the `# Omitted:` header): hidden entries, conditions folding to false, nodes the fork
    lacks (`sequence`, `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `sequenceIsComplete`, ...), an entry
-   whose own action is unmapped, a call of an empty group.
+   whose own action is unmapped, a call of an empty group, a cast aimed at another target (`target` Target with an
+   index above 0, never read as the current one; aura audit C7).
 3. An all-empty group is an ON/OFF switch: `settings.wowsims_<name>`, its wowsims default; the header lists it only
    when an emitted line reads it (ruling L14), and the class registers exactly those (with the recipe's `settings`).
 4. `auraIsKnown`: a talent's `enabled`, an ability's `known`, else `true` (a gear or enchant aura too, worn or not:

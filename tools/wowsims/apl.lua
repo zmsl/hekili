@@ -29,7 +29,9 @@
 --    gives no guard and a header note.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
 --    false; entries whose action or condition uses a node the fork lacks (`schedule`, `itemSwap`, `wait`,
---    `activeItemSwapSet`, `selectedConjured`), or whose own action is an unmapped spell, item or other ID (an unmapped
+--    `activeItemSwapSet`, `selectedConjured`), a cast aimed at another target (`target` Target with an index above 0:
+--    wowsims's second target, Bane of Havoc; aura audit C7, never cast on the current one), or whose own action is an
+--    unmapped spell, item or other ID (an unmapped
 --    read drops only its branch: rule 12); a call of a group whose every entry was omitted. Also listed: rule 12's
 --    dropped reads and rule 13's unmapped cooldowns, by entry. A `wait` stays omitted (CN19, docs/dev/wowsims-packs.md):
 --    the engine times each line at its own ready moment, so a hold only matters against a later line ready sooner.
@@ -1913,6 +1915,10 @@ function entry(c, e)
         return nil, "empty"
     end
     local body, key, auto, seq
+    local tg = type(a[kind]) == "table" and a[kind].target
+    if type(tg) == "table" and tg.type == "Target" and (tg.index or 0) > 0 then -- rule 2: another target's cast
+        return nil, ("%s on another target (Target index %d)"):format(kind, tg.index)
+    end
     if kind == "castSpell" or kind == "channelSpell" then
         local x = spellKey(c, a[kind].spellId)
         c.self, key = x, x
