@@ -86,6 +86,8 @@ local ALLOW_IDS = {
     [145] = "an action slot bound in upstream's keybind scan (Engine/Sim/Events.lua); it collides with Fireball rank 3's ID",
     [17] = "a field index and string offset core uses (a log row's slot, VirtualState's Moving); it collides with Power Word: Shield rank 1's ID",
     [600] = "a time and value in the harness's specs; it collides with Power Word: Shield rank 3's ID",
+    [168] = "an action slot bound in upstream's keybind scan (Engine/Sim/Events.lua); it collides with Frost Armor rank 1's ID",
+    [1032] = "a source line in a known-nil note in the harness (Scripts.lua:1032); it collides with Devotion Aura rank 5's ID",
 }
 
 local CLASS_WORDS =

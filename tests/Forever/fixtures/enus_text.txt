@@ -5776,6 +5776,72 @@ options.abilities.seal_of_fury.toggle	values.interrupts	Interrupts
 options.abilities.seal_of_fury.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.seal_of_fury.toggle	values.none	None
 options.abilities.seal_of_fury.toggle	values.potions	Potions
+options.abilities.seal_of_justice	name	Spell 20164
+options.abilities.seal_of_justice.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 20164 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 20164 can be recommended in any type of fight.
+options.abilities.seal_of_justice.boss	name	Boss Encounter Only
+options.abilities.seal_of_justice.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 20164 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.seal_of_justice.clash	name	Clash
+options.abilities.seal_of_justice.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 20164.
+options.abilities.seal_of_justice.disabled	name	Disable |T136000:0|t Spell 20164
+options.abilities.seal_of_justice.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.seal_of_justice.dotCap	name	Maximum Applications
+options.abilities.seal_of_justice.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.seal_of_justice.hasIcon	name	Icon Replacement
+options.abilities.seal_of_justice.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.seal_of_justice.keybind	name	Override Keybind Text
+options.abilities.seal_of_justice.lineBreak1	name	\032
+options.abilities.seal_of_justice.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.seal_of_justice.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.seal_of_justice.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.seal_of_justice.noIcon	name	Icon Replacement
+options.abilities.seal_of_justice.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 20164 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.seal_of_justice.targetMax	name	Maximum Targets
+options.abilities.seal_of_justice.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 20164 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.seal_of_justice.targetMin	name	Minimum Targets
+options.abilities.seal_of_justice.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.seal_of_justice.toggle	name	Require Toggle
+options.abilities.seal_of_justice.toggle	values.cooldowns	Cooldowns
+options.abilities.seal_of_justice.toggle	values.custom1	Custom 1
+options.abilities.seal_of_justice.toggle	values.custom2	Custom 2
+options.abilities.seal_of_justice.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.seal_of_justice.toggle	values.defensives	Defensives
+options.abilities.seal_of_justice.toggle	values.interrupts	Interrupts
+options.abilities.seal_of_justice.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.seal_of_justice.toggle	values.none	None
+options.abilities.seal_of_justice.toggle	values.potions	Potions
+options.abilities.seal_of_light	name	Spell 20165
+options.abilities.seal_of_light.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 20165 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 20165 can be recommended in any type of fight.
+options.abilities.seal_of_light.boss	name	Boss Encounter Only
+options.abilities.seal_of_light.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 20165 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.seal_of_light.clash	name	Clash
+options.abilities.seal_of_light.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 20165.
+options.abilities.seal_of_light.disabled	name	Disable |T136000:0|t Spell 20165
+options.abilities.seal_of_light.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.seal_of_light.dotCap	name	Maximum Applications
+options.abilities.seal_of_light.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.seal_of_light.hasIcon	name	Icon Replacement
+options.abilities.seal_of_light.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.seal_of_light.keybind	name	Override Keybind Text
+options.abilities.seal_of_light.lineBreak1	name	\032
+options.abilities.seal_of_light.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.seal_of_light.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.seal_of_light.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.seal_of_light.noIcon	name	Icon Replacement
+options.abilities.seal_of_light.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 20165 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.seal_of_light.targetMax	name	Maximum Targets
+options.abilities.seal_of_light.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 20165 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.seal_of_light.targetMin	name	Minimum Targets
+options.abilities.seal_of_light.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.seal_of_light.toggle	name	Require Toggle
+options.abilities.seal_of_light.toggle	values.cooldowns	Cooldowns
+options.abilities.seal_of_light.toggle	values.custom1	Custom 1
+options.abilities.seal_of_light.toggle	values.custom2	Custom 2
+options.abilities.seal_of_light.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.seal_of_light.toggle	values.defensives	Defensives
+options.abilities.seal_of_light.toggle	values.interrupts	Interrupts
+options.abilities.seal_of_light.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.seal_of_light.toggle	values.none	None
+options.abilities.seal_of_light.toggle	values.potions	Potions
 options.abilities.seal_of_righteousness	name	Spell 20154
 options.abilities.seal_of_righteousness.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 20154 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 20154 can be recommended in any type of fight.
 options.abilities.seal_of_righteousness.boss	name	Boss Encounter Only
@@ -5842,6 +5908,39 @@ options.abilities.seal_of_the_crusader.toggle	values.interrupts	Interrupts
 options.abilities.seal_of_the_crusader.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.seal_of_the_crusader.toggle	values.none	None
 options.abilities.seal_of_the_crusader.toggle	values.potions	Potions
+options.abilities.seal_of_wisdom	name	Spell 20166
+options.abilities.seal_of_wisdom.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 20166 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 20166 can be recommended in any type of fight.
+options.abilities.seal_of_wisdom.boss	name	Boss Encounter Only
+options.abilities.seal_of_wisdom.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 20166 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.seal_of_wisdom.clash	name	Clash
+options.abilities.seal_of_wisdom.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 20166.
+options.abilities.seal_of_wisdom.disabled	name	Disable |T136000:0|t Spell 20166
+options.abilities.seal_of_wisdom.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.seal_of_wisdom.dotCap	name	Maximum Applications
+options.abilities.seal_of_wisdom.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.seal_of_wisdom.hasIcon	name	Icon Replacement
+options.abilities.seal_of_wisdom.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.seal_of_wisdom.keybind	name	Override Keybind Text
+options.abilities.seal_of_wisdom.lineBreak1	name	\032
+options.abilities.seal_of_wisdom.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.seal_of_wisdom.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.seal_of_wisdom.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.seal_of_wisdom.noIcon	name	Icon Replacement
+options.abilities.seal_of_wisdom.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 20166 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.seal_of_wisdom.targetMax	name	Maximum Targets
+options.abilities.seal_of_wisdom.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 20166 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.seal_of_wisdom.targetMin	name	Minimum Targets
+options.abilities.seal_of_wisdom.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.seal_of_wisdom.toggle	name	Require Toggle
+options.abilities.seal_of_wisdom.toggle	values.cooldowns	Cooldowns
+options.abilities.seal_of_wisdom.toggle	values.custom1	Custom 1
+options.abilities.seal_of_wisdom.toggle	values.custom2	Custom 2
+options.abilities.seal_of_wisdom.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.seal_of_wisdom.toggle	values.defensives	Defensives
+options.abilities.seal_of_wisdom.toggle	values.interrupts	Interrupts
+options.abilities.seal_of_wisdom.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.seal_of_wisdom.toggle	values.none	None
+options.abilities.seal_of_wisdom.toggle	values.potions	Potions
 options.abilities.searing_pain	name	Spell 5676
 options.abilities.searing_pain.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 5676 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 5676 can be recommended in any type of fight.
 options.abilities.searing_pain.boss	name	Boss Encounter Only
@@ -7352,6 +7451,39 @@ options.abilities.taunt.toggle	values.interrupts	Interrupts
 options.abilities.taunt.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.taunt.toggle	values.none	None
 options.abilities.taunt.toggle	values.potions	Potions
+options.abilities.templars_bulwark	name	Spell 1311015
+options.abilities.templars_bulwark.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1311015 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1311015 can be recommended in any type of fight.
+options.abilities.templars_bulwark.boss	name	Boss Encounter Only
+options.abilities.templars_bulwark.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1311015 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.templars_bulwark.clash	name	Clash
+options.abilities.templars_bulwark.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1311015.
+options.abilities.templars_bulwark.disabled	name	Disable |T136000:0|t Spell 1311015
+options.abilities.templars_bulwark.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.templars_bulwark.dotCap	name	Maximum Applications
+options.abilities.templars_bulwark.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.templars_bulwark.hasIcon	name	Icon Replacement
+options.abilities.templars_bulwark.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.templars_bulwark.keybind	name	Override Keybind Text
+options.abilities.templars_bulwark.lineBreak1	name	\032
+options.abilities.templars_bulwark.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.templars_bulwark.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.templars_bulwark.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.templars_bulwark.noIcon	name	Icon Replacement
+options.abilities.templars_bulwark.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1311015 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.templars_bulwark.targetMax	name	Maximum Targets
+options.abilities.templars_bulwark.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1311015 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.templars_bulwark.targetMin	name	Minimum Targets
+options.abilities.templars_bulwark.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.templars_bulwark.toggle	name	Require Toggle
+options.abilities.templars_bulwark.toggle	values.cooldowns	Cooldowns
+options.abilities.templars_bulwark.toggle	values.custom1	Custom 1
+options.abilities.templars_bulwark.toggle	values.custom2	Custom 2
+options.abilities.templars_bulwark.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.templars_bulwark.toggle	values.defensives	Defensives
+options.abilities.templars_bulwark.toggle	values.interrupts	Interrupts
+options.abilities.templars_bulwark.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.templars_bulwark.toggle	values.none	None
+options.abilities.templars_bulwark.toggle	values.potions	Potions
 options.abilities.thorns	name	Spell 467
 options.abilities.thorns.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 467 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 467 can be recommended in any type of fight.
 options.abilities.thorns.boss	name	Boss Encounter Only
@@ -14330,7 +14462,6 @@ options.packs.arcane.Arcane (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.arcane_blast	|T136000:0|t Spell 400573
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.arcane_power	|T136000:0|t Spell 12042
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.clearcasting	|T136000:0|t Spell 12536
-options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.combustion	|T136000:0|t Spell 11129
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.fingers_of_frost	|T136000:0|t Spell 400669
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.fire_vulnerability	|T136000:0|t Spell 22959
@@ -18493,7 +18624,6 @@ options.packs.fire.Fire (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.arcane_blast	|T136000:0|t Spell 400573
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.arcane_power	|T136000:0|t Spell 12042
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.clearcasting	|T136000:0|t Spell 12536
-options.packs.fire.Fire (wowsims.com).lists.buff_name	values.combustion	|T136000:0|t Spell 11129
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.fingers_of_frost	|T136000:0|t Spell 400669
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.fire_vulnerability	|T136000:0|t Spell 22959
@@ -18706,7 +18836,6 @@ options.packs.fire.Frostfire (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.arcane_blast	|T136000:0|t Spell 400573
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.arcane_power	|T136000:0|t Spell 12042
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.clearcasting	|T136000:0|t Spell 12536
-options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.combustion	|T136000:0|t Spell 11129
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.fingers_of_frost	|T136000:0|t Spell 400669
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.fire_vulnerability	|T136000:0|t Spell 22959
@@ -20032,8 +20161,11 @@ options.packs.protection.Protection (wowsims.com).lists.action	values.righteous_
 options.packs.protection.Protection (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.protection.Protection (wowsims.com).lists.action	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.protection.Protection (wowsims.com).lists.action	values.seal_of_fury	|T136000:0|t Spell 1311649
+options.packs.protection.Protection (wowsims.com).lists.action	values.seal_of_justice	|T136000:0|t Spell 20164
+options.packs.protection.Protection (wowsims.com).lists.action	values.seal_of_light	|T136000:0|t Spell 20165
 options.packs.protection.Protection (wowsims.com).lists.action	values.seal_of_righteousness	|T136000:0|t Spell 20154
 options.packs.protection.Protection (wowsims.com).lists.action	values.seal_of_the_crusader	|T136000:0|t Spell 21082
+options.packs.protection.Protection (wowsims.com).lists.action	values.seal_of_wisdom	|T136000:0|t Spell 20166
 options.packs.protection.Protection (wowsims.com).lists.action	values.shield_bash	|T136000:0|t Spell 72
 options.packs.protection.Protection (wowsims.com).lists.action	values.shield_block	|T136000:0|t Spell 2565
 options.packs.protection.Protection (wowsims.com).lists.action	values.shield_slam	|T136000:0|t Spell 23922
@@ -20044,6 +20176,7 @@ options.packs.protection.Protection (wowsims.com).lists.action	values.sunder_arm
 options.packs.protection.Protection (wowsims.com).lists.action	values.sweeping_strikes	|T136000:0|t Spell 12292
 options.packs.protection.Protection (wowsims.com).lists.action	values.swift_judgement	|T136000:0|t Spell 1310994
 options.packs.protection.Protection (wowsims.com).lists.action	values.taunt	|T136000:0|t Spell 355
+options.packs.protection.Protection (wowsims.com).lists.action	values.templars_bulwark	|T136000:0|t Spell 1311015
 options.packs.protection.Protection (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
 options.packs.protection.Protection (wowsims.com).lists.action	values.thunder_clap	|T136000:0|t Spell 6343
 options.packs.protection.Protection (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
@@ -20057,23 +20190,24 @@ options.packs.protection.Protection (wowsims.com).lists.actionID	desc	Select the
 options.packs.protection.Protection (wowsims.com).lists.actionID	name	Entry
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 12975 - |cFFFFD100|cffffd100(!(buff.last_stand.up||(action.shield_wall.known&buff.shield_wall.up))&health.pct<=40)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 20594
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20271
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1311015
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 871 - |cFFFFD100|cffffd100(health.pct<=35&!((action.last_stand.known&buff.last_stand.up)||buff.shield_wall.up))|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 1310994 - |cFFFFD100|cffffd100(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20271
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20594 - |cFFFFD100|cffffd100((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=50)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1299026 - |cFFFFD100|cffffd100((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=50)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1311649 - |cFFFFD100|cffffd100(buff.seal_of_fury.remains<mainhand_remains&!buff.seal_of_fury.up)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 26573
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1310994 - |cFFFFD100|cffffd100(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1311649 - |cFFFFD100|cffffd100(buff.seal_of_fury.remains<mainhand_remains&!buff.seal_of_fury.up)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.pct<=30|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1311606 - |cFFFFD100|cffffd100(!talent.consecrated_ground.enabled||debuff.consecrated_ground.up)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1329555
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 26573
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 12328
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 20925
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 679
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1311606 - |cFFFFD100|cffffd100(!talent.consecrated_ground.enabled||debuff.consecrated_ground.up)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 20925
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcd_racials|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2565 - |cFFFFD100|cffffd100(rage.lo>=40||(!buff.revenge_usable.up&(!action.revenge.known||cooldown.revenge.remains<=1.5)))|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 879
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 679
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 12292 - |cFFFFD100|cffffd100active_enemies>1|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 879
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>2|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 6572
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 23922
@@ -20146,8 +20280,11 @@ options.packs.protection.Protection (wowsims.com).lists.action_name	values.right
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.seal_of_fury	|T136000:0|t Spell 1311649
+options.packs.protection.Protection (wowsims.com).lists.action_name	values.seal_of_justice	|T136000:0|t Spell 20164
+options.packs.protection.Protection (wowsims.com).lists.action_name	values.seal_of_light	|T136000:0|t Spell 20165
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.seal_of_righteousness	|T136000:0|t Spell 20154
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.seal_of_the_crusader	|T136000:0|t Spell 21082
+options.packs.protection.Protection (wowsims.com).lists.action_name	values.seal_of_wisdom	|T136000:0|t Spell 20166
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.shield_bash	|T136000:0|t Spell 72
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.shield_block	|T136000:0|t Spell 2565
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.shield_slam	|T136000:0|t Spell 23922
@@ -20158,6 +20295,7 @@ options.packs.protection.Protection (wowsims.com).lists.action_name	values.sunde
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.sweeping_strikes	|T136000:0|t Spell 12292
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.swift_judgement	|T136000:0|t Spell 1310994
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.taunt	|T136000:0|t Spell 355
+options.packs.protection.Protection (wowsims.com).lists.action_name	values.templars_bulwark	|T136000:0|t Spell 1311015
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.thunder_clap	|T136000:0|t Spell 6343
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
@@ -20176,6 +20314,7 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.berserk
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.bloodrage	|T136000:0|t Spell 29131
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.challenging_shout	|T136000:0|t Spell 1161
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.charge_stun	|T136000:0|t Spell 7922
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.concentration_aura	|T136000:0|t Spell 19746
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.concussion_blow	|T136000:0|t Spell 12809
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.consecrated_ground	|T136000:0|t Spell 1280353
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.death_wish	|T136000:0|t Spell 12328
@@ -20185,14 +20324,29 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.disarm	
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.divine_favor	|T136000:0|t Spell 20216
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_command	|T136000:0|t Spell 1311703
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_fury	|T136000:0|t Spell 1311701
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_justice	|T136000:0|t Spell 1311705
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_light	|T136000:0|t Spell 1328198
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_righteousness	|T136000:0|t Spell 1311704
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_wisdom	|T136000:0|t Spell 1328206
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.forbearance	|T136000:0|t Spell 25771
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.holy_alacrity	|T136000:0|t Spell 449982
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.improved_hamstring	|T136000:0|t Spell 23694
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.infusion_of_light	|T136000:0|t Spell 437063
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.inspiration	|T136000:0|t Spell 14893
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.iron_creed	|T136000:0|t Spell 1311033
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.judgement_of_fury	|T136000:0|t Spell 20232
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.judgement_of_justice	|T136000:0|t Spell 20184
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.justice_armor_5pc	|T136000:0|t Spell 1301694
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.justice_battlegear_5pc	|T136000:0|t Spell 1301702
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.justice_battleplate_5pc	|T136000:0|t Spell 1301697
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.oath_of_light	|T136000:0|t Spell 1328548
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.overpower_ready	|T136000:0|t Spell 1282733
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.piercing_howl	|T136000:0|t Spell 12323
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.reckless_swings	|T136000:0|t Spell 1329555
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.recklessness	|T136000:0|t Spell 1719
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.reckoning	|T136000:0|t Spell 1326084
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.redoubt	|T136000:0|t Spell 20128
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.rend	|T136000:0|t Spell 772
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.retaliation	|T136000:0|t Spell 20230
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.retribution_aura	|T136000:0|t Spell 7294
@@ -20200,16 +20354,24 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.revenge
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.righteous_fury	|T136000:0|t Spell 25780
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_fury	|T136000:0|t Spell 1311649
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_justice	|T136000:0|t Spell 20164
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_light	|T136000:0|t Spell 20165
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_righteousness	|T136000:0|t Spell 20154
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_the_crusader	|T136000:0|t Spell 21082
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_wisdom	|T136000:0|t Spell 20166
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.shield_bash_silenced	|T136000:0|t Spell 18498
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.shield_block	|T136000:0|t Spell 2565
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.shield_wall	|T136000:0|t Spell 871
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.shieldsworn_block	|T136000:0|t Spell 1328551
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.sunder_armor	|T136000:0|t Spell 7386
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.sweeping_strikes	|T136000:0|t Spell 12292
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.taunt	|T136000:0|t Spell 355
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.templars_bulwark	|T136000:0|t Spell 1311015
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.tenets_of_the_silver_hand	|T136000:0|t Spell 1302545
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.thunder_clap	|T136000:0|t Spell 6343
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.vengeance	|T136000:0|t Spell 20050
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.victorious	|T136000:0|t Spell 402975
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.vindication	|T136000:0|t Spell 440667
 options.packs.protection.Protection (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.protection.Protection (wowsims.com).lists.caption	name	Caption
 options.packs.protection.Protection (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
@@ -20256,7 +20418,7 @@ options.packs.protection.Protection (wowsims.com).lists.modMoving.moving	values.
 options.packs.protection.Protection (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.protection.Protection (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 20271)
+options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 1311015)
 options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 871)
 options.packs.protection.Protection (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.protection.Protection (wowsims.com).lists.modPooling.wait	name	Pooling Time
@@ -20436,9 +20598,13 @@ options.packs.retribution.Retribution (wowsims.com).lists.action	values.righteou
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.seal_of_fury	|T136000:0|t Spell 1311649
+options.packs.retribution.Retribution (wowsims.com).lists.action	values.seal_of_justice	|T136000:0|t Spell 20164
+options.packs.retribution.Retribution (wowsims.com).lists.action	values.seal_of_light	|T136000:0|t Spell 20165
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.seal_of_righteousness	|T136000:0|t Spell 20154
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.seal_of_the_crusader	|T136000:0|t Spell 21082
+options.packs.retribution.Retribution (wowsims.com).lists.action	values.seal_of_wisdom	|T136000:0|t Spell 20166
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.swift_judgement	|T136000:0|t Spell 1310994
+options.packs.retribution.Retribution (wowsims.com).lists.action	values.templars_bulwark	|T136000:0|t Spell 1311015
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
@@ -20486,9 +20652,13 @@ options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.rig
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.seal_of_fury	|T136000:0|t Spell 1311649
+options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.seal_of_justice	|T136000:0|t Spell 20164
+options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.seal_of_light	|T136000:0|t Spell 20165
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.seal_of_righteousness	|T136000:0|t Spell 20154
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.seal_of_the_crusader	|T136000:0|t Spell 21082
+options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.seal_of_wisdom	|T136000:0|t Spell 20166
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.swift_judgement	|T136000:0|t Spell 1310994
+options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.templars_bulwark	|T136000:0|t Spell 1311015
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
@@ -20497,17 +20667,41 @@ options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.var
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.wait	|T136243:0|t |cff00ccff[Wait]|r
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.concentration_aura	|T136000:0|t Spell 19746
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.consecrated_ground	|T136000:0|t Spell 1280353
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.divine_favor	|T136000:0|t Spell 20216
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.echo_of_command	|T136000:0|t Spell 1311703
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.echo_of_fury	|T136000:0|t Spell 1311701
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.echo_of_justice	|T136000:0|t Spell 1311705
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.echo_of_light	|T136000:0|t Spell 1328198
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.echo_of_righteousness	|T136000:0|t Spell 1311704
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.echo_of_wisdom	|T136000:0|t Spell 1328206
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.forbearance	|T136000:0|t Spell 25771
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.holy_alacrity	|T136000:0|t Spell 449982
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.infusion_of_light	|T136000:0|t Spell 437063
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.iron_creed	|T136000:0|t Spell 1311033
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.judgement_of_fury	|T136000:0|t Spell 20232
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.judgement_of_justice	|T136000:0|t Spell 20184
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.justice_armor_5pc	|T136000:0|t Spell 1301694
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.justice_battlegear_5pc	|T136000:0|t Spell 1301702
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.justice_battleplate_5pc	|T136000:0|t Spell 1301697
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.oath_of_light	|T136000:0|t Spell 1328548
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.reckoning	|T136000:0|t Spell 1326084
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.redoubt	|T136000:0|t Spell 20128
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.retribution_aura	|T136000:0|t Spell 7294
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.righteous_fury	|T136000:0|t Spell 25780
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_fury	|T136000:0|t Spell 1311649
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_justice	|T136000:0|t Spell 20164
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_light	|T136000:0|t Spell 20165
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_righteousness	|T136000:0|t Spell 20154
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_the_crusader	|T136000:0|t Spell 21082
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.seal_of_wisdom	|T136000:0|t Spell 20166
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.shieldsworn_block	|T136000:0|t Spell 1328551
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.templars_bulwark	|T136000:0|t Spell 1311015
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.tenets_of_the_silver_hand	|T136000:0|t Spell 1302545
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.vengeance	|T136000:0|t Spell 20050
+options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.vindication	|T136000:0|t Spell 440667
 options.packs.retribution.Retribution (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.retribution.Retribution (wowsims.com).lists.caption	name	Caption
 options.packs.retribution.Retribution (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
