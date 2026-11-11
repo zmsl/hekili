@@ -283,4 +283,48 @@ describe("token-keyed target memory (lane T2m)", function()
         tab(2, 11)
         assert.are.same({ true, false, false }, { I.th.slot > 0, I.th.fresh, I.th.attackable })
     end)
+
+    -- Task 7: the Cooldown Manager on a loaded record (cdm-verdict rules unchanged); each script runs in both worlds.
+    -- lit: the item on the tab back; past: polls on to 27 (expiry by time at 25 with the item still lit).
+    local function cdmScript(w, lit, past)
+        start(w, 3, true)
+        tab(1, 10)
+        castX(10, 15) -- mob A: 25
+        ctl.ViewerAura(ti, "target")
+        for t = 10.5, 12.5, 0.5 do
+            fold(t)
+        end
+        ctl.now = 13
+        ctl.ViewerClear(ti) -- mob B does not carry it
+        tab(2, 13)
+        for t = 13.1, 16.5, 0.4 do
+            fold(t)
+        end
+        local out = { est(16.5) or "down" }
+        if lit then
+            ctl.ViewerAura(ti, "target")
+        end
+        tab(1, 17)
+        local gen = VS.AuraGen("target")
+        for t = 17.1, 18.1, 0.2 do
+            fold(t)
+        end
+        out[#out + 1] = est(18.1) or "down"
+        out[#out + 1] = VS.AuraGen("target") - gen
+        if past then
+            for t = 18.5, 27, 0.5 do
+                fold(t)
+                out[#out + 1] = est(t) or "down"
+            end
+        end
+        return out
+    end
+
+    it("the CDM on a loaded record: lit keeps the remembered expiry, dark closes ours, as with GUIDs (task 7)", function()
+        local tok, gid = cdmScript("token", true, true), cdmScript("guid", true, true)
+        assert.are.same({ "down", 25, 0 }, { tok[1], tok[2], tok[3] }) -- 25, not the 32.1 seed
+        assert.are.same(gid, tok)
+        tok, gid = cdmScript("token", false), cdmScript("guid", false)
+        assert.are.same(gid, tok)
+    end)
 end)
