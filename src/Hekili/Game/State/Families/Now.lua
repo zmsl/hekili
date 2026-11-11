@@ -6,7 +6,8 @@
 -- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `removeStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
 -- `summonPet`, `dismissPet`, `openWindow`, `closeWindow`) and reads (`talent`, `buff`, `debuff`, the resources by key,
 -- `knownRank`, `stat`, `swingBase`, `mainhand_speed`, `offhand_speed`, `weapon`, `equipped`, `set_bonus`, `healthMax`,
--- `now`, `combat`, `level`, `lastSwing`, `nextSwing`, `usable`, `window`) with belief meanings. A window's evaluator
+-- `now`, `combat`, `level`, `lastSwing`, `nextSwing`, `usable`, `window`, and the `now`-only `instant`, `cast_start`,
+-- `target.health`: aura audit C8) with belief meanings. A window's evaluator
 -- (Families/Windows.lua) runs in the same context, reads only. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An `applyBuff`/`applyDebuff` with no duration writes the aura's registered one: its number, or its function evaluated
 -- in this context (gear-aware spec §5), so a pack writes a duration once.
@@ -47,6 +48,12 @@ local NAMES = {
     weapon = { size = 0 }, -- the gear (Sources/Player.lua): the main hand's size, 2 a two-hander, as the sim's `weapon`
     equipped = { shield = false }, -- and its `equipped.shield`
     set_bonus = I.setBonus, -- the declared gear's values (Families/Gear.lua), the core's state.set_bonus semantics
+    -- the cast's start (aura audit C8; `now`-only names, the sim's `state` has neither): `cast_start` its start time, 0
+    -- for an instant (no start seen), and `instant`, true only inside an instant cast's `now` (false elsewhere)
+    -- shortcut: a hard cast whose UnitCastingInfo times were secret stages no start, so it reads instant; upgrade with
+    -- a start flag staged at UNIT_SPELLCAST_START itself if a pack's instant-only spend shows it live
+    cast_start = 0,
+    instant = false,
 }
 I.weapon, I.equipped = NAMES.weapon, NAMES.equipped
 -- equipped.<key>: the core's mt_equipped (Engine/Sim/State.lua:4848), set_bonus.<key> > 0; the raw `shield` stays
@@ -196,6 +203,26 @@ NAMES.action = setmetatable({}, {
     end,
 })
 local NO_SETTINGS = {}
+
+-- target.health (aura audit C8; `now`-only): the belief's target health interval (Families/TargetHealth.lua) as
+-- percent bounds `lo` and `hi` (0 and 100 while unknown), and `known`, true once something bounded it (a gate's
+-- answer, a pin, learned damage, a death). No `pct`: secret health is unknown, never read as 100 or 0, so a `now`
+-- tests a bound (`target.health.hi < 35`: proven below 35%) and a bare `pct` read raises (a counted error).
+NAMES.target = {
+    health = setmetatable({}, {
+        __index = function(_, f)
+            local h = VS.Health("target", T)
+            if f == "known" then
+                return h.lo > 0 or h.hi < 1
+            elseif f == "lo" then
+                return h.lo * 100
+            elseif f == "hi" then
+                return h.hi * 100
+            end
+            return nil
+        end,
+    }),
+}
 
 local resourceMeta = {
     __index = function(r, f)
@@ -723,12 +750,17 @@ local function run(o, t)
     end
 
     undoA, undoT, undoSlot, paid, undoN = a, o.t, I.curSlot, 0, 0
+    local started = o.kind == CAST and A.castStartT[a] or 0 -- read before `automatic` and the line after clear it
     automatic(a, t, o.kind, o)
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
     I.castsRun = I.castsRun + 1
     I.WindowCast(a, t) -- the stepped and strict windows' one per-cast hook (Families/Windows.lua), before the `now`
     if A.now[a] then
+        rawset(NAMES, "cast_start", started)
+        rawset(NAMES, "instant", started == 0)
         call(A.now[a], a, t)
+        rawset(NAMES, "cast_start", 0)
+        rawset(NAMES, "instant", false)
     end
 end
 -- CastSuccess only: a channel stages ChannelStart and CastSuccess both (Sources/Casts.lua), and must run once.

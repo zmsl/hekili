@@ -100,7 +100,7 @@ local nowEnv = {
     "summonTotem", "summonPet", "dismissPet", "reduceCooldown", "level",
     "talent",
     "buff", "debuff", "knownRank", "stat", "swingBase", "healthMax", "now", "combat", "rage", "energy", "mana", "focus",
-    "runic_power", "totem", "action", "settings", "haste",
+    "runic_power", "totem", "action", "settings", "haste", "instant", "cast_start", "target",
     "set_bonus", "equipped",
     "openWindow", "closeWindow", "lastSwing", "nextSwing", "usable", -- the windows (Families/Windows.lua)
 }
