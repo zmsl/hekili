@@ -618,6 +618,8 @@ describe("the wowsims APL translator", function()
                     },
                 }),
                 cast(100, cmp("OpGt", { auraRemainingTime = { auraId = { spellId = 910, tag = -1 } } }, const("2s"))),
+                -- an unresolved ID folds false inside an emitted line: its header note shows the silent fold
+                cast(100, { ["or"] = { vals = { known(999), known(200, "Self") } } }),
             },
         }, ctx({ map = { [951] = "cuts" } }))
         assert.are.equal(
@@ -631,10 +633,16 @@ describe("the wowsims APL translator", function()
                 "actions+=/strike",
                 "actions+=/strike,if=action.big_hit.known",
                 "actions+=/strike",
+                "actions+=/strike,if=action.big_hit.known",
             }, "\n"),
             text
         )
-        assert.are.same({ "default #6: never", "default #8: never", "default #9: never" }, omitted)
+        assert.are.same({
+            "default #6: never",
+            "default #8: never",
+            "default #9: never",
+            "default #13: auraIsKnown of the unresolved aura 999 folds false",
+        }, omitted)
     end)
 
     it(
