@@ -180,6 +180,41 @@ describe("Forever Hunter", function()
         })
     end)
 
+    it("shortens Rapid Fire's cooldown by Rapid Killing's curve {-60, -120} s (talents_marksmanship.go:100)", function()
+        local e = ld.env(w)
+        local cd = {}
+        for n = 0, 2 do
+            e.talent = setmetatable({}, {
+                __index = function()
+                    return { rank = n, enabled = n > 0 }
+                end,
+            })
+            cd[n + 1] = ld.run(w.abilities.rapid_fire.cooldown, e)
+        end
+        assert.are.same({ 300, 240, 180 }, cd)
+    end)
+
+    it("registers the pin's bookkeeping auras (id, duration, stacks) and Immolation Trap's burn", function()
+        local A = w.auras
+        -- id, duration, max_stack: wowsims sim/hunter (spells_auto_gen.go rows 415407, 1310786, 1310726, 1317257,
+        -- 1310536, 14301)
+        for key, want in pairs({
+            rapid_killing = { 415407, 20, 1 },
+            sniper_shot = { 1310786, 10, 3 },
+            expose_prey = { 1310726, 10, 1 },
+            strider_kick = { 1317257, 3, 1 },
+            lacerating_strikes = { 1310536, 21, 1 },
+            immolation_trap = { 14301, 15, 1 },
+        }) do
+            assert.are.same(want, { A[key].id, A[key].duration, A[key].max_stack }, key)
+        end
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = ld.env(w)
+            ld.run(w.abilities.immolation_trap[field], e)
+            assert.are.same({ "immolation_trap" }, e.applied, field)
+        end
+    end)
+
     it("hastes Aimed Shot, Multi-Shot and Sniper Shot's casts by Rapid Fire and Quick Shots", function()
         local e = ld.env(w)
         local function casts()

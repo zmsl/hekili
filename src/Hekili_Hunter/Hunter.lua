@@ -8,11 +8,14 @@
 -- the time to the next main-hand swing (`mainhand_remains`, the weave's Multi-Shot gap), and the default priorities
 -- (the wowsims.com packs, translated from wowsims/forever's Melee Weave; no in-game check yet).
 -- Research: docs/research/2026-10-15-forever-hunter/research.md and the class-completion research §5.
--- Unmodelled: ranged haste on the auto-shot clock (Rapid Fire, Quick Shots; their haste on Aimed, Multi and Sniper
--- Shot's casts is modelled), the pet and its abilities (D6), Aspect of the Viper and the other runes no priority names,
+-- Unmodelled: ranged haste on the auto-shot clock and Rapid Fire's +40% melee haste on the main-hand swing (Rapid Fire,
+-- Quick Shots; their haste on Aimed, Multi and Sniper Shot's casts is modelled; both wait for the core's haste-rescales-
+-- the-swing item), Quick Shots itself (nothing applies it: its Deadly Aspects roll is unobservable, and whether the
+-- player aura or the Cooldown Manager shows it in combat is unprobed), the pet and its abilities (D6), Aspect of the Viper and the other runes no priority names,
 -- Improved Aimed Shot's +2 s cast, Sniper Shot's range buff, Expose Prey's own Mongoose Bite window (the usability read
--- covers it), Resourcefulness's second effect (1242688: 30 s of 50% mana regen while casting after a critical strike;
--- the mana belief's `mult` hook scales a whole rate, not the spirit part inside the five-second rule).
+-- covers it), Resourcefulness's second effect (1242688: the 30 s aura follows a crit, which only the client's aura read
+-- shows, out of combat or through the Cooldown Manager; its `share` entry is in the mana model) and Rapid Killing's buff
+-- (a kill proc nothing here reads).
 -- Credits: Hekili (registration API and pack format; the on-next-swing queue read follows the Warrior's Heroic Strike).
 -- wowsims/forever (MIT, ui/specs/hunter/dps/apls/default.apl.json, the Melee Weave, and sim/hunter/) is the source of
 -- the priorities (tools/wowsims/specs/hunter_*.lua) and the reference for the Summon Hawk, Sniper Shot, Raptor Strike
@@ -254,6 +257,16 @@ spec:RegisterAuras({
     -- entry). Rapid Recuperation (talent 1223987): the same share on a Serpent Sting hit or spending Rapid Killing.
     resourcefulness = { id = 1242688, duration = 30, max_stack = 1 },
     rapid_recuperation = { id = 1242512, duration = 15, max_stack = 1 },
+    -- Rapid Killing's buff (415407, a kill proc: +20% on the next Shot, 20 s, one charge), Sniper Shot's (1310786: 10 s,
+    -- three charges, +10 yd range on the Shots), Expose Prey's Mongoose Bite window (1310726: 10 s, one charge), Strider
+    -- Kick's speed (1317257, 3 s), Lacerating Strikes' bleed and Immolation Trap's burn (target debuffs, from our casts):
+    -- registered as the pin states them (wowsims sim/hunter); no list reads them, so only the burn has a handler.
+    rapid_killing = { id = 415407, duration = 20, max_stack = 1 },
+    sniper_shot = { id = 1310786, duration = 10, max_stack = 3 },
+    expose_prey = { id = 1310726, duration = 10, max_stack = 1 },
+    strider_kick = { id = 1317257, duration = 3, max_stack = 1 },
+    lacerating_strikes = { id = 1310536, duration = 21, tick_time = 3, dot = "debuff", max_stack = 1 },
+    immolation_trap = { id = 14301, duration = 15, dot = "debuff", max_stack = 1 },
     -- Mongoose Bite's window after we dodge (Defensive State, 5 s), timed from the plain usability flip (reset_precast).
     defensive_state = { id = 5302, duration = 5, max_stack = 1 },
     -- Raptor Strike queued on the next main-hand swing (C_Spell.IsCurrentSpell, applied in reset_precast).
@@ -464,7 +477,9 @@ spec:RegisterAbilities({
     rapid_fire = {
         id = 3045,
         cast = 0,
-        cooldown = 300,
+        cooldown = function() -- Rapid Killing's curve {-60, -120} s by rank (talents_marksmanship.go:100)
+            return 300 - 60 * talent.rapid_killing.rank
+        end,
         gcd = "off",
 
         spend = 100,
@@ -703,6 +718,9 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(IMMOLATION_TRAP),
+
+        now = applies("immolation_trap", true),
+        handler = applies("immolation_trap", true),
     },
 })
 
