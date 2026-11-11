@@ -124,6 +124,8 @@ function M.wrapRangeLib(lib, ctl)
             return nil
         elseif ctl.distance[unit] == SECRET then
             return SECRET, SECRET
+        elseif ctl.distance[unit] == nil and ctl.inRange[unit] ~= true then
+            return nil -- a world with no position and nothing in reach: unknown, not "every check failed: past 100 yd"
         end
         self:init()
         return real(self, unit, ...)

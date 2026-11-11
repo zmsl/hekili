@@ -61,6 +61,7 @@ describe("LibRangeCheck-3.0 in the headless client", function()
         local C = hw.BeastMastery
         local H = boot(C.character(), C.PACK)
         local lib = H.env.LibStub("LibRangeCheck-3.0")
+        at(H, 6) -- a read builds the checker lists (the library's init)
         local function inner(list)
             for _, rc in ipairs(list) do
                 if rc.range == 8 and rc.minRange == nil and rc.info:find("^spell:75:") then
