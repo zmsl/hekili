@@ -17,9 +17,9 @@
 -- Where the DB2 and wowsims's newer data (build 70450) disagree and wowsims's log casts its own (the Mage lane's ruling
 -- M9 precedent; wowsims packs Task 14; in-game checks): Devouring Plague's cooldown 24 s (DB2 60 s), Shadow Word:
 -- Death's 18 s (DB2 15 s).
--- Unmodelled: the procs' rolls (Holy Purpose from Searing Light, Spirit Tap on a kill, Shadow Weaving: unseen; Dark
--- Inspiration is modelled, in the mana regen and the world; the player aura walk reads the player's where plain), the
--- DoTs' resists, Shadow Word: Death's backlash, Inner Focus's crit, pushback, the healing spells Shadowform forbids (no
+-- Unmodelled: the procs' rolls (Holy Purpose from Searing Light, Spirit Tap on a kill, Shadow Weaving: unseen; the
+-- player aura walk reads the player's where plain). Dark Inspiration is applied by a Mind Blast (in the mana regen
+-- and the world; a Mind Flay's full channel is not: a channel's handler never runs). Also unmodelled: the DoTs' resists, Shadow Word: Death's backlash, Inner Focus's crit, pushback, the healing spells Shadowform forbids (no
 -- priority casts one).
 -- Credits: Hekili (registration API and pack format). wowsims/forever (MIT, https://github.com/wowsims/forever:
 -- ui/specs/priest/dps/builds/*.build.json and sim/priest/) is the reference for the abilities and the talent, proc,
@@ -345,6 +345,19 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(MIND_BLAST),
         usable = unlocked("shadow"),
+
+        -- Dark Inspiration on every Mind Blast (wowsims talents_shadow.go; a miss is rare, the aura read corrects it);
+        -- two closures, each with its own environment (the belief's `now` and the sim's `handler`).
+        now = function()
+            if talent.dark_inspiration.rank > 0 then
+                applyBuff("dark_inspiration")
+            end
+        end,
+        handler = function()
+            if talent.dark_inspiration.rank > 0 then
+                applyBuff("dark_inspiration")
+            end
+        end,
     },
 
     -- A channel of 3 s, a tick a second (DB2 period 1000; a channel's `handler` never runs in Hekili's simulation:
