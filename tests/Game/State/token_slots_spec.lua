@@ -139,4 +139,34 @@ describe("token-keyed target memory (lane T2m)", function()
         tab(1, 16) -- UnitIsUnit still names nameplate1, but no plate 1 is up: no plate answers
         assert.are.equal(0, I.curSlot)
     end)
+
+    it("a plate lost while targeted keeps the live record; its memory goes at the tab away (task 5)", function()
+        for _, dies in ipairs({ false, true }) do
+            start("token")
+            local gone = {}
+            I.On(Obs.TargetGone, function(o)
+                gone[#gone + 1] = o.a
+            end)
+            tab(1, 10)
+            castX(10.1, 15)
+            local slot = I.curSlot
+            assert.is_true(slot > 0)
+            ctl.dead.target = dies or nil
+            plate("NAME_PLATE_UNIT_REMOVED", 1, 11)
+            fold(11.1)
+            near(25.1, est(11.1), "the live record stands")
+            if not dies then
+                assert.is_true(VS.Health("target", 11.1).est > 0)
+            end
+            assert.are.same({}, gone) -- no TargetGone for the current slot: it would read as a death
+            plate("NAME_PLATE_UNIT_ADDED", 1, 12)
+            fold(12.1)
+            near(25.1, est(12.1), "still up")
+            ctl.dead.target = nil
+            tab(2, 13)
+            assert.are.same({ slot }, gone) -- forgotten at the tab away
+            tab(1, 14)
+            assert.is_nil(est(14.1), "the orphan was forgotten")
+        end
+    end)
 end)

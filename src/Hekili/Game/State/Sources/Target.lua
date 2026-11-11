@@ -102,6 +102,7 @@ local function swap(api, t)
             noPlateN = noPlateN + 1
         end
     end
+    local old = I.targetSlot
     local s, fresh = 0, false
     if key ~= "" and key ~= 0 then
         s, fresh = slotFor(key, t)
@@ -110,6 +111,10 @@ local function swap(api, t)
     dead, lastLo, lastHi = false, -1, -1
     -- (review F11) a plate slot is never "fresh": a plate index newly keyed says nothing of the mob's health
     Direct(Obs.TargetSwap, t, s, fresh and not tokenMode and 1 or 0, attackable and 1 or 0)
+    if old > 0 and guid[old] == false then -- the orphan: its record was saved by this swap's fold, then forgotten
+        Direct(Obs.TargetGone, t, old)
+        guid[old] = ""
+    end
     I.targetSlot = s -- the slot this swap names; I.curSlot follows at its fold
     I.targetSwapN = I.targetSwapN + 1 -- I.curSwapN copies it at the fold (Sources/Auras.lua waits for it)
     if s > 0 and I.auras.n >= 2 then
