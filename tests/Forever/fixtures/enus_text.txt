@@ -4555,6 +4555,39 @@ options.abilities.natures_grasp.toggle	values.interrupts	Interrupts
 options.abilities.natures_grasp.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.natures_grasp.toggle	values.none	None
 options.abilities.natures_grasp.toggle	values.potions	Potions
+options.abilities.natures_swiftness	name	Spell 17116
+options.abilities.natures_swiftness.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 17116 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 17116 can be recommended in any type of fight.
+options.abilities.natures_swiftness.boss	name	Boss Encounter Only
+options.abilities.natures_swiftness.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 17116 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.natures_swiftness.clash	name	Clash
+options.abilities.natures_swiftness.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 17116.
+options.abilities.natures_swiftness.disabled	name	Disable |T136000:0|t Spell 17116
+options.abilities.natures_swiftness.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.natures_swiftness.dotCap	name	Maximum Applications
+options.abilities.natures_swiftness.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.natures_swiftness.hasIcon	name	Icon Replacement
+options.abilities.natures_swiftness.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.natures_swiftness.keybind	name	Override Keybind Text
+options.abilities.natures_swiftness.lineBreak1	name	\032
+options.abilities.natures_swiftness.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.natures_swiftness.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.natures_swiftness.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.natures_swiftness.noIcon	name	Icon Replacement
+options.abilities.natures_swiftness.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 17116 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.natures_swiftness.targetMax	name	Maximum Targets
+options.abilities.natures_swiftness.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 17116 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.natures_swiftness.targetMin	name	Minimum Targets
+options.abilities.natures_swiftness.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.natures_swiftness.toggle	name	Require Toggle
+options.abilities.natures_swiftness.toggle	values.cooldowns	Cooldowns
+options.abilities.natures_swiftness.toggle	values.custom1	Custom 1
+options.abilities.natures_swiftness.toggle	values.custom2	Custom 2
+options.abilities.natures_swiftness.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.natures_swiftness.toggle	values.defensives	Defensives
+options.abilities.natures_swiftness.toggle	values.interrupts	Interrupts
+options.abilities.natures_swiftness.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.natures_swiftness.toggle	values.none	None
+options.abilities.natures_swiftness.toggle	values.potions	Potions
 options.abilities.overpower	name	Spell 7384
 options.abilities.overpower.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 7384 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 7384 can be recommended in any type of fight.
 options.abilities.overpower.boss	name	Boss Encounter Only
@@ -14689,6 +14722,7 @@ options.packs.arms.Arms (wowsims.com).lists.buff_name	values.death_wish	|T136000
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.defensive_stance	|T136000:0|t Spell 71
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.demoralizing_shout	|T136000:0|t Spell 1160
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.disarm	|T136000:0|t Spell 676
+options.packs.arms.Arms (wowsims.com).lists.buff_name	values.gore_drinker	|T136000:0|t Spell 1323969
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.improved_hamstring	|T136000:0|t Spell 23694
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.inspiration	|T136000:0|t Spell 14893
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
@@ -15251,6 +15285,7 @@ options.packs.balance.Balance (wowsims.com).lists.action	values.maul	|T136000:0|
 options.packs.balance.Balance (wowsims.com).lists.action	values.moonfire	|T136000:0|t Spell 8921
 options.packs.balance.Balance (wowsims.com).lists.action	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.balance.Balance (wowsims.com).lists.action	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.balance.Balance (wowsims.com).lists.action	values.natures_swiftness	|T136000:0|t Spell 17116
 options.packs.balance.Balance (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.balance.Balance (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.balance.Balance (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
@@ -15284,7 +15319,7 @@ options.packs.balance.Balance (wowsims.com).lists.actionID	values.0003	|cFFFFD10
 options.packs.balance.Balance (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 8921 - |cFFFFD100|cffffd100!debuff.moonfire.up|r|r
 options.packs.balance.Balance (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 5570 - |cFFFFD100|cffffd100!debuff.insect_swarm.up|r|r
 options.packs.balance.Balance (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 16914 - |cFFFFD100|cffffd100active_enemies>=4|r|r
-options.packs.balance.Balance (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 2912 - |cFFFFD100|cffffd100(buff.eclipse.up&(buff.eclipse.stack>1||!action.starfire.executing))|r|r
+options.packs.balance.Balance (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 2912 - |cFFFFD100|cffffd100((!talent.eclipse.enabled||buff.eclipse.up)&((talent.eclipse.enabled&buff.eclipse.stack>1)||!action.starfire.executing))|r|r
 options.packs.balance.Balance (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 5176
 options.packs.balance.Balance (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.balance.Balance (wowsims.com).lists.action_name	name	Action Name
@@ -15326,6 +15361,7 @@ options.packs.balance.Balance (wowsims.com).lists.action_name	values.maul	|T1360
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.balance.Balance (wowsims.com).lists.action_name	values.natures_swiftness	|T136000:0|t Spell 17116
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
@@ -15375,6 +15411,7 @@ options.packs.balance.Balance (wowsims.com).lists.buff_name	values.lacerate	|T13
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
+options.packs.balance.Balance (wowsims.com).lists.buff_name	values.natures_swiftness	|T136000:0|t Spell 17116
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328827
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.pounce_bleed	|T136000:0|t Spell 9007
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
@@ -18073,6 +18110,7 @@ options.packs.feral.Feral (wowsims.com).lists.action	values.maul	|T136000:0|t Sp
 options.packs.feral.Feral (wowsims.com).lists.action	values.moonfire	|T136000:0|t Spell 8921
 options.packs.feral.Feral (wowsims.com).lists.action	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.feral.Feral (wowsims.com).lists.action	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.feral.Feral (wowsims.com).lists.action	values.natures_swiftness	|T136000:0|t Spell 17116
 options.packs.feral.Feral (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.feral.Feral (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.feral.Feral (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
@@ -18155,6 +18193,7 @@ options.packs.feral.Feral (wowsims.com).lists.action_name	values.maul	|T136000:0
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.feral.Feral (wowsims.com).lists.action_name	values.natures_swiftness	|T136000:0|t Spell 17116
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
@@ -18204,6 +18243,7 @@ options.packs.feral.Feral (wowsims.com).lists.buff_name	values.lacerate	|T136000
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
+options.packs.feral.Feral (wowsims.com).lists.buff_name	values.natures_swiftness	|T136000:0|t Spell 17116
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328827
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.pounce_bleed	|T136000:0|t Spell 9007
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
@@ -19064,6 +19104,7 @@ options.packs.fury.Fury (wowsims.com).lists.buff_name	values.death_wish	|T136000
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.defensive_stance	|T136000:0|t Spell 71
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.demoralizing_shout	|T136000:0|t Spell 1160
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.disarm	|T136000:0|t Spell 676
+options.packs.fury.Fury (wowsims.com).lists.buff_name	values.gore_drinker	|T136000:0|t Spell 1323969
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.improved_hamstring	|T136000:0|t Spell 23694
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.inspiration	|T136000:0|t Spell 14893
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
@@ -19314,6 +19355,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action	values.maul	|T136000:
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.moonfire	|T136000:0|t Spell 8921
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.guardian.Guardian (wowsims.com).lists.action	values.natures_swiftness	|T136000:0|t Spell 17116
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
@@ -19396,6 +19438,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.maul	|T13
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.natures_grasp	|T136000:0|t Spell 16689
+options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.natures_swiftness	|T136000:0|t Spell 17116
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
@@ -19445,6 +19488,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.lacerate	|T
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.moonfire	|T136000:0|t Spell 8921
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.moonkin_form	|T136000:0|t Spell 24858
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.natures_grace	|T136000:0|t Spell 16886
+options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.natures_swiftness	|T136000:0|t Spell 17116
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328827
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.pounce_bleed	|T136000:0|t Spell 9007
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.prowl	|T136000:0|t Spell 5215
@@ -20186,6 +20230,7 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.divine_
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_command	|T136000:0|t Spell 1311703
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_fury	|T136000:0|t Spell 1311701
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_righteousness	|T136000:0|t Spell 1311704
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.gore_drinker	|T136000:0|t Spell 1323969
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.improved_hamstring	|T136000:0|t Spell 23694
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.inspiration	|T136000:0|t Spell 14893
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
