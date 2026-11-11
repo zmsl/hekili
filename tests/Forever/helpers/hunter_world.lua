@@ -283,10 +283,12 @@ local PACKS = {
         fsr = { 15.88, 0, auras = { [RESOURCEFULNESS] = { share = 0.5 } } },
         uptime = { "serpent_sting", "hunters_mark" },
     },
-    -- Melee: a two-hander, no Auto Shots.
+    -- Melee: a two-hander, no Auto Shots fired (no `ranged`); Auto Shot is still known, as on every Hunter (its 8 yd
+    -- minimum gives LibRangeCheck its 8 yd edge).
     Survival = {
         pack = "Survival (wowsims.com)",
         kit = {
+            "auto_shot",
             "aspect_of_the_beast",
             "hunters_mark",
             "raptor_strike",
@@ -309,12 +311,7 @@ local PACKS = {
 -- Survival at the weave's range with a ranged weapon, as BM and MM (R63): its live bars only. At melee the shots sit
 -- inside their 8-35 band and Raptor Strike is off the GCD, so the GCD-idle metric never ends a streak; the loop and
 -- replay worlds stay M.Survival.
-PACKS.SurvivalRanged = setmetatable({ distance = 11, ranged = { 140, 200, 3.0 }, kit = { "auto_shot" } }, {
-    __index = PACKS.Survival,
-})
-for _, key in ipairs(PACKS.Survival.kit) do
-    table.insert(PACKS.SurvivalRanged.kit, key)
-end
+PACKS.SurvivalRanged = setmetatable({ distance = 11, ranged = { 140, 200, 3.0 } }, { __index = PACKS.Survival })
 
 -- The class data a press reads from a booted instance `H` (once per instance): each aura's ID, duration and stacks.
 local cache = setmetatable({}, { __mode = "k" })

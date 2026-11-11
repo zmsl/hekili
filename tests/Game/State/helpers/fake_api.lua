@@ -450,13 +450,13 @@ function M.new()
         end,
         IsSpellInRange = function(id, unit)
             local d = ctl.distance[unit]
-            if d == SECRET then
-                return SECRET
-            elseif d == nil then
-                return ctl.inRange[unit] == true
-            end
             local r = ctl.ranges[id]
             local lo, hi = r and r[1] or 0, r and (r[3] or r[2]) or 5
+            if d == SECRET then
+                return SECRET
+            elseif d == nil then -- no position: in reach when in range, at 0 yd (the world's `distance or 0`): inside a minimum
+                return ctl.inRange[unit] == true and lo <= 0
+            end
             if hi == 0 then
                 return nil -- no range check (the client's nil)
             end

@@ -3978,6 +3978,14 @@ local function createCheckerList(spellList, itemList, interactList)
           if checker then
             addChecker(res, range, minRange, checker, "spell:" .. sid .. ":" .. tostring(name))
             addChecker(resInCombat, range, minRange, checker, "spell:" .. sid .. ":" .. tostring(name))
+            local reach = findMinRangeChecker(minRange, range, spellList, interactList) -- Hekili Forever patch (upstream PR pending): the min-range fallback, as above
+            if reach then -- Hekili Forever patch (upstream PR pending): mark the spell's minimum range too
+              local within = function(unit) -- Hekili Forever patch (upstream PR pending): within minRange = a definite out of range (0, not nil) still in the fallback's reach
+                return IsSpellBookItemInRange(spellIdx, BOOKTYPE_SPELL, unit) == 0 and reach(unit) -- Hekili Forever patch (upstream PR pending): see above
+              end -- Hekili Forever patch (upstream PR pending)
+              addChecker(res, minRange, nil, within, "spell:" .. sid .. ":" .. tostring(name) .. ":min") -- Hekili Forever patch (upstream PR pending): same-range dedup kept
+              addChecker(resInCombat, minRange, nil, within, "spell:" .. sid .. ":" .. tostring(name) .. ":min") -- Hekili Forever patch (upstream PR pending): both lists, as its sibling
+            end -- Hekili Forever patch (upstream PR pending)
           end
         else
           addChecker(res, range, minRange, checkers_Spell[spellIdx], "spell:" .. sid .. ":" .. tostring(name))
