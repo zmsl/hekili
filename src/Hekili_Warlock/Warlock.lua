@@ -379,12 +379,19 @@ end
 -- Pain) at a target under 35% (wowsims talents_demonology.go). The belief's `now` has no target to read (its health is
 -- secret on Forever: the glow read of `decimation` carries it in game).
 local function bolted(sim)
+    if sim then
+        return function()
+            if buff.shadow_trance.up then
+                removeBuff("shadow_trance")
+            end
+            if talent.decimation.rank > 0 and target.health.pct < 35 then
+                applyBuff("decimation")
+            end
+        end
+    end
     return function()
         if buff.shadow_trance.up then
             removeBuff("shadow_trance")
-        end
-        if sim and talent.decimation.rank > 0 and target.health.pct < 35 then
-            applyBuff("decimation")
         end
     end
 end
@@ -402,13 +409,21 @@ end
 -- Searing Pain's: Demonic Brand's charges on the target, 2 a rank.
 -- `sim`: also Decimation at a target under 35%, as Shadow Bolt's (`bolted`).
 local function branded(sim)
+    if sim then
+        return function()
+            local r = talent.demonic_brand.rank
+            if r > 0 then
+                applyDebuff("target", "demonic_brand", nil, 2 * min(r, 3))
+            end
+            if talent.decimation.rank > 0 and target.health.pct < 35 then
+                applyBuff("decimation")
+            end
+        end
+    end
     return function()
         local r = talent.demonic_brand.rank
         if r > 0 then
             applyDebuff("target", "demonic_brand", nil, 2 * min(r, 3))
-        end
-        if sim and talent.decimation.rank > 0 and target.health.pct < 35 then
-            applyBuff("decimation")
         end
     end
 end
