@@ -17534,6 +17534,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.improved_
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.maelstrom_weapon	|T136000:0|t Spell 408505
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.revelation	|T136000:0|t Spell 1323418
+options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.stormstrike	|T136000:0|t Spell 17364
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.water_shield	|T136000:0|t Spell 408510
 options.packs.elemental.Elemental (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.elemental.Elemental (wowsims.com).lists.caption	name	Caption
@@ -17851,6 +17852,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.impro
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.maelstrom_weapon	|T136000:0|t Spell 408505
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.revelation	|T136000:0|t Spell 1323418
+options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.stormstrike	|T136000:0|t Spell 17364
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.water_shield	|T136000:0|t Spell 408510
 options.packs.enhancement.Enhancement (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.enhancement.Enhancement (wowsims.com).lists.caption	name	Caption
