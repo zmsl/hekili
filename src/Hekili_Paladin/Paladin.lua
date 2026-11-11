@@ -10,8 +10,12 @@
 -- Talents: the DB2's 44 Classic nodes and the Forever-only ones this file reads; a modifier is rank 1's value x the
 -- rank, floored at 0, except where the DB2 holds the full-rank value on rank 1 (Benediction, Holy Conduit: each one's
 -- comment).
--- Unmodelled: the judgement debuffs on the target (no priority reads them), Seal of Fury's absorb, the seals' attack
--- speed and per-hit effects.
+-- The seven seals (Justice, Light and Wisdom too), Judgement's debuff on the target (modelled from the cast, not
+-- refreshed by our hits), Templar's Bulwark and Forbearance, and the own procs the Cooldown Manager follows are
+-- registered; the Justice sets' 5-piece bonuses read as set_bonus.
+-- Unmodelled: Seal of Fury's absorb (the same spell id as the seal, tagged: no id of its own), the seals' attack
+-- speed and per-hit effects, Reckoning's and Vengeance's gains (our own hits and crits are unseen), the Echoes'
+-- gains (the belief holds them from the aura read).
 -- Credits: Hekili (registration API and pack format; `mainhand_remains` follows Hekili's Classic Warrior profile,
 -- origin/classic:Classic/Warrior.lua, as Hekili_Warrior/Warrior.lua has it). wowsims/forever (MIT,
 -- ui/specs/paladin/*/apls/*.apl.json and sim/paladin/) is the reference for the priorities and the seal, Echo,
@@ -65,6 +69,14 @@ local SEAL_OF_THE_CRUSADER = { 21082, 20162, 20305, 20306, 20307, 20308 }
 local SEAL_OF_THE_CRUSADER_COST = { 25, 40, 65, 90, 125, 160 }
 local SEAL_OF_FURY = { 1311649, 1311656, 20163, 20419, 20421, 20422, 20423 } -- Forever's; ranks 1-2 Forever-only
 local SEAL_OF_FURY_COST = { 40, 60, 90, 120, 140, 170, 200 }
+-- The other three seals (wowsims's data, the pin's spells_auto_gen: Justice 13% of the base mana, Light and Wisdom flat).
+local SEAL_OF_JUSTICE = { 20164 }
+local SEAL_OF_JUSTICE_COST = { 0.13 }
+local SEAL_OF_LIGHT = { 20165, 20347, 20348, 20349 }
+local SEAL_OF_LIGHT_COST = { 110, 140, 180, 210 }
+local SEAL_OF_WISDOM = { 20166, 20356, 20357 }
+local SEAL_OF_WISDOM_COST = { 135, 170, 200 }
+local BASE_MANA = 1512 -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
 local HAMMER_OF_WRATH = { 24275, 24274, 24239 }
 local HAMMER_OF_WRATH_COST = { 295, 360, 425 }
 local HOLY_STRIKE = { 679, 678, 1866, 680, 2495, 5569, 10332, 10333 }
@@ -120,7 +132,15 @@ end
 
 -- The seals. Unsealed Wrath's Echoes (hotfix 113554; the talent keeps Twist of Light's 1310735) come from our landed
 -- hits, not the seal swap: the belief holds them from the aura read.
-local SEALS = { "seal_of_command", "seal_of_righteousness", "seal_of_the_crusader", "seal_of_fury" }
+local SEALS = {
+    "seal_of_command",
+    "seal_of_righteousness",
+    "seal_of_the_crusader",
+    "seal_of_fury",
+    "seal_of_justice",
+    "seal_of_light",
+    "seal_of_wisdom",
+}
 
 -- A seal cast's effect (the `now` and the `handler`, two closures so each gets its own environment): the other seal up
 -- goes down.
@@ -217,7 +237,7 @@ spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
             return state.spec.retribution and 8.25 or 0
         end,
     },
-    base = 1512, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
+    base = BASE_MANA,
 })
 
 -- Talents: { talent tree (1 Holy, 2 Protection, 3 Retribution: the dominant tree picks the spec), rank 1's spell, max
@@ -281,7 +301,20 @@ spec:RegisterTalents({
     twist_of_light = { 3, 1310735, 1 },
 })
 
+-- The Justice sets (wowsims item_sets.go; the item ids the pin's db.json ships, four pieces each so far): only the
+-- 5-piece bonuses move a recommendation's timing (a hidden aura each, read through set_bonus); the 2- and 4-piece
+-- bonuses are stats, nothing the belief models.
+spec:RegisterGear("justice_battlegear", 273908, 273909, 273910, 273911)
+spec:RegisterGear("justice_armor", 273912, 273913, 273914, 273915)
+spec:RegisterGear("justice_battleplate", 273916, 273917, 273918, 273919)
+spec:RegisterSetBonus("justice_battlegear_5pc", 1301702)
+spec:RegisterSetBonus("justice_armor_5pc", 1301694)
+spec:RegisterSetBonus("justice_battleplate_5pc", 1301697)
+
 spec:RegisterAuras({
+    justice_battlegear_5pc = { id = 1301702, duration = 3600, max_stack = 1 },
+    justice_armor_5pc = { id = 1301694, duration = 3600, max_stack = 1 },
+    justice_battleplate_5pc = { id = 1301697, duration = 3600, max_stack = 1 },
     seal_of_command = { id = 20375, copy = rest(SEAL_OF_COMMAND), duration = 30, max_stack = 1 },
     seal_of_righteousness = { id = 20154, copy = rest(SEAL_OF_RIGHTEOUSNESS), duration = 30, max_stack = 1 },
     seal_of_the_crusader = { id = 21082, copy = rest(SEAL_OF_THE_CRUSADER), duration = 30, max_stack = 1 },
@@ -291,6 +324,12 @@ spec:RegisterAuras({
     echo_of_command = { id = 1311703, duration = 15, max_stack = 3 },
     echo_of_righteousness = { id = 1311704, duration = 15, max_stack = 3 },
     echo_of_fury = { id = 1311701, duration = 15, max_stack = 3 },
+    echo_of_justice = { id = 1311705, duration = 15, max_stack = 3 },
+    echo_of_light = { id = 1328198, duration = 15, max_stack = 3 },
+    echo_of_wisdom = { id = 1328206, duration = 15, max_stack = 3 },
+    seal_of_justice = { id = 20164, duration = 30, max_stack = 1 },
+    seal_of_light = { id = 20165, copy = rest(SEAL_OF_LIGHT), duration = 30, max_stack = 1 },
+    seal_of_wisdom = { id = 20166, copy = rest(SEAL_OF_WISDOM), duration = 30, max_stack = 1 },
     -- Holy Shield: +30% block for 10 s, 4 charges (DB2 ProcCharges), each block or partial block on us spending one.
     holy_shield = {
         id = 20925,
@@ -306,6 +345,72 @@ spec:RegisterAuras({
     -- the client and wowsims's log show; 1310905 "Consecrated Ground" targets the caster): its 8 s and the 0.6 s tail
     -- (wowsims consecration.go), modelled from our cast (target auras are unreadable in combat).
     consecrated_ground = { id = 1280353, duration = 8.6, max_stack = 1 },
+
+    -- Judgement's debuffs on the target (B4; wowsims judgement.go, buffs/paladin.go): 40 s (Justice's 10 s, Fury's taunt
+    -- 3 s), refreshed by our landed melee hits (unmodelled: Judgement itself recasts every cooldown).
+    judgement_of_the_crusader = {
+        id = 20188,
+        copy = { 20300, 20301, 20302, 20303, 21183 },
+        duration = 40,
+        max_stack = 1,
+    },
+    judgement_of_light = { id = 20185, copy = { 20344, 20345, 20346 }, duration = 40, max_stack = 1 },
+    judgement_of_wisdom = { id = 20186, copy = { 20354, 20355 }, duration = 40, max_stack = 1 },
+    judgement_of_justice = { id = 20184, duration = 10, max_stack = 1 },
+    judgement_of_fury = { id = 20232, duration = 3, max_stack = 1 },
+    -- Vindication's debuff on the target (B5, wowsims talents_retribution.go:82-121: -AP, 30 s, a proc: observed only).
+    vindication = { id = 440667, duration = 30, max_stack = 1 },
+
+    -- Templar's Bulwark's absorb (B2, 8 s) and the Forbearance it brings (60 s less Sacred Duty's 5 s a rank).
+    templars_bulwark = { id = 1311015, duration = 8, max_stack = 1 },
+    forbearance = { id = 25771, duration = 60, max_stack = 1 },
+
+    -- Own procs (B3; no priority reads them, the Cooldown Manager follows their presence): Vengeance 5 stacks 30 s, a
+    -- landed crit; Redoubt 5 charges 10 s, one a block; Reckoning's stored extra attacks (4, until the next swing).
+    vengeance = { id = 20050, duration = 30, max_stack = 5 },
+    redoubt = { id = 20128, duration = 10, max_stack = 5, consumedBy = { BLOCK = true, BLOCKED = true } },
+    reckoning = { id = 1326084, duration = 3600, max_stack = 4 },
+    -- Iron Creed's 6 s (-2/4/6% damage taken, a Holy Strike under Righteous Fury) and Shieldsworn's spell block (6 s, a
+    -- landed Holy Strike with a shield): modelled from our Holy Strikes, neither has a Cooldown Manager item.
+    iron_creed = { id = 1311033, duration = 6, max_stack = 1 },
+    shieldsworn_block = { id = 1328551, duration = 6, max_stack = 1 },
+
+    -- The Paladin auras (B6, one up at a time), Consecration's ranks (B7: wowsims registers each rank's dot; the Cooldown
+    -- Manager's item links the five and 1280345-1280349 as a self aura: needs in-game check which unit shows it), the
+    -- Holy-only auras (B8, Holy is unsupported) and the blessings (item 200215 etc.: our own casts, no priority reads them).
+    devotion_aura = { id = 465, copy = { 10290, 643, 10291, 1032, 10292, 10293 }, duration = 3600, max_stack = 1 },
+    concentration_aura = { id = 19746, duration = 3600, max_stack = 1 },
+    fire_resistance_aura = { id = 19891, copy = { 19899, 19900 }, duration = 3600, max_stack = 1 },
+    frost_resistance_aura = { id = 19888, copy = { 19897, 19898 }, duration = 3600, max_stack = 1 },
+    shadow_resistance_aura = { id = 19876, copy = { 19895, 19896 }, duration = 3600, max_stack = 1 },
+    consecration = {
+        id = 26573,
+        copy = { 20116, 20922, 20923, 20924, 1280345, 1280346, 1280347, 1280348, 1280349 },
+        duration = 8,
+        max_stack = 1,
+    },
+    infusion_of_light = { id = 437063, duration = 15, max_stack = 1 },
+    lights_vigil = { id = 1310909, copy = { 1311593, 1311597 }, duration = 30, max_stack = 1 },
+    lights_vigil_target = { id = 1310910, copy = { 1311594, 1311599 }, duration = 30, max_stack = 1 },
+    oath_of_light = { id = 1328548, duration = 300, max_stack = 1 },
+    blessing_of_might = {
+        id = 19740,
+        copy = { 19834, 19835, 19836, 19837, 19838, 25291, 25782, 25916 },
+        duration = 300,
+        max_stack = 1,
+    },
+    blessing_of_kings = { id = 20217, copy = { 25898 }, duration = 300, max_stack = 1 },
+    blessing_of_wisdom = {
+        id = 19742,
+        copy = { 19850, 19852, 19853, 19854, 25290, 25894, 25918 },
+        duration = 300,
+        max_stack = 1,
+    },
+    blessing_of_salvation = { id = 1038, copy = { 25895 }, duration = 300, max_stack = 1 },
+    blessing_of_light = { id = 19977, copy = { 19978, 19979, 25890 }, duration = 300, max_stack = 1 },
+    -- Librams (item_librams.go; item-level, external: the walk reads them where plain).
+    holy_alacrity = { id = 449982, duration = 10, max_stack = 1 },
+    tenets_of_the_silver_hand = { id = 1302545, duration = 3600, max_stack = 1 },
 })
 
 -- Any seal up: Judgement's requirement.
@@ -313,24 +418,31 @@ spec:RegisterAuras({
 -- base cost x (2 - its cost multiplier) at 3/3 (tests/Forever/wowsims/paladin_retribution.log:439, Seal of Command
 -- up: "Gained 161.280 mana from {SpellID: 1311074}" = 210 x 1.28 x 0.6): the belief counts the refund only at 3/3,
 -- a sure one.
+-- The fourth field is the judgement debuff the seal puts on the target (none for Command and Righteousness: damage only).
 local SEAL_BASE = {
     { "seal_of_command", SEAL_OF_COMMAND_COST, SEAL_OF_COMMAND },
     { "seal_of_righteousness", SEAL_OF_RIGHTEOUSNESS_COST, SEAL_OF_RIGHTEOUSNESS },
-    { "seal_of_the_crusader", SEAL_OF_THE_CRUSADER_COST, SEAL_OF_THE_CRUSADER },
-    { "seal_of_fury", SEAL_OF_FURY_COST, SEAL_OF_FURY },
+    { "seal_of_the_crusader", SEAL_OF_THE_CRUSADER_COST, SEAL_OF_THE_CRUSADER, "judgement_of_the_crusader" },
+    { "seal_of_fury", SEAL_OF_FURY_COST, SEAL_OF_FURY, "judgement_of_fury" },
+    { "seal_of_justice", SEAL_OF_JUSTICE_COST, SEAL_OF_JUSTICE, "judgement_of_justice" },
+    { "seal_of_light", SEAL_OF_LIGHT_COST, SEAL_OF_LIGHT, "judgement_of_light" },
+    { "seal_of_wisdom", SEAL_OF_WISDOM_COST, SEAL_OF_WISDOM, "judgement_of_wisdom" },
 }
 -- A Judgement's cast effect, Judgement's and Swift Judgement's (the `now` and the `handler`, two closures so each gets
--- its own environment): the refund.
+-- its own environment): the seal's judgement debuff, and the refund.
 local function judgementCast()
     return function()
-        if talent.sanctified_judgement.rank < 3 then
-            return
-        end
         for i = 1, #SEAL_BASE do
             local s = SEAL_BASE[i]
             if buff[s[1]].up then
-                local mult = sealMult(talent)
-                gain(byRank(s[2], s[3]) * (2 - mult) * 0.6, "mana")
+                if s[4] then
+                    applyDebuff("target", s[4])
+                end
+                if talent.sanctified_judgement.rank >= 3 then
+                    local mult = sealMult(talent)
+                    local cost = byRank(s[2], s[3])
+                    gain((cost < 1 and cost * BASE_MANA or cost) * (2 - mult) * 0.6, "mana") -- Justice's is a fraction
+                end
                 return
             end
         end
@@ -342,6 +454,9 @@ spec:RegisterStateExpr("seal_up", function()
         or buff.seal_of_righteousness.up
         or buff.seal_of_the_crusader.up
         or buff.seal_of_fury.up
+        or buff.seal_of_justice.up
+        or buff.seal_of_light.up
+        or buff.seal_of_wisdom.up
 end)
 
 -- The time to the next main-hand swing (Hekili_Warrior/Warrior.lua's, after Hekili's Classic profile): the swing gap
@@ -362,19 +477,54 @@ spec:RegisterStateExpr("mainhand_remains", function()
     return mainhand_speed - (query_time - mh) % mainhand_speed
 end)
 
+-- A Holy Strike's effects, the `now` and the `handler` (two closures). A Shieldsworn Holy Strike with a shield restores
+-- 4% of the maximum mana only when it lands (the Shield Specialization trigger, wowsims talents_protection.go:137-174: its
+-- chance is 100% at rank 2 only; 105 at 2627 in the Protection log, none on the log's misses and dodges) and grants the
+-- spell block for 6 s; under Righteous Fury it grants Iron Creed's 6 s. `landed` (the `handler`'s: the simulation's
+-- forecast) adds the mana. The belief's `now` does not: an avoid undoes only a target aura (Families/Now.lua), so a
+-- gain at the cast would stay on a miss and promote a cast we cannot afford.
+-- shortcut: the belief's mana lacks the return until the client's affordability answers lift it; upgrade with a core
+-- landed-outcome hook (an effect run when the cast's hit lands).
+local function holyStruck(landed)
+    return function()
+        if talent.shieldsworn.enabled and equipped.shield then
+            if landed and talent.shield_specialization.rank >= 2 then
+                gain(0.04 * mana.max, "mana")
+            end
+            applyBuff("shieldsworn_block")
+        end
+        if talent.iron_creed.enabled and buff.righteous_fury.up then
+            applyBuff("iron_creed")
+        end
+    end
+end
+
+-- Templar's Bulwark's effects (the `now` and the `handler`): the absorb, and Forbearance 5 s shorter a rank of Sacred
+-- Duty (wowsims forbearance.go) and 10 s shorter under the Justice Battleplate 5-piece (1301697).
+local function templarsBulwark()
+    return function()
+        applyBuff("templars_bulwark")
+        applyBuff("forbearance", 60 - 5 * talent.sacred_duty.rank - (set_bonus.justice_battleplate_5pc > 0 and 10 or 0))
+    end
+end
+
 spec:RegisterAbilities({
     seal_of_command = seal("seal_of_command", SEAL_OF_COMMAND, SEAL_OF_COMMAND_COST),
     seal_of_righteousness = seal("seal_of_righteousness", SEAL_OF_RIGHTEOUSNESS, SEAL_OF_RIGHTEOUSNESS_COST),
     seal_of_the_crusader = seal("seal_of_the_crusader", SEAL_OF_THE_CRUSADER, SEAL_OF_THE_CRUSADER_COST),
     seal_of_fury = seal("seal_of_fury", SEAL_OF_FURY, SEAL_OF_FURY_COST),
+    seal_of_justice = seal("seal_of_justice", SEAL_OF_JUSTICE, SEAL_OF_JUSTICE_COST),
+    seal_of_light = seal("seal_of_light", SEAL_OF_LIGHT, SEAL_OF_LIGHT_COST),
+    seal_of_wisdom = seal("seal_of_wisdom", SEAL_OF_WISDOM, SEAL_OF_WISDOM_COST),
 
     -- Unleashes the seal up (it stays up: wowsims judgement.go, the DB2 tooltip).
     judgement = {
         id = 20271,
         cast = 0,
-        -- Improved Judgement (25956, Forever DB2: aura 107 misc 11, -1000 ms a rank): 1 s shorter a rank
+        -- Improved Judgement (25956, Forever DB2: aura 107 misc 11, -1000 ms a rank): 1 s shorter a rank; the Justice
+        -- Battlegear 5-piece (1301702): 0.5 s shorter
         cooldown = function()
-            return 10 - talent.improved_judgement.rank
+            return 10 - talent.improved_judgement.rank - (set_bonus.justice_battlegear_5pc > 0 and 0.5 or 0)
         end,
         gcd = "off",
 
@@ -458,6 +608,9 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(HOLY_STRIKE),
+
+        now = holyStruck(),
+        handler = holyStruck(true),
     },
 
     consecration = {
@@ -508,7 +661,9 @@ spec:RegisterAbilities({
         id = 1311606,
         copy = rest(HOLY_SHOCK),
         cast = 0,
-        cooldown = 10,
+        cooldown = function() -- the Justice Armor 5-piece (1301694): 1 s shorter
+            return set_bonus.justice_armor_5pc > 0 and 9 or 10
+        end,
         gcd = "spell",
 
         spend = function()
@@ -560,6 +715,32 @@ spec:RegisterAbilities({
         end,
     },
 
+    -- Templar's Bulwark (talent 1311015; wowsims templars_bulwark.go, a major cooldown the default casts at the pull): an
+    -- absorb of the maximum health for 8 s and Forbearance, 110 mana, 300 s less 30 s a rank of Sacred Duty; refused
+    -- under Forbearance.
+    templars_bulwark = {
+        id = 1311015,
+        cast = 0,
+        cooldown = function()
+            return 300 - 30 * talent.sacred_duty.rank
+        end,
+        gcd = "off",
+
+        spend = 110,
+        spendType = "mana",
+
+        startsCombat = false,
+        toggle = "cooldowns",
+        known = knows({ 1311015 }),
+
+        usable = function()
+            return not buff.forbearance.up, "forbearance"
+        end,
+
+        now = templarsBulwark(),
+        handler = templarsBulwark(),
+    },
+
     righteous_fury = selfBuff("righteous_fury", RIGHTEOUS_FURY, {
         spend = function()
             return 0.3 * (1 - 0.02 * talent.benediction.rank)
@@ -604,8 +785,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Protection (wowsims.com)",
-    20261110000,
-    [[Hekili:LwvxVPnmu0Fl9LnqRlPWw7wrJh6u106uxvLsF2jg7BiEyIJ8hJHuv(TVRdqAsiHnPYdG5(X5CVxFYnKjKNirCQfipm9IPxnzYKlWpKi72cGevqzROlXd50143pQvwGzfQ8YKrBuBmI1MaMA9yFKBLkk3J2cNqAVlNSOxGnfadr6M7V527EywrnIKOmbNd7sdmStW2SYeBguMS3wyQsd)g0LjCiL6K2YKBE8(Ye0CzslqCIqp9MWcQKYf5HVqFiTqAc3dqa(NaeA54ZrQ00CJeBeoEw5PwyktOCUk)T4HvWwtqzYTulDwpL0OFE3tiizwBHzwy4sHnZTW3fHDcDmIjw5WL0Rz8P0P8uwaow1QuHeh90QQ0euObm5fu7CTyzMfuotCQtV9Cr68Zw4stdABpWvu(JJs(DZd1Gvlw48oIPonTbaD8miegGkJvPX4Lrmt7muoOFbM(82eQ5gRkhWUFDTjeZF54lH1qU9CNbW0tJxY4ZN0meZgrQnEGa98p6SDbhuhtWQC1M8NzkLKJhA4qdRPICZxMpQhNCS79a9(lgpUvfSV1Qg8PkMZmFAfXTA8QX)b89FNrZ5X7n8MZoowxrlwy4paBxf00EMsUn2KPyR21SwQ0xS1Hd84LALlNha50fsG)mhQiRNi6q5EOfGKFOVo2nQowbnnd)rPzcdEpsIqLSX)0C7h6LcJ1uTPz3dy4XhQ28SVcjF9GchxqCqwqSikDcQXDThH6KQVZ8j9H)ZK6iKirmTWcAbLenOe6vPH8f3h7uCn48vREA0An8qIQUk9dtK)lhyS3uT5J7QbI7f1x751)wfEAzONZpDAo9YY2nZNpzcvcvFyxpqyheUeVSjQE12PuNT3U2CemW23(uX1G1ztBpWD8U4(u4DV2BUZ9yqhyZC1uaNduNntHP9DyLqkWxH9T9VHQYn5Vd]]
+    20261111000,
+    [[Hekili:Lwv3oonpq0NL9gOvSFjTf2LVTIEXIwHyrWkKcx7eh7jnM6gh5FOujuE2zCAB2K0Kcs0lsD8CMZmEMJNqMt(gjItTa5PfZwC7C83SzZir29LajQKY2qxJlkOBXNFvRSaZkufvjt2P2zeBnbm12PEK7Lkk3ZwQtiTpwqshKytjWqMU)Z3)WJpTSSHrsuUGZHdUbg2fI2YQeBouLCCVWmLg(bORs4qg1jTvj3)1pxLGBxL0HeNi0hEtyjvs5IIWNdFiTuAcpsqa(sasTC61yO00cJepiCCTYhAHPkHY5QIxIl2a7nbvjpqT0LdKst(YJFdjj3AlnlddxlS5Uu)PiSh0PiNyMd3qVJXxqxWZybyzvRYesS0tRZstqPgqNtP2vAX6ClOCM4mNE)1ISvxL6YYc6UFGRS6tN58RwfQbRwK68gIPonTfb9SmkfgGkJvzXyZiMPDgkh0ptZqwBt1kJvva4PFBZwiNwyBPKQnXPo5oQEZ1odGSKfVMXxnVnYV74RHTqHDCiMDImB8ia9z6KRoaoObtWMc1UIFXukjhx0YGg2sffM3TAYag5yDYt0)nB60ozWXIqDlktXCMvlQdCNsuDJ6e)(N50cE8XnEXvNJ1v2jkm8pGDidAVFUsUp2KRyBoCyTuPpzBGd841ALRGhaf0ujW)fhQd2ai6fYJulaj)056CZOoAd0EB4NkntyWoojc18g)9(UJhKcJ1upt6WvrC5t1ZOoMHK3F6Uaok5KaIyrw6bQvV2ZqJt9fyEFF9FPVn9BVtV5V0PEIqsetlSGwqjrJk)(N0F(K7MEjxRy(pR8AD0AzHevld8ncm(3oslRTs1J7TJG7zLB361FwbFzjSpM))LJPxs39WC3fDOwK7HnF2i4oP6jEDtuZe0ljT7oeVDnyKH8dDfOHSEd0hGUZh5p09I(992J2pN0r(aqDvaRduNnxHU9ryJqkWVu(HJFiS2m53d]]
 )
 
 -- The hand-built lists the wowsims.com priorities replaced: a saved choice of one falls back to its spec's default.

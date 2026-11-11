@@ -159,6 +159,7 @@ function M.load(vs, file, class)
     w.packs = reg.RegisterPack or {}
     w.retired = reg.RetirePacks and reg.RetirePacks[1][1]
     w.options = reg.RegisterOptions and reg.RegisterOptions[1][1]
+    w.gear, w.setBonuses = reg.RegisterGear or {}, reg.RegisterSetBonus or {} -- the calls' arguments, in order
     w.windows = {} -- RegisterWindow's records by name
     for _, call in ipairs(reg.RegisterWindow or {}) do
         w.windows[call[1]] = call[2]

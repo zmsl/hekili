@@ -37,6 +37,11 @@ local KIT = {
     holy_shield = { { 20925, 20927, 20928, 1239570 }, 240, 10, "spell" }, -- rank 4: the owner's in-game tooltip
     righteous_fury = { { 25780, 407627 }, 0.3, 0, "spell" },
     retribution_aura = { { 7294, 10298, 10299, 10300, 10301 }, 0, 0, "spell" },
+    -- the other three seals (audit B1; wowsims's data: Justice 13% of base mana, Light and Wisdom flat)
+    seal_of_justice = { { 20164 }, 0.13, 0, "spell" },
+    seal_of_light = { { 20165, 20347, 20348, 20349 }, 210, 0, "spell" },
+    seal_of_wisdom = { { 20166, 20356, 20357 }, 200, 0, "spell" },
+    templars_bulwark = { { 1311015 }, 110, 300, "off" }, -- audit B2 (wowsims: 110 mana, 300 s, an absorb for 8 s)
 }
 
 local function idsOf(a)
@@ -100,7 +105,7 @@ describe("Forever Paladin", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(15, n)
+        assert.are.equal(19, n)
         assert.are.equal("PALADIN", w.class)
         assert.is_nil(w.options)
     end)
@@ -308,6 +313,233 @@ describe("Forever Paladin", function()
             w.auras.echo_of_fury.id,
         })
     end)
+
+    it("puts Seal of Justice, Light and Wisdom up like the other seals (audit B1)", function()
+        local want = {
+            seal_of_justice = { 20164 },
+            seal_of_light = { 20165, { 20347, 20348, 20349 } },
+            seal_of_wisdom = { 20166, { 20356, 20357 } },
+        }
+        for key, d in pairs(want) do
+            local a = w.auras[key]
+            assert.are.same({ d[1], d[2], 30, 1 }, { a.id, a.copy, a.duration, a.max_stack }, key)
+            for _, field in ipairs({ "now", "handler" }) do
+                local e = ld.env(w)
+                e.buff = buffs({ seal_of_command = true })
+                ld.run(w.abilities[key][field], e)
+                assert.are.same({ { "seal_of_command" }, { key } }, { e.removed, e.applied }, key .. field)
+            end
+            local e = ld.env(w)
+            e.buff = buffs({ [key] = true })
+            assert.is_true(ld.run(w.exprs.seal_up, e), key) -- Judgement's requirement holds under it
+        end
+        -- and the old four's cast takes them down
+        local e = ld.env(w)
+        e.buff = buffs({ seal_of_light = true })
+        ld.run(w.abilities.seal_of_righteousness.now, e)
+        assert.are.same({ "seal_of_light" }, e.removed)
+        for key, id in pairs({ echo_of_justice = 1311705, echo_of_light = 1328198, echo_of_wisdom = 1328206 }) do
+            assert.are.same({ id, 15, 3 }, { w.auras[key].id, w.auras[key].duration, w.auras[key].max_stack }, key)
+        end
+        assert.are.equal(0.13, ld.run(w.abilities.seal_of_justice.spend, ld.env(w))) -- 13% of the maximum
+    end)
+
+    it("puts the judgement debuff of the seal up on the target at Judgement (audit B4)", function()
+        local want = {
+            seal_of_the_crusader = { "judgement_of_the_crusader", 40 },
+            seal_of_light = { "judgement_of_light", 40 },
+            seal_of_wisdom = { "judgement_of_wisdom", 40 },
+            seal_of_justice = { "judgement_of_justice", 10 },
+            seal_of_fury = { "judgement_of_fury", 3 },
+        }
+        for seal, d in pairs(want) do
+            for _, a in ipairs({ w.abilities.judgement, w.abilities.swift_judgement }) do
+                for _, field in ipairs({ "now", "handler" }) do
+                    local e = ld.env(w)
+                    e.buff = buffs({ [seal] = true })
+                    ld.run(a[field], e)
+                    assert.are.same({ d[1] }, e.applied, seal .. field)
+                    assert.are.equal(d[2], w.auras[d[1]].duration)
+                end
+            end
+        end
+        for _, seal in ipairs({ "seal_of_command", "seal_of_righteousness" }) do -- damage only: no debuff
+            local e = ld.env(w)
+            e.buff = buffs({ [seal] = true })
+            ld.run(w.abilities.judgement.now, e)
+            assert.are.same({}, e.applied, seal)
+        end
+        assert.are.same(
+            { 20188, { 20300, 20301, 20302, 20303, 21183 } },
+            { w.auras.judgement_of_the_crusader.id, w.auras.judgement_of_the_crusader.copy }
+        )
+        assert.are.same(
+            { 20185, { 20344, 20345, 20346 } },
+            { w.auras.judgement_of_light.id, w.auras.judgement_of_light.copy }
+        )
+        assert.are.same(
+            { 20186, { 20354, 20355 } },
+            { w.auras.judgement_of_wisdom.id, w.auras.judgement_of_wisdom.copy }
+        )
+        assert.are.same({ 20184, 20232 }, { w.auras.judgement_of_justice.id, w.auras.judgement_of_fury.id })
+        assert.are.same({ 440667, 30 }, { w.auras.vindication.id, w.auras.vindication.duration }) -- B5
+    end)
+
+    it(
+        "casts Templar's Bulwark: an 8 s absorb and Forbearance 60 s less Sacred Duty, refused under it (audit B2)",
+        function()
+            local tb = w.abilities.templars_bulwark
+            assert.are.same(
+                { 1311015, 0, "off", "mana", "cooldowns" },
+                { tb.id, tb.cast, tb.gcd, tb.spendType, tb.toggle }
+            )
+            assert.are.same({ 1311015, 8 }, { w.auras.templars_bulwark.id, w.auras.templars_bulwark.duration })
+            assert.are.same({ 25771, 60 }, { w.auras.forbearance.id, w.auras.forbearance.duration })
+            local e = ld.env(w)
+            assert.are.equal(300, ld.run(tb.cooldown, e))
+            assert.is_true((ld.run(tb.usable, e)))
+            e.buff = buffs({ forbearance = true })
+            assert.is_false((ld.run(tb.usable, e)))
+            for _, field in ipairs({ "now", "handler" }) do
+                e = ld.env(w)
+                ld.run(tb[field], e)
+                assert.are.same({ "templars_bulwark", "forbearance" }, e.applied, field)
+                assert.are.equal(60, e.durations.forbearance)
+                e = ld.env(w)
+                e.talent = talents({ sacred_duty = 2 })
+                ld.run(tb[field], e)
+                assert.are.same({ 50, 240 }, { e.durations.forbearance, ld.run(tb.cooldown, e) }, field) -- -5 s a rank; -30 s a rank
+            end
+            assert.are.same({ 2, 1224697, 2 }, w.talents.sacred_duty)
+        end
+    )
+
+    it("registers Vengeance, Redoubt and Reckoning (audit B3), Redoubt's charges spent by blocks", function()
+        local v, r, k = w.auras.vengeance, w.auras.redoubt, w.auras.reckoning
+        assert.are.same({ 20050, 30, 5 }, { v.id, v.duration, v.max_stack })
+        assert.are.same(
+            { 20128, 10, 5, { BLOCK = true, BLOCKED = true } },
+            { r.id, r.duration, r.max_stack, r.consumedBy }
+        )
+        assert.are.same({ 1326084, 4 }, { k.id, k.max_stack })
+    end)
+
+    it(
+        "gives a landed Shieldsworn Holy Strike with a shield 4% of the maximum mana in the simulation only (audit B10), and Iron Creed's and the spell block's auras",
+        function()
+            local function run(field, tal, equipped)
+                local e = ld.env(w)
+                e.mana.max = 2600
+                e.talent = tal
+                e.equipped = equipped
+                ld.run(w.abilities.holy_strike[field], e)
+                return e
+            end
+            local on = talents({ shield_specialization = 2, shieldsworn = 1 })
+            local e = run("handler", on, { shield = true })
+            assert.are.same({ { 104, "mana" } }, e.gained) -- 2600 x 4%
+            assert.are.same({ "shieldsworn_block" }, e.applied)
+            -- the belief's `now` adds none (a miss would keep it: an avoid undoes only target auras), but the spell block
+            e = run("now", on, { shield = true })
+            assert.are.same({ {}, { "shieldsworn_block" } }, { e.gained, e.applied })
+            -- without the shield, the talent or the second rank: no mana
+            for _, miss in ipairs({
+                { on, { shield = false } },
+                { talents({ shield_specialization = 2 }), { shield = true } },
+                { talents({ shield_specialization = 1, shieldsworn = 1 }), { shield = true } },
+            }) do
+                assert.are.same({}, run("handler", miss[1], miss[2]).gained)
+            end
+            for _, field in ipairs({ "now", "handler" }) do
+                -- Iron Creed under Righteous Fury
+                e = ld.env(w)
+                e.talent = talents({ iron_creed = 3 })
+                e.buff = buffs({ righteous_fury = true })
+                ld.run(w.abilities.holy_strike[field], e)
+                assert.are.same({ "iron_creed" }, e.applied, field)
+                e = ld.env(w)
+                e.talent = talents({ iron_creed = 3 })
+                ld.run(w.abilities.holy_strike[field], e)
+                assert.are.same({}, e.applied, field)
+            end
+            assert.are.same({ 1311033, 6 }, { w.auras.iron_creed.id, w.auras.iron_creed.duration })
+            assert.are.same({ 1328551, 6 }, { w.auras.shieldsworn_block.id, w.auras.shieldsworn_block.duration })
+        end
+    )
+
+    it(
+        "registers the Paladin auras, Consecration's ranks, the Holy-only auras and the blessings (audit B6-B8, 13)",
+        function()
+            local want = {
+                devotion_aura = { 465, { 10290, 643, 10291, 1032, 10292, 10293 } },
+                concentration_aura = { 19746 },
+                fire_resistance_aura = { 19891, { 19899, 19900 } },
+                frost_resistance_aura = { 19888, { 19897, 19898 } },
+                shadow_resistance_aura = { 19876, { 19895, 19896 } },
+                consecration = { 26573, { 20116, 20922, 20923, 20924, 1280345, 1280346, 1280347, 1280348, 1280349 } },
+                infusion_of_light = { 437063 },
+                lights_vigil = { 1310909, { 1311593, 1311597 } },
+                lights_vigil_target = { 1310910, { 1311594, 1311599 } },
+                oath_of_light = { 1328548 },
+                blessing_of_might = { 19740, { 19834, 19835, 19836, 19837, 19838, 25291, 25782, 25916 } },
+                blessing_of_kings = { 20217, { 25898 } },
+                blessing_of_wisdom = { 19742, { 19850, 19852, 19853, 19854, 25290, 25894, 25918 } },
+                blessing_of_salvation = { 1038, { 25895 } },
+                blessing_of_light = { 19977, { 19978, 19979, 25890 } },
+                holy_alacrity = { 449982 },
+                tenets_of_the_silver_hand = { 1302545 },
+            }
+            for key, d in pairs(want) do
+                local a = w.auras[key]
+                assert.is_table(a, key)
+                assert.are.same({ d[1], d[2] }, { a.id, a.copy }, key)
+            end
+        end
+    )
+
+    it(
+        "reads the Justice sets' 5-piece bonuses: Judgement -0.5 s, Holy Shock -1 s, Forbearance -10 s (audit item 14)",
+        function()
+            local function gear(key)
+                for _, g in ipairs(w.gear or {}) do
+                    if g[1] == key then
+                        return { select(2, unpack(g)) }
+                    end
+                end
+            end
+            assert.are.same({ 273908, 273909, 273910, 273911 }, gear("justice_battlegear"))
+            assert.are.same({ 273912, 273913, 273914, 273915 }, gear("justice_armor"))
+            assert.are.same({ 273916, 273917, 273918, 273919 }, gear("justice_battleplate"))
+            for key, id in pairs({
+                justice_battlegear_5pc = 1301702,
+                justice_armor_5pc = 1301694,
+                justice_battleplate_5pc = 1301697,
+            }) do
+                assert.are.equal(id, w.auras[key].id, key)
+                local found
+                for _, b in ipairs(w.setBonuses or {}) do
+                    found = found or (b[1] == key and b[2] == id)
+                end
+                assert.is_true(found, key)
+            end
+            local function with(key, n)
+                local e = ld.env(w)
+                e.set_bonus = setmetatable({}, {
+                    __index = function(_, k)
+                        return k == key and n or 0
+                    end,
+                })
+                return e
+            end
+            assert.are.equal(9.5, ld.run(w.abilities.judgement.cooldown, with("justice_battlegear_5pc", 1)))
+            assert.are.equal(9, ld.run(w.abilities.holy_shock.cooldown, with("justice_armor_5pc", 1)))
+            assert.are.equal(10, ld.run(w.abilities.holy_shock.cooldown, with("justice_armor_5pc", 0)))
+            local e = with("justice_battleplate_5pc", 1)
+            e.talent = talents({ sacred_duty = 1 })
+            ld.run(w.abilities.templars_bulwark.now, e)
+            assert.are.equal(45, e.durations.forbearance) -- 60 - 5 - 10
+        end
+    )
 
     it("marks the target with Consecrated Ground at Consecration; Holy Shock spends Divine Favor", function()
         local e = ld.env(w)
