@@ -40,7 +40,9 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 39
+-- 39 + WeakAuras/LibRangeCheck-3.0#60 (min-range mark): 40 so this copy wins over a stock 39 from another addon.
+-- Re-vendor from upstream once #60 ships.
+local MINOR_VERSION = 40
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
