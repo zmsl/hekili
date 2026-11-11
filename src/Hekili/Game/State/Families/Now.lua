@@ -3,7 +3,7 @@
 -- On each own CastSuccess (a channel's included) the family writes the automatic effects from the ability's declared
 -- fields (its cost, its cooldown or charge, the GCD), then runs the ability's `now` function, if the class file
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
--- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
+-- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `removeStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
 -- `summonPet`, `dismissPet`, `openWindow`, `closeWindow`) and reads (`talent`, `buff`, `debuff`, the resources by key,
 -- `knownRank`, `stat`, `swingBase`, `mainhand_speed`, `offhand_speed`, `weapon`, `equipped`, `set_bonus`, `healthMax`,
 -- `now`, `combat`, `level`, `lastSwing`, `nextSwing`, `usable`, `window`) with belief meanings. A window's evaluator
@@ -350,6 +350,24 @@ function NAMES.addStack(aura_, duration, stacks)
     local _, have = I.CastAura("player", auraSpell[j], T)
     local n = (have or 0) + (stacks or 1)
     aura(1, aura_, duration, n < auraMax[j] and n or auraMax[j]) -- Hekili's max_stack clamp (State.lua:837-852)
+end
+--- removeStack(aura, stacks): Hekili's verb (State.lua): `stacks` (1) fewer of our aura, its expiry and applied time
+--- kept; down when none is left. A down aura is left down (aura audit C4).
+function NAMES.removeStack(aura_, stacks)
+    local j = auraByKey[aura_]
+    if not live or not j then
+        return
+    end
+    local rec, have, applied = VS.Aura("player", auraSpell[j], T)
+    if not rec then
+        return
+    end
+    local n = (have or 1) - (stacks or 1)
+    if n <= 0 then
+        aura(1, aura_, 0)
+        return
+    end
+    I.AuraModel(1, j, applied, rec.est, n, T, CAST, false) -- no log row: the expiry stands (a dose, not a refresh)
 end
 function NAMES.setCooldown(action, duration)
     local a = abByKey[action]

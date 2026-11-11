@@ -228,8 +228,8 @@ describe("now handlers", function()
         maul = "as heroic_strike",
         raptor_strike = "as heroic_strike",
         revenge = "revenge_usable has no spell id: untracked",
-        starfire = "removeStack is no `now` verb; the charges end with the 15 s aura",
-        fire_blast = "removeStack is no `now` verb; the belief reads Fingers of Frost charges from the aura walk",
+        starfire = "no `now` yet (removeStack is a `now` verb since aura audit C4: the Druid lane's)",
+        fire_blast = "no `now` yet (removeStack is a `now` verb since aura audit C4: the Mage lane's)",
         claw = "combo points are read plainly in combat (poll 1)",
         shred = "as claw",
         premeditation = "as claw",
@@ -799,6 +799,40 @@ describe("now handlers", function()
         cast(7387, 6)
         local _, stacks = VS.Aura("player", 7386, 6.1)
         assert.are.equal(5, stacks)
+    end)
+
+    it("spends stacks with removeStack (aura audit C4): expiry kept, down at 0, a down aura untouched", function()
+        h.Class.auras.sunder_test = { key = "sunder_test", id = 7386, duration = 30, max_stack = 5 }
+        register("stack_test", {
+            id = 7387,
+            now = function()
+                addStack("sunder_test", 30, 2)
+            end,
+        })
+        register("spend_test", {
+            id = 7388,
+            now = function()
+                removeStack("sunder_test")
+            end,
+        })
+        register("spend_all", {
+            id = 7389,
+            now = function()
+                removeStack("sunder_test", 5)
+            end,
+        })
+        start()
+        cast(7388, 4) -- down: nothing to spend, nothing applied
+        assert.is_nil(VS.Aura("player", 7386, 4.1))
+        cast(7387, 5)
+        cast(7388, 8)
+        local rec, stacks = VS.Aura("player", 7386, 8.1)
+        assert.are.same({ 35, 1, "modelled" }, { rec.est, stacks, rec.basis }) -- Hekili's removeStack( aura, stacks )
+        cast(7388, 9) -- the last stack: down
+        assert.is_nil(VS.Aura("player", 7386, 9.1))
+        cast(7387, 10)
+        cast(7389, 11) -- more than it holds: down
+        assert.is_nil(VS.Aura("player", 7386, 11.1))
     end)
 
     describe("a stacking aura's cast beside a plain read of it", function()
