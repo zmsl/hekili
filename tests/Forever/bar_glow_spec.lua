@@ -282,11 +282,11 @@ describe("action bar glow", function()
         assert.are.equal(0, bytes)
     end)
 
-    it("is on by default for the Primary display only, in the classic and timeline styles", function()
+    it("is off by default on every display, in the classic and timeline styles (owner 2026-11-11)", function()
         local displays = H.Hekili.DB.profile.displays
         for _, style in ipairs({ "classic", "timeline" }) do
             local p, a = displays.Primary[style].barGlow, displays.AOE[style].barGlow
-            assert.is_true(p.enabled)
+            assert.is_false(p.enabled)
             assert.is_false(a.enabled)
             assert.are.same({ 1, 0.82, 0, 1 }, p.colorNow)
             assert.is_true(p.glowNext)

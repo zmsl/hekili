@@ -419,13 +419,7 @@ do
                         numIcons = 3,
                         order = 1,
 
-                        timeline = {
-                            barGlow = { enabled = true },
-                        },
-
                         classic = {
-                            barGlow = { enabled = true },
-
 
                             glow = {
                                 enabled = true,

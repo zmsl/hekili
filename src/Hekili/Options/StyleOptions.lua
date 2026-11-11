@@ -105,7 +105,7 @@ local function base()
         },
 
         barGlow = {
-            enabled = false, -- the Primary display turns it on (Options.lua)
+            enabled = false, -- off on every display by default (owner 2026-11-11)
             colorNow = { 1, 0.82, 0, 1 }, -- gold, like a proc
             glowNext = true,
             colorNext = { 0.3, 0.6, 1, 1 },

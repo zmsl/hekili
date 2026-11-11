@@ -11509,7 +11509,7 @@ options.displays.Multi.classic.barGlow	desc	Preferences for the glow around your
 options.displays.Multi.classic.barGlow	name	Action Bar Glow
 options.displays.Multi.classic.barGlow.colorNext	name	Next Color
 options.displays.Multi.classic.barGlow.colorNow	name	Now Color
-options.displays.Multi.classic.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
+options.displays.Multi.classic.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
 options.displays.Multi.classic.barGlow.enabled	name	Enabled
 options.displays.Multi.classic.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFF00FF00Checked|r\n|cFF00B4FFDefensives:|r |cFF00FF00Checked|r\n|cFF00B4FFInterrupts:|r |cFF00FF00Checked|r
 options.displays.Multi.classic.barGlow.glowNext	name	Glow the next recommendation
@@ -12099,7 +12099,7 @@ options.displays.Multi.timeline.tab_now.barGlow	desc	Preferences for the glow ar
 options.displays.Multi.timeline.tab_now.barGlow	name	Action Bar Glow
 options.displays.Multi.timeline.tab_now.barGlow.colorNext	name	Next Color
 options.displays.Multi.timeline.tab_now.barGlow.colorNow	name	Now Color
-options.displays.Multi.timeline.tab_now.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
+options.displays.Multi.timeline.tab_now.barGlow.enabled	desc	If enabled, the action buttons that cast this display's first recommendation glow, and the buttons of the second recommendation glow in another color.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
 options.displays.Multi.timeline.tab_now.barGlow.enabled	name	Enabled
 options.displays.Multi.timeline.tab_now.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFF00FF00Checked|r\n|cFF00B4FFDefensives:|r |cFF00FF00Checked|r\n|cFF00B4FFInterrupts:|r |cFF00FF00Checked|r
 options.displays.Multi.timeline.tab_now.barGlow.glowNext	name	Glow the next recommendation
