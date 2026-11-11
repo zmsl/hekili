@@ -1,5 +1,5 @@
 -- Hekili_Shared/Races/Gnome.lua
--- The Gnome's Forever racials (DB2 build 70707): Eureka! (15 s: the next 3 abilities in its scope cost 10% less,
+-- The Gnome's Forever racials (DB2 build 70707): Eureka! (8 s as wowsims has it, no charges: every ability in its scope costs 10% less,
 -- +10% damage not modelled; 120 s, off the GCD; one ID per class: 1259813 Warrior, 1259812 Rogue, 1259817 Mage,
 -- 1259821 Warlock, 1259823 Priest), Expansive Mind (+5% maximum resources: 20591 Priest/Mage/Warlock, 1259802
 -- Warrior, 1259803 Rogue) and Escape Artist (20589: roots and snares removed, immune for 3 s; 120 s, on the GCD).
@@ -85,19 +85,18 @@ race:RegisterAbility("eureka", {
     toggle = "cooldowns",
 
     handler = function()
-        applyBuff("eureka", 15, 3)
+        applyBuff("eureka", 8)
     end,
     -- The belief's now-state of the cast (event-facade spec §12a)
     now = function()
-        applyBuff("eureka", 15, 3)
+        applyBuff("eureka", 8)
     end,
 })
 
 race:RegisterAura("eureka", {
     id = 1259813,
     copy = EUREKA,
-    duration = 15,
-    max_stack = 3,
+    duration = 8, -- the pin (wowsims racials.go:371-396, eureka.go:25) over the DB2's 15 s / 3 stacks
 })
 
 race:RegisterAbility("escape_artist", {
@@ -131,7 +130,6 @@ if spells then
     race:RegisterCostMod({
         aura = "eureka",
         pct = -0.10,
-        charges = 3,
         spells = spells,
     })
 end

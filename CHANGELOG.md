@@ -9,6 +9,8 @@
 - The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
 
 ### Fixed
+- Gnome Warriors, Rogues, Mages, Warlocks and Priests: Eureka! is modelled as the sim has it, 8 seconds with every ability in its scope costing 10% less (it was 15 seconds and three casts), so the last seconds of a fight no longer hide Eureka! as early.
+- Protection Warriors: the default priority's Thunder Clap line again checks for the Thunderfury slow; it reads down in combat, so nothing changes unless you can see the debuff.
 
 ### Known issues
 

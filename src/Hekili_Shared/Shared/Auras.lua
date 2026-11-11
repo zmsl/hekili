@@ -2,7 +2,7 @@
 -- The auras every class shares on Forever (shared-content spec §4.1), through Engine/Schema/Shared.lua into `all`: auras others
 -- put on the player, which the player's aura walk reads in combat (lust, Power Infusion, dispellable
 -- debuffs), the per-school lockouts, and four id-less stubs for the keys core still reads by name. Lusts and lockouts
--- Forever's DB2 lacks, the target-side reads (a target's auras are secret in combat) and the absorbs are left out (spec §4.1);
+-- Forever's DB2 lacks, the target-side reads (a target's auras are secret in combat, but Thunderfury's slow, which a priority names) and the absorbs are left out (spec §4.1);
 -- class buffs live in their class files and racials in the race packs.
 
 local Client = Hekili.Client
@@ -113,6 +113,15 @@ local auras = {
         max_stack = 1,
         shared = "player",
         dot = "buff",
+    },
+
+    -- Thunderfury's slow (the weapon's proc; no cast of ours applies it, so it reads up only from the client: a target's
+    -- auras are secret in combat, hence down there): registered so the wowsims priorities' `!debuff.thunderfury.up` term translates.
+    thunderfury = {
+        id = 27648,
+        duration = 12,
+        max_stack = 1,
+        shared = "target",
     },
 
     dispellable_curse = { generate = dispellable("Curse") },

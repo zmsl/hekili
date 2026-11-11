@@ -188,9 +188,14 @@ describe("shared content", function()
             "power_infusion",
             "reversible_magic",
             "shadowform",
+            "thunderfury",
             "voidbinding",
             "voidform",
         }, keys("auras"))
+        assert.are.same(
+            { 27648, 12, "target" },
+            { all.auras.thunderfury.id, all.auras.thunderfury.duration, all.auras.thunderfury.shared }
+        )
         assert.are.same({ 10060, 15 }, { all.auras.power_infusion.id, all.auras.power_infusion.duration })
         assert.are.same(
             { 0, 1 },
