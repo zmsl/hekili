@@ -519,7 +519,7 @@ spec:RegisterAuras({
     },
     deep_wound = {
         id = 23255,
-        copy = { 23256 },
+        copy = { 23256, 412609 }, -- 412609: the CDM item's spell
         duration = 12,
         max_stack = 1,
     },
@@ -556,7 +556,13 @@ spec:RegisterAuras({
         id = 12966,
         copy = { 12967, 12968, 12969, 12970 },
         duration = 15,
-        max_stack = 1,
+        max_stack = 3,
+    },
+    -- Gore Drinker's heal buff (the talent's trigger): 3 charges, 8 s, from the five abilities the tooltip names.
+    gore_drinker = {
+        id = 1323969,
+        duration = 8,
+        max_stack = 3,
     },
     hamstring = {
         id = 1715,
@@ -645,7 +651,7 @@ spec:RegisterAuras({
     retaliation = {
         id = 20230,
         duration = 15,
-        max_stack = 1,
+        max_stack = 30,
     },
     revenge_stun = {
         id = 12798,
@@ -915,6 +921,9 @@ spec:RegisterAbilities({
         -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             applyBuff("berserker_rage")
+            if talent.gore_drinker.rank > 0 then
+                applyBuff("gore_drinker", nil, 3)
+            end
             if talent.improved_berserker_rage.enabled then
                 gain(10 * talent.improved_berserker_rage.rank, "rage")
             end
@@ -922,6 +931,9 @@ spec:RegisterAbilities({
 
         handler = function()
             applyBuff("berserker_rage")
+            if talent.gore_drinker.rank > 0 then
+                applyBuff("gore_drinker", nil, 3)
+            end
             -- DB2 20500: energize 100 (10 rage) a rank.
             if talent.improved_berserker_rage.enabled then
                 gain(10 * talent.improved_berserker_rage.rank, "rage")
@@ -971,12 +983,18 @@ spec:RegisterAbilities({
         now = function()
             gain(10 * (1 + 0.25 * talent.improved_bloodrage.rank), "rage")
             applyBuff("bloodrage")
+            if talent.gore_drinker.rank > 0 then
+                applyBuff("gore_drinker", nil, 3)
+            end
         end,
 
         handler = function()
             -- 12301 (in-game tooltip): +25% of the rage Bloodrage generates a rank.
             gain(10 * (1 + 0.25 * talent.improved_bloodrage.rank), "rage")
             applyBuff("bloodrage")
+            if talent.gore_drinker.rank > 0 then
+                applyBuff("gore_drinker", nil, 3)
+            end
         end,
     },
 
@@ -996,6 +1014,18 @@ spec:RegisterAbilities({
         startsCombat = true,
         refundOnAvoid = true, -- wowsims talents_fury.go; DB2 Discount Power On Miss
         known = knows(BLOODTHIRST),
+
+        now = function()
+            if talent.gore_drinker.rank > 0 then
+                applyBuff("gore_drinker", nil, 3)
+            end
+        end,
+
+        handler = function()
+            if talent.gore_drinker.rank > 0 then
+                applyBuff("gore_drinker", nil, 3)
+            end
+        end,
     },
 
     challenging_shout = {
@@ -1128,10 +1158,16 @@ spec:RegisterAbilities({
 
         now = function()
             applyBuff("death_wish")
+            if talent.gore_drinker.rank > 0 then
+                applyBuff("gore_drinker", nil, 3)
+            end
         end,
 
         handler = function()
             applyBuff("death_wish")
+            if talent.gore_drinker.rank > 0 then
+                applyBuff("gore_drinker", nil, 3)
+            end
         end,
     },
 
@@ -1536,11 +1572,17 @@ spec:RegisterAbilities({
 
         now = function()
             applyBuff("reckless_swings", nil, 4)
+            if talent.gore_drinker.rank > 0 then
+                applyBuff("gore_drinker", nil, 3)
+            end
             gain(20, "rage")
         end,
 
         handler = function()
             applyBuff("reckless_swings", nil, 4)
+            if talent.gore_drinker.rank > 0 then
+                applyBuff("gore_drinker", nil, 3)
+            end
             gain(20, "rage")
         end,
     },
@@ -1604,11 +1646,11 @@ spec:RegisterAbilities({
         form = "battle_stance",
 
         now = function()
-            applyBuff("retaliation")
+            applyBuff("retaliation", nil, 30)
         end,
 
         handler = function()
-            applyBuff("retaliation")
+            applyBuff("retaliation", nil, 30)
         end,
     },
 
