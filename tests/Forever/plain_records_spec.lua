@@ -184,18 +184,9 @@ local KNOWN_MISSING = {
     ["hunter_world BeastMastery"] = with(),
     ["shaman_world Enhancement"] = with(),
     ["druid_loop_world Feral"] = with(),
-    -- removeStack: the `now`s share Mage.lua casts(spends)'s closure, whose stack branch runs only with `spends` (the
-    -- handlers'): dead in the belief (Mage.lua's own note, D3)
+    -- removeStack is a `now` verb since aura audit C4, so the `now`s that share Mage.lua casts(spends)'s closure no
+    -- longer read a missing global (their stack branch still runs only with `spends`: dead in the belief, D3)
     ["mage_world Arcane"] = with(
-        {
-            "arcane_blast.now reads removeStack",
-            "arcane_wrath.now reads removeStack",
-            "fireball.now reads removeStack",
-            "frostbolt.now reads removeStack",
-            "frostfire_bolt.now reads removeStack",
-            "pyroblast.now reads removeStack",
-            "scorch.now reads removeStack",
-        },
         locked(
             { "arcane_blast", "arcane" },
             { "arcane_missiles", "arcane" },
