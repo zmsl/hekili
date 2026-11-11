@@ -416,7 +416,13 @@ local function content(name)
                 maelstrom(W, us, X)
             end
         end
+        -- Improved Stormstrike's rank effect 2 (wowsims talents_enhancement.go:218-231): at 2/2 a dodge or parry of an
+        -- attack on us resets Stormstrike's cooldown
+        local resets = (P.talents or {})[1223031] == 2
         us.took = function(W, _, act)
+            if resets and (act == "DODGE" or act == "PARRY") then
+                W.resetCooldown(us, "stormstrike", { A.stormstrike.id })
+            end
             local a = us.auras[ls]
             if a and act == "WOUND" then
                 a.stacks = a.stacks - 1

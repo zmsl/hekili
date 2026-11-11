@@ -770,11 +770,18 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows({ 17364 }),
 
+        -- Improved Stormstrike: rank 2 applied as modelled; rank 1's 50% roll is observed only (owner, 2026-11-11)
         now = function()
             applyDebuff("target", "stormstrike", 12)
+            if talent.improved_stormstrike.rank >= 2 then
+                applyBuff("improved_stormstrike")
+            end
         end,
         handler = function()
             applyDebuff("target", "stormstrike", 12)
+            if talent.improved_stormstrike.rank >= 2 then
+                applyBuff("improved_stormstrike")
+            end
         end,
     },
 

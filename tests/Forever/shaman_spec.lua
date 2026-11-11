@@ -423,6 +423,25 @@ describe("Forever Shaman", function()
         end
     end)
 
+    -- wowsims talents_enhancement.go:192-216 (sd 32600-32602): the cast completing rolls 1238931 (15 s) at the rank's
+    -- chance, 50% / 100%. Owner ruling 2026-11-11: rank 2 applied as modelled; rank 1's roll is observed only (shown
+    -- when the client or the Cooldown Manager reports it, never predicted).
+    it("Stormstrike's now and handler apply Improved Stormstrike at 2/2, not at 1/2 or 0/2", function()
+        assert.are.same({ 1238931, 15 }, { w.auras.improved_stormstrike.id, w.auras.improved_stormstrike.duration })
+        for _, field in ipairs({ "now", "handler" }) do
+            for rank, want in pairs({
+                [0] = { "stormstrike" },
+                { "stormstrike" },
+                { "stormstrike", "improved_stormstrike" },
+            }) do
+                local e = ld.env(w)
+                e.talent.improved_stormstrike = { rank = rank, enabled = rank > 0 }
+                ld.run(w.abilities.stormstrike[field], e)
+                assert.are.same(want, e.applied, field .. " " .. rank)
+            end
+        end
+    end)
+
     -- wowsims totems.go:30-52: a drop deactivates the slot's previous totem's aura and activates the new one's for the
     -- totem's duration; talents_restoration.go:98-111: Mana Tide is a water totem, so it takes Mana Spring down.
     -- Owner ruling 2026-11-11: applied on the summon (reverses "observed out of combat, not applied by the summon").
