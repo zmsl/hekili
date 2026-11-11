@@ -38,6 +38,7 @@ function M.load(vs, file, class)
         formSpell = {},
         base = { 0, 0 }, -- VS.SwingBase: each hand's unhasted speed (0: no plain read yet)
         now = 0, -- GetTime()
+        row = {}, -- the combat-log row CombatLogGetCurrentEventInfo answers
     }
     local w = { game = game, abilities = {}, auras = {}, resources = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { buff = {}, swings = {} }
@@ -85,6 +86,9 @@ function M.load(vs, file, class)
         end,
         GetTime = function()
             return game.now
+        end,
+        CombatLogGetCurrentEventInfo = function()
+            return unpack(game.row, 1, 24)
         end,
         Enum = { PowerType = { Mana = 0, Rage = 1, Energy = 3, ComboPoints = 4 } },
     }
@@ -153,6 +157,10 @@ function M.load(vs, file, class)
         else
             w.settings[call[1]] = { default = call[2], option = call[3], specs = specs }
         end
+    end
+    w.gear = {} -- RegisterGear's (key, ids) pairs
+    for _, call in ipairs(reg.RegisterGear or {}) do
+        w.gear[call[1]] = call[2]
     end
     w.totems = reg.RegisterTotems and reg.RegisterTotems[1][1]
     w.pets = reg.RegisterPets and reg.RegisterPets[1][1]

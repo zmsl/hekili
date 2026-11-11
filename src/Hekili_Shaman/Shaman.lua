@@ -8,17 +8,21 @@
 -- imbues (C4's main_hand_enchant), Rage of the Farseer (a talent under the Cooldowns toggle: its 25 s buff), mana
 -- under the five-second rule (`fsr`), and the default priority, Enhancement (wowsims.com), translated from
 -- wowsims/forever's APL (tools/wowsims/specs/shaman_enhancement.lua). Research: the class-completion research §4.
--- Unmodelled: the totems' effects, Flametongue and Windfury Weapon's
--- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges, Rage of the Farseer's
--- +30% attack speed (nothing reads swing timing for mana).
+-- Unmodelled: the totems' effects (their buffs are applied on the summon, as wowsims does), Flametongue and Windfury
+-- Weapon's procs, Windfury Totem's proc (its 1 s attack-power buff is registered, nothing applies it), Improved
+-- Lightning Shield (+5% a rank on the shield's damage: not a charge), Rage of the Farseer's +30% attack speed (the swing
+-- family observes the hasted durations; only the swing in flight when it is cast lags one swing).
+-- Also here: Improved Stormstrike (rank 2 applied by Stormstrike; rank 1's 50% roll is observed only) and its reset of
+-- Stormstrike on a dodge or parry taken (rank 2), Nature's Swiftness, Flurry and Elemental Devastation (registered for
+-- reads: their crits are unobservable), Burning Totem (the relic: +3 s on Flame Shock).
 -- The Elemental kit (class-completion Task 17; its priority Elemental (wowsims.com)): what wowsims/forever's
 -- Elemental list casts (ui/specs/shaman/elemental/builds/testing.build.json): Chain Lightning (its 6 s cooldown lifted
 -- by Elemental Mastery), Elemental Mastery, Magma, Windfury and Mana Tide Totems (Windfury Totem only for a
 -- pack that casts it, as that list's pre-pull does), Water Shield (one shield at a time), Convection's and Elemental
 -- Alacrity's cuts, Clearcasting on Chain Lightning, Revelation's charge (Lava Burst is gone from the game).
--- Also unmodelled: Mana Tide's mana, Water Shield's mana, Revelation's proc (the weapon enchant's; the player aura read
--- answers it), Lightning Overload, Mindfulness (mana regen while casting: Elemental's `fsr.share`, below, carries it;
--- Improved Stormstrike's casting share is the mana entry below).
+-- Also unmodelled: Water Shield's mana, Revelation's proc (the weapon enchant's; read out of combat only), Lightning
+-- Overload, Mindfulness (mana regen while casting: Elemental's `fsr.share`, below, carries it; Improved Stormstrike's
+-- casting share and Mana Tide's mana are entries below).
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (in-game checks): Call of Flame's +3 s a
 -- rank on Flame Shock, Stormstrike's cost, Mana Tide Totem's rank 4 (1325256), Elemental
 -- Mastery, Revelation, Elemental Alacrity's Forever ranks. Also from it: Fire Nova's costs (the DB2's are wrong: R57a),
@@ -212,6 +216,29 @@ local TOTEMS = {
     grounding_totem = { element = "air", ids = { 8177 }, cost = { 91 }, duration = { 45 }, cooldown = 15 },
 }
 
+-- The buff each totem leaves on us (the aura keys below). A summon applies its own for the totem's life and takes down
+-- those of the element's other totems (wowsims totems.go:30-52: a drop deactivates the slot's previous totem's aura).
+-- Searing, Magma, Tremor, the cleansers, Sentry, Earthbind, Stoneclaw and Grounding leave none.
+local TOTEM_BUFF = {
+    flametongue_totem = "flametongue",
+    frost_resistance_totem = "frost_resistance",
+    stoneskin_totem = "stoneskin",
+    strength_of_earth_totem = "strength_of_earth",
+    grace_of_air_totem = "grace_of_air",
+    nature_resistance_totem = "nature_resistance",
+    windwall_totem = "windwall",
+    windfury_totem = "windfury",
+    mana_spring_totem = "mana_spring",
+    mana_tide_totem = "mana_tide",
+    healing_stream_totem = "healing_stream",
+    fire_resistance_totem = "fire_resistance",
+}
+local ELEMENT_BUFFS = { fire = {}, earth = {}, air = {}, water = {} }
+for key, buff in pairs(TOTEM_BUFF) do
+    local list = ELEMENT_BUFFS[TOTEMS[key].element]
+    list[#list + 1] = buff
+end
+
 -- Mana Spring's buff on us (DB2 aura 24), mana every 2 s by totem rank.
 local MANA_SPRING = { 4, 6, 8, 10 }
 
@@ -254,6 +281,15 @@ local function summon(key)
             d = d + 10 * talent.improved_fire_nova.rank
         end
         summonTotem(key, t.element, d)
+        local own, others = TOTEM_BUFF[key], ELEMENT_BUFFS[t.element]
+        for i = 1, #others do
+            if others[i] ~= own then
+                removeBuff(others[i])
+            end
+        end
+        if own then
+            applyBuff(own, d)
+        end
     end
 end
 
@@ -329,7 +365,11 @@ local function shockEffect(other, debuffKey)
         setCooldown(other, 6 - 0.2 * talent.reverberation.rank)
         if debuffKey then
             -- the aura's duration, explicit for `now`
-            applyDebuff("target", debuffKey, 12 + 3 * talent.call_of_flame.rank)
+            applyDebuff(
+                "target",
+                debuffKey,
+                12 + 3 * talent.call_of_flame.rank + (set_bonus.burning_totem > 0 and 3 or 0) -- the relic's +3 s
+            )
         else
             removeBuff("revelation") -- Earth Shock: Revelation's mask has it, not Flame Shock
             removeDebuff("target", "stormstrike")
@@ -353,10 +393,12 @@ local function costed(costs, ids, convection, focus)
     end
 end
 
--- A `now` or `handler` that spends Revelation (one charge: the next Lightning Bolt or Chain Lightning).
+-- Chain Lightning's `now` or `handler`: spends Revelation (one charge: the next Lightning Bolt or Chain Lightning) and
+-- Nature's Swiftness.
 local function revealed()
     return function()
         removeBuff("revelation")
+        removeBuff("natures_swiftness")
         removeDebuff("target", "stormstrike")
     end
 end
@@ -405,6 +447,8 @@ spec:RegisterResource(
     Enum.PowerType.Mana,
     {
         improved_stormstrike = { aura = "improved_stormstrike", share = 0.5 },
+        -- Mana Tide Totem's buff (1325257 effect 1: 290 every 3 s, 13 s; wowsims spell data)
+        mana_tide = { aura = "mana_tide", mp5 = 290 / 3 * 5 },
         mana_spring = {
             aura = "mana_spring",
             mp5 = function()
@@ -464,11 +508,20 @@ spec:RegisterAuras({
     flametongue_weapon = { enchants = { 5, 4, 3, 523, 1665, 1666 }, duration = 3600, max_stack = 1 },
     windfury_weapon = { enchants = { 283, 284, 525, 1669 }, duration = 3600, max_stack = 1 },
     frostbrand_weapon = { enchants = { 2, 12, 524, 1667, 1668 }, duration = 3600, max_stack = 1 },
+    -- Flurry (16257, wowsims: 15 s, 3 charges, set on a melee crit, spent by landed white swings) and Elemental
+    -- Devastation (30165: 10 s, +3/6/9% melee crit after a spell crit): registered for reads; crits are unobservable
+    -- live, so nothing here applies them. Windfury Totem's proc buff (10610: 1 s, 2 charges): the same.
+    flurry = { id = 16257, duration = 15, max_stack = 3 },
+    elemental_devastation = { id = 30165, duration = 10, max_stack = 1 },
+    windfury_attack = { id = 10610, duration = 1, max_stack = 2 },
+    -- Nature's Swiftness (16188): until used (wowsims DurationMs -1), one charge; the next Lightning Bolt or Chain
+    -- Lightning (its mask) is instant and spends it.
+    natures_swiftness = { id = 16188, duration = 3600, max_stack = 1 },
     -- Improved Stormstrike (DB2 1238931): Stormstrike's 15 s buff, +50% Spirit regen while casting (the mana entry).
     improved_stormstrike = { id = 1238931, duration = 15, max_stack = 1 },
     -- The totems' buffs on us (wowsims e2842f0a78's ids, ranks 1..n; copy leads with the `<name>_totem` alias), read like
-    -- any aura: observed out of combat, not applied by the summon. Mana Spring's is up while its water totem stands
-    -- (the mana entry). Tremor, the cleansers, Sentry, Earthbind, Stoneclaw, Grounding, Searing and Magma leave none.
+    -- any aura: observed out of combat, applied by the summon (TOTEM_BUFF; owner 2026-11-11, as wowsims does). Mana
+    -- Spring's is up while its water totem stands (the mana entry). Tremor, the cleansers, Sentry, Earthbind, Stoneclaw, Grounding, Searing and Magma leave none.
     mana_spring = { id = 10494, copy = { "mana_spring_totem", 5677, 10491, 10493 }, duration = 300, max_stack = 1 },
     stoneskin = {
         id = 10405,
@@ -510,7 +563,7 @@ spec:RegisterAuras({
         max_stack = 1,
     },
     windwall = { id = 15110, copy = { "windwall_totem", 15108, 15109 }, duration = 300, max_stack = 1 },
-    -- the party's proc-trigger auras (the 1 s attack-power buff Windfury's proc applies is not declared)
+    -- the party's proc-trigger auras (the 1 s attack-power buff Windfury's proc applies is windfury_attack, above)
     flametongue = {
         id = 15036,
         copy = { "flametongue_totem", 8230, 8250, 10521 },
@@ -527,7 +580,7 @@ spec:RegisterAuras({
         id = 8050,
         copy = rest(FLAME_SHOCK),
         duration = function()
-            return 12 + 3 * talent.call_of_flame.rank
+            return 12 + 3 * talent.call_of_flame.rank + (set_bonus.burning_totem > 0 and 3 or 0)
         end,
         tick_time = 3,
         max_stack = 1,
@@ -563,18 +616,21 @@ spec:RegisterAbilities({
         school = "nature",
         copy = rest(LIGHTNING_BOLT),
         cast = function()
+            if buff.natures_swiftness.up then
+                return 0
+            end
             local t = byRank(LIGHTNING_BOLT_CAST, LIGHTNING_BOLT) - (ALACRITY[talent.elemental_alacrity.rank] or 0)
             if buff.elemental_mastery.up then
                 t = t - 0.5
             end
-            return max(0, t) * max(0, 1 - 0.2 * buff.maelstrom_weapon.stack)
+            return max(0, t) * max(0, 1 - 0.04 * talent.maelstrom_weapon.rank * buff.maelstrom_weapon.stack)
         end,
         cooldown = 0,
         gcd = "spell",
 
         spend = function()
             return byRank(LIGHTNING_BOLT_COST, LIGHTNING_BOLT)
-                * max(0, 1 - 0.2 * buff.maelstrom_weapon.stack)
+                * max(0, 1 - 0.04 * talent.maelstrom_weapon.rank * buff.maelstrom_weapon.stack)
                 * (1 - 0.02 * talent.convection.rank)
         end,
         spendType = "mana",
@@ -591,6 +647,7 @@ spec:RegisterAbilities({
         now = function()
             removeBuff("maelstrom_weapon")
             removeBuff("revelation")
+            removeBuff("natures_swiftness")
             if debuff.stormstrike.up then
                 applyDebuff("target", "stormstrike", min(2, debuff.stormstrike.remains))
             end
@@ -598,6 +655,7 @@ spec:RegisterAbilities({
         handler = function()
             removeBuff("maelstrom_weapon")
             removeBuff("revelation")
+            removeBuff("natures_swiftness")
             if debuff.stormstrike.up then
                 applyDebuff("target", "stormstrike", min(2, debuff.stormstrike.remains))
             end
@@ -609,6 +667,9 @@ spec:RegisterAbilities({
         id = 421,
         copy = rest(CHAIN_LIGHTNING),
         cast = function()
+            if buff.natures_swiftness.up then
+                return 0
+            end
             return 2 - (ALACRITY[talent.elemental_alacrity.rank] or 0)
         end,
         cooldown = function()
@@ -624,6 +685,25 @@ spec:RegisterAbilities({
 
         now = revealed(),
         handler = revealed(),
+    },
+
+    -- 3 minutes, off the GCD (wowsims: a DPS major cooldown, no GCD), under the Cooldowns toggle; no pack prompts it.
+    natures_swiftness = {
+        id = 16188,
+        cast = 0,
+        cooldown = 180,
+        gcd = "off",
+
+        startsCombat = false,
+        toggle = "cooldowns",
+        known = knows({ 16188 }),
+
+        now = function()
+            applyBuff("natures_swiftness")
+        end,
+        handler = function()
+            applyBuff("natures_swiftness")
+        end,
     },
 
     -- 3 minutes, off the GCD (wowsims's data: no GCD), under the Cooldowns toggle.
@@ -833,6 +913,39 @@ spec:RegisterTalents({
     purification = { 3, 16178, 5 },
     riptide = { 3, 408521, 1 },
 })
+
+-- Burning Totem (272433, the relic; wowsims item_totems.go:70-77): +3 s on Flame Shock, read as `set_bonus.burning_totem`.
+spec:RegisterGear("burning_totem", 272433)
+
+-- Improved Stormstrike's rank effect 2 (wowsims talents_enhancement.go:218-231): a dodge or parry of an attack on us
+-- resets Stormstrike's cooldown. The rows are the victim side's (plain live); the reset stands from the dodge until the
+-- next Stormstrike cast. Rank 2 only: rank 1's 50% roll is skipped (owner, 2026-11-11).
+local CombatLogGetCurrentEventInfo, GetTime = Facade.CombatLogGetCurrentEventInfo, Facade.GetTime
+local stormstrike_cast, stormstrike_reset = 0, 0
+
+spec:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function()
+    local _, subtype, _, sourceGUID, _, _, _, destGUID, _, _, _, actionType, _, _, spellMissType =
+        CombatLogGetCurrentEventInfo()
+    if sourceGUID == state.GUID and subtype == "SPELL_CAST_SUCCESS" and actionType == 17364 then
+        stormstrike_cast = GetTime()
+    elseif destGUID == state.GUID then
+        local kind
+        if subtype == "SWING_MISSED" then
+            kind = actionType
+        elseif subtype == "SPELL_MISSED" then
+            kind = spellMissType
+        end
+        if kind == "DODGE" or kind == "PARRY" then
+            stormstrike_reset = GetTime()
+        end
+    end
+end)
+
+spec:RegisterHook("reset_precast", function()
+    if stormstrike_reset > stormstrike_cast and talent.improved_stormstrike.rank >= 2 then
+        setCooldown("stormstrike", 0)
+    end
+end)
 
 -- The time to each hand's next swing (Hekili_Warrior/Warrior.lua's, after Hekili's Classic profile): Enhancement's AoE
 -- Chain Lightning reads wowsims's AnyAuto, the earlier hand (translator-5); a Shaman has no ranged auto. With no

@@ -36,6 +36,7 @@ local KIT = {
     windfury_totem = { { 8512, 10613, 10614 }, 250, 0, "totem" },
     mana_tide_totem = { { 16190, 17354, 17359, 1325256 }, 60, 300, "totem" },
     water_shield = { { 408510 }, 0, 0, "spell" },
+    natures_swiftness = { { 16188 }, 0, 180, "off" }, -- wowsims's data: off the GCD
     -- the totems with no rotation use (wowsims e2842f0a78; levels agree with the DB2 SpellLevels); a percent cost
     -- is of base mana 1520 as Stormstrike's (Poison/Disease Cleansing 10%, Earthbind/Grounding 6%)
     stoneskin_totem = { { 8071, 8154, 8155, 10406, 10407, 10408 }, 210, 0, "totem" },
@@ -139,7 +140,7 @@ describe("Forever Shaman", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(35, n)
+        assert.are.equal(36, n)
         assert.are.equal("SHAMAN", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.elemental_mastery.toggle)
@@ -295,21 +296,30 @@ describe("Forever Shaman", function()
     )
 
     it(
-        "takes 20% of Lightning Bolt's cast and cost a Maelstrom Weapon stack, five making it free; the cast spends them",
+        "takes 4% a rank of Maelstrom Weapon off Lightning Bolt's cast and cost a stack, five at 5/5 making it free; the cast spends them",
         function()
             local lb = w.abilities.lightning_bolt
             w.game.known[15208] = true
             local e = ld.env(w)
+            e.talent.maelstrom_weapon = { rank = 5, enabled = true }
             assert.are.same({ 2.5, 220 }, { ld.run(lb.cast, e), ld.run(lb.spend, e) })
             e.buff = buffs({ maelstrom_weapon = 3 })
             local cast, spend = ld.run(lb.cast, e), ld.run(lb.spend, e)
             assert.are.same({ 1, 88 }, { math.floor(cast * 1000 + 0.5) / 1000, math.floor(spend + 0.5) })
             e.buff = buffs({ maelstrom_weapon = 5 })
             assert.are.same({ 0, 0 }, { ld.run(lb.cast, e), ld.run(lb.spend, e) })
+            -- 3/5: 12% a stack, 36% off at three stacks, 60% at five (wowsims talents_enhancement.go:247-249)
+            e.talent.maelstrom_weapon = { rank = 3, enabled = true }
+            e.buff = buffs({ maelstrom_weapon = 3 })
+            cast, spend = ld.run(lb.cast, e), ld.run(lb.spend, e)
+            assert.are.same({ 1.6, 141 }, { math.floor(cast * 1000 + 0.5) / 1000, math.floor(spend + 0.5) })
+            e.buff = buffs({ maelstrom_weapon = 5 })
+            cast, spend = ld.run(lb.cast, e), ld.run(lb.spend, e)
+            assert.are.same({ 1, 88 }, { math.floor(cast * 1000 + 0.5) / 1000, math.floor(spend + 0.5) })
             for _, field in ipairs({ "now", "handler" }) do
                 e = ld.env(w)
                 ld.run(lb[field], e)
-                assert.are.same({ "maelstrom_weapon", "revelation" }, e.removed, field)
+                assert.are.same({ "maelstrom_weapon", "revelation", "natures_swiftness" }, e.removed, field)
             end
             assert.are.same({ 408505, 30, 5 }, {
                 w.auras.maelstrom_weapon.id,
@@ -410,6 +420,199 @@ describe("Forever Shaman", function()
             e = ld.env(w)
             ld.run(lb[field], e)
             assert.are.same({}, e.applied, field)
+        end
+    end)
+
+    -- wowsims totems.go:30-52: a drop deactivates the slot's previous totem's aura and activates the new one's for the
+    -- totem's duration; talents_restoration.go:98-111: Mana Tide is a water totem, so it takes Mana Spring down.
+    -- Owner ruling 2026-11-11: applied on the summon (reverses "observed out of combat, not applied by the summon").
+    it(
+        "a totem's summon applies its buff for the rank's duration and removes its element's other totem buffs",
+        function()
+            local BUFF = {
+                searing_totem = false,
+                magma_totem = false,
+                flametongue_totem = "flametongue",
+                strength_of_earth_totem = "strength_of_earth",
+                stoneskin_totem = "stoneskin",
+                grace_of_air_totem = "grace_of_air",
+                windfury_totem = "windfury",
+                windwall_totem = "windwall",
+                nature_resistance_totem = "nature_resistance",
+                mana_spring_totem = "mana_spring",
+                mana_tide_totem = "mana_tide",
+                healing_stream_totem = "healing_stream",
+                fire_resistance_totem = "fire_resistance",
+                frost_resistance_totem = "frost_resistance",
+                tremor_totem = false,
+                poison_cleansing_totem = false,
+                disease_cleansing_totem = false,
+                sentry_totem = false,
+                earthbind_totem = false,
+                stoneclaw_totem = false,
+                grounding_totem = false,
+            }
+            local ELEMENT = {
+                fire = { "flametongue", "frost_resistance" },
+                earth = { "stoneskin", "strength_of_earth" },
+                air = { "grace_of_air", "nature_resistance", "windwall", "windfury" },
+                water = { "mana_spring", "mana_tide", "healing_stream", "fire_resistance" },
+            }
+            for key, buff in pairs(BUFF) do
+                local ids = KIT[key][1]
+                for _, id in ipairs(ids) do
+                    w.game.known[id] = false
+                end
+                w.game.known[ids[#ids]] = true
+                local element = TOTEMS[key][1]
+                local others = {}
+                for _, b in ipairs(ELEMENT[element]) do
+                    if b ~= buff then
+                        others[#others + 1] = b
+                    end
+                end
+                table.sort(others)
+                for _, field in ipairs({ "now", "handler" }) do
+                    local e = ld.env(w)
+                    e.summonTotem = function() end
+                    ld.run(w.abilities[key][field], e)
+                    table.sort(e.removed)
+                    local want = buff and { buff } or {}
+                    assert.are.same({ want, others }, { e.applied, e.removed }, key .. " " .. field)
+                    if buff then
+                        assert.are.equal(TOTEMS[key][2][#ids], e.durations[buff], key .. " " .. field)
+                    end
+                end
+            end
+        end
+    )
+
+    it("declares Mana Tide's mana: 290 every 3 s (mp5 483.3) while mana_tide is up", function()
+        local m = w.resources[0].models.mana_tide
+        assert.are.same({ "mana_tide", 290 / 3 * 5 }, { m.aura, m.mp5 })
+        assert.is_true(math.abs(m.mp5 - 483.3) < 0.05)
+    end)
+
+    -- wowsims talents_enhancement.go:218-231: rank effect 2 resets Stormstrike's cooldown on a dodge or parry taken
+    -- (50% / 100% by rank; rank 2 modelled, rank 1's roll skipped by the owner's ruling).
+    describe("Stormstrike's reset on a dodge or parry of an attack on us", function()
+        local ME, MOB = "Player-1", "Creature-1"
+
+        local function row(t, sub, src, dst, a12, a15)
+            w.game.now = t
+            w.game.row = { t, sub, false, src, "", 0, 0, dst, "", 0, 0, a12, "", 1, a15 or 0 }
+            w.events.COMBAT_LOG_EVENT_UNFILTERED()
+        end
+
+        local function readied(t, rank)
+            local e = ld.env(w)
+            e.now, e.query_time = t, t
+            e.talent.improved_stormstrike = { rank = rank, enabled = rank > 0 }
+            e.setCooldown = function(k, v)
+                e.cooldowns[#e.cooldowns + 1] = { k, v }
+            end
+            ld.run(w.hooks.reset_precast, e)
+            return e.cooldowns
+        end
+
+        before_each(function()
+            w.state.GUID = ME
+        end)
+
+        it("readies Stormstrike at 2/2 on a dodge or parry after its cast, a swing or a spell", function()
+            row(10, "SPELL_CAST_SUCCESS", ME, MOB, 17364)
+            assert.are.same({}, readied(11, 2))
+            row(12, "SWING_MISSED", MOB, ME, "DODGE")
+            assert.are.same({ { "stormstrike", 0 } }, readied(13, 2))
+            row(14, "SPELL_CAST_SUCCESS", ME, MOB, 17364) -- cast again: ready no more
+            assert.are.same({}, readied(15, 2))
+            row(16, "SPELL_MISSED", MOB, ME, 1234, "PARRY")
+            assert.are.same({ { "stormstrike", 0 } }, readied(17, 2))
+        end)
+
+        it("does not at 1/2 (a 50% roll), on another unit's dodge, on a block or a miss, or before the cast", function()
+            row(10, "SPELL_CAST_SUCCESS", ME, MOB, 17364)
+            row(11, "SWING_MISSED", MOB, ME, "DODGE")
+            assert.are.same({}, readied(12, 1))
+            assert.are.same({}, readied(12, 0))
+            w = ld.load(nil, FILE, "SHAMAN")
+            w.state.GUID = ME
+            row(20, "SWING_MISSED", MOB, ME, "DODGE") -- before any Stormstrike
+            row(21, "SPELL_CAST_SUCCESS", ME, MOB, 17364)
+            assert.are.same({}, readied(22, 2))
+            row(23, "SWING_MISSED", MOB, "Creature-2", "DODGE") -- someone else's dodge
+            row(24, "SWING_MISSED", MOB, ME, "BLOCK")
+            row(25, "SWING_MISSED", MOB, ME, "MISS")
+            assert.are.same({}, readied(26, 2))
+        end)
+    end)
+
+    -- wowsims talents_enhancement.go:115-159, talents_elemental.go:78-104 (sd 13304, 22835): registered for the
+    -- reads; crits are unobservable live, so nothing here applies them.
+    it(
+        "registers flurry 16257 (15 s, 3 stacks), elemental_devastation 30165 (10 s), the Windfury Totem charge buff",
+        function()
+            local a = w.auras
+            assert.are.same({ 16257, 15, 3 }, { a.flurry.id, a.flurry.duration, a.flurry.max_stack })
+            assert.are.same(
+                { 30165, 10, 1 },
+                { a.elemental_devastation.id, a.elemental_devastation.duration, a.elemental_devastation.max_stack }
+            )
+            -- core/buffs/drivers.go:245-275: 1 s, 2 charges (sd 7681: DurationMs 1000, ProcCharges 2)
+            assert.are.same(
+                { 10610, 1, 2 },
+                { a.windfury_attack.id, a.windfury_attack.duration, a.windfury_attack.max_stack }
+            )
+        end
+    )
+
+    -- wowsims talents_restoration.go:120-150 (sd 13243): until used, one charge, 180 s off the GCD, a DPS major
+    -- cooldown; the next Lightning Bolt or Chain Lightning (its mask) is instant and spends the charge.
+    it("Nature's Swiftness makes the next Lightning Bolt or Chain Lightning instant and is spent by it", function()
+        local ns = w.abilities.natures_swiftness
+        assert.are.same({ 16188, "off", 180, "cooldowns" }, { ns.id, ns.gcd, ns.cooldown, ns.toggle })
+        assert.are.same({ 16188, 1 }, { w.auras.natures_swiftness.id, w.auras.natures_swiftness.max_stack })
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = ld.env(w)
+            ld.run(ns[field], e)
+            assert.are.same({ "natures_swiftness" }, e.applied, field)
+        end
+        w.game.known[15208], w.game.known[10605] = true, true
+        for _, key in ipairs({ "lightning_bolt", "chain_lightning" }) do
+            local e = ld.env(w)
+            assert.is_true(ld.run(w.abilities[key].cast, e) > 0, key)
+            e.buff = buffs({ natures_swiftness = true })
+            assert.are.equal(0, ld.run(w.abilities[key].cast, e), key)
+            for _, field in ipairs({ "now", "handler" }) do
+                e = ld.env(w)
+                e.setCooldown = function() end
+                ld.run(w.abilities[key][field], e)
+                local spent = false
+                for _, k in ipairs(e.removed) do
+                    spent = spent or k == "natures_swiftness"
+                end
+                assert.is_true(spent, key .. " " .. field)
+            end
+        end
+    end)
+
+    -- sim/shaman/item_totems.go:70-77: the relic Burning Totem (272433, the aura 1291077) adds 3 s to Flame Shock.
+    it("lengthens Flame Shock by 3 s while the Burning Totem relic is equipped", function()
+        assert.are.same({ burning_totem = 272433 }, w.gear)
+        local e = ld.env(w)
+        assert.are.equal(12, ld.run(w.auras.flame_shock.duration, e))
+        e.set_bonus = setmetatable({ burning_totem = 1 }, {
+            __index = function()
+                return 0
+            end,
+        })
+        e.talent.call_of_flame = { rank = 1, enabled = true }
+        assert.are.equal(18, ld.run(w.auras.flame_shock.duration, e))
+        for _, field in ipairs({ "now", "handler" }) do
+            e.applied, e.durations = {}, {}
+            e.setCooldown = function() end
+            ld.run(w.abilities.flame_shock[field], e)
+            assert.are.equal(18, e.durations.flame_shock, field)
         end
     end)
 
