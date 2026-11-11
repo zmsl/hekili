@@ -16,7 +16,7 @@ local WORLDS = {
     { "Forever.helpers.druid_loop_world", "Feral" },
 }
 -- the function fields the belief evaluates, by record kind (Casts.lua, Resources.lua, Expect.lua)
-local ABILITY = { "cooldown", "spend", "gcdTime", "usable", "now", "onCrit", "now_finish" }
+local ABILITY = { "cooldown", "spend", "gcdTime", "usable", "now", "onCrit", "onLand", "now_finish" }
 local AURA = { "duration", "tick_time", "base_tick_time" }
 local RESOURCE = { "max", "decay", "decayInterval", "swingValue", "swingOff", "swingCrit", "swingOffCrit", "taken" }
 local ENTRY = { "spirit", "mp5", "share", "value", "mult", "when" }

@@ -24,6 +24,7 @@ local CAST = Obs.CastSuccess
 local A = I.ab
 A.now = {} -- by ability index: the `now` function, bound to the context, or false
 A.onCrit = {} -- by ability index: the `onCrit` function (run at the cast's own crit, Obs.Crit), bound, or false
+A.onLand = {} -- by ability index: the `onLand` function (run once its cast landed, Obs.Landed), bound, or false
 A.finish = {} -- by ability index: the `now_finish` function (run at a channel's stop at its end), bound, or false
 A.extra = {} -- by ability index: a `track_<id>` extra (VS.Track): no ability, no effects
 A.known = A.known or {} -- by ability index: any rank in the spellbook (Sources/Spellbook.lua)
@@ -604,6 +605,8 @@ I.OnBuild(function(def)
         A.now[a] = type(f) == "function" and setfenv(f, ctx) or false
         local c = obj.onCrit
         A.onCrit[a] = type(c) == "function" and setfenv(c, ctx) or false
+        local l = obj.onLand
+        A.onLand[a] = type(l) == "function" and setfenv(l, ctx) or false
         local fin = obj.now_finish
         if type(fin) == "function" and fin == obj.finish then -- as `now` and `handler`: one function, one environment
             I.nowErrors, I.nowError = I.nowErrors + 1, "now: " .. tostring(A.key[a]) .. "'s now_finish is its finish"
@@ -810,6 +813,17 @@ I.On(Obs.ChannelStop, function(o)
     if A.finish[a] and A.key[a] and not A.extra[a] and o.t >= chanEnd - FINISH_TOL then
         journal = false
         call(A.finish[a], a, o.t)
+        journal = true
+    end
+end)
+
+-- Our cast's own landed hit (Events/Rows.lua, aura audit C10): the ability's `onLand` runs at it, its writes `modelled`
+-- there and no avoid's to undo (a gain only a landed hit gives, as a mana return). Allocates nothing.
+I.On(Obs.Landed, function(o)
+    local a = o.a
+    if A.onLand[a] and A.key[a] and not A.extra[a] then
+        journal = false
+        call(A.onLand[a], a, o.t)
         journal = true
     end
 end)

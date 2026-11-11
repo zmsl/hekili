@@ -1088,6 +1088,29 @@ describe("now handlers", function()
             assert.are.equal(0, VS.Power(fs.RAGE, 6.1).est)
         end)
 
+        -- aura audit C10: the ability's `onLand` runs once its cast is settled as landed (a hit or a crit paid to
+        -- it, or its window closing with no row: presumed landed, as a white swing's `land`), never on an avoid.
+        it("runs onLand at a landed hit or crit, at an unpaid close, never at an avoid (aura audit C10)", function()
+            local lands = {}
+            h.Class.abilities.spender_c.funcs.onLand = function()
+                lands[#lands + 1] = now -- luacheck: ignore 113 (the `now` context's time)
+            end
+            begin()
+            h.Class.abilities.spender_c.funcs.onLand = nil
+            castOutcome(fs.SPENDER_C, 5, "WOUND", 0, 100) -- a hit
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 100, 1) -- a crit lands too
+            ctl.Tick(10.01)
+            VS.Drain(10.02)
+            castOutcome(fs.SPENDER_C, 15, "DODGE") -- avoided: nothing
+            castOutcome(fs.SPENDER_C, 20) -- no row: presumed landed at its window's close
+            ctl.now = 25
+            ctl.Tick(25)
+            VS.Drain(25.01)
+            assert.are.same({ 5, 10, 20 }, lands)
+        end)
+
         it("a crit a pending swing explains runs no onCrit; one in the newer cast's frame is its (GAP T)", function()
             local crits = 0
             h.Class.abilities.spender_c.funcs.onCrit = function()
