@@ -2800,6 +2800,44 @@ describe("the wowsims APL translator's auto-attack clocks", function()
         end
         assert.is_true(waits > 0)
     end)
+
+    it("maintains two hawks, selects Aimed or Multi-Shot by target count, then falls back to Arcane", function()
+        local json = require("dkjson")
+        local f = assert(io.open("tests/Forever/wowsims/hunter_beast_mastery.build.json", "rb"))
+        local player = json.decode(f:read("*a")).player
+        f:close()
+        local r = dofile("tools/wowsims/specs/hunter_beast_mastery.lua")
+        local set = require("Forever.helpers.engine").abilitySet(r.class)
+        local text = apl.translate(player.rotation, apl.context(set, r, nil, player))
+        local lines = {}
+        for line in text:gmatch("[^\n]+") do
+            lines[#lines + 1] = line
+        end
+
+        local first = {}
+        for i, line in ipairs(lines) do
+            local key = line:match("actions%+?=/([%w_]+)") or line:match("actions=([%w_]+)")
+            if key and not first[key] then
+                first[key] = i
+            end
+            if key == "arcane_shot" then
+                assert.is_falsy(line:find("active_enemies", 1, true), line)
+                assert.is_falsy(line:find("window.hha", 1, true), line)
+            elseif key == "multi_shot" then
+                assert.is_truthy(line:find("active_enemies>1", 1, true), line)
+            end
+        end
+
+        assert.is_falsy(text:find("window.hha", 1, true), text)
+        assert.is_truthy(text:find("actions+=/summon_hawk,if=pet.hawk.count<2", 1, true), text)
+        assert.is_truthy(text:find("actions+=/aimed_shot,if=active_enemies=1&target.outside8", 1, true), text)
+        assert.is_truthy(text:find("actions+=/arcane_shot,if=target.outside8", 1, true), text)
+        assert.is_true(first.summon_hawk < first.aimed_shot)
+        assert.is_true(first.summon_hawk < first.multi_shot)
+        assert.is_true(first.aimed_shot < first.arcane_shot)
+        assert.is_true(first.aimed_shot < first.multi_shot)
+        assert.is_true(first.multi_shot < first.arcane_shot)
+    end)
 end)
 
 -- CN2 (.siml recipes, L141): upstream moved the Paladin APLs to .apl.siml (2fe0846044). export.lua turns a .siml file
