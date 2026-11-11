@@ -39,6 +39,13 @@ local function forget(s, t)
         guid[s] = ""
     end
 end
+local function forgetAll(t)
+    for s = 1, I.TARGET_CAP do
+        if guid[s] ~= "" then
+            forget(s, t)
+        end
+    end
+end
 local dead = false
 local HUGE = math.huge
 local lastLo, lastHi = -1, -1 -- the bracket last logged (-1: none since the swap)
@@ -90,11 +97,16 @@ local function swap(api, t)
     I.Units.Pin(api, t)
     local g = I.Units.Bound(1)
     local secret = g == "" and I.Units.Secret(api, 1) -- Map: a target is there, its GUID unreadable
+    local mode = tokenMode -- no target: the key space stands
     if g ~= "" then
-        tokenMode = false
+        mode = false
     elseif secret then
-        tokenMode = true
-    end -- no target: the key space stands
+        mode = true
+    end
+    if mode ~= tokenMode then -- (review F6) the key spaces never meet: a flip forgets every slot
+        forgetAll(t)
+        tokenMode = mode
+    end
     local key = g
     if secret then
         key = plateOfTarget(api) -- 0: no plate answers (plates off, out of plate range): no memory
@@ -127,8 +139,19 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(api, t)
 end)
 S.OnStart(swap)
 I.OnBuild(function(def, now)
+    if tokenMode then -- the build made the memory arrays anew and cleared the log: no plate key survives it
+        for s = 1, I.TARGET_CAP do
+            guid[s] = ""
+        end
+    end
     if I.api then
         swap(I.api, now)
+    end
+end)
+-- A world entry that is no rebuild (a zone change): the plates are new, so is every plate key.
+S.On("PLAYER_ENTERING_WORLD", nil, function(api, t)
+    if tokenMode then
+        forgetAll(t)
     end
 end)
 

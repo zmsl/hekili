@@ -169,4 +169,118 @@ describe("token-keyed target memory (lane T2m)", function()
             assert.is_nil(est(14.1), "the orphan was forgotten")
         end
     end)
+
+    it("a target no plate answers for takes slot 0 (task 6)", function()
+        start("token", 0) -- plates off: none up
+        tab(1, 10)
+        assert.are.equal(0, I.curSlot)
+        castX(10.1, 15)
+        tab(2, 13)
+        tab(1, 17)
+        assert.is_nil(est(17.1))
+        start("token") -- plates up, UnitIsUnit answers for none
+        ctl.guid.target, ctl.unitIs.target = fake.SECRET, nil
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        fold(10)
+        assert.are.equal(0, I.curSlot)
+    end)
+
+    it("every compare secret: slot 0, no error, no secret stored (task 6)", function()
+        start("token")
+        ctl.now = 10
+        ctl.guid.target, ctl.unitIs.target = fake.SECRET, fake.SECRET
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        fold(10.05)
+        assert.are.equal(0, I.curSlot)
+        assert.are.equal(0, fake.secretsIn(I.targetKeys))
+        assert.are.equal(0, fake.secretsIn(I.Plates.active))
+    end)
+
+    it("40 plates and 17 mobs in turn: the least recently used is forgotten, as with GUIDs (task 6)", function()
+        local got = {}
+        for _, w in ipairs(WORLDS) do
+            start(w, 40)
+            tab(1, 10)
+            castX(10.1, 15)
+            for k = 2, 17 do
+                tab(k, 10 + k * 0.1)
+            end
+            tab(17, 12.5)
+            castX(12.6, 15)
+            tab(1, 13) -- mob 1's slot went to mob 17
+            got[w] = { est(13.1) or "down", I.curSlot }
+            tab(17, 13.5)
+            got[w][3] = est(13.6) or "down"
+        end
+        assert.are.equal("down", got.token[1])
+        near(27.6, got.token[3], "mob 17 remembered")
+        assert.are.same(got.guid, got.token)
+    end)
+
+    it("a flip between the key spaces forgets all memory, both ways (task 6, review F6)", function()
+        start("guid")
+        tab(1, 10)
+        castX(10.1, 15) -- remembered under Creature-1
+        world = "token"
+        tab(2, 11) -- the GUID reads secret now: every GUID slot is forgotten
+        castX(11.1, 15) -- remembered under plate 2
+        world = "guid"
+        tab(1, 12) -- plain again: every plate slot is forgotten
+        assert.is_nil(est(12.1), "Creature-1 forgotten at the first flip")
+        world = "token"
+        tab(2, 13)
+        assert.is_nil(est(13.1), "plate 2 forgotten at the second flip")
+    end)
+
+    it("a rebuild in token mode keeps no plate key; the target stays judgeable (task 6, plan §4.4)", function()
+        start("token")
+        tab(1, 10)
+        castX(10.1, 15)
+        tab(2, 11)
+        assert.are.equal(2, keys())
+        I.Build(def, 12) -- the memory arrays are new; the build's swap keys the current target again
+        fold(12.1)
+        assert.are.equal(1, keys())
+        assert.are.equal(I.targetSwapN, I.curSwapN)
+        tab(1, 13)
+        assert.is_nil(est(13.1))
+    end)
+
+    it("a world entry with no rebuild forgets every plate key (task 6, plan §4.4)", function()
+        start("token")
+        tab(1, 10)
+        castX(10.1, 15)
+        tab(2, 11)
+        ctl.now = 12
+        ctl.Fire("PLAYER_ENTERING_WORLD")
+        fold(12.05)
+        assert.are.equal(0, keys()) -- plate 2 (the target) is an orphan until the next swap
+        tab(1, 13)
+        assert.is_nil(est(13.1))
+    end)
+
+    it("the swap's walk raising keeps the loaded memory; a plain empty walk out of combat clears it (task 6)", function()
+        start("token")
+        tab(1, 10)
+        castX(10.1, 15)
+        tab(2, 11)
+        ctl.auraError.target = true -- in combat under Map: the target's walk raises
+        tab(1, 12)
+        near(25.1, est(12.1), "a raising walk writes nothing")
+        ctl.auraError.target = nil
+        ctl.auras.target.HARMFUL[1] = nil -- out of combat, the walk is plain: nothing on mob A
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        tab(2, 13)
+        tab(1, 14)
+        assert.is_nil(est(14.1), "the plain walk wins")
+    end)
+
+    it("a token slot is never fresh; attackable follows UnitCanAttack (task 6, review F11)", function()
+        start("token")
+        tab(1, 10)
+        assert.are.same({ true, false, true }, { I.th.slot > 0, I.th.fresh, I.th.attackable })
+        ctl.friendly.target = true
+        tab(2, 11)
+        assert.are.same({ true, false, false }, { I.th.slot > 0, I.th.fresh, I.th.attackable })
+    end)
 end)
