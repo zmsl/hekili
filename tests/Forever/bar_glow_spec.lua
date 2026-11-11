@@ -304,10 +304,13 @@ describe("action bar glow", function()
         assert.is_true(fresh.combatOnly)
     end)
 
-    it("has its own options page beside the Cooldown Manager's, and no style tab or style group", function()
-        local page = H.Hekili.Options.args.barGlow
+    it("has its own options page under Displays (owner 2026-11-11), and no style tab or style group", function()
+        H.Hekili:EmbedDisplayOptions()
+        local page = H.Hekili.Options.args.displays.args.barGlow
         assert.is_table(page)
-        assert.is_table(H.Hekili.Options.args.cdm)
+        assert.are.equal("group", page.type)
+        assert.is_nil(H.Hekili.Options.args.barGlow) -- not a top-level page any more
+        assert.is_table(H.Hekili.Options.args.displays.args.barGlowBtn) -- the overview's shortcut, like Share Styles
         for _, k in ipairs({ "enabled", "follow", "colorNow", "glowNext", "colorNext", "combatOnly" }) do
             assert.is_table(page.args[k], k)
         end

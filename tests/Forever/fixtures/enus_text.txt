@@ -7847,26 +7847,6 @@ options.abilities.wrath.toggle	values.interrupts	Interrupts
 options.abilities.wrath.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.wrath.toggle	values.none	None
 options.abilities.wrath.toggle	values.potions	Potions
-options.barGlow	desc	Preferences for the glow around your action bar buttons.
-options.barGlow	name	Action Bar Glow
-options.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
-options.barGlow.colorNext	name	Next Color
-options.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
-options.barGlow.colorNow	name	Now Color
-options.barGlow.combatOnly	desc	If enabled, the buttons glow only while you are in combat.
-options.barGlow.combatOnly	name	In Combat Only
-options.barGlow.enabled	desc	If enabled, the action buttons that cast the followed display's first recommendation glow.
-options.barGlow.enabled	name	Enabled
-options.barGlow.follow	desc	The display whose recommendations the glow follows.
-options.barGlow.follow	name	Follow Display
-options.barGlow.follow	values.AOE	AOE
-options.barGlow.follow	values.Cooldowns	Cooldowns
-options.barGlow.follow	values.Defensives	Defensives
-options.barGlow.follow	values.Interrupts	Interrupts
-options.barGlow.follow	values.Primary	Primary
-options.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
-options.barGlow.glowNext	name	Glow the next recommendation
-options.barGlow.intro	name	Glows the real buttons on your action bars that cast the first recommendation of a display, and the second recommendation's in another color. It works with the display itself hidden.
 options.cdm	name	Cooldown Manager
 options.cdm.combat	name	Changes apply after combat.
 options.cdm.intro	name	Hekili reads the Cooldown Manager to see when your buffs and debuffs are up. Turn a switch off and Hekili ignores that aura's items there. |cffffd100Gold|r: on a bar. |cff808080Grey|r: not on a bar; its switch applies when you add it.
@@ -13304,6 +13284,29 @@ options.displays.Primary.visibility.simple.pveAlpha	desc	Set the transparency of
 options.displays.Primary.visibility.simple.pveAlpha	name	PvE Alpha
 options.displays.Primary.visibility.simple.pvpAlpha	desc	Set the transparency of the display when in PvP environments.  If set to 0, the display will not appear in PvP.
 options.displays.Primary.visibility.simple.pvpAlpha	name	PvP Alpha
+options.displays.barGlow	desc	Preferences for the glow around your action bar buttons.
+options.displays.barGlow	name	|cFF1EFF00Action Bar Glow|r
+options.displays.barGlow.colorNext	desc	The glow on the buttons of the second recommendation.
+options.displays.barGlow.colorNext	name	Next Color
+options.displays.barGlow.colorNow	desc	The glow on the buttons of the first recommendation.
+options.displays.barGlow.colorNow	name	Now Color
+options.displays.barGlow.combatOnly	desc	If enabled, the buttons glow only while you are in combat.
+options.displays.barGlow.combatOnly	name	In Combat Only
+options.displays.barGlow.enabled	desc	If enabled, the action buttons that cast the followed display's first recommendation glow.
+options.displays.barGlow.enabled	name	Enabled
+options.displays.barGlow.follow	desc	The display whose recommendations the glow follows.
+options.displays.barGlow.follow	name	Follow Display
+options.displays.barGlow.follow	values.AOE	AOE
+options.displays.barGlow.follow	values.Cooldowns	Cooldowns
+options.displays.barGlow.follow	values.Defensives	Defensives
+options.displays.barGlow.follow	values.Interrupts	Interrupts
+options.displays.barGlow.follow	values.Primary	Primary
+options.displays.barGlow.glowNext	desc	If enabled, the buttons of the second recommendation glow too, in the next color.
+options.displays.barGlow.glowNext	name	Glow the next recommendation
+options.displays.barGlow.intro	name	Glows the real buttons on your action bars that cast the first recommendation of a display, and the second recommendation's in another color. It works with the display itself hidden.
+options.displays.barGlowBtn	desc	Preferences for the glow around your action bar buttons.
+options.displays.barGlowBtn	name	Action Bar Glow
+options.displays.barGlowHeader	name	Action Bar Glow
 options.displays.btnAOE	name	AOE
 options.displays.btnCooldowns	name	chromietime-32x32 Cooldowns
 options.displays.btnDefensives	name	nameplates-InterruptShield Defensives

@@ -1982,6 +1982,97 @@ return L["Position"] end,
                     width = 1.5
                 },
 
+                barGlowHeader = {
+                    type = "header",
+                    name = L["Action Bar Glow"],
+                    order = 960,
+                },
+
+                barGlowBtn = {
+                    type = "execute",
+                    name = L["Action Bar Glow"],
+                    desc = L["Preferences for the glow around your action bar buttons."],
+                    func = function ()
+                        ACD:SelectGroup( "Hekili", "displays", "barGlow" )
+                    end,
+                    order = 961,
+                },
+
+                barGlow = {
+                    type = "group",
+                    name = L["|cFF1EFF00Action Bar Glow|r"],
+                    desc = L["Preferences for the glow around your action bar buttons."],
+                    order = 962,
+                    get = function( info )
+                        local v = Hekili.DB.profile.barGlow[ info[ #info ] ]
+                        if info.type == "color" then return unpack( v ) end
+                        return v
+                    end,
+                    set = function( info, val, ... )
+                        local c = Hekili.DB.profile.barGlow
+                        local k = info[ #info ]
+                        if info.type == "color" then c[ k ] = { val, ... } else c[ k ] = val end
+                        ns.UI.BarGlow.Apply()
+                    end,
+                    args = {
+                        intro = {
+                            type = "description",
+                            name = L["Glows the real buttons on your action bars that cast the first recommendation of a display, and the second recommendation's in another color. It works with the display itself hidden."],
+                            fontSize = "medium",
+                            order = 1,
+                            width = "full",
+                        },
+                        enabled = {
+                            type = "toggle",
+                            name = L["Enabled"],
+                            desc = L["If enabled, the action buttons that cast the followed display's first recommendation glow."],
+                            order = 2,
+                            width = "full",
+                        },
+                        follow = {
+                            type = "select",
+                            name = L["Follow Display"],
+                            desc = L["The display whose recommendations the glow follows."],
+                            order = 3,
+                            width = 1.49,
+                            values = function()
+                                local t = {}
+                                for id in pairs( Hekili.DB.profile.displays ) do t[ id ] = id end
+                                return t
+                            end,
+                        },
+                        combatOnly = {
+                            type = "toggle",
+                            name = L["In Combat Only"],
+                            desc = L["If enabled, the buttons glow only while you are in combat."],
+                            order = 4,
+                            width = 1.49,
+                        },
+                        colorNow = {
+                            type = "color",
+                            name = L["Now Color"],
+                            desc = L["The glow on the buttons of the first recommendation."],
+                            order = 5,
+                            width = 1.49,
+                        },
+                        glowNext = {
+                            type = "toggle",
+                            name = L["Glow the next recommendation"],
+                            desc = L["If enabled, the buttons of the second recommendation glow too, in the next color."],
+                            order = 6,
+                            width = 1.49,
+                        },
+                        colorNext = {
+                            type = "color",
+                            name = L["Next Color"],
+                            desc = L["The glow on the buttons of the second recommendation."],
+                            order = 7,
+                            width = 1.49,
+                            disabled = function() return Hekili.DB.profile.barGlow.glowNext == false end,
+                        },
+                    },
+                },
+
                 shareHeader = {
                     type = "header",
                     name = L["Sharing"],
@@ -7695,81 +7786,6 @@ do
                         args = {},
                         -- `hidden` is inherited: it also runs for each card (info.option = the card, no args)
                         hidden = function( info ) local a = info.option.args return a ~= nil and next( a ) == nil end,
-                    },
-                },
-            },
-
-            barGlow = {
-                type = "group",
-                name = L["Action Bar Glow"],
-                desc = L["Preferences for the glow around your action bar buttons."],
-                order = 83,
-                get = function( info )
-                    local v = Hekili.DB.profile.barGlow[ info[ #info ] ]
-                    if info.type == "color" then return unpack( v ) end
-                    return v
-                end,
-                set = function( info, val, ... )
-                    local c = Hekili.DB.profile.barGlow
-                    local k = info[ #info ]
-                    if info.type == "color" then c[ k ] = { val, ... } else c[ k ] = val end
-                    ns.UI.BarGlow.Apply()
-                end,
-                args = {
-                    intro = {
-                        type = "description",
-                        name = L["Glows the real buttons on your action bars that cast the first recommendation of a display, and the second recommendation's in another color. It works with the display itself hidden."],
-                        fontSize = "medium",
-                        order = 1,
-                        width = "full",
-                    },
-                    enabled = {
-                        type = "toggle",
-                        name = L["Enabled"],
-                        desc = L["If enabled, the action buttons that cast the followed display's first recommendation glow."],
-                        order = 2,
-                        width = "full",
-                    },
-                    follow = {
-                        type = "select",
-                        name = L["Follow Display"],
-                        desc = L["The display whose recommendations the glow follows."],
-                        order = 3,
-                        width = 1.49,
-                        values = function()
-                            local t = {}
-                            for id in pairs( Hekili.DB.profile.displays ) do t[ id ] = id end
-                            return t
-                        end,
-                    },
-                    combatOnly = {
-                        type = "toggle",
-                        name = L["In Combat Only"],
-                        desc = L["If enabled, the buttons glow only while you are in combat."],
-                        order = 4,
-                        width = 1.49,
-                    },
-                    colorNow = {
-                        type = "color",
-                        name = L["Now Color"],
-                        desc = L["The glow on the buttons of the first recommendation."],
-                        order = 5,
-                        width = 1.49,
-                    },
-                    glowNext = {
-                        type = "toggle",
-                        name = L["Glow the next recommendation"],
-                        desc = L["If enabled, the buttons of the second recommendation glow too, in the next color."],
-                        order = 6,
-                        width = 1.49,
-                    },
-                    colorNext = {
-                        type = "color",
-                        name = L["Next Color"],
-                        desc = L["The glow on the buttons of the second recommendation."],
-                        order = 7,
-                        width = 1.49,
-                        disabled = function() return Hekili.DB.profile.barGlow.glowNext == false end,
                     },
                 },
             },
