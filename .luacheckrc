@@ -50,7 +50,7 @@ read_globals = {
     "max", "min", "floor", "ceil", "abs", "date", "time", "bit", "debugstack", "debugprofilestop",
     "geterrorhandler", "seterrorhandler", "issecretvalue", "issecrettable", "C_Secrets",
     -- libraries and other addons
-    "LibStub", "WeakAuras", "ElvUI", "ConsolePort", "SpellFlashCore", "Masque",
+    "LibStub", "WeakAuras", "ElvUI", "ConsolePort", "Masque",
     -- FrameXML (Lua-defined UI utilities, not reads)
     "UIParent", "GameTooltip", "GameTooltip_SetTitle", "GameTooltip_AddNormalLine",
     "GetAppropriateTooltip", "UIDropDownMenu_SetDisplayMode", "UIDropDownMenu_AddSeparator",

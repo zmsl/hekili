@@ -30,7 +30,6 @@ end
 
 local Registry = Hekili.Engine.Registry
 local SO = ns.StyleOptions
-local flashEvents = ns.UI.FlashEvents
 local Button_OnMouseDown, Button_OnMouseUp = ns.UI.Button_OnMouseDown, ns.UI.Button_OnMouseUp
 local LSM = LibStub( "LibSharedMedia-3.0", true )
 local Glower = LibStub( "LibCustomGlow-1.0" )
@@ -68,7 +67,7 @@ end
 
 -- Its icon zones for the shared option builders: cell 1, cell 2, the lane (the alternatives use the lane's text).
 local ZONES = { "now", "next", "lane" }
-local SHARED = { "border", "range", "glow", "barGlow", "flash", "captions", "indicators", "targets", "delays", "keybindings", "gamepad" }
+local SHARED = { "border", "range", "glow", "barGlow", "captions", "indicators", "targets", "delays", "keybindings", "gamepad" }
 
 -- Per zone (1 now, 2 next, 3 lane) the shared groups' field names (StyleOptions: a later zone prefixes its own).
 local function zkey( z, field )
@@ -400,10 +399,7 @@ function Timeline.Build( d, conf )
         for i = 1, SLOTS do T.cells[ i ] = newCell( d, T, i ) end
         T.base = track( T, d:CreateTexture( nil, "ARTWORK" ), "Ruler.Base" )
         for k = 1, MAX_TICKS do T.ticks[ k ] = track( T, d:CreateTexture( nil, "ARTWORK" ), "Ruler.Tick" .. k ) end
-        T.flashOn = function() st.flashReady = true end
     end
-    st.flashTimer = st.flashTimer or 0
-
     local s = Hekili:GetScale()
     local left = tl.direction == "LEFT"
     T.s, T.pt, T.sx = s, left and "TOPRIGHT" or "TOPLEFT", left and -1 or 1
@@ -462,8 +458,6 @@ function Timeline.Build( d, conf )
     end
     T.combat, T.quiet = nil, nil -- the ruler's alpha and the quiet state are set on the next Draw
     reveal( T, tl )
-
-    if st.flashReady == nil then C_Timer.After( 3, T.flashOn ) end
 
     local out = Hekili.Engine.Output[ d.id ]
     if out and out.count > 0 then d.NewRecommendations = true end -- redraw what is published with the new layout
@@ -663,7 +657,6 @@ local function assign( d, T, tl, conf, out, now, combat )
     end
     T.has = true
     if T.cleared then reveal( T, tl ) end
-    local suppress = tl.flash.enabled and tl.flash.suppress
     local kb, cap, ind, a = tl.keybindings, tl.captions, tl.indicators, tl.alts
     local px, abilities = tl.pxPerSec, Registry.Abilities()
     local gated1 -- the first pick short of its resource: the picks after it may slip (dimmed)
@@ -726,15 +719,11 @@ local function assign( d, T, tl, conf, out, now, combat )
                 -- the gap to the lane's previous pick (not r.since: the focus record between them is not on the lane)
                 T.row[ c ] = ( tl.rows >= 2 and c > 3 and T.row[ c - 1 ] == 1 and ( key - cells[ c - 1 ].Key ) * px < tl.rowGap ) and 2 or 1
                 if reset or not T.want[ c ] or not b.Action then T.at[ c ] = key end -- newly on the lane: no glide
-                T.want[ c ] = not suppress
+                T.want[ c ] = true
                 T.x[ c ] = -1
-                if suppress and T.inLane[ c ] then
-                    T.inLane[ c ] = false
-                    b:Hide()
-                end
                 b:SetAlpha( gated1 and gated1 < i and tl.laneDim or tl.laneAlpha )
             else
-                b:SetShown( not suppress )
+                b:Show()
                 if i == 1 then
                     highlight( b, tl, ability, exact )
                 else
@@ -903,7 +892,6 @@ function Timeline.Draw( d, conf, out, status )
         b.Targets:SetText( nil )
     end
 
-    ns.UI.FlashRecommendation( st, tl.flash, b.Action, T.elapsed or 0 )
 end
 
 function Timeline.OnGameEvent( d, conf, event, ... )
@@ -923,10 +911,6 @@ function Timeline.OnGameEvent( d, conf, event, ... )
     elseif event == "CURRENT_SPELL_CAST_CHANGED" then
         local b = T.cells[ T.press ]
         highlight( b, tl, b.Ability, b.ExactTime or 0 )
-    end
-    if flashEvents[ event ] then
-        st.flashReady = false
-        C_Timer.After( 3, T.flashOn )
     end
 end
 

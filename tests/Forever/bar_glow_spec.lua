@@ -285,13 +285,48 @@ describe("action bar glow", function()
         end
     end)
 
-    it("hides the SpellFlash tab without SpellFlashCore", function()
-        assert.is_nil(H.env.SpellFlashCore)
-        local conf = H.Hekili.DB.profile.displays.Primary
-        local zones = { "primary", "queued", legacy = true }
-        local flash = H.ns.StyleOptions.flash("classic", zones, 8, "Primary", conf)
-        assert.is_true(flash.hidden())
-        local tab = H.ns.StyleOptions.barGlow("classic", zones, 8.5, "Primary", conf)
-        assert.is_falsy(tab.hidden and tab.hidden())
+    it("loads and draws a profile that still holds SpellFlash's old settings, and offers no such tab", function()
+        local old = { enabled = true, color = { 1, 0, 0, 1 }, suppress = true, size = 111, combat = true }
+        local saved = {
+            profiles = {
+                Default = {
+                    flashTexture = "Interface\\Cooldown\\ping4",
+                    displays = {
+                        Primary = {
+                            flash = old,
+                            classic = { flash = old },
+                            timeline = { flash = old },
+                        },
+                    },
+                },
+            },
+        }
+        install()
+        local H2 = headless.new({ character = ww.character(), pack = ww.PACK, saved = saved })
+        fake.new = fakeNew
+        assert.are.same({}, H2.loadErrors)
+        assert(headless.cycle(H2, H2.ctl.now + 0.2))
+        local conf = H2.Hekili.DB.profile.displays.Primary
+        local dsp = rawget(H2.env, "HekiliDisplayPrimary")
+        for _, style in ipairs({ "classic", "timeline", "classic" }) do
+            conf.style = style
+            H2.Hekili:BuildUI()
+            local abilities = H2.Hekili.Engine.Registry.Abilities()
+            local o = H2.ns.Output.Begin("Primary")
+            for n, a in ipairs({ "mortal_strike", "overpower" }) do
+                o[n].actionName, o[n].actionID, o[n].texture = a, abilities[a].id, "tex" .. n
+                o[n].time, o[n].exact_time = n, H2.ctl.now + n
+            end
+            H2.ns.Output.Publish("Primary", 2)
+            for _ = 1, 3 do
+                H2.ctl.now = H2.ctl.now + 0.2
+                dsp.__scripts.OnUpdate(dsp, 0.2)
+            end
+        end
+        assert.are.same({}, H2.errors)
+        H2.Hekili:EmbedDisplayOptions()
+        local args = H2.Hekili.Options.args.displays.plugins.Primary.Primary.args.classic.args
+        assert.is_nil(args.flash)
+        assert.is_table(args.barGlow)
     end)
 end)

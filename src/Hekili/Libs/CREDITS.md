@@ -33,7 +33,6 @@ The ten Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development Tea
 | LibDualSpec-1.0 | https://github.com/AdiAddons/LibDualSpec-1.0 | commit 71dcd66 (2026-09-20) | BSD-style with a no-standalone-redistribution clause (file header; quoted in `LICENSE-NOTE.md`) | Adirelle, Nebula | Yes: TOC `## Interface: 11509, 16001, ...`; Forever branches at lines 72-77 and 518 | `GetBuildInfo` 16000-20000 forces primary/secondary (dual spec) mode, then a Forever `GetProfileSpecialization` using `GetNumSpecGroups` |
 | LibCustomGlow-1.0 | https://github.com/Stanzilla/LibCustomGlow | commit 4f8f5c2 (2026-07-17) | MIT, `LICENSE` | deezo, Benjamin Staneck (Stanzilla) | No (TOC 120001, 120000) | `isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE` picks retail vs classic code paths (lines 16, 24, 151); no early return. Repo folder `LibCustomGlow` vendored as `LibCustomGlow-1.0` to match `embeds.xml` |
 | LibTranslit-1.0 | https://github.com/Vardex/LibTranslit | commit 66a5aa7 (2022-11-11) | LGPL v3, `COPYING` + `COPYING.LESSER` | Vardex | No (TOC 100000) | None |
-| SpellFlashCore | Contributed copy kept in this repo (the 2024-09-15 copy; git history: added 617e3e6a 2023-11-29, last changed 1bd9f1c2 2024-07-08) | in-repo, TOC version 2.4.1 | No licence file in its folder | BigRedBrent, LightSpell | No | **Returns for builds below 110000** (`SpellFlashCore.lua` lines 1-4; 30400 for 3.4.x). Forever (16001) therefore does not load it: expected, not a Hekili failure |
 | VirtualGameAPI-1.0 | This repository | folded into `VirtualState/Facade.lua` (VirtualState Phase 1); the folder keeps only its `LICENSE` and `README.md` and is not loaded | MIT, `LICENSE` | Hekili Forever port | Yes (written for Forever) | None |
 
 ## Translated content
@@ -59,4 +58,3 @@ listed.
 | LibSpellRange-1.0 | licence unstated, ask or replace |
 | LibDataBroker-1.1 | licence unstated, ask or replace |
 | LibDBIcon-1.0 | licence unstated, ask or replace |
-| SpellFlashCore | licence unstated, ask or replace |

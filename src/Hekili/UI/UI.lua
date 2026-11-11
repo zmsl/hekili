@@ -954,20 +954,6 @@ do
         UPDATE_SHAPESHIFT_FORM = 1,
     }
 
-    local flashEvents = {
-        -- This unregisters flash frames in SpellFlash.
-        ACTIONBAR_SHOWGRID = 1,
-
-        -- These re-register flash frames in SpellFlash (after 0.5 - 1.0s).
-        ACTIONBAR_HIDEGRID = 1,
-        LEARNED_SPELL_IN_SKILL_LINE = 1,
-        CHARACTER_POINTS_CHANGED = 1,
-        ACTIVE_TALENT_GROUP_CHANGED = 1,
-        UPDATE_MACROS = 1,
-        VEHICLE_UPDATE = 1,
-    }
-    ns.UI.FlashEvents = flashEvents -- the display registers them; classic's OnGameEvent pauses its flash on them
-
     -- Opportunity for Performance Preference, maybe.
     local pulseDisplay = 0.25
     local function CalculateAlpha( id )
@@ -1245,10 +1231,6 @@ do
 
                     -- Update keybindings.
                     for k in pairs( kbEvents ) do
-                        self:RegisterEvent( k )
-                    end
-
-                    for k in pairs( flashEvents ) do
                         self:RegisterEvent( k )
                     end
 

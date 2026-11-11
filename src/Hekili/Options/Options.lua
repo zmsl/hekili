@@ -31,7 +31,6 @@ local TableToString, StringToTable, SerializeActionPack, DeserializeActionPack, 
 local ACD = LibStub( "AceConfigDialog-3.0" )
 local LDBIcon = LibStub( "LibDBIcon-1.0", true )
 local LSM = LibStub( "LibSharedMedia-3.0" )
-local SF = SpellFlashCore
 
 local NewFeature = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0|t"
 local GreenPlus = "Interface\\AddOns\\Hekili\\Textures\\GreenPlus"
@@ -85,7 +84,7 @@ local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 
 -- Classic's settings, flat on the display table before every style had its own subtable (display styles plan, Task 2b).
 local legacyClassic = { "primaryWidth", "primaryHeight", "zoom", "keepAspectRatio", "queue", "border", "range", "glow",
-    "flash", "captions", "indicators", "targets", "delays", "keybindings" }
+    "captions", "indicators", "targets", "delays", "keybindings" }
 
 local function mergeKey( into, k, v )
     if type( v ) == "table" and type( into[ k ] ) == "table" then
@@ -304,7 +303,6 @@ do
                 minimapIcon = false,
                 screenshot = true,
 
-                flashTexture = "Interface\\Cooldown\\star4",
                 performance = {
                     frameBudget = 0.7,
                     forecastWindow = 15, -- Forever E9
@@ -428,9 +426,6 @@ do
                         classic = {
                             barGlow = { enabled = true },
 
-                            flash = {
-                                color = { 1, 0, 0, 1 },
-                            },
 
                             glow = {
                                 enabled = true,
@@ -452,9 +447,6 @@ do
                         order = 2,
 
                         classic = {
-                            flash = {
-                                color = { 0, 1, 0, 1 },
-                            },
 
                             glow = {
                                 enabled = true,
@@ -477,9 +469,6 @@ do
                         order = 3,
 
                         classic = {
-                            flash = {
-                                color = { 1, 0.82, 0, 1 },
-                            },
 
                             glow = {
                                 enabled = true,
@@ -502,9 +491,6 @@ do
                         order = 4,
 
                         classic = {
-                            flash = {
-                                color = { 0.522, 0.302, 1, 1 },
-                            },
 
                             glow = {
                                 enabled = true,
@@ -527,9 +513,6 @@ do
                         order = 5,
 
                         classic = {
-                            flash = {
-                                color = { 1, 1, 1, 1 },
-                            },
 
                             glow = {
                                 enabled = true,

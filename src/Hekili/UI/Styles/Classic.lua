@@ -45,27 +45,12 @@ for t = 0, 99 do
 end
 
 local dPool = ns.UI.Displays
-local flashEvents = ns.UI.FlashEvents
 local Button_OnMouseDown, Button_OnMouseUp = ns.UI.Button_OnMouseDown, ns.UI.Button_OnMouseUp
 local pulseRange = TOOLTIP_UPDATE_TIME
 
 -- Keybinding text: a gamepad binding sits outside the icon (UI.lua), any other text at the keyboard anchor.
 local function setKeybinding( b, text, kb, g )
     ns.UI.SetKeybindingText( b.Keybinding, b, text, kb.anchor or "TOPRIGHT", kb.x or 0, kb.y or 0, g )
-end
-
-local LSF = SpellFlashCore
-local catchFlash, lastFramesFlashed = nil, {}
-
-if LSF then
-    hooksecurefunc( LSF, "FlashFrame", function( frame )
-        local flash = frame and frame.SpellFlashCoreAddonFlashFrame
-
-        -- We need to know what flashed so we can force it to stop flashing when the recommendation changes.
-        if catchFlash and flash then
-            lastFramesFlashed[ flash ] = 1
-        end
-    end )
 end
 
 local lastGcdStart = 0
@@ -75,7 +60,7 @@ local Glower = LibStub("LibCustomGlow-1.0")
 -- Its icon zones for the shared option builders (Options/StyleOptions.lua, Task 3d): the primary icon and the queue,
 -- marked legacy so the queue keeps classic's shape (queued* keybinding fields behind separateQueueStyle).
 local ZONES = { "primary", "queued", legacy = true }
-local SHARED = { "border", "range", "glow", "barGlow", "flash", "captions", "indicators", "targets", "delays", "keybindings", "gamepad" }
+local SHARED = { "border", "range", "glow", "barGlow", "captions", "indicators", "targets", "delays", "keybindings", "gamepad" }
 
 local Classic = {
     label = L["Classic"],
@@ -526,102 +511,6 @@ local function RefreshCooldowns( self, out )
     end
 end
 
---- Flashes the action bar buttons of record 1's action `a` through SpellFlash, from a display's Draw. `st` is the
---- display's styleState (flashReady: SpellFlash may flash) and `flash` the bound style's flash group. Shared by every
---- style that offers the flash group (UI/Styles/Timeline.lua); true when it flashed.
-function ns.UI.FlashRecommendation( st, flash, a, elapsed )
-    if not ( st.flashReady and flash.enabled and LSF and ( InCombatLockdown() or not flash.combat ) ) then return false end
-    local profile = Hekili.DB.profile
-    st.flashTimer = st.flashTimer - elapsed
-    st.flashWarnings = st.flashWarnings or {}
-    st.lastFlashFrames = st.lastFlashFrames or {}
-
-    local changed = st.lastFlash ~= a
-
-    if a then -- every Draw is a full update
-        if changed then
-            for frame in pairs( st.lastFlashFrames ) do
-                frame:Hide()
-                frame.flashDuration = 0
-                st.lastFlashFrames[ frame ] = nil
-            end
-        end
-
-        st.flashTimer = flash.speed or 0.4
-
-        local ability = Registry.Abilities()[ a ]
-
-        st.flashColor = st.flashColor or {}
-        st.flashColor.r, st.flashColor.g, st.flashColor.b = unpack( flash.color )
-
-        catchFlash = GetTime()
-        table.wipe( lastFramesFlashed )
-
-        if ability.item then
-            local iname = LSF.ItemName( ability.item )
-            if LSF.Flashable( iname ) then
-                LSF.FlashItem( iname, st.flashColor, flash.size, flash.brightness, flash.blink, nil, profile.flashTexture, flash.fixedSize, flash.fixedBrightness )
-            elseif flash.suppress and not st.flashWarnings[ iname ] then
-                st.flashWarnings[ iname ] = true
-            end
-        else
-            local aFlash = ability.flash
-            if aFlash then
-                local flashable = false
-
-                if type( aFlash ) == "table" then
-                    local lastSpell
-                    for _, spell in ipairs( aFlash ) do
-                        lastSpell = spell
-                        if LSF.Flashable( spell ) then
-                            flashable = true
-                            break
-                        end
-                    end
-                    aFlash = lastSpell
-                else
-                    flashable = LSF.Flashable( aFlash )
-                end
-
-                if flashable then
-                    LSF.FlashAction( aFlash, st.flashColor, flash.size, flash.brightness, flash.blink, nil, profile.flashTexture, flash.fixedSize, flash.fixedBrightness )
-                elseif flash.suppress and not st.flashWarnings[ aFlash ] then
-                    st.flashWarnings[ aFlash ] = true
-                end
-            else
-                local id = ability.known
-
-                if id == nil or type( id ) ~= "number" then
-                    id = ability.id
-                end
-
-                local sname = LSF.SpellName( id )
-
-                if sname then
-                    if LSF.Flashable( sname ) then
-                        LSF.FlashAction( sname, st.flashColor, flash.size, flash.brightness, flash.blink, nil, profile.flashTexture, flash.fixedSize, flash.fixedBrightness )
-                    elseif not st.flashWarnings[ sname ] then
-                        st.flashWarnings[ sname ] = true
-                    end
-                end
-            end
-        end
-
-        catchFlash = nil
-        for frame, status in pairs( lastFramesFlashed ) do
-            if status ~= 0 then
-                st.lastFlashFrames[ frame ] = 1
-                if frame.texture ~= profile.flashTexture then
-                    frame.FlashTexture:SetTexture( profile.flashTexture )
-                    frame.texture = profile.flashTexture
-                end
-            end
-        end
-        st.lastFlash = a
-    end
-    return a ~= nil
-end
-
 --- Builds (or reuses) the ten buttons on `d` and returns them; core stores the list as ns.UI.Buttons[ d.id ].
 function Classic.Build( d, conf )
     local self, id, st = Hekili, d.id, d.styleState
@@ -629,7 +518,7 @@ function Classic.Build( d, conf )
     d:SetSize( scale * ( border + ( conf.classic.primaryWidth or 50 ) ), scale * ( border + ( conf.classic.primaryHeight or 50 ) ) )
     d.styleFrames.classic = d.styleFrames.classic or {}
     local buttons = d.styleFrames.classic
-    st.delayTimer, st.flashTimer, st.rangeTimer = st.delayTimer or 0, st.flashTimer or 0, st.rangeTimer or 0
+    st.delayTimer, st.rangeTimer = st.delayTimer or 0, st.rangeTimer or 0
 
     local out = Hekili.Engine.Output[ id ]
 
@@ -652,12 +541,6 @@ function Classic.Build( d, conf )
         local E = _G.ElvUI and ElvUI[1]
         E:UpdateCooldownOverride( 'global' )
         st.forceElvUpdate = nil
-    end
-
-    if st.flashReady == nil then
-        C_Timer.After( 3, function()
-            st.flashReady = true
-        end )
     end
 
     return buttons
@@ -741,8 +624,7 @@ function Classic.Draw( d, conf, out, status )
                 if ability and ability.actionID < 0 and ability.actionID > -100 and action ~= "cancel_buff" or exact_time == nil then ability = nil end
 
                 if ability then
-                    if ( conf.classic.flash.enabled and conf.classic.flash.suppress ) then b:Hide()
-                    else b:Show() end
+                    b:Show()
 
                     local image = ability.texture -- texture to be shown on the button for the current action
 
@@ -883,7 +765,6 @@ function Classic.Draw( d, conf, out, status )
             end
         end
 
-        ns.UI.FlashRecommendation( st, conf.classic.flash, self.Buttons[ 1 ].Action, elapsed )
         ns.UI.BarGlow.Update( self, conf.classic.barGlow, out, conf.numIcons )
 
         if fullUpdate then
@@ -1087,13 +968,6 @@ function Classic.OnGameEvent( d, conf, event, ... )
                 end
             end
         end
-    end
-
-    if flashEvents[ event ] then
-        st.flashReady = false
-        C_Timer.After( 3, function()
-            st.flashReady = true
-        end )
     end
 
     if event == "CURRENT_SPELL_CAST_CHANGED" then
@@ -1485,7 +1359,6 @@ return L["Position"] end,
         range = SO.range( "classic", ZONES, 5, id, conf ),
         glow = SO.glow( "classic", ZONES, 6, id, conf ),
         barGlow = SO.barGlow( "classic", ZONES, 8.5, id, conf ),
-        flash = SO.flash( "classic", ZONES, 8, id, conf ),
         captions = SO.captions( "classic", ZONES, 9, id, conf ),
         targets = SO.targets( "classic", ZONES, 10, id, conf ),
         delays = delays,

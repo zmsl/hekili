@@ -7979,45 +7979,6 @@ options.displays.AOE.classic.delays.type	name	Indicator
 options.displays.AOE.classic.delays.type	values.ICON	Show Icon (Color)
 options.displays.AOE.classic.delays.type	values.TEXT	Show Text (Countdown)
 options.displays.AOE.classic.delays.type	values.__NA	No Indicator
-options.displays.AOE.classic.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.AOE.classic.flash	name	SpellFlash
-options.displays.AOE.classic.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.
-options.displays.AOE.classic.flash.blink	name	Button Blink
-options.displays.AOE.classic.flash.break00	name	\032
-options.displays.AOE.classic.flash.break01	name	\032
-options.displays.AOE.classic.flash.break02	name	\032
-options.displays.AOE.classic.flash.break03	name	\032
-options.displays.AOE.classic.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.
-options.displays.AOE.classic.flash.brightness	name	Flash Brightness
-options.displays.AOE.classic.flash.color	desc	Specify a glow color for the SpellFlash highlight.
-options.displays.AOE.classic.flash.color	name	Color
-options.displays.AOE.classic.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.
-options.displays.AOE.classic.flash.combat	name	Combat Only
-options.displays.AOE.classic.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.
-options.displays.AOE.classic.flash.enabled	name	Enabled
-options.displays.AOE.classic.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.
-options.displays.AOE.classic.flash.fixedBrightness	name	Fixed Brightness
-options.displays.AOE.classic.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.
-options.displays.AOE.classic.flash.fixedSize	name	Fixed Size
-options.displays.AOE.classic.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.
-options.displays.AOE.classic.flash.flashTexture	name	Texture
-options.displays.AOE.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.AOE.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.AOE.classic.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.AOE.classic.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.AOE.classic.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.AOE.classic.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.AOE.classic.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.AOE.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.AOE.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.AOE.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.AOE.classic.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.
-options.displays.AOE.classic.flash.size	name	Flash Size
-options.displays.AOE.classic.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.
-options.displays.AOE.classic.flash.speed	name	Speed
-options.displays.AOE.classic.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.
-options.displays.AOE.classic.flash.suppress	name	Hide Display
-options.displays.AOE.classic.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.AOE.classic.gamepad	desc	Options for the controller button pictures shown for the game's gamepad action bars.
 options.displays.AOE.classic.gamepad	name	Gamepad
 options.displays.AOE.classic.gamepad.cPort	name	ConsolePort
@@ -8039,7 +8000,7 @@ options.displays.AOE.classic.gamepad.pos.size	desc	The size of the controller bu
 options.displays.AOE.classic.gamepad.pos.size	name	Size
 options.displays.AOE.classic.gamepad.pos.x	name	X Offset
 options.displays.AOE.classic.gamepad.pos.y	name	Y Offset
-options.displays.AOE.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.AOE.classic.glow	desc	Preferences for Blizzard action button glows.
 options.displays.AOE.classic.glow	name	Glows
 options.displays.AOE.classic.glow.break01	name	\032
 options.displays.AOE.classic.glow.break02	name	\032
@@ -8383,7 +8344,7 @@ options.displays.AOE.timeline.tab_next.captions.queued	desc	If enabled, descript
 options.displays.AOE.timeline.tab_next.captions.queued	name	Enabled for Queued Icons
 options.displays.AOE.timeline.tab_next.gap	desc	The space between the now circle and the next box, and between the next box and the lane.
 options.displays.AOE.timeline.tab_next.gap	name	Gap
-options.displays.AOE.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.AOE.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows.
 options.displays.AOE.timeline.tab_next.glow	name	Glows
 options.displays.AOE.timeline.tab_next.glow.queued	desc	If enabled, abilities that have active glows (or overlays) will also glow in your queue.\n\nThis may not be ideal, the glow may no longer be correct by that point in the future.
 options.displays.AOE.timeline.tab_next.glow.queued	name	Enabled for Queued Icons
@@ -8530,45 +8491,6 @@ options.displays.AOE.timeline.tab_now.eta.style	values.MONOCHROME,THICKOUTLINE	M
 options.displays.AOE.timeline.tab_now.eta.style	values.NONE	None
 options.displays.AOE.timeline.tab_now.eta.style	values.OUTLINE	Outline
 options.displays.AOE.timeline.tab_now.eta.style	values.THICKOUTLINE	Thick Outline
-options.displays.AOE.timeline.tab_now.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.AOE.timeline.tab_now.flash	name	SpellFlash
-options.displays.AOE.timeline.tab_now.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.
-options.displays.AOE.timeline.tab_now.flash.blink	name	Button Blink
-options.displays.AOE.timeline.tab_now.flash.break00	name	\032
-options.displays.AOE.timeline.tab_now.flash.break01	name	\032
-options.displays.AOE.timeline.tab_now.flash.break02	name	\032
-options.displays.AOE.timeline.tab_now.flash.break03	name	\032
-options.displays.AOE.timeline.tab_now.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.
-options.displays.AOE.timeline.tab_now.flash.brightness	name	Flash Brightness
-options.displays.AOE.timeline.tab_now.flash.color	desc	Specify a glow color for the SpellFlash highlight.
-options.displays.AOE.timeline.tab_now.flash.color	name	Color
-options.displays.AOE.timeline.tab_now.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.
-options.displays.AOE.timeline.tab_now.flash.combat	name	Combat Only
-options.displays.AOE.timeline.tab_now.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.
-options.displays.AOE.timeline.tab_now.flash.enabled	name	Enabled
-options.displays.AOE.timeline.tab_now.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.
-options.displays.AOE.timeline.tab_now.flash.fixedBrightness	name	Fixed Brightness
-options.displays.AOE.timeline.tab_now.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.
-options.displays.AOE.timeline.tab_now.flash.fixedSize	name	Fixed Size
-options.displays.AOE.timeline.tab_now.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.
-options.displays.AOE.timeline.tab_now.flash.flashTexture	name	Texture
-options.displays.AOE.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.AOE.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.AOE.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.AOE.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.AOE.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.AOE.timeline.tab_now.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.AOE.timeline.tab_now.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.AOE.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.AOE.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.AOE.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.AOE.timeline.tab_now.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.
-options.displays.AOE.timeline.tab_now.flash.size	name	Flash Size
-options.displays.AOE.timeline.tab_now.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.
-options.displays.AOE.timeline.tab_now.flash.speed	name	Speed
-options.displays.AOE.timeline.tab_now.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.
-options.displays.AOE.timeline.tab_now.flash.suppress	name	Hide Display
-options.displays.AOE.timeline.tab_now.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.AOE.timeline.tab_now.focusPendingColor	desc	The now circle's ring while a focus ability counts down (the Timeline tab's Ring Color once it is ready).
 options.displays.AOE.timeline.tab_now.focusPendingColor	name	Pending Ring Color
 options.displays.AOE.timeline.tab_now.focusReadyStyle	desc	How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it, or the Gold Ring art (full colour when ready, grey and half faded while pending; fixed-colour art, so the ring colours do not apply to it).
@@ -8597,7 +8519,7 @@ options.displays.AOE.timeline.tab_now.gamepad.pos.size	desc	The size of the cont
 options.displays.AOE.timeline.tab_now.gamepad.pos.size	name	Size
 options.displays.AOE.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.AOE.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.AOE.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.AOE.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows.
 options.displays.AOE.timeline.tab_now.glow	name	Glows
 options.displays.AOE.timeline.tab_now.glow.break01	name	\032
 options.displays.AOE.timeline.tab_now.glow.break02	name	\032
@@ -8967,45 +8889,6 @@ options.displays.Cooldowns.classic.delays.type	name	Indicator
 options.displays.Cooldowns.classic.delays.type	values.ICON	Show Icon (Color)
 options.displays.Cooldowns.classic.delays.type	values.TEXT	Show Text (Countdown)
 options.displays.Cooldowns.classic.delays.type	values.__NA	No Indicator
-options.displays.Cooldowns.classic.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.Cooldowns.classic.flash	name	SpellFlash
-options.displays.Cooldowns.classic.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.
-options.displays.Cooldowns.classic.flash.blink	name	Button Blink
-options.displays.Cooldowns.classic.flash.break00	name	\032
-options.displays.Cooldowns.classic.flash.break01	name	\032
-options.displays.Cooldowns.classic.flash.break02	name	\032
-options.displays.Cooldowns.classic.flash.break03	name	\032
-options.displays.Cooldowns.classic.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.
-options.displays.Cooldowns.classic.flash.brightness	name	Flash Brightness
-options.displays.Cooldowns.classic.flash.color	desc	Specify a glow color for the SpellFlash highlight.
-options.displays.Cooldowns.classic.flash.color	name	Color
-options.displays.Cooldowns.classic.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.
-options.displays.Cooldowns.classic.flash.combat	name	Combat Only
-options.displays.Cooldowns.classic.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.
-options.displays.Cooldowns.classic.flash.enabled	name	Enabled
-options.displays.Cooldowns.classic.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.
-options.displays.Cooldowns.classic.flash.fixedBrightness	name	Fixed Brightness
-options.displays.Cooldowns.classic.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.
-options.displays.Cooldowns.classic.flash.fixedSize	name	Fixed Size
-options.displays.Cooldowns.classic.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.
-options.displays.Cooldowns.classic.flash.flashTexture	name	Texture
-options.displays.Cooldowns.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.Cooldowns.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.Cooldowns.classic.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.Cooldowns.classic.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.Cooldowns.classic.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.Cooldowns.classic.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.Cooldowns.classic.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.Cooldowns.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.Cooldowns.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.Cooldowns.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.Cooldowns.classic.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.
-options.displays.Cooldowns.classic.flash.size	name	Flash Size
-options.displays.Cooldowns.classic.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.
-options.displays.Cooldowns.classic.flash.speed	name	Speed
-options.displays.Cooldowns.classic.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.
-options.displays.Cooldowns.classic.flash.suppress	name	Hide Display
-options.displays.Cooldowns.classic.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.Cooldowns.classic.gamepad	desc	Options for the controller button pictures shown for the game's gamepad action bars.
 options.displays.Cooldowns.classic.gamepad	name	Gamepad
 options.displays.Cooldowns.classic.gamepad.cPort	name	ConsolePort
@@ -9027,7 +8910,7 @@ options.displays.Cooldowns.classic.gamepad.pos.size	desc	The size of the control
 options.displays.Cooldowns.classic.gamepad.pos.size	name	Size
 options.displays.Cooldowns.classic.gamepad.pos.x	name	X Offset
 options.displays.Cooldowns.classic.gamepad.pos.y	name	Y Offset
-options.displays.Cooldowns.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Cooldowns.classic.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Cooldowns.classic.glow	name	Glows
 options.displays.Cooldowns.classic.glow.break01	name	\032
 options.displays.Cooldowns.classic.glow.break02	name	\032
@@ -9371,7 +9254,7 @@ options.displays.Cooldowns.timeline.tab_next.captions.queued	desc	If enabled, de
 options.displays.Cooldowns.timeline.tab_next.captions.queued	name	Enabled for Queued Icons
 options.displays.Cooldowns.timeline.tab_next.gap	desc	The space between the now circle and the next box, and between the next box and the lane.
 options.displays.Cooldowns.timeline.tab_next.gap	name	Gap
-options.displays.Cooldowns.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Cooldowns.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Cooldowns.timeline.tab_next.glow	name	Glows
 options.displays.Cooldowns.timeline.tab_next.glow.queued	desc	If enabled, abilities that have active glows (or overlays) will also glow in your queue.\n\nThis may not be ideal, the glow may no longer be correct by that point in the future.
 options.displays.Cooldowns.timeline.tab_next.glow.queued	name	Enabled for Queued Icons
@@ -9518,45 +9401,6 @@ options.displays.Cooldowns.timeline.tab_now.eta.style	values.MONOCHROME,THICKOUT
 options.displays.Cooldowns.timeline.tab_now.eta.style	values.NONE	None
 options.displays.Cooldowns.timeline.tab_now.eta.style	values.OUTLINE	Outline
 options.displays.Cooldowns.timeline.tab_now.eta.style	values.THICKOUTLINE	Thick Outline
-options.displays.Cooldowns.timeline.tab_now.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.Cooldowns.timeline.tab_now.flash	name	SpellFlash
-options.displays.Cooldowns.timeline.tab_now.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.
-options.displays.Cooldowns.timeline.tab_now.flash.blink	name	Button Blink
-options.displays.Cooldowns.timeline.tab_now.flash.break00	name	\032
-options.displays.Cooldowns.timeline.tab_now.flash.break01	name	\032
-options.displays.Cooldowns.timeline.tab_now.flash.break02	name	\032
-options.displays.Cooldowns.timeline.tab_now.flash.break03	name	\032
-options.displays.Cooldowns.timeline.tab_now.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.
-options.displays.Cooldowns.timeline.tab_now.flash.brightness	name	Flash Brightness
-options.displays.Cooldowns.timeline.tab_now.flash.color	desc	Specify a glow color for the SpellFlash highlight.
-options.displays.Cooldowns.timeline.tab_now.flash.color	name	Color
-options.displays.Cooldowns.timeline.tab_now.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.
-options.displays.Cooldowns.timeline.tab_now.flash.combat	name	Combat Only
-options.displays.Cooldowns.timeline.tab_now.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.
-options.displays.Cooldowns.timeline.tab_now.flash.enabled	name	Enabled
-options.displays.Cooldowns.timeline.tab_now.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.
-options.displays.Cooldowns.timeline.tab_now.flash.fixedBrightness	name	Fixed Brightness
-options.displays.Cooldowns.timeline.tab_now.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.
-options.displays.Cooldowns.timeline.tab_now.flash.fixedSize	name	Fixed Size
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	name	Texture
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.Cooldowns.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.Cooldowns.timeline.tab_now.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.
-options.displays.Cooldowns.timeline.tab_now.flash.size	name	Flash Size
-options.displays.Cooldowns.timeline.tab_now.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.
-options.displays.Cooldowns.timeline.tab_now.flash.speed	name	Speed
-options.displays.Cooldowns.timeline.tab_now.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.
-options.displays.Cooldowns.timeline.tab_now.flash.suppress	name	Hide Display
-options.displays.Cooldowns.timeline.tab_now.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.Cooldowns.timeline.tab_now.focusPendingColor	desc	The now circle's ring while a focus ability counts down (the Timeline tab's Ring Color once it is ready).
 options.displays.Cooldowns.timeline.tab_now.focusPendingColor	name	Pending Ring Color
 options.displays.Cooldowns.timeline.tab_now.focusReadyStyle	desc	How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it, or the Gold Ring art (full colour when ready, grey and half faded while pending; fixed-colour art, so the ring colours do not apply to it).
@@ -9585,7 +9429,7 @@ options.displays.Cooldowns.timeline.tab_now.gamepad.pos.size	desc	The size of th
 options.displays.Cooldowns.timeline.tab_now.gamepad.pos.size	name	Size
 options.displays.Cooldowns.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.Cooldowns.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.Cooldowns.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Cooldowns.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Cooldowns.timeline.tab_now.glow	name	Glows
 options.displays.Cooldowns.timeline.tab_now.glow.break01	name	\032
 options.displays.Cooldowns.timeline.tab_now.glow.break02	name	\032
@@ -9955,45 +9799,6 @@ options.displays.Defensives.classic.delays.type	name	Indicator
 options.displays.Defensives.classic.delays.type	values.ICON	Show Icon (Color)
 options.displays.Defensives.classic.delays.type	values.TEXT	Show Text (Countdown)
 options.displays.Defensives.classic.delays.type	values.__NA	No Indicator
-options.displays.Defensives.classic.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.Defensives.classic.flash	name	SpellFlash
-options.displays.Defensives.classic.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.
-options.displays.Defensives.classic.flash.blink	name	Button Blink
-options.displays.Defensives.classic.flash.break00	name	\032
-options.displays.Defensives.classic.flash.break01	name	\032
-options.displays.Defensives.classic.flash.break02	name	\032
-options.displays.Defensives.classic.flash.break03	name	\032
-options.displays.Defensives.classic.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.
-options.displays.Defensives.classic.flash.brightness	name	Flash Brightness
-options.displays.Defensives.classic.flash.color	desc	Specify a glow color for the SpellFlash highlight.
-options.displays.Defensives.classic.flash.color	name	Color
-options.displays.Defensives.classic.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.
-options.displays.Defensives.classic.flash.combat	name	Combat Only
-options.displays.Defensives.classic.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.
-options.displays.Defensives.classic.flash.enabled	name	Enabled
-options.displays.Defensives.classic.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.
-options.displays.Defensives.classic.flash.fixedBrightness	name	Fixed Brightness
-options.displays.Defensives.classic.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.
-options.displays.Defensives.classic.flash.fixedSize	name	Fixed Size
-options.displays.Defensives.classic.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.
-options.displays.Defensives.classic.flash.flashTexture	name	Texture
-options.displays.Defensives.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.Defensives.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.Defensives.classic.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.Defensives.classic.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.Defensives.classic.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.Defensives.classic.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.Defensives.classic.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.Defensives.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.Defensives.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.Defensives.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.Defensives.classic.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.
-options.displays.Defensives.classic.flash.size	name	Flash Size
-options.displays.Defensives.classic.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.
-options.displays.Defensives.classic.flash.speed	name	Speed
-options.displays.Defensives.classic.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.
-options.displays.Defensives.classic.flash.suppress	name	Hide Display
-options.displays.Defensives.classic.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.Defensives.classic.gamepad	desc	Options for the controller button pictures shown for the game's gamepad action bars.
 options.displays.Defensives.classic.gamepad	name	Gamepad
 options.displays.Defensives.classic.gamepad.cPort	name	ConsolePort
@@ -10015,7 +9820,7 @@ options.displays.Defensives.classic.gamepad.pos.size	desc	The size of the contro
 options.displays.Defensives.classic.gamepad.pos.size	name	Size
 options.displays.Defensives.classic.gamepad.pos.x	name	X Offset
 options.displays.Defensives.classic.gamepad.pos.y	name	Y Offset
-options.displays.Defensives.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Defensives.classic.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Defensives.classic.glow	name	Glows
 options.displays.Defensives.classic.glow.break01	name	\032
 options.displays.Defensives.classic.glow.break02	name	\032
@@ -10359,7 +10164,7 @@ options.displays.Defensives.timeline.tab_next.captions.queued	desc	If enabled, d
 options.displays.Defensives.timeline.tab_next.captions.queued	name	Enabled for Queued Icons
 options.displays.Defensives.timeline.tab_next.gap	desc	The space between the now circle and the next box, and between the next box and the lane.
 options.displays.Defensives.timeline.tab_next.gap	name	Gap
-options.displays.Defensives.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Defensives.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Defensives.timeline.tab_next.glow	name	Glows
 options.displays.Defensives.timeline.tab_next.glow.queued	desc	If enabled, abilities that have active glows (or overlays) will also glow in your queue.\n\nThis may not be ideal, the glow may no longer be correct by that point in the future.
 options.displays.Defensives.timeline.tab_next.glow.queued	name	Enabled for Queued Icons
@@ -10506,45 +10311,6 @@ options.displays.Defensives.timeline.tab_now.eta.style	values.MONOCHROME,THICKOU
 options.displays.Defensives.timeline.tab_now.eta.style	values.NONE	None
 options.displays.Defensives.timeline.tab_now.eta.style	values.OUTLINE	Outline
 options.displays.Defensives.timeline.tab_now.eta.style	values.THICKOUTLINE	Thick Outline
-options.displays.Defensives.timeline.tab_now.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.Defensives.timeline.tab_now.flash	name	SpellFlash
-options.displays.Defensives.timeline.tab_now.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.
-options.displays.Defensives.timeline.tab_now.flash.blink	name	Button Blink
-options.displays.Defensives.timeline.tab_now.flash.break00	name	\032
-options.displays.Defensives.timeline.tab_now.flash.break01	name	\032
-options.displays.Defensives.timeline.tab_now.flash.break02	name	\032
-options.displays.Defensives.timeline.tab_now.flash.break03	name	\032
-options.displays.Defensives.timeline.tab_now.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.
-options.displays.Defensives.timeline.tab_now.flash.brightness	name	Flash Brightness
-options.displays.Defensives.timeline.tab_now.flash.color	desc	Specify a glow color for the SpellFlash highlight.
-options.displays.Defensives.timeline.tab_now.flash.color	name	Color
-options.displays.Defensives.timeline.tab_now.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.
-options.displays.Defensives.timeline.tab_now.flash.combat	name	Combat Only
-options.displays.Defensives.timeline.tab_now.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.
-options.displays.Defensives.timeline.tab_now.flash.enabled	name	Enabled
-options.displays.Defensives.timeline.tab_now.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.
-options.displays.Defensives.timeline.tab_now.flash.fixedBrightness	name	Fixed Brightness
-options.displays.Defensives.timeline.tab_now.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.
-options.displays.Defensives.timeline.tab_now.flash.fixedSize	name	Fixed Size
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	name	Texture
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.Defensives.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.Defensives.timeline.tab_now.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.
-options.displays.Defensives.timeline.tab_now.flash.size	name	Flash Size
-options.displays.Defensives.timeline.tab_now.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.
-options.displays.Defensives.timeline.tab_now.flash.speed	name	Speed
-options.displays.Defensives.timeline.tab_now.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.
-options.displays.Defensives.timeline.tab_now.flash.suppress	name	Hide Display
-options.displays.Defensives.timeline.tab_now.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.Defensives.timeline.tab_now.focusPendingColor	desc	The now circle's ring while a focus ability counts down (the Timeline tab's Ring Color once it is ready).
 options.displays.Defensives.timeline.tab_now.focusPendingColor	name	Pending Ring Color
 options.displays.Defensives.timeline.tab_now.focusReadyStyle	desc	How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it, or the Gold Ring art (full colour when ready, grey and half faded while pending; fixed-colour art, so the ring colours do not apply to it).
@@ -10573,7 +10339,7 @@ options.displays.Defensives.timeline.tab_now.gamepad.pos.size	desc	The size of t
 options.displays.Defensives.timeline.tab_now.gamepad.pos.size	name	Size
 options.displays.Defensives.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.Defensives.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.Defensives.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Defensives.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Defensives.timeline.tab_now.glow	name	Glows
 options.displays.Defensives.timeline.tab_now.glow.break01	name	\032
 options.displays.Defensives.timeline.tab_now.glow.break02	name	\032
@@ -10943,45 +10709,6 @@ options.displays.Interrupts.classic.delays.type	name	Indicator
 options.displays.Interrupts.classic.delays.type	values.ICON	Show Icon (Color)
 options.displays.Interrupts.classic.delays.type	values.TEXT	Show Text (Countdown)
 options.displays.Interrupts.classic.delays.type	values.__NA	No Indicator
-options.displays.Interrupts.classic.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.Interrupts.classic.flash	name	SpellFlash
-options.displays.Interrupts.classic.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.
-options.displays.Interrupts.classic.flash.blink	name	Button Blink
-options.displays.Interrupts.classic.flash.break00	name	\032
-options.displays.Interrupts.classic.flash.break01	name	\032
-options.displays.Interrupts.classic.flash.break02	name	\032
-options.displays.Interrupts.classic.flash.break03	name	\032
-options.displays.Interrupts.classic.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.
-options.displays.Interrupts.classic.flash.brightness	name	Flash Brightness
-options.displays.Interrupts.classic.flash.color	desc	Specify a glow color for the SpellFlash highlight.
-options.displays.Interrupts.classic.flash.color	name	Color
-options.displays.Interrupts.classic.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.
-options.displays.Interrupts.classic.flash.combat	name	Combat Only
-options.displays.Interrupts.classic.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.
-options.displays.Interrupts.classic.flash.enabled	name	Enabled
-options.displays.Interrupts.classic.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.
-options.displays.Interrupts.classic.flash.fixedBrightness	name	Fixed Brightness
-options.displays.Interrupts.classic.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.
-options.displays.Interrupts.classic.flash.fixedSize	name	Fixed Size
-options.displays.Interrupts.classic.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.
-options.displays.Interrupts.classic.flash.flashTexture	name	Texture
-options.displays.Interrupts.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.Interrupts.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.Interrupts.classic.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.Interrupts.classic.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.Interrupts.classic.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.Interrupts.classic.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.Interrupts.classic.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.Interrupts.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.Interrupts.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.Interrupts.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.Interrupts.classic.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.
-options.displays.Interrupts.classic.flash.size	name	Flash Size
-options.displays.Interrupts.classic.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.
-options.displays.Interrupts.classic.flash.speed	name	Speed
-options.displays.Interrupts.classic.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.
-options.displays.Interrupts.classic.flash.suppress	name	Hide Display
-options.displays.Interrupts.classic.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.Interrupts.classic.gamepad	desc	Options for the controller button pictures shown for the game's gamepad action bars.
 options.displays.Interrupts.classic.gamepad	name	Gamepad
 options.displays.Interrupts.classic.gamepad.cPort	name	ConsolePort
@@ -11003,7 +10730,7 @@ options.displays.Interrupts.classic.gamepad.pos.size	desc	The size of the contro
 options.displays.Interrupts.classic.gamepad.pos.size	name	Size
 options.displays.Interrupts.classic.gamepad.pos.x	name	X Offset
 options.displays.Interrupts.classic.gamepad.pos.y	name	Y Offset
-options.displays.Interrupts.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Interrupts.classic.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Interrupts.classic.glow	name	Glows
 options.displays.Interrupts.classic.glow.break01	name	\032
 options.displays.Interrupts.classic.glow.break02	name	\032
@@ -11347,7 +11074,7 @@ options.displays.Interrupts.timeline.tab_next.captions.queued	desc	If enabled, d
 options.displays.Interrupts.timeline.tab_next.captions.queued	name	Enabled for Queued Icons
 options.displays.Interrupts.timeline.tab_next.gap	desc	The space between the now circle and the next box, and between the next box and the lane.
 options.displays.Interrupts.timeline.tab_next.gap	name	Gap
-options.displays.Interrupts.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Interrupts.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Interrupts.timeline.tab_next.glow	name	Glows
 options.displays.Interrupts.timeline.tab_next.glow.queued	desc	If enabled, abilities that have active glows (or overlays) will also glow in your queue.\n\nThis may not be ideal, the glow may no longer be correct by that point in the future.
 options.displays.Interrupts.timeline.tab_next.glow.queued	name	Enabled for Queued Icons
@@ -11494,45 +11221,6 @@ options.displays.Interrupts.timeline.tab_now.eta.style	values.MONOCHROME,THICKOU
 options.displays.Interrupts.timeline.tab_now.eta.style	values.NONE	None
 options.displays.Interrupts.timeline.tab_now.eta.style	values.OUTLINE	Outline
 options.displays.Interrupts.timeline.tab_now.eta.style	values.THICKOUTLINE	Thick Outline
-options.displays.Interrupts.timeline.tab_now.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.Interrupts.timeline.tab_now.flash	name	SpellFlash
-options.displays.Interrupts.timeline.tab_now.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.
-options.displays.Interrupts.timeline.tab_now.flash.blink	name	Button Blink
-options.displays.Interrupts.timeline.tab_now.flash.break00	name	\032
-options.displays.Interrupts.timeline.tab_now.flash.break01	name	\032
-options.displays.Interrupts.timeline.tab_now.flash.break02	name	\032
-options.displays.Interrupts.timeline.tab_now.flash.break03	name	\032
-options.displays.Interrupts.timeline.tab_now.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.
-options.displays.Interrupts.timeline.tab_now.flash.brightness	name	Flash Brightness
-options.displays.Interrupts.timeline.tab_now.flash.color	desc	Specify a glow color for the SpellFlash highlight.
-options.displays.Interrupts.timeline.tab_now.flash.color	name	Color
-options.displays.Interrupts.timeline.tab_now.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.
-options.displays.Interrupts.timeline.tab_now.flash.combat	name	Combat Only
-options.displays.Interrupts.timeline.tab_now.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.
-options.displays.Interrupts.timeline.tab_now.flash.enabled	name	Enabled
-options.displays.Interrupts.timeline.tab_now.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.
-options.displays.Interrupts.timeline.tab_now.flash.fixedBrightness	name	Fixed Brightness
-options.displays.Interrupts.timeline.tab_now.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.
-options.displays.Interrupts.timeline.tab_now.flash.fixedSize	name	Fixed Size
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	name	Texture
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.Interrupts.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.Interrupts.timeline.tab_now.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.
-options.displays.Interrupts.timeline.tab_now.flash.size	name	Flash Size
-options.displays.Interrupts.timeline.tab_now.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.
-options.displays.Interrupts.timeline.tab_now.flash.speed	name	Speed
-options.displays.Interrupts.timeline.tab_now.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.
-options.displays.Interrupts.timeline.tab_now.flash.suppress	name	Hide Display
-options.displays.Interrupts.timeline.tab_now.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.Interrupts.timeline.tab_now.focusPendingColor	desc	The now circle's ring while a focus ability counts down (the Timeline tab's Ring Color once it is ready).
 options.displays.Interrupts.timeline.tab_now.focusPendingColor	name	Pending Ring Color
 options.displays.Interrupts.timeline.tab_now.focusReadyStyle	desc	How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it, or the Gold Ring art (full colour when ready, grey and half faded while pending; fixed-colour art, so the ring colours do not apply to it).
@@ -11561,7 +11249,7 @@ options.displays.Interrupts.timeline.tab_now.gamepad.pos.size	desc	The size of t
 options.displays.Interrupts.timeline.tab_now.gamepad.pos.size	name	Size
 options.displays.Interrupts.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.Interrupts.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.Interrupts.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Interrupts.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Interrupts.timeline.tab_now.glow	name	Glows
 options.displays.Interrupts.timeline.tab_now.glow.break01	name	\032
 options.displays.Interrupts.timeline.tab_now.glow.break02	name	\032
@@ -11945,45 +11633,6 @@ options.displays.Multi.classic.delays.type	name	Indicator
 options.displays.Multi.classic.delays.type	values.ICON	Show Icon (Color)
 options.displays.Multi.classic.delays.type	values.TEXT	Show Text (Countdown)
 options.displays.Multi.classic.delays.type	values.__NA	No Indicator
-options.displays.Multi.classic.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.Multi.classic.flash	name	SpellFlash
-options.displays.Multi.classic.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.classic.flash.blink	name	Button Blink
-options.displays.Multi.classic.flash.break00	name	\032
-options.displays.Multi.classic.flash.break01	name	\032
-options.displays.Multi.classic.flash.break02	name	\032
-options.displays.Multi.classic.flash.break03	name	\032
-options.displays.Multi.classic.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.\n\n|cFF00B4FFPrimary:|r |cFFFFD100100|r\n|cFF00B4FFAOE:|r |cFFFFD100100|r\n|cFF00B4FFCooldowns:|r |cFFFFD100100|r\n|cFF00B4FFDefensives:|r |cFFFFD100100|r\n|cFF00B4FFInterrupts:|r |cFFFFD100100|r
-options.displays.Multi.classic.flash.brightness	name	Flash Brightness
-options.displays.Multi.classic.flash.color	desc	Specify a glow color for the SpellFlash highlight.\n\n|cFF00B4FFPrimary:|r |A:WhiteCircle-RaidBlips:16:16:0:0:255:0:0|a |cFFFFD100#ff0000|r\n|cFF00B4FFAOE:|r |A:WhiteCircle-RaidBlips:16:16:0:0:0:255:0|a |cFFFFD100#00ff00|r\n|cFF00B4FFCooldowns:|r |A:WhiteCircle-RaidBlips:16:16:0:0:255:209:0|a |cFFFFD100#ffd100|r\n|cFF00B4FFDefensives:|r |A:WhiteCircle-RaidBlips:16:16:0:0:133:77:255|a |cFFFFD100#854dff|r\n|cFF00B4FFInterrupts:|r |A:WhiteCircle-RaidBlips:16:16:0:0:255:255:255|a |cFFFFD100#ffffff|r
-options.displays.Multi.classic.flash.color	name	Color
-options.displays.Multi.classic.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.classic.flash.combat	name	Combat Only
-options.displays.Multi.classic.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.classic.flash.enabled	name	Enabled
-options.displays.Multi.classic.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.classic.flash.fixedBrightness	name	Fixed Brightness
-options.displays.Multi.classic.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.classic.flash.fixedSize	name	Fixed Size
-options.displays.Multi.classic.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.\n\n|cFF00B4FFPrimary:|r |cFFFFD100Star (Default)|r\n|cFF00B4FFAOE:|r |cFFFFD100Star (Default)|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Star (Default)|r\n|cFF00B4FFDefensives:|r |cFFFFD100Star (Default)|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Star (Default)|r
-options.displays.Multi.classic.flash.flashTexture	name	Texture
-options.displays.Multi.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.Multi.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.Multi.classic.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.Multi.classic.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.Multi.classic.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.Multi.classic.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.Multi.classic.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.Multi.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.Multi.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.Multi.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.Multi.classic.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.\n\n|cFF00B4FFPrimary:|r |cFFFFD100240|r\n|cFF00B4FFAOE:|r |cFFFFD100240|r\n|cFF00B4FFCooldowns:|r |cFFFFD100240|r\n|cFF00B4FFDefensives:|r |cFFFFD100240|r\n|cFF00B4FFInterrupts:|r |cFFFFD100240|r
-options.displays.Multi.classic.flash.size	name	Flash Size
-options.displays.Multi.classic.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.\n\n|cFF00B4FFPrimary:|r |cFFFFD1000.40|r\n|cFF00B4FFAOE:|r |cFFFFD1000.40|r\n|cFF00B4FFCooldowns:|r |cFFFFD1000.40|r\n|cFF00B4FFDefensives:|r |cFFFFD1000.40|r\n|cFF00B4FFInterrupts:|r |cFFFFD1000.40|r
-options.displays.Multi.classic.flash.speed	name	Speed
-options.displays.Multi.classic.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.classic.flash.suppress	name	Hide Display
-options.displays.Multi.classic.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.Multi.classic.gamepad	desc	Options for the controller button pictures shown for the game's gamepad action bars.
 options.displays.Multi.classic.gamepad	name	Gamepad
 options.displays.Multi.classic.gamepad.cPort	name	ConsolePort
@@ -12008,7 +11657,7 @@ options.displays.Multi.classic.gamepad.pos.x	desc	|cFF00B4FFPrimary:|r |cFFFFD10
 options.displays.Multi.classic.gamepad.pos.x	name	X Offset
 options.displays.Multi.classic.gamepad.pos.y	desc	|cFF00B4FFPrimary:|r |cFFFFD100-1|r\n|cFF00B4FFAOE:|r |cFFFFD100-1|r\n|cFF00B4FFCooldowns:|r |cFFFFD100-1|r\n|cFF00B4FFDefensives:|r |cFFFFD100-1|r\n|cFF00B4FFInterrupts:|r |cFFFFD100-1|r
 options.displays.Multi.classic.gamepad.pos.y	name	Y Offset
-options.displays.Multi.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Multi.classic.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Multi.classic.glow	name	Glows
 options.displays.Multi.classic.glow.break01	name	\032
 options.displays.Multi.classic.glow.break02	name	\032
@@ -12390,7 +12039,7 @@ options.displays.Multi.timeline.tab_next.captions.queued	desc	If enabled, descri
 options.displays.Multi.timeline.tab_next.captions.queued	name	Enabled for Queued Icons
 options.displays.Multi.timeline.tab_next.gap	desc	The space between the now circle and the next box, and between the next box and the lane.\n\n|cFF00B4FFPrimary:|r |cFFFFD10012|r\n|cFF00B4FFAOE:|r |cFFFFD10012|r\n|cFF00B4FFCooldowns:|r |cFFFFD10012|r\n|cFF00B4FFDefensives:|r |cFFFFD10012|r\n|cFF00B4FFInterrupts:|r |cFFFFD10012|r
 options.displays.Multi.timeline.tab_next.gap	name	Gap
-options.displays.Multi.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Multi.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Multi.timeline.tab_next.glow	name	Glows
 options.displays.Multi.timeline.tab_next.glow.queued	desc	If enabled, abilities that have active glows (or overlays) will also glow in your queue.\n\nThis may not be ideal, the glow may no longer be correct by that point in the future.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
 options.displays.Multi.timeline.tab_next.glow.queued	name	Enabled for Queued Icons
@@ -12551,45 +12200,6 @@ options.displays.Multi.timeline.tab_now.eta.style	values.MONOCHROME,THICKOUTLINE
 options.displays.Multi.timeline.tab_now.eta.style	values.NONE	None
 options.displays.Multi.timeline.tab_now.eta.style	values.OUTLINE	Outline
 options.displays.Multi.timeline.tab_now.eta.style	values.THICKOUTLINE	Thick Outline
-options.displays.Multi.timeline.tab_now.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.Multi.timeline.tab_now.flash	name	SpellFlash
-options.displays.Multi.timeline.tab_now.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.timeline.tab_now.flash.blink	name	Button Blink
-options.displays.Multi.timeline.tab_now.flash.break00	name	\032
-options.displays.Multi.timeline.tab_now.flash.break01	name	\032
-options.displays.Multi.timeline.tab_now.flash.break02	name	\032
-options.displays.Multi.timeline.tab_now.flash.break03	name	\032
-options.displays.Multi.timeline.tab_now.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.\n\n|cFF00B4FFPrimary:|r |cFFFFD100100|r\n|cFF00B4FFAOE:|r |cFFFFD100100|r\n|cFF00B4FFCooldowns:|r |cFFFFD100100|r\n|cFF00B4FFDefensives:|r |cFFFFD100100|r\n|cFF00B4FFInterrupts:|r |cFFFFD100100|r
-options.displays.Multi.timeline.tab_now.flash.brightness	name	Flash Brightness
-options.displays.Multi.timeline.tab_now.flash.color	desc	Specify a glow color for the SpellFlash highlight.\n\n|cFF00B4FFPrimary:|r |A:WhiteCircle-RaidBlips:16:16:0:0:255:215:0|a |cFFFFD100#ffd700|r\n|cFF00B4FFAOE:|r |A:WhiteCircle-RaidBlips:16:16:0:0:255:215:0|a |cFFFFD100#ffd700|r\n|cFF00B4FFCooldowns:|r |A:WhiteCircle-RaidBlips:16:16:0:0:255:215:0|a |cFFFFD100#ffd700|r\n|cFF00B4FFDefensives:|r |A:WhiteCircle-RaidBlips:16:16:0:0:255:215:0|a |cFFFFD100#ffd700|r\n|cFF00B4FFInterrupts:|r |A:WhiteCircle-RaidBlips:16:16:0:0:255:215:0|a |cFFFFD100#ffd700|r
-options.displays.Multi.timeline.tab_now.flash.color	name	Color
-options.displays.Multi.timeline.tab_now.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.timeline.tab_now.flash.combat	name	Combat Only
-options.displays.Multi.timeline.tab_now.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.timeline.tab_now.flash.enabled	name	Enabled
-options.displays.Multi.timeline.tab_now.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.timeline.tab_now.flash.fixedBrightness	name	Fixed Brightness
-options.displays.Multi.timeline.tab_now.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.timeline.tab_now.flash.fixedSize	name	Fixed Size
-options.displays.Multi.timeline.tab_now.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.\n\n|cFF00B4FFPrimary:|r |cFFFFD100Star (Default)|r\n|cFF00B4FFAOE:|r |cFFFFD100Star (Default)|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Star (Default)|r\n|cFF00B4FFDefensives:|r |cFFFFD100Star (Default)|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Star (Default)|r
-options.displays.Multi.timeline.tab_now.flash.flashTexture	name	Texture
-options.displays.Multi.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.Multi.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.Multi.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.Multi.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.Multi.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.Multi.timeline.tab_now.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.Multi.timeline.tab_now.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.Multi.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.Multi.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.Multi.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.Multi.timeline.tab_now.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.\n\n|cFF00B4FFPrimary:|r |cFFFFD100240|r\n|cFF00B4FFAOE:|r |cFFFFD100240|r\n|cFF00B4FFCooldowns:|r |cFFFFD100240|r\n|cFF00B4FFDefensives:|r |cFFFFD100240|r\n|cFF00B4FFInterrupts:|r |cFFFFD100240|r
-options.displays.Multi.timeline.tab_now.flash.size	name	Flash Size
-options.displays.Multi.timeline.tab_now.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.\n\n|cFF00B4FFPrimary:|r |cFFFFD1000.40|r\n|cFF00B4FFAOE:|r |cFFFFD1000.40|r\n|cFF00B4FFCooldowns:|r |cFFFFD1000.40|r\n|cFF00B4FFDefensives:|r |cFFFFD1000.40|r\n|cFF00B4FFInterrupts:|r |cFFFFD1000.40|r
-options.displays.Multi.timeline.tab_now.flash.speed	name	Speed
-options.displays.Multi.timeline.tab_now.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.timeline.tab_now.flash.suppress	name	Hide Display
-options.displays.Multi.timeline.tab_now.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.Multi.timeline.tab_now.focusPendingColor	name	Pending Ring Color
 options.displays.Multi.timeline.tab_now.focusReadyStyle	desc	How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it, or the Gold Ring art (full colour when ready, grey and half faded while pending; fixed-colour art, so the ring colours do not apply to it).\n\n|cFF00B4FFPrimary:|r |cFFFFD100Ring|r\n|cFF00B4FFAOE:|r |cFFFFD100Ring|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Ring|r\n|cFF00B4FFDefensives:|r |cFFFFD100Ring|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Ring|r
 options.displays.Multi.timeline.tab_now.focusReadyStyle	name	Ready Look
@@ -12620,7 +12230,7 @@ options.displays.Multi.timeline.tab_now.gamepad.pos.x	desc	|cFF00B4FFPrimary:|r 
 options.displays.Multi.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.Multi.timeline.tab_now.gamepad.pos.y	desc	|cFF00B4FFPrimary:|r |cFFFFD100-1|r\n|cFF00B4FFAOE:|r |cFFFFD100-1|r\n|cFF00B4FFCooldowns:|r |cFFFFD100-1|r\n|cFF00B4FFDefensives:|r |cFFFFD100-1|r\n|cFF00B4FFInterrupts:|r |cFFFFD100-1|r
 options.displays.Multi.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.Multi.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Multi.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Multi.timeline.tab_now.glow	name	Glows
 options.displays.Multi.timeline.tab_now.glow.break01	name	\032
 options.displays.Multi.timeline.tab_now.glow.break02	name	\032
@@ -13007,45 +12617,6 @@ options.displays.Primary.classic.delays.type	name	Indicator
 options.displays.Primary.classic.delays.type	values.ICON	Show Icon (Color)
 options.displays.Primary.classic.delays.type	values.TEXT	Show Text (Countdown)
 options.displays.Primary.classic.delays.type	values.__NA	No Indicator
-options.displays.Primary.classic.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.Primary.classic.flash	name	SpellFlash
-options.displays.Primary.classic.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.
-options.displays.Primary.classic.flash.blink	name	Button Blink
-options.displays.Primary.classic.flash.break00	name	\032
-options.displays.Primary.classic.flash.break01	name	\032
-options.displays.Primary.classic.flash.break02	name	\032
-options.displays.Primary.classic.flash.break03	name	\032
-options.displays.Primary.classic.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.
-options.displays.Primary.classic.flash.brightness	name	Flash Brightness
-options.displays.Primary.classic.flash.color	desc	Specify a glow color for the SpellFlash highlight.
-options.displays.Primary.classic.flash.color	name	Color
-options.displays.Primary.classic.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.
-options.displays.Primary.classic.flash.combat	name	Combat Only
-options.displays.Primary.classic.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.
-options.displays.Primary.classic.flash.enabled	name	Enabled
-options.displays.Primary.classic.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.
-options.displays.Primary.classic.flash.fixedBrightness	name	Fixed Brightness
-options.displays.Primary.classic.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.
-options.displays.Primary.classic.flash.fixedSize	name	Fixed Size
-options.displays.Primary.classic.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.
-options.displays.Primary.classic.flash.flashTexture	name	Texture
-options.displays.Primary.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.Primary.classic.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.Primary.classic.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.Primary.classic.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.Primary.classic.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.Primary.classic.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.Primary.classic.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.Primary.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.Primary.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.Primary.classic.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.Primary.classic.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.
-options.displays.Primary.classic.flash.size	name	Flash Size
-options.displays.Primary.classic.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.
-options.displays.Primary.classic.flash.speed	name	Speed
-options.displays.Primary.classic.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.
-options.displays.Primary.classic.flash.suppress	name	Hide Display
-options.displays.Primary.classic.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.Primary.classic.gamepad	desc	Options for the controller button pictures shown for the game's gamepad action bars.
 options.displays.Primary.classic.gamepad	name	Gamepad
 options.displays.Primary.classic.gamepad.cPort	name	ConsolePort
@@ -13067,7 +12638,7 @@ options.displays.Primary.classic.gamepad.pos.size	desc	The size of the controlle
 options.displays.Primary.classic.gamepad.pos.size	name	Size
 options.displays.Primary.classic.gamepad.pos.x	name	X Offset
 options.displays.Primary.classic.gamepad.pos.y	name	Y Offset
-options.displays.Primary.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Primary.classic.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Primary.classic.glow	name	Glows
 options.displays.Primary.classic.glow.break01	name	\032
 options.displays.Primary.classic.glow.break02	name	\032
@@ -13411,7 +12982,7 @@ options.displays.Primary.timeline.tab_next.captions.queued	desc	If enabled, desc
 options.displays.Primary.timeline.tab_next.captions.queued	name	Enabled for Queued Icons
 options.displays.Primary.timeline.tab_next.gap	desc	The space between the now circle and the next box, and between the next box and the lane.
 options.displays.Primary.timeline.tab_next.gap	name	Gap
-options.displays.Primary.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Primary.timeline.tab_next.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Primary.timeline.tab_next.glow	name	Glows
 options.displays.Primary.timeline.tab_next.glow.queued	desc	If enabled, abilities that have active glows (or overlays) will also glow in your queue.\n\nThis may not be ideal, the glow may no longer be correct by that point in the future.
 options.displays.Primary.timeline.tab_next.glow.queued	name	Enabled for Queued Icons
@@ -13558,45 +13129,6 @@ options.displays.Primary.timeline.tab_now.eta.style	values.MONOCHROME,THICKOUTLI
 options.displays.Primary.timeline.tab_now.eta.style	values.NONE	None
 options.displays.Primary.timeline.tab_now.eta.style	values.OUTLINE	Outline
 options.displays.Primary.timeline.tab_now.eta.style	values.THICKOUTLINE	Thick Outline
-options.displays.Primary.timeline.tab_now.flash	desc	This feature requires the SpellFlashCore addon or library to function properly.
-options.displays.Primary.timeline.tab_now.flash	name	SpellFlash
-options.displays.Primary.timeline.tab_now.flash.blink	desc	If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.
-options.displays.Primary.timeline.tab_now.flash.blink	name	Button Blink
-options.displays.Primary.timeline.tab_now.flash.break00	name	\032
-options.displays.Primary.timeline.tab_now.flash.break01	name	\032
-options.displays.Primary.timeline.tab_now.flash.break02	name	\032
-options.displays.Primary.timeline.tab_now.flash.break03	name	\032
-options.displays.Primary.timeline.tab_now.flash.brightness	desc	Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.
-options.displays.Primary.timeline.tab_now.flash.brightness	name	Flash Brightness
-options.displays.Primary.timeline.tab_now.flash.color	desc	Specify a glow color for the SpellFlash highlight.
-options.displays.Primary.timeline.tab_now.flash.color	name	Color
-options.displays.Primary.timeline.tab_now.flash.combat	desc	If checked, the addon will only create flashes when you are in combat.
-options.displays.Primary.timeline.tab_now.flash.combat	name	Combat Only
-options.displays.Primary.timeline.tab_now.flash.enabled	desc	If enabled, the addon will place a colorful glow on the first recommended ability for this display.
-options.displays.Primary.timeline.tab_now.flash.enabled	name	Enabled
-options.displays.Primary.timeline.tab_now.flash.fixedBrightness	desc	If checked, the SpellFlash glow will not dim/brighten.
-options.displays.Primary.timeline.tab_now.flash.fixedBrightness	name	Fixed Brightness
-options.displays.Primary.timeline.tab_now.flash.fixedSize	desc	If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.
-options.displays.Primary.timeline.tab_now.flash.fixedSize	name	Fixed Size
-options.displays.Primary.timeline.tab_now.flash.flashTexture	desc	Your selection will override the SpellFlash texture for all displays' flashes.
-options.displays.Primary.timeline.tab_now.flash.flashTexture	name	Texture
-options.displays.Primary.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle2	Monochrome Circle Thin
-options.displays.Primary.timeline.tab_now.flash.flashTexture	values.Interface\AddOns\Hekili\Textures\MonoCircle5	Monochrome Circle Thick
-options.displays.Primary.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\ping4	Circle
-options.displays.Primary.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\star4	Star (Default)
-options.displays.Primary.timeline.tab_now.flash.flashTexture	values.Interface\Cooldown\starburst	Starburst
-options.displays.Primary.timeline.tab_now.flash.flashTexture	values.Interface\Masks\CircleMaskScalable	Filled Circle
-options.displays.Primary.timeline.tab_now.flash.flashTexture	values.Interface\Masks\SquareMask	Filled Square
-options.displays.Primary.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitCollectionsIconMask	Filled Octagon
-options.displays.Primary.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsConduitPendingAnimationMask	Octagon Outline
-options.displays.Primary.timeline.tab_now.flash.flashTexture	values.Interface\Soulbinds\SoulbindsEnhancedConduitMask	Octagon Thick
-options.displays.Primary.timeline.tab_now.flash.size	desc	Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.
-options.displays.Primary.timeline.tab_now.flash.size	name	Flash Size
-options.displays.Primary.timeline.tab_now.flash.speed	desc	Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.
-options.displays.Primary.timeline.tab_now.flash.speed	name	Speed
-options.displays.Primary.timeline.tab_now.flash.suppress	desc	If checked, the addon will not show this display and will make recommendations via SpellFlash only.
-options.displays.Primary.timeline.tab_now.flash.suppress	name	Hide Display
-options.displays.Primary.timeline.tab_now.flash.warning	name	These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.
 options.displays.Primary.timeline.tab_now.focusPendingColor	desc	The now circle's ring while a focus ability counts down (the Timeline tab's Ring Color once it is ready).
 options.displays.Primary.timeline.tab_now.focusPendingColor	name	Pending Ring Color
 options.displays.Primary.timeline.tab_now.focusReadyStyle	desc	How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it, or the Gold Ring art (full colour when ready, grey and half faded while pending; fixed-colour art, so the ring colours do not apply to it).
@@ -13625,7 +13157,7 @@ options.displays.Primary.timeline.tab_now.gamepad.pos.size	desc	The size of the 
 options.displays.Primary.timeline.tab_now.gamepad.pos.size	name	Size
 options.displays.Primary.timeline.tab_now.gamepad.pos.x	name	X Offset
 options.displays.Primary.timeline.tab_now.gamepad.pos.y	name	Y Offset
-options.displays.Primary.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
+options.displays.Primary.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows.
 options.displays.Primary.timeline.tab_now.glow	name	Glows
 options.displays.Primary.timeline.tab_now.glow.break01	name	\032
 options.displays.Primary.timeline.tab_now.glow.break02	name	\032

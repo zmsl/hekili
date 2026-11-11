@@ -6,7 +6,7 @@
 - The Primary display can glow your real action bar buttons: the buttons that cast the first recommendation in a gold glow, and the second recommendation's in blue. It works on the game's keyboard and gamepad bars and on ElvUI, Bartender and Dominos, and has its own Action Bar Glow tab in each display's style options.
 
 ### Changed
-- The SpellFlash tab is hidden when SpellFlash is not available, since it does nothing then.
+- The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
 
 ### Fixed
 

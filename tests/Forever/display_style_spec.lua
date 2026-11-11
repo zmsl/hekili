@@ -207,20 +207,18 @@ end
 local function events(H, d, lines)
     local abilities = H.Hekili.Engine.Registry.Abilities()
     local ms, op = abilities.mortal_strike.id, abilities.overpower.id
-    local st = d.styleState or d -- the style's scratch (on the display itself at base)
     overlayed[op], overlayed[ms] = true, nil
     d:OnEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", op)
     d:OnEvent("SPELL_ACTIVATION_OVERLAY_GLOW_HIDE", ms)
     H.ctl.current[ms] = true
     d:OnEvent("CURRENT_SPELL_CAST_CHANGED")
-    d:OnEvent("ACTIONBAR_SHOWGRID") -- a flash event: pauses SpellFlash
     d:OnEvent("SPELLS_CHANGED") -- a keybinding event
-    lines[#lines + 1] = "-- events: flashReady=" .. v(st.flashReady)
+    lines[#lines + 1] = "-- events"
     dump(d, lines)
     H.Hekili.Pause = true
     H.ctl.now = H.ctl.now + 0.2
     d.__scripts.OnUpdate(d, 0.2)
-    lines[#lines + 1] = "-- paused: paused=" .. v(st.paused)
+    lines[#lines + 1] = "-- paused: paused=" .. v((d.styleState or d).paused)
     dump(d, lines)
     local l, r, t, b
     if d.style then
@@ -571,7 +569,6 @@ local LEGACY = {
     border = { thickness = 3 },
     range = { type = "melee" },
     glow = { mode = "pixel" },
-    flash = { size = 111 },
     captions = { x = 4 },
     indicators = { x = 5 },
     targets = { x = 6 },
@@ -628,7 +625,7 @@ describe("classic's settings", function()
         local displays = H.Hekili.DB.profile.displays
         assert.are.same(H.ns.UI.Styles.classic.defaults.keybindings, displays.Primary.classic.keybindings)
         assert.are.equal(50, displays.Primary.classic.primaryWidth)
-        assert.are.same({ 0, 1, 0, 1 }, displays.AOE.classic.flash.color) -- a built-in display's own default
+        assert.are.equal("autocast", displays.AOE.classic.glow.mode) -- a built-in display's own default
         for k in pairs(LEGACY) do
             assert.is_nil(rawget(displays.Primary, k), k)
         end
@@ -1042,12 +1039,6 @@ describe("the timeline display style", function()
         local ms, slam = abilities.mortal_strike, abilities.slam
         overlayed[ms.id] = true -- record 1 glows; glow.queued is off, so only its cell may
         H.ctl.usable[ms.actualName or ms.name] = { false, true } -- record 1 unusable: its cell tints grey
-        local flashed = {}
-        local flash = H.ns.UI.FlashRecommendation
-        H.ns.UI.FlashRecommendation = function(st, conf, a, elapsed)
-            flashed[#flashed + 1] = a
-            return flash(st, conf, a, elapsed)
-        end
         H.Hekili.Engine.Output.status.numTargets = 3 -- a target count to show
         tlPublish(H, 3)
         tlFrame(H, d)
@@ -1064,7 +1055,7 @@ describe("the timeline display style", function()
         assert.are.equal(1, rawget(c[1].Texture, "__r")) -- slam usable
         assert.is_nil(c[1].Targets:GetText())
         assert.is_false(c[1].Alts[1]:IsShown())
-        -- the next box: the press record with its keybind, glow, tint, target count, alternatives and flash
+        -- the next box: the press record with its keybind, glow, tint, target count, alternatives
         assert.are.equal("tex1", c[2].Texture:GetTexture())
         assert.are.equal("K1", c[2].Keybinding:GetText())
         assert.is_true(c[2].glowing)
@@ -1072,7 +1063,6 @@ describe("the timeline display style", function()
         assert.are.equal("3|r", c[2].Targets:GetText())
         assert.is_true(c[2].Alts[1]:IsShown())
         assert.are.equal("alt1a", c[2].Alts[1]:GetTexture())
-        assert.are.equal("mortal_strike", flashed[#flashed])
         -- the lane: records 2, 4, 5, 6
         assert.are.equal("tex2", c[3].Texture:GetTexture())
         assert.are.equal("tex4", c[4].Texture:GetTexture())
@@ -1103,8 +1093,6 @@ describe("the timeline display style", function()
         assert.is_nil(c[2].Targets:GetText())
         assert.are.equal("3|r", c[1].Targets:GetText())
         assert.is_false(c[2].Highlight:IsShown())
-        assert.are.equal("mortal_strike", flashed[#flashed])
-        H.ns.UI.FlashRecommendation = flash
         overlayed[ms.id] = nil
         assert.are.same({}, H.errors)
     end)
@@ -1911,7 +1899,7 @@ describe("the timeline display style", function()
             "border",
             "range",
             "glow",
-            "flash",
+            "barGlow",
             "captions",
             "targets",
             "delays",

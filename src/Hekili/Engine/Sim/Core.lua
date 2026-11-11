@@ -1530,14 +1530,9 @@ function Hekili.Update()
             local numRecs = display.numIcons or 3
             -- Fix 34: off-GCD picks at 0.00 can fill every icon and hide the on-GCD plan, so records continue past
             -- numIcons (at most 2 more) until they hold two on-GCD picks (the one after an on-GCD record 1 too, as in
-            -- the owner's Fury snapshot); a one-icon display (Interrupts, Defensives, flash suppression) asks for one pick.
+            -- the owner's Fury snapshot); a one-icon display (Interrupts, Defensives) asks for one pick.
             local maxRecs, onGcd = numRecs > 1 and numRecs + 2 or numRecs, 0
             local abilityOpts = Hekili:GetActiveSpecOption( "abilities" )
-
-            local flash = Hekili.Engine.StyleGroup( display, "flash" )
-            if flash.enabled and flash.suppress then
-                numRecs, maxRecs = 1, 1
-            end
 
             if debug then Hekili:Debug( "Combat Timer: %.2f", state.time ) end
 

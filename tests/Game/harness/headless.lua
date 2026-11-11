@@ -23,7 +23,6 @@ M.KNOWN_LOAD_NILS = {
     ElvUI = "another addon (Hekili skins for it when present)",
     WeakAuras = "another addon",
     io = "LibDeflate.lua:3453 probes the standalone Lua io library (absent in WoW)",
-    SpellFlashCore = "an optional library's host addon",
     ["LibDualSpec-1.0-35 test"] = "LibStub probes a minor version",
     LibStub = "LibStub.lua's own `_G.LibStub` probe before it defines it",
     HekiliDB = "no saved variables (a fresh profile)",

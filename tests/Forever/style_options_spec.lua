@@ -184,7 +184,7 @@ end)
 
 -- A registered style whose config holds the shared groups for zones { "now", "next" } and whose options are the
 -- shared builders, reached the way an external style reaches them: through Hekili.StyleOptions.
-local GROUPS = { "keybindings", "captions", "indicators", "range", "glow", "flash", "border", "targets", "delays" }
+local GROUPS = { "keybindings", "captions", "indicators", "range", "glow", "border", "targets", "delays" }
 local ZONES = { "now", "next" }
 
 local function external(H, groups)
@@ -299,7 +299,7 @@ describe("the engine's and the shared resolve's range, flash and keybinding sett
         assert.are.equal(conf.classic.range, group(conf, "range")) -- still classic
         conf.style = "ext"
         assert.are.equal(conf.ext.range, group(conf, "range"))
-        assert.are.equal(conf.classic.flash, group(conf, "flash")) -- ext offers no flash
+        assert.are.equal(conf.classic.glow, group(conf, "glow")) -- ext offers no glow
         conf.ext.range.type = "xclude"
         H.Hekili.State.reset("Primary")
         assert.is_true(H.Hekili.State.rangefilter)
@@ -409,7 +409,7 @@ describe("the timeline's option tabs", function()
                 "keybindings.fontSize",
                 "glow.highlight",
                 "targets.enabled",
-                "flash.enabled",
+                "barGlow.enabled",
                 "border.enabled",
             },
             tab_next = {
