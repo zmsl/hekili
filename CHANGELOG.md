@@ -10,6 +10,7 @@
 
 ### Fixed
 - In dungeons and raids, switching targets with Tab no longer makes a debuff that the Cooldown Manager shows on your new target (such as Faerie Fire) look missing, so it is no longer recommended again.
+- In dungeons and raids, the debuffs you put on an enemy are remembered when you Tab away and back, as long as its nameplate stays shown, so they are not recommended again while they are still up.
 
 ### Known issues
 

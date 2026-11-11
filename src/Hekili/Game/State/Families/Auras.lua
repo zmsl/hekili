@@ -1,7 +1,8 @@
 -- Game/State/Families/Auras.lua
 -- The auras family (spec §6.3): per unit and tracked aura, the believed expiry, stacks, applied time and an invented
 -- stable instance ID; plain walk reads (observed), our casts' handler writes (modelled, Families/Now.lua), expiry by time;
--- per-target memory by GUID slot (TARGET_CAP); the index order for AuraAt; AuraGen; Count.WithAura; a player aura's
+-- per-target memory by slot (TARGET_CAP; Sources/Target.lua keys a slot by GUID, under Map by plate index); the
+-- pending-swap serial I.curSwapN; the index order for AuraAt; AuraGen; Count.WithAura; a player aura's
 -- stacks spent by hits on the player (its `consumedBy`, tank design §3).
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Auras.lua and Belief/Targets.lua (Applier TargetSwap
 -- :147); the aura conf of src/TacoDogForever/Model/Belief.lua:709.

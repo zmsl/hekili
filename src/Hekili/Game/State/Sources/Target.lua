@@ -1,7 +1,9 @@
 -- Game/State/Sources/Target.lua
--- Target sources (spec §4.2): PLAYER_TARGET_CHANGED keeps a GUID -> memory slot map (TARGET_CAP slots, the least
--- recently used reused) and logs `TargetSwap` (a: the slot, 0 no target; b: 1 a slot newly taken; c: 1 plain
--- UnitCanAttack) straight to the log, then walks the new target's auras; poll 4 logs `TargetGone` for a dead target;
+-- Target sources (spec §4.2): PLAYER_TARGET_CHANGED keeps a target -> memory slot map (TARGET_CAP slots, the least
+-- recently used reused) keyed by GUID, or under Map (the GUID secret) by the target's plate index, forgotten at either
+-- edge of that plate (tab-targeting T2m; no plate: no memory), and logs `TargetSwap` (a: the slot, 0 no target; b: 1 a
+-- slot newly taken by a GUID; c: 1 plain UnitCanAttack) straight to the log, then walks the new target's auras; each
+-- swap bumps I.targetSwapN (the pending-swap serial, lane A); poll 4 logs `TargetGone` for a dead target;
 -- the target's UNIT_SPELLCAST_* events become `TargetCast` observations by castBarID (plain; the spellID and castGUID
 -- are secret on the target).
 -- The target's UNIT_COMBAT WOUND amounts become `TargetDamage` (b: the amount; target-health design §2.3c).
