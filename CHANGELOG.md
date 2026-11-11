@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- Stormstrike's debuff on the target (the extra damage your next Lightning Bolt, Chain Lightning or Earth Shock deals) now shows with the other auras.
 - A new Action Bar Glow page in the options can glow your real action bar buttons: the buttons that cast the first recommendation of a display in gold, and the second recommendation's in blue. It works on the game's keyboard and gamepad bars and on ElvUI, Bartender and Dominos, follows the display you choose, glows in combat only unless you change that, and works with the icons hidden. It is off by default.
 
 ### Changed

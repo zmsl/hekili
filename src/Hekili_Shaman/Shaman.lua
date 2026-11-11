@@ -8,7 +8,7 @@
 -- imbues (C4's main_hand_enchant), Rage of the Farseer (a talent under the Cooldowns toggle: its 25 s buff), mana
 -- under the five-second rule (`fsr`), and the default priority, Enhancement (wowsims.com), translated from
 -- wowsims/forever's APL (tools/wowsims/specs/shaman_enhancement.lua). Research: the class-completion research §4.
--- Unmodelled: Stormstrike's debuff (no priority reads it), the totems' effects, Flametongue and Windfury Weapon's
+-- Unmodelled: the totems' effects, Flametongue and Windfury Weapon's
 -- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges, Rage of the Farseer's
 -- +30% attack speed (nothing reads swing timing for mana).
 -- The Elemental kit (class-completion Task 17; its priority Elemental (wowsims.com)): what wowsims/forever's
@@ -332,6 +332,7 @@ local function shockEffect(other, debuffKey)
             applyDebuff("target", debuffKey, 12 + 3 * talent.call_of_flame.rank)
         else
             removeBuff("revelation") -- Earth Shock: Revelation's mask has it, not Flame Shock
+            removeDebuff("target", "stormstrike")
         end
     end
 end
@@ -356,6 +357,7 @@ end
 local function revealed()
     return function()
         removeBuff("revelation")
+        removeDebuff("target", "stormstrike")
     end
 end
 
@@ -530,6 +532,10 @@ spec:RegisterAuras({
         tick_time = 3,
         max_stack = 1,
     },
+    -- Stormstrike's debuff (17364; wowsims e5a9cd2a2d: 12 s, one charge): +20% nature damage from us to the target, spent
+    -- by the next landed Lightning Bolt, Chain Lightning or Earth Shock of ours (effect 2's mask 1048579 = 1 | 2 | 1048576).
+    -- Modelled for the auras list; no priority reads it. shortcut: spent at the cast, not at impact; main target only.
+    stormstrike = { id = 17364, duration = 12, max_stack = 1 },
     -- Rage of the Farseer (425336): +30% melee and ranged attack speed (DB2 aura 342) for 25 s; nothing reads it here.
     rage_of_the_farseer = { id = 425336, duration = 25, max_stack = 1 },
 })
@@ -578,10 +584,12 @@ spec:RegisterAbilities({
         now = function()
             removeBuff("maelstrom_weapon")
             removeBuff("revelation")
+            removeDebuff("target", "stormstrike")
         end,
         handler = function()
             removeBuff("maelstrom_weapon")
             removeBuff("revelation")
+            removeDebuff("target", "stormstrike")
         end,
     },
 
@@ -670,6 +678,13 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows({ 17364 }),
+
+        now = function()
+            applyDebuff("target", "stormstrike", 12)
+        end,
+        handler = function()
+            applyDebuff("target", "stormstrike", 12)
+        end,
     },
 
     earth_shock = shock("flame_shock", EARTH_SHOCK, EARTH_SHOCK_COST),
