@@ -466,6 +466,11 @@ function U.Bound(i)
     local u = tokUid[i]
     return u > 0 and uGUID[u] or ""
 end
+--- Whether token index i's GUID reads secret now (a unit is there, which one is unknown). Allocates nothing.
+function U.Secret(api, i)
+    local _, s = read(api, i)
+    return s
+end
 --- The slot bound to token index i, 0 none.
 function U.Uid(i)
     return tokUid[i]

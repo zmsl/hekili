@@ -295,6 +295,14 @@ describe("the unit registry", function()
         assert.is_false(T.Crowded(u, 8, ctl.now)) -- within CROWD of the mark: only the reuse cleared it
     end)
 
+    it("tells a secret GUID from a plain one and from no unit (Secret; tab-targeting T2m)", function()
+        assert.is_false(U.Secret(api, 1)) -- Creature-1, plain
+        ctl.guid.target = fake.SECRET
+        assert.is_true(U.Secret(api, 1))
+        ctl.guid.target = nil
+        assert.is_false(U.Secret(api, 1))
+    end)
+
     it("pins the target, else the soft enemy, and keeps the SENT pin by castGUID", function()
         assert.are.equal("Creature-1", U.Pin(api, 1))
         ctl.guid.target, ctl.guid.softenemy = nil, "Creature-5"
