@@ -44,18 +44,21 @@ local function add( button )
     if type( slot ) ~= "number" then return end
 
     local aType, id = GetActionInfo( slot )
-    if aType == "macro" and id then
-        local spell = GetMacroSpell( id )
-        if spell then
-            aType, id = "spell", spell
-        else
-            local name, link = GetMacroItem( id )
-            aType, id = "item", ( link or name ) and GetItemInfoInstant( link or name )
-        end
-    end
     if not aType or not id then return end
 
+    -- On Forever a macro slot answers its spell's id ("macro 778", in game 2026-11-11), which the keybind reader's
+    -- lookup already resolves; a macro index is the fallback (its spell, else its item).
     local key, ability = ns.ResolveAction( aType, id )
+    if not key and aType == "macro" then
+        local spell = GetMacroSpell( id )
+        if spell then
+            key, ability = ns.ResolveAction( "spell", spell )
+        else
+            local name, link = GetMacroItem( id )
+            local item = ( link or name ) and GetItemInfoInstant( link or name )
+            if item then key, ability = ns.ResolveAction( "item", item ) end
+        end
+    end
     if not key then return end
 
     count = count + 1

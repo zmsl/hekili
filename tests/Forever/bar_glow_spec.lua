@@ -209,6 +209,15 @@ describe("action bar glow", function()
         assert.is_nil(glow.on(e.ActionButton3)) -- a macro that casts an item the lookup does not know
     end)
 
+    it("glows a macro slot that answers its spell's id directly (Forever, in game: 'macro 778')", function()
+        local e = H.env
+        world.actions[37] = { "macro", id(H, "overpower") } -- no macro index: GetMacroSpell would answer nothing
+        e.MultiBarLeftButton1 = button(37)
+        BG.Rescan()
+        BG.Update(d, cfg, out("overpower"), 1)
+        assert.are.same(NOW, (glow.on(e.MultiBarLeftButton1)))
+    end)
+
     it("glows a gamepad bar button through its current action", function()
         local e = H.env
         world.actions[190] = { "spell", id(H, "mortal_strike") }
