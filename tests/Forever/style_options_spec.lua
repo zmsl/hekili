@@ -4,6 +4,7 @@
 -- toggle flipped, and classic's defaults. Record with STYLE_OPTIONS=record (rewrites the fixture).
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
+local fake = require("Game.State.helpers.fake_api")
 
 local PATH = "tests/Forever/fixtures/classic_options.lua"
 
@@ -330,6 +331,20 @@ describe("the engine's and the shared resolve's range, flash and keybinding sett
         conf.ext.range.enabled = false
         H.ns.UI.Resolve(d, conf, out, H.ctl.now)
         assert.are.equal(1, calls)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- range review C1: a secret target GUID (the Map restriction) under the melee range check; v38 keyed its cache by it
+    it("resolves the melee range check without raising while the target's GUID is secret", function()
+        local H = boot()
+        H.ctl.guid.target = fake.SECRET
+        local d = rawget(H.env, "HekiliDisplayPrimary")
+        assert.is_true(external(H, { "range" }))
+        local conf = H.Hekili.DB.profile.displays.Primary
+        conf.style, conf.ext.range.type = "ext", "melee"
+        assert.has_no.errors(function()
+            H.ns.UI.Resolve(d, conf, H.Hekili.Engine.Output.Primary, H.ctl.now)
+        end)
         assert.are.same({}, H.errors)
     end)
 end)

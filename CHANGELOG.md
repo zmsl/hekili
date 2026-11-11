@@ -9,6 +9,7 @@
 - The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
 
 ### Fixed
+- A display style whose range check is set to melee no longer raises a Lua error in dungeons while you target an enemy: Hekili now ships the newer LibRangeCheck-3.0.
 
 ### Known issues
 
