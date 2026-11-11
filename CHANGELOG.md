@@ -3,7 +3,6 @@
 ## Unreleased
 
 ### New
-- Keybinds now show on the icons for the game's own gamepad action bars: each recommendation shows the controller buttons that cast it, as the game's button pictures in your controller style, on the icon where keybinds sit. A new Gamepad tab in each display's style options sets their anchor, offsets and size, and now holds the ConsolePort button options (your saved choices carry over). Gamepad keys on normal bars show as pictures too.
 
 ### Changed
 
@@ -12,6 +11,20 @@
 ### Known issues
 
 ### Upgrade notes
+
+## v0.7.3
+
+_Released 2026-11-11_
+
+This release shows your controller buttons on the recommendation icons when you play with a gamepad.
+
+### Core and display
+- Recommendations now show the controller buttons that cast them when the ability is on the game's own gamepad action bars, including modifier bars and form bars.
+- The buttons are drawn as the game's button pictures in your controller style, on the icon where keybinds normally sit.
+- Gamepad keys bound on normal action bars now show as pictures too; number-pad keys still show as keyboard text.
+- The Generic controller style shows X, Y, B and A, matching the game's gamepad bars.
+- A new Gamepad tab in each display's style options sets the button pictures' anchor point, X and Y offsets, and size, separately from keyboard keybind text.
+- The ConsolePort button options now live in the Gamepad tab, and your saved choices carry over.
 
 ## v0.7.2
 
