@@ -126,8 +126,28 @@ local function gcdTime(a, t)
     return g
 end
 
+-- The GCD modifiers (aura audit C12; Engine/Schema/Races.lua RegisterGcdMod, def.gcdMods): by modifier k, its player
+-- aura index, its multiplier (1 + pct) and its scope (false: every ability; else a set of ability indexes), built at
+-- the build.
+local GM = { n = 0, aura = {}, mult = {}, scope = {} }
+
+-- The product of the multipliers of the GCD modifiers in ability a's scope whose aura is believed up at t (1: none).
+-- Allocates nothing.
+local function gcdMult(a, t)
+    local f = 1
+    for k = 1, GM.n do
+        local j, sc = GM.aura[k], GM.scope[k]
+        if (not sc or sc[a]) and I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then -- unit 1: "player"
+            f = f * GM.mult[k]
+        end
+    end
+    return f
+end
+
 --- The length of a GCD that ability a (0: none known, the last opener's kind) opens at t: its declared `gcdTime`,
---- else its kind's learned length, else 1.0 for the totem kind and max(1.0, 1.5 / spell haste) for the spell kind. Allocates nothing.
+--- else its kind's learned length, else 1.0 for the totem kind and max(1.0, 1.5 / spell haste) for the spell kind; a
+--- spell-kind one then x the GCD modifiers up in its scope (aura audit C12), floored at 1.0 (wowsims: the multiplier
+--- before the haste and the floor; the learned length already holds the haste). Allocates nothing.
 function I.GcdLen(a, t)
     local kind = I.gcdKindLast
     if a > 0 then
@@ -139,14 +159,17 @@ function I.GcdLen(a, t)
     end
     if kind == 0 then
         return 0
-    elseif I.gcdLearned[kind] > 0 then
-        return I.gcdLearned[kind]
     elseif kind == 2 then
-        return 1.0
+        return I.gcdLearned[2] > 0 and I.gcdLearned[2] or 1.0
     end
-    -- spell haste (UnitSpellHaste %, plain), never melee haste: attack speed does not shorten a GCD on Forever
-    local h = VS.SpellHaste and VS.SpellHaste(t).est or 0
-    return max(1.0, 1.5 / (1 + (h > 0 and h or 0) / 100)) -- 1 + h/100 >= 1: h > 0 checked
+    local len = I.gcdLearned[1]
+    if len <= 0 then
+        -- spell haste (UnitSpellHaste %, plain), never melee haste: attack speed does not shorten a GCD on Forever
+        local h = VS.SpellHaste and VS.SpellHaste(t).est or 0
+        len = max(1.0, 1.5 / (1 + (h > 0 and h or 0) / 100)) -- 1 + h/100 >= 1: h > 0 checked
+    end
+    local f = a > 0 and GM.n > 0 and gcdMult(a, t) or 1
+    return f ~= 1 and max(1.0, len * f) or len
 end
 
 local function maxCharges(a)
@@ -198,6 +221,30 @@ I.OnBuild(function(def, now)
         end
     end
     I.TRACKED.ability = A.id
+    GM.n = 0
+    local mods = def.gcdMods or {} -- a hand-built def may carry none
+    for k = 1, #mods do
+        local m, j = mods[k], 0
+        for i = 1, #def.auras do
+            if def.auras[i].key == m.aura then
+                j = i
+            end
+        end
+        if j > 0 and type(m.pct) == "number" then
+            GM.n = GM.n + 1
+            local sc = false
+            if type(m.spells) == "table" then
+                sc = {}
+                for _, id in ipairs(m.spells) do
+                    local ab = A.bySpell[id]
+                    if ab then
+                        sc[ab] = true
+                    end
+                end
+            end
+            GM.aura[GM.n], GM.mult[GM.n], GM.scope[GM.n] = j, 1 + m.pct, sc
+        end
+    end
     gcd = I.NewBelief("gcd")
     I.castAb, I.castEnd, I.channel, I.gcdStart, I.gcdDur, I.queuedStrike = 0, 0, false, 0, 0, false
     I.gcdOwner, I.gcdKindLast, I.gcdRead, lastGcdA, lastGcdT = 0, 1, false, 0, 0
@@ -319,8 +366,9 @@ I.On(Obs.Cooldown, function(o, t)
             local len, owner = o.t - I.gcdStart, I.gcdOwner
             local kind = owner > 0 and A.gcdKind[owner] or 0
             local g = owner > 0 and gcdTime(owner, t)
-            -- an ownerless GCD, or one of a declared length, teaches nothing
-            if I.gcdStart > 0 and kind > 0 and not (type(g) == "number" and g > 0) then
+            -- an ownerless GCD, one of a declared length, or one a GCD modifier cut (aura audit C12) teaches nothing
+            local cut = kind == 1 and GM.n > 0 and gcdMult(owner, I.gcdStart) ~= 1
+            if I.gcdStart > 0 and kind > 0 and not (type(g) == "number" and g > 0) and not cut then
                 if len >= GCD_MIN[kind] and len < GCD_MAX[kind] then
                     I.gcdLearned[kind] = quantise(len)
                 end

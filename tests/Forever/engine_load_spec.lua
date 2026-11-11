@@ -235,4 +235,27 @@ describe("the simulation's GCD by kind in energy (core edit E10)", function()
         assert.are.equal(1, S.gcd.execute)
         assert.are.equal(1, S.gcd.max) -- no ability context: the clause E10 keeps
     end)
+
+    -- aura audit C12: a class's GCD modifier (spec:RegisterGcdMod) cuts a spell-kind press in its scope while its
+    -- aura is up in the simulation; out of scope or with the aura down the press keeps 1.5 x haste.
+    it("cuts a spell-kind press in a GCD modifier's scope while its aura is up (aura audit C12)", function()
+        local H = headless.new({
+            character = {
+                class = "DRUID",
+                classID = 11,
+                specID = 1483,
+                level = 60,
+                known = { 768, 5487, 5221 },
+                power = { type = 3, token = "ENERGY", max = 100 },
+            },
+        })
+        local S, C = H.Hekili.State, H.Hekili.Class
+        H.ns.RegisterGcdMod({ aura = "natures_grace", pct = -0.1, spells = { C.abilities.wrath.id } })
+        S.this_action = "wrath"
+        assert.are.equal(1.5 * S.haste, S.gcd.execute)
+        S.applyBuff("natures_grace")
+        assert.is_true(math.abs(S.gcd.execute - 1.5 * S.haste * 0.9) < 1e-9)
+        S.this_action = "bear_form" -- out of scope
+        assert.are.equal(1.5 * S.haste, S.gcd.execute)
+    end)
 end)

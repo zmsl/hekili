@@ -803,6 +803,48 @@ describe("now handlers", function()
         assert.is_nil(VS.Aura("player", 4611, 21.6))
     end)
 
+    -- aura audit C12: a pack's GCD modifier ({ aura, pct, spells }, Engine/Schema/Races.lua's list) cuts a spell-kind
+    -- GCD in its scope while the aura is believed up, on top of the learned length (floor 1.0); a GCD it cut teaches
+    -- no length.
+    it("cuts a spell-kind GCD in scope while the modifier's aura is up, and learns no length from it (C12)", function()
+        h.Class.auras.grace_test = { key = "grace_test", id = 4701, duration = 3 }
+        register("grace_cast", {
+            id = 4702,
+            gcd = "off",
+            now = function()
+                applyBuff("grace_test")
+            end,
+        })
+        register("other_test", { id = 4703 })
+        ns.raceMods = {
+            maxMods = {},
+            costMods = {},
+            gcdMods = { { aura = "grace_test", pct = -0.1, spells = { fs.SPENDER_C } } },
+        }
+        ns.ResourceIsPoints = function() -- Tracked.lua's race path (Engine/Sim/Constants.lua's)
+            return false
+        end
+        start()
+        cast(4702, 10)
+        cast(fs.SPENDER_C, 10.5)
+        I.Sources.Direct(VS.Obs.Cooldown, 10.5, 0, 1, 1) -- its GCD's edges, 1.35 s apart
+        I.Sources.Direct(VS.Obs.Cooldown, 11.85, 0, 0, 1)
+        VS.Drain(11.9)
+        assert.are.same({ 0, 0 }, I.gcdLearned) -- a cut GCD teaches nothing
+        cast(4703, 12) -- out of scope
+        assert.are.equal(13.5, VS.Gcd(12.1).est)
+        I.gcdLearned[1] = 1.4
+        cast(4702, 20)
+        cast(fs.SPENDER_C, 20.5)
+        assert.is_true(math.abs(VS.Gcd(20.6).est - (20.5 + 1.26)) < 0.002)
+        I.gcdLearned[1] = 1.05
+        cast(4702, 30)
+        cast(fs.SPENDER_C, 30.5)
+        assert.are.equal(31.5, VS.Gcd(30.6).est) -- 1.05 x 0.9 floors at 1.0
+        cast(fs.SPENDER_C, 40) -- the aura ran out at 33
+        assert.is_true(math.abs(VS.Gcd(40.1).est - 41.05) < 0.002)
+    end)
+
     it(
         "spends a charge from the count caught up to the cast: recharges finished since the last sample count",
         function()

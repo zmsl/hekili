@@ -573,6 +573,12 @@ local HekiliSpecMixin = {
         ns.RegisterCostMod( def )
     end,
 
+    -- A class's GCD modifier (aura audit C12: an aura that shortens the GCD of some abilities, e.g. a 10% cut):
+    -- { aura, pct, spells }, into the list both the belief and the simulation read (Engine/Schema/Races.lua).
+    RegisterGcdMod = function( self, def )
+        ns.RegisterGcdMod( def )
+    end,
+
     RegisterEvent = function( self, event, func )
         RegisterEvent( event, function( ... )
             if state.spec.id == self.id or state.spec.kitID == self.id then func( ... ) end
