@@ -16,6 +16,7 @@ for k = 1, PLATES do
     index[token[k]] = k
     active[k] = false
 end
+I.Plates = { active = active, token = token } -- Sources/Target.lua finds the target's plate at a target change
 
 S.On("NAME_PLATE_UNIT_ADDED", nil, function(api, t, unit)
     local k = unit and index[unit]
