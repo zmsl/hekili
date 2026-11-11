@@ -7,7 +7,7 @@
 
 ### Changed
 - The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
-- Hekili now reads your target's distance in steps of about 5 yards from LibRangeCheck, the library other addons use, instead of from your abilities' ranges, so priorities that check how far the target is away are more exact. The melee range check of a display style shows the target as in melee while its distance is unknown.
+- Hekili now reads your target's distance from LibRangeCheck, the range library other addons use, instead of from your abilities' ranges. Priorities that check how far away the target is use its answer, which comes in steps of about 5 yards. The melee range check of a display style shows the target as in melee while its distance is unknown.
 
 ### Fixed
 - A display style whose range check is set to melee no longer raises a Lua error in dungeons while you target an enemy: Hekili now ships the newer LibRangeCheck-3.0.

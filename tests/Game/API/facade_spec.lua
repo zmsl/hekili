@@ -661,6 +661,7 @@ describe("ns.Facade", function()
             end
             ctl.distance.nameplate1, ctl.distance.nameplate2 = 12, 12
             ctl.exists.nameplate1, ctl.exists.nameplate2 = true, true
+            ctl.guid.nameplate1 = "Creature-9" -- the library's own UnitGUID read (its cache key)
             assert.are.same({ 10, 15 }, { RC:GetRange("nameplate1") })
             local n = ctl.rangeLibCalls
             assert.are.same({}, { RC:GetRange("nameplate2") }) -- the Map restriction: not asked until probe G2 (R3)
