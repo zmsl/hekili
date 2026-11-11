@@ -12,6 +12,7 @@
 -- An `applyBuff`/`applyDebuff` with no duration writes the aura's registered one: its number, or its function evaluated
 -- in this context (gear-aware spec §5), so a pack writes a duration once.
 -- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
+-- A channel that ran to its believed end runs the ability's `now_finish` (the sim's `finish`'s twin; aura audit C11).
 -- A reaction (RegisterReaction) runs in the same context at a settled outcome's row time, never through the cast fold.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
 
@@ -23,6 +24,7 @@ local CAST = Obs.CastSuccess
 local A = I.ab
 A.now = {} -- by ability index: the `now` function, bound to the context, or false
 A.onCrit = {} -- by ability index: the `onCrit` function (run at the cast's own crit, Obs.Crit), bound, or false
+A.finish = {} -- by ability index: the `now_finish` function (run at a channel's stop at its end), bound, or false
 A.extra = {} -- by ability index: a `track_<id>` extra (VS.Track): no ability, no effects
 A.known = A.known or {} -- by ability index: any rank in the spellbook (Sources/Spellbook.lua)
 
@@ -602,6 +604,12 @@ I.OnBuild(function(def)
         A.now[a] = type(f) == "function" and setfenv(f, ctx) or false
         local c = obj.onCrit
         A.onCrit[a] = type(c) == "function" and setfenv(c, ctx) or false
+        local fin = obj.now_finish
+        if type(fin) == "function" and fin == obj.finish then -- as `now` and `handler`: one function, one environment
+            I.nowErrors, I.nowError = I.nowErrors + 1, "now: " .. tostring(A.key[a]) .. "'s now_finish is its finish"
+            fin = false
+        end
+        A.finish[a] = type(fin) == "function" and setfenv(fin, ctx) or false
         rawset(NAMES.action, A.key[a], setmetatable({ a = a }, actionMeta))
     end
     rawset(NAMES, "settings", def.settings or NO_SETTINGS) -- the spec's settings as plain values, the core's copy
@@ -774,6 +782,34 @@ I.On(Obs.Crit, function(o)
     if A.onCrit[a] and A.key[a] and not A.extra[a] then
         journal = false
         call(A.onCrit[a], a, o.t)
+        journal = true
+    end
+end)
+
+-- A channel's `now_finish` (aura audit C11): the channel in progress (ability index, 0 none) and its believed end, from
+-- its start (Sources/Casts.lua stages it only with plain times) and pushbacks; a stop within FINISH_TOL of that end
+-- ran it full (wowsims: the last tick lands at the end), so its `now_finish` runs at the stop, its writes no avoid's
+-- to undo. A stop earlier (a break, a clip) or a channel with no plain start runs nothing (dim: never a full channel
+-- assumed). Allocates nothing.
+local FINISH_TOL = 0.05 -- UNMEASURED: CHANNEL_STOP at a full channel's end is read at or just after it
+local chanA, chanEnd = 0, 0
+I.On(Obs.ChannelStart, function(o)
+    chanA, chanEnd = o.a, o.b
+end)
+I.On(Obs.ChannelUpdate, function(o)
+    if o.a == chanA then
+        chanEnd = o.b
+    end
+end)
+I.On(Obs.ChannelStop, function(o)
+    local a = chanA
+    if o.a ~= a then
+        return
+    end
+    chanA = 0
+    if A.finish[a] and A.key[a] and not A.extra[a] and o.t >= chanEnd - FINISH_TOL then
+        journal = false
+        call(A.finish[a], a, o.t)
         journal = true
     end
 end)

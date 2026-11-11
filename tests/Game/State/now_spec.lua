@@ -773,6 +773,36 @@ describe("now handlers", function()
         assert.are.equal(0, I.ab.castStartT[I.ab.bySpell[1464]])
     end)
 
+    -- aura audit C11: a channel's `now_finish` (the belief's twin of the sim's `finish`) runs once the channel ran to
+    -- its believed end; a channel broken earlier runs nothing.
+    it("runs a channel's now_finish at a stop at its end, never at an earlier stop (aura audit C11)", function()
+        h.Class.auras.inspire_test = { key = "inspire_test", id = 4611, duration = 5 }
+        register("flay_test", { id = 4601, channeled = true })
+        h.Class.abilities.flay_test.funcs.now_finish = function()
+            applyBuff("inspire_test")
+        end
+        start()
+        local function channel(t0, t1, stopAt)
+            ctl.now = t0
+            ctl.channel = { t0 * 1000, t1 * 1000 }
+            ctl.Fire("UNIT_SPELLCAST_CHANNEL_START", "player", "Cast-9", 4601)
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 4601)
+            ctl.Tick(t0 + 0.01)
+            VS.Drain(t0 + 0.02)
+            ctl.now = stopAt
+            ctl.channel = nil
+            ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-9", 4601)
+            ctl.Tick(stopAt + 0.01)
+            VS.Drain(stopAt + 0.02)
+        end
+        channel(10, 13, 13) -- ran to its end
+        local rec = VS.Aura("player", 4611, 13.1)
+        assert.is_truthy(rec)
+        assert.are.equal(18, rec.est)
+        channel(20, 23, 21.5) -- broken: nothing
+        assert.is_nil(VS.Aura("player", 4611, 21.6))
+    end)
+
     it(
         "spends a charge from the count caught up to the cast: recharges finished since the last sample count",
         function()
