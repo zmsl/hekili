@@ -637,6 +637,13 @@ describe("the wowsims APL translator", function()
         assert.are.same({ "default #6: never", "default #8: never", "default #9: never" }, omitted)
     end)
 
+    it("reads auraIsKnown of an aura the recipe's knownAs names as that talent's enabled", function()
+        local text = apl.translate({
+            priorityList = { cast(100, { auraIsKnown = { auraId = { spellId = 910 } } }) },
+        }, ctx({ knownAs = { [910] = "cuts" } }))
+        assert.are.equal("actions=strike,if=talent.cuts.enabled", text)
+    end)
+
     it(
         "reads auraIcdIsReady as the declaring aura's icd_ready, by its ID or its proc trigger's (a talent's: guarded)",
         function()

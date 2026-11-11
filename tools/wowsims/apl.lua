@@ -43,7 +43,8 @@
 --    ID that resolves (rule 5, or a kit talent's spell) to a talent's key or aura is `talent.<key>.enabled`, to an
 --    ability's key `action.<key>.known`, to any other aura `true`; an ID nothing resolves, or another unit, is false.
 --    (wowsims registers a gear, set or consumable aura only when it is equipped or configured; `true` for one of those
---    may disagree, no APL reads one today.) Solo exports: another player's aura (wowsims's External, tag -1) is never
+--    may disagree: two Warlock APLs read the weapon enchant 8217's Revelation, which reads known without the enchant
+--    but is never up unobserved.) Solo exports: another player's aura (wowsims's External, tag -1) is never
 --    registered, so it is not known (false) and every other read of it is nil (rule 6: dropped).
 -- 5. Keys, from the character's ability set (tests/Forever/helpers/engine.lua abilitySet: the class kit, the shared
 --    content and every race's racials, as the engine merges them): a spell ID maps through the recipe's `map`, else
@@ -508,6 +509,7 @@ function M.context(set, r, log, player, encounter, tank)
         talentKey = {},
         map = r.map or {},
         auraMap = r.auras or {},
+        knownAs = r.knownAs or {}, -- { [aura ID] = talent key }: `auraIsKnown` of that aura is the talent's `enabled`
         focus = r.focus or {},
         executePhase = r.executePhase,
         leveling = r.leveling or {},
@@ -1310,6 +1312,10 @@ local function bool(c, n)
         local id = v.auraId and v.auraId.spellId
         if not UNIT[v.sourceUnit and v.sourceUnit.type or "Self"] or not id or v.auraId.tag == -1 then
             return nil, false, false
+        end
+        local ka = c.knownAs[id]
+        if ka and c.talentKey[ka] then
+            return "talent." .. ka .. ".enabled", nil, false
         end
         local x = c.auraMap[id] or c.map[id] or c.talentOf[id] or c.auraOf[id] or c.keyOf[id]
         if not x then

@@ -249,6 +249,9 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 3. An all-empty group is an ON/OFF switch: `settings.wowsims_<name>`, its wowsims default; the header lists it only
    when an emitted line reads it (ruling L14), and the class registers exactly those (with the recipe's `settings`).
 4. `auraIsKnown`: a talent's `enabled`, an ability's `known`, else `true`; another unit's or player's aura is false.
+   A gear aura reads `true` without the item (Warlock's Revelation, weapon enchant 8217: two APLs read it): it is only
+   ever up when the client or the Cooldown Manager shows it. A recipe's `knownAs = { [aura ID] = talent key }` makes
+   that aura's `auraIsKnown` the talent's `enabled` (a build's "X known" variable on a talent's own aura).
 5. Keys from the character's ability set (kit, shared, every race): `map`, `auras`, then the set (an ability's key
    reads as an aura only where the kit registers an aura under it, else rule 12's nil: Enhancement's Stormstrike
    debuff 17364). Ignores
