@@ -15029,6 +15029,7 @@ options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.g
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.ghostly_strike	|T136000:0|t Spell 14278
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.ghostly_strike_next	|T136000:0|t Spell 1329326
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.hemorrhage	|T136000:0|t Spell 16511
+options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328826
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.rupture	|T136000:0|t Spell 1943
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.slice_and_dice	|T136000:0|t Spell 5171
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
@@ -15690,12 +15691,18 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	desc	Spe
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.defensive_state	|T136000:0|t Spell 5302
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.expose_prey	|T136000:0|t Spell 1310726
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.immolation_trap	|T136000:0|t Spell 14301
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.lacerating_strikes	|T136000:0|t Spell 1310536
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.rapid_killing	|T136000:0|t Spell 415407
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.sniper_shot	|T136000:0|t Spell 1310786
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.caption	name	Caption
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
@@ -16005,6 +16012,7 @@ options.packs.combat.Combat (wowsims.com).lists.buff_name	values.garrote	|T13600
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.ghostly_strike	|T136000:0|t Spell 14278
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.ghostly_strike_next	|T136000:0|t Spell 1329326
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.hemorrhage	|T136000:0|t Spell 16511
+options.packs.combat.Combat (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328826
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.rupture	|T136000:0|t Spell 1943
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.slice_and_dice	|T136000:0|t Spell 5171
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
@@ -19760,12 +19768,18 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	desc	Speci
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.defensive_state	|T136000:0|t Spell 5302
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.expose_prey	|T136000:0|t Spell 1310726
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.immolation_trap	|T136000:0|t Spell 14301
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.lacerating_strikes	|T136000:0|t Spell 1310536
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.rapid_killing	|T136000:0|t Spell 415407
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.sniper_shot	|T136000:0|t Spell 1310786
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.caption	name	Caption
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
@@ -21170,6 +21184,7 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.garrote	|T1
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.ghostly_strike	|T136000:0|t Spell 14278
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.ghostly_strike_next	|T136000:0|t Spell 1329326
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.hemorrhage	|T136000:0|t Spell 16511
+options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328826
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.rupture	|T136000:0|t Spell 1943
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.slice_and_dice	|T136000:0|t Spell 5171
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
@@ -21472,12 +21487,18 @@ options.packs.survival.Survival (wowsims.com).lists.buff_name	desc	Specify the b
 options.packs.survival.Survival (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.defensive_state	|T136000:0|t Spell 5302
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.expose_prey	|T136000:0|t Spell 1310726
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.immolation_trap	|T136000:0|t Spell 14301
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.lacerating_strikes	|T136000:0|t Spell 1310536
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.rapid_killing	|T136000:0|t Spell 415407
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.sniper_shot	|T136000:0|t Spell 1310786
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.survival.Survival (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.survival.Survival (wowsims.com).lists.caption	name	Caption
 options.packs.survival.Survival (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
