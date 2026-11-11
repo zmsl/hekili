@@ -8014,12 +8014,19 @@ options.displays.AOE.classic.gamepad.cPort	name	ConsolePort
 options.displays.AOE.classic.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.AOE.classic.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.AOE.classic.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.AOE.classic.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.
-options.displays.AOE.classic.gamepad.offset	name	Offset
-options.displays.AOE.classic.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.
-options.displays.AOE.classic.gamepad.position	name	Position
-options.displays.AOE.classic.gamepad.position	values.BOTTOM	Bottom
-options.displays.AOE.classic.gamepad.position	values.TOP	Top
+options.displays.AOE.classic.gamepad.pos	name	Position
+options.displays.AOE.classic.gamepad.pos.anchor	name	Anchor Point
+options.displays.AOE.classic.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.AOE.classic.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.AOE.classic.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.AOE.classic.gamepad.pos.anchor	values.CENTER	Center
+options.displays.AOE.classic.gamepad.pos.anchor	values.LEFT	Left
+options.displays.AOE.classic.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.AOE.classic.gamepad.pos.anchor	values.TOP	Top
+options.displays.AOE.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.AOE.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.AOE.classic.gamepad.pos.x	name	X Offset
+options.displays.AOE.classic.gamepad.pos.y	name	Y Offset
 options.displays.AOE.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.
 options.displays.AOE.classic.gamepad.size	name	Size
 options.displays.AOE.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
@@ -8555,12 +8562,19 @@ options.displays.AOE.timeline.tab_now.gamepad.cPort	name	ConsolePort
 options.displays.AOE.timeline.tab_now.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.AOE.timeline.tab_now.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.AOE.timeline.tab_now.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.AOE.timeline.tab_now.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.
-options.displays.AOE.timeline.tab_now.gamepad.offset	name	Offset
-options.displays.AOE.timeline.tab_now.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.
-options.displays.AOE.timeline.tab_now.gamepad.position	name	Position
-options.displays.AOE.timeline.tab_now.gamepad.position	values.BOTTOM	Bottom
-options.displays.AOE.timeline.tab_now.gamepad.position	values.TOP	Top
+options.displays.AOE.timeline.tab_now.gamepad.pos	name	Position
+options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	name	Anchor Point
+options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.CENTER	Center
+options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.LEFT	Left
+options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
+options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.AOE.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.AOE.timeline.tab_now.gamepad.pos.x	name	X Offset
+options.displays.AOE.timeline.tab_now.gamepad.pos.y	name	Y Offset
 options.displays.AOE.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.
 options.displays.AOE.timeline.tab_now.gamepad.size	name	Size
 options.displays.AOE.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
@@ -8968,12 +8982,19 @@ options.displays.Cooldowns.classic.gamepad.cPort	name	ConsolePort
 options.displays.Cooldowns.classic.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.Cooldowns.classic.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Cooldowns.classic.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.Cooldowns.classic.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.
-options.displays.Cooldowns.classic.gamepad.offset	name	Offset
-options.displays.Cooldowns.classic.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.
-options.displays.Cooldowns.classic.gamepad.position	name	Position
-options.displays.Cooldowns.classic.gamepad.position	values.BOTTOM	Bottom
-options.displays.Cooldowns.classic.gamepad.position	values.TOP	Top
+options.displays.Cooldowns.classic.gamepad.pos	name	Position
+options.displays.Cooldowns.classic.gamepad.pos.anchor	name	Anchor Point
+options.displays.Cooldowns.classic.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.Cooldowns.classic.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.Cooldowns.classic.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.Cooldowns.classic.gamepad.pos.anchor	values.CENTER	Center
+options.displays.Cooldowns.classic.gamepad.pos.anchor	values.LEFT	Left
+options.displays.Cooldowns.classic.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.Cooldowns.classic.gamepad.pos.anchor	values.TOP	Top
+options.displays.Cooldowns.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.Cooldowns.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Cooldowns.classic.gamepad.pos.x	name	X Offset
+options.displays.Cooldowns.classic.gamepad.pos.y	name	Y Offset
 options.displays.Cooldowns.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.
 options.displays.Cooldowns.classic.gamepad.size	name	Size
 options.displays.Cooldowns.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
@@ -9509,12 +9530,19 @@ options.displays.Cooldowns.timeline.tab_now.gamepad.cPort	name	ConsolePort
 options.displays.Cooldowns.timeline.tab_now.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.Cooldowns.timeline.tab_now.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Cooldowns.timeline.tab_now.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.Cooldowns.timeline.tab_now.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.
-options.displays.Cooldowns.timeline.tab_now.gamepad.offset	name	Offset
-options.displays.Cooldowns.timeline.tab_now.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.
-options.displays.Cooldowns.timeline.tab_now.gamepad.position	name	Position
-options.displays.Cooldowns.timeline.tab_now.gamepad.position	values.BOTTOM	Bottom
-options.displays.Cooldowns.timeline.tab_now.gamepad.position	values.TOP	Top
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos	name	Position
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	name	Anchor Point
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.CENTER	Center
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.LEFT	Left
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.x	name	X Offset
+options.displays.Cooldowns.timeline.tab_now.gamepad.pos.y	name	Y Offset
 options.displays.Cooldowns.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.
 options.displays.Cooldowns.timeline.tab_now.gamepad.size	name	Size
 options.displays.Cooldowns.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
@@ -9922,12 +9950,19 @@ options.displays.Defensives.classic.gamepad.cPort	name	ConsolePort
 options.displays.Defensives.classic.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.Defensives.classic.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Defensives.classic.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.Defensives.classic.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.
-options.displays.Defensives.classic.gamepad.offset	name	Offset
-options.displays.Defensives.classic.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.
-options.displays.Defensives.classic.gamepad.position	name	Position
-options.displays.Defensives.classic.gamepad.position	values.BOTTOM	Bottom
-options.displays.Defensives.classic.gamepad.position	values.TOP	Top
+options.displays.Defensives.classic.gamepad.pos	name	Position
+options.displays.Defensives.classic.gamepad.pos.anchor	name	Anchor Point
+options.displays.Defensives.classic.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.Defensives.classic.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.Defensives.classic.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.Defensives.classic.gamepad.pos.anchor	values.CENTER	Center
+options.displays.Defensives.classic.gamepad.pos.anchor	values.LEFT	Left
+options.displays.Defensives.classic.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.Defensives.classic.gamepad.pos.anchor	values.TOP	Top
+options.displays.Defensives.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.Defensives.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Defensives.classic.gamepad.pos.x	name	X Offset
+options.displays.Defensives.classic.gamepad.pos.y	name	Y Offset
 options.displays.Defensives.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.
 options.displays.Defensives.classic.gamepad.size	name	Size
 options.displays.Defensives.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
@@ -10463,12 +10498,19 @@ options.displays.Defensives.timeline.tab_now.gamepad.cPort	name	ConsolePort
 options.displays.Defensives.timeline.tab_now.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.Defensives.timeline.tab_now.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Defensives.timeline.tab_now.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.Defensives.timeline.tab_now.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.
-options.displays.Defensives.timeline.tab_now.gamepad.offset	name	Offset
-options.displays.Defensives.timeline.tab_now.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.
-options.displays.Defensives.timeline.tab_now.gamepad.position	name	Position
-options.displays.Defensives.timeline.tab_now.gamepad.position	values.BOTTOM	Bottom
-options.displays.Defensives.timeline.tab_now.gamepad.position	values.TOP	Top
+options.displays.Defensives.timeline.tab_now.gamepad.pos	name	Position
+options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	name	Anchor Point
+options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.CENTER	Center
+options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.LEFT	Left
+options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
+options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.Defensives.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Defensives.timeline.tab_now.gamepad.pos.x	name	X Offset
+options.displays.Defensives.timeline.tab_now.gamepad.pos.y	name	Y Offset
 options.displays.Defensives.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.
 options.displays.Defensives.timeline.tab_now.gamepad.size	name	Size
 options.displays.Defensives.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
@@ -10876,12 +10918,19 @@ options.displays.Interrupts.classic.gamepad.cPort	name	ConsolePort
 options.displays.Interrupts.classic.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.Interrupts.classic.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Interrupts.classic.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.Interrupts.classic.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.
-options.displays.Interrupts.classic.gamepad.offset	name	Offset
-options.displays.Interrupts.classic.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.
-options.displays.Interrupts.classic.gamepad.position	name	Position
-options.displays.Interrupts.classic.gamepad.position	values.BOTTOM	Bottom
-options.displays.Interrupts.classic.gamepad.position	values.TOP	Top
+options.displays.Interrupts.classic.gamepad.pos	name	Position
+options.displays.Interrupts.classic.gamepad.pos.anchor	name	Anchor Point
+options.displays.Interrupts.classic.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.Interrupts.classic.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.Interrupts.classic.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.Interrupts.classic.gamepad.pos.anchor	values.CENTER	Center
+options.displays.Interrupts.classic.gamepad.pos.anchor	values.LEFT	Left
+options.displays.Interrupts.classic.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.Interrupts.classic.gamepad.pos.anchor	values.TOP	Top
+options.displays.Interrupts.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.Interrupts.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Interrupts.classic.gamepad.pos.x	name	X Offset
+options.displays.Interrupts.classic.gamepad.pos.y	name	Y Offset
 options.displays.Interrupts.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.
 options.displays.Interrupts.classic.gamepad.size	name	Size
 options.displays.Interrupts.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
@@ -11417,12 +11466,19 @@ options.displays.Interrupts.timeline.tab_now.gamepad.cPort	name	ConsolePort
 options.displays.Interrupts.timeline.tab_now.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.Interrupts.timeline.tab_now.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Interrupts.timeline.tab_now.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.Interrupts.timeline.tab_now.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.
-options.displays.Interrupts.timeline.tab_now.gamepad.offset	name	Offset
-options.displays.Interrupts.timeline.tab_now.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.
-options.displays.Interrupts.timeline.tab_now.gamepad.position	name	Position
-options.displays.Interrupts.timeline.tab_now.gamepad.position	values.BOTTOM	Bottom
-options.displays.Interrupts.timeline.tab_now.gamepad.position	values.TOP	Top
+options.displays.Interrupts.timeline.tab_now.gamepad.pos	name	Position
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	name	Anchor Point
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.CENTER	Center
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.LEFT	Left
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.x	name	X Offset
+options.displays.Interrupts.timeline.tab_now.gamepad.pos.y	name	Y Offset
 options.displays.Interrupts.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.
 options.displays.Interrupts.timeline.tab_now.gamepad.size	name	Size
 options.displays.Interrupts.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
@@ -11846,12 +11902,22 @@ options.displays.Multi.classic.gamepad.cPort	name	ConsolePort
 options.displays.Multi.classic.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.Multi.classic.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.\n
 options.displays.Multi.classic.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.Multi.classic.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.\n\n|cFF00B4FFPrimary:|r |cFFFFD1001|r\n|cFF00B4FFAOE:|r |cFFFFD1001|r\n|cFF00B4FFCooldowns:|r |cFFFFD1001|r\n|cFF00B4FFDefensives:|r |cFFFFD1001|r\n|cFF00B4FFInterrupts:|r |cFFFFD1001|r
-options.displays.Multi.classic.gamepad.offset	name	Offset
-options.displays.Multi.classic.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.\n\n|cFF00B4FFPrimary:|r |cFFFFD100Bottom|r\n|cFF00B4FFAOE:|r |cFFFFD100Bottom|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Bottom|r\n|cFF00B4FFDefensives:|r |cFFFFD100Bottom|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Bottom|r
-options.displays.Multi.classic.gamepad.position	name	Position
-options.displays.Multi.classic.gamepad.position	values.BOTTOM	Bottom
-options.displays.Multi.classic.gamepad.position	values.TOP	Top
+options.displays.Multi.classic.gamepad.pos	name	Position
+options.displays.Multi.classic.gamepad.pos.anchor	desc	|cFF00B4FFPrimary:|r |cFFFFD100Top Right|r\n|cFF00B4FFAOE:|r |cFFFFD100Top Right|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Top Right|r\n|cFF00B4FFDefensives:|r |cFFFFD100Top Right|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Top Right|r
+options.displays.Multi.classic.gamepad.pos.anchor	name	Anchor Point
+options.displays.Multi.classic.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.Multi.classic.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.Multi.classic.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.Multi.classic.gamepad.pos.anchor	values.CENTER	Center
+options.displays.Multi.classic.gamepad.pos.anchor	values.LEFT	Left
+options.displays.Multi.classic.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.Multi.classic.gamepad.pos.anchor	values.TOP	Top
+options.displays.Multi.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.Multi.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Multi.classic.gamepad.pos.x	desc	|cFF00B4FFPrimary:|r |cFFFFD1001|r\n|cFF00B4FFAOE:|r |cFFFFD1001|r\n|cFF00B4FFCooldowns:|r |cFFFFD1001|r\n|cFF00B4FFDefensives:|r |cFFFFD1001|r\n|cFF00B4FFInterrupts:|r |cFFFFD1001|r
+options.displays.Multi.classic.gamepad.pos.x	name	X Offset
+options.displays.Multi.classic.gamepad.pos.y	desc	|cFF00B4FFPrimary:|r |cFFFFD100-1|r\n|cFF00B4FFAOE:|r |cFFFFD100-1|r\n|cFF00B4FFCooldowns:|r |cFFFFD100-1|r\n|cFF00B4FFDefensives:|r |cFFFFD100-1|r\n|cFF00B4FFInterrupts:|r |cFFFFD100-1|r
+options.displays.Multi.classic.gamepad.pos.y	name	Y Offset
 options.displays.Multi.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.\n\n|cFF00B4FFPrimary:|r |cFFFFD10012|r\n|cFF00B4FFAOE:|r |cFFFFD10012|r\n|cFF00B4FFCooldowns:|r |cFFFFD10012|r\n|cFF00B4FFDefensives:|r |cFFFFD10012|r\n|cFF00B4FFInterrupts:|r |cFFFFD10012|r
 options.displays.Multi.classic.gamepad.size	name	Size
 options.displays.Multi.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
@@ -12440,12 +12506,22 @@ options.displays.Multi.timeline.tab_now.gamepad.cPort	name	ConsolePort
 options.displays.Multi.timeline.tab_now.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.Multi.timeline.tab_now.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.\n
 options.displays.Multi.timeline.tab_now.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.Multi.timeline.tab_now.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.\n\n|cFF00B4FFPrimary:|r |cFFFFD1001|r\n|cFF00B4FFAOE:|r |cFFFFD1001|r\n|cFF00B4FFCooldowns:|r |cFFFFD1001|r\n|cFF00B4FFDefensives:|r |cFFFFD1001|r\n|cFF00B4FFInterrupts:|r |cFFFFD1001|r
-options.displays.Multi.timeline.tab_now.gamepad.offset	name	Offset
-options.displays.Multi.timeline.tab_now.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.\n\n|cFF00B4FFPrimary:|r |cFFFFD100Bottom|r\n|cFF00B4FFAOE:|r |cFFFFD100Bottom|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Bottom|r\n|cFF00B4FFDefensives:|r |cFFFFD100Bottom|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Bottom|r
-options.displays.Multi.timeline.tab_now.gamepad.position	name	Position
-options.displays.Multi.timeline.tab_now.gamepad.position	values.BOTTOM	Bottom
-options.displays.Multi.timeline.tab_now.gamepad.position	values.TOP	Top
+options.displays.Multi.timeline.tab_now.gamepad.pos	name	Position
+options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	desc	|cFF00B4FFPrimary:|r |cFFFFD100Top Right|r\n|cFF00B4FFAOE:|r |cFFFFD100Top Right|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Top Right|r\n|cFF00B4FFDefensives:|r |cFFFFD100Top Right|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Top Right|r
+options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	name	Anchor Point
+options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.CENTER	Center
+options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.LEFT	Left
+options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
+options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Multi.timeline.tab_now.gamepad.pos.x	desc	|cFF00B4FFPrimary:|r |cFFFFD1001|r\n|cFF00B4FFAOE:|r |cFFFFD1001|r\n|cFF00B4FFCooldowns:|r |cFFFFD1001|r\n|cFF00B4FFDefensives:|r |cFFFFD1001|r\n|cFF00B4FFInterrupts:|r |cFFFFD1001|r
+options.displays.Multi.timeline.tab_now.gamepad.pos.x	name	X Offset
+options.displays.Multi.timeline.tab_now.gamepad.pos.y	desc	|cFF00B4FFPrimary:|r |cFFFFD100-1|r\n|cFF00B4FFAOE:|r |cFFFFD100-1|r\n|cFF00B4FFCooldowns:|r |cFFFFD100-1|r\n|cFF00B4FFDefensives:|r |cFFFFD100-1|r\n|cFF00B4FFInterrupts:|r |cFFFFD100-1|r
+options.displays.Multi.timeline.tab_now.gamepad.pos.y	name	Y Offset
 options.displays.Multi.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.\n\n|cFF00B4FFPrimary:|r |cFFFFD10012|r\n|cFF00B4FFAOE:|r |cFFFFD10012|r\n|cFF00B4FFCooldowns:|r |cFFFFD10012|r\n|cFF00B4FFDefensives:|r |cFFFFD10012|r\n|cFF00B4FFInterrupts:|r |cFFFFD10012|r
 options.displays.Multi.timeline.tab_now.gamepad.size	name	Size
 options.displays.Multi.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
@@ -12870,12 +12946,19 @@ options.displays.Primary.classic.gamepad.cPort	name	ConsolePort
 options.displays.Primary.classic.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.Primary.classic.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Primary.classic.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.Primary.classic.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.
-options.displays.Primary.classic.gamepad.offset	name	Offset
-options.displays.Primary.classic.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.
-options.displays.Primary.classic.gamepad.position	name	Position
-options.displays.Primary.classic.gamepad.position	values.BOTTOM	Bottom
-options.displays.Primary.classic.gamepad.position	values.TOP	Top
+options.displays.Primary.classic.gamepad.pos	name	Position
+options.displays.Primary.classic.gamepad.pos.anchor	name	Anchor Point
+options.displays.Primary.classic.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.Primary.classic.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.Primary.classic.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.Primary.classic.gamepad.pos.anchor	values.CENTER	Center
+options.displays.Primary.classic.gamepad.pos.anchor	values.LEFT	Left
+options.displays.Primary.classic.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.Primary.classic.gamepad.pos.anchor	values.TOP	Top
+options.displays.Primary.classic.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.Primary.classic.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Primary.classic.gamepad.pos.x	name	X Offset
+options.displays.Primary.classic.gamepad.pos.y	name	Y Offset
 options.displays.Primary.classic.gamepad.size	desc	The size of the controller button pictures, in pixels.
 options.displays.Primary.classic.gamepad.size	name	Size
 options.displays.Primary.classic.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).
@@ -13411,12 +13494,19 @@ options.displays.Primary.timeline.tab_now.gamepad.cPort	name	ConsolePort
 options.displays.Primary.timeline.tab_now.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
 options.displays.Primary.timeline.tab_now.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.
 options.displays.Primary.timeline.tab_now.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
-options.displays.Primary.timeline.tab_now.gamepad.offset	desc	The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r.
-options.displays.Primary.timeline.tab_now.gamepad.offset	name	Offset
-options.displays.Primary.timeline.tab_now.gamepad.position	desc	Where the controller button pictures sit: below the icon or above it.
-options.displays.Primary.timeline.tab_now.gamepad.position	name	Position
-options.displays.Primary.timeline.tab_now.gamepad.position	values.BOTTOM	Bottom
-options.displays.Primary.timeline.tab_now.gamepad.position	values.TOP	Top
+options.displays.Primary.timeline.tab_now.gamepad.pos	name	Position
+options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	name	Anchor Point
+options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.BOTTOM	Bottom
+options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMLEFT	Bottom Left
+options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.BOTTOMRIGHT	Bottom Right
+options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.CENTER	Center
+options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.LEFT	Left
+options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.RIGHT	Right
+options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.TOP	Top
+options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.TOPLEFT	Top Left
+options.displays.Primary.timeline.tab_now.gamepad.pos.anchor	values.TOPRIGHT	Top Right
+options.displays.Primary.timeline.tab_now.gamepad.pos.x	name	X Offset
+options.displays.Primary.timeline.tab_now.gamepad.pos.y	name	Y Offset
 options.displays.Primary.timeline.tab_now.gamepad.size	desc	The size of the controller button pictures, in pixels.
 options.displays.Primary.timeline.tab_now.gamepad.size	name	Size
 options.displays.Primary.timeline.tab_now.glow	desc	Preferences for Blizzard action button glows (not SpellFlash).

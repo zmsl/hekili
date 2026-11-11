@@ -147,27 +147,19 @@ local function fontFlags( style )
 end
 ns.UI.FontFlags = fontFlags
 
---- Sets keybinding text `text` on font string `fs` of icon `b`. A gamepad binding's pictures sit outside the icon,
---- centred, `g.offset` px from its edge (`g.position` "TOP": above it, else below), ignoring the keyboard anchor
---- `anchor` and offsets `x`, `y`; any other text keeps that anchor. The points change only when the kind of text,
---- the side or the offset does.
+--- Sets keybinding text `text` on font string `fs` of icon `b`, at the keyboard anchor (`anchor`, offsets `x`, `y`);
+--- a gamepad binding's pictures at the gamepad group `g`'s own (anchor, x, y), justified from it the same way. The points
+--- change only when the kind of text, the anchor or the offsets do.
 function ns.UI.SetKeybindingText( fs, b, text, anchor, x, y, g )
-    local pad = text ~= nil and ns.Gamepad.Is( text )
-    local want = pad and ( g and g.position == "TOP" and "TOP" or "BOTTOM" ) or false
-    local off = pad and g and g.offset or 1
-    if ( fs.padPos or false ) ~= want or ( want and fs.padOff ~= off ) then
+    if text ~= nil and g and ns.Gamepad.Is( text ) then
+        anchor, x, y = g.anchor or anchor, g.x or x, g.y or y
+    end
+    if fs.kbAnchor ~= anchor or fs.kbX ~= x or fs.kbY ~= y then
         fs:ClearAllPoints()
-        if want then
-            fs.kbJustifyV = fs.kbJustifyV or fs:GetJustifyV()
-            if want == "TOP" then fs:SetPoint( "BOTTOM", b, "TOP", 0, off ) else fs:SetPoint( "TOP", b, "BOTTOM", 0, -off ) end
-            fs:SetJustifyH( "CENTER" )
-            fs:SetJustifyV( want == "TOP" and "BOTTOM" or "TOP" )
-        else
-            fs:SetPoint( anchor, b, anchor, x, y )
-            fs:SetJustifyH( anchor:match( "RIGHT" ) and "RIGHT" or ( anchor:match( "LEFT" ) and "LEFT" or "CENTER" ) )
-            if fs.kbJustifyV then fs:SetJustifyV( fs.kbJustifyV ) end
-        end
-        fs.padPos, fs.padOff = want, off
+        fs:SetPoint( anchor, b, anchor, x, y )
+        fs:SetJustifyH( anchor:match( "RIGHT" ) and "RIGHT" or ( anchor:match( "LEFT" ) and "LEFT" or "CENTER" ) )
+        fs:SetJustifyV( anchor:match( "TOP" ) and "TOP" or ( anchor:match( "BOTTOM" ) and "BOTTOM" or "MIDDLE" ) )
+        fs.kbAnchor, fs.kbX, fs.kbY = anchor, x, y
     end
     fs:SetText( text )
 end

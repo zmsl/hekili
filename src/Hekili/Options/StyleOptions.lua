@@ -167,12 +167,13 @@ local function base()
             fade = false,
         },
 
-        -- The gamepad pictures (Engine/Sim/Events.lua ns.Gamepad): beside the icon, `size` px, `offset` px off its edge.
-        -- The ConsolePort options of this tab stay stored in `keybindings` (cPortOverride, cPortZoom).
+        -- The gamepad pictures (Engine/Sim/Events.lua ns.Gamepad): on the icon at their own anchor, as keybinding text
+        -- (the same defaults), `size` px. The ConsolePort options of this tab stay stored in `keybindings`.
         gamepad = {
-            position = "BOTTOM",
+            anchor = "TOPRIGHT",
+            x = 1,
+            y = -1,
             size = 12,
-            offset = 1,
         },
 
         keybindings = {
@@ -398,14 +399,44 @@ return L["Position"] end,
 end
 
 function SO.gamepad( styleKey, zones, order, id, conf )
+    local P = ns.UI.DisplayOptionParts
+    local s = conf[ styleKey ]
     local args = {
-        position = {
-            type = "select",
-            name = L["Position"],
-            desc = L["Where the controller button pictures sit: below the icon or above it."],
+        pos = {
+            type = "group",
+            inline = true,
+            name = function( info ) P.rangeIcon( info )
+return L["Position"] end,
             order = 1,
-            width = 1,
-            values = { BOTTOM = L["Bottom"], TOP = L["Top"] },
+            args = {
+                anchor = {
+                    type = "select",
+                    name = L['Anchor Point'],
+                    order = 2,
+                    width = 1,
+                    values = P.realAnchorPositions
+                },
+
+                x = {
+                    type = "range",
+                    name = L["X Offset"],
+                    order = 3,
+                    width = 0.99,
+                    min = -spanW( s ),
+                    max = spanW( s ),
+                    step = 1,
+                },
+
+                y = {
+                    type = "range",
+                    name = L["Y Offset"],
+                    order = 4,
+                    width = 0.99,
+                    min = -spanH( s ),
+                    max = spanH( s ),
+                    step = 1,
+                },
+            },
         },
 
         size = {
@@ -415,17 +446,6 @@ function SO.gamepad( styleKey, zones, order, id, conf )
             order = 2,
             min = 8,
             max = 64,
-            step = 1,
-            width = 0.99,
-        },
-
-        offset = {
-            type = "range",
-            name = L["Offset"],
-            desc = L["The distance of the pictures from the icon's edge, in pixels. Default is |cFFFFD1001|r."],
-            order = 3,
-            min = -20,
-            max = 40,
             step = 1,
             width = 0.99,
         },

@@ -261,7 +261,7 @@ local function CreateButton( dispID, id )
     b.Keybinding:SetJustifyV( kbAnchor:match("TOP") and "TOP" or ( kbAnchor:match( "BOTTOM" ) and "BOTTOM" or "MIDDLE" ) )
     b.Keybinding:SetTextColor( unpack( queued and conf.classic.keybindings.queuedColor or conf.classic.keybindings.color ) )
     b.Keybinding:SetWordWrap( false )
-    b.Keybinding.padPos, b.Keybinding.kbJustifyV = nil, nil -- the points above are the keyboard's
+    b.Keybinding.kbAnchor = nil -- Build set the points: the next text sets them again if it differs
 
     local kbText = b.Keybinding:GetText()
     b.Keybinding:SetText( nil )

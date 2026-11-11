@@ -356,7 +356,7 @@ local function dress( T, b, i, size, tl )
     b.Keybinding:ClearAllPoints()
     b.Keybinding:SetPoint( kb.anchor, b, kb.anchor, kb.x, kb.y )
     b.Keybinding:SetJustifyH( justifyH( kb.anchor ) )
-    b.Keybinding.padPos, b.Keybinding.kbJustifyV = nil, nil -- the points above are the keyboard's
+    b.Keybinding.kbAnchor = nil -- Build set the points: the next text sets them again if it differs
     b.Keybinding:SetText( nil )
 
     setFont( b.Eta, eta.font, z == 3 and tl.laneEta.fontSize or eta.size, eta.style, eta.color )

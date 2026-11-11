@@ -313,28 +313,27 @@ describe("gamepad keybinds on the icons", function()
     it("anchors a gamepad binding below the classic icon, above with Top; keyboard text keeps its anchor", function()
         local H, d, conf = setup("classic")
         local kb, g = conf.classic.keybindings, conf.classic.gamepad
-        assert.are.same({ position = "BOTTOM", size = 12, offset = 1 }, g) -- today's look
+        -- by default the pictures sit where keyboard text sits
+        assert.are.same({ anchor = kb.anchor, x = kb.x, y = kb.y, size = 12 }, g)
         assert.is_nil(kb.gamepadPosition)
+        kb.anchor, kb.x, kb.y = "BOTTOMLEFT", 3, 4 -- the keyboard text moves, the pictures' own anchor does not
         local b1, b2 = d.Buttons[1], d.Buttons[2]
         b1.Keybinding, b2.Keybinding = fs(), fs()
         b1.Action, b2.Action = "mortal_strike", "overpower"
         d.style.UpdateKeybindings(d)
         assert.is_true(H.ns.Gamepad.Is(b1.Keybinding.text))
-        assert.are.same({ { "TOP", b1, "BOTTOM", 0, -1 } }, b1.Keybinding.points)
+        assert.are.same({ { "TOPRIGHT", b1, "TOPRIGHT", 1, -1 } }, b1.Keybinding.points)
+        assert.are.equal("RIGHT", b1.Keybinding.h)
+        assert.are.equal("5", b2.Keybinding.text) -- keyboard text: its own anchor
+        assert.are.same({ { "BOTTOMLEFT", b2, "BOTTOMLEFT", 3, 4 } }, b2.Keybinding.points)
+        -- changing the gamepad anchor and offsets moves it; an unchanged refresh sets no point again
+        g.anchor, g.x, g.y = "BOTTOM", -2, 6
+        d.style.UpdateKeybindings(d)
+        assert.are.same({ { "BOTTOM", b1, "BOTTOM", -2, 6 } }, b1.Keybinding.points)
         assert.are.equal("CENTER", b1.Keybinding.h)
-        assert.are.equal("5", b2.Keybinding.text) -- keyboard text: the configured anchor, untouched
-        assert.are.same({}, b2.Keybinding.points)
-        g.position = "TOP"
+        b1.Keybinding.points[1].marker = true
         d.style.UpdateKeybindings(d)
-        assert.are.same({ { "BOTTOM", b1, "TOP", 0, 1 } }, b1.Keybinding.points)
-        -- Offset: away from the icon, in the direction Position picks, both ways
-        g.offset = 7
-        d.style.UpdateKeybindings(d)
-        assert.are.same({ { "BOTTOM", b1, "TOP", 0, 7 } }, b1.Keybinding.points)
-        g.position, g.offset = "BOTTOM", 5
-        d.style.UpdateKeybindings(d)
-        assert.are.same({ { "TOP", b1, "BOTTOM", 0, -5 } }, b1.Keybinding.points)
-        g.offset = 1
+        assert.is_true(b1.Keybinding.points[1].marker)
         -- the ability loses its gamepad binding: back to the keyboard anchor
         world.actions[186] = nil
         read(H)
@@ -359,7 +358,12 @@ describe("gamepad keybinds on the icons", function()
             assert.is_true(H.ns.Gamepad.Is(T.cells[1].Keybinding.text))
             assert.is_true(H.ns.Gamepad.Is(T.cells[2].Keybinding.text))
             assert.is_nil(T.cells[3].Keybinding.text) -- never on a lane record
-            assert.are.same({ { "TOP", T.cells[1], "BOTTOM", 0, -1 } }, T.cells[1].Keybinding.points)
+            local g = conf.timeline.gamepad
+            assert.are.same({ { g.anchor, T.cells[1], g.anchor, g.x, g.y } }, T.cells[1].Keybinding.points)
+            assert.are.same({ g.anchor, g.x, g.y }, { kb.anchor, kb.x, kb.y }) -- the defaults agree
+            g.anchor, g.x, g.y = "BOTTOMLEFT", 5, 6
+            d.style.UpdateKeybindings(d)
+            assert.are.same({ { "BOTTOMLEFT", T.cells[2], "BOTTOMLEFT", 5, 6 } }, T.cells[2].Keybinding.points)
             -- a focus record on cell 1: the picture still shows (keyboard text would not)
             T.focused, T.rec[1] = true, 2 -- a focus record (not the first pick) holds the circle
             d.style.UpdateKeybindings(d)
@@ -418,28 +422,13 @@ describe("the Gamepad options tab", function()
                     H.Hekili:GetBindingForAction("mortal_strike", conf, i)
                 )
             end
-            assert.are.same({ position = "BOTTOM", size = 12, offset = 1 }, H.ns.UI.Styles.timeline.defaults.gamepad)
+            local kb = H.ns.UI.Styles.timeline.defaults.keybindings
+            assert.are.same(
+                { anchor = kb.anchor, x = kb.x, y = kb.y, size = 12 },
+                H.ns.UI.Styles.timeline.defaults.gamepad
+            )
         end
     )
-
-    it("offsets the timeline's pictures from the box, both ways", function()
-        local H = boot()
-        world.actions[186] = id(H, "mortal_strike")
-        read(H)
-        local conf = H.Hekili.DB.profile.displays.Primary
-        conf.style, conf.numIcons = "timeline", 6
-        H.Hekili:BuildUI()
-        local d = rawget(H.env, "HekiliDisplayPrimary")
-        local T = d.styleFrames.timeline
-        local b = T.cells[2]
-        b.Keybinding, b.Action, T.rec[2], T.focused = fs(), "mortal_strike", 2, false
-        conf.timeline.gamepad.position, conf.timeline.gamepad.offset = "TOP", 9
-        d.style.UpdateKeybindings(d)
-        assert.are.same({ { "BOTTOM", b, "TOP", 0, 9 } }, b.Keybinding.points)
-        conf.timeline.gamepad.position, conf.timeline.gamepad.offset = "BOTTOM", 4
-        d.style.UpdateKeybindings(d)
-        assert.are.same({ { "TOP", b, "BOTTOM", 0, -4 } }, b.Keybinding.points)
-    end)
 
     it("exists in both styles; Keybinds is keyboard-only", function()
         local H = boot()
@@ -447,9 +436,12 @@ describe("the Gamepad options tab", function()
             local t = tabs(H, style)
             local host = style == "classic" and t or t.tab_now.args -- the timeline's shared groups sit in its zone tabs
             assert.truthy(host.gamepad, style)
-            assert.truthy(host.gamepad.args.position)
+            assert.truthy(host.gamepad.args.pos.args.anchor)
+            assert.truthy(host.gamepad.args.pos.args.x)
+            assert.truthy(host.gamepad.args.pos.args.y)
             assert.truthy(host.gamepad.args.size)
-            assert.truthy(host.gamepad.args.offset)
+            assert.is_nil(host.gamepad.args.position) -- Top/Bottom and Offset are gone
+            assert.is_nil(host.gamepad.args.offset)
             assert.truthy(host.gamepad.args.cPort.args.cPortOverride)
             assert.truthy(host.gamepad.args.cPort.args.cPortZoom)
             assert.is_nil(host.keybindings.args.cPort)
@@ -477,9 +469,10 @@ describe("the Gamepad options tab", function()
         local _, it = opt(H, "timeline", { "tab_now", "gamepad", "cPort", "cPortZoom" })
         tk.cPortZoom = 0.3
         assert.are.equal(0.3, H.Hekili:GetDisplayOption(it))
-        -- and Position lives in the gamepad group
-        local _, ip = opt(H, "classic", { "gamepad", "position" })
-        H.Hekili:SetDisplayOption(ip, "TOP")
-        assert.are.equal("TOP", H.Hekili.DB.profile.displays.Primary.classic.gamepad.position)
+        -- and the anchor lives in the gamepad group, not the keybindings'
+        local _, ia = opt(H, "classic", { "gamepad", "pos", "anchor" })
+        H.Hekili:SetDisplayOption(ia, "BOTTOM")
+        assert.are.equal("BOTTOM", H.Hekili.DB.profile.displays.Primary.classic.gamepad.anchor)
+        assert.are.equal("TOPRIGHT", kb.anchor)
     end)
 end)
