@@ -155,6 +155,28 @@ S.On("PLAYER_ENTERING_WORLD", nil, function(api, t)
     end
 end)
 
+--- Snapshot's line (allocates; debugging only): the key space, the current slot, the keys held, an orphan, and the
+--- counters (slots forgotten by plate edges and flips; Map target changes no plate answered).
+I.OnSnapshot(function(out)
+    local keys, orphan = 0, 0
+    for s = 1, I.TARGET_CAP do
+        if guid[s] == false then
+            orphan = 1
+        elseif guid[s] ~= "" then
+            keys = keys + 1
+        end
+    end
+    out[#out + 1] = string.format(
+        "target slots mode=%s cur=%d keys=%d orphan=%d forget=%d noPlate=%d",
+        tokenMode and "token" or "guid",
+        I.curSlot,
+        keys,
+        orphan,
+        forgetN,
+        noPlateN
+    )
+end)
+
 -- A plate's ADDED or REMOVED (review F3: both edges, a token may change mob at either): the memory keyed by it is
 -- forgotten. A GUID key never equals a plate index. Allocates nothing.
 local function plateEdge(api, t, unit)

@@ -327,4 +327,26 @@ describe("token-keyed target memory (lane T2m)", function()
         tok, gid = cdmScript("token", false), cdmScript("guid", false)
         assert.are.same(gid, tok)
     end)
+
+    it("the snapshot line names the key space, the slot, the keys, an orphan and the counters (task 8)", function()
+        local function line()
+            return VS.Snapshot():match("target slots [^\n]*")
+        end
+        start("guid")
+        tab(1, 10)
+        assert.are.equal("target slots mode=guid cur=1 keys=1 orphan=0 forget=0 noPlate=0", line())
+        world = "token"
+        tab(1, 11) -- the flip forgets Creature-1's slot
+        tab(2, 12)
+        local cur = I.curSlot
+        plate("NAME_PLATE_UNIT_REMOVED", 2, 12.5)
+        assert.are.equal(
+            string.format("target slots mode=token cur=%d keys=1 orphan=1 forget=2 noPlate=0", cur),
+            line()
+        )
+        ctl.unitIs.target = nil
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        fold(13)
+        assert.are.equal("target slots mode=token cur=0 keys=1 orphan=0 forget=2 noPlate=1", line())
+    end)
 end)
