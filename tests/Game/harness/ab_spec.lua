@@ -25,6 +25,20 @@ describe("the A/B harness", function()
         assert.is_nil(ab.ARMS.viewer) -- the layout-less arm is viewer-none now
     end)
 
+    it("the live-auras arms (aura audit C1): our auras hidden in combat, the CDM's only, never the default", function()
+        for name, layout in pairs({ ["live-auras"] = "fixture", ["live-auras-none"] = "none" }) do
+            local a = ab.ARMS[name]
+            assert.are.same({
+                outcomes = "default",
+                presence = "router",
+                viewer = true,
+                layout = layout,
+                observe = { secretPlayerAuras = true },
+            }, a)
+        end
+        assert.is_nil(ab.ARMS.default.observe)
+    end)
+
     it("the verdict arms (verdict spec §5), each with edgestats and a -novd twin that differs only by novd", function()
         local names = {
             "viewer-reshuffle",

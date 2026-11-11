@@ -71,6 +71,10 @@ M.DEFAULTS = {
     -- plain; the October beta's rows were all plain. On: the stream says so (`s.secretAmount`) and the drive fires
     -- every UNIT_COMBAT amount as fake_api's SECRET; a4 keeps the truth for the metrics. Never on the plain oracle.
     secretAmount = false,
+    -- Live (FR-1, 2026-11-05): our own auras raise in combat (GetAuraDataByIndex("player")), so only the Cooldown
+    -- Manager shows them. On (the live-auras arms, aura audit C1): "@auraError player" from the pull to combat's end,
+    -- as the target's. Off by default: the gates' streams list our auras plain. Never on the plain oracle.
+    secretPlayerAuras = false,
 }
 
 M.COMBAT_END = 1.0 -- s from a kill to PLAYER_REGEN_ENABLED when no attacker is left (Rogue kill-events capture)
@@ -549,6 +553,9 @@ function M.new(W, k)
             push(t, "@combat", true)
             if not k.plain then
                 push(t, "@auraError", "target", true) -- spec §3.1: the target's auras raise in combat
+                if k.secretPlayerAuras then
+                    push(t, "@auraError", "player", true)
+                end
             end
             push(t, "PLAYER_REGEN_DISABLED")
             if k.enterCombat then
@@ -559,6 +566,9 @@ function M.new(W, k)
             combat(t, false)
             if not k.plain then
                 push(t, "@auraError", "target", false)
+                if k.secretPlayerAuras then
+                    push(t, "@auraError", "player", false)
+                end
             end
             cache(t, ev)
             push(t, "PLAYER_REGEN_ENABLED")
@@ -706,6 +716,9 @@ function M.new(W, k)
                 combat(te, false)
                 if not k.plain then
                     push(te, "@auraError", "target", false)
+                    if k.secretPlayerAuras then
+                        push(te, "@auraError", "player", false)
+                    end
                 end
                 push(te, "PLAYER_REGEN_ENABLED")
             end

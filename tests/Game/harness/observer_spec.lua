@@ -298,6 +298,25 @@ describe("the observer", function()
         assert.is_true(rawequal(fake.SECRET, unitIs))
     end)
 
+    it("hides our own auras in combat under secretPlayerAuras (FR-1), never on the plain oracle", function()
+        local function errors(k)
+            setup()
+            W.emit({ t = 1.5, kind = "prepull" })
+            W.emit({ t = 2, kind = "pull" })
+            W.emit({ t = 9, kind = "stop" })
+            local s, out = observer.observe(W, setmetatable(k, { __index = observer.DEFAULTS })), {}
+            for i = 1, s.n do
+                if s.ev[i] == "@auraError" and s.a1[i] == "player" then
+                    out[#out + 1] = { s.t[i], s.a2[i] }
+                end
+            end
+            return out
+        end
+        assert.are.same({ { 2, true }, { 9, false } }, errors({ secretPlayerAuras = true }))
+        assert.are.same({}, errors({})) -- the default: our auras plain in combat (today's stream)
+        assert.are.same({}, errors({ secretPlayerAuras = true, plain = true }))
+    end)
+
     it("shares one meter group between our hit swing and its proc in the same frame (DM §2)", function()
         setup()
         W.emit({ t = 5, kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", flag = "", amount = 30 })
