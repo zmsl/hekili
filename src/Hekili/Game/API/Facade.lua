@@ -578,8 +578,9 @@ local function rangeLib(unit)
     end
     local ok, lo, hi = true, nil, nil
     if unit == "target" then
-        -- the belief's poll asks once per poll: a raise inside the library (a secret answer it tests) is unknown
-        ok, lo, hi = pcall(lrc.GetRange, lrc, unit)
+        -- the belief's poll asks once per poll: a raise inside the library (a secret answer it tests) is unknown.
+        -- maxCacheAge 0: the poll stamps the answer with its own time, so never take the library's 0.1 s old one
+        ok, lo, hi = pcall(lrc.GetRange, lrc, unit, nil, nil, 0)
     else
         local g = realUnitGUID and realUnitGUID(unit) -- secret: tested next
         if not LRC_UNDER_MAP and (issecretvalue(g) or g == nil) then

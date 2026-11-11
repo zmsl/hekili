@@ -683,4 +683,13 @@ describe("ns.Facade", function()
         ctl.rangeLib, ctl.distance.target = nil, fake.SECRET
         assert.are.same({}, { Facade.RangeLib("target") })
     end)
+
+    -- the belief stamps the target's answer with its poll's time: the library's 0.1 s cache would hand a poll the
+    -- previous one's answer (a Hunter replay's off-GCD row moved by it, range plan R2 round 4)
+    it("RangeLib asks the library afresh for the target at each read, past its cache", function()
+        ctl.distance.target = 7
+        assert.are.same({ 5, 10 }, { Facade.RangeLib("target") })
+        ctl.distance.target = 12 -- the same instant: a cached answer would still say 5-10
+        assert.are.same({ 10, 15 }, { Facade.RangeLib("target") })
+    end)
 end)
