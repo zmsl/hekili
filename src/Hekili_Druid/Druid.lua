@@ -143,6 +143,10 @@ local GEAR = {
     -- Grips, Shoulderpads, Stompers); the head and chest join when they ship. 5-piece 1301242: Insect Swarm +3 s.
     grovekeeper_eclipse = { 273884, 273885, 273886, 273887 },
     grovekeeper_eclipse_5pc = 1301242,
+    -- Haruspex's Garb (ZG, set 479, db.json setId; sim/druid/item_sets.go:56-73): five items, the 3-piece's hidden aura
+    -- 24479 makes Faerie Fire last 5 s longer.
+    haruspex = { 19613, 19838, 19839, 19840, 19955 },
+    haruspex_3pc = 24479,
 }
 
 -- The forms, in `buff.form`'s member order (one is up at a time).
@@ -390,6 +394,8 @@ end)
 spec:RegisterGear("swarming_idol", GEAR.swarming_idol)
 spec:RegisterGear("grovekeeper_eclipse", unpack(GEAR.grovekeeper_eclipse))
 spec:RegisterSetBonus("grovekeeper_eclipse_5pc", GEAR.grovekeeper_eclipse_5pc)
+spec:RegisterGear("haruspex", unpack(GEAR.haruspex))
+spec:RegisterSetBonus("haruspex_3pc", GEAR.haruspex_3pc)
 
 spec:RegisterAuras({
     serenity_field = { id = 1291103, duration = 15, max_stack = 1 },
@@ -432,6 +438,12 @@ spec:RegisterAuras({
     -- (both environments read the belief's record: Facade GetPlayerAuraBySpellID; gear-aware spec §2).
     grovekeeper_eclipse_5pc = {
         id = 1301242,
+        duration = 3600,
+        max_stack = 1,
+    },
+    -- The Haruspex's Garb 3-piece's hidden aura (24479): tracked so set_bonus.haruspex_3pc reads it.
+    haruspex_3pc = {
+        id = 24479,
         duration = 3600,
         max_stack = 1,
     },
@@ -513,7 +525,9 @@ spec:RegisterAuras({
     faerie_fire = {
         id = 770,
         copy = rest(FAERIE_FIRE),
-        duration = 40,
+        duration = function() -- the Haruspex's Garb 3-piece: +5 s
+            return 40 + (set_bonus.haruspex_3pc > 0 and 5 or 0)
+        end,
         max_stack = 1,
     },
     feral_charge_effect = {

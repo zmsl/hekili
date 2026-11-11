@@ -14732,7 +14732,7 @@ options.packs.arms.Arms (wowsims.com).lists.buff_name	values.reckless_swings	|T1
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.recklessness	|T136000:0|t Spell 1719
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.rend	|T136000:0|t Spell 772
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.retaliation	|T136000:0|t Spell 20230
-options.packs.arms.Arms (wowsims.com).lists.buff_name	values.revenge_stun	|T136000:0|t Spell 12798
+options.packs.arms.Arms (wowsims.com).lists.buff_name	values.revenge_usable	|T136000:0|t Spell 5302
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.shield_bash_silenced	|T136000:0|t Spell 18498
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.shield_block	|T136000:0|t Spell 2565
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.shield_wall	|T136000:0|t Spell 871
@@ -15404,6 +15404,7 @@ options.packs.balance.Balance (wowsims.com).lists.buff_name	values.feral_charge_
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.grovekeeper_eclipse_5pc	|T136000:0|t Spell 1301242
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.growl	|T136000:0|t Spell 6795
+options.packs.balance.Balance (wowsims.com).lists.buff_name	values.haruspex_3pc	|T136000:0|t Spell 24479
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.howling_idol	|T136000:0|t Spell 1291059
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.innervate	|T136000:0|t Spell 29166
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.insect_swarm	|T136000:0|t Spell 5570
@@ -18236,6 +18237,7 @@ options.packs.feral.Feral (wowsims.com).lists.buff_name	values.feral_charge_effe
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.grovekeeper_eclipse_5pc	|T136000:0|t Spell 1301242
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.growl	|T136000:0|t Spell 6795
+options.packs.feral.Feral (wowsims.com).lists.buff_name	values.haruspex_3pc	|T136000:0|t Spell 24479
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.howling_idol	|T136000:0|t Spell 1291059
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.innervate	|T136000:0|t Spell 29166
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.insect_swarm	|T136000:0|t Spell 5570
@@ -19114,7 +19116,7 @@ options.packs.fury.Fury (wowsims.com).lists.buff_name	values.reckless_swings	|T1
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.recklessness	|T136000:0|t Spell 1719
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.rend	|T136000:0|t Spell 772
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.retaliation	|T136000:0|t Spell 20230
-options.packs.fury.Fury (wowsims.com).lists.buff_name	values.revenge_stun	|T136000:0|t Spell 12798
+options.packs.fury.Fury (wowsims.com).lists.buff_name	values.revenge_usable	|T136000:0|t Spell 5302
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.shield_bash_silenced	|T136000:0|t Spell 18498
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.shield_block	|T136000:0|t Spell 2565
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.shield_wall	|T136000:0|t Spell 871
@@ -19481,6 +19483,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.feral_charg
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.frenzied_regeneration	|T136000:0|t Spell 22842
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.grovekeeper_eclipse_5pc	|T136000:0|t Spell 1301242
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.growl	|T136000:0|t Spell 6795
+options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.haruspex_3pc	|T136000:0|t Spell 24479
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.howling_idol	|T136000:0|t Spell 1291059
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.innervate	|T136000:0|t Spell 29166
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.insect_swarm	|T136000:0|t Spell 5570
@@ -20241,7 +20244,7 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.reckles
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.rend	|T136000:0|t Spell 772
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.retaliation	|T136000:0|t Spell 20230
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.retribution_aura	|T136000:0|t Spell 7294
-options.packs.protection.Protection (wowsims.com).lists.buff_name	values.revenge_stun	|T136000:0|t Spell 12798
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.revenge_usable	|T136000:0|t Spell 5302
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.righteous_fury	|T136000:0|t Spell 25780
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.seal_of_fury	|T136000:0|t Spell 1311649

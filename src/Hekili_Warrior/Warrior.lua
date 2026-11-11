@@ -653,13 +653,9 @@ spec:RegisterAuras({
         duration = 15,
         max_stack = 30,
     },
-    revenge_stun = {
-        id = 12798,
-        duration = 3,
-        max_stack = 1,
-    },
     -- Revenge's window from the block, dodge or parry on us in the combat log, while Revenge is usable (reset_precast).
     revenge_usable = {
+        id = 5302, -- Defensive State, wowsims G/revenge.go:19-26: the same 5 s window
         duration = 5,
         max_stack = 1,
     },

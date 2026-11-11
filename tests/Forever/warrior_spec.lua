@@ -542,6 +542,12 @@ describe("Forever Warrior", function()
         )
     end)
 
+    it("gives Revenge's window the Defensive State id 5302 and drops the unused Revenge Stun aura", function()
+        assert.are.equal(5302, w.auras.revenge_usable.id)
+        assert.are.equal(5, w.auras.revenge_usable.duration)
+        assert.is_nil(w.auras.revenge_stun)
+    end)
+
     it("applies Retaliation at 30 charges", function()
         local e = lw.env(w)
         lw.run(w.abilities.retaliation.now, e)

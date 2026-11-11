@@ -550,6 +550,20 @@ describe("Forever Druid", function()
             end
         )
 
+        it("lengthens Faerie Fire by 5 s under the Haruspex's Garb 3-piece (aura 24479 or 3 pieces worn)", function()
+            local function ff(sb)
+                local e2 = ld.env(w)
+                e2.set_bonus = setmetatable(sb, {
+                    __index = function()
+                        return 0
+                    end,
+                })
+                return ld.run(w.auras.faerie_fire.duration, e2)
+            end
+            assert.are.same({ 40, 45 }, { ff({}), ff({ haruspex_3pc = 1 }) })
+            assert.are.equal(24479, w.auras.haruspex_3pc.id)
+        end)
+
         it("gains Shifting Power's 40 energy and Enrage's 10 rage, and Bite spends the energy left", function()
             local e = ld.env(w)
             ld.run(w.abilities.shifting_power.now, e)
