@@ -2404,6 +2404,35 @@ describe("resources", function()
             assert.are.same({ 12, 10 }, { I.res.regE[1], I.res.spE[1] })
         end)
 
+        -- aura audit C9: a share-only entry (a regen-while-casting aura, Mage Armor) mixes the client's pair by a known
+        -- share s, so an out-of-combat read unmixes it: casting M + (c + s)S, the rest (1 - c - s)S. At c + s >= 1 the
+        -- pair holds only the total, which rescales the stored split.
+        local function readPair(t, idle, act)
+            local api = fake.new()
+            I.api = api
+            VS.Start(api)
+            I.AuraModel(1, 2, 100, 1e6, 1, 100, 0) -- focus up
+            api.ctl.auras.player.HELPFUL[1] = { spellId = 1022, expirationTime = 1e6, applications = 0 }
+            api.ctl.regen[MANA] = { idle, act }
+            api.ctl.Tick(t)
+            S.RunPolls(t)
+            I.Fold(t, false)
+        end
+
+        it("unmixes an out-of-combat read under a share-only entry and calibrates both parts (C9)", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "focus", share = 0.25 } })
+            readPair(105, 28, 22) -- truth M 4, S 24: idle M + S, casting M + 0.75 S
+            within(16, I.res.regE[1]) -- M + cS
+            within(12, I.res.spE[1]) -- (1 - c)S
+        end)
+
+        it("rescales the stored split by the total when the shares reach all of the spirit regen (C9)", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "focus", share = 0.5 } })
+            readPair(105, 33, 33) -- the total only: 22 stored, 33 read
+            within(18, I.res.regE[1])
+            within(15, I.res.spE[1])
+        end)
+
         it("allocates nothing with regen auras up over 1000 spends, advances and projections", function()
             shaped({ spirit = 10, mp5 = 12, share = 0.5 }, {
                 { aura = "surge", spirit = 16, share = 1 },
