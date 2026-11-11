@@ -122,6 +122,9 @@ describe("token-keyed target memory (lane T2m)", function()
         start("token")
         tab(1, 10)
         castX(10.1, 15)
+        tab(2, 10.5)
+        tab(1, 10.7)
+        near(25.1, est(10.8), "control: remembered while plate 1 stayed up")
         tab(2, 11)
         plate("NAME_PLATE_UNIT_REMOVED", 1, 11.5)
         plate("NAME_PLATE_UNIT_ADDED", 1, 11.6) -- another mob took plate 1
@@ -259,21 +262,35 @@ describe("token-keyed target memory (lane T2m)", function()
         assert.is_nil(est(13.1))
     end)
 
-    it("the swap's walk raising keeps the loaded memory; a plain empty walk out of combat clears it (task 6)", function()
-        start("token")
-        tab(1, 10)
-        castX(10.1, 15)
-        tab(2, 11)
-        ctl.auraError.target = true -- in combat under Map: the target's walk raises
-        tab(1, 12)
-        near(25.1, est(12.1), "a raising walk writes nothing")
-        ctl.auraError.target = nil
-        ctl.auras.target.HARMFUL[1] = nil -- out of combat, the walk is plain: nothing on mob A
-        ctl.Fire("PLAYER_REGEN_ENABLED")
-        tab(2, 13)
-        tab(1, 14)
-        assert.is_nil(est(14.1), "the plain walk wins")
-    end)
+    -- The swap's own walk runs before its fold, against the old target's record, so it reads no remembered aura down
+    -- (both worlds, as before T2m); a later plain walk does.
+    it(
+        "the swap's walk raising keeps the loaded memory; a later plain empty walk clears it, as with GUIDs (task 6)",
+        function()
+            local got = {}
+            for _, w in ipairs(WORLDS) do
+                start(w)
+                tab(1, 10)
+                castX(10.1, 15)
+                tab(2, 11)
+                ctl.auraError.target = true -- in combat under Map: the target's walk raises
+                tab(1, 12)
+                local out = { est(12.1) or "down" }
+                ctl.auraError.target = nil
+                ctl.auras.target.HARMFUL[1] = nil -- out of combat, the walk is plain: nothing on mob A
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                tab(2, 13)
+                tab(1, 14)
+                out[2] = est(14.1) or "down" -- the swap's walk: no down for a record the old target did not hold
+                ctl.Fire("UNIT_AURA", "target")
+                fold(14.2)
+                out[3] = est(14.2) or "down"
+                got[w] = out
+            end
+            assert.are.same({ 25.1, 25.1, "down" }, got.token)
+            assert.are.same(got.guid, got.token)
+        end
+    )
 
     it("a token slot is never fresh; attackable follows UnitCanAttack (task 6, review F11)", function()
         start("token")
@@ -320,13 +337,16 @@ describe("token-keyed target memory (lane T2m)", function()
         return out
     end
 
-    it("the CDM on a loaded record: lit keeps the remembered expiry, dark closes ours, as with GUIDs (task 7)", function()
-        local tok, gid = cdmScript("token", true, true), cdmScript("guid", true, true)
-        assert.are.same({ "down", 25, 0 }, { tok[1], tok[2], tok[3] }) -- 25, not the 32.1 seed
-        assert.are.same(gid, tok)
-        tok, gid = cdmScript("token", false), cdmScript("guid", false)
-        assert.are.same(gid, tok)
-    end)
+    it(
+        "the CDM on a loaded record: lit keeps the remembered expiry, dark closes ours, as with GUIDs (task 7)",
+        function()
+            local tok, gid = cdmScript("token", true, true), cdmScript("guid", true, true)
+            assert.are.same({ "down", 25, 0 }, { tok[1], tok[2], tok[3] }) -- 25, not the 32.1 seed
+            assert.are.same(gid, tok)
+            tok, gid = cdmScript("token", false), cdmScript("guid", false)
+            assert.are.same(gid, tok)
+        end
+    )
 
     it("the snapshot line names the key space, the slot, the keys, an orphan and the counters (task 8)", function()
         local function line()
