@@ -379,8 +379,8 @@ local function judgeable(j, u)
         return false -- Sources/Forms.lua's and Sources/Enchants.lua's records
     end
     -- (review m3) a target change's TargetSwap folds after this drain's polls: until then the record is the old mob's,
-    -- so nothing is applied on the target; the next poll answers
-    return u ~= 2 or I.targetSlot == I.curSlot
+    -- so nothing is applied on the target; the next poll answers. A serial, not the slot: under Map every slot is 0
+    return u ~= 2 or I.targetSwapN == I.curSwapN
 end
 
 -- Rules 2.5.1-7 for one reduced fact (UP or DOWN) of aura j on unit u: a plain walk wins out of combat (I7); forms and
@@ -656,7 +656,7 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
     end
     for j = 1, I.auras.nAura do
         local k = I.AURA_UNIT + j
-        if longE[k] > 0 and I.targetSlot == I.curSlot then -- a second change in one drain: the first one clamped
+        if longE[k] > 0 and I.targetSwapN == I.curSwapN then -- a second change in one drain: the first one clamped
             clamp(j, 2, t)
         end
         longE[k], lastE[k], lastSt[k], cyT[k] = 0, 0, 0, 0

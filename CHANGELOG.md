@@ -9,6 +9,7 @@
 - The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
 
 ### Fixed
+- In dungeons and raids, switching targets with Tab no longer makes a debuff that the Cooldown Manager shows on your new target (such as Faerie Fire) look missing, so it is no longer recommended again.
 
 ### Known issues
 

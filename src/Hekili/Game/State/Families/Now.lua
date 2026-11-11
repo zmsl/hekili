@@ -71,10 +71,10 @@ I.nowErrors, I.nowError, I.nowRuns, I.castsRun = 0, nil, 0, 0
 -- keeps it in `ability.funcs`, where RunStressTest or an APL reading `action.x.now` can call it) writes nothing.
 local T, curA, live = 0, 0, false
 
--- The latest cast's undo (Obs.Avoided): its ability, time and target (memory slot), the cost it paid, and the target
+-- The latest cast's undo (Obs.Avoided): its ability, time and target (the swap serial), the cost it paid, and the target
 -- auras its `now` wrote, each as it was before (expiry 0: down), at most UNDO of them. Preallocated.
 local UNDO = 4
-local undoA, undoT, undoSlot, paid, undoN = 0, -1, 0, 0, 0
+local undoA, undoT, undoSwap, paid, undoN = 0, -1, 0, 0, 0
 local journal = true -- false while an `onCrit` runs: a landed crit's writes are no avoid's to undo
 local undoJ, undoE, undoAp, undoSt = {}, {}, {}, {}
 for k = 1, UNDO do
@@ -704,7 +704,7 @@ local function run(o, t)
         return
     end
 
-    undoA, undoT, undoSlot, paid, undoN = a, o.t, I.curSlot, 0, 0
+    undoA, undoT, undoSwap, paid, undoN = a, o.t, I.curSwapN, 0, 0
     automatic(a, t, o.kind, o)
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
     I.castsRun = I.castsRun + 1
@@ -742,7 +742,7 @@ I.On(Obs.Avoided, function(o, t)
         return
     end
     undoA = 0
-    for k = 1, I.curSlot == undoSlot and undoN or 0 do -- another target since the cast: its auras are not these
+    for k = 1, I.curSwapN == undoSwap and undoN or 0 do -- another target since the cast: its auras are not these
         local j = undoJ[k]
         local rec = VS.Aura("target", auraSpell[j], t)
         local was, back = rec and rec.est or 0, undoE[k] > t and undoE[k] or 0

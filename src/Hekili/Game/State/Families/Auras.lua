@@ -50,6 +50,9 @@ I.nextInst = 0
 -- Per-target memory (spec §6.3): TARGET_CAP slots, each a copy of the target's arrays; slot 0 is "no target".
 local memExp, memApplied, memStacks, memInst = {}, {}, {}, {}
 I.curSlot = 0
+-- The serial of the swap folded last (Sources/Target.lua's I.targetSwapN, copied, never incremented: a swap the log
+-- dropped before its fold must not leave the target waiting for ever). Unequal: a swap waits to fold.
+I.curSwapN = 0
 
 -- The player auras with a `consumedBy` (a set of I.HitKind names): their indices, and each one's kinds by I.HitKind.
 local CONS, consKinds = { n = 0 }, {}
@@ -109,7 +112,7 @@ I.OnBuild(function(def, now)
         end
         memExp[s], memApplied[s], memStacks[s], memInst[s] = e, ap, st, ins
     end
-    I.curSlot = 0
+    I.curSlot, I.curSwapN = 0, I.targetSwapN -- the build cleared the log: no swap waits (Target.lua's hook logs its own)
     CONS.n = 0
     for j = 1, U.nAura do
         local by = rawget(auras[j], "consumedBy")
@@ -330,7 +333,7 @@ end
 -- TargetSwap: a is the new target's memory slot (0: none). TargetGone: forget slot a.
 I.On(Obs.TargetSwap, function(o)
     save(I.curSlot)
-    I.curSlot = o.a
+    I.curSlot, I.curSwapN = o.a, I.targetSwapN
     load(o.a)
 end)
 

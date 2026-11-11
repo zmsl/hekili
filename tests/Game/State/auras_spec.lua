@@ -959,6 +959,64 @@ describe("auras", function()
             end
         )
 
+        -- Lane A (the swap guard): under Map every target's GUID is secret, so every swap names slot 0 and the m3
+        -- guard (slot numbers) never saw a swap pending. The pending swap is a serial now.
+        local function near(want, got, label)
+            assert.is_true(got ~= nil and math.abs(got - want) < 1e-9, (label or "") .. " " .. tostring(got))
+        end
+        local function debounceWaits()
+            return tonumber(VS.Snapshot():match("presence%-edge debounceWaits=(%d+)"))
+        end
+
+        it("Map: the switch's drain applies nothing on the target, B opens from its own light (lane A)", function()
+            ctl.guid.target = fake.SECRET
+            start(fs.def(fs.new(9)))
+            cast(2, REND, 10, 15) -- mob A's record expires at 25
+            ctl.ViewerAura(ti, "target")
+            for t = 10.5, 12, 0.5 do
+                poll(t)
+            end
+            assert.are.equal(25, est("target", fs.SPENDER_C, 12))
+            swap(fake.SECRET, 13) -- mob B carries our debuff too: the item stays lit
+            poll(13.1) -- the first drain past the switch's frame: its polls run before the fold
+            poll(13.3)
+            assert.are.equal(0, I.curSlot) -- the Map premise: no memory slot for a secret GUID
+            near(28.1, est("target", fs.SPENDER_C, 13.3), "B opened from its own light")
+            for t = 13.5, 16.5, 0.5 do
+                poll(t)
+                near(28.1, est("target", fs.SPENDER_C, t), t)
+            end
+            assert.are.equal(0, debounceWaits()) -- no Fix B: the debounce memory never held A's record for B
+            swap(fake.SECRET, 17) -- back to A, B's record up, no drain in the switch's frame
+            poll(17.1)
+            poll(17.3)
+            near(32.1, est("target", fs.SPENDER_C, 17.3), "A re-opened (no memory under Map: the seed)")
+            for t = 17.5, 20, 0.5 do
+                poll(t)
+                near(32.1, est("target", fs.SPENDER_C, t), t)
+            end
+            assert.are.equal(0, debounceWaits())
+        end)
+
+        it("Map: a rebuild drops a logged swap before its fold; the target stays judgeable (lane A)", function()
+            ctl.guid.target = fake.SECRET
+            local def = fs.def(fs.new(9))
+            start(def)
+            swap(fake.SECRET, 11) -- logged, never folded: the rebuild clears the log
+            ctl.Fire("PLAYER_REGEN_ENABLED") -- out of combat: an in-combat rebuild keeps the providers off (decision 89)
+            I.Build(def, 11) -- logs its own swap (Sources/Target.lua's build hook)
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.Fire("UNIT_AURA", "player") -- both walks secret again
+            ctl.Fire("UNIT_AURA", "target")
+            ctl.ViewerAura(ti, "target")
+            poll(11.1)
+            poll(11.3)
+            assert.is_not_nil(est("target", fs.SPENDER_C, 11.3)) -- a light opens the target's record
+            ctl.ViewerClear(ti)
+            poll(11.6)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.6)) -- and its NONE closes it
+        end)
+
         -- The owner's rule (L310, decision 112 as amended; variant C, the default): trust the belief's duration. No
         -- extension before the model's expiry; past it, the CDM overrides only once its item stayed lit HOLD, then
         -- once, long (3600 s; -1 for a player aura with no numeric duration), closed by the observed down.

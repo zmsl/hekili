@@ -1074,6 +1074,26 @@ describe("now handlers", function()
             assert.are.equal(125, VS.Aura("target", fs.SPENDER_A, 5.2).est) -- the crit's write stays
         end)
 
+        it("Map (secret GUIDs): an avoid after a tab leaves the new target's auras alone (lane A)", function()
+            ctl.guid.target = fake.SECRET
+            begin()
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- on mob A
+            ctl.Tick(5.01)
+            VS.Drain(5.02)
+            ctl.now = 5.05
+            ctl.Fire("PLAYER_TARGET_CHANGED") -- tab to mob B (slot 0 again: its GUID is secret)
+            VS.Drain(5.06)
+            assert.are.equal(0, I.curSlot) -- the Map premise: no memory slot for a secret GUID
+            local j = I.auras.bySpell[fs.SPENDER_C]
+            I.AuraModel(2, j, 5.06, 20, 1, 5.06, VS.Obs.CastSuccess, true) -- B carries the debuff (an earlier cast)
+            I.Sources.Direct(VS.Obs.Avoided, 5.1, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- the cast on A
+            VS.Drain(5.12)
+            local rec = VS.Aura("target", fs.SPENDER_C, 5.2)
+            assert.is_not_nil(rec) -- A's pre-cast auras are not B's
+            assert.are.equal(20, rec.est)
+        end)
+
         it("a dodge in the cast's frame: no debuff, 80% of the cost back, a REMOVED row", function()
             begin()
             castOutcome(fs.SPENDER_C, 5, "DODGE")
@@ -1259,7 +1279,7 @@ describe("now handlers", function()
                 ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
                 ctl.Tick(5.01)
                 VS.Drain(5.01)
-                I.curSlot = I.curSlot + 1 -- as a swap's TargetSwap applier sets it (Families/Auras.lua)
+                I.curSwapN = I.curSwapN + 1 -- as a swap's TargetSwap fold moves it (Families/Auras.lua; lane A)
                 ctl.now = 5.02
                 ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
                 ctl.Tick(5.03)
