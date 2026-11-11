@@ -57,29 +57,87 @@ describe("LibRangeCheck-3.0 in the headless client", function()
         end)
     end
 
-    it("adds the within-minRange checker to both checker lists, true only on a definite out-of-range answer", function()
-        local C = hw.BeastMastery
-        local H = boot(C.character(), C.PACK)
-        local lib = H.env.LibStub("LibRangeCheck-3.0")
-        at(H, 6) -- a read builds the checker lists (the library's init)
-        local function inner(list)
-            for _, rc in ipairs(list) do
-                if rc.range == 8 and rc.minRange == nil and rc.info:find("^spell:75:") then
-                    return rc.checker
+    -- the 8 yd checker, in each of the library's harm lists
+    local function inner(list)
+        for _, rc in ipairs(list) do
+            if rc.range == 8 and rc.minRange == nil and rc.info:find("^spell:75:") then
+                return rc.checker
+            end
+        end
+    end
+
+    it(
+        "adds the within-minRange checker to both checker lists; a spell with no answer defers to the next-larger",
+        function()
+            local C = hw.BeastMastery
+            local H = boot(C.character(), C.PACK)
+            local lib = H.env.LibStub("LibRangeCheck-3.0")
+            at(H, 6) -- a read builds the checker lists (the library's init)
+            for _, list in ipairs({ lib.harmRC, lib.harmRCInCombat }) do
+                local check = inner(list)
+                assert.is_function(check)
+                H.ctl.ranges[75] = { 8, 35 }
+                H.ctl.distance.target = 6
+                assert.is_truthy(check("target"))
+                H.ctl.distance.target = 9
+                assert.is_falsy(check("target"))
+                H.ctl.distance.target = 40 -- past Auto Shot's 35: out of range there too, but past the reach checker
+                assert.is_falsy(check("target"))
+                H.ctl.ranges[75] = { 8, 0 } -- the spell answers nil (no range check, e.g. no ranged weapon)
+                local larger -- the next-larger checker in this list (harmRC: the 10 yd item; in combat: Auto Shot's)
+                for i = #list, 1, -1 do
+                    if list[i].range > 8 then
+                        larger = list[i].checker
+                        break
+                    end
+                end
+                for _, yd in ipairs({ 3, 9, 12, 30, 40 }) do
+                    H.ctl.distance.target = yd
+                    assert.are.equal(not larger("target"), not check("target"), yd .. " yd: not the next-larger's")
                 end
             end
         end
-        local check = inner(lib.harmRC)
-        assert.is_function(check)
-        assert.are.equal(check, inner(lib.harmRCInCombat))
-        H.ctl.distance.target = 6
-        assert.is_truthy(check("target"))
-        H.ctl.distance.target = 9
-        assert.is_falsy(check("target"))
-        H.ctl.distance.target = 40 -- past Auto Shot's 35: out of range there too, but past the reach checker
-        assert.is_falsy(check("target"))
-        H.ctl.distance.target = 6
-        H.ctl.ranges[75] = { 8, 0 } -- the spell answers nil (no range check, e.g. no ranged weapon): not within
-        assert.is_falsy(check("target"))
+    )
+
+    -- getRangeWithCheckerList binary-searches the list: within a smaller range must imply within every larger one
+    it("keeps every harm list monotone whether Auto Shot answers in range, out of range or nothing", function()
+        local C = hw.BeastMastery
+        local H = boot(C.character(), C.PACK)
+        local lib = H.env.LibStub("LibRangeCheck-3.0")
+        at(H, 6)
+        for _, r in ipairs({ { 8, 35 }, { 8, 0 } }) do
+            H.ctl.ranges[75] = r
+            for _, list in ipairs({ lib.harmRC, lib.harmRCInCombat }) do
+                for yd = 0, 40, 0.5 do
+                    H.ctl.distance.target = yd
+                    local seenFalse
+                    for i = 1, #list do -- largest range first
+                        local within = list[i].checker("target") and true or false
+                        assert.is_false(
+                            within and seenFalse == true,
+                            ("%s yd, Auto Shot %d-%d: %s within after a smaller miss"):format(
+                                yd,
+                                r[1],
+                                r[2],
+                                list[i].info
+                            )
+                        )
+                        seenFalse = seenFalse or not within
+                    end
+                end
+            end
+        end
+    end)
+
+    it("reads a Hunter whose Auto Shot cannot check (no ranged weapon) as in melee at 3 yd", function()
+        local C = hw.Survival
+        local H = boot(C.character(), C.PACK)
+        at(H, 20)
+        H.ctl.ranges[75] = { 8, 0 }
+        assert.are.same({ 0, 5 }, at(H, 3))
+        local six, nine = at(H, 6), at(H, 9)
+        assert.is_true(six[1] == 5 and six[2] >= 8, ("6 yd: %s-%s"):format(tostring(six[1]), tostring(six[2])))
+        assert.is_true(nine[1] == 5 and nine[2] >= 8, ("9 yd: %s-%s"):format(tostring(nine[1]), tostring(nine[2])))
+        assert.are.same({}, H.errors)
     end)
 end)

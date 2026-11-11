@@ -3980,11 +3980,23 @@ local function createCheckerList(spellList, itemList, interactList)
             addChecker(resInCombat, range, minRange, checker, "spell:" .. sid .. ":" .. tostring(name))
             local reach = findMinRangeChecker(minRange, range, spellList, interactList) -- Hekili Forever patch (upstream PR pending): the min-range fallback, as above
             if reach then -- Hekili Forever patch (upstream PR pending): mark the spell's minimum range too
-              local within = function(unit) -- Hekili Forever patch (upstream PR pending): within minRange = a definite out of range (0, not nil) still in the fallback's reach
-                return IsSpellBookItemInRange(spellIdx, BOOKTYPE_SPELL, unit) == 0 and reach(unit) -- Hekili Forever patch (upstream PR pending): see above
+              local function within(list) -- Hekili Forever patch (upstream PR pending): within minRange, for one list
+                return function(unit) -- Hekili Forever patch (upstream PR pending)
+                  local r = IsSpellBookItemInRange(spellIdx, BOOKTYPE_SPELL, unit) -- Hekili Forever patch (upstream PR pending)
+                  if r == 0 then -- Hekili Forever patch (upstream PR pending): out of range, still in the fallback's reach: inside minRange
+                    return reach(unit) -- Hekili Forever patch (upstream PR pending)
+                  elseif r == 1 then -- Hekili Forever patch (upstream PR pending): in range: not inside minRange
+                    return false -- Hekili Forever patch (upstream PR pending)
+                  end -- Hekili Forever patch (upstream PR pending)
+                  for i = #list, 1, -1 do -- Hekili Forever patch (upstream PR pending): no answer (e.g. no ranged weapon): the next-larger checker's, which keeps the list monotone
+                    if list[i].range > minRange then -- Hekili Forever patch (upstream PR pending)
+                      return list[i].checker(unit) -- Hekili Forever patch (upstream PR pending)
+                    end -- Hekili Forever patch (upstream PR pending)
+                  end -- Hekili Forever patch (upstream PR pending)
+                end -- Hekili Forever patch (upstream PR pending)
               end -- Hekili Forever patch (upstream PR pending)
-              addChecker(res, minRange, nil, within, "spell:" .. sid .. ":" .. tostring(name) .. ":min") -- Hekili Forever patch (upstream PR pending): same-range dedup kept
-              addChecker(resInCombat, minRange, nil, within, "spell:" .. sid .. ":" .. tostring(name) .. ":min") -- Hekili Forever patch (upstream PR pending): both lists, as its sibling
+              addChecker(res, minRange, nil, within(res), "spell:" .. sid .. ":" .. tostring(name) .. ":min") -- Hekili Forever patch (upstream PR pending): same-range dedup kept
+              addChecker(resInCombat, minRange, nil, within(resInCombat), "spell:" .. sid .. ":" .. tostring(name) .. ":min") -- Hekili Forever patch (upstream PR pending): both lists, as its sibling
             end -- Hekili Forever patch (upstream PR pending)
           end
         else
