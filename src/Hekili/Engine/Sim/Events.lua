@@ -1867,11 +1867,17 @@ end
 
 --- Calls store( page, markup, type, id ) for every gamepad-bar slot holding an action whose button can be pressed.
 --- The modifiers' keys are read now, never named here.
+-- Gamepad mode binds its buttons as override bindings: a plain read can answer nil (owner, in game 2026-11-10); read
+-- them as Blizzard does (Blizzard_GamepadActionBars/ActionBarEditFrame.lua:101), the plain binding as a fallback.
+local function padKey( command )
+    return GetBindingKey( command, 1 ) or GetBindingKey( command )
+end
+
 function Pad.Read( store )
     local first = C_GamepadUI.GetFirstGamepadActionStorageSlotIndex()
     if not first then return end
 
-    local left, right = GetBindingKey( "GAMEPADLEFTMOD" ), GetBindingKey( "GAMEPADRIGHTMOD" )
+    local left, right = padKey( "GAMEPADLEFTMOD" ), padKey( "GAMEPADRIGHTMOD" )
     left, right = left and Pad.Glyph( left ), right and Pad.Glyph( right )
     local mods = { "", left, right, left and right and left .. right } -- by bar: top, left, right, bottom
 
@@ -1887,7 +1893,7 @@ function Pad.Read( store )
 
     local buttons = {}
     for pos = 1, 8 do
-        local key = GetBindingKey( "GAMEPADACTIONBUTTON" .. pos )
+        local key = padKey( "GAMEPADACTIONBUTTON" .. pos )
         buttons[ pos ] = key and Pad.Glyph( key )
     end
 

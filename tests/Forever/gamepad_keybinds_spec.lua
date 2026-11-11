@@ -19,7 +19,11 @@ local function install()
                 return "spell", id
             end
         end
-        api.GetBindingKey = function(command)
+        api.GetBindingKey = function(command, override)
+            -- gamepad mode binds its buttons as override bindings: a plain read may answer nothing (owner, in game)
+            if world.overrideOnly and not override and command:find("^GAMEPAD") then
+                return nil
+            end
             return world.keys[command]
         end
         api.C_GamepadUI.GetFirstGamepadActionStorageSlotIndex = function()
@@ -138,6 +142,13 @@ describe("gamepad keybinds", function()
         info = read(H)
         assert.are.equal(L("PADDUP"), info.mortal_strike.pad[1])
         assert.are.equal(L("PADLTRIGGER") .. L("PADRTRIGGER") .. L("PADDLEFT"), info.overpower.pad[1])
+    end)
+
+    it("reads the gamepad buttons and modifiers as override bindings (a plain read answers nothing)", function()
+        local H = boot()
+        world.overrideOnly = true
+        world.actions[194] = id(H, "mortal_strike") -- right bar, d-pad up: the owner's Faerie Fire slot
+        assert.are.equal(L("PADRTRIGGER") .. L("PADDUP"), read(H).mortal_strike.pad[1])
     end)
 
     it("reads nothing without the gamepad action bars", function()
