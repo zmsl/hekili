@@ -18,12 +18,27 @@ local Plain, Stage, Direct = S.Plain, S.Stage, S.Direct
 
 -- By memory slot: its key and when it was last the target. The key: the target's GUID (a string) while it reads plain;
 -- under Map (the GUID secret) the index 1..40 of the plate that is the target (a number: never equal to a GUID, so the
--- two key spaces cannot collide); "" free.
+-- two key spaces cannot collide); "" free; false: an orphan, the current target's slot whose plate left (no key finds
+-- it again; forgotten at the next swap).
 local guid, used = {}, {}
 for s = 1, I.TARGET_CAP do
     guid[s], used[s] = "", 0
 end
 local tokenMode = false -- the key space of the last swap that had a target (true: plate indices)
+local forgetN, noPlateN = 0, 0 -- slots forgotten by plate edges and flips; Map swaps no plate answered (snapshot)
+I.targetKeys = guid -- read-only, for tests
+
+-- Forgets slot s: the current target's becomes an orphan with no log entry (a TargetGone on the current slot reads as
+-- its death, Families/Auras.lua and TargetHealth.lua: review F4), any other is logged gone and freed.
+local function forget(s, t)
+    forgetN = forgetN + 1
+    if s == I.targetSlot then
+        guid[s] = false
+    else
+        Direct(Obs.TargetGone, t, s)
+        guid[s] = ""
+    end
+end
 local dead = false
 local HUGE = math.huge
 local lastLo, lastHi = -1, -1 -- the bracket last logged (-1: none since the swap)
@@ -83,6 +98,9 @@ local function swap(api, t)
     local key = g
     if secret then
         key = plateOfTarget(api) -- 0: no plate answers (plates off, out of plate range): no memory
+        if key == 0 then
+            noPlateN = noPlateN + 1
+        end
     end
     local s, fresh = 0, false
     if key ~= "" and key ~= 0 then
@@ -108,6 +126,24 @@ I.OnBuild(function(def, now)
         swap(I.api, now)
     end
 end)
+
+-- A plate's ADDED or REMOVED (review F3: both edges, a token may change mob at either): the memory keyed by it is
+-- forgotten. A GUID key never equals a plate index. Allocates nothing.
+local function plateEdge(api, t, unit)
+    local i = unit and I.Units.INDEX[unit]
+    if not i then
+        return
+    end
+    local k = i - 2 -- nameplateK is the registry's token K + 2
+    for s = 1, I.TARGET_CAP do
+        if guid[s] == k then
+            forget(s, t)
+            return
+        end
+    end
+end
+S.On("NAME_PLATE_UNIT_ADDED", nil, plateEdge)
+S.On("NAME_PLATE_UNIT_REMOVED", nil, plateEdge)
 
 -- Poll 4: the target's plain death goes to the registry, which tells every listener once (OnGone DEAD, below).
 S.Poll(4, function(api, t)
