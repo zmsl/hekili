@@ -21,7 +21,9 @@
 --   faded), and wowsims recasts Searing Pain on the early fade; ours keeps it the full 10 s (the target's charges
 --   unreadable, the demon's hits unseen): 157-170 s (8, all Searing Pain pairs), 74-99 (4) and 138.9 (1) show the
 --   brand 6-9.5 s left in ours too (not verified row by row); 10.88 is C's knock-on. Without A and C 0.841.
--- Omitted 2 -> 11 (dry.lua 11): Demonology's ten plus a `never` (default #9); unitIsMoving dropped, listed.
+-- Omitted 2 -> 11 (dry.lua 11): Demonology's ten plus a `never` (default #9); unitIsMoving dropped, listed. Aura lane
+-- 2026-11-11: the kit now registers Revelation (1323392), so default #9 is translated, not omitted (knownAs: the
+-- build's "Improved Shadow Bolt Known" variable is the talent).
 -- Known deviations: warlock_demonology.lua's (the same list but Shadow Bolt the filler and the Life Tap line's constant
 -- "Lash of Pain cost" 160, the Succubus's, kept verbatim: ruling W7).
 -- Deviations: Berserking (Troll) and
@@ -38,6 +40,8 @@ return {
     build = "ui/specs/warlock/dps/builds/demo_shadow_brand.build.json",
     gear = "ui/specs/warlock/dps/gear_sets/preraid.gear.json",
     map = { ["item:272438"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
+    -- the build's "Improved Shadow Bolt Known" variable is auraIsKnown(Shadow Vulnerability 17794): the talent that makes it
+    knownAs = { [17794] = "improved_shadow_bolt" },
     select = {
         castWarlockAssignedCurse = {
             setting = "assigned_curse",

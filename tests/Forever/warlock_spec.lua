@@ -344,6 +344,82 @@ describe("Forever Warlock", function()
         end
     )
 
+    it("registers Revelation 1323392: 15 s, one charge (the weapon enchant 8217's Warlock buff)", function()
+        local a = w.auras.revelation
+        assert.are.same({ 1323392, 15, 1 }, { a.id, a.duration, a.max_stack })
+    end)
+
+    it("reads the proc auras from their spell's glow where the walk is secret: Shadow Trance and Decimation", function()
+        assert.are.equal(686, w.auras.shadow_trance.overlay) -- Shadow Bolt's glow
+        assert.are.equal(6353, w.auras.decimation.overlay) -- Soul Fire's glow
+    end)
+
+    it("a landed Shadow Bolt or Searing Pain at a target under 35% applies Decimation, with the talent only", function()
+        local function run(key, ranks, pct)
+            local e = env(ranks)
+            e.target = { health = { pct = pct } }
+            ld.run(w.abilities[key].handler, e)
+            return e.applied
+        end
+        for _, key in ipairs({ "shadow_bolt", "searing_pain" }) do
+            assert.are.same({ "decimation" }, run(key, { decimation = 2 }, 30), key)
+            assert.are.same({}, run(key, { decimation = 2 }, 35), key)
+            assert.are.same({}, run(key, { decimation = 2 }, 100), key)
+            assert.are.same({}, run(key, {}, 30), key)
+        end
+        -- the belief's `now` context has no target to read: it writes no Decimation (the glow read carries it)
+        local e = env({ decimation = 2 })
+        ld.run(w.abilities.shadow_bolt.now, e)
+        ld.run(w.abilities.searing_pain.now, e)
+        assert.are.same({}, e.applied)
+    end)
+
+    it("registers Shadow and Flame's buffs for 20 s; Conflagrate applies the Shadow, Shadowburn the Fire", function()
+        local a = w.auras
+        assert.are.same({ 1293816, 20, 426311, 20 }, {
+            a.shadow_and_flame_shadow.id,
+            a.shadow_and_flame_shadow.duration,
+            a.shadow_and_flame_fire.id,
+            a.shadow_and_flame_fire.duration,
+        })
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = env({ shadow_and_flame = 1 })
+            ld.run(w.abilities.conflagrate[field], e)
+            assert.are.same({ "shadow_and_flame_shadow" }, e.applied, field)
+            e = env({ shadow_and_flame = 1 })
+            ld.run(w.abilities.shadowburn[field], e)
+            assert.are.same({ "shadow_and_flame_fire" }, e.applied, field)
+            e = env()
+            ld.run(w.abilities.conflagrate[field], e)
+            ld.run(w.abilities.shadowburn[field], e)
+            assert.are.same({}, e.applied, field) -- without the talent: none
+        end
+    end)
+
+    it(
+        "registers the Warlock's remaining own auras (Soul Harvest, Bane of Havoc, demon and armor auras, channels)",
+        function()
+            local want = {
+                soul_harvest = { 1242853, 10 },
+                fel_domination = { 18708, 15 },
+                soul_link = { 19028, 3600, 25228 },
+                demonic_knowledge = { 412732, 3600 },
+                master_demonologist = { 23785, 3600 },
+                demon_armor = { 11735, 1800 },
+                blood_pact = { 11767, 3600 },
+                hellfire_channel = { 11684, 15 },
+                rain_of_fire_channel = { 11678, 8 },
+                drain_soul_channel = { 11675, 15 },
+                drain_life_channel = { 11700, 5 },
+            }
+            for key, v in pairs(want) do
+                local a = w.auras[key]
+                assert.is_not_nil(a, key)
+                assert.are.same({ v[1], v[2], v[3] }, { a.id, a.duration, a.copy }, key)
+            end
+        end
+    )
+
     it("brands the target from Searing Pain, 2 charges a rank of Demonic Brand", function()
         local sp = w.abilities.searing_pain
         for _, field in ipairs({ "now", "handler" }) do

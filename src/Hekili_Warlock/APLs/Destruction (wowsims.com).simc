@@ -11,7 +11,6 @@
 # Omitted: default #3: move
 # Omitted: default #5: spell 1225228
 # Omitted: default #6: changeTarget
-# Omitted: default #9: dropped the unresolved aura 1293816 (its branch only)
 # Omitted: single_multi_target_curse_logic #2: changeTarget
 # Omitted: multi_target_dot_logic #1: dropped the unresolved aura 1225228 (its branch only)
 # Omitted: multi_target_dot_logic #2: dropped the unresolved aura 1225228 (its branch only)
@@ -32,7 +31,7 @@ actions+=/hellfire,if=active_enemies>=3&toggle.movement&(active_enemies>=3&targe
 actions+=/bane_of_doom,focus=2,if=fight_remains>debuff.bane_of_doom.duration
 actions+=/call_action_list,name=single_target_dot_logic,if=active_enemies=1
 actions+=/call_action_list,name=multi_target_dot_logic,if=active_enemies>1
-actions+=/conflagrate,if=(!action.immolate.known|debuff.immolate.up)
+actions+=/conflagrate,if=((action.immolate.known&debuff.immolate.up)|!buff.shadow_and_flame_shadow.up)
 actions+=/shadowburn
 actions+=/call_action_list,name=cooldowns,if=((action.bane_of_doom.known&((!action.bane_of_doom.known|((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known|!debuff.bane_of_doom.up)))|((action.bane_of_doom.known&debuff.bane_of_doom.up)|(active_enemies>=3&target.within5)))
 actions+=/hellfire,if=active_enemies>=3&target.within5

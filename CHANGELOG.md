@@ -9,6 +9,8 @@
 - The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
 
 ### Fixed
+- Warlock: Affliction and Shadow Brand (wowsims.com) now react to the Revelation weapon enchant's proc, Decimation and Shadow Trance are now also read from the spell's glow in combat where the game lights it, and Destruction (wowsims.com) now tracks Shadow and Flame's buffs the way wowsims does.
+- Priest: Shadow (wowsims.com) now counts Dark Inspiration as soon as you cast Mind Blast, so the mana estimate no longer ignores it.
 
 ### Known issues
 

@@ -21,8 +21,8 @@ actions+=/call_action_list,name=single_multi_target_curse_logic
 actions+=/bane_of_doom,if=fight_remains>debuff.bane_of_doom.duration
 actions+=/call_action_list,name=single_target_dot_logic,if=active_enemies=1
 actions+=/call_action_list,name=multi_target_dot_logic,if=active_enemies>1
-actions+=/shadow_bolt,focus=2,if=buff.shadow_trance.up
-actions+=/shadow_bolt,focus=1,if=buff.shadow_trance.up
+actions+=/shadow_bolt,focus=2,if=(buff.shadow_trance.up|(talent.improved_shadow_bolt.enabled&buff.revelation.up&(!debuff.shadow_vulnerability.up|debuff.shadow_vulnerability.remains<(action.shadow_bolt.cast+action.shadow_bolt.travel_time))))
+actions+=/shadow_bolt,focus=1,if=(buff.shadow_trance.up|(talent.improved_shadow_bolt.enabled&buff.revelation.up&(!debuff.shadow_vulnerability.up|debuff.shadow_vulnerability.remains<(action.shadow_bolt.cast+action.shadow_bolt.travel_time))))
 actions+=/call_action_list,name=cooldowns,if=(!action.bane_of_doom.known|((action.bane_of_doom.known&((!action.bane_of_doom.known|((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known|!debuff.bane_of_doom.up)))|(action.bane_of_doom.known&debuff.bane_of_doom.up)))
 actions+=/death_coil,if=(!action.shadow_bolt.known|(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)
 actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)

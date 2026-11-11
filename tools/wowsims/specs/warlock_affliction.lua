@@ -42,6 +42,8 @@ return {
     build = "ui/specs/warlock/dps/builds/aff_wrack.build.json",
     gear = "ui/specs/warlock/dps/gear_sets/preraid.gear.json",
     map = { ["item:272438"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
+    -- the build's "Improved Shadow Bolt Known" variable is auraIsKnown(Shadow Vulnerability 17794): the talent that makes it
+    knownAs = { [17794] = "improved_shadow_bolt" },
     select = {
         castWarlockAssignedCurse = {
             setting = "assigned_curse",
