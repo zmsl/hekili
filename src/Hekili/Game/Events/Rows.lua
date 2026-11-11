@@ -139,7 +139,9 @@ end
 
 -- A swing closing unpaid: SWING_MISSED for a provisional avoid, else SWING_DAMAGE 0 (the swing timer reads it). The
 -- avoid it still holds is settled now (no wound can take it back): staged at its row's time (Families/Now.lua's
--- reactions). A swing closing with no row stages nothing: no outcome was observed. A retraction's re-open (T.retry)
+-- reactions). A swing closing with no row stages SwingSettled with c = -1 at its own time: no outcome was observed, so
+-- only a "land" reaction runs (live, a non-crit hit's row is secret and only avoids are plain: aura audit C3). A
+-- retraction's re-open (T.retry)
 -- closing on a real avoid it still holds is a new settled fact (R23): its row and settle go out, the guard aside.
 T.onExpire = function(i)
     if T.kind[i] ~= MELEE then
@@ -151,6 +153,8 @@ T.onExpire = function(i)
         emit(MELEE, T.x[i], T.guid[i], held and T.avoid[i] or "WOUND", "", 0, T.at[i], 1)
         if held and T.state[i] == T.PROV then -- only a ticket still provisional (T.Provisional) settles its avoid here
             S.Stage(Obs.SwingSettled, T.avoidT[i], T.x[i], T.at[i], I.HitKind[T.avoid[i]] or 0)
+        elseif not held then
+            S.Stage(Obs.SwingSettled, T.at[i], T.x[i], T.at[i], -1) -- no row: presumed landed
         end
     end
 end

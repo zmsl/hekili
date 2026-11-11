@@ -245,6 +245,52 @@ describe("reactions", function()
         end)
     end)
 
+    -- aura audit C3: outcome "land" (a white swing of ours that landed: a settled wound, or a swing that closed with no
+    -- row at all, as live, where a non-crit hit's row is secret and only avoids are plain), optional hand
+    describe('outcome "land" (who = "target")', function()
+        it("runs at a settled wound and at a swing closing with no row; never at an avoid", function()
+            build({ reaction("landed", "target", "land"), reaction("swung", "target", "swing") })
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.47 -- the core band: final at once
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            drain(10.5)
+            assert.are.same({ 1, 1 }, { runs.landed, runs.swung })
+            assert.are.equal(10.47, W("landed")[2])
+            ctl.now = 20
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 20.47
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1)
+            drain(20.5)
+            drain(22)
+            drain(22.1)
+            assert.are.same({ 1, 2 }, { runs.landed, runs.swung }) -- avoided: no land
+            ctl.now = 30
+            ctl.Fire("PLAYER_SWING", 2.6, 0) -- no row (live: its amount secret, the row background)
+            drain(30.5)
+            assert.are.equal(1, runs.landed)
+            drain(32)
+            drain(32.1)
+            assert.are.same({ 2, 2 }, { runs.landed, runs.swung }) -- landed, presumed; "swing" still needs a row
+            assert.are.equal(30, W("landed")[2]) -- at the swing's own time
+            assert.are.equal(0, I.nowErrors)
+        end)
+
+        it("hand filters by the swing's hand", function()
+            local main, off = reaction("main_land", "target", "land"), reaction("off_land", "target", "land")
+            main.hand, off.hand = "main", "off"
+            build({ main, off })
+            local S, Obs, K = I.Sources, VS.Obs, I.HitKind
+            S.Direct(Obs.SwingSettled, 5, 1, 4.9, K.WOUND)
+            VS.Drain(5.1)
+            S.Direct(Obs.SwingSettled, 6, 2, 5.9, -1) -- closed with no row (0 is an avoid of an unmapped kind)
+            VS.Drain(6.1)
+            S.Direct(Obs.SwingSettled, 7, 2, 6.9, K.DODGE)
+            VS.Drain(7.1)
+            assert.are.same({ 1, 1 }, { runs.main_land, runs.off_land })
+        end)
+    end)
+
     -- Task 8a-4 (owner 2026-11-04): outcome "swing" (every white swing of ours at its settled outcome, optional hand),
     -- and "deflect" / "evade" through the same settled-only paths
     describe('outcome "swing" (who = "target")', function()

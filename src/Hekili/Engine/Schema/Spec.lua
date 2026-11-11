@@ -497,8 +497,8 @@ local HekiliSpecMixin = {
         assert( data.who == "player" or data.who == "target", "RegisterReaction: " .. name .. "'s who" )
         local o = data.outcome
         assert( o == "dodge" or o == "parry" or o == "block" or o == "miss" or o == "deflect" or o == "evade" or o == "crit"
-            or ( o == "swing" and data.who == "target" ), "RegisterReaction: " .. name .. "'s outcome" )
-        assert( data.hand == nil or o == "swing" and ( data.hand == "main" or data.hand == "off" ),
+            or ( ( o == "swing" or o == "land" ) and data.who == "target" ), "RegisterReaction: " .. name .. "'s outcome" )
+        assert( data.hand == nil or ( o == "swing" or o == "land" ) and ( data.hand == "main" or data.hand == "off" ),
             "RegisterReaction: " .. name .. "'s hand (a target swing's: main or off)" )
         assert( type( data.now ) == "function", "RegisterReaction: " .. name .. "'s now is not a function" )
         self.reactions[ name ] = { key = name, who = data.who, outcome = o, hand = data.hand, now = data.now }

@@ -492,8 +492,8 @@ NAMES.window = setmetatable({}, {
 -- 2 off: a "swing" reaction's filter), preallocated at load, refilled at the build.
 
 local WHO, HAND = { player = 1, target = 2 }, { main = 1, off = 2 }
-local OUTCOME = { dodge = 1, parry = 2, block = 3, miss = 4, deflect = 5, evade = 6, crit = 7, swing = 8 }
-local CRIT, SWING = OUTCOME.crit, OUTCOME.swing
+local OUTCOME = { dodge = 1, parry = 2, block = 3, miss = 4, deflect = 5, evade = 6, crit = 7, swing = 8, land = 9 }
+local CRIT, SWING, LAND = OUTCOME.crit, OUTCOME.swing, OUTCOME.land
 local OUTCOME_OF = {} -- by I.HitKind: the outcome slot (0: no reaction outcome)
 for name, kind in pairs(I.HitKind) do
     local o = OUTCOME[name:lower()]
@@ -503,7 +503,7 @@ OUTCOME_OF[I.HitKind.BLOCKED] = OUTCOME.block -- `block` covers BLOCK and BLOCKE
 local NO_REACTIONS = {}
 local react = { {}, {} } -- react[who][outcome] = { n = count, bound functions... }
 for w = 1, 2 do
-    for o = 1, SWING do
+    for o = 1, LAND do
         react[w][o] = { n = 0, hand = {} }
     end
 end
@@ -511,7 +511,7 @@ I.reactionsRun = 0
 
 local function bindReactions(list)
     for w = 1, 2 do
-        for o = 1, SWING do
+        for o = 1, LAND do
             local l = react[w][o]
             for k = 1, l.n do
                 l[k], l.hand[k] = nil, nil
@@ -777,9 +777,17 @@ end)
 -- The other settled outcomes reactions run on (re-pin design §3a): our white swing's (Obs.SwingSettled, Events/Rows.lua:
 -- its avoid's own outcome, then every "swing" reaction of its hand), a hit on us (Obs.PlayerHit, Obs.PlayerCrit:
 -- victim-side UNIT_COMBAT, Sources/Player.lua), each at its row's time. Allocates nothing.
+-- "land" (aura audit C3): a settled wound, or a swing that closed with no row (c = -1: live, a non-crit hit's row is
+-- secret and only avoids are plain), which runs nothing else.
+local WOUND = I.HitKind.WOUND
 I.On(Obs.SwingSettled, function(o)
     fire(2, OUTCOME_OF[o.c] or 0, o.t)
-    fire(2, SWING, o.t, o.a)
+    if o.c ~= -1 then
+        fire(2, SWING, o.t, o.a)
+    end
+    if o.c == WOUND or o.c == -1 then
+        fire(2, LAND, o.t, o.a)
+    end
 end)
 I.On(Obs.PlayerHit, function(o)
     fire(1, OUTCOME_OF[o.a] or 0, o.t)
