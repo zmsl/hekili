@@ -141,7 +141,8 @@ local function debuff(key, alsoHit) -- the debuff when its hit (for `key`'s amou
         local w = class()
         local a = w.auras[key]
         if W.hit(e, e.target, alsoHit and AMOUNT[key] or nil, SCHOOL[key] or 1).act == "WOUND" then
-            W.applyAura(e.target, a.id, a.duration, 1, a.max_stack)
+            -- shortcut: a function duration (Faerie Fire's set bonus) is its ungeared 40 s; upgrade if a world wears gear
+            W.applyAura(e.target, a.id, type(a.duration) == "function" and 40 or a.duration, 1, a.max_stack)
         end
     end
 end
