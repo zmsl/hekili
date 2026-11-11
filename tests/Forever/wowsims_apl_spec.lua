@@ -2829,7 +2829,10 @@ describe("the wowsims APL translator's auto-attack clocks", function()
         end
 
         assert.is_falsy(text:find("window.hha", 1, true), text)
-        assert.is_truthy(text:find("actions+=/summon_hawk,if=pet.hawk.count<2", 1, true), text)
+        assert.is_truthy(
+            text:find("actions+=/summon_hawk,if=action.summon_hawk.known&pet.hawk.count<2", 1, true),
+            text
+        )
         assert.is_truthy(text:find("actions+=/aimed_shot,if=active_enemies=1&target.outside8", 1, true), text)
         assert.is_truthy(text:find("actions+=/arcane_shot,if=target.outside8", 1, true), text)
         assert.is_true(first.summon_hawk < first.aimed_shot)

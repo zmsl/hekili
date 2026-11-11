@@ -69,7 +69,7 @@ return {
         multi_shot = "active_enemies>1",
     },
     extra = {
-        { before = "multi_shot", line = "summon_hawk,if=pet.hawk.count<2" },
+        { before = "multi_shot", line = "summon_hawk,if=action.summon_hawk.known&pet.hawk.count<2" },
         { before = "multi_shot", line = "aimed_shot,if=active_enemies=1&target.outside8" },
         { before = "call_action_list", line = "arcane_shot,if=target.outside8" },
     },
