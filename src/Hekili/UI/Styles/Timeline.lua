@@ -683,7 +683,7 @@ local function assign( d, T, tl, conf, out, now, combat )
 
         if ability then
             local queued = i > 1
-            b.Texture:SetTexture( r.iconOverride or r.texture ) -- the APL line's icon= first (a style may ignore it)
+            ns.UI.SetRecTexture( b.Texture, r ) -- the APL line's icon= first (a style may ignore it)
             b.Label:SetText( r.label )
             local indicator = r.indicator
             if ind.enabled and indicator and ( not queued or ind.queued ) then

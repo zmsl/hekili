@@ -689,6 +689,29 @@ describe("Engine.Output (headless Arms)", function()
         end
     )
 
+    it("icon=<unknown spell ID> gives the line no override and one warning naming the line and the value", function()
+        H.ctl.unknownSpells = { [999999] = true }
+        local before = #H.errors
+        local key, hits = marked({ icon = "999999" })
+        for _, ri in ipairs(hits) do
+            assert.is_nil(ri.iconOverride, ri.actionName)
+        end
+        assert.are.equal(before + 1, #H.errors)
+        hits = select(2, marked({}, key)) -- loaded again: the same warning, counted, not a second line in the log
+        assert.is_nil(hits[1].iconOverride)
+        local line = key.__pack .. ":" .. key.__list .. ":" .. key.__id
+        local found = 0
+        for _, w in ipairs(H.Hekili.ErrorKeys) do
+            if w:find("icon=999999", 1, true) then
+                found = found + 1
+                assert.truthy(w:find(line, 1, true), w)
+                assert.truthy(w:find("not a known spell ID", 1, true), w)
+            end
+        end
+        assert.are.equal(1, found)
+        H.ctl.unknownSpells = nil
+    end)
+
     it("a label, label_if, icon or icon_if that raises gives nil, never an error", function()
         marked({ label = "R6", icon = "Interface/Icons/X", icon_if = "time>=0" })
         local mods = H.Hekili.Scripts.DB[out.recs[1].script].Modifiers

@@ -1207,7 +1207,10 @@ function M.new()
         i.minRange, i.maxRange = r and r[1] or 0, r and r[2] or 5
         return i
     end
-    function C.GetSpellTexture()
+    function C.GetSpellTexture(id)
+        if ctl.unknownSpells and ctl.unknownSpells[id] then
+            return nil -- a test's spell the client does not know (the real API returns nothing)
+        end
         return 136000
     end
     function C.GetSpellDescription()

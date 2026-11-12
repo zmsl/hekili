@@ -147,6 +147,30 @@ local function fontFlags( style )
 end
 ns.UI.FontFlags = fontFlags
 
+-- Overrides (icon= values) the client could not draw: [value] = { [record.script] = true, per line warned }.
+local badIcons = {}
+
+--- Draws record `rec`'s icon on texture `tex`: the APL line's icon= (`rec.iconOverride`) when it has one the client
+--- can draw, else `rec.texture`. An override SetTexture refuses is not tried again; each line that asks for it adds
+--- one warning. The renderers' one-line choice: a style that ignores overrides calls tex:SetTexture( rec.texture ).
+function ns.UI.SetRecTexture( tex, rec )
+    local o = rec.iconOverride
+    if o ~= nil then
+        local bad = badIcons[ o ]
+        if not bad then
+            if tex:SetTexture( o ) ~= false then return end
+            bad = {}
+            badIcons[ o ] = bad
+        end
+        local line = rec.script or "?"
+        if not bad[ line ] then
+            bad[ line ] = true
+            Hekili:Error( "Priority line %s (%s): icon=%s cannot be drawn; the normal icon is shown.", tostring( line ), tostring( rec.actionName ), tostring( o ) )
+        end
+    end
+    tex:SetTexture( rec.texture )
+end
+
 --- Sets keybinding text `text` on font string `fs` of icon `b`, at the keyboard anchor (`anchor`, offsets `x`, `y`);
 --- a gamepad binding's pictures at the gamepad group `g`'s own (anchor, x, y), justified from it the same way. The points
 --- change only when the kind of text, the anchor or the offsets do.

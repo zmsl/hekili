@@ -640,7 +640,7 @@ function Classic.Draw( d, conf, out, status )
 
                     if action ~= b.lastAction or image ~= b.lastImage or self.NewRecommendations or not b.Image then
                         b.Image = image
-                        b.Texture:SetTexture( b.Image )
+                        ns.UI.SetRecTexture( b.Texture, ability ) -- b.Image, or the normal texture if the client refuses it
                         b.Texture:SetTexCoord( unpack( b.texCoords ) )
                         b.lastAction = action
                         b.lastImage = image

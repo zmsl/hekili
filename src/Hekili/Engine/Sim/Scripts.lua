@@ -17,6 +17,7 @@ local roundUp = ns.roundUp
 local safeMax = ns.safeMax
 
 local format, trim = string.format, string.trim
+local GetSpellTexture = ns.Facade.C_Spell.GetSpellTexture
 
 local twipe, insert = table.wipe, table.insert
 
@@ -1323,6 +1324,17 @@ local newModifiers = {
 }
 
 
+-- A 'text' modifier's Lua source: the value verbatim, except icon=<number>, a spell ID resolved here once to its icon;
+-- an unknown spell gives the line no icon override (nil) and one warning naming the line and the value.
+local function textSource( m, v, header, action )
+    local id = m == 'icon' and tonumber( v )
+    if not id then return format( "%q", tostring( v ) ) end
+    local tex = GetSpellTexture( id )
+    if tex then return type( tex ) == "number" and tostring( tex ) or format( "%q", tostring( tex ) ) end
+    Hekili:Error( "Priority line %s (%s): icon=%s is not a known spell ID; the line's icon is not overridden.", tostring( header ), tostring( action ), tostring( v ) )
+end
+
+
 local valueModifiers = {
     sec = true,
     value = true,
@@ -1515,9 +1527,10 @@ local function ConvertScript( node, hasModifiers, header )
 
     if hasModifiers then
         for m, value in pairs( newModifiers ) do
-            if node[ m ] then
+            local text = node[ m ] and value == 'text' and textSource( m, node[ m ], header, node.action )
+            if node[ m ] and ( value ~= 'text' or text ) then
                 local emulated
-                local o = value == 'text' and format( "%q", tostring( node[ m ] ) ) or SimToLua( node[ m ] )
+                local o = text or SimToLua( node[ m ] )
 
                 specialMods = specialMods .. " - " .. m .. " : " .. o
 
