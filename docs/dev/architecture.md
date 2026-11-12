@@ -234,7 +234,9 @@ hand the belief paired it to; a swing closing with no row runs only `land`, and 
 (`docs/dev/gaps.md` CO). `land` (who `target` only; aura audit C3) runs once per white swing of ours that landed: a
 settled wound, or a swing that closed with no row at all, at the swing's own time (live, a non-crit hit's amount is
 secret, so its row is background and only avoids are plain: a swing with no avoid seen is presumed landed; it is
-staged as `Obs.SwingSettled` with c = -1, which runs `land` only). The owner's order: an aura first, a usability flip
+staged as `Obs.SwingSettled` with c = -1, which runs `land` only). A reaction is folded after its time, so its aura reads
+answer as of that time (`I.AuraAsOf`, `Families/Auras.lua`: an aura applied later reads down, the last one fallen
+later reads up as it was). The owner's order: an aura first, a usability flip
 where it works, a reaction only where only an outcome reveals the span.
 
 `RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec/Abilities.lua`) is a spell the spellbook knows and the

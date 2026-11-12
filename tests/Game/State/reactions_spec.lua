@@ -256,7 +256,7 @@ describe("reactions", function()
             ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
             drain(10.5)
             assert.are.same({ 1, 1 }, { runs.landed, runs.swung })
-            assert.are.equal(10.47, W("landed")[2])
+            assert.are.equal(10, W("landed")[2]) -- at the swing's own time, not its row's (10.47)
             ctl.now = 20
             ctl.Fire("PLAYER_SWING", 2.6, 0)
             ctl.now = 20.47
@@ -273,6 +273,31 @@ describe("reactions", function()
             drain(32.1)
             assert.are.same({ 2, 2 }, { runs.landed, runs.swung }) -- landed, presumed; "swing" still needs a row
             assert.are.equal(30, W("landed")[2]) -- at the swing's own time
+            assert.are.equal(0, I.nowErrors)
+        end)
+
+        -- A landed swing's effects follow the auras up when it swung: a buff applied between the swing and its row
+        -- (0.47 s later) reads down, one that fell in between reads up with the stacks it had.
+        it("reads the auras as of the swing's time, not its row's", function()
+            local seen = {}
+            local r = reaction("landed", "target", "land")
+            r.now = function()
+                seen[#seen + 1] = { now, buff.spender_a.up, buff.spender_c.up, buff.spender_c.stack }
+                addStack("spender_c")
+            end
+            build({ r })
+            local A, C, cast = I.auras.bySpell[fs.SPENDER_A], I.auras.bySpell[fs.SPENDER_C], VS.Obs.CastSuccess
+            I.AuraModel(1, C, 5, 25, 2, 5, cast)
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            drain(10.1)
+            I.AuraModel(1, A, 10.2, 130, 1, 10.2, cast) -- after the swing, before its row
+            I.AuraModel(1, C, 0, 0, 0, 10.2, cast)
+            ctl.now = 10.47 -- the core band: final at once
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            drain(10.5)
+            assert.are.same({ { 10, false, true, 2 } }, seen)
+            assert.are.same({ 10, 25 }, { I.auras.applied[1][C], I.auras.exp0[1][C] }) -- written at the swing's time
             assert.are.equal(0, I.nowErrors)
         end)
 

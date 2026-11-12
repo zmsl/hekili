@@ -424,6 +424,31 @@ describe("Forever Paladin", function()
         assert.are.same({ 1326084, 4 }, { k.id, k.max_stack })
     end)
 
+    -- Audit C3: Unsealed Wrath's Echoes (wowsims talents_retribution.go applyUnsealedWrath): each landed white swing
+    -- stores a stack of the active seal's Echo and spends the other Echoes (the Retribution log: none at a Holy Strike).
+    it("stores the active seal's Echo at a landed main-hand swing, spending the others", function()
+        local r = w.reactions.unsealed_wrath
+        assert.are.same({ "target", "land", "main" }, { r.who, r.outcome, r.hand })
+        for _, f in ipairs({ r.now }) do
+            local e = ld.env(w)
+            e.talent = talents({ twist_of_light = 1 })
+            e.buff = buffs({ seal_of_command = true, echo_of_righteousness = true })
+            ld.run(f, e)
+            assert.are.same({ { "echo_of_command" } }, { e.added[1] and { e.added[1][1] } }, "adds the own")
+            assert.are.same({ "echo_of_righteousness" }, e.removed)
+            -- no talent, or no seal with an Echo up: nothing
+            e = ld.env(w)
+            e.buff = buffs({ seal_of_command = true })
+            ld.run(f, e)
+            assert.are.same({ {}, {} }, { e.added, e.removed })
+            e = ld.env(w)
+            e.talent = talents({ twist_of_light = 1 })
+            e.buff = buffs({ seal_of_the_crusader = true, echo_of_command = true })
+            ld.run(f, e)
+            assert.are.same({ {}, {} }, { e.added, e.removed })
+        end
+    end)
+
     it(
         "gives a landed Shieldsworn Holy Strike with a shield 4% of the maximum mana in `onLand` and the simulation's handler (audit C10), and Iron Creed's and the spell block's auras",
         function()

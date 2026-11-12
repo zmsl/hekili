@@ -43,6 +43,11 @@ local U = {
     hasteOn = {}, -- by aura: its `swingHaste` gain was applied and its fall not yet (pairs every gain with one fall)
     firstWalk = {}, -- by unit: the time of its first clean walk (Sources/Auras.lua), 0 none yet
     openFold = {}, -- by unit and aura: the I.folds of its last Cooldown Manager open (I.CastAura), 0 none
+    -- by unit and aura: its last fall (I.AuraAsOf): when, and the fallen application's applied time, expiry and stacks
+    fellAt = {},
+    fellFrom = {},
+    fellExp = {},
+    fellStacks = {},
 }
 I.auras = U
 -- The believed delta since the drain last delivered it (see `set` below); I.auraDelta for Game/API/Facade.lua.
@@ -91,12 +96,13 @@ I.OnBuild(function(def, now)
     for u = 1, U.n do
         U.token[u], U.index[units[u]] = units[u], u
         local e, ap, st, ins, hm, sq, rc = {}, {}, {}, {}, {}, {}, {}
-        local ord = {}
+        local ord, fa, ff, fe, fs = {}, {}, {}, {}, {}
         for j = 1, U.nAura do
             e[j], ap[j], st[j], ins[j], hm[j], sq[j] = 0, 0, 0, 0, u ~= 1, 0
             rc[j] = I.NewBelief("aura " .. units[u] .. " " .. tostring(auras[j].key or U.id[j]))
-            ord[j] = 0
+            ord[j], fa[j], ff[j], fe[j], fs[j] = 0, 0, 0, 0, 0
         end
+        U.fellAt[u], U.fellFrom[u], U.fellExp[u], U.fellStacks[u] = fa, ff, fe, fs
         U.exp0[u], U.applied[u], U.stacks[u], U.inst[u], U.harm[u], U.seq[u], U.rec[u] = e, ap, st, ins, hm, sq, rc
         U.ord[u], U.ordN[u], U.gen[u] = ord, 0, 0
         U.firstWalk[u] = 0
@@ -192,6 +198,8 @@ local function set(u, j, expires, applied, stacks, t, origin, event, harmful)
     if expires <= 0 then
         if was > 0 then
             push(D.rem, D.nRem, u, inst0)
+            U.fellAt[u][j], U.fellFrom[u][j] = was < t and was or t, U.applied[u][j] -- a fall by time: when it ran out
+            U.fellExp[u][j], U.fellStacks[u][j] = was, wasStacks
         end
         U.inst[u][j] = 0
         expires, applied, stacks = 0, 0, 0
@@ -283,6 +291,23 @@ function I.CastAura(unit, spellID, t)
         end
     end
     return VS.Aura(unit, spellID, t)
+end
+
+--- I.CastAura as of a past t (a reaction folded after its outcome: Families/Now.lua): an application later than t
+--- reads down, and the last one fallen after t reads up as it was. Expiry (nil: down), stacks, applied. Allocates
+--- nothing.
+--- shortcut: one fall deep, and a refresh after t (a later applied time) reads down; upgrade with a per-aura history
+--- if a reaction shows either.
+function I.AuraAsOf(unit, spellID, t)
+    local rec, stacks, applied = I.CastAura(unit, spellID, t)
+    if rec and applied <= t then
+        return rec.est, stacks, applied
+    end
+    local u, j = U.index[unit], U.bySpell[spellID]
+    if u and j and U.fellFrom[u][j] <= t and U.fellAt[u][j] > t then
+        return U.fellExp[u][j], U.fellStacks[u][j], U.fellFrom[u][j]
+    end
+    return nil
 end
 
 --- Our own cast changed aura j on unit u (spec §5.3): a `modelled` expiry with its stacks and applied time. A plain

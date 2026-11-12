@@ -27,6 +27,7 @@
 - Mage: Fingers of Frost is followed under the id the game shows, Combustion ends with its crit counter, and a crit on a Fire or Frost spell now counts Master of Elements' mana refund.
 - Paladin: a landed Shieldsworn Holy Strike returns its mana once target hit data is readable.
 - Mage: Fire Blast spends a Fingers of Frost charge at the cast.
+- Retribution Paladins: each landed melee swing now stores an Echo of the seal that was up when you swung, even when you change seals before the hit shows, so a seal twist is timed from the right Echo.
 
 ### Known issues
 
