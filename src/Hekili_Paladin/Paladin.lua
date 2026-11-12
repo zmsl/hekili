@@ -832,9 +832,13 @@ spec:RegisterWindow("move2", {
 -- own Retribution page picks its APL (ui/specs/paladin/retribution/spec.ts: `holyShock` talented, the Holy Shock list):
 -- Retribution ahead with Holy Shock taken (wowsims's Holy Shock build is 23/0/28) runs Holy Shock (wowsims.com); any other
 -- Retribution build runs the default, Retribution (wowsims.com). A Holy-dominant build stays on Holy.
-spec:RegisterSelector("holy_shock", { spec = "retribution", pack = "Holy Shock (wowsims.com)" }, function(tab1, tab2, tab3)
-    return tab3 > tab1 and tab3 > tab2 and talent.holy_shock.rank > 0
-end)
+spec:RegisterSelector(
+    "holy_shock",
+    { spec = "retribution", pack = "Holy Shock (wowsims.com)" },
+    function(tab1, tab2, tab3)
+        return tab3 > tab1 and tab3 > tab2 and talent.holy_shock.rank > 0
+    end
+)
 
 -- The priorities, one a spec, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit
 -- those (a wowsims.com pack: its recipe, tools/wowsims/specs/) and run it, never these blocks

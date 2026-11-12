@@ -1,5 +1,20 @@
 -- tools/wowsims/specs/paladin_holy_shock.lua (new packs, owner-approved 2026-11-12): Holy Shock (wowsims.com)'s
 -- wowsims/forever request and translation.
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at the pin: builds/holy_shock.siml (its talents
+-- 05025210221021--0523330110130033, 23 Holy / 28 Retribution, gear holy_shock.gear.siml, Engineering and
+-- Blacksmithing) in paladin_retribution.lua's player shape (Human, 100 ms, 25 yd), the list
+-- ui/specs/paladin/retribution/apls/holy_shock.apl.siml. Like its sibling it carries no consumables or raid buffs.
+-- Spec binding: Retribution's second pack, picked by the talents (Paladin.lua's `holy_shock` selector: Retribution the
+-- most points and Holy Shock taken), as wowsims's own Retribution page picks this list (spec.ts `holyShock`).
+-- Disagreements (P7; floor 0.97), decisions on-GCD 0.977 (43 of 44) top [seal_of_righteousness -> consecration 1]:
+--   2.0 (log): wowsims's move_to_melee sequence (its group 4, step 4) casts the seal on the way in; ours, with that
+--   sequence omitted, follows the priority, Consecration first. A deviation (below).
+-- Deviations: the item swaps (precombat itemSwap, the mcp_swap group: wowsims swaps a Manual Crowd Pummeler in) are
+-- omitted, so the request's gear stays on; the move_to_melee sequence of a group reference and autocast (none in the
+-- log) are omitted (the pack's 14 `# Omitted:` lines); wowsims casts and logs Holy Shock as rank 3's damage row 25902
+-- (the DB2's 20930 is a dummy the server turns into 25902 or the heal 25903), so the map names 25902 and the replay
+-- renames it to the kit's 20930 (wowsims_paladin_spec.lua's `alias`, tests/Game/harness/replay.lua).
+-- Loops (20 fights, seeds 1-20 / 21-40 / 41-60): agreement .998 / .999 / .997, flicker 0 x3, heldReady 65 / 70 / 94.
 return {
     class = "PALADIN",
     pack = "Holy Shock (wowsims.com)",

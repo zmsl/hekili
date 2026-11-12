@@ -45,9 +45,11 @@ local function set(...)
     return out
 end
 
--- Holy Shock (wowsims.com)'s floors (new pack, 2026-11-12): replay decisions on-GCD, its flicker ceiling, the live
--- limits per level.
-local HS_FLOOR, HS_FLICKER, HS_LIVE_LIMIT = 0, 99, { [10] = 99, [40] = 99, [60] = 99 }
+-- Holy Shock (wowsims.com)'s floors (new pack, 2026-11-12, R6 first measurement): replay decisions on-GCD 0.97 (0.977,
+-- 43 of 44: seal_of_righteousness -> consecration once, the recipe's header), its ON flicker ceiling 0.7 (0.67/min
+-- measured, 2 flips), the live limits per level: L40 4.8 and L60 4.8 under the 6 s bar; L10 8.4 (cause not yet
+-- traced; expected Retribution L10's shape: Holy Strike and Judgement cooling, Seal of Righteousness up)
+local HS_FLOOR, HS_FLICKER, HS_LIVE_LIMIT = 0.97, 0.7, { [10] = 8.4, [40] = 6, [60] = 6 }
 
 -- wowsims's Paladin knows the 879 ranks of Exorcism only (Undead or Demon targets; its target is Mechanical).
 local EXORCISM_ANY = { 415068, 415069, 415070, 415071, 415072, 415073 }

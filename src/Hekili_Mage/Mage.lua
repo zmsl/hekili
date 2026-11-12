@@ -1,5 +1,5 @@
 -- Hekili_Mage/Mage.lua
--- The Forever Mage (Arcane and Fire, and an idle Frost, one spec a talent tree: Hekili:NewClass): the Mage kit with
+-- The Forever Mage (Arcane, Fire and Frost, one spec a talent tree: Hekili:NewClass): the Mage kit with
 -- Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever DB2 at build 1.60.1.70338,
 -- wowdb), mana under the five-second rule (`fsr`), the casts and the two channels (Arcane Missiles and Evocation:
 -- `channeled`, `tick_time`), Arcane Blast's charges (each +175% to its own cost, a fraction of base mana), Missile
@@ -7,9 +7,10 @@
 -- spent by each damage cast, Frost Channeling's cheaper Frost casts, Fire Vulnerability's stacks from Scorch,
 -- Evocation's mana, Presence of Mind, Arcane Power's +30% cost, Clearcasting as a charged cost modifier, Counterspell,
 -- and the school lockouts (each spell refuses while an interrupt has its school locked out: Hekili_Shared's
--- locked_out_<school>). The priorities are the wowsims.com packs (Arcane, Fire, and Frostfire as Fire's second by its
--- talents' points; the abilities and auras below are what wowsims/forever's arcane.apl.json, deepFire.apl.json and
--- ffb.apl.json cast or read).
+-- locked_out_<school>), and the Frost kit (Winter's Chill, Cone of Cold, Ice Lance, Ice Barrier, Cold Snap, Blizzard,
+-- Frost Nova, Ice Block). The priorities are the wowsims.com packs (Arcane, Fire, Frostfire as Fire's second by its
+-- talents' points, and Frost; the abilities and auras below are what wowsims/forever's arcane.apl.json,
+-- deepFire.apl.json, ffb.apl.json and frost.apl.json cast or read, and the Frost spells a Frost player presses).
 -- Research: docs/research/2026-10-15-forever-mage/research.md.
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (ruling P6; in-game checks): Arcane Wrath
 -- (1326079-1326082: ranks, levels, costs, 3.5 s cast, 6 s cooldown and its class mask), the talents' per-rank values
@@ -103,6 +104,10 @@ local ICE_BARRIER = { 11426, 13031, 13032, 13033 }
 local ICE_BARRIER_COST = { 305, 360, 420, 480 }
 local BLIZZARD = { 10, 6141, 8427, 10185, 10186, 10187 }
 local BLIZZARD_COST = { 320, 520, 720, 935, 1160, 1400 }
+local FROST_NOVA = { 122, 865, 6131, 10230 }
+local FROST_NOVA_COST = { 55, 85, 115, 145 }
+local ICE_BLOCK = { 11958 }
+local ICE_BLOCK_COST = { 15 }
 
 -- The talents' per-rank values (wowsims's data; the DB2 carries the top rank's on rank 1): Improved Fireball and
 -- Improved Frostbolt -0.1 s cast a rank; Wake of Fire (11078, wowsims's Improved Fire Blast) -1 / -2 s Fire Blast
@@ -254,7 +259,9 @@ spec:RegisterCostMod({
     aura = "clearcasting",
     pct = -1,
     charges = 1,
-    spells = { 400574, 2136, 133, 116, 401502, 11366, 2948, 1326079 },
+    -- Cone of Cold, Ice Lance, Blizzard and Frost Nova too (the mask's bits 9, 17, 7, 6; Ice Barrier and Ice Block not):
+    -- wowsims's Frost log casts Cone of Cold for 0 under it (72.00)
+    spells = { 400574, 2136, 133, 116, 401502, 11366, 2948, 1326079, 120, 1312002, 10, 122 },
 })
 spec:RegisterCostMod({ aura = "clearcasting", pct = -1, charges = 1, spells = { 5143 }, unless = "missile_barrage" })
 spec:RegisterCostMod({ aura = "missile_barrage", pct = -1, charges = 1, spells = { 5143 } })
@@ -685,11 +692,8 @@ spec:RegisterAuras({
     -- full 60 s however soon the shield breaks: wowsims ice_barrier.go), which the pack's Ice Barrier line reads.
     ice_barrier = { id = 11426, copy = { 13031, 13032, 13033 }, duration = 60, max_stack = 1 },
     frigid_power = { id = 1326891, duration = 60, max_stack = 1 },
+    ice_block = { id = 11958, duration = 10, max_stack = 1 },
 })
-
--- Clearcasting's mask (12536) names Cone of Cold, Ice Lance and Blizzard too (Ice Barrier not): wowsims's Frost log
--- casts Cone of Cold for 0 under it (72.00).
-spec:RegisterCostMod({ aura = "clearcasting", pct = -1, charges = 1, spells = { 120, 1312002, 10 } })
 
 -- Ice Lance's or Cone of Cold's `now` or `handler`: a Fingers of Frost charge spent (a damage cast). Ice Lance on a
 -- Frozen target (a charge up) adds a Winter's Chill stack first (wowsims rolls it at the cast's result, the charge still
@@ -715,10 +719,12 @@ local function coned()
         removeDebuff("target", "winters_chill")
     end
 end
--- Cold Snap: every Frost-only cooldown ends (wowsims cold_snap.go; of the kit's, Cone of Cold and Ice Barrier).
+-- Cold Snap: every Frost-only cooldown ends (wowsims cold_snap.go: Frost Nova, Cone of Cold, Ice Block and Ice Barrier).
 local function snapped()
     return function()
+        setCooldown("frost_nova", 0)
         setCooldown("cone_of_cold", 0)
+        setCooldown("ice_block", 0)
         setCooldown("ice_barrier", 0)
     end
 end
@@ -726,6 +732,11 @@ local function barriered()
     return function()
         applyBuff("ice_barrier")
         applyBuff("frigid_power")
+    end
+end
+local function blocked()
+    return function()
+        applyBuff("ice_block")
     end
 end
 
@@ -791,7 +802,7 @@ spec:RegisterAbilities({
         handler = barriered(),
     },
 
-    -- Off the GCD; 10 minutes (DB2 RecoveryTime).
+    -- Off the GCD; 10 minutes (DB2 RecoveryTime; the pin's row: CooldownMs 600000, no GCD).
     cold_snap = {
         id = 12472,
         cast = 0,
@@ -822,6 +833,45 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(BLIZZARD),
         usable = unlocked("frost"),
+    },
+
+    -- No pack line casts these two; a Frost player presses them (wowsims frost_nova.go, ice_block.go; the pin's rows:
+    -- Frost Nova 25 s, less Improved Frost Nova's 2 s a rank; Ice Block 300 s, 15 mana, its 10 s self aura).
+    frost_nova = {
+        id = 122,
+        school = "frost",
+        copy = rest(FROST_NOVA),
+        cast = 0,
+        cooldown = function()
+            return 25 - 2 * talent.improved_frost_nova.rank
+        end,
+        gcd = "spell",
+
+        spend = frostChanneled(FROST_NOVA_COST, FROST_NOVA),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(FROST_NOVA),
+        usable = unlocked("frost"),
+        onCrit = mastered(FROST_NOVA_COST, FROST_NOVA),
+    },
+
+    ice_block = {
+        id = 11958,
+        cast = 0,
+        cooldown = 300,
+        gcd = "spell",
+
+        spend = frostChanneled(ICE_BLOCK_COST, ICE_BLOCK),
+        spendType = "mana",
+
+        startsCombat = false,
+        toggle = "defensives",
+        known = knows(ICE_BLOCK),
+        usable = unlocked("frost"),
+
+        now = blocked(),
+        handler = blocked(),
     },
 })
 

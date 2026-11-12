@@ -78,7 +78,9 @@ local PACKS = {
     -- the re-timed fight
     { "mage_fire", "Fire", "Fire (wowsims.com)", 0.96, 6.2, 0.34 },
     { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8, 0 },
-    { "mage_frost", "Frost", "Frost (wowsims.com)", 0, 99, 99 }, -- PROVISIONAL
+    -- Frost (new pack, 2026-11-12, R6 first measurement): 0.93 (0.934, 57 of 61; the recipe's header names the misses),
+    -- LIVE60 6.0 (the 6 s bar: 6.0 measured, L10 0.2, L40 0.0), flicker 0 (0.00/min measured)
+    { "mage_frost", "Frost", "Frost (wowsims.com)", 0.93, 6.0, 0 },
 }
 
 describe("the Mage wowsims.com packs #slow #wowsims", function()
