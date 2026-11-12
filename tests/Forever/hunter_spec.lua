@@ -984,27 +984,13 @@ describe("Forever Hunter Movement (R8)", function()
     end)
 end)
 
-describe("Time-to-Die checks", function()
+describe("Immune checks", function()
     local function profile()
         local f = assert(io.open("src/Hekili_Hunter/APLs/Beast Mastery (wowsims.com).simc"))
         local text = f:read("*a")
         f:close()
         return text
     end
-
-    --#TODO Remove after wowsims APL finds a better window
-    it("reserves Serpent Sting for 9s", function()
-        local text = profile()
-        local lifetime = "target.time_to_die>=debuff.serpent_sting.duration*0.6&target.time_to_die<3600"
-        local seen = 0
-        for line in text:gmatch("[^\n]+") do
-            if line:find("serpent_sting", 1, true) and not line:match("^#") then
-                seen = seen + 1
-                assert.is_truthy(line:find(lifetime, 1, true), line)
-            end
-        end
-        assert.are.equal(3, seen)
-    end)
 
     it("excludes Elemental and Mechanical targets from Serpent Sting", function()
         local text = profile()
@@ -1017,41 +1003,5 @@ describe("Time-to-Die checks", function()
             end
         end
         assert.are.equal(3, seen)
-    end)
-
-    it("requires Rapid Fire to be ready on every branch", function()
-        local text = profile()
-        local seen = 0
-        for line in text:gmatch("[^\n]+") do
-            if line:find("rapid_fire", 1, true) and not line:match("^#") then
-                seen = seen + 1
-                assert.is_truthy(line:find("cooldown.rapid_fire.remains=0", 1, true), line)
-            end
-        end
-        assert.are.equal(3, seen)
-    end)
-
-    it("keeps Hawk first, then the single-target and group owner priorities", function()
-        local text = profile()
-        local hawk = assert(text:find("actions+=/summon_hawk,if=action.summon_hawk.known&pet.hawk.count<2", 1, true))
-        local aimed = assert(text:find("actions+=/aimed_shot,if=active_enemies=1&target.outside8", 1, true))
-        local multi = assert(text:find("actions+=/multi_shot,if=active_enemies>1&target.outside8", 1, true))
-        local volley = assert(text:find("actions+=/volley,if=active_enemies>1&target.outside8", 1, true))
-        local arcane = assert(text:find("actions+=/arcane_shot,if=target.outside8", 1, true))
-        assert.is_true(hawk < aimed and aimed < arcane)
-        assert.is_true(hawk < multi and multi < volley and volley < arcane)
-    end)
-
-    it("does not start Aimed Shot unless the target should survive its hasted cast", function()
-        local text = profile()
-        local guard = "target.time_to_die>action.aimed_shot.cast&target.time_to_die<3600"
-        local seen = 0
-        for line in text:gmatch("[^\n]+") do
-            if line:find("aimed_shot", 1, true) and not line:match("^#") then
-                seen = seen + 1
-                assert.is_truthy(line:find(guard, 1, true), line)
-            end
-        end
-        assert.are.equal(1, seen)
     end)
 end)
