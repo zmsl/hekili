@@ -4244,7 +4244,8 @@ found = true end
                                         nameplateRange = {
                                             type = "range",
                                             name = L["Enemy Range Radius"],
-                                            desc = L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\n"
+                                            desc = L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. "
+                                                .. "Beyond 10 yards, only enemies in combat are counted.\n\n"
                                                 .. "This setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."],
                                             width = "full",
                                             order = 0.1,

@@ -287,6 +287,8 @@ end )
 
 
 local RC = Facade.LibRangeCheck -- the one range source (range plan R2): LibRangeCheck through the facade
+local isSecret = Facade.issecretvalue
+local NEAR_YD = 10 -- caster range (L644): within this many yards a plate counts in or out of combat, as melee always did
 local LSR = LibStub( "SpellRange-1.0" )
 
 local lastCount = 1
@@ -443,6 +445,16 @@ do
 
                                 if debugging and excluded then
                                     details = format( "%s\n    - Excluded by range (%d > %d).", details, maxR, checkPlates )
+                                end
+
+                                -- caster range (L644): past the near band a plate counts only while plainly in combat
+                                if not excluded and checkPlates > NEAR_YD and ( maxR == nil or maxR > NEAR_YD ) then
+                                    local engaged = UnitAffectingCombat( unit )
+                                    excluded = isSecret( engaged ) or engaged ~= true
+
+                                    if debugging and excluded then
+                                        details = format( "%s\n    - Excluded: not in combat beyond %d yd.", details, NEAR_YD )
+                                    end
                                 end
                             end
 

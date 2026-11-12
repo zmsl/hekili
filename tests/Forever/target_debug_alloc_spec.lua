@@ -79,6 +79,24 @@ describe("Engine/Sim/Targets.lua's nameplate log", function()
         assert.are.same({ 0, 0, 0 }, got, "bytes per count at 0/5/15 plates")
     end)
 
+    -- caster range (L644): the engaged rule beyond 10 yd (a radius of 40, as a ranged spec's default) reads each far
+    -- plate's combat answer and allocates nothing, in combat or out
+    it("counts 15 far plates by their combat answer, allocating nothing per count", function()
+        H.Hekili.ActiveDebug = false
+        H.Hekili.DB.profile.specs[ww.SPEC].nameplateRange = 40
+        plates(15)
+        local counts, got = {}, {}
+        for _, engaged in ipairs({ true, false }) do
+            for i = 1, 15 do
+                H.ctl.distance["nameplate" .. i], H.ctl.unitCombat["nameplate" .. i] = 30, engaged
+            end
+            counts[#counts + 1] = H.ns.getNumberTargets(true)
+            got[#got + 1] = bytes()
+        end
+        assert.are.same({ 16, 1 }, counts)
+        assert.are.same({ 0, 0 }, got, "bytes per count at 15 far plates, in combat and out")
+    end)
+
     it("keeps the log, a line per plate, while debug is on", function()
         plates(15)
         H.Hekili.ActiveDebug = true

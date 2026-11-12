@@ -472,7 +472,7 @@ L["If checked, enemy nameplates will be displayed and can be used to count enemy
 L["Show All Nameplates"] = true
 L["If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets."] = true
 L["Enemy Range Radius"] = true
-L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."] = true
+L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."] = true
 L["Allow Target Swaps |TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t"] = true
 L["When target swapping is enabled, an icon (|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t) may be shown when you should use an ability on a different target.\n\nThis works well for some specs that simply want to apply a debuff to another target, but can be less-effective for specializations that are concerned with maintaining dots/debuffs based on their durations.\n\nThis feature is targeted for improvement in a future update."] = true
 L["Secondary Targets"] = true
