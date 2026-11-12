@@ -147,8 +147,9 @@ end
 --- The length of a GCD that ability a (0: none known, the last opener's kind) opens at t: its declared `gcdTime`,
 --- else its kind's learned length, else 1.0 for the totem kind and max(1.0, 1.5 / spell haste) for the spell kind; a
 --- spell-kind one then x the GCD modifiers up in its scope (aura audit C12), floored at 1.0 (wowsims: the multiplier
---- before the haste and the floor; the learned length already holds the haste). Allocates nothing.
-function I.GcdLen(a, t)
+--- before the haste and the floor; the learned length already holds the haste). The modifiers' auras are judged at
+--- `t0` (default t), the GCD's opening: a gain after it, folded before its cast, does not cut it. Allocates nothing.
+function I.GcdLen(a, t, t0)
     local kind = I.gcdKindLast
     if a > 0 then
         local g = gcdTime(a, t)
@@ -168,7 +169,7 @@ function I.GcdLen(a, t)
         local h = VS.SpellHaste and VS.SpellHaste(t).est or 0
         len = max(1.0, 1.5 / (1 + (h > 0 and h or 0) / 100)) -- 1 + h/100 >= 1: h > 0 checked
     end
-    local f = a > 0 and GM.n > 0 and gcdMult(a, t) or 1
+    local f = a > 0 and GM.n > 0 and gcdMult(a, t0 or t) or 1
     return f ~= 1 and max(1.0, len * f) or len
 end
 
@@ -273,17 +274,17 @@ local function opener(a, at, t)
         return -- off the GCD (an on-next-swing strike's success at its swing): never an opener
     end
     if I.gcdStart > 0 and I.gcdOwner == 0 and at >= gcdEdge and at - gcdEdge <= GCD_EDGE then
-        I.gcdOwner, I.gcdKindLast, gcdCut = a, A.gcdKind[a], cutAt(a, t)
+        I.gcdOwner, I.gcdKindLast, gcdCut = a, A.gcdKind[a], cutAt(a, gcdEdge)
         if not I.gcdRead then
-            I.gcdDur = quantise(I.GcdLen(a, t))
+            I.gcdDur = quantise(I.GcdLen(a, t, gcdEdge))
             pinGcd(t)
         end
         lastGcdA = 0
     else
         lastGcdA, lastGcdT = a, at
-        I.gcdOwner, I.gcdKindLast, I.gcdRead, gcdCut = a, A.gcdKind[a], false, cutAt(a, t)
+        I.gcdOwner, I.gcdKindLast, I.gcdRead, gcdCut = a, A.gcdKind[a], false, cutAt(a, at)
         -- no pinned sample: the gcd belief's modelled one is Families/Now.lua's, and only an edge pins it
-        I.gcdStart, I.gcdDur, gcdEdge = quantise(at), quantise(I.GcdLen(a, t)), at
+        I.gcdStart, I.gcdDur, gcdEdge = quantise(at), quantise(I.GcdLen(a, t, at)), at
     end
 end
 
@@ -360,11 +361,11 @@ I.On(Obs.Cooldown, function(o, t)
                 owner = lastGcdA
             end
             lastGcdA = 0
-            I.gcdOwner, I.gcdRead, gcdCut = owner, false, cutAt(owner, t)
+            I.gcdOwner, I.gcdRead, gcdCut = owner, false, cutAt(owner, o.t)
             if owner > 0 then
                 I.gcdKindLast = A.gcdKind[owner]
             end
-            I.gcdStart, I.gcdDur, gcdEdge = quantise(o.t), quantise(I.GcdLen(owner, t)), o.t
+            I.gcdStart, I.gcdDur, gcdEdge = quantise(o.t), quantise(I.GcdLen(owner, t, o.t)), o.t
             pinGcd(t)
         elseif I.gcdStart > 0 and abs(o.t - gcdEdge) <= GCD_EDGE then
             -- a fall at the current GCD's opening is the last one's, seen late (read only on the next press's

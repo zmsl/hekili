@@ -876,6 +876,30 @@ describe("now handlers", function()
         assert.are.same({ 0, 0 }, I.gcdLearned)
     end)
 
+    -- A modifier's aura gained after a GCD opened does not cut it, though the cast folds after the gain (a crit's
+    -- proc a spell batch after the cast; wowsims's Balance log: Insect Swarm at 3.00 after Moonfire's 1.50, the buff
+    -- at 1.51).
+    it("judges a GCD modifier at the GCD's opening, not at the fold of its cast (C12)", function()
+        h.Class.auras.grace_test = { key = "grace_test", id = 4701, duration = 3 }
+        ns.raceMods = {
+            maxMods = {},
+            costMods = {},
+            gcdMods = { { aura = "grace_test", pct = -0.1, spells = { fs.SPENDER_C } } },
+        }
+        ns.ResourceIsPoints = function()
+            return false
+        end
+        start()
+        ctl.now = 10.5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- staged until the frame's flush
+        ctl.now = 10.51
+        ctl.auras.player.HELPFUL[1] = { spellId = 4701, expirationTime = 13.51, duration = 3, applications = 1 }
+        ctl.Fire("UNIT_AURA", "player")
+        ctl.Tick(10.51)
+        VS.Drain(10.52)
+        assert.is_true(VS.Gcd(10.6).est >= 12 - 0.002, tostring(VS.Gcd(10.6).est)) -- 1.5 s, not 1.35
+    end)
+
     it(
         "spends a charge from the count caught up to the cast: recharges finished since the last sample count",
         function()
