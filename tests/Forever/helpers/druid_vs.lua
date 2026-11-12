@@ -44,6 +44,7 @@ function M.boot(ns, api, edit)
             onNextSwing = a.onNextSwing,
             startsCombat = ld.run(a.startsCombat, e), -- Rows.lua credits a strike's hit to its cast
             refundOnAvoid = a.refundOnAvoid, -- an avoid's refund (Families/Now.lua)
+            ladder = a.ladder, -- `false`: its answers are no rungs (Families/Resources.lua)
             expects = a.expects, -- the declared outcome (Families/Expect.lua): which rows its ticket takes
             velocity = a.velocity,
             school = a.school,

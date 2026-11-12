@@ -747,7 +747,7 @@ describe("Forever Druid", function()
             local e = ld.env(w)
             e.rage.current = 40
             ld.run(w.abilities.bear_form.now, e)
-            assert.are.same({ { 40, "rage" } }, e.spent)
+            assert.are.same({ { "rage", 0, 0 } }, e.reset) -- all rage gone, untalented no Furor
             assert.are.same(
                 { "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form", "maul" },
                 e.removed
@@ -762,10 +762,24 @@ describe("Forever Druid", function()
                 assert.are.same({ { x[2], "energy" }, { x[2], "energy" } }, e.spent, "Furor " .. x[1])
                 assert.are.same({ {}, { "cat_form", "cat_form" } }, { e.gained, e.applied })
             end
-            e = ld.env(w)
-            e.rage.current = 30
-            e.swap_form("bear_form")
-            assert.are.same({ { 30, "rage" } }, e.spent)
+            -- Furor's 10 into Bear (wowsims furorRageOnEnterBear): 20% a rank, so the belief's `now` sets [0, 10] at 1-4/5
+            -- and 10 at 5/5; the sim, from its floor, gains it at 5/5 only
+            for _, x in ipairs({
+                { 0, { "rage", 0, 0 }, {} },
+                { 3, { "rage", 0, 10 }, {} },
+                { 5, { "rage", 10, 0 }, { { 10, "rage" } } },
+            }) do
+                local talent = setmetatable({ furor = { rank = x[1] } }, getmetatable(rank(0)))
+                e = ld.env(w)
+                e.talent = talent
+                ld.run(w.abilities.bear_form.now, e)
+                assert.are.same({ x[2] }, e.reset, "Furor " .. x[1])
+                e = ld.env(w)
+                e.talent = talent
+                e.rage.current = 30
+                e.swap_form("bear_form")
+                assert.are.same({ { { 30, "rage" } }, x[3] }, { e.spent, e.gained }, "Furor " .. x[1])
+            end
         end
     )
 
@@ -1164,10 +1178,10 @@ describe("Forever Druid in VirtualState's now context", function()
         I.Sources.Direct(VS.Obs.Swing, 8, 1, 2.5, 4) -- PLAYER_SWING, then Rows.lua's landed wound
         I.Sources.Direct(VS.Obs.Swing, 8, 1, 0, 1)
         VS.Drain(8)
-        near(11.25, power(1, 8))
+        near(10 + 11.25, power(1, 8)) -- Furor 5/5's certain 10 at the entry, then the swing
         cast(5229, 9) -- Enrage: 10 now, 2 a second
         I.Settle(12)
-        near(11.25 + 10 + 6, power(1, 12))
+        near(10 + 11.25 + 10 + 6, power(1, 12))
         cast(414644, 13) -- Lacerate twice: 2 stacks
         cast(414644, 14)
         assert.are.equal(2, select(2, VS.Aura("target", 414644, 14.1)))
@@ -1250,6 +1264,75 @@ describe("Forever Druid in VirtualState's now context", function()
                 assert.are.equal(0, I.nowErrors, tostring(I.nowError))
             end
         )
+    end
+
+    -- Rage outside Bear Form (owner 2026-11-12: Cat Form out of combat, the client at 0, the belief pinned at 5). wowsims's
+    -- Cat entry leaves rage alone (forms.go RegisterCatFormAura) and wowsims has no out-of-combat decay; the class file's
+    -- 1.25 a second, stepped and front-loaded, runs on the swing-paid pool in any form (Resources.lua I.OnAdvance).
+    -- Bear at 2, a swing's 11.25 at 3, Cat at 4 (in combat: kept), the combat ends at 5: beats at 5..13.
+    local function bearSwingCat()
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+        cast(5487, 2)
+        I.Sources.Direct(VS.Obs.Swing, 3, 1, 2.5, 4)
+        I.Sources.Direct(VS.Obs.Swing, 3, 1, 0, 1)
+        VS.Drain(3)
+        cast(768, 4)
+        near(11.25, power(1, 4.1)) -- Cat Form keeps the rage (wowsims)
+    end
+    local function settle(t)
+        I.Settle(t)
+        return VS.Power(1, t)
+    end
+
+    it("decays rage out of combat in Cat Form at 1.25 a second to 0, lo and hi with it", function()
+        bearSwingCat()
+        I.Sources.Direct(VS.Obs.CombatEnd, 5)
+        VS.Drain(5)
+        near(10, settle(5.5).est) -- the first quantum at once
+        -- read ahead of the fold (no drain since 5.5): the projection takes the quanta the fold will
+        near(5, VS.Power(1, 9.5).est) -- beats at 5, 6, 7, 8, 9
+        near(5, settle(9.5).est)
+        local r = settle(13.5)
+        assert.are.same({ 0, 0 }, { r.est, r.lo })
+        r = VS.Power(1, 100) -- the top too, projected: 100 at most, 80 s
+        assert.are.same({ 0, 0, 0 }, { r.est, r.lo, r.hi })
+        r = settle(100)
+        assert.are.same({ 0, 0, 0 }, { r.est, r.lo, r.hi })
+        assert.are.equal(0, I.nowErrors, tostring(I.nowError))
+    end)
+
+    -- Feral Charge (1238122) is the 5-rage spender whose DB2 stance mask holds Cat Form too: the client's yes there is no
+    -- rage rung (`ladder = false`), so the poll repeating it every pass cannot hold the floor at 5 (the owner's P=5.00#1).
+    it("takes no rage floor from Feral Charge's answers in Cat Form out of combat", function()
+        bearSwingCat()
+        I.Sources.Direct(VS.Obs.CombatEnd, 5)
+        VS.Drain(5)
+        local fc
+        for a = 1, I.ab.n do
+            if I.ab.key[a] == "feral_charge" then
+                fc = a
+            end
+        end
+        for t = 14, 20 do -- the usability poll's yes, every pass
+            I.Sources.Direct(VS.Obs.Usable, t, fc, 1, 0)
+            VS.Drain(t)
+        end
+        local r = VS.Power(1, 20)
+        assert.are.same({ 0, 0 }, { r.est, r.lo })
+    end)
+
+    -- Into Bear Form (wowsims forms.go registerShapeshiftSpell, furorRageOnEnterBear): all rage goes, then Furor's 10
+    -- (17057's energize) at its rank's chance, 20% a rank (17056 effect 1): certain at 5/5, an unseen roll at 1-4/5 (the
+    -- floor, the top 10 higher), none untalented.
+    for _, x in ipairs({ { 0, { 0, 0, 0 } }, { 3, { 0, 0, 10 } }, { 5, { 10, 10, 10 } } }) do
+        it(("sets rage on a Cat to Bear shift with Furor %d/5 to [%d, %d]"):format(x[1], x[2][2], x[2][3]), function()
+            bearSwingCat()
+            I.SetTalentRank(I.talents.bySpell[17056], x[1])
+            cast(5487, 5)
+            local r = VS.Power(1, 5.1)
+            assert.are.same(x[2], { r.est, r.lo, r.hi })
+            assert.are.equal(0, I.nowErrors, tostring(I.nowError))
+        end)
     end
 
     -- wowsims talents_balance.go applyNaturesGrace, its Balance log: under Nature's Grace a GCD takes the 10% cast speed

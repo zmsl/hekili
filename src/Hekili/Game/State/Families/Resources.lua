@@ -671,7 +671,8 @@ local function decayFrom(r, from, to)
 end
 
 -- One stepped decay quantum of slot r at t: the interval down by decay x interval, never below rest, as a `modelled`
--- sample at t, kept out of the regen measurement; the next one an interval later, none once the estimate rests.
+-- sample at t, kept out of the regen measurement; the next one an interval later, none once the estimate rests (the
+-- top then falls continuously: I.OnAdvance).
 local function beat(r, t)
     local rest, step, before = R.rest[r], R.decay[r] * R.decayIv[r], R.est0[r]
     if before > rest then
@@ -729,6 +730,9 @@ I.OnAdvance(function(from, to)
         local d = R.decay[r]
         local start = d > 0 and decayFrom(r, from, to)
         if R.decayIv[r] > 0 then
+            -- quanta while the estimate is above rest; with it resting, a top above it falls continuously (never under
+            -- the stepped truth, which loses each quantum at its window's start), so lo and hi reach rest too
+            local idle = R.decayNext[r] == 0 and R.est0[r] <= R.rest[r]
             if not start then
                 R.decayNext[r] = 0
             elseif start > from or R.decayNext[r] == 0 and R.est0[r] > R.rest[r] then
@@ -736,6 +740,11 @@ I.OnAdvance(function(from, to)
             end
             while R.decayNext[r] > 0 and R.decayNext[r] <= to do
                 beat(r, R.decayNext[r])
+            end
+            local rest, h = R.rest[r], R.hi0[r]
+            if idle and start and h > rest then
+                h = h - d * (to - start)
+                R.hi0[r] = h > rest and h or rest
             end
         elseif start then
             local rest, drop, before = R.rest[r], d * (to - start), R.est0[r]
@@ -1857,9 +1866,48 @@ function I.Refund(r, d, t)
     end
 end
 
+--- Our own cast set slot r to [v, v + width] (`width`: what a roll the belief does not see may add): the estimate
+--- takes the floor, moved as a cast's change (I.ResourceShift), and the interval is exactly that. Allocates nothing.
+function I.ResourceSet(r, v, width, t, event)
+    I.ResourceShift(r, v - R.est0[r], t, event)
+    local max = R.max[r]
+    R.lo0[r], R.over[r], R.hi0[r] = clamp(v, max), 0, clamp(v + width, max)
+end
+
+-- What slot r's out-of-combat decay takes from the clock to `now`, as I.OnAdvance will when the fold gets there: from
+-- the estimate (and lo) the quanta at or before `now` (`up`: the projected estimate is above rest, as a gain before the
+-- decay starts it), and from the top the same, or its continuous fall while the estimate rests. 0, 0 in combat.
+-- Allocates nothing.
+local function decayAhead(r, now, up)
+    local d = R.decay[r]
+    if fighting or d <= 0 or now <= I.clock then
+        return 0, 0
+    end
+    local start = decayFrom(r, I.clock, now)
+    if not start then
+        return 0, 0
+    end
+    local iv = R.decayIv[r]
+    if iv <= 0 then
+        return d * (now - start), d * (now - start)
+    end
+    local n = R.decayNext[r]
+    if start > I.clock or n == 0 and up then
+        n = start
+    end
+    if n == 0 then
+        return 0, d * (now - start) -- the estimate rests: the top's continuous fall (I.OnAdvance)
+    end
+    if n > now then
+        return 0, 0
+    end
+    local q = (floor((now - n) / iv) + 1) * d * iv -- nonzero: iv > 0 checked
+    return q, q
+end
+
 --- (spec §3.2) The believed amount of a power type at `now`: the clock values plus continuous regen x dt and the
---- aura-gated ticks to `now`, each clamped to [0, max]; conf 1 - (hi - lo) / max, halved within SNAP_HOLD of a snap.
---- Allocates nothing.
+--- aura-gated ticks to `now`, each clamped to [0, max], less the out-of-combat decay to `now` (never below rest);
+--- conf 1 - (hi - lo) / max, halved within SNAP_HOLD of a snap. Allocates nothing.
 function VS.Power(powerType, now)
     local r = R.slotOf[powerType]
     if not r then
@@ -1882,6 +1930,13 @@ function VS.Power(powerType, now)
     local est = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + gain, max)
     local lo = clamp(R.lo0[r] + R.over[r] + R.regL[r] * a + R.spL[r] * b + gain, max)
     local hi = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b + gain, max)
+    local rest = R.rest[r]
+    local drop, top = decayAhead(r, now, est > rest)
+    if top > 0 then -- a swing-paid slot too: its decay runs by time (I.OnAdvance)
+        est = est > rest and (est - drop > rest and est - drop or rest) or est
+        lo = lo > rest and (lo - drop > rest and lo - drop or rest) or lo
+        hi = hi > rest and (hi - top > rest and hi - top or rest) or hi
+    end
     if lo > est then
         lo = est
     end

@@ -158,6 +158,9 @@ local FORMS = { "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic
 -- after a Cat pull) through an in-combat shift (GCD kinds design D4; checkpoint G6 reads both forms' speeds).
 local SHIFTING_POWER_ENERGY = 40
 local BEAR_RAGE_RATE = 4.5
+-- Furor's rage into Bear Form (wowsims forms.go furorRageOnEnterBear): 17057's energize, 10, at 20% a rank (17056
+-- effect 1): certain at 5/5.
+local FUROR_RAGE = 10
 local BEAR_SWING = 2.5
 -- Primal Fury ("Blood Frenzy" on Forever, DB2 16958; wowsims/forever talents_feral_combat.go): a melee crit of ours in
 -- Bear Form gives 16959's 5 rage, always at 2/2 and half the time at 1/2 (wowsims's ladder): its expected rage. The
@@ -768,8 +771,9 @@ spec:RegisterStateExpr("druid_bleed_active", function()
     return debuff.rake.up or debuff.rip.up or debuff.lacerate.up or debuff.pounce_bleed.up
 end)
 
--- A shift (Classic's swap_form, Forever's rules): the other forms and a queued Maul go; into Bear all rage is lost
--- (Furor's 20%-a-rank chance of 10 is unknowable at the cast: none); into Cat the energy becomes Furor's 20% a rank of
+-- A shift (Classic's swap_form, Forever's rules): the other forms and a queued Maul go; into Bear all rage is lost,
+-- then Furor's 10 at 20% a rank (wowsims forms.go): the sim from its floor, so at 5/5 only (the belief's `now` sets 1-4/5's
+-- unseen roll as [0, 10]); into Cat the rage stays (wowsims's Cat Form leaves it: the decay takes it out of combat) and the energy becomes Furor's 20% a rank of
 -- the pool (wowsims forms.go restoreCatEnergy; the pool is its stored energy, bear_pause above): none untalented, as
 -- the owner's client showed (L586). wowsims keeps the bar on a first entry with nothing stored, its pull only: the
 -- belief cannot tell one after a /reload, so every entry takes the share. The forms' `now` write the same lines.
@@ -780,6 +784,9 @@ spec:RegisterStateFunction("swap_form", function(form)
     removeBuff("maul")
     if form == "bear_form" then
         spend(rage.lo, "rage") -- the sim's floor (border batch 2)
+        if talent.furor.rank >= 5 then
+            gain(FUROR_RAGE, "rage")
+        end
     elseif form == "cat_form" then
         spend(energy.lo * (5 - talent.furor.rank) / 5, "energy") -- keeps rank / 5 of the sim's floor (border batch 2)
     end
@@ -888,7 +895,8 @@ spec:RegisterAbilities({
                 removeBuff(FORMS[i])
             end
             removeBuff("maul")
-            spend(rage.current, "rage")
+            local f = talent.furor.rank -- all rage goes, then Furor's (swap_form): certain at 5/5, a roll below
+            resetResource("rage", f >= 5 and FUROR_RAGE or 0, f > 0 and f < 5 and FUROR_RAGE or 0)
             applyBuff("bear_form")
         end,
 
@@ -1147,6 +1155,9 @@ spec:RegisterAbilities({
 
         spend = 5,
         spendType = "rage",
+        -- No rage rung: the DB2 stance mask (0x91) holds Cat Form too, and a usable answer pinned the floor at its 5 in
+        -- Cat Form out of combat with the client's bar at 0 (owner 2026-11-12; the poll repeats it every pass).
+        ladder = false,
 
         startsCombat = true,
         known = knows(FERAL_CHARGE),
