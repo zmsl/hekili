@@ -17,13 +17,19 @@
 -- cast on wowsims's second target, never in this single-target log) is `other_target=1` (rule 21, option D). Aura lane 2026-11-11: the kit now registers Shadow and Flame's buff (1293816)
 -- so Conflagrate's condition reads it (no "dropped the unresolved aura" note for 1293816). Option D registers Bane of
 -- Havoc and its debuff (1225228): the multi-target lines' "not on the Havoc target" reads resolve.
--- Leveling note: below Incinerate (40) the list has no filler and falls through to its last line, Life Tap (as
--- wowsims's own list would at that level); the gate counts Life Tap as a press, so no bracket is idle.
+-- Leveling note: without Incinerate (40) the list fills with its `searing_pain,if=!action.incinerate.known|...` line,
+-- and below Searing Pain (18) with the Shadow Bolt below.
 -- Deviations: Berserking (Troll) and
 -- Eureka! and Blood Fury are other races' racials, never known to the Human. The Weakness Analyzer trinket (272438) is `use_items` (rule
 -- 13).
--- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket
--- idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
+-- Filler (owner 2026-11-12, a player's report: "after putting my dots, Hekili wants me to spam Life Tap, even with full
+-- mana"; owner: "Life tap is not a good filler"): wowsims's list ends `incinerate` then an unconditional Life Tap, so a
+-- Warlock with neither Incinerate nor Searing Pain was shown Life Tap at full mana. An `extra` Shadow Bolt (known at 1)
+-- goes before that last Life Tap, and `guard` "default #18" shows the Life Tap only under Shadow Bolt's cost. In
+-- wowsims's build Incinerate (325 mana less Cataclysm) is cheaper than Shadow Bolt and always castable above its cost,
+-- so neither line moves the replay or the loops (docs/dev/wowsims-packs.md, Deviations by ruling).
+-- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in Shadow Bolt then Life Tap under its cost,
+-- so no bracket idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
 return {
     class = "WARLOCK",
     pack = "Destruction (wowsims.com)",
@@ -60,9 +66,11 @@ return {
         curse_of_recklessness = 2,
         curse_of_weakness = 2,
     },
-    -- the low-level behaviour (owner ruling 2026-10-21: no low-level filler), in the pack's description
+    -- the low-level behaviour, in the pack's description
     notes = {
-        "Below level 40 (before Incinerate) this priority has no filler and shows Life Tap between its DoTs, as wowsims's own list would at that level.",
+        "Without Incinerate (before level 40) this priority fills with Searing Pain, or with Shadow Bolt before Searing Pain is learned.",
     },
+    extra = { { before = "life_tap", last = true, line = "shadow_bolt" } }, -- the filler (header)
+    guard = { ["default #18"] = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" }, -- the final Life Tap (header)
     leveling = {},
 }

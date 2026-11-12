@@ -175,6 +175,35 @@ describe("the wowsims APL translator", function()
         end, "extra: no big_hit line in actions")
     end)
 
+    it("puts a recipe extra line marked `last` before the last line of its anchor action", function()
+        local text = apl.translate(
+            { priorityList = { cast(100), cast(200), cast(100) } },
+            ctx({ extra = { { before = "strike", last = true, line = "dot" } } })
+        )
+        assert.are.equal(
+            table.concat({ "actions=strike", "actions+=/big_hit", "actions+=/dot", "actions+=/strike" }, "\n"),
+            text
+        )
+    end)
+
+    it("guards a cast entry keyed `<list> #<n>` on that entry's line only, after its own condition", function()
+        local text = apl.translate(
+            { priorityList = { cast(100), cast(200), cast(100, E) } },
+            ctx({
+                executePhase = "execute_phase",
+                guard = { ["default #1"] = "buff.fury.up", ["default #3"] = "time>1" },
+            })
+        )
+        assert.are.equal(
+            table.concat({
+                "actions=strike,if=buff.fury.up",
+                "actions+=/big_hit",
+                "actions+=/strike,if=execute_phase&time>1",
+            }, "\n"),
+            text
+        )
+    end)
+
     it("actionGroupUsed of a group with actions is wowsims's constant: a shown reference to it exists", function()
         local function used(name)
             return { actionGroupUsed = { name = name } }
@@ -2914,6 +2943,7 @@ describe("the wowsims APL translator on the Warlocks' assigned-curse check", fun
         local r = dofile("tools/wowsims/specs/warlock_demonology.lua")
         local set = require("Forever.helpers.engine").abilitySet(r.class)
         local player = { warlock = { options = { classOptions = {} } } } -- the zero value, Elements
+        r.extra, r.guard = nil, nil -- the filler lines anchor on the shipped list's last Life Tap, not in this one
         r.select.castWarlockAssignedCurse.is = nil -- the shipped recipes name it now (CN3, the 0.7 re-pin): drop it for the "before"
         local before, omitted = apl.translate(rotation, apl.context(set, r, nil, player))
         assert.are.equal("", before)

@@ -162,8 +162,9 @@ Translation:
   talent is taken (Retribution's Twist of Light lines; Warrior's Berserker Rage, the user's ruling below). Not added
   when the condition already has the talent test as a top-level `&` term. A key naming no APL entry is an error (CN12; an omitted entry still matches).
 - `guard` (`{ [action or group snake name] = SimC expression }`): one `&(<expression>)` term appended to each such
-  entry's condition, in every list (rule 16's select lines too); a key naming no APL entry (an action, a group, or a
-  move entry `"<list> #<n>"`) is an error (CN12: an upstream rename would drop it silently; an omitted entry still
+  entry's condition, in every list (rule 16's select lines too); keyed `"<list> #<n>"` (the APL's entry number), to
+  that one entry's line (a move's reached lines carry it); a key naming no APL entry (an action, a group, or an entry
+  `"<list> #<n>"`) is an error (CN12: an upstream rename would drop it silently; an omitted entry still
   matches). A deviation from wowsims, so only on the user's ruling, named in the recipe and under "Deviations by
   ruling" below.
 - `windowVars` (`{ [variable name] = window }`): an APL variable that times "since the last shot or swing", read from
@@ -204,7 +205,7 @@ Translation:
   Form), which a trailing line would never reach; silent while the form is up. They lead a non-empty precombat list
   too, so a pre-pull cast never shows before the form.
 - `extra` (`{ { before = "<action>", line = "<simc line>" } }`): a line put just before the first `actions` line of
-  `before` (the translator errors when there is none). Only for content wowsims cannot model, never to tune a
+  `before`, or its last with `last = true` (the translator errors when there is none). Only for content wowsims cannot model, never to tune a
   wowsims line, and each use names its reason in the recipe comment. The user's ruling (2026-10-21), for Warrior's
   Victory Rush: "This isn't something from wowsims, but needs to be added since it won't affect wowsims accuracy
   (wowsims never goes mob to mob so VR isn't ever a thing). Should be used just above bloodthirst (since it's a mini
@@ -395,6 +396,17 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   `starshards,if=settings.prefer_starshards&(!action.mind_blast.known|cooldown.mind_blast.remains>=4)`, with the class setting `prefer_starshards` (off by
   default, no `sim` default, so the default pack and every number are as before). Only matters when Starshards is known (the
   Night Elf racial). The Human replay and loops never cast it. Not checked in game.
+- Warlock, the Life Tap fallback (owner 2026-11-12, on a player's report "after putting my dots, Hekili wants me to
+  spam Life Tap, even with full mana": "Life tap is not a good filler"). Every wowsims Warlock list ends in its filler
+  (Affliction Wrack, Destruction Incinerate, Demonology Searing Pain, SM Ruin and Shadow Brand Shadow Bolt) then an
+  unconditional Life Tap, which wowsims reaches only when the filler cannot be paid; a Warlock without that filler (a
+  talent not taken, a spell not learned yet) fell through to Life Tap at any mana. Each recipe guards that last Life
+  Tap, `guard = { ["default #<its entry>"] = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" }` (the
+  known test is rule 6's form, tools/check_pack_levels.lua), and Affliction, Destruction and
+  Demonology add `extra = { { before = "life_tap", last = true, line = "shadow_bolt" } }` (Shadow Bolt is known at
+  level 1). It is not a filler for filling's sake (R41): Shadow Bolt is the class's core cast, and it is not silent
+  at 60 for a build without the filler. The builds' fillers cost less than Shadow Bolt and are always castable above
+  their cost, so the replay and loop numbers do not move (measured, three seed sets). Not checked in game.
 
 ## Pack notes
 

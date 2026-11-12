@@ -966,3 +966,92 @@ describe("Forever Warlock Movement (R8)", function()
         end)
     end
 end)
+
+-- A player's report (2026-11-12): with the dots up, a Warlock without the spec's endgame filler (Wrack, Incinerate,
+-- Searing Pain: talents or a later level) was shown Life Tap at full mana. Each pack's list tail, from its unconditional
+-- filler line to the end of `actions`, through the engine without the filler: Shadow Bolt at full mana, Life Tap only
+-- under Shadow Bolt's cost. The tail stands for "every line above it is quiet" (the dots up), not a dotted rotation.
+describe("Forever Warlock without the endgame filler", function()
+    local ww = require("Forever.helpers.warlock_world")
+
+    -- The pack's `actions` lines from the last line that is `filler` alone.
+    local function tail(pack, filler)
+        local f = assert(io.open("src/Hekili_Warlock/APLs/" .. pack .. ".simc"))
+        local s = f:read("*a")
+        f:close()
+        local lines, from = {}, nil
+        for l in s:gmatch("\n(actions%+=/[^\n]+)") do
+            lines[#lines + 1] = l
+            if l == "actions+=/" .. filler then
+                from = #lines
+            end
+        end
+        assert(from, pack)
+        return table.concat(lines, "\n", from)
+    end
+
+    local function world(name, filler, unknown)
+        local C = ww[name]
+        local ch = C.character()
+        local w = ld.load(nil, FILE, "WARLOCK")
+        local drop, talents = {}, {}
+        for _, id in ipairs(unknown and idsOf(w.abilities[unknown]) or {}) do
+            drop[id] = true
+        end
+        local known = {}
+        for _, id in ipairs(ch.known) do
+            if not drop[id] then
+                known[#known + 1] = id
+            end
+        end
+        for id, rank in pairs(ch.talents) do -- a copy: the world's table is shared
+            if not drop[id] then
+                talents[id] = rank
+            end
+        end
+        ch.known, ch.talents = known, talents
+        local H = headless.new({ character = ch, pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, 25
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        local lines = H.Hekili:ParseActionList(tail(C.PACK, filler))
+        for _, l in ipairs(lines) do
+            l.enabled = true
+        end
+        H.Hekili.DB.profile.packs[C.PACK].lists = { precombat = {}, default = lines }
+        H.Hekili:LoadScripts()
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local VS = H.ns.VirtualState
+        local power, mana = VS.Power, {}
+        VS.Power = function(pt, now)
+            return pt == 0 and mana or power(pt, now)
+        end
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        return function(m)
+            mana.est, mana.lo, mana.hi, mana.conf = m, m, m, 1
+            t = t + 0.2
+            assert(headless.cycle(H, t))
+            assert.are.same({}, H.errors)
+            return out.recs[1] and out.recs[1].actionName
+        end
+    end
+
+    for _, p in ipairs({
+        { "Affliction", "wrack", "wrack" },
+        { "Destruction", "incinerate", "incinerate" },
+        { "Demonology", "searing_pain", "searing_pain" },
+        { "SMRuin", "shadow_bolt" },
+        { "ShadowBrand", "shadow_bolt" },
+    }) do
+        it(
+            p[1] .. ": Shadow Bolt at full mana" .. (p[3] and " without " .. p[3] or "") .. ", Life Tap under its cost",
+            function()
+                local at = world(p[1], p[2], p[3])
+                assert.are.same({ "shadow_bolt", "life_tap" }, { at(ww[p[1]].WORLD.max), at(50) })
+            end
+        )
+    end
+end)

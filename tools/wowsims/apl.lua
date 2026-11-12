@@ -79,8 +79,8 @@
 --    the `levelingFirst` lines lead a non-empty precombat list too (its pre-pull cast would show before the form):
 --    `leveling` lines are silent at 60, `levelingFirst` lines whenever their form is up. Each recipe `extra`
 --    ({ before = action, line = text }, content outside wowsims's model) goes just before the first `actions` line of
---    `before` (an error when there is none). The recipe's `settings` ({ [key] = { default = bool, desc = text } }) are
---    pack settings like an ON/OFF group's: a line reads one as `settings.<key>`, and the header lists each one read.
+--    `before`, its last with `last = true` (an error when there is none). The recipe's `settings` ({ [key] = {
+--    default = bool, desc = text } }) are pack settings like an ON/OFF group's: a line reads one as `settings.<key>`, and the header lists each one read.
 --    The recipe's `prepullSkip` ({ action key, ... }: an owner ruling against a wowsims pre-pull cast) omits that
 --    action's precombat lines, listed (an error when there is none).
 --    The recipe's `requires` ({ [action key or group's snake name] = talent key }) puts `talent.<key>.enabled&` before
@@ -89,7 +89,8 @@
 --    talent, e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
 --    The recipe's `guard` ({ [action key or group's snake name] = SimC expression }) appends `&(<expression>)` to the
 --    condition of each such entry (rule 13's automatic lines too), in every list (after a required talent); keyed
---    "<list> #<n>", to a move entry's condition, which its reached lines carry (rule 19, the ON variant): a
+--    "<list> #<n>", to that entry's cast line, or a move entry's condition, which its reached lines carry (rule 19,
+--    the ON variant): a
 --    documented deviation from wowsims, each
 --    with its reason in the recipe and docs/dev/wowsims-packs.md.
 --    The recipe's `condition` ({ [action key] = SimC expression }) replaces the APL's condition of each cast line of
@@ -2051,6 +2052,7 @@ local function entryBody(c, e)
         cond, c.conditioned[key] = c.condition[key], true
     end
     cond = guarded(c, key, required(c, key, cond))
+    cond = guarded(c, c.listName .. " #" .. c.entryNo, cond) -- rule 7: the entry's own guard
     return cond and (body .. ",if=" .. cond) or body
 end
 local function restoreMods(c, mods, ...)
@@ -2912,7 +2914,9 @@ function M.translate(rotation, c)
         for i, body in ipairs(byName.default) do
             if body:match("^[%w_]+") == x.before then
                 at = i
-                break
+                if not x.last then
+                    break
+                end
             end
         end
         if not at then
