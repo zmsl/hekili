@@ -876,9 +876,8 @@ describe("now handlers", function()
         assert.are.same({ 0, 0 }, I.gcdLearned)
     end)
 
-    -- A modifier's aura gained after a GCD opened does not cut it, though the cast folds after the gain (a crit's
-    -- proc a spell batch after the cast; wowsims's Balance log: Insect Swarm at 3.00 after Moonfire's 1.50, the buff
-    -- at 1.51).
+    -- A modifier's aura gained after a GCD opened does not cut it, though the cast folds after the gain (a proc a
+    -- spell batch after the cast, its walk heard before the cast's staged success).
     it("judges a GCD modifier at the GCD's opening, not at the fold of its cast (C12)", function()
         h.Class.auras.grace_test = { key = "grace_test", id = 4701, duration = 3 }
         ns.raceMods = {
