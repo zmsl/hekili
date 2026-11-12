@@ -128,6 +128,7 @@ local NOW = {
     "feral_charge",
     "faerie_fire",
     "wrath",
+    "starfire",
     "moonfire",
     "insect_swarm",
     "entangling_roots",
@@ -597,7 +598,7 @@ describe("Forever Druid", function()
             assert.are.equal(17768, w.auras.wolfshead_helm.id)
         end)
 
-        it("adds Wrath's Eclipse charges only with the talent, and Starfire's handler spends one", function()
+        it("adds Wrath's Eclipse charges only with the talent, and Starfire's now and handler spend one", function()
             local e = ld.env(w)
             ld.run(w.abilities.wrath.now, e)
             assert.are.same({}, e.added)
@@ -605,12 +606,16 @@ describe("Forever Druid", function()
             ld.run(w.abilities.wrath.now, e)
             ld.run(w.abilities.wrath.handler, e)
             assert.are.same({ { "eclipse", 2 }, { "eclipse", 2 } }, e.added)
-            e.removed = {}
-            ld.run(w.abilities.starfire.handler, e)
-            assert.are.same({}, e.removed)
-            e.buff = auras({ eclipse = { up = true, stack = 2 } })
-            ld.run(w.abilities.starfire.handler, e)
-            assert.are.same({ "eclipse" }, e.removed)
+            -- wowsims talents_balance.go applyEclipse: every Starfire cast spends a charge; the belief at the cast (`now`)
+            for _, f in ipairs({ "now", "handler" }) do
+                e.removed = {}
+                e.buff = auras({})
+                ld.run(w.abilities.starfire[f], e)
+                assert.are.same({}, e.removed, f)
+                e.buff = auras({ eclipse = { up = true, stack = 2 } })
+                ld.run(w.abilities.starfire[f], e)
+                assert.are.same({ "eclipse" }, e.removed, f)
+            end
         end)
 
         it("registers the Eclipse and Nature's Grace talent ids as aura copies", function()

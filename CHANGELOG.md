@@ -21,6 +21,7 @@
 - Protection Warriors: the default priority's Thunder Clap line again checks for the Thunderfury slow; it reads down in combat, so nothing changes unless you can see the debuff.
 - Druid: Balance now reads the Eclipse and Nature's Grace buffs in combat through the Cooldown Manager's talent entries, Starfire's cast time follows Improved Starfire, the Eclipse charge and Nature's Grace (Wrath follows Nature's Grace too), Nature's Swiftness makes the next Wrath instant, and the Haruspex's Garb 3-piece lengthens Faerie Fire by 5 seconds.
 - Druid: the Wrath that Nature's Swiftness makes instant now uses the buff up as soon as you cast it, so the next Wrath is no longer shown as instant.
+- Druid: each Starfire you cast now uses up one Eclipse charge, so the next Starfire is no longer shown with the shorter cast of a charge already used.
 - Warrior: Deep Wound is read from the Cooldown Manager's copy of the debuff, Flurry counts its three charges, Retaliation its 30, and Gore Drinker's buff is tracked from the abilities that grant it.
 - Warlock: Affliction and Shadow Brand (wowsims.com) now react to the Revelation weapon enchant's proc, Decimation and Shadow Trance are now also read from the spell's glow in combat where the game lights it, and Destruction (wowsims.com) now tracks Shadow and Flame's buffs the way wowsims does.
 - Priest: Shadow (wowsims.com) now counts Dark Inspiration as soon as you cast Mind Blast, so the mana estimate no longer ignores it.

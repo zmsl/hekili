@@ -1841,7 +1841,14 @@ spec:RegisterAbilities({
         known = knows(STARFIRE),
         nobuff = "feral_form",
 
-        -- No `now`: spending a charge is no `now` verb; the belief's charges end with the 15 s aura.
+        -- Every Starfire cast spends an Eclipse charge, a missed one too (wowsims talents_balance.go applyEclipse); the
+        -- belief at the cast with `removeStack` (aura audit C4).
+        now = function()
+            if buff.eclipse.up then
+                removeStack("eclipse")
+            end
+        end,
+
         handler = function()
             if buff.eclipse.up then
                 removeStack("eclipse")
