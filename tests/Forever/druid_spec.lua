@@ -784,7 +784,10 @@ describe("Forever Druid", function()
             for _, pt in ipairs({ 4 }) do
                 assert.are.same({ nil, nil }, { w.resources[pt].models, w.resources[pt].meta }, pt)
             end
-            assert.are.same({ nil, { refundOnAvoid = 0.8 } }, { w.resources[3].models, w.resources[3].meta })
+            assert.are.same(
+                { nil, { regen = 10, refundOnAvoid = 0.8 } },
+                { w.resources[3].models, w.resources[3].meta }
+            )
             -- wowsims/forever's logs: 2.2 mana a 0.1 s tick outside the rule, none inside it (Feral, Balance)
             assert.are.same({ spirit = 22, mp5 = 0 }, w.resources[0].meta.fsr)
             assert.is_nil(w.resources[1].meta.max)
@@ -1129,13 +1132,16 @@ describe("Forever Druid in VirtualState's now context", function()
         cast(768, 2) -- Cat Form: 684 mana (55% of the base mana at 60) of the fake's 100: none left
         assert.is_not_nil(VS.Aura("player", 768, 2.1))
         near(0, power(0, 2.1))
-        cast(5221, 3) -- Shred: 60 of 100 energy
+        local function close(want, got)
+            assert.is_true(math.abs(got - want) < 1e-6, ("want %.4f, got %.4f"):format(want, got))
+        end
+        cast(5221, 3) -- Shred: 60 of 100 energy, then the declared 10 a second
         cast(1322605, 4) -- Shifting Power: +40
-        assert.are.equal(80, power(3, 4.1))
-        cast(1822, 5) -- Rake: 40, and its 9 s debuff
+        close(91, power(3, 4.1))
+        cast(1822, 5) -- Rake: 40 of the capped 100, and its 9 s debuff
         assert.are.equal(14, VS.Aura("target", 1822, 5.1).est)
-        cast(22568, 6) -- Ferocious Bite: 35, then the 5 left
-        assert.are.equal(0, power(3, 6.1))
+        cast(22568, 6) -- Ferocious Bite: 35 of 70, then the 35 left
+        close(1, power(3, 6.1))
         cast(5487, 7) -- Bear Form
         assert.are.same({ true, false }, { VS.Aura("player", 5487, 7.1) ~= nil, VS.Aura("player", 768, 7.1) ~= nil })
         I.Sources.Direct(VS.Obs.Swing, 8, 1, 2.5, 4) -- PLAYER_SWING, then Rows.lua's landed wound
@@ -1154,6 +1160,15 @@ describe("Forever Druid in VirtualState's now context", function()
         VS.Drain(16)
         assert.are.equal(power(1, 15.1), power(1, 16))
         assert.are.same({ 0, 9 }, { I.nowErrors, I.nowRuns })
+    end)
+
+    -- L576 bug 1: energy is secret even out of combat and the rate read never came (a /reload in combat): the build
+    -- seeds the pack's declared 10 a second (wowsims energy.go:48-49), not 0.
+    it("regenerates energy at the declared 10 a second from a build with no plain rate read", function()
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+        near(10, VS.Regen(3, 1.6).est)
+        cast(5221, 2) -- Shred: 60 of 100 energy
+        near(10, power(3, 3.25) - power(3, 2.25)) -- after Shred's 60, 10 a second
     end)
 
     it("builds each ability's declared outcome as the class file registers it (Families/Expect.lua)", function()
@@ -1234,10 +1249,11 @@ describe("Forever Druid in VirtualState's now context", function()
     it("makes a covered cast free while Clearcasting is believed up, which the cast then takes", function()
         cast(5221, 2) -- 40 energy left
         I.AuraModel(1, I.auras.bySpell[16870], 3, 18, 1, 3, VS.Obs.CastSuccess, false)
-        cast(5221, 4) -- free
-        assert.are.same({ 40, nil }, { power(3, 4.1), VS.Aura("player", 16870, 4.1) })
-        cast(5221, 5)
-        assert.are.equal(0, power(3, 5.1))
+        cast(5221, 4) -- free: only the 10 a second since
+        assert.is_nil(VS.Aura("player", 16870, 4.1))
+        assert.is_true(math.abs(power(3, 4.1) - 61) < 1e-6)
+        cast(5221, 5) -- 70 - 60
+        assert.is_true(math.abs(power(3, 5.1) - 11) < 1e-6)
     end)
 
     it("allocates nothing over 1000 casts with `now` handlers", function()

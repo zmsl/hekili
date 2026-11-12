@@ -304,6 +304,9 @@ local function buildDef()
             -- (a number, 0-1; Families/Now.lua's Obs.Avoided); the sim never reads it: it does not roll avoidance
             refundOnAvoid = meta.refundOnAvoid,
             base = meta.base, -- the pool's base power (Families/Casts.lua)
+            -- the declared base rate a second (Resources.lua seeds and calibrates against it until a plain rate read);
+            -- a number only: a function meta field is the sim's state override
+            regen = type(meta.regen) == "number" and meta.regen or nil,
             mult = plain(r.state and r.state.regenMult, {}), -- the rate multipliers, out of the regen model (Spec.lua, C3b)
         }
         insert(def.resources, d)

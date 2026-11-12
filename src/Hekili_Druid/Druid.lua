@@ -208,13 +208,13 @@ local function moonglow(rank)
     return MOONGLOW[rank] or 1
 end
 
--- shortcut: after a /reload in combat energy's regen rate stays 0 for the rest of the fight (the belief's calibrate
--- returns early at ref == 0); upgrade with a `regen` meta field forwarded by the adapter after checkpoint Q3.
+-- regen: energy's base rate a second, the belief's from the build until a plain rate read (energy is secret even out
+-- of combat): wowsims/forever's 1 energy every 0.1 s (sim/core/energy.go:48-49).
 -- refundOnAvoid (energy here, rage below): the share an ability flagged `refundOnAvoid = true` gives back when dodged,
 -- parried or missed (wowsims/forever druid/feral.go refundOnMiss and MissRefund: 0.8 where the DB2 flags Discount
 -- Power On Miss). Not Ferocious Bite (flagged in the DB2, but wowsims issues no refund), Swipe, Faerie Fire (Feral) or
 -- Demoralizing Roar.
-spec:RegisterResource(Enum.PowerType.Energy, nil, nil, { refundOnAvoid = 0.8 })
+spec:RegisterResource(Enum.PowerType.Energy, nil, nil, { regen = 10, refundOnAvoid = 0.8 })
 spec:RegisterResource(Enum.PowerType.ComboPoints)
 
 spec:RegisterResource(

@@ -24,6 +24,7 @@
 - Warlock: Affliction and Shadow Brand (wowsims.com) now react to the Revelation weapon enchant's proc, Decimation and Shadow Trance are now also read from the spell's glow in combat where the game lights it, and Destruction (wowsims.com) now tracks Shadow and Flame's buffs the way wowsims does.
 - Priest: Shadow (wowsims.com) now counts Dark Inspiration as soon as you cast Mind Blast, so the mana estimate no longer ignores it.
 - Paladin: Seal of Justice, Light and Wisdom now count as a seal for Judgement, and Protection (wowsims.com) suggests Templar's Bulwark at the pull.
+- Druids and Rogues: after a /reload in combat, the estimate of your energy now refills at 10 a second straight away, instead of staying low until you leave combat.
 - Mage: Fingers of Frost is followed under the id the game shows, Combustion ends with its crit counter, and a crit on a Fire or Frost spell now counts Master of Elements' mana refund.
 
 ### Known issues
