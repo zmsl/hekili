@@ -562,7 +562,11 @@ kept("UnitInRange", "virtual", inRangeUnknown, "secret always [W PR7]; no signal
 -- One range source (range plan R2, owner 2026-11-11): LibRangeCheck-3.0, the only fetch of it in the addon
 -- (tools/check_api_reads.sh), from the belief's client (I.api: _G in game, the fake headless) once Start has run.
 -- Plain on Forever in the open world for the target and plate tokens, about 5 yd brackets (owner, 2026-11-11).
-local LRC_UNDER_MAP = false -- range plan R3 flips it once probe G2 prints numbers: ask for a unit whose GUID is secret
+-- Asked under the Map restriction too (a unit whose GUID is secret; the library keys its cache by the unit token
+-- then): probe G2 passed (owner, 2026-11-11, open world with addonMapRestrictionsForced=1: in combat 30 plain, 1 nil
+-- at the target's death; out of combat 14 plain, 13 nil; 0 secret, 0 errors). A real dungeon (G3) is unprobed: the
+-- belief's bracket ages to unknown after 1.5 s with no plain answer (Sources/Target.lua poll 14). false: not asked.
+local LRC_UNDER_MAP = true
 local realUnitGUID = resolve("UnitGUID")
 local lrc -- the library; false: absent
 local function rangeLib(unit)
@@ -576,18 +580,19 @@ local function rangeLib(unit)
     if not lrc then
         return nil
     end
-    local ok, lo, hi = true, nil, nil
+    local age -- nil: the library's 0.1 s cache
     if unit == "target" then
-        -- the belief's poll asks once per poll: a raise inside the library (a secret answer it tests) is unknown.
-        -- maxCacheAge 0: the poll stamps the answer with its own time, so never take the library's 0.1 s old one
-        ok, lo, hi = pcall(lrc.GetRange, lrc, unit, nil, nil, 0)
-    else
+        -- maxCacheAge 0: the belief's poll stamps the answer with its own time, so never take the library's old one
+        age = 0
+    elseif not LRC_UNDER_MAP then
         local g = realUnitGUID and realUnitGUID(unit) -- secret: tested next
-        if not LRC_UNDER_MAP and (issecretvalue(g) or g == nil) then
+        if issecretvalue(g) or g == nil then
             return nil -- the Map restriction: its checks may answer secret inside the library, which raises there
         end
-        lo, hi = lrc:GetRange(unit)
     end
+    -- a raise inside the library (a secret answer it tests) is unknown, for any unit (review M4). shortcut: each raise
+    -- allocates its error string (the known G2 cost; none raised in probe G2), revisit if probe G3 shows steady raises
+    local ok, lo, hi = pcall(lrc.GetRange, lrc, unit, nil, nil, age)
     if not ok or issecretvalue(lo) or issecretvalue(hi) then
         return nil
     end
@@ -598,7 +603,7 @@ kept(
     "hybrid",
     rangeLib,
     "LibRangeCheck-3.0's GetRange(unit): lower and upper yards (nil upper: past its last check); nothing when "
-        .. "absent, secret or raising; never asked for a unit with a secret GUID (Map) until probe G2"
+        .. "absent, secret or raising; asked for a unit with a secret GUID too (Map: probe G2 passed)"
 )
 
 -- LibRangeCheck's `GetRange(unit)` shape, every range read of the core (Engine/Sim/State.lua, Targets.lua, Events.lua,

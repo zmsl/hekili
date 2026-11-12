@@ -652,34 +652,39 @@ describe("ns.Facade", function()
         end
     )
 
-    it(
-        "LibRangeCheck.GetRange asks the library for a plate with a plain GUID, never for one whose GUID is secret",
-        function()
-            local RC = Facade.LibRangeCheck
-            answers.UnitGUID = function(unit)
-                return unit == "nameplate1" and "Creature-9" or fake.SECRET
-            end
-            ctl.distance.nameplate1, ctl.distance.nameplate2 = 12, 12
-            ctl.exists.nameplate1, ctl.exists.nameplate2 = true, true
-            ctl.guid.nameplate1 = "Creature-9" -- the library's own UnitGUID read (its cache key)
-            assert.are.same({ 10, 15 }, { RC:GetRange("nameplate1") })
-            local n = ctl.rangeLibCalls
-            assert.are.same({}, { RC:GetRange("nameplate2") }) -- the Map restriction: not asked until probe G2 (R3)
-            assert.are.equal(n, ctl.rangeLibCalls)
-            ctl.distance.nameplate1 = fake.SECRET -- a secret answer: nothing
-            assert.are.same({}, { RC:GetRange("nameplate1") })
+    -- owner decision 2026-11-11: the library is taken as plain under the Map restriction too (probe G1 passed in the
+    -- open world; its checkers are the range checks probed plain in combat), so a secret GUID is asked as well
+    it("LibRangeCheck.GetRange asks the library for a plate whether its GUID is plain or secret", function()
+        local RC = Facade.LibRangeCheck
+        answers.UnitGUID = function(unit)
+            return unit == "nameplate1" and "Creature-9" or fake.SECRET
         end
-    )
+        ctl.distance.nameplate1, ctl.distance.nameplate2 = 12, 12
+        ctl.exists.nameplate1, ctl.exists.nameplate2 = true, true
+        -- the library's own UnitGUID read (its cache key: the unit token for a secret GUID)
+        ctl.guid.nameplate1, ctl.guid.nameplate2 = "Creature-9", fake.SECRET
+        assert.are.same({ 10, 15 }, { RC:GetRange("nameplate1") })
+        assert.are.same({ 10, 15 }, { RC:GetRange("nameplate2") }) -- the Map restriction: asked all the same
+        ctl.distance.nameplate1 = fake.SECRET -- a secret answer: nothing
+        assert.are.same({}, { RC:GetRange("nameplate1") })
+    end)
 
-    it("RangeLib answers nothing, never an error, when the library raises on the target", function()
-        ctl.distance.target = 7
+    it("RangeLib answers nothing, never an error, when the library raises, for the target or any other unit", function()
+        ctl.distance.target, ctl.distance.nameplate1, ctl.exists.nameplate1 = 7, 7, true
+        ctl.guid.nameplate1 = "Creature-9"
+        answers.UnitGUID = function()
+            return "Creature-9"
+        end
         assert.are.same({ 5, 10 }, { Facade.RangeLib("target") })
+        assert.are.same({ 5, 10 }, { Facade.RangeLib("nameplate1") })
         ctl.rangeLib = "raise"
-        local got
-        assert.has_no.errors(function()
-            got = { Facade.RangeLib("target") }
-        end)
-        assert.are.same({}, got)
+        for _, unit in ipairs({ "target", "nameplate1" }) do
+            local got
+            assert.has_no.errors(function()
+                got = { Facade.RangeLib(unit) }
+            end)
+            assert.are.same({}, got)
+        end
         ctl.rangeLib, ctl.distance.target = nil, fake.SECRET
         assert.are.same({}, { Facade.RangeLib("target") })
     end)
