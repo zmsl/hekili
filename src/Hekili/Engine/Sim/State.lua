@@ -724,6 +724,7 @@ do
             cycle.minTTD  = max( state.settings.cycle_min, ability.min_ttd or 0, cDebuff.duration / 2 )
             cycle.maxTTD  = ability.max_ttd
 
+            if state.active_dot[ aura ] == 0 then state.active_dot[ aura ] = 1 end -- the target's own belief: at least this one
             cycle.aura = aura
 
             if state.active_dot[ aura ] >= state.cycle_enemies then
@@ -2272,6 +2273,9 @@ do
 
                 -- cap cycle_targets if forced into single-target model.
                 if t.max_targets > 0 then targets = min( t.max_targets, targets ) end
+                -- the line's own cap (max_cycle_targets=N: wowsims's multidot maxDots)
+                local mc = t.args.max_cycle_targets
+                if type( mc ) == "number" and mc > 0 then targets = min( targets, mc ) end
 
                 return max( 1, targets )
 
@@ -4451,20 +4455,13 @@ local mt_active_dot = {
 
         if aura then
             if rawget( t, aura.key ) then return t[ aura.key ] end
-            local id = aura.id
-            local count = ns.numDebuffs( id )
-
-            if aura.copy then
-                if type( aura.copy ) == "table" then
-                    for _, v in ipairs( aura.copy ) do
-                        if type(v) == "number" and v > 0 and v ~= id then
-
-                            count = count + ns.numDebuffs( v )
-                        end
-                    end
-                elseif type( aura.copy ) == "number" and aura.copy > 0 and aura.copy ~= id then
-                    count = count + ns.numDebuffs( aura.copy )
-                end
+            -- The belief's count (option D, owner decision 2): the target and every remembered target, all ranks
+            -- (one belief index per aura, so the copies are not summed again). Unknown (nil: the target holds no
+            -- memory slot): every enemy counts as carrying it, so no swap is suggested (never 0: a 0 suggests a swap
+            -- for ever).
+            local count = Facade.DebuffCount( aura.id, state.now )
+            if count == nil then
+                count = UnitExists( "target" ) and state.true_active_enemies or 0
             end
 
             t[ k ] = count
