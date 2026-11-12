@@ -915,7 +915,7 @@ describe("Time-to-Die checks", function()
         return text
     end
 
-    it("reserves Serpent Sting for a full-duration target and excludes Elemental and Mechanical targets", function()
+    it("reserves Serpent Sting for 9s and excludes Elemental and Mechanical targets", function()
         local text = profile()
         local lifetime = "target.time_to_die>=debuff.serpent_sting.duration*0.6&target.time_to_die<3600"
         local creatures = 'target.creature_type!="elemental"&target.creature_type!="mechanical"'
