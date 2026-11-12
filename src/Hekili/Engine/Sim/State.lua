@@ -3565,7 +3565,8 @@ local mt_gcd = {
                 return state.buff.adrenaline_rush.up and max( 0.75, state.haste ) or 1
             end
 
-            return max( 1.5 * state.haste, state.buff.voidform.up and 0.67 or 0.75 )
+            -- a GCD modifier in scope (aura audit C12) before the floor, as wowsims applies it
+            return max( 1.5 * state.haste * ns.costMods.GcdMult( ability ), state.buff.voidform.up and 0.67 or 0.75 )
 
         elseif k == "remains" then
             return state.cooldown.global_cooldown.remains
@@ -3578,7 +3579,8 @@ local mt_gcd = {
                 return state.buff.adrenaline_rush.up and max( 0.75, state.haste ) or 1
             end
 
-            return max( 1.5 * state.haste, state.buff.voidform.up and 0.67 or 0.75 )
+            local ability = state.this_action and class.abilities[ state.this_action ]
+            return max( 1.5 * state.haste * ns.costMods.GcdMult( ability ), state.buff.voidform.up and 0.67 or 0.75 )
 
         elseif k == "lastStart" then
             return 0

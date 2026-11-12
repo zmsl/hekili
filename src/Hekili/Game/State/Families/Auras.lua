@@ -39,6 +39,8 @@ local U = {
     gen = {},
     mem = {},
     icd = {}, -- by aura: its RegisterAura `icd` (seconds), 0 none
+    haste = {}, -- by aura: its RegisterAura `swingHaste` (the swing speed's multiplier while up), 0 none
+    hasteOn = {}, -- by aura: its `swingHaste` gain was applied and its fall not yet (pairs every gain with one fall)
     firstWalk = {}, -- by unit: the time of its first clean walk (Sources/Auras.lua), 0 none yet
     openFold = {}, -- by unit and aura: the I.folds of its last Cooldown Manager open (I.CastAura), 0 none
 }
@@ -55,8 +57,9 @@ I.curSlot = 0
 -- dropped before its fold must not leave the target waiting for ever). Unequal: a swap waits to fold.
 I.curSwapN = 0
 
--- The player auras with a `consumedBy` (a set of I.HitKind names): their indices, and each one's kinds by I.HitKind.
-local CONS, consKinds = { n = 0 }, {}
+-- The player auras with a `consumedBy` (a set of I.HitKind names): their indices, and each one's kinds by I.HitKind;
+-- each one's `consumeIcd` (seconds, 0 none) and its last spend's time.
+local CONS, consKinds, consIcd, consLast = { n = 0 }, {}, {}, {}
 
 I.OnBuild(function(def, now)
     for k in pairs(U.bySpell) do
@@ -75,6 +78,9 @@ I.OnBuild(function(def, now)
         U.id[j], U.obj[j] = ids[1], auras[j]
         local icd = rawget(auras[j], "icd")
         U.icd[j] = type(icd) == "number" and icd > 0 and icd or 0
+        local haste = rawget(auras[j], "swingHaste")
+        U.haste[j] = type(haste) == "number" and haste > 0 and haste or 0
+        U.hasteOn[j] = false
         if auras[j].key ~= nil then
             U.byKey[auras[j].key] = j
         end
@@ -128,6 +134,8 @@ I.OnBuild(function(def, now)
                 end
             end
             consKinds[CONS.n] = kinds
+            local icd = rawget(auras[j], "consumeIcd")
+            consIcd[CONS.n], consLast[CONS.n] = type(icd) == "number" and icd > 0 and icd or 0, -HUGE
         end
     end
     I.TRACKED.aura = U.id
@@ -191,6 +199,14 @@ local function set(u, j, expires, applied, stacks, t, origin, event, harmful)
         push(D.upd, D.nUpd, u, inst0)
     end
     e[j], U.applied[u][j], U.stacks[u][j] = expires, applied, stacks
+    local f = u == 1 and U.haste[j] or 0
+    if f > 0 and (expires > 0) ~= U.hasteOn[j] then -- a `swingHaste` aura's gain or fall (aura audit C5)
+        U.hasteOn[j] = expires > 0 -- an expired record recast before the sweep stays one application
+        local at = (expires <= 0 and was < t) and was or t -- a fall by time: when it ran out
+        if I.inCombat and at >= I.combatT then -- out of combat the client's plain speed reads say it
+            I.SwingHaste(expires > 0 and f or 1 / f, at) -- nonzero: f > 0
+        end
+    end
     if harmful ~= nil then
         U.harm[u][j] = harmful
     end
@@ -282,14 +298,16 @@ function I.AuraModel(u, j, applied, expires, stacks, t, event, harmful)
 end
 
 -- A hit of a listed kind spends one stack of each `consumedBy` player aura believed up (a modelled sample at the hit),
--- and takes it down at 0. The floor (decision 114): a generic input by aura, default 0; while floor[j] is 1 the last
+-- and takes it down at 0; an aura with `consumeIcd` spends at most one a window from its last spend (wowsims's ICD
+-- timer: a recast keeps it running). The floor (decision 114): a generic input by aura, default 0; while floor[j] is 1 the last
 -- stack is kept (its writer says the aura is seen up: the hit count is not what closes it). Allocates nothing.
 local floor = I.auraFloor or {}
 I.auraFloor = floor
 I.On(Obs.PlayerHit, function(o, t)
     for k = 1, CONS.n do
         local j = CONS[k]
-        if consKinds[k][o.a] and U.exp0[1][j] > t then -- unit 1 is always "player" (Tracked.lua's def.units)
+        if consKinds[k][o.a] and U.exp0[1][j] > t and t - consLast[k] >= consIcd[k] then -- unit 1: "player"
+            consLast[k] = t
             local n = U.stacks[1][j] - 1
             if n > 0 then
                 set(1, j, U.exp0[1][j], U.applied[1][j], n, t, "modelled", Obs.PlayerHit)

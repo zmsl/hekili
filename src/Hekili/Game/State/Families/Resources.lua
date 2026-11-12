@@ -600,21 +600,25 @@ local function coefAt(r, t, inside)
     return f * fa, f * fb, f * k
 end
 
--- The entries of slot r up at t as the out-of-combat read sees them: their whole-rate multiple f, their summed mp5, and
--- whether a `spirit` or `share` one is up (the game's pair then mixes the parts: no news). Allocates nothing.
+-- The entries of slot r up at t as the out-of-combat read sees them: their whole-rate multiple f, their summed mp5,
+-- whether a `spirit` one is up (the game's pair then mixes the parts: no news), and the summed share s of the
+-- share-only ones (a regen-while-casting aura: the pair mixes them by a known share, which the read unmixes; aura audit
+-- C9). Allocates nothing.
 local function readAt(r, t)
-    local f, k, mixed = 1, 0, false
+    local f, k, mixed, s = 1, 0, false, 0
     for i = 1, M.n do
         if M.slot[i] == r then
             local j = M.aura[i]
             if I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then
                 f, k = f * M.mult[i], k + M.mp5[i]
-                mixed = mixed or M.spirit[i] ~= 1 or M.share[i] > 0
+                mixed = mixed or M.spirit[i] ~= 1
+                s = s + (M.spirit[i] == 1 and M.share[i] or 0)
             end
         end
     end
-    return f, k, mixed
+    return f, k, mixed, s
 end
+local pendAct = {} -- by slot: an `fsr` slot's casting read under a share-only entry, unmixed at its spirit read (-1 none)
 
 -- Slot r's regen weights over (from, from + dt]: the integrals of coefAt's fa, fb and k, split at the window's end and
 -- at every entry's aura edge inside it (each piece read at its start: no edge lies inside it, and a midpoint of a
@@ -1396,8 +1400,34 @@ I.On(Obs.Read, function(o, t, lag)
         end
     elseif c == ReadOf.Regen or c == ReadOf.RegenSpirit then
         -- the game's rate includes the entries up now: store it unscaled and net of their mp5 (none of a mixed pair)
-        local f, k, mixed = readAt(r, t)
-        if c == ReadOf.Regen and R.swing[r] == 0 and not (R.fsr[r] and mixed) then
+        local f, k, mixed, s = readAt(r, t)
+        if c == ReadOf.Regen and R.fsr[r] and not mixed and s > 0 then
+            pendAct[r] = o.b / f - k -- M + (c + s)S: unmixed with the spirit read that follows (Power.lua)
+        elseif c == ReadOf.RegenSpirit and R.fsr[r] and not mixed and s > 0 then
+            -- aura audit C9: casting M + (c + s)S and the rest (1 - c - s)S, so S = rest / (1 - c - s) and the stored
+            -- parts are M + cS (casting less sS) and (1 - c)S; at c + s >= 1 the pair holds only the total M + S, which
+            -- rescales the stored split
+            local act, v, cs = pendAct[r] or -1, o.b / f, R.share[r] -- nonzero: every entry's mult > 0 (the build)
+            pendAct[r] = -1
+            if act >= 0 then
+                local e, sp
+                if cs + s < 1 then
+                    local spirit = v / (1 - cs - s) -- nonzero: cs + s < 1
+                    e, sp = act - s * spirit, (1 - cs) * spirit
+                else
+                    local old = R.regE[r] + R.spE[r]
+                    e, sp = act + v, 0
+                    if old > 0 then
+                        e, sp = R.regE[r] * (act + v) / old, R.spE[r] * (act + v) / old -- nonzero: old > 0
+                    end
+                end
+                e = e > 0 and e or 0
+                R.decl[r], R.spDecl[r], R.readT[r] = e, sp, t
+                R.regE[r], R.regL[r], R.regH[r] = e, e, e
+                R.spE[r], R.spL[r], R.spH[r] = sp, sp, sp
+                I.Sample(R.regen[r], "observed", e + sp, t, Obs.Read)
+            end
+        elseif c == ReadOf.Regen and R.swing[r] == 0 and not (R.fsr[r] and mixed) then
             local v = o.b / f - k -- nonzero: every entry's mult > 0 (the build)
             v = v > 0 and v or 0 -- an `mp5` aura believed up that the game dropped: never a draining rate
             R.decl[r], R.readT[r] = v, t

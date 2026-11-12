@@ -245,10 +245,13 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
    raises gives no guard and a header note.
 2. Omitted (and listed in the `# Omitted:` header): hidden entries, conditions folding to false, nodes the fork
    lacks (`sequence`, `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `sequenceIsComplete`, ...), an entry
-   whose own action is unmapped, a call of an empty group.
+   whose own action is unmapped, a call of an empty group, a cast aimed at another target (`target` Target with an
+   index above 0, never read as the current one; aura audit C7).
 3. An all-empty group is an ON/OFF switch: `settings.wowsims_<name>`, its wowsims default; the header lists it only
    when an emitted line reads it (ruling L14), and the class registers exactly those (with the recipe's `settings`).
-4. `auraIsKnown`: a talent's `enabled`, an ability's `known`, else `true`; another unit's or player's aura is false.
+4. `auraIsKnown`: a talent's `enabled`, an ability's `known`, else `true` (a gear or enchant aura too, worn or not:
+   the branch then rests on the aura's read, Warlock Revelation); another unit's or player's aura is false; an ID
+   nothing resolves is false with a header note (`auraIsKnown of the unresolved aura <id> folds false`).
 5. Keys from the character's ability set (kit, shared, every race): `map`, `auras`, then the set (an ability's key
    reads as an aura only where the kit registers an aura under it, else rule 12's nil: Enhancement's Stormstrike
    debuff 17364). Ignores

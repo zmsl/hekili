@@ -93,6 +93,37 @@ describe("swings", function()
         assert.are.equal(2.6, VS.SwingSpeed(1, 102).est)
     end)
 
+    it("rescales the swing in flight and the speed at a `swingHaste` aura's gain and fall (aura audit C5)", function()
+        local def = fs.def(fs.new(9))
+        def.auras[1] = { key = "spender_a", id = fs.SPENDER_A, duration = 15, swingHaste = 1.4 }
+        I.Build(def, 90)
+        local function near(want, got)
+            assert.is_true(math.abs(want - got) < 1e-9, ("%.6f vs %.6f"):format(got, want))
+        end
+        local function drain(t) -- the fold, then the settle: its sweep takes an aura down by time (Auras.lua)
+            I.Fold(t)
+            I.Settle(t)
+        end
+        S.Direct(Obs.Swing, 95, 1, 2.8, 4) -- out of combat: a gain there rescales nothing (the plain reads say it)
+        drain(95)
+        I.AuraModel(1, 1, 95, 96, 1, 95, 0)
+        near(2.8, VS.SwingSpeed(1, 95).est)
+        I.inCombat = true -- the fall at 96 is swept in combat's first fold, but fell before the pull at 99: no rescale
+        S.Direct(Obs.CombatStart, 99)
+        S.Direct(Obs.Swing, 100, 1, 2.8, 4) -- next at 102.8
+        drain(100)
+        I.AuraModel(1, 1, 101, 116, 1, 101, 0) -- up at 101: 1.8 s left becomes 1.8 / 1.4
+        near(101 + 1.8 / 1.4, VS.Swing(1, 101).est)
+        near(2.0, VS.SwingSpeed(1, 101).est)
+        near(101 + 1.8 / 1.4 + 2.0, VS.Swing(1, 102.5).est)
+        I.AuraModel(1, 1, 101.5, 116, 1, 101.5, 0) -- a refresh while up: no second rescale
+        near(2.0, VS.SwingSpeed(1, 101.5).est)
+        S.Direct(Obs.Swing, 115, 1, 2.0, 4) -- the client's hasted swing: its duration as observed, not divided again
+        drain(116.5) -- the aura ran out at 116: 1.0 s left there becomes 1.4
+        near(117.4, VS.Swing(1, 116.5).est)
+        near(2.8, VS.SwingSpeed(1, 116.5).est)
+    end)
+
     describe("parry haste (parry-haste spec decisions 57-59, the owner's ruling 2026-10-23)", function()
         -- in combat: the main hand (2.0 s) swung at 100, next at 102; the off hand (2.0 s) at 100.1
         local function swung()

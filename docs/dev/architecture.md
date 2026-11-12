@@ -191,7 +191,12 @@ Two environments have them:
   or its hybrid's out-of-combat cache when the read is secret);
 - the belief's `now` context (`Game/State/Families/Now.lua`, `NAMES`): the same names, where `stat` is only the
   plain function `stat(name, arg)` and the gear comes from the belief's own read of the weapon slots
-  (`Sources/Player.lua`). A `now` handler cannot read `stat.crit`, and `equipped` holds `shield` alone.
+  (`Sources/Player.lua`). A `now` handler cannot read `stat.crit`, and `equipped` holds `shield` alone. Three names
+  are the `now` context's alone (aura audit C8; the sim's `state` answers none of them): `instant` (true inside an
+  instant cast's `now`: no start seen; false elsewhere), `cast_start` (the cast's start time, 0 for an instant) and
+  `target.health` (`known`, and the percent bounds `lo` and `hi` of the belief's target health interval,
+  `Families/TargetHealth.lua`; 0 and 100 while unknown). There is no `target.health.pct`: secret health is unknown,
+  never 100 or 0, so a `now` tests a bound (`target.health.hi < 35`: proven below 35%).
 
 A file-level helper keeps its file's environment, so these names do not resolve there: a pack function passes what it
 read. A file's `state.knownRank` local is the facade's function, safe in a helper on either side.
@@ -218,16 +223,19 @@ condition fails now is rechecked like any entry, so "true in t" opens the window
 `window.<name>` gets that time as a recheck (its countdown). The decreasing-clock `<`/`<=` direction works today; the
 weave's "the next Auto Shot fires" is the wrap of a decreasing clock (`ranged_remains>ranged_speed-x`), which only
 ruling R6's `>`/`>=` wrap branch (Task 8b, `Engine/Sim/Scripts.lua`) times.
-`spec:RegisterReaction(name, { who = "player"|"target", outcome = "dodge"|"parry"|"block"|"miss"|"deflect"|"evade"|"crit"|"swing", hand = "main"|"off", now = fn })`
+`spec:RegisterReaction(name, { who = "player"|"target", outcome = "dodge"|"parry"|"block"|"miss"|"deflect"|"evade"|"crit"|"swing"|"land", hand = "main"|"off", now = fn })`
 crosses as `def.reactions`: a `now` function the belief runs at a settled outcome's row time
 (`Game/State/Families/Now.lua`; incoming from victim-side `UNIT_COMBAT`, ours from `Game/Events/Rows.lua`'s settled
 payments and a white swing's `Obs.SwingSettled`: a final credit, a provisional one at `T.onFinal`, an avoid at its
 window's close), never an ability (no index, cast history, `prev_gcd`, ticket, GCD or options row) and with no
 forecast: its window reaches the core in the next copy. `swing` (who `target` only; a hit on us tells no white swing
-from a special) runs once per white swing of ours whatever its outcome, `hand` (swing only) filtering by the hand the
-belief paired it to; a swing closing with no row runs nothing, and a spell of ours blocked fires nothing
-(`docs/dev/gaps.md` CO). The owner's order: an aura first, a usability flip where it works, a reaction only where only
-an outcome reveals the span.
+from a special) runs once per white swing of ours whatever its outcome, `hand` (swing and land only) filtering by the
+hand the belief paired it to; a swing closing with no row runs only `land`, and a spell of ours blocked fires nothing
+(`docs/dev/gaps.md` CO). `land` (who `target` only; aura audit C3) runs once per white swing of ours that landed: a
+settled wound, or a swing that closed with no row at all, at the swing's own time (live, a non-crit hit's amount is
+secret, so its row is background and only avoids are plain: a swing with no avoid seen is presumed landed; it is
+staged as `Obs.SwingSettled` with c = -1, which runs `land` only). The owner's order: an aura first, a usability flip
+where it works, a reaction only where only an outcome reveals the span.
 
 `RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec/Abilities.lua`) is a spell the spellbook knows and the
 player never casts. The belief tracks its known rank (the `now` context's `knownRank` reads it; the sim's asks the
@@ -295,6 +303,46 @@ times its tick phase). An `icd` aura already up in the unit's first clean walk (
 so its ICD reads ready (its applied time is put one ICD back, a sentinel) until a gain is seen. The sim's `applyBuff`
 starts it too, and removing a down aura keeps it (`tests/Forever/aura_icd_spec.lua`, `tests/Game/State/auras_spec.lua`).
 
+**A charge spent by hits on us, with its own cooldown.** A player aura's `consumedBy` (a set of hit kinds:
+`WOUND`, `BLOCK`, `BLOCKED`, ...) makes each such hit on us spend one stack in the belief (`Families/Auras.lua`), and
+`consumeIcd = <seconds>` limits it to one stack a window from the last spend (wowsims's ICD timer: a recast keeps it
+running; aura audit C2). A `now` function spends our own stacks with `removeStack(aura, stacks)` (Hekili's verb: the
+expiry kept, down at 0; aura audit C4).
+
+**A haste aura on the swing clocks.** `RegisterAura{ swingHaste = <multiplier> }` (aura audit C5): while the belief
+holds the player aura up in combat, every hand swings `multiplier` times faster; at its gain the swing in flight lands
+after (its time left) / multiplier and the speed is divided by it, at its fall (its expiry, when it ran out) the
+inverse, as the client rescales a running swing. The next PLAYER_SWING's duration is the hasted one as observed, so it
+is never divided again; out of combat (or for a fall before the pull) nothing is rescaled: the plain speed reads say
+it. One multiplier for every hand; the sim's own forecast of a haste cast inside its window is not rescaled.
+
+**What only a landed hit or a full channel gives** (aura audit C10, C11). An ability's `onLand` (bound like `onCrit`)
+runs in the `now` context once its cast is settled as landed: `Game/Events/Rows.lua` stages `Obs.Landed` once per
+direct-hit ticket (not a tick's or a swing's), when a wound or crit is paid to it or a provisional payment is final.
+A ticket closing with no row is not presumed landed: live, every target row is background (its amount, flag and school
+secret), so avoids pay nothing either and a presumed land would follow every avoid; until rows are plain again
+`onLand` runs only where they are (the harness, replays). An avoid never runs it, and an ability whose `expects` is
+NONE (no ticket) never lands. A channeled ability's
+`now_finish` is the belief's twin of the sim's `finish` (run at CHANNEL_FINISH, `Engine/Sim/State.lua`): it runs at
+the channel's stop when that stop is at most 0.05 s before the channel's believed end (its start's plain end, moved
+by pushbacks) and at most 0.5 s after it; a broken channel, one whose times were secret, or a later stop (another
+channel's, whose start was secret) runs nothing. Both write `modelled` samples no avoid
+undoes.
+
+**A GCD modifier.** `spec:RegisterGcdMod({ aura = <key>, pct = <n>, spells = { <ids> } | nil })` (aura audit C12;
+the cost modifier's shape and scope: `spells` nil is every ability, a listed ID matches the ability's `id` or a `copy`
+rank) makes a spell-kind GCD (1 + pct) as long while the player's aura is up, before the floor, as wowsims's
+GCDMultiplier does (then the haste, then the 1.0 s minimum). The sim applies it in `state.gcd` (`execute`, and
+`max`/`duration` for `this_action`; `Engine/Schema/Races.lua` `GcdMult`), the belief in `Families/Casts.lua`'s
+`GcdLen` on top of the learned spell-kind length (floored at 1.0); a GCD a modifier cut teaches no length, and a
+declared `gcdTime` still wins.
+
+**A regen-while-casting share.** A regen entry `{ aura = <key>, share = s }` with no `spirit` multiple (aura audit
+C9) adds s of the spirit regen inside the five-second window while the aura is believed up. Its out-of-combat read is
+unmixed, not dropped: the client's casting rate is M + (c + s)S and the rest (1 - c - s)S, so the stored parts become
+M + cS and (1 - c)S; when c + s reaches all of it the pair holds only the total, which rescales the stored split. An
+entry with a `spirit` multiple (Evocation) still makes the pair no news.
+
 **Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Shared`
 (`## Dependencies: Hekili`, `## LoadOnDemand: 1`; Shared auras, consumables, items, and the race packs), then one pack
 per class: `Hekili_Warrior`, `Hekili_Druid`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman`, `Hekili_Hunter`, `Hekili_Mage`, `Hekili_Priest`, `Hekili_Warlock` (`## Dependencies: Hekili, Hekili_Shared`,
@@ -309,8 +357,10 @@ class token, a missing pack, a mismatch or a failed pack load keeps one notice, 
 
 **What bumps what.** A class release bumps `## Version` in its pack's TOC. `CONTENT_API` and every content TOC's
 `## X-Hekili-ContentAPI` change together, only when the content surface changes: the Register* API, `Hekili.Client`,
-or the environment names above (now 12: 10 added `Hekili:GetLocale` and the packs' `Locales/`, 11 the aura field
-`enchants`, 12 `kit:RegisterSelector`). `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
+or the environment names above (now 14: 10 added `Hekili:GetLocale` and the packs' `Locales/`, 11 the aura field
+`enchants`, 12 `kit:RegisterSelector`, 13 the `now` verb `removeStack`, the aura fields `consumeIcd` and `swingHaste`
+and the reaction outcome `land`, 14 the `now` names `instant`, `cast_start` and `target.health`, the ability fields
+`onLand` and `now_finish` and `spec:RegisterGcdMod`). `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
 
 **Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`,
 `Engine/Schema/Selectors.lua`; the tree arithmetic, ids, share keys and migration are `Engine/Schema/Trees.lua`'s) from

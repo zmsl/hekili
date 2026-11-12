@@ -96,11 +96,11 @@ files["src/Hekili/Options/DevTools.lua"] = {
 files["src/Hekili/UI/UI.lua"] = { globals = { "p" } } -- upstream's stray global read
 -- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Game/State/Families/Now.lua).
 local nowEnv = {
-    "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "summonTotem",
-    "summonPet", "dismissPet", "reduceCooldown", "level",
+    "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "removeStack", "setCooldown",
+    "summonTotem", "summonPet", "dismissPet", "reduceCooldown", "level",
     "talent",
     "buff", "debuff", "knownRank", "stat", "swingBase", "healthMax", "now", "combat", "rage", "energy", "mana", "focus",
-    "runic_power", "totem", "action", "settings", "haste",
+    "runic_power", "totem", "action", "settings", "haste", "instant", "cast_start", "target",
     "set_bonus", "equipped",
     "openWindow", "closeWindow", "lastSwing", "nextSwing", "usable", -- the windows (Families/Windows.lua)
 }

@@ -618,6 +618,8 @@ describe("the wowsims APL translator", function()
                     },
                 }),
                 cast(100, cmp("OpGt", { auraRemainingTime = { auraId = { spellId = 910, tag = -1 } } }, const("2s"))),
+                -- an unresolved ID folds false inside an emitted line: its header note shows the silent fold
+                cast(100, { ["or"] = { vals = { known(999), known(200, "Self") } } }),
             },
         }, ctx({ map = { [951] = "cuts" } }))
         assert.are.equal(
@@ -631,10 +633,16 @@ describe("the wowsims APL translator", function()
                 "actions+=/strike",
                 "actions+=/strike,if=action.big_hit.known",
                 "actions+=/strike",
+                "actions+=/strike,if=action.big_hit.known",
             }, "\n"),
             text
         )
-        assert.are.same({ "default #6: never", "default #8: never", "default #9: never" }, omitted)
+        assert.are.same({
+            "default #6: never",
+            "default #8: never",
+            "default #9: never",
+            "default #13: auraIsKnown of the unresolved aura 999 folds false",
+        }, omitted)
     end)
 
     it(
@@ -721,6 +729,24 @@ describe("the wowsims APL translator", function()
                 "actions+=/strike",
             }, "\n"),
             text
+        )
+    end)
+
+    it("omits a cast aimed at another target (castSpell target index 1), never on the current one", function()
+        local function at(target)
+            return { action = { castSpell = { spellId = { spellId = 100 }, target = target } } }
+        end
+        local text, omitted = apl.translate({
+            priorityList = {
+                at({ index = 1, type = "Target" }), -- wowsims's second target (Bane of Havoc): aura audit C7
+                at({ type = "Target" }), -- index 0: the encounter's first target, read as the current one
+                { action = { changeTarget = { newTarget = { type = "NextTarget" } } } }, -- never a current-target line
+            },
+        }, ctx())
+        assert.are.equal("actions=strike,focus=1", text) -- ctx()'s recipe gives strike focus tier 1
+        assert.are.same(
+            { "default #1: castSpell on another target (Target index 1)", "default #3: changeTarget" },
+            omitted
         )
     end)
 

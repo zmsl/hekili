@@ -3,14 +3,16 @@
 -- On each own CastSuccess (a channel's included) the family writes the automatic effects from the ability's declared
 -- fields (its cost, its cooldown or charge, the GCD), then runs the ability's `now` function, if the class file
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
--- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
+-- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `removeStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
 -- `summonPet`, `dismissPet`, `openWindow`, `closeWindow`) and reads (`talent`, `buff`, `debuff`, the resources by key,
 -- `knownRank`, `stat`, `swingBase`, `mainhand_speed`, `offhand_speed`, `weapon`, `equipped`, `set_bonus`, `healthMax`,
--- `now`, `combat`, `level`, `lastSwing`, `nextSwing`, `usable`, `window`) with belief meanings. A window's evaluator
+-- `now`, `combat`, `level`, `lastSwing`, `nextSwing`, `usable`, `window`, and the `now`-only `instant`, `cast_start`,
+-- `target.health`: aura audit C8) with belief meanings. A window's evaluator
 -- (Families/Windows.lua) runs in the same context, reads only. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An `applyBuff`/`applyDebuff` with no duration writes the aura's registered one: its number, or its function evaluated
 -- in this context (gear-aware spec §5), so a pack writes a duration once.
 -- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
+-- A channel that ran to its believed end runs the ability's `now_finish` (the sim's `finish`'s twin; aura audit C11).
 -- A reaction (RegisterReaction) runs in the same context at a settled outcome's row time, never through the cast fold.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
 
@@ -22,6 +24,8 @@ local CAST = Obs.CastSuccess
 local A = I.ab
 A.now = {} -- by ability index: the `now` function, bound to the context, or false
 A.onCrit = {} -- by ability index: the `onCrit` function (run at the cast's own crit, Obs.Crit), bound, or false
+A.onLand = {} -- by ability index: the `onLand` function (run once its cast landed, Obs.Landed), bound, or false
+A.finish = {} -- by ability index: the `now_finish` function (run at a channel's stop at its end), bound, or false
 A.extra = {} -- by ability index: a `track_<id>` extra (VS.Track): no ability, no effects
 A.known = A.known or {} -- by ability index: any rank in the spellbook (Sources/Spellbook.lua)
 
@@ -47,6 +51,12 @@ local NAMES = {
     weapon = { size = 0 }, -- the gear (Sources/Player.lua): the main hand's size, 2 a two-hander, as the sim's `weapon`
     equipped = { shield = false }, -- and its `equipped.shield`
     set_bonus = I.setBonus, -- the declared gear's values (Families/Gear.lua), the core's state.set_bonus semantics
+    -- the cast's start (aura audit C8; `now`-only names, the sim's `state` has neither): `cast_start` its start time, 0
+    -- for an instant (no start seen), and `instant`, true only inside an instant cast's `now` (false elsewhere)
+    -- shortcut: a hard cast whose UnitCastingInfo times were secret stages no start, so it reads instant; upgrade with
+    -- a start flag staged at UNIT_SPELLCAST_START itself if a pack's instant-only spend shows it live
+    cast_start = 0,
+    instant = false,
 }
 I.weapon, I.equipped = NAMES.weapon, NAMES.equipped
 -- equipped.<key>: the core's mt_equipped (Engine/Sim/State.lua:4848), set_bonus.<key> > 0; the raw `shield` stays
@@ -196,6 +206,26 @@ NAMES.action = setmetatable({}, {
     end,
 })
 local NO_SETTINGS = {}
+
+-- target.health (aura audit C8; `now`-only): the belief's target health interval (Families/TargetHealth.lua) as
+-- percent bounds `lo` and `hi` (0 and 100 while unknown), and `known`, true once something bounded it (a gate's
+-- answer, a pin, learned damage, a death). No `pct`: secret health is unknown, never read as 100 or 0, so a `now`
+-- tests a bound (`target.health.hi < 35`: proven below 35%) and a bare `pct` read raises (a counted error).
+NAMES.target = {
+    health = setmetatable({}, {
+        __index = function(_, f)
+            local h = VS.Health("target", T)
+            if f == "known" then
+                return h.lo > 0 or h.hi < 1
+            elseif f == "lo" then
+                return h.lo * 100
+            elseif f == "hi" then
+                return h.hi * 100
+            end
+            return nil
+        end,
+    }),
+}
 
 local resourceMeta = {
     __index = function(r, f)
@@ -351,6 +381,24 @@ function NAMES.addStack(aura_, duration, stacks)
     local n = (have or 0) + (stacks or 1)
     aura(1, aura_, duration, n < auraMax[j] and n or auraMax[j]) -- Hekili's max_stack clamp (State.lua:837-852)
 end
+--- removeStack(aura, stacks): Hekili's verb (State.lua): `stacks` (1) fewer of our aura, its expiry and applied time
+--- kept; down when none is left. A down aura is left down (aura audit C4).
+function NAMES.removeStack(aura_, stacks)
+    local j = auraByKey[aura_]
+    if not live or not j then
+        return
+    end
+    local rec, have, applied = VS.Aura("player", auraSpell[j], T)
+    if not rec then
+        return
+    end
+    local n = (have or 1) - (stacks or 1)
+    if n <= 0 then
+        aura(1, aura_, 0)
+        return
+    end
+    I.AuraModel(1, j, applied, rec.est, n, T, CAST, false) -- no log row: the expiry stands (a dose, not a refresh)
+end
 function NAMES.setCooldown(action, duration)
     local a = abByKey[action]
     if live and a and type(duration) == "number" then
@@ -474,8 +522,8 @@ NAMES.window = setmetatable({}, {
 -- 2 off: a "swing" reaction's filter), preallocated at load, refilled at the build.
 
 local WHO, HAND = { player = 1, target = 2 }, { main = 1, off = 2 }
-local OUTCOME = { dodge = 1, parry = 2, block = 3, miss = 4, deflect = 5, evade = 6, crit = 7, swing = 8 }
-local CRIT, SWING = OUTCOME.crit, OUTCOME.swing
+local OUTCOME = { dodge = 1, parry = 2, block = 3, miss = 4, deflect = 5, evade = 6, crit = 7, swing = 8, land = 9 }
+local CRIT, SWING, LAND = OUTCOME.crit, OUTCOME.swing, OUTCOME.land
 local OUTCOME_OF = {} -- by I.HitKind: the outcome slot (0: no reaction outcome)
 for name, kind in pairs(I.HitKind) do
     local o = OUTCOME[name:lower()]
@@ -485,7 +533,7 @@ OUTCOME_OF[I.HitKind.BLOCKED] = OUTCOME.block -- `block` covers BLOCK and BLOCKE
 local NO_REACTIONS = {}
 local react = { {}, {} } -- react[who][outcome] = { n = count, bound functions... }
 for w = 1, 2 do
-    for o = 1, SWING do
+    for o = 1, LAND do
         react[w][o] = { n = 0, hand = {} }
     end
 end
@@ -493,7 +541,7 @@ I.reactionsRun = 0
 
 local function bindReactions(list)
     for w = 1, 2 do
-        for o = 1, SWING do
+        for o = 1, LAND do
             local l = react[w][o]
             for k = 1, l.n do
                 l[k], l.hand[k] = nil, nil
@@ -557,6 +605,14 @@ I.OnBuild(function(def)
         A.now[a] = type(f) == "function" and setfenv(f, ctx) or false
         local c = obj.onCrit
         A.onCrit[a] = type(c) == "function" and setfenv(c, ctx) or false
+        local l = obj.onLand
+        A.onLand[a] = type(l) == "function" and setfenv(l, ctx) or false
+        local fin = obj.now_finish
+        if type(fin) == "function" and fin == obj.finish then -- as `now` and `handler`: one function, one environment
+            I.nowErrors, I.nowError = I.nowErrors + 1, "now: " .. tostring(A.key[a]) .. "'s now_finish is its finish"
+            fin = false
+        end
+        A.finish[a] = type(fin) == "function" and setfenv(fin, ctx) or false
         rawset(NAMES.action, A.key[a], setmetatable({ a = a }, actionMeta))
     end
     rawset(NAMES, "settings", def.settings or NO_SETTINGS) -- the spec's settings as plain values, the core's copy
@@ -705,12 +761,17 @@ local function run(o, t)
     end
 
     undoA, undoT, undoSwap, paid, undoN = a, o.t, I.curSwapN, 0, 0
+    local started = o.kind == CAST and A.castStartT[a] or 0 -- read before `automatic` and the line after clear it
     automatic(a, t, o.kind, o)
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
     I.castsRun = I.castsRun + 1
     I.WindowCast(a, t) -- the stepped and strict windows' one per-cast hook (Families/Windows.lua), before the `now`
     if A.now[a] then
+        rawset(NAMES, "cast_start", started)
+        rawset(NAMES, "instant", started == 0)
         call(A.now[a], a, t)
+        rawset(NAMES, "cast_start", 0)
+        rawset(NAMES, "instant", false)
     end
 end
 -- CastSuccess only: a channel stages ChannelStart and CastSuccess both (Sources/Casts.lua), and must run once.
@@ -724,6 +785,46 @@ I.On(Obs.Crit, function(o)
     if A.onCrit[a] and A.key[a] and not A.extra[a] then
         journal = false
         call(A.onCrit[a], a, o.t)
+        journal = true
+    end
+end)
+
+-- A channel's `now_finish` (aura audit C11): the channel in progress (ability index, 0 none) and its believed end, from
+-- its start (Sources/Casts.lua stages it only with plain times) and pushbacks; a stop within FINISH_TOL of that end
+-- ran it full (wowsims: the last tick lands at the end), so its `now_finish` runs at the stop, its writes no avoid's
+-- to undo. A stop earlier (a break, a clip), later than FINISH_LATE past the end, or a channel with no plain start runs
+-- nothing (dim: never a full channel assumed). Allocates nothing.
+local FINISH_TOL = 0.05 -- UNMEASURED: CHANNEL_STOP at a full channel's end is read at or just after it
+local FINISH_LATE = 0.5 -- a stop later than this past the end is another channel's (one whose start was secret)
+local chanA, chanEnd = 0, 0
+I.On(Obs.ChannelStart, function(o)
+    chanA, chanEnd = o.a, o.b
+end)
+I.On(Obs.ChannelUpdate, function(o)
+    if o.a == chanA then
+        chanEnd = o.b
+    end
+end)
+I.On(Obs.ChannelStop, function(o)
+    local a = chanA
+    if o.a ~= a then
+        return
+    end
+    chanA = 0
+    if A.finish[a] and A.key[a] and not A.extra[a] and o.t >= chanEnd - FINISH_TOL and o.t <= chanEnd + FINISH_LATE then
+        journal = false
+        call(A.finish[a], a, o.t)
+        journal = true
+    end
+end)
+
+-- Our cast's own landed hit (Events/Rows.lua, aura audit C10): the ability's `onLand` runs at it, its writes `modelled`
+-- there and no avoid's to undo (a gain only a landed hit gives, as a mana return). Allocates nothing.
+I.On(Obs.Landed, function(o)
+    local a = o.a
+    if A.onLand[a] and A.key[a] and not A.extra[a] then
+        journal = false
+        call(A.onLand[a], a, o.t)
         journal = true
     end
 end)
@@ -759,9 +860,17 @@ end)
 -- The other settled outcomes reactions run on (re-pin design §3a): our white swing's (Obs.SwingSettled, Events/Rows.lua:
 -- its avoid's own outcome, then every "swing" reaction of its hand), a hit on us (Obs.PlayerHit, Obs.PlayerCrit:
 -- victim-side UNIT_COMBAT, Sources/Player.lua), each at its row's time. Allocates nothing.
+-- "land" (aura audit C3): a settled wound, or a swing that closed with no row (c = -1: live, a non-crit hit's row is
+-- secret and only avoids are plain), which runs nothing else.
+local WOUND = I.HitKind.WOUND
 I.On(Obs.SwingSettled, function(o)
     fire(2, OUTCOME_OF[o.c] or 0, o.t)
-    fire(2, SWING, o.t, o.a)
+    if o.c ~= -1 then
+        fire(2, SWING, o.t, o.a)
+    end
+    if o.c == WOUND or o.c == -1 then
+        fire(2, LAND, o.t, o.a)
+    end
 end)
 I.On(Obs.PlayerHit, function(o)
     fire(1, OUTCOME_OF[o.a] or 0, o.t)

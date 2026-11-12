@@ -287,4 +287,40 @@ describe("target health", function()
         I.Fold(13)
         assert.are.equal(0, I.th.M)
     end)
+
+    -- aura audit C8: a `now` reads whether its cast was instant (no start seen) and the target's health interval as
+    -- percent bounds, `known` only once something bounded it (a fresh target's [0, 100] is unknown, never 100).
+    describe("in the `now` context (aura audit C8)", function()
+        local seen
+        local function build()
+            local d = def()
+            d.abilities[2].now = function()
+                local h = target.health -- luacheck: ignore 113 (the `now` context's names)
+                seen[#seen + 1] = { instant, cast_start, h.known, h.lo, h.hi } -- luacheck: ignore 113
+            end
+            seen = {}
+            I.Build(d, 1)
+        end
+
+        it("tells an instant cast from a hard one and answers the health bounds only once known", function()
+            build()
+            obs(Obs.CastSuccess, 2, 2, 0, 1) -- instant: no start
+            I.Fold(2)
+            obs(Obs.CastStart, 3, 2, 4.5)
+            obs(Obs.CastSuccess, 4.5, 2, 0, 1)
+            I.Fold(4.5)
+            obs(Obs.Usable, 9, GATED, 1, 0) -- usable: at or below the gate (0.2)
+            obs(Obs.CastSuccess, 10, 2, 0, 1)
+            I.Fold(10)
+            obs(Obs.TargetGone, 11, 1)
+            obs(Obs.CastSuccess, 12, 2, 0, 1)
+            I.Fold(12)
+            assert.are.same({
+                { true, 0, false, 0, 100 }, -- a fresh target: unknown
+                { false, 3, false, 0, 100 },
+                { true, 0, true, 0, 20 },
+                { true, 0, true, 0, 0 }, -- dead: observed 0
+            }, seen)
+        end)
+    end)
 end)

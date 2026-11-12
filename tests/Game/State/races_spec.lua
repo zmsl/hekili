@@ -117,7 +117,7 @@ describe("Engine/Schema/Races.lua", function()
         local class = { abilities = {}, auras = {} }
         ns.applyRace(class) -- nothing owned: the class keeps its own
         assert.are.same({ abilities = {}, auras = {} }, class)
-        assert.are.same({ maxMods = {}, costMods = {}, regenMods = {} }, ns.raceMods)
+        assert.are.same({ maxMods = {}, costMods = {}, regenMods = {}, gcdMods = {} }, ns.raceMods)
         assert.are.equal(ns.raceMods, hekili.RaceMods) -- the table read in game
     end)
 

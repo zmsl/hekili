@@ -41,6 +41,7 @@ local def = {
     windows = {}, -- the rotation windows (RegisterWindow's records; `steps` as ability indexes): Families/Windows.lua
     reactions = {}, -- RegisterReaction's records { key, who, outcome, hand, now }: Families/Now.lua (no ability index)
     gear = {}, -- the declared gear (spec:RegisterGear's sets and items, spec:RegisterSetBonus's bonuses): Families/Gear.lua
+    gcdMods = {}, -- the GCD modifiers { aura, pct, spells } (Engine/Schema/Races.lua; aura audit C12): Families/Casts.lua
 }
 local LISTS = {
     "abilities",
@@ -55,6 +56,7 @@ local LISTS = {
     "windows",
     "reactions",
     "gear",
+    "gcdMods",
 }
 
 local HANDS = { mainhand = 1, offhand = 2 }
@@ -339,6 +341,11 @@ local function buildDef()
         insert(def.abilities, { key = "track_" .. id, id = id, cooldown = 0 })
         def.abilityIds[#def.abilities] = { id }
         def.abilitySlot[#def.abilities] = 0
+    end
+    for _, m in ipairs(ns.raceMods and ns.raceMods.gcdMods or NO_GEAR) do
+        local rec = plain(m, {})
+        rec.scope = nil -- the sim's scope cache (Races.lua inScope)
+        insert(def.gcdMods, rec)
     end
     for _, k in ipairs(sortedKeys(class.auras)) do
         local a = class.auras[k]

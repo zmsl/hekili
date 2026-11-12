@@ -37,7 +37,12 @@ local format = string.format
 -- older core drops such an aura from the belief silently, so it would read down forever.
 -- 12 (2026-11-08): kit:RegisterSelector (a spec and its pack from the talents; Engine/Schema/Selectors.lua): an older
 -- core has no such method, so the pack's load would raise.
-local CONTENT_API = 12
+-- 13 (2026-11-11, aura audit C2-C5): the `now` verb `removeStack`, the aura fields `consumeIcd` and `swingHaste`, the
+-- reaction outcome `land`: an older core ignores the fields, raises on the verb and refuses the outcome.
+-- 14 (2026-11-11, aura audit C8-C12): the `now` names `instant`, `cast_start` and `target.health`, the ability fields
+-- `onLand` and `now_finish`, `spec:RegisterGcdMod`: an older core never runs the fields, reads nil for the names and
+-- raises on the call.
+local CONTENT_API = 14
 
 local done, notice = false, nil
 

@@ -69,7 +69,10 @@ local methods = {
     -- meta's share) or a share 0-1: a dodged, parried or missed cast gives back that much of its cost (the belief's
     -- only, Game/State/Families/Now.lua; the sim does not predict avoidance). `onCrit = function() ... end`, beside
     -- `now`: what a critical hit of the cast gives, written with the same verbs when the target's row shows our cast's
-    -- own crit (Primal Fury's `gain( 5, "rage" )`); the belief's only, the sim does not predict crits. `spendBase = true`:
+    -- own crit (Primal Fury's `gain( 5, "rage" )`); the belief's only, the sim does not predict crits. `onLand`, the
+    -- same way: what only a landed hit gives (a mana return), run once the cast's hit is settled as landed, never on an
+    -- avoid (aura audit C10). `now_finish`: a channel's `finish` twin in the belief, run when the channel ran to its
+    -- end (aura audit C11). `spendBase = true`:
     -- its `spend` (scalar or function) is a fraction of its pool's base power at any magnitude, floored, in both layers
     -- (a percent-of-base cost a stacking aura raises past 100%); without it only a cost between 0 and 1 is a fraction.
     -- Hekili's `form = key` (or a function returning one): the form or stance aura the ability needs (state:IsUsable);

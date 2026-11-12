@@ -577,6 +577,32 @@ describe("auras", function()
             assert.are.equal(1, I.auras.stacks[1][SHOUT])
         end)
 
+        it("with `consumeIcd` spends one stack per window: hits inside it spend none (aura audit C2)", function()
+            local def = fs.def(fs.new(9))
+            def.auras[SHOUT] = {
+                key = "spender_a",
+                id = fs.SPENDER_A,
+                max_stack = 3,
+                consumedBy = { BLOCK = true },
+                consumeIcd = 3.5,
+            }
+            I.Build(def, 1)
+            I.ObsLog.Clear(I.log)
+            I.AuraModel(1, SHOUT, 10, 40, 3, 10, 0)
+            hit(11, BLOCK)
+            assert.are.equal(2, select(2, VS.Aura("player", fs.SPENDER_A, 11)))
+            hit(12, BLOCK) -- inside the window
+            hit(14.4, BLOCK)
+            assert.are.equal(2, select(2, VS.Aura("player", fs.SPENDER_A, 14.4)))
+            hit(14.5, BLOCK) -- the window's end: the next spends
+            assert.are.equal(1, select(2, VS.Aura("player", fs.SPENDER_A, 14.5)))
+            I.AuraModel(1, SHOUT, 15, 45, 3, 15, 0) -- a recast refills it; the window runs on (wowsims's timer)
+            hit(16, BLOCK)
+            assert.are.equal(3, select(2, VS.Aura("player", fs.SPENDER_A, 16)))
+            hit(18, BLOCK)
+            assert.are.equal(2, select(2, VS.Aura("player", fs.SPENDER_A, 18)))
+        end)
+
         it("allocates nothing over 1000 hits", function()
             local alloc = require("Game.State.helpers.alloc")
             local t = 11

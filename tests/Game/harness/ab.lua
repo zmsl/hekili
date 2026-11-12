@@ -13,6 +13,23 @@ M.ARMS = {
     ["viewer-buffs"] = { outcomes = "default", presence = "router", viewer = true, layout = "buffs" },
     ["viewer-fixture"] = { outcomes = "default", presence = "router", viewer = true, layout = "fixture" },
     ["viewer-mixed"] = { outcomes = "default", presence = "router", viewer = true, layout = "mixed" },
+    -- live player auras (aura audit C1): our auras raise in combat (observer secretPlayerAuras, FR-1), so a proc aura
+    -- the pack only reads (never applies) is seen only through the Cooldown Manager: `live-auras` with the class's
+    -- real layout (fixture; a class without one skips the arm), `live-auras-none` with no item (every one unseen)
+    ["live-auras"] = {
+        outcomes = "default",
+        presence = "router",
+        viewer = true,
+        layout = "fixture",
+        observe = { secretPlayerAuras = true },
+    },
+    ["live-auras-none"] = {
+        outcomes = "default",
+        presence = "router",
+        viewer = true,
+        layout = "none",
+        observe = { secretPlayerAuras = true },
+    },
     -- the meter arm's baseline (measured by hand, not by make gate-ab): the Default with the meter arm's taken lead, so
     -- the two differ only by the leaf and its assumptions
     lagged = { outcomes = "default", presence = "router", viewer = false, observe = { takenLag = 0.48 } },

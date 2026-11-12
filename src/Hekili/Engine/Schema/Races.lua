@@ -17,7 +17,7 @@
 local addon, ns = ...
 local Hekili = _G[addon]
 
-local mods = { maxMods = {}, costMods = {}, regenMods = {} }
+local mods = { maxMods = {}, costMods = {}, regenMods = {}, gcdMods = {} }
 ns.raceMods = mods
 Hekili.RaceMods = mods -- read in game at CHECKPOINT B (ns is not global)
 
@@ -86,6 +86,17 @@ end
 --- `spec:RegisterCostMod` (Engine/Schema/Spec.lua): the class file has returned for any other class, so its append is the player's.
 function ns.RegisterCostMod(def)
     mods.costMods[#mods.costMods + 1] = def
+end
+
+--- { aura = key, pct = n, spells = { spell IDs } | nil } (aura audit C12): a spell-kind GCD of an ability in scope
+--- (as a cost modifier's: every ability when `spells` is nil) is (1 + pct) as long while the player's aura is up, before
+--- the GCD floor (wowsims spell_mod.go GCDMultiplier, then the haste, then the minimum). A class file's
+--- `spec:RegisterGcdMod` (Engine/Schema/Spec.lua). Both layers read it: the sim (M.GcdMult) and the belief (Tracked.lua's
+--- def.gcdMods, Families/Casts.lua).
+function ns.RegisterGcdMod(def)
+    if type(def) == "table" and type(def.aura) == "string" and type(def.pct) == "number" then
+        mods.gcdMods[#mods.gcdMods + 1] = def
+    end
 end
 
 function Race:RegisterCostMod(def)
@@ -172,6 +183,24 @@ function M.Apply(cost, a)
         end
     end
     return cost > 0 and cost or 0
+end
+
+--- The simulation's GCD multiplier for ability `a` (nil: none in scope but a modifier without `spells`): the product
+--- of (1 + pct) over the GCD modifiers in scope whose buff is up in Hekili's `state`; 1 with none. Allocates nothing
+--- after each ability key's first scope read.
+function M.GcdMult(a)
+    local list = mods.gcdMods
+    if #list == 0 then
+        return 1
+    end
+    local buff, f = Hekili.State.buff, 1
+    for i = 1, #list do
+        local m = list[i]
+        if (a and inScope(m, a) or not m.spells) and buff[m.aura].up then
+            f = f * (1 + m.pct)
+        end
+    end
+    return f
 end
 
 local held = {} -- M.Spend's per-modifier `unless` answers, decided before any stack goes; grows once, to the list's size

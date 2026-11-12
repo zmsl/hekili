@@ -8,7 +8,7 @@
 ## Dependencies: Hekili, Hekili_Shared
 ## Group: Hekili
 ## LoadOnDemand: 1
-## X-Hekili-ContentAPI: 12
+## X-Hekili-ContentAPI: 14
 
 Locales\enUS.lua
 Locales\zhCN.lua
