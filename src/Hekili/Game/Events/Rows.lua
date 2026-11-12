@@ -138,9 +138,10 @@ local function avoided(i, t, act)
 end
 
 -- Our cast's own landed hit for the belief (aura audit C10: Families/Now.lua's `onLand`): a direct hit's ticket (no
--- tick's, no swing's) settled as landed, once per ticket: paid by a wound or crit (at its row), final (T.onFinal), or
--- closing with no row (at the cast: presumed landed, as a white swing's `land`: live, a non-crit hit's row is secret
--- and only avoids are plain). A cast whose ability opens no ticket (expects NONE) never lands here.
+-- tick's, no swing's; each owes one row) settled as landed, once: paid by a wound or crit (at its row) or final
+-- (T.onFinal). A ticket closing with no row is not presumed landed: live, every target row is background (amount, flag
+-- and school secret; deferrals L317), so an avoid never pays either and a presumed land would follow every avoid,
+-- promoting the gain. A cast whose ability opens no ticket (expects NONE) never lands here.
 local function landed(i, t)
     local a, k = T.ab[i], T.kind[i]
     if a > 0 and k ~= TICKS and k ~= CHANNEL and k ~= MELEE then
@@ -156,7 +157,6 @@ end
 -- closing on a real avoid it still holds is a new settled fact (R23): its row and settle go out, the guard aside.
 T.onExpire = function(i)
     if T.kind[i] ~= MELEE then
-        landed(i, T.at[i]) -- no row by its window's close (a paid or final ticket is closed before it expires)
         return
     end
     local reAvoid = T.retry[i] and T.avoid[i] ~= "" and T.state[i] == T.PROV

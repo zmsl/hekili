@@ -64,7 +64,7 @@ VS.Obs = {
     -- Families/Now.lua's reactions only
     PlayerCrit = 41, -- a CRITICAL wound on the player (UNIT_COMBAT, beside its PlayerHit); Families/Now.lua's reactions
     Landed = 42, -- a: ability index; b: its cast's time: our cast's direct hit settled as landed (Events/Rows.lua: a
-    -- wound or crit paid to its ticket, or its window closing with no row: presumed); Families/Now.lua runs `onLand`
+    -- wound or crit paid to its ticket, at its row or once final); Families/Now.lua runs `onLand`
 }
 
 --- What a `PlayerHit` observation reports (its `a`), and each kind's name (the `taken` and `consumedBy` keys): a WOUND

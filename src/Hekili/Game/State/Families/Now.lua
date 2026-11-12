@@ -792,9 +792,10 @@ end)
 -- A channel's `now_finish` (aura audit C11): the channel in progress (ability index, 0 none) and its believed end, from
 -- its start (Sources/Casts.lua stages it only with plain times) and pushbacks; a stop within FINISH_TOL of that end
 -- ran it full (wowsims: the last tick lands at the end), so its `now_finish` runs at the stop, its writes no avoid's
--- to undo. A stop earlier (a break, a clip) or a channel with no plain start runs nothing (dim: never a full channel
--- assumed). Allocates nothing.
+-- to undo. A stop earlier (a break, a clip), later than FINISH_LATE past the end, or a channel with no plain start runs
+-- nothing (dim: never a full channel assumed). Allocates nothing.
 local FINISH_TOL = 0.05 -- UNMEASURED: CHANNEL_STOP at a full channel's end is read at or just after it
+local FINISH_LATE = 0.5 -- a stop later than this past the end is another channel's (one whose start was secret)
 local chanA, chanEnd = 0, 0
 I.On(Obs.ChannelStart, function(o)
     chanA, chanEnd = o.a, o.b
@@ -810,7 +811,7 @@ I.On(Obs.ChannelStop, function(o)
         return
     end
     chanA = 0
-    if A.finish[a] and A.key[a] and not A.extra[a] and o.t >= chanEnd - FINISH_TOL then
+    if A.finish[a] and A.key[a] and not A.extra[a] and o.t >= chanEnd - FINISH_TOL and o.t <= chanEnd + FINISH_LATE then
         journal = false
         call(A.finish[a], a, o.t)
         journal = true

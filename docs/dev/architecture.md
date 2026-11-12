@@ -318,12 +318,15 @@ it. One multiplier for every hand; the sim's own forecast of a haste cast inside
 
 **What only a landed hit or a full channel gives** (aura audit C10, C11). An ability's `onLand` (bound like `onCrit`)
 runs in the `now` context once its cast is settled as landed: `Game/Events/Rows.lua` stages `Obs.Landed` once per
-direct-hit ticket (not a tick's or a swing's), when a wound or crit is paid to it, when a provisional payment is final,
-or when its window closes with no row (presumed landed, as a white swing's `land`: live, only avoids are plain). An
-avoid never runs it, and an ability whose `expects` is NONE (no ticket) never lands. A channeled ability's
+direct-hit ticket (not a tick's or a swing's), when a wound or crit is paid to it or a provisional payment is final.
+A ticket closing with no row is not presumed landed: live, every target row is background (its amount, flag and school
+secret), so avoids pay nothing either and a presumed land would follow every avoid; until rows are plain again
+`onLand` runs only where they are (the harness, replays). An avoid never runs it, and an ability whose `expects` is
+NONE (no ticket) never lands. A channeled ability's
 `now_finish` is the belief's twin of the sim's `finish` (run at CHANNEL_FINISH, `Engine/Sim/State.lua`): it runs at
-the channel's stop when that stop is within 0.05 s of the channel's believed end (its start's plain end, moved by
-pushbacks); a broken channel, or one whose times were secret, runs nothing. Both write `modelled` samples no avoid
+the channel's stop when that stop is at most 0.05 s before the channel's believed end (its start's plain end, moved
+by pushbacks) and at most 0.5 s after it; a broken channel, one whose times were secret, or a later stop (another
+channel's, whose start was secret) runs nothing. Both write `modelled` samples no avoid
 undoes.
 
 **A GCD modifier.** `spec:RegisterGcdMod({ aura = <key>, pct = <n>, spells = { <ids> } | nil })` (aura audit C12;

@@ -801,6 +801,8 @@ describe("now handlers", function()
         assert.are.equal(18, rec.est)
         channel(20, 23, 21.5) -- broken: nothing
         assert.is_nil(VS.Aura("player", 4611, 21.6))
+        channel(30, 33, 34) -- a stop a second past the end: another channel's, nothing
+        assert.is_nil(VS.Aura("player", 4611, 34.1))
     end)
 
     -- aura audit C12: a pack's GCD modifier ({ aura, pct, spells }, Engine/Schema/Races.lua's list) cuts a spell-kind
@@ -1131,8 +1133,8 @@ describe("now handlers", function()
         end)
 
         -- aura audit C10: the ability's `onLand` runs once its cast is settled as landed (a hit or a crit paid to
-        -- it, or its window closing with no row: presumed landed, as a white swing's `land`), never on an avoid.
-        it("runs onLand at a landed hit or crit, at an unpaid close, never at an avoid (aura audit C10)", function()
+        -- it), never on an avoid, and never at a close with no row (live, avoids pay nothing either: L317).
+        it("runs onLand at a landed hit or crit, never at an avoid or an unpaid close (aura audit C10)", function()
             local lands = {}
             h.Class.abilities.spender_c.funcs.onLand = function()
                 lands[#lands + 1] = now -- luacheck: ignore 113 (the `now` context's time)
@@ -1146,11 +1148,11 @@ describe("now handlers", function()
             ctl.Tick(10.01)
             VS.Drain(10.02)
             castOutcome(fs.SPENDER_C, 15, "DODGE") -- avoided: nothing
-            castOutcome(fs.SPENDER_C, 20) -- no row: presumed landed at its window's close
+            castOutcome(fs.SPENDER_C, 20) -- no row: not presumed (an avoid's row would be as unseen live)
             ctl.now = 25
             ctl.Tick(25)
             VS.Drain(25.01)
-            assert.are.same({ 5, 10, 20 }, lands)
+            assert.are.same({ 5, 10 }, lands)
         end)
 
         it("a crit a pending swing explains runs no onCrit; one in the newer cast's frame is its (GAP T)", function()
