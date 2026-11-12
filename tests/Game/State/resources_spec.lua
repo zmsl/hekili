@@ -2346,21 +2346,29 @@ describe("resources", function()
             within(400 + 2 * 2 + 7 * 3 + 12 * 1, VS.Power(MANA, 16).est) -- 10-12 mp5, 12-15 + half the spirit, 15-16 all
         end)
 
-        -- A share-only entry's spirit weight inside the window is no time outside it: pins wholly inside measure the mp5
-        -- part with the spirit part held (its spread stays shut), as with no entry up.
-        it(
-            "measures the mp5 part between pins inside the window under a share-only aura, the spirit part held",
-            function()
-                shaped({ spirit = 10, mp5 = 2 }, { { aura = "focus", share = 0.5 } })
-                read(10, 500)
-                I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
-                I.AuraModel(1, 2, 10, 30, 1, 10, 0)
-                local spL = I.res.spL[1]
-                read(14, 400 + (3 + 0.5 * 10) * 4) -- mp5 3 a second plus half the spirit regen: (32 - 10 x 2) / 4 = 3
-                within(2 + I.ALPHA * 1, I.res.regE[1])
-                assert.are.same({ 10, spL }, { I.res.spE[1], I.res.spL[1] })
-            end
-        )
+        -- A share-only entry's spirit weight inside the window is no time outside it, and the gain there mixes both
+        -- parts: pins wholly inside measure neither (a declared-0 mp5 part refuses m < 0, so it would learn only the
+        -- upward noise), and both spreads stay shut.
+        it("measures neither part between pins inside the window under a share-only aura", function()
+            shaped({ spirit = 10, mp5 = 2 }, { { aura = "focus", share = 0.5 } })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 2, 10, 30, 1, 10, 0)
+            local regL, spL = I.res.regL[1], I.res.spL[1]
+            read(14, 400 + (3 + 0.5 * 10) * 4) -- mp5 3 a second plus half the spirit regen: no part moves
+            assert.are.same({ 2, regL, 10, spL }, { I.res.regE[1], I.res.regL[1], I.res.spE[1], I.res.spL[1] })
+        end)
+
+        it("measures the spirit part from a share-only interval with at least PIN_GAP outside the window", function()
+            shaped({ spirit = 10, mp5 = 2 }, { { aura = "focus", share = 0.5 } })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 2, 10, 30, 1, 10, 0)
+            -- 10-15: mp5 2 + half of spirit 12; 15-17: 2 + 12. Spirit (gain - 2 x 7) / (0.5 x 5 + 2) = 12
+            read(17, 400 + 8 * 5 + 14 * 2)
+            within(10 + I.ALPHA * 2, I.res.spE[1])
+            assert.are.equal(2, I.res.regE[1])
+        end)
 
         it("adds an `mp5` aura's rate in both windows, out of the calibration and out of the read", function()
             shaped({ spirit = 10, mp5 = 2 }, { { aura = "spring", mp5 = 5 } })
