@@ -405,7 +405,7 @@ function M.run(L, seed, o, drivers)
         ctl.combat, ctl.form, ctl.stealthed = false, L.form, false
         if aw.followCycle then -- option D's arms (ab.lua; every other arm leaves all this at the defaults)
             -- Recommend Target Swaps per the arm, the enemy plates shown and counted (the spec's default Enemy Range
-            -- Radius: 40 yd for a ranged spec; past 10 yd only plates in combat count, L644), and the observer's
+            -- Radius: 30 yd for a ranged spec; past 10 yd only plates in combat count, L644), and the observer's
             -- nameplate1..N existing
             local sp = d.H.Hekili.Engine.settings.specs[d.H.Hekili.State.spec.id]
             sp.cycle = aw.cycle or false

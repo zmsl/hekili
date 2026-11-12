@@ -1,5 +1,5 @@
 -- tests/Forever/caster_range_spec.lua (caster range, L644; fable-decision-caster-range.md): the plate count's engaged
--- rule (Engine/Sim/Targets.lua's GUID plate loop). A ranged spec counts plates out to its 40 yd default, but beyond
+-- rule (Engine/Sim/Targets.lua's GUID plate loop). A ranged spec counts plates out to its 30 yd default, but beyond
 -- 10 yd a plate counts only while UnitAffectingCombat answers a plain true; inside 10 yd, and the target, as before.
 -- A melee spec (10 yd default) is unchanged. Plain-GUID plates, as tests/Forever/target_debug_alloc_spec.lua.
 local fake = require("Game.State.helpers.fake_api")
@@ -48,13 +48,13 @@ local function count(H)
     return H.ns.getNumberTargets(true)
 end
 
-describe("caster range: a ranged spec's plate count (Destruction, 40 yd default)", function()
+describe("caster range: a ranged spec's plate count (Destruction, 30 yd default)", function()
     local wl = require("Forever.helpers.warlock_world")
     local H
 
     before_each(function()
         H = boot(wl.Destruction)
-        assert.are.equal(40, H.Hekili.DB.profile.specs[wl.Destruction.SPEC].nameplateRange)
+        assert.are.equal(30, H.Hekili.DB.profile.specs[wl.Destruction.SPEC].nameplateRange)
     end)
 
     it("counts the target only while the far plates are out of combat", function()
