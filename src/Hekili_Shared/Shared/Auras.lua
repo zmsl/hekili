@@ -130,6 +130,12 @@ local auras = {
     reversible_magic = { generate = dispellable("Magic") },
 }
 
+-- The weapon enchant 8217's proc buff (wowsims enchants.go revelationBuffs), one id per class group, 15 s, one charge: the
+-- mage, priest, druid, hunter and paladin ones (the Warlock's and Shaman's are their packs' own `revelation`).
+for _, id in ipairs({ 1248808, 1323377, 1323400, 1323410, 1323419 }) do
+    auras["revelation_" .. id] = { id = id, duration = 15, max_stack = 1 }
+end
+
 -- The player's magic debuffs only, as reversible_magic: a target's buffs are secret in combat (spec §4.1, rule 4).
 auras.dispellable_magic = { generate = auras.reversible_magic.generate }
 
