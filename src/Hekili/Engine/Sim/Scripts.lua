@@ -1317,7 +1317,7 @@ local newModifiers = {
 
     -- shown with the pick (Core's markPick): text on its icon, and an icon a display may draw instead, each only while
     -- its _if holds. 'text' is the line's value verbatim: no SimC translation, so a texture path keeps its backslashes.
-    label = 'text',
+    label = 'text', -- a modifier type, not player text -- l10n: verbatim
     label_if = 'bool',
     icon = 'text',
     icon_if = 'bool',
