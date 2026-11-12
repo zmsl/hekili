@@ -11,6 +11,7 @@
 - Warrior: Weaponmaster now shows its three auras (`weaponmaster_axe_polearm`, `weaponmaster_mace_staff`, `weaponmaster_sword`) while you have the talent and hold that kind of weapon, for custom priorities. The sword's extra attack is not predicted.
 
 ### Changed
+- Druid: in Cat Form, Feral and Guardian now recommend Claw instead of Shred while your target is attacking you (you cannot get behind it), and also when you have fewer than 2 points in Shredding Attacks, where Claw does more damage for its energy; Shred is still recommended with Clearcasting unless the target is attacking you. Claw is now shown as soon as you have its energy. Turn on "Always Behind" if you can always get behind your target.
 - The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
 - Hekili now reads your target's distance from LibRangeCheck, the range library other addons use, instead of from your abilities' ranges. Priorities that check how far away the target is use its answer, which comes in steps of about 5 yards. The melee range check of a display style shows the target as in melee while its distance is unknown.
 - Rogue: a Shank at 5 of 5 Boot Knife now counts its 2 combo points in the forecast, and the opening Poised discount (10 energy, plus Composure's 5 or 10) is priced on the abilities it covers, so the first recommendations after a pull see the energy you really have. The Remorseless buff is known to the addon and shown when the game reports it.

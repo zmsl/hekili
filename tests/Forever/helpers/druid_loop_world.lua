@@ -296,6 +296,10 @@ local PACKS = {
         world = { regen = { [ENERGY] = dw.ENERGY_REGEN }, fsr = manaFsr(22), power = 100, stats = { [5] = 124 } },
         talents = { [17056] = 3 }, -- Furor (wowsims's Feral build's 3/5, the log header's 17056=3)
         uptime = { "rip", "rake" },
+        -- wowsims's Feral scenario, which the pack's Shred and Claw lines read (L602): Shredding Attacks 3/3 (the log
+        -- header's 16966=3), and a DPS behind its target, so the client says our target targets someone else
+        talents = { [16966] = 3 },
+        notTargeted = true,
     },
     Guardian = {
         kit = {
@@ -485,6 +489,7 @@ local function content(name)
         plainPower = { [POINTS] = "always" },
         powerTokens = TOKENS,
         powerMax = pt == MANA or P.res[MANA] ~= nil,
+        notTargeted = P.notTargeted, -- the pack's scenario (observer.lua: targettarget answers not us)
     }
 
     -- True rage per landed white wound in Bear (the class file's model, druid_world's rules); no other power is

@@ -3050,6 +3050,7 @@ do
         is_in_party = 1,
         is_in_raid = 1,
         is_player = 1,
+        is_targeting_player = 1,
         is_dummy = 1,
         is_undead = 1,
         level = 1,
@@ -3159,6 +3160,9 @@ do
                 local isPlayer = UnitIsPlayer( "target" )
                 if not isPlayer then isPlayer = PvpDummies[ t.npcid ] end
                 t[k] = isPlayer or false -- Enables proper treatment of Absolute Corruption and similar modified-in-PvP effects.
+            elseif k == "is_targeting_player" then
+                -- the target's target is us (the facade: nil when secret or unknown, read as false: assume behind)
+                t[k] = UnitIsUnit( "targettarget", "player" ) == true
 
             elseif k == "is_dummy" then t[k] = ( TargetDummies[ t.npcid ] ~= nil )
             elseif k == "is_undead" then t[k] = t.creature_type == "undead"

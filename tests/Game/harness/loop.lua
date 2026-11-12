@@ -441,6 +441,7 @@ function M.run(L, seed, o, drivers)
         end
         if o.replay then
             k.powerMax = true -- the log's pools (replay.lua's maxOf), not the character sheet's
+            k.notTargeted = o.replay.notTargeted -- the replay's knob (replay.lua M.new)
         end
         if d.plain then
             k.plain, k.usableDelay = true, 0

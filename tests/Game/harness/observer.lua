@@ -23,6 +23,7 @@ M.DEFAULTS = {
     targetTokens = { "plate", "target" }, -- "plate": the target's nameplateN (P logs 1-2: nameplate1 then target)
     plainSpeed = false, -- UnitAttackSpeed of a hostile plain (Attackers.lua notes: secret on Forever)
     secretUnitIs = false, -- UnitIsUnit("<plate>target", "player") answers secret (spec §3.1: plain or secret, UNMEASURED)
+    notTargeted = false, -- UnitIsUnit("targettarget", "player") answers false even while our target targets us (replay.lua)
     -- A secret-free client (the headless loop's oracle, design §4/D4): our power (`powerType`, its event token
     -- `powerToken`), the target's health and our cooldown times plain, the target's auras listed (no auraError). The
     -- events are the same; usability without delay is the caller's `usableDelay = 0`.
@@ -399,7 +400,7 @@ function M.new(W, k)
         if k.actionTargeting then
             push(t, "@guid", "softenemy", tgt and tgt.guid)
         end
-        push(t, "@unitIs", "targettarget", tgt and tt[tgt] == us and "player" or nil)
+        push(t, "@unitIs", "targettarget", not k.notTargeted and tgt and tt[tgt] == us and "player" or nil)
         if k.plainSpeed and tgt then
             push(t, "@speed", "target", tgt.weapons[1][3])
         end
