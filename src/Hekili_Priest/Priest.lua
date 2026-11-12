@@ -102,6 +102,8 @@ local INNER_FIRE = { 588, 7128, 602, 1006, 10951, 10952 }
 local FEEDBACK = { 13896, 19271, 19273, 19274, 19275 }
 local TOUCH_OF_WEAKNESS = { 2652, 19261, 19262, 19264, 19265, 19266 }
 local HEX_OF_WEAKNESS = { 9035, 19281, 19282, 19283, 19284, 19285 }
+local PSYCHIC_SCREAM = { 8122, 8124, 10888, 10890 }
+local FORTITUDE_BUFF = { 1244, 1245, 2791, 10937, 10938, 21562, 21564 } -- Power Word: Fortitude's and Prayer of Fortitude's
 local INNER_FIRE_COST = { 30, 65, 105, 165, 235, 315 }
 
 -- The talents' per-rank values (wowsims's data; the DB2 carries the top rank's on rank 1): Mental Agility -3 / -7 /
@@ -359,18 +361,39 @@ spec:RegisterAuras({
     weakened_soul = { id = 6788, duration = 15, max_stack = 1 },
     -- The procs (unseen, observed only: no producer, the player aura walk reads them where plain): Spirit Tap on a kill, Dark Inspiration from Mind
     -- Blast and a full Mind Flay (wowsims's: absent from the DB2), Holy Purpose from Holy Fire's ticks (Searing Light).
-    spirit_tap = { id = 15271, duration = 15, max_stack = 1 },
+    spirit_tap = { id = 15271, copy = { 15270 }, duration = 15, max_stack = 1 },
     dark_inspiration = { id = 1326168, duration = 10, max_stack = 1 },
     -- The utility spells' auras (no priority casts them; registered for the displays and custom priorities).
     fade_buff = { id = 586, copy = rest(FADE), duration = 10, max_stack = 1 },
     renew = { id = 139, copy = rest(RENEW), duration = 15, tick_time = 3, max_stack = 1 },
     elunes_grace = { id = 2651, duration = 15, max_stack = 1 },
     feedback = { id = 13896, copy = rest(FEEDBACK), duration = 15, max_stack = 1 },
-    touch_of_weakness = { id = 2652, copy = rest(TOUCH_OF_WEAKNESS), duration = 600, max_stack = 1 },
+    touch_of_weakness = { id = 2943, copy = { 19249, 19251, 19252, 19253, 19254 }, duration = 120, max_stack = 1 }, -- the buff's ID, not the cast's
+    -- The Cooldown Manager's items (the owner's live export, tests/Forever/fixtures/cdm): the ally and target effects
+    -- and the passive talents' buffs it links, each under every ID it names, ranks and the talent's own.
+    prayer_of_mending = {
+        id = 401877,
+        copy = { 1240848, 1240849, 401859, 1240826, 1240827 },
+        duration = 30,
+        max_stack = 1,
+    },
+    shackle_undead = { id = 9484, copy = { 9485, 10955, 1324415, 1324420, 1324422 }, duration = 50, max_stack = 1 },
+    psychic_scream = { id = 8122, copy = rest(PSYCHIC_SCREAM), duration = 8, max_stack = 1 },
+    silence = { id = 15487, copy = { 1324427 }, duration = 5, max_stack = 1 },
+    fear_ward = { id = 6346, duration = 180, max_stack = 1 },
+    abolish_disease = { id = 552, duration = 20, max_stack = 1 },
+    mind_soothe = { id = 453, copy = { 8192, 10953 }, duration = 15, max_stack = 1 },
+    shadow_protection = { id = 976, copy = { 10957, 10958, 27683 }, duration = 600, max_stack = 1 },
+    divine_spirit = { id = 14752, copy = { 14818, 14819, 27841, 27681 }, duration = 3600, max_stack = 1 },
+    blessed_recovery = { id = 27811, copy = { 27813 }, duration = 6, max_stack = 1 },
+    inspiration = { id = 14892, copy = { 14893 }, duration = 15, max_stack = 1 },
+    spirit_of_redemption = { id = 20711, copy = { 27827 }, duration = 15, max_stack = 1 },
+    blackout = { id = 15326, copy = { 15269 }, duration = 3600, max_stack = 1 },
+    focused_casting = { id = 27828, duration = 6, max_stack = 1 }, -- Martyrdom's
     hex_of_weakness = { id = 9035, copy = rest(HEX_OF_WEAKNESS), duration = 120, max_stack = 1 },
-    power_word_fortitude = { id = 1243, copy = rest(POWER_WORD_FORTITUDE), duration = 3600, max_stack = 1 },
-    divine_aegis = { id = 431624, duration = 12, max_stack = 1 },
-    holy_purpose = { id = 1284536, duration = 10, max_stack = 1 },
+    power_word_fortitude = { id = 1243, copy = FORTITUDE_BUFF, duration = 3600, max_stack = 1 }, -- the Prayer's ranks too (the CDM links them)
+    divine_aegis = { id = 431624, copy = { 431622 }, duration = 12, max_stack = 1 },
+    holy_purpose = { id = 1284536, copy = { 14909 }, duration = 10, max_stack = 1 },
     dark_sacrifice = { id = 1277324, copy = rest(DARK_SACRIFICE), duration = 15, tick_time = 3, max_stack = 1 },
     -- The target's (unreadable in combat), modelled from our casts.
     shadow_word_pain = {
@@ -383,7 +406,7 @@ spec:RegisterAuras({
     devouring_plague = { id = 2944, copy = rest(DEVOURING_PLAGUE), duration = 24, tick_time = 3, max_stack = 1 },
     holy_fire = { id = 14914, copy = rest(HOLY_FIRE), duration = 10, tick_time = 2, max_stack = 1 },
     vampiric_embrace = { id = 15286, duration = 30, max_stack = 1 },
-    shadow_weaving = { id = 15258, duration = 15, max_stack = 5 },
+    shadow_weaving = { id = 15258, copy = { 15257 }, duration = 15, max_stack = 5 },
     -- The channels' auras on the target (wowsims's logs key each by the cast's ID; the client's Penance channel aura is
     -- the DB2's 1316994-family child: unmeasured).
     mind_flay = { id = 15407, copy = rest(MIND_FLAY), duration = 3, tick_time = 1, max_stack = 1 },
@@ -826,6 +849,8 @@ spec:RegisterAbilities({
 -- in a priority. Mental Agility's mask (DB2 14520: Renew, Fade, Scream, Chastise, Prayer of Mending, the buffs, and
 -- every spell with the class's instant bit) and Improved Healing's are the flags. A heal lands on an ally, so only the
 -- self buffs (Fade, Elune's Grace, Feedback, Touch and Hex of Weakness) get a handler.
+-- Keys `heal_spell` and `fade_spell`: the core's boundary test bans the bare words (a hit kind, a visual). No school
+-- lockout (`unlocked`): no priority casts them, and the belief reads no locked_out_*.
 -- Unregistered: Mind Control and Mind Vision (channels of unmeasured shape), Levitate (a reagent), Binding Heal and
 -- Pain Suppression (absent from wowsims's Priest kit), Prayer of Shadow Protection (ID unknown).
 -- shortcut: Improved Psychic Scream's -2 s a rank (DB2 15392 holds only the top rank's -4 s); upgrade on a measured rank 1.
@@ -851,9 +876,6 @@ local function utility(ids, costs, o)
         a.spend = price(costs, ids, o.agile, o.healing)
         a.spendType = "mana"
     end
-    if o.school then
-        a.usable = unlocked(o.school)
-    end
     if o.buff then
         a.now = selfBuff(o.buff)
         a.handler = selfBuff(o.buff)
@@ -875,7 +897,6 @@ local GREATER_HEAL = { 2060, 10963, 10964, 10965, 25314 }
 local FLASH_HEAL = { 2061, 9472, 9473, 9474, 10915, 10916, 10917 }
 local PRAYER_OF_HEALING = { 596, 996, 10960, 10961, 25316 }
 local PRAYER_OF_MENDING = { 401859, 1240826, 1240827 }
-local PSYCHIC_SCREAM = { 8122, 8124, 10888, 10890 }
 local MANA_BURN = { 8129, 8131, 10874, 10875, 10876 }
 local DESPERATE_PRAYER = { 13908, 19236, 19238, 19240, 19241, 19242, 19243 }
 local DISPEL_MAGIC = { 527, 988 }
@@ -893,38 +914,25 @@ spec:RegisterAbilities({
     -- ranked heals; Flash Heal and Prayer of Healing outside both.
     lesser_heal = utility(LESSER_HEAL, { 30, 45, 75 }, {
         cast = function()
-            return LESSER_HEAL_CAST[knownRank(LESSER_HEAL)] * haste
+            return (LESSER_HEAL_CAST[knownRank(LESSER_HEAL)] or LESSER_HEAL_CAST[1]) * haste
         end,
         healing = true,
-        school = "holy",
     }),
-    heal = utility(
-        HEAL,
-        { 155, 205, 255, 305 },
-        { cast = castTime(3, "divine_fury", 0.1), healing = true, school = "holy" }
-    ),
+    heal_spell = utility(HEAL, { 155, 205, 255, 305 }, { cast = castTime(3, "divine_fury", 0.1), healing = true }),
     greater_heal = utility(
         GREATER_HEAL,
         { 370, 455, 545, 655, 710 },
-        { cast = castTime(3, "divine_fury", 0.1), healing = true, school = "holy" }
+        { cast = castTime(3, "divine_fury", 0.1), healing = true }
     ),
-    flash_heal = utility(FLASH_HEAL, { 125, 155, 185, 215, 265, 315, 380 }, { cast = castTime(1.5), school = "holy" }),
-    renew = utility(RENEW, { 30, 65, 105, 140, 170, 205, 250, 305, 365, 410 }, { agile = true, school = "holy" }),
-    prayer_of_healing = utility(
-        PRAYER_OF_HEALING,
-        { 410, 560, 770, 1030, 1070 },
-        { cast = castTime(3), school = "holy" }
-    ),
-    prayer_of_mending = utility(
-        PRAYER_OF_MENDING,
-        { 210, 305, 390 },
-        { cooldown = 10, agile = true, healing = true, school = "holy" }
-    ),
+    flash_heal = utility(FLASH_HEAL, { 125, 155, 185, 215, 265, 315, 380 }, { cast = castTime(1.5) }),
+    renew = utility(RENEW, { 30, 65, 105, 140, 170, 205, 250, 305, 365, 410 }, { agile = true }),
+    prayer_of_healing = utility(PRAYER_OF_HEALING, { 410, 560, 770, 1030, 1070 }, { cast = castTime(3) }),
+    prayer_of_mending = utility(PRAYER_OF_MENDING, { 210, 305, 390 }, { cooldown = 10, agile = true, healing = true }),
     -- Improved Mana Burn: -0.5 s a rank (DB2 14750: aura 107 misc 10 -1000 at 2/2).
     mana_burn = utility(
         MANA_BURN,
         { 95, 140, 185, 225, 270 },
-        { cast = castTime(3, "improved_mana_burn", 0.5), combat = true, school = "shadow" }
+        { cast = castTime(3, "improved_mana_burn", 0.5), combat = true }
     ),
     -- Improved Psychic Scream: -2 s a rank on its 30 s (DB2 15392: aura 107 misc 11 -4000 at 2/2).
     psychic_scream = utility(PSYCHIC_SCREAM, { 100, 140, 180, 210 }, {
@@ -933,22 +941,17 @@ spec:RegisterAbilities({
         end,
         agile = true,
         combat = true,
-        school = "shadow",
     }),
-    fade = utility(FADE, { 40, 75, 125, 175, 225, 275 }, { cooldown = 30, agile = true, buff = "fade_buff" }),
-    desperate_prayer = utility(DESPERATE_PRAYER, nil, { cooldown = 600, school = "holy" }),
-    dispel_magic = utility(DISPEL_MAGIC, { 0.18, 0.18 }, { agile = true, school = "holy" }),
-    cure_disease = utility({ 528 }, { 0.15 }, { agile = true, school = "holy" }),
-    abolish_disease = utility({ 552 }, { 0.15 }, { agile = true, school = "holy" }),
+    fade_spell = utility(FADE, { 40, 75, 125, 175, 225, 275 }, { cooldown = 30, agile = true, buff = "fade_buff" }),
+    desperate_prayer = utility(DESPERATE_PRAYER, nil, { cooldown = 600 }),
+    dispel_magic = utility(DISPEL_MAGIC, { 0.18, 0.18 }, { agile = true }),
+    cure_disease = utility({ 528 }, { 0.15 }, { agile = true }),
+    abolish_disease = utility({ 552 }, { 0.15 }, { agile = true }),
     elunes_grace = utility({ 2651 }, { 0.03 }, { cooldown = 300, agile = true, buff = "elunes_grace" }),
-    fear_ward = utility({ 6346 }, { 100 }, { cooldown = 180, agile = true, school = "holy" }),
+    fear_ward = utility({ 6346 }, { 100 }, { cooldown = 180, agile = true }),
     feedback = utility(FEEDBACK, { 55, 100, 140, 190, 230 }, { cooldown = 180, agile = true, buff = "feedback" }),
-    chastise = utility(
-        CHASTISE,
-        { 50, 100, 135, 180, 225 },
-        { cooldown = 120, agile = true, combat = true, school = "holy" }
-    ),
-    silence = utility({ 15487 }, { 225 }, { cooldown = 45, agile = true, combat = true, school = "shadow" }),
+    chastise = utility(CHASTISE, { 50, 100, 135, 180, 225 }, { cooldown = 120, agile = true, combat = true }),
+    silence = utility({ 15487 }, { 225 }, { cooldown = 45, agile = true, combat = true }),
     touch_of_weakness = utility(
         TOUCH_OF_WEAKNESS,
         { 25, 45, 75, 105, 145, 195 },
@@ -959,23 +962,15 @@ spec:RegisterAbilities({
         { 35, 55, 90, 130, 180, 240 },
         { agile = true, buff = "hex_of_weakness" }
     ),
-    power_word_fortitude = utility(
-        POWER_WORD_FORTITUDE,
-        { 60, 155, 400, 745, 1170, 1695 },
-        { agile = true, school = "holy" }
-    ),
-    prayer_of_fortitude = utility(PRAYER_OF_FORTITUDE, { 2600, 3400 }, { agile = true, school = "holy" }),
-    divine_spirit = utility(DIVINE_SPIRIT, { 285, 420, 785, 970 }, { agile = true, school = "holy" }),
-    prayer_of_spirit = utility({ 27681 }, { 1940 }, { agile = true, school = "holy" }),
-    shadow_protection = utility(SHADOW_PROTECTION, { 250, 450, 650 }, { agile = true, school = "holy" }),
-    shackle_undead = utility(
-        SHACKLE_UNDEAD,
-        { 90, 120, 150 },
-        { cast = castTime(1.5), combat = true, school = "holy" }
-    ),
-    resurrection = utility(RESURRECTION, { 0.75, 0.75, 0.75, 0.75, 0.75 }, { cast = castTime(10), school = "holy" }),
+    power_word_fortitude = utility(POWER_WORD_FORTITUDE, { 60, 155, 400, 745, 1170, 1695 }, { agile = true }),
+    prayer_of_fortitude = utility(PRAYER_OF_FORTITUDE, { 2600, 3400 }, { agile = true }),
+    divine_spirit = utility(DIVINE_SPIRIT, { 285, 420, 785, 970 }, { agile = true }),
+    prayer_of_spirit = utility({ 27681 }, { 1940 }, { agile = true }),
+    shadow_protection = utility(SHADOW_PROTECTION, { 250, 450, 650 }, { agile = true }),
+    shackle_undead = utility(SHACKLE_UNDEAD, { 90, 120, 150 }, { cast = castTime(1.5), combat = true }),
+    resurrection = utility(RESURRECTION, { 0.75, 0.75, 0.75, 0.75, 0.75 }, { cast = castTime(10) }),
     mind_soothe = utility(MIND_SOOTHE, { 50, 70, 90 }, { agile = true, combat = true }),
-    lightwell = utility(LIGHTWELL, { 225, 295, 365 }, { cast = castTime(1.5), cooldown = 600, school = "holy" }),
+    lightwell = utility(LIGHTWELL, { 225, 295, 365 }, { cast = castTime(1.5), cooldown = 600 }),
 })
 
 -- Talents: { talent tree (1 Discipline, 2 Holy, 3 Shadow: the dominant tree picks the spec), rank 1's spell, max rank

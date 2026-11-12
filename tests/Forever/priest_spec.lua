@@ -35,14 +35,14 @@ local KIT = {
     shoot = { { 5019 }, 0, 0, "off" },
     -- The heals and utility a Shadow or Discipline build can press (wowsims pin spell data; a percent-of-base cost as the fraction)
     lesser_heal = { { 2050, 2052, 2053 }, 75, 0, "spell" },
-    heal = { { 2054, 2055, 6063, 6064 }, 305, 0, "spell" },
+    heal_spell = { { 2054, 2055, 6063, 6064 }, 305, 0, "spell" },
     greater_heal = { { 2060, 10963, 10964, 10965, 25314 }, 710, 0, "spell" },
     flash_heal = { { 2061, 9472, 9473, 9474, 10915, 10916, 10917 }, 380, 0, "spell" },
     renew = { { 139, 6074, 6075, 6076, 6077, 6078, 10927, 10928, 10929, 25315 }, 410, 0, "spell" },
     prayer_of_healing = { { 596, 996, 10960, 10961, 25316 }, 1070, 0, "spell" },
     prayer_of_mending = { { 401859, 1240826, 1240827 }, 390, 10, "spell" },
     psychic_scream = { { 8122, 8124, 10888, 10890 }, 210, 30, "spell" },
-    fade = { { 586, 9578, 9579, 9592, 10941, 10942 }, 275, 30, "spell" },
+    fade_spell = { { 586, 9578, 9579, 9592, 10941, 10942 }, 275, 30, "spell" },
     mana_burn = { { 8129, 8131, 10874, 10875, 10876 }, 270, 0, "spell" },
     desperate_prayer = { { 13908, 19236, 19238, 19240, 19241, 19242, 19243 }, 0, 600, "spell" },
     dispel_magic = { { 527, 988 }, 0.18, 0, "spell" },
@@ -420,7 +420,7 @@ describe("Forever Priest", function()
         e.talent.improved_healing = { rank = 3 } -- -15%: Lesser Heal, Heal, Greater Heal, Penance, Prayer of Mending
         assert.are.same({ 63.75, 259.25, 603.5, 327.25, 298.35 }, {
             spend("lesser_heal"),
-            spend("heal"),
+            spend("heal_spell"),
             spend("greater_heal"),
             spend("penance"),
             spend("prayer_of_mending"), -- 390 x 0.9 (Mental Agility, its mask) x 0.85
@@ -430,7 +430,7 @@ describe("Forever Priest", function()
         e.talent.improved_healing = { rank = 1 }
         assert.are.equal(674.5, spend("greater_heal"))
         -- Mental Agility reaches the instants and Renew, Fade, Scream, never the hard-cast heals
-        assert.are.same({ 247.5, 189, 369 }, { spend("fade"), spend("psychic_scream"), spend("renew") })
+        assert.are.same({ 247.5, 189, 369 }, { spend("fade_spell"), spend("psychic_scream"), spend("renew") })
         assert.are.equal(1695 * 0.9, ld.run(A.power_word_fortitude.spend, e))
         assert.are.equal(0.18 * 0.9, ld.run(A.dispel_magic.spend, e))
     end)
@@ -447,7 +447,7 @@ describe("Forever Priest", function()
         end
         assert.are.same({ 2.5, 3, 3, 1.5, 3, 3 }, {
             cast("lesser_heal"),
-            cast("heal"),
+            cast("heal_spell"),
             cast("greater_heal"),
             cast("flash_heal"),
             cast("mana_burn"),
@@ -457,7 +457,7 @@ describe("Forever Priest", function()
         e.talent.improved_mana_burn = { rank = 2 }
         assert.are.same({ 2.5, 2.5, 2.5, 1.5, 2, 3 }, {
             cast("lesser_heal"),
-            cast("heal"),
+            cast("heal_spell"),
             cast("greater_heal"),
             cast("flash_heal"),
             cast("mana_burn"),
@@ -470,13 +470,50 @@ describe("Forever Priest", function()
         assert.are.equal(26, ld.run(A.psychic_scream.cooldown, e)) -- DB2 15392: -4 s at the top rank (-2 s a rank: unverified)
     end)
 
+    it(
+        "registers each aura under every ID the Cooldown Manager links (the live export's), ranks and talent included",
+        function()
+            -- the export's linkedSpellIDs per item (tests/Forever/fixtures/cdm/priest.lua on cdm-fixture): the leaf maps an item
+            -- when exactly one aura holds them all
+            local LINKED = {
+                prayer_of_mending = { 401877, 1240848, 1240849, 401859, 1240826, 1240827 },
+                shackle_undead = { 9484, 9485, 10955, 1324415, 1324420, 1324422 },
+                psychic_scream = { 8122, 8124, 10888, 10890 },
+                silence = { 15487, 1324427 },
+                fear_ward = { 6346 },
+                power_word_fortitude = { 1243, 1244, 1245, 2791, 10937, 10938, 21562, 21564 },
+                abolish_disease = { 552 },
+                blessed_recovery = { 27811, 27813 },
+                inspiration = { 14892, 14893 },
+                holy_purpose = { 14909, 1284536 },
+                spirit_of_redemption = { 27827, 20711 },
+                blackout = { 15326, 15269 },
+                spirit_tap = { 15270, 15271 },
+                shadow_weaving = { 15257, 15258 },
+                focused_casting = { 27828 },
+                divine_aegis = { 431622, 431624 },
+                mind_soothe = { 453, 8192, 10953 },
+                shadow_protection = { 976, 10957, 10958, 27683 },
+                divine_spirit = { 14752, 14818, 14819, 27841, 27681 },
+                touch_of_weakness = { 19252, 2943, 19254, 19253, 19249, 19251 },
+            }
+            for key, ids in pairs(LINKED) do
+                local a = assert(w.auras[key], key)
+                local have = idsOf(a)
+                table.sort(have)
+                table.sort(ids)
+                assert.are.same(ids, have, key)
+            end
+        end
+    )
+
     it("applies the self buffs the utility spells give, with the spell's own aura ID", function()
         local A = w.abilities
         for _, row in ipairs({
-            { "fade", "fade_buff", 586, 10 },
+            { "fade_spell", "fade_buff", 586, 10 },
             { "elunes_grace", "elunes_grace", 2651, 15 },
             { "feedback", "feedback", 13896, 15 },
-            { "touch_of_weakness", "touch_of_weakness", 2652, 600 },
+            { "touch_of_weakness", "touch_of_weakness", 2943, 120 },
             { "hex_of_weakness", "hex_of_weakness", 9035, 120 },
         }) do
             local key, aura = row[1], row[2]
