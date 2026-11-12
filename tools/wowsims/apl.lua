@@ -29,9 +29,9 @@
 --    gives no guard and a header note.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
 --    false; entries whose action or condition uses a node the fork lacks (`schedule`, `itemSwap`, `wait`,
---    `activeItemSwapSet`, `selectedConjured`), a cast aimed at another target (`target` Target with an index above 0:
---    wowsims's second target; aura audit C7, never cast on the current one), or whose own action is an
---    unmapped spell, item or other ID (an unmapped
+--    `activeItemSwapSet`, `selectedConjured`), an action other than a cast aimed at another target (`target` Target
+--    with an index above 0: wowsims's second target; aura audit C7, never on the current one; a cast is rule 21), a
+--    `changeTarget` rule 20 does not absorb, or whose own action is an unmapped spell, item or other ID (an unmapped
 --    read drops only its branch: rule 12); a call of a group whose every entry was omitted. Also listed: rule 12's
 --    dropped reads and rule 13's unmapped cooldowns, by entry. A `wait` stays omitted (CN19, docs/dev/wowsims-packs.md):
 --    the engine times each line at its own ready moment, so a hold only matters against a later line ready sooner.
@@ -212,12 +212,13 @@
 --    the enum's zero value (protojson omits it; re-pin: 4 of 5 warlock builds): the recipe's `zero`, the option value
 --    numbered 0 in the pinned proto (each recipe cites it). An entry the APL never uses, a select with no `zero`, or a
 --    build value with no candidate is an error. The value `activeAll` (the selected spell on every target) is `active`
---    on the current target, with rule 17's `# Deviation:` line.
+--    on the current target, with rule 17's `# Deviation:` line, except in a swap rule 20 absorbs.
 -- 17. `multidot` (wowsims: the DoT cast on up to `maxDots` targets whose DoT has at most `maxOverlap` left) is the
 --    cast's line under the entry's condition and `debuff.<key>.remains<=<maxOverlap>` (0 when absent), its aura read as
---    `dotRemainingTime` (rules 5, 6, 12; `rank` ignored, rule 5). Deviation, a `# Deviation:` header line by entry:
---    the current target only (`maxDots` unused). No `cycle_targets=1`: the engine's target cycling (State.lua SetupCycle) needs
---    other targets' DoTs (`active_dot`), which Forever does not give plainly (gap AO / AP), and the replay is one target.
+--    `dotRemainingTime` (rules 5, 6, 12; `rank` ignored, rule 5). With `maxDots` above 1 (option D) the line carries
+--    `,cycle_targets=1,max_cycle_targets=<maxDots>` (Recommend Target Swaps: the engine's cycle on the belief's count,
+--    active_dot) and the `# Deviation:` line "multidot keeps the DoT on the first N targets in wowsims; here on up to N,
+--    the current one first, ..."; with 1 or none, the current target only, as before (its deviation says so).
 --    `strictMultidot` (wowsims: the same targets, each cast re-checking the entry's condition) is the same line.
 -- 18. Movement terms (re-pin plan Task 5; the design's decision 8, owner "ok"): every movement term is dropped from
 --    translated conditions: run speed (`unitMovementSpeed`), "is moving" (`unitIsMoving`, any unit) and arithmetic
@@ -258,6 +259,19 @@
 --    are never rewritten (decision 7). The header lists `# Movement: <list> #<n> reaches <list>: <actions>; ...`
 --    per move that reaches a line; a spec opts into the Movement toggle (its NewClass entry's `movement = true`)
 --    exactly when its pack reads `toggle.movement` (tests/Forever/packs_spec.lua). No movement icon, no wait (decision 9).
+-- 20. Target swaps (option D, owner 2026-11-11): a `changeTarget` to NextTarget whose condition, a top-level `and`,
+--    (nested `and`s flattened) holds an "up here" read of X (`dotIsActive`, `auraIsActive` of CurrentTarget, or a rule 16 select's `active`) and
+--    a `not` of the matching "on all targets" read (`dotIsActiveOnAllTargets`, `auraIsActiveOnAllTargets`, the
+--    select's `activeAll`), after an entry of the same list that casts X (a castSpell of that spell, or the select),
+--    gives no line: that cast's lines carry `,cycle_targets=1` (each select candidate's too), shown on another target
+--    with Recommend Target Swaps on. The header says `# Cycle: <list> #<n> changeTarget -> #<m> <keys>: ...`, and one
+--    `# Deviation:` names the swap's other terms (the node kinds; a top-level `numberTargets>1` is the engine's own
+--    `active_enemies>1`), which are not carried: the list's order gives them. Any other changeTarget is omitted: to
+--    NextTarget with "no on-all-targets read of a cast before it in this list" (the Warlock Bane spread, Havoc's
+--    swap away), to Target with "no main target in Hekili" (the swap back).
+-- 21. A castSpell or channelSpell aimed at another target (`target` Target with an index above 0: wowsims's second
+--    target, Bane of Havoc) carries `,other_target=1`: shown only on another target with Recommend Target Swaps on,
+--    never on the current one (the engine's forced cycle). Any other action aimed there stays omitted (rule 2).
 -- 14b. A `sequence` (wowsims: its members in order, each once, once per reset; design §3a) is a stepped window `<w>`
 --    (the snake of its name) whose steps are its cast members: one line a cast, `<key>,if=window.<w>.next.<key>`, its
 --    own condition after, consecutive equal lines once. A distance-only waitUntil member is the next cast's range gate,
@@ -289,7 +303,8 @@
 --    encounter target's `mobType` (absent: unknown, every type false), each a `# Deviation:` line where its entry
 --    emits: the client gives no facing and the creature type is not read (CN16). `spellExpectedDpet` stays unsupported (no damage model: CN5, docs/dev/wowsims-packs.md), as
 --    does a class's own "on all targets" read with no recipe `select` field (rule 16's `activeAll`).
---    CN4 (upstream's values after the pin): `auraIsActiveOnAllTargets` / `auraIsActiveOnAnyTarget` are the target's
+--    CN4 (upstream's values after the pin): `auraIsActiveOnAnyTarget` is `active_dot.<key>>0` (option D: the belief's
+--    count of enemies carrying it); `auraIsActiveOnAllTargets` is the target's
 --    `debuff.<key>.up` and `dotIsActiveOnAnyTarget` is `dotIsActive`, each on the current target with a `# Deviation:`
 --    line (rule 17's precedent; "any" errs the other way: a DoT on another target reads down); of the current target
 --    (wowsims's default unit) `targetIsActive` is true, `timeUntilTargetActive` 0 (a line is read only with the target
@@ -1434,7 +1449,13 @@ local function bool(c, n)
     elseif k == "dotIsActiveOnAllTargets" then -- rule 17's precedent: the current target only
         deviate(c, ALL_TARGETS)
         return bool(c, { dotIsActive = v })
-    elseif k == "dotIsActiveOnAnyTarget" or k == "auraIsActiveOnAllTargets" or k == "auraIsActiveOnAnyTarget" then
+    elseif k == "auraIsActiveOnAnyTarget" then -- option D: the belief's count of enemies carrying it (active_dot)
+        local a = readAura(c, v.auraId and v.auraId.spellId)
+        if not a then
+            return nil, nil, true
+        end
+        return "active_dot." .. a .. ">0", nil, reads(c, a)
+    elseif k == "dotIsActiveOnAnyTarget" or k == "auraIsActiveOnAllTargets" then
         -- CN4, rule 17's precedent: the current target only, noted when the read resolves
         local n = k == "dotIsActiveOnAnyTarget" and { dotIsActive = v }
             or { auraIsActive = { auraId = v.auraId, sourceUnit = { type = "CurrentTarget" } } }
@@ -1697,7 +1718,7 @@ local function castBody(c, x)
         tier = tier[c.seen[x]] or tier[#tier]
     end
     -- a pre-pull line's tier is stripped with rule 1's guard pass (rule 7: none on a pre-pull line)
-    return x .. (c.offGcd[x] and ",use_off_gcd=1" or "") .. (tier and (",focus=" .. tier) or "")
+    return x .. (c.offGcd[x] and ",use_off_gcd=1" or "") .. (c.cycleMods or "") .. (tier and (",focus=" .. tier) or "")
 end
 
 -- Condition node `n` as text: nil when always true (a nil condition is true: wowsims's apl_action.go), false never.
@@ -1925,8 +1946,11 @@ function entry(c, e)
     end
     local body, key, auto, seq
     local tg = type(a[kind]) == "table" and a[kind].target
-    if type(tg) == "table" and tg.type == "Target" and (tg.index or 0) > 0 then -- rule 2: another target's cast
-        return nil, ("%s on another target (Target index %d)"):format(kind, tg.index)
+    if type(tg) == "table" and tg.type == "Target" and (tg.index or 0) > 0 then -- rule 21: another target's cast
+        if kind ~= "castSpell" and kind ~= "channelSpell" then
+            return nil, ("%s on another target (Target index %d)"):format(kind, tg.index)
+        end
+        c.cycleMods = ",other_target=1"
     end
     if kind == "castSpell" or kind == "channelSpell" then
         local x = spellKey(c, a[kind].spellId)
@@ -1934,9 +1958,18 @@ function entry(c, e)
         body = castBody(c, x)
     elseif kind == "multidot" or kind == "strictMultidot" then -- rule 17: the cast under "its DoT has at most maxOverlap left", this target only
         local m = a[kind]
-        c.deviations[#c.deviations + 1] = ("multidot keeps the DoT on up to %d targets in wowsims; this line is for the current target only."):format(
-            m.maxDots or 0
-        )
+        local n = m.maxDots or 0
+        if n > 1 then
+            c.cycleMods = (",cycle_targets=1,max_cycle_targets=%d"):format(n)
+            c.deviations[#c.deviations + 1] = (
+                "multidot keeps the DoT on the first %d targets in wowsims; here on up to %d, the current one first,"
+                .. " with Recommend Target Swaps on."
+            ):format(n, n)
+        else
+            c.deviations[#c.deviations + 1] = ("multidot keeps the DoT on up to %d targets in wowsims; this line is for the current target only."):format(
+                n
+            )
+        end
         local due = {
             cmp = {
                 op = "OpLe",
@@ -2138,6 +2171,123 @@ end
 -- Rules 19 and 14b: a `move`, `waitUntil` or `resetSequence` entry gives no line. A resetSequence is its window's
 -- loop; a distance-only waitUntil is held (its condition the gate rule 19 carries); a move is recorded with its
 -- target range and condition for the rewrite. Returns the entry's omitted text.
+-- Rule 20's reads: the aura ID (or rule 16 select) an "up here" read names, and the one a `not` of an "on all targets"
+-- read names; nil for anything else.
+local function upRead(c, n)
+    local k, v = next(n)
+    if k == "dotIsActive" and not v.targetUnit then
+        return v.spellId and v.spellId.spellId
+    elseif k == "auraIsActive" and v.sourceUnit and v.sourceUnit.type == "CurrentTarget" then
+        return v.auraId and v.auraId.spellId
+    end
+    local sv = c.selectValue[k]
+    return sv and sv[1] == "active" and sv[2] or nil
+end
+local function allRead(c, n)
+    local x = n["not"] and n["not"].val or {}
+    local k, v = next(x)
+    if k == "dotIsActiveOnAllTargets" then
+        return v.spellId and v.spellId.spellId
+    elseif k == "auraIsActiveOnAllTargets" then
+        return v.auraId and v.auraId.spellId
+    end
+    local sv = c.selectValue[k]
+    return sv and sv[1] == "activeAll" and sv[2] or nil
+end
+-- The node kinds under `n` (its leaves; constants left out), into the set `out`.
+local function leaves(n, out)
+    for k, v in pairs(n) do
+        if k == "and" or k == "or" then
+            for _, x in ipairs(v.vals or {}) do
+                leaves(x, out)
+            end
+        elseif k == "not" then
+            leaves(v.val or {}, out)
+        elseif k == "cmp" or k == "math" then
+            leaves(v.lhs or {}, out)
+            leaves(v.rhs or {}, out)
+        elseif k ~= "const" then
+            out[k] = true
+        end
+    end
+end
+-- The `&` terms of `n`, nested `and`s flattened, into `out`.
+local function flatAnd(n, out)
+    if n["and"] then
+        for _, x in ipairs(n["and"].vals or {}) do
+            flatAnd(x, out)
+        end
+    else
+        out[#out + 1] = n
+    end
+    return out
+end
+-- Rule 20 over one list: { [cast index] = true } and, by changeTarget index, its absorption { m, keys, dropped } or
+-- why it is not absorbed.
+local function swaps(c, entries)
+    local cycleAt, swapAt = {}, {}
+    for j, e in ipairs(entries) do
+        local ct = e.action and e.action.changeTarget
+        if ct and not e.hide then
+            local to = ct.newTarget and ct.newTarget.type
+            swapAt[j] = "changeTarget " .. tostring(to) .. ": no on-all-targets read of a cast before it in this list"
+            if to == "Target" then
+                swapAt[j] = "changeTarget Target: no main target in Hekili"
+            end
+            local vals = to == "NextTarget" and e.action.condition and flatAnd(e.action.condition, {}) or {}
+            local x, ia
+            for i, n in ipairs(vals) do
+                x, ia = x or allRead(c, n), ia or (allRead(c, n) and i)
+            end
+            local iu
+            for i, n in ipairs(vals) do
+                iu = iu or (x and upRead(c, n) == x and i)
+            end
+            local m
+            for i = 1, iu and j - 1 or 0 do
+                local a = entries[i].action or {}
+                local s = a.castSpell and a.castSpell.spellId
+                for k in pairs(a) do
+                    if (s and s.spellId == x) or (type(x) == "table" and k ~= "condition" and c.select[k] == x) then
+                        m = i
+                    end
+                end
+            end
+            if m then
+                cycleAt[m] = true
+                local keys, kinds = {}, {}
+                if type(x) == "table" then
+                    for _, val in ipairs(x.values) do
+                        keys[#keys + 1] = x.x.candidates[val] or nil
+                    end
+                else
+                    keys[1] = spellLookup(c, entries[m].action.castSpell.spellId)
+                end
+                for i, n in ipairs(vals) do
+                    local t = n.cmp
+                    local twoPlus = t
+                        and t.op == "OpGt"
+                        and t.lhs
+                        and t.lhs.numberTargets
+                        and t.rhs
+                        and t.rhs.const
+                        and tonumber(t.rhs.const.val) == 1
+                    if i ~= ia and i ~= iu and not twoPlus then -- Core.lua's own `active_enemies > 1`
+                        leaves(n, kinds)
+                    end
+                end
+                local dropped = {}
+                for k in pairs(kinds) do
+                    dropped[#dropped + 1] = k
+                end
+                table.sort(dropped)
+                swapAt[j] = { m = m, keys = table.concat(keys, ", "), dropped = table.concat(dropped, ", ") }
+            end
+        end
+    end
+    return cycleAt, swapAt
+end
+
 local function motion(c, a)
     c.self = nil
     if a.resetSequence then
@@ -2623,6 +2773,7 @@ function M.translate(rotation, c)
     local function run(name, entries, at)
         local out, order = {}, {}
         origin[name], c.listName = {}, name
+        local cycleAt, swapAt = swaps(c, entries) -- rule 20
         for i in ipairs(entries) do
             order[i] = i
         end
@@ -2651,8 +2802,26 @@ function M.translate(rotation, c)
                 end
                 local a = e.action or {}
                 local ok, body, why = true, nil, "noted"
+                c.cycleMods = cycleAt[i] and ",cycle_targets=1" or nil -- rule 20 (rules 17 and 21 set it in `entry`)
+                local s = swapAt[i]
                 if a.move or a.waitUntil or a.resetSequence then -- rules 19, 14b: no line, but recorded
                     omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, motion(c, a))
+                elseif type(s) == "table" then -- rule 20: absorbed into its cast's line
+                    c.deviated[#c.deviated + 1] = ("# Cycle: %s #%d changeTarget -> #%d %s: cycle_targets=1 (shown with Recommend Target Swaps on)"):format(
+                        name,
+                        i,
+                        s.m,
+                        s.keys
+                    )
+                    if s.dropped ~= "" then
+                        c.deviated[#c.deviated + 1] = ("# Deviation: %s #%d: the swap's other terms (%s) are not carried; the list's order gives them"):format(
+                            name,
+                            i,
+                            s.dropped
+                        )
+                    end
+                elseif s then
+                    omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, s)
                 else
                     ok, body, why = pcall(entry, c, e)
                 end

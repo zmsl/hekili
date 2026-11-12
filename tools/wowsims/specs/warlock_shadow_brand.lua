@@ -21,7 +21,7 @@
 --   faded), and wowsims recasts Searing Pain on the early fade; ours keeps it the full 10 s (the target's charges
 --   unreadable, the demon's hits unseen): 157-170 s (8, all Searing Pain pairs), 74-99 (4) and 138.9 (1) show the
 --   brand 6-9.5 s left in ours too (not verified row by row); 10.88 is C's knock-on. Without A and C 0.841.
--- Omitted 2 -> 11 (dry.lua 11): Demonology's ten plus a `never` (default #9); unitIsMoving dropped, listed. Aura lane
+-- Omitted 2 -> 8 (dry.lua 11 before option D): Demonology's seven plus a `never` (default #9); unitIsMoving dropped, listed. Aura lane
 -- 2026-11-11: the kit now registers Revelation (1323392), so default #9 is translated, not omitted (knownAs: the
 -- build's "Improved Shadow Bolt Known" variable is the talent).
 -- Known deviations: warlock_demonology.lua's (the same list but Shadow Bolt the filler and the Life Tap line's constant
@@ -54,6 +54,7 @@ return {
                 NoCurse = false,
             },
             active = "warlockAssignedCurseIsActive",
+            activeAll = "warlockAssignedCurseIsActiveOnAllTargets", -- rule 20: its swap is the curse lines' cycle_targets=1
             is = "warlockIsAssignedCurse",
         },
     },

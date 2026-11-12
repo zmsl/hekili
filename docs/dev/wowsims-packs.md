@@ -245,8 +245,9 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
    raises gives no guard and a header note.
 2. Omitted (and listed in the `# Omitted:` header): hidden entries, conditions folding to false, nodes the fork
    lacks (`sequence`, `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `sequenceIsComplete`, ...), an entry
-   whose own action is unmapped, a call of an empty group, a cast aimed at another target (`target` Target with an
-   index above 0, never read as the current one; aura audit C7).
+   whose own action is unmapped, a call of an empty group, a non-cast action aimed at another target (`target`
+   Target with an index above 0, never read as the current one; aura audit C7; a cast there is rule 21), a
+   `changeTarget` rule 20 does not absorb.
 3. An all-empty group is an ON/OFF switch: `settings.wowsims_<name>`, its wowsims default; the header lists it only
    when an emitted line reads it (ruling L14), and the class registers exactly those (with the recipe's `settings`).
 4. `auraIsKnown`: a talent's `enabled`, an ability's `known`, else `true` (a gear or enchant aura too, worn or not:
@@ -288,8 +289,19 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
     the selected candidate's debuff (false with none selected, as wowsims; another candidate's term behind its known
     test, so an unlearned one reads down and the level checker sees its guard); its "is" value as the
     setting term. Unsupported: an "is" with no field (protojson's zero value) or an unknown option value.
-17. `multidot`: the DoT's cast while its DoT has at most `maxOverlap` left, on the current target only (`maxDots` is
-    a `# Deviation:` header line per entry; no `cycle_targets`: other targets' DoTs are not readable on Forever).
+17. `multidot`: the DoT's cast while its DoT has at most `maxOverlap` left. With `maxDots` above 1 (option D) it
+    carries `cycle_targets=1,max_cycle_targets=<maxDots>`: with Recommend Target Swaps on, the engine suggests it on
+    another target while fewer enemies carry the DoT (the belief's count, `active_dot`) than the cap; a
+    `# Deviation:` says wowsims keeps the first N targets, here up to N with the current one first. With 1 or none,
+    the current target only.
+20. Target swaps (option D): a `changeTarget` to NextTarget on "X up here and not on every target" (`dotIsActive`
+    or the target's `auraIsActive`, or a select's `active`, with a `not` of the matching on-all-targets read or the
+    select's `activeAll`), after a cast of X in the same list, becomes that cast's `cycle_targets=1` (each select
+    candidate's line). Header: `# Cycle:`, plus one `# Deviation:` naming the swap's other terms, which the list's
+    order gives. Any other changeTarget is omitted with its reason: the Warlock Bane spread and Havoc's swap away
+    (no on-all-targets read of a cast), the swap back to the main target (Hekili has none).
+21. A cast aimed at another target (`target` Target with an index above 0: wowsims's second target, Bane of Havoc)
+    carries `other_target=1`: shown only with Recommend Target Swaps on, on another target, never on the current one.
 
 The second translator lane (0.7): `spellIsChanneling` is `action.<key>.channeling` for a kit ability declared
 `channeled`, false for any other (CN14: Affliction's Siphon Life line); `frontOfTarget` and `targetIsMobType` fold to
@@ -309,7 +321,8 @@ the re-pin triage found (Immolation Trap shown where wowsims kicks, repin-triage
 by a hold: the trap's own line ranks above the weave, so its cause is untraced (the walk-in Hekili does not forecast is
 the candidate); a deferral, revisited with a traced tick.
 
-Upstream's newer values (CN4): the "on all/any targets" aura and DoT reads are the current target's, each a
+Upstream's newer values (CN4): `auraIsActiveOnAnyTarget` is `active_dot.<key>>0`, the belief's count of enemies
+carrying it (option D); the other "on all/any targets" aura and DoT reads are the current target's, each a
 `# Deviation:` line; of the current target, "is active" is true, "time until active" 0 and "time until it dies"
 `fight_remains`; `numActiveAdds`, `remainingCastTime` and another target unit are unsupported.
 
