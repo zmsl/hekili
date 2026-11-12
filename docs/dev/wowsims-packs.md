@@ -358,6 +358,17 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   breaks Prowl) behind Ravage while Prowled. No 'behind the target' signal and no fallback timer: Ravage stays the
   first icon while Prowl is up and the target is in range; Prowl ends when Ravage lands or the player attacks. The
   replay and loop worlds do not know Prowl or Ravage, so they do not see the deviation (unit-tested in druid_spec).
+- Druid Feral (and Guardian's imported Cat lines), Claw vs Shred (owner, 2026-11-11, L597-L603): solo, the mob attacks
+  the player, who cannot be behind it, and Claw out-damages Shred per energy below 2 ranks of Shredding Attacks (Claw
+  r2 140% + 39 for 40 energy with Ferocity, Shred r2 200% + 32 for 60, -6 a rank; both free under Clearcasting, where
+  Shred wins). `guard = { shred = "(settings.behind|!target.is_targeting_player)&(talent.improved_shred.rank>=2|buff.clearcasting.up)" }`
+  on every Shred line; `condition = { claw = ... }` is wowsims's translated Claw condition with `!action.shred.ready`
+  replaced by `(!settings.behind&target.is_targeting_player|talent.improved_shred.rank<2&!buff.clearcasting.up)` and
+  `energy.lo>=action.shred.cost` by `energy.lo>=action.claw.cost` (no recipe key edits part of a line, so the rest is
+  the generated text, re-copied on a re-pin). `target.is_targeting_player` is the core's
+  UnitIsUnit("targettarget", "player"), false when secret or unknown (assume behind); `settings.behind` is the class's
+  "Always Behind" option. The replay world answers that the target attacks someone else (wowsims stands behind;
+  replay knob `notTargeted`) and the build has 3/3, so the replay is unchanged; the loops' mob attacks the player.
 - Rogue Combat, Riposte (owner R70, 2026-11-06: "add it to the apl and make it focus=1"). A recipe `extra` line before
   Garrote (the first line left once the new pin's APL dropped its Ambush opener: re-anchored, L143):
   `riposte,use_off_gcd=1,focus=1,if=energy.lo>=action.riposte.cost`. The 5 s parry window is the kit's registered window

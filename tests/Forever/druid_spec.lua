@@ -900,15 +900,7 @@ describe("Forever Druid", function()
         assert.is_nil(src:find("buff%.clearcasting")) -- the modifier, not each `spend`, prices it
     end)
 
-    describe("the missable bleeds and the not-behind window", function()
-        local function reset(t, debuffs)
-            local e = ld.env(w)
-            e.now, e.query_time = t, t
-            e.debuff = auras(debuffs or {})
-            ld.run(w.hooks.reset_precast, e)
-            return e
-        end
-
+    describe("the missable bleeds", function()
         it("declares its bleeds missable, which core drops on a miss (Engine/Schema/Spec/Abilities.lua)", function()
             assert.are.same({ true, true, "pounce_bleed" }, {
                 w.abilities.rake.missable,
@@ -918,14 +910,10 @@ describe("Forever Druid", function()
             assert.is_nil(w.events.COMBAT_LOG_EVENT_UNFILTERED) -- no copy of its own
         end)
 
-        it("opens not_behind for the rest of 5 s after a listed error, never for another", function()
-            w.spec.notBehindErrors[51] = true -- the type checkpoint Q11 records
-            w.game.now = 20
-            w.events.UI_ERROR_MESSAGE("UI_ERROR_MESSAGE", 50, "Another error.")
-            assert.is_nil(reset(21).durations.not_behind)
-            w.events.UI_ERROR_MESSAGE("UI_ERROR_MESSAGE", 51, "You must be behind your target.")
-            assert.are.equal(3, reset(22).durations.not_behind)
-            assert.is_nil(reset(25.5).durations.not_behind)
+        it("has no not-behind window: no error handler, no not_behind aura (L599)", function()
+            assert.is_nil(w.events.UI_ERROR_MESSAGE)
+            assert.is_nil(w.auras.not_behind)
+            assert.is_nil(rawget(w.spec, "notBehindErrors"))
         end)
     end)
 
@@ -942,16 +930,8 @@ describe("Forever Druid", function()
         end
     end)
 
-    it("refuses Shred in the not-behind window unless the behind setting says otherwise (Claw then)", function()
-        local e = ld.env(w)
-        local ok = function()
-            return ld.run(w.abilities.shred.usable, e)
-        end
-        assert.is_true(ok())
-        e.buff = auras({ not_behind = { up = true } })
-        assert.is_false(ok())
-        e.settings.behind = true
-        assert.is_true(ok())
+    it("never refuses Shred by position: the priority's lines choose Claw or Shred (L603)", function()
+        assert.is_nil(w.abilities.shred.usable)
     end)
 
     it("registers the packs of APLs/packs.lua exactly as tools/make_pack.lua druid prints them", function()
@@ -1389,7 +1369,9 @@ describe("Forever Druid Movement (R8)", function()
     -- of the first icon with the toggle set.
     local function world(yd, C, pack, key, ptype)
         C, pack, key, ptype = C or dlw.Feral, pack or PACK, key or "shred", ptype or 3
-        local H = headless.new({ character = C.character(), pack = pack })
+        local c = C.character()
+        c.talents[16966] = 3 -- Shredding Attacks 3/3, the replay build's: Shred's lines want 2+ (L602)
+        local H = headless.new({ character = c, pack = pack })
         assert.are.same({}, H.loadErrors)
         H.ctl.level.target, H.ctl.distance.target = 60, yd
         H.Fire("PLAYER_TARGET_CHANGED")
@@ -1515,5 +1497,101 @@ describe("Forever Druid Ravage opener (R69)", function()
         assert.are.equal("faerie_fire", list[1], table.concat(list, " "))
         none(list, "ravage")
         none(list, "cancel_buff")
+    end)
+end)
+
+-- Claw vs Shred (owner L597-L603): a Shred line runs while `settings.behind` is on or the target is not attacking us
+-- (target.is_targeting_player), and with Shredding Attacks at 2+ ranks or Clearcasting up; the Claw line takes the
+-- other cases at Claw's own cost. The pack's Shred and Claw lines alone, a Cat in melee range, in combat.
+describe("Forever Druid Claw vs Shred (L602)", function()
+    local headless = require("Game.harness.headless")
+    local dlw = require("Forever.helpers.druid_loop_world")
+    local SECRET = require("Game.State.helpers.fake_api").SECRET
+    local PACK = "Feral (wowsims.com)"
+
+    local function lines(key)
+        local f = assert(io.open("src/Hekili_Druid/APLs/" .. PACK .. ".simc"))
+        local s = f:read("*a")
+        f:close()
+        local out = {}
+        for l in s:gmatch("\n(actions%+=/" .. key .. ",[^\n]+)") do
+            out[#out + 1] = l
+        end
+        return out
+    end
+
+    -- The first icon of a Cat with `o.shredding` ranks of Shredding Attacks and Ferocity 5/5 (Claw 40), `o.energy`
+    -- energy (100), the client's targettarget answer `o.tt` (nil: not us), Clearcasting up when `o.cc`, and
+    -- `settings.behind` as `o.behind`.
+    local function first(o)
+        local c = dlw.Feral.character()
+        c.talents[16966], c.talents[16934] = o.shredding, 5
+        local H = headless.new({ character = c, pack = PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, 3
+        H.ctl.unitIs.targettarget = o.tt
+        if o.cc then
+            H.ctl.auras.player.HELPFUL[1] = { spellId = 16870, expirationTime = H.ctl.now + 15, applications = 0 }
+        end
+        H.Fire("UNIT_AURA", "player")
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local list = {}
+        for _, k in ipairs({ "shred", "claw" }) do
+            for _, l in ipairs(lines(k)) do
+                local parsed = H.Hekili:ParseActionList(l)
+                parsed[1].enabled = true
+                list[#list + 1] = parsed[1]
+            end
+        end
+        H.Hekili.DB.profile.packs[PACK].lists = { precombat = {}, default = list }
+        H.Hekili.DB.profile.specs[dlw.Feral.SPEC].settings.behind = o.behind or false
+        H.Hekili:LoadScripts()
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local VS = H.ns.VirtualState
+        local e = o.energy or 100
+        local power, fixed = VS.Power, { est = e, lo = e, hi = e, conf = 1 }
+        VS.Power = function(pt, now)
+            return pt == 3 and fixed or power(pt, now)
+        end
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        assert(headless.cycle(H, H.ctl.now + 0.2))
+        assert.are.same({}, H.errors)
+        local r = H.Hekili.Engine.Output.Primary.recs[1]
+        return r and r.actionName, r and r.wait
+    end
+
+    it("guards every Shred line, and the Claw line, by position, the talent and Clearcasting", function()
+        local shred, claw = lines("shred"), lines("claw")
+        local S = "(settings.behind|!target.is_targeting_player)&(talent.improved_shred.rank>=2|buff.clearcasting.up)"
+        local C = "(!settings.behind&target.is_targeting_player|talent.improved_shred.rank<2&!buff.clearcasting.up)"
+        assert.are.equal(2, #shred)
+        for _, l in ipairs(shred) do
+            assert.is_truthy(l:find(S, 1, true), l)
+        end
+        assert.are.equal(1, #claw)
+        assert.is_truthy(claw[1]:find(C, 1, true), claw[1])
+        assert.is_nil(claw[1]:find("action.shred.ready", 1, true))
+        assert.is_nil(claw[1]:find("action.shred.cost", 1, true))
+    end)
+
+    it("shows Claw at its own 40 energy while the target attacks us, Clearcasting or not", function()
+        local name, wait = first({ shredding = 3, tt = "player", energy = 40 })
+        assert.are.same({ "claw", 0 }, { name, wait }) -- now, not after pooling to Shred's 42
+        assert.are.equal("claw", first({ shredding = 3, tt = "player", cc = true }))
+    end)
+
+    it("shows Shred from behind with Shredding Attacks 2+, or while the behind setting is on", function()
+        assert.are.equal("shred", first({ shredding = 3 }))
+        assert.are.equal("shred", first({ shredding = 2, tt = "player", behind = true }))
+    end)
+
+    it("shows Claw even from behind with Shredding Attacks 0-1, and Shred under Clearcasting", function()
+        assert.are.equal("claw", first({ shredding = 0 }))
+        assert.are.equal("claw", first({ shredding = 1, behind = true }))
+        assert.are.equal("shred", first({ shredding = 1, cc = true }))
+    end)
+
+    it("reads a secret targettarget as behind", function()
+        assert.are.equal("shred", first({ shredding = 3, tt = SECRET }))
     end)
 end)

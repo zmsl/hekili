@@ -12,13 +12,12 @@
 -- Idol and Grovekeeper Eclipse 5-piece (set_bonus, gear-aware spec).
 -- Credits: Hekili (registration API and pack format); the abilities, auras, handlers and `swap_form` are ported from
 -- Hekili's Classic profile (origin/classic:Classic/Druid.lua). Ported from Taco Dog Forever
--- (src/TacoDogForever_Druid/): the not-behind window (Feral.lua), Enrage's 10 + 2/s and Faerie Fire free in form
+-- (src/TacoDogForever_Druid/): Enrage's 10 + 2/s and Faerie Fire free in form
 -- (Bear.lua), and the `form` alias over the forms (Expressions.lua's RegisterForms). The Feral, Guardian and Balance
 -- (wowsims.com) priorities translate wowsims/forever's default APLs (MIT, https://github.com/wowsims/forever).
 
 local Facade = Hekili.Client
 local C_Spell, UnitClassBase = Facade.C_Spell, Facade.UnitClassBase
-local GetTime = Facade.GetTime
 local L = Hekili:GetLocale("Hekili_Druid")
 
 if UnitClassBase("player") ~= "DRUID" then
@@ -651,11 +650,6 @@ spec:RegisterAuras({
         duration = 45,
         max_stack = 1,
     },
-    -- The target faces us: the rest of 5 s after a "must be behind" error (reset_precast).
-    not_behind = {
-        duration = 5,
-        max_stack = 1,
-    },
     pounce = {
         id = 9005,
         copy = rest(POUNCE),
@@ -792,29 +786,11 @@ spec:RegisterStateFunction("swap_form", function(form)
     applyBuff(form)
 end)
 
--- The UI_ERROR_MESSAGE types of "You must be behind your target" (checkpoint Q11 records it; until then none, and the
--- window never opens). On the spec object so the headless specs can name one. Shred's positional fallback (its
--- `usable`, the packs' Claw) depends on it: until Q11 fills it, Shred is never refused.
-local NOT_BEHIND_ERRORS = {}
-spec.notBehindErrors = NOT_BEHIND_ERRORS
-local NOT_BEHIND_WINDOW = 5
-local behindErrAt = 0
-
-spec:RegisterEvent("UI_ERROR_MESSAGE", function(_, errorType)
-    if NOT_BEHIND_ERRORS[errorType] then
-        behindErrAt = GetTime()
-    end
-end)
-
 spec:RegisterHook("reset_precast", function()
     -- The form comes from the belief's Forms source (Game/State/Sources/Forms.lua) through the aura walk.
     local maul = knownRank(MAUL)
     if maul > 0 and IsCurrentSpell(MAUL[maul]) then
         applyBuff("maul")
-    end
-
-    if now == query_time and behindErrAt > 0 and now - behindErrAt < NOT_BEHIND_WINDOW then
-        applyBuff("not_behind", behindErrAt + NOT_BEHIND_WINDOW - now)
     end
 end)
 
@@ -1825,13 +1801,8 @@ spec:RegisterAbilities({
         known = knows(SHRED),
         form = "cat_form",
 
-        -- Shred needs us behind the target, which the game tells only by refusing: a "must be behind" error opens the
-        -- not-behind window (TDF Feral.lua), where Shred is refused and the packs' Claw fallbacks
-        -- (`!action.shred.ready`) fire; settings.behind says the player always stands behind.
-        usable = function()
-            return settings.behind or not buff.not_behind.up, "not behind the target"
-        end,
-
+        -- Shred needs us behind the target: the packs' Shred and Claw lines choose by `target.is_targeting_player`,
+        -- `settings.behind` and Shredding Attacks (tools/wowsims/specs/druid_feral.lua, L602)
         handler = function()
             gain(1, "combo_points")
         end,
@@ -1999,7 +1970,8 @@ spec:RegisterAbilities({
     },
 })
 
--- The setting Shred's `usable` reads (TDF's name and default); Guardian's is below (its imported cat lists).
+-- The setting the packs' Shred and Claw lines read (TDF's name and default): Shred as if always behind the target, the
+-- target attacking us or not (L603); Guardian's is below (its imported cat lists).
 local behind = {
     type = "toggle",
     name = L["Always Behind"],
@@ -2055,8 +2027,8 @@ spec:RegisterSetting(
 -- (tests/Forever/druid_spec.lua checks they match). Your talents pick one (the selector); /hekili priority <name> keeps another. Restoration is deferred.
 spec:RegisterPack(
     "Feral (wowsims.com)",
-    20261110000,
-    [[Hekili:TVvBVTTUv4Fl(lEYlzYV042ClQdWUOOBz4UIH5UVAzgjkBUilzisfJue4F73dLOKOKiLLSLtCbsaABKi5HpNx15qE6IXl(XI5oigEX3NmAYhhpE8i4NfZzpVfVy(wK9JOvWV4J2a)93WHiV9ln2fSJs2qnTd2mGpPN9cqoCc9qeXJDV)Ihust6wS9I5F9)()U)RF2LtQfZxtCCWjZhtTvVdFE)s2A8(LI3n0nie)eoC)shSlkYJTF5F))8h7xcVE)Y01hrgY3n6qNWiIZW4DZgXgI26rhICqBzKNWMWtM)FAG)GRHTie5t9aq7a)EaFlj09lroob()f4xEe)m1C)YVIyOpRakg)77)bqK1m2w6NhoCfHTo6bo6hwAQdaAcigpf9B2otqtCCTbYE)MTbHmyB(hrOqhcYVKiawevifEaJG9ZJqzuydX(mCihY7wt84Jg56AYNIfSFBmJ2Ac6NWaxyWfZr2msGpDMnYZZk5bloHUMRDNXx11e3zviX()LyHxnBOlchsWwUKqmFUggjdzk9EZh9d2533bhti5bcXBqeF6xMnAqFJEIvcOBNxYAEPx8ssEt02bd63RwWeIEcmotWHkYvKA9nybRw5Hn3e8eEdi46ZqHRWmZGigL4GN(I45DGYJ4p9GBpypf)6yaKm10xbZSZ3oWgoWMeerTEGWeCDgBNTXsCUeyg03LSAnZktdmUpyw9qG12aIpdSXIcdbiE3SjDVyc7f5JPGHgaGRJOyRaxxRv2oZghZdcgqEwclOUgikfGmKhqAWkbdbSccF2YHqTjB9i(ytSp6bpSt)MlLvluVjNcHKTIfl8p4VqOv4sFq8ByKqxpGnSrugXFf3Cc7Jdx9SPxWDZ(4ObVKAWPFw3csKxmuJOPW2Cqc8j(2COjnD0a(pDUYIUM4Y3oa67WHT1ApdGFz20p1xSQIKeK6iNN7EGFAUPAvxnWo9fzUEAzx(B7EwLUgqZ1Ub2ruHZCByvvwwWoEb6sEjIPFndtCgcuasgHj4K26SzOHT5kICnozdYZYnk8ztidXhNn6fDdbkM(IHkfQryHacAnY5x6Ld7yVkbMl8kraRcU13nZ42RglLoL8QnYuaxnE0G7Y(wBYCSdOSRKS34pNOI6jz0bQXsB4TNdLi6r8rRfZGlqKQ49JNb4Me4RTb8KChQOiUmdYCjIP3d8jmcT9q7Q8Xxd1AIQbhaO3C1MYOl9ufCs5mR1WFGkhdoV9UFrRW07(fc)cIpSlpHoMCVd8CGHmZOqIvTy)Ibp5NGDlWjBq(iEI2JVz0OShmk8LN)kWI9H6CLo2d56s(WO(QLKL(C74PDSik(TZYgIlLo0StkRbY1XEnFJQwfFj8uz1pGcFK(iXNp31yKhBT5wB2xalYQ8MrjIL7eiJbHwmtNvySKGrdklwQaR6pAcXU2KtM4veZUGN4pjyhWczf3CcXhTKCDY03uiI9drQSsYoRN4XfYYsEigzhPOi9AEv0PI9E6gkhWYdjWBDRlgiG7OIjK81PxY)M6zaqEiBUgudAYgnn183uTA5J(nDFA9j)(gYdPs0I1AiaCM4gccx(vugYgkWdIfxEKmw7dVTSMdEtaSmYp5LDggGcL5rkMX)8c1KJvg8hRktNxZBVurrLrL1GVQ8zvgvYHskkTcNZxpqwbJ0DKTyR0Buj2v5jSfeUEdbZZxRF81szbzjcbYtg9vvQ2mhJ3q8Sbf5v6diYL6icucsYr1fewFKBnHNtY5AS50b1S20D)VjMbhRjHOVtL1yAvoxKIZyfTwbyr6ybf7WllaXAx2J5RJNjy9Rm7GUDJcdYo4S(PFyC8Ob1qBv5DKp9C0R)(pZjx93eQP82gFdJkY2P0TzwBo5Y0ZbrxxLCQw9I5pHdPabkDr7X3oC89Xdth(3VhFl)cH5IFp9MGtgpMClMBhcQ9qcAX8Q70cgSbCsiHkorLwujB58Tq2Evgdaj)GoujQwqM(DAvdhWBQS7ehR3up7l2RoVwH2I0mzOmskj2NQrSRSYcn6GtUcJ2YyaU)y9QGZy1fnmBEfl8W1xCSfy0qmvQcJZDjgTvTMBVgR1kzP(jDwQ5LwOYc4vUKK2YZaJDRgglvDuGRUuQpPT8584um4F5a44FtdhxPsdzw)IQSLwY(L4)XJ0iaK8Ev8bLUUSMwYeXixxYd5f5uXj8CxSZXWgtAJp3Rk6kAOuoRiju1WYEoP6EU0k85yfMJRMRqQgNJ7yr9nAf1AfUskRdrFMi)6SC77YmXpEsC4sSYYnxhdQ6J1mES84(XvfBMdOQSugzlxxwsHmwj9ECCCMA4ED5eC8jfKBdK3sPnPfvRR0MKwwTiavUpLQD8G3autUcOS6yuaS0BcRa06v(sY6oCOTiKcTpxrbvMKQ0v5DEB31MYrnT8KguI4rbHMu6N2eQRtQFkx19PDx3N6LD30B7(KVU7gFF3DKUUMsik26zhTdux2bTnLL0vJqhft4K6T2tV5ABQuqBLcXnntjUVfSVkl0tUvwASyUD(3xMO6x2OoDwCN8KRRRWqqWD0oPhzp5EsnLR2UYvxB5EI9L7BzJ52k18KAlCM3VThVEUd6A3JGx0Lx(jgB9S2AVNPOzxMO69ySQoyIuZuEFXwXkvtp)QSPF131VnTTFBrF)(M24VNj7Zltu9UxtXmt0D6czD27r)DRFHBs4gjhJpiVApXYU5O8Kov0d3CbnOvkKVqfywLo3dLNMzTNZA(fuHORlFsNa7GIyRdGYR)N4hjEK9ln(M4)F)XdV4p)]]
+    20261112001,
+    [[Hekili:TZvBVnoUr4Fl(lUYDtLFzJZMBX6a0IfxBkApuC(UVkzgjkB2ilzisfJSWW)2VH6vAkszjB5ehG7aUDTejh(mVQzihSwJT(nR5Uig26xMmAYDJhpEYOrJTMZEDd2A(gKZZOLWpcqRH)8NXri)9lm2gULswtnDcxpGpPx9drUCc9umXN9yG1tkPjDd2XA(3)1F)XV)vpoPSMVI46ItNpM6OEh(6(fSv49lYE3qVWi8l4O9lCXEOyF2(f)9)3)z)c417xKV(yYq(Urh6gftChMSBoi2q0gF6qKlAdJ8c2eEY8)tddgCdSfrOaQpaAx43H8TKq3Va56gg8xGF8m(vQ5(fFhXqFvbum(Vp(BarwXyBOFD4WLe2Q4N4OFO0uha0eqmEk6NCCNGM465aK9X1BcJyW28pJrrUeuGKiawentk8egb7NpHYOWgIdy4ioK3UI4Zhn2ZZKpfBy)wBgVXe0prHEWGwZromsyaDMdY33o9bBoHUHRDNXx1neVzviX()D2c)0SHEiCebB7rIW85AyKoKPW7nFoiCBqFxCcHehicVgrcOFB2Ob9n6LTsaDB9txZUEjlj9nXBgmOFVAbte6fW4mfhQi3HuRVblC5sFS56WxWRbbxFgkAjMzggZOex80DzpVfuEKGPhD7b7PKxNaG0PM)kyMD(2b2WHoKWyQ9tewgxxW2fBSaNlaMb99ilxXSl0aJ7dMvpfAVjKeWaBS4OiaIpmBs3lMW(XbykyOba4Myk2o0ZZEPJ7SXj8qgdioRmlOUgikfGmKpqAWkbdbScJE12LqDiB8jbytCa6jFSB)MlLvluVTKcrKnzloZ)G)ImTcx6dIFdJu66dSHdIYibl5Mt4aC0Yxn9dFy2DJgSl3Gt)SUhKi7muJOPW2Cuc8f(2CSjnD0a()15kl6kIhF7aOVfh1wR9ca(Tzt)s)SvDijbPoY91Uh4NNBQw1vdSt3jY1tLD5VV7zv6kan34f6etZCMBdRQYYc2XRqxYRrm9XmmrcWPygFguWUcmZC31lZSJqTt)vIpQp6viBPcdFYA4d5VGDTtm6mHK1Egee7uAe19w6G4pZoFsB9On0iB5A7sZkYAKVTxC0RjC2Sr70neW09ZgskEwMziOn1Om31Re2PsXumFWRYIkEqSJhMzC)NglKZM4Qnk0YFA8Obpu8b9054eszFsWOM)CQDqpblBWwrAdV)sOerpJpzTybCbIufV3DbGBA012gvvWNRII46ms21iM(ZORVLrxD8rBRKgHHA1D1iqG8P52gQdH1tsO1xVmBNEj23M0xP6CGMTTQRkxqKhIuHNC5WxLonxJy6JRJCh7JrcGD5f0PursOVlmKzbfsZriB)sap5hGrnWjRrbiE5hJVD0OIhmo4tL)vGf7dv)lCyqIvR95rQ9HKZpy80oweL82zfdXLshB2Pf7bjN5SIVrvpBdj8uz1pHIEM(mjGp3vyKpBL5gh23alYQ8MHeXkDceXqMwSqNDWyPP2nqwSubw1FGnz7AtoVM3qm7bEI)GaHJJWl5Mti(OsY1jtFxHioicPYkP4eWsgptwk5HyuCqRz1dWpBHCXEpDdvcyXHYWBDRlbiG7OIjK(1PDLFF(caiFKdxdQbnfJMxlX7Qwv(aXZ3NwFE4VJ8qUe9WIJYaCH4gccl)kkd5ajkcXILhPG1(87lR5IxhclJ8dEgCrHOirESiRpowzW)Bxz68I07LlkQmQOg8nLpRYOcoucrPv4C(2bYkyKULSbBNFptjUkVGTHW1RjyE(A9tUSoBilriqE6OVPs1M5y8oIN1OyFPpGiw2uwGsqsoQUGW6JCRj8CAoxJnNoOM1MV7)TSzWXAAi6huznMxLZvP4mrrRvaEiDSHID4LfGyTl7XY1XZeS(vwuNUxCuyXj91p)dJJhnOgARkVJYPxIE93kCj5Q)(Hnf32K7Dvr2os3XBT5KlspxeDvvYPA1wZFbhrbci1(bj3zEsxkath(7FjP3hYeMw)J87hpD8eYzn3jcu7reK18Q7Kfd2aojeqfNOclsYwUCleTxfXaqYpRdvzvlis)oTQHJ4nj7oXX6T1Z(z7vNxRqBrAHmuejsI9PAe7kRSqJo4SRWOTmgG77QxfCbRUOHzZRyHhV(ItTaJgIjPkmU0Ly0w1AP9AIwtYs9l6SullTqLfWBCjjTLNbg7EnmwU64aU6AP(K2YNZtsXG)LdGJ)jnCCLknez9RQYwAj7lX)JhPrai49Q4dkDDznTKjsqUUKhklYPIt4LUyNtHnM0gFU3u0DOHICwrcOQHL9Cw19CTv4ZPkmhxnxHCnoh3jI6B1kQ1kCfuwhJ(SS8RlYTVlZe)0jXXlXQi3CDmOQpwZ4XYt6szvSzjGQYsfKvUUS0czSt7i7K4m1W96Yj40tkO0gOSrBBsJ7wxPnPnY7Hau5(iv74rVbOMCfqf1XOay53e2bqRN8LK1D4qBrih0uHhkOkKusxL3LTjGBkh10YtAqjINeeAsPFAtOUoP(5Cv3N3DDFUx2DtVT7Z(6UB89D3r66AkH4WEL7KDG6Y(kUPSKUAe6OycNvhhF(TCCtLcARuiPJAK4(wW(QSqp7wzPXI525FFDIQpSrDu2UCNv)YDYnmxJ8ckZHVU6pb9Zjhl4e7v5ZQzL12TY6Ax5ZSFLFpBy5wPMNuB958(q(01ZDq3mFc8IU0)pZq4x0wE(cf086ev)zO83Oq5QoMLCVbEx(wXzqt3qRSDO13p0nTHOBxhrVR7Aj63ZEI(c5tDDIQp0E6DIl4HztP7GxkA65t(BTFG7F6gjhtoJZApm3U5uofoW4J33fnOlteVRjywshjKYd6T2JGU8U7q0vYhcmWoOy2QWiR5)l8ZeFY(fg)C2)GqKmS1F8]]
 )
 spec:RegisterPack(
     "Balance (wowsims.com)",
@@ -2065,8 +2037,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Guardian (wowsims.com)",
-    20261110000,
-    [[Hekili:TVvBVTTnq4Fl5lE2lzYV0600I6aSHIULHTIH5UVkzAjkBollzqsfJue4F77OKSSinPTSKDRkYArADejp(CVWJhFKPDF7pBp2dXX2FAqVb32VF)EWFShZFAf2E8kK7c0m4dHOLW)(RXiQhbfUzs71rRzKLml3OLDe97PGiKNqwtJjb8hcTNQvSSvyx7XF4V)Nh(W7MLjn7XZjEE40HGzUgNN3TzcFoEZKSN11pIIFet3mXd7JId4BM8Z)1FSzc84ntkiIysxX0Y66rJjED9XuuWumI2fTkG1f5HwXjpITGFZ6FzrHDUbMgkkKfaW3d(CKyAjSntqEErH)a8Hf4NywBM8beh9onWP9F(WNbHmNZxXEx3UZi85XtfAqxLU2bKjGA8q0BD9gGg457cI9HLRIOCyA(OaPk2ayeSmZGRySbegNbtgoKJPc4UEojaACASVVf0dhyQwAfVYcCs0iFOn7XixojkKnYffe4K(loc5CJWldpLFdXFKQa287zd76rDfwVKNl6y7Rs6A(ZG(2P1vhA4jEah35i6m8nXmStKVVZmxVr9tKhx8CUvumNr8WdpIWMIOlyliHjdDogfWNBTYL)(r32RvBE0SzbyRLrpIxcwOwQYUv7RsLKvrmzTimAD4ZUrrbEWhKBJIrEp1PZZzsAn4CjHd7CeuIdIdXmWkpBoxJkNbII9kfenivWNId)cb75qXZWHG8enOA1hmSbHyCifPncl3EN0Hmln0mmplrKq27hbXo59AfLSeGYucFBxZvG9AAh(l2ug8p04sasq0710b3igh092xDbbuaYv4rnGM8wtHIyGngNSpctjyhFcfl5Bl88mJKhorofByN)UjPsBn334h5gZgnivVANH)CNr8QwQpIXHnSVFeKZuTLCn9vnjn1dVmcec5lKWzo0ievsLzyohAGzjGoh(XzV(dif(BMYUxRf9VFDv7JO3fwlwm)VMf2FfX8HHmBnzf2rSl)ULzpIDGDcwsWS7hnOvs5votdWWEePT(11MxLfvng4TekGvzNQuGMTJvwgzWo37qz7nhjzyFGK1h333AyNdm2TZ(pL1dbyt3l4(rg3WQj58nADtddmAppKyfpCK6UpvEZNDqiADqMfiDUtFcuuT0mdkff9OO8gzfy3OLh8(odfFHQfvD22AceZ3EgLAlDWhh5sIIz7YjMRu5Ztb9QWC3PLVOEzNCZzFiwF50iNvrWUgWeetHkx5WkN6BeoCz8z4TmvXFIZRoZdhfasc8Wy4C2r0NC8imxYQasigkSfb5H9AvEBOEt2R3jbkzv2GZcLfpyB(dW22ruXCQCdGnjCrmXE3IydXHfM9usYRB7jQJ9y96UHIYD1JiiNXXfWBetZX60WED0xk7j6ByZj(cXdqDnMEIHU5459Jg(MwzJswIzP8QnoR1smJoJsef(CrLCO6Y17QVMXMdZU82LLxZ0fMaP9BGRVAIy67Z18NHv9GLqUsYsB1BBqlf29Do4Kcr8JPpzrrHlg17ztnjQ8oRjL8gzbeGD1Gz95R2b7K1qzyw6rzzFKw0E)O23DD)cvTuC0TZT3x3VhuGyBP(iQn86cHxBzuacVleJbEnLj8UZHpdTaxvNwo6azSp8U9mGU0SyNy2RcX27zMBMzmAIy6fBwm3a0A1noBR3WV)kDaPL3lPnvXv6Y0OTNhmoVJU1bcv7)xgCsy6f7Yasii1hrvOQ4mkkYfqAqCgRbjyL8fimfa(suisucC)x3Rx(V0wABKFe0i1xdrHANFvVw6nCkBv2FynTioqiPW5H4Js4py)t6kZmHHbl43fXMlp6D9D3Ky89qUtwh8nsAvCkRZ7M8Keu(zFGsXIYR2Q12xDs)EhKukPPY0lQsZWTh)iMYajO8I1tEpWI3)o0B4)(uY71pdt2)Y235R94ceqb9LcNeKsq2JpVexPYCLnhqRbaLYILew0kszjE8aC1iCbgELbmS1cxefvGJlDt5Rn5hKonUK6Bk)ZLL5lDGFOa8fIkfHvfqAgmRcFx7nB5gMIsROLdGZTvWwwNnzR3US1DB2YUpBT3OT070wb3k41EJbVM8PvR6kGZjbA6q)DviMR8OVw0QvFE10PWV1O7cWISEEckQUiSAxeCPnON26ZMjQ(UnRrLYBmo5qPI9BGqY(9mv7azvvx5vrw4QfnCg5HZerC1KjUVLuXz0JoiXJAQ8ub9Av2LEg4O7iW2urS1l54fLeVlu6OMjQEzLKuerA8inbO1QbKgy2tl1EM52RSK7DcS79nLEVluOyZevVSwGixfHPJINtExv3457yAa1KtHNYhso)u5SjzMiaz6E2zztEIYH4hOtuBhGGVq5(Zf3jKKB3HowT2bbvVsrYDKzxmLRmN0B0cmIdrovoFFY8tLmzhHuXC(MmB2u)6WPtkfpWz(3coftQPa7TxncP58SEfjoYxsVs8T0Re0mDXUDeNb0xlAR0DHkm5RQ9fR4mOSBjZ5aUQl4nROK3Kbnd843TIQE5kkjMuUDfx6RxXzWvVlUoXrQerBKumdVCHQ)2f(wBhoaHyB9Akvz3qULgNbDx(OVM4GzVlDHK9OrDfoovBYXnkMOXOq2aD7KDUVNhNQIPpq3m7g5x9J9xvFPVciNjvZ0XK1Vi(BnILdYulVRisl51cPw3lKM2fd5mAG7B(OicvjX8p0S53Ob)Wo1JnNCrce1tFDMp1tHZ3DHp)tneBRQ8vSi)erh78QLUENepckMppcsa(B4fKaYMjT)y2D4pPz7)l]]
+    20261112001,
+    [[Hekili:TZ1)pQTnu8)wUFHb7Uf(slxVvDCsBQQBDARAA09RjysCaVlKez7aIke)TVNtcHeJnesGE5KQQ6vUy7N)8(IF(5pbxZ(MFXCSdIJn)8GEdUVF)(d61RV5y(6qS54qK9ZOzWh8rlGF(BriQdb5VDs7vbRyKfmd7GfDe9BTxaYriRPrep(N8nNQuSSqST54p8p)7N(W7NLknZXZjoo4KHGz2ANN3VDcFoE7K0N11nGIxIPBN4GDrrE8Tt(L)(p3obE82j5erePRyAzDDOreNUUykYBkgr7Ic9yDroOqozj2a(nJ)Jf435oyAOiFMhaFh4ZbIPLW2ob54e4)dWhEgVMzSDYhqC07vaN2)1N(ciK5CEi79D7oJWNhnvObDL6AhqMaQXdr)STZa0ahxBqSFAryaLdtZhfivYgaJGLAgSfJ1JW4myYW(Cmva3vZjEqJtJCDnGEybt1cJOqdWjrdCH2mhJS5KaF2iBKNNvYVyjKZDcVm8u(De3rYcy7FKoSBh1vy9IFUOJTVjURzpd6BNw3CSHh7bSSNJOZW3fXWwbUUwZSDg1pwECXZ5gbrCgXbp8ecBkI(m7zIF8qNJrE85gH28hhDFVwT5bZM5HnweSeVaSqTKLDR23KijJ8yY4z)Gv(BSdc8CGpuSnkg5SUtNnPsAf4Cj(d7CcuI9I8XmWkpBoxHkNcI89kbenivWLI9)kb7yrXZW(G8eniB1hmSbHySpfPmclZEh3Huln0mmplqeF2JJGyNSEfsjlaOmLW311mf4GM2J)8nLc)JnUyG4f8OIoyhW4GU3(MRiG8q2cpQg0K1AcuedSX4KDrykbB5sO4c(2Cpp1i5GJLt(g27VBsQ0oZ9DUb2rSrds0R2P4pZzef2s(rmoSH9tJGCMYTKPPVPjPPo4fbGqiFL4pZIgGOfuzgMZHgygcOZH)ADq)bKc)jvzpO18(3VTQ9j07CRfZN)xXc7VHy(4qMTIeITe7YVFz2sSfStWccM90ObTIlVYAQhg2JiP1VT28QSOQXaVfqbSs7uLa00DSsZid25EhlBV(ijn7deV(4P(gd7CKXUB2)P0EiaBYEbpns7gwnjNVwRBsyGw75XeR4HJK39PYB(ShcbR8sTajZDYtGIQlmZGsrrlfL3uub2p6Id(qNHKVq2IkpB7mbI57aJsTLo4JdSjbrS95eZuQS5jNELBU70YvuVSvM5SpeRVyAGvyaSRbmbruOYvoSYP(gHJxgFkEltv8N58QY8WrEGKapmgoNDaDTLdHztc9i(yOWweKh2Pv5THQnzVDVeOKW0bNgklEWU8hGTTJOI5e56bBsyJyI9UfXgIdlmBDCYR77jQJ9u96HHIYDvJiiNXPfW7etZP60WEDuxk7z6ByZjUcXdqDfMEMHUz45XrdFxR0rvuIPP8QnoR1smToJsefUjVsouE56d1xZyZHzV42LLxZufMaP9BGRVAIy615A(yGND6IPyiQYzZnPrzeMvYNIxb6HwJPDYIZjlGDuxcf4ghZzqr(WXTgSrzqu9dSbZDXYvlTRTTgtPW5UpkkUAh3i66yfzuVn6AsuEFAtsjNsJ6aNNgF3MB2d7eJwcMl8O0uCfYm80O2pCB)CLgLF0TZCQ32VhufA7c9rua6T5IH3rBbSgkxGmeAinHpCj8zONXv1PLHoqghcV7VaOljv5zMIm3cOdmZnZ0snrm99uLxZuL2EOvYLa0wT39W0jG5O8HcQZhDJKnQLEt0g9gOhh0sP3RJMP9WvMc7q2bWpwZnY1inrm96DDBnxsr8bPUevHZkKsCtMas2Fpn0ogRKVcXWaWxG8rIdg0)T96L9lTlSV3pcAK8lNj3jkEtp1lzK3BV)WAArSGqsHZdXhfZQYHN)ViFnAgSG1BeBEXrVVV7NeTVD29Y6OVNwJ8tzDEJTNLGYs)d1ogKvEyRDVqP(9okvDfMkDV(ofd3C8smLbsq6RBq8Bhx8Tsa6n8pFo(B7qkMm)1DVjCZX5OLd6lfoFmLGmhFzPZtMpptoGwnakHBVcyrPilkXthGlhHlWWB0GHDw48OOcm)PAkFRo)qbokkO(6Y)CD5duf4hkaFUOsryvoKMcZQWc4bZwMHjV0YB5a4CFfSL1zt26TlBD3MTS7Zw7nAl9oTvWTcET3PXRv841vDfWLKwrvO)HkeZvE0xlYgRpBJQu4FwR7cWsr98muuvry1Ui4sBqpV1Nntu9QnRHYZvxRdwx5twF4UoXNJwSTge53VNUsuiHvDbEfzNSw0tQLFsDeuwtgkFjPOuRhDqShvxvWcAhRSl9cWD5jGTUALRxo4Rk5MxPSEntu99CXxHCXIaFThqZdTsoUxdNNkj9upRNLL2ZZJ3ZliXNVKmFELw(0mr1R6f1N9QTIv(OJLImEnR6MLVIzivrckEcvrzu3Lr0MEoskYe2ElB8tK43yGkrTBacQul2FU4sefFDGur43Eii7vYZ7vrIxtOr0k5kqbJ4y82LrfArQ7INStW3AgvC6nBYF)jvjL8Nfp7RnPKjvxG9U7stH58IENAoX3QZs816SemWD1Uonxa0xlg9uDdC05RQ9nX5cOS7456iUQR4vXPKx9ffd80xgNQEBCkjMKUoox77JZfWvVpUo2rkfrRLVqnV3LQ)IxEPTdhHRWDEnPs2BixRNlGUx84664n6GBPtb7rJ6o)CU2KtBu0r9sUSbQ2j7sFXGoxftDGUEgzYURqhUQ(AFNHUqQMUZCREr8lnIlgKjxExEKwY7ruTUirnTBs0f0a3x)rreQsS5FOEZVwd(XDQNAo5IeiYN(6cFQNCNV7kF(NAi2wv5BFs2jIo15vlD9oXEeueFEaKa83Xpt8iBN0(JP)N(qCZM))d]]
 )
 
 -- The hand-built lists the wowsims.com packs replace (wowsims packs plan, P9): a saved choice of one falls back to the

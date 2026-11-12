@@ -308,7 +308,8 @@ end
 --- (`target.creature_type`'s key; the request's mobType: tests/Forever/helpers/wowsims.lua `creatureType`), distance (the request's distanceFromTarget: our yards from the target at the start,
 --- W.moveTo; the log's move lines step it; nil: no positions). An ItemID cast maps through the abilities' `item`/`items`:
 --- a decision and a cooldown, no cast event (shortcut: the client is not shown the item's spell; emit it when a gate
---- reads an item's cast).
+--- reads an item's cast). notTargeted: the client answers our target's target as not us (UnitIsUnit("targettarget",
+--- "player") false) though the mob still swings at us: wowsims's melee stands behind a mob that attacks the raid's tank.
 function M.new(text, H, o)
     o = o or {}
     local p = M.parse(text)
@@ -327,6 +328,7 @@ function M.new(text, H, o)
         duration = h.duration or 180,
         targetLevel = h.targetLevel,
         creatureType = o.creatureType,
+        notTargeted = o.notTargeted,
     }
     local class = H.Hekili.Class
     -- an item's buff (the log's "Aura gained: {ItemID: n}", the line before its "Gained {"Spirit": ...}"): a class regen

@@ -84,7 +84,10 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "Feral (wowsims.com)",
             content("druid_feral", W.Feral, "Feral (wowsims.com)", 60),
             "druid_feral",
-            0.96
+            0.96,
+            -- wowsims's Feral stands behind its target (no inFrontOfTarget in the request): the client says the mob
+            -- targets someone else, so the pack's Shred lines run as wowsims's (L602)
+            { notTargeted = true }
         )
         assert.is_true(r.flicker <= 0.7, line)
     end)
