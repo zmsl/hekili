@@ -19,6 +19,7 @@ local KIT = {
     corruption = { { 172, 6222, 6223, 7648, 11671, 11672, 25311 }, 340, 0, "spell" },
     bane_of_agony = { { 980, 1014, 6217, 11711, 11712, 11713 }, 215, 0, "spell" },
     bane_of_doom = { { 603 }, 300, 60, "spell" },
+    bane_of_havoc = { { 1225228 }, 0.05, 0, "off" }, -- 5% of base mana; off the GCD as wowsims (its TODO)
     curse_of_the_elements = { { 440892, 1311676, 1311677, 1311680 }, 200, 0, "spell" },
     curse_of_recklessness = { { 704, 7658, 7659, 11717 }, 115, 0, "spell" },
     curse_of_weakness = { { 702, 1108, 6205, 7646, 11707, 11708 }, 175, 0, "spell" },
@@ -120,7 +121,7 @@ describe("Forever Warlock", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(28, n)
+        assert.are.equal(29, n)
         assert.are.equal("cooldowns", w.abilities.amplify_curse.toggle)
         for _, key in ipairs({
             "summon_imp",
@@ -746,6 +747,53 @@ describe("Forever Warlock through the engine", function()
             assert.is_truthy(a, c[1])
             assert.are.equal(t + c[4], a.est, c[1])
         end
+        assert.are.same({}, H.errors)
+    end)
+
+    -- Option D (owner decisions 1 and 2): Destruction's Bane of Havoc line (other_target=1) through the belief's real
+    -- count: shown only with Recommend Target Swaps on and two enemies, with the cycle icon; once it lands on mob A, a
+    -- tab to mob B finds it remembered there (one Havoc at a time), so it is not shown again.
+    it("shows Bane of Havoc for another target only, with Recommend Target Swaps on, one at a time", function()
+        local H = headless.new({ character = character(), pack = "Destruction (wowsims.com)" })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        H.ns.getNumberTargets = function()
+            return 2, 2
+        end
+        local spec = H.Hekili.Engine.settings.specs[100093]
+        local t = H.ctl.now
+        local function havoc() -- the Havoc record's indicator ("" none), or false when it is not shown
+            for _ = 1, 2 do -- the update after the change, and the published set it builds
+                t = t + 0.6
+                assert.is_true(headless.cycle(H, t))
+            end
+            local out = H.Hekili.Engine.Output.Primary
+            for i = 1, out.count do
+                if out.recs[i].actionName == "bane_of_havoc" then
+                    return out.recs[i].indicator or ""
+                end
+            end
+            return false
+        end
+        assert.is_false(havoc())
+        spec.cycle = true
+        assert.are.equal("cycle", havoc())
+        t = t + 0.1
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-havoc", 1225228) -- landed on mob A, the target then
+        assert.is_false(havoc(), "one Havoc at a time")
+        H.ctl.guid.target = "Creature-2"
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_false(havoc(), "remembered on mob A after the tab")
+        assert.are.equal(1, H.Hekili.State.active_dot.bane_of_havoc)
+        -- review M1: mob B dies, no target, two enemies left: the count is unknown (saturated, never 0), no Havoc flash
+        H.ctl.exists.target, H.ctl.guid.target = false, nil
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_false(havoc(), "no target: Havoc is not shown again")
+        assert.are_not.equal(0, H.Hekili.State.active_dot.bane_of_havoc)
+        spec.cycle = false
         assert.are.same({}, H.errors)
     end)
 

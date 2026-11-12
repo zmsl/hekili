@@ -43,6 +43,7 @@ local spec = Hekili:NewClass("HUNTER", {
             icon = 132164,
             role = "attack",
             ranged = true,
+            nameplateRange = 35, -- Auto Shot reaches 35 yd
             package = "Beast Mastery (wowsims.com)",
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
@@ -53,6 +54,7 @@ local spec = Hekili:NewClass("HUNTER", {
             icon = 132222,
             role = "attack",
             ranged = true,
+            nameplateRange = 35, -- Auto Shot reaches 35 yd
             package = "Marksmanship (wowsims.com)",
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
@@ -63,6 +65,7 @@ local spec = Hekili:NewClass("HUNTER", {
             icon = 132215,
             role = "attack",
             ranged = true,
+            nameplateRange = 35, -- Auto Shot reaches 35 yd
             package = "Survival (wowsims.com)",
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },

@@ -34,6 +34,9 @@ local OPTIONS = {
     name = "list_name",
     buff_name = "buff_name",
     use_off_gcd = "use_off_gcd",
+    cycle_targets = "cycle_targets", -- the target-swap modifiers (Recommend Target Swaps): numbers
+    max_cycle_targets = "max_cycle_targets",
+    other_target = "other_target",
     focus = "focus",
     label = "label",
     label_if = "label_if",
@@ -44,9 +47,9 @@ local OPTIONS = {
 local VERBATIM = { name = true, buff_name = true, label = true, label_if = true, icon = true, icon_if = true }
 
 -- SimC-style lines into their lists and entries:
--- actions[.list](=|+=/)action[,name=list][,buff_name=aura][,use_off_gcd=N][,focus=N][,label=text][,label_if=cond]
--- [,icon=texture file id or path][,icon_if=cond][,if=criteria]; focus is a tier, 1 highest; buff_name is
--- cancel_buff's aura.
+-- actions[.list](=|+=/)action[,name=list][,buff_name=aura][,use_off_gcd=N][,cycle_targets=N][,max_cycle_targets=N]
+-- [,other_target=N][,focus=N][,label=text][,label_if=cond][,icon=texture file id or path][,icon_if=cond][,if=criteria];
+-- focus is a tier, 1 highest; buff_name is cancel_buff's aura.
 local function parse(simc)
     local lists = {}
     for line in simc:gmatch("[^\n]+") do
@@ -106,6 +109,9 @@ local function unparse(lists)
                 .. (e.list_name and ",name=" .. e.list_name or "")
                 .. (e.buff_name and ",buff_name=" .. e.buff_name or "")
                 .. (e.use_off_gcd and ",use_off_gcd=" .. e.use_off_gcd or "")
+                .. (e.cycle_targets and ",cycle_targets=" .. e.cycle_targets or "")
+                .. (e.max_cycle_targets and ",max_cycle_targets=" .. e.max_cycle_targets or "")
+                .. (e.other_target and ",other_target=" .. e.other_target or "")
                 .. (e.focus and ",focus=" .. e.focus or "")
                 .. (e.label and ",label=" .. e.label or "")
                 .. (e.label_if and ",label_if=" .. e.label_if or "")

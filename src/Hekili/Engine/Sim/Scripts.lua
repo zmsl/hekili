@@ -1298,6 +1298,7 @@ local newModifiers = {
     extra_amount = 'raw',
     line_cd = 'raw',
     max_cycle_targets = 'raw',
+    other_target = 'raw', -- 1: for another target only (a forced cycle, option D)
     sec = 'raw',
     value = 'raw',
     value_else = 'raw',

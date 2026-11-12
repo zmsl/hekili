@@ -117,7 +117,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 126, hybrid = 44, virtual = 25, display = 1 }, count)
+        assert.are.same({ passthrough = 125, hybrid = 45, virtual = 25, display = 1 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -599,6 +599,18 @@ describe("ns.Facade", function()
         for _, n in ipairs({ "UnitGUID", "UnitIsUnit", "UnitName" }) do
             assert.are.equal("hybrid", Facade.Status(n))
         end
+    end)
+
+    -- T1 (plate count plan v2 §3): UnitPhaseReason guards the plate count's phase test (Targets.lua UnitInPhase) when a
+    -- restriction turns a plate's reads secret; a secret reason is unknown (nil: in phase).
+    it("answers UnitPhaseReason raw while plain and nothing once secret (T1)", function()
+        answers.UnitPhaseReason = function()
+            return 2
+        end
+        assert.are.equal(2, Facade.UnitPhaseReason("nameplate1"))
+        answers.UnitPhaseReason = nil -- secret
+        assert.is_nil(Facade.UnitPhaseReason("nameplate1"))
+        assert.are.equal("hybrid", Facade.Status("UnitPhaseReason"))
     end)
 
     it("answers UnitExists raw for any unit but the pet, and the belief's for a secret pet read (C1)", function()

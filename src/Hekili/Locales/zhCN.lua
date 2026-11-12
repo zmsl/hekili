@@ -461,7 +461,7 @@ L["If checked, the damage-based target system will only count enemies that are o
 L["|cFFFF0000Requires Enemy Nameplates|r"] = "|cFFFF0000需要敌方姓名板|r"
 L["|cFF00FF00Requires Enemy Nameplates|r"] = "|cFF00FF00需要敌方姓名板|r"
 L["Count Nameplates Near You"] = "统计你附近的姓名板"
-L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Discouraged for ranged specializations."] = "勾选后，你角色周围指定半径内的敌方姓名板会被计为敌方目标。\n\n%s 推荐攻击范围在 10 码以内的近战专精使用\n\n%s 不建议远程专精使用。"
+-- L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Ranged specializations count enemies in combat out to the radius; target swaps need it."] = ""
 L["Count Targets Near Your Pet"] = "统计宠物附近的目标"
 L["If checked and properly configured, the addon will count targets near your pet as valid targets, when your target is also within range of your pet."] = "勾选并正确配置后，当你的目标也在宠物的范围内时，插件会将宠物附近的目标计为有效目标。"
 L["%s|w|r is on your action bar and will be used for all your %s pets."] = "%s|w|r已在你的动作条上，将用于你所有的%s宠物。"
@@ -481,7 +481,7 @@ L["If checked, enemy nameplates will be displayed and can be used to count enemy
 L["Show All Nameplates"] = "显示所有姓名板"
 L["If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets."] = "勾选后，将显示所有敌方姓名板（而不仅是你的目标），并可用于统计敌方目标数。"
 L["Enemy Range Radius"] = "敌人范围半径"
-L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."] = "如果启用了|cFFFFD100统计你附近的姓名板|r，此范围内的敌人将被计入目标数。\n\n仅在同时启用|cFFFFD100显示敌方姓名板|r和|cFFFFD100显示所有姓名板|r时，此设置才可用。"
+-- L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."] = ""
 L["Allow Target Swaps |TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t"] = "允许切换目标 |TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t"
 L["When target swapping is enabled, an icon (|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t) may be shown when you should use an ability on a different target.\n\nThis works well for some specs that simply want to apply a debuff to another target, but can be less-effective for specializations that are concerned with maintaining dots/debuffs based on their durations.\n\nThis feature is targeted for improvement in a future update."] = "启用切换目标后，当你应该对另一个目标使用技能时，可能会显示一个图标（|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t）。\n\n这对只需给另一个目标施加减益效果的专精效果很好，但对于需要根据持续时间维持 DOT/减益效果的专精，效果可能较差。\n\n此功能计划在未来的更新中改进。"
 L["Secondary Targets"] = "副目标"
@@ -1017,6 +1017,8 @@ L["The lane's time axis, the ruler and the focus zone."] = "轨道的时间轴�
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000警告|r：此版本的 Hekili Forever 适用于更新的 WoW Forever 客户端；你应重新安装适用于 %s 的版本。"
 
 -- No longer used (the English changed or went away): reuse or delete
+L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Discouraged for ranged specializations."] = "勾选后，你角色周围指定半径内的敌方姓名板会被计为敌方目标。\n\n%s 推荐攻击范围在 10 码以内的近战专精使用\n\n%s 不建议远程专精使用。"
+L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."] = "如果启用了|cFFFFD100统计你附近的姓名板|r，此范围内的敌人将被计入目标数。\n\n仅在同时启用|cFFFFD100显示敌方姓名板|r和|cFFFFD100显示所有姓名板|r时，此设置才可用。"
 L["Preferences for Blizzard action button glows (not SpellFlash)."] = "暴雪动作条按钮发光的偏好设置（非 SpellFlash）。"
 L["If enabled, the addon can highlight abilities on your action bars when they are recommended for use."] = "启用后，当技能被推荐使用时，插件可以在你的动作条上高亮该技能。"
 L["This feature requires the SpellFlashCore addon or library to function properly."] = "此功能需要 SpellFlashCore 插件或库才能正常工作。"

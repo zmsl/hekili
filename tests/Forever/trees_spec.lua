@@ -260,4 +260,38 @@ describe("Hekili:NewClass (the engine headless)", function()
         assert.are.same({ "p", "One" }, { kit.specs.one.options.potion, kit.specs.one.options.package })
         assert.is_nil(kit.specs.heal.options.package)
     end)
+
+    -- caster range (L644): a ranged tree's Enemy Range Radius defaults to 30 yd, a pack's own value wins, melee none
+    it("defaults a ranged tree's nameplateRange to 30, keeps a pack's own and leaves a melee tree's unset", function()
+        local env = engine.load("WARRIOR")
+        local kit = env.Hekili:NewClass("WARRIOR", {
+            specs = {
+                { key = "one", name = "One", tree = 1, role = "attack" },
+                { key = "two", name = "Two", tree = 2, role = "attack", ranged = true },
+                { key = "own", name = "Own", tree = 3, role = "attack", ranged = true, nameplateRange = 35 },
+            },
+        })
+        assert.is_nil(kit.specs.one.options.nameplateRange)
+        assert.are.equal(30, kit.specs.two.options.nameplateRange)
+        assert.are.equal(35, kit.specs.own.options.nameplateRange)
+    end)
+
+    it("keeps a radius the player set on a ranged spec through init; the other ranged specs read 30", function()
+        local headless = require("Game.harness.headless")
+        local wl = require("Forever.helpers.warlock_world")
+        local C = wl.Destruction
+        local saved = { profiles = { Default = { specs = { [C.SPEC] = { nameplateRange = 15 } } } } }
+        local H = headless.new({ character = C.character(), pack = C.PACK, saved = saved })
+        assert.are.same({}, H.loadErrors)
+        local specs = H.Hekili.DB.profile.specs
+        assert.are.equal(15, specs[C.SPEC].nameplateRange)
+        local others = 0
+        for id, s in pairs(H.Hekili.Class.specs) do
+            if id ~= C.SPEC and id > 0 and not s.melee and s.kit == H.Hekili.Class.kit then
+                assert.are.equal(30, specs[id].nameplateRange, id)
+                others = others + 1
+            end
+        end
+        assert.is_true(others > 0, "no other ranged spec")
+    end)
 end)
