@@ -177,20 +177,29 @@ describe("race packs", function()
             load("Gnome", { eureka = stock, [1] = stock }) -- a stock `all` registration under the same key
             assert.are.equal(1259813, all.abilities.eureka.id) -- the race file loads later and wins
             assert.are.equal(all.abilities.eureka, all.abilities[1259817]) -- a `copy` alias
-            assert.are.equal(3, all.auras.eureka.max_stack)
+            assert.are.equal(8, all.auras.eureka.duration) -- the pin: 8 s, no charges (S0)
+            assert.is_nil(all.auras.eureka.max_stack)
             assert.is_function(all.abilities.eureka.now)
+            local applied = {}
+            _G.applyBuff = function(...)
+                applied[#applied + 1] = { ... }
+            end
+            all.abilities.eureka.handler()
+            all.abilities.eureka.now()
+            _G.applyBuff = nil
+            assert.are.same({ { "eureka", 8 }, { "eureka", 8 } }, applied) -- the cast applies 8 s, no stacks
             assert.are.same({ { pct = 0.05 } }, ns.raceMods.maxMods)
-            assert.are.same({ "eureka", -0.10, 3, 18 }, {
+            assert.are.same({ "eureka", -0.10, false, 18 }, {
                 ns.raceMods.costMods[1].aura,
                 ns.raceMods.costMods[1].pct,
-                ns.raceMods.costMods[1].charges,
+                ns.raceMods.costMods[1].charges or false,
                 #ns.raceMods.costMods[1].spells,
             })
         end
     )
 
     it(
-        "prices Heroic Strike at 13.5 with Eureka! up in the simulation, three casts remove it; Rend stays 10",
+        "prices Heroic Strike at 13.5 with Eureka! up in the simulation, no cast takes a stack; Rend stays 10",
         function()
             load("Gnome")
             local heroic_strike =
@@ -209,14 +218,11 @@ describe("race packs", function()
             assert.are.equal(15, heroic_strike.baseSpend) -- the belief reads the declared cost
             ns.costMods.Spend(rend.baseSpend, "rend") -- out of scope: no charge
             assert.are.equal(3, state.buff.eureka.count)
-            for k = 1, 3 do
+            for _ = 1, 4 do
                 ns.costMods.Spend(heroic_strike.baseSpend, "heroic_strike") -- ns.spendResources' call
-                if k < 3 then
-                    assert.are.equal(3 - k, state.buff.eureka.count)
-                end
             end
-            assert.is_false(state.buff.eureka.up)
-            assert.are.equal(15, heroic_strike.spend)
+            assert.is_true(state.buff.eureka.up) -- the pin's Eureka! has no charges: it ends by time only
+            assert.are.equal(3, state.buff.eureka.count)
         end
     )
 

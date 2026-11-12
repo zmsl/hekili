@@ -15,7 +15,6 @@
 # Omitted: default #12: other OtherActionOffensivePotion
 # Omitted: default #14: other OtherActionResourcePotion
 # Omitted: default #20: hidden
-# Omitted: default #27: dropped the unresolved aura 27648 (its branch only)
 # Omitted: default #34: never
 # Omitted: default #35: never
 # Omitted: default #36: hidden
@@ -55,7 +54,7 @@ actions+=/bloodthirst
 actions+=/mortal_strike
 actions+=/thunder_clap,if=active_enemies>1
 actions+=/demoralizing_shout,if=settings.maintain_demoralizing_shout&debuff.demoralizing_shout.remains<=6
-actions+=/thunder_clap,if=debuff.thunder_clap.remains<=6
+actions+=/thunder_clap,if=(!debuff.thunderfury.up&debuff.thunder_clap.remains<=6)
 actions+=/battle_shout,if=buff.battle_shout.remains<=10
 actions+=/rend,if=(!debuff.rend.up&(!(offhand_speed=0)|(offhand_speed=0&(!action.shield_slam.known|cooldown.shield_slam.remains>=1.5))))
 actions+=/sunder_armor,if=(debuff.sunder_armor.stack<5|((!action.shield_slam.known|cooldown.shield_slam.remains>=1.5)&debuff.sunder_armor.remains<=10))

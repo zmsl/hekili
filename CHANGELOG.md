@@ -15,6 +15,8 @@
 - In dungeons (and in raids, if the game hides targets there too), switching targets with Tab no longer makes a debuff that the Cooldown Manager shows on your new target (such as Faerie Fire) look missing, so it is no longer recommended again.
 - In dungeons (and in raids, if the game hides targets there too), the debuffs you put on an enemy are remembered when you Tab away and back, as long as its nameplate stays shown, so they are not recommended again while they are still up.
 - A display style whose range check is set to melee no longer raises a Lua error in dungeons while you target an enemy: Hekili now ships the newer LibRangeCheck-3.0.
+- Gnome Warriors, Rogues, Mages, Warlocks and Priests: Eureka! is modelled as the sim has it, 8 seconds with every ability in its scope costing 10% less (it was 15 seconds and three casts), so the last seconds of a fight no longer hide Eureka! as early.
+- Protection Warriors: the default priority's Thunder Clap line again checks for the Thunderfury slow; it reads down in combat, so nothing changes unless you can see the debuff.
 
 ### Known issues
 
