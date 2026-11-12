@@ -79,54 +79,57 @@ describe("a dungeon pull through the token plate count (T1)", function()
         assert.is_nil(find(recs, "magma_totem"), names(recs))
     end)
 
-    it("Destruction with Recommend Target Swaps: its curse and DoTs swap to the other plate until it carries them", function()
-        local H = mw.new("C", {
-            character = character("src/Hekili_Warlock/Warlock.lua", "WARLOCK", 9, 1490),
-            pack = "Destruction (wowsims.com)",
-        })
-        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
-        local spec = H.Hekili.Engine.settings.specs[100093]
-        local A = H.Hekili.Class.abilities
-        local SPREAD = { "curse_of_the_elements", "immolate", "corruption" } -- the cycle_targets=1 lines' debuffs
-        mw.plate(H, 1)
-        mw.plate(H, 2)
-        mw.target(H, 1)
-        local t = H.ctl.now
-        local recs
-        recs, t = queue(H, t)
-        assert.are.equal(2, H.Hekili.State.active_enemies)
-        assert.is_nil(find(recs, nil, "cycle"))
-        local n = 0
-        local function cast(id)
-            n = n + 1
-            t = t + 0.1
-            H.ctl.now = t
-            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-map" .. n, id)
-            local _
-            _, t = queue(H, t) -- a GCD and more between casts, each folded on its target
+    it(
+        "Destruction with Recommend Target Swaps: its curse and DoTs swap to the other plate until it carries them",
+        function()
+            local H = mw.new("C", {
+                character = character("src/Hekili_Warlock/Warlock.lua", "WARLOCK", 9, 1490),
+                pack = "Destruction (wowsims.com)",
+            })
+            assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+            local spec = H.Hekili.Engine.settings.specs[100093]
+            local A = H.Hekili.Class.abilities
+            local SPREAD = { "curse_of_the_elements", "immolate", "corruption" } -- the cycle_targets=1 lines' debuffs
+            mw.plate(H, 1)
+            mw.plate(H, 2)
+            mw.target(H, 1)
+            local t = H.ctl.now
+            local recs
+            recs, t = queue(H, t)
+            assert.are.equal(2, H.Hekili.State.active_enemies)
+            assert.is_nil(find(recs, nil, "cycle"))
+            local n = 0
+            local function cast(id)
+                n = n + 1
+                t = t + 0.1
+                H.ctl.now = t
+                H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-map" .. n, id)
+                local _
+                _, t = queue(H, t) -- a GCD and more between casts, each folded on its target
+            end
+            for _, k in ipairs(SPREAD) do -- on mob A, our target
+                cast(A[k].id)
+            end
+            recs, t = queue(H, t)
+            assert.is_nil(find(recs, nil, "cycle"), "toggle off: no swap " .. names(recs))
+            spec.cycle = true
+            recs, t = queue(H, t)
+            local before = names(recs)
+            assert.is_truthy(find(recs, nil, "cycle"), before)
+            mw.target(H, 2) -- the swap: mob B
+            recs, t = queue(H, t)
+            for _, k in ipairs(SPREAD) do
+                cast(A[k].id)
+            end
+            cast(A.bane_of_havoc.id) -- Havoc (other_target=1) on B, for A
+            mw.target(H, 1) -- back to mob A
+            recs, t = queue(H, t)
+            print("\nDestruction under Map: before the swap " .. before .. "; after " .. names(recs))
+            for _, k in ipairs(SPREAD) do
+                assert.are.equal(2, H.Hekili.State.active_dot[k], k)
+            end
+            assert.is_nil(find(recs, nil, "cycle"), "every plate carries them: no swap " .. names(recs))
+            spec.cycle = false
         end
-        for _, k in ipairs(SPREAD) do -- on mob A, our target
-            cast(A[k].id)
-        end
-        recs, t = queue(H, t)
-        assert.is_nil(find(recs, nil, "cycle"), "toggle off: no swap " .. names(recs))
-        spec.cycle = true
-        recs, t = queue(H, t)
-        local before = names(recs)
-        assert.is_truthy(find(recs, nil, "cycle"), before)
-        mw.target(H, 2) -- the swap: mob B
-        recs, t = queue(H, t)
-        for _, k in ipairs(SPREAD) do
-            cast(A[k].id)
-        end
-        cast(A.bane_of_havoc.id) -- Havoc (other_target=1) on B, for A
-        mw.target(H, 1) -- back to mob A
-        recs, t = queue(H, t)
-        print("\nDestruction under Map: before the swap " .. before .. "; after " .. names(recs))
-        for _, k in ipairs(SPREAD) do
-            assert.are.equal(2, H.Hekili.State.active_dot[k], k)
-        end
-        assert.is_nil(find(recs, nil, "cycle"), "every plate carries them: no swap " .. names(recs))
-        spec.cycle = false
-    end)
+    )
 end)

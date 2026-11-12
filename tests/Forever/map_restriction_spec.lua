@@ -435,21 +435,24 @@ describe("the plate enemy count under the Map restriction (T1)", function()
     end)
 
     -- task 4: plates already up at a /reload fire no ADDED (assumed until probe P14, L77).
-    it("PLAYER_ENTERING_WORLD on a reload finds the plates already up; their ADDED afterwards changes nothing", function()
-        local H, ctl = world("B")
-        for k = 1, 3 do
-            local u = "nameplate" .. k
-            ctl.exists[u], ctl.guid[u], ctl.names[u], ctl.level[u] = true, SECRET, SECRET, 60
+    it(
+        "PLAYER_ENTERING_WORLD on a reload finds the plates already up; their ADDED afterwards changes nothing",
+        function()
+            local H, ctl = world("B")
+            for k = 1, 3 do
+                local u = "nameplate" .. k
+                ctl.exists[u], ctl.guid[u], ctl.names[u], ctl.level[u] = true, SECRET, SECRET, 60
+            end
+            mw.target(H, 1)
+            assert.are.equal(1, count(H), "no ADDED: nothing known")
+            H.Fire("PLAYER_ENTERING_WORLD", false, true)
+            assert.are.equal(3, count(H))
+            for k = 1, 3 do
+                H.Fire("NAME_PLATE_UNIT_ADDED", "nameplate" .. k)
+            end
+            assert.are.equal(3, count(H))
         end
-        mw.target(H, 1)
-        assert.are.equal(1, count(H), "no ADDED: nothing known")
-        H.Fire("PLAYER_ENTERING_WORLD", false, true)
-        assert.are.equal(3, count(H))
-        for k = 1, 3 do
-            H.Fire("NAME_PLATE_UNIT_ADDED", "nameplate" .. k)
-        end
-        assert.are.equal(3, count(H))
-    end)
+    )
 
     -- task 5: each scenario both worlds express counts the same through the GUID path (A) and the token path (B).
     it("A/B parity: the GUID path and the token path agree", function()
