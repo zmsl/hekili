@@ -6,6 +6,7 @@
 - Shaman: Stormstrike's debuff on the target (the extra damage your next Lightning Bolt, Chain Lightning or Earth Shock deals) now shows with the other auras.
 - Shaman: a totem you drop now shows its buff for the totem's life and takes down the buff of the totem it replaces, Mana Tide Totem adds its mana, Improved Stormstrike (2/2) is applied by Stormstrike and a dodge or parry on you readies Stormstrike, Maelstrom Weapon cuts Lightning Bolt by 4% a talent rank a stack, Nature's Swiftness makes the next Lightning Bolt or Chain Lightning instant, the Burning Totem relic lengthens Flame Shock, and Flurry, Elemental Devastation and Windfury Totem's attack-power buff are registered.
 - A new Action Bar Glow page in the options can glow your real action bar buttons: the buttons that cast the first recommendation of a display in gold, and the second recommendation's in blue. It works on the game's keyboard and gamepad bars and on ElvUI, Bartender and Dominos, follows the display you choose, glows in combat only unless you change that, and works with the icons hidden. It is off by default.
+- Every class: the item, potion, enchant and set-bonus buffs the simulation tracks (such as Revelation, the weapon enchant's proc, for Mages, Priests, Druids, Hunters and Paladins) and the Undead's Touch of the Grave now show with the other auras when the game reports them. They are shown, not predicted.
 
 ### Changed
 - The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.

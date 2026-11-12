@@ -7,7 +7,7 @@ LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
 .PHONY: accuracy gate gate-ab gate-body gate-ab-body bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check cdv-coverage syntax api-check \
-	packs-check tools-test check check-full packs package package-check wowsims-cli wowsims-sim-cli wowsims-export wowsims-siml wowsims-learn wowsims-packs test-wowsims
+	packs-check tools-test check check-full packs package package-check wowsims-cli wowsims-sim-cli wowsims-export wowsims-siml wowsims-learn shared-auras wowsims-packs test-wowsims
 
 bootstrap:
 	scripts/bootstrap.sh
@@ -132,6 +132,9 @@ wowsims-export:
 # wowsims-siml SPEC=<spec>: the recipe's .siml build as tests/Forever/wowsims/<spec>.build.json (export runs it too).
 wowsims-siml:
 	WOWSIMS=$(WOWSIMS) $(LUA) tools/wowsims/export.lua siml $(SPEC)
+
+shared-auras:
+	python3 -I tools/gen_shared_auras.py $(PIN)
 
 wowsims-learn:
 	$(LUA) tools/wowsims/export.lua learn $(CLASS)

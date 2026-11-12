@@ -208,6 +208,23 @@ describe("shared content", function()
         end
     end)
 
+    it("registers the pin's item auras (S2): Revelation per class, a timed and an until-cancelled sample", function()
+        load({ "ItemAuras" })
+        for k, id in pairs({
+            revelation_1248808 = 1248808,
+            revelation_1323377 = 1323377,
+            revelation_1323400 = 1323400,
+            revelation = 1323410,
+            revelation_1323419 = 1323419,
+        }) do
+            assert.are.same({ id, 15, 1 }, { all.auras[k].id, all.auras[k].duration, all.auras[k].max_stack }, k)
+            assert.are.equal(all.auras[k], all.auras[id])
+        end
+        assert.are.same({ 13494, 30 }, { all.auras.haste.id, all.auras.haste.duration })
+        assert.are.same({ 8191, 15 }, { all.auras.zeal.id, all.auras.zeal.duration })
+        assert.are.equal(233, #keys("auras")) -- one per distinct spell id in names.json shared.aura (20007 twice)
+    end)
+
     it("answers locked_out_<school> from the active lockouts' school masks, until each one ends", function()
         load({ "Auras" })
         local schools = {}
@@ -343,7 +360,7 @@ describe("shared content", function()
 
     it("registers each shared key in one file only, every file Hekili_Shared.toc lists", function()
         load()
-        assert.are.same({ "Auras", "Consumables", "Items" }, SHARED)
+        assert.are.same({ "Auras", "ItemAuras", "Consumables", "Items" }, SHARED)
         for _, kind in ipairs({ "abilities", "auras" }) do
             local seen = {}
             for _, k in ipairs(all.keys[kind]) do

@@ -11,6 +11,7 @@
 ## X-Hekili-ContentAPI: 14
 
 Shared\Auras.lua
+Shared\ItemAuras.lua
 Shared\Consumables.lua
 Shared\Items.lua
 Races\Gnome.lua
