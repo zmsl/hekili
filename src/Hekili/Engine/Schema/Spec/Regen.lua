@@ -23,7 +23,8 @@ local mt_resource = ns.metatables.mt_resource
 --                                    our spends and the regen, until a short answer below it drops it to the ladder's.
 -- A regen entry of rate fields (C3b), `{ aura = key, mult = n, spirit = m, share = s, mp5 = x }`, any of the four,
 -- each one of wowsims's mana PseudoStats while the player's aura `key` is up (sim/core/mana.go:186-211): `mult` the
--- whole rate x n (MultiplyManaRegenSpeed; an energy surge); `spirit` the spirit regen x m (DB2 aura 110,
+-- whole rate x n (MultiplyManaRegenSpeed; an energy surge; 0 stops it: a form that pauses the pool); `spirit` the
+-- spirit regen x m (DB2 aura 110,
 -- SpiritRegenMultiplier); `share` + s of the spirit regen while casting (aura 134, SpiritRegenRateCasting), the total
 -- with the `fsr` meta's `share` capped at all of it; `mp5` + x a second in and out of the window (an MP5 aura). On an
 -- `fsr` resource the four combine as wowsims does: inside the window (MP5 + S x m x min(c + s, 1)) x f, outside

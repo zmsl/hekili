@@ -23,6 +23,7 @@
 - Druid: the Wrath that Nature's Swiftness makes instant now uses the buff up as soon as you cast it, so the next Wrath is no longer shown as instant.
 - Druid: each Starfire you cast now uses up one Eclipse charge, so the next Starfire is no longer shown with the shorter cast of a charge already used.
 - Druid: Nature's Grace now shortens the global cooldown too (about 1.23 seconds on Wrath, Starfire, Moonfire and the other Balance and healing spells, 1.36 on the rest), so the recommendations after a crit come on time.
+- Druid: shifting into Cat Form now sets your energy as the game does: none without Furor, and with Furor its 20% a rank of the energy you left Cat Form with plus 10 a second you spent out of Bear Form, so the first recommendations after a shift no longer count energy you do not have.
 - Warrior: Deep Wound is read from the Cooldown Manager's copy of the debuff, Flurry counts its three charges, Retaliation its 30, and Gore Drinker's buff is tracked from the abilities that grant it.
 - Warlock: Affliction and Shadow Brand (wowsims.com) now react to the Revelation weapon enchant's proc, Decimation and Shadow Trance are now also read from the spell's glow in combat where the game lights it, and Destruction (wowsims.com) now tracks Shadow and Flame's buffs the way wowsims does.
 - Priest: Shadow (wowsims.com) now counts Dark Inspiration as soon as you cast Mind Blast, so the mana estimate no longer ignores it.

@@ -2638,7 +2638,9 @@ describe("resources", function()
         end)
     end)
 
-    it("ignores a regen `mult` of 0 or less (the out-of-combat read divides by it)", function()
+    -- a `mult` of 0 pauses the slot's regen while its aura is up (a pool that stops in a form); an out-of-combat rate
+    -- read under it says nothing of the stored rate (it would divide by 0). A negative one is ignored.
+    it("pauses the regen under a `mult` of 0, learns nothing from a read under it, and ignores one below 0", function()
         boot({
             abilities = {},
             abilityIds = {},
@@ -2660,11 +2662,14 @@ describe("resources", function()
             units = { "player", "target" },
         })
         I.Settle(10)
-        I.AuraModel(1, 1, 10, 15, 1, 10, 0)
-        assert.are.same({ 0, false }, { I.res.regenMult.n, I.res.shaped[1] })
-        obs(Obs.Read, 12, 1, 12, I.ReadOf.Regen)
+        I.ResourceShift(1, -200, 10, Obs.CastSuccess) -- 0 at 10
+        I.AuraModel(1, 1, 10, 15, 1, 10, 0) -- up 10 to 15
+        assert.are.same({ 1, true }, { I.res.regenMult.n, I.res.shaped[1] })
+        within(0, VS.Power(ENERGY, 12).est)
+        within(30, VS.Power(ENERGY, 18).est) -- 10/s from 15
+        obs(Obs.Read, 12, 1, 0, I.ReadOf.Regen)
         I.Fold(12, false)
-        assert.are.same({ 12, 12 }, { I.res.decl[1], VS.Regen(ENERGY, 12).est })
+        assert.are.same({ 10, 0, 10 }, { I.res.decl[1], VS.Regen(ENERGY, 12).est, VS.Regen(ENERGY, 16).est })
     end)
 
     describe("a swing entry gated on a player aura (swings pay only while form_a is up)", function()

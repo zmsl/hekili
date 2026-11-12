@@ -263,26 +263,31 @@ local GATES = {
         gcdGate(t, msg)
     end,
     furor = function(k)
+        -- L586: the Cat entry's energy as wowsims's Furor sets it (forms.go): untalented none, at 5/5 the pool, which
+        -- regenerates outside Bear Form only, in the world and the belief alike
         local variants = {
-            { "Cat entry zero", { cat = { [dw.ENERGY] = "zero" } } },
+            { "Cat entry zero", { onEnter = { cat = { [dw.ENERGY] = "zero" } } } },
             {
-                -- Furor's Cat restore (the energy left plus 10 a second out of Cat) is what the world's regen in every
-                -- form already gives: the Cat entry keeps
                 "Furor rank 5",
                 {
-                    bear = {
-                        [dw.RAGE] = function()
-                            return 10 -- 20% a rank of 10 rage: rank 5 always
-                        end,
+                    onEnter = {
+                        bear = {
+                            [dw.RAGE] = function()
+                                return 10 -- 20% a rank of 10 rage: rank 5 always
+                            end,
+                        },
+                        cat = dw.entryRules("cat_form", 5), -- the class file's Cat entry at 5/5
                     },
+                    talents = { [17056] = 5 },
                 },
             },
         }
         for _, x in ipairs(variants) do
-            local t, mBear = shift(50 * k, { onEnter = x[2] })
+            local t, mBear = shift(50 * k, x[2])
             local msg = line("shift fight, " .. x[1], t, mBear)
             print(msg) -- report: the error at each Cat entry and the time a usability pin takes to correct it
             assert.is_true(t.rageOver == 0 and t.bearEntryOver <= 1.3, msg) -- Bear's rage never an overshoot
+            assert.is_true(t.entryErr <= 1, msg) -- the belief's Cat entry is the world's (was 28.99 untalented)
         end
     end,
     decay = function(k)

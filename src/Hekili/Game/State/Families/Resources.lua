@@ -433,10 +433,10 @@ I.OnBuild(function(def, now)
         local entries = list[r].mult
         for k = 1, entries and #entries or 0 do
             local e = entries[k]
-            -- each field valid or its default (a mult or spirit of 0 or less: the out-of-combat read divides by it); a
-            -- function spirit or mp5 is read here once
+            -- each field valid or its default (a spirit of 0 or less: the out-of-combat read divides by it; a mult of 0
+            -- pauses the slot, and a read under it teaches nothing); a function spirit or mp5 is read here once
             local f, sh, m, x = e.mult, e.share, e.spirit, e.mp5
-            f = type(f) == "number" and f > 0 and f or nil
+            f = type(f) == "number" and f >= 0 and f or nil
             sh = type(sh) == "number" and sh > 0 and sh <= 1 and sh or nil
             local live = f
                 or sh
@@ -1401,13 +1401,16 @@ I.On(Obs.Read, function(o, t, lag)
     elseif c == ReadOf.Regen or c == ReadOf.RegenSpirit then
         -- the game's rate includes the entries up now: store it unscaled and net of their mp5 (none of a mixed pair)
         local f, k, mixed, s = readAt(r, t)
+        if f <= 0 then
+            return -- a pausing entry (mult 0) is up: the read says nothing of the stored rate
+        end
         if c == ReadOf.Regen and R.fsr[r] and not mixed and s > 0 then
             pendAct[r] = o.b / f - k -- M + (c + s)S: unmixed with the spirit read that follows (Power.lua)
         elseif c == ReadOf.RegenSpirit and R.fsr[r] and not mixed and s > 0 then
             -- aura audit C9: casting M + (c + s)S and the rest (1 - c - s)S, so S = rest / (1 - c - s) and the stored
             -- parts are M + cS (casting less sS) and (1 - c)S; at c + s >= 1 the pair holds only the total M + S, which
             -- rescales the stored split
-            local act, v, cs = pendAct[r] or -1, o.b / f, R.share[r] -- nonzero: every entry's mult > 0 (the build)
+            local act, v, cs = pendAct[r] or -1, o.b / f, R.share[r] -- nonzero: f > 0 checked above
             pendAct[r] = -1
             if act >= 0 then
                 local e, sp
@@ -1428,13 +1431,13 @@ I.On(Obs.Read, function(o, t, lag)
                 I.Sample(R.regen[r], "observed", e + sp, t, Obs.Read)
             end
         elseif c == ReadOf.Regen and R.swing[r] == 0 and not (R.fsr[r] and mixed) then
-            local v = o.b / f - k -- nonzero: every entry's mult > 0 (the build)
+            local v = o.b / f - k -- nonzero: f > 0 checked above
             v = v > 0 and v or 0 -- an `mp5` aura believed up that the game dropped: never a draining rate
             R.decl[r], R.readT[r] = v, t
             R.regE[r], R.regL[r], R.regH[r] = v, v, v
             I.Sample(R.regen[r], "observed", v + R.spE[r], t, Obs.Read)
         elseif c == ReadOf.RegenSpirit and R.fsr[r] and not mixed then -- after its slot's Regen read (Power.lua)
-            local v = o.b / f -- nonzero: every entry's mult > 0 (the build)
+            local v = o.b / f -- nonzero: f > 0 checked above
             R.spDecl[r], R.readT[r] = v, t
             R.spE[r], R.spL[r], R.spH[r] = v, v, v
             I.Sample(R.regen[r], "observed", R.regE[r] + v, t, Obs.Read)

@@ -467,6 +467,7 @@ local function content(name)
         max = P.power.max,
         res = P.res,
         formSpeed = { [FORM.bear_form] = dw.SPEED[dw.BEAR], [FORM.cat_form] = dw.SPEED[dw.CAT] },
+        regenPause = rules().pause, -- energy stops in Bear Form (the class file's bear_pause; both lists put Bear first)
         mobHealth = 15000,
         canParry = false, -- druids never parry (wowsims's CanParry: no parry haste of ours)
     }, { __index = P.world })

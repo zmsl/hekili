@@ -214,7 +214,14 @@ end
 -- parried or missed (wowsims/forever druid/feral.go refundOnMiss and MissRefund: 0.8 where the DB2 flags Discount
 -- Power On Miss). Not Ferocious Bite (flagged in the DB2, but wowsims issues no refund), Swipe, Faerie Fire (Feral) or
 -- Demoralizing Roar.
-spec:RegisterResource(Enum.PowerType.Energy, nil, nil, { regen = 10, refundOnAvoid = 0.8 })
+-- bear_pause: no energy comes in Bear Form (wowsims forms.go pauseCatEnergy); out of Cat it comes as in Cat, so the
+-- pool at a Cat entry is wowsims's stored energy plus 10 a second outside Bear, capped (Furor's share: swap_form).
+spec:RegisterResource(
+    Enum.PowerType.Energy,
+    { bear_pause = { aura = "bear_form", mult = 0 } },
+    nil,
+    { regen = 10, refundOnAvoid = 0.8 }
+)
 spec:RegisterResource(Enum.PowerType.ComboPoints)
 
 spec:RegisterResource(
@@ -768,8 +775,10 @@ spec:RegisterStateExpr("druid_bleed_active", function()
 end)
 
 -- A shift (Classic's swap_form, Forever's rules): the other forms and a queued Maul go; into Bear all rage is lost
--- (Furor's 20%-a-rank chance of 10 is unknowable at the cast: none); into Cat the energy is kept (Furor's Forever
--- restore is unmodelled until checkpoint Q3). The forms' `now` write the same lines.
+-- (Furor's 20%-a-rank chance of 10 is unknowable at the cast: none); into Cat the energy becomes Furor's 20% a rank of
+-- the pool (wowsims forms.go restoreCatEnergy; the pool is its stored energy, bear_pause above): none untalented, as
+-- the owner's client showed (L586). wowsims keeps the bar on a first entry with nothing stored, its pull only: the
+-- belief cannot tell one after a /reload, so every entry takes the share. The forms' `now` write the same lines.
 spec:RegisterStateFunction("swap_form", function(form)
     for i = 1, #FORMS do
         removeBuff(FORMS[i])
@@ -777,6 +786,8 @@ spec:RegisterStateFunction("swap_form", function(form)
     removeBuff("maul")
     if form == "bear_form" then
         spend(rage.lo, "rage") -- the sim's floor (border batch 2)
+    elseif form == "cat_form" then
+        spend(energy.lo * (5 - talent.furor.rank) / 5, "energy") -- keeps rank / 5 of the sim's floor (border batch 2)
     end
     applyBuff(form)
 end)
@@ -958,6 +969,7 @@ spec:RegisterAbilities({
                 removeBuff(FORMS[i])
             end
             removeBuff("maul")
+            spend(energy.current * (5 - talent.furor.rank) / 5, "energy") -- Furor (swap_form)
             applyBuff("cat_form")
         end,
 
