@@ -510,7 +510,11 @@ function M.new(seed)
     --- While an entry's `auras` are up on `e`, wowsims's PseudoStats rule runs (mana.go:186-206): S = B / (1 - c) (c the
     --- entry's `share`; A - `mp5` when c >= 1), M = A - c x S (or `mp5`); inside the window M + sum(mp5) + S x prod(spirit)
     --- x min(c + sum(share), 1), outside it M + sum(mp5) + S x prod(spirit); "idle" reads the outside rate.
+    --- `W.regenPause[pt]` (a form): none while `e` is in it.
     function W.regenRate(e, pt, mode)
+        if W.regenPause and W.regenPause[pt] == e.form then
+            return 0
+        end
         local f = W.fsr[pt]
         local open = f
             and (

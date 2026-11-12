@@ -19,8 +19,15 @@ function M.boot(ns, api, edit)
     w.state.mainhand_speed = 2.5
     local e = ld.env(w)
     local class = { primaryResource = "energy", abilities = {}, auras = {}, talents = w.talents }
+    -- the rate-field entries (Bear Form's energy pause), which Spec/Regen.lua moves out of the model into regenMult
+    local rates = {}
+    for _, m in pairs(w.resources[3].models or {}) do
+        if m.mult or m.spirit or m.share or m.mp5 then
+            rates[#rates + 1] = m
+        end
+    end
     class.resources = {
-        energy = { type = 3, state = { meta = w.resources[3].meta } },
+        energy = { type = 3, state = { meta = w.resources[3].meta, regenMult = rates } },
         combo_points = { type = 4, state = {} },
         rage = { type = 1, state = { regenModel = w.resources[1].models, meta = w.resources[1].meta } },
         mana = { type = 0, state = { meta = w.resources[0].meta } }, -- its `base`: a fraction cost's base mana
@@ -70,7 +77,8 @@ function M.boot(ns, api, edit)
     ns.ResourceIsPoints = function(k) -- Constants.lua's, for the one point resource here
         return k == "combo_points"
     end
-    ns.raceMods = { maxMods = {}, costMods = w.costMods } -- Clearcasting, as spec:RegisterCostMod appends it
+    -- Clearcasting and Nature's Grace, as spec:RegisterCostMod and spec:RegisterGcdMod append them
+    ns.raceMods = { maxMods = {}, costMods = w.costMods, gcdMods = w.gcdMods }
     load.schema(ns, h)
     VS.Start(api)
     ns.BuildTracked()

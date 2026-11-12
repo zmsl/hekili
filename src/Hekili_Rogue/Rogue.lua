@@ -137,14 +137,15 @@ end
 
 spec:RegisterResource(Enum.PowerType.ComboPoints)
 -- Adrenaline Rush (13750 aura 110 misc 3 base 100): +100% energy regen while it is up, a rate multiplier (C3b).
--- shortcut: after a /reload in combat energy's regen rate stays 0 for the rest of the fight (the Druid's Q3 note).
+-- regen: energy's base rate a second, the belief's from the build until a plain rate read (energy is secret even out
+-- of combat): wowsims/forever's 1 energy every 0.1 s (sim/core/energy.go:48-49).
 -- refundOnAvoid: the share of the energy an ability flagged `refundOnAvoid = true` gives back when dodged, parried or
 -- missed (wowsims/forever's MissRefund, spelldata/attributes.go: 0.8 where the DB2 flags Discount Power On Miss and the
 -- spell issues the refund). Not Slice and Dice, Vanish or the poisons; Gouge is flagged in the DB2 but wowsims issues
 -- no refund for it (and the kit has no Gouge).
 spec:RegisterResource(Enum.PowerType.Energy, {
     adrenaline_rush = { aura = "adrenaline_rush", mult = 2 },
-}, nil, { refundOnAvoid = 0.8 })
+}, nil, { regen = 10, refundOnAvoid = 0.8 })
 
 -- Talents: { talent tree (1 Assassination, 2 Combat, 3 Subtlety: the dominant tree picks the spec), rank 1's spell,
 -- max rank }: Forever's tree as wowsims/forever's ui/sim/talents/trees/rogue.json lists it (tools/wowsims/talents.lua

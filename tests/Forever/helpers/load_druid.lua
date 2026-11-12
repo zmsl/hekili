@@ -14,7 +14,7 @@ M.SPELL_NAMES = {}
 --- load theirs through it). `vs` (optional) is the VirtualState whose KnownRank the file's knownRank reads through
 --- `state.knownRank` (a real one, for the strict-context specs); by default a fake answering from `game.known`. Returns `w`: `w.abilities`,
 --- `w.auras` (merged by key), `w.talents`, `w.resources[powerType]` ({ models, meta }), `w.costMods` (the
---- RegisterCostMod declarations), `w.hooks[name]`, `w.events[event]`, `w.funcs[name]`, `w.exprs[name]`,
+--- RegisterCostMod declarations), `w.gcdMods` (RegisterGcdMod's), `w.hooks[name]`, `w.events[event]`, `w.funcs[name]`, `w.exprs[name]`,
 --- `w.settings[key]` ({ default, option, specs: nil for every spec }), `w.totems` (the RegisterTotems table), `w.pets`
 --- (the RegisterPets table), `w.packs` (in order: { name, version, string }), `w.options`, `w.class` and
 --- `w.def` (NewClass's token and definition),
@@ -132,6 +132,10 @@ function M.load(vs, file, class)
     w.costMods = {}
     for i, call in ipairs(reg.RegisterCostMod or {}) do
         w.costMods[i] = call[1]
+    end
+    w.gcdMods = {}
+    for i, call in ipairs(reg.RegisterGcdMod or {}) do
+        w.gcdMods[i] = call[1]
     end
     w.events = {}
     for _, call in ipairs(reg.RegisterEvent or {}) do

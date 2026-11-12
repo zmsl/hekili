@@ -312,10 +312,13 @@ end
 
 --- Our own cast changed aura j on unit u (spec §5.3): a `modelled` expiry with its stacks and applied time. A plain
 --- read that saw the aura up in the cast's frame or later already includes the cast (its stack, say): the read wins
---- and the modelled change is dropped (counted), so the cast is not applied twice.
-function I.AuraModel(u, j, applied, expires, stacks, t, event, harmful)
+--- and the modelled change is dropped (counted), so the cast is not applied twice. `closes` (a charge spend taking the
+--- last stack, Families/Modifiers.lua): an up-read before the cast, even in its frame, cannot include a close, so only
+--- a read at the cast's time or later wins (one at its time: a proc the cast itself raised) (L576).
+function I.AuraModel(u, j, applied, expires, stacks, t, event, harmful, closes)
     local seen = U.rec[u][j].last.observed
-    if seen.event == Obs.Read and seen.v > 0 and seen.t >= t - I.SAME_FRAME then
+    local from = closes and t or t - I.SAME_FRAME
+    if seen.event == Obs.Read and seen.v > 0 and seen.t >= from then
         I.auraReadsWon = I.auraReadsWon + 1
         return
     end

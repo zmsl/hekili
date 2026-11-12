@@ -39,6 +39,10 @@ describe("the Druid loop worlds", function()
             end
             assert.are.same({}, unmapped)
             assert.is_false(pcall(C.resolve, "not_an_ability", H))
+            if name == "Feral" then -- wowsims's Furor 3/5 in the character and in the world's Cat entry (60% kept)
+                local enter = C.resolve("cat_form", H).shift.onEnter[require("Forever.helpers.druid_world").ENERGY]
+                assert.are.same({ 3, 30 }, { H.Hekili.State.talent.furor.rank, enter(nil, nil, nil, 50) })
+            end
         end)
     end
 end)

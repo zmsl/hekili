@@ -208,13 +208,20 @@ local function moonglow(rank)
     return MOONGLOW[rank] or 1
 end
 
--- shortcut: after a /reload in combat energy's regen rate stays 0 for the rest of the fight (the belief's calibrate
--- returns early at ref == 0); upgrade with a `regen` meta field forwarded by the adapter after checkpoint Q3.
+-- regen: energy's base rate a second, the belief's from the build until a plain rate read (energy is secret even out
+-- of combat): wowsims/forever's 1 energy every 0.1 s (sim/core/energy.go:48-49).
 -- refundOnAvoid (energy here, rage below): the share an ability flagged `refundOnAvoid = true` gives back when dodged,
 -- parried or missed (wowsims/forever druid/feral.go refundOnMiss and MissRefund: 0.8 where the DB2 flags Discount
 -- Power On Miss). Not Ferocious Bite (flagged in the DB2, but wowsims issues no refund), Swipe, Faerie Fire (Feral) or
 -- Demoralizing Roar.
-spec:RegisterResource(Enum.PowerType.Energy, nil, nil, { refundOnAvoid = 0.8 })
+-- bear_pause: no energy comes in Bear Form (wowsims forms.go pauseCatEnergy); out of Cat it comes as in Cat, so the
+-- pool at a Cat entry is wowsims's stored energy plus 10 a second outside Bear, capped (Furor's share: swap_form).
+spec:RegisterResource(
+    Enum.PowerType.Energy,
+    { bear_pause = { aura = "bear_form", mult = 0 } },
+    nil,
+    { regen = 10, refundOnAvoid = 0.8 }
+)
 spec:RegisterResource(Enum.PowerType.ComboPoints)
 
 spec:RegisterResource(
@@ -749,6 +756,18 @@ spec:RegisterCostMod({
     spells = { 1082, 1822, 5221, 6785, 9005, 1079, 1328618, 8998 },
 })
 
+-- Nature's Grace (16886; wowsims talents_balance.go applyNaturesGrace): its 10% cast speed (effect 0) shortens every
+-- spell GCD, and effect 1 cuts the GCD 10% more on its class mask's spells (these, by rank 1 ID). The wowsims Balance
+-- log: 1.5 / 1.1 x 0.9 = 1.227 s on the mask, 1.364 s off it (Innervate).
+-- shortcut: the cast speed is a modifier because no haste the belief reads holds the 3 s buff; upgrade if a plain
+-- in-combat spell haste read is found to include it (the GCD would then take it twice).
+spec:RegisterGcdMod({ aura = "natures_grace", pct = 1 / 1.1 - 1 })
+spec:RegisterGcdMod({
+    aura = "natures_grace",
+    pct = -0.1,
+    spells = { 339, 467, 770, 774, 1126, 2912, 5176, 5185, 5570, 8921, 8936, 16689, 16914, 21849 },
+})
+
 -- wowsims's druidBleedIsActive (wowsims/forever sim/druid/feral.go targetIsBleeding, apl_values.go): Rake, Rip, Lacerate
 -- or Pounce's bleed on the target. Its assumeBleedActive (both requests set it) has no in-game reading: the real target.
 spec:RegisterStateExpr("druid_bleed_active", function()
@@ -756,8 +775,10 @@ spec:RegisterStateExpr("druid_bleed_active", function()
 end)
 
 -- A shift (Classic's swap_form, Forever's rules): the other forms and a queued Maul go; into Bear all rage is lost
--- (Furor's 20%-a-rank chance of 10 is unknowable at the cast: none); into Cat the energy is kept (Furor's Forever
--- restore is unmodelled until checkpoint Q3). The forms' `now` write the same lines.
+-- (Furor's 20%-a-rank chance of 10 is unknowable at the cast: none); into Cat the energy becomes Furor's 20% a rank of
+-- the pool (wowsims forms.go restoreCatEnergy; the pool is its stored energy, bear_pause above): none untalented, as
+-- the owner's client showed (L586). wowsims keeps the bar on a first entry with nothing stored, its pull only: the
+-- belief cannot tell one after a /reload, so every entry takes the share. The forms' `now` write the same lines.
 spec:RegisterStateFunction("swap_form", function(form)
     for i = 1, #FORMS do
         removeBuff(FORMS[i])
@@ -765,6 +786,8 @@ spec:RegisterStateFunction("swap_form", function(form)
     removeBuff("maul")
     if form == "bear_form" then
         spend(rage.lo, "rage") -- the sim's floor (border batch 2)
+    elseif form == "cat_form" then
+        spend(energy.lo * (5 - talent.furor.rank) / 5, "energy") -- keeps rank / 5 of the sim's floor (border batch 2)
     end
     applyBuff(form)
 end)
@@ -946,6 +969,7 @@ spec:RegisterAbilities({
                 removeBuff(FORMS[i])
             end
             removeBuff("maul")
+            spend(energy.current * (5 - talent.furor.rank) / 5, "energy") -- Furor (swap_form)
             applyBuff("cat_form")
         end,
 
@@ -1841,7 +1865,14 @@ spec:RegisterAbilities({
         known = knows(STARFIRE),
         nobuff = "feral_form",
 
-        -- No `now`: spending a charge is no `now` verb; the belief's charges end with the 15 s aura.
+        -- Every Starfire cast spends an Eclipse charge, a missed one too (wowsims talents_balance.go applyEclipse); the
+        -- belief at the cast with `removeStack` (aura audit C4).
+        now = function()
+            if buff.eclipse.up then
+                removeStack("eclipse")
+            end
+        end,
+
         handler = function()
             if buff.eclipse.up then
                 removeStack("eclipse")
@@ -1950,8 +1981,10 @@ spec:RegisterAbilities({
         known = knows(WRATH),
         nobuff = "feral_form",
 
-        -- Eclipse's charges (R §9 open: +1 or +2 a Wrath) while the talent is known.
+        -- Nature's Swiftness spent (the handler's), and Eclipse's charges (R §9 open: +1 or +2 a Wrath) while the
+        -- talent is known.
         now = function()
+            removeBuff("natures_swiftness")
             if talent.eclipse.rank > 0 then
                 addStack("eclipse", nil, 2)
             end

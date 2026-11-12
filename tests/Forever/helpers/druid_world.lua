@@ -91,18 +91,42 @@ local function nowGains(key)
     return out
 end
 
--- A shift's entry rule per resource, from the class file's swap_form at 50 rage: "zero" when it spends it all.
-local function entryRules(form)
+-- A shift's entry rule per resource, from the class file's swap_form at 50 of each and Furor at rank `furor` (0):
+-- "zero" when it spends it all, "keep" when none, else a function keeping the same share of the pool (Furor's).
+local function entryRules(form, furor)
     local w, e = class()
+    local talent = e.talent
+    e.talent = setmetatable({ furor = { rank = furor or 0, enabled = (furor or 0) > 0 } }, getmetatable(talent))
     e.spent, e.rage.current, e.energy.current = {}, 50, 50
     e.swap_form(form)
+    e.talent = talent
     local rules = { [M.RAGE] = "keep", [M.ENERGY] = "keep" }
     for _, s in ipairs(e.spent) do
         if s[1] == 50 then
             rules[PT[s[2]]] = "zero"
+        elseif s[1] > 0 then
+            local keep = 1 - s[1] / 50
+            rules[PT[s[2]]] = function(_, _, _, cur)
+                return cur * keep
+            end
         end
     end
     return rules
+end
+M.entryRules = entryRules
+
+-- The pools the class file's regen stops in a form (a `mult = 0` entry on a form's aura): { [pt] = form }.
+local function regenPauses()
+    local w = class()
+    local out = {}
+    for pt, r in pairs(w.resources) do
+        for _, m in pairs(r.models or {}) do
+            if type(m) == "table" and m.mult == 0 and M.FORM[m.aura] then
+                out[pt] = M.FORM[m.aura]
+            end
+        end
+    end
+    return out
 end
 
 -- The rage entries of the class file's model: per white swing in Bear (`value`, `crit`), Enrage's ticks, the decay.
@@ -113,7 +137,8 @@ local function rageModel()
 end
 
 --- The world's rates and rules read from the class file: { swing, crit, payIn, tick = { every, amount }, decay = {
---- rate, interval }, enterBear, enterCat, shiftingPower (energy), enrage (rage at once) }.
+--- rate, interval }, enterBear, enterCat (Furor untalented), pause (the regen a form stops), shiftingPower (energy),
+--- enrage (rage at once) }.
 function M.rules()
     local models, meta, w = rageModel()
     local mh, en = models.mainhand, models.enrage
@@ -125,6 +150,7 @@ function M.rules()
         decay = { rate = meta.decay(), interval = meta.decayInterval() },
         enterBear = entryRules("bear_form"),
         enterCat = entryRules("cat_form"),
+        pause = regenPauses(),
         shiftingPower = nowGains("shifting_power")[1][2],
         enrage = nowGains("enrage")[1][2],
     }
@@ -416,6 +442,7 @@ function M.knobs(o, R, gcdSpell)
         pt = M.RAGE,
         res = { [M.ENERGY] = { cur = 100, max = 100 }, [M.POINTS] = { cur = 0, max = 5 } },
         regen = { [M.ENERGY] = M.ENERGY_REGEN },
+        regenPause = R.pause, -- none in Bear Form (wowsims forms.go pauseCatEnergy, the class file's bear_pause)
         regenAfter = o.regenAfter,
         decay = { pt = M.RAGE, rate = R.decay.rate, interval = R.decay.interval, pausedBy = o.pausedBy or false },
         formSpeed = M.SPEED,
@@ -484,6 +511,10 @@ function M.fight(o, seed)
                 ctl.known[w.abilities[key].id] = true
             end
             dvs.boot(c.ns, c.api, o.edit)
+            local I = c.ns.VirtualStateInternal
+            for id, r in pairs(o.talents or {}) do -- a variant's ranks by spell ID (the fake client walks no talents)
+                I.SetTalentRank(I.talents.bySpell[id], r)
+            end
         end,
     })
     c.druidSaved = saved
@@ -544,9 +575,10 @@ M.SCENARIOS = {
         o.script = M.script(M.catList(), 1.0, {}, R, o)
         return o
     end,
-    -- §4.3-§4.4: Cat at the pull, Bear at 30 s, Cat at 60, Bear at 90, stop at 120; `v.onEnter` a Furor variant
+    -- §4.3-§4.4: Cat at the pull, Bear at 30 s, Cat at 60, Bear at 90, stop at 120; `v.onEnter` and `v.talents` a
+    -- Furor variant
     shift = function(R, v)
-        local o = { form = M.CAT, onEnter = v.onEnter }
+        local o = { form = M.CAT, onEnter = v.onEnter, talents = v.talents }
         local function at(form, from, to)
             return function(_, us, t)
                 return us.form ~= form and t >= PULL + from and t < PULL + to

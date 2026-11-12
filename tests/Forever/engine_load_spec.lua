@@ -236,9 +236,10 @@ describe("the simulation's GCD by kind in energy (core edit E10)", function()
         assert.are.equal(1, S.gcd.max) -- no ability context: the clause E10 keeps
     end)
 
-    -- aura audit C12: a class's GCD modifier (spec:RegisterGcdMod) cuts a spell-kind press in its scope while its
-    -- aura is up in the simulation; out of scope or with the aura down the press keeps 1.5 x haste.
-    it("cuts a spell-kind press in a GCD modifier's scope while its aura is up (aura audit C12)", function()
+    -- aura audit C12: a class's GCD modifiers (spec:RegisterGcdMod; the Druid's Nature's Grace: 10% cast speed on
+    -- every spell GCD, 10% more on its mask) cut a spell-kind press while their aura is up in the simulation; with the
+    -- aura down the press keeps 1.5 x haste.
+    it("cuts a spell-kind press by the GCD modifiers in its scope while their aura is up (aura audit C12)", function()
         local H = headless.new({
             character = {
                 class = "DRUID",
@@ -249,13 +250,12 @@ describe("the simulation's GCD by kind in energy (core edit E10)", function()
                 power = { type = 3, token = "ENERGY", max = 100 },
             },
         })
-        local S, C = H.Hekili.State, H.Hekili.Class
-        H.ns.RegisterGcdMod({ aura = "natures_grace", pct = -0.1, spells = { C.abilities.wrath.id } })
+        local S = H.Hekili.State
         S.this_action = "wrath"
         assert.are.equal(1.5 * S.haste, S.gcd.execute)
         S.applyBuff("natures_grace")
-        assert.is_true(math.abs(S.gcd.execute - 1.5 * S.haste * 0.9) < 1e-9)
-        S.this_action = "bear_form" -- out of scope
-        assert.are.equal(1.5 * S.haste, S.gcd.execute)
+        assert.is_true(math.abs(S.gcd.execute - 1.5 * S.haste / 1.1 * 0.9) < 1e-9)
+        S.this_action = "bear_form" -- off the mask: the cast speed alone
+        assert.is_true(math.abs(S.gcd.execute - 1.5 * S.haste / 1.1) < 1e-9)
     end)
 end)

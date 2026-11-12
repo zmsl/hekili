@@ -672,10 +672,11 @@ describe("Forever Rogue combo points on the current target (L90)", function()
     end)
 end)
 
--- Audit item 1: an Assassination Rogue whose energy rate never came plain (a /reload or a build in combat) has
--- regen_combined 0; the forecast window must stay finite (the client raises on x/0, stock Lua gives inf).
+-- Audit item 1: an Assassination Rogue whose energy rate never came plain (a /reload or a build in combat): the forecast
+-- window must stay finite (the client raises on x/0, stock Lua gives inf). L576 bug 1: its rate is the pack's declared
+-- 10 a second (wowsims energy.go:48-49) from the build, not 0.
 describe("Forever Assassination with no plain energy rate", function()
-    it("keeps every forecast window finite", function()
+    it("regenerates at the declared 10 a second and keeps every forecast window finite", function()
         local C = require("Forever.helpers.rogue_world").Assassination
         local H = headless.new({ character = C.character(), pack = C.PACK })
         assert.are.same({}, H.loadErrors)
@@ -692,10 +693,28 @@ describe("Forever Assassination with no plain energy rate", function()
         assert.is_true(headless.cycle(H, H.ctl.now + 0.5))
         S.SetConstraint = set
         assert.is_true(S.spec.assassination and true or false)
-        assert.are.equal(0, S.energy.regen_combined)
+        assert.are.equal(10, S.energy.regen_combined)
         assert.is_true(#maxes > 0)
         for _, hi in ipairs(maxes) do
             assert.is_true(hi == nil or hi < math.huge, "window " .. tostring(hi))
         end
+    end)
+end)
+
+-- L576 bug 2, the Rogue's Poised (1328826): a plain read that saw it up 20 ms before Sinister Strike does not keep the
+-- charge the strike spent, so the next covered ability is not discounted again.
+describe("Forever Rogue Poised under a read in the cast's frame", function()
+    it("spends Poised at Sinister Strike, through the engine", function()
+        local C = require("Forever.helpers.rogue_world").Combat
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        local VS, I = H.ns.VirtualState, H.ns.VirtualStateInternal
+        local t = H.ctl.now + 1
+        I.Sources.Direct(VS.Obs.Read, t - 0.02, I.auras.bySpell[1328826], -1, I.ReadOf.Aura + I.AURA_STACK)
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 1752)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_nil(VS.Aura("player", 1328826, t + 0.1))
+        assert.are.same({}, H.errors)
     end)
 end)

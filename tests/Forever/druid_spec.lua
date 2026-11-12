@@ -128,6 +128,7 @@ local NOW = {
     "feral_charge",
     "faerie_fire",
     "wrath",
+    "starfire",
     "moonfire",
     "insect_swarm",
     "entangling_roots",
@@ -597,7 +598,7 @@ describe("Forever Druid", function()
             assert.are.equal(17768, w.auras.wolfshead_helm.id)
         end)
 
-        it("adds Wrath's Eclipse charges only with the talent, and Starfire's handler spends one", function()
+        it("adds Wrath's Eclipse charges only with the talent, and Starfire's now and handler spend one", function()
             local e = ld.env(w)
             ld.run(w.abilities.wrath.now, e)
             assert.are.same({}, e.added)
@@ -605,12 +606,28 @@ describe("Forever Druid", function()
             ld.run(w.abilities.wrath.now, e)
             ld.run(w.abilities.wrath.handler, e)
             assert.are.same({ { "eclipse", 2 }, { "eclipse", 2 } }, e.added)
-            e.removed = {}
-            ld.run(w.abilities.starfire.handler, e)
-            assert.are.same({}, e.removed)
-            e.buff = auras({ eclipse = { up = true, stack = 2 } })
-            ld.run(w.abilities.starfire.handler, e)
-            assert.are.same({ "eclipse" }, e.removed)
+            -- wowsims talents_balance.go applyEclipse: every Starfire cast spends a charge; the belief at the cast (`now`)
+            for _, f in ipairs({ "now", "handler" }) do
+                e.removed = {}
+                e.buff = auras({})
+                ld.run(w.abilities.starfire[f], e)
+                assert.are.same({}, e.removed, f)
+                e.buff = auras({ eclipse = { up = true, stack = 2 } })
+                ld.run(w.abilities.starfire[f], e)
+                assert.are.same({ "eclipse" }, e.removed, f)
+            end
+        end)
+
+        -- the pin's 16886: effect 0 10% casting speed (every spell GCD), effect 1 -10% GCD on its class mask (14 pack spells)
+        it("registers Nature's Grace's two GCD modifiers, the cast speed's and the mask's cut", function()
+            assert.are.same({
+                { aura = "natures_grace", pct = 1 / 1.1 - 1 },
+                {
+                    aura = "natures_grace",
+                    pct = -0.1,
+                    spells = { 339, 467, 770, 774, 1126, 2912, 5176, 5185, 5570, 8921, 8936, 16689, 16914, 21849 },
+                },
+            }, w.gcdMods)
         end)
 
         it("registers the Eclipse and Nature's Grace talent ids as aura copies", function()
@@ -645,21 +662,26 @@ describe("Forever Druid", function()
             assert.is_near(3.5 / 1.1, cast(rank(0), { natures_grace = { up = true } }), 1e-9)
         end)
 
-        it("Wrath is instant under Nature's Swiftness, which its handler spends; Nature's Grace speeds it", function()
-            local e = ld.env(w)
-            e.talent = rank(0)
-            e.buff = auras({ natures_swiftness = { up = true } })
-            assert.are.equal(0, ld.run(w.abilities.wrath.cast, e))
-            e.removed = {}
-            ld.run(w.abilities.wrath.handler, e)
-            assert.are.same({ "natures_swiftness" }, e.removed)
-            e.buff = auras({})
-            local base = ld.run(w.abilities.wrath.cast, e)
-            e.buff = auras({ natures_grace = { up = true } })
-            assert.is_near(base / 1.1, ld.run(w.abilities.wrath.cast, e), 1e-9)
-            ld.run(w.abilities.natures_swiftness.handler, e)
-            assert.are.same({ "natures_swiftness" }, e.applied)
-        end)
+        it(
+            "Wrath is instant under Nature's Swiftness, which its now and handler spend; Nature's Grace speeds it",
+            function()
+                local e = ld.env(w)
+                e.talent = rank(0)
+                e.buff = auras({ natures_swiftness = { up = true } })
+                assert.are.equal(0, ld.run(w.abilities.wrath.cast, e))
+                for _, f in ipairs({ "now", "handler" }) do
+                    e.removed = {}
+                    ld.run(w.abilities.wrath[f], e)
+                    assert.are.same({ "natures_swiftness" }, e.removed, f)
+                end
+                e.buff = auras({})
+                local base = ld.run(w.abilities.wrath.cast, e)
+                e.buff = auras({ natures_grace = { up = true } })
+                assert.is_near(base / 1.1, ld.run(w.abilities.wrath.cast, e), 1e-9)
+                ld.run(w.abilities.natures_swiftness.handler, e)
+                assert.are.same({ "natures_swiftness" }, e.applied)
+            end
+        )
 
         it('leaves any form but Moonkin on Innervate, as Classic\'s swap_form("") and wowsims/forever', function()
             for _, f in ipairs({ "now", "handler" }) do
@@ -717,22 +739,35 @@ describe("Forever Druid", function()
         end)
     end)
 
-    it("shifts: Bear Form spends all rage and removes the other forms and Maul; Cat Form writes no energy", function()
-        local e = ld.env(w)
-        e.rage.current = 40
-        ld.run(w.abilities.bear_form.now, e)
-        assert.are.same({ { 40, "rage" } }, e.spent)
-        assert.are.same({ "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form", "maul" }, e.removed)
-        assert.are.same({ "bear_form" }, e.applied)
-        e = ld.env(w)
-        ld.run(w.abilities.cat_form.now, e)
-        e.swap_form("cat_form")
-        assert.are.same({ {}, {}, { "cat_form", "cat_form" } }, { e.spent, e.gained, e.applied })
-        e = ld.env(w)
-        e.rage.current = 30
-        e.swap_form("bear_form")
-        assert.are.same({ { 30, "rage" } }, e.spent)
-    end)
+    -- Furor (wowsims forms.go restoreCatEnergy): into Cat Form the energy becomes 20% a rank of the energy believed then
+    -- (the energy left in Cat plus 10 a second outside Bear Form, capped: the pool's own regen, paused in Bear)
+    it(
+        "shifts: Bear Form spends all rage and removes the other forms and Maul; Cat Form keeps Furor's share",
+        function()
+            local e = ld.env(w)
+            e.rage.current = 40
+            ld.run(w.abilities.bear_form.now, e)
+            assert.are.same({ { 40, "rage" } }, e.spent)
+            assert.are.same(
+                { "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form", "maul" },
+                e.removed
+            )
+            assert.are.same({ "bear_form" }, e.applied)
+            for _, x in ipairs({ { 0, 50 }, { 3, 20 }, { 5, 0 } }) do
+                e = ld.env(w)
+                e.talent = setmetatable({ furor = { rank = x[1] } }, getmetatable(rank(0)))
+                e.energy.current = 50
+                ld.run(w.abilities.cat_form.now, e)
+                e.swap_form("cat_form")
+                assert.are.same({ { x[2], "energy" }, { x[2], "energy" } }, e.spent, "Furor " .. x[1])
+                assert.are.same({ {}, { "cat_form", "cat_form" } }, { e.gained, e.applied })
+            end
+            e = ld.env(w)
+            e.rage.current = 30
+            e.swap_form("bear_form")
+            assert.are.same({ { 30, "rage" } }, e.spent)
+        end
+    )
 
     it("reads Maul's queue at reset, leaving the form to the Forms source", function()
         local e = ld.env(w)
@@ -778,13 +813,17 @@ describe("Forever Druid", function()
     )
 
     it(
-        "declares energy with no regen model, combo points with no maximum, mana's five-second rule, Classic's order",
+        "declares energy paused in Bear Form, combo points with no maximum, mana's five-second rule, Classic's order",
         function()
             assert.are.same({ 3, 4, 1, 0 }, w.order)
             for _, pt in ipairs({ 4 }) do
                 assert.are.same({ nil, nil }, { w.resources[pt].models, w.resources[pt].meta }, pt)
             end
-            assert.are.same({ nil, { refundOnAvoid = 0.8 } }, { w.resources[3].models, w.resources[3].meta })
+            -- no energy in Bear Form (wowsims forms.go pauseCatEnergy)
+            assert.are.same(
+                { { bear_pause = { aura = "bear_form", mult = 0 } }, { regen = 10, refundOnAvoid = 0.8 } },
+                { w.resources[3].models, w.resources[3].meta }
+            )
             -- wowsims/forever's logs: 2.2 mana a 0.1 s tick outside the rule, none inside it (Feral, Balance)
             assert.are.same({ spirit = 22, mp5 = 0 }, w.resources[0].meta.fsr)
             assert.is_nil(w.resources[1].meta.max)
@@ -1126,16 +1165,20 @@ describe("Forever Druid in VirtualState's now context", function()
 
     it("runs a Feral and a bear sequence: costs, energy, forms, debuffs and bear rage, with no `now` error", function()
         I.Sources.Direct(VS.Obs.CombatStart, 1.5) -- in combat: no rage decay
+        I.SetTalentRank(I.talents.bySpell[17056], 5) -- Furor 5/5: the Cat entry keeps the 100
         cast(768, 2) -- Cat Form: 684 mana (55% of the base mana at 60) of the fake's 100: none left
         assert.is_not_nil(VS.Aura("player", 768, 2.1))
         near(0, power(0, 2.1))
-        cast(5221, 3) -- Shred: 60 of 100 energy
+        local function close(want, got)
+            assert.is_true(math.abs(got - want) < 1e-6, ("want %.4f, got %.4f"):format(want, got))
+        end
+        cast(5221, 3) -- Shred: 60 of 100 energy, then the declared 10 a second
         cast(1322605, 4) -- Shifting Power: +40
-        assert.are.equal(80, power(3, 4.1))
-        cast(1822, 5) -- Rake: 40, and its 9 s debuff
+        close(91, power(3, 4.1))
+        cast(1822, 5) -- Rake: 40 of the capped 100, and its 9 s debuff
         assert.are.equal(14, VS.Aura("target", 1822, 5.1).est)
-        cast(22568, 6) -- Ferocious Bite: 35, then the 5 left
-        assert.are.equal(0, power(3, 6.1))
+        cast(22568, 6) -- Ferocious Bite: 35 of 70, then the 35 left
+        close(1, power(3, 6.1))
         cast(5487, 7) -- Bear Form
         assert.are.same({ true, false }, { VS.Aura("player", 5487, 7.1) ~= nil, VS.Aura("player", 768, 7.1) ~= nil })
         I.Sources.Direct(VS.Obs.Swing, 8, 1, 2.5, 4) -- PLAYER_SWING, then Rows.lua's landed wound
@@ -1154,6 +1197,15 @@ describe("Forever Druid in VirtualState's now context", function()
         VS.Drain(16)
         assert.are.equal(power(1, 15.1), power(1, 16))
         assert.are.same({ 0, 9 }, { I.nowErrors, I.nowRuns })
+    end)
+
+    -- L576 bug 1: energy is secret even out of combat and the rate read never came (a /reload in combat): the build
+    -- seeds the pack's declared 10 a second (wowsims energy.go:48-49), not 0.
+    it("regenerates energy at the declared 10 a second from a build with no plain rate read", function()
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+        near(10, VS.Regen(3, 1.6).est)
+        cast(5221, 2) -- Shred: 60 of 100 energy
+        near(10, power(3, 3.25) - power(3, 2.25)) -- after Shred's 60, 10 a second
     end)
 
     it("builds each ability's declared outcome as the class file registers it (Families/Expect.lua)", function()
@@ -1184,6 +1236,53 @@ describe("Forever Druid in VirtualState's now context", function()
         assert.are.equal(0, crit(4))
         I.SetTalentRank(I.talents.bySpell[16958], 2)
         assert.are.equal(5, crit(6))
+        assert.are.equal(0, I.nowErrors, tostring(I.nowError))
+    end)
+
+    -- L586, Furor (wowsims forms.go): out of Cat the pool keeps its 10 a second except in Bear Form, and a Cat entry
+    -- keeps 20% a rank of it: untalented, none. Cat at 2 (from 100), Shred at 3 (60), out of Cat at 4 to the caster
+    -- form or Bear Form, back into Cat at 7. At 5/5: 40 left, 50 at 4, then 80 (caster) or 50 (Bear); at 3/5: 60 at
+    -- the entry, 10 after Shred, 20 at 4, 50 at 7, x 0.6.
+    for _, x in ipairs({ { 0, false, 0 }, { 0, true, 0 }, { 5, false, 80 }, { 5, true, 50 }, { 3, false, 30 } }) do
+        local furor, bear, want = x[1], x[2], x[3]
+        it(
+            ("enters Cat Form with Furor %d/5 after 3 s in %s: %d energy"):format(
+                furor,
+                bear and "Bear Form" or "caster form",
+                want
+            ),
+            function()
+                I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+                I.SetTalentRank(I.talents.bySpell[17056], furor)
+                cast(768, 2)
+                near(math.min(100, 100 * furor / 5 + 1), power(3, 2.1)) -- then 10 a second
+                cast(5221, 3) -- Shred: 60
+                if bear then
+                    cast(5487, 4)
+                else
+                    ctl.form = 0 -- a manual unshift
+                    ctl.Fire("UPDATE_SHAPESHIFT_FORM")
+                    ctl.Tick(4)
+                    VS.Drain(4.01)
+                end
+                cast(768, 7)
+                near(want + 0.5, power(3, 7.05))
+                assert.are.equal(0, I.nowErrors, tostring(I.nowError))
+            end
+        )
+    end
+
+    -- wowsims talents_balance.go applyNaturesGrace, its Balance log: under Nature's Grace a GCD takes the 10% cast speed
+    -- and, on the buff's class mask, the 10% cut: Moonfire 1.227 s, Innervate 1.364 s, 1.5 s without it.
+    it("cuts the GCD under Nature's Grace: 1.227 s on its mask's spells, 1.364 s on the others", function()
+        local function gcdOf(id, t)
+            cast(id, t)
+            return VS.Gcd(t + 0.05).est - t
+        end
+        near(1.5, gcdOf(8921, 2)) -- Moonfire, no buff
+        I.AuraModel(1, I.auras.bySpell[16886], 4, 30, 1, 4, VS.Obs.CastSuccess, false)
+        assert.is_true(math.abs(gcdOf(8921, 5) - 1.5 / 1.1 * 0.9) < 0.002)
+        assert.is_true(math.abs(gcdOf(29166, 8) - 1.5 / 1.1) < 0.002)
         assert.are.equal(0, I.nowErrors, tostring(I.nowError))
     end)
 
@@ -1234,10 +1333,26 @@ describe("Forever Druid in VirtualState's now context", function()
     it("makes a covered cast free while Clearcasting is believed up, which the cast then takes", function()
         cast(5221, 2) -- 40 energy left
         I.AuraModel(1, I.auras.bySpell[16870], 3, 18, 1, 3, VS.Obs.CastSuccess, false)
-        cast(5221, 4) -- free
-        assert.are.same({ 40, nil }, { power(3, 4.1), VS.Aura("player", 16870, 4.1) })
-        cast(5221, 5)
-        assert.are.equal(0, power(3, 5.1))
+        cast(5221, 4) -- free: only the 10 a second since
+        assert.is_nil(VS.Aura("player", 16870, 4.1))
+        assert.is_true(math.abs(power(3, 4.1) - 61) < 1e-6)
+        cast(5221, 5) -- 70 - 60
+        assert.is_true(math.abs(power(3, 5.1) - 11) < 1e-6)
+    end)
+
+    -- L576 bug 2: the Prowl-removal walk reads Poised up (permanent) 20 ms before Ravage; Ravage still takes the charge,
+    -- so Claw after it pays its full cost.
+    it("spends Poised at Ravage even when a plain read saw it up in the cast's frame", function()
+        local j, claw = I.auras.bySpell[1328827], I.ab.bySpell[1082]
+        ctl.Tick(1.5) -- the build's player walk first: the fake lists no Poised, the read below is the fixture
+        VS.Drain(1.5)
+        I.Sources.Direct(VS.Obs.Read, 4.98, j, -1, I.ReadOf.Aura + I.AURA_STACK)
+        I.Fold(4.99)
+        assert.is_not_nil(VS.Aura("player", 1328827, 4.99))
+        cast(6785, 5) -- Ravage, discounted
+        assert.is_nil(VS.Aura("player", 1328827, 5.1))
+        I.clock = 5.1
+        assert.are.equal(I.BaseCostOf(claw), I.CostOf(claw))
     end)
 
     it("allocates nothing over 1000 casts with `now` handlers", function()

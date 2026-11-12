@@ -710,7 +710,7 @@ local function automatic(a, t, kind, o)
         if kind == CAST and A.castStartT[a] > 0 and A.castStartT[a] < t then
             start = A.castStartT[a] -- a hard cast's GCD began at its start
         end
-        local len = I.GcdLen(a, t) -- its kind's (Families/Casts.lua)
+        local len = I.GcdLen(a, t, start < t and start or at) -- its kind's, modifiers judged at its opening (Casts.lua)
         if start + len > t then
             I.GcdModel(start + len, t, kind)
         end
