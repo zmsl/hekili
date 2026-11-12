@@ -919,6 +919,32 @@ describe("Forever Warrior", function()
         assert.are.same({}, e.removed)
     end)
 
+    -- Weaponmaster (1290261, wowsims talents_arms.go:276-383): one aura a branch, up while the talent is known and
+    -- either hand holds the branch's weapon kind. Id-less (the three share the talent's spell id).
+    it("shows the Weaponmaster branch auras by the held weapon kind", function()
+        for _, k in ipairs({ "weaponmaster_axe_polearm", "weaponmaster_mace_staff", "weaponmaster_sword" }) do
+            assert.is_not_nil(w.auras[k], k)
+            assert.is_nil(w.auras[k].id, k)
+        end
+        local function applied(rank, main, off)
+            local e = lw.env(w)
+            e.talent = setmetatable({ weaponmaster = { rank = rank, enabled = rank > 0 } }, getmetatable(e.talent))
+            e.main_hand, e.off_hand = main, off
+            lw.run(w.hooks.reset_precast, e)
+            table.sort(e.applied)
+            return e.applied
+        end
+        assert.are.same({}, applied(0, { sword = true }, {}))
+        assert.are.same({ "weaponmaster_sword" }, applied(5, { sword = true }, {}))
+        assert.are.same({ "weaponmaster_axe_polearm" }, applied(1, { polearm = true }, {}))
+        assert.are.same({ "weaponmaster_mace_staff" }, applied(5, { staff = true }, {}))
+        assert.are.same(
+            { "weaponmaster_axe_polearm", "weaponmaster_mace_staff" },
+            applied(5, { axe = true }, { mace = true })
+        )
+        assert.are.same({}, applied(5, { dagger = true }, { fist = true }))
+    end)
+
     it("keeps Tactical Mastery's rage on a stance swap", function()
         local e = lw.env(w)
         w.game.known[1310185] = true

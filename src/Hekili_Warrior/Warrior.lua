@@ -715,6 +715,16 @@ spec:RegisterAuras({
         duration = 300,
         max_stack = 1,
     },
+    -- Weaponmaster's three branches (talent 1290261; wowsims talents_arms.go:276-383 registers one aura each, tags 1/2/3 of
+    -- the one spell id, so ours are id-less): up while the talent is known and either hand holds the branch's weapon kind
+    -- (the gear scan's main_hand.sword and kin), applied at reset_precast. Display and custom priorities only; the sim-only
+    -- auras are not tracked by the belief. Axe/polearm crit and mace/staff armor ignore are damage-only effects no
+    -- priority consumes. The sword branch's extra attack (a chance roll on a landed melee hit, Whirlwind/Cleave once a
+    -- cast, none from Sweeping Strikes or a Windfury Totem swing) stays unmodelled: the roll is unseen, and an observed
+    -- extra swing already pays its rage through the swing rows. Needs in-game check: whether PLAYER_SWING fires for it.
+    weaponmaster_axe_polearm = { duration = 3600, max_stack = 1 },
+    weaponmaster_mace_staff = { duration = 3600, max_stack = 1 },
+    weaponmaster_sword = { duration = 3600, max_stack = 1 },
 })
 
 -- A stance change drops all rage above what is kept: Forever's Tactical Mastery passive keeps 10, Improved Tactical
@@ -811,6 +821,19 @@ spec:RegisterHook("reset_precast", function()
     end
     if cl > 0 and IsCurrentSpell(CLEAVE[cl]) then
         applyBuff("cleave")
+    end
+
+    if talent.weaponmaster.rank > 0 then
+        local mh, oh = main_hand, off_hand
+        if mh.axe or mh.polearm or oh.axe or oh.polearm then
+            applyBuff("weaponmaster_axe_polearm")
+        end
+        if mh.mace or mh.staff or oh.mace or oh.staff then
+            applyBuff("weaponmaster_mace_staff")
+        end
+        if mh.sword or oh.sword then
+            applyBuff("weaponmaster_sword")
+        end
     end
 
     if now == query_time then
