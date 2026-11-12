@@ -618,6 +618,18 @@ describe("Forever Druid", function()
             end
         end)
 
+        -- the pin's 16886: effect 0 10% casting speed (every spell GCD), effect 1 -10% GCD on its class mask (14 pack spells)
+        it("registers Nature's Grace's two GCD modifiers, the cast speed's and the mask's cut", function()
+            assert.are.same({
+                { aura = "natures_grace", pct = 1 / 1.1 - 1 },
+                {
+                    aura = "natures_grace",
+                    pct = -0.1,
+                    spells = { 339, 467, 770, 774, 1126, 2912, 5176, 5185, 5570, 8921, 8936, 16689, 16914, 21849 },
+                },
+            }, w.gcdMods)
+        end)
+
         it("registers the Eclipse and Nature's Grace talent ids as aura copies", function()
             local function has(a, id)
                 for _, c in ipairs(a.copy) do
@@ -1206,6 +1218,20 @@ describe("Forever Druid in VirtualState's now context", function()
         assert.are.equal(0, crit(4))
         I.SetTalentRank(I.talents.bySpell[16958], 2)
         assert.are.equal(5, crit(6))
+        assert.are.equal(0, I.nowErrors, tostring(I.nowError))
+    end)
+
+    -- wowsims talents_balance.go applyNaturesGrace, its Balance log: under Nature's Grace a GCD takes the 10% cast speed
+    -- and, on the buff's class mask, the 10% cut: Moonfire 1.227 s, Innervate 1.364 s, 1.5 s without it.
+    it("cuts the GCD under Nature's Grace: 1.227 s on its mask's spells, 1.364 s on the others", function()
+        local function gcdOf(id, t)
+            cast(id, t)
+            return VS.Gcd(t + 0.05).est - t
+        end
+        near(1.5, gcdOf(8921, 2)) -- Moonfire, no buff
+        I.AuraModel(1, I.auras.bySpell[16886], 4, 30, 1, 4, VS.Obs.CastSuccess, false)
+        assert.is_true(math.abs(gcdOf(8921, 5) - 1.5 / 1.1 * 0.9) < 0.002)
+        assert.is_true(math.abs(gcdOf(29166, 8) - 1.5 / 1.1) < 0.002)
         assert.are.equal(0, I.nowErrors, tostring(I.nowError))
     end)
 

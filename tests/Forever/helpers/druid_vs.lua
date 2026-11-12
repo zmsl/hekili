@@ -70,7 +70,8 @@ function M.boot(ns, api, edit)
     ns.ResourceIsPoints = function(k) -- Constants.lua's, for the one point resource here
         return k == "combo_points"
     end
-    ns.raceMods = { maxMods = {}, costMods = w.costMods } -- Clearcasting, as spec:RegisterCostMod appends it
+    -- Clearcasting and Nature's Grace, as spec:RegisterCostMod and spec:RegisterGcdMod append them
+    ns.raceMods = { maxMods = {}, costMods = w.costMods, gcdMods = w.gcdMods }
     load.schema(ns, h)
     VS.Start(api)
     ns.BuildTracked()

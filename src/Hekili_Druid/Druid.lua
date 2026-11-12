@@ -749,6 +749,18 @@ spec:RegisterCostMod({
     spells = { 1082, 1822, 5221, 6785, 9005, 1079, 1328618, 8998 },
 })
 
+-- Nature's Grace (16886; wowsims talents_balance.go applyNaturesGrace): its 10% cast speed (effect 0) shortens every
+-- spell GCD, and effect 1 cuts the GCD 10% more on its class mask's spells (these, by rank 1 ID). The wowsims Balance
+-- log: 1.5 / 1.1 x 0.9 = 1.227 s on the mask, 1.364 s off it (Innervate).
+-- shortcut: the cast speed is a modifier because no haste the belief reads holds the 3 s buff; upgrade if a plain
+-- in-combat spell haste read is found to include it (the GCD would then take it twice).
+spec:RegisterGcdMod({ aura = "natures_grace", pct = 1 / 1.1 - 1 })
+spec:RegisterGcdMod({
+    aura = "natures_grace",
+    pct = -0.1,
+    spells = { 339, 467, 770, 774, 1126, 2912, 5176, 5185, 5570, 8921, 8936, 16689, 16914, 21849 },
+})
+
 -- wowsims's druidBleedIsActive (wowsims/forever sim/druid/feral.go targetIsBleeding, apl_values.go): Rake, Rip, Lacerate
 -- or Pounce's bleed on the target. Its assumeBleedActive (both requests set it) has no in-game reading: the real target.
 spec:RegisterStateExpr("druid_bleed_active", function()
