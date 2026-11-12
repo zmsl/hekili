@@ -120,6 +120,19 @@ the snapshot panel whichever display is picked. One engine registry, no AceEvent
 `results` with the values of the entry's conditions (`mod` nil) or of one modifier (`"value"`, `"value_else"`,
 `"strict_if"`). Returns `results, list, action`.
 
+**Target swaps on Forever** (option D, owner 2026-11-11). The per-spec toggle (`settings.cycle`, "Recommend Target
+Swaps", off by default) arms upstream's cycle machinery for a line with `cycle_targets=1` (optionally
+`max_cycle_targets=N`): while the current target carries the line's debuff and fewer enemies carry it than
+`cycle_enemies`, the line reads the debuff as down and its record shows the cycle icon. `other_target=1` is a forced
+cycle: the line is usable only while a cycle is armed, so it is never shown on the current target and never with the
+toggle off. `active_dot` is the belief's count (`Facade.DebuffCount`, §1: the target plus every remembered target
+slot, by GUID in the open world and by nameplate under the Map restriction); unknown (the target holds no memory slot)
+is saturated, every enemy counted as carrying it, so no swap is suggested; the current target's own debuff floors it
+at 1. A swapped cast's handler runs with `state.cycle` set: its debuffs add to `active_dot` and leave the current
+target's alone. Time to die is never known on Forever, so `cycle_min` and the TTD filters exclude nobody (`FEED` is
+off); no pack may declare `min_ttd` or `max_ttd` (`tests/Forever/packs_spec.lua`), and the slider is hidden. Under the
+Map restriction `active_enemies` is 1 until a GUID-free enemy count exists, so no cycle arms in dungeons yet.
+
 **`Engine.Configure(profile)`** and **`Engine.settings`** (`Engine/Settings.lua`). The engine reads configuration only
 from `Engine.settings`. `Configure` assigns `specs`, `packs`, `toggles`, `displays`, `performance` and
 `notifications` by reference: an edit inside them is live with no call. It copies the scalars `enabled` and
