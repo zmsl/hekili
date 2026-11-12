@@ -21,44 +21,51 @@ local function exists(path)
     return f ~= nil
 end
 
-local specs, order = {}, {}
-local function spec(class, label)
-    local k = class .. "/" .. key(label, class)
-    if not specs[k] then
-        specs[k] = { class = class, name = key(label, class), loop = {}, live = {} }
-        order[#order + 1] = k
+-- Two passes over the same spec files (run.sh): raw/ is the default world (auras served as truth, "full information"),
+-- raw-live/ the same specs under the live-auras arm (our own auras hidden in combat, "live-like"); the second pass
+-- is optional (a report from an older run has none).
+local function load(rawDir)
+    local specs, order = {}, {}
+    local function spec(class, label)
+        local k = class .. "/" .. key(label, class)
+        if not specs[k] then
+            specs[k] = { class = class, name = key(label, class), loop = {}, live = {} }
+            order[#order + 1] = k
+        end
+        return specs[k]
     end
-    return specs[k]
-end
-
-local p = io.popen("ls " .. dir .. "/raw")
-for name in p:lines() do
-    local kind, rest = name:match("^(%a+)%.(.*)%.txt$")
-    local class = (rest:match("^loop_(%a+)") or rest:match("^wowsims_(%a+)") or "?"):gsub("^%l", string.upper)
-    for line in io.lines(dir .. "/raw/" .. name) do
-        local what, f = parse.classify(line)
-        if what == "loop" then
-            local r = parse.loop(f[3])
-            r.agreement = parse.ratio(f[4]) or r.agreement
-            spec(class, f[1]).loop[tonumber(f[2])] = r
-        elseif what == "crowd" then
-            spec(class, f[1]).crowd = parse.loop(f[3])
-            spec(class, f[1]).crowdRatio = tonumber(f[4])
-        elseif what == "floor" then
-            spec(class, f[1]).replayFloor = tonumber(f[3])
-            spec(class, f[1]).preset = f[2]
-        elseif what == "replay" then
-            spec(class, f[1]).replay = parse.replay(f[2])
-        elseif what == "ready-floor" then
-            spec(class, f[1]).readyFloor = { median = tonumber(f[3]), count = tonumber(f[4]) }
-        elseif what == "timing" then
-            spec(class, f[1]).ready = parse.ready(f[2])
-        elseif what == "live" then
-            spec(class, f[1]).live[tonumber(f[2])] = parse.live(f[3]).idle
+    local p = io.popen("ls " .. rawDir .. " 2>/dev/null")
+    for name in p:lines() do
+        local kind, rest = name:match("^(%a+)%.(.*)%.txt$")
+        local class = (rest:match("^loop_(%a+)") or rest:match("^wowsims_(%a+)") or "?"):gsub("^%l", string.upper)
+        for line in io.lines(rawDir .. "/" .. name) do
+            local what, f = parse.classify(line)
+            if what == "loop" then
+                local r = parse.loop(f[3])
+                r.agreement = parse.ratio(f[4]) or r.agreement
+                spec(class, f[1]).loop[tonumber(f[2])] = r
+            elseif what == "crowd" then
+                spec(class, f[1]).crowd = parse.loop(f[3])
+                spec(class, f[1]).crowdRatio = tonumber(f[4])
+            elseif what == "floor" then
+                spec(class, f[1]).replayFloor = tonumber(f[3])
+                spec(class, f[1]).preset = f[2]
+            elseif what == "replay" then
+                spec(class, f[1]).replay = parse.replay(f[2])
+            elseif what == "ready-floor" then
+                spec(class, f[1]).readyFloor = { median = tonumber(f[3]), count = tonumber(f[4]) }
+            elseif what == "timing" then
+                spec(class, f[1]).ready = parse.ready(f[2])
+            elseif what == "live" then
+                spec(class, f[1]).live[tonumber(f[2])] = parse.live(f[3]).idle
+            end
         end
     end
+    p:close()
+    return specs, order
 end
-p:close()
+local specs, order = load(dir .. "/raw")
+local liveSpecs = load(dir .. "/raw-live")
 
 -- worst of the seed sets: the lowest agreement and dps, the highest of everything else
 local LOWEST = { agreement = true, dps = true }
@@ -83,11 +90,28 @@ local function worst(sets)
     return w
 end
 
+local liveArm = "unknown" -- run.sh writes the arm of the live pass beside raw-live/
+do
+    local f = io.open(dir .. "/live-arm")
+    if f then
+        liveArm = f:read("*l") or liveArm
+        f:close()
+    end
+end
 local list = {}
 for _, k in ipairs(order) do
     local s = specs[k]
     s.hasPreset = s.preset ~= nil or exists(("tests/Forever/wowsims/%s_%s.json"):format(s.class:lower(), snake(s.name)))
     s.worst = worst(s.loop)
+    local l = liveSpecs[k] -- live-like figures: replay, solo (worst seed set), crowd; "none" where the arm printed nothing
+    if l then
+        s.liveLike = {
+            replay = l.replay and l.replay.agreement or "none",
+            solo = l.loop[1] and l.loop[2] and l.loop[3] and worst(l.loop).agreement or "none",
+            crowd = l.crowd and l.crowd.agreement or "none",
+            arm = liveArm,
+        }
+    end
     s.once = s.loop[1] -- cpu, calibration and bytes: the first seed set's
     list[#list + 1] = s
 end
@@ -221,6 +245,7 @@ for _, s in ipairs(list) do
             readyNever = s.ready and s.ready.never or "none",
             liveIdle = next(s.live) and s.live or "none",
         } or "n/a",
+        liveLike = s.liveLike or "none", -- the same figures with our auras hidden in combat (raw-live/); "none" = no live pass
         loop = w and {
             seeds = { s.loop[1], s.loop[2], s.loop[3] },
             worst = w,
@@ -256,6 +281,37 @@ for _, s in ipairs(list) do
                 )
             or ("| %s %s | %s | none | none | none | none | none |"):format(s.class, s.name, row[1])
     end
+end
+local md4 = {
+    "",
+    "## Two numbers per spec: full information and live-like",
+    "",
+    "Full information: the harness serves our auras as truth. Live-like: the same specs with our own auras hidden in combat, as on the live client, under harness arm `"
+        .. liveArm
+        .. "` (`live-auras-none` = no Cooldown Manager item, so no hidden aura is seen at all: the lower bound; `live-auras` = the class's real layout, classes without one print none). Solo = worst of the three seed sets; crowd = 39 others, seeds 1-20.",
+    "",
+    "| Spec | Replay full | Replay live-like | Solo full | Solo live-like | Crowd full | Crowd live-like |",
+    "|---|---|---|---|---|---|---|",
+}
+for _, s in ipairs(list) do
+    local l = s.liveLike or {}
+    local function n(x)
+        return num(type(x) == "number" and x or nil)
+    end
+    local solo = s.loop[1] and s.loop[2] and s.loop[3] and s.worst.agreement or nil
+    md4[#md4 + 1] = ("| %s %s | %s | %s | %s | %s | %s | %s |"):format(
+        s.class,
+        s.name,
+        n(s.hasPreset and s.replay and s.replay.agreement or nil),
+        n(l.replay),
+        n(solo),
+        n(l.solo),
+        n(s.crowd and s.crowd.agreement),
+        n(l.crowd)
+    )
+end
+for _, l in ipairs(md4) do
+    md[#md + 1] = l
 end
 for _, l in ipairs(md2) do
     md[#md + 1] = l
