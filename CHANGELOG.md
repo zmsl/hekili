@@ -25,6 +25,7 @@
 - Priest: Shadow (wowsims.com) now counts Dark Inspiration as soon as you cast Mind Blast, so the mana estimate no longer ignores it.
 - Paladin: Seal of Justice, Light and Wisdom now count as a seal for Judgement, and Protection (wowsims.com) suggests Templar's Bulwark at the pull.
 - Druids and Rogues: after a /reload in combat, the estimate of your energy now refills at 10 a second straight away, instead of staying low until you leave combat.
+- Druid: Faerie Fire in Cat Form now takes the cat's 1 second global cooldown, as the game gives it, so the ability after it (such as Rake) is no longer shown about half a second late.
 - Mage: Fingers of Frost is followed under the id the game shows, Combustion ends with its crit counter, and a crit on a Fire or Frost spell now counts Master of Elements' mana refund.
 
 ### Known issues
