@@ -652,6 +652,17 @@ describe("the wowsims APL translator", function()
         assert.are.equal("actions=strike,if=talent.cuts.enabled", text)
     end)
 
+    -- batch review M7: a knownAs naming a talent the kit lacks falls through as any other aura, with a header note
+    it("notes a knownAs that names a talent the kit lacks, and resolves the aura as any other", function()
+        local text, omitted = apl.translate({
+            priorityList = { cast(100, { auraIsKnown = { auraId = { spellId = 910 } } }) },
+        }, ctx({ knownAs = { [910] = "no_such_talent" } }))
+        assert.are.equal("actions=strike", text)
+        assert.are.same({
+            "default #1: knownAs of the aura 910 names no_such_talent, a talent the kit lacks: read as any other aura",
+        }, omitted)
+    end)
+
     it(
         "reads auraIcdIsReady as the declaring aura's icd_ready, by its ID or its proc trigger's (a talent's: guarded)",
         function()

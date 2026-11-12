@@ -30,7 +30,7 @@
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
 --    false; entries whose action or condition uses a node the fork lacks (`schedule`, `itemSwap`, `wait`,
 --    `activeItemSwapSet`, `selectedConjured`), a cast aimed at another target (`target` Target with an index above 0:
---    wowsims's second target, Bane of Havoc; aura audit C7, never cast on the current one), or whose own action is an
+--    wowsims's second target; aura audit C7, never cast on the current one), or whose own action is an
 --    unmapped spell, item or other ID (an unmapped
 --    read drops only its branch: rule 12); a call of a group whose every entry was omitted. Also listed: rule 12's
 --    dropped reads and rule 13's unmapped cooldowns, by entry. A `wait` stays omitted (CN19, docs/dev/wowsims-packs.md):
@@ -45,9 +45,10 @@
 --    ID that resolves (rule 5, or a kit talent's spell) to a talent's key or aura is `talent.<key>.enabled`, to an
 --    ability's key `action.<key>.known`, to any other aura `true`; an ID nothing resolves, or another unit, is false.
 --    An ID nothing resolves leaves a header note (`auraIsKnown of the unresolved aura <id> folds false`), so the fold
---    is not silent. wowsims registers a gear, set or consumable aura only when it is equipped or configured; `true`
+--    is not silent; so does a recipe `knownAs` naming a talent the kit lacks (its aura then reads as any other).
+--    wowsims registers a gear, set or consumable aura only when it is equipped or configured; `true`
 --    for one of those may disagree when it is not worn, and the branch then rests on the aura's own read (down while
---    not worn): the Warlock APLs read Revelation 1323392, the weapon enchant 8217's proc. Solo exports: another
+--    not worn): a weapon enchant's proc aura an APL reads (1323392, enchant 8217's) is one. Solo exports: another
 --    player's aura (wowsims's External, tag -1) is never registered, so it is not known (false, no note) and every
 --    other read of it is nil (rule 6: dropped).
 -- 5. Keys, from the character's ability set (tests/Forever/helpers/engine.lua abilitySet: the class kit, the shared
@@ -1321,6 +1322,9 @@ local function bool(c, n)
         local ka = c.knownAs[id]
         if ka and c.talentKey[ka] then
             return "talent." .. ka .. ".enabled", nil, false
+        elseif ka then -- a recipe typo or a talent the kit dropped: noted, so the fall-through is not silent (M7)
+            local what = "knownAs of the aura " .. tostring(id)
+            drop(c, what, what .. " names " .. ka .. ", a talent the kit lacks: read as any other aura")
         end
         local x = c.auraMap[id] or c.map[id] or c.talentOf[id] or c.auraOf[id] or c.keyOf[id]
         if not x then
