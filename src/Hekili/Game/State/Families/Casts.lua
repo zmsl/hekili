@@ -172,6 +172,13 @@ function I.GcdLen(a, t)
     return f ~= 1 and max(1.0, len * f) or len
 end
 
+-- Whether a GCD modifier cut the current GCD, fixed where its length is (review M2): its fall teaches no length then,
+-- however the modifier's aura moved since.
+local gcdCut = false
+local function cutAt(a, t)
+    return a > 0 and A.gcdKind[a] == 1 and GM.n > 0 and gcdMult(a, t) ~= 1
+end
+
 local function maxCharges(a)
     local c = A.obj[a].charges
     return type(c) == "number" and c or 1
@@ -247,7 +254,7 @@ I.OnBuild(function(def, now)
     end
     gcd = I.NewBelief("gcd")
     I.castAb, I.castEnd, I.channel, I.gcdStart, I.gcdDur, I.queuedStrike = 0, 0, false, 0, 0, false
-    I.gcdOwner, I.gcdKindLast, I.gcdRead, lastGcdA, lastGcdT = 0, 1, false, 0, 0
+    I.gcdOwner, I.gcdKindLast, I.gcdRead, lastGcdA, lastGcdT, gcdCut = 0, 1, false, 0, 0, false
 end)
 
 -- The GCD's current sample at its fixed end.
@@ -266,7 +273,7 @@ local function opener(a, at, t)
         return -- off the GCD (an on-next-swing strike's success at its swing): never an opener
     end
     if I.gcdStart > 0 and I.gcdOwner == 0 and at >= gcdEdge and at - gcdEdge <= GCD_EDGE then
-        I.gcdOwner, I.gcdKindLast = a, A.gcdKind[a]
+        I.gcdOwner, I.gcdKindLast, gcdCut = a, A.gcdKind[a], cutAt(a, t)
         if not I.gcdRead then
             I.gcdDur = quantise(I.GcdLen(a, t))
             pinGcd(t)
@@ -274,7 +281,7 @@ local function opener(a, at, t)
         lastGcdA = 0
     else
         lastGcdA, lastGcdT = a, at
-        I.gcdOwner, I.gcdKindLast, I.gcdRead = a, A.gcdKind[a], false
+        I.gcdOwner, I.gcdKindLast, I.gcdRead, gcdCut = a, A.gcdKind[a], false, cutAt(a, t)
         -- no pinned sample: the gcd belief's modelled one is Families/Now.lua's, and only an edge pins it
         I.gcdStart, I.gcdDur, gcdEdge = quantise(at), quantise(I.GcdLen(a, t)), at
     end
@@ -353,7 +360,7 @@ I.On(Obs.Cooldown, function(o, t)
                 owner = lastGcdA
             end
             lastGcdA = 0
-            I.gcdOwner, I.gcdRead = owner, false
+            I.gcdOwner, I.gcdRead, gcdCut = owner, false, cutAt(owner, t)
             if owner > 0 then
                 I.gcdKindLast = A.gcdKind[owner]
             end
@@ -366,14 +373,14 @@ I.On(Obs.Cooldown, function(o, t)
             local len, owner = o.t - I.gcdStart, I.gcdOwner
             local kind = owner > 0 and A.gcdKind[owner] or 0
             local g = owner > 0 and gcdTime(owner, t)
-            -- an ownerless GCD, one of a declared length, or one a GCD modifier cut (aura audit C12) teaches nothing
-            local cut = kind == 1 and GM.n > 0 and gcdMult(owner, I.gcdStart) ~= 1
-            if I.gcdStart > 0 and kind > 0 and not (type(g) == "number" and g > 0) and not cut then
+            -- an ownerless GCD, one of a declared length, or one a GCD modifier cut (aura audit C12; latched at its
+            -- opening, review M2) teaches nothing
+            if I.gcdStart > 0 and kind > 0 and not (type(g) == "number" and g > 0) and not gcdCut then
                 if len >= GCD_MIN[kind] and len < GCD_MAX[kind] then
                     I.gcdLearned[kind] = quantise(len)
                 end
             end
-            I.gcdStart, I.gcdDur, I.gcdOwner, I.gcdRead = 0, 0, 0, false
+            I.gcdStart, I.gcdDur, I.gcdOwner, I.gcdRead, gcdCut = 0, 0, 0, false, false
             gcd.est, gcd.lo, gcd.hi = o.t, o.t, o.t
             I.Sample(gcd, "pinned", o.t, t, Obs.Cooldown)
         end

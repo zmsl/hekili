@@ -847,6 +847,35 @@ describe("now handlers", function()
         assert.is_true(math.abs(VS.Gcd(40.1).est - 41.05) < 0.002)
     end)
 
+    -- review M2: whether a modifier cut the GCD is fixed at its opening; an aura re-applied inside it (its window no
+    -- longer covering the GCD's start) does not make the cut length a learned one at the fall.
+    it("latches a GCD modifier's cut at the GCD's opening, not at its fall (C12, review M2)", function()
+        h.Class.auras.grace_test = { key = "grace_test", id = 4701, duration = 3 }
+        register("grace_cast", {
+            id = 4702,
+            gcd = "off",
+            now = function()
+                applyBuff("grace_test")
+            end,
+        })
+        ns.raceMods = {
+            maxMods = {},
+            costMods = {},
+            gcdMods = { { aura = "grace_test", pct = -0.1, spells = { fs.SPENDER_C } } },
+        }
+        ns.ResourceIsPoints = function()
+            return false
+        end
+        start()
+        cast(4702, 10)
+        cast(fs.SPENDER_C, 10.5)
+        I.Sources.Direct(VS.Obs.Cooldown, 10.5, 0, 1, 1)
+        cast(4702, 11) -- re-applied inside the cut GCD: its window now starts after the GCD's
+        I.Sources.Direct(VS.Obs.Cooldown, 11.85, 0, 0, 1)
+        VS.Drain(11.9)
+        assert.are.same({ 0, 0 }, I.gcdLearned)
+    end)
+
     it(
         "spends a charge from the count caught up to the cast: recharges finished since the last sample count",
         function()
