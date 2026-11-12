@@ -110,6 +110,21 @@ describe("resource modifiers", function()
         assert.are.equal(3, stacks)
     end)
 
+    -- L576 bug 2: an up-read in the cast's frame or before it cannot include the cast's close of the last charge.
+    it("closes a one-charge modifier's aura at the cast even after an up-read just before it", function()
+        local spender_b = I.ab.bySpell[fs.SPENDER_B]
+        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -0.10, charges = 1, spells = { fs.SPENDER_B } } }
+        ns.BuildTracked()
+        VS.Drain(1.5)
+        local j = I.auras.bySpell[MOD_AURA]
+        I.Sources.Direct(VS.Obs.Read, 5.98, j, -1, I.ReadOf.Aura + I.AURA_STACK) -- up, permanent, in the cast's frame
+        I.Fold(5.99)
+        cast(fs.SPENDER_B, 6)
+        assert.is_nil(VS.Aura("player", MOD_AURA, 6.1))
+        I.clock = 6.1
+        assert.are.equal(15, I.CostOf(spender_b))
+    end)
+
     it("never raises a point resource's maximum", function()
         h.Class.resources.combo_points = { type = 4 }
         ns.BuildTracked()

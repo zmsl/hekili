@@ -700,3 +700,21 @@ describe("Forever Assassination with no plain energy rate", function()
         end
     end)
 end)
+
+-- L576 bug 2, the Rogue's Poised (1328826): a plain read that saw it up 20 ms before Sinister Strike does not keep the
+-- charge the strike spent, so the next covered ability is not discounted again.
+describe("Forever Rogue Poised under a read in the cast's frame", function()
+    it("spends Poised at Sinister Strike, through the engine", function()
+        local C = require("Forever.helpers.rogue_world").Combat
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        local VS, I = H.ns.VirtualState, H.ns.VirtualStateInternal
+        local t = H.ctl.now + 1
+        I.Sources.Direct(VS.Obs.Read, t - 0.02, I.auras.bySpell[1328826], -1, I.ReadOf.Aura + I.AURA_STACK)
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 1752)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_nil(VS.Aura("player", 1328826, t + 0.1))
+        assert.are.same({}, H.errors)
+    end)
+end)

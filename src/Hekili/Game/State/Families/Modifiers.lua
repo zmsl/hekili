@@ -111,10 +111,12 @@ function I.SpendCostCharges(a, r, t, event)
             local rec, stacks, applied = VS.Aura("player", js[k], t)
             if rec then
                 local left = (stacks or 1) - 1
+                -- shortcut: a partial spend keeps the read-wins guard (a read in the frame may already show it); every
+                -- shipped charged modifier has charges = 1. Upgrade with the read's stack count if one ships with more.
                 if left > 0 then
                     I.AuraModel(1, ja[k], applied or t, rec.est, left, t, event, false)
                 else
-                    I.AuraModel(1, ja[k], 0, 0, 0, t, event, false)
+                    I.AuraModel(1, ja[k], 0, 0, 0, t, event, false, true)
                 end
             end
         end

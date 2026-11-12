@@ -1256,6 +1256,21 @@ describe("Forever Druid in VirtualState's now context", function()
         assert.is_true(math.abs(power(3, 5.1) - 11) < 1e-6)
     end)
 
+    -- L576 bug 2: the Prowl-removal walk reads Poised up (permanent) 20 ms before Ravage; Ravage still takes the charge,
+    -- so Claw after it pays its full cost.
+    it("spends Poised at Ravage even when a plain read saw it up in the cast's frame", function()
+        local j, claw = I.auras.bySpell[1328827], I.ab.bySpell[1082]
+        ctl.Tick(1.5) -- the build's player walk first: the fake lists no Poised, the read below is the fixture
+        VS.Drain(1.5)
+        I.Sources.Direct(VS.Obs.Read, 4.98, j, -1, I.ReadOf.Aura + I.AURA_STACK)
+        I.Fold(4.99)
+        assert.is_not_nil(VS.Aura("player", 1328827, 4.99))
+        cast(6785, 5) -- Ravage, discounted
+        assert.is_nil(VS.Aura("player", 1328827, 5.1))
+        I.clock = 5.1
+        assert.are.equal(I.BaseCostOf(claw), I.CostOf(claw))
+    end)
+
     it("allocates nothing over 1000 casts with `now` handlers", function()
         function h:ForceUpdate() end -- the fake records each call; Hekili's own only sets fields
         local t = 2
