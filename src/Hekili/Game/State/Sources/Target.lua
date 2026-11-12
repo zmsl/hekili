@@ -51,7 +51,9 @@ local function forgetAll(t)
 end
 local dead = false
 local HUGE = math.huge
-local lastLo, lastHi = -1, -1 -- the bracket last logged (-1: none since the swap)
+local lastLo, lastHi = -1, -1 -- the bracket last logged (-1: none since the swap or the age-out)
+local plainT = 0 -- the last plain range answer's time
+local RANGE_AGE = 1.5 -- seconds with no plain answer before a held bracket goes unknown (batch review I1)
 I.targetSlot = 0 -- the memory slot the last swap logged (0: no target)
 I.targetSwapN = 0 -- each swap's serial; Families/Auras.lua copies it at the fold (a slot is 0 for every secret GUID)
 local answer = {} -- by ability index: this poll's plain answer (true, false, or 0 for none)
@@ -218,7 +220,9 @@ end)
 -- Poll 14: each tracked ability's plain range answer (action.<key>.in_range) while the target holds a memory slot,
 -- and the target's distance bracket, LibRangeCheck's (range plan R2: the facade's RangeLib; asked whenever there is
 -- a target, a secret GUID's too, which takes no slot under the Map restriction). Logged when it changes; a poll with
--- no plain answer keeps the last. Allocates nothing once `answer` has grown to the ability count.
+-- no plain answer keeps the last for under RANGE_AGE s, then logs it unknown once (TargetRange a = -1: a secret,
+-- raising or silent library never freezes the bracket for the fight). Allocates nothing once `answer` has grown to
+-- the ability count.
 S.Poll(14, function(api, t)
     if I.curSlot ~= 0 then
         local A = I.ab
@@ -236,11 +240,15 @@ S.Poll(14, function(api, t)
     local lo, hi = ns.Facade.RangeLib("target") -- nil without a target (the library's own UnitExists test)
     lo, hi = Plain(api, lo), Plain(api, hi)
     if type(lo) == "number" then
+        plainT = t
         hi = type(hi) == "number" and hi or HUGE -- no upper bound: past the library's last check
         if lo ~= lastLo or hi ~= lastHi then
             lastLo, lastHi = lo, hi
             Direct(Obs.TargetRange, t, lo, hi)
         end
+    elseif lastLo >= 0 and t - plainT >= RANGE_AGE then -- a bracket held: a target since the last swap
+        lastLo, lastHi = -1, -1 -- the next plain answer is logged, the same bracket too
+        Direct(Obs.TargetRange, t, -1, HUGE)
     end
 end)
 
