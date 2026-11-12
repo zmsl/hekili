@@ -15740,7 +15740,7 @@ options.packs.balance.core	name	Specialization Settings
 options.packs.balance.core.activate	desc	Recommend for Balance from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.balance.core.activate	name	Activate Balance
 options.packs.balance.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.balance.core.behind	desc	When enabled, Shred is recommended over Claw as if you always stand behind the target.
+options.packs.balance.core.behind	desc	Hekili assumes you are always behind the target. Below 2 ranks of Shredding Attacks, Claw is still preferred unless Clearcasting makes Shred free.
 options.packs.balance.core.behind	name	Always Behind
 options.packs.balance.core.disableSpacer	name	\032
 options.packs.balance.core.enabled	desc	No recommendations while this specialization is active.
@@ -18653,7 +18653,7 @@ options.packs.feral.core	name	Specialization Settings
 options.packs.feral.core.activate	desc	Recommend for Feral from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.feral.core.activate	name	Activate Feral
 options.packs.feral.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.feral.core.behind	desc	When enabled, Shred is recommended over Claw as if you always stand behind the target.
+options.packs.feral.core.behind	desc	Hekili assumes you are always behind the target. Below 2 ranks of Shredding Attacks, Claw is still preferred unless Clearcasting makes Shred free.
 options.packs.feral.core.behind	name	Always Behind
 options.packs.feral.core.disableSpacer	name	\032
 options.packs.feral.core.enabled	desc	No recommendations while this specialization is active.
@@ -19897,7 +19897,7 @@ options.packs.guardian.core	name	Specialization Settings
 options.packs.guardian.core.activate	desc	Recommend for Guardian from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.guardian.core.activate	name	Activate Guardian
 options.packs.guardian.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.guardian.core.behind	desc	When enabled, Shred is recommended over Claw as if you always stand behind the target.
+options.packs.guardian.core.behind	desc	Hekili assumes you are always behind the target. Below 2 ranks of Shredding Attacks, Claw is still preferred unless Clearcasting makes Shred free.
 options.packs.guardian.core.behind	name	Always Behind
 options.packs.guardian.core.disableSpacer	name	\032
 options.packs.guardian.core.enabled	desc	No recommendations while this specialization is active.

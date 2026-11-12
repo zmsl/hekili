@@ -8,10 +8,12 @@
 - A new Action Bar Glow page in the options can glow your real action bar buttons: the buttons that cast the first recommendation of a display in gold, and the second recommendation's in blue. It works on the game's keyboard and gamepad bars and on ElvUI, Bartender and Dominos, follows the display you choose, glows in combat only unless you change that, and works with the icons hidden. It is off by default.
 - Mage, Priest, Druid, Hunter and Paladin: the Revelation buff of the weapon enchant of that name now shows with the other auras when the game reports it; the Undead's Touch of the Grave likewise. They are shown, not predicted.
 - Custom priorities can check the kind of weapon you wear: `main_hand`, `off_hand` and `ranged` each answer `dagger`, `sword`, `axe`, `mace`, `fist`, `staff`, `polearm`, `bow`, `gun`, `crossbow`, `thrown` or `wand` (for example `main_hand.axe&main_hand.two_handed` for a two-handed axe).
+- Warlock: the Doomcaller's Attire set bonuses are counted when you wear them.
+- Priest: utility auras are now known to the addon, for custom priorities.
 - Warrior: Weaponmaster now shows its three auras (`weaponmaster_axe_polearm`, `weaponmaster_mace_staff`, `weaponmaster_sword`) while you have the talent and hold that kind of weapon, for custom priorities. The sword's extra attack is not predicted.
 
 ### Changed
-- Druid: in Cat Form, Feral and Guardian now recommend Claw instead of Shred while your target is attacking you (you cannot get behind it), and also when you have fewer than 2 points in Shredding Attacks, where Claw does more damage for its energy; Shred is still recommended with Clearcasting unless the target is attacking you. Claw is now shown as soon as you have its energy. Turn on "Always Behind" if you can always get behind your target.
+- Druid: in Cat Form, Feral and Guardian now recommend Claw instead of Shred while your target is attacking you (you cannot get behind it), and also when you have fewer than 2 points in Shredding Attacks, where Claw does more damage for its energy; Shred is still recommended with Clearcasting unless the target is attacking you. Claw is now shown as soon as you have its energy. Who your target is attacking can be read in the open world; in dungeons the game hides it, so Shred is assumed as before (or "Always Behind" decides). Turn on "Always Behind" if you can always get behind your target.
 - The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
 - Hekili now reads your target's distance from LibRangeCheck, the range library other addons use, instead of from your abilities' ranges. Priorities that check how far away the target is use its answer, which comes in steps of about 5 yards. The melee range check of a display style shows the target as in melee while its distance is unknown.
 - Rogue: a Shank at 5 of 5 Boot Knife now counts its 2 combo points in the forecast, and the opening Poised discount (10 energy, plus Composure's 5 or 10) is priced on the abilities it covers, so the first recommendations after a pull see the energy you really have. The Remorseless buff is known to the addon and shown when the game reports it.
@@ -34,7 +36,8 @@
 - Priest: Shadow (wowsims.com) now counts Dark Inspiration as soon as you cast Mind Blast, so the mana estimate no longer ignores it.
 - Paladin: Seal of Justice, Light and Wisdom now count as a seal for Judgement, and Protection (wowsims.com) suggests Templar's Bulwark whenever it is ready and Cooldowns are on.
 - Mage: Fingers of Frost is followed under the id the game shows, Combustion ends with its crit counter, and Master of Elements' mana refund now counts when the crit of a Fire or Frost spell is seen.
-- Paladin: a landed Shieldsworn Holy Strike returns its mana once target hit data is readable.
+- Paladin: a landed Shieldsworn Holy Strike returns its mana, but only when the game shows target hit data (it does not on live today).
+- Warlock: a hard-cast Shadow Bolt no longer uses up Shadow Trance.
 - Mage: Fire Blast spends a Fingers of Frost charge at the cast.
 - Retribution Paladins: each landed melee swing now stores an Echo of the seal that was up when you swung, even when you change seals before the hit shows, so a seal twist is timed from the right Echo.
 - Druids and Rogues: after a /reload in combat, the estimate of your energy now refills at 10 a second straight away, instead of staying low until you leave combat.

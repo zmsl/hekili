@@ -1975,7 +1975,7 @@ spec:RegisterAbilities({
 local behind = {
     type = "toggle",
     name = L["Always Behind"],
-    desc = L["When enabled, Shred is recommended over Claw as if you always stand behind the target."],
+    desc = L["Hekili assumes you are always behind the target. Below 2 ranks of Shredding Attacks, Claw is still preferred unless Clearcasting makes Shred free."],
     width = "full",
 }
 spec:RegisterSetting("behind", false, behind, "feral", "balance")
