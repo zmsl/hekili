@@ -425,7 +425,7 @@ describe("Forever Paladin", function()
     end)
 
     it(
-        "gives a landed Shieldsworn Holy Strike with a shield 4% of the maximum mana in the simulation only (audit B10), and Iron Creed's and the spell block's auras",
+        "gives a landed Shieldsworn Holy Strike with a shield 4% of the maximum mana in `onLand` and the simulation's handler (audit C10), and Iron Creed's and the spell block's auras",
         function()
             local function run(field, tal, equipped)
                 local e = ld.env(w)
@@ -439,9 +439,12 @@ describe("Forever Paladin", function()
             local e = run("handler", on, { shield = true })
             assert.are.same({ { 104, "mana" } }, e.gained) -- 2600 x 4%
             assert.are.same({ "shieldsworn_block" }, e.applied)
-            -- the belief's `now` adds none (a miss would keep it: an avoid undoes only target auras), but the spell block
+            -- the belief's `now` adds none (a miss would keep it: an avoid undoes only target auras), but the spell block;
+            -- `onLand` adds the mana (a landed hit) and no aura
             e = run("now", on, { shield = true })
             assert.are.same({ {}, { "shieldsworn_block" } }, { e.gained, e.applied })
+            e = run("onLand", on, { shield = true })
+            assert.are.same({ { { 104, "mana" } }, {} }, { e.gained, e.applied })
             -- without the shield, the talent or the second rank: no mana
             for _, miss in ipairs({
                 { on, { shield = false } },
@@ -449,6 +452,7 @@ describe("Forever Paladin", function()
                 { talents({ shield_specialization = 1, shieldsworn = 1 }), { shield = true } },
             }) do
                 assert.are.same({}, run("handler", miss[1], miss[2]).gained)
+                assert.are.same({}, run("onLand", miss[1], miss[2]).gained)
             end
             for _, field in ipairs({ "now", "handler" }) do
                 -- Iron Creed under Righteous Fury

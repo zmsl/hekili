@@ -257,6 +257,20 @@ describe("Forever Mage", function()
         end
     end)
 
+    -- Audit C4: removeStack is a `now` verb, so Fire Blast's belief spends a Fingers of Frost charge at the cast too.
+    it("spends a Fingers of Frost charge at a Fire Blast in the belief's now and the simulation's handler", function()
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = ld.env(w)
+            e.buff = setmetatable({}, {
+                __index = function(_, k)
+                    return { up = k == "fingers_of_frost", remains = 10, stack = 2 }
+                end,
+            })
+            ld.run(w.abilities.fire_blast[field], e)
+            assert.are.same({ "fingers_of_frost" }, e.removed, field)
+        end
+    end)
+
     -- Audit B7/C7: Master of Elements (wowsims talents_fire.go registerMasterOfElements): a Fire or Frost damage cast's
     -- crit refunds 10% a rank of its base cost; the belief sees it through the cast's own crit (`onCrit`).
     it("refunds Master of Elements' share of the base cost at a Fire or Frost cast's own crit", function()
@@ -326,7 +340,7 @@ describe("Forever Mage", function()
             e = ld.env(w)
             ld.run(a.handler, e) -- none up: none spent
             assert.is_falsy(table.concat(e.removed, " "):find("fingers_of_frost", 1, true), key)
-            if a.now then
+            if a.now and key ~= "fire_blast" then -- Fire Blast's `now` spends it (audit C4: below)
                 e = ld.env(w)
                 e.buff = buffs({ fingers_of_frost = 2 })
                 ld.run(a.now, e)

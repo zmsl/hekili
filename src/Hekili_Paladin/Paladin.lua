@@ -482,9 +482,8 @@ end)
 -- chance is 100% at rank 2 only; 105 at 2627 in the Protection log, none on the log's misses and dodges) and grants the
 -- spell block for 6 s; under Righteous Fury it grants Iron Creed's 6 s. `landed` (the `handler`'s: the simulation's
 -- forecast) adds the mana. The belief's `now` does not: an avoid undoes only a target aura (Families/Now.lua), so a
--- gain at the cast would stay on a miss and promote a cast we cannot afford.
--- shortcut: the belief's mana lacks the return until the client's affordability answers lift it; upgrade with a core
--- landed-outcome hook (an effect run when the cast's hit lands).
+-- gain at the cast would stay on a miss and promote a cast we cannot afford; its `onLand` (audit C10, run at a paid
+-- wound or crit) adds the mana. Live that is idle until target rows are plain again (gaps.md).
 local function holyStruck(landed)
     return function()
         if talent.shieldsworn.enabled and equipped.shield then
@@ -495,6 +494,15 @@ local function holyStruck(landed)
         end
         if talent.iron_creed.enabled and buff.righteous_fury.up then
             applyBuff("iron_creed")
+        end
+    end
+end
+
+-- Holy Strike's landed hit (`onLand`): Shieldsworn's mana only (the cast's `now` has the auras).
+local function holyLanded()
+    return function()
+        if talent.shieldsworn.enabled and equipped.shield and talent.shield_specialization.rank >= 2 then
+            gain(0.04 * mana.max, "mana")
         end
     end
 end
@@ -611,6 +619,7 @@ spec:RegisterAbilities({
 
         now = holyStruck(),
         handler = holyStruck(true),
+        onLand = holyLanded(),
     },
 
     consecration = {
