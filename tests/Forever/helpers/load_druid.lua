@@ -158,10 +158,6 @@ function M.load(vs, file, class)
             w.settings[call[1]] = { default = call[2], option = call[3], specs = specs }
         end
     end
-    w.gear = {} -- RegisterGear's (key, ids) pairs
-    for _, call in ipairs(reg.RegisterGear or {}) do
-        w.gear[call[1]] = call[2]
-    end
     w.totems = reg.RegisterTotems and reg.RegisterTotems[1][1]
     w.pets = reg.RegisterPets and reg.RegisterPets[1][1]
     w.packs = reg.RegisterPack or {}

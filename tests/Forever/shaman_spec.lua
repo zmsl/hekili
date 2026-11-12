@@ -617,7 +617,7 @@ describe("Forever Shaman", function()
 
     -- sim/shaman/item_totems.go:70-77: the relic Burning Totem (272433, the aura 1291077) adds 3 s to Flame Shock.
     it("lengthens Flame Shock by 3 s while the Burning Totem relic is equipped", function()
-        assert.are.same({ burning_totem = 272433 }, w.gear)
+        assert.are.same({ { "burning_totem", 272433 } }, w.gear) -- RegisterGear's calls, in order
         local e = ld.env(w)
         assert.are.equal(12, ld.run(w.auras.flame_shock.duration, e))
         e.set_bonus = setmetatable({ burning_totem = 1 }, {
