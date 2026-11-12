@@ -404,10 +404,11 @@ function M.run(L, seed, o, drivers)
         end
         ctl.combat, ctl.form, ctl.stealthed = false, L.form, false
         if aw.followCycle then -- option D's arms (ab.lua; every other arm leaves all this at the defaults)
-            -- Recommend Target Swaps per the arm, the enemy plates shown and counted out to 40 yd (the spec's Enemy
-            -- Range Radius; its default 10 misses a caster's mobs), and the observer's nameplate1..N existing
+            -- Recommend Target Swaps per the arm, the enemy plates shown and counted (the spec's default Enemy Range
+            -- Radius: 40 yd for a ranged spec; past 10 yd only plates in combat count, L644), and the observer's
+            -- nameplate1..N existing
             local sp = d.H.Hekili.Engine.settings.specs[d.H.Hekili.State.spec.id]
-            sp.cycle, sp.nameplateRange = aw.cycle or false, aw.plates and 40 or nil
+            sp.cycle = aw.cycle or false
             ctl.cvars.nameplateShowEnemies = aw.plates and "1" or nil
             ctl.cvars.nameplateShowAll = aw.plates and "1" or nil
             for i = 1, 1 + (aw.extraMobs or 0) do
