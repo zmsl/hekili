@@ -105,4 +105,43 @@ describe("Engine/Sim/Targets.lua's nameplate log", function()
         assert.is_truthy(tostring(H.Hekili.TargetDebug):find("Nameplates are enabled", 1, true))
         assert.is_true(select(2, H.Hekili.TargetDebug:gsub("nameplate", "")) > 0, "no plate line in the log")
     end)
+
+    -- T1: under the Map restriction the plates are kept by token; a count and each plate handler allocate nothing.
+    it("allocates nothing per count at 0, 5 and 15 token plates (Map), nor per plate event", function()
+        local got, counts = {}, {}
+        H.Hekili.ActiveDebug = false
+        H.ctl.guid.target, H.ctl.unitIs.target = fake.SECRET, "nameplate1"
+        local function tokens(from, n)
+            for i = from, n do
+                local unit = "nameplate" .. i
+                H.ctl.guid[unit], H.ctl.exists[unit], H.ctl.distance[unit] = fake.SECRET, true, 3
+                H.Fire("NAME_PLATE_UNIT_ADDED", unit)
+            end
+        end
+        for _, n in ipairs({ 0, 5, 15 }) do
+            tokens(1, n)
+            counts[#counts + 1] = H.ns.getNumberTargets(true)
+            got[#got + 1] = bytes()
+        end
+        print("token counts at 0/5/15 plates: " .. table.concat(counts, "/") .. "; bytes " .. table.concat(got, "/"))
+        assert.are.same({ 1, 5, 15 }, counts)
+        assert.are.same({ 0, 0, 0 }, got, "bytes per count at 0/5/15 token plates")
+        -- a REMOVED, an ADDED and a friendly flag on token plates, the second round measured (the first warms up)
+        local function events()
+            H.Fire("NAME_PLATE_UNIT_REMOVED", "nameplate6")
+            H.Fire("NAME_PLATE_UNIT_ADDED", "nameplate6")
+            H.Fire("UNIT_FLAGS", "nameplate8")
+        end
+        H.ctl.friendly.nameplate8 = true
+        events()
+        collectgarbage("collect")
+        collectgarbage("stop")
+        local b = collectgarbage("count")
+        events()
+        local d = (collectgarbage("count") - b) * 1024
+        collectgarbage("restart")
+        H.ctl.friendly.nameplate8 = nil
+        assert.is_nil(H.Hekili.npTokens.nameplate8)
+        assert.are.equal(0, d, "bytes per plate event")
+    end)
 end)
