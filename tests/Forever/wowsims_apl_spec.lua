@@ -3291,6 +3291,43 @@ describe("the wowsims APL translator's target swaps (option D)", function()
         }, header)
     end)
 
+    it("keeps a sequence member's swap modifier on that member only (review M2)", function()
+        local text = apl.translate({
+            priorityList = {
+                {
+                    action = {
+                        strictSequence = {
+                            actions = {
+                                {
+                                    castSpell = { spellId = { spellId = 100 }, target = { index = 1, type = "Target" } },
+                                },
+                                { castSpell = { spellId = { spellId = 400 } } },
+                            },
+                        },
+                    },
+                },
+            },
+        }, ctx({}))
+        local first, second = text:match("^actions=([^\n]*)\nactions%+=/([^\n]*)$")
+        assert.is_truthy(first and first:find("^strike,other_target=1"), text)
+        assert.is_truthy(second and second:find("^dot"), text)
+        assert.is_falsy(second:find("other_target"), text)
+    end)
+
+    it("absorbs no swap into a hidden cast (review M2)", function()
+        local hidden = cast(400, NOT(up))
+        hidden.hide = true
+        local text, omitted, _, header = apl.translate({
+            priorityList = { hidden, swap(AND(up, NOT(all), many)) },
+        }, ctx({}))
+        assert.are.equal("", text)
+        assert.are.same({
+            "default #1: hidden",
+            "default #2: changeTarget NextTarget: no on-all-targets read of a cast before it in this list",
+        }, omitted)
+        assert.are.same({}, header)
+    end)
+
     it("CN4: auraIsActiveOnAnyTarget is the belief's count of enemies carrying it, with no deviation", function()
         local any = { auraIsActiveOnAnyTarget = { auraId = { spellId = 400 } } }
         local text, omitted, _, header = apl.translate({ priorityList = { cast(400, NOT(any)) } }, ctx({}))

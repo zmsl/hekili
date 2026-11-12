@@ -1933,7 +1933,7 @@ local function windowed(c, a)
 end
 
 -- One entry as a line body (a list of them for rules 13 and 14), or nil and why it folds away.
-function entry(c, e)
+local function entryBody(c, e)
     local a = e.action or {}
     local kind
     for k in pairs(a) do
@@ -2052,6 +2052,14 @@ function entry(c, e)
     end
     cond = guarded(c, key, required(c, key, cond))
     return cond and (body .. ",if=" .. cond) or body
+end
+local function restoreMods(c, mods, ...)
+    c.cycleMods = mods
+    return ...
+end
+-- Rules 17 and 21 set the swap modifier for this entry's own line only: a sequence's later member does not inherit it.
+function entry(c, e)
+    return restoreMods(c, c.cycleMods, entryBody(c, e))
 end
 
 -- Rule 1: what ability `key`'s handler does, recorded: { unit = "buff"|"debuff" (it applies an aura of its own key),
@@ -2224,7 +2232,7 @@ local function flatAnd(n, out)
 end
 -- Rule 20 over one list: { [cast index] = true } and, by changeTarget index, its absorption { m, keys, dropped } or
 -- why it is not absorbed.
-local function swaps(c, entries)
+local function swaps(c, entries, at)
     local cycleAt, swapAt = {}, {}
     for j, e in ipairs(entries) do
         local ct = e.action and e.action.changeTarget
@@ -2245,7 +2253,9 @@ local function swaps(c, entries)
             end
             local m
             for i = 1, iu and j - 1 or 0 do
-                local a = entries[i].action or {}
+                -- a hidden or omitted cast writes no line to carry the swap (review M2)
+                local gone = entries[i].hide or type(at and at[i]) == "string"
+                local a = not gone and entries[i].action or {}
                 local s = a.castSpell and a.castSpell.spellId
                 for k in pairs(a) do
                     if (s and s.spellId == x) or (type(x) == "table" and k ~= "condition" and c.select[k] == x) then
@@ -2773,7 +2783,7 @@ function M.translate(rotation, c)
     local function run(name, entries, at)
         local out, order = {}, {}
         origin[name], c.listName = {}, name
-        local cycleAt, swapAt = swaps(c, entries) -- rule 20
+        local cycleAt, swapAt = swaps(c, entries, at) -- rule 20
         for i in ipairs(entries) do
             order[i] = i
         end
