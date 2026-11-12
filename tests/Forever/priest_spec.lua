@@ -33,6 +33,37 @@ local KIT = {
     inner_focus = { { 14751 }, 0, 180, "off" },
     power_infusion = { { 10060 }, 0.2, 180, "off" },
     shoot = { { 5019 }, 0, 0, "off" },
+    -- The heals and utility a Shadow or Discipline build can press (wowsims pin spell data; a percent-of-base cost as the fraction)
+    lesser_heal = { { 2050, 2052, 2053 }, 75, 0, "spell" },
+    heal = { { 2054, 2055, 6063, 6064 }, 305, 0, "spell" },
+    greater_heal = { { 2060, 10963, 10964, 10965, 25314 }, 710, 0, "spell" },
+    flash_heal = { { 2061, 9472, 9473, 9474, 10915, 10916, 10917 }, 380, 0, "spell" },
+    renew = { { 139, 6074, 6075, 6076, 6077, 6078, 10927, 10928, 10929, 25315 }, 410, 0, "spell" },
+    prayer_of_healing = { { 596, 996, 10960, 10961, 25316 }, 1070, 0, "spell" },
+    prayer_of_mending = { { 401859, 1240826, 1240827 }, 390, 10, "spell" },
+    psychic_scream = { { 8122, 8124, 10888, 10890 }, 210, 30, "spell" },
+    fade = { { 586, 9578, 9579, 9592, 10941, 10942 }, 275, 30, "spell" },
+    mana_burn = { { 8129, 8131, 10874, 10875, 10876 }, 270, 0, "spell" },
+    desperate_prayer = { { 13908, 19236, 19238, 19240, 19241, 19242, 19243 }, 0, 600, "spell" },
+    dispel_magic = { { 527, 988 }, 0.18, 0, "spell" },
+    cure_disease = { { 528 }, 0.15, 0, "spell" },
+    abolish_disease = { { 552 }, 0.15, 0, "spell" },
+    elunes_grace = { { 2651 }, 0.03, 300, "spell" },
+    fear_ward = { { 6346 }, 100, 180, "spell" },
+    feedback = { { 13896, 19271, 19273, 19274, 19275 }, 230, 180, "spell" },
+    chastise = { { 1277331, 1277332, 1277333, 1277334, 1277335 }, 225, 120, "spell" },
+    silence = { { 15487 }, 225, 45, "spell" },
+    touch_of_weakness = { { 2652, 19261, 19262, 19264, 19265, 19266 }, 195, 0, "spell" },
+    hex_of_weakness = { { 9035, 19281, 19282, 19283, 19284, 19285 }, 240, 0, "spell" },
+    power_word_fortitude = { { 1243, 1244, 1245, 2791, 10937, 10938 }, 1695, 0, "spell" },
+    prayer_of_fortitude = { { 21562, 21564 }, 3400, 0, "spell" },
+    divine_spirit = { { 14752, 14818, 14819, 27841 }, 970, 0, "spell" },
+    prayer_of_spirit = { { 27681 }, 1940, 0, "spell" },
+    shadow_protection = { { 976, 10957, 10958 }, 650, 0, "spell" },
+    shackle_undead = { { 9484, 9485, 10955 }, 150, 0, "spell" },
+    resurrection = { { 2006, 2010, 10880, 10881, 20770 }, 0.75, 0, "spell" },
+    mind_soothe = { { 453, 8192, 10953 }, 90, 0, "spell" },
+    lightwell = { { 724, 27870, 27871 }, 365, 600, "spell" },
 }
 
 local function idsOf(a)
@@ -87,7 +118,7 @@ describe("Forever Priest", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(19, n)
+        assert.are.equal(49, n)
         for _, key in ipairs({ "inner_focus", "power_infusion", "dark_sacrifice" }) do
             assert.are.equal("cooldowns", w.abilities[key].toggle, key)
         end
@@ -285,20 +316,49 @@ describe("Forever Priest", function()
                 1,
                 {
                     17,
+                    139,
+                    453,
+                    527,
+                    528,
+                    552,
                     585,
+                    586,
                     588,
                     589,
+                    596,
+                    724,
+                    976,
+                    1243,
+                    2006,
+                    2050,
+                    2054,
+                    2060,
+                    2061,
+                    2651,
+                    2652,
                     2944,
+                    6346,
                     8092,
+                    8122,
+                    8129,
+                    9035,
+                    9484,
                     10060,
                     10797,
+                    13896,
+                    14752,
                     14914,
                     15237,
                     15286,
                     15407,
                     15473,
+                    15487,
                     18137,
+                    21562,
+                    27681,
+                    401859,
                     402174,
+                    1277331,
                     1309595,
                 },
             },
@@ -326,6 +386,110 @@ describe("Forever Priest", function()
             assert.is_true((ld.run(w.abilities[key].usable, e)), key)
             e["locked_out_" .. school] = true
             assert.is_false((ld.run(w.abilities[key].usable, e)), key)
+        end
+    end)
+
+    it("prices the heals and utility by their talents: Soul Warding, Improved Healing, Mental Agility", function()
+        local A = w.abilities
+        for _, id in ipairs({
+            10901,
+            2053,
+            6064,
+            25314,
+            10917,
+            1316995,
+            1240827,
+            10890,
+            10942,
+            25316,
+            10876,
+            25315,
+            10938,
+        }) do
+            w.game.known[id] = true
+        end
+        local e = ld.env(w)
+        local function spend(key)
+            return near(ld.run(A[key].spend, e))
+        end
+        assert.are.same({ 4, 500 }, { ld.run(A.power_word_shield.cooldown, e), spend("power_word_shield") })
+        e.talent.soul_warding = { rank = 1 } -- PWS cooldown 4 -> 0 and -15% cost (DB2 402000 effects 0 and 1)
+        assert.are.same({ 0, 425 }, { ld.run(A.power_word_shield.cooldown, e), spend("power_word_shield") })
+        e.talent.mental_agility = { rank = 3 }
+        assert.are.equal(382.5, spend("power_word_shield")) -- two cost mods multiply
+        e.talent.improved_healing = { rank = 3 } -- -15%: Lesser Heal, Heal, Greater Heal, Penance, Prayer of Mending
+        assert.are.same({ 63.75, 259.25, 603.5, 327.25, 298.35 }, {
+            spend("lesser_heal"),
+            spend("heal"),
+            spend("greater_heal"),
+            spend("penance"),
+            spend("prayer_of_mending"), -- 390 x 0.9 (Mental Agility, its mask) x 0.85
+        })
+        -- outside Improved Healing's mask, and outside Mental Agility's
+        assert.are.same({ 380, 1070 }, { spend("flash_heal"), spend("prayer_of_healing") })
+        e.talent.improved_healing = { rank = 1 }
+        assert.are.equal(674.5, spend("greater_heal"))
+        -- Mental Agility reaches the instants and Renew, Fade, Scream, never the hard-cast heals
+        assert.are.same({ 247.5, 189, 369 }, { spend("fade"), spend("psychic_scream"), spend("renew") })
+        assert.are.equal(1695 * 0.9, ld.run(A.power_word_fortitude.spend, e))
+        assert.are.equal(0.18 * 0.9, ld.run(A.dispel_magic.spend, e))
+    end)
+
+    it("times the heals by Divine Fury, Improved Mana Burn and Improved Psychic Scream", function()
+        local A = w.abilities
+        for _, id in ipairs({ 2053, 6064, 25314, 10917, 10876, 10890, 25316 }) do
+            w.game.known[id] = true
+        end
+        local e = ld.env(w)
+        e.haste = 1
+        local function cast(key)
+            return near(ld.run(A[key].cast, e))
+        end
+        assert.are.same({ 2.5, 3, 3, 1.5, 3, 3 }, {
+            cast("lesser_heal"),
+            cast("heal"),
+            cast("greater_heal"),
+            cast("flash_heal"),
+            cast("mana_burn"),
+            cast("prayer_of_healing"),
+        })
+        e.talent.divine_fury = { rank = 5 } -- Heal and Greater Heal only (DB2 18530's mask)
+        e.talent.improved_mana_burn = { rank = 2 }
+        assert.are.same({ 2.5, 2.5, 2.5, 1.5, 2, 3 }, {
+            cast("lesser_heal"),
+            cast("heal"),
+            cast("greater_heal"),
+            cast("flash_heal"),
+            cast("mana_burn"),
+            cast("prayer_of_healing"),
+        })
+        e.haste = 0.8
+        assert.are.equal(2, cast("greater_heal"))
+        assert.are.equal(30, ld.run(A.psychic_scream.cooldown, e))
+        e.talent.improved_psychic_scream = { rank = 2 }
+        assert.are.equal(26, ld.run(A.psychic_scream.cooldown, e)) -- DB2 15392: -4 s at the top rank (-2 s a rank: unverified)
+    end)
+
+    it("applies the self buffs the utility spells give, with the spell's own aura ID", function()
+        local A = w.abilities
+        for _, row in ipairs({
+            { "fade", "fade_buff", 586, 10 },
+            { "elunes_grace", "elunes_grace", 2651, 15 },
+            { "feedback", "feedback", 13896, 15 },
+            { "touch_of_weakness", "touch_of_weakness", 2652, 600 },
+            { "hex_of_weakness", "hex_of_weakness", 9035, 120 },
+        }) do
+            local key, aura = row[1], row[2]
+            for _, field in ipairs({ "now", "handler" }) do
+                local e = ld.env(w)
+                ld.run(A[key][field], e)
+                assert.are.same({ aura }, e.applied, key .. field)
+            end
+            assert.are.same({ row[3], row[4] }, { w.auras[aura].id, w.auras[aura].duration }, aura)
+        end
+        for _, key in ipairs({ "flash_heal", "renew", "prayer_of_healing" }) do
+            assert.is_nil(A[key].handler, key) -- the ally's buff, not the player's: no assumption
+            assert.is_false(A[key].startsCombat, key)
         end
     end)
 end)
