@@ -79,6 +79,8 @@ return {
         curse_of_weakness = 2,
     },
     extra = { { before = "life_tap", last = true, line = "shadow_bolt" } }, -- the filler (header)
-    guard = { ["default #12"] = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" }, -- the final Life Tap (header)
+    guard = {
+        ["default #12"] = { expect = "life_tap", cond = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" },
+    }, -- the final Life Tap (header)
     leveling = {},
 }

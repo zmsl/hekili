@@ -71,6 +71,8 @@ return {
         "Without Incinerate (before level 40) this priority fills with Searing Pain, or with Shadow Bolt before Searing Pain is learned.",
     },
     extra = { { before = "life_tap", last = true, line = "shadow_bolt" } }, -- the filler (header)
-    guard = { ["default #18"] = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" }, -- the final Life Tap (header)
+    guard = {
+        ["default #18"] = { expect = "life_tap", cond = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" },
+    }, -- the final Life Tap (header)
     leveling = {},
 }

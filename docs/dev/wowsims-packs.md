@@ -163,7 +163,10 @@ Translation:
   when the condition already has the talent test as a top-level `&` term. A key naming no APL entry is an error (CN12; an omitted entry still matches).
 - `guard` (`{ [action or group snake name] = SimC expression }`): one `&(<expression>)` term appended to each such
   entry's condition, in every list (rule 16's select lines too); keyed `"<list> #<n>"` (the APL's entry number), to
-  that one entry's line (a move's reached lines carry it); a key naming no APL entry (an action, a group, or an entry
+  that one entry's line (a move's reached lines carry it), with the value `{ expect = "<action>", cond = "<SimC
+  expression>" }`: the build raises when that entry is not the expected action (its cast key, else its kind, e.g.
+  `"move"`), names none, or sits in a list never translated, so a re-pin that shifts the list cannot silently guard
+  another line; a key naming no APL entry (an action, a group, or an entry
   `"<list> #<n>"`) is an error (CN12: an upstream rename would drop it silently; an omitted entry still
   matches). A deviation from wowsims, so only on the user's ruling, named in the recipe and under "Deviations by
   ruling" below.
@@ -401,7 +404,7 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   (Affliction Wrack, Destruction Incinerate, Demonology Searing Pain, SM Ruin and Shadow Brand Shadow Bolt) then an
   unconditional Life Tap, which wowsims reaches only when the filler cannot be paid; a Warlock without that filler (a
   talent not taken, a spell not learned yet) fell through to Life Tap at any mana. Each recipe guards that last Life
-  Tap, `guard = { ["default #<its entry>"] = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" }` (the
+  Tap, `guard = { ["default #<its entry>"] = { expect = "life_tap", cond = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" } }` (the
   known test is rule 6's form, tools/check_pack_levels.lua), and Affliction, Destruction and
   Demonology add `extra = { { before = "life_tap", last = true, line = "shadow_bolt" } }` (Shadow Bolt is known at
   level 1). It is not a filler for filling's sake (R41): Shadow Bolt is the class's core cast, and it is not silent

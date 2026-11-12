@@ -82,6 +82,8 @@ return {
         "Before the Demonic Brand talent, Searing Pain leads the list (its brand is never up), as wowsims's own list would.",
     },
     extra = { { before = "life_tap", last = true, line = "shadow_bolt" } }, -- the filler (header)
-    guard = { ["default #14"] = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" }, -- the final Life Tap (header)
+    guard = {
+        ["default #14"] = { expect = "life_tap", cond = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" },
+    }, -- the final Life Tap (header)
     leveling = {},
 }

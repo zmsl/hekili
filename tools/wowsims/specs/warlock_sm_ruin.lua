@@ -77,6 +77,8 @@ return {
         { before = "life_tap", line = "siphon_life,focus=2,if=debuff.siphon_life.remains<=action.siphon_life.cast" },
         { before = "life_tap", line = "immolate,focus=2,if=debuff.immolate.remains<=action.immolate.cast" },
     },
-    guard = { ["default #13"] = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" }, -- the final Life Tap (header)
+    guard = {
+        ["default #13"] = { expect = "life_tap", cond = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" },
+    }, -- the final Life Tap (header)
     leveling = {},
 }
