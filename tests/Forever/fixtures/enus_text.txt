@@ -364,6 +364,39 @@ options.abilities.aspect_of_the_beast.toggle	values.interrupts	Interrupts
 options.abilities.aspect_of_the_beast.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.aspect_of_the_beast.toggle	values.none	None
 options.abilities.aspect_of_the_beast.toggle	values.potions	Potions
+options.abilities.aspect_of_the_cheetah	name	Spell 5118
+options.abilities.aspect_of_the_cheetah.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 5118 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 5118 can be recommended in any type of fight.
+options.abilities.aspect_of_the_cheetah.boss	name	Boss Encounter Only
+options.abilities.aspect_of_the_cheetah.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 5118 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.aspect_of_the_cheetah.clash	name	Clash
+options.abilities.aspect_of_the_cheetah.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 5118.
+options.abilities.aspect_of_the_cheetah.disabled	name	Disable |T136000:0|t Spell 5118
+options.abilities.aspect_of_the_cheetah.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.aspect_of_the_cheetah.dotCap	name	Maximum Applications
+options.abilities.aspect_of_the_cheetah.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.aspect_of_the_cheetah.hasIcon	name	Icon Replacement
+options.abilities.aspect_of_the_cheetah.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.aspect_of_the_cheetah.keybind	name	Override Keybind Text
+options.abilities.aspect_of_the_cheetah.lineBreak1	name	\032
+options.abilities.aspect_of_the_cheetah.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.aspect_of_the_cheetah.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.aspect_of_the_cheetah.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.aspect_of_the_cheetah.noIcon	name	Icon Replacement
+options.abilities.aspect_of_the_cheetah.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 5118 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.aspect_of_the_cheetah.targetMax	name	Maximum Targets
+options.abilities.aspect_of_the_cheetah.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 5118 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.aspect_of_the_cheetah.targetMin	name	Minimum Targets
+options.abilities.aspect_of_the_cheetah.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.aspect_of_the_cheetah.toggle	name	Require Toggle
+options.abilities.aspect_of_the_cheetah.toggle	values.cooldowns	Cooldowns
+options.abilities.aspect_of_the_cheetah.toggle	values.custom1	Custom 1
+options.abilities.aspect_of_the_cheetah.toggle	values.custom2	Custom 2
+options.abilities.aspect_of_the_cheetah.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.aspect_of_the_cheetah.toggle	values.defensives	Defensives
+options.abilities.aspect_of_the_cheetah.toggle	values.interrupts	Interrupts
+options.abilities.aspect_of_the_cheetah.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.aspect_of_the_cheetah.toggle	values.none	None
+options.abilities.aspect_of_the_cheetah.toggle	values.potions	Potions
 options.abilities.aspect_of_the_hawk	name	Spell 13165
 options.abilities.aspect_of_the_hawk.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 13165 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 13165 can be recommended in any type of fight.
 options.abilities.aspect_of_the_hawk.boss	name	Boss Encounter Only
@@ -15222,6 +15255,8 @@ options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.g
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.ghostly_strike	|T136000:0|t Spell 14278
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.ghostly_strike_next	|T136000:0|t Spell 1329326
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.hemorrhage	|T136000:0|t Spell 16511
+options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328826
+options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.remorseless	|T136000:0|t Spell 14143
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.rupture	|T136000:0|t Spell 1943
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.slice_and_dice	|T136000:0|t Spell 5171
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
@@ -15767,6 +15802,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	name	Action
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.aimed_shot	|T136000:0|t Spell 19434
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.arcane_shot	|T136000:0|t Spell 3044
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
@@ -15850,6 +15886,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	name	A
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.arcane_shot	|T136000:0|t Spell 3044
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
@@ -15885,14 +15922,24 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.defensive_state	|T136000:0|t Spell 5302
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.expose_prey	|T136000:0|t Spell 1310726
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.immolation_trap	|T136000:0|t Spell 14301
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.lacerating_strikes	|T136000:0|t Spell 1310536
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.rapid_killing	|T136000:0|t Spell 415407
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.sniper_shot	|T136000:0|t Spell 1310786
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.caption	name	Caption
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
@@ -16202,6 +16249,8 @@ options.packs.combat.Combat (wowsims.com).lists.buff_name	values.garrote	|T13600
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.ghostly_strike	|T136000:0|t Spell 14278
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.ghostly_strike_next	|T136000:0|t Spell 1329326
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.hemorrhage	|T136000:0|t Spell 16511
+options.packs.combat.Combat (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328826
+options.packs.combat.Combat (wowsims.com).lists.buff_name	values.remorseless	|T136000:0|t Spell 14143
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.rupture	|T136000:0|t Spell 1943
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.slice_and_dice	|T136000:0|t Spell 5171
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
@@ -19872,6 +19921,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	name	Action
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.aimed_shot	|T136000:0|t Spell 19434
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.arcane_shot	|T136000:0|t Spell 3044
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
@@ -19941,6 +19991,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	name	Act
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.arcane_shot	|T136000:0|t Spell 3044
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
@@ -19976,14 +20027,24 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.w
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.defensive_state	|T136000:0|t Spell 5302
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.expose_prey	|T136000:0|t Spell 1310726
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.immolation_trap	|T136000:0|t Spell 14301
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.lacerating_strikes	|T136000:0|t Spell 1310536
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.rapid_killing	|T136000:0|t Spell 415407
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.sniper_shot	|T136000:0|t Spell 1310786
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.caption	name	Caption
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
@@ -21454,6 +21515,8 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.garrote	|T1
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.ghostly_strike	|T136000:0|t Spell 14278
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.ghostly_strike_next	|T136000:0|t Spell 1329326
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.hemorrhage	|T136000:0|t Spell 16511
+options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328826
+options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.remorseless	|T136000:0|t Spell 14143
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.rupture	|T136000:0|t Spell 1943
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.slice_and_dice	|T136000:0|t Spell 5171
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
@@ -21641,6 +21704,7 @@ options.packs.survival.Survival (wowsims.com).lists.action	name	Action
 options.packs.survival.Survival (wowsims.com).lists.action	values.aimed_shot	|T136000:0|t Spell 19434
 options.packs.survival.Survival (wowsims.com).lists.action	values.arcane_shot	|T136000:0|t Spell 3044
 options.packs.survival.Survival (wowsims.com).lists.action	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.survival.Survival (wowsims.com).lists.action	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.survival.Survival (wowsims.com).lists.action	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.survival.Survival (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
 options.packs.survival.Survival (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
@@ -21719,6 +21783,7 @@ options.packs.survival.Survival (wowsims.com).lists.action_name	name	Action Name
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.arcane_shot	|T136000:0|t Spell 3044
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.survival.Survival (wowsims.com).lists.action_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
@@ -21754,14 +21819,24 @@ options.packs.survival.Survival (wowsims.com).lists.action_name	values.wait	|T13
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.survival.Survival (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
 options.packs.survival.Survival (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.defensive_state	|T136000:0|t Spell 5302
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.expose_prey	|T136000:0|t Spell 1310726
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.immolation_trap	|T136000:0|t Spell 14301
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.lacerating_strikes	|T136000:0|t Spell 1310536
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.rapid_killing	|T136000:0|t Spell 415407
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.sniper_shot	|T136000:0|t Spell 1310786
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.survival.Survival (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.survival.Survival (wowsims.com).lists.caption	name	Caption
 options.packs.survival.Survival (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.

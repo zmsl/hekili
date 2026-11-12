@@ -157,6 +157,9 @@ M.MAP = {
         effect = function(W, e, _, X)
             W.hit(e, e.target, AMOUNT.shank, 1)
             W.emit({ kind = "gain", src = e, pt = ENERGY, rage = 25 + 3 * X.fos })
+            if X.boot then
+                W.emit({ kind = "gain", src = e, pt = POINTS, rage = 2 })
+            end
             if X.venom then
                 aura(W, X, e, "venom")
             end
@@ -274,6 +277,7 @@ local PACKS = {
             [14278] = 1,
             [1316709] = 1,
             [1329256] = 1,
+            [1329286] = 5,
         },
         uptime = { "rupture", "hemorrhage" },
     },
@@ -298,6 +302,7 @@ local function classData(H)
     X.relentless = (talent.relentless_strikes.rank or 0) >= 5
     X.fos = talent.flash_of_steel.rank or 0
     X.venom = talent.venom.enabled == true
+    X.boot = (talent.boot_knife.rank or 0) >= 5
     X.isnd = talent.improved_slice_and_dice.rank or 0
     X.bs = talent.blood_splatter.rank or 0
     return X

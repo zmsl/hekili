@@ -19,6 +19,7 @@ local KIT = {
     hunters_mark = { { 1130, 14323, 14324, 14325, 1213268 }, 60, 0, "spell" },
     aspect_of_the_hawk = { { 13165, 14318, 14319, 14320, 14321, 14322, 25296 }, 120, 0, "spell" },
     aspect_of_the_beast = { { 13161, 1299445, 1299446, 1299447 }, 110, 0, "spell" },
+    aspect_of_the_cheetah = { { 5118 }, 40, 0, "spell" },
     rapid_fire = { { 3045 }, 100, 300, "off" },
     -- the BM talent (19574): its pet's 18 s rage, autocast as a major cooldown in wowsims's BM log
     bestial_wrath = { { 19574 }, 0, 120, "off" },
@@ -79,7 +80,7 @@ describe("Forever Hunter", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(17, n)
+        assert.are.equal(18, n)
         assert.are.equal("HUNTER", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.rapid_fire.toggle)
@@ -155,8 +156,9 @@ describe("Forever Hunter", function()
             { "hunters_mark", { "hunters_mark" }, {} },
             { "serpent_sting", { "serpent_sting" }, {} },
             { "rapid_fire", { "rapid_fire" }, {} },
-            { "aspect_of_the_hawk", { "aspect_of_the_hawk" }, { "aspect_of_the_beast" } },
-            { "aspect_of_the_beast", { "aspect_of_the_beast" }, { "aspect_of_the_hawk" } },
+            { "aspect_of_the_hawk", { "aspect_of_the_hawk" }, { "aspect_of_the_beast", "aspect_of_the_cheetah" } },
+            { "aspect_of_the_beast", { "aspect_of_the_beast" }, { "aspect_of_the_hawk", "aspect_of_the_cheetah" } },
+            { "aspect_of_the_cheetah", { "aspect_of_the_cheetah" }, { "aspect_of_the_hawk", "aspect_of_the_beast" } },
         }) do
             for _, field in ipairs({ "now", "handler" }) do
                 local e = ld.env(w)
@@ -172,12 +174,85 @@ describe("Forever Hunter", function()
             A.hunters_mark.id,
             A.hunters_mark.duration,
             A.rapid_fire.id,
-            A.rapid_fire.duration,
+            ld.run(A.rapid_fire.duration, ld.env(w)), -- a function since the Cryptstalker 2-piece
             A.quick_shots.id,
             A.quick_shots.duration,
             A.defensive_state.id,
             A.defensive_state.duration,
         })
+    end)
+
+    it("shortens Rapid Fire's cooldown by Rapid Killing's curve {-60, -120} s (talents_marksmanship.go:100)", function()
+        local e = ld.env(w)
+        local cd = {}
+        for n = 0, 2 do
+            e.talent = setmetatable({}, {
+                __index = function()
+                    return { rank = n, enabled = n > 0 }
+                end,
+            })
+            cd[n + 1] = ld.run(w.abilities.rapid_fire.cooldown, e)
+        end
+        assert.are.same({ 300, 240, 180 }, cd)
+    end)
+
+    -- Aspect of the Cheetah (5118: 40 mana, aura 30% speed, a proc of Dazed 15571: 4 s) and the Cryptstalker set
+    -- (sim/hunter/item_sets.go: 2pc 28755 Rapid Fire +4 s, 8pc 28751 Multi-Shot and Aimed Shot -20 mana).
+    it("registers Dazed, and the Cryptstalker bonuses lengthen Rapid Fire and cut the shots' cost", function()
+        local A = w.auras
+        assert.are.same({ 5118, 3600, 15571, 4, 28755, 28751 }, {
+            A.aspect_of_the_cheetah.id,
+            A.aspect_of_the_cheetah.duration,
+            A.dazed.id,
+            A.dazed.duration,
+            A.cryptstalker_2pc.id,
+            A.cryptstalker_8pc.id,
+        })
+        local function with(sb, f)
+            local e = ld.env(w)
+            e.set_bonus = setmetatable(sb, {
+                __index = function()
+                    return 0
+                end,
+            })
+            return ld.run(f, e)
+        end
+        assert.are.same(
+            { 15, 19 },
+            { with({}, A.rapid_fire.duration), with({ cryptstalker_2pc = 1 }, A.rapid_fire.duration) }
+        )
+        local e8 = { cryptstalker_8pc = 1 }
+        local function round(x)
+            return math.floor(x * 100000 + 0.5) / 100000
+        end
+        w.game.known[2643], w.game.known[20904] = true, true
+        assert.are.same({ 0.139, 310, round(0.139 - 20 / 1720), 290 }, {
+            round(with({}, w.abilities.multi_shot.spend)),
+            with({}, w.abilities.aimed_shot.spend),
+            round(with(e8, w.abilities.multi_shot.spend)),
+            with(e8, w.abilities.aimed_shot.spend),
+        })
+    end)
+
+    it("registers the pin's bookkeeping auras (id, duration, stacks) and Immolation Trap's burn", function()
+        local A = w.auras
+        -- id, duration, max_stack: wowsims sim/hunter (spells_auto_gen.go rows 415407, 1310786, 1310726, 1317257,
+        -- 1310536, 14301)
+        for key, want in pairs({
+            rapid_killing = { 415407, 20, 1 },
+            sniper_shot = { 1310786, 10, 3 },
+            expose_prey = { 1310726, 10, 1 },
+            strider_kick = { 1317257, 3, 1 },
+            lacerating_strikes = { 1310536, 21, 1 },
+            immolation_trap = { 14301, 15, 1 },
+        }) do
+            assert.are.same(want, { A[key].id, A[key].duration, A[key].max_stack }, key)
+        end
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = ld.env(w)
+            ld.run(w.abilities.immolation_trap[field], e)
+            assert.are.same({ "immolation_trap" }, e.applied, field)
+        end
     end)
 
     it("hastes Aimed Shot, Multi-Shot and Sniper Shot's casts by Rapid Fire and Quick Shots", function()

@@ -8,11 +8,14 @@
 -- the time to the next main-hand swing (`mainhand_remains`, the weave's Multi-Shot gap), and the default priorities
 -- (the wowsims.com packs, translated from wowsims/forever's Melee Weave; no in-game check yet).
 -- Research: docs/research/2026-10-15-forever-hunter/research.md and the class-completion research §5.
--- Unmodelled: ranged haste on the auto-shot clock (Rapid Fire, Quick Shots; their haste on Aimed, Multi and Sniper
--- Shot's casts is modelled), the pet and its abilities (D6), Aspect of the Viper and the other runes no priority names,
+-- Unmodelled: ranged haste on the auto-shot clock and Rapid Fire's +40% melee haste on the main-hand swing (Rapid Fire,
+-- Quick Shots; their haste on Aimed, Multi and Sniper Shot's casts is modelled; both wait for the core's haste-rescales-
+-- the-swing item), Quick Shots itself (nothing applies it: its Deadly Aspects roll is unobservable, and whether the
+-- player aura or the Cooldown Manager shows it in combat is unprobed), the pet and its abilities (D6), Aspect of the Viper and the other runes no priority names,
 -- Improved Aimed Shot's +2 s cast, Sniper Shot's range buff, Expose Prey's own Mongoose Bite window (the usability read
--- covers it), Resourcefulness's second effect (1242688: 30 s of 50% mana regen while casting after a critical strike;
--- the mana belief's `mult` hook scales a whole rate, not the spirit part inside the five-second rule).
+-- covers it), Resourcefulness's second effect (1242688: the 30 s aura follows a crit, which only the client's aura read
+-- shows, out of combat or through the Cooldown Manager; its `share` entry is in the mana model) and Rapid Killing's buff
+-- (a kill proc nothing here reads).
 -- Credits: Hekili (registration API and pack format; the on-next-swing queue read follows the Warrior's Heroic Strike).
 -- wowsims/forever (MIT, ui/specs/hunter/dps/apls/default.apl.json, the Melee Weave, and sim/hunter/) is the source of
 -- the priorities (tools/wowsims/specs/hunter_*.lua) and the reference for the Summon Hawk, Sniper Shot, Raptor Strike
@@ -91,6 +94,12 @@ local ASPECT_OF_THE_HAWK = { 13165, 14318, 14319, 14320, 14321, 14322, 25296 }
 local ASPECT_OF_THE_HAWK_COST = { 20, 35, 50, 70, 90, 110, 120 }
 local ASPECT_OF_THE_BEAST = { 13161, 1299445, 1299446, 1299447 } -- ranks 2-4 Forever-only (D4)
 local ASPECT_OF_THE_BEAST_COST = { 50, 70, 90, 110 }
+local ASPECT_OF_THE_CHEETAH = { 5118 }
+local ASPECT_OF_THE_CHEETAH_COST = { 40 }
+local BASE_MANA = 1720 -- a fraction cost is of this (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
+-- Cryptstalker Armor (set 530, wowsims sim/hunter/item_sets.go; items from its db.json): the 2-piece's hidden aura
+-- 28755 makes Rapid Fire last 4 s longer, the 8-piece's 28751 takes 20 mana off Multi-Shot and Aimed Shot.
+local CRYPTSTALKER = { 22436, 22437, 22438, 22439, 22440, 22441, 22442, 22443, 23067 }
 local IMMOLATION_TRAP = { 13795, 14302, 14303, 14304, 14305 }
 local IMMOLATION_TRAP_COST = { 50, 90, 135, 190, 245 }
 
@@ -130,10 +139,13 @@ end
 -- wowsims's logs: 2/2 Resourcefulness pays 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap; 2/5
 -- Efficiency 94 Raptor Strike, 75.2 Wing Clip, 178.6 Arcane Shot, 235 Serpent Sting.
 local RESOURCEFUL = { 0.3, 0.6 }
-local function discounted(price, resourceful, efficient)
+local function discounted(price, resourceful, efficient, flat8pc)
     local priced = type(price) == "function" -- decided here: the returned function runs in the state's environment
     return function()
         local c = priced and price() or price
+        if flat8pc and set_bonus.cryptstalker_8pc > 0 then
+            c = c - flat8pc
+        end
         local off = (resourceful and RESOURCEFUL[talent.resourcefulness.rank] or 0)
             + (efficient and 0.03 * talent.efficiency.rank or 0)
         return c * (1 - off)
@@ -149,14 +161,15 @@ local function rangedCast(base)
 end
 
 -- One aspect at a time (wowsims aspects.go): each removes the other.
-local function aspectEffect(key, other)
+local function aspectEffect(key, other, other2)
     return function()
         removeBuff(other)
+        removeBuff(other2)
         applyBuff(key)
     end
 end
 
-local function aspect(key, other, ids, costs)
+local function aspect(key, other, other2, ids, costs)
     return {
         id = ids[1],
         copy = rest(ids),
@@ -170,8 +183,8 @@ local function aspect(key, other, ids, costs)
         startsCombat = false,
         known = knows(ids),
 
-        now = aspectEffect(key, other),
-        handler = aspectEffect(key, other),
+        now = aspectEffect(key, other, other2),
+        handler = aspectEffect(key, other, other2),
     }
 end
 
@@ -232,7 +245,7 @@ spec:RegisterResource(
                 return state.spec.beast_mastery and 0.5 or 0
             end,
         },
-        base = 1720, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
+        base = BASE_MANA, -- a fraction cost is of base mana (Spec.lua)
     }
 )
 
@@ -244,16 +257,42 @@ spec:RegisterPets({
     hawk = { spell = "summon_hawk", duration = 18, cap = 2 },
 })
 
+spec:RegisterGear("cryptstalker", unpack(CRYPTSTALKER))
+spec:RegisterSetBonus("cryptstalker_2pc", 28755)
+spec:RegisterSetBonus("cryptstalker_8pc", 28751)
+
 spec:RegisterAuras({
     aspect_of_the_hawk = { id = 13165, copy = rest(ASPECT_OF_THE_HAWK), duration = 3600, max_stack = 1 },
     aspect_of_the_beast = { id = 13161, copy = rest(ASPECT_OF_THE_BEAST), duration = 3600, max_stack = 1 },
-    rapid_fire = { id = 3045, duration = 15, max_stack = 1 },
+    rapid_fire = {
+        id = 3045,
+        duration = function() -- the Cryptstalker 2-piece: +4 s
+            return 15 + (set_bonus.cryptstalker_2pc > 0 and 4 or 0)
+        end,
+        max_stack = 1,
+    },
+    -- Aspect of the Cheetah (5118; no APL casts it: for display and custom priorities) and the Dazed it proc'd when
+    -- struck (15571: 4 s, -70% speed), and the set's hidden auras (tracked so set_bonus reads them).
+    aspect_of_the_cheetah = { id = 5118, duration = 3600, max_stack = 1 },
+    dazed = { id = 15571, duration = 4, max_stack = 1 },
+    cryptstalker_2pc = { id = 28755, duration = 3600, max_stack = 1 },
+    cryptstalker_8pc = { id = 28751, duration = 3600, max_stack = 1 },
     -- Aspect of the Hawk's proc (Deadly Aspects) on an Auto Shot: +30% ranged haste.
     quick_shots = { id = 6150, duration = 12, max_stack = 1 },
     -- Resourcefulness (talent 440529): a melee or ranged ability's crit gives +50% Spirit regen while casting (the mana
     -- entry). Rapid Recuperation (talent 1223987): the same share on a Serpent Sting hit or spending Rapid Killing.
     resourcefulness = { id = 1242688, duration = 30, max_stack = 1 },
     rapid_recuperation = { id = 1242512, duration = 15, max_stack = 1 },
+    -- Rapid Killing's buff (415407, a kill proc: +20% on the next Shot, 20 s, one charge), Sniper Shot's (1310786: 10 s,
+    -- three charges, +10 yd range on the Shots), Expose Prey's Mongoose Bite window (1310726: 10 s, one charge), Strider
+    -- Kick's speed (1317257, 3 s), Lacerating Strikes' bleed and Immolation Trap's burn (target debuffs, from our casts):
+    -- registered as the pin states them (wowsims sim/hunter); no list reads them, so only the burn has a handler.
+    rapid_killing = { id = 415407, duration = 20, max_stack = 1 },
+    sniper_shot = { id = 1310786, duration = 10, max_stack = 3 },
+    expose_prey = { id = 1310726, duration = 10, max_stack = 1 },
+    strider_kick = { id = 1317257, duration = 3, max_stack = 1 },
+    lacerating_strikes = { id = 1310536, duration = 21, tick_time = 3, dot = "debuff", max_stack = 1 },
+    immolation_trap = { id = 14301, duration = 15, dot = "debuff", max_stack = 1 },
     -- Mongoose Bite's window after we dodge (Defensive State, 5 s), timed from the plain usability flip (reset_precast).
     defensive_state = { id = 5302, duration = 5, max_stack = 1 },
     -- Raptor Strike queued on the next main-hand swing (C_Spell.IsCurrentSpell, applied in reset_precast).
@@ -451,20 +490,31 @@ spec:RegisterAbilities({
     aspect_of_the_hawk = aspect(
         "aspect_of_the_hawk",
         "aspect_of_the_beast",
+        "aspect_of_the_cheetah",
         ASPECT_OF_THE_HAWK,
         ASPECT_OF_THE_HAWK_COST
     ),
     aspect_of_the_beast = aspect(
         "aspect_of_the_beast",
         "aspect_of_the_hawk",
+        "aspect_of_the_cheetah",
         ASPECT_OF_THE_BEAST,
         ASPECT_OF_THE_BEAST_COST
+    ),
+    aspect_of_the_cheetah = aspect(
+        "aspect_of_the_cheetah",
+        "aspect_of_the_hawk",
+        "aspect_of_the_beast",
+        ASPECT_OF_THE_CHEETAH,
+        ASPECT_OF_THE_CHEETAH_COST
     ),
 
     rapid_fire = {
         id = 3045,
         cast = 0,
-        cooldown = 300,
+        cooldown = function() -- Rapid Killing's curve {-60, -120} s by rank (talents_marksmanship.go:100)
+            return 300 - 60 * talent.rapid_killing.rank
+        end,
         gcd = "off",
 
         spend = 100,
@@ -562,7 +612,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = discounted(cost(AIMED_SHOT_COST, AIMED_SHOT), false, true),
+        spend = discounted(cost(AIMED_SHOT_COST, AIMED_SHOT), false, true, 20),
         spendType = "mana",
 
         startsCombat = true,
@@ -582,7 +632,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = discounted(0.139, false, true),
+        spend = discounted(0.139, false, true, 20 / BASE_MANA),
         spendType = "mana",
 
         startsCombat = true,
@@ -703,6 +753,9 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(IMMOLATION_TRAP),
+
+        now = applies("immolation_trap", true),
+        handler = applies("immolation_trap", true),
     },
 })
 
