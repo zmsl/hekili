@@ -291,7 +291,7 @@ spec:RegisterAuras({
     spirit_tap = { id = 15271, duration = 15, max_stack = 1 },
     dark_inspiration = { id = 1326168, duration = 10, max_stack = 1 },
     -- The utility spells' auras (no priority casts them; registered for the displays and custom priorities).
-    fade = { id = 586, copy = rest(FADE), duration = 10, max_stack = 1 },
+    fade_buff = { id = 586, copy = rest(FADE), duration = 10, max_stack = 1 },
     renew = { id = 139, copy = rest(RENEW), duration = 15, tick_time = 3, max_stack = 1 },
     elunes_grace = { id = 2651, duration = 15, max_stack = 1 },
     power_word_fortitude = { id = 1243, copy = rest(POWER_WORD_FORTITUDE), duration = 3600, max_stack = 1 },

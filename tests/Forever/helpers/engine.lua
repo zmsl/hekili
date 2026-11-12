@@ -142,6 +142,7 @@ local function newState(class, race)
     s.lastSwing = function()
         return 0
     end
+    s.instant, s.cast_start = false, 0 -- and the cast-start pair (Families/Now.lua): a hard or instant cast is the test's to set
     s.stat = function()
         return 0
     end

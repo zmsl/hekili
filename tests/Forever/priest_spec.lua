@@ -411,7 +411,7 @@ describe("Forever Priest through the engine", function()
     it("registers the utility auras: Fade, Renew, Elune's Grace, Fortitude, Divine Aegis", function()
         local _, w = character()
         local out = {}
-        for _, k in ipairs({ "fade", "renew", "elunes_grace", "power_word_fortitude", "divine_aegis" }) do
+        for _, k in ipairs({ "fade_buff", "renew", "elunes_grace", "power_word_fortitude", "divine_aegis" }) do
             out[#out + 1] = { w.auras[k].id, w.auras[k].duration }
         end
         assert.are.same({ { 586, 10 }, { 139, 15 }, { 2651, 15 }, { 1243, 3600 }, { 431624, 12 } }, out)
