@@ -2910,6 +2910,7 @@ describe("the wowsims APL translator's auto-attack clocks", function()
         assert.is_true(waits > 0)
     end)
 end)
+
 -- CN2 (.siml recipes, L141): upstream moved the Paladin APLs to .apl.siml (2fe0846044). export.lua turns a .siml file
 -- into protojson with the CLI's `siml parse -json` (its `siml` step; a recipe `apl` path is CN1's); the translator then
 -- reads the request's rotation as it reads a JSON APL. The fixtures are upstream/master 4b0030a44b's
