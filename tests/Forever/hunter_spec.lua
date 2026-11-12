@@ -495,6 +495,7 @@ describe("Forever Hunter priorities", function()
                 end
             end
         end
+    end)
 end)
 
 -- Through the real engine (headless.lua): a Hunter who knows the whole kit.
