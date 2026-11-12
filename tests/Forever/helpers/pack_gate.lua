@@ -381,7 +381,17 @@ M.FLICKER = {
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 3 / 5 / 2):
     -- flicker 0.3 -> 0 (S, steady icons on by default)
     -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 3 / 5 / 2): heldReady 8 -> 5 (the worst set)
-    ["SM Ruin"] = { flicker = 0, retracted = 0, heldReady = 5 }, -- 0 / 0 / 0, 0
+    -- 0.8 aura lane (C8, fcceb5577: Shadow Trance is spent only by an instant Shadow Bolt, wowsims
+    -- talents_affliction.go:186-190, as the loop world; agreement .979 -> .983; seeds 1-20 / 21-40 / 41-60 flicker
+    -- 0.02 / 0.00 / 0.00, oracle the same, heldReady 5 / 4 / 0): flicker 0 -> 0.03 (the measured worst + 0.01: the line
+    -- rounds to two decimals). Traced, the only flip in 60 fights, seed 8, ticks 823-825 (167.4-167.8 s): filler
+    -- shadow_bolt@0.10 / immolate@0.20 (the GCD over, Immolate 0.2 s from its refresh line: the core's EARLY_EXIT) /
+    -- shadow_bolt@0.00 from a Nightfall proc, pressed at once by ours and the oracle. Each icon is right when shown and
+    -- the oracle's first icon is identical on every tick: the list plus a random proc, not the belief. The flip rule
+    -- excuses a press of the middle icon only; here the pressed proc is the returning one (owner rule 2026-10-25: name it
+    -- as the cause, never hide a correct icon). Reverting C8 alone restores .979 / 3 / 0.00. Decision:
+    -- fable-decision-smruin.md, ledger L631
+    ["SM Ruin"] = { flicker = 0.03, retracted = 0, heldReady = 5 }, -- 0.02 / 0 / 0, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 2 / 0):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0): heldReady 4 -> 0
