@@ -638,6 +638,31 @@ function M.new(o)
         -- the client's spellbook enums, as LibRangeCheck compares them (fake_api's spellbook: one Spell item each)
         SpellBookSpellBank = fake.LIB_SHIMS.Enum.SpellBookSpellBank,
         SpellBookItemType = fake.LIB_SHIMS.Enum.SpellBookItemType,
+        -- the client's item class and weapon subclass numbers (the gear scan's weapon kind)
+        ItemClass = { Armor = 4, Weapon = 2 },
+        ItemWeaponSubclass = {
+            Axe1H = 0,
+            Axe2H = 1,
+            Bows = 2,
+            Guns = 3,
+            Mace1H = 4,
+            Mace2H = 5,
+            Polearm = 6,
+            Sword1H = 7,
+            Sword2H = 8,
+            Warglaive = 9,
+            Staff = 10,
+            Bearclaw = 11,
+            Catclaw = 12,
+            Unarmed = 13,
+            Generic = 14,
+            Dagger = 15,
+            Thrown = 16,
+            Obsolete3 = 17,
+            Crossbow = 18,
+            Wand = 19,
+            Fishingpole = 20,
+        },
     }, {
         __index = function(t, k)
             local v = anyNumber()
@@ -914,8 +939,8 @@ function M.new(o)
         for id, r in pairs(c.ranges or {}) do -- { [spellID] = { min, max } yards }: GetSpellInfo's, the range checks'
             ctl.ranges[id] = r
         end
-        for slot, item in pairs(c.items or {}) do -- { [slot] = { itemID, name, equipLoc } }: the gear scan's reads
-            ctl.inventory[slot], ctl.items[item[1]] = item[1], { item[2], item[3] }
+        for slot, item in pairs(c.items or {}) do -- { [slot] = { itemID, name, equipLoc, classID?, subClassID? } }
+            ctl.inventory[slot], ctl.items[item[1]] = item[1], { item[2], item[3], item[4], item[5] }
         end
         for i, id in ipairs(c.forms or {}) do
             ctl.forms[i] = id

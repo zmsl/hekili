@@ -198,7 +198,7 @@ function M.new()
         powerType = { 0, "MANA" }, -- UnitPowerType("player")
         role = "DAMAGER",
         inventory = {}, -- [slot] = itemID (GetInventoryItemID("player", slot))
-        items = {}, -- [itemID] = { name, equipLoc } (C_Item.GetItemInfo's first and ninth returns)
+        items = {}, -- [itemID] = { name, equipLoc, classID, subClassID, uncached = bool } (C_Item.GetItemInfo(Instant))
         tooltips = {}, -- [spellID] = C_TooltipInfo.GetSpellByID's data ({ lines = { { leftText }... } }; nil: none)
         -- LibRangeCheck-3.0 is the vendored library itself, run against this client (M.wrapRangeLib): "none" answers
         -- nothing, "raise" raises; rangeLibCalls counts GetRange calls
@@ -698,7 +698,7 @@ function M.new()
         IsUsableItem = no,
         GetItemInfo = function(id)
             local i = ctl.items[id]
-            if i then
+            if i and not i.uncached then -- uncached: the client answers nothing until it has the item (Instant still does)
                 return i[1], nil, nil, nil, nil, nil, nil, nil, i[2]
             elseif ctl.rangeItems[id] then -- a cached range item (LibRangeCheck's selection)
                 return "Item"
@@ -722,10 +722,10 @@ function M.new()
             end
             return d <= r
         end,
-        GetItemInfoInstant = function(id)
+        GetItemInfoInstant = function(id) -- itemID, type, subType, equipLoc, icon, classID, subClassID
             local i = ctl.items[id]
             if i then
-                return id, nil, nil, i[2]
+                return id, nil, nil, i[2], nil, i[3], i[4]
             end
         end,
         GetItemCooldown = function()

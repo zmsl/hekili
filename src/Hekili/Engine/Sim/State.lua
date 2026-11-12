@@ -147,6 +147,9 @@ state.main_hand = state.weapon
 state.off_hand = {
     size = 0
 }
+state.ranged = { -- the ranged slot (18): its weapon kind only (mt_weapon_type)
+    size = 0
+}
 
 state.gcd = {}
 
@@ -5531,9 +5534,13 @@ local mt_weapon_type = {
             return size == 2
         elseif k == "one_handed" or k == "1h" or k == "one_hand" then
             return size == 1
+        elseif k == "fist_weapon" then
+            k = "fist"
         end
 
-        return false
+        -- the worn weapon's kind (dagger, sword, axe, mace, fist, staff, polearm, bow, gun, crossbow, thrown, wand),
+        -- set by the gear scan (Events.lua); nil when the slot holds no weapon
+        return k == rawget( t, "kind" )
     end,
 }
 
@@ -5556,6 +5563,7 @@ setmetatable( state.dot, mt_dot )
 setmetatable( state.equipped, mt_equipped )
 setmetatable( state.main_hand, mt_weapon_type )
 setmetatable( state.off_hand, mt_weapon_type )
+setmetatable( state.ranged, mt_weapon_type )
 setmetatable( state.pet, mt_pets )
 setmetatable( state.pet.fake_pet, mt_default_pet )
 setmetatable( state.prev, mt_prev )

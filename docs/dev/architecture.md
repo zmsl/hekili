@@ -198,6 +198,15 @@ Two environments have them:
   `Families/TargetHealth.lua`; 0 and 100 while unknown). There is no `target.health.pct`: secret health is unknown,
   never 100 or 0, so a `now` tests a bound (`target.health.hi < 35`: proven below 35%).
 
+The worn weapons, as priority conditions (the sim's `state` only; the `now` context has `weapon.size` alone):
+`main_hand`, `off_hand` and `ranged` (slot 18) answer the size keys `two_handed` (`2h`, `two_hand`) and `one_handed`
+(`1h`, `one_hand`) from the equip location, and the kind keys `dagger`, `sword`, `axe`, `mace`, `fist` (`fist_weapon`),
+`staff`, `polearm`, `bow`, `gun`, `crossbow`, `thrown` and `wand` from the item's class and subclass
+(`C_Item.GetItemInfoInstant`, no item cache needed). They combine: a two-handed axe answers `main_hand.axe` and
+`main_hand.two_handed`. A shield, a held-in-off-hand item or a relic has no kind; an empty slot and any other key answer
+false. The gear scan (`Engine/Sim/Events.lua`, on `PLAYER_EQUIPMENT_CHANGED`) sets one `kind` field per table; a query
+allocates nothing.
+
 A file-level helper keeps its file's environment, so these names do not resolve there: a pack function passes what it
 read. A file's `state.knownRank` local is the facade's function, safe in a helper on either side.
 
