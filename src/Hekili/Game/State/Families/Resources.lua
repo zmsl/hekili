@@ -803,18 +803,18 @@ end
 
 -- One regen measurement m (per second, between two pins ending at t) into the slot's regen (the EMA, TDF
 -- calibrate). A swing-paid slot calibrates its step scale against the spec's value per second of swinging. A shaped
--- slot's m is the gain over the pins' interval, split by its weights (pinA, pinB; spans): with no time outside the
--- window (pinX 0: a share-only entry's spirit weight inside it does not count) it measures the mp5 part (or the whole
--- unscaled rate) as (gain - spirit x pinB) / pinA, the spirit part held; with at least I.PIN_GAP outside, the spirit
--- part as (gain - mp5 x pinA) / pinB; a shorter time outside is no measurement.
+-- slot's m is the gain over the pins' interval, split by its weights (pinA, pinB; spans): with no spirit weight it
+-- measures the mp5 part (or the whole unscaled rate) as gain / pinA; with at least I.PIN_GAP outside the window (pinX:
+-- a share-only entry's spirit weight inside it does not count), the spirit part as (gain - mp5 x pinA) / pinB; else no
+-- measurement: a casting-only gain under a share-only entry mixes both parts, and a declared-0 mp5 part (bound mode
+-- refuses m < 0) would learn only its upward noise.
 local function calibrate(r, m, t)
     if R.shaped[r] then
         local a, b = R.pinA[r], R.pinB[r]
         local ok
-        if R.pinX[r] <= 0 and a > 0 then
+        if b <= 0 and a > 0 then
             local bound = R.fsr[r] and R.decl[r] + R.spDecl[r] or nil
-            local v = (m - R.spE[r] * b) / a -- nonzero: a > 0 checked
-            ok = ema(r, v, R.decl[r], R.regE, R.regL, R.regH, R.dev, bound)
+            ok = ema(r, m / a, R.decl[r], R.regE, R.regL, R.regH, R.dev, bound) -- nonzero: a > 0 checked
         elseif R.pinX[r] >= I.PIN_GAP then
             ok = ema(r, (m - R.regE[r] * a) / b, R.spDecl[r], R.spE, R.spL, R.spH, R.spDev) -- nonzero: b >= 1
         end
