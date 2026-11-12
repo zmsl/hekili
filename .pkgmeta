@@ -33,7 +33,6 @@ ignore:
     - tools
     - docs
     - scripts
-    - archive
     - .superpowers
     - .github
     - .busted
