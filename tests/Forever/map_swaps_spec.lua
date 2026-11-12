@@ -94,18 +94,29 @@ describe("a dungeon pull through the token plate count (T1)", function()
             mw.plate(H, 2)
             mw.target(H, 1)
             local t = H.ctl.now
+            local start = t
             local recs
             recs, t = queue(H, t)
             assert.are.equal(2, H.Hekili.State.active_enemies)
             assert.is_nil(find(recs, nil, "cycle"))
+            -- the enemies the belief holds aura `k` up on now (Facade.DebuffCount: active_dot's source; the State after an
+            -- update is the queue's last simulated step, where Conflagrate may have eaten an Immolate)
+            local function carriers(k)
+                return H.ns.Facade.DebuffCount(H.Hekili.Class.auras[k].id, t)
+            end
             local n = 0
-            local function cast(id)
+            local function cast(id) -- our cast on the current target, folded there (the belief's drain) before a tab
                 n = n + 1
                 t = t + 0.1
                 H.ctl.now = t
                 H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-map" .. n, id)
-                local _
-                _, t = queue(H, t) -- a GCD and more between casts, each folded on its target
+                t = t + 0.2
+                assert.is_true(headless.cycle(H, t))
+            end
+            local function tab(k)
+                mw.target(H, k)
+                t = t + 0.2
+                assert.is_true(headless.cycle(H, t))
             end
             for _, k in ipairs(SPREAD) do -- on mob A, our target
                 cast(A[k].id)
@@ -114,19 +125,35 @@ describe("a dungeon pull through the token plate count (T1)", function()
             assert.is_nil(find(recs, nil, "cycle"), "toggle off: no swap " .. names(recs))
             spec.cycle = true
             recs, t = queue(H, t)
-            local before = names(recs)
-            assert.is_truthy(find(recs, nil, "cycle"), before)
-            mw.target(H, 2) -- the swap: mob B
-            recs, t = queue(H, t)
-            for _, k in ipairs(SPREAD) do
-                cast(A[k].id)
-            end
+            local first = names(recs)
+            assert.is_truthy(find(recs, "curse_of_the_elements", "cycle"), first)
+            tab(2) -- the swap to mob B: the curse and Havoc only
+            cast(A.curse_of_the_elements.id)
             cast(A.bane_of_havoc.id) -- Havoc (other_target=1) on B, for A
-            mw.target(H, 1) -- back to mob A
+            tab(1)
             recs, t = queue(H, t)
-            print("\nDestruction under Map: before the swap " .. before .. "; after " .. names(recs))
+            local dots = names(recs)
+            assert.are.equal(2, carriers("curse_of_the_elements"))
+            assert.is_nil(find(recs, "curse_of_the_elements", "cycle"), dots)
+            assert.is_truthy(
+                find(recs, "immolate", "cycle") or find(recs, "corruption", "cycle"),
+                "a DoT swap " .. dots
+            )
+            tab(2) -- the DoTs on B
+            cast(A.immolate.id)
+            cast(A.corruption.id)
+            tab(1)
+            recs, t = queue(H, t)
+            print(
+                ("\nDestruction under Map (t %.1f s after the first cast): %s; curse on both: %s; all on both: %s"):format(
+                    t - start,
+                    first,
+                    dots,
+                    names(recs)
+                )
+            )
             for _, k in ipairs(SPREAD) do
-                assert.are.equal(2, H.Hekili.State.active_dot[k], k)
+                assert.are.equal(2, carriers(k), k)
             end
             assert.is_nil(find(recs, nil, "cycle"), "every plate carries them: no swap " .. names(recs))
             spec.cycle = false
