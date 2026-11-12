@@ -38,11 +38,17 @@ local OPTIONS = {
     max_cycle_targets = "max_cycle_targets",
     other_target = "other_target",
     focus = "focus",
+    label = "label",
+    label_if = "label_if",
+    icon = "icon",
+    icon_if = "icon_if",
 } -- plus if=, which runs to the end of the line
+-- kept as the line wrote them: text shown with the pick (label, icon) and its condition (label_if, icon_if)
+local VERBATIM = { name = true, buff_name = true, label = true, label_if = true, icon = true, icon_if = true }
 
 -- SimC-style lines into their lists and entries:
 -- actions[.list](=|+=/)action[,name=list][,buff_name=aura][,use_off_gcd=N][,cycle_targets=N][,max_cycle_targets=N]
--- [,other_target=N][,focus=N][,if=criteria];
+-- [,other_target=N][,focus=N][,label=text][,label_if=cond][,icon=texture file id or path][,icon_if=cond][,if=criteria];
 -- focus is a tier, 1 highest; buff_name is cancel_buff's aura.
 local function parse(simc)
     local lists = {}
@@ -54,19 +60,20 @@ local function parse(simc)
         list = list == "" and "default" or list
         local action, opts = body:match("^([%w_]+),?(.*)$")
         local e = { action = action, enabled = true }
-        e.criteria = opts:match("if=(.*)$")
+        opts = "," .. opts -- if= only as a whole option, never the tail of label_if= or icon_if=
+        e.criteria = opts:match(",if=(.*)$")
         if e.criteria then
             -- stored as the in-game importer stores it: a literal | is || (a lone | starts a WoW colour escape in the
             -- editor); the engine reads either form (Scripts.lua)
             e.criteria = e.criteria:gsub("(|)([^|])", "%1|%2"):gsub("|||", "||")
         end
-        opts = opts:gsub(",?if=.*$", "")
+        opts = opts:gsub(",if=.*$", "")
         for opt in opts:gmatch("[^,]+") do
             local k, v = opt:match("^([%w_]+)=(.+)$")
             if not OPTIONS[k] then
                 error("unknown option " .. (k or opt) .. " in: " .. line, 0)
             end
-            local value = (k == "name" or k == "buff_name") and v or tonumber(v)
+            local value = VERBATIM[k] and v or tonumber(v)
             if k == "focus" and not v:match("^[1-9]%d*$") then
                 value = nil -- a focus tier is a positive integer, 1 highest
             end
@@ -106,6 +113,10 @@ local function unparse(lists)
                 .. (e.max_cycle_targets and ",max_cycle_targets=" .. e.max_cycle_targets or "")
                 .. (e.other_target and ",other_target=" .. e.other_target or "")
                 .. (e.focus and ",focus=" .. e.focus or "")
+                .. (e.label and ",label=" .. e.label or "")
+                .. (e.label_if and ",label_if=" .. e.label_if or "")
+                .. (e.icon and ",icon=" .. e.icon or "")
+                .. (e.icon_if and ",icon_if=" .. e.icon_if or "")
                 .. (e.criteria and ",if=" .. e.criteria:gsub("||", "|") or "")
         end
     end

@@ -230,6 +230,16 @@ local function CreateButton( dispID, id )
     b.Caption:SetText( capText )
 
 
+    -- Label Text: the APL line's label= (tbc's Label: top centre, yellow, in the display font).
+    b.Label = b.Label or b:CreateFontString( bName .. "_Label", "OVERLAY" )
+    b.Label:SetFont( LSM:Fetch( "font", conf.font ), 12, ns.UI.FontFlags( "OUTLINE" ) )
+    b.Label:ClearAllPoints()
+    b.Label:SetPoint( "TOP", b, "TOP", 0, -2 )
+    b.Label:SetJustifyH( "CENTER" )
+    b.Label:SetTextColor( 1, 1, 0, 1 )
+    b.Label:SetWordWrap( false )
+
+
     -- Keybinding Text
     b.Keybinding = b.Keybinding or b:CreateFontString(bName .. "_KB", "OVERLAY")
 
@@ -626,17 +636,18 @@ function Classic.Draw( d, conf, out, status )
                 if ability then
                     b:Show()
 
-                    local image = ability.texture -- texture to be shown on the button for the current action
+                    local image = ability.iconOverride or ability.texture -- the APL line's icon= first (a style may ignore it)
 
                     if action ~= b.lastAction or image ~= b.lastImage or self.NewRecommendations or not b.Image then
                         b.Image = image
-                        b.Texture:SetTexture( b.Image )
+                        ns.UI.SetRecTexture( b.Texture, ability ) -- b.Image
                         b.Texture:SetTexCoord( unpack( b.texCoords ) )
                         b.lastAction = action
                         b.lastImage = image
                     end
 
                     b.Texture:Show()
+                    b.Label:SetText( ability.label )
 
                     if i == 1 then
                         if conf.classic.glow.highlight then
