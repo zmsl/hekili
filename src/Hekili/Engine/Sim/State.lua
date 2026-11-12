@@ -56,7 +56,8 @@ local format, find = string.format, string.find
 
 local Mark, SuperMark, ClearMarks = ns.Mark, ns.SuperMark, ns.ClearMarks
 
--- Forever (gap 13, border batch 2 E7): the facade's LibRangeCheck shape, answered by the belief's target bracket.
+-- Forever (gap 13, border batch 2 E7; range plan R2): the facade's LibRangeCheck row, the one range source: the
+-- target's answer is the belief's bracket, which LibRangeCheck feeds.
 local RC = Facade.LibRangeCheck
 
 local class = Hekili.Class
@@ -3085,9 +3086,9 @@ do
 
     mt_target = {
         __index = function( t, k )
-            -- Forever (gap 13): RC is the facade's LibRangeCheck shape (the belief's bracket from the tracked
-            -- abilities' own ranges; the library resolves nothing here): GetRange answers nil while unknown, and a
-            -- lower bound alone past every range answered. Unknown never blocks: within and outside are both true,
+            -- Forever (gap 13; range plan R2): RC is the facade's LibRangeCheck row (the belief's bracket, fed by
+            -- LibRangeCheck's about 5 yd brackets): GetRange answers nil while unknown, and a lower bound alone past
+            -- the library's last check. Unknown never blocks: within and outside are both true,
             -- distance and minR/maxR keep upstream's defaults.
             if k == "distance" then t[k] = ( t.minR + t.maxR ) / 2
             elseif k == "in_range" then return t.distance <= 8

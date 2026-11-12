@@ -291,7 +291,7 @@ function M.new(o)
     end
     -- the client: fake_api's functions, namespaces copied so an instance's writes stay its own
     for k, v in pairs(api) do
-        if k ~= "ctl" then
+        if k ~= "ctl" and k ~= "LibStub" then -- the vendored LibStub loads with the TOC; the range double joins it below
             local mt = { __index = v }
             if k:match("^C_") then -- an absent member read through a namespace counts as a miss (§1.4)
                 function mt.__index(_, key)
@@ -635,6 +635,9 @@ function M.new(o)
             Pain = 18,
             Essence = 19,
         },
+        -- the client's spellbook enums, as LibRangeCheck compares them (fake_api's spellbook: one Spell item each)
+        SpellBookSpellBank = fake.LIB_SHIMS.Enum.SpellBookSpellBank,
+        SpellBookItemType = fake.LIB_SHIMS.Enum.SpellBookItemType,
     }, {
         __index = function(t, k)
             local v = anyNumber()
@@ -958,6 +961,12 @@ function M.new(o)
     end
     env.HekiliDB = o.saved -- saved variables, as the client sets them before the addon's ADDON_LOADED (nil: fresh)
     loadAddon(addons.CORE)
+    -- the vendored LibRangeCheck-3.0 answers from this client's world (fake_api's spellbook, interact and item checks)
+    -- with fake_api's knobs on its GetRange; H.realGetRange is the library's own, unwrapped
+    local lrc = rawget(env, "LibStub") and env.LibStub("LibRangeCheck-3.0", true)
+    if lrc then
+        H.realGetRange = fake.wrapRangeLib(lrc, ctl)
+    end
     -- the scenario the settings' defaults are for (Engine.SettingDefault: "sim" for the harness's own, nil in game),
     -- set before ADDON_LOADED fills the profile
     local core = rawget(env, "Hekili")

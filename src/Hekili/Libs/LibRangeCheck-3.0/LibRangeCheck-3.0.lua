@@ -40,7 +40,9 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 38
+-- 39 + WeakAuras/LibRangeCheck-3.0#60 (min-range mark): 40 so this copy wins over a stock 39 from another addon.
+-- Re-vendor from upstream once #60 ships.
+local MINOR_VERSION = 40
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -56,7 +58,6 @@ local isTBC = WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC
 local isWrath = WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC
 local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
 local isMists = WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC
-local isMidnight = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE and interfaceVersion >= 120000
 local isForever = interfaceVersion >= 16000 and interfaceVersion < 20000
 
 local InCombatLockdownRestriction = function(unit) return InCombatLockdown() and not UnitCanAttack("player", unit) end
@@ -3979,6 +3980,26 @@ local function createCheckerList(spellList, itemList, interactList)
           if checker then
             addChecker(res, range, minRange, checker, "spell:" .. sid .. ":" .. tostring(name))
             addChecker(resInCombat, range, minRange, checker, "spell:" .. sid .. ":" .. tostring(name))
+            local reach = findMinRangeChecker(minRange, range, spellList, interactList) -- Hekili Forever patch (upstream PR pending): the min-range fallback, as above
+            if reach then -- Hekili Forever patch (upstream PR pending): mark the spell's minimum range too
+              local function within(list) -- Hekili Forever patch (upstream PR pending): within minRange, for one list
+                return function(unit) -- Hekili Forever patch (upstream PR pending)
+                  local r = IsSpellBookItemInRange(spellIdx, BOOKTYPE_SPELL, unit) -- Hekili Forever patch (upstream PR pending)
+                  if r == 0 then -- Hekili Forever patch (upstream PR pending): out of range, still in the fallback's reach: inside minRange
+                    return reach(unit) -- Hekili Forever patch (upstream PR pending)
+                  elseif r == 1 then -- Hekili Forever patch (upstream PR pending): in range: not inside minRange
+                    return false -- Hekili Forever patch (upstream PR pending)
+                  end -- Hekili Forever patch (upstream PR pending)
+                  for i = #list, 1, -1 do -- Hekili Forever patch (upstream PR pending): no answer (e.g. no ranged weapon): the next-larger checker's, which keeps the list monotone
+                    if list[i].range > minRange then -- Hekili Forever patch (upstream PR pending)
+                      return list[i].checker(unit) -- Hekili Forever patch (upstream PR pending)
+                    end -- Hekili Forever patch (upstream PR pending)
+                  end -- Hekili Forever patch (upstream PR pending)
+                end -- Hekili Forever patch (upstream PR pending)
+              end -- Hekili Forever patch (upstream PR pending)
+              addChecker(res, minRange, nil, within(res), "spell:" .. sid .. ":" .. tostring(name) .. ":min") -- Hekili Forever patch (upstream PR pending): same-range dedup kept
+              addChecker(resInCombat, minRange, nil, within(resInCombat), "spell:" .. sid .. ":" .. tostring(name) .. ":min") -- Hekili Forever patch (upstream PR pending): both lists, as its sibling
+            end -- Hekili Forever patch (upstream PR pending)
           end
         else
           addChecker(res, range, minRange, checkers_Spell[spellIdx], "spell:" .. sid .. ":" .. tostring(name))
@@ -4076,8 +4097,8 @@ local function getCachedRange(unit, noItems, maxCacheAge)
 
   -- compose cache key out of unit guid and noItems
   local guid = UnitGUID(unit)
-  -- unfortunately, caching on GUID is not possible due to secrets, using unit instead
-  local cacheKey = (isMidnight and issecretvalue(guid) and unit or guid) .. (noItems and "-1" or "-0")
+  -- unfortunately, caching on GUID is not possible due to secrets (Midnight, Forever), using unit instead
+  local cacheKey = (issecretvalue(guid) and unit or guid) .. (noItems and "-1" or "-0")
   local cacheItem = rangeCache[cacheKey] or nil
 
   local currentTime = GetTime()

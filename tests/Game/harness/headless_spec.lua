@@ -12,6 +12,8 @@ local ABSENT = {
     ["C_Traits.GetSubTreeInfo"] = "retail hero talents",
     ["C_Traits.GetTreeCurrencyInfo"] = "retail talent currency",
 }
+-- Facade rows a library answers (range plan R2), served by LibStub: fake_api's double for LibRangeCheck-3.0.
+local LIBRARY = { RangeLib = "LibRangeCheck-3.0", ["LibRangeCheck.GetRange"] = "LibRangeCheck-3.0" }
 
 describe("headless Hekili", function()
     local H
@@ -144,6 +146,9 @@ describe("headless Hekili", function()
             if H.ns.Facade.Status(name) ~= "virtual" and not ABSENT[name] then
                 local space, key = name:match("^([%w_]+)%.([%w_]+)$")
                 local fn = space and api[space] and api[space][key] or (not space and api[name])
+                if LIBRARY[name] then
+                    fn = api.LibStub(LIBRARY[name]).GetRange
+                end
                 if type(fn) ~= "function" then
                     missing[#missing + 1] = name
                 end

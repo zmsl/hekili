@@ -28,5 +28,9 @@ hits=$(grep -nE "getmetatable\(.*(Register|Unregister)[A-Za-z]*Event" "${files[@
 # table (`local F = ns.Facade; F.Display`) needs review.
 hits=$(grep -nHE '(Facade|Client)\.Display\b' "${files[@]}" | grep -vE '^src/Hekili/(UI/Truth|Game/API/Facade)\.lua:')
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
+# Range plan R2 (owner 2026-11-11): one range source; only the facade fetches LibRangeCheck-3.0 (Facade.RangeLib, read
+# by Facade.LibRangeCheck). shortcut: catches `LibStub( "LibRangeCheck-3.0"` only; LibStub:GetLibrary needs review.
+hits=$(grep -nHE "LibStub *\( *[\"']LibRangeCheck-3\.0" "${files[@]}" | grep -vE '^src/Hekili/Game/API/Facade\.lua:')
+[ -n "$hits" ] && { echo "$hits"; fail=1; }
 [ $fail -eq 0 ] && echo "ok: no direct game API read in ${#files[@]} loaded files"
 exit $fail

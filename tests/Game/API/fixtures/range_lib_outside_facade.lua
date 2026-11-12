@@ -1,0 +1,3 @@
+-- tools/check_api_reads.sh must fail this file on line 3 (LibRangeCheck fetched outside Game/API/Facade.lua)
+local _, ns = ...
+local lo = LibStub("LibRangeCheck-3.0"):GetRange("target")

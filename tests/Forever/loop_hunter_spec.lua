@@ -181,8 +181,8 @@ describe("the Hunter at range, then in melee", function()
                 local function view(x)
                     return { x.within, x.outside, x.usable, x.inRange, x.distance }
                 end
-                -- [8, 35]: in the shots' band; Raptor Strike out of reach
-                assert.are.same({ false, true, false, false, 21.5 }, view(seen.far))
+                -- [20, 25]: LibRangeCheck's bracket (the harness double; range plan R2); Raptor Strike out of reach
+                assert.are.same({ false, true, false, false, 22.5 }, view(seen.far))
                 assert.are.same({ true, false, true, true, 2.5 }, view(seen.near)) -- [0, 5]
                 assert.are.same({ true, false, true, true, 2.5 }, view(seen.secret)) -- the last plain bracket stays
                 assert.are.equal(0, seen.far.melee)

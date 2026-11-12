@@ -81,6 +81,59 @@ local NO_ENCHANTS = {} -- an unenchanted weapon slot's list (shared: the fake al
 -- The Cooldown Manager's four viewer frames (providers spec §4.2; CV research §2), in category order 0-3.
 M.VIEWERS = { "EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
 
+-- LibRangeCheck-3.0 run against the fake client (range plan R2, round 2): the vendored files, and what the library
+-- reads at load that the client leaves to the headless loader (WoW's Lua aliases, C_Timer, Enum).
+M.LIBSTUB = "src/Hekili/Libs/LibStub/LibStub.lua"
+M.LIBRANGECHECK = "src/Hekili/Libs/LibRangeCheck-3.0/LibRangeCheck-3.0.lua"
+M.LIB_SHIMS = {
+    tinsert = table.insert,
+    tremove = table.remove,
+    sort = table.sort,
+    wipe = function(t)
+        for k in pairs(t) do
+            t[k] = nil
+        end
+        return t
+    end,
+    C_Timer = {
+        NewTicker = function()
+            return {}
+        end,
+    },
+    Enum = {
+        SpellBookSpellBank = { Player = 0, Pet = 1 },
+        SpellBookItemType = { None = 0, Spell = 1, FutureSpell = 2, PetAction = 3, Flyout = 4 },
+    },
+    GetInventorySlotInfo = function()
+        return 10 -- HANDSSLOT
+    end,
+}
+
+--- The knobs on the library's GetRange (the headless instance's vendored copy, or api.LibStub's): `ctl.rangeLib`
+--- "raise" raises, "none" answers nothing; `ctl.rangeLibCalls` counts the calls. A secret distance answers secret: in
+--- game a secret check raises inside the library, a truth test Lua 5.1 cannot trap. Each call first runs the
+--- library's init (a no-op once built): its frame does that after load and after each spell change, which no fake
+--- runs.
+function M.wrapRangeLib(lib, ctl)
+    local real = lib.GetRange
+    function lib.GetRange(self, unit, ...)
+        ctl.rangeLibCalls = ctl.rangeLibCalls + 1
+        if ctl.rangeLib == "raise" then
+            error("LibRangeCheck-3.0: a secret range answer tested")
+        elseif ctl.rangeLib == "none" then
+            return nil
+        elseif ctl.distance[unit] == SECRET then
+            return SECRET, SECRET
+        elseif ctl.distance[unit] == nil and ctl.inRange[unit] ~= true then
+            return nil -- a world with no position and nothing in reach: unknown, not "every check failed: past 100 yd"
+        end
+        self:init()
+        return real(self, unit, ...)
+    end
+    lib.getRange = lib.GetRange
+    return real
+end
+
 --- A new fake client and its control table.
 function M.new()
     local ctl = {
@@ -147,8 +200,53 @@ function M.new()
         inventory = {}, -- [slot] = itemID (GetInventoryItemID("player", slot))
         items = {}, -- [itemID] = { name, equipLoc } (C_Item.GetItemInfo's first and ninth returns)
         tooltips = {}, -- [spellID] = C_TooltipInfo.GetSpellByID's data ({ lines = { { leftText }... } }; nil: none)
+        -- LibRangeCheck-3.0 is the vendored library itself, run against this client (M.wrapRangeLib): "none" answers
+        -- nothing, "raise" raises; rangeLibCalls counts GetRange calls
+        rangeLib = nil,
+        rangeLibCalls = 0,
+        -- [itemID] = yards: the items the client has cached, which the library's item checkers use (C_Item); the
+        -- library's first Era/Forever HarmItems per range (its file, `HarmItems` under isEra or isForever).
+        rangeItems = {
+            [8149] = 5,
+            [9606] = 10,
+            [4559] = 15,
+            [1191] = 20,
+            [13289] = 25,
+            [835] = 30,
+            [1258] = 35,
+            [4945] = 40,
+            [221316] = 45,
+            [5418] = 100,
+        },
     }
     local api = { ctl = ctl }
+
+    -- The vendored LibStub and LibRangeCheck-3.0 loaded once, on first ask, into an environment over this client (a
+    -- headless instance has its own, loaded with the TOC, and never asks here).
+    local libs
+    function api.LibStub(name, silent)
+        if not libs then
+            local env = setmetatable({}, {
+                __index = function(_, k)
+                    local v = api[k]
+                    if v == nil then
+                        v = M.LIB_SHIMS[k]
+                    end
+                    if v == nil then
+                        v = _G[k]
+                    end
+                    return v
+                end,
+            })
+            env._G, env.LibStub = env, false -- LibStub.lua makes its own
+            for _, path in ipairs({ M.LIBSTUB, M.LIBRANGECHECK }) do
+                setfenv(assert(loadfile(path)), env)()
+            end
+            libs = env.LibStub
+            M.wrapRangeLib(libs("LibRangeCheck-3.0"), ctl)
+        end
+        return libs(name, silent)
+    end
 
     function api.issecretvalue(v)
         return v == SECRET -- rawequal semantics: the proxy's __eq only fires between two proxies
@@ -183,9 +281,19 @@ function M.new()
         end
         return ctl.friendly[unit] ~= true
     end
-    function api.CheckInteractDistance(unit) -- LibRangeCheck's interact checkers: within reach when in range
-        return ctl.inRange[unit] == true
+    -- LibRangeCheck's interact checkers: within the index's yards (the library's own table: 3 Duel 8, 4 Follow 28) of
+    -- `distance`; a secret distance answers secret; no distance: in reach when in range (`inRange`)
+    local INTERACT = { 28, 9, 8, 28, 7 }
+    function api.CheckInteractDistance(unit, index)
+        local d = ctl.distance[unit]
+        if d == SECRET then
+            return SECRET
+        elseif d == nil then
+            return ctl.inRange[unit] == true
+        end
+        return d <= (INTERACT[index] or 0)
     end
+    function api.GetInventoryItemLink() end -- the library's hand-slot probe (gloves that change spell ranges): none
     function api.UnitPower(unit, pt)
         if unit == "pet" then -- no pet: plain 0 (probe W PR12, a character with no pet); a secret pet: every type secret
             if ctl.exists.pet ~= true then
@@ -344,13 +452,13 @@ function M.new()
         end,
         IsSpellInRange = function(id, unit)
             local d = ctl.distance[unit]
-            if d == SECRET then
-                return SECRET
-            elseif d == nil then
-                return ctl.inRange[unit] == true
-            end
             local r = ctl.ranges[id]
             local lo, hi = r and r[1] or 0, r and (r[3] or r[2]) or 5
+            if d == SECRET then
+                return SECRET
+            elseif d == nil then -- no position: in reach when in range, at 0 yd (the world's `distance or 0`): inside a minimum
+                return ctl.inRange[unit] == true and lo <= 0
+            end
             if hi == 0 then
                 return nil -- no range check (the client's nil)
             end
@@ -592,7 +700,27 @@ function M.new()
             local i = ctl.items[id]
             if i then
                 return i[1], nil, nil, nil, nil, nil, nil, nil, i[2]
+            elseif ctl.rangeItems[id] then -- a cached range item (LibRangeCheck's selection)
+                return "Item"
             end
+        end,
+        -- LibRangeCheck's item checkers: the cached range items (`rangeItems`), each within its yards of `distance`
+        IsItemDataCachedByID = function(id)
+            return ctl.rangeItems[id] ~= nil
+        end,
+        DoesItemExistByID = function(id)
+            return ctl.rangeItems[id] ~= nil or ctl.items[id] ~= nil
+        end,
+        IsItemInRange = function(id, unit)
+            local r, d = ctl.rangeItems[id], ctl.distance[unit]
+            if d == SECRET then
+                return SECRET
+            elseif r == nil then
+                return nil
+            elseif d == nil then
+                return ctl.inRange[unit] == true
+            end
+            return d <= r
         end,
         GetItemInfoInstant = function(id)
             local i = ctl.items[id]
@@ -1102,8 +1230,37 @@ function M.new()
     local B = api.C_SpellBook
     B.IsSpellInSpellBook = B.IsSpellKnown
     B.FindSpellBookSlotForSpell = none
-    B.GetNumSpellBookSkillLines = zero
-    B.GetSpellBookItemName = none -- LibSpellRange's fallback probe: an empty book
+    -- The spellbook as LibRangeCheck scans it (its findSpellIdx): one skill line holding every known spell, by ID
+    -- order, built at the skill line's read (the library's init only; allocates there)
+    local book, LINE, ITEM = {}, { itemIndexOffset = 0, numSpellBookItems = 0 }, { itemType = 1, spellID = 0 }
+    function B.GetNumSpellBookSkillLines()
+        return 1
+    end
+    function B.GetSpellBookSkillLineInfo(i)
+        if i ~= 1 then
+            return nil
+        end
+        for k = #book, 1, -1 do
+            book[k] = nil
+        end
+        for id, on in pairs(ctl.known) do
+            if on == true then
+                book[#book + 1] = id
+            end
+        end
+        table.sort(book)
+        LINE.numSpellBookItems = #book
+        return LINE
+    end
+    function B.GetSpellBookItemName(i)
+        return book[i] and C.GetSpellInfo(book[i]).name
+    end
+    function B.GetSpellBookItemInfo(i)
+        if book[i] then
+            ITEM.spellID = book[i]
+            return ITEM
+        end
+    end
 
     -- Frames: each records its registrations; the first one made is the client's view of VirtualState's frame
     -- (`api.frame`): Fire delivers an event to its OnEvent when registered, ctl.Tick runs its OnUpdate.
@@ -1130,6 +1287,15 @@ function M.new()
         end
         function f:GetScript(name)
             return self.scripts[name]
+        end
+        function f:IsEventRegistered(e)
+            return self.events[e] == true
+        end
+        function f:Show() -- LibRangeCheck shows its frame to schedule an init (wrapRangeLib runs it instead)
+            self.shown = true
+        end
+        function f:Hide()
+            self.shown = false
         end
         function f:Fire(event, ...)
             local fn = self.scripts.OnEvent

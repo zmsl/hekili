@@ -7,8 +7,9 @@
 -- the target's UNIT_SPELLCAST_* events become `TargetCast` observations by castBarID (plain; the spellID and castGUID
 -- are secret on the target).
 -- The target's UNIT_COMBAT WOUND amounts become `TargetDamage` (b: the amount; target-health design §2.3c).
--- Poll 14 brackets the target's distance from each tracked ability's range (Spellbook.lua's rMin/rMax) and its plain
--- C_Spell.IsSpellInRange (plain in combat, probe W PR7; a secret or nil answer is skipped) into `TargetRange`.
+-- Poll 14 keeps each tracked ability's plain C_Spell.IsSpellInRange (plain in combat, probe W PR7; Spellbook.lua's
+-- rMax: 0 is never asked) for action.<key>.in_range, and logs LibRangeCheck's bracket of the target's distance
+-- (the facade's RangeLib, range plan R2) as `TargetRange`.
 -- Credits: secret-value handling after Catnip's (Durts) research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Target.lua.
 
@@ -214,62 +215,32 @@ S.Poll(4, function(api, t)
     dead = d
 end)
 
--- Poll 14: the target's distance bracket. An answer in range puts it within [min, max]; out of a range from 0 past
--- max; out of a band (min > 0) on the side the others leave open (nearer than min when it is within max, else past
--- max). Logged when it changes. Allocates nothing once `answer` has grown to the ability count.
--- The maxRange-0 hostile spells read as melee (rMelee) count only when their answers agree: a self-centred one
--- (Thunder Clap) answering true or false at any distance cannot put the target on the wrong side of 5 yd then.
+-- Poll 14: each tracked ability's plain range answer (action.<key>.in_range) while the target holds a memory slot,
+-- and the target's distance bracket, LibRangeCheck's (range plan R2: the facade's RangeLib; asked whenever there is
+-- a target, a secret GUID's too, which takes no slot under the Map restriction). Logged when it changes; a poll with
+-- no plain answer keeps the last. Allocates nothing once `answer` has grown to the ability count.
 S.Poll(14, function(api, t)
-    if I.curSlot == 0 then
-        return
-    end
-    local A = I.ab
-    local lo, hi, seen, band, meleeIn, meleeOut = 0, HUGE, false, false, false, false
-    for a = 1, A.n do
-        local r
-        if A.rMax[a] > 0 and A.known[a] then
-            r = Plain(api, api.C_Spell.IsSpellInRange(A.qid[a], "target"))
-            if A.rMelee[a] then -- applied below the loop, when every melee answer agrees
-                meleeIn, meleeOut = meleeIn or r == true, meleeOut or r == false
-            elseif r == true then
-                lo, hi = math.max(lo, A.rMin[a]), math.min(hi, A.rMax[a])
-            elseif r == false and A.rMin[a] == 0 then
-                lo = math.max(lo, A.rMax[a])
-            elseif r == false then
-                band = true
-            end
-            seen = seen or (r ~= nil and not A.rMelee[a]) -- melee answers that disagree tell nothing
-        end
-        if r == nil then
-            r = 0 -- never nil: a hole drops the key at the next rehash and re-adding it grows the table again (gap CD)
-        end
-        answer[a] = r
-    end
-    if meleeIn ~= meleeOut then
-        if meleeIn then
-            hi = math.min(hi, 5)
-        else
-            lo = math.max(lo, 5)
-        end
-        seen = true
-    end
-    if band then
+    if I.curSlot ~= 0 then
+        local A = I.ab
         for a = 1, A.n do
-            if answer[a] == false and A.rMin[a] > 0 then
-                if hi <= A.rMax[a] then
-                    hi = math.min(hi, A.rMin[a])
-                elseif lo >= A.rMin[a] then
-                    lo = math.max(lo, A.rMax[a])
-                end
+            local r
+            if A.rMax[a] > 0 and A.known[a] then
+                r = Plain(api, api.C_Spell.IsSpellInRange(A.qid[a], "target"))
             end
+            if r == nil then
+                r = 0 -- never nil: a hole drops the key at the next rehash and re-adding it grows the table again (gap CD)
+            end
+            answer[a] = r
         end
     end
-    if lo > hi then -- the answers disagree (a melee reach beyond its 5 yd, say): the upper bound wins
-        lo = hi
-    end
-    if seen and (lo ~= lastLo or hi ~= lastHi) then
-        lastLo, lastHi = lo, hi
-        Direct(Obs.TargetRange, t, lo, hi)
+    local lo, hi = ns.Facade.RangeLib("target") -- nil without a target (the library's own UnitExists test)
+    lo, hi = Plain(api, lo), Plain(api, hi)
+    if type(lo) == "number" then
+        hi = type(hi) == "number" and hi or HUGE -- no upper bound: past the library's last check
+        if lo ~= lastLo or hi ~= lastHi then
+            lastLo, lastHi = lo, hi
+            Direct(Obs.TargetRange, t, lo, hi)
+        end
     end
 end)
 

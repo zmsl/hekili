@@ -51,7 +51,7 @@ local TimerunningCheck = ns.TimerunningCheck
 local FindStringInInventoryItemTooltip = ns.FindStringInInventoryItemTooltip
 local ResetDisabledGearAndSpells = ns.ResetDisabledGearAndSpells
 
-local RC = LibStub( "LibRangeCheck-3.0" )
+local RC = Facade.LibRangeCheck -- the one range source (range plan R2): LibRangeCheck through the facade
 
 -- Abandoning AceEvent in favor of darkend's solution from:
 -- http://andydote.co.uk/2014/11/23/good-design-in-warcraft-addons.html
