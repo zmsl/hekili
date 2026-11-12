@@ -524,6 +524,52 @@ describe("Forever Warrior", function()
         end)
     end)
 
+    it("registers the aura copies, stack caps and Gore Drinker's buff the audit found missing", function()
+        local function has(a, id)
+            for _, c in ipairs(a.copy) do
+                if c == id then
+                    return true
+                end
+            end
+        end
+        assert.is_true(has(w.auras.deep_wound, 412609))
+        assert.are.equal(12, w.auras.deep_wound.duration)
+        assert.are.equal(3, w.auras.flurry.max_stack)
+        assert.are.equal(30, w.auras.retaliation.max_stack)
+        assert.are.same(
+            { 1323969, 8, 3 },
+            { w.auras.gore_drinker.id, w.auras.gore_drinker.duration, w.auras.gore_drinker.max_stack }
+        )
+    end)
+
+    it("gives Revenge's window the Defensive State id 5302 and drops the unused Revenge Stun aura", function()
+        assert.are.equal(5302, w.auras.revenge_usable.id)
+        assert.are.equal(5, w.auras.revenge_usable.duration)
+        assert.is_nil(w.auras.revenge_stun)
+    end)
+
+    it("applies Retaliation at 30 charges", function()
+        local e = lw.env(w)
+        lw.run(w.abilities.retaliation.now, e)
+        assert.are.equal(30, e.stacks.retaliation)
+    end)
+
+    it("applies Gore Drinker at 3 stacks from its five abilities, only with the talent", function()
+        for _, k in ipairs({ "berserker_rage", "bloodrage", "death_wish", "reckless_swings", "bloodthirst" }) do
+            local e = lw.env(w)
+            lw.run(w.abilities[k].handler, e)
+            assert.is_nil(e.stacks.gore_drinker, k)
+            e.talent = setmetatable({}, {
+                __index = function()
+                    return { rank = 1, enabled = true }
+                end,
+            })
+            e.applied, e.stacks = {}, {}
+            lw.run(w.abilities[k].handler, e)
+            assert.are.equal(3, e.stacks.gore_drinker, k)
+        end
+    end)
+
     it("gates Thunder Clap, Execute and Spearing Strike on the stances Forever's tooltips name", function()
         local a = w.abilities
         assert.are.same({ nil, "berserker_stance" }, { a.thunder_clap.form, a.thunder_clap.nobuff })

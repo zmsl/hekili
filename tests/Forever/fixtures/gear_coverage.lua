@@ -92,8 +92,9 @@ return {
             id = "D8",
             class = "DRUID",
             item = "Haruspex's Garb (ZG, set 479) 3pc",
-            effect = "Faerie Fire duration +5 s",
-            status = "todo",
+            effect = "Faerie Fire duration +5 s (24479)",
+            status = "modelled",
+            keys = { "haruspex", "haruspex_3pc" },
         },
         { id = "D9", class = "DRUID", item = "Haruspex's Garb 5pc", effect = "Starfire crit +3%", status = "todo" },
         {

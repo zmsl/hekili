@@ -67,6 +67,7 @@ local KIT = {
     entangling_roots = { { 339, 1062, 5195, 5196, 9852, 9853 }, { 50, 65, 80, 95, 110, 125 }, "mana", 0, "spell" },
     innervate = { { 29166 }, 62, "mana", 360, "spell" },
     barkskin = { { 22812 }, 0, nil, 60, "spell" },
+    natures_swiftness = { { 17116 }, 0, nil, 180, "off" },
     natures_grasp = { { 16689, 16810, 16811, 16812, 16813, 17329 }, { 50, 65, 80, 95, 110, 125 }, "mana", 60, "spell" },
     mark_of_the_wild = {
         { 1126, 5232, 6756, 5234, 8907, 9884, 9885 },
@@ -110,6 +111,7 @@ local NOW = {
     "prowl",
     "dash",
     "shifting_power",
+    "natures_swiftness",
     "berserk",
     "cat_form",
     "bear_form",
@@ -231,7 +233,7 @@ describe("Forever Druid", function()
                     assert.are.equal(want[2], priced(w, ld.run(a.spend, e), a.spendType) or 0, key)
                 end
             end
-            assert.are.equal(44, n)
+            assert.are.equal(45, n)
             local stale = { tigers_fury = true }
             for _, id in ipairs({
                 5217,
@@ -260,7 +262,7 @@ describe("Forever Druid", function()
             -- Wrath's cast at its top rank (the cost loop above learned every rank)
             assert.are.same(
                 { 2, 3.5, 2 },
-                { ld.run(w.abilities.wrath.cast, e), w.abilities.starfire.cast, w.abilities.regrowth.cast }
+                { ld.run(w.abilities.wrath.cast, e), ld.run(w.abilities.starfire.cast, e), w.abilities.regrowth.cast }
             )
         end
     )
@@ -548,6 +550,20 @@ describe("Forever Druid", function()
             end
         )
 
+        it("lengthens Faerie Fire by 5 s under the Haruspex's Garb 3-piece (aura 24479 or 3 pieces worn)", function()
+            local function ff(sb)
+                local e2 = ld.env(w)
+                e2.set_bonus = setmetatable(sb, {
+                    __index = function()
+                        return 0
+                    end,
+                })
+                return ld.run(w.auras.faerie_fire.duration, e2)
+            end
+            assert.are.same({ 40, 45 }, { ff({}), ff({ haruspex_3pc = 1 }) })
+            assert.are.equal(24479, w.auras.haruspex_3pc.id)
+        end)
+
         it("gains Shifting Power's 40 energy and Enrage's 10 rage, and Bite spends the energy left", function()
             local e = ld.env(w)
             ld.run(w.abilities.shifting_power.now, e)
@@ -589,11 +605,60 @@ describe("Forever Druid", function()
             ld.run(w.abilities.wrath.now, e)
             ld.run(w.abilities.wrath.handler, e)
             assert.are.same({ { "eclipse", 2 }, { "eclipse", 2 } }, e.added)
+            e.removed = {}
             ld.run(w.abilities.starfire.handler, e)
             assert.are.same({}, e.removed)
             e.buff = auras({ eclipse = { up = true, stack = 2 } })
             ld.run(w.abilities.starfire.handler, e)
             assert.are.same({ "eclipse" }, e.removed)
+        end)
+
+        it("registers the Eclipse and Nature's Grace talent ids as aura copies", function()
+            local function has(a, id)
+                for _, c in ipairs(a.copy) do
+                    if c == id then
+                        return true
+                    end
+                end
+            end
+            assert.is_true(has(w.auras.eclipse, 408248) and has(w.auras.eclipse, 441260))
+            assert.is_true(has(w.auras.natures_grace, 16880))
+        end)
+
+        it("Starfire's cast follows Improved Starfire, the Eclipse charge and Nature's Grace", function()
+            local e = ld.env(w)
+            local function ranks(t)
+                return setmetatable(t, getmetatable(rank(0)))
+            end
+            local function cast(talents, buffs)
+                e.talent = talents
+                e.buff = auras(buffs)
+                return ld.run(w.abilities.starfire.cast, e)
+            end
+            local up = { up = true, stack = 2 }
+            assert.is_near(3.5, cast(rank(0), {}), 1e-9)
+            assert.is_near(3.0, cast(ranks({ improved_starfire = { rank = 5 } }), {}), 1e-9)
+            local both = ranks({ improved_starfire = { rank = 5 }, eclipse = { rank = 3 } })
+            assert.is_near(2.5, cast(both, { eclipse = up }), 1e-9)
+            assert.is_near(3.33, cast(ranks({ eclipse = { rank = 1 } }), { eclipse = up }), 1e-9)
+            assert.is_near(3.17, cast(ranks({ eclipse = { rank = 2 } }), { eclipse = up }), 1e-9)
+            assert.is_near(3.5 / 1.1, cast(rank(0), { natures_grace = { up = true } }), 1e-9)
+        end)
+
+        it("Wrath is instant under Nature's Swiftness, which its handler spends; Nature's Grace speeds it", function()
+            local e = ld.env(w)
+            e.talent = rank(0)
+            e.buff = auras({ natures_swiftness = { up = true } })
+            assert.are.equal(0, ld.run(w.abilities.wrath.cast, e))
+            e.removed = {}
+            ld.run(w.abilities.wrath.handler, e)
+            assert.are.same({ "natures_swiftness" }, e.removed)
+            e.buff = auras({})
+            local base = ld.run(w.abilities.wrath.cast, e)
+            e.buff = auras({ natures_grace = { up = true } })
+            assert.is_near(base / 1.1, ld.run(w.abilities.wrath.cast, e), 1e-9)
+            ld.run(w.abilities.natures_swiftness.handler, e)
+            assert.are.same({ "natures_swiftness" }, e.applied)
         end)
 
         it('leaves any form but Moonkin on Innervate, as Classic\'s swap_form("") and wowsims/forever', function()

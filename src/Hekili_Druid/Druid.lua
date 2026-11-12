@@ -104,6 +104,8 @@ local FAERIE_FIRE_COST = { 55, 75, 95, 115 }
 local WRATH = { 5176, 5177, 5178, 5179, 5180, 6780, 8905, 9912 }
 local WRATH_COST = { 10, 20, 40, 50, 70, 80, 100, 120 }
 local WRATH_CAST = { 1.5, 1.7, 2, 2, 2, 2, 2, 2 }
+-- Eclipse's cut of Starfire's cast by talent rank (DB2 effect 2: -170/-330/-500 ms)
+local ECLIPSE_CUT = { 0.17, 0.33, 0.5 }
 local STARFIRE = { 2912, 8949, 8950, 8951, 9875, 9876, 25298 }
 local STARFIRE_COST = { 95, 135, 180, 230, 275, 315, 340 }
 local MOONFIRE = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 }
@@ -141,6 +143,10 @@ local GEAR = {
     -- Grips, Shoulderpads, Stompers); the head and chest join when they ship. 5-piece 1301242: Insect Swarm +3 s.
     grovekeeper_eclipse = { 273884, 273885, 273886, 273887 },
     grovekeeper_eclipse_5pc = 1301242,
+    -- Haruspex's Garb (ZG, set 479, db.json setId; sim/druid/item_sets.go:56-73): five items, the 3-piece's hidden aura
+    -- 24479 makes Faerie Fire last 5 s longer.
+    haruspex = { 19613, 19838, 19839, 19840, 19955 },
+    haruspex_3pc = 24479,
 }
 
 -- The forms, in `buff.form`'s member order (one is up at a time).
@@ -388,6 +394,8 @@ end)
 spec:RegisterGear("swarming_idol", GEAR.swarming_idol)
 spec:RegisterGear("grovekeeper_eclipse", unpack(GEAR.grovekeeper_eclipse))
 spec:RegisterSetBonus("grovekeeper_eclipse_5pc", GEAR.grovekeeper_eclipse_5pc)
+spec:RegisterGear("haruspex", unpack(GEAR.haruspex))
+spec:RegisterSetBonus("haruspex_3pc", GEAR.haruspex_3pc)
 
 spec:RegisterAuras({
     serenity_field = { id = 1291103, duration = 15, max_stack = 1 },
@@ -430,6 +438,12 @@ spec:RegisterAuras({
     -- (both environments read the belief's record: Facade GetPlayerAuraBySpellID; gear-aware spec §2).
     grovekeeper_eclipse_5pc = {
         id = 1301242,
+        duration = 3600,
+        max_stack = 1,
+    },
+    -- The Haruspex's Garb 3-piece's hidden aura (24479): tracked so set_bonus.haruspex_3pc reads it.
+    haruspex_3pc = {
+        id = 24479,
         duration = 3600,
         max_stack = 1,
     },
@@ -488,7 +502,7 @@ spec:RegisterAuras({
     },
     eclipse = {
         id = 408255,
-        copy = { 441260 },
+        copy = { 441260, 408248 }, -- 408248: the talent's CDM item (cooldownID 199506)
         duration = 15,
         max_stack = 4,
     },
@@ -511,7 +525,9 @@ spec:RegisterAuras({
     faerie_fire = {
         id = 770,
         copy = rest(FAERIE_FIRE),
-        duration = 40,
+        duration = function() -- the Haruspex's Garb 3-piece: +5 s
+            return 40 + (set_bonus.haruspex_3pc > 0 and 5 or 0)
+        end,
         max_stack = 1,
     },
     feral_charge_effect = {
@@ -612,7 +628,14 @@ spec:RegisterAuras({
     },
     natures_grace = {
         id = 16886,
+        copy = { 16880 }, -- the talent's CDM item (cooldownID 199845)
         duration = 3,
+        max_stack = 1,
+    },
+    -- The next Wrath is instant (it spends the buff; the pin's flags reach Wrath, not Starfire).
+    natures_swiftness = {
+        id = 17116,
+        duration = 3600,
         max_stack = 1,
     },
     natures_grasp = {
@@ -1491,6 +1514,25 @@ spec:RegisterAbilities({
         end,
     },
 
+    natures_swiftness = {
+        id = 17116,
+        cast = 0,
+        cooldown = 180,
+        gcd = "off",
+
+        startsCombat = false,
+        known = knows({ 17116 }),
+        nobuff = "moonkin_form", -- the pin: the row bars it on Moonkin Form
+
+        now = function()
+            applyBuff("natures_swiftness")
+        end,
+
+        handler = function()
+            applyBuff("natures_swiftness")
+        end,
+    },
+
     natures_grasp = {
         id = 16689,
         copy = rest(NATURES_GRASP),
@@ -1776,7 +1818,17 @@ spec:RegisterAbilities({
         expects = "instant",
         school = "arcane",
         copy = rest(STARFIRE),
-        cast = 3.5, -- shorter with an Eclipse charge (unmodelled)
+        -- 3.5 s less Improved Starfire (0.1 a rank) and the Eclipse cut, then Nature's Grace's 10 % cast speed
+        cast = function()
+            local t = 3.5 - 0.1 * talent.improved_starfire.rank
+            if buff.eclipse.up then
+                t = t - (ECLIPSE_CUT[talent.eclipse.rank] or 0)
+            end
+            if buff.natures_grace.up then
+                t = t / 1.1
+            end
+            return t
+        end,
         cooldown = 0,
         gcd = "spell",
 
@@ -1875,7 +1927,14 @@ spec:RegisterAbilities({
         school = "nature",
         copy = rest(WRATH),
         cast = function()
-            return byRank(WRATH_CAST, WRATH) - 0.1 * talent.improved_wrath.rank
+            if buff.natures_swiftness.up then
+                return 0
+            end
+            local t = byRank(WRATH_CAST, WRATH) - 0.1 * talent.improved_wrath.rank
+            if buff.natures_grace.up then
+                t = t / 1.1
+            end
+            return t
         end,
         cooldown = 0,
         gcd = "spell",
@@ -1899,6 +1958,7 @@ spec:RegisterAbilities({
         end,
 
         handler = function()
+            removeBuff("natures_swiftness")
             if talent.eclipse.rank > 0 then
                 addStack("eclipse", nil, 2)
             end
@@ -1967,8 +2027,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Balance (wowsims.com)",
-    20261107001,
-    [[Hekili:1sv3oTnmu4NfUHr1QsAkfydrrAi00aTHMwy36ex7tA8QJDKTdDinLN9DCkeC)BSDXUPY9C83p2Nphsc5EskN6aYDJhn(0KKrNnAucj19ynqsRPSf054cfTc)9kQKQyqB(rl1lTIkBetxnWVThLAk3t1SgH0DJImBNSARbgj96V99BU(8zRiJKwk4CyfcWY2NkN3M7kXIpvlUqBGhatBohkOnsxB(h(6NBZXYT5VWqJi2RPnMBAe84N0mMwlXsRagH)j6hwTAWqucdvzLOX54ATxsHTnNY5A1BWflGhTrT5xtD0Z3Hvo6l3CpssPZvBppoEUWv2mZ7(4n26aKt0XWj03Z4JPJ5fSi8A0Oles8gHYCcTYgvBae8mQBALwRwiuzi(QHIIPhmRPOikSAutD7TBb8TtJxAOUspgFZhGmqbvcWEXK(T)pYoYjiBuGntkMx6g2yHmDrr2CgFAs4UekfyEaVm9Cwrv0OAMltQVyYOdl8qZmqfvOSxE8OqCEHlegyyHM1yNoUZsCO3u(EByiKea52UKINGDalS)gqlBmgbJQGTVJUC6KWDADutGVs8aoQJEGjf1wVPoC9cie2Ilt(1bRyj6zkIGFcSgNqnFWGqj6gwT3ssXqIfRTX7hPW6SDVyxLDXL319cgu0zsGtU65WdjnC8rszgHdmckjDNdxIdvAdIcMREv6joC47XD8Emq)4pu9xjg45BYg8fy9TdbRFE9fjPDJh)5bj7KxLSnIgH()LgRt6P75e3hLc1zRiLNHZ2RT(ldu)Xe1lo65U9(pXR(72J)7sFe)qnT)li)xJyRl8EV0UysNPqBrBCLAdj9tWcHuGFX9Jp9b1U2KFd]]
+    20261111000,
+    [[Hekili:1svxVPnmu0Fl9LoqdLauA3gQuPvvnTwTvnT09Qjg7BiE4yhz7uwLQYV9DD4JAcWQMMgpGCUFCoNR9XMmG8ajHtDa5(H9hEXa8x)(9jjUNkbssjLTGohxOOf4)xtLufdQt7SuV0kkSrmDrxFzpj1uUhQzvcP7wfz2br1wcmsYnF)h3EZ4zRaJKKl4CyvhGLDmwgxN6YXGRJfNPnWJGPoLdz0kPRo9JF7l1Py460xqOse750gZnvcE8AoJPLsm0QgJWpI(PvR62dPWqvwjkCoUw7PuyRtPCUw9gCXc4jBuD6nuhD8bKsNVE7dii5oxPDCC8CHlVAMx9XTkTlIjQy4C6hy8H0H8mweUnA0zcjUJqzoHwzJkna28mQBsHwRwiutX(l6jYMCYSQSSOWOrvL13TxJVDs8sd1L77XN8rykOGcbyVC02Y)lrhXeKvkWovkMN76vzHP6SSPZz8jdcRsOuG5rCZ0JzbvrJkzUPs9LJ6FAMV1PgOGku2RoRFyFEIZegOxMMvzNmSrsCyRO85AjieeaX2UKItWbAlmFRwZRmgbJQG93JUAYOWkToQjqxd8n0PZjoQeuUiGjfLwicu0zsG)CdVBcwv290oDoCLNUtLijSfxnO7ZNSI4OnSgb)cyvoHAE3UHQQ58T(osc6RSySwx5KcRZ2CjFLDhxEFZL(1StUEJFJKeEItsygHdmckj5G(bIdzQfqbwbplBbo0V477SJiGToMq2FfNJhVrTWlq677B2DE9bjjnNO(5bb78xfSwUPq9)sIDb9IJmXBDFH8SNl0JW7oQSoUh8F2e(hDHVmfBYUDMh4v87pYm34yjEJqY2hQ(VAl3L4JUrF5OgrHYIw5Y1gsYNHfcPaFy)tRF3Ujn53)]]
 )
 spec:RegisterPack(
     "Guardian (wowsims.com)",

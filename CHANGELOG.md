@@ -17,6 +17,8 @@
 - A display style whose range check is set to melee no longer raises a Lua error in dungeons while you target an enemy: Hekili now ships the newer LibRangeCheck-3.0.
 - Gnome Warriors, Rogues, Mages, Warlocks and Priests: Eureka! is modelled as the sim has it, 8 seconds with every ability in its scope costing 10% less (it was 15 seconds and three casts), so the last seconds of a fight no longer hide Eureka! as early.
 - Protection Warriors: the default priority's Thunder Clap line again checks for the Thunderfury slow; it reads down in combat, so nothing changes unless you can see the debuff.
+- Druid: Balance now reads the Eclipse and Nature's Grace buffs in combat through the Cooldown Manager's talent entries, Starfire's cast time follows Improved Starfire, the Eclipse charge and Nature's Grace (Wrath follows Nature's Grace too), Nature's Swiftness makes the next Wrath instant, and the Haruspex's Garb 3-piece lengthens Faerie Fire by 5 seconds.
+- Warrior: Deep Wound is read from the Cooldown Manager's copy of the debuff, Flurry counts its three charges, Retaliation its 30, and Gore Drinker's buff is tracked from the abilities that grant it.
 
 ### Known issues
 
