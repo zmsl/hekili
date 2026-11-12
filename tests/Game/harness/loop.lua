@@ -500,7 +500,8 @@ function M.run(L, seed, o, drivers)
     -- mob whose truth lacks its debuff, and the target goes back to mob 1 at the next tick
     local follow, mob1 = aw.followCycle, us.target
     local back, backIds = false, nil
-    run.cyclePresses, run.cycleLanded = 0, 0
+    run.cyclePresses, run.cycleLanded, run.cycleMobs = 0, 0, 0
+    local landedOn = {} -- the mobs a swapped press landed on (run.cycleMobs counts them)
     -- a verdict arm's recast (ab.lua world.recast): an uptime aura's press whose hit was avoided is pressed again at
     -- the next free GCD, whatever the driver shows (the recast inside the verdict's drain, review M1)
     local recastOf, recastKey = nil, nil
@@ -699,6 +700,9 @@ function M.run(L, seed, o, drivers)
         if back and t >= (us.castUntil or 0) and not us.channel then -- once its cast has landed (or not)
             if M.auraUp(us.target, backIds, t) then
                 run.cycleLanded = run.cycleLanded + 1 -- the swapped press's debuff is up on that mob (world truth)
+                if not landedOn[us.target] then
+                    landedOn[us.target], run.cycleMobs = true, run.cycleMobs + 1
+                end
             end
             us.target, back = mob1, false
             W.emit({ kind = "target", relist = true })

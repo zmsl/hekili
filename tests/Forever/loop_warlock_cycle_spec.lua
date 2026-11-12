@@ -24,7 +24,7 @@ describe("Recommend Target Swaps in a three-mob world #warlock", function()
             )
         )
         assert.is_true(a.cyclePresses > 0)
-        assert.is_true(a.cycleLanded >= 2, "the spread reached both other mobs") -- each truly carries the debuff
+        assert.are.equal(2, a.cycleMobs, "the spread reached both other mobs") -- each truly carries a swapped debuff
         assert.is_true(on.flicker <= 1.10 * off.flicker + 1e-9, "flicker on " .. on.flicker .. " off " .. off.flicker)
     end)
 end)
