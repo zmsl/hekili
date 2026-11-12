@@ -294,11 +294,11 @@ local PACKS = {
         form = "cat_form",
         weapon = { 55, 75, 1.0 },
         world = { regen = { [ENERGY] = dw.ENERGY_REGEN }, fsr = manaFsr(22), power = 100, stats = { [5] = 124 } },
-        talents = { [17056] = 3 }, -- Furor (wowsims's Feral build's 3/5, the log header's 17056=3)
+        -- Furor 3/5 (wowsims's Feral build, the log header's 17056=3); wowsims's Feral scenario, which the pack's Shred
+        -- and Claw lines read (L602): Shredding Attacks 3/3 (the log header's 16966=3), and a DPS behind its target, so
+        -- the client says our target targets someone else
+        talents = { [17056] = 3, [16966] = 3 },
         uptime = { "rip", "rake" },
-        -- wowsims's Feral scenario, which the pack's Shred and Claw lines read (L602): Shredding Attacks 3/3 (the log
-        -- header's 16966=3), and a DPS behind its target, so the client says our target targets someone else
-        talents = { [16966] = 3 },
         notTargeted = true,
     },
     Guardian = {
