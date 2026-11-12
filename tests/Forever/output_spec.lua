@@ -604,6 +604,131 @@ describe("Engine.Output (headless Arms)", function()
         assert.is_nil(out1[2].focus)
     end)
 
+    -- APL label=/label_if= and icon=/icon_if= (owner 2026-11-12): sets `fields` on the entry record 1 came from,
+    -- recompiles its script, runs two updates and returns the entry and the published records it made.
+    local function marked(fields, entry)
+        local r = out.recs[1]
+        local pack, list, id = r.pack, r.list, r.action
+        if entry then
+            pack, list, id = entry.__pack, entry.__list, entry.__id
+        end
+        entry = H.Hekili.DB.profile.packs[pack].lists[list][id]
+        for k, v in pairs(fields) do
+            entry[k] = v
+        end
+        H.Hekili:LoadScript(pack, list, id)
+        for _ = 1, 2 do
+            t = t + 0.2
+            assert(headless.cycle(H, t))
+        end
+        local hits = {}
+        for i = 1, out.count do
+            local ri = out.recs[i]
+            if ri.pack == pack and ri.list == list and ri.action == id then
+                hits[#hits + 1] = ri
+            elseif ri.label ~= nil or ri.iconOverride ~= nil then
+                error("record " .. i .. " (" .. tostring(ri.actionName) .. ") carries another entry's label or icon")
+            end
+        end
+        assert.is_true(#hits > 0, "no published record came from the marked entry")
+        return { __pack = pack, __list = list, __id = id }, hits
+    end
+
+    it("label= reaches the published record (the subscription data); records from other entries carry none", function()
+        local seen
+        local function sub(_, _, o)
+            seen = nil
+            for i = 1, o.count do
+                seen = seen or o.recs[i].label
+            end
+        end
+        H.Hekili.Engine.Subscribe("Primary", sub, true)
+        local _, hits = marked({ label = "R6" })
+        for _, ri in ipairs(hits) do
+            assert.are.equal("R6", ri.label, ri.actionName)
+            assert.is_nil(ri.iconOverride, ri.actionName)
+        end
+        assert.are.equal("R6", seen)
+        H.Hekili.Engine.Unsubscribe("Primary", sub)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("label_if false drops the label; label_if true keeps it", function()
+        local key, hits = marked({ label = "R6", label_if = "time<0" })
+        for _, ri in ipairs(hits) do
+            assert.is_nil(ri.label, ri.actionName)
+        end
+        hits = select(2, marked({ label_if = "time>=0" }, key))
+        for _, ri in ipairs(hits) do
+            assert.are.equal("R6", ri.label, ri.actionName)
+        end
+        assert.are.same({}, H.errors)
+    end)
+
+    it(
+        "icon= with icon_if true sets iconOverride (a path verbatim) and leaves texture alone; icon_if false none",
+        function()
+            local abilities = H.Hekili.Class.abilities
+            local path = "Interface\\Icons\\Spell_Nature_StarFall"
+            local key, hits = marked({ icon = path, icon_if = "time>=0" })
+            for _, ri in ipairs(hits) do
+                assert.are.equal(path, ri.iconOverride, ri.actionName)
+                assert.are.equal(abilities[ri.actionName].texture or 136000, ri.texture, ri.actionName)
+                assert.is_nil(ri.label, ri.actionName)
+            end
+            hits = select(2, marked({ icon_if = "time<0" }, key))
+            for _, ri in ipairs(hits) do
+                assert.is_nil(ri.iconOverride, ri.actionName)
+            end
+            -- a number names a spell first: its icon (the fake client answers 136000 for any spell)
+            hits = select(2, marked({ icon = "6603", icon_if = false }, key))
+            for _, ri in ipairs(hits) do
+                assert.are.equal(136000, ri.iconOverride, ri.actionName)
+            end
+            assert.are.same({}, H.errors)
+        end
+    )
+
+    it("a label, label_if, icon or icon_if that raises gives nil, never an error", function()
+        marked({ label = "R6", icon = "Interface/Icons/X", icon_if = "time>=0" })
+        local mods = H.Hekili.Scripts.DB[out.recs[1].script].Modifiers
+        local function boom()
+            error("injected")
+        end
+        local function check()
+            t = t + 0.2
+            assert(headless.cycle(H, t))
+            for i = 1, out.count do
+                assert.is_nil(out.recs[i].label, out.recs[i].actionName)
+                assert.is_nil(out.recs[i].iconOverride, out.recs[i].actionName)
+            end
+        end
+        mods.label, mods.icon = boom, boom
+        check()
+        mods.label = function()
+            return "R6"
+        end
+        mods.icon = function()
+            return "Interface/Icons/X"
+        end
+        mods.label_if, mods.icon_if = boom, boom
+        check()
+        assert.are.same({}, H.errors)
+    end)
+
+    it("the in-game importer keeps label=, label_if=, icon= and icon_if= on the entry", function()
+        local e = H.Hekili:ParseActionList(
+            "actions=mortal_strike,label=R6,label_if=rage>30,icon=Interface/Icons/X,icon_if=rage>50,if=rage>10\n"
+        )[1]
+        assert.are.equal("mortal_strike", e.action)
+        assert.are.equal("R6", e.label)
+        assert.are.equal("rage > 30", e.label_if)
+        assert.are.equal("Interface/Icons/X", e.icon)
+        assert.are.equal("rage > 50", e.icon_if)
+        assert.are.equal("rage > 10", e.criteria)
+        assert.is_nil(H.Hekili:ParseActionList("actions=slam,label=,label_if=,icon=,icon_if=\n")[1].label_if)
+    end)
+
     it("alts is empty on every record when no subscriber declares the need", function()
         assert.are.equal(0, out.needAlts)
         for _ = 1, 5 do

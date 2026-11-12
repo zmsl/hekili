@@ -1313,6 +1313,13 @@ local newModifiers = {
     window_name = 'string',
     refresh = 'raw',
     duration = 'raw',
+
+    -- shown with the pick (Core's markPick): text on its icon, and an icon a display may draw instead, each only while
+    -- its _if holds. 'text' is the line's value verbatim: no SimC translation, so a texture path keeps its backslashes.
+    label = 'text',
+    label_if = 'bool',
+    icon = 'text',
+    icon_if = 'bool',
 }
 
 
@@ -1510,7 +1517,7 @@ local function ConvertScript( node, hasModifiers, header )
         for m, value in pairs( newModifiers ) do
             if node[ m ] then
                 local emulated
-                local o = SimToLua( node[ m ] )
+                local o = value == 'text' and format( "%q", tostring( node[ m ] ) ) or SimToLua( node[ m ] )
 
                 specialMods = specialMods .. " - " .. m .. " : " .. o
 
@@ -1522,6 +1529,8 @@ local function ConvertScript( node, hasModifiers, header )
                 elseif value == 'raw' then
                     emulated = node[ m ] ~= "" and node[ m ]
                     emulated = SimToLua( scripts:EmulateSyntax( emulated, true ) )
+                elseif value == 'text' then
+                    emulated = o
                 else -- string
                     o = "'" .. o .. "'"
                     emulated = o
@@ -1534,7 +1543,7 @@ local function ConvertScript( node, hasModifiers, header )
                 if sf then
                     setfenv( sf, state )
                     modifiers[ m ] = sf
-                    modElements[ m ] = GetScriptElements( o )
+                    modElements[ m ] = value ~= 'text' and GetScriptElements( o ) or nil
 
                     if modElements[ m ] then
                         for k, v in pairs( modElements[ m ] ) do

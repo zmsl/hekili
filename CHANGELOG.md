@@ -10,6 +10,7 @@
 - Custom priorities can check the kind of weapon you wear: `main_hand`, `off_hand` and `ranged` each answer `dagger`, `sword`, `axe`, `mace`, `fist`, `staff`, `polearm`, `bow`, `gun`, `crossbow`, `thrown` or `wand` (for example `main_hand.axe&main_hand.two_handed` for a two-handed axe).
 - Warlock: the Doomcaller's Attire set bonuses are counted when you wear them.
 - Priest: utility auras are now known to the addon, for custom priorities.
+- Custom priorities can label a recommendation: `label=R6` on a line shows "R6" on its icon, and `label_if=<condition>` shows it only while the condition holds (for example to mark a lower spell rank). `icon=` (a spell ID, texture ID or texture path) with `icon_if=<condition>` asks the display to show a different icon for that line.
 - Warrior: Weaponmaster now shows its three auras (`weaponmaster_axe_polearm`, `weaponmaster_mace_staff`, `weaponmaster_sword`) while you have the talent and hold that kind of weapon, for custom priorities. The sword's extra attack is not predicted.
 
 ### Changed

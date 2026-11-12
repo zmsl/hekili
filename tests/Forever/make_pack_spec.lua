@@ -328,6 +328,27 @@ describe("tools/make_pack.lua", function()
         end
     end)
 
+    it("round-trips label=, label_if=, icon= and icon_if= as strings, written before if=, never read as if=", function()
+        local simc = "actions=starfire,label=R6,label_if=mana.pct<20,icon=Interface/Icons/Spell_Arcane_StarFire,"
+            .. "icon_if=a&b,if=c\nactions+=/wrath,icon=136006\n"
+        local lists = mp.parse(simc)
+        assert.are.same({
+            action = "starfire",
+            enabled = true,
+            label = "R6",
+            label_if = "mana.pct<20",
+            icon = "Interface/Icons/Spell_Arcane_StarFire",
+            icon_if = "a&b",
+            criteria = "c",
+        }, lists.default[1])
+        assert.are.same({ action = "wrath", enabled = true, icon = "136006" }, lists.default[2])
+        assert.are.equal(simc, mp.unparse(lists))
+        assert.are.same(
+            { action = "rip", enabled = true, label_if = "x" },
+            mp.parse("actions=rip,label_if=x\n").default[1]
+        )
+    end)
+
     it("refuses prepull_at: pre-pull lines carry their guard in the condition (wowsims rule 1)", function()
         assert.has_error(function()
             mp.parse("actions.precombat=aura,prepull_at=10\n")

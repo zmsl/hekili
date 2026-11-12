@@ -314,6 +314,26 @@ local function gcdLength( action )
     return length
 end
 
+-- An entry's label= and icon= on the pick it made (Scripts.lua's 'text' modifiers), each only while its label_if /
+-- icon_if holds (absent: holds); an error in any of them gives nil. Both are set on every pick: the slot is reused.
+local function modValue( f )
+    local ok, v = pcall( f )
+    return ok and v or nil
+end
+
+local function markPick( slot, mods )
+    local label, icon
+    if mods then
+        if mods.label and ( not mods.label_if or modValue( mods.label_if ) ) then label = modValue( mods.label ) end
+        if mods.icon and ( not mods.icon_if or modValue( mods.icon_if ) ) then
+            icon = modValue( mods.icon )
+            local n = tonumber( icon ) -- a number names a spell first (its icon), else a texture ID; else a texture path
+            if n then icon = GetSpellTexture( n ) or n end
+        end
+    end
+    slot.label, slot.iconOverride = label, icon
+end
+
 local default_modifiers = {
     early_chain_if = return_false,
     chain = return_false,
@@ -1069,6 +1089,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                             slot.texture = ability.texture
                                                             slot.indicator = ability.indicator
                                                             slot.focus = entry.focus
+                                                            markPick( slot, script.Modifiers )
 
                                                             if ability.interrupt and state.buff.casting.up then
                                                                 slot.interrupt = true
@@ -1178,6 +1199,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                         slot.texture = ability.texture
                                                         slot.indicator = ability.indicator
                                                         slot.focus = entry.focus
+                                                        markPick( slot, script.Modifiers )
 
                                                         if ability.interrupt and state.buff.casting.up then
                                                             slot.interrupt = true
