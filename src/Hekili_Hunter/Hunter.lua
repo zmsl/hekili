@@ -94,6 +94,12 @@ local ASPECT_OF_THE_HAWK = { 13165, 14318, 14319, 14320, 14321, 14322, 25296 }
 local ASPECT_OF_THE_HAWK_COST = { 20, 35, 50, 70, 90, 110, 120 }
 local ASPECT_OF_THE_BEAST = { 13161, 1299445, 1299446, 1299447 } -- ranks 2-4 Forever-only (D4)
 local ASPECT_OF_THE_BEAST_COST = { 50, 70, 90, 110 }
+local ASPECT_OF_THE_CHEETAH = { 5118 }
+local ASPECT_OF_THE_CHEETAH_COST = { 40 }
+local BASE_MANA = 1720 -- a fraction cost is of this (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
+-- Cryptstalker Armor (set 530, wowsims sim/hunter/item_sets.go; items from its db.json): the 2-piece's hidden aura
+-- 28755 makes Rapid Fire last 4 s longer, the 8-piece's 28751 takes 20 mana off Multi-Shot and Aimed Shot.
+local CRYPTSTALKER = { 22436, 22437, 22438, 22439, 22440, 22441, 22442, 22443, 23067 }
 local IMMOLATION_TRAP = { 13795, 14302, 14303, 14304, 14305 }
 local IMMOLATION_TRAP_COST = { 50, 90, 135, 190, 245 }
 
@@ -133,10 +139,13 @@ end
 -- wowsims's logs: 2/2 Resourcefulness pays 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap; 2/5
 -- Efficiency 94 Raptor Strike, 75.2 Wing Clip, 178.6 Arcane Shot, 235 Serpent Sting.
 local RESOURCEFUL = { 0.3, 0.6 }
-local function discounted(price, resourceful, efficient)
+local function discounted(price, resourceful, efficient, flat8pc)
     local priced = type(price) == "function" -- decided here: the returned function runs in the state's environment
     return function()
         local c = priced and price() or price
+        if flat8pc and set_bonus.cryptstalker_8pc > 0 then
+            c = c - flat8pc
+        end
         local off = (resourceful and RESOURCEFUL[talent.resourcefulness.rank] or 0)
             + (efficient and 0.03 * talent.efficiency.rank or 0)
         return c * (1 - off)
@@ -152,14 +161,15 @@ local function rangedCast(base)
 end
 
 -- One aspect at a time (wowsims aspects.go): each removes the other.
-local function aspectEffect(key, other)
+local function aspectEffect(key, other, other2)
     return function()
         removeBuff(other)
+        removeBuff(other2)
         applyBuff(key)
     end
 end
 
-local function aspect(key, other, ids, costs)
+local function aspect(key, other, other2, ids, costs)
     return {
         id = ids[1],
         copy = rest(ids),
@@ -173,8 +183,8 @@ local function aspect(key, other, ids, costs)
         startsCombat = false,
         known = knows(ids),
 
-        now = aspectEffect(key, other),
-        handler = aspectEffect(key, other),
+        now = aspectEffect(key, other, other2),
+        handler = aspectEffect(key, other, other2),
     }
 end
 
@@ -235,7 +245,7 @@ spec:RegisterResource(
                 return state.spec.beast_mastery and 0.5 or 0
             end,
         },
-        base = 1720, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
+        base = BASE_MANA, -- a fraction cost is of base mana (Spec.lua)
     }
 )
 
@@ -247,10 +257,26 @@ spec:RegisterPets({
     hawk = { spell = "summon_hawk", duration = 18, cap = 2 },
 })
 
+spec:RegisterGear("cryptstalker", unpack(CRYPTSTALKER))
+spec:RegisterSetBonus("cryptstalker_2pc", 28755)
+spec:RegisterSetBonus("cryptstalker_8pc", 28751)
+
 spec:RegisterAuras({
     aspect_of_the_hawk = { id = 13165, copy = rest(ASPECT_OF_THE_HAWK), duration = 3600, max_stack = 1 },
     aspect_of_the_beast = { id = 13161, copy = rest(ASPECT_OF_THE_BEAST), duration = 3600, max_stack = 1 },
-    rapid_fire = { id = 3045, duration = 15, max_stack = 1 },
+    rapid_fire = {
+        id = 3045,
+        duration = function() -- the Cryptstalker 2-piece: +4 s
+            return 15 + (set_bonus.cryptstalker_2pc > 0 and 4 or 0)
+        end,
+        max_stack = 1,
+    },
+    -- Aspect of the Cheetah (5118; no APL casts it: for display and custom priorities) and the Dazed it proc'd when
+    -- struck (15571: 4 s, -70% speed), and the set's hidden auras (tracked so set_bonus reads them).
+    aspect_of_the_cheetah = { id = 5118, duration = 3600, max_stack = 1 },
+    dazed = { id = 15571, duration = 4, max_stack = 1 },
+    cryptstalker_2pc = { id = 28755, duration = 3600, max_stack = 1 },
+    cryptstalker_8pc = { id = 28751, duration = 3600, max_stack = 1 },
     -- Aspect of the Hawk's proc (Deadly Aspects) on an Auto Shot: +30% ranged haste.
     quick_shots = { id = 6150, duration = 12, max_stack = 1 },
     -- Resourcefulness (talent 440529): a melee or ranged ability's crit gives +50% Spirit regen while casting (the mana
@@ -464,14 +490,23 @@ spec:RegisterAbilities({
     aspect_of_the_hawk = aspect(
         "aspect_of_the_hawk",
         "aspect_of_the_beast",
+        "aspect_of_the_cheetah",
         ASPECT_OF_THE_HAWK,
         ASPECT_OF_THE_HAWK_COST
     ),
     aspect_of_the_beast = aspect(
         "aspect_of_the_beast",
         "aspect_of_the_hawk",
+        "aspect_of_the_cheetah",
         ASPECT_OF_THE_BEAST,
         ASPECT_OF_THE_BEAST_COST
+    ),
+    aspect_of_the_cheetah = aspect(
+        "aspect_of_the_cheetah",
+        "aspect_of_the_hawk",
+        "aspect_of_the_beast",
+        ASPECT_OF_THE_CHEETAH,
+        ASPECT_OF_THE_CHEETAH_COST
     ),
 
     rapid_fire = {
@@ -577,7 +612,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = discounted(cost(AIMED_SHOT_COST, AIMED_SHOT), false, true),
+        spend = discounted(cost(AIMED_SHOT_COST, AIMED_SHOT), false, true, 20),
         spendType = "mana",
 
         startsCombat = true,
@@ -597,7 +632,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = discounted(0.139, false, true),
+        spend = discounted(0.139, false, true, 20 / BASE_MANA),
         spendType = "mana",
 
         startsCombat = true,

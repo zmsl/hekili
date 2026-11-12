@@ -8,7 +8,8 @@
 ### Changed
 - The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
 - Rogue: a Shank at 5 of 5 Boot Knife now counts its 2 combo points in the forecast, and the opening Poised discount (10 energy, plus Composure's 5 or 10) is priced on the abilities it covers, so the first recommendations after a pull see the energy you really have.
-- Hunter: Rapid Killing now shortens Rapid Fire's cooldown (60 seconds a rank), so a long fight shows the second Rapid Fire sooner.
+- Hunter: Rapid Killing now shortens Rapid Fire's cooldown (60 seconds a rank), so a long fight shows the second Rapid Fire sooner. Aspect of the Cheetah and Dazed are known to the addon for custom priorities, and the Cryptstalker set bonuses (Rapid Fire 4 seconds longer, Multi-Shot and Aimed Shot 20 mana cheaper) are counted when you wear them.
+- Rogue: the Remorseless buff is known to the addon and shown when the game reports it.
 
 ### Fixed
 

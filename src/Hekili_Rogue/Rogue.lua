@@ -223,6 +223,15 @@ spec:RegisterAuras({
         duration = 15,
         max_stack = 1,
     },
+    -- Remorseless (14143, the talent 14144's buff: 20 s, one charge, +40% crit on the strikes the pin's mask names): a
+    -- kill opens it and no event here ties a death to our kill, so only a client or Cooldown Manager read shows it.
+    remorseless = {
+        id = 14143,
+        duration = 20,
+        max_stack = 1,
+    },
+    -- Slice and Dice (5171) and Blade Flurry (13877) each give +20% melee haste (A_MOD_MELEE_HASTE_3, pin spell rows):
+    -- unmodelled until CORE C5's haste hook lets a pack aura rescale the swing clock (attack speed is secret in combat).
     blade_flurry = {
         id = 13877,
         duration = 15,

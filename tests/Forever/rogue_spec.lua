@@ -186,6 +186,13 @@ describe("Forever Rogue", function()
         end
     end)
 
+    -- Remorseless (14143, the talent's triggered buff: 20 s, one charge; wowsims talents_assassination.go:52-75): the
+    -- next strike crits. Observed only: nothing here hears the kill that opens it.
+    it("registers Remorseless (14143: 20 s, one charge)", function()
+        local a = w.auras.remorseless
+        assert.are.same({ 14143, 20, 1 }, { a.id, a.duration, a.max_stack })
+    end)
+
     it("registers Poised (1328826) with a one-charge flat cost mod over the class-set mask", function()
         assert.are.same({ 1328826, 3600, 1 }, { w.auras.poised.id, w.auras.poised.duration, w.auras.poised.max_stack })
         assert.are.equal(1, #w.costMods)
