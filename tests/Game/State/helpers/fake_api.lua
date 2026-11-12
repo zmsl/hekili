@@ -183,6 +183,13 @@ function M.new()
         unitIs = {}, -- [unit] = the token UnitIsUnit(unit, x) is true for (SECRET: a secret answer)
         names = {}, -- [unit] = UnitName (default "Player" for the player, else "Unit"; SECRET: a secret answer)
         friendly = {}, -- [unit] = true: UnitCanAttack("player", unit) false, UnitIsFriend true (default: hostile)
+        -- the plate count's unit reads (T1): [unit] = UnitIsPlayer's, UnitInParty's, UnitInRaid's, IsActionInRange's
+        -- answer (SECRET: a secret answer; unset: the defaults below); pvp: UnitIsPVP's (any unit)
+        isPlayer = {},
+        inParty = {},
+        inRaid = {},
+        actionInRange = {},
+        pvp = nil,
         level = { player = 20 }, -- [unit] = UnitLevel (nil: a secret answer)
         creature = {}, -- [unit] = UnitCreatureType's type as State.lua's key ("undead"; default "beast"; SECRET: secret)
         unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
@@ -535,15 +542,29 @@ function M.new()
     function api.GetInventoryItemID(_, slot)
         return ctl.inventory[slot]
     end
-    api.UnitPhaseReason, api.UnitThreatSituation, api.UnitTokenFromGUID, api.IsActionInRange = none, none, none, none
+    api.UnitPhaseReason, api.UnitThreatSituation, api.UnitTokenFromGUID = none, none, none
+    function api.IsActionInRange(_, unit) -- ctl.actionInRange[unit] when set (SECRET: a secret answer); else nothing
+        return ctl.actionInRange[unit]
+    end
     api.HasOverrideActionBar, api.HasVehicleActionBar, api.SpellIsSelfBuff = no, no, no
     api.IsMounted, api.IsResting, api.IsInRaid, api.UnitCanAssist = no, no, no, no
     function api.IsInGroup() -- `ctl.inGroup` (the meter provider reads it at PLAYER_REGEN_DISABLED)
         return ctl.inGroup == true
     end
-    api.UnitIsTrivial, api.UnitIsPVP, api.UnitInVehicle, api.UnitHasVehicleUI, api.UnitOnTaxi = no, no, no, no, no
-    api.UnitInParty, api.UnitInRaid = no, none
-    api.GetHaste, api.GetFrameCPUUsage, api.GetNumGroupMembers, api.GetNumSubgroupMembers = zero, zero, zero, zero
+    api.UnitIsTrivial, api.UnitInVehicle, api.UnitHasVehicleUI, api.UnitOnTaxi = no, no, no, no
+    function api.UnitIsPVP() -- ctl.pvp: the player's flag (SECRET: a secret answer; default false)
+        return ctl.pvp or false
+    end
+    function api.UnitInParty(u) -- ctl.inParty[u] (SECRET: a secret answer; default false)
+        return ctl.inParty[u] or false
+    end
+    function api.UnitInRaid(u) -- ctl.inRaid[u] (SECRET: a secret answer; default nothing)
+        return ctl.inRaid[u]
+    end
+    api.GetHaste, api.GetFrameCPUUsage, api.GetNumSubgroupMembers = zero, zero, zero
+    function api.GetNumGroupMembers() -- ctl.groupMembers (default 0: solo)
+        return ctl.groupMembers or 0
+    end
     function api.GetFramerate()
         return 60
     end
@@ -592,7 +613,11 @@ function M.new()
     function api.UnitAffectingCombat()
         return ctl.combat
     end
-    function api.UnitIsPlayer(u)
+    function api.UnitIsPlayer(u) -- ctl.isPlayer[u] when set (SECRET: a secret answer); else the player only
+        local v = ctl.isPlayer[u]
+        if v ~= nil then
+            return v
+        end
         return u == "player"
     end
     function api.UnitIsFriend(_, u) -- ctl.friendly: the friendly units (SECRET: a secret answer)
