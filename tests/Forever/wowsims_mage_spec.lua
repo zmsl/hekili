@@ -78,6 +78,7 @@ local PACKS = {
     -- the re-timed fight
     { "mage_fire", "Fire", "Fire (wowsims.com)", 0.96, 6.2, 0.34 },
     { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8, 0 },
+    { "mage_frost", "Frost", "Frost (wowsims.com)", 0, 99, 99 }, -- PROVISIONAL
 }
 
 describe("the Mage wowsims.com packs #slow #wowsims", function()

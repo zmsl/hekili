@@ -227,6 +227,52 @@ local PACKS = {
         fsr = { 17.38, 0 },
         uptime = { "consecrated_ground" },
     },
+    -- Holy Shock: Seal of Righteousness, Holy Shock under Divine Favor; wowsims/forever's builds/holy_shock.siml talents
+    -- (05025210221021--0523330110130033, 23 Holy to 28 Retribution: the selector's build), the log's pool (4667), its
+    -- regen parts (2.625 a 0.1 s tick outside the rule, 0.788 inside) and its main hand's swing (2.2 s; the amounts
+    -- UNMEASURED).
+    HolyShock = {
+        kit = {
+            "seal_of_command",
+            "seal_of_righteousness",
+            "seal_of_the_crusader",
+            "judgement",
+            "hammer_of_wrath",
+            "holy_strike",
+            "consecration",
+            "exorcism",
+            "holy_shock",
+            "divine_favor",
+            "retribution_aura",
+        },
+        talents = {
+            [20262] = 5, -- Divine Strength
+            [1310899] = 2, -- Reverence
+            [20224] = 5, -- Improved Seals
+            [429144] = 2, -- Purifying Power
+            [20216] = 1, -- Divine Favor
+            [1237268] = 2, -- Holy Conduit
+            [1310904] = 2, -- Divine Precision
+            [426065] = 1, -- Infusion of Light
+            [1310905] = 2, -- Consecrated Ground
+            [1311606] = 1, -- Holy Shock
+            [20101] = 5, -- Benediction
+            [25956] = 2, -- Improved Judgement
+            [20117] = 3, -- Conviction
+            [1311074] = 3, -- Sanctified Judgement
+            [9452] = 3, -- Vindication
+            [20375] = 1, -- Seal of Command
+            [26022] = 1, -- Pursuit of Justice
+            [1311087] = 1, -- Sacred Arbiter
+            [20111] = 3, -- Two-Handed Weapon Specialization
+            [20049] = 3, -- Vengeance
+            [1311084] = 3, -- Champion of the Light
+        },
+        weapon = { 100, 160, 2.2 },
+        fsr = { 18.37, 7.88 },
+        max = 4667,
+        uptime = { "consecrated_ground" },
+    },
 }
 
 -- Swift Judgement: a second Judgement on its own cooldown (hotfix 113554, wowsims swift_judgement.go).
@@ -257,7 +303,7 @@ end
 local function content(name, pack)
     local P = PACKS[name]
     local C = { PACK = pack or name, IDS = {} }
-    C.SPEC = ({ Retribution = 100023, Protection = 100022 })[name]
+    C.SPEC = ({ Retribution = 100023, Protection = 100022, HolyShock = 100023 })[name]
 
     function C.character()
         local w = class()
@@ -281,7 +327,7 @@ local function content(name, pack)
             level = 60,
             known = known,
             talents = P.talents,
-            power = { type = MANA, token = "MANA", max = 6000 },
+            power = { type = MANA, token = "MANA", max = P.max or 6000 },
             speed = { P.weapon[3] },
             ranges = ranges,
         }
@@ -346,9 +392,9 @@ local function content(name, pack)
     C.WORLD = {
         level = 60,
         weapons = { P.weapon },
-        max = 6000,
+        max = P.max or 6000,
         fsr = { [MANA] = P.fsr },
-        power = 6000,
+        power = P.max or 6000,
         mobHealth = 15000,
         script = hooks,
     }
@@ -437,5 +483,6 @@ end
 
 M.Retribution, M.Protection =
     content("Retribution", "Retribution (wowsims.com)"), content("Protection", "Protection (wowsims.com)")
+M.HolyShock = content("HolyShock", "Holy Shock (wowsims.com)")
 
 return M

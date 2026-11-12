@@ -34,9 +34,8 @@ end
 
 local state = Hekili.State
 
--- The class kit and one spec a talent tree (ids the core's: Arcane 100081, Fire 100082, Frost 100083, unsupported:
--- wowsims/forever has no Frost APL; the client's one pseudo-spec, assumed 1485, only keys the legacy profile the core
--- migrates). Icons: the DB2 talent tabs'. Each package is the spec's wowsims.com pack.
+-- The class kit and one spec a talent tree (ids the core's: Arcane 100081, Fire 100082, Frost 100083; the client's one
+-- pseudo-spec, assumed 1485, only keys the legacy profile the core migrates). Icons: the DB2 talent tabs'. Each package is the spec's wowsims.com pack.
 local spec = Hekili:NewClass("MAGE", {
     specs = {
         {
@@ -64,7 +63,7 @@ local spec = Hekili:NewClass("MAGE", {
             icon = 135846,
             role = "attack",
             ranged = true,
-            unsupported = true,
+            package = "Frost (wowsims.com)",
         },
     },
 })
@@ -95,6 +94,15 @@ local FIRE_BLAST = { 2136, 2137, 2138, 8412, 8413, 10197, 10199 }
 local FIRE_BLAST_COST = { 40, 75, 115, 165, 220, 280, 340 }
 local FROSTFIRE_BOLT = { 401502, 1237312, 1237313 }
 local FROSTFIRE_BOLT_COST = { 205, 285, 370 }
+-- Frost's (the DB2's ranks and costs; Ice Lance's and Ice Barrier's ladders as wowsims's spell data lists them).
+local CONE_OF_COLD = { 120, 8492, 10159, 10160, 10161 }
+local CONE_OF_COLD_COST = { 210, 290, 380, 465, 555 }
+local ICE_LANCE = { 1312002, 400640, 1240044, 1240045, 1240046, 1240047 }
+local ICE_LANCE_COST = { 45, 55, 70, 105, 120, 160 }
+local ICE_BARRIER = { 11426, 13031, 13032, 13033 }
+local ICE_BARRIER_COST = { 305, 360, 420, 480 }
+local BLIZZARD = { 10, 6141, 8427, 10185, 10186, 10187 }
+local BLIZZARD_COST = { 320, 520, 720, 935, 1160, 1400 }
 
 -- The talents' per-rank values (wowsims's data; the DB2 carries the top rank's on rank 1): Improved Fireball and
 -- Improved Frostbolt -0.1 s cast a rank; Wake of Fire (11078, wowsims's Improved Fire Blast) -1 / -2 s Fire Blast
@@ -180,6 +188,23 @@ local function casts(spends)
         removeBuff("presence_of_mind")
         if spends and buff.fingers_of_frost.up then
             removeStack("fingers_of_frost")
+        end
+    end
+end
+
+-- Winter's Chill (11180, 5 ranks; wowsims talents_frost.go registerWinterChill): a landed Frostbolt adds a stack of the
+-- target's Winter's Chill (12579: 5 at most, 15 s; Cone of Cold spends them). A Frostbolt's `now` or `handler`: the
+-- same as `casts`, and the stack.
+-- shortcut: the roll (20% a rank) is unseen, so ranks 1-4 add a stack on every Frostbolt as rank 5 (100%) does;
+-- upgrade if a pack reads the stack below 5/5.
+local function chilled(spends)
+    return function()
+        removeBuff("presence_of_mind")
+        if spends and buff.fingers_of_frost.up then
+            removeStack("fingers_of_frost")
+        end
+        if talent.winters_chill_talent.rank > 0 then
+            applyDebuff("target", "winters_chill", nil, min(5, debuff.winters_chill.stack + 1))
         end
     end
 end
@@ -425,8 +450,8 @@ spec:RegisterAbilities({
         known = knows(FROSTBOLT),
         usable = unlocked("frost"),
 
-        now = casts(),
-        handler = casts(true),
+        now = chilled(),
+        handler = chilled(true),
         onCrit = mastered(FROSTBOLT_COST, FROSTBOLT),
     },
 
@@ -647,6 +672,159 @@ spec:RegisterAbilities({
     },
 })
 
+-- Frost (wowsims/forever's frost.apl.json, the Frost (wowsims.com) pack): Cone of Cold on five Winter's Chill stacks,
+-- Cold Snap to reset it, Ice Barrier kept for Frigid Power, Ice Lance on a Fingers of Frost charge, and the AoE list's
+-- Blizzard. Values from the DB2 (costs, cooldowns, durations, the class masks: Frost Channeling's bit 19 names Cone of
+-- Cold, Ice Lance, Ice Barrier and Blizzard) where wowsims's log agrees (Cone of Cold 527.25 = 555 x 0.95 and Ice
+-- Barrier 456 = 480 x 0.95 under Frost Channeling 1/3). Blink (the list's pre-pull leap) is not registered: its line's
+-- time reads Blink's aura duration, which the translator does not fold (the pack's `# Omitted:` line).
+spec:RegisterAuras({
+    -- The target's (unreadable in combat), modelled from our Frostbolts: Winter's Chill, 5 at most, 15 s.
+    winters_chill = { id = 12579, duration = 15, max_stack = 5 },
+    -- Ice Barrier's shield (60 s or until it breaks: no damage taken is modelled) and its Frigid Power (1326891, the
+    -- full 60 s however soon the shield breaks: wowsims ice_barrier.go), which the pack's Ice Barrier line reads.
+    ice_barrier = { id = 11426, copy = { 13031, 13032, 13033 }, duration = 60, max_stack = 1 },
+    frigid_power = { id = 1326891, duration = 60, max_stack = 1 },
+})
+
+-- Clearcasting's mask (12536) names Cone of Cold, Ice Lance and Blizzard too (Ice Barrier not): wowsims's Frost log
+-- casts Cone of Cold for 0 under it (72.00).
+spec:RegisterCostMod({ aura = "clearcasting", pct = -1, charges = 1, spells = { 120, 1312002, 10 } })
+
+-- Ice Lance's or Cone of Cold's `now` or `handler`: a Fingers of Frost charge spent (a damage cast). Ice Lance on a
+-- Frozen target (a charge up) adds a Winter's Chill stack first (wowsims rolls it at the cast's result, the charge still
+-- up; the same shortcut as `chilled`), and sets Fire Blast's cooldown (category 19, 8 s: wowsims ice_lance.go).
+-- shortcut: Fire Blast's cast does not set Ice Lance's (no pack casts both); upgrade if one does.
+local function lanced()
+    return function()
+        if buff.fingers_of_frost.up then
+            if talent.winters_chill_talent.rank > 0 then
+                applyDebuff("target", "winters_chill", nil, min(5, debuff.winters_chill.stack + 1))
+            end
+            removeStack("fingers_of_frost")
+        end
+        setCooldown("fire_blast", 8)
+    end
+end
+-- Cone of Cold spends every Winter's Chill stack on the target it lands on (wowsims consumeWintersChill).
+local function coned()
+    return function()
+        if buff.fingers_of_frost.up then
+            removeStack("fingers_of_frost")
+        end
+        removeDebuff("target", "winters_chill")
+    end
+end
+-- Cold Snap: every Frost-only cooldown ends (wowsims cold_snap.go; of the kit's, Cone of Cold and Ice Barrier).
+local function snapped()
+    return function()
+        setCooldown("cone_of_cold", 0)
+        setCooldown("ice_barrier", 0)
+    end
+end
+local function barriered()
+    return function()
+        applyBuff("ice_barrier")
+        applyBuff("frigid_power")
+    end
+end
+
+spec:RegisterAbilities({
+    cone_of_cold = {
+        id = 120,
+        school = "frost",
+        copy = rest(CONE_OF_COLD),
+        cast = 0,
+        cooldown = 10,
+        gcd = "spell",
+
+        spend = frostChanneled(CONE_OF_COLD_COST, CONE_OF_COLD),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(CONE_OF_COLD),
+        usable = unlocked("frost"),
+
+        now = coned(),
+        handler = coned(),
+        onCrit = mastered(CONE_OF_COLD_COST, CONE_OF_COLD),
+    },
+
+    -- 8 s on category 19, shared with Fire Blast (wowsims ice_lance.go; the DB2 holds the category on rank 1 only).
+    ice_lance = {
+        id = 1312002,
+        expects = "travel",
+        velocity = 38,
+        school = "frost",
+        copy = rest(ICE_LANCE),
+        cast = 0,
+        cooldown = 8,
+        gcd = "spell",
+
+        spend = frostChanneled(ICE_LANCE_COST, ICE_LANCE),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(ICE_LANCE),
+        usable = unlocked("frost"),
+
+        now = lanced(),
+        handler = lanced(),
+        onCrit = mastered(ICE_LANCE_COST, ICE_LANCE),
+    },
+
+    ice_barrier = {
+        id = 11426,
+        copy = rest(ICE_BARRIER),
+        cast = 0,
+        cooldown = 30,
+        gcd = "spell",
+
+        spend = frostChanneled(ICE_BARRIER_COST, ICE_BARRIER),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(ICE_BARRIER),
+        usable = unlocked("frost"),
+
+        now = barriered(),
+        handler = barriered(),
+    },
+
+    -- Off the GCD; 10 minutes (DB2 RecoveryTime).
+    cold_snap = {
+        id = 12472,
+        cast = 0,
+        cooldown = 600,
+        gcd = "off",
+
+        startsCombat = false,
+        toggle = "cooldowns",
+        known = knows({ 12472 }),
+
+        now = snapped(),
+        handler = snapped(),
+    },
+
+    -- A channel of 8 s, a tick a second (the AoE list's filler: three targets or more).
+    blizzard = {
+        id = 10,
+        copy = rest(BLIZZARD),
+        cast = 8,
+        channeled = true,
+        tick_time = 1,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = frostChanneled(BLIZZARD_COST, BLIZZARD),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(BLIZZARD),
+        usable = unlocked("frost"),
+    },
+})
+
 -- Talents: { talent tree (1 Arcane, 2 Fire, 3 Frost: the dominant tree picks the spec), rank 1's spell, max rank }:
 -- Forever's tree as wowsims/forever's ui/sim/talents/trees/mage.json lists it (tools/wowsims/talents.lua writes it;
 -- tests/Forever/talent_trees_spec.lua checks it and the spec detection over it). A key is Classic's where the talent
@@ -736,4 +914,9 @@ spec:RegisterPack(
     "Frostfire (wowsims.com)",
     20261110000,
     [[Hekili:1EvxpQnou0Fl9fwIwuYaT0UD0KhAv7SDwTTALY8Sdo23aEXehz7mtPcLF771jqcHphwAbjKtSVN7X3p8XqgsEKeXPwG8Tr3m6Tdho8g8djYUmhir5u2C6uCqgDb(79ALXMk0q5K(pRE2iwy8zQfEUfUuQOChyjfcP9HmsYbX1Kdms0x)WF(5BDarIMj4COE1GHDCFCB5e7m8LRFxqQsdpb6YjCiLwiTLt(W)83LtWxxozBmkeboFAcwGBKaEUjGMlrZtt8Xb()RrL5naXwtZmsKVCCSY5lHPCcLZvz)goyoS04xo5tul92dWH(F9HhrqMzT5MBdcMkSZksC0oyNL6HyIufgtFpJpIoINY8XONwLkKyWGYScvMXpxdOXjuBy(sTkrsn2Y)A9KHmQugx)qSuySdCjNq4jfJ6E3arAy)xvpVFJ5(ZZupNTAbnJ6lv3T30mmI514JFpmWWuA2SbPkwHjCufO95qsrAQVlYg)uHmd00eHuyx6BSyLYDJxD8vOHfurM5UXE9oloVz1g(xZcF47aRWkYM61HJqHgMthuyGyvAA8ugpCOJPNb)WXBdsIuP4XPf6LxlqG2a65ilVsGCwlSWcZvIJlzhpfwCLW0uKSUyOcH(vamdOUSsCr(AdFDV9R8AtEBJALV3d210kBkglrkhN66KxxvmQJ5BAXJtus7UaNGTio42qMURUUxOXg)MwNqnq5Xsyj2xLb1nsvmcWi0uXpaUFrEV1y2zT1q6DamDLPnTMD6Mooo9W()N8h2DkVvnD1hYKlKPEE923GlH(NGlRo1w7vmLsYXr7mR7PLER2JtymLeHNCAqa3rlXD4NXj50Wq8HVvPObz0ejWjFCZzQKOoUJeX0ylMwqjrxyKJyrASJp2cSlpT(RpV2geAJurvjt3wb3pV(47NtLNVMe9bY0NJMw3DeQe7puE(aCEx1VZi)16)DLyRR1IRVful5otLW5K5gV6NME5jemB3v1ZD6m)wsfUqCBgPsQD793z1qCW)Mxi8TIWxSlg)sDrJ88f7I3(cDrJW9f7H39c9Wgj9l2b)XXRt))OK3YOMzBQRg6837pQ)oPeFlUT3pOlWdV5iNV3vJVAPhtkyZve2MwN6Qc1N90CP8tPY0goQ)grlSZuAs0xG5ysb)Rc3V(Fcunn5)o]]
+)
+spec:RegisterPack(
+    "Frost (wowsims.com)",
+    20261112001,
+    [[Hekili:1EvBVTTnq4Fl9lBXygYrUlnRbvfidBzRfRbdW9ZsMI8KnNPifiPINlk0V9D0YswYwsw1B7lj08UNN749QDOF4NdxWiwi8553o)n(((ZV9w)Wf2Dzq4ImcDdzfEqssX)(KwzSflVzRARHNA8OQ0joL2jueMJO4CUW(bzyCNCAYaA4Ip94V9RpK4ykCXAoJbLQdgA3g4HIL21qXYd3nlrPHxaDXsgKqYfO6p(N)rXs86ILv4Z5ZCgZmlf9(zSmZmsMaH6e7Hh9(lJsozkYSMinc0vz4zLZsCtXscJPKFpEydSZ4vS8xiwYdD4b38Pp8zKK1wBM5HzZwXTRZJDo9StuDcYj6xWDK3szZjZzjupmWPvjCbgxjulxjnEzAabhtSbCkeft0AoONYtcEvCEsIxJl9YZk(4zW(HGYNyScdlvIdOeHiQ8drcUXo1LmdsjssKvPegNbCFYlJAJeQ3fCxnwKqixdBitZnqKkjjAfLf47qS3Js4YvG2GsIkJTnCleBSqPyrj56DxjEugO3GkDD4DG4wi1CDW3hIwbPxh6Ud7ef4iWD)lqeiHuoyEFWRBHujyrgjj7CdFZRkvdlYKorroD92ivBLFLIjtgEOTmnKs4s0e3pPTnoQZ0efn3uAagS)TTLlTU3gDnxi8mwCoq7YcxTOGiPqtW30DCPeU)3v781fPh88ZUg(BGMBrEMm5uJw1vuA25hZgA(kolktTf7oo8OFx74659gEh7cc0aHfjGDyYscDPHRz4ffL4U)OCmHg0xWCGWX7d8BXrFH0Vnk()PY5UjD5QDKigEmvj0yb)lFHOzfFmCboz0GIoznHRzX42MGaW)98(vuGKelaw4phUGQXEAnN4w3muWPAUkIOXZkCXEh2rRfn8)AURZATj(1NqCJ8HtJgU2HmwtBpuU6YjlN5)XEFxDLJA)AoCF97zUJW7oHWkavPtuhCF(XMLUsCvyA1P1vwOsX62Ts2pSWF4AI2BYAeOpzCCzDwu5xSPHF3H70xURC14LlAWa83qfXXLMJL5tt29YC960XY8Pz9(yUEr7yj(nJK4QvWJL377TU4SnUJS0Wnecj(NgPd)FE)8977NFBVVRHwypMjG(32l1x768b3NFXjN(xAEF3l6hXmm)(MZu7OLZzQ)(0dneRLvUW41bgX120OXj521kKYFh2WfC83y80HFcXEXH)d]]
 )

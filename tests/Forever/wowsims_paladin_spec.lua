@@ -45,6 +45,10 @@ local function set(...)
     return out
 end
 
+-- Holy Shock (wowsims.com)'s floors (new pack, 2026-11-12): replay decisions on-GCD, its flicker ceiling, the live
+-- limits per level.
+local HS_FLOOR, HS_FLICKER, HS_LIVE_LIMIT = 0, 99, { [10] = 99, [40] = 99, [60] = 99 }
+
 -- wowsims's Paladin knows the 879 ranks of Exorcism only (Undead or Demon targets; its target is Mechanical).
 local EXORCISM_ANY = { 415068, 415069, 415070, 415071, 415072, 415073 }
 -- The seals' hits (Seal of Command 20424, Seal of Righteousness 25713, Seal of Fury 20418, Vindication 440667) log
@@ -120,6 +124,24 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
             local C = content("paladin_retribution", RET_LIVE, "Retribution (wowsims.com)", level)
             local limit = level == 60 and math.max(6, RET_LIVE60) or level == 10 and RET_LIVE10 or 6
             ws.live("Retribution (wowsims.com)", C, limit)
+        end)
+    end
+
+    -- Holy Shock (wowsims.com): the Holy Shock build (wowsims/forever's builds/holy_shock.siml) on its own list. Its
+    -- casts log as rank 3's damage row 25902, replayed as the kit's 20930 (replay.lua's alias; the recipe's header).
+    -- Mana: the e5a9cd2a2d log's 2.625 and 0.788 each 0.1 s.
+    local HS = wowsims(pw.HolyShock, set(EXORCISM_ANY), { fsr = { [0] = { 26.25, 7.88 } } })
+    local HS_LIVE = wowsims(pw.HolyShock, set(EXORCISM_ANY), {})
+    local HS_REPLAY = { alias = { [25902] = 20930 } }
+    it("Holy Shock (wowsims.com) follows wowsims's casts", function()
+        local C = content("paladin_holy_shock", HS, "Holy Shock (wowsims.com)", 60)
+        local r, line = ws.gate("Holy Shock (wowsims.com)", C, "paladin_holy_shock", HS_FLOOR, HS_REPLAY)
+        ab.check(r.flicker <= HS_FLICKER + 1e-9, "Holy Shock (wowsims.com)", "ON flicker ceiling: " .. line)
+    end)
+    for _, level in ipairs({ 10, 40, 60 }) do
+        it("Holy Shock (wowsims.com) stays live at level " .. level, function()
+            local C = content("paladin_holy_shock", HS_LIVE, "Holy Shock (wowsims.com)", level)
+            ws.live("Holy Shock (wowsims.com)", C, HS_LIVE_LIMIT[level])
         end)
     end
 

@@ -9,7 +9,7 @@ local pack_gate = require("Forever.helpers.pack_gate")
 local mw = require("Forever.helpers.mage_world")
 
 describe("the Mage loop worlds", function()
-    for _, name in ipairs({ "Arcane", "Fire", "Frostfire" }) do
+    for _, name in ipairs({ "Arcane", "Fire", "Frostfire", "Frost" }) do
         it(name .. ": boots on its spec, and maps every ability the character knows", function()
             local C = mw[name]
             local H = headless.new({ character = C.character() })
@@ -47,10 +47,11 @@ describe("the Mage loop worlds", function()
                 evo.clip or false, -- no channel running
             })
             -- a cast press: its top rank's cost and cast time on the true state
-            local key = name == "Arcane" and "arcane_wrath" or "fireball"
+            local key = ({ Arcane = "arcane_wrath", Frost = "frostbolt" })[name] or "fireball"
             local p = C.resolve(key, H) -- a cast bar (UNIT_SPELLCAST_START at the press: W.press with a cast time)
-            assert.are.same( -- Fireball rank 11 (the trainer's: no book rank), Improved Fireball 5/5: 3.5 - 0.5
-                name == "Arcane" and { 395, 3.5, 6 } or { 395, 3, 0 },
+            assert.are.same( -- Fireball rank 11 (the trainer's: no book rank), Improved Fireball 5/5: 3.5 - 0.5;
+                -- Frostbolt rank 10 (no book rank), Frost Channeling 1/3 and Improved Frostbolt 5/5: 260 x 0.95, 3 - 0.5
+                ({ Arcane = { 395, 3.5, 6 }, Frost = { 247, 2.5, 0 } })[name] or { 395, 3, 0 },
                 { p.cost, p.cast, p.cooldown }
             )
             assert.is_true(#C.usable(H) > 0)
@@ -156,7 +157,7 @@ describe("the Mage loop worlds", function()
 end)
 
 describe("the headless Mage gates, 3 fights a pack #slow", function()
-    for _, name in ipairs({ "Arcane", "Fire", "Frostfire" }) do
+    for _, name in ipairs({ "Arcane", "Fire", "Frostfire", "Frost" }) do
         it(
             name .. " solo, level 60, one mob, 3 fights of up to 3 minutes: the first icon against the oracle's",
             function()
