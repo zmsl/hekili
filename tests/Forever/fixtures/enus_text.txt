@@ -13993,6 +13993,8 @@ options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.decimat
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.demon_armor	|T136000:0|t Spell 11735
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.demonic_brand	|T136000:0|t Spell 1293696
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.demonic_knowledge	|T136000:0|t Spell 412732
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.doomcaller_3pc	|T136000:0|t Spell 26116
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.doomcaller_5pc	|T136000:0|t Spell 26117
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.drain_life_channel	|T136000:0|t Spell 11700
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.drain_soul_channel	|T136000:0|t Spell 11675
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.fel_domination	|T136000:0|t Spell 18708
@@ -14268,6 +14270,8 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.decimation
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.demon_armor	|T136000:0|t Spell 11735
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.demonic_brand	|T136000:0|t Spell 1293696
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.demonic_knowledge	|T136000:0|t Spell 412732
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.doomcaller_3pc	|T136000:0|t Spell 26116
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.doomcaller_5pc	|T136000:0|t Spell 26117
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.drain_life_channel	|T136000:0|t Spell 11700
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.drain_soul_channel	|T136000:0|t Spell 11675
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.fel_domination	|T136000:0|t Spell 18708
@@ -16571,6 +16575,8 @@ options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.decimat
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.demon_armor	|T136000:0|t Spell 11735
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.demonic_brand	|T136000:0|t Spell 1293696
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.demonic_knowledge	|T136000:0|t Spell 412732
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.doomcaller_3pc	|T136000:0|t Spell 26116
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.doomcaller_5pc	|T136000:0|t Spell 26117
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.drain_life_channel	|T136000:0|t Spell 11700
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.drain_soul_channel	|T136000:0|t Spell 11675
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.fel_domination	|T136000:0|t Spell 18708
@@ -16846,6 +16852,8 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.decim
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.demon_armor	|T136000:0|t Spell 11735
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.demonic_brand	|T136000:0|t Spell 1293696
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.demonic_knowledge	|T136000:0|t Spell 412732
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.doomcaller_3pc	|T136000:0|t Spell 26116
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.doomcaller_5pc	|T136000:0|t Spell 26117
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.drain_life_channel	|T136000:0|t Spell 11700
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.drain_soul_channel	|T136000:0|t Spell 11675
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.fel_domination	|T136000:0|t Spell 18708
@@ -17192,6 +17200,8 @@ options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.decim
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.demon_armor	|T136000:0|t Spell 11735
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.demonic_brand	|T136000:0|t Spell 1293696
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.demonic_knowledge	|T136000:0|t Spell 412732
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.doomcaller_3pc	|T136000:0|t Spell 26116
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.doomcaller_5pc	|T136000:0|t Spell 26117
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.drain_life_channel	|T136000:0|t Spell 11700
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.drain_soul_channel	|T136000:0|t Spell 11675
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.fel_domination	|T136000:0|t Spell 18708
@@ -17499,6 +17509,8 @@ options.packs.discipline.Smite (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.dark_inspiration	|T136000:0|t Spell 1326168
 options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.dark_sacrifice	|T136000:0|t Spell 1277324
 options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.devouring_plague	|T136000:0|t Spell 2944
+options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.divine_aegis	|T136000:0|t Spell 431624
+options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.elunes_grace	|T136000:0|t Spell 2651
 options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.holy_fire	|T136000:0|t Spell 14914
 options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.holy_purpose	|T136000:0|t Spell 1284536
 options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.inner_focus	|T136000:0|t Spell 14751
@@ -21192,6 +21204,8 @@ options.packs.shadow.Shadow (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.dark_inspiration	|T136000:0|t Spell 1326168
 options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.dark_sacrifice	|T136000:0|t Spell 1277324
 options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.devouring_plague	|T136000:0|t Spell 2944
+options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.divine_aegis	|T136000:0|t Spell 431624
+options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.elunes_grace	|T136000:0|t Spell 2651
 options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.holy_fire	|T136000:0|t Spell 14914
 options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.holy_purpose	|T136000:0|t Spell 1284536
 options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.inner_focus	|T136000:0|t Spell 14751

@@ -325,6 +325,7 @@ describe("Forever Warlock", function()
             for _, field in ipairs({ "now", "handler" }) do
                 local e = env()
                 e.buff = buffs({ shadow_trance = 1 })
+                e.instant = true -- the belief's `now` spends it only on an instant cast
                 ld.run(A.shadow_bolt[field], e)
                 assert.are.same({ "shadow_trance" }, e.removed, field)
                 e = env()
@@ -341,6 +342,50 @@ describe("Forever Warlock", function()
             assert.are.same({ false, "no immolate" }, { ld.run(A.conflagrate.usable, e) })
             e.debuff = buffs({ immolate = 1 })
             assert.is_true((ld.run(A.conflagrate.usable, e)))
+        end
+    )
+
+    it("a hard Shadow Bolt keeps Shadow Trance in the belief (a proc during the cast)", function()
+        local e = env()
+        e.buff = buffs({ shadow_trance = 1 })
+        e.instant = false
+        ld.run(w.abilities.shadow_bolt.now, e)
+        assert.are.same({}, e.removed)
+    end)
+
+    it(
+        "Shadow Bolt spends Revelation's charge; the sim's handler adds Shadow Vulnerability (a guaranteed crit)",
+        function()
+            for _, field in ipairs({ "now", "handler" }) do
+                local e = env({ improved_shadow_bolt = 5 })
+                e.buff = buffs({ revelation = 1 })
+                e.target = { health = { pct = 100 } }
+                ld.run(w.abilities.shadow_bolt[field], e)
+                assert.are.same({ "revelation" }, e.removed, field)
+                assert.are.same(field == "handler" and { "shadow_vulnerability" } or {}, e.applied, field)
+                e = env({ improved_shadow_bolt = 5 })
+                e.target = { health = { pct = 100 } }
+                ld.run(w.abilities.shadow_bolt[field], e)
+                assert.are.same({}, e.removed, field)
+                assert.are.same({}, e.applied, field)
+            end
+        end
+    )
+
+    it(
+        "Doomcaller's Attire: five pieces, 3pc 26116 and 5pc 26117 (Shadow Bolt -15% mana, added to Cataclysm)",
+        function()
+            assert.are.same({ "doomcaller", 21334, 21335, 21336, 21337, 21338 }, w.gear[#w.gear])
+            assert.are.equal(26116, w.auras.doomcaller_3pc.id)
+            assert.are.equal(26117, w.auras.doomcaller_5pc.id)
+            w.game.known[25307] = true
+            local e = env({ cataclysm = 3 })
+            e.set_bonus = setmetatable({ doomcaller_5pc = 1 }, {
+                __index = function()
+                    return 0
+                end,
+            })
+            assert.are.equal(342 - 0.15 * 380, near(ld.run(w.abilities.shadow_bolt.spend, e)))
         end
     )
 

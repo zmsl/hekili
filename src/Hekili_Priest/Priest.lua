@@ -19,7 +19,8 @@
 -- Death's 18 s (DB2 15 s).
 -- Unmodelled: the procs' rolls (Holy Purpose from Searing Light, Spirit Tap on a kill, Shadow Weaving: unseen; the
 -- player aura walk reads the player's where plain). Dark Inspiration is applied by a Mind Blast (in the mana regen
--- and the world; a Mind Flay's full channel is not: a channel's handler never runs). Also unmodelled: the DoTs' resists, Shadow Word: Death's backlash, Inner Focus's crit, pushback, the healing spells Shadowform forbids (no
+-- and the world; a Mind Flay's full channel is not: a channel's handler never runs, and the full-channel roll is unseen:
+-- accepted, the aura read corrects it). Also unmodelled: the DoTs' resists, Shadow Word: Death's backlash, Inner Focus's crit, pushback, the healing spells Shadowform forbids (no
 -- priority casts one).
 -- Credits: Hekili (registration API and pack format). wowsims/forever (MIT, https://github.com/wowsims/forever:
 -- ui/specs/priest/dps/builds/*.build.json and sim/priest/) is the reference for the abilities and the talent, proc,
@@ -94,6 +95,9 @@ local HOLY_NOVA = { 15237, 15430, 15431, 27799, 27800, 27801 }
 local HOLY_NOVA_COST = { 185, 290, 400, 520, 635, 750 }
 local POWER_WORD_SHIELD = { 17, 592, 600, 3747, 6065, 6066, 10898, 10899, 10900, 10901 }
 local POWER_WORD_SHIELD_COST = { 45, 80, 130, 175, 210, 250, 300, 355, 425, 500 }
+local FADE = { 586, 9578, 9579, 9592, 10941, 10942 }
+local RENEW = { 139, 6074, 6075, 6076, 6077, 6078, 10927, 10928, 10929, 25315 }
+local POWER_WORD_FORTITUDE = { 1243, 1244, 1245, 2791, 10937, 10938 }
 local INNER_FIRE = { 588, 7128, 602, 1006, 10951, 10952 }
 local INNER_FIRE_COST = { 30, 65, 105, 165, 235, 315 }
 
@@ -282,10 +286,16 @@ spec:RegisterAuras({
     inner_focus = { id = 14751, duration = 3600, max_stack = 1 }, -- until the next spell (DB2 -1)
     power_word_shield = { id = 17, copy = rest(POWER_WORD_SHIELD), duration = 30, max_stack = 1 },
     weakened_soul = { id = 6788, duration = 15, max_stack = 1 },
-    -- The procs (unseen; the player aura walk reads them where plain): Spirit Tap on a kill, Dark Inspiration from Mind
+    -- The procs (unseen, observed only: no producer, the player aura walk reads them where plain): Spirit Tap on a kill, Dark Inspiration from Mind
     -- Blast and a full Mind Flay (wowsims's: absent from the DB2), Holy Purpose from Holy Fire's ticks (Searing Light).
     spirit_tap = { id = 15271, duration = 15, max_stack = 1 },
     dark_inspiration = { id = 1326168, duration = 10, max_stack = 1 },
+    -- The utility spells' auras (no priority casts them; registered for the displays and custom priorities).
+    fade_buff = { id = 586, copy = rest(FADE), duration = 10, max_stack = 1 },
+    renew = { id = 139, copy = rest(RENEW), duration = 15, tick_time = 3, max_stack = 1 },
+    elunes_grace = { id = 2651, duration = 15, max_stack = 1 },
+    power_word_fortitude = { id = 1243, copy = rest(POWER_WORD_FORTITUDE), duration = 3600, max_stack = 1 },
+    divine_aegis = { id = 431624, duration = 12, max_stack = 1 },
     holy_purpose = { id = 1284536, duration = 10, max_stack = 1 },
     dark_sacrifice = { id = 1277324, copy = rest(DARK_SACRIFICE), duration = 15, tick_time = 3, max_stack = 1 },
     -- The target's (unreadable in combat), modelled from our casts.

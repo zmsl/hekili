@@ -173,6 +173,21 @@ local function cataclysmic(values, ids)
     end
 end
 
+-- Doomcaller's Attire (AQ, set 499, db.json setId; sim/warlock/item_sets.go): five pieces; the 3-piece 26116 (Immolate's
+-- damage) and the 5-piece 26117 (Shadow Bolt -15% mana, a percent modifier added to Cataclysm's: DB2 effect 702131).
+local DOOMCALLER = { 21334, 21335, 21336, 21337, 21338 }
+spec:RegisterGear("doomcaller", unpack(DOOMCALLER))
+spec:RegisterSetBonus("doomcaller_3pc", 26116)
+spec:RegisterSetBonus("doomcaller_5pc", 26117)
+
+-- Shadow Bolt's mana: Cataclysm's cut and the Doomcaller 5-piece's.
+local function boltCost()
+    return function()
+        local cut = (CATACLYSM[min(talent.cataclysm.rank, 3)] or 0) + (set_bonus.doomcaller_5pc > 0 and 0.15 or 0)
+        return (SHADOW_BOLT_COST[knownRank(SHADOW_BOLT)] or SHADOW_BOLT_COST[1]) * (1 - cut)
+    end
+end
+
 -- A cast time less Bane's 0.1 s a rank (DB2 17788 effect 0: aura 107 misc 10 on Shadow Bolt, Immolate and Incinerate),
 -- hasted. `base`: a number, or a table by rank of `ids`. The reads are arguments: a field function's caller passes its
 -- own `talent` and `haste` (Hekili setfenv's only the field function itself, never a closure it calls).
@@ -320,6 +335,9 @@ spec:RegisterAuras({
     shadow_trance = { id = 17941, duration = 10, max_stack = 1, overlay = 686 },
     decimation = { id = 440873, duration = 10, max_stack = 1, overlay = 6353 },
     amplify_curse = { id = 18288, duration = 30, max_stack = 1 },
+    -- The Doomcaller's Attire bonuses' hidden auras: tracked so set_bonus.doomcaller_* reads them.
+    doomcaller_3pc = { id = 26116, duration = 3600, max_stack = 1 },
+    doomcaller_5pc = { id = 26117, duration = 3600, max_stack = 1 },
     -- The weapon enchant 8217's proc (wowsims enchants.go revelationBuffs; each class has its own id): the next
     -- Shadow Bolt's crit chance +100%, one charge. A random proc: read, never predicted.
     revelation = { id = 1323392, duration = 15, max_stack = 1 },
@@ -372,17 +390,25 @@ local function lands(key, group, amplified, duration)
     end
 end
 
--- Shadow Bolt's: Shadow Trance spent by an instant cast (wowsims talents_affliction.go).
--- shortcut: in the belief a Shadow Trance up at the cast's success is spent, a proc during a hard cast too; the
--- player aura walk corrects it where plain.
+-- Shadow Bolt's: Shadow Trance spent by an instant cast (wowsims talents_affliction.go), and Revelation's charge by
+-- any cast (wowsims enchants.go: the next cast the crit modifier reaches).
+-- In the belief `instant` is true only for a cast that started none (Families/Now.lua); the sim's cast time is 0 while
+-- the buff is up, so its handler spends on the buff alone.
 -- `sim`: the simulation's handler, which also reads the target's health for Decimation: a landed Shadow Bolt (or Searing
--- Pain) at a target under 35% (wowsims talents_demonology.go). The belief's `now` has no target to read (its health is
--- secret on Forever: the glow read of `decimation` carries it in game).
+-- Pain) at a target under 35% (wowsims talents_demonology.go), and applies Shadow Vulnerability for Revelation's
+-- guaranteed crit. The belief's `now` has no target to read (its health is secret on Forever: the glow read of
+-- `decimation` carries it in game; the crit's own `onCrit` carries the vulnerability).
 local function bolted(sim)
     if sim then
         return function()
             if buff.shadow_trance.up then
                 removeBuff("shadow_trance")
+            end
+            if buff.revelation.up then
+                removeBuff("revelation")
+                if talent.improved_shadow_bolt.rank > 0 then
+                    applyDebuff("target", "shadow_vulnerability")
+                end
             end
             if talent.decimation.rank > 0 and target.health.pct < 35 then
                 applyBuff("decimation")
@@ -390,8 +416,11 @@ local function bolted(sim)
         end
     end
     return function()
-        if buff.shadow_trance.up then
+        if instant and buff.shadow_trance.up then
             removeBuff("shadow_trance")
+        end
+        if buff.revelation.up then
+            removeBuff("revelation")
         end
     end
 end
@@ -543,7 +572,7 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = cataclysmic(SHADOW_BOLT_COST, SHADOW_BOLT),
+        spend = boltCost(),
         spendType = "mana",
 
         startsCombat = true,
