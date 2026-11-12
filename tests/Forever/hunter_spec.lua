@@ -906,3 +906,42 @@ describe("Forever Hunter Movement (R8)", function()
         assert.are.same({ "multi_shot", "multi_shot" }, { far(true), near(true) })
     end)
 end)
+
+describe("Time-to-Die checks", function()
+    local function profile()
+        local f = assert(io.open("src/Hekili_Hunter/APLs/Beast Mastery (wowsims.com).simc"))
+        local text = f:read("*a")
+        f:close()
+        return text
+    end
+
+    it("reserves Serpent Sting for a full-duration target and excludes Elemental and Mechanical targets", function()
+        local text = profile()
+        local lifetime = "target.time_to_die>=debuff.serpent_sting.duration*0.6&target.time_to_die<3600"
+        local creatures = 'target.creature_type!="elemental"&target.creature_type!="mechanical"'
+        local seen = 0
+        for line in text:gmatch("[^\n]+") do
+            if line:find("serpent_sting", 1, true) and not line:match("^#") then
+                seen = seen + 1
+                assert.is_truthy(line:find(lifetime, 1, true), line)
+                assert.is_truthy(line:find(creatures, 1, true), line)
+            end
+        end
+        assert.are.equal(3, seen)
+    end)
+
+    it("does not start Aimed Shot unless the target should survive its hasted cast", function()
+        local text = profile()
+        local guard = "target.time_to_die>action.aimed_shot.cast&target.time_to_die<3600"
+        local seen = 0
+        for line in text:gmatch("[^\n]+") do
+            if line:find("aimed_shot", 1, true) and not line:match("^#") then
+                seen = seen + 1
+                assert.is_truthy(line:find(guard, 1, true), line)
+            end
+        end
+        assert.are.equal(1, seen)
+    end)
+
+    end)
+end)
