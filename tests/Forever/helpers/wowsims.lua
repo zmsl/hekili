@@ -455,7 +455,9 @@ M.READY = {
     -- shown 0.2-0.8 s before wowsims's cast). Cause as the Enhancement loop bar (pack_gate M.REACT_P90_BY): the
     -- conservative mana lower bound loses cost ties at the oracle's exact edge, re-timed by CN8's queue window; no cast
     -- lost. Not traced row by row (deferral)
-    shaman_enhancement = { 0.38, 34 },
+    -- { 0.38, 34 } -> { 0.40, 34 } (regen phase lane, R6, cause harness: the indexed poll clock (ledger L606/L667;
+    -- the replay world ticks no regen): the decision window moved, timing fixture re-recorded; median 0.400, 34 real)
+    shaman_enhancement = { 0.40, 34 },
     -- { 0.48, 54 } -> { 2.20, 3 } re-pin 0.7 (lane shaman, R6): 91 decisions, 3 real (all late, cost class: the Major
     -- Mana Potion / Demonic Rune refills the belief cannot see leave lo ~2630 under the truth, gaps.md "Potion mana
     -- refill"; Lightning Bolt at its top rank's 198 where wowsims down-ranks, gap BL), median 2.20; the count falls from
