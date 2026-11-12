@@ -1393,6 +1393,20 @@ describe("Forever Druid in VirtualState's now context", function()
         assert.are.equal(0, settle(30).hi)
     end)
 
+    -- The same while an older top still falls on the decay's grid (5, 6, ... its next quantum at 15): the reset's top
+    -- leaves that grid and starts its own, an interval after the decay picks it up.
+    it("restarts the top's quanta at a reset out of combat while an older top still falls", function()
+        I.SetTalentRank(I.talents.bySpell[17056], 3)
+        bearSwingCat()
+        I.Sources.Direct(VS.Obs.CombatEnd, 5)
+        VS.Drain(5)
+        assert.is_true(settle(14.5).hi > 0) -- the estimate rests since 13, the top above it
+        cast(5487, 14.6) -- Cat to Bear: [0, 10]
+        near(10, VS.Power(1, 15.5).hi) -- no quantum at the old grid's 15
+        near(10, settle(15.5).hi)
+        assert.are.equal(0, settle(30).hi)
+    end)
+
     -- wowsims talents_balance.go applyNaturesGrace, its Balance log: under Nature's Grace a GCD takes the 10% cast speed
     -- and, on the buff's class mask, the 10% cut: Moonfire 1.227 s, Innervate 1.364 s, 1.5 s without it.
     it("cuts the GCD under Nature's Grace: 1.227 s on its mask's spells, 1.364 s on the others", function()

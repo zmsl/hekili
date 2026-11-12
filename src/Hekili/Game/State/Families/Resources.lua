@@ -1877,11 +1877,12 @@ function I.Refund(r, d, t)
 end
 
 --- Our own cast set slot r to [v, v + width] (`width`: what a roll the belief does not see may add): the estimate
---- takes the floor, moved as a cast's change (I.ResourceShift), and the interval is exactly that. Allocates nothing.
+--- takes the floor, moved as a cast's change (I.ResourceShift), and the interval is exactly that; the top leaves an
+--- older top's decay grid (I.OnAdvance starts its own). Allocates nothing.
 function I.ResourceSet(r, v, width, t, event)
     I.ResourceShift(r, v - R.est0[r], t, event)
     local max = R.max[r]
-    R.lo0[r], R.over[r], R.hi0[r] = clamp(v, max), 0, clamp(v + width, max)
+    R.lo0[r], R.over[r], R.hi0[r], R.topNext[r] = clamp(v, max), 0, clamp(v + width, max), 0
 end
 
 -- What slot r's out-of-combat decay takes from the clock to `now`, as a fold from the clock to `now` (I.OnAdvance)
