@@ -773,6 +773,14 @@ do
                     state.set_bonus[ key ] = 1
                 end
 
+                local classID, subClassID
+                if i >= 16 and i <= 18 then
+                    -- the client's item data needs no item cache: the size and kind of an item not cached yet
+                    local _, _, _, loc
+                    _, _, _, loc, _, classID, subClassID = GetItemInfoInstant( item )
+                    equipLoc = equipLoc or loc
+                end
+
                 if i == 16 then
                     if equipLoc == "INVTYPE_2HWEAPON" then
                         state.main_hand.size = 2
@@ -793,12 +801,8 @@ do
                     end
                 end
 
-                if i >= 16 and i <= 18 then
-                    -- the weapon kind from the client's item data (no item cache needed); a relic or shield has none
-                    local _, _, _, _, _, classID, subClassID = GetItemInfoInstant( item )
-                    if classID == WEAPON_CLASS then
-                        state[ HAND_OF_SLOT[ i ] ].kind = WEAPON_KIND[ subClassID ]
-                    end
+                if classID and classID == WEAPON_CLASS then -- a relic, shield or held-in-off-hand item has no kind
+                    state[ HAND_OF_SLOT[ i ] ].kind = WEAPON_KIND[ subClassID ]
                 end
 
 
