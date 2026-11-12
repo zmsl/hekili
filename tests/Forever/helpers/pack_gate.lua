@@ -147,7 +147,19 @@ M.FLICKER = {
     -- heldReady 236 / 263 / 283, agreement .984 / .983 / .977: flicker 1.3 -> 0.9, heldReady 393 -> 283 (the worst set)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0.02, readyShort 0 / 0 / 0, heldReady 200 / 259 / 266):
     -- flicker 0.9 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)
-    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 283 }, -- 0.56 / 0.89 / 0.56, 0
+    -- integ/auras 0.8 (R6; druid-fix + claw-shred; the loop world takes wowsims's Feral build: Furor 3/5 and Shredding
+    -- Attacks 3/3 (log header 17056=3, 16966=3), the target not attacking the player): seeds 1-20 / 21-40 / 41-60
+    -- heldReady 283 / 311 / 285, flicker 0.00 / 0.02 / 0.04 (oracle 0.80 / 0.74 / 0.67), agreement .982 / .980 / .980.
+    -- heldReady 283 -> 311 (the worst set): Shred at 42 instead of 60 lands more cost crossings on a poll while the
+    -- belief's energy sits one regen tick under the stepped truth, the harness clock artifact (world regen and the
+    -- loop's poll clock are float running sums; held ticks at belief-minus-truth -1/-2: 236 / 254 / 221, was 202 / 208 /
+    -- 186; at 0: 47 / 57 / 63, was 81 / 60 / 68): exposed, not caused. The old and the new Feral list read identically
+    -- in this world. Flicker row NOT moved: the 0.04 at seeds 41-60 is two flips, (1) Shifting Power vs a Clearcasting
+    -- Shred, which the oracle makes one poll earlier (Shifting Power's mana forecast trails the crossing), (2) gap AS's
+    -- residual (a Rake MISS tied with a swing in flight). Over the row on that set: owner decision pending. Re-measure
+    -- when the harness clock lane lands (ledger). Decided by Fable in the owner's place 2026-11-12, owner review
+    -- pending (fable-decision-feral-clock.md).
+    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 311 }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     ["Balance"] = { flicker = 0, retracted = 0, heldReady = 140 }, -- 0.03 / 0.05 / 0.07, 0
