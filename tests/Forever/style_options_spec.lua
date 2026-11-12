@@ -348,7 +348,7 @@ describe("the engine's and the shared resolve's range, flash and keybinding sett
         assert.are.same({}, H.errors)
         -- the vendored library itself (the harness answers through a double; H.realGetRange is the library's own)
         local LRC = H.env.LibStub("LibRangeCheck-3.0")
-        assert.are.equal(39, select(2, H.env.LibStub:GetLibrary("LibRangeCheck-3.0")))
+        assert.are.equal(40, select(2, H.env.LibStub:GetLibrary("LibRangeCheck-3.0")))
         assert.has_no.errors(function()
             H.realGetRange(LRC, "target")
         end)
