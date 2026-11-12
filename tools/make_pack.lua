@@ -45,7 +45,7 @@ local VERBATIM = { name = true, buff_name = true, label = true, label_if = true,
 
 -- SimC-style lines into their lists and entries:
 -- actions[.list](=|+=/)action[,name=list][,buff_name=aura][,use_off_gcd=N][,focus=N][,label=text][,label_if=cond]
--- [,icon=spell id or texture path][,icon_if=cond][,if=criteria]; focus is a tier, 1 highest; buff_name is
+-- [,icon=texture file id or path][,icon_if=cond][,if=criteria]; focus is a tier, 1 highest; buff_name is
 -- cancel_buff's aura.
 local function parse(simc)
     local lists = {}

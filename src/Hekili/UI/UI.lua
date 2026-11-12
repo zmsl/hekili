@@ -147,28 +147,11 @@ local function fontFlags( style )
 end
 ns.UI.FontFlags = fontFlags
 
--- Overrides (icon= values) the client could not draw: [value] = { [record.script] = true, per line warned }.
-local badIcons = {}
-
---- Draws record `rec`'s icon on texture `tex`: the APL line's icon= (`rec.iconOverride`) when it has one the client
---- can draw, else `rec.texture`. An override SetTexture refuses is not tried again; each line that asks for it adds
---- one warning. The renderers' one-line choice: a style that ignores overrides calls tex:SetTexture( rec.texture ).
+--- Draws record `rec`'s icon on texture `tex`: the APL line's icon= (`rec.iconOverride`, a file ID) when it has one,
+--- else `rec.texture`. No check here: the client's SetTexture returns true even for a missing file (owner probe
+--- 2026-11-12); Scripts.lua checks a path at load. A style that ignores overrides calls tex:SetTexture( rec.texture ).
 function ns.UI.SetRecTexture( tex, rec )
-    local o = rec.iconOverride
-    if o ~= nil then
-        local bad = badIcons[ o ]
-        if not bad then
-            if tex:SetTexture( o ) ~= false then return end
-            bad = {}
-            badIcons[ o ] = bad
-        end
-        local line = rec.script or "?"
-        if not bad[ line ] then
-            bad[ line ] = true
-            Hekili:Error( "Priority line %s (%s): icon=%s cannot be drawn; the normal icon is shown.", tostring( line ), tostring( rec.actionName ), tostring( o ) )
-        end
-    end
-    tex:SetTexture( rec.texture )
+    tex:SetTexture( rec.iconOverride or rec.texture )
 end
 
 --- Sets keybinding text `text` on font string `fs` of icon `b`, at the keyboard anchor (`anchor`, offsets `x`, `y`);

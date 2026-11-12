@@ -522,16 +522,17 @@ rage cap and 2 otherwise.
 
 Four more, from the tbc branch's `label` (no shipped pack uses them): `label=<text>` puts the text on the pick's
 record as `label` (the displays draw it on the icon, top centre), `label_if=<condition>` keeps it only while the
-condition holds; `icon=<spell id or texture path>` puts a second icon on the record as `iconOverride` (`texture` is
-never changed), `icon_if=<condition>` likewise. A number is a spell ID, resolved once when the line's script loads
-(`textSource` in `Sim/Scripts.lua`) to the spell's icon; an unknown spell gives the line no override and one warning
-(the Warnings log, the snapshot's `### Warnings`) naming the line (`pack:list:index`, the action) and the value.
-Anything else is a texture path. Without its `_if` each always applies; an error in any of them leaves the field nil.
-Core evaluates them at each pick (`markPick` in `Sim/Core.lua`); the value is taken verbatim (Scripts.lua's `text`
-modifier type), so it may not hold a comma. Both default renderers draw the record's icon through
-`ns.UI.SetRecTexture` (UI.lua): `iconOverride` when set, else `texture`; an override the client's `SetTexture`
-refuses (it returns false) falls back to `texture`, is not tried again, and adds one warning per line and value. A
-style that ignores overrides sets `texture` itself. Example: `starfire,label=R6,label_if=mana.pct<20`.
+condition holds; `icon=<texture file ID or texture path>` puts a second icon on the record as `iconOverride` (a file
+ID, a number; `texture` is never changed), `icon_if=<condition>` likewise. A bare number is a texture file ID, used as
+given and not checked (the client cannot tell a missing file ID: its `SetTexture` returns true and draws a blank
+icon). Anything else is a texture path, resolved once when the line's script loads (`textSource` in
+`Sim/Scripts.lua`, through `ns.Facade.GetFileIDFromPath`) to its file ID; a path the client lacks gives the line no
+override and one warning (the Warnings log, the snapshot's `### Warnings`) naming the line (`pack:list:index`, the
+action) and the value. Spell IDs are not supported (owner 2026-11-12). Without its `_if` each always applies; an
+error in any of them leaves the field nil. Core evaluates them at each pick (`markPick` in `Sim/Core.lua`), in that
+queue slot's state; the value is taken verbatim (Scripts.lua's `text` modifier type), so it may not hold a comma.
+Both default renderers draw the record's icon through `ns.UI.SetRecTexture` (UI.lua): `iconOverride` when set, else
+`texture`. A style that ignores overrides sets `texture` itself. Example: `starfire,label=R6,label_if=mana.pct<20`.
 
 **Pre-pull guards.** Upstream Hekili walks `precombat` before `default` on every refresh and skips its non-essential
 entries once `time > 0`; out of combat it is a plain priority. The fork keeps it so (owner ruling 2026-10-21: "a guard

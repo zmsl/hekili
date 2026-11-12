@@ -530,6 +530,11 @@ function M.new()
         return ctl.cvars[name]
     end
     api.GetCursorInfo, api.GetActionInfo, api.GetBindingKey = none, none, none
+    function api.GetFileIDFromPath(path) -- every path is a file (134400) except a test's `ctl.missingFiles[path]`
+        if not (ctl.missingFiles and ctl.missingFiles[path]) then
+            return 134400
+        end
+    end
     api.GetMacroSpell, api.GetMacroItem = none, none
     api.GetSpecializationInfoByID, api.GetStablePetInfo = none, none
     function api.GetInventoryItemID(_, slot)
@@ -1207,10 +1212,7 @@ function M.new()
         i.minRange, i.maxRange = r and r[1] or 0, r and r[2] or 5
         return i
     end
-    function C.GetSpellTexture(id)
-        if ctl.unknownSpells and ctl.unknownSpells[id] then
-            return nil -- a test's spell the client does not know (the real API returns nothing)
-        end
+    function C.GetSpellTexture()
         return 136000
     end
     function C.GetSpellDescription()

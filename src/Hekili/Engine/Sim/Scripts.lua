@@ -17,7 +17,7 @@ local roundUp = ns.roundUp
 local safeMax = ns.safeMax
 
 local format, trim = string.format, string.trim
-local GetSpellTexture = ns.Facade.C_Spell.GetSpellTexture
+local GetFileIDFromPath = ns.Facade.GetFileIDFromPath
 
 local twipe, insert = table.wipe, table.insert
 
@@ -1324,14 +1324,14 @@ local newModifiers = {
 }
 
 
--- A 'text' modifier's Lua source: the value verbatim, except icon=<number>, a spell ID resolved here once to its icon;
--- an unknown spell gives the line no icon override (nil) and one warning naming the line and the value.
+-- A 'text' modifier's Lua source: the value verbatim, except icon=, always a texture file ID as a number literal
+-- (SetTexture( "136006" ) would look up a path): a bare number as given (the client cannot tell a missing one), a path
+-- resolved here once; a path the client lacks gives the line no icon override (nil) and one warning naming the line.
 local function textSource( m, v, header, action )
-    local id = m == 'icon' and tonumber( v )
-    if not id then return format( "%q", tostring( v ) ) end
-    local tex = GetSpellTexture( id )
-    if tex then return type( tex ) == "number" and tostring( tex ) or format( "%q", tostring( tex ) ) end
-    Hekili:Error( "Priority line %s (%s): icon=%s is not a known spell ID; the line's icon is not overridden.", tostring( header ), tostring( action ), tostring( v ) )
+    if m ~= 'icon' then return format( "%q", tostring( v ) ) end
+    local id = tonumber( v ) or GetFileIDFromPath( tostring( v ) )
+    if id then return tostring( id ) end
+    Hekili:Error( "Priority line %s (%s): icon=%s is not a texture file; the line's icon is not overridden.", tostring( header ), tostring( action ), tostring( v ) )
 end
 
 

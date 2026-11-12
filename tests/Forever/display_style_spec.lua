@@ -296,29 +296,6 @@ describe("the classic display style", function()
         assert.are.same({}, H.errors)
     end)
 
-    it("draws the normal texture when the client refuses an override: one warning over many publishes", function()
-        local H, d = boot()
-        local tex = d.Buttons[1].Texture
-        rawset(tex, "SetTexture", function(self, t)
-            if t == "bad" then
-                return false
-            end
-            rawset(self, "__tex", t)
-            return true
-        end)
-        local before = #H.errors
-        for n = 1, 5 do
-            publish(H, function(s)
-                s[1].iconOverride, s[1].script = "bad", "P:default:1"
-                s[1].actionName = n % 2 == 0 and "overpower" or "mortal_strike" -- a new action redraws the texture
-            end)
-            H.ctl.now = H.ctl.now + 0.2
-            d.__scripts.OnUpdate(d, 0.2)
-            assert.are.equal("tex1", tex:GetTexture(), n)
-        end
-        assert.are.equal(before + 1, #H.errors)
-    end)
-
     it("allocates nothing over 1,000 display frames after the first publish", function()
         local H, d = boot()
         publish(H)
@@ -1006,33 +983,6 @@ describe("the timeline display style", function()
         assert.is_nil(cell(3).Label:GetText())
         assert.are.equal("tex1", cell(1).Texture:GetTexture())
         assert.are.same({}, H.errors)
-    end)
-
-    it("draws the normal texture when the client refuses an override: one warning over many publishes", function()
-        local H, d, T = tlBoot()
-        for _, b in ipairs(T.cells) do
-            rawset(b.Texture, "SetTexture", function(self, t)
-                if t == "bad" then
-                    return false
-                end
-                rawset(self, "__tex", t)
-                return true
-            end)
-        end
-        local before = #H.errors
-        for n = 1, 5 do
-            tlPublish(H, nil, function(s)
-                s[1].iconOverride, s[1].script = "bad", "P:default:1"
-            end)
-            H.ctl.now = H.ctl.now + 0.2
-            d.__scripts.OnUpdate(d, 0.2)
-            for _, b in ipairs(T.cells) do
-                if b.recIndex == 1 then
-                    assert.are.equal("tex1", b.Texture:GetTexture(), n)
-                end
-            end
-        end
-        assert.are.equal(before + 1, #H.errors)
     end)
 
     it(

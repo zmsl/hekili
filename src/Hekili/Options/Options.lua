@@ -8584,7 +8584,8 @@ do
                             value = SpaceOut( value )
                         end
 
-                        -- an empty label=, icon= or condition is no option (Scripts.lua would compile `return `)
+                        -- an empty value is no option: label= would draw nothing, icon= would name no file, and an
+                        -- empty label_if= or icon_if= would compile `return ` (Scripts.lua)
                         if value == "" and ( key == 'label' or key == 'label_if' or key == 'icon' or key == 'icon_if' ) then value = nil end
 
                         if key == 'caption' then

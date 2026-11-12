@@ -326,7 +326,7 @@ local function markPick( slot, mods )
     if mods then
         if mods.label and ( not mods.label_if or modValue( mods.label_if ) ) then label = modValue( mods.label ) end
         if mods.icon and ( not mods.icon_if or modValue( mods.icon_if ) ) then
-            icon = modValue( mods.icon ) -- a spell's icon (Scripts.lua resolved the ID at load) or a texture path
+            icon = modValue( mods.icon ) -- a texture file ID (Scripts.lua resolved a path at load)
         end
     end
     slot.label, slot.iconOverride = label, icon

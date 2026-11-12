@@ -99,7 +99,7 @@ describe("Engine/Driver.lua through the engine frame", function()
         local bytes = perUpdate(45)
         local r = H.Hekili.Engine.Output.Primary.recs[1]
         assert.are.equal("R6", r.label)
-        assert.are.equal("Interface/Icons/X", r.iconOverride)
+        assert.are.equal(134400, r.iconOverride) -- the path's file ID (the fake client's answer)
         assert.are.equal(0, bytes)
         assert.are.same({}, H.errors)
     end)

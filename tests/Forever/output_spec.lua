@@ -665,14 +665,36 @@ describe("Engine.Output (headless Arms)", function()
         assert.are.same({}, H.errors)
     end)
 
+    it("label_if and icon_if are read in each pick's own slot state: true at record 1, false at later ones", function()
+        local pack = out.recs[1].pack
+        for list, entries in pairs(H.Hekili.DB.profile.packs[pack].lists) do
+            for id, e in ipairs(entries) do -- every line the same condition on the queue slot (state.index)
+                e.label, e.label_if, e.icon, e.icon_if = "R1", "index=1", "136006", "index=1"
+                H.Hekili:LoadScript(pack, list, id)
+            end
+        end
+        for _ = 1, 2 do
+            t = t + 0.2
+            assert(headless.cycle(H, t))
+        end
+        assert.is_true(out.count >= 2)
+        assert.are.equal("R1", out.recs[1].label)
+        assert.are.equal(136006, out.recs[1].iconOverride)
+        for i = 2, out.count do
+            assert.are.equal(pack, out.recs[i].pack)
+            assert.is_nil(out.recs[i].label, out.recs[i].actionName)
+            assert.is_nil(out.recs[i].iconOverride, out.recs[i].actionName)
+        end
+        assert.are.same({}, H.errors)
+    end)
+
     it(
-        "icon= with icon_if true sets iconOverride (a path verbatim) and leaves texture alone; icon_if false none",
+        "icon= with icon_if true sets iconOverride (a path's file ID) and leaves texture alone; icon_if false none",
         function()
             local abilities = H.Hekili.Class.abilities
-            local path = "Interface\\Icons\\Spell_Nature_StarFall"
-            local key, hits = marked({ icon = path, icon_if = "time>=0" })
+            local key, hits = marked({ icon = "Interface\\Icons\\Spell_Nature_StarFall", icon_if = "time>=0" })
             for _, ri in ipairs(hits) do
-                assert.are.equal(path, ri.iconOverride, ri.actionName)
+                assert.are.equal(134400, ri.iconOverride, ri.actionName) -- the fake client's file ID for any path
                 assert.are.equal(abilities[ri.actionName].texture or 136000, ri.texture, ri.actionName)
                 assert.is_nil(ri.label, ri.actionName)
             end
@@ -680,19 +702,23 @@ describe("Engine.Output (headless Arms)", function()
             for _, ri in ipairs(hits) do
                 assert.is_nil(ri.iconOverride, ri.actionName)
             end
-            -- a number names a spell first: its icon (the fake client answers 136000 for any spell)
-            hits = select(2, marked({ icon = "6603", icon_if = false }, key))
-            for _, ri in ipairs(hits) do
-                assert.are.equal(136000, ri.iconOverride, ri.actionName)
+            -- a bare number is a texture file ID, used as given and kept a number (SetTexture("136006") is a path)
+            for _, v in ipairs({ "136006", 136006 }) do
+                hits = select(2, marked({ icon = v, icon_if = false }, key))
+                for _, ri in ipairs(hits) do
+                    assert.are.equal("number", type(ri.iconOverride), ri.actionName)
+                    assert.are.equal(136006, ri.iconOverride, ri.actionName)
+                end
             end
             assert.are.same({}, H.errors)
         end
     )
 
-    it("icon=<unknown spell ID> gives the line no override and one warning naming the line and the value", function()
-        H.ctl.unknownSpells = { [999999] = true }
+    it("icon=<a path the client lacks> gives the line no override and one warning naming the line and value", function()
+        local path = "Interface\\Icons\\NoSuchX"
+        H.ctl.missingFiles = { [path] = true }
         local before = #H.errors
-        local key, hits = marked({ icon = "999999" })
+        local key, hits = marked({ icon = path })
         for _, ri in ipairs(hits) do
             assert.is_nil(ri.iconOverride, ri.actionName)
         end
@@ -702,14 +728,14 @@ describe("Engine.Output (headless Arms)", function()
         local line = key.__pack .. ":" .. key.__list .. ":" .. key.__id
         local found = 0
         for _, w in ipairs(H.Hekili.ErrorKeys) do
-            if w:find("icon=999999", 1, true) then
+            if w:find("icon=" .. path, 1, true) then
                 found = found + 1
                 assert.truthy(w:find(line, 1, true), w)
-                assert.truthy(w:find("not a known spell ID", 1, true), w)
+                assert.truthy(w:find("not a texture file", 1, true), w)
             end
         end
         assert.are.equal(1, found)
-        H.ctl.unknownSpells = nil
+        H.ctl.missingFiles = nil
     end)
 
     it("a label, label_if, icon or icon_if that raises gives nil, never an error", function()
