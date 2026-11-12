@@ -775,8 +775,9 @@ end)
 -- then Furor's 10 at 20% a rank (wowsims forms.go): the sim from its floor, so at 5/5 only (the belief's `now` sets
 -- 1-4/5's unseen roll as [0, 10]); into Cat the rage stays (wowsims's Cat Form leaves it: the decay takes it out of
 -- combat) and the energy becomes Furor's 20% a rank of the pool (wowsims forms.go restoreCatEnergy; the pool is its
--- stored energy, bear_pause above): none untalented, as the owner's client showed (L586). wowsims keeps the bar on a first entry with nothing stored, its pull only: the
--- belief cannot tell one after a /reload, so every entry takes the share. The forms' `now` write the same lines.
+-- stored energy, bear_pause above): none untalented, as the owner's client showed (L586). wowsims keeps the bar on a
+-- first entry with nothing stored, its pull only: the belief cannot tell one after a /reload, so every entry takes
+-- the share. The forms' `now` write the same lines.
 spec:RegisterStateFunction("swap_form", function(form)
     for i = 1, #FORMS do
         removeBuff(FORMS[i])
