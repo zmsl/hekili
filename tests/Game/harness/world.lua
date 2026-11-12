@@ -206,7 +206,8 @@ function M.new(seed)
 
     --- The player `e` pressed `key` now. `p` is the content's resolved press { spell, ids (every rank's: the client
     --- answers their cooldown and IsCurrentSpell together; default { spell }), cost, pt (the cost's power type; default
-    --- the swing-paid one), cooldown, gcd (seconds; 0 or offGcd: off the GCD), offGcd, onNextSwing, amount ({ lo, hi } of
+    --- the swing-paid one), cooldown, gcd (seconds, or fn(W, e) -> seconds at the press; 0 or offGcd: off the GCD),
+    --- offGcd, onNextSwing, amount ({ lo, hi } of
     --- a queued strike), reagent ({ itemID, n [1] }: a bag count the press needs, paid when its cast lands; short:
     --- "reagent"), cast (a cast time in seconds), channel ({ length, tick, gain = { pt, amount }, effect = fn(W, e,
     --- p, n) }: a channel of `length` s ticking every `tick` s, each tick's gain and effect; the cast, its cost and its
@@ -264,7 +265,11 @@ function M.new(seed)
         if clip then
             W.stopChannel(e)
         end
-        local gcdLen = not offGcd and (p.gcd or 1.5) + (e.gcdLatency or 0) or nil
+        local g = p.gcd
+        if type(g) == "function" then
+            g = g(W, e)
+        end
+        local gcdLen = not offGcd and (g or 1.5) + (e.gcdLatency or 0) or nil
         if gcdLen then
             e.gcdUntil = t + gcdLen
         end

@@ -1116,7 +1116,11 @@ spec:RegisterAbilities({
         cooldown = function()
             return (buff.cat_form.up or buff.bear_form.up) and 6 or 0 -- not the `feral_form` alias: no belief read
         end,
-        gcd = "spell",
+        -- 1 s in Cat Form: the Cat Form passive's GCD mod (wowsims pin spells_auto_gen.go:2014, 3025 effect 4: -500 ms
+        -- on this mask); the Bear Form passives (1178, 9635) carry none, so Bear keeps the spell GCD.
+        gcd = function()
+            return buff.cat_form.up and "totem" or "spell"
+        end,
 
         spend = function()
             if buff.cat_form.up or buff.bear_form.up then

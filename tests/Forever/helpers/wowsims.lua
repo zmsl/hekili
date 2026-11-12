@@ -353,7 +353,10 @@ M.READY = {
     -- { 0.35, 10 } -> { 0.40, 10 } (CN8 I1, R6: a probe stands until the game says ready): decision 12, shifting_power
     -- at 11.75, the model's end short of the flag's, reads 0.500 late (0.350 while the probe counted down); real 10
     -- (early 2, late 8), median 0.400
-    druid_feral = { 0.40, 10 },
+    -- { 0.40, 10 } -> { 0.45, 9 } (R6, cause Faerie Fire 1.0 s Cat GCD (pin Cat Form passive 3025; owner in game, Rake
+    -- shown ~0.5 s late)): shifting_power 41.88 late 0.25 -> in:grain leaves the real set, decision 4 (rake at 2.0)
+    -- -0.4 -> -1.0 early (wowsims's slack after the 1 s GCD); real 9 (early 2, late 7), median 0.450
+    druid_feral = { 0.45, 9 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone

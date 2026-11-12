@@ -176,7 +176,10 @@ M.FLICKER = {
     -- heldReady 311 -> 357; flicker kept at 0.03 (the owner's hold, ledger L660 (b)). The clock lane showed the cause
     -- above is the phase of each stepped regen tick against the poll, not the float sums: the base's drift was a lottery
     -- between the belief one tick under and level; a random phase keeps some of each (L667)
-    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 357 }, -- 0.56 / 0.89 / 0.56, 0
+    -- heldReady 357 -> 479 (R6, cause Faerie Fire 1.0 s Cat GCD (pin Cat Form passive 3025; owner in game, Rake shown
+    -- ~0.5 s late); seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 369 / 407 / 479,
+    -- agreement .971 / .947 / .975, was .971 / .974 / .974): flicker under the held 0.03
+    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 479 }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /

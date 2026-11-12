@@ -41,6 +41,7 @@
 - Mage: Fire Blast spends a Fingers of Frost charge at the cast.
 - Retribution Paladins: each landed melee swing now stores an Echo of the seal that was up when you swung, even when you change seals before the hit shows, so a seal twist is timed from the right Echo.
 - Druids and Rogues: after a /reload in combat, the estimate of your energy now refills at 10 a second straight away, instead of staying low until you leave combat.
+- Druid: Faerie Fire in Cat Form now takes the cat's 1 second global cooldown, as the game gives it, so the ability after it (such as Rake) is no longer shown about half a second late.
 
 ### Known issues
 
