@@ -129,11 +129,17 @@ local function debuff(key, alsoHit) -- the debuff when its hit (for `key`'s amou
         end
     end
 end
+local catAt = {} -- the Cat entry rule by Furor rank above 0, built once a rank
 local function shift(key, mult)
     return {
-        extra = function(p)
+        extra = function(p, _, _, P)
             local R = rules()
             local onEnter = key == "bear_form" and R.enterBear or (key == "cat_form" and R.enterCat or nil)
+            local furor = P.talents and P.talents[17056] or 0 -- the pack's Furor; the Bear entry reads none
+            if key == "cat_form" and furor > 0 then
+                catAt[furor] = catAt[furor] or dw.entryRules("cat_form", furor)
+                onEnter = catAt[furor]
+            end
             p.shift = { form = FORM[key], dmgMult = mult, onEnter = onEnter }
         end,
     }
@@ -288,6 +294,7 @@ local PACKS = {
         form = "cat_form",
         weapon = { 55, 75, 1.0 },
         world = { regen = { [ENERGY] = dw.ENERGY_REGEN }, fsr = manaFsr(22), power = 100, stats = { [5] = 124 } },
+        talents = { [17056] = 3 }, -- Furor (wowsims's Feral build's 3/5, the log header's 17056=3)
         uptime = { "rip", "rake" },
     },
     Guardian = {
@@ -562,7 +569,7 @@ local function content(name)
             p.points = { POINTS, m.points }
         end
         if m.extra then
-            m.extra(p, pt, P.res)
+            m.extra(p, pt, P.res, P)
         end
         p.requires = function(W, e)
             local ok, why = formOk(a, e)
