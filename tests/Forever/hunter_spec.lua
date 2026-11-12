@@ -979,6 +979,4 @@ describe("Time-to-Die checks", function()
         end
         assert.are.equal(1, seen)
     end)
-
-    end)
 end)
