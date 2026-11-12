@@ -1369,9 +1369,7 @@ describe("Forever Druid Movement (R8)", function()
     -- of the first icon with the toggle set.
     local function world(yd, C, pack, key, ptype)
         C, pack, key, ptype = C or dlw.Feral, pack or PACK, key or "shred", ptype or 3
-        local c = C.character()
-        c.talents[16966] = 3 -- Shredding Attacks 3/3, the replay build's: Shred's lines want 2+ (L602)
-        local H = headless.new({ character = c, pack = pack })
+        local H = headless.new({ character = C.character(), pack = pack })
         assert.are.same({}, H.loadErrors)
         H.ctl.level.target, H.ctl.distance.target = 60, yd
         H.Fire("PLAYER_TARGET_CHANGED")
