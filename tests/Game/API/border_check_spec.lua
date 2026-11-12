@@ -19,6 +19,6 @@ describe("tools/check_border.sh", function()
     it("passes the real tree", function()
         local rc, out = run()
         assert.are.equal(0, rc, out)
-        assert.is_truthy(out:match("^ok:[^\n]*Facade%.Window"), out) -- the window read, the owner's one new crossing
+        assert.is_truthy(out:match("^ok:[^\n]*Facade%.Window[^\n]*Facade%.DebuffCount"), out) -- the owner's two belief reads
     end)
 end)

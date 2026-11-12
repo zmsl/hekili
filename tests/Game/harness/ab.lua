@@ -145,6 +145,21 @@ M.ARMS = {
         world = { swapEvery = { 4, 8 }, extraMobs = 2 },
     },
 }
+-- Option D (owner 2026-11-11): Recommend Target Swaps in a three-mob world (the extra two with plates, the client's
+-- enemy plates shown), the driver following the cycle icon (loop.lua `followCycle`); `cycle-follow-off` is its
+-- toggle-off twin, the flicker reference. Record-only.
+M.ARMS["cycle-follow"] = {
+    outcomes = "default",
+    presence = "router",
+    viewer = false,
+    world = { extraMobs = 2, plates = true, cycle = true, followCycle = true },
+}
+M.ARMS["cycle-follow-off"] = {
+    outcomes = "default",
+    presence = "router",
+    viewer = false,
+    world = { extraMobs = 2, plates = true, followCycle = true },
+}
 M.VERDICT = {
     "viewer-reshuffle",
     "viewer-nonland",

@@ -4088,7 +4088,7 @@ found = true end
                                     name = L["Count Nameplates Near You"],
                                     desc = format( L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n"
                                         .. "%s Recommended for melee specializations using a range of 10 yds or fewer\n\n"
-                                        .. "%s Discouraged for ranged specializations."], AtlasToString( "common-icon-checkmark" ), AtlasToString( "common-icon-redx" ) ),
+                                        .. "%s Ranged specializations count enemies in combat out to the radius; target swaps need it."], AtlasToString( "common-icon-checkmark" ), AtlasToString( "common-icon-checkmark" ) ),
                                     width = "full",
                                     order = 0.1,
                                 },
@@ -4244,7 +4244,8 @@ found = true end
                                         nameplateRange = {
                                             type = "range",
                                             name = L["Enemy Range Radius"],
-                                            desc = L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\n"
+                                            desc = L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. "
+                                                .. "Beyond 10 yards, only enemies in combat are counted.\n\n"
                                                 .. "This setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."],
                                             width = "full",
                                             order = 0.1,
@@ -4273,7 +4274,8 @@ found = true end
                                     type = "group",
                                     name = L["Secondary Targets"],
                                     inline = true,
-                                    hidden = function() return not self.DB.profile.specs[ id ].cycle end,
+                                    -- Forever never shows an enemy's time to die, so this filter moves nothing (option D, owner decision 3)
+                                    hidden = function() return true end,
                                     order = 7,
                                     args = {
                                         cycle_min = {
@@ -8611,6 +8613,7 @@ do
 
             if result.for_next then result.for_next = tonumber( result.for_next ) end
             if result.cycle_targets then result.cycle_targets = tonumber( result.cycle_targets ) end
+            if result.other_target then result.other_target = tonumber( result.other_target ) end
             if result.max_energy then result.max_energy = tonumber( result.max_energy ) end
 
             if result.use_off_gcd then result.use_off_gcd = tonumber( result.use_off_gcd ) end

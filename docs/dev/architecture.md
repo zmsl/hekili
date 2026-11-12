@@ -53,7 +53,11 @@ Those three are all the core names; the gate allows nothing else. The one belief
 (re-pin decision 11, owner "yes"): `ns.Facade.Window(name)` -> `up, openedAt, expiresAt, refreshes, step` (plain
 values; `false, 0, 0, 0, 0` closed or unknown), a belief-only facade function like `Facade.KnownRank`, never the aura
 copy; the core's `state.reset` copies every registered window through it (`Engine/Sim/State.lua` `CopyWindows`) and
-writes nothing back. `def` carries plain records (batch 4, the owner's
+writes nothing back. The second is the debuff count (option D, owner decision 2, 2026-11-11):
+`ns.Facade.DebuffCount(spellID, now)` -> how many enemies the belief holds the aura up on (the target plus every
+remembered target slot, keyed by GUID in the open world and by nameplate under the Map restriction), or nil when unknown
+(the current target holds no memory slot, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on
+Forever"). `def` carries plain records (batch 4, the owner's
 design 2026-11-01): no metatable, never a live Hekili table. Each field is a value, a function the belief runs in its own
 `now` context (`Families/Casts.lua` `I.Eval`: a raise is counted in `I.nowErrors` and fails
 `tests/Forever/plain_records_spec.lua`), or absent; a function field may carry a static value the core computes under
@@ -115,6 +119,19 @@ the snapshot panel whichever display is picked. One engine registry, no AceEvent
 **`Engine.Evaluate(pack, list, action, mod, results)`** is the pack editor's preview: resets the state, then fills
 `results` with the values of the entry's conditions (`mod` nil) or of one modifier (`"value"`, `"value_else"`,
 `"strict_if"`). Returns `results, list, action`.
+
+**Target swaps on Forever** (option D, owner 2026-11-11). The per-spec toggle (`settings.cycle`, "Recommend Target
+Swaps", off by default) arms upstream's cycle machinery for a line with `cycle_targets=1` (optionally
+`max_cycle_targets=N`): while the current target carries the line's debuff and fewer enemies carry it than
+`cycle_enemies`, the line reads the debuff as down and its record shows the cycle icon. `other_target=1` is a forced
+cycle: the line is usable only while a cycle is armed, so it is never shown on the current target and never with the
+toggle off. `active_dot` is the belief's count (`Facade.DebuffCount`, §1: the target plus every remembered target
+slot, by GUID in the open world and by nameplate under the Map restriction); unknown (the target holds no memory slot)
+is saturated, every enemy counted as carrying it, so no swap is suggested; the current target's own debuff floors it
+at 1. A swapped cast's handler runs with `state.cycle` set: its debuffs add to `active_dot` and leave the current
+target's alone. Time to die is never known on Forever, so `cycle_min` and the TTD filters exclude nobody (`FEED` is
+off); no pack may declare `min_ttd` or `max_ttd` (`tests/Forever/packs_spec.lua`), and the slider is hidden. Under the
+Map restriction `active_enemies` is 1 until a GUID-free enemy count exists, so no cycle arms in dungeons yet.
 
 **`Engine.Configure(profile)`** and **`Engine.settings`** (`Engine/Settings.lua`). The engine reads configuration only
 from `Engine.settings`. `Configure` assigns `specs`, `packs`, `toggles`, `displays`, `performance` and
