@@ -231,6 +231,7 @@ describe("Forever Druid", function()
                         assert.are.equal(cost, priced(w, ld.run(a.spend, e), a.spendType), key .. " rank " .. r)
                     end
                 else
+                    e.buff.bear_form = key == "feral_charge" and { up = true } or nil -- its cost is Bear Form's only
                     assert.are.equal(want[2], priced(w, ld.run(a.spend, e), a.spendType) or 0, key)
                 end
             end
@@ -1301,24 +1302,42 @@ describe("Forever Druid in VirtualState's now context", function()
         assert.are.equal(0, I.nowErrors, tostring(I.nowError))
     end)
 
-    -- Feral Charge (1238122) is the 5-rage spender whose DB2 stance mask holds Cat Form too: the client's yes there is no
-    -- rage rung (`ladder = false`), so the poll repeating it every pass cannot hold the floor at 5 (the owner's P=5.00#1).
-    it("takes no rage floor from Feral Charge's answers in Cat Form out of combat", function()
-        bearSwingCat()
-        I.Sources.Direct(VS.Obs.CombatEnd, 5)
-        VS.Drain(5)
-        local fc
+    local function feralCharge()
         for a = 1, I.ab.n do
             if I.ab.key[a] == "feral_charge" then
-                fc = a
+                return a
             end
         end
+    end
+
+    -- Feral Charge (1238122) is the 5-rage spender whose DB2 stance mask holds Cat Form too: its cost is 5 in Bear Form
+    -- only (0 elsewhere), so the poll repeating the client's yes in Cat Form every pass cannot hold the floor at 5 (the
+    -- owner's P=5.00#1), and a Cat-Form charge spends no rage.
+    it("takes no rage floor from Feral Charge's answers in Cat Form out of combat", function()
+        bearSwingCat()
+        cast(1238122, 4.5) -- in Cat Form, in combat: no rage spent
+        near(11.25, power(1, 4.6))
+        I.Sources.Direct(VS.Obs.CombatEnd, 5)
+        VS.Drain(5)
+        local fc = feralCharge()
         for t = 14, 20 do -- the usability poll's yes, every pass
             I.Sources.Direct(VS.Obs.Usable, t, fc, 1, 0)
             VS.Drain(t)
         end
         local r = VS.Power(1, 20)
         assert.are.same({ 0, 0 }, { r.est, r.lo })
+    end)
+
+    it("keeps Feral Charge's 5-rage rung in Bear Form", function()
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+        cast(5487, 2)
+        local fc = feralCharge()
+        I.Sources.Direct(VS.Obs.Usable, 2.5, fc, 0, 1) -- short
+        VS.Drain(2.5)
+        I.Sources.Direct(VS.Obs.Usable, 3, fc, 1, 0) -- yes: 5 at least
+        VS.Drain(3)
+        local r = VS.Power(1, 3)
+        assert.are.same({ 5, 5 }, { r.est, r.lo })
     end)
 
     -- Into Bear Form (wowsims forms.go registerShapeshiftSpell, furorRageOnEnterBear): all rage goes, then Furor's 10
@@ -1334,6 +1353,45 @@ describe("Forever Druid in VirtualState's now context", function()
             assert.are.equal(0, I.nowErrors, tostring(I.nowError))
         end)
     end
+
+    -- Furor 3/5's unseen roll leaves the top 10 over the estimate. The estimate rests at its beat at 13; the top keeps
+    -- the same grid (6, 7, ...) in whole quanta, so it never sits under a stepped truth, and the read ahead of the fold
+    -- takes the same quanta as the fold, also in the update where the estimate comes to rest.
+    it(
+        "drops the top in whole quanta on the decay's grid once the estimate rests, read ahead and folded alike",
+        function()
+            I.SetTalentRank(I.talents.bySpell[17056], 3)
+            bearSwingCat()
+            I.Sources.Direct(VS.Obs.CombatEnd, 5)
+            VS.Drain(5)
+            local h = VS.Power(1, 5).hi -- after the first quantum, at once
+            local function top(t) -- a quantum at each whole second after 5
+                local v = h - 1.25 * math.floor(t - 5)
+                return v > 0 and v or 0
+            end
+            for _, t in ipairs({ 12.5, 13.2, 14.5, 16.5, 21.5, 40 }) do
+                near(top(t), VS.Power(1, t).hi) -- read ahead from 5
+            end
+            local r = VS.Power(1, 14.5)
+            local ahead = { r.est, r.lo, r.hi }
+            assert.is_true(ahead[3] > 0)
+            r = settle(14.5) -- one fold from 5: the estimate rests in it
+            assert.are.same(ahead, { r.est, r.lo, r.hi })
+            for _, t in ipairs({ 16.5, 21.5, 40 }) do
+                near(top(t), settle(t).hi)
+            end
+        end
+    )
+
+    -- A top risen over the resting estimate out of combat (Bear Form at Furor 3/5: [0, 10]) has no grid of its own: its
+    -- first quantum an interval after the decay picks it up, the latest a truth's can come.
+    it("drops a top risen over the resting estimate out of combat no sooner than an interval on", function()
+        I.SetTalentRank(I.talents.bySpell[17056], 3)
+        cast(5487, 10)
+        near(10, VS.Power(1, 10.9).hi)
+        near(10, settle(10.9).hi)
+        assert.are.equal(0, settle(30).hi)
+    end)
 
     -- wowsims talents_balance.go applyNaturesGrace, its Balance log: under Nature's Grace a GCD takes the 10% cast speed
     -- and, on the buff's class mask, the 10% cut: Moonfire 1.227 s, Innervate 1.364 s, 1.5 s without it.

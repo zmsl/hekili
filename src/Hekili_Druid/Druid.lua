@@ -772,10 +772,10 @@ spec:RegisterStateExpr("druid_bleed_active", function()
 end)
 
 -- A shift (Classic's swap_form, Forever's rules): the other forms and a queued Maul go; into Bear all rage is lost,
--- then Furor's 10 at 20% a rank (wowsims forms.go): the sim from its floor, so at 5/5 only (the belief's `now` sets 1-4/5's
--- unseen roll as [0, 10]); into Cat the rage stays (wowsims's Cat Form leaves it: the decay takes it out of combat) and the energy becomes Furor's 20% a rank of
--- the pool (wowsims forms.go restoreCatEnergy; the pool is its stored energy, bear_pause above): none untalented, as
--- the owner's client showed (L586). wowsims keeps the bar on a first entry with nothing stored, its pull only: the
+-- then Furor's 10 at 20% a rank (wowsims forms.go): the sim from its floor, so at 5/5 only (the belief's `now` sets
+-- 1-4/5's unseen roll as [0, 10]); into Cat the rage stays (wowsims's Cat Form leaves it: the decay takes it out of
+-- combat) and the energy becomes Furor's 20% a rank of the pool (wowsims forms.go restoreCatEnergy; the pool is its
+-- stored energy, bear_pause above): none untalented, as the owner's client showed (L586). wowsims keeps the bar on a first entry with nothing stored, its pull only: the
 -- belief cannot tell one after a /reload, so every entry takes the share. The forms' `now` write the same lines.
 spec:RegisterStateFunction("swap_form", function(form)
     for i = 1, #FORMS do
@@ -896,7 +896,9 @@ spec:RegisterAbilities({
             end
             removeBuff("maul")
             local f = talent.furor.rank -- all rage goes, then Furor's (swap_form): certain at 5/5, a roll below
+            -- luacheck: push read globals resetResource (the belief's verb, Families/Now.lua: a `now` only)
             resetResource("rage", f >= 5 and FUROR_RAGE or 0, f > 0 and f < 5 and FUROR_RAGE or 0)
+            -- luacheck: pop
             applyBuff("bear_form")
         end,
 
@@ -1153,11 +1155,13 @@ spec:RegisterAbilities({
         cooldown = 15,
         gcd = "off",
 
-        spend = 5,
+        -- 5 in Bear Form only: the DB2 stance mask (0x91) holds Cat Form too, where a usable answer pinned the floor at
+        -- 5 out of combat with the client's bar at 0 (owner 2026-11-12; the poll repeats it every pass). A cost of 0
+        -- is no rage rung, and a Cat-Form charge spends no rage.
+        spend = function()
+            return buff.bear_form.up and 5 or 0
+        end,
         spendType = "rage",
-        -- No rage rung: the DB2 stance mask (0x91) holds Cat Form too, and a usable answer pinned the floor at its 5 in
-        -- Cat Form out of combat with the client's bar at 0 (owner 2026-11-12; the poll repeats it every pass).
-        ladder = false,
 
         startsCombat = true,
         known = knows(FERAL_CHARGE),

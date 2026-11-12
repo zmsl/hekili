@@ -37,7 +37,8 @@ function M.boot(ns, api, edit)
             key = key,
             id = a.id,
             copy = a.copy,
-            spend = a.spend ~= nil and ld.run(a.spend, e) or nil,
+            -- Feral Charge's cost reads the form (Bear Form's only): the belief runs it (Engine/Schema/Tracked.lua)
+            spend = key == "feral_charge" and a.spend or (a.spend ~= nil and ld.run(a.spend, e) or nil),
             spendType = a.spendType,
             cooldown = ld.run(a.cooldown, e),
             gcd = a.gcd,
