@@ -6,9 +6,10 @@
 -- consumables (flask, food, elixirs, Demonic Rune, the Major Mana and Major Frenzy potions, EZ-Thro Dynamite II, Goblin
 -- Sapper Charge), Kings, Might 2 and Wisdom 2, the top ranks: R25), converted by `make wowsims-siml`
 -- (tests/Forever/wowsims/hunter_beast_mastery.build.json). Raid buffs and debuffs stay unsent, as for every spec.
--- Owner policy (2026-11-11): replace wowsims's atomic Hawk/Hawk/Arcane sequence with the live priority: maintain two
--- hawks, choose Aimed Shot for one target or Multi-Shot for a group, then use Arcane Shot when its separate cooldown is
--- ready. Summon Hawk shares its cooldown with Arcane Shot; Aimed Shot shares its cooldown with Multi-Shot.
+-- Owner policy (2026-11-12): replace wowsims's atomic Hawk/Hawk/Arcane sequence with the live priority: maintain two
+-- hawks first; for one target use Aimed Shot then Arcane Shot; for a group use Multi-Shot, Volley, then Arcane Shot as
+-- the fallback when Volley is unusable (including insufficient mana). Summon Hawk shares its cooldown with Arcane Shot;
+-- Aimed Shot shares its cooldown with Multi-Shot. Volley has no cooldown in Forever.
 -- Disagreements below are the e2842f0a78 numbers, STALE until the 0.7 floors are re-measured (P7, after R51), decisions
 -- on-GCD 0.929 (70); the old HHA sequence disagreements no longer describe this owner policy.
 --   Serpent Sting a beat early (class B; 31.37, 47.71): the kit applies the target's dot at the cast (`now`), wowsims at the landing
@@ -67,6 +68,7 @@ return {
     },
     guard = {
         multi_shot = "active_enemies>1",
+        rapid_fire = "cooldown.rapid_fire.remains=0",
         serpent_sting = '(target.time_to_die>=debuff.serpent_sting.duration*0.6&target.time_to_die<3600)&target.creature_type!="elemental"&target.creature_type!="mechanical"',
     },
     extra = {
@@ -75,8 +77,8 @@ return {
             before = "multi_shot",
             line = "aimed_shot,if=active_enemies=1&target.outside8&(target.time_to_die>action.aimed_shot.cast&target.time_to_die<3600)",
         },
+        { before = "call_action_list", line = "volley,if=active_enemies>1&target.outside8" },
         { before = "call_action_list", line = "arcane_shot,if=target.outside8" },
     },
-    -- A normal action line needs no explicit cooldown expression: the engine skips it until the ability is usable.
     leveling = {},
 }

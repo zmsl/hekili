@@ -82,6 +82,8 @@ local AIMED_SHOT = { 19434, 20900, 20901, 20902, 20903, 20904 }
 local AIMED_SHOT_COST = { 75, 115, 160, 210, 260, 310 }
 local SERPENT_STING = { 1978, 13549, 13550, 13551, 13552, 13553, 13554, 13555, 25295 }
 local SERPENT_STING_COST = { 15, 30, 50, 80, 115, 150, 190, 230, 250 }
+local VOLLEY = { 1510, 14294, 14295 }
+local VOLLEY_COST = { 350, 420, 490 }
 local HUNTERS_MARK = { 1130, 14323, 14324, 14325, 1213268 } -- 1213268: Forever's rank 4 row
 local HUNTERS_MARK_COST = { 15, 30, 45, 60, 60 }
 local SNIPER_SHOT = { 1310687, 1310785, 1310786 } -- Forever-only (D4)
@@ -561,6 +563,24 @@ spec:RegisterAbilities({
 
         now = applies("serpent_sting", true),
         handler = applies("serpent_sting", true),
+    },
+
+    volley = {
+        id = 1510,
+        school = "arcane",
+        copy = rest(VOLLEY),
+        cast = 6,
+        fixedCast = true,
+        channeled = true,
+        tick_time = 1,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = cost(VOLLEY_COST, VOLLEY),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(VOLLEY),
     },
 
     arcane_shot = {

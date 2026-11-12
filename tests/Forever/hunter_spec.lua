@@ -24,6 +24,7 @@ local KIT = {
     -- the BM talent (19574): its pet's 18 s rage, autocast as a major cooldown in wowsims's BM log
     bestial_wrath = { { 19574 }, 0, 120, "off" },
     serpent_sting = { { 1978, 13549, 13550, 13551, 13552, 13553, 13554, 13555, 25295 }, 250, 0, "spell" },
+    volley = { { 1510, 14294, 14295 }, 490, 0, "spell" },
     arcane_shot = { { 3044, 14281, 14282, 14283, 14284, 14285, 14286, 14287 }, 190, 6, "spell" },
     summon_hawk = { { 1293241, 1293525, 1293526, 1293527 }, 190, 6, "spell" },
     aimed_shot = { { 19434, 20900, 20901, 20902, 20903, 20904 }, 310, 6, "spell" },
@@ -85,6 +86,7 @@ describe("Forever Hunter", function()
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.rapid_fire.toggle)
         assert.are.equal("cooldowns", w.abilities.bestial_wrath.toggle)
+        assert.are.same({ 6, true, 1 }, { w.abilities.volley.cast, w.abilities.volley.channeled, w.abilities.volley.tick_time })
     end)
 
     it("places every talent in a tree (Forever's)", function()
@@ -493,7 +495,6 @@ describe("Forever Hunter priorities", function()
                 end
             end
         end
-    end)
 end)
 
 -- Through the real engine (headless.lua): a Hunter who knows the whole kit.
@@ -990,19 +991,54 @@ describe("Time-to-Die checks", function()
         return text
     end
 
-    it("reserves Serpent Sting for 9s and excludes Elemental and Mechanical targets", function()
+    --#TODO Remove after wowsims APL finds a better window
+    it("reserves Serpent Sting for 9s", function()
         local text = profile()
         local lifetime = "target.time_to_die>=debuff.serpent_sting.duration*0.6&target.time_to_die<3600"
-        local creatures = 'target.creature_type!="elemental"&target.creature_type!="mechanical"'
         local seen = 0
         for line in text:gmatch("[^\n]+") do
             if line:find("serpent_sting", 1, true) and not line:match("^#") then
                 seen = seen + 1
                 assert.is_truthy(line:find(lifetime, 1, true), line)
+            end
+        end
+        assert.are.equal(3, seen)
+    end)
+
+    it("excludes Elemental and Mechanical targets from Serpent Sting", function()
+        local text = profile()
+        local creatures = 'target.creature_type!="elemental"&target.creature_type!="mechanical"'
+        local seen = 0
+        for line in text:gmatch("[^\n]+") do
+            if line:find("serpent_sting", 1, true) and not line:match("^#") then
+                seen = seen + 1
                 assert.is_truthy(line:find(creatures, 1, true), line)
             end
         end
         assert.are.equal(3, seen)
+    end)
+
+    it("requires Rapid Fire to be ready on every branch", function()
+        local text = profile()
+        local seen = 0
+        for line in text:gmatch("[^\n]+") do
+            if line:find("rapid_fire", 1, true) and not line:match("^#") then
+                seen = seen + 1
+                assert.is_truthy(line:find("cooldown.rapid_fire.remains=0", 1, true), line)
+            end
+        end
+        assert.are.equal(3, seen)
+    end)
+
+    it("keeps Hawk first, then the single-target and group owner priorities", function()
+        local text = profile()
+        local hawk = assert(text:find("actions+=/summon_hawk,if=action.summon_hawk.known&pet.hawk.count<2", 1, true))
+        local aimed = assert(text:find("actions+=/aimed_shot,if=active_enemies=1&target.outside8", 1, true))
+        local multi = assert(text:find("actions+=/multi_shot,if=active_enemies>1&target.outside8", 1, true))
+        local volley = assert(text:find("actions+=/volley,if=active_enemies>1&target.outside8", 1, true))
+        local arcane = assert(text:find("actions+=/arcane_shot,if=target.outside8", 1, true))
+        assert.is_true(hawk < aimed and aimed < arcane)
+        assert.is_true(hawk < multi and multi < volley and volley < arcane)
     end)
 
     it("does not start Aimed Shot unless the target should survive its hasted cast", function()
