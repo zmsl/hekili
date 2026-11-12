@@ -4088,7 +4088,7 @@ found = true end
                                     name = L["Count Nameplates Near You"],
                                     desc = format( L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n"
                                         .. "%s Recommended for melee specializations using a range of 10 yds or fewer\n\n"
-                                        .. "%s Discouraged for ranged specializations."], AtlasToString( "common-icon-checkmark" ), AtlasToString( "common-icon-redx" ) ),
+                                        .. "%s Ranged specializations count enemies in combat out to the radius; target swaps need it."], AtlasToString( "common-icon-checkmark" ), AtlasToString( "common-icon-checkmark" ) ),
                                     width = "full",
                                     order = 0.1,
                                 },

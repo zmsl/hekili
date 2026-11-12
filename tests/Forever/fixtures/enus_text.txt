@@ -14490,7 +14490,7 @@ options.packs.affliction.targets.dmgGroup.damageOnScreen	desc	If checked, the da
 options.packs.affliction.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.affliction.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.affliction.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.affliction.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.affliction.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.affliction.targets.nameplates	name	Count Nameplates Near You
 options.packs.affliction.targets.npGroup	name	Nameplate Detection
 options.packs.affliction.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -14766,7 +14766,7 @@ options.packs.arcane.targets.dmgGroup.damageOnScreen	desc	If checked, the damage
 options.packs.arcane.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.arcane.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.arcane.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.arcane.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.arcane.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.arcane.targets.nameplates	name	Count Nameplates Near You
 options.packs.arcane.targets.npGroup	name	Nameplate Detection
 options.packs.arcane.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -15152,7 +15152,7 @@ options.packs.arms.targets.dmgGroup.damageOnScreen	desc	If checked, the damage-b
 options.packs.arms.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.arms.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.arms.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.arms.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.arms.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.arms.targets.nameplates	name	Count Nameplates Near You
 options.packs.arms.targets.npGroup	name	Nameplate Detection
 options.packs.arms.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -15464,7 +15464,7 @@ options.packs.assassination.targets.dmgGroup.damageOnScreen	desc	If checked, the
 options.packs.assassination.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.assassination.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.assassination.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.assassination.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.assassination.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.assassination.targets.nameplates	name	Count Nameplates Near You
 options.packs.assassination.targets.npGroup	name	Nameplate Detection
 options.packs.assassination.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -15822,7 +15822,7 @@ options.packs.balance.targets.dmgGroup.damageOnScreen	desc	If checked, the damag
 options.packs.balance.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.balance.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.balance.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.balance.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.balance.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.balance.targets.nameplates	name	Count Nameplates Near You
 options.packs.balance.targets.npGroup	name	Nameplate Detection
 options.packs.balance.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -16145,7 +16145,7 @@ options.packs.beast_mastery.targets.dmgGroup.damageOnScreen	desc	If checked, the
 options.packs.beast_mastery.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.beast_mastery.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.beast_mastery.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.beast_mastery.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.beast_mastery.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.beast_mastery.targets.nameplates	name	Count Nameplates Near You
 options.packs.beast_mastery.targets.npGroup	name	Nameplate Detection
 options.packs.beast_mastery.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -16458,7 +16458,7 @@ options.packs.combat.targets.dmgGroup.damageOnScreen	desc	If checked, the damage
 options.packs.combat.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.combat.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.combat.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.combat.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.combat.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.combat.targets.nameplates	name	Count Nameplates Near You
 options.packs.combat.targets.npGroup	name	Nameplate Detection
 options.packs.combat.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -17088,7 +17088,7 @@ options.packs.demonology.targets.dmgGroup.damageOnScreen	desc	If checked, the da
 options.packs.demonology.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.demonology.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.demonology.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.demonology.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.demonology.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.demonology.targets.nameplates	name	Count Nameplates Near You
 options.packs.demonology.targets.npGroup	name	Nameplate Detection
 options.packs.demonology.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -17439,7 +17439,7 @@ options.packs.destruction.targets.dmgGroup.damageOnScreen	desc	If checked, the d
 options.packs.destruction.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.destruction.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.destruction.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.destruction.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.destruction.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.destruction.targets.nameplates	name	Count Nameplates Near You
 options.packs.destruction.targets.npGroup	name	Nameplate Detection
 options.packs.destruction.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -17724,7 +17724,7 @@ options.packs.discipline.targets.dmgGroup.damageOnScreen	desc	If checked, the da
 options.packs.discipline.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.discipline.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.discipline.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.discipline.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.discipline.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.discipline.targets.nameplates	name	Count Nameplates Near You
 options.packs.discipline.targets.npGroup	name	Nameplate Detection
 options.packs.discipline.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -18048,7 +18048,7 @@ options.packs.elemental.targets.dmgGroup.damageOnScreen	desc	If checked, the dam
 options.packs.elemental.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.elemental.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.elemental.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.elemental.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.elemental.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.elemental.targets.nameplates	name	Count Nameplates Near You
 options.packs.elemental.targets.npGroup	name	Nameplate Detection
 options.packs.elemental.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -18376,7 +18376,7 @@ options.packs.enhancement.targets.dmgGroup.damageOnScreen	desc	If checked, the d
 options.packs.enhancement.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.enhancement.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.enhancement.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.enhancement.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.enhancement.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.enhancement.targets.nameplates	name	Count Nameplates Near You
 options.packs.enhancement.targets.npGroup	name	Nameplate Detection
 options.packs.enhancement.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -18749,7 +18749,7 @@ options.packs.feral.targets.dmgGroup.damageOnScreen	desc	If checked, the damage-
 options.packs.feral.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.feral.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.feral.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.feral.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.feral.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.feral.targets.nameplates	name	Count Nameplates Near You
 options.packs.feral.targets.npGroup	name	Nameplate Detection
 options.packs.feral.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -19238,7 +19238,7 @@ options.packs.fire.targets.dmgGroup.damageOnScreen	desc	If checked, the damage-b
 options.packs.fire.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.fire.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.fire.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.fire.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.fire.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.fire.targets.nameplates	name	Count Nameplates Near You
 options.packs.fire.targets.npGroup	name	Nameplate Detection
 options.packs.fire.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -19620,7 +19620,7 @@ options.packs.fury.targets.dmgGroup.damageOnScreen	desc	If checked, the damage-b
 options.packs.fury.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.fury.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.fury.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.fury.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.fury.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.fury.targets.nameplates	name	Count Nameplates Near You
 options.packs.fury.targets.npGroup	name	Nameplate Detection
 options.packs.fury.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -19993,7 +19993,7 @@ options.packs.guardian.targets.dmgGroup.damageOnScreen	desc	If checked, the dama
 options.packs.guardian.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.guardian.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.guardian.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.guardian.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.guardian.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.guardian.targets.nameplates	name	Count Nameplates Near You
 options.packs.guardian.targets.npGroup	name	Nameplate Detection
 options.packs.guardian.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -20308,7 +20308,7 @@ options.packs.marksmanship.targets.dmgGroup.damageOnScreen	desc	If checked, the 
 options.packs.marksmanship.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.marksmanship.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.marksmanship.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.marksmanship.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.marksmanship.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.marksmanship.targets.nameplates	name	Count Nameplates Near You
 options.packs.marksmanship.targets.npGroup	name	Nameplate Detection
 options.packs.marksmanship.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -20799,7 +20799,7 @@ options.packs.protection.targets.dmgGroup.damageOnScreen	desc	If checked, the da
 options.packs.protection.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.protection.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.protection.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.protection.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.protection.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.protection.targets.nameplates	name	Count Nameplates Near You
 options.packs.protection.targets.npGroup	name	Nameplate Detection
 options.packs.protection.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -21125,7 +21125,7 @@ options.packs.retribution.targets.dmgGroup.damageOnScreen	desc	If checked, the d
 options.packs.retribution.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.retribution.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.retribution.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.retribution.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.retribution.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.retribution.targets.nameplates	name	Count Nameplates Near You
 options.packs.retribution.targets.npGroup	name	Nameplate Detection
 options.packs.retribution.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -21423,7 +21423,7 @@ options.packs.shadow.targets.dmgGroup.damageOnScreen	desc	If checked, the damage
 options.packs.shadow.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.shadow.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.shadow.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.shadow.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.shadow.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.shadow.targets.nameplates	name	Count Nameplates Near You
 options.packs.shadow.targets.npGroup	name	Nameplate Detection
 options.packs.shadow.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -21784,7 +21784,7 @@ options.packs.subtlety.targets.dmgGroup.damageOnScreen	desc	If checked, the dama
 options.packs.subtlety.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.subtlety.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.subtlety.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.subtlety.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.subtlety.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.subtlety.targets.nameplates	name	Count Nameplates Near You
 options.packs.subtlety.targets.npGroup	name	Nameplate Detection
 options.packs.subtlety.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
@@ -22102,7 +22102,7 @@ options.packs.survival.targets.dmgGroup.damageOnScreen	desc	If checked, the dama
 options.packs.survival.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.survival.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.survival.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.survival.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.survival.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.survival.targets.nameplates	name	Count Nameplates Near You
 options.packs.survival.targets.npGroup	name	Nameplate Detection
 options.packs.survival.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.

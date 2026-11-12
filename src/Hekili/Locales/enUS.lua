@@ -452,7 +452,7 @@ L["If checked, the damage-based target system will only count enemies that are o
 L["|cFFFF0000Requires Enemy Nameplates|r"] = true
 L["|cFF00FF00Requires Enemy Nameplates|r"] = true
 L["Count Nameplates Near You"] = true
-L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Discouraged for ranged specializations."] = true
+L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Ranged specializations count enemies in combat out to the radius; target swaps need it."] = true
 L["Count Targets Near Your Pet"] = true
 L["If checked and properly configured, the addon will count targets near your pet as valid targets, when your target is also within range of your pet."] = true
 L["%s|w|r is on your action bar and will be used for all your %s pets."] = true

@@ -488,8 +488,7 @@ do
 
                                 -- caster range (L644): past the near band a plate counts only while plainly in combat
                                 if not excluded and checkPlates > NEAR_YD and ( maxR == nil or maxR > NEAR_YD ) then
-                                    local engaged = UnitAffectingCombat( unit )
-                                    excluded = issecretvalue( engaged ) or engaged ~= true
+                                    excluded = plain( UnitAffectingCombat( unit ) ) ~= true
 
                                     if debugging and excluded then
                                         details = format( "%s\n    - Excluded: not in combat beyond %d yd.", details, NEAR_YD )

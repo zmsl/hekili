@@ -144,4 +144,28 @@ describe("Engine/Sim/Targets.lua's nameplate log", function()
         assert.is_nil(H.Hekili.npTokens.nameplate8)
         assert.are.equal(0, d, "bytes per plate event")
     end)
+
+    -- integ/dot review M2: token plates past 10 yd with a ranged radius reach the engaged rule's combat read; a count
+    -- allocates nothing, in combat or out (the target's plate is exempt, so out of combat counts 1)
+    it("counts 15 far token plates (Map) by their combat answer, allocating nothing per count", function()
+        H.Hekili.ActiveDebug = false
+        H.Hekili.DB.profile.specs[ww.SPEC].nameplateRange = 40
+        H.ctl.guid.target, H.ctl.unitIs.target = fake.SECRET, "nameplate1"
+        for i = 1, 15 do
+            local unit = "nameplate" .. i
+            H.ctl.guid[unit], H.ctl.exists[unit], H.ctl.distance[unit] = fake.SECRET, true, 30
+            H.Fire("NAME_PLATE_UNIT_ADDED", unit)
+        end
+        local counts, got = {}, {}
+        for _, engaged in ipairs({ true, false }) do
+            for i = 1, 15 do
+                H.ctl.unitCombat["nameplate" .. i] = engaged
+            end
+            H.ns.getNumberTargets(true) -- a fall is held one update (T1)
+            counts[#counts + 1] = H.ns.getNumberTargets(true)
+            got[#got + 1] = bytes()
+        end
+        assert.are.same({ 15, 1 }, counts)
+        assert.are.same({ 0, 0 }, got, "bytes per count at 15 far token plates, in combat and out")
+    end)
 end)

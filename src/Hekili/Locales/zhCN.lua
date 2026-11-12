@@ -461,7 +461,7 @@ L["If checked, the damage-based target system will only count enemies that are o
 L["|cFFFF0000Requires Enemy Nameplates|r"] = "|cFFFF0000需要敌方姓名板|r"
 L["|cFF00FF00Requires Enemy Nameplates|r"] = "|cFF00FF00需要敌方姓名板|r"
 L["Count Nameplates Near You"] = "统计你附近的姓名板"
-L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Discouraged for ranged specializations."] = "勾选后，你角色周围指定半径内的敌方姓名板会被计为敌方目标。\n\n%s 推荐攻击范围在 10 码以内的近战专精使用\n\n%s 不建议远程专精使用。"
+-- L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Ranged specializations count enemies in combat out to the radius; target swaps need it."] = ""
 L["Count Targets Near Your Pet"] = "统计宠物附近的目标"
 L["If checked and properly configured, the addon will count targets near your pet as valid targets, when your target is also within range of your pet."] = "勾选并正确配置后，当你的目标也在宠物的范围内时，插件会将宠物附近的目标计为有效目标。"
 L["%s|w|r is on your action bar and will be used for all your %s pets."] = "%s|w|r已在你的动作条上，将用于你所有的%s宠物。"
@@ -1017,6 +1017,7 @@ L["The lane's time axis, the ruler and the focus zone."] = "轨道的时间轴�
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000警告|r：此版本的 Hekili Forever 适用于更新的 WoW Forever 客户端；你应重新安装适用于 %s 的版本。"
 
 -- No longer used (the English changed or went away): reuse or delete
+L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Discouraged for ranged specializations."] = "勾选后，你角色周围指定半径内的敌方姓名板会被计为敌方目标。\n\n%s 推荐攻击范围在 10 码以内的近战专精使用\n\n%s 不建议远程专精使用。"
 L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."] = "如果启用了|cFFFFD100统计你附近的姓名板|r，此范围内的敌人将被计入目标数。\n\n仅在同时启用|cFFFFD100显示敌方姓名板|r和|cFFFFD100显示所有姓名板|r时，此设置才可用。"
 L["Preferences for Blizzard action button glows (not SpellFlash)."] = "暴雪动作条按钮发光的偏好设置（非 SpellFlash）。"
 L["If enabled, the addon can highlight abilities on your action bars when they are recommended for use."] = "启用后，当技能被推荐使用时，插件可以在你的动作条上高亮该技能。"
