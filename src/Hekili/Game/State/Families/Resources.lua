@@ -730,8 +730,9 @@ I.OnAdvance(function(from, to)
         local d = R.decay[r]
         local start = d > 0 and decayFrom(r, from, to)
         if R.decayIv[r] > 0 then
-            -- quanta while the estimate is above rest; with it resting, a top above it falls continuously (never under
-            -- the stepped truth, which loses each quantum at its window's start), so lo and hi reach rest too
+            -- quanta while the estimate is above rest; with it resting, a top above it falls continuously, so lo and hi
+            -- reach rest too. shortcut: off the quanta's grid the top can sit up to one quantum under a stepped truth
+            -- between its windows' starts; keep the last quantum's time and fall in whole quanta if that ever shows.
             local idle = R.decayNext[r] == 0 and R.est0[r] <= R.rest[r]
             if not start then
                 R.decayNext[r] = 0
