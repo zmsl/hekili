@@ -26,6 +26,9 @@
 - Priest: Shadow (wowsims.com) now counts Dark Inspiration as soon as you cast Mind Blast, so the mana estimate no longer ignores it.
 - Paladin: Seal of Justice, Light and Wisdom now count as a seal for Judgement, and Protection (wowsims.com) suggests Templar's Bulwark whenever it is ready and Cooldowns are on.
 - Mage: Fingers of Frost is followed under the id the game shows, Combustion ends with its crit counter, and Master of Elements' mana refund now counts when the crit of a Fire or Frost spell is seen.
+- Paladin: a landed Shieldsworn Holy Strike returns its mana once target hit data is readable.
+- Mage: Fire Blast spends a Fingers of Frost charge at the cast.
+- Retribution Paladins: each landed melee swing now stores an Echo of the seal that was up when you swung, even when you change seals before the hit shows, so a seal twist is timed from the right Echo.
 
 ### Known issues
 

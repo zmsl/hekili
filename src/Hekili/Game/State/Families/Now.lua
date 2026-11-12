@@ -80,6 +80,9 @@ I.nowErrors, I.nowError, I.nowRuns, I.castsRun = 0, nil, 0, 0
 -- The cast's belief time and ability while its effects run; `live` only then: a `now` called from anywhere else (Hekili
 -- keeps it in `ability.funcs`, where RunStressTest or an APL reading `action.x.now` can call it) writes nothing.
 local T, curA, live = 0, 0, false
+-- True while a reaction runs: it is folded after its outcome's time T (a swing's row comes ~0.47 s after the swing, an
+-- avoid at its window's close), so its aura reads answer as of T (I.AuraAsOf), not the belief's latest.
+local asOf = false
 
 -- The latest cast's undo (Obs.Avoided): its ability, time and target (the swap serial), the cost it paid, and the target
 -- auras its `now` wrote, each as it was before (expiry 0: down), at most UNDO of them. Preallocated.
@@ -117,20 +120,29 @@ local abByKey, auraByKey, auraSpell, auraDur, auraFn, auraMax, resByKey = {}, {}
 ----------------------------------------------------------------------------------------------------------------------
 -- Reads: proxies built at SpecChanged, answered from the belief at the cast's time.
 
+-- An aura at T: its expiry (nil: down), stacks and applied time.
+local function readAura(unit, spell)
+    if asOf then
+        return I.AuraAsOf(unit, spell, T)
+    end
+    local rec, stacks, applied = I.CastAura(unit, spell, T)
+    return rec and rec.est, stacks, applied
+end
+
 local function auraField(r, f)
-    local rec, stacks, applied = I.CastAura(rawget(r, "unit"), rawget(r, "spell"), T)
+    local e, stacks, applied = readAura(rawget(r, "unit"), rawget(r, "spell"))
     if f == "up" then
-        return rec ~= nil
+        return e ~= nil
     elseif f == "down" then
-        return rec == nil
+        return e == nil
     elseif f == "remains" then
-        return rec and rec.est - T or 0
+        return e and e - T or 0
     elseif f == "stack" or f == "count" then
-        return rec and stacks or 0
+        return e and stacks or 0
     elseif f == "expires" then
-        return rec and rec.est or 0
+        return e or 0
     elseif f == "applied" then
-        return rec and applied or 0
+        return e and applied or 0
     end
     return nil
 end
@@ -377,8 +389,8 @@ function NAMES.addStack(aura_, duration, stacks)
     if not live or not j then
         return
     end
-    local _, have = I.CastAura("player", auraSpell[j], T)
-    local n = (have or 0) + (stacks or 1)
+    local e, have = readAura("player", auraSpell[j])
+    local n = (e and have or 0) + (stacks or 1)
     aura(1, aura_, duration, n < auraMax[j] and n or auraMax[j]) -- Hekili's max_stack clamp (State.lua:837-852)
 end
 --- removeStack(aura, stacks): Hekili's verb (State.lua): `stacks` (1) fewer of our aura, its expiry and applied time
@@ -743,7 +755,7 @@ local function fire(w, o, t, hand)
     if not l or l.n == 0 then
         return
     end
-    journal = false
+    journal, asOf = false, true
     for k = 1, l.n do
         local hk = l.hand[k]
         if hk == 0 or hk == hand then
@@ -751,7 +763,7 @@ local function fire(w, o, t, hand)
             I.reactionsRun = I.reactionsRun + 1
         end
     end
-    journal = true
+    journal, asOf = true, false
 end
 
 local function run(o, t)
@@ -861,7 +873,8 @@ end)
 -- its avoid's own outcome, then every "swing" reaction of its hand), a hit on us (Obs.PlayerHit, Obs.PlayerCrit:
 -- victim-side UNIT_COMBAT, Sources/Player.lua), each at its row's time. Allocates nothing.
 -- "land" (aura audit C3): a settled wound, or a swing that closed with no row (c = -1: live, a non-crit hit's row is
--- secret and only avoids are plain), which runs nothing else.
+-- secret and only avoids are plain), which runs nothing else, at the swing's own time (o.b): what a landed hit does
+-- follows the auras up when it swung, not at its row ~0.47 s later (an aura may change in between).
 local WOUND = I.HitKind.WOUND
 I.On(Obs.SwingSettled, function(o)
     fire(2, OUTCOME_OF[o.c] or 0, o.t)
@@ -869,7 +882,7 @@ I.On(Obs.SwingSettled, function(o)
         fire(2, SWING, o.t, o.a)
     end
     if o.c == WOUND or o.c == -1 then
-        fire(2, LAND, o.t, o.a)
+        fire(2, LAND, o.b, o.a)
     end
 end)
 I.On(Obs.PlayerHit, function(o)

@@ -173,8 +173,8 @@ end
 -- A hard cast's `now` or `handler`: spends Presence of Mind (DB2 12043 aura 108 misc 10 -100% cast time on every cast
 -- below, by the class mask; wowsims presence_of_mind.go: the first cast of its scope with a cast time takes it). Each
 -- cast time reads it: 0 while it is up.
--- With `spends` (a `handler`'s): a Fingers of Frost charge spent too (below; no `now` verb spends a stack: the belief's
--- charges are the aura walk's).
+-- With `spends` (a `handler`'s): a Fingers of Frost charge spent too (below; Fire Blast's `now` spends it too, the other
+-- casts leave the belief's charges to the aura walk).
 local function casts(spends)
     return function()
         removeBuff("presence_of_mind")
@@ -518,7 +518,7 @@ spec:RegisterAbilities({
         known = knows(FIRE_BLAST),
         usable = unlocked("fire"),
 
-        -- no `now`: removeStack is no `now` verb; the belief takes the charges from the aura walk
+        now = fingered(),
         handler = fingered(),
         onCrit = mastered(FIRE_BLAST_COST, FIRE_BLAST),
     },

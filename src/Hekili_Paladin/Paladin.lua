@@ -131,7 +131,7 @@ local function reactive(ids)
 end
 
 -- The seals. Unsealed Wrath's Echoes (hotfix 113554; the talent keeps Twist of Light's 1310735) come from our landed
--- hits, not the seal swap: the belief holds them from the aura read.
+-- hits, not the seal swap: the `unsealed_wrath` reaction (below) stores them.
 local SEALS = {
     "seal_of_command",
     "seal_of_righteousness",
@@ -319,8 +319,8 @@ spec:RegisterAuras({
     seal_of_righteousness = { id = 20154, copy = rest(SEAL_OF_RIGHTEOUSNESS), duration = 30, max_stack = 1 },
     seal_of_the_crusader = { id = 21082, copy = rest(SEAL_OF_THE_CRUSADER), duration = 30, max_stack = 1 },
     seal_of_fury = { id = 1311649, copy = rest(SEAL_OF_FURY), duration = 30, max_stack = 1 },
-    -- Unsealed Wrath's Echoes (hotfix 113554 rows: 15 s, 3 stacks): each landed melee hit stores a stack of the active
-    -- seal's; a hit under another seal spends them. From the player aura read (secrecy unprobed: checkpoint).
+    -- Unsealed Wrath's Echoes (hotfix 113554 rows: 15 s, 3 stacks): each landed white swing stores a stack of the
+    -- active seal's; a swing under another seal spends them (the `unsealed_wrath` reaction, below).
     echo_of_command = { id = 1311703, duration = 15, max_stack = 3 },
     echo_of_righteousness = { id = 1311704, duration = 15, max_stack = 3 },
     echo_of_fury = { id = 1311701, duration = 15, max_stack = 3 },
@@ -477,14 +477,57 @@ spec:RegisterStateExpr("mainhand_remains", function()
     return mainhand_speed - (query_time - mh) % mainhand_speed
 end)
 
+-- Unsealed Wrath's Echoes (wowsims talents_retribution.go applyUnsealedWrath): a landed melee hit stores a stack of the
+-- active seal's Echo and spends the other Echoes (Seal of the Crusader has none: a hit under it changes nothing). The
+-- reaction below runs it at our landed main-hand swing.
+local ECHO_OF = {
+    seal_of_command = "echo_of_command",
+    seal_of_righteousness = "echo_of_righteousness",
+    seal_of_fury = "echo_of_fury",
+    seal_of_justice = "echo_of_justice",
+    seal_of_light = "echo_of_light",
+    seal_of_wisdom = "echo_of_wisdom",
+}
+local ECHOES = {
+    "echo_of_command",
+    "echo_of_righteousness",
+    "echo_of_fury",
+    "echo_of_justice",
+    "echo_of_light",
+    "echo_of_wisdom",
+}
+-- The Echoes at a landed main-hand swing, and only there (the Retribution log stores no Echo at a Holy Strike's hit,
+-- 3.50 and 13.50). The core runs it as of the swing's time (a seal swapped before its row is not yet up).
+local function landing()
+    if not talent.twist_of_light.enabled then
+        return
+    end
+    local own
+    for i = 1, #SEALS do
+        if ECHO_OF[SEALS[i]] and buff[SEALS[i]].up then
+            own = ECHO_OF[SEALS[i]]
+        end
+    end
+    if not own then
+        return
+    end
+    for i = 1, #ECHOES do
+        if ECHOES[i] == own then
+            addStack(own)
+        elseif buff[ECHOES[i]].up then
+            removeBuff(ECHOES[i])
+        end
+    end
+end
+spec:RegisterReaction("unsealed_wrath", { who = "target", outcome = "land", hand = "main", now = landing })
+
 -- A Holy Strike's effects, the `now` and the `handler` (two closures). A Shieldsworn Holy Strike with a shield restores
 -- 4% of the maximum mana only when it lands (the Shield Specialization trigger, wowsims talents_protection.go:137-174: its
 -- chance is 100% at rank 2 only; 105 at 2627 in the Protection log, none on the log's misses and dodges) and grants the
 -- spell block for 6 s; under Righteous Fury it grants Iron Creed's 6 s. `landed` (the `handler`'s: the simulation's
 -- forecast) adds the mana. The belief's `now` does not: an avoid undoes only a target aura (Families/Now.lua), so a
--- gain at the cast would stay on a miss and promote a cast we cannot afford.
--- shortcut: the belief's mana lacks the return until the client's affordability answers lift it; upgrade with a core
--- landed-outcome hook (an effect run when the cast's hit lands).
+-- gain at the cast would stay on a miss and promote a cast we cannot afford; its `onLand` (audit C10, run at a paid
+-- wound or crit) adds the mana. Live that is idle until target rows are plain again (gaps.md).
 local function holyStruck(landed)
     return function()
         if talent.shieldsworn.enabled and equipped.shield then
@@ -495,6 +538,15 @@ local function holyStruck(landed)
         end
         if talent.iron_creed.enabled and buff.righteous_fury.up then
             applyBuff("iron_creed")
+        end
+    end
+end
+
+-- Holy Strike's landed hit (`onLand`): Shieldsworn's mana only (the cast's `now` has the auras).
+local function holyLanded()
+    return function()
+        if talent.shieldsworn.enabled and equipped.shield and talent.shield_specialization.rank >= 2 then
+            gain(0.04 * mana.max, "mana")
         end
     end
 end
@@ -611,6 +663,7 @@ spec:RegisterAbilities({
 
         now = holyStruck(),
         handler = holyStruck(true),
+        onLand = holyLanded(),
     },
 
     consecration = {

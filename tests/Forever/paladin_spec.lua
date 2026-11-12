@@ -424,8 +424,33 @@ describe("Forever Paladin", function()
         assert.are.same({ 1326084, 4 }, { k.id, k.max_stack })
     end)
 
+    -- Audit C3: Unsealed Wrath's Echoes (wowsims talents_retribution.go applyUnsealedWrath): each landed white swing
+    -- stores a stack of the active seal's Echo and spends the other Echoes (the Retribution log: none at a Holy Strike).
+    it("stores the active seal's Echo at a landed main-hand swing, spending the others", function()
+        local r = w.reactions.unsealed_wrath
+        assert.are.same({ "target", "land", "main" }, { r.who, r.outcome, r.hand })
+        for _, f in ipairs({ r.now }) do
+            local e = ld.env(w)
+            e.talent = talents({ twist_of_light = 1 })
+            e.buff = buffs({ seal_of_command = true, echo_of_righteousness = true })
+            ld.run(f, e)
+            assert.are.same({ { "echo_of_command" } }, { e.added[1] and { e.added[1][1] } }, "adds the own")
+            assert.are.same({ "echo_of_righteousness" }, e.removed)
+            -- no talent, or no seal with an Echo up: nothing
+            e = ld.env(w)
+            e.buff = buffs({ seal_of_command = true })
+            ld.run(f, e)
+            assert.are.same({ {}, {} }, { e.added, e.removed })
+            e = ld.env(w)
+            e.talent = talents({ twist_of_light = 1 })
+            e.buff = buffs({ seal_of_the_crusader = true, echo_of_command = true })
+            ld.run(f, e)
+            assert.are.same({ {}, {} }, { e.added, e.removed })
+        end
+    end)
+
     it(
-        "gives a landed Shieldsworn Holy Strike with a shield 4% of the maximum mana in the simulation only (audit B10), and Iron Creed's and the spell block's auras",
+        "gives a landed Shieldsworn Holy Strike with a shield 4% of the maximum mana in `onLand` and the simulation's handler (audit C10), and Iron Creed's and the spell block's auras",
         function()
             local function run(field, tal, equipped)
                 local e = ld.env(w)
@@ -439,9 +464,12 @@ describe("Forever Paladin", function()
             local e = run("handler", on, { shield = true })
             assert.are.same({ { 104, "mana" } }, e.gained) -- 2600 x 4%
             assert.are.same({ "shieldsworn_block" }, e.applied)
-            -- the belief's `now` adds none (a miss would keep it: an avoid undoes only target auras), but the spell block
+            -- the belief's `now` adds none (a miss would keep it: an avoid undoes only target auras), but the spell block;
+            -- `onLand` adds the mana (a landed hit) and no aura
             e = run("now", on, { shield = true })
             assert.are.same({ {}, { "shieldsworn_block" } }, { e.gained, e.applied })
+            e = run("onLand", on, { shield = true })
+            assert.are.same({ { { 104, "mana" } }, {} }, { e.gained, e.applied })
             -- without the shield, the talent or the second rank: no mana
             for _, miss in ipairs({
                 { on, { shield = false } },
@@ -449,6 +477,7 @@ describe("Forever Paladin", function()
                 { talents({ shield_specialization = 1, shieldsworn = 1 }), { shield = true } },
             }) do
                 assert.are.same({}, run("handler", miss[1], miss[2]).gained)
+                assert.are.same({}, run("onLand", miss[1], miss[2]).gained)
             end
             for _, field in ipairs({ "now", "handler" }) do
                 -- Iron Creed under Righteous Fury
