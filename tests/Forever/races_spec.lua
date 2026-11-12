@@ -372,6 +372,13 @@ describe("race packs", function()
         assert.are.same({ true, 10, true }, { c.channeled, c.cast, c.fixedCast }) -- 20578's 10 s self-channel (DB2)
         assert.are.same({ 20578, 10 }, { all.auras.cannibalize.id, all.auras.cannibalize.duration }) -- the heal's aura
     end)
+
+    it("registers Touch of the Grave under both class-group ids (wowsims racials.go)", function()
+        load("Scourge")
+        local t = all.auras.touch_of_the_grave
+        assert.are.same({ 1260189, 1260201 }, { t.id, t.copy[1] })
+        assert.are.equal(t, all.auras[1260201])
+    end)
 end)
 
 -- The race packs' `now` handlers as VirtualState runs them: bound to Families/Now.lua's context, on our own casts.

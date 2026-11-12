@@ -186,6 +186,11 @@ describe("shared content", function()
             "main_hand_enchant",
             "off_hand_enchant",
             "power_infusion",
+            "revelation_1248808",
+            "revelation_1323377",
+            "revelation_1323400",
+            "revelation_1323410",
+            "revelation_1323419",
             "reversible_magic",
             "shadowform",
             "thunderfury",
@@ -196,6 +201,10 @@ describe("shared content", function()
             { 27648, 12, "target" },
             { all.auras.thunderfury.id, all.auras.thunderfury.duration, all.auras.thunderfury.shared }
         )
+        for _, id in ipairs({ 1248808, 1323377, 1323400, 1323410, 1323419 }) do -- Revelation, per class group
+            local a = all.auras["revelation_" .. id]
+            assert.are.same({ id, 15, 1 }, { a.id, a.duration, a.max_stack })
+        end
         assert.are.same({ 10060, 15 }, { all.auras.power_infusion.id, all.auras.power_infusion.duration })
         assert.are.same(
             { 0, 1 },

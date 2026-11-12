@@ -43,3 +43,12 @@ race:RegisterAura("cannibalize", {
     duration = 10,
     max_stack = 1,
 })
+
+-- Touch of the Grave's proc buff (wowsims racials.go applyTouchOfTheGrave: a permanent label aura, 1260189 for Warrior,
+-- Paladin and Rogue, 1260201 for the rest). Observed only: the drain it triggers has no rotation effect.
+race:RegisterAura("touch_of_the_grave", {
+    id = 1260189,
+    copy = { 1260201 },
+    duration = 3600,
+    max_stack = 1,
+})
