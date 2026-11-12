@@ -3,6 +3,7 @@
 -- yield never shows a half-built set, a snapshot during a suspended build drops the stale thread (R1), and the status
 -- record bumps on a combat flip only.
 local alloc = require("Game.State.helpers.alloc")
+local fake = require("Game.State.helpers.fake_api")
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
@@ -714,29 +715,38 @@ describe("Engine.Output (headless Arms)", function()
         end
     )
 
-    it("icon=<a path the client lacks> gives the line no override and one warning naming the line and value", function()
-        local path = "Interface\\Icons\\NoSuchX"
-        H.ctl.missingFiles = { [path] = true }
-        local before = #H.errors
-        local key, hits = marked({ icon = path })
-        for _, ri in ipairs(hits) do
-            assert.is_nil(ri.iconOverride, ri.actionName)
-        end
-        assert.are.equal(before + 1, #H.errors)
-        hits = select(2, marked({}, key)) -- loaded again: the same warning, counted, not a second line in the log
-        assert.is_nil(hits[1].iconOverride)
-        local line = key.__pack .. ":" .. key.__list .. ":" .. key.__id
-        local found = 0
-        for _, w in ipairs(H.Hekili.ErrorKeys) do
-            if w:find("icon=" .. path, 1, true) then
-                found = found + 1
-                assert.truthy(w:find(line, 1, true), w)
-                assert.truthy(w:find("not a texture file", 1, true), w)
+    it(
+        "icon=<a path the client lacks, or whose file ID reads secret>: no override, one warning naming the line",
+        function()
+            -- the client's answer for each path: none, or a secret (a script reload in combat must not raise)
+            for _, case in ipairs({
+                { "Interface\\Icons\\NoSuchX", false },
+                { "Interface\\Icons\\SecretX", fake.SECRET },
+            }) do
+                local path = case[1]
+                H.ctl.fileIDs = { [path] = case[2] }
+                local before = #H.errors
+                local key, hits = marked({ icon = path })
+                for _, ri in ipairs(hits) do
+                    assert.is_nil(ri.iconOverride, ri.actionName)
+                end
+                assert.are.equal(before + 1, #H.errors, path)
+                hits = select(2, marked({}, key)) -- loaded again: the same warning, counted, not a second line in the log
+                assert.is_nil(hits[1].iconOverride)
+                local line = key.__pack .. ":" .. key.__list .. ":" .. key.__id
+                local found = 0
+                for _, w in ipairs(H.Hekili.ErrorKeys) do
+                    if w:find("icon=" .. path, 1, true) then
+                        found = found + 1
+                        assert.truthy(w:find(line, 1, true), w)
+                        assert.truthy(w:find("not a texture file", 1, true), w)
+                    end
+                end
+                assert.are.equal(1, found, path)
             end
+            H.ctl.fileIDs = nil
         end
-        assert.are.equal(1, found)
-        H.ctl.missingFiles = nil
-    end)
+    )
 
     it("a label, label_if, icon or icon_if that raises gives nil, never an error", function()
         marked({ label = "R6", icon = "Interface/Icons/X", icon_if = "time>=0" })

@@ -530,10 +530,12 @@ function M.new()
         return ctl.cvars[name]
     end
     api.GetCursorInfo, api.GetActionInfo, api.GetBindingKey = none, none, none
-    function api.GetFileIDFromPath(path) -- every path is a file (134400) except a test's `ctl.missingFiles[path]`
-        if not (ctl.missingFiles and ctl.missingFiles[path]) then
+    function api.GetFileIDFromPath(path) -- every path is a file (134400) unless a test sets `ctl.fileIDs[path]`
+        local id = ctl.fileIDs and ctl.fileIDs[path]
+        if id == nil then
             return 134400
         end
+        return id or nil -- false: a path the client lacks
     end
     api.GetMacroSpell, api.GetMacroItem = none, none
     api.GetSpecializationInfoByID, api.GetStablePetInfo = none, none

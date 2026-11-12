@@ -17,7 +17,7 @@ local roundUp = ns.roundUp
 local safeMax = ns.safeMax
 
 local format, trim = string.format, string.trim
-local GetFileIDFromPath = ns.Facade.GetFileIDFromPath
+local GetFileIDFromPath, issecretvalue = ns.Facade.GetFileIDFromPath, ns.Facade.issecretvalue
 
 local twipe, insert = table.wipe, table.insert
 
@@ -1326,11 +1326,12 @@ local newModifiers = {
 
 -- A 'text' modifier's Lua source: the value verbatim, except icon=, always a texture file ID as a number literal
 -- (SetTexture( "136006" ) would look up a path): a bare number as given (the client cannot tell a missing one), a path
--- resolved here once; a path the client lacks gives the line no icon override (nil) and one warning naming the line.
+-- resolved here once; a path the client lacks (or answers secret) gives the line no icon override (nil) and one
+-- warning naming the line.
 local function textSource( m, v, header, action )
     if m ~= 'icon' then return format( "%q", tostring( v ) ) end
     local id = tonumber( v ) or GetFileIDFromPath( tostring( v ) )
-    if id then return tostring( id ) end
+    if not issecretvalue( id ) and id then return tostring( id ) end -- secrecy first: no boolean test on a secret
     Hekili:Error( "Priority line %s (%s): icon=%s is not a texture file; the line's icon is not overridden.", tostring( header ), tostring( action ), tostring( v ) )
 end
 
