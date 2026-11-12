@@ -645,14 +645,16 @@ describe("Forever Druid", function()
             assert.is_near(3.5 / 1.1, cast(rank(0), { natures_grace = { up = true } }), 1e-9)
         end)
 
-        it("Wrath is instant under Nature's Swiftness, which its handler spends; Nature's Grace speeds it", function()
+        it("Wrath is instant under Nature's Swiftness, which its now and handler spend; Nature's Grace speeds it", function()
             local e = ld.env(w)
             e.talent = rank(0)
             e.buff = auras({ natures_swiftness = { up = true } })
             assert.are.equal(0, ld.run(w.abilities.wrath.cast, e))
-            e.removed = {}
-            ld.run(w.abilities.wrath.handler, e)
-            assert.are.same({ "natures_swiftness" }, e.removed)
+            for _, f in ipairs({ "now", "handler" }) do
+                e.removed = {}
+                ld.run(w.abilities.wrath[f], e)
+                assert.are.same({ "natures_swiftness" }, e.removed, f)
+            end
             e.buff = auras({})
             local base = ld.run(w.abilities.wrath.cast, e)
             e.buff = auras({ natures_grace = { up = true } })

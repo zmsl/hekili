@@ -1950,8 +1950,10 @@ spec:RegisterAbilities({
         known = knows(WRATH),
         nobuff = "feral_form",
 
-        -- Eclipse's charges (R §9 open: +1 or +2 a Wrath) while the talent is known.
+        -- Nature's Swiftness spent (the handler's), and Eclipse's charges (R §9 open: +1 or +2 a Wrath) while the
+        -- talent is known.
         now = function()
+            removeBuff("natures_swiftness")
             if talent.eclipse.rank > 0 then
                 addStack("eclipse", nil, 2)
             end
