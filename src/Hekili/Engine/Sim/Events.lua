@@ -31,6 +31,23 @@ local lower = string.lower
 local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
 
 local CGetItemInfo = C_Item.GetItemInfo
+local GetItemInfoInstant = C_Item.GetItemInfoInstant
+
+-- The gear scan's weapon kind (ranged.bow ...): the client's weapon subclass -> kind, read by enum name so a client
+-- without one answers no kind instead of raising at load.
+local WEAPON_CLASS = Enum.ItemClass and Enum.ItemClass.Weapon
+local WEAPON_KIND = {}
+do
+    local sub = Enum.ItemWeaponSubclass or {}
+    for name, kind in pairs( {
+        Axe1H = "axe", Axe2H = "axe", Mace1H = "mace", Mace2H = "mace", Sword1H = "sword", Sword2H = "sword",
+        Dagger = "dagger", Unarmed = "fist", Staff = "staff", Polearm = "polearm",
+        Bows = "bow", Guns = "gun", Crossbow = "crossbow", Thrown = "thrown", Wand = "wand",
+    } ) do
+        if sub[ name ] then WEAPON_KIND[ sub[ name ] ] = kind end
+    end
+end
+local HAND_OF_SLOT = { [ 16 ] = "weapon", [ 17 ] = "off_hand", [ 18 ] = "ranged" } -- state.weapon is the main hand
 local IsEquippedItem = C_Item.IsEquippedItem
 local GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo
 local UA_GetPlayerAuraBySpellID = Facade.C_UnitAuras.GetPlayerAuraBySpellID
@@ -695,6 +712,7 @@ do
 
         state.main_hand.size = 0
         state.off_hand.size = 0
+        state.weapon.kind, state.off_hand.kind, state.ranged.kind = nil, nil, nil
 
         local MH = GetInventoryItemID( "player", 16 )
 
@@ -755,6 +773,14 @@ do
                     state.set_bonus[ key ] = 1
                 end
 
+                local classID, subClassID
+                if i >= 16 and i <= 18 then
+                    -- the client's item data needs no item cache: the size and kind of an item not cached yet
+                    local _, _, _, loc
+                    _, _, _, loc, _, classID, subClassID = GetItemInfoInstant( item )
+                    equipLoc = equipLoc or loc
+                end
+
                 if i == 16 then
                     if equipLoc == "INVTYPE_2HWEAPON" then
                         state.main_hand.size = 2
@@ -773,6 +799,10 @@ do
                     elseif equipLoc == "INVTYPE_SHIELD" then
                         state.set_bonus.shield = 1
                     end
+                end
+
+                if classID and classID == WEAPON_CLASS then -- a relic, shield or held-in-off-hand item has no kind
+                    state[ HAND_OF_SLOT[ i ] ].kind = WEAPON_KIND[ subClassID ]
                 end
 
 
