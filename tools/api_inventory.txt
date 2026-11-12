@@ -181,7 +181,7 @@ UnitLevel	passthrough
 UnitName	hybrid
 UnitOnTaxi	passthrough
 UnitPartialPower	virtual
-UnitPhaseReason	passthrough
+UnitPhaseReason	hybrid
 UnitPower	hybrid
 UnitPowerMax	hybrid
 UnitPowerType	passthrough
