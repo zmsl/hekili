@@ -41,7 +41,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- `share[r]` (c, 0-1): the static casting share the learned split already holds (the `fsr` meta's `share`), so
 -- the mp5 part is wowsims's casting rate M + cS and the spirit part (1 - c)S. `shaped[r]`: the slot has an `fsr` or a
 -- regen entry (else its regen is the plain rate x dt). `pinA[r]` / `pinB[r]`: the integrals of each part's weight
--- (coefAt's fa and fb) since the last pin (the calibration's weights).
+-- (coefAt's fa and fb) since the last pin (the calibration's weights); `pinX[r]`: pinB less the share-only entries'
+-- weight inside the window (coefAt's fx: what picks the part a measurement calibrates).
 -- `liftE/L/H[r]` and `liftT[r]`: how far a rung lifted a swing-paid slot's est, lo and hi (our cast's success, a usable
 -- answer, a flip's pin: the game held more than we believed) and the latest lifting rung's time; a landed swing at or
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
@@ -95,6 +96,7 @@ local R = {
     shaped = {},
     pinA = {},
     pinB = {},
+    pinX = {},
     scale = {},
     spread = {},
     pinT = {},
@@ -389,6 +391,7 @@ I.OnBuild(function(def, now)
             rate, spirit = finite(fsr.mp5) or 0, finite(fsr.spirit) or 0 -- numbers: the core's (Tracked.lua)
         end
         R.fsr[r], R.fsrUntil[r], R.shaped[r], R.pinA[r], R.pinB[r] = fsr ~= false, 0, fsr ~= false, 0, 0
+        R.pinX[r] = 0
         R.fsrFrom[r], R.fsrHeld[r] = -1e9, false
         R.shareDef[r] = fsr and fsr.share
         R.decl[r] = rate
@@ -575,31 +578,34 @@ end
 -- (MP5/5 + S x m x min(c + s, 1)) x f inside the window and (MP5/5 + S x m) x f outside (sim/core/mana.go:186-206),
 -- from the entries up at t: f and m multiply, s and mp5 add. The spirit regen S is spE / (1 - c), or the mp5 part
 -- when the static share c is all of it (shortcut: exact while the slot has no mp5; upgrade if a full-share spec has
--- mp5). A plain slot's fb is 0. Allocates nothing.
+-- mp5). A plain slot's fb is 0. The fourth value fx is fb without the share-only entries' (spirit 1, readAt's) share
+-- inside the window: their spirit weight there is no time outside it (fx = fb while none is up). Allocates nothing.
 local function coefAt(r, t, inside)
-    local f, m, s, k = 1, 1, 0, 0
+    local f, m, s, k, so = 1, 1, 0, 0, 0
     for i = 1, M.n do
         if M.slot[i] == r then
             local j = M.aura[i]
             if I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then -- unit 1 is always "player"
                 f, m, s, k = f * M.mult[i], m * M.spirit[i], s + M.share[i], k + M.mp5[i]
+                so = so + (M.spirit[i] == 1 and M.share[i] or 0)
             end
         end
     end
     if not R.fsr[r] then
-        return f, 0, f * k
+        return f, 0, f * k, 0
     end
     local c = R.share[r]
-    local fa, fb, e = 1, 1, m - 1
+    local fa, fb, fx, e, ex = 1, 1, 1, m - 1, m - 1
     if inside then
-        fb, e = 0, m * (c + s < 1 and c + s or 1) - c
+        local sx = s - so
+        fb, fx, e, ex = 0, 0, m * (c + s < 1 and c + s or 1) - c, m * (c + sx < 1 and c + sx or 1) - c
     end
     if c < 1 then
-        fb = fb + e / (1 - c) -- nonzero: c < 1
+        fb, fx = fb + e / (1 - c), fx + ex / (1 - c) -- nonzero: c < 1
     else
         fa = fa + e
     end
-    return f * fa, f * fb, f * k
+    return f * fa, f * fb, f * k, f * fx
 end
 
 -- The entries of slot r up at t as the out-of-combat read sees them: their whole-rate multiple f, their summed mp5,
@@ -622,15 +628,15 @@ local function readAt(r, t)
 end
 local pendAct = {} -- by slot: an `fsr` slot's casting read under a share-only entry, unmixed at its spirit read (-1 none)
 
--- Slot r's regen weights over (from, from + dt]: the integrals of coefAt's fa, fb and k, split at the window's end and
--- at every entry's aura edge inside it (each piece read at its start: no edge lies inside it, and a midpoint of a
--- sub-ulp piece rounds onto its end); dt, 0 and 0 for a plain slot. The window is the latest one: a bound over a past
--- interval that held an earlier window is approximate. Allocates nothing.
+-- Slot r's regen weights over (from, from + dt]: the integrals of coefAt's fa, fb, k and fx, split at the window's end
+-- and at every entry's aura edge inside it (each piece read at its start: no edge lies inside it, and a midpoint of a
+-- sub-ulp piece rounds onto its end); dt, 0, 0 and 0 for a plain slot. The window is the latest one: a bound over a
+-- past interval that held an earlier window is approximate. Allocates nothing.
 local function spans(r, from, dt)
     if not R.shaped[r] then
-        return dt, 0, 0
+        return dt, 0, 0, 0
     end
-    local to, a, b, k, t = from + dt, 0, 0, 0, from
+    local to, a, b, k, x, t = from + dt, 0, 0, 0, 0, from
     local u = R.fsr[r] and R.fsrUntil[r] or -1
     while t < to do
         local nxt = u > t and u < to and u or to
@@ -646,11 +652,11 @@ local function spans(r, from, dt)
                 end
             end
         end
-        local fa, fb, kk = coefAt(r, t, t < u)
+        local fa, fb, kk, fx = coefAt(r, t, t < u)
         local w = nxt - t
-        a, b, k, t = a + fa * w, b + fb * w, k + kk * w, nxt
+        a, b, k, x, t = a + fa * w, b + fb * w, k + kk * w, x + fx * w, nxt
     end
-    return a, b, k
+    return a, b, k, x
 end
 
 -- No decay while a `pausesDecay` entry's player aura of slot r is up (Bloodrage: +1/s and no decay for 10 s, in game):
@@ -709,12 +715,12 @@ I.OnAdvance(function(from, to)
     for r = 1, R.n do
         local learned = R.regH[r] ~= 0 or R.spH[r] ~= 0
         if R.swing[r] == 0 and (learned or R.shaped[r]) then
-            local max, a, b, k = R.max[r], spans(r, from, dt)
+            local max, a, b, k, x = R.max[r], spans(r, from, dt)
             if learned or k ~= 0 then -- a slot with no learned regen still gains an `mp5` entry's k (as VS.Power does)
                 R.est0[r] = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + k, max)
                 R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * b + k, max)
                 R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b + k, max)
-                R.pinA[r], R.pinB[r] = R.pinA[r] + a, R.pinB[r] + b
+                R.pinA[r], R.pinB[r], R.pinX[r] = R.pinA[r] + a, R.pinB[r] + b, R.pinX[r] + x
                 R.pinDelta[r] = R.pinDelta[r] + k -- an `mp5` entry's known gain, kept out of the measurement
                 norm(r)
             end
@@ -817,16 +823,18 @@ end
 -- One regen measurement m (per second, between two pins ending at t) into the slot's regen (the EMA, TDF
 -- calibrate). A swing-paid slot calibrates its step scale against the spec's value per second of swinging. A shaped
 -- slot's m is the gain over the pins' interval, split by its weights (pinA, pinB; spans): with no time outside the
--- window it measures the mp5 part (or the whole unscaled rate) as gain / pinA; with at least I.PIN_GAP outside, the
--- spirit part as (gain - mp5 x pinA) / pinB; a shorter time outside is no measurement.
+-- window (pinX 0: a share-only entry's spirit weight inside it does not count) it measures the mp5 part (or the whole
+-- unscaled rate) as (gain - spirit x pinB) / pinA, the spirit part held; with at least I.PIN_GAP outside, the spirit
+-- part as (gain - mp5 x pinA) / pinB; a shorter time outside is no measurement.
 local function calibrate(r, m, t)
     if R.shaped[r] then
         local a, b = R.pinA[r], R.pinB[r]
         local ok
-        if b <= 0 and a > 0 then
+        if R.pinX[r] <= 0 and a > 0 then
             local bound = R.fsr[r] and R.decl[r] + R.spDecl[r] or nil
-            ok = ema(r, m / a, R.decl[r], R.regE, R.regL, R.regH, R.dev, bound) -- nonzero: a > 0 checked
-        elseif b >= I.PIN_GAP then
+            local v = (m - R.spE[r] * b) / a -- nonzero: a > 0 checked
+            ok = ema(r, v, R.decl[r], R.regE, R.regL, R.regH, R.dev, bound)
+        elseif R.pinX[r] >= I.PIN_GAP then
             ok = ema(r, (m - R.regE[r] * a) / b, R.spDecl[r], R.spE, R.spL, R.spH, R.spDev) -- nonzero: b >= 1
         end
         if ok then
@@ -908,7 +916,7 @@ local function pin(r, v, width, t, origin, event, mid)
     R.est0[r], R.lo0[r], R.hi0[r] = clamp(est, max), clamp(v, max), clamp(v + width, max)
     R.snapT[r] = -1e9 -- an anchor, not a snap
     R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.pinOwn[r] = t, vm, 0, measures, false
-    R.pinA[r], R.pinB[r] = 0, 0
+    R.pinA[r], R.pinB[r], R.pinX[r] = 0, 0, 0
     remeasure(r, was, origin == "pinned" and v + width or -1) -- an exact read leaves no model above it
     I.Sample(R.power[r], origin, R.est0[r], t, event)
 end
@@ -1745,10 +1753,11 @@ end)
 local function window(r, t, u)
     local late = I.clock - t
     late = late > 0 and late or 0
-    local _, b0 = spans(r, t, late)
+    local _, b0, _, x0 = spans(r, t, late)
     R.fsrUntil[r] = u
-    local _, b1 = spans(r, t, late)
+    local _, b1, _, x1 = spans(r, t, late)
     local d = b0 - b1
+    R.pinX[r] = R.pinX[r] - x0 + x1 -- apart from d: at a full casting share the window moves fx alone
     if d ~= 0 then
         local max = R.max[r]
         R.est0[r] = clamp(R.est0[r] - R.spE[r] * d, max)
