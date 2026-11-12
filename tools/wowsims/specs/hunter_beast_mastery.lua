@@ -68,14 +68,13 @@ return {
     },
     guard = {
         multi_shot = "active_enemies>1",
-        rapid_fire = "cooldown.rapid_fire.remains=0",
-        serpent_sting = '(target.time_to_die>=debuff.serpent_sting.duration*0.6&target.time_to_die<3600)&target.creature_type!="elemental"&target.creature_type!="mechanical"',
+        serpent_sting = 'target.creature_type!="elemental"&target.creature_type!="mechanical"',
     },
     extra = {
         { before = "multi_shot", line = "summon_hawk,if=action.summon_hawk.known&pet.hawk.count<2" },
         {
             before = "multi_shot",
-            line = "aimed_shot,if=active_enemies=1&target.outside8&(target.time_to_die>action.aimed_shot.cast&target.time_to_die<3600)",
+            line = "aimed_shot,if=active_enemies=1&target.outside8",
         },
         { before = "call_action_list", line = "volley,if=active_enemies>1&target.outside8" },
         { before = "call_action_list", line = "arcane_shot,if=target.outside8" },
