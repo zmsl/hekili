@@ -485,7 +485,7 @@ describe("Forever Priest", function()
                 abolish_disease = { 552 },
                 blessed_recovery = { 27811, 27813 },
                 inspiration = { 14892, 14893 },
-                holy_purpose = { 14909, 1284536 },
+                holy_purpose = { 1284536 }, -- the export also links Searing Light 14909: left out (the translator reads an aura holding a talent ID as that talent)
                 spirit_of_redemption = { 27827, 20711 },
                 blackout = { 15326, 15269 },
                 spirit_tap = { 15270, 15271 },

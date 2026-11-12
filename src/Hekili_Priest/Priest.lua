@@ -393,7 +393,7 @@ spec:RegisterAuras({
     hex_of_weakness = { id = 9035, copy = rest(HEX_OF_WEAKNESS), duration = 120, max_stack = 1 },
     power_word_fortitude = { id = 1243, copy = FORTITUDE_BUFF, duration = 3600, max_stack = 1 }, -- the Prayer's ranks too (the CDM links them)
     divine_aegis = { id = 431624, copy = { 431622 }, duration = 12, max_stack = 1 },
-    holy_purpose = { id = 1284536, copy = { 14909 }, duration = 10, max_stack = 1 },
+    holy_purpose = { id = 1284536, duration = 10, max_stack = 1 }, -- not Searing Light 14909 (the CDM links it): the pack translator would read it as that talent, changing the Smite priority
     dark_sacrifice = { id = 1277324, copy = rest(DARK_SACRIFICE), duration = 15, tick_time = 3, max_stack = 1 },
     -- The target's (unreadable in combat), modelled from our casts.
     shadow_word_pain = {
