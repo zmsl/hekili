@@ -163,7 +163,7 @@ describe("race packs", function()
                 end
             end
             assert.is_not_nil(all.auras.blood_fury)
-            assert.are.same({ maxMods = {}, costMods = {}, regenMods = {} }, ns.raceMods)
+            assert.are.same({ maxMods = {}, costMods = {}, regenMods = {}, gcdMods = {} }, ns.raceMods)
             local class = { abilities = {}, auras = {} }
             ns.applyRace(class)
             assert.are.same({ abilities = {}, auras = {} }, class)
@@ -229,7 +229,7 @@ describe("race packs", function()
         )
         assert.are.same({ 1259799, 15 }, { all.auras.elunes_light.id, all.auras.elunes_light.duration })
         assert.is_false(all.abilities.war_stomp.known)
-        assert.are.same({ maxMods = {}, costMods = {}, regenMods = {} }, ns.raceMods) -- no resource or cost modifier
+        assert.are.same({ maxMods = {}, costMods = {}, regenMods = {}, gcdMods = {} }, ns.raceMods) -- no resource or cost modifier
         load("Tauren")
         local stomp = all.abilities.war_stomp
         assert.are.same({ 20549, 0.5, 90, "off" }, { stomp.id, stomp.cast, stomp.cooldown, stomp.gcd })
