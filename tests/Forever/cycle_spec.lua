@@ -7,7 +7,7 @@ local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
 describe("target swaps (cycle_targets, option D)", function()
-    local H, st, rec, t, count, enemies, rendId
+    local H, st, rec, t, count, enemies, rendId, others
 
     -- The list: `rendLine`'s modifiers (cycle_targets=1 unless overridden) over a Battle Shout filler.
     local function boot(mods)
@@ -29,10 +29,13 @@ describe("target swaps (cycle_targets, option D)", function()
         }
         H.Hekili:LoadScripts()
         assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
-        count, enemies = 1, 3
+        count, enemies, others = 1, 3, 0
+        local sunderId = H.Hekili.Class.auras.sunder_armor.id
         H.ns.Facade.DebuffCount = function(id)
             if id == rendId then
                 return count
+            elseif id == sunderId then
+                return others
             end
             return 0
         end
@@ -137,6 +140,36 @@ describe("target swaps (cycle_targets, option D)", function()
         assert.are.equal(3, st.cycle_enemies)
     end)
 
+    -- Task 3a: a swapped cast's handler counts its debuff and leaves the current target's alone; its self-buffs apply.
+    it(
+        "forecasts a swapped cast as one more carrier, the current target's debuff unchanged, self-buffs applied",
+        function()
+            boot()
+            local ab = H.Hekili.Class.abilities.rend
+            local handler = ab.handler
+            ab.handler = function() -- a test-only self-buff on the cast
+                handler()
+                st.applyBuff("battle_shout")
+            end
+            H.Hekili.DB.profile.packs[ww.PACK].lists.default = {
+                { enabled = true, action = "rend", criteria = "!debuff.rend.up", cycle_targets = 1 },
+                {
+                    enabled = true,
+                    action = "sunder_armor",
+                    criteria = "debuff.rend.remains<12&active_dot.rend=3&buff.battle_shout.up",
+                },
+                { enabled = true, action = "battle_shout" },
+            }
+            H.Hekili:LoadScripts()
+            rendUp(10)
+            count = 2
+            local first = { update() }
+            ab.handler = handler
+            assert.are.same({ "rend", "cycle" }, first)
+            assert.are.equal("sunder_armor", rec[2].actionName)
+        end
+    )
+
     it("counts the swapped cast in the forecast: the next icon is no second swap", function()
         boot()
         rendUp(10)
@@ -144,5 +177,59 @@ describe("target swaps (cycle_targets, option D)", function()
         assert.are.same({ "rend", "cycle" }, { update() })
         assert.is_true(H.Hekili.Engine.Output.Primary.count >= 2)
         assert.are_not.same({ "rend", "cycle" }, { rec[2].actionName, rec[2].indicator })
+    end)
+
+    -- Task 3 (owner decision 1): other_target=1, a cast for another target only (a forced cycle). Sunder Armor stands in
+    -- for a debuff the current target lacks; `others` is its count.
+    describe("other_target=1", function()
+        local function bootOther()
+            boot()
+            H.Hekili.DB.profile.packs[ww.PACK].lists.default = {
+                {
+                    enabled = true,
+                    action = "sunder_armor",
+                    criteria = "active_dot.sunder_armor=0",
+                    other_target = 1,
+                },
+                {
+                    enabled = true,
+                    action = "rend",
+                    criteria = "!debuff.sunder_armor.up&active_dot.sunder_armor=1&!debuff.rend.up",
+                },
+                { enabled = true, action = "battle_shout" },
+            }
+            H.Hekili:LoadScripts()
+        end
+
+        it("is never shown with the toggle off, and never on the current target", function()
+            bootOther()
+            H.Hekili.Engine.settings.specs[ww.SPEC].cycle = false
+            assert.are.same({ "battle_shout" }, { update() })
+        end)
+
+        it("is shown with the cycle icon while no enemy carries it, and counted in the forecast", function()
+            bootOther()
+            enemies = 2
+            assert.are.same({ "sunder_armor", "cycle" }, { update() })
+            -- the forecast: the current target still lacks it, and one enemy carries it
+            assert.are.equal("rend", rec[2].actionName)
+        end)
+
+        it("is not shown once an enemy carries it, with one enemy, or with the count unknown", function()
+            bootOther()
+            rendUp(10)
+            others = 1
+            assert.are.same({ "battle_shout" }, { update() })
+            others, enemies = 0, 1
+            assert.are.same({ "battle_shout" }, { update() })
+            others, enemies = nil, 3
+            assert.are.same({ "battle_shout" }, { update() })
+        end)
+
+        it("is parsed by the importer as the number 1", function()
+            boot()
+            local lines = H.Hekili:ParseActionList("actions=sunder_armor,other_target=1,if=active_dot.sunder_armor=0")
+            assert.are.equal(1, lines[1].other_target)
+        end)
     end)
 end)

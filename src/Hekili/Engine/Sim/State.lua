@@ -52,7 +52,8 @@ local GetSpecialization = Facade.C_SpecializationInfo.GetSpecialization
 -- Clean up table_x later.
 ---@diagnostic disable-next-line: deprecated
 local insert, remove, sort, tcopy, unpack, wipe = table.insert, table.remove, table.sort, ns.tableCopy, table.unpack, table.wipe
-local format, find = string.format, string.find
+local byte, format, find = string.byte, string.format, string.find
+local CYCLED = byte( "c" ) -- the last byte of a swapped cast's event target ("<unit>c", Core.lua)
 
 local Mark, SuperMark, ClearMarks = ns.Mark, ns.SuperMark, ns.ClearMarks
 
@@ -696,7 +697,8 @@ do
     local cycle = {}
     local debug = function( ... ) if Hekili.ActiveDebug then Hekili:Debug( ... ) end end
 
-    function state.SetupCycle( ability, quiet )
+    -- force: another target whatever the current one holds (other_target=1, option D).
+    function state.SetupCycle( ability, quiet, force )
         wipe( cycle )
 
         if not ability and not quiet then
@@ -715,6 +717,15 @@ do
 
         if not cDebuff then
             debug( " - the debuff '%s' was not found in our database.", aura )
+            return
+        end
+
+        if force then
+            cycle.expires = math.huge
+            cycle.minTTD  = max( state.settings.cycle_min, ability.min_ttd or 0, cDebuff.duration / 2 )
+            cycle.maxTTD  = ability.max_ttd
+            cycle.aura = aura
+            if not quiet then debug( " - %s is for another target only.", aura ) end
             return
         end
 
@@ -823,12 +834,6 @@ local function applyBuff( aura, duration, stacks, value, v2, v3, applied )
 
     if model.alias then
         aura = model.alias[1]
-    end
-
-    if state.cycle then
-        if duration == 0 then state.active_dot[ aura ] = max( 0, state.active_dot[ aura ] - 1 )
-        else state.active_dot[ aura ] = max( state.active_enemies, state.active_dot[ aura ] + 1 ) end
-        return
     end
 
     local b = state.buff[ aura ]
@@ -971,7 +976,7 @@ local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
     if state.cycle then
         if duration == 0 then
             if Hekili.ActiveDebug then Hekili:Debug( "Removed an application of '%s' while target-cycling.", aura ) end
-            state.active_dot[ aura ] = state.active_dot[ aura ] - 1
+            state.active_dot[ aura ] = max( 0, state.active_dot[ aura ] - 1 )
             if model.key ~= aura then state.active_dot[ model.key ] = state.active_dot[ aura ] end
         else
             if Hekili.ActiveDebug then Hekili:Debug( "Added an application of '%s' while target-cycling.", aura ) end
@@ -6224,8 +6229,10 @@ do
                 self.SetupCycle( ability )
             end
 
-            -- Perform the action.
+            -- Perform the action (a swapped cast's queued on "<unit>c", Core.lua: its debuffs count, the target's stand).
+            self.cycle = e.target and byte( e.target, -1 ) == CYCLED or nil
             self:RunHandler( action )
+            self.cycle = nil
             self.hardcast = nil
             self.whitelist = nil
             self.removeBuff( "casting" ) -- TODO: Revisit for Casting while Casting scenarios; check Fire Mage.
@@ -6263,7 +6270,9 @@ do
                 self.SetupCycle( ability )
             end
 
+            self.cycle = e.target and byte( e.target, -1 ) == CYCLED or nil
             if ability.impact then ability.impact( e.real ) end
+            self.cycle = nil
             self:StartCombat()
 
             if wasCycling then

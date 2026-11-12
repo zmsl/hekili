@@ -875,8 +875,10 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                 else
                                     -- Target Cycling.
                                     -- We have to determine *here* whether the ability would be used on the current target or a different target.
-                                    if state.args.cycle_targets == 1 and state.settings.cycle and state.active_enemies > 1 then
-                                        state.SetupCycle( ability )
+                                    -- other_target=1: another target only (a forced cycle, option D), never the current one.
+                                    local other = state.args.other_target == 1
+                                    if ( state.args.cycle_targets == 1 or other ) and state.settings.cycle and state.active_enemies > 1 then
+                                        state.SetupCycle( ability, nil, other )
 
                                         if state.cycle_enemies == 1 then
                                             if debug then Hekili:Debug( "There is only 1 valid enemy for target cycling; canceling cycle." ) end
@@ -889,6 +891,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                     Timer:Track("Post Cycle")
 
                                     local usable, why = state:IsUsable()
+                                    if other and not state.IsCycling( nil, true ) then usable, why = false, "another target only" end
 
                                     Timer:Track("Post Usable")
 
@@ -1859,7 +1862,7 @@ function Hekili.Update()
                     local cast_target = i == 1 and state.cast_target ~= "nobody" and state.cast_target or state.target.unit
 
                     if slot.indicator == "cycle" then
-                        state.SetupCycle( ability )
+                        state.SetupCycle( ability, nil, state.args.other_target == 1 )
                         cast_target = cast_target .. "c"
                     end
 
@@ -1935,7 +1938,9 @@ function Hekili.Update()
                                     state:QueueEvent( action, state.query_time, state.cooldown.global_cooldown.expires, "GCD_FINISH", cast_target )
                                 end
 
+                                state.cycle = slot.indicator == "cycle" or nil -- on another target: its debuffs count, the target's stand
                                 state:RunHandler( action )
+                                state.cycle = nil
                                 ns.spendResources( action )
                             end
                         else
@@ -1949,7 +1954,9 @@ function Hekili.Update()
                             end
 
                             ns.spendResources( action )
+                            state.cycle = slot.indicator == "cycle" or nil -- on another target: its debuffs count, the target's stand
                             state:RunHandler( action )
+                            state.cycle = nil
                         end
 
                         -- Projectile spells have two handlers, effectively.  A handler (run on cast/channel finish), and then an impact handler.
