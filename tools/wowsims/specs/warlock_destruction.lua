@@ -14,7 +14,9 @@
 --   class C (1; R50): the pre-pull Incinerate is omitted (warlock_demonology.lua).
 --   the rest (3: 101.5, 167, 185 immolate): the Immolate refresh at `remains<=cast`, not traced.
 -- Omitted 2 -> 3 (dry.lua 3): petAttack, the pre-pull doAtValue (C), spell 1225228 (Bane of Havoc: a NextTarget cast,
--- never in this single-target log), listed.
+-- never in this single-target log), listed. Aura lane 2026-11-11: the kit now registers Shadow and Flame's buff (1293816)
+-- so Conflagrate's condition reads it (no "dropped the unresolved aura" note for 1293816). Bane of Havoc's debuff
+-- (1225228) is deliberately NOT registered: the translator would read it and cast on the main target; waits for C7.
 -- Leveling note: below Incinerate (40) the list has no filler and falls through to its last line, Life Tap (as
 -- wowsims's own list would at that level); the gate counts Life Tap as a press, so no bracket is idle.
 -- Deviations: Berserking (Troll) and

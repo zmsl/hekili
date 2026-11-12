@@ -513,6 +513,7 @@ function M.context(set, r, log, player, encounter, tank)
         talentKey = {},
         map = r.map or {},
         auraMap = r.auras or {},
+        knownAs = r.knownAs or {}, -- { [aura ID] = talent key }: `auraIsKnown` of that aura is the talent's `enabled`
         focus = r.focus or {},
         executePhase = r.executePhase,
         leveling = r.leveling or {},
@@ -1316,6 +1317,10 @@ local function bool(c, n)
         local id = v.auraId and v.auraId.spellId
         if not UNIT[v.sourceUnit and v.sourceUnit.type or "Self"] or not id or v.auraId.tag == -1 then
             return nil, false, false
+        end
+        local ka = c.knownAs[id]
+        if ka and c.talentKey[ka] then
+            return "talent." .. ka .. ".enabled", nil, false
         end
         local x = c.auraMap[id] or c.map[id] or c.talentOf[id] or c.auraOf[id] or c.keyOf[id]
         if not x then

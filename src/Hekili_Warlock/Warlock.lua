@@ -25,12 +25,15 @@
 -- (the five builds' logs at 60, preraid gear).
 -- Not on Forever (the DB2 has no row): Backlash, Dark Pact, Curse of Shadow; Curse of Agony and Doom are Banes.
 -- The demon's mana is the client's (`pet.mana`: UnitPower("pet"), plain; central fix 27), read, not predicted.
--- Unmodelled: the procs' rolls (Nightfall's Shadow Trance, Decimation below 35%: the player aura walk reads them where
--- plain), Shadow and Flame's buffs and its shard refund, the shard a kill or Drain Soul returns, the sim's spent
+-- Unmodelled: the procs' rolls (Nightfall's Shadow Trance, Revelation: the player aura walk reads them where plain,
+-- the spell's glow in combat; Decimation is also applied by a Shadow Bolt or Searing Pain the simulation lands on a
+-- target under 35% health, which is secret on Forever), Shadow and Flame's shard refund (its buffs are applied), the
+-- shard a kill or Drain Soul returns, the sim's spent
 -- shards (a list evaluation reads the bag count; two shard spells in one queue may outrun it: gaps.md's reagent
 -- prediction), Life Tap's health and Demonic Energies' share of it to the demon, the demon's spells (Firebolt
--- 3110-11763, 10-115 mana; Lash of Pain 7814-11780, 65-160 mana: pet-bar, D6), Bane of Havoc, Curse of Exhaustion and
--- Tongues, the armors, Fel Domination, Soul Link and pushback.
+-- 3110-11763, 10-115 mana; Lash of Pain 7814-11780, 65-160 mana: pet-bar, D6), Bane of Havoc's cast on a second target
+-- (its debuff too: both wait for core's C7), Curse of Exhaustion and Tongues, Soul Harvest's regen, and pushback; the armors, Fel
+-- Domination, Soul Link and the other demon auras are registered, read where plain, never cast.
 -- Credits: Hekili (registration API and pack format). wowsims/forever (MIT) is the reference for the mechanics above;
 -- no code is copied.
 
@@ -308,11 +311,36 @@ spec:RegisterAuras({
     -- Improved Shadow Bolt's (a Shadow Bolt crit's: the belief's own crit, Shadow Bolt's `onCrit`).
     shadow_vulnerability = { id = 17794, duration = 12, max_stack = 1 },
 
-    -- The player's. The procs (unseen; the player aura walk reads them where plain): Nightfall's next Shadow Bolt
-    -- instant; Decimation's faster Soul Fire with no shard (below 35% target health).
-    shadow_trance = { id = 17941, duration = 10, max_stack = 1 },
-    decimation = { id = 440873, duration = 10, max_stack = 1 },
+    -- Bane of Havoc's debuff (1225228, 300 s) is NOT registered: the translator would read it (and the cast on a second
+    -- target, which it cannot express, would land on the main target). Waits for core's second-target cast (C7).
+
+    -- The player's. The procs (their rolls unseen; the player aura walk reads them where plain, in combat the glow of
+    -- the spell they light: `overlay`, needs in-game check): Nightfall's next Shadow Bolt instant; Decimation's
+    -- faster Soul Fire with no shard (below 35% target health).
+    shadow_trance = { id = 17941, duration = 10, max_stack = 1, overlay = 686 },
+    decimation = { id = 440873, duration = 10, max_stack = 1, overlay = 6353 },
     amplify_curse = { id = 18288, duration = 30, max_stack = 1 },
+    -- The weapon enchant 8217's proc (wowsims enchants.go revelationBuffs; each class has its own id): the next
+    -- Shadow Bolt's crit chance +100%, one charge. A random proc: read, never predicted.
+    revelation = { id = 1323392, duration = 15, max_stack = 1 },
+    -- Shadow and Flame's (Conflagrate: the Shadow buff, Shadowburn: the Fire buff; wowsims talents_destruction.go; its
+    -- names.json calls the first plain `shadow`).
+    shadow_and_flame_shadow = { id = 1293816, duration = 20, max_stack = 1 },
+    shadow_and_flame_fire = { id = 426311, duration = 20, max_stack = 1 },
+    -- Drain Soul's kill buff (10 s, regen +100%): a kill's, no producer here (the Drain Soul line is in no priority).
+    soul_harvest = { id = 1242853, duration = 10, max_stack = 1 },
+    -- No priority reads these (wowsims talents_demonology.go, armors.go): the player aura walk shows them where plain.
+    fel_domination = { id = 18708, duration = 15, max_stack = 1 },
+    soul_link = { id = 19028, copy = 25228, duration = 3600, max_stack = 1 },
+    demonic_knowledge = { id = 412732, duration = 3600, max_stack = 1 },
+    master_demonologist = { id = 23785, duration = 3600, max_stack = 1 }, -- one id for the four demons' effects
+    demon_armor = { id = 11735, duration = 1800, max_stack = 1 },
+    blood_pact = { id = 11767, duration = 3600, max_stack = 1 },
+    -- The channels' own auras (the kit models the channels: `channeled`).
+    hellfire_channel = { id = 11684, duration = 15, max_stack = 1 },
+    rain_of_fire_channel = { id = 11678, duration = 8, max_stack = 1 },
+    drain_soul_channel = { id = 11675, duration = 15, max_stack = 1 },
+    drain_life_channel = { id = 11700, duration = 5, max_stack = 1 },
     -- Demonic Sacrifice's effects (2 h; wowsims: until a summon cancels it).
     burning_shadow = { id = 18789, duration = 7200, max_stack = 1 },
     fel_stamina = { id = 18790, duration = 7200, max_stack = 1 },
@@ -347,7 +375,20 @@ end
 -- Shadow Bolt's: Shadow Trance spent by an instant cast (wowsims talents_affliction.go).
 -- shortcut: in the belief a Shadow Trance up at the cast's success is spent, a proc during a hard cast too; the
 -- player aura walk corrects it where plain.
-local function bolted()
+-- `sim`: the simulation's handler, which also reads the target's health for Decimation: a landed Shadow Bolt (or Searing
+-- Pain) at a target under 35% (wowsims talents_demonology.go). The belief's `now` has no target to read (its health is
+-- secret on Forever: the glow read of `decimation` carries it in game).
+local function bolted(sim)
+    if sim then
+        return function()
+            if buff.shadow_trance.up then
+                removeBuff("shadow_trance")
+            end
+            if talent.decimation.rank > 0 and target.health.pct < 35 then
+                applyBuff("decimation")
+            end
+        end
+    end
     return function()
         if buff.shadow_trance.up then
             removeBuff("shadow_trance")
@@ -366,7 +407,19 @@ local function vulnerable()
 end
 
 -- Searing Pain's: Demonic Brand's charges on the target, 2 a rank.
-local function branded()
+-- `sim`: also Decimation at a target under 35%, as Shadow Bolt's (`bolted`).
+local function branded(sim)
+    if sim then
+        return function()
+            local r = talent.demonic_brand.rank
+            if r > 0 then
+                applyDebuff("target", "demonic_brand", nil, 2 * min(r, 3))
+            end
+            if talent.decimation.rank > 0 and target.health.pct < 35 then
+                applyBuff("decimation")
+            end
+        end
+    end
     return function()
         local r = talent.demonic_brand.rank
         if r > 0 then
@@ -375,12 +428,25 @@ local function branded()
     end
 end
 
--- Conflagrate's: our Immolate consumed, unless Shadow and Flame keeps it (20% a rank, wowsims's curve).
+-- Conflagrate's: our Immolate consumed, unless Shadow and Flame keeps it (20% a rank, wowsims's curve); and with the
+-- talent its Shadow damage buff.
 -- shortcut: the roll is unseen; below 5/5 the Immolate is taken as consumed (an early recast at worst).
 local function conflagrated()
     return function()
         if talent.shadow_and_flame.rank < 5 then
             removeDebuff("target", "immolate")
+        end
+        if talent.shadow_and_flame.rank > 0 then
+            applyBuff("shadow_and_flame_shadow")
+        end
+    end
+end
+
+-- Shadowburn's: with Shadow and Flame its Fire damage buff (the shard refund is unmodelled).
+local function burned()
+    return function()
+        if talent.shadow_and_flame.rank > 0 then
+            applyBuff("shadow_and_flame_fire")
         end
     end
 end
@@ -484,8 +550,8 @@ spec:RegisterAbilities({
         known = knows(SHADOW_BOLT),
         usable = unlocked("shadow"),
 
-        now = bolted(),
-        handler = bolted(),
+        now = bolted(false),
+        handler = bolted(true),
         onCrit = vulnerable(),
     },
 
@@ -794,6 +860,9 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(SHADOWBURN),
         usable = sharded(),
+
+        now = burned(),
+        handler = burned(),
     },
 
     searing_pain = {
@@ -813,8 +882,8 @@ spec:RegisterAbilities({
         usable = unlocked("fire"),
         missable = "demonic_brand",
 
-        now = branded(),
-        handler = branded(),
+        now = branded(false),
+        handler = branded(true),
     },
 
     incinerate = {
@@ -1031,8 +1100,8 @@ spec:RegisterSetting("assigned_curse", "elements", {
 -- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/warlock_*.lua).
 spec:RegisterPack(
     "Affliction (wowsims.com)",
-    20261110000,
-    [[Hekili:DR12UTTny4NLCtIfAMCKZsxBqua62WW6wx3WCb2DsMwKYM1sIcKujiab(zFKswhOmLeTsIt3sqluf)5)5dKFQEoEFXBoeWrEFE2fZERJJZfIF8MZFif5npfeSbSs8qciw83FimmchWXKKTlMCp5EgoMzhqITKu(qebaLCBzgoI)XeVLAzmlff4n)F(WF)P)8N(9RbvC0B(AmeIk2gIf0J0UE7c(A02f7E30qcfDhIUDbefcYI4Bx8H)6tBxiET4PMmjdpvkE207b0isWMPWu2uP6cztfAI)9uH9AN)c7VYijwNlKefKWIe2bu8mrkzmB7caessot8Wg0dm7Tl(zahCTgnAYF8XViyYAopLD90PRW81zlLgX0wKAj4PqXrxbEFaCgygmmWw4vPKqCKWZdYnbMDkfj28sa3LTgaj37VKiS3FB3YUlrugIUbNS68mgYNiSPvbqxNkkEJ7u5cyokM1njqumjbh4tZsqDtvm4ReQFmib4NsKVSBsdarr(f)t)imJFUmFYLj0ZiKFSiKH95a6ke3pityb(rKv4GMmyjirYAFiHeFoo0neVAn3NIIb4e2Tq0YSWq7MezdZOG8WUPQXofas4fIxkgjT3H8rjOymIzInPym9WRBv4vJG55HKGmM7m5wYTQDRjZddq2zP9VphJ2NEDpGqIeBjHj5XKtkwx1RUjrS(JtM05ANoP)nQe4(URSM2xSZ6ghRt7JFNOB3zPwwwp2Jk25MuRba81(beCKI3OHhV0M0SsaGXFJM3lcg3HI854yK1TkUcfzhHdL5JP5swwGzNgiZKU5YlovnZ)TxOSX8gy64u17ShOOZT4zHBr0I1hfHIrjCwZKsgIZf8Gzdym8QeeSy7UNvs8zIq2Kjgq2U4GwjkdivU2kkeD)2eHySeXF2fm7uonPDFzPWjTY6EeyJjYPKU9LrfhutUgkeiRp1PMgfeuTAzGOTDP4LhW2oKyLHQ0)rdeLSWOGqTMCmdahZIfdmDtdc6Ny6cItfnVEOGVQNSiVT4ygl07SK(gQDs5Or1fPia8HEh1O0T(MEN1zPr9aRijp0HrvSM0QupzXnxnOZTXbQY5sZK6X5y7s5gLUfqO0SujrkkwPmQxwkaTNeSbjL(xzPOQYCR7LwpwiEBsgNHHOR00D4GZmpP78Hh7o(ksJgLN))LP0gegoI5WQPyoZms5EcjXV3ibWWPRZp(EisReASEN1jnPPQqPIbfhC9USOeefSehH55UJANBeHa9dZOvXZc)x9RvsqlUD9okvExWAqscksyQnd8vxhXfLrrBa6k1gxUFV5h6spkZ2Fx)1BJ62iDFhgnUczwFL79BahIZvFd4rYtIgSU)fWmAnDZ1Pdfu5(CJng1N(pB2iDONwC9sXvlDE3fAUCPWG8MFhIYeCUfqEsCdy5OhwG6M4XpNJMikbSmcb9(rV5nsqLlUdglV514u5XfS1WDvHCLCtxA4MAILLCFFVH7Bp0TKB(QwBUK424Pu4D8lqnDGBzi57B7GVndycPqfwpfd8MBo8xsU)dT4EnFAN)Eywu7Hssz9odL1TMkl9NsukQ33POAo(Qc)RA51argHRuo6uMdk4OZfpNS0jNLTljQzzFncgF36NDm26dKTrHYMHb(QgO5UX29iQlVlHPtRRDF46EUWRlxRA3eQuRkB4ROtdbKxohB3EQKJ5Z4YPOREqvYKl(DE1hkqxBzDzT57AOwvA4vTbAaigpxadEub74LhrQgve6mz1MuTRemia8Qbk4ZhQGVkbHMAHAqODHVbbHxfqbpYfkgy8hCqOKaLaaV7dHCahdvbjh15h9GHtVG40pkoJdgNNaoohjGC6djN(7zns3L5y1S)HPZP10YzdbSPrEBfDQIO9GDnI4vaXMdaYMEWSPXjkQvV21R1NN7aQqlq(5iCQ5NaQp9aYX4Uu(HCN46i3RStAiiuEr8sDD(7ItlBCBMxc7AFSH01fOuH1EHHrhfhcQOX5WheROI68oUW(bu039y5XnSy0(XVXNTU)hx74oRDFXFeM1Upjd8f(2)t8n4W688yqgFnH6n)xrBeds3UyYVS7)PE5l79V]]
+    20261111000,
+    [[Hekili:TR16UTTnu4NL8NeB0m5lDPRnioaDByyDRRByUa7FsMwIYM1sIcIujWab(zFhsDXIYus0Qjozflfnqv8C)cpKFQ2tS)S9CpehB)PPJN(MjWpJhp2EoFBm2EEmYDdAf8qeke(9799diUCcnA3Ib3tVNrczwU0WHck3gqrEcPTmLeW)qK9sTcMfJDTN)pV)V)4F(t)(1OsjApFnXZdNXgM52I2UE3c(A8Uf5VBKpnbFhoz3cpSpknGVBX7)RpUBb8A4PQcjLmsOE2O7rjbu3nJ8IzJeMRhBeyjo3Na(RL8fwFHrJgEjOPeuela8dp4zQqZe2UfippA0fWdBWBzw7w8Zio6Anw0G)4dFgeYAopMD9OrRi81PlfoXOAKoeKjy44RqVZ1BkAQNVRfevtO(KaiYJKUaZkobdmVeXNXwJ8O37SKc(7VLV8SL4egozdjA1LPmSdf8PvUEZMusXRMnsSaHJdzntIhoKgrCDssJWntvi6l0eNqueYjMkEzZK6IccCY(Nobeg)sr90mgyNbyNqiLrC4OKvyUJBk4bob0ve3QcyjksiAhpkn8sI)mFYQ1CNeCiIeXU1dVm133QkrwEPjizA3uZi3a8O8m1luJG27Wo4iCibZmXNuCMwK1TkYQsY8sFQBkB2ubldKUv(IIcrxSvA8dd4OaCe3Iec1h3H9CQWUfocTma7DUKvrPvGmma8D(GZYdu50FxAqeobTKeq4BfcUTLZJ13miZQTQQtxeJ)knVhmzq)oCsiEi8t7E8KVX9y91lUuAaWDet69NLlsLk5nrW6pmyqJRD(G2zuPz57UA4O26xgEZKHN3M8oth3PXG3(qlMyJmPUVdIV2XLscuIgvdW5(uptj3Qeku0DaXxShqSuZIn1SIDfDV386XNRUBZBgRWOCOHojv(oRo2OBw2ZqybgR5GdWHqToR6gbmmNdYGzHymYQiObqYYSlki(ciLnyGbKLNh0QrrcPm0wsbmXztaMXIG)MNmBupvP9qDPijT66EmAJj6PGUd1rPeulU6kfi6p1zMgLeu9ArIOUFPeL7W3oMCLHM0)rtefIWOKWEl5uMaoLnlg46MMe0FkLzOWyyZRTzYv90CYTf7ZyHwNL02qTZkgnQUycg5TT1rnk7wFtRZ6gQX8qROrBBWPYwt4vcM2FAUBUQZGBLdXkLIY586vGTjJRx2MlnjjnwqKIHvOJ9lluG2tFxHKI4ROvu1yUD2Rh(qM6TOPCgXdFLMDho6kZZAUE4HMZVqzuVI8FtwsBqA4ewdRwInzQrg3xrr87msbms8A5X39XA1qL1BSpPknLnkDCpLkP0ak1ZXpnPmFMf)2)ALc0menYPu5DURrrr4aWvRM4lVoYmCAcEdsxRw)Q9BT(qx5rr1(BBVFRx3gP57WOjuiQ6ldVVacitU6fqerwe1zF)tGBuB62SjnyGk3NRV5O2S)Pt7za98SRxcxTCYBhR5YLGdzp)oCcdKCnWtf4gWKi2MH0j84NKi4MJbI9pApVsbQyXCOdTNVhBqBoiwd5QeTqbtV2qMQIFOGVV3q(oarrbZxvJ5cIRJNsw0XjdP6oULHqUVPb5wnHbAjb8(ecYEU5qokK(put67Lt963JZJQpusOR3AOUU1uDP)uIcv9Ugvvdi390bD3tn2D7JvvickdeJ9f9pq0yY4)pCKfoMidh13kQs4OLnG7)uYhDSnBdCZEHUPHnCLdUKHX67nVFB1c4r1gApeM0hlCsLwv9n)lSQIbTk2uxaOkLy9XcfsuE2cjfnT3FPo5WFMx(rX0nouxvRKRUgrOrw7Dqdap6Xcq2tkitp9ibwPJqNlRUbB9obdsapBGX(4Hg7ZssOQvOMeQ34Bqs4zbm2tCJIbo)rNekiqjbWB(WFhXX)vqqtD(rlyN1k4zTJEw)Gp7Ra)SteaATHGw77z1ZWL5yKD4LyK0AA7SHaLvPUTKovvuFWUgv8mGu2ravwlyLv5ef7nV69R7pp3r0HMH42j4uZTHQrhOT1c4s9dmKJblI9zUN5Guxqx9KeLA683zNw24TzEk8RdXKt3UafgS2lm07SyB(JaIU(fW7eJUS(8gak5iA6BESC)gw0744l8zRh(rnpTZApu9NGzThsshFz1d)0QDoSwwhJs5RPj2Z)v8gyq6Ufd(L8)xPkx2(F)d]]
 )
 spec:RegisterPack(
     "Demonology (wowsims.com)",
@@ -1041,8 +1110,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Destruction (wowsims.com)",
-    20261108000,
-    [[Hekili:TV1AVTTnx4Fl5lo2Oz(sADwBqCaAxXW6E76gMdW(MKPLOSzTKOGivmmqG)TVdLSUqjszjfNlOVdbjqwK8C)C4Hp0XyIXDgZTrCSX3UC8LxnzY43pE8yJ58DbyJ5biRnOvWd(ip4VFgZ4HrwCc1F)I(BPBzep2qlQ3aXu35sr2cYTmI4Y)IVXsLuMfGTmM)pF8V)6F(l)VRTZjPX81eBBCY6WmR64317xWxJ3V4W7g5qdX3Jd3VWg7GIC57x8X)6R7xaVE)czQergjKa2OTOqxQ1Mr2bSrcj2MnkwyOdJ)0WVZO(dUa4tiYN5c6Hn8mvWxcB)cKTn1)C4Hn4DSHatqC01kKN()XxUdiYAopGD9OrRi81rlfQWOstDaqtqSXtrFWY(s0L2owaz)e2LUD)cxygU7x8UXabxIfRy)IV4Br8XHGGnivOccj0qcFhWpe8rFqADiUUc5a5dIpBnWZ9l(kXbw)DOG9lwI5BXyWUq4WaFMEhdewXApiDcnKUfg3LW4I3g5ANiO81I)glydbVFif4eeIGITZSHbHyqjxI4ZyWAmDiGi)7vg8nZgr88OcR7feNzNzJxg54mm9DdJcYw0Sig2KWXESleprDCmxzzpBs2eaAzJ9O(elZWiFS(z5H(on00d5JmdOIxQFQwixxZKpAkSaxiYdMXi(RCXMEqCgXKJcxH5MwrHarCPRiwfjWASRRq3fAN4T3JnX(ypcMD7S32JtxbeAOh9ESh2N3RVIPet(H0ioJyJNoOiXxI8fYTPnL6DHd1kIn7sbJCiRwZndXEiIp72d20ItEODee3iYhAQUEqlTP8eDSQ(0edNKfRgADRmTO(oUOvHhcs6FwYq5rjB8Hq0hQg7izSyRr20TlJcBGsBrPUWK9zX8R)b(jzbJ5zV(zct1bFOFFjhXpnDWO68fdUzYGE1rVZuTAqlhm4H6KrnR6b9bBBHIue)PaHBrOS0sLm8yuieezgagbz)xwbSudw1bSqm(BQ(AOMmu3XKt8WdUvYkpqUEaIV20IsCLyCrj6aRvnIG31qCxOkkelhetAr1KHbwIi6BE70EYzGxnwAHzv8kKYQ3OuoS(arVrTTsMrzJPsUZlhFK6zZsEgIDGTCnXUX1QyfLEgMZbAWgIymYkFSDYYNDE6KphcS73Vbt7G2QKJ5rTGENndyRKnUygZh(9qeVw(uCUv5LeLuYRTy0MMWN05vLhzuqK327m9MeFA8dNxih8y(jr5mv6sJ8uYMgH3QSYl5koIbOno0gks)i7Ts5tJ8u5I7ZPx65mTRbQ(j1tPUTKziVaOw5UKvk3JysFbDyV6A3GVUDXplTNe5bdXi7D5UhfluAROBQTbKbkep0kQ)onkvYycTsUFGBMEuJBHUxJPI0EHDYWQt46KSPEl6QDy2tzR2zti1YkYuLfdOLPbpuU3(Mizw0WWOaXKukB5dRv6kmLUlFAowWrZzotFK6d6J8en42LyIFmt2QDz1E2VKjwqeoQd9zmpTnsEtK7tCoCJ45ts2zboNDW0z4Oq8gKQmSUfYxRZuLVmni)91NMPjmyqTPr6pPRctHie1LsTnDIc39kWGmz6RblcgQ)gUbcu)plYw9N6UTs1JuJk1lYSj9ozN7xNwNnTxf6RgPuckLUgEwN8F5LDmwQxcYoU0BU8QXJRIRdOqgZVhs2akx6EoeWjYIVDLKRKaE8BX32c2hT0fBB8jJ5fYnfdEa98K3hJ1TbhOAdxur0VfR7TnCDvWdxS43vAXPtUmGPj6PzY9dDKJ8kO7un0nfDrGdHGMhsqjJ9ObmxW0RkX0Cw0COYZf1Idduquor4Ka(8ZA5t5eH2zql3PHGxVVH862MYl1h5qWQpOlwihy(I8xha9QqOxq(jJ1q)Ci7JNw5KNcCSR7ADYXOVoq6BD1lbyincM(g6HZk5gBolxwPLzIsYqmblxVjZnwauD1XjL3770CtaXcLU6y5xnGsrsXve007iiMT6kZLUtNetp2Lhetr91WQXo2YMiYLZ0vixFBs5cCztpJqXtRCTPkAph(zE2TaRANXSGN0Bpw1oHvL2CRIIt6LW2JTjLcHjNQnal1t1nD8SI56Re0ZluitLDroASC0qd8sVy3YXP7AoE96PkkQYEQY7m0ap1lYTC8mNY1aL)PXtLsfjVexF7MT4KlsaalVlvnq)wl2V1d(B3q)9ra)7Ze(VDfa4wIaC9fs7OL)KGXB1dCfpHMwz5Xa17X6dQCtLk4AhH6T4HRshTCwAEB8TiVmbVyLTn220J6dkQdgMJGvCnab2n0BAd6j5yi)cBKogwBpjwPMIvuoUY))OvQM8(wllpwfPnyj32ZbE0cG6oEBHZb(6Y4OegWuPw5HY7CmDD6Jah6Uf(DuGOt2BqdiETyJc9nW1TEb6SD81ExyYHy3m9zUvQQS)fRFjnF9rQ(9h5yLvEY6RQdsO2(VGSmueFnn0y(VH3qCj7x0)xp8)Wr8Wg)7d]]
+    20261111001,
+    [[Hekili:TVvBVTTTt8pl5nowOz(PwN1gyhG2vmSU)DDdZbyVZY0s02Sws0qKkggiWF23rjRhOePEkopG(FjibYIhV73D8UJhpMmF487MpZgXXZ)2ObJUEi81GbdNpJFyhE(SDiRTO1WdEix43FgZ4(bwCc174IU7P7zexwplQRHG0douKTGDldio8V4nFPsoZ2HTMp7F(4F)1)8x(F3yNYY5Z2qSTXrZdZSktE3CCbFd(4ItVR)kQp(ES)Xf24vOah(XfF8V(6XfWRpUqMlbK(ceW6Vh57qT223EhRVaX2S(HGH2l8t9(oJ6zCfihFKhZb0dB4zQqUe2XfiBBQ3LWdBXhy9aHG4OBuGNU)XxUdyYgoFh7M(9xt4BcwkuH(5i1a4jaB8y0hSShHgzVYcy7NWo09hx4au4CCX7gamCjwmJJl(INfXd7daZigu78juFc)aipe8rpaTRioocCG8a4Z2aY84IVswbZ)o0UJlwI57XyWUq4WaFMEhdaRyUNqNqdP7HXDimU4Tbo2raLVr87qG1dw99PGKaxeuODM1BNpguYLi(ugmhZveaY)EHbFZ0(exxQW6Efz10lSXldwTQx876fSlzstdyytch7YUs8eD1kZ1w2thMqaWlBSl1Jyz6h4H1tLl67uFtxKhYChv8s9KAHCCmJ(OPWcCLioykJ4T2bB6c(zetoYFnMBAf4dmXHUMyLLbBWoocDxODI3Ep2e7HDjy2TtFBhoDnWOEU07XUypENUkijK99ObCgXgp2ilZxI8e420MsDVAf1kGnDKqqRiR3Wn9XUiIh72t20Se3Zoa8BeXd1vxpPL2uEKowuFQJHtYIvcVUvMxuVvoO1(NCs62nAOuVKTEGlANI(ogpCr4RyBq209MqiGjWixSz0leuKvorVDzGFnmlwuQdqShtcrs24iu1T7fAh8HUDLwQ(PXg9lB1YyYqJoLXVlunBqlnmEOmmQzwpO3DCpKgJ4ngyCdC2LMQKHhJ8b3mZDGri0EgRIKKuCXgSIdyHy83u81qwBiZKjN4InUvYkBiNXaX3yArjoscolIojAvJiKDjm3bYZcE77czTiFtVDwcF(jVDCh5y0RhinXKCIzcQ1BuY74FIPtuBRKfuYyQWDAc7kY4nn6zW3b2u2e7eMnJLf9mmNd8G1dXyK1Ey7OPp9YyIVeCS72TgKDsBvkXuVwqVtOa2SzRdMX8GFo5XRvozPTOSK4KszThJ2wh5etxrzKWbrCBNl0Bs8OHpCzMyWQwNePZuPl1ALs20iwTYR8slfvyaAYcAnH0pYRwXYPwRuPW95Cv65mSRgQ(zDLsDHltrU7GCLhIMPCvKr1f0I9QlDd(Y2f)I4AsKh0hJSpKU8OyIsBfnP0cqmuap0AQ3bnkv0ycTsUEGjJR04MP(2qUiTxyRmS6axRWM6TOlwdAhLfJNqqSLvePkddOKjJhYx9FDqMf13pyNGiLylDyTOldjThFAo4qLXmxO3t9b9EEIcCBJpXpMbBLoTspDyeHzGqLlOpJXPnb51b3N5y4AjZNKOZmso5GPtXb(4TivryTZLV0ftvRLXo5VV8WmnUbgLggP)KUkmfcxuhkfo9FG)HxbgKHJFnyrWq(x)TGJ6)zr2R)u3nfvpsnkxTith25SDUFDADczVk0xnOuQvkT19Sm8pAul9L6e1zhh6KrxpyqX(6ak08z3dbBaNZDtiI2jYcV)LOlTaE8BH3hd2dT0bBp)tZNLj2um4P(Rh9(WUHpNdCTMtkB)XfZ7T1CEf6yUyYVl3KJjoFdtJ0tZOBqQIJ8k47yn8nU7IGe8bn3NGIg7r3sDHqVoNqtfr9BMEkuZomWbr6eXIeiNFwRCYhi0mdA(kneY691uw3wxzP(ihcr9bD(cPTUpR8Bsl8RUh(camCGgeK2u)qYYhEPatnDFTZEx8lRn(no)wOjSonYVM(ajjLdnN5t80WyvjmeYW8zKswgZ02DPvnT7oEEURGqqPltx6LhOeskUeH6ElcHIvxIW49cLeAvxVqih1NLRe7ydlZifNXZqod4W8PatipHrHKLp7vbTNdFpl5MKvT3zIZt8nqRAVYIOn1QO4SGrITQTXuaMuUwJUTEUUlKN1UY(kP)6zsKPYUi7nM3BOgRsVy3dY57IqE9UsLfQYRu53zOgRuVi3dYZCixnu(NMvQyUiTkX1xqAdoBJulIL3LQKMdxA3HlV9WTR)WpIge)m1H422I4g2J4YtK2sl)zPlWfpswib1nZYJPzWvvhu(Ikvi1w2m4Sh)kE08rPPLX3G4YOokRSSXMgEuUtrznQPIUjxsRcBx)DAs)vs7Y8lSrQQUX9KyLQB3Ks788)pALkjUVXy5XQinPBZn9CGvMau3XBZCoWxxghLnkmg1kpuER9PltFeDQUDUFv2Q6O9g00MVgSrH(c4AxTaT2o(AVkmzxSjJFMlLQO4FXQxsZFGjf)lmPQ0kpz1v1ceQT(likdfW3q9Np73WBjoKJl6(RN()ajC45)l]]
 )
 spec:RegisterPack(
     "SM Ruin (wowsims.com)",
@@ -1051,6 +1120,6 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Shadow Brand (wowsims.com)",
-    20261108000,
-    [[Hekili:TRvxVTTnx4Fl5ghl0m5p6CwBqCaAxXW6766kMlWUtY0su2SwsuqKkEbiW)2FpuY6ttkr7e7gSTlAHc5HNVEip8WNeRrwF1AMlIJT(84HJVE0OHVz4WHwZ4peHTMfHCwJwcFeIcG)F2kKlDZ25Vpgf6UDE)n0nmsaZ0Hgyie(bFkYvOWfjeF(hdTwiv3SiSJ1S)6D)5N(JF(3UXfhqdP(0LpynBfX1fNTmmZPDdEZ258v4TZ3n2apAm(EC825UypuIpF7839LpTDom825n1tczGWjyd2GI9PoRh4gXgiCAx2aH)yZsxG9cH8MPty(ngn04kWOWymFiQafXPcNGW2oh56sdVe(yn(bM525FaXr3iX56)7F8RGswX5rSBgmyjHVkzHiEg0qudqNqmGNGERJ7y0yxphqTVhlMExK)brMJ4uewCKpoKdAFggftcxUD(xqKWTZ9Xix2U14tyGw7t4WalYwMW9dZ8UKireIyfoUiIOBcZx3gAcKjaOoM6r8HDeihoHgYmJIXqmSaXNMN5Oac8)2B6xnDGdnoojsm(veVPx4IxK45zwoQzsuXcNMWW2eooGDL4lQNN9sh3PJkea0NBwwWoojeRwQa03OX2bOqKDen14kf1b57BN9J2IW(kXM)PmiH6JTdGDweBokEjMB7Kedkb26cGqffSc777rIXI4tm69yBCioGGz3n91940LGImdO3Jda4QxFjIKQEtAcNrCXtmQQ8fOqHFB7sPbx5rDsythlmKhz5kUDmoaGC2D7YQvf20njgj0svTXY2PyhbRQQ263phyYtVzhfsIEu647S7TJnNy07Im9Bwv5M4)g7KWHFSx)l2pKnESzmBOnKSdmCP8mOy)0Uo4BnGTfDDNg6YHs9HdbHSSu5U0rnWyDimFpinRCYh73VgM(dtmg0gSAC7iJETPVlKTA4eVHXJT5Jkw1JQ33UbkQrcbi04aovuBPATfTyBwzfN8mNKzCqm(RKmouo)ESVnNeGnURwc3OEvgeFLTdL4x32v3INzCzZimElk3N4j2ghLQArnkZihXgWBF9WE1pxF9WAluwX2k6RSaChvVMM9naVWLe2y)0ktSQzBgMlo8Ymrmgzzi2nB5tVmx4lfNR7RHy5f8LzXYnwqgSqc4YJ1(ygle(3UnLkTtvz33w10KuBTbJwRJDYLBFBuObXrRExOoLest)4Ykht6cNevCKflAHu1tnc0QzWxdk6ibCiaQMU0)KrRC7Ofsv6UNtu6CEStJq)zfPKF7(08l1qlPHp0O)Nd)I0EnNivTWm9QFF3Tt60ZQ3NCTB9K1WCpPD)vrK8Meo4MVu7FKGaQ4zqs9U8jv6BfcC8EMI2)oBGARDCNjvrVzD61Nkaxll)mdLvSzrNWtXjX41O6V6QwRus7aw5CT36SmSm)jkVP9UKBPjz1oJ6wRLKkepIZNsDT9sIF4fqcz0KxczemuYoEnSf9)YiBA2BFNfVobbtJ7SMosHBw7Tlhls1M)pE8rMw7L9uk4zuJVEOKhsbbK1S7H9DGMBWqP4P8SuMrZ4se(8ZPmLIdrl8XUwV3AwLTPIj3rfw24PuwzXbTQ5IQsILyDVwZ1ThTwIf)JnwCUWnjRiloTZ42TJEzf6DIc9M)YEWcXqKhtqzZ9K59sy0RBy0stOpJxLUA1PbniUUtasGD(jL2PfUWovKHTFBpLHqvfvpeEJYqO5z5dBprZoge26TAAR701wY7ZuyQrdBbAoYQ)p7KR1g7AhCPpXtK0IFnnZTf1RttNnlKDGhJR5dPkSzrUk4JAo6EUiPtNdgJAwoTSSBoREY969z3tx69snRQcX53zwZODX7xQgvvcUsYkvUMvn3ZYcXMv8RLr29BkuDtWUydyXBpQgvsF8sMX76chjUuPE1GWJNl6ipReJ8cHIRkWQS8s9txQp(Rzw5msY1ZhxKVCrQQUADKQzzqnqQVlurEMpYPrWFAqQCTudL4Q77Q1sIT3VZPLER9BWovaDRt8u54s(Tq6TZ)PWZvPDZNRjsw251b8cYmQYK2rI8wzvozhnb32ZU7GMSw4a54ET(H8A5s6Z(oNK6IBLtswsxUbkPu7FJzjv9ExTDwTREEkIU9jyRnowK(KHJglBlEe8TDCP9ojClRMOIx6FwVCREU)2jFNVb7iOb6SEt3r4FkUreWFucFfn2A2VIxt8jBN3)x29x8y60w))]]
+    20261111000,
+    [[Hekili:TR1AVTTnx4Fl5lkwOzYx6CxBqCaAxXW6766kMlW(MKPLOSzTKOGiv8mqG)T)EOUyDXKY0ojobBRanqrK8C75OdpNNw7H2FZEQhIJT)YObJEZq4pdgmWEkFtm2EAmYDfAb8qeke(50Lip66TZ(qckYB7SERPRzKqMLln0uS5nbuKNqGZtjb8pfzpxQSzXyx7P)17)Zp)h)8VDThoKgrdOl2ypDjXZdNFmmZTBfE92z8L4TZkExFFAc(oCY2zEyFuAaF7S3)1pVDg86TZAlNusFHrW6VgLeqDx13lM1xy0ES(c7XHLDaN5I9BLTG13z0iZRaLcVJfaEfiiovyee22zippA0LWdRWBywBN9rehDTeJR3V)PVbczjNhZUUF)fe(Y05c)PFRTAcYe8b8y07C9gHg557cI9dyXYfE(hfroI7o3IJcWrCq6tXOes0ITZ(kIeTDwag5XkotaHbsThHdVyE(XeMFuU1Lgl8qeBNHl8i66OYZTMMcrcaQtO(KaiJa5Yj0iMvCcg8H5i(KYihfqG)3El)Qj9DPjjPXI3FfXFYfE45P((wvV1knE3bNKYWoeooKDL4jQVVZcxVjd3TbqEE5rbNK0iS6DfI(onXjefHCIPzkx5wDrbbo5)QJWTVsK8pHbb0aStiKzrC4OKfyUJBAciei1faHAcyjoiWNKGf(N4T3HDWr4qcMD7KxBWPlabzfsVdhcWLrpjBjt8w0uoJ4HhBwx4Zrrc72XJsdVYN6MYMmsOiFYILCNeCia5SBlIQ13SLxAcsiL6sJLNP4edNQU061ReykdV5FkKgFV03xO3Bgzn204IC5Bvx4w4)g7MYHF1O3f77YM332Nn1gskadpkphk2pSRd(2ay7qw3QHSCP0a4JGiwEOSiC0amwfbRBaHzLlEFVEnW0FySz)UGvZBgAA0L8Uq2PHV4nnVVlBuXPUxDE7AOOgjcGWgyyTcdzHL8QvwKqOyYDypNARBHJqZdWEgzAwuomavuAWyxIzX(VlnicNGMtci8n1YpLUCzAAP7wxNUig)vsEpuVh0VdNeInRLBx3AltTnpIQancvA9jPmvxKPCIUZTnsWmBwvfXx64sjbn1D9pPZvUSvekVdHhq8fF2gNjArnzRyxXhC386bgnRJ9MbQYHKjVQlCoq16j5pdPZWLIo4GSkXS6rBgMlquMfIXilIG8ZSJm5YYnFPOowpn2w5fCY0y1hsqeC3oGllxfGzSi4VfFeQup137(6QHKKQR1y0kD0t5(2xh7KGOuIXfQdjr0ShUSwzHdHtIkSY8fTqQMHgbA125BafhiaCmaQMM0)KrRs9OfsvzUNtu6C(zNgU(JksjVBMjLxIJwqJ20QFVJVXbJ2lKjwXL0nVV7MXh0YAoxqJB9KnGGH0UDRTLYMIo6MnvBFKWqQySpPwx5IkTTDB40TmfT7E2a1oNWiFx76f9Gw9tfGRLMFKHYA6CxN)tWPj4vOMtz2OvkPD8RCTUhvqgww2R7B7EQGogkqTXOEucjHcXqRbuQNJFAYMxabKHJFjerWqj7Kvqk6)frwlD(WJ1GEGotR7SMmuHz2y2LtfP6Y(hn6edRg5JsbJrn6ndKmif4q2tVdY7aj3Irwb1fSmMGZ5ofE8lzmdxmiU9hSNwlnvSyb1F5VpJIoBoivnpuDs7eN71AEU9OXtC4FS1Hl3CBYzY9tNCUSpqVSc5owHClNSh0qc45jeu(ApyE(ek9nTuALk0NHVktT(YGeex3jajqp)Ks90b3FpvK)TFBpvUqDb10fERsxO93Yhxor7oge66DAQRB1vxY7ZuOQHd6aAoXQ)p6Kj2fBIhDPpXisAXNOMX2D1RZcNTlKTlXQ6cNgX4NkIjFwzMmls0U68rwqRbAKjW2LTRffvZw5JfDL6uIyOQ7gQ43uUvVppN6s0zMAvD1rz3dnu6HyantITVxqwwSyFTRRVNMfBB6U)b5KDtVcrRk7PAkS6EL0X4Yv(HU6vIjvjxnO(5XIy2ZkfrVqi7RgSklU08RR2zeAGspBKY(4Xk7lxKQUP2ePuxOwdJ9SIsN1p50W5FAqQsP0aL4Q7aTZsID353tlrF7pQr2g0ToXdLTp53cPxM)dHXVk9wUwBKSQh0Jyw6CsdL2rI8M6vU4bghOlcioaHHDWg0PXBXXWBqfrIpZbPdXY0tsusxwsQix8FJrjvT8RAEVJ2aFOE3(un2fBtshz4KXYU8hbZJNwy)GupMxtubNhN1l3Ag7Vz8Z8nyNaHyN1B6ob7tXnIa(Js5lPj2t)v8ksaz7SE)sX)xxZw2()d]]
 )

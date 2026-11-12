@@ -9,7 +9,6 @@
 # Movement: default #3 reaches default: hellfire
 # Omitted: precombat #2: petAttack
 # Omitted: default #3: move
-# Omitted: default #9: never
 # Omitted: single_multi_target_curse_logic #2: changeTarget
 # Omitted: multi_target_dot_logic #2: changeTarget
 # Omitted: multi_target_dot_logic #4: changeTarget
@@ -30,6 +29,7 @@ actions+=/searing_pain,focus=2,if=((!debuff.demonic_brand.up|debuff.demonic_bran
 actions+=/call_action_list,name=single_target_dot_logic,if=active_enemies=1
 actions+=/call_action_list,name=multi_target_dot_logic,if=active_enemies>1
 actions+=/call_action_list,name=cooldowns,if=((action.bane_of_doom.known&((!action.bane_of_doom.known|((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known|!debuff.bane_of_doom.up)))|((action.bane_of_doom.known&debuff.bane_of_doom.up)|(active_enemies>=3&target.within5)))
+actions+=/shadow_bolt,if=(talent.improved_shadow_bolt.enabled&buff.revelation.up&(!debuff.shadow_vulnerability.up|debuff.shadow_vulnerability.remains<(action.shadow_bolt.cast+action.shadow_bolt.travel_time))&!action.shadow_bolt.executing)
 actions+=/hellfire,if=active_enemies>=3&target.within5
 actions+=/searing_pain,focus=2,if=(!action.shadow_bolt.known|(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)
 actions+=/death_coil,if=(!action.searing_pain.known|action.searing_pain.cast>fight_remains)

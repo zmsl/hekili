@@ -383,6 +383,45 @@ describe("Forever Priest through the engine", function()
         end
     )
 
+    -- Dark Inspiration (talent 1326159) is applied by a Mind Blast: 10 s, in the belief and the sim; without the talent
+    -- none. Holy Purpose has no producer: it is up only when the aura read says so.
+    it("applies Dark Inspiration on a Mind Blast with the talent, and Holy Purpose never", function()
+        for rank, want in pairs({ [0] = false, [1] = true }) do
+            local c = character()
+            c.talents = { [1326159] = rank }
+            local H = headless.new({ character = c })
+            local I, VS, S = H.ns.VirtualStateInternal, H.ns.VirtualState, H.Hekili.State
+            local t = H.ctl.now + 1
+            assert.is_true(headless.cycle(H, t))
+            VS.Drain(t)
+            S.reset("Primary", true)
+            assert.is_false(S.buff.dark_inspiration.up)
+            H.ctl.now = t + 1
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-MB", 10947)
+            assert.is_true(headless.cycle(H, t + 1.1))
+            VS.Drain(t + 1.1)
+            S.reset("Primary", true)
+            assert.are.equal(want, S.buff.dark_inspiration.up, "belief, rank " .. rank)
+            assert.is_false(S.buff.holy_purpose.up) -- no handler applies it: the aura read alone can
+            assert.are.equal(0, I.nowErrors, tostring(I.nowError))
+            assert.are.same({}, H.errors)
+        end
+    end)
+
+    it("Mind Blast's now and handler apply Dark Inspiration (10 s) under the talent only", function()
+        local _, w = character()
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = ld.env(w)
+            e.talent.dark_inspiration = { rank = 1 }
+            ld.run(w.abilities.mind_blast[field], e)
+            assert.are.same({ "dark_inspiration" }, e.applied, field)
+            e = ld.env(w)
+            ld.run(w.abilities.mind_blast[field], e)
+            assert.are.same({}, e.applied, field)
+        end
+        assert.are.same({ 1326168, 10 }, { w.auras.dark_inspiration.id, w.auras.dark_inspiration.duration })
+    end)
+
     -- Shadowform is a form (core's form reads), and its -50% reaches Mind Blast in both layers; Inner Focus's charge
     -- makes the next one free and is spent by it.
     it(
