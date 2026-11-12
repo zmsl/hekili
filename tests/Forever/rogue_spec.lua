@@ -34,6 +34,17 @@ local KIT = {
     preparation = { { 14185 }, 0, 600, "totem" },
     vanish = { { 1856, 1857, 1285372 }, 0, 300, "off" },
     stealth = { { 1784, 1785, 1786, 1787 }, 0, 10, "off" },
+    -- the manual-press abilities (pin spells_auto_gen.go Powers, cooldowns, GCDMs; Distract's 1.5 s is "spell")
+    feint = { { 1966, 6768, 8637, 11303, 25302 }, 20, 10, "totem" },
+    gouge = { { 1776, 1777, 8629, 11285, 11286 }, 45, 10, "totem" },
+    kidney_shot = { { 408, 8643 }, 25, 20, "totem" },
+    cheap_shot = { { 1833 }, 60, 0, "totem" },
+    sap = { { 6770, 2070, 11297 }, 65, 0, "totem" },
+    blind = { { 2094 }, 30, 300, "totem" },
+    evasion = { { 5277 }, 0, 300, "off" },
+    sprint = { { 2983, 8696, 11305 }, 0, 300, "off" },
+    distract = { { 1725 }, 30, 30, "spell" },
+    redirect = { { 438040 }, 0, 10, "off" },
 }
 
 local function idsOf(a)
@@ -75,6 +86,7 @@ describe("Forever Rogue", function()
             "death_mark",
             "eviscerate",
             "expose_armor",
+            "feint",
             "garrote",
             "ghostly_strike",
             "hemorrhage",
@@ -102,7 +114,7 @@ describe("Forever Rogue", function()
                 assert.are.equal("function", type(a.known), key)
             end
         end
-        assert.are.equal(22, n)
+        assert.are.equal(32, n)
         assert.are.same({ 8928, 8927, 8926, 6950, 6949, 6947 }, w.abilities.instant_poison.items)
         assert.are.same({ 20844, 8985, 8984, 2893, 2892 }, w.abilities.deadly_poison.items)
         assert.are.equal("cooldowns", w.abilities.vanish.toggle) -- the native Cooldowns toggle (APL usability audit B)
@@ -246,6 +258,122 @@ describe("Forever Rogue", function()
         assert.are.equal(0, cost("riposte", 2, true)) -- floored at 0
     end)
 
+    -- Relentless Strikes (14179, rank curve {4..20} % a point, 14181's 25 energy): the expectation, chance x points x 25
+    it("refunds Relentless Strikes's expected energy by rank and points, on every finisher in its mask", function()
+        local function gain(key, cp, n)
+            local env = ld.env(w)
+            env.talent = rank(n)
+            env.combo_points.current = cp
+            ld.run(w.abilities[key].handler, env)
+            return env.gained[1] and env.gained[1][1] or 0
+        end
+        for _, key in ipairs({ "eviscerate", "expose_armor", "rupture", "slice_and_dice", "death_mark", "kidney_shot" }) do
+            assert.are.equal(0, gain(key, 5, 0), key)
+            assert.is_true(math.abs(gain(key, 3, 2) - 25 * 0.24) < 1e-9, key)
+            assert.is_true(math.abs(gain(key, 1, 1) - 25 * 0.04) < 1e-9, key)
+            assert.are.equal(25, gain(key, 5, 5), key)
+            assert.is_true(math.abs(gain(key, 5, 3) - 25 * 0.6) < 1e-9, key) -- 12% a point x 5 points: 60%
+        end
+    end)
+
+    it("applies Elusiveness, Endurance and Camouflage to the cooldowns they name", function()
+        local function cd(key, k, n)
+            local env = ld.env(w)
+            env.talent = setmetatable({ [k] = { rank = n, enabled = n > 0 } }, { __index = rank(0) })
+            return ld.run(w.abilities[key].cooldown, env)
+        end
+        for n, want in ipairs({ 255, 210 }) do -- Elusiveness 13981: -45 / -90 s on Vanish and Blind
+            assert.are.equal(want, cd("vanish", "elusiveness", n))
+            assert.are.equal(want, cd("blind", "elusiveness", n))
+        end
+        for n, want in ipairs({ 210, 120 }) do -- Endurance 13742: -30 / -60 % on Sprint and Evasion
+            assert.are.equal(want, cd("sprint", "endurance", n))
+            assert.are.equal(want, cd("evasion", "endurance", n))
+        end
+        for n, want in ipairs({ 8, 6, 4 }) do -- Camouflage 13975's second effect: -2 s a rank on Stealth
+            assert.are.equal(want, cd("stealth", "camouflage", n))
+        end
+    end)
+
+    it("prices Dirty Tricks on Sap and Blind and Dirty Deeds on Cheap Shot, Composure joining them", function()
+        local function cost(key, k, n, poised)
+            local env = ld.env(w)
+            env.talent = setmetatable({ [k] = { rank = n, enabled = n > 0 } }, { __index = rank(0) })
+            env.buff = setmetatable({ poised = { up = poised } }, {
+                __index = function()
+                    return { up = false }
+                end,
+            })
+            return ld.run(w.abilities[key].spend, env)
+        end
+        assert.are.equal(65, cost("sap", "dirty_tricks", 0))
+        assert.are.equal(48.75, cost("sap", "dirty_tricks", 1))
+        assert.are.equal(32.5, cost("sap", "dirty_tricks", 2))
+        assert.are.equal(30, cost("blind", "dirty_tricks", 0))
+        assert.are.equal(22.5, cost("blind", "dirty_tricks", 1))
+        assert.are.equal(15, cost("blind", "dirty_tricks", 2))
+        assert.are.equal(60, cost("cheap_shot", "dirty_deeds", 0))
+        assert.are.equal(50, cost("cheap_shot", "dirty_deeds", 1))
+        assert.are.equal(40, cost("cheap_shot", "dirty_deeds", 2))
+        assert.are.equal(45, cost("gouge", "composure", 0, true)) -- Poised's -10 is the cost mod's, not `spend`'s
+        assert.are.equal(40, cost("gouge", "composure", 1, true)) -- Composure 1 adds its 5 while Poised is up
+    end)
+
+    it("models the manual-press abilities' combo points, auras and stealth rules", function()
+        local function run(key, field, cp)
+            local env = ld.env(w)
+            env.combo_points.current = cp or 0
+            ld.run(w.abilities[key][field], env)
+            return env
+        end
+        assert.are.same({ { 1, "combo_points" } }, run("gouge", "handler").gained)
+        assert.are.same({ { 2, "combo_points" } }, run("cheap_shot", "handler").gained)
+        assert.are.same({ { 3, "combo_points" } }, run("kidney_shot", "handler", 3).spent)
+        assert.are.same({}, run("kidney_shot", "now", 3).spent)
+        e.combo_points.current = 0
+        assert.is_false((ld.run(w.abilities.kidney_shot.usable, e)))
+        assert.is_false(w.abilities.kidney_shot.ladder)
+        for _, key in ipairs({ "cheap_shot", "sap" }) do
+            local env = ld.env(w)
+            assert.is_false((ld.run(w.abilities[key].usable, env)), key)
+            env.buff = setmetatable({ stealth = { up = true } }, { __index = ld.env(w).buff })
+            assert.is_true((ld.run(w.abilities[key].usable, env)), key)
+        end
+        for _, key in ipairs({ "feint", "gouge", "kidney_shot", "cheap_shot", "sap", "blind" }) do
+            assert.are.same({ "stealth", "vanish" }, run(key, "now", 1).removed, key)
+        end
+        assert.is_true(w.abilities.feint.refundOnAvoid)
+        -- the player auras carry the BUFF's spell ID, the one the Cooldown Manager links (the leaf maps by aura id)
+        assert.are.same({ 2983, 15 }, { w.auras.sprint.id, w.auras.sprint.duration })
+        assert.are.same({ 8696, 11305 }, w.auras.sprint.copy)
+        assert.are.same({ 5277, 15 }, { w.auras.evasion.id, w.auras.evasion.duration })
+        -- the owner's Cooldown Manager export links these (tests/Forever/cdm_map_spec.lua on cdm-fixture closes them)
+        assert.are.same({ 1324474, 1324475, 408, 8643 }, idsOf(w.auras.kidney_shot))
+        assert.are.same({ 1324482, 1324483, 1324484 }, idsOf(w.auras.sap))
+        assert.are.same({ 1324477, 2094 }, idsOf(w.auras.blind))
+        assert.are.same({ 1324481, 1776, 1777, 8629, 11285, 11286 }, idsOf(w.auras.gouge))
+        assert.are.same({ 1966, 6768, 8637, 11303, 25302 }, idsOf(w.auras.feint))
+        assert.are.same({ 1324485 }, idsOf(w.auras.silenced_kick))
+        assert.are.same({ 1725 }, idsOf(w.auras.distract))
+        assert.are.same({ 1833 }, idsOf(w.auras.cheap_shot))
+        assert.are.same({ 14143, 14144 }, idsOf(w.auras.remorseless))
+        for _, key in ipairs({ "sprint", "evasion" }) do
+            assert.are.same({ key }, run(key, "handler").applied, key)
+            assert.are.same({ key }, run(key, "now").applied, key)
+        end
+        -- Poised covers the seven class-set abilities among them (mask bits Feint, Gouge, Kidney, Cheap, Sap, Blind, Distract)
+        local scoped = {}
+        for _, id in ipairs(w.costMods[1].spells) do
+            scoped[id] = true
+        end
+        for _, key in ipairs({ "feint", "gouge", "kidney_shot", "cheap_shot", "sap", "blind", "distract" }) do
+            assert.is_true(scoped[w.abilities[key].id] == true, key)
+        end
+        for _, key in ipairs({ "sprint", "evasion", "redirect" }) do
+            assert.is_nil(scoped[w.abilities[key].id], key)
+        end
+    end)
+
     it("makes Death Mark a finisher that marks the target for 6 s", function()
         assert.are.same({ 6, 1325758 }, { w.auras.death_mark.duration, w.auras.death_mark.id })
         assert.are.same({ 1325758, 1316709, 1325756, 1325757 }, idsOf(w.auras.death_mark))
@@ -287,8 +415,8 @@ describe("Forever Rogue", function()
                 s = run("slice_and_dice", 5, field, rs5)
                 assert.is_true(math.abs(s.durations.slice_and_dice - 21 * 1.15) < 1e-9, field)
                 assert.are.same({ { 25, "energy" } }, s.gained, field)
-                assert.are.same({}, run("slice_and_dice", 4, field, rs5).gained, field)
-                assert.are.same({}, run("slice_and_dice", 5, field, rank(4)).gained, field) -- 4 ranks: chance, not certain
+                assert.are.same({ { 20, "energy" } }, run("slice_and_dice", 4, field, rs5).gained, field) -- 4 x 20% x 25
+                assert.are.same({ { 20, "energy" } }, run("slice_and_dice", 5, field, rank(4)).gained, field) -- 5 x 16% x 25
                 assert.are.equal(16, run("rupture", 5, field).durations.rupture, field)
             end
             -- the sim spends the points; the belief's poll reads them (no `now` spend)
@@ -338,7 +466,7 @@ describe("Forever Rogue", function()
         assert.is_true(w.abilities.hemorrhage.missable)
         assert.is_true(w.auras.stealth.isStealthed and w.auras.vanish.isStealthed)
         assert.are.same({ 1784, 1785, 1786, 1787 }, idsOf(w.auras.stealth))
-        assert.are.same({ 11327, 11329 }, idsOf(w.auras.vanish))
+        assert.are.same({ 11327, 11329, 1856, 1857 }, idsOf(w.auras.vanish))
     end)
 
     it("gives the next Ambush or Garrote from a Ghostly Strike's cast, 7 s, one charge", function()

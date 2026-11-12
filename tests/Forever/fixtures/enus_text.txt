@@ -892,6 +892,39 @@ options.abilities.blade_flurry.toggle	values.interrupts	Interrupts
 options.abilities.blade_flurry.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.blade_flurry.toggle	values.none	None
 options.abilities.blade_flurry.toggle	values.potions	Potions
+options.abilities.blind	name	Spell 2094
+options.abilities.blind.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 2094 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 2094 can be recommended in any type of fight.
+options.abilities.blind.boss	name	Boss Encounter Only
+options.abilities.blind.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 2094 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.blind.clash	name	Clash
+options.abilities.blind.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 2094.
+options.abilities.blind.disabled	name	Disable |T136000:0|t Spell 2094
+options.abilities.blind.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.blind.dotCap	name	Maximum Applications
+options.abilities.blind.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.blind.hasIcon	name	Icon Replacement
+options.abilities.blind.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.blind.keybind	name	Override Keybind Text
+options.abilities.blind.lineBreak1	name	\032
+options.abilities.blind.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.blind.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.blind.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.blind.noIcon	name	Icon Replacement
+options.abilities.blind.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 2094 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.blind.targetMax	name	Maximum Targets
+options.abilities.blind.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 2094 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.blind.targetMin	name	Minimum Targets
+options.abilities.blind.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.blind.toggle	name	Require Toggle
+options.abilities.blind.toggle	values.cooldowns	Cooldowns
+options.abilities.blind.toggle	values.custom1	Custom 1
+options.abilities.blind.toggle	values.custom2	Custom 2
+options.abilities.blind.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.blind.toggle	values.defensives	Defensives
+options.abilities.blind.toggle	values.interrupts	Interrupts
+options.abilities.blind.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.blind.toggle	values.none	None
+options.abilities.blind.toggle	values.potions	Potions
 options.abilities.bloodrage	name	Spell 2687
 options.abilities.bloodrage.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 2687 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 2687 can be recommended in any type of fight.
 options.abilities.bloodrage.boss	name	Boss Encounter Only
@@ -1123,6 +1156,39 @@ options.abilities.charge.toggle	values.interrupts	Interrupts
 options.abilities.charge.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.charge.toggle	values.none	None
 options.abilities.charge.toggle	values.potions	Potions
+options.abilities.cheap_shot	name	Spell 1833
+options.abilities.cheap_shot.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1833 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1833 can be recommended in any type of fight.
+options.abilities.cheap_shot.boss	name	Boss Encounter Only
+options.abilities.cheap_shot.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1833 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.cheap_shot.clash	name	Clash
+options.abilities.cheap_shot.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1833.
+options.abilities.cheap_shot.disabled	name	Disable |T136000:0|t Spell 1833
+options.abilities.cheap_shot.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.cheap_shot.dotCap	name	Maximum Applications
+options.abilities.cheap_shot.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.cheap_shot.hasIcon	name	Icon Replacement
+options.abilities.cheap_shot.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.cheap_shot.keybind	name	Override Keybind Text
+options.abilities.cheap_shot.lineBreak1	name	\032
+options.abilities.cheap_shot.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.cheap_shot.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.cheap_shot.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.cheap_shot.noIcon	name	Icon Replacement
+options.abilities.cheap_shot.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1833 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.cheap_shot.targetMax	name	Maximum Targets
+options.abilities.cheap_shot.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1833 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.cheap_shot.targetMin	name	Minimum Targets
+options.abilities.cheap_shot.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.cheap_shot.toggle	name	Require Toggle
+options.abilities.cheap_shot.toggle	values.cooldowns	Cooldowns
+options.abilities.cheap_shot.toggle	values.custom1	Custom 1
+options.abilities.cheap_shot.toggle	values.custom2	Custom 2
+options.abilities.cheap_shot.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.cheap_shot.toggle	values.defensives	Defensives
+options.abilities.cheap_shot.toggle	values.interrupts	Interrupts
+options.abilities.cheap_shot.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.cheap_shot.toggle	values.none	None
+options.abilities.cheap_shot.toggle	values.potions	Potions
 options.abilities.claw	name	Spell 1082
 options.abilities.claw.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1082 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1082 can be recommended in any type of fight.
 options.abilities.claw.boss	name	Boss Encounter Only
@@ -1948,6 +2014,39 @@ options.abilities.disease_cleansing_totem.toggle	values.interrupts	Interrupts
 options.abilities.disease_cleansing_totem.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.disease_cleansing_totem.toggle	values.none	None
 options.abilities.disease_cleansing_totem.toggle	values.potions	Potions
+options.abilities.distract	name	Spell 1725
+options.abilities.distract.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1725 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1725 can be recommended in any type of fight.
+options.abilities.distract.boss	name	Boss Encounter Only
+options.abilities.distract.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1725 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.distract.clash	name	Clash
+options.abilities.distract.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1725.
+options.abilities.distract.disabled	name	Disable |T136000:0|t Spell 1725
+options.abilities.distract.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.distract.dotCap	name	Maximum Applications
+options.abilities.distract.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.distract.hasIcon	name	Icon Replacement
+options.abilities.distract.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.distract.keybind	name	Override Keybind Text
+options.abilities.distract.lineBreak1	name	\032
+options.abilities.distract.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.distract.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.distract.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.distract.noIcon	name	Icon Replacement
+options.abilities.distract.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1725 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.distract.targetMax	name	Maximum Targets
+options.abilities.distract.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1725 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.distract.targetMin	name	Minimum Targets
+options.abilities.distract.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.distract.toggle	name	Require Toggle
+options.abilities.distract.toggle	values.cooldowns	Cooldowns
+options.abilities.distract.toggle	values.custom1	Custom 1
+options.abilities.distract.toggle	values.custom2	Custom 2
+options.abilities.distract.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.distract.toggle	values.defensives	Defensives
+options.abilities.distract.toggle	values.interrupts	Interrupts
+options.abilities.distract.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.distract.toggle	values.none	None
+options.abilities.distract.toggle	values.potions	Potions
 options.abilities.divine_favor	name	Spell 20216
 options.abilities.divine_favor.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 20216 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 20216 can be recommended in any type of fight.
 options.abilities.divine_favor.boss	name	Boss Encounter Only
@@ -2212,6 +2311,39 @@ options.abilities.entangling_roots.toggle	values.interrupts	Interrupts
 options.abilities.entangling_roots.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.entangling_roots.toggle	values.none	None
 options.abilities.entangling_roots.toggle	values.potions	Potions
+options.abilities.evasion	name	Spell 5277
+options.abilities.evasion.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 5277 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 5277 can be recommended in any type of fight.
+options.abilities.evasion.boss	name	Boss Encounter Only
+options.abilities.evasion.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 5277 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.evasion.clash	name	Clash
+options.abilities.evasion.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 5277.
+options.abilities.evasion.disabled	name	Disable |T136000:0|t Spell 5277
+options.abilities.evasion.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.evasion.dotCap	name	Maximum Applications
+options.abilities.evasion.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.evasion.hasIcon	name	Icon Replacement
+options.abilities.evasion.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.evasion.keybind	name	Override Keybind Text
+options.abilities.evasion.lineBreak1	name	\032
+options.abilities.evasion.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.evasion.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.evasion.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.evasion.noIcon	name	Icon Replacement
+options.abilities.evasion.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 5277 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.evasion.targetMax	name	Maximum Targets
+options.abilities.evasion.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 5277 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.evasion.targetMin	name	Minimum Targets
+options.abilities.evasion.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.evasion.toggle	name	Require Toggle
+options.abilities.evasion.toggle	values.cooldowns	Cooldowns
+options.abilities.evasion.toggle	values.custom1	Custom 1
+options.abilities.evasion.toggle	values.custom2	Custom 2
+options.abilities.evasion.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.evasion.toggle	values.defensives	Defensives
+options.abilities.evasion.toggle	values.interrupts	Interrupts
+options.abilities.evasion.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.evasion.toggle	values.none	None
+options.abilities.evasion.toggle	values.potions	Potions
 options.abilities.eviscerate	name	Spell 2098
 options.abilities.eviscerate.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 2098 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 2098 can be recommended in any type of fight.
 options.abilities.eviscerate.boss	name	Boss Encounter Only
@@ -2410,6 +2542,39 @@ options.abilities.faerie_fire.toggle	values.interrupts	Interrupts
 options.abilities.faerie_fire.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.faerie_fire.toggle	values.none	None
 options.abilities.faerie_fire.toggle	values.potions	Potions
+options.abilities.feint	name	Spell 1966
+options.abilities.feint.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1966 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1966 can be recommended in any type of fight.
+options.abilities.feint.boss	name	Boss Encounter Only
+options.abilities.feint.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1966 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.feint.clash	name	Clash
+options.abilities.feint.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1966.
+options.abilities.feint.disabled	name	Disable |T136000:0|t Spell 1966
+options.abilities.feint.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.feint.dotCap	name	Maximum Applications
+options.abilities.feint.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.feint.hasIcon	name	Icon Replacement
+options.abilities.feint.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.feint.keybind	name	Override Keybind Text
+options.abilities.feint.lineBreak1	name	\032
+options.abilities.feint.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.feint.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.feint.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.feint.noIcon	name	Icon Replacement
+options.abilities.feint.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1966 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.feint.targetMax	name	Maximum Targets
+options.abilities.feint.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1966 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.feint.targetMin	name	Minimum Targets
+options.abilities.feint.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.feint.toggle	name	Require Toggle
+options.abilities.feint.toggle	values.cooldowns	Cooldowns
+options.abilities.feint.toggle	values.custom1	Custom 1
+options.abilities.feint.toggle	values.custom2	Custom 2
+options.abilities.feint.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.feint.toggle	values.defensives	Defensives
+options.abilities.feint.toggle	values.interrupts	Interrupts
+options.abilities.feint.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.feint.toggle	values.none	None
+options.abilities.feint.toggle	values.potions	Potions
 options.abilities.feral_charge	name	Spell 1238122
 options.abilities.feral_charge.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1238122 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1238122 can be recommended in any type of fight.
 options.abilities.feral_charge.boss	name	Boss Encounter Only
@@ -2971,6 +3136,39 @@ options.abilities.gift_of_the_wild.toggle	values.interrupts	Interrupts
 options.abilities.gift_of_the_wild.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.gift_of_the_wild.toggle	values.none	None
 options.abilities.gift_of_the_wild.toggle	values.potions	Potions
+options.abilities.gouge	name	Spell 1776
+options.abilities.gouge.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1776 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1776 can be recommended in any type of fight.
+options.abilities.gouge.boss	name	Boss Encounter Only
+options.abilities.gouge.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1776 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.gouge.clash	name	Clash
+options.abilities.gouge.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1776.
+options.abilities.gouge.disabled	name	Disable |T136000:0|t Spell 1776
+options.abilities.gouge.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.gouge.dotCap	name	Maximum Applications
+options.abilities.gouge.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.gouge.hasIcon	name	Icon Replacement
+options.abilities.gouge.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.gouge.keybind	name	Override Keybind Text
+options.abilities.gouge.lineBreak1	name	\032
+options.abilities.gouge.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.gouge.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.gouge.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.gouge.noIcon	name	Icon Replacement
+options.abilities.gouge.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1776 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.gouge.targetMax	name	Maximum Targets
+options.abilities.gouge.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1776 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.gouge.targetMin	name	Minimum Targets
+options.abilities.gouge.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.gouge.toggle	name	Require Toggle
+options.abilities.gouge.toggle	values.cooldowns	Cooldowns
+options.abilities.gouge.toggle	values.custom1	Custom 1
+options.abilities.gouge.toggle	values.custom2	Custom 2
+options.abilities.gouge.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.gouge.toggle	values.defensives	Defensives
+options.abilities.gouge.toggle	values.interrupts	Interrupts
+options.abilities.gouge.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.gouge.toggle	values.none	None
+options.abilities.gouge.toggle	values.potions	Potions
 options.abilities.grace_of_air_totem	name	Spell 8835
 options.abilities.grace_of_air_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8835 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8835 can be recommended in any type of fight.
 options.abilities.grace_of_air_totem.boss	name	Boss Encounter Only
@@ -3895,6 +4093,39 @@ options.abilities.kick.toggle	values.interrupts	Interrupts
 options.abilities.kick.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.kick.toggle	values.none	None
 options.abilities.kick.toggle	values.potions	Potions
+options.abilities.kidney_shot	name	Spell 408
+options.abilities.kidney_shot.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 408 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 408 can be recommended in any type of fight.
+options.abilities.kidney_shot.boss	name	Boss Encounter Only
+options.abilities.kidney_shot.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 408 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.kidney_shot.clash	name	Clash
+options.abilities.kidney_shot.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 408.
+options.abilities.kidney_shot.disabled	name	Disable |T136000:0|t Spell 408
+options.abilities.kidney_shot.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.kidney_shot.dotCap	name	Maximum Applications
+options.abilities.kidney_shot.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.kidney_shot.hasIcon	name	Icon Replacement
+options.abilities.kidney_shot.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.kidney_shot.keybind	name	Override Keybind Text
+options.abilities.kidney_shot.lineBreak1	name	\032
+options.abilities.kidney_shot.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.kidney_shot.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.kidney_shot.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.kidney_shot.noIcon	name	Icon Replacement
+options.abilities.kidney_shot.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 408 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.kidney_shot.targetMax	name	Maximum Targets
+options.abilities.kidney_shot.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 408 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.kidney_shot.targetMin	name	Minimum Targets
+options.abilities.kidney_shot.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.kidney_shot.toggle	name	Require Toggle
+options.abilities.kidney_shot.toggle	values.cooldowns	Cooldowns
+options.abilities.kidney_shot.toggle	values.custom1	Custom 1
+options.abilities.kidney_shot.toggle	values.custom2	Custom 2
+options.abilities.kidney_shot.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.kidney_shot.toggle	values.defensives	Defensives
+options.abilities.kidney_shot.toggle	values.interrupts	Interrupts
+options.abilities.kidney_shot.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.kidney_shot.toggle	values.none	None
+options.abilities.kidney_shot.toggle	values.potions	Potions
 options.abilities.lacerate	name	Spell 1328617
 options.abilities.lacerate.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1328617 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1328617 can be recommended in any type of fight.
 options.abilities.lacerate.boss	name	Boss Encounter Only
@@ -5388,6 +5619,39 @@ options.abilities.recklessness.toggle	values.interrupts	Interrupts
 options.abilities.recklessness.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.recklessness.toggle	values.none	None
 options.abilities.recklessness.toggle	values.potions	Potions
+options.abilities.redirect	name	Spell 438040
+options.abilities.redirect.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 438040 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 438040 can be recommended in any type of fight.
+options.abilities.redirect.boss	name	Boss Encounter Only
+options.abilities.redirect.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 438040 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.redirect.clash	name	Clash
+options.abilities.redirect.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 438040.
+options.abilities.redirect.disabled	name	Disable |T136000:0|t Spell 438040
+options.abilities.redirect.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.redirect.dotCap	name	Maximum Applications
+options.abilities.redirect.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.redirect.hasIcon	name	Icon Replacement
+options.abilities.redirect.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.redirect.keybind	name	Override Keybind Text
+options.abilities.redirect.lineBreak1	name	\032
+options.abilities.redirect.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.redirect.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.redirect.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.redirect.noIcon	name	Icon Replacement
+options.abilities.redirect.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 438040 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.redirect.targetMax	name	Maximum Targets
+options.abilities.redirect.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 438040 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.redirect.targetMin	name	Minimum Targets
+options.abilities.redirect.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.redirect.toggle	name	Require Toggle
+options.abilities.redirect.toggle	values.cooldowns	Cooldowns
+options.abilities.redirect.toggle	values.custom1	Custom 1
+options.abilities.redirect.toggle	values.custom2	Custom 2
+options.abilities.redirect.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.redirect.toggle	values.defensives	Defensives
+options.abilities.redirect.toggle	values.interrupts	Interrupts
+options.abilities.redirect.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.redirect.toggle	values.none	None
+options.abilities.redirect.toggle	values.potions	Potions
 options.abilities.regrowth	name	Spell 8936
 options.abilities.regrowth.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8936 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8936 can be recommended in any type of fight.
 options.abilities.regrowth.boss	name	Boss Encounter Only
@@ -5751,6 +6015,39 @@ options.abilities.rupture.toggle	values.interrupts	Interrupts
 options.abilities.rupture.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.rupture.toggle	values.none	None
 options.abilities.rupture.toggle	values.potions	Potions
+options.abilities.sap	name	Spell 6770
+options.abilities.sap.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 6770 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 6770 can be recommended in any type of fight.
+options.abilities.sap.boss	name	Boss Encounter Only
+options.abilities.sap.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 6770 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.sap.clash	name	Clash
+options.abilities.sap.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 6770.
+options.abilities.sap.disabled	name	Disable |T136000:0|t Spell 6770
+options.abilities.sap.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.sap.dotCap	name	Maximum Applications
+options.abilities.sap.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.sap.hasIcon	name	Icon Replacement
+options.abilities.sap.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.sap.keybind	name	Override Keybind Text
+options.abilities.sap.lineBreak1	name	\032
+options.abilities.sap.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.sap.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.sap.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.sap.noIcon	name	Icon Replacement
+options.abilities.sap.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 6770 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.sap.targetMax	name	Maximum Targets
+options.abilities.sap.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 6770 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.sap.targetMin	name	Minimum Targets
+options.abilities.sap.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.sap.toggle	name	Require Toggle
+options.abilities.sap.toggle	values.cooldowns	Cooldowns
+options.abilities.sap.toggle	values.custom1	Custom 1
+options.abilities.sap.toggle	values.custom2	Custom 2
+options.abilities.sap.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.sap.toggle	values.defensives	Defensives
+options.abilities.sap.toggle	values.interrupts	Interrupts
+options.abilities.sap.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.sap.toggle	values.none	None
+options.abilities.sap.toggle	values.potions	Potions
 options.abilities.scorch	name	Spell 2948
 options.abilities.scorch.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 2948 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 2948 can be recommended in any type of fight.
 options.abilities.scorch.boss	name	Boss Encounter Only
@@ -6898,6 +7195,39 @@ options.abilities.spec	values.100093	|W|T136186:0::::64:64:4:60:4:60|t Destructi
 options.abilities.spec	values.100111	|W|T136096:0::::64:64:4:60:4:60|t Balance|w
 options.abilities.spec	values.100112	|W|T132115:0::::64:64:4:60:4:60|t Feral|w
 options.abilities.spec	values.100113	|W|T132276:0::::64:64:4:60:4:60|t Guardian|w
+options.abilities.sprint	name	Spell 2983
+options.abilities.sprint.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 2983 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 2983 can be recommended in any type of fight.
+options.abilities.sprint.boss	name	Boss Encounter Only
+options.abilities.sprint.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 2983 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.sprint.clash	name	Clash
+options.abilities.sprint.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 2983.
+options.abilities.sprint.disabled	name	Disable |T136000:0|t Spell 2983
+options.abilities.sprint.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.sprint.dotCap	name	Maximum Applications
+options.abilities.sprint.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.sprint.hasIcon	name	Icon Replacement
+options.abilities.sprint.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.sprint.keybind	name	Override Keybind Text
+options.abilities.sprint.lineBreak1	name	\032
+options.abilities.sprint.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.sprint.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.sprint.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.sprint.noIcon	name	Icon Replacement
+options.abilities.sprint.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 2983 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.sprint.targetMax	name	Maximum Targets
+options.abilities.sprint.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 2983 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.sprint.targetMin	name	Minimum Targets
+options.abilities.sprint.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.sprint.toggle	name	Require Toggle
+options.abilities.sprint.toggle	values.cooldowns	Cooldowns
+options.abilities.sprint.toggle	values.custom1	Custom 1
+options.abilities.sprint.toggle	values.custom2	Custom 2
+options.abilities.sprint.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.sprint.toggle	values.defensives	Defensives
+options.abilities.sprint.toggle	values.interrupts	Interrupts
+options.abilities.sprint.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.sprint.toggle	values.none	None
+options.abilities.sprint.toggle	values.potions	Potions
 options.abilities.starfire	name	Spell 2912
 options.abilities.starfire.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 2912 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 2912 can be recommended in any type of fight.
 options.abilities.starfire.boss	name	Boss Encounter Only
@@ -15143,22 +15473,29 @@ options.packs.assassination.Assassination (wowsims.com).lists.action	values.adre
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.ambush	|T136000:0|t Spell 8676
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.backstab	|T136000:0|t Spell 53
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.blade_flurry	|T136000:0|t Spell 13877
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.blind	|T136000:0|t Spell 2094
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.cheap_shot	|T136000:0|t Spell 1833
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.death_mark	|T136000:0|t Spell 1316709
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.distract	|T136000:0|t Spell 1725
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.evasion	|T136000:0|t Spell 5277
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.eviscerate	|T136000:0|t Spell 2098
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.expose_armor	|T136000:0|t Spell 8647
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.feint	|T136000:0|t Spell 1966
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.garrote	|T136000:0|t Spell 703
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.ghostly_strike	|T136000:0|t Spell 14278
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.gouge	|T136000:0|t Spell 1776
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.hemorrhage	|T136000:0|t Spell 16511
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.instant_poison	|T0:0|t [Item 6947]
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.kick	|T136000:0|t Spell 1766
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.kidney_shot	|T136000:0|t Spell 408
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -15168,12 +15505,15 @@ options.packs.assassination.Assassination (wowsims.com).lists.action	values.pool
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.premeditation	|T136000:0|t Spell 14183
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.preparation	|T136000:0|t Spell 14185
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.redirect	|T136000:0|t Spell 438040
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.riposte	|T136000:0|t Spell 14251
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.rupture	|T136000:0|t Spell 1943
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.sap	|T136000:0|t Spell 6770
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.shank	|T136000:0|t Spell 1329283
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.sinister_strike	|T136000:0|t Spell 1752
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.slice_and_dice	|T136000:0|t Spell 5171
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.sprint	|T136000:0|t Spell 2983
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.stealth	|T136000:0|t Spell 1784
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
@@ -15216,22 +15556,29 @@ options.packs.assassination.Assassination (wowsims.com).lists.action_name	values
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.ambush	|T136000:0|t Spell 8676
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.backstab	|T136000:0|t Spell 53
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.blade_flurry	|T136000:0|t Spell 13877
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.blind	|T136000:0|t Spell 2094
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.cheap_shot	|T136000:0|t Spell 1833
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.death_mark	|T136000:0|t Spell 1316709
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.distract	|T136000:0|t Spell 1725
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.evasion	|T136000:0|t Spell 5277
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.eviscerate	|T136000:0|t Spell 2098
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.expose_armor	|T136000:0|t Spell 8647
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.feint	|T136000:0|t Spell 1966
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.garrote	|T136000:0|t Spell 703
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.ghostly_strike	|T136000:0|t Spell 14278
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.gouge	|T136000:0|t Spell 1776
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.hemorrhage	|T136000:0|t Spell 16511
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.instant_poison	|T0:0|t [Item 6947]
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.kick	|T136000:0|t Spell 1766
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.kidney_shot	|T136000:0|t Spell 408
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -15241,12 +15588,15 @@ options.packs.assassination.Assassination (wowsims.com).lists.action_name	values
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.premeditation	|T136000:0|t Spell 14183
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.preparation	|T136000:0|t Spell 14185
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.redirect	|T136000:0|t Spell 438040
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.riposte	|T136000:0|t Spell 14251
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.rupture	|T136000:0|t Spell 1943
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.sap	|T136000:0|t Spell 6770
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.shank	|T136000:0|t Spell 1329283
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.sinister_strike	|T136000:0|t Spell 1752
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.slice_and_dice	|T136000:0|t Spell 5171
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.sprint	|T136000:0|t Spell 2983
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.stealth	|T136000:0|t Spell 1784
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
@@ -15259,15 +15609,18 @@ options.packs.assassination.Assassination (wowsims.com).lists.buff_name	desc	Spe
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.adrenaline_rush	|T136000:0|t Spell 13750
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.blade_flurry	|T136000:0|t Spell 13877
+options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.cheap_shot	|T136000:0|t Spell 1833
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.death_mark	|T136000:0|t Spell 1325758
+options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.distract	|T136000:0|t Spell 1725
+options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.evasion	|T136000:0|t Spell 5277
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.garrote	|T136000:0|t Spell 703
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.ghostly_strike	|T136000:0|t Spell 14278
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.ghostly_strike_next	|T136000:0|t Spell 1329326
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.hemorrhage	|T136000:0|t Spell 16511
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328826
-options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.remorseless	|T136000:0|t Spell 14143
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.rupture	|T136000:0|t Spell 1943
+options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.silenced_kick	|T136000:0|t Spell 1324485
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.slice_and_dice	|T136000:0|t Spell 5171
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
 options.packs.assassination.Assassination (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
@@ -16136,22 +16489,29 @@ options.packs.combat.Combat (wowsims.com).lists.action	values.adrenaline_rush	|T
 options.packs.combat.Combat (wowsims.com).lists.action	values.ambush	|T136000:0|t Spell 8676
 options.packs.combat.Combat (wowsims.com).lists.action	values.backstab	|T136000:0|t Spell 53
 options.packs.combat.Combat (wowsims.com).lists.action	values.blade_flurry	|T136000:0|t Spell 13877
+options.packs.combat.Combat (wowsims.com).lists.action	values.blind	|T136000:0|t Spell 2094
 options.packs.combat.Combat (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.combat.Combat (wowsims.com).lists.action	values.cheap_shot	|T136000:0|t Spell 1833
 options.packs.combat.Combat (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.combat.Combat (wowsims.com).lists.action	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.combat.Combat (wowsims.com).lists.action	values.death_mark	|T136000:0|t Spell 1316709
 options.packs.combat.Combat (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.combat.Combat (wowsims.com).lists.action	values.distract	|T136000:0|t Spell 1725
+options.packs.combat.Combat (wowsims.com).lists.action	values.evasion	|T136000:0|t Spell 5277
 options.packs.combat.Combat (wowsims.com).lists.action	values.eviscerate	|T136000:0|t Spell 2098
 options.packs.combat.Combat (wowsims.com).lists.action	values.expose_armor	|T136000:0|t Spell 8647
+options.packs.combat.Combat (wowsims.com).lists.action	values.feint	|T136000:0|t Spell 1966
 options.packs.combat.Combat (wowsims.com).lists.action	values.garrote	|T136000:0|t Spell 703
 options.packs.combat.Combat (wowsims.com).lists.action	values.ghostly_strike	|T136000:0|t Spell 14278
+options.packs.combat.Combat (wowsims.com).lists.action	values.gouge	|T136000:0|t Spell 1776
 options.packs.combat.Combat (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.hemorrhage	|T136000:0|t Spell 16511
 options.packs.combat.Combat (wowsims.com).lists.action	values.instant_poison	|T0:0|t [Item 6947]
 options.packs.combat.Combat (wowsims.com).lists.action	values.kick	|T136000:0|t Spell 1766
+options.packs.combat.Combat (wowsims.com).lists.action	values.kidney_shot	|T136000:0|t Spell 408
 options.packs.combat.Combat (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.combat.Combat (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -16161,12 +16521,15 @@ options.packs.combat.Combat (wowsims.com).lists.action	values.pool_resource	|T13
 options.packs.combat.Combat (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.premeditation	|T136000:0|t Spell 14183
 options.packs.combat.Combat (wowsims.com).lists.action	values.preparation	|T136000:0|t Spell 14185
+options.packs.combat.Combat (wowsims.com).lists.action	values.redirect	|T136000:0|t Spell 438040
 options.packs.combat.Combat (wowsims.com).lists.action	values.riposte	|T136000:0|t Spell 14251
 options.packs.combat.Combat (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.rupture	|T136000:0|t Spell 1943
+options.packs.combat.Combat (wowsims.com).lists.action	values.sap	|T136000:0|t Spell 6770
 options.packs.combat.Combat (wowsims.com).lists.action	values.shank	|T136000:0|t Spell 1329283
 options.packs.combat.Combat (wowsims.com).lists.action	values.sinister_strike	|T136000:0|t Spell 1752
 options.packs.combat.Combat (wowsims.com).lists.action	values.slice_and_dice	|T136000:0|t Spell 5171
+options.packs.combat.Combat (wowsims.com).lists.action	values.sprint	|T136000:0|t Spell 2983
 options.packs.combat.Combat (wowsims.com).lists.action	values.stealth	|T136000:0|t Spell 1784
 options.packs.combat.Combat (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
 options.packs.combat.Combat (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
@@ -16210,22 +16573,29 @@ options.packs.combat.Combat (wowsims.com).lists.action_name	values.adrenaline_ru
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.ambush	|T136000:0|t Spell 8676
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.backstab	|T136000:0|t Spell 53
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.blade_flurry	|T136000:0|t Spell 13877
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.blind	|T136000:0|t Spell 2094
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.cheap_shot	|T136000:0|t Spell 1833
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.death_mark	|T136000:0|t Spell 1316709
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.distract	|T136000:0|t Spell 1725
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.evasion	|T136000:0|t Spell 5277
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.eviscerate	|T136000:0|t Spell 2098
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.expose_armor	|T136000:0|t Spell 8647
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.feint	|T136000:0|t Spell 1966
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.garrote	|T136000:0|t Spell 703
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.ghostly_strike	|T136000:0|t Spell 14278
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.gouge	|T136000:0|t Spell 1776
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.hemorrhage	|T136000:0|t Spell 16511
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.instant_poison	|T0:0|t [Item 6947]
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.kick	|T136000:0|t Spell 1766
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.kidney_shot	|T136000:0|t Spell 408
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -16235,12 +16605,15 @@ options.packs.combat.Combat (wowsims.com).lists.action_name	values.pool_resource
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.premeditation	|T136000:0|t Spell 14183
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.preparation	|T136000:0|t Spell 14185
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.redirect	|T136000:0|t Spell 438040
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.riposte	|T136000:0|t Spell 14251
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.rupture	|T136000:0|t Spell 1943
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.sap	|T136000:0|t Spell 6770
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.shank	|T136000:0|t Spell 1329283
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.sinister_strike	|T136000:0|t Spell 1752
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.slice_and_dice	|T136000:0|t Spell 5171
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.sprint	|T136000:0|t Spell 2983
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.stealth	|T136000:0|t Spell 1784
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
@@ -16253,15 +16626,18 @@ options.packs.combat.Combat (wowsims.com).lists.buff_name	desc	Specify the buff 
 options.packs.combat.Combat (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.adrenaline_rush	|T136000:0|t Spell 13750
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.blade_flurry	|T136000:0|t Spell 13877
+options.packs.combat.Combat (wowsims.com).lists.buff_name	values.cheap_shot	|T136000:0|t Spell 1833
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.death_mark	|T136000:0|t Spell 1325758
+options.packs.combat.Combat (wowsims.com).lists.buff_name	values.distract	|T136000:0|t Spell 1725
+options.packs.combat.Combat (wowsims.com).lists.buff_name	values.evasion	|T136000:0|t Spell 5277
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.garrote	|T136000:0|t Spell 703
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.ghostly_strike	|T136000:0|t Spell 14278
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.ghostly_strike_next	|T136000:0|t Spell 1329326
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.hemorrhage	|T136000:0|t Spell 16511
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328826
-options.packs.combat.Combat (wowsims.com).lists.buff_name	values.remorseless	|T136000:0|t Spell 14143
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.rupture	|T136000:0|t Spell 1943
+options.packs.combat.Combat (wowsims.com).lists.buff_name	values.silenced_kick	|T136000:0|t Spell 1324485
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.slice_and_dice	|T136000:0|t Spell 5171
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
 options.packs.combat.Combat (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
@@ -21453,22 +21829,29 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.adrenaline_rus
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.ambush	|T136000:0|t Spell 8676
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.backstab	|T136000:0|t Spell 53
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.blade_flurry	|T136000:0|t Spell 13877
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.blind	|T136000:0|t Spell 2094
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.cheap_shot	|T136000:0|t Spell 1833
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.death_mark	|T136000:0|t Spell 1316709
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.distract	|T136000:0|t Spell 1725
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.evasion	|T136000:0|t Spell 5277
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.eviscerate	|T136000:0|t Spell 2098
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.expose_armor	|T136000:0|t Spell 8647
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.feint	|T136000:0|t Spell 1966
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.garrote	|T136000:0|t Spell 703
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.ghostly_strike	|T136000:0|t Spell 14278
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.gouge	|T136000:0|t Spell 1776
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.hemorrhage	|T136000:0|t Spell 16511
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.instant_poison	|T0:0|t [Item 6947]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.kick	|T136000:0|t Spell 1766
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.kidney_shot	|T136000:0|t Spell 408
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -21478,12 +21861,15 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.pool_resource	
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.premeditation	|T136000:0|t Spell 14183
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.preparation	|T136000:0|t Spell 14185
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.redirect	|T136000:0|t Spell 438040
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.riposte	|T136000:0|t Spell 14251
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.rupture	|T136000:0|t Spell 1943
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.sap	|T136000:0|t Spell 6770
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.shank	|T136000:0|t Spell 1329283
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.sinister_strike	|T136000:0|t Spell 1752
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.slice_and_dice	|T136000:0|t Spell 5171
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.sprint	|T136000:0|t Spell 2983
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.stealth	|T136000:0|t Spell 1784
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
@@ -21526,22 +21912,29 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.adrenalin
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.ambush	|T136000:0|t Spell 8676
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.backstab	|T136000:0|t Spell 53
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.blade_flurry	|T136000:0|t Spell 13877
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.blind	|T136000:0|t Spell 2094
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.cheap_shot	|T136000:0|t Spell 1833
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.deadly_poison	|T0:0|t [Item 2892]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.death_mark	|T136000:0|t Spell 1316709
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.distract	|T136000:0|t Spell 1725
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.evasion	|T136000:0|t Spell 5277
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.eviscerate	|T136000:0|t Spell 2098
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.expose_armor	|T136000:0|t Spell 8647
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.feint	|T136000:0|t Spell 1966
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.garrote	|T136000:0|t Spell 703
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.ghostly_strike	|T136000:0|t Spell 14278
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.gouge	|T136000:0|t Spell 1776
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.hemorrhage	|T136000:0|t Spell 16511
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.instant_poison	|T0:0|t [Item 6947]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.kick	|T136000:0|t Spell 1766
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.kidney_shot	|T136000:0|t Spell 408
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -21551,12 +21944,15 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.pool_reso
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.premeditation	|T136000:0|t Spell 14183
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.preparation	|T136000:0|t Spell 14185
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.redirect	|T136000:0|t Spell 438040
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.riposte	|T136000:0|t Spell 14251
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.rupture	|T136000:0|t Spell 1943
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.sap	|T136000:0|t Spell 6770
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.shank	|T136000:0|t Spell 1329283
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.sinister_strike	|T136000:0|t Spell 1752
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.slice_and_dice	|T136000:0|t Spell 5171
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.sprint	|T136000:0|t Spell 2983
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.stealth	|T136000:0|t Spell 1784
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
@@ -21569,15 +21965,18 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	desc	Specify the b
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.adrenaline_rush	|T136000:0|t Spell 13750
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.blade_flurry	|T136000:0|t Spell 13877
+options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.cheap_shot	|T136000:0|t Spell 1833
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.cold_blood	|T136000:0|t Spell 14177
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.death_mark	|T136000:0|t Spell 1325758
+options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.distract	|T136000:0|t Spell 1725
+options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.evasion	|T136000:0|t Spell 5277
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.garrote	|T136000:0|t Spell 703
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.ghostly_strike	|T136000:0|t Spell 14278
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.ghostly_strike_next	|T136000:0|t Spell 1329326
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.hemorrhage	|T136000:0|t Spell 16511
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.poised	|T136000:0|t Spell 1328826
-options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.remorseless	|T136000:0|t Spell 14143
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.rupture	|T136000:0|t Spell 1943
+options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.silenced_kick	|T136000:0|t Spell 1324485
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.slice_and_dice	|T136000:0|t Spell 5171
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
 options.packs.subtlety.Subtlety (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
