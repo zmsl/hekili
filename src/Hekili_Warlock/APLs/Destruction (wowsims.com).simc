@@ -14,10 +14,7 @@
 # Movement: default #3 reaches default: hellfire
 # Omitted: precombat #2: petAttack
 # Omitted: default #3: move
-# Omitted: default #5: spell 1225228
 # Omitted: default #6: changeTarget NextTarget: no on-all-targets read of a cast before it in this list
-# Omitted: multi_target_dot_logic #1: dropped the unresolved aura 1225228 (its branch only)
-# Omitted: multi_target_dot_logic #2: dropped the unresolved aura 1225228 (its branch only)
 # Omitted: multi_target_dot_logic #3: changeTarget NextTarget: no on-all-targets read of a cast before it in this list
 # Omitted: multi_target_dot_logic #8: changeTarget Target: no main target in Hekili
 # Omitted: cooldowns #1: item 249469
@@ -31,6 +28,7 @@ actions+=/major_mana_potion,use_off_gcd=1
 actions+=/call_action_list,name=single_multi_target_curse_logic
 actions+=/hellfire,if=active_enemies>=3&toggle.movement&(active_enemies>=3&target.outside5)
 actions+=/bane_of_doom,focus=2,if=fight_remains>debuff.bane_of_doom.duration
+actions+=/bane_of_havoc,use_off_gcd=1,other_target=1,if=(active_enemies>1&!(active_dot.bane_of_havoc>0))
 actions+=/call_action_list,name=single_target_dot_logic,if=active_enemies=1
 actions+=/call_action_list,name=multi_target_dot_logic,if=active_enemies>1
 actions+=/conflagrate,if=((action.immolate.known&debuff.immolate.up)|!buff.shadow_and_flame_shadow.up)
@@ -46,8 +44,8 @@ actions+=/life_tap
 actions.single_multi_target_curse_logic=curse_of_the_elements,cycle_targets=1,focus=2,if=settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)|(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)|(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up))&!(settings.assigned_curse='nocurse'))
 actions.single_multi_target_curse_logic+=/curse_of_recklessness,cycle_targets=1,focus=2,if=settings.assigned_curse='recklessness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)|(settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)|(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up))&!(settings.assigned_curse='nocurse'))
 actions.single_multi_target_curse_logic+=/curse_of_weakness,cycle_targets=1,focus=2,if=settings.assigned_curse='weakness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)|(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)|(settings.assigned_curse='weakness'&debuff.curse_of_weakness.up))&!(settings.assigned_curse='nocurse'))
-actions.multi_target_dot_logic=amplify_curse,use_off_gcd=1,if=((!action.bane_of_doom.known|!debuff.bane_of_doom.up)&(!action.bane_of_doom.known|((action.bane_of_doom.known&!cooldown.bane_of_doom.ready)|(action.bane_of_doom.known&fight_remains<debuff.bane_of_doom.duration)))&(!action.bane_of_agony.known|!debuff.bane_of_agony.up)&active_enemies<5)
-actions.multi_target_dot_logic+=/bane_of_agony,focus=2,if=((!action.bane_of_doom.known|!debuff.bane_of_doom.up)&!debuff.bane_of_agony.up&active_enemies<5)
+actions.multi_target_dot_logic=amplify_curse,use_off_gcd=1,if=((!action.bane_of_doom.known|!debuff.bane_of_doom.up)&(!action.bane_of_doom.known|((action.bane_of_doom.known&!cooldown.bane_of_doom.ready)|(action.bane_of_doom.known&fight_remains<debuff.bane_of_doom.duration)))&(!action.bane_of_agony.known|!debuff.bane_of_agony.up)&(!action.bane_of_havoc.known|!debuff.bane_of_havoc.up)&active_enemies<5)
+actions.multi_target_dot_logic+=/bane_of_agony,focus=2,if=((!action.bane_of_doom.known|!debuff.bane_of_doom.up)&!debuff.bane_of_agony.up&(!action.bane_of_havoc.known|!debuff.bane_of_havoc.up)&active_enemies<5)
 actions.multi_target_dot_logic+=/immolate,cycle_targets=1,focus=2,if=(!debuff.immolate.up&fight_remains>debuff.immolate.duration&(!(active_enemies>=3)|target.outside5))
 actions.multi_target_dot_logic+=/corruption,cycle_targets=1,focus=2,if=(!debuff.corruption.up&fight_remains>debuff.corruption.duration&(!(active_enemies>=3)|target.outside5))
 actions.single_target_dot_logic=amplify_curse,use_off_gcd=1,if=(!(action.bane_of_doom.known|action.bane_of_agony.known)|((!action.bane_of_doom.known|!debuff.bane_of_doom.up)&(!action.bane_of_doom.known|((action.bane_of_doom.known&!cooldown.bane_of_doom.ready)|(action.bane_of_doom.known&fight_remains<debuff.bane_of_doom.duration)))&(!action.bane_of_agony.known|!debuff.bane_of_agony.up)&(!action.bane_of_agony.known|fight_remains>debuff.bane_of_agony.duration)))

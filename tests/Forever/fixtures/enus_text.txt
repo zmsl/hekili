@@ -562,6 +562,39 @@ options.abilities.bane_of_doom.toggle	values.interrupts	Interrupts
 options.abilities.bane_of_doom.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.bane_of_doom.toggle	values.none	None
 options.abilities.bane_of_doom.toggle	values.potions	Potions
+options.abilities.bane_of_havoc	name	Spell 1225228
+options.abilities.bane_of_havoc.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1225228 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1225228 can be recommended in any type of fight.
+options.abilities.bane_of_havoc.boss	name	Boss Encounter Only
+options.abilities.bane_of_havoc.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1225228 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.bane_of_havoc.clash	name	Clash
+options.abilities.bane_of_havoc.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1225228.
+options.abilities.bane_of_havoc.disabled	name	Disable |T136000:0|t Spell 1225228
+options.abilities.bane_of_havoc.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.bane_of_havoc.dotCap	name	Maximum Applications
+options.abilities.bane_of_havoc.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.bane_of_havoc.hasIcon	name	Icon Replacement
+options.abilities.bane_of_havoc.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.bane_of_havoc.keybind	name	Override Keybind Text
+options.abilities.bane_of_havoc.lineBreak1	name	\032
+options.abilities.bane_of_havoc.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.bane_of_havoc.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.bane_of_havoc.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.bane_of_havoc.noIcon	name	Icon Replacement
+options.abilities.bane_of_havoc.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1225228 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.bane_of_havoc.targetMax	name	Maximum Targets
+options.abilities.bane_of_havoc.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1225228 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.bane_of_havoc.targetMin	name	Minimum Targets
+options.abilities.bane_of_havoc.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.bane_of_havoc.toggle	name	Require Toggle
+options.abilities.bane_of_havoc.toggle	values.cooldowns	Cooldowns
+options.abilities.bane_of_havoc.toggle	values.custom1	Custom 1
+options.abilities.bane_of_havoc.toggle	values.custom2	Custom 2
+options.abilities.bane_of_havoc.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.bane_of_havoc.toggle	values.defensives	Defensives
+options.abilities.bane_of_havoc.toggle	values.interrupts	Interrupts
+options.abilities.bane_of_havoc.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.bane_of_havoc.toggle	values.none	None
+options.abilities.bane_of_havoc.toggle	values.potions	Potions
 options.abilities.barkskin	name	Spell 22812
 options.abilities.barkskin.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 22812 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 22812 can be recommended in any type of fight.
 options.abilities.barkskin.boss	name	Boss Encounter Only
@@ -13868,6 +13901,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action	name	Action
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.Affliction (wowsims.com).lists.action	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -13934,6 +13968,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action_name	name	Action 
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -13983,6 +14018,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
@@ -14143,6 +14179,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action	name	Action
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -14211,6 +14248,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	name	Action Nam
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -14260,6 +14298,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
@@ -16449,6 +16488,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action	name	Action
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Demonology (wowsims.com).lists.action	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -16516,6 +16556,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action_name	name	Action 
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -16565,6 +16606,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
@@ -16725,6 +16767,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action	name	Action
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -16793,6 +16836,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	name	Actio
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -16842,6 +16886,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	name	Buff Na
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
@@ -17072,6 +17117,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action	name	Action
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.destruction.Destruction (wowsims.com).lists.action	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -17124,23 +17170,25 @@ options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0003	|
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_multi_target_curse_logic|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&toggle.movement&(active_enemies>=3&target.outside5)|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 603 - |cFFFFD100|cffffd100fight_remains>debuff.bane_of_doom.duration|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1293817 - |cFFFFD100|cffffd100((action.immolate.known&debuff.immolate.up)||!buff.shadow_and_flame_shadow.up)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 17877
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||((action.bane_of_doom.known&debuff.bane_of_doom.up)||(active_enemies>=3&target.within5)))|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 5676 - |cFFFFD100|cffffd100(!action.incinerate.known||(action.incinerate.cast+action.incinerate.travel_time)>fight_remains)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<35&fight_remains>60)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 348 - |cFFFFD100|cffffd100(!action.incinerate.known||debuff.immolate.remains<action.incinerate.cast)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 412758
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 1454
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1225228 - |cFFFFD100|cffffd100(active_enemies>1&!(active_dot.bane_of_havoc>0))|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1293817 - |cFFFFD100|cffffd100((action.immolate.known&debuff.immolate.up)||!buff.shadow_and_flame_shadow.up)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 17877
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||((action.bane_of_doom.known&debuff.bane_of_doom.up)||(active_enemies>=3&target.within5)))|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 5676 - |cFFFFD100|cffffd100(!action.incinerate.known||(action.incinerate.cast+action.incinerate.travel_time)>fight_remains)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<35&fight_remains>60)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 348 - |cFFFFD100|cffffd100(!action.incinerate.known||debuff.immolate.remains<action.incinerate.cast)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 412758
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1454
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	name	Action Name
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -17190,6 +17238,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.buff_name	name	Buff Na
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172

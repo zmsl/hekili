@@ -31,8 +31,8 @@
 -- shard a kill or Drain Soul returns, the sim's spent
 -- shards (a list evaluation reads the bag count; two shard spells in one queue may outrun it: gaps.md's reagent
 -- prediction), Life Tap's health and Demonic Energies' share of it to the demon, the demon's spells (Firebolt
--- 3110-11763, 10-115 mana; Lash of Pain 7814-11780, 65-160 mana: pet-bar, D6), Bane of Havoc's cast on a second target
--- (its debuff too: both wait for core's C7), Curse of Exhaustion and Tongues, Soul Harvest's regen, and pushback; the armors, Fel
+-- 3110-11763, 10-115 mana; Lash of Pain 7814-11780, 65-160 mana: pet-bar, D6), Bane of Havoc's 15% damage share,
+-- Curse of Exhaustion and Tongues, Soul Harvest's regen, and pushback; the armors, Fel
 -- Domination, Soul Link and the other demon auras are registered, read where plain, never cast.
 -- Credits: Hekili (registration API and pack format). wowsims/forever (MIT) is the reference for the mechanics above;
 -- no code is copied.
@@ -326,8 +326,9 @@ spec:RegisterAuras({
     -- Improved Shadow Bolt's (a Shadow Bolt crit's: the belief's own crit, Shadow Bolt's `onCrit`).
     shadow_vulnerability = { id = 17794, duration = 12, max_stack = 1 },
 
-    -- Bane of Havoc's debuff (1225228, 300 s) is NOT registered: the translator would read it (and the cast on a second
-    -- target, which it cannot express, would land on the main target). Waits for core's second-target cast (C7).
+    -- Bane of Havoc's (1225228, 300 s; wowsims bane_of_havoc.go): one target at a time, never the main one (the pack's
+    -- other_target=1 line, option D).
+    bane_of_havoc = { id = 1225228, duration = 300, max_stack = 1 },
 
     -- The player's. The procs (their rolls unseen; the player aura walk reads them where plain, in combat the glow of
     -- the spell they light: `overlay`, needs in-game check): Nightfall's next Shadow Bolt instant; Decimation's
@@ -662,6 +663,28 @@ spec:RegisterAbilities({
 
         now = lands("bane_of_doom", BANES),
         handler = lands("bane_of_doom", BANES),
+    },
+
+    -- Bane of Havoc (the Destruction talent's spell; wowsims bane_of_havoc.go): 5% of base mana, a Bane (it takes our
+    -- other Bane off its target). The pack casts it on another target only (other_target=1: Recommend Target Swaps).
+    -- shortcut: Agony and Doom do not take Havoc off their target here (wowsims's deactivateOtherBanes does); add
+    -- bane_of_havoc to BANES if a pack ever casts a Bane on the Havoc target.
+    bane_of_havoc = {
+        id = 1225228,
+        expects = "debuff", -- a dummy aura, no damage (DB2, wowsims): its ticket takes its own avoid only
+        cast = 0,
+        cooldown = 0,
+        gcd = "off", -- wowsims: no SpellCooldowns row, so off the GCD (its TODO; ledger: confirm in game)
+
+        spend = 0.05,
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows({ 1225228 }),
+        missable = true,
+
+        now = lands("bane_of_havoc", BANES),
+        handler = lands("bane_of_havoc", BANES),
     },
 
     curse_of_the_elements = {
@@ -1139,8 +1162,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Destruction (wowsims.com)",
-    20261112001,
-    [[Hekili:TVvBVTTnq4Fl5lowOz(TwN1gehG2vmSU11nmhG9njtlrzZAjrdrQyyGa)BFhLSEHsKYskEPbDdfTqH84Dp3X7oE8yQ5yZ7nN7G4yZVmz0KRhpE8KrJgBoNVFl2C(wK9g0k4JaKp8VFeZ4Hr2Ccn4WI(7O7yeF2aBQVHG09EuKJGDlJiE8pfyUujNzBX2MZ)73)xF(p(PF7gNCwAoFnXXbNSomZUo5DZHf814dloo2qxAi(bC4HfoyxuKh)WI3)NF(Wcy4dlK5sezOabSH7qHEu7ndD2YgkqSdBymyOdI)PbFLrdmUcKtikG5b6Hd8nvixc7WcKJdn4s4Jn49SbGqqC0nkWt)F)t3dmznNVLDZWHRi81rlfQWWsKAa8eGnEk6D2otqtCCTb2(bShD3HfEafEhw8MradxIfR4WIpfytcWHaWmsb12qcnKW3dYdb)yaGwxINNahOaa(S1GmpS4Zexy93J2EyXsmFhgd2fchM4J07zayfR9i6eAiDhmVhHXfJg55Kau(AX)gdSbWUFifKe4IGITZSbBdXGsUeXNXG1y5sai)RvM8vZgs89PcR7ve3zx4Gxg56oiDSbrBZw0Sig2IWX(SReFrDDTwz7mBCgbaVCW(0aITvyuawpv(OVsdT8rbiRTuXG6j1g55zL8JwclWvI4GzmsWkpSLp4NrS4OWvyULDuiWep6kIDrgSg75j0DH2jg9bSfoa7tWS7M96EC6kGrd8PpG9Xb8E9vqsm7hqJ4mIdEQrrMVefiWTLdL6FLl1oInBIqqUKvR5wHyFejGD3rBArIh4eb(nI4HMQRh1shkprhRQpnXWjzXQHx3jZlAGRhAv4rNK(9tMk3lzta4I2RQVJXJxepeBnYHUZccbSag5JTsgqqrr5Km6YOWgywSPupG4aMeIKSXjOQF)l0o5J97lTv9dtngw3ULXTJn6vh)Uq1QbT0W4X6WOMv9OE3XDqAmsWuGXTWzxAPsgEmkeCZS2cgHy7zQksYsXLAWQoHnIXFv1HHS2qMjloXhBCNKv2qoJbIV2YMs8KeCreDu0QMri7AyUhKNf823gZAr(MbBTf(83(6P9KJrVEK0cZYjwiOwVrPSJ)rMERABLSGYMtfUZtyFImEZs(g8DGdLTWEXzZyxzV3ol1bKFOO2WWCoWt2aeJrwfGDsy3Sltx8LGJE)(nGSJAVseK7fd2HmkGdF24HzSa4VhJa0kNI0wvwsCsPS2HrBAICsPRQmY4GioU3f6njb04pUSqm5P23eP3uPlDANt2uj29kBmK2AoHbPnBWnesFpV7LkNoTZLd)NZDTNZWYgO6N1Do1f6md5VfYTUpzLYvDMuhrhoBV2ccQ7u)lsRHrEYqmYzF(2JIfkD01T1wWIHc4Hwrd2RrPsMtOvY1pC70tAClupCmxKo7StgwDGRtyl7i9Acq7R4(p9uwmFgbPwArKRmSGsUmES8ThAcsTPHHrBfe1iSMtUw0wGKUJxnxe5KXuxO3t(r9EMIcM7IpZ3NbJ1USAVTzcHfGWj3qFgJJBdYBcUvx2ENJPBKmleTE(Ioli5Sl6odhfI3GufH1nx(A3mvTxM6K)26dZ04gyuByK(BoRWuiCr9Ouhl3OW9VamiJN(sWIGH8VHBah1)3ISt)T4BlQEIAuPAvMnU3zRpc606mYErOVAqPuRz6Q7zD4FYKo6l1lPtrE0BNC9Orv7teOqMZFac2aox6LveTNKf)Eojpcc85xIFFhCaAPh2X8dMZleBkM8y)6tgpU76MCGRnCrf73UyDVUHRRsh4fl(nLwCkXLBaBIEAL8IuN4kYc(ovdFt7wjiHqqZdjOK5EYTOxi0Rlj0Cr08MZNd1ItdCqKorSjbY5h1kNYbcTZGwUsdHSEBdL1DnvwQVcIquVtNVq(tbuu(T5jbo9BciaW4rAqq(Jeetw5WlfyQTNRD2FvG6EwGwNFl2e2KhgOH(azjLJnNLt80YyvjmeZWYzKY2gl0gFPDnTNoEEE7HyqPltx(JrOeskEuIM(QeXIvxIW0ZcLe6PEUIyoQplxn2XwwMrootxHCgWXLtbMrEgJIjRC2RkAph(Z8SxMw1zNzopPVOTQZkRI2CRII7cMi2tDmwnGrzhwHHl26M4dFZmAfaudAK756zyEwB47lKw5xN)HsW)K33(M9imNVxH5f0ENUtpQW3N8(23KNG5zoKSbk)5zFJRVm2wCJiPgllF2wnTuU2EkxFtL7wxLFcTv(zQVYDTXYTSZYQs2wSC8oz5pl9oU6f5IjqUoMY5Ak6VvTSHM2c5tv9u5srvi1o2c5IxAlDwjzZlw8FlIlt6dTYInBB4r9of11ENt0d6AAWy36kuB6ktEVP)gBKovp8(xXk10EqL3V6)lALQjUV1y5PQiTPh1T92JNmbOUlfx42JVSmokBVykQvEv(o7txN(i6VD3C)ozdUtoBqtZbBXbf6lGRB1c0z74l9QWKDXUD6ZCPuvfFxQxQAyEZUs2tO6kn)sSu93IfvzCtXBXQJAjI7wLzTb1XrIOi(AAO58FbVH4roSO)pF8)XkXtB(p]]
+    20261112002,
+    [[Hekili:TVvBVTTTt8pl5nowOz(P2K1gehG2vmSU)DDdZbyVtY0s02Sws0qKkggiWF23rjRhOePEk(VB26qrnKfjV7hVN4X7CmhB(G5mhehB(LjJMCZ4XJNmA0eZz89BXMZ2IS3Gwbp4J8Gp)iMXdcT5eQ)H593r3XiESb2updXu37srocYTiK4Y)KV5cLuMTfBBo7VE)F(5F)N(F36KrsZzRjoo441Hz2vXVBpmNVgFy(X3nCjna)io4WCh8suOl)W83)hF(WC41hMltLqYqbcyd3HcCP2Bg6SLnuGyh2WiWqhe9TbFLr9nUc4taYN5c7dh4zQGVe2H5ihhQ)LWdBW7zdaMG4OBvGN()2NEaiYAoFl72Hdxr4Rdxi2cdlmvdGMaSXxJENTZe0eNL2az)a2LU7WCxygUhM)MrabxGfR4W8p5Bt8XbaWmsa12acnGW3d8dbF1hq7sIRRahiFa(S1appm)ZKLW6FaT9W8fy(omgKleomWhPpWaWkw7r0j2H0DW4Uegx82qxNyGYxl(mcydaTFaf4eyIGIKZSbBdWWMCbIpLbRXAjbG8VwAWxnDiXZJkKUxrwo9ch8IWLlhK8UbHBtx00qg2IWXESReprxU0ALTZ0XPtaOLd2J6tSTcc9X6NLh6R0alpKpYAlv8s9t1g56Af)vlHe4kHFWugXFLl2YdSZiwCuWkm3YomaiIlDfXopbwJDDf7DXUt82hXwyFShbZUF6R7XPRacnWJ(i2d7Z71xXuIi)aAiNrCWxBKN4lq(cCB5qPExTKAhYMorWOLKvR5wbypeXND)rzA(jpWjeSBe(dkO2A0JuBzrYvuWzl44wf(kWJIqDCVlsELdLpqIy3pYWOXs1JYtGiXsZYsUMOIK0nvqR7LPf1FPlAvWrZX(9JhkZECJp4m0RSvQXtxe9k2AKdDNf4SzbeYdBf)cXmYZN43UimWV(DInL6ct2NjHijTzmQ63)cTd(u)(sgf)W1gdRYUW4UXg9QIExOA1WU0W4PQWOMv9KEd)DqatI)1gYwq14wjTujbpgfaMzwBbHqK8mzlssdMMiWkpGnIXFv5xdNpaXaT4epSX9sszd5yti(AlBkXvIX5r0rwRAebVRG4UqeDWAFBePfr2gS1wyZF3RVUNC0GBgjTW0OV5cFOxOu0W)irVtTSsMrPJPc3zhnutS1PXpd2oqejlSBuCt2v27TtdDaXhYVByyohOjBaIXiR8XoXKB6Ljl(sWqVF)gmTJ7ELiiZkgKdPZaoMBJlMX8H)F0dqlFYp3Y8sIsk51omAtt4tY8kZJuki8JHW5AjHpn6HlZ5twNEteEt1EPtAozrLq7vuyiPAQrG0gfCdH0)M1Ej8PtAUm4Fo1ANt3YgS1pPAo1j6mf5TfITUpELfsMlkpIoC2ELjeu1P(xKKdJ8GbyKZ(m1JIfkD01DvMWIHc4Hwr93RztfpMYDvuoRAww8yILjN2XDxxRojxk2rmx6i3oPp0TNoNBP0eiQiCqFf3RRNYlPKoHe9QioHmSGe8mEQ4TIAcsTPbbHBftQrynB6ArBUP0D8Q5Ap16bFHE)MN07hispVlMAFN46NFzvEl64jMdc1QqpJU)Tb5nb3QVKqN9PBepZ5TE68oZX50RvpfhgG3Gu5H1nt(kvMQ0Ljg5VTA3mnMbgv6gP)E6kefctuxk1XAzyW(xacKXx)sqIGH4VbBad1)tIStFndAlQEM7Oc5QmDCVtwvl0TRtN2lI9RgukviOUAEwf(NmPJ2s9IRlLl9Uj3mAu5QsbBiZzpcoBaLl0XirXqzr9PkU5oWJFjQVvyF0cxSJ5hmNLZ3um4X(qe)(OUgyYbQ2WfLVpcI196gUUsDwqS43uyXjtUy5EJ3NwXDARMlKlO71AOBsTrboea78ackESNDRhem9McmnJfnVPdzqn)WafeHtekjGp)Ow(02gpOxBjnvZz57XHyEWhVvlkk6o2o1AX8De86DnKx33uEP(IqcwnEKotYS(FijYBrFqQVririOO7BccY6ms00k6WQatT941tERqQQxiTomBKiSjDdPHgbPNnejolghRLHmKWqeb1fBlFVlK0AApK(00WLiqPlWywhyucjfDIPPTIjITfdnMW2KJKLyAD9OjIIveeuVCSLz7KHZKvihiECXyGPtpLqrtRy4Rs7Eo8VzPn(x1r4Pgpj)GbuDKDz0MjvuCL0y2w3PPvagLLvgED(kifDQsQqlhGAq1Rpv9E6SwL7xi9VOk7dLG)zR3(M15PtxRNEbP70DCuj6(S1BFt670z2LSbB(tJEJRpp2wCXmP6BlF2wfv2UYsBxDTT7wXTFgv3(mvE7UwF7wwGBvbBZNoENK8NKsyx(gDrtqopMIXAYBVvoTHMwj76YEQy(Xk4AhRKD(lTLmQeV55t(Vf(LXLdxzYMT19OAJIQQYunLcVI6C2TIt1MIdLvI8VXcP6kL4)xKsnTuyzLn)7rPuf(9Tglp3nsBkvEBV9yTba1Dx8C3E8LLWrzvotqTYRY3zB6Q2pIYS3nZVARZE8zdAQoyloOqFcCDlxGolh)hxwy5)140MFooN3uWoDWUl5NvoSsZUc4ZiBon)2Dk)J3rve(e8MpBSwI4ULjyBqDKNpkKVMgyo7xWBiUKdZ7)Zh)dqkAyZ)(]]
 )
 spec:RegisterPack(
     "SM Ruin (wowsims.com)",
