@@ -630,6 +630,14 @@ describe("Forever Warrior", function()
         assert.are.same({ 29131, 10 }, { w.auras.bloodrage.id, w.auras.bloodrage.duration })
     end)
 
+    -- the buffs the owner's Cooldown Manager export links (tests/Forever/fixtures/cdm/warrior.lua on cdm-fixture)
+    it("registers the CDM-linked auras: Bloodthrill, Disarm, Concussion Blow, Improved Shield Bash", function()
+        assert.are.equal(1289681, w.auras.bloodthrill.id)
+        assert.are.same({ 1324558 }, w.auras.disarm.copy)
+        assert.are.same({ 1324556 }, w.auras.concussion_blow.copy)
+        assert.are.same({ 1324551 }, w.auras.shield_bash_silenced.copy)
+    end)
+
     -- A `shared = "target"` aura is read from the target's debuffs, anyone's (src/Hekili/Engine/Sim/State.lua's debuff
     -- lookup since central GAP AJ): Thunder Clap's slow, whoever cast it.
     it("shares only Thunder Clap's debuff, read from the target (any warrior's slows it)", function()

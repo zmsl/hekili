@@ -527,6 +527,7 @@ spec:RegisterAuras({
     },
     concussion_blow = {
         id = 12809,
+        copy = { 1324556 }, -- the CDM item's spell
         duration = 5,
         max_stack = 1,
     },
@@ -554,6 +555,7 @@ spec:RegisterAuras({
     },
     disarm = {
         id = 676,
+        copy = { 1324558 }, -- the CDM item's spell
         duration = 10,
         max_stack = 1,
     },
@@ -642,6 +644,13 @@ spec:RegisterAuras({
         duration = 5,
         max_stack = 1,
     },
+    -- Bloodthrill's own aura (1289681), the buff the CDM links; its proc opens the overpower_ready window above, which
+    -- the plain usability read observes. Declared for the CDM mapping only: never applied.
+    bloodthrill = {
+        id = 1289681,
+        duration = 5,
+        max_stack = 1,
+    },
     piercing_howl = {
         id = 12323,
         duration = 6,
@@ -686,6 +695,7 @@ spec:RegisterAuras({
     },
     shield_bash_silenced = {
         id = 18498,
+        copy = { 1324551 }, -- the CDM item's spell (Improved Shield Bash, "Silenced")
         duration = 3,
         max_stack = 1,
     },
