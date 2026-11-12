@@ -88,7 +88,9 @@ return {
         burstWindow = 6,
         inspirationUptime = 0.25,
     },
-    map = { [25903] = "holy_shock" }, -- Holy Shock rank 4's hostile spell (wowdb: 25903, range 40); the kit's 20930
+    -- 25903: Holy Shock rank 4's hostile spell (wowdb: 25903, range 40), the kit's 20930; 1311015: Templar's Bulwark, the
+    -- major cooldown wowsims's autocastOtherCooldowns casts at the pull (log line 223: 110 mana, off the GCD)
+    map = { [25903] = "holy_shock", [1311015] = "templars_bulwark" },
     focus = { seal_of_fury = 2, holy_shield = 2 },
     leveling = {},
 }

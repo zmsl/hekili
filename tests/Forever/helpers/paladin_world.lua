@@ -172,6 +172,16 @@ M.MAP = {
     },
     righteous_fury = selfAura("righteous_fury"),
     retribution_aura = selfAura("retribution_aura"),
+    -- Templar's Bulwark: an 8 s absorb and Forbearance (60 s; wowsims templars_bulwark.go), refused under Forbearance
+    templars_bulwark = {
+        effect = function(W, e, _, X)
+            aura(W, X, e, "templars_bulwark")
+            aura(W, X, e, "forbearance")
+        end,
+        requires = function(_, e, X)
+            return not up(e, X, "forbearance"), "forbearance"
+        end,
+    },
 }
 
 -- The packs' worlds: `kit` the abilities the character knows (every rank), `talents` by spell ID, `weapon` the main
@@ -210,8 +220,9 @@ local PACKS = {
             "holy_shield",
             "righteous_fury",
             "retribution_aura",
+            "templars_bulwark",
         },
-        talents = { [1310994] = 1, [20925] = 1, [20473] = 1, [1328544] = 1 }, -- Shieldsworn: the pin's preset (R28)
+        talents = { [1310994] = 1, [20925] = 1, [20473] = 1, [1328544] = 1, [1311015] = 1 }, -- Shieldsworn: the pin's preset (R28)
         weapon = { 70, 130, 2.7 },
         fsr = { 17.38, 0 },
         uptime = { "consecrated_ground" },

@@ -120,6 +120,9 @@ describe("Forever Mage", function()
             assert.are.same({ 14.57, 14.56, 0.5 }, seed("fire")) -- Mage Armor's 50% (Fire and Frostfire)
             assert.are.equal(1213, r.meta.base)
             assert.are.same({ aura = "evocation", spirit = 16, share = 1 }, r.models.evocation) -- DB2 12051: 110, 134
+            -- B2: the armor is a registered aura only; the share assumes it up (a regen entry would end the out-of-combat
+            -- read's calibration: Resources.lua readAt)
+            assert.is_nil(r.models.mage_armor)
         end
     )
 
@@ -231,6 +234,63 @@ describe("Forever Mage", function()
         end
         local a = w.auras.fire_vulnerability
         assert.are.same({ 22959, 30, 5 }, { a.id, a.duration, a.max_stack })
+    end)
+
+    it("follows the ids the client shows: Fingers of Frost's 400670, Combustion's 28682 (audit A1, B1)", function()
+        local f = w.auras.fingers_of_frost
+        assert.are.same({ 400669, 15, 2 }, { f.id, f.duration, f.max_stack })
+        assert.are.same({ 400670 }, f.copy)
+        local c = w.auras.combustion
+        assert.are.same({ 11129, 3600, 1 }, { c.id, c.duration, c.max_stack })
+        assert.are.same({ 28682 }, c.copy) -- the CDM item links 28682 only: its loss ends the belief's aura
+    end)
+
+    it("registers the armor family on the pin's ranks (audit B2), each its own key", function()
+        local want = {
+            mage_armor = { 6117, { 22782, 22783 } },
+            ice_armor = { 7302, { 7320, 10219, 10220 } },
+            frost_armor = { 168, { 7300, 7301 } },
+        }
+        for key, d in pairs(want) do
+            local a = w.auras[key]
+            assert.are.same({ d[1], d[2], 1800, 1 }, { a.id, a.copy, a.duration, a.max_stack }, key)
+        end
+    end)
+
+    -- Audit B7/C7: Master of Elements (wowsims talents_fire.go registerMasterOfElements): a Fire or Frost damage cast's
+    -- crit refunds 10% a rank of its base cost; the belief sees it through the cast's own crit (`onCrit`).
+    it("refunds Master of Elements' share of the base cost at a Fire or Frost cast's own crit", function()
+        local top = {
+            fireball = 410,
+            scorch = 150,
+            pyroblast = 440,
+            fire_blast = 340,
+            frostbolt = 290,
+            frostfire_bolt = 370,
+        }
+        for key, cost in pairs(top) do
+            local a = w.abilities[key]
+            assert.are.equal("function", type(a.onCrit), key)
+            local ids = KIT[key][1]
+            for _, id in ipairs(ids) do
+                w.game.known[id] = false
+            end
+            w.game.known[ids[#ids]] = true
+            local e = ld.env(w)
+            ld.run(a.onCrit, e)
+            assert.are.same({}, e.gained, key) -- no talent: nothing
+            e = ld.env(w)
+            e.talent = setmetatable({}, {
+                __index = function(_, k)
+                    return { rank = k == "master_of_elements" and 3 or 0 }
+                end,
+            })
+            ld.run(a.onCrit, e)
+            assert.are.same({ { near(0.3 * cost), "mana" } }, { { near(e.gained[1][1]), e.gained[1][2] } }, key) -- 30% at 3/3
+        end
+        for _, key in ipairs({ "arcane_blast", "arcane_missiles", "arcane_wrath" }) do
+            assert.is_nil(w.abilities[key].onCrit, key) -- Arcane: not Fire or Frost
+        end
     end)
 
     it("spends Heating Up on a Pyroblast unless Presence of Mind made it instant", function()
@@ -434,6 +494,17 @@ describe("Forever Mage through the engine", function()
             out
         )
         assert.are.same({}, H.errors)
+    end)
+
+    -- Audit A1, B1, B2: the belief's registry resolves each copy id to its aura's one record, so a walk or a Cooldown
+    -- Manager edge on 400670 / 28682 reads and ends `fingers_of_frost` / `combustion`.
+    it("resolves the copy ids to their auras' records in the belief", function()
+        local H = headless.new({ character = character() })
+        local by = H.ns.VirtualStateInternal.auras.bySpell
+        for _, pair in ipairs({ { 400669, 400670 }, { 11129, 28682 }, { 6117, 22783 }, { 7302, 10220 }, { 168, 7301 } }) do
+            assert.is_truthy(by[pair[1]], pair[1])
+            assert.are.equal(by[pair[1]], by[pair[2]], pair[2])
+        end
     end)
 
     -- CN11 parity: the cost modifier's `unless`, in the belief and the simulation alike (the kit's split Clearcasting).

@@ -21,6 +21,8 @@
 - Warrior: Deep Wound is read from the Cooldown Manager's copy of the debuff, Flurry counts its three charges, Retaliation its 30, and Gore Drinker's buff is tracked from the abilities that grant it.
 - Warlock: Affliction and Shadow Brand (wowsims.com) now react to the Revelation weapon enchant's proc, Decimation and Shadow Trance are now also read from the spell's glow in combat where the game lights it, and Destruction (wowsims.com) now tracks Shadow and Flame's buffs the way wowsims does.
 - Priest: Shadow (wowsims.com) now counts Dark Inspiration as soon as you cast Mind Blast, so the mana estimate no longer ignores it.
+- Paladin: Seal of Justice, Light and Wisdom now count as a seal for Judgement, and Protection (wowsims.com) suggests Templar's Bulwark at the pull.
+- Mage: Fingers of Frost is followed under the id the game shows, Combustion ends with its crit counter, and a crit on a Fire or Frost spell now counts Master of Elements' mana refund.
 
 ### Known issues
 

@@ -557,8 +557,10 @@ local function content(name)
 
     -- Level 60 against a level 60 mob in range, the pack's mana full and under the five-second rule. Neither side dies
     -- (hunter_world's reason: a kill ends the loop before the client sees it).
-    local function hooks(_, us)
+    local function hooks(W, us)
         us.health, us.healthMax = 1e9, 1e9
+        -- every wowsims export pre-buffs Mage Armor (defaultMageArmor, 30 min): the share reads it
+        W.applyAura(us, 22783, 1800, 1, 1)
     end
     C.WORLD = {
         level = 60,
