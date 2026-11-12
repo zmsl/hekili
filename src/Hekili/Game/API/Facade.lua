@@ -1367,6 +1367,18 @@ function Facade.Window(name)
     return VS.Window(name)
 end
 
+--- (option D, owner decision 2, 2026-11-11) How many enemies the belief holds aura `spellID` (any of its ranks) up on
+--- at `now`: the target and every remembered target slot (Families/Auras.lua VS.Count.WithAura; slots keyed by GUID,
+--- under Map by plate: Sources/Target.lua). nil when unknown: the current target holds no memory slot (no target, Map
+--- with no plate answering, plates off) or the belief does not track the aura. Belief-only, like Window: the core's
+--- second belief read (`active_dot`). Allocates nothing.
+function Facade.DebuffCount(spellID, now)
+    if I.curSlot == 0 or I.auras.bySpell[spellID] == nil or I.auras.n < 2 then
+        return nil
+    end
+    return VS.Count.WithAura(spellID, now)
+end
+
 Facade.Display = {}
 local function display(name, reason)
     local nsName, key = split(name)

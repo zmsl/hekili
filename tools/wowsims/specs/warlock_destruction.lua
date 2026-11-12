@@ -13,10 +13,10 @@
 --   class A (7, t=19-48; R50, accepted limit): the refill-blind mana belief's Life Tap (warlock_demonology.lua).
 --   class C (1; R50): the pre-pull Incinerate is omitted (warlock_demonology.lua).
 --   the rest (3: 101.5, 167, 185 immolate): the Immolate refresh at `remains<=cast`, not traced.
--- Omitted 2 -> 3 (dry.lua 3): petAttack, the pre-pull doAtValue (C), spell 1225228 (Bane of Havoc: a NextTarget cast,
--- never in this single-target log), listed. Aura lane 2026-11-11: the kit now registers Shadow and Flame's buff (1293816)
--- so Conflagrate's condition reads it (no "dropped the unresolved aura" note for 1293816). Bane of Havoc's debuff
--- (1225228) is deliberately NOT registered: the translator would read it and cast on the main target; waits for C7.
+-- Omitted 2 -> 2 (dry.lua 3 before option D): petAttack, the pre-pull doAtValue (C), listed. Bane of Havoc (1225228, a
+-- cast on wowsims's second target, never in this single-target log) is `other_target=1` (rule 21, option D). Aura lane 2026-11-11: the kit now registers Shadow and Flame's buff (1293816)
+-- so Conflagrate's condition reads it (no "dropped the unresolved aura" note for 1293816). Option D registers Bane of
+-- Havoc and its debuff (1225228): the multi-target lines' "not on the Havoc target" reads resolve.
 -- Leveling note: below Incinerate (40) the list has no filler and falls through to its last line, Life Tap (as
 -- wowsims's own list would at that level); the gate counts Life Tap as a press, so no bracket is idle.
 -- Deviations: Berserking (Troll) and
@@ -45,6 +45,7 @@ return {
                 NoCurse = false,
             },
             active = "warlockAssignedCurseIsActive",
+            activeAll = "warlockAssignedCurseIsActiveOnAllTargets", -- rule 20: its swap is the curse lines' cycle_targets=1
             is = "warlockIsAssignedCurse",
         },
     },

@@ -305,6 +305,20 @@ describe("tools/make_pack.lua", function()
         assert.are.same(lists, mp.parse(mp.unparse(lists)))
     end)
 
+    it("round-trips the target-swap modifiers as numbers, after use_off_gcd= and before focus=", function()
+        local simc = "actions=x,cycle_targets=1,max_cycle_targets=3,other_target=1,if=a\n"
+            .. "actions+=/y,use_off_gcd=1,cycle_targets=1,focus=2\n"
+        local lists = mp.parse(simc)
+        assert.are.same(
+            { action = "x", enabled = true, cycle_targets = 1, max_cycle_targets = 3, other_target = 1, criteria = "a" },
+            lists.default[1]
+        )
+        assert.are.equal(simc, mp.unparse(lists))
+        assert.has_error(function()
+            mp.parse("actions=x,cycle_targets=yes\n")
+        end, "bad value cycle_targets=yes in: actions=x,cycle_targets=yes")
+    end)
+
     it("round-trips cancel_buff's buff_name as a string, written after name=", function()
         local simc = "actions=cancel_buff,buff_name=cat_form,if=a\n"
         local lists = mp.parse(simc)

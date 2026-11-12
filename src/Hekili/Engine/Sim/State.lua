@@ -696,7 +696,8 @@ do
     local cycle = {}
     local debug = function( ... ) if Hekili.ActiveDebug then Hekili:Debug( ... ) end end
 
-    function state.SetupCycle( ability, quiet )
+    -- force: another target whatever the current one holds (other_target=1, option D).
+    function state.SetupCycle( ability, quiet, force )
         wipe( cycle )
 
         if not ability and not quiet then
@@ -718,16 +719,31 @@ do
             return
         end
 
+        if force then
+            cycle.expires = math.huge
+            cycle.minTTD  = max( state.settings.cycle_min, ability.min_ttd or 0, cDebuff.duration / 2 )
+            cycle.maxTTD  = ability.max_ttd
+            cycle.aura = aura
+            if state.active_dot[ aura ] >= state.cycle_enemies then
+                if not quiet then debug( " - no other target lacks %s: %d vs %d.", aura, state.active_dot[ aura ], state.cycle_enemies ) end
+                state.ClearCycle()
+                return
+            end
+            if not quiet then debug( " - %s is for another target only.", aura ) end
+            return
+        end
+
         if cDebuff.up and not ability.cycle_to then
             -- We want to target enemies with this debuff.
             cycle.expires = cDebuff.expires
             cycle.minTTD  = max( state.settings.cycle_min, ability.min_ttd or 0, cDebuff.duration / 2 )
             cycle.maxTTD  = ability.max_ttd
 
+            if state.active_dot[ aura ] == 0 then state.active_dot[ aura ] = 1 end -- the target's own belief: at least this one
             cycle.aura = aura
 
             if state.active_dot[ aura ] >= state.cycle_enemies then
-                if not quiet then debug( " - we do not have another valid target for " .. aura .. ": " .. state.active_dot[ aura ] .. " vs " .. state.cycle_enemies .. "." ) end
+                if not quiet then debug( " - we do not have another valid target for %s: %d vs %d.", aura, state.active_dot[ aura ], state.cycle_enemies ) end
                 state.ClearCycle()
                 return
             end
@@ -774,16 +790,16 @@ do
         end
         if aura and cycle.aura ~= aura then
             if not quiet then debug( "cycle.aura ~= '%s'", aura ) end
-            return false, format( "cycle aura (%s) is not '%s'", cycle.aura or "none", aura )
+            return false, "cycle aura is another"
         end
         if state.cycle_enemies == 1 then
             return false, "cycle_enemies == 1"
         end
         if cycle.expires < state.query_time then
-            return false, format( "cycle aura (%s) expires before current time", cycle.aura )
+            return false, "cycle aura expires before current time"
         end
         if state.active_dot[ cycle.aura ] >= state.cycle_enemies then
-            return false, format( "active_dot[%d] >= cycle_enemies[%d]", state.active_dot[ cycle.aura ], state.cycle_enemies )
+            return false, "active_dot >= cycle_enemies"
         end
 
         return true
@@ -822,12 +838,6 @@ local function applyBuff( aura, duration, stacks, value, v2, v3, applied )
 
     if model.alias then
         aura = model.alias[1]
-    end
-
-    if state.cycle then
-        if duration == 0 then state.active_dot[ aura ] = max( 0, state.active_dot[ aura ] - 1 )
-        else state.active_dot[ aura ] = max( state.active_enemies, state.active_dot[ aura ] + 1 ) end
-        return
     end
 
     local b = state.buff[ aura ]
@@ -970,7 +980,7 @@ local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
     if state.cycle then
         if duration == 0 then
             if Hekili.ActiveDebug then Hekili:Debug( "Removed an application of '%s' while target-cycling.", aura ) end
-            state.active_dot[ aura ] = state.active_dot[ aura ] - 1
+            state.active_dot[ aura ] = max( 0, state.active_dot[ aura ] - 1 )
             if model.key ~= aura then state.active_dot[ model.key ] = state.active_dot[ aura ] end
         else
             if Hekili.ActiveDebug then Hekili:Debug( "Added an application of '%s' while target-cycling.", aura ) end
@@ -2272,6 +2282,9 @@ do
 
                 -- cap cycle_targets if forced into single-target model.
                 if t.max_targets > 0 then targets = min( t.max_targets, targets ) end
+                -- the line's own cap (max_cycle_targets=N: wowsims's multidot maxDots)
+                local mc = t.args.max_cycle_targets
+                if type( mc ) == "number" and mc > 0 then targets = min( targets, mc ) end
 
                 return max( 1, targets )
 
@@ -4451,21 +4464,11 @@ local mt_active_dot = {
 
         if aura then
             if rawget( t, aura.key ) then return t[ aura.key ] end
-            local id = aura.id
-            local count = ns.numDebuffs( id )
-
-            if aura.copy then
-                if type( aura.copy ) == "table" then
-                    for _, v in ipairs( aura.copy ) do
-                        if type(v) == "number" and v > 0 and v ~= id then
-
-                            count = count + ns.numDebuffs( v )
-                        end
-                    end
-                elseif type( aura.copy ) == "number" and aura.copy > 0 and aura.copy ~= id then
-                    count = count + ns.numDebuffs( aura.copy )
-                end
-            end
+            -- The belief's count (option D, owner decision 2): the target and every remembered target, all ranks
+            -- (one belief index per aura, so the copies are not summed again). Unknown (nil: the target holds no
+            -- memory slot, or there is no target while memory may hold it): every enemy counts as carrying it, so no
+            -- swap is suggested (never 0: a 0 suggests a swap for ever).
+            local count = Facade.DebuffCount( aura.id, state.now ) or state.true_active_enemies
 
             t[ k ] = count
             return t[ k ]
@@ -5928,6 +5931,7 @@ do
             e.type   = nil
             e.target = nil
             e.real   = nil
+            e.cycle  = nil
             e.func   = nil
 
             insert( eventPool, e )
@@ -5935,7 +5939,8 @@ do
         end
     end
 
-    function state:QueueEvent( action, start, time, type, target, real )
+    -- cycle: a swapped cast (Core.lua's cycle icon): on another target, its debuffs count and the target's stand.
+    function state:QueueEvent( action, start, time, type, target, real, cycle )
         local queue = real and realQueue or virtualQueue
         local e = NewEvent()
 
@@ -5966,6 +5971,7 @@ do
             e.type   = type
             e.target = target
             e.real   = real
+            e.cycle  = cycle
             e.func   = nil
 
             insert( queue, e )
@@ -6222,13 +6228,15 @@ do
                 expires, minTTD, maxTTD, aura = self.GetCycleInfo()
             end
 
-            if e.target and e.target ~= self.target.unit then
+            if e.cycle or e.target and e.target ~= self.target.unit then
                 if Hekili.ActiveDebug then Hekili:Debug( "Using ability on a different target." ) end
                 self.SetupCycle( ability )
             end
 
-            -- Perform the action.
+            -- Perform the action (a swapped cast's event is flagged, Core.lua: its debuffs count, the target's stand).
+            self.cycle = e.cycle
             self:RunHandler( action )
+            self.cycle = nil
             self.hardcast = nil
             self.whitelist = nil
             self.removeBuff( "casting" ) -- TODO: Revisit for Casting while Casting scenarios; check Fire Mage.
@@ -6261,12 +6269,14 @@ do
                 expires, minTTD, maxTTD, aura = self.GetCycleInfo()
             end
 
-            if e.target and e.target ~= self.target.unit then
+            if e.cycle or e.target and e.target ~= self.target.unit then
                 if Hekili.ActiveDebug then Hekili:Debug( "Using ability on a different target." ) end
                 self.SetupCycle( ability )
             end
 
+            self.cycle = e.cycle
             if ability.impact then ability.impact( e.real ) end
+            self.cycle = nil
             self:StartCombat()
 
             if wasCycling then

@@ -20,8 +20,8 @@
 --   the rest (5: 10.9 searing_pain -> corruption, 81.8 / 92.3 / 93.9 / 125.6): Searing Pain / Life Tap near-ties with
 --   lo 32 under the truth, not traced one by one.
 --   The measured top also has corruption -> searing_pain (2) and bane_of_agony -> searing_pain (1), the other way: untraced.
--- Omitted 2 -> 10 (dry.lua 10): petAttack, the pre-pull doAtValue (C), the move (R8: it reaches Hellfire; the
--- spec opts into Movement), five changeTarget, the APL's trinket 18820 (not worn) and the Major Spellblasting Potion
+-- Omitted 2 -> 7 (dry.lua 10 before option D): petAttack, the pre-pull doAtValue (C), the move (R8: it reaches
+-- Hellfire; the spec opts into Movement), two changeTarget (rule 20 absorbs the other three: option D), the APL's trinket 18820 (not worn) and the Major Spellblasting Potion
 -- 250937; unitIsMoving dropped (Task 5), listed.
 -- Known API deviations: the demon's attacks spend Demonic Brand's charges, unseen (the kit keeps
 -- the brand its full 10 s); before the Demonic Brand talent the brand is never up, so `searing_pain,if=!debuff.
@@ -53,6 +53,7 @@ return {
                 NoCurse = false,
             },
             active = "warlockAssignedCurseIsActive",
+            activeAll = "warlockAssignedCurseIsActiveOnAllTargets", -- rule 20: its swap is the curse lines' cycle_targets=1
             is = "warlockIsAssignedCurse",
         },
     },

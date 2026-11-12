@@ -4273,7 +4273,8 @@ found = true end
                                     type = "group",
                                     name = L["Secondary Targets"],
                                     inline = true,
-                                    hidden = function() return not self.DB.profile.specs[ id ].cycle end,
+                                    -- Forever never shows an enemy's time to die, so this filter moves nothing (option D, owner decision 3)
+                                    hidden = function() return true end,
                                     order = 7,
                                     args = {
                                         cycle_min = {
@@ -8611,6 +8612,7 @@ do
 
             if result.for_next then result.for_next = tonumber( result.for_next ) end
             if result.cycle_targets then result.cycle_targets = tonumber( result.cycle_targets ) end
+            if result.other_target then result.other_target = tonumber( result.other_target ) end
             if result.max_energy then result.max_energy = tonumber( result.max_energy ) end
 
             if result.use_off_gcd then result.use_off_gcd = tonumber( result.use_off_gcd ) end

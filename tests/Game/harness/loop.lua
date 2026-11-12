@@ -403,6 +403,17 @@ function M.run(L, seed, o, drivers)
             d.H.Fire("COOLDOWN_VIEWER_DATA_LOADED")
         end
         ctl.combat, ctl.form, ctl.stealthed = false, L.form, false
+        if aw.followCycle then -- option D's arms (ab.lua; every other arm leaves all this at the defaults)
+            -- Recommend Target Swaps per the arm, the enemy plates shown and counted out to 40 yd (the spec's Enemy
+            -- Range Radius; its default 10 misses a caster's mobs), and the observer's nameplate1..N existing
+            local sp = d.H.Hekili.Engine.settings.specs[d.H.Hekili.State.spec.id]
+            sp.cycle, sp.nameplateRange = aw.cycle or false, aw.plates and 40 or nil
+            ctl.cvars.nameplateShowEnemies = aw.plates and "1" or nil
+            ctl.cvars.nameplateShowAll = aw.plates and "1" or nil
+            for i = 1, 1 + (aw.extraMobs or 0) do
+                ctl.exists["nameplate" .. i] = aw.plates or nil
+            end
+        end
         local fresh = {
             ctl.dead,
             ctl.current,
@@ -485,6 +496,12 @@ function M.run(L, seed, o, drivers)
     local stopAt = W.stopAt
     local t = 0
     local lastRefused, readySince = false, {}
+    -- option D's driver (ab.lua world.followCycle): a pressed record with the cycle icon is pressed on the first live
+    -- mob whose truth lacks its debuff, and the target goes back to mob 1 at the next tick
+    local follow, mob1 = aw.followCycle, us.target
+    local back, backIds = false, nil
+    run.cyclePresses, run.cycleLanded, run.cycleMobs = 0, 0, 0
+    local landedOn = {} -- the mobs a swapped press landed on (run.cycleMobs counts them)
     -- a verdict arm's recast (ab.lua world.recast): an uptime aura's press whose hit was avoided is pressed again at
     -- the next free GCD, whatever the driver shows (the recast inside the verdict's drain, review M1)
     local recastOf, recastKey = nil, nil
@@ -679,6 +696,32 @@ function M.run(L, seed, o, drivers)
         local press, forced = shown and t - readySince[key] >= (o.reaction or 0) - 1e-9, false -- one attempt a tick
         if recastKey and gcdFree then -- one attempt, pressed or refused
             key, press, forced, recastKey = recastKey, true, true, nil
+        end
+        if back and t >= (us.castUntil or 0) and not us.channel then -- once its cast has landed (or not)
+            if M.auraUp(us.target, backIds, t) then
+                run.cycleLanded = run.cycleLanded + 1 -- the swapped press's debuff is up on that mob (world truth)
+                if not landedOn[us.target] then
+                    landedOn[us.target], run.cycleMobs = true, run.cycleMobs + 1
+                end
+            end
+            us.target, back = mob1, false
+            W.emit({ kind = "target", relist = true })
+        end
+        local rec1 = follow and steps[1].H.Hekili.Engine.Output.Primary.recs[1]
+        if press and rec1 and rec1.indicator == "cycle" and rec1.actionName == key then
+            local ab_ = truth.Hekili.Class.abilities[key]
+            local aura = truth.Hekili.Class.auras[ab_.cycle or ab_.aura or key]
+            local ids = { aura and aura.id }
+            for _, id in ipairs(aura and type(aura.copy) == "table" and aura.copy or {}) do
+                ids[#ids + 1] = id
+            end
+            for _, e in ipairs(W.ents) do
+                if not back and e.kind == "mob" and e ~= us.target and not e.dead and not M.auraUp(e, ids, t) then
+                    us.target, back, backIds = e, true, ids
+                    W.emit({ kind = "target", relist = true })
+                end
+            end
+            run.cyclePresses = run.cyclePresses + 1
         end
         if press then
             truth.Hekili.State.reset("Primary", true) -- Update leaves its last prediction (a predicted buff, query_time ahead of now)
