@@ -5,8 +5,6 @@
 # Setting assigned_curse (choice of curseOptions: elements, nocurse, recklessness, weakness), default elements in game and in the harness.
 # Deviation: precombat #1: the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast.
 # Omitted: precombat #2: petAttack
-# Omitted: default #6: auraIsKnown of the unresolved aura 1323392 folds false
-# Omitted: default #7: auraIsKnown of the unresolved aura 1323392 folds false
 # Omitted: single_multi_target_curse_logic #2: changeTarget
 # Omitted: multi_target_dot_logic #3: changeTarget
 # Omitted: multi_target_dot_logic #5: changeTarget
