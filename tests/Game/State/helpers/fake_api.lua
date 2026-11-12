@@ -139,6 +139,7 @@ function M.new()
     local ctl = {
         now = 100,
         combat = false,
+        unitCombat = {}, -- [unit] = UnitAffectingCombat(unit): true, false or SECRET (unset: `combat`)
         class = "CLASS_A",
         power = {}, -- [powerType] = value (SECRET for a secret read)
         -- [target token] = GetComboPoints("player", token): the points usable on that unit (SECRET: a secret answer;
@@ -610,7 +611,11 @@ function M.new()
         end
         return ctl.powerType[1], ctl.powerType[2]
     end
-    function api.UnitAffectingCombat()
+    function api.UnitAffectingCombat(u) -- ctl.unitCombat[u] when set (true, false or SECRET), else ctl.combat
+        local v = u and ctl.unitCombat[u]
+        if v ~= nil then
+            return v
+        end
         return ctl.combat
     end
     function api.UnitIsPlayer(u) -- ctl.isPlayer[u] when set (SECRET: a secret answer); else the player only

@@ -322,6 +322,7 @@ end )
 
 
 local RC = Facade.LibRangeCheck -- the one range source (range plan R2): LibRangeCheck through the facade
+local NEAR_YD = 10 -- caster range (L644): within this many yards a plate counts in or out of combat, as melee always did
 local LSR = LibStub( "SpellRange-1.0" )
 
 local lastCount = 1
@@ -528,6 +529,11 @@ do
                         if isT ~= true and not excluded and checkPlates then
                             local _, maxR = RC:GetRange( unit ) -- nil: unknown, kept
                             excluded = maxR ~= nil and maxR > checkPlates
+                            -- caster range (L644): past the near band a plate counts only while plainly in combat
+                            -- (UnitAffectingCombat on plates plain under forced Map: owner 2026-11-12, 109/120 ticks)
+                            if not excluded and checkPlates > NEAR_YD and ( maxR == nil or maxR > NEAR_YD ) then
+                                excluded = plain( UnitAffectingCombat( unit ) ) ~= true
+                            end
                         end
 
                         if not excluded then

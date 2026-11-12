@@ -237,7 +237,7 @@ describe("the plate enemy count under the Map restriction (T1)", function()
                 mw.unplate(H, k)
             end
             ctl.friendly[u], ctl.dead[u], ctl.isPlayer[u], ctl.inParty[u], ctl.inRaid[u] = nil, nil, nil, nil, nil
-            ctl.actionInRange[u], ctl.distance[u], ctl.unitIs[u] = nil, nil, nil
+            ctl.actionInRange[u], ctl.distance[u], ctl.unitIs[u], ctl.unitCombat[u] = nil, nil, nil, nil
         end
         ctl.dead.target, ctl.isPlayer.target = nil, nil
         ctl.pvp, ctl.groupMembers, ctl.rangeLib = nil, nil, nil
@@ -423,6 +423,28 @@ describe("the plate enemy count under the Map restriction (T1)", function()
         assert.are.equal(3, count(H), "raising")
         ctl.rangeLib = "none"
         assert.are.equal(3, count(H), "silent")
+    end)
+
+    -- caster range (L644, branch caster-range) on token plates: past 10 yd a plate counts only while plainly in combat
+    -- (UnitAffectingCombat on plates plain under forced Map: owner 2026-11-12, 109 of 120 ticks plain, 0 secret)
+    it("a ranged radius: past 10 yd a token plate counts only while plainly in combat; within 10 yd always", function()
+        local H, ctl, spec = world("B")
+        plates(H, 4)
+        mw.target(H, 1)
+        spec.nameplateRange = 40
+        ctl.distance.nameplate2, ctl.distance.nameplate3, ctl.distance.nameplate4 = 30, 30, 5
+        ctl.unitCombat.nameplate2, ctl.unitCombat.nameplate3 = true, false
+        ctl.unitCombat.nameplate4 = false
+        assert.are.equal(3, count(H), "the target, the far engaged plate, the near idle one")
+        ctl.unitCombat.nameplate2 = SECRET
+        assert.are.equal(2, count(H), "a secret combat answer past 10 yd: not counted")
+        ctl.unitCombat.nameplate2, ctl.distance.nameplate2 = true, nil
+        assert.are.equal(3, count(H), "unknown range, engaged: counted")
+        ctl.unitCombat.nameplate2 = false
+        assert.are.equal(2, count(H), "unknown range, idle: not counted")
+        spec.nameplateRange = nil -- the default 10 yd radius: no combat read
+        ctl.distance.nameplate2, ctl.distance.nameplate3 = nil, nil
+        assert.are.equal(4, count(H))
     end)
 
     it("world C (in combat, the target's auras raising, health secret): the same counts, no error", function()
