@@ -273,6 +273,7 @@ end
 
 local WORLDS = {
     druid = require("Forever.helpers.druid_loop_world").Feral,
+    hunter = require("Forever.helpers.hunter_world").BeastMastery,
     mage = require("Forever.helpers.mage_world").Fire,
     warlock = require("Forever.helpers.warlock_world").Affliction,
 }
@@ -314,6 +315,13 @@ local SHIPPED = {
     druid_balance = { "druid", 100111, "Balance (wowsims.com)" },
     druid_feral = { "druid", 100112, "Feral (wowsims.com)" },
     druid_guardian = { "druid", 100113, "Guardian (wowsims.com)", "guardian" },
+    hunter_beast_mastery = { "hunter", 100031, "Beast Mastery (wowsims.com)" },
+    hunter_beast_mastery_turret = { "hunter", 100031, "Beast Mastery Turret (wowsims.com)", "bm_turret" },
+    hunter_marksmanship = { "hunter", 100032, "Marksmanship (wowsims.com)" },
+    hunter_marksmanship_turret = { "hunter", 100032, "Marksmanship Turret (wowsims.com)", "mm_turret" },
+    hunter_survival = { "hunter", 100033, "Survival (wowsims.com)" },
+    hunter_survival_turret = { "hunter", 100033, "Survival Turret (wowsims.com)", "sv_turret" },
+    hunter_survival_melee = { "hunter", 100033, "Survival Melee (wowsims.com)", "sv_melee" },
     mage_arcane = { "mage", 100081, "Arcane (wowsims.com)" },
     mage_fire = { "mage", 100082, "Fire (wowsims.com)" },
     mage_frostfire = { "mage", 100082, "Frostfire (wowsims.com)", "frostfire" },
@@ -344,6 +352,11 @@ describe("the shipped selectors (headless)", function()
                 { "mage_fire", "mage_frostfire", 2 }, -- a pack switch each way (back: no selector, the default again)
                 { "warlock_affliction", "warlock_sm_ruin", 2 },
                 { "warlock_demonology", "warlock_shadow_brand", 2 },
+                { "hunter_beast_mastery", "hunter_beast_mastery_turret", 2 }, -- weave and non-weave: a pack switch
+                { "hunter_marksmanship", "hunter_marksmanship_turret", 2 },
+                { "hunter_survival", "hunter_survival_turret", 2 },
+                { "hunter_survival", "hunter_survival_melee", 2 },
+                { "hunter_survival_turret", "hunter_survival_melee", 2 },
             }) do
                 local a, b = SHIPPED[pair[1]], SHIPPED[pair[2]]
                 local H = boot(a[1], build(pair[1], a[1]))
@@ -361,6 +374,9 @@ describe("the shipped selectors (headless)", function()
             { "druid", { [16942] = 2, [16934] = 5 }, 100112, "Feral (wowsims.com)" }, -- Sharpened Claws, Ferocity
             { "mage", { [11069] = 5, [11119] = 5 }, 100082, "Fire (wowsims.com)" }, -- Improved Fireball, Ignite
             { "warlock", { [18174] = 5, [17810] = 3 }, 100091, "Affliction (wowsims.com)" }, -- Suppression, Imp. Corr.
+            -- Survival with neither the Turret build's Survivalist nor the Melee build's Survivalist's Discipline: the
+            -- weave default (Savage Strikes, Deflection, Surefooted)
+            { "hunter", { [19159] = 2, [19295] = 5, [19290] = 3 }, 100033, "Survival (wowsims.com)" },
         }) do
             local H = boot(case[1], case[2])
             assert.are.same({ case[3], case[4] }, { active(H) }, case[1])
@@ -527,6 +543,20 @@ describe("the shipped selectors (headless)", function()
         assert.is_true(sp.packManual)
         respec(H, build("mage_frostfire", "mage"))
         assert.are.equal("Fire (wowsims.com)", sp.package)
+    end)
+
+    it("lets /hekili priority override a Hunter selector's pack, and the default hands it back", function()
+        local H = boot("hunter", build("hunter_survival_melee", "hunter"))
+        local sp = H.Hekili.DB.profile.specs[100033]
+        assert.are.equal("Survival Melee (wowsims.com)", sp.package)
+        H.Hekili:HandlePriorityCommand({ "priority", "survival", "(wowsims.com)" }) -- the weave pack, by name
+        assert.are.same({ 100033, "Survival (wowsims.com)" }, { active(H) })
+        respec(H, build("hunter_survival_melee", "hunter"))
+        assert.are.equal("Survival (wowsims.com)", sp.package)
+        H.Hekili:HandlePriorityCommand({ "priority", "default" })
+        respec(H, build("hunter_survival_melee", "hunter"))
+        assert.are.equal("Survival Melee (wowsims.com)", sp.package)
+        assert.are.same({}, H.errors)
     end)
 
     it("leaves a custom priority alone", function()

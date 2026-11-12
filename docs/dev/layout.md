@@ -390,6 +390,17 @@ Marksmanship solo: fights=20 agreement 1.000 (16624 ticks); react median 0 p90 1
 Survival solo: fights=20 agreement 0.958 (18040 ticks); react median 0 p90 1 never 0.007; ready while short 0; held while ready 323; refused per 100 [cost 0.0 (oracle 0.4, unmatched 0.0)], episodes 0.00/min; dps A/B 1.013; ...
 ```
 
+wowsims's non-weave Hunter builds (owner 2026-11-12, ledger L661) ship beside the weave packs: Beast Mastery Turret,
+Marksmanship Turret and Survival Turret (wowsims's `bm`, `mm` and `sv` builds on `turret.apl.siml`: Hunter's Mark,
+Serpent Sting, Arcane Shot, Aimed Shot, Sniper Shot as the filler and the pull's opener, no melee) and Survival Melee
+(`sv_melee.siml` on `melee.apl.siml`). Hunter.lua's selectors pick them from the talents, each by a talent only that
+build takes: Improved Arcane Shot without Efficiency (Beast Mastery), Sniper Shot (Marksmanship), Survivalist without
+Strider Kick (Survival Turret), Survivalist's Discipline (Survival Melee); any other build keeps the tree's weave pack.
+Their worlds take the export's whole talent string; the Turret worlds stand at 12 yd shooting, Survival Melee at 5 yd
+with two one-handers (its live bars at 11 yd, R63, `W.SurvivalMeleeRanged`). Replay decisions on-GCD: 1.000 (59),
+0.955 (66), 0.962 (53), 0.942 (86); the 20-fight lines (seeds 1-20) read agreement 0.998 / 1.000 / 0.996 / 0.997,
+flicker 0, held while ready 125 / 101 / 115 / 166 (rows in `pack_gate.FLICKER`, the worst of three seed sets).
+
 Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter
 research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`), plus:
 - H1: the client's pseudo-spec id (assumed 1484; only the legacy profile migration reads it) and the talent tree the

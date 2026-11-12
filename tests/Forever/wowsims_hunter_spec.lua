@@ -117,6 +117,57 @@ local PACKS = {
         0.7,
         "SurvivalRanged",
     },
+    -- wowsims's non-weave builds (owner 2026-11-12, ledger L661): new rows, first measured on this lane (R6; the
+    -- replay is one fight at the log's seed). The Turret worlds know every ability their list casts (no extra kit);
+    -- Survival Melee's replay opens Mongoose Bite on Expose Prey as the weave's (REPLAY_EXTRA). Replay misses: the
+    -- Turrets' are Serpent Sting against Arcane Shot (the sting believed up at the cast, about 0.33 s before it lands:
+    -- the weave rows' class, no belief landing hook); Survival Melee's immolation_trap -> wing_clip 2, immolation_trap
+    -- -> summon_hawk 1, strider_kick -> wing_clip 1 (untraced). Live L40/L60 over 6 s: the weave rows' R41 class (mana
+    -- dry in the 5000 pool, the shots waiting on their cost), not traced per tick. ON flicker: Marksmanship Turret 1.66
+    -- and Survival Turret 1.00 measured, the replay's no-press-exclusion lead (Beast Mastery's note above), untraced.
+    {
+        "hunter_beast_mastery_turret",
+        "BeastMasteryTurret",
+        "Beast Mastery Turret (wowsims.com)",
+        1.00, -- 1.000 (59)
+        { [10] = 6, [40] = 6, [60] = 13.0 }, -- 4.4 / 4.4 / 13.0
+        0, -- 0.00
+        nil,
+        {},
+        {},
+    },
+    {
+        "hunter_marksmanship_turret",
+        "MarksmanshipTurret",
+        "Marksmanship Turret (wowsims.com)",
+        0.95, -- 0.955 (66)
+        { [10] = 6, [40] = 9.4, [60] = 14.0 }, -- 4.4 / 9.4 / 14.0
+        1.7, -- 1.66
+        nil,
+        {},
+        {},
+    },
+    {
+        "hunter_survival_turret",
+        "SurvivalTurret",
+        "Survival Turret (wowsims.com)",
+        0.96, -- 0.962 (53)
+        { [10] = 6, [40] = 6, [60] = 15.4 }, -- 4.4 / 4.4 / 15.4
+        1.0, -- 1.00
+        nil,
+        {},
+        {},
+    },
+    {
+        "hunter_survival_melee",
+        "SurvivalMelee",
+        "Survival Melee (wowsims.com)",
+        0.94, -- 0.942 (86)
+        -- in melee 116.8 / 7.2 / 8.6: the live bars run W.SurvivalMeleeRanged (R63, hunter_world.lua): 4.4 / 10.0 / 15.4
+        { [10] = 6, [40] = 10.0, [60] = 15.4 },
+        0, -- 0.00
+        "SurvivalMeleeRanged",
+    },
 }
 
 describe("the Hunter wowsims.com packs #slow #wowsims", function()
@@ -125,12 +176,12 @@ describe("the Hunter wowsims.com packs #slow #wowsims", function()
         local spec, world, pack, FLOOR, LIVE, FLICKER = p[1], W[p[2]], p[3], p[4], p[5], p[6]
         local liveWorld = W[p[7] or p[2]]
         it(pack .. " follows wowsims's casts", function()
-            local r, line = ws.gate(pack, content(spec, world, pack, 60, REPLAY_EXTRA), spec, FLOOR, REPLAY)
+            local r, line = ws.gate(pack, content(spec, world, pack, 60, p[8] or REPLAY_EXTRA), spec, FLOOR, REPLAY)
             ab.check(r.flicker <= FLICKER + 1e-9, pack, "ON flicker ceiling: " .. line)
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()
-                ws.live(pack, content(spec, liveWorld, pack, level, EXTRA), LIVE[level])
+                ws.live(pack, content(spec, liveWorld, pack, level, p[9] or EXTRA), LIVE[level])
             end)
         end
     end
