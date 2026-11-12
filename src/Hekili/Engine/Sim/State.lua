@@ -2260,7 +2260,10 @@ do
             elseif k == "cycle_enemies" then
                 if not t.settings.cycle or t.active_enemies == 1 then return 1 end
 
-                local targets = t.true_active_enemies
+                -- swaps read the count before the plate hold: a dotted add dying (its debuffs forgotten at once) is far
+                -- more common than an edge flap, which disarms a swap for one update (owner no-jitter rule, ledger L709)
+                local _, _, unheld = ns.getNumberTargets()
+                local targets = min( t.true_active_enemies, unheld or t.true_active_enemies )
                 local timeframe = t.delay + t.offset
 
                 local minTTD = timeframe + min( t.cycleInfo.minTTD or 10, t.settings.cycle_min )

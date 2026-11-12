@@ -159,4 +159,108 @@ describe("a dungeon pull through the token plate count (T1)", function()
             spec.cycle = false
         end
     )
+
+    -- integ/dot review I1 (the owner's no-jitter rule): a dotted mob's plate leaving forgets its debuffs in the belief
+    -- at once, so the enemy count must not stay one update above the debuff count: no swap flash on that update.
+    describe("a dotted plate leaving shows no swap on the first update after", function()
+        local H, A, t, n
+        local function boot(plates)
+            H = mw.new("C", {
+                character = character("src/Hekili_Warlock/Warlock.lua", "WARLOCK", 9, 1490),
+                pack = "Destruction (wowsims.com)",
+            })
+            assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+            H.Hekili.Engine.settings.specs[100093].cycle = true
+            A, t, n = H.Hekili.Class.abilities, H.ctl.now, 0
+            for k = 1, plates do
+                mw.plate(H, k)
+            end
+            mw.target(H, 1)
+        end
+        local function cast(id)
+            n = n + 1
+            t = t + 0.1
+            H.ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-gone" .. n, id)
+            t = t + 0.2
+            assert.is_true(headless.cycle(H, t))
+        end
+        local function tab(k)
+            mw.target(H, k)
+            t = t + 0.2
+            assert.is_true(headless.cycle(H, t))
+        end
+        local function first() -- the queue of the one update right after the change
+            t = t + 0.2
+            assert.is_true(headless.cycle(H, t))
+            assert.are.same({}, H.errors)
+            local out, recs = H.Hekili.Engine.Output.Primary, {}
+            for i = 1, out.count do
+                recs[i] = { out.recs[i].actionName, out.recs[i].indicator or "" }
+            end
+            return recs
+        end
+
+        it("Destruction, 3 mobs carrying the curse, Immolate and Corruption: one leaves, no swap", function()
+            boot(3)
+            for k = 1, 3 do
+                tab(k)
+                for _, a in ipairs({ "curse_of_the_elements", "immolate", "corruption" }) do -- the cycled lines' debuffs
+                    cast(A[a].id)
+                end
+                if k == 2 then
+                    cast(A.bane_of_havoc.id)
+                end
+            end
+            tab(1)
+            local recs
+            recs, t = queue(H, t)
+            assert.is_nil(find(recs, nil, "cycle"), "all 3 carry them " .. names(recs))
+            mw.unplate(H, 3)
+            recs = first()
+            assert.is_nil(find(recs, nil, "cycle"), "first update after C's plate left " .. names(recs))
+        end)
+
+        it("Destruction, Havoc on B: B leaves, no Havoc on the first update", function()
+            boot(2)
+            tab(2)
+            cast(A.bane_of_havoc.id)
+            tab(1)
+            local recs
+            recs, t = queue(H, t)
+            assert.is_nil(find(recs, "bane_of_havoc"), "Havoc is up on B " .. names(recs))
+            mw.unplate(H, 2)
+            recs = first()
+            assert.is_nil(find(recs, "bane_of_havoc"), "first update after B's plate left " .. names(recs))
+        end)
+
+        -- The accepted trade-off of I1's fix (swaps read the count before the hold): a plate that flaps (REMOVED, then
+        -- ADDED the next update) while it is the only enemy lacking the debuffs disarms the swap for that one update,
+        -- while the held count (AoE lines, the display) stays. A dotted add dying is far more common than an edge flap
+        -- (owner no-jitter rule, ledger L709). Pinned so a change is visible.
+        it("a flapping plate, the only one lacking the debuffs, disarms the swap for one update (trade-off)", function()
+            boot(3)
+            for k = 1, 2 do
+                tab(k)
+                for _, a in ipairs({ "curse_of_the_elements", "immolate", "corruption" }) do
+                    cast(A[a].id)
+                end
+                if k == 2 then
+                    cast(A.bane_of_havoc.id)
+                end
+            end
+            tab(1)
+            local recs
+            recs, t = queue(H, t)
+            assert.is_truthy(find(recs, nil, "cycle"), "C lacks them: a swap shows " .. names(recs))
+            mw.unplate(H, 3)
+            recs = first()
+            local held, _, unheld = H.ns.getNumberTargets()
+            assert.are.same({ 3, 2 }, { held, unheld }, "the dip update: count held, swaps see 2")
+            assert.is_nil(find(recs, nil, "cycle"), "the dip update: swap disarmed " .. names(recs))
+            mw.plate(H, 3)
+            recs = first()
+            assert.is_truthy(find(recs, nil, "cycle"), "C back: the swap re-arms at once " .. names(recs))
+        end)
+    end)
 end)

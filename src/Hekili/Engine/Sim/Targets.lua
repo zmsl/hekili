@@ -328,6 +328,7 @@ local LSR = LibStub( "SpellRange-1.0" )
 local lastCount = 1
 local lastStationary = 1
 local heldLow = false -- the token count's fall held this update (T1)
+local unheldCount = 1 -- the count before the hold: what target swaps read (integ/dot I1)
 
 
 -- War Mode
@@ -407,7 +408,7 @@ do
     -- New Nameplate Proximity System
     function ns.getNumberTargets( forceUpdate )
         if not forceUpdate then
-            return lastCount, lastStationary
+            return lastCount, lastStationary, unheldCount
         end
 
         local debugging = Hekili.ActiveDebug
@@ -716,6 +717,7 @@ do
 
         -- T1, the owner's no-jitter rule: with token plates, a fall publishes on the next forced update if it holds
         -- (0.1-0.5 s later); a rise at once. The GUID and damage paths are untouched.
+        unheldCount = count
         if tokenMode and count < lastCount and not heldLow then
             heldLow = true
             count, stationary = lastCount, lastStationary
