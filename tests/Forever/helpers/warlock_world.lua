@@ -128,6 +128,7 @@ local DOT = {
     immolate = { 15, 3, 4 },
     bane_of_agony = { 24, 2, 32, "bane" },
     bane_of_doom = { 60, 60, 32, "bane" },
+    bane_of_havoc = { 300, nil, 1, "bane" }, -- no tick (a dummy aura), wowsims's school 1; replaces our other Bane there
     siphon_life = { 30, 3, 32 },
     curse_of_the_elements = { 300, nil, 32, "curse" },
     curse_of_recklessness = { 120, nil, 32, "curse" },
@@ -600,6 +601,7 @@ M.MAP = {
     corruption = lands("corruption"),
     bane_of_agony = lands("bane_of_agony"),
     bane_of_doom = lands("bane_of_doom"),
+    bane_of_havoc = lands("bane_of_havoc"), -- option D: Destruction's other_target=1 line, pressed by a following driver
     curse_of_the_elements = lands("curse_of_the_elements"),
     curse_of_recklessness = lands("curse_of_recklessness"),
     curse_of_weakness = lands("curse_of_weakness"),
