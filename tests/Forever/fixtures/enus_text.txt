@@ -4589,39 +4589,16 @@ options.abilities.natures_grasp.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.natures_grasp.toggle	values.none	None
 options.abilities.natures_grasp.toggle	values.potions	Potions
 options.abilities.natures_swiftness	name	Spell 16188
-options.abilities.natures_swiftness.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 16188 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 16188 can be recommended in any type of fight.
-options.abilities.natures_swiftness.boss	name	Boss Encounter Only
-options.abilities.natures_swiftness.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 16188 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
-options.abilities.natures_swiftness.clash	name	Clash
-options.abilities.natures_swiftness.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 16188.
-options.abilities.natures_swiftness.disabled	name	Disable |T136000:0|t Spell 16188
-options.abilities.natures_swiftness.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
-options.abilities.natures_swiftness.dotCap	name	Maximum Applications
-options.abilities.natures_swiftness.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
-options.abilities.natures_swiftness.hasIcon	name	Icon Replacement
-options.abilities.natures_swiftness.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
-options.abilities.natures_swiftness.keybind	name	Override Keybind Text
-options.abilities.natures_swiftness.lineBreak1	name	\032
-options.abilities.natures_swiftness.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
-options.abilities.natures_swiftness.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
-options.abilities.natures_swiftness.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
-options.abilities.natures_swiftness.noIcon	name	Icon Replacement
-options.abilities.natures_swiftness.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 16188 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
-options.abilities.natures_swiftness.targetMax	name	Maximum Targets
-options.abilities.natures_swiftness.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 16188 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
-options.abilities.natures_swiftness.targetMin	name	Minimum Targets
-options.abilities.natures_swiftness.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
-options.abilities.natures_swiftness.toggle	name	Require Toggle
-options.abilities.natures_swiftness.toggle	values.cooldowns	Cooldowns
-options.abilities.natures_swiftness.toggle	values.custom1	Custom 1
-options.abilities.natures_swiftness.toggle	values.custom2	Custom 2
-options.abilities.natures_swiftness.toggle	values.default	Default |cffffd100(cooldowns)|r
 options.abilities.natures_swiftness	name	Spell 17116
+options.abilities.natures_swiftness.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 16188 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 16188 can be recommended in any type of fight.
 options.abilities.natures_swiftness.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 17116 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 17116 can be recommended in any type of fight.
 options.abilities.natures_swiftness.boss	name	Boss Encounter Only
+options.abilities.natures_swiftness.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 16188 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
 options.abilities.natures_swiftness.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 17116 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
 options.abilities.natures_swiftness.clash	name	Clash
+options.abilities.natures_swiftness.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 16188.
 options.abilities.natures_swiftness.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 17116.
+options.abilities.natures_swiftness.disabled	name	Disable |T136000:0|t Spell 16188
 options.abilities.natures_swiftness.disabled	name	Disable |T136000:0|t Spell 17116
 options.abilities.natures_swiftness.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
 options.abilities.natures_swiftness.dotCap	name	Maximum Applications
@@ -4634,8 +4611,10 @@ options.abilities.natures_swiftness.noFeignedCooldown	desc	If checked |cFFFFD100
 options.abilities.natures_swiftness.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
 options.abilities.natures_swiftness.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
 options.abilities.natures_swiftness.noIcon	name	Icon Replacement
+options.abilities.natures_swiftness.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 16188 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
 options.abilities.natures_swiftness.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 17116 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
 options.abilities.natures_swiftness.targetMax	name	Maximum Targets
+options.abilities.natures_swiftness.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 16188 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
 options.abilities.natures_swiftness.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 17116 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
 options.abilities.natures_swiftness.targetMin	name	Minimum Targets
 options.abilities.natures_swiftness.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
@@ -4643,6 +4622,7 @@ options.abilities.natures_swiftness.toggle	name	Require Toggle
 options.abilities.natures_swiftness.toggle	values.cooldowns	Cooldowns
 options.abilities.natures_swiftness.toggle	values.custom1	Custom 1
 options.abilities.natures_swiftness.toggle	values.custom2	Custom 2
+options.abilities.natures_swiftness.toggle	values.default	Default |cffffd100(cooldowns)|r
 options.abilities.natures_swiftness.toggle	values.default	Default |cffffd100(none)|r
 options.abilities.natures_swiftness.toggle	values.defensives	Defensives
 options.abilities.natures_swiftness.toggle	values.interrupts	Interrupts
@@ -13942,8 +13922,8 @@ options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0005	|cF
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 603 - |cFFFFD100|cffffd100fight_remains>debuff.bane_of_doom.duration|r|r
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 686 - |cFFFFD100|cffffd100buff.shadow_trance.up|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 686 - |cFFFFD100|cffffd100buff.shadow_trance.up|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 686 - |cFFFFD100|cffffd100(buff.shadow_trance.up||(talent.improved_shadow_bolt.enabled&buff.revelation.up&(!debuff.shadow_vulnerability.up||debuff.shadow_vulnerability.remains<(action.shadow_bolt.cast+action.shadow_bolt.travel_time))))|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 686 - |cFFFFD100|cffffd100(buff.shadow_trance.up||(talent.improved_shadow_bolt.enabled&buff.revelation.up&(!debuff.shadow_vulnerability.up||debuff.shadow_vulnerability.remains<(action.shadow_bolt.cast+action.shadow_bolt.travel_time))))|r|r
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100(!action.bane_of_doom.known||((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||(action.bane_of_doom.known&debuff.bane_of_doom.up)))|r|r
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 6789 - |cFFFFD100|cffffd100(!action.shadow_bolt.known||(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)|r|r
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
@@ -14003,19 +13983,32 @@ options.packs.affliction.Affliction (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.curse_of_the_elements	|T136000:0|t Curse of the Elements
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.decimation	|T136000:0|t Spell 440873
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.demon_armor	|T136000:0|t Spell 11735
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.demonic_brand	|T136000:0|t Spell 1293696
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.demonic_knowledge	|T136000:0|t Spell 412732
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.drain_life_channel	|T136000:0|t Spell 11700
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.drain_soul_channel	|T136000:0|t Spell 11675
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.fel_domination	|T136000:0|t Spell 18708
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.fel_energy	|T136000:0|t Spell 18792
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.fel_stamina	|T136000:0|t Spell 18790
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.hellfire_channel	|T136000:0|t Spell 11684
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.immolate	|T136000:0|t Spell 348
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.master_demonologist	|T136000:0|t Spell 23785
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.rain_of_fire_channel	|T136000:0|t Spell 11678
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.revelation	|T136000:0|t Spell 1323392
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.shadow_and_flame_fire	|T136000:0|t Spell 426311
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.shadow_and_flame_shadow	|T136000:0|t Spell 1293816
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.shadow_trance	|T136000:0|t Spell 17941
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.shadow_vulnerability	|T136000:0|t Spell 17794
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.siphon_life	|T136000:0|t Spell 18265
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.soul_harvest	|T136000:0|t Spell 1242853
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.touch_of_fire	|T136000:0|t Spell 18791
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.affliction.Affliction (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
@@ -14265,19 +14258,32 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.curse_of_the_elements	|T136000:0|t Curse of the Elements
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.decimation	|T136000:0|t Spell 440873
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.demon_armor	|T136000:0|t Spell 11735
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.demonic_brand	|T136000:0|t Spell 1293696
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.demonic_knowledge	|T136000:0|t Spell 412732
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.drain_life_channel	|T136000:0|t Spell 11700
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.drain_soul_channel	|T136000:0|t Spell 11675
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.fel_domination	|T136000:0|t Spell 18708
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.fel_energy	|T136000:0|t Spell 18792
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.fel_stamina	|T136000:0|t Spell 18790
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.hellfire_channel	|T136000:0|t Spell 11684
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.immolate	|T136000:0|t Spell 348
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.master_demonologist	|T136000:0|t Spell 23785
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.rain_of_fire_channel	|T136000:0|t Spell 11678
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.revelation	|T136000:0|t Spell 1323392
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.shadow_and_flame_fire	|T136000:0|t Spell 426311
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.shadow_and_flame_shadow	|T136000:0|t Spell 1293816
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.shadow_trance	|T136000:0|t Spell 17941
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.shadow_vulnerability	|T136000:0|t Spell 17794
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.siphon_life	|T136000:0|t Spell 18265
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.soul_harvest	|T136000:0|t Spell 1242853
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.touch_of_fire	|T136000:0|t Spell 18791
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.affliction.SM Ruin (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
@@ -16555,19 +16561,32 @@ options.packs.demonology.Demonology (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.curse_of_the_elements	|T136000:0|t Curse of the Elements
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.decimation	|T136000:0|t Spell 440873
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.demon_armor	|T136000:0|t Spell 11735
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.demonic_brand	|T136000:0|t Spell 1293696
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.demonic_knowledge	|T136000:0|t Spell 412732
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.drain_life_channel	|T136000:0|t Spell 11700
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.drain_soul_channel	|T136000:0|t Spell 11675
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.fel_domination	|T136000:0|t Spell 18708
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.fel_energy	|T136000:0|t Spell 18792
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.fel_stamina	|T136000:0|t Spell 18790
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.hellfire_channel	|T136000:0|t Spell 11684
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.immolate	|T136000:0|t Spell 348
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.master_demonologist	|T136000:0|t Spell 23785
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.rain_of_fire_channel	|T136000:0|t Spell 11678
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.revelation	|T136000:0|t Spell 1323392
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.shadow_and_flame_fire	|T136000:0|t Spell 426311
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.shadow_and_flame_shadow	|T136000:0|t Spell 1293816
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.shadow_trance	|T136000:0|t Spell 17941
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.shadow_vulnerability	|T136000:0|t Spell 17794
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.siphon_life	|T136000:0|t Spell 18265
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.soul_harvest	|T136000:0|t Spell 1242853
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.touch_of_fire	|T136000:0|t Spell 18791
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.demonology.Demonology (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
@@ -16756,12 +16775,13 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0007	|
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||((action.bane_of_doom.known&debuff.bane_of_doom.up)||(active_enemies>=3&target.within5)))|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 5676 - |cFFFFD100|cffffd100(!action.shadow_bolt.known||(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 686
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 686 - |cFFFFD100|cffffd100(talent.improved_shadow_bolt.enabled&buff.revelation.up&(!debuff.shadow_vulnerability.up||debuff.shadow_vulnerability.remains<(action.shadow_bolt.cast+action.shadow_bolt.travel_time))&!action.shadow_bolt.executing)|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 5676 - |cFFFFD100|cffffd100(!action.shadow_bolt.known||(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 686
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1454
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	name	Action Name
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
@@ -16816,19 +16836,32 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	name	Buff Na
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.curse_of_the_elements	|T136000:0|t Curse of the Elements
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.decimation	|T136000:0|t Spell 440873
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.demon_armor	|T136000:0|t Spell 11735
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.demonic_brand	|T136000:0|t Spell 1293696
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.demonic_knowledge	|T136000:0|t Spell 412732
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.drain_life_channel	|T136000:0|t Spell 11700
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.drain_soul_channel	|T136000:0|t Spell 11675
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.fel_domination	|T136000:0|t Spell 18708
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.fel_energy	|T136000:0|t Spell 18792
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.fel_stamina	|T136000:0|t Spell 18790
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.hellfire_channel	|T136000:0|t Spell 11684
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.immolate	|T136000:0|t Spell 348
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.master_demonologist	|T136000:0|t Spell 23785
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.rain_of_fire_channel	|T136000:0|t Spell 11678
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.revelation	|T136000:0|t Spell 1323392
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.shadow_and_flame_fire	|T136000:0|t Spell 426311
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.shadow_and_flame_shadow	|T136000:0|t Spell 1293816
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.shadow_trance	|T136000:0|t Spell 17941
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.shadow_vulnerability	|T136000:0|t Spell 17794
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.siphon_life	|T136000:0|t Spell 18265
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.soul_harvest	|T136000:0|t Spell 1242853
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.touch_of_fire	|T136000:0|t Spell 18791
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.demonology.Shadow Brand (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
@@ -17085,7 +17118,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0005	|
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 603 - |cFFFFD100|cffffd100fight_remains>debuff.bane_of_doom.duration|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1293817 - |cFFFFD100|cffffd100(!action.immolate.known||debuff.immolate.up)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1293817 - |cFFFFD100|cffffd100((action.immolate.known&debuff.immolate.up)||!buff.shadow_and_flame_shadow.up)|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 17877
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||((action.bane_of_doom.known&debuff.bane_of_doom.up)||(active_enemies>=3&target.within5)))|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
@@ -17149,19 +17182,32 @@ options.packs.destruction.Destruction (wowsims.com).lists.buff_name	name	Buff Na
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.curse_of_recklessness	|T136000:0|t Curse of Recklessness
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.curse_of_the_elements	|T136000:0|t Curse of the Elements
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.decimation	|T136000:0|t Spell 440873
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.demon_armor	|T136000:0|t Spell 11735
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.demonic_brand	|T136000:0|t Spell 1293696
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.demonic_knowledge	|T136000:0|t Spell 412732
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.drain_life_channel	|T136000:0|t Spell 11700
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.drain_soul_channel	|T136000:0|t Spell 11675
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.fel_domination	|T136000:0|t Spell 18708
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.fel_energy	|T136000:0|t Spell 18792
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.fel_stamina	|T136000:0|t Spell 18790
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.hellfire_channel	|T136000:0|t Spell 11684
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.immolate	|T136000:0|t Spell 348
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.master_demonologist	|T136000:0|t Spell 23785
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.rain_of_fire_channel	|T136000:0|t Spell 11678
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.revelation	|T136000:0|t Spell 1323392
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.shadow_and_flame_fire	|T136000:0|t Spell 426311
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.shadow_and_flame_shadow	|T136000:0|t Spell 1293816
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.shadow_trance	|T136000:0|t Spell 17941
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.shadow_vulnerability	|T136000:0|t Spell 17794
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.siphon_life	|T136000:0|t Spell 18265
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.soul_harvest	|T136000:0|t Spell 1242853
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.touch_of_fire	|T136000:0|t Spell 18791
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.destruction.Destruction (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
@@ -20366,7 +20412,7 @@ options.packs.protection.Protection (wowsims.com).lists.actionID	values.0015	|cF
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 12294
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>1|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 1160 - |cFFFFD100|cffffd100settings.maintain_demoralizing_shout&debuff.demoralizing_shout.remains<=6|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 6343 - |cFFFFD100|cffffd100debuff.thunder_clap.remains<=6|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 6343 - |cFFFFD100|cffffd100(!debuff.thunderfury.up&debuff.thunder_clap.remains<=6)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 6673 - |cFFFFD100|cffffd100buff.battle_shout.remains<=10|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 772 - |cFFFFD100|cffffd100(!debuff.rend.up&(!(offhand_speed=0)||(offhand_speed=0&(!action.shield_slam.known||cooldown.shield_slam.remains>=1.5))))|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 7386 - |cFFFFD100|cffffd100(debuff.sunder_armor.stack<5||((!action.shield_slam.known||cooldown.shield_slam.remains>=1.5)&debuff.sunder_armor.remains<=10))|r|r
@@ -20477,9 +20523,9 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_justice	|T136000:0|t Spell 1311705
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_light	|T136000:0|t Spell 1328198
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_righteousness	|T136000:0|t Spell 1311704
-options.packs.protection.Protection (wowsims.com).lists.buff_name	values.gore_drinker	|T136000:0|t Spell 1323969
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_wisdom	|T136000:0|t Spell 1328206
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.forbearance	|T136000:0|t Spell 25771
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.gore_drinker	|T136000:0|t Spell 1323969
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.holy_alacrity	|T136000:0|t Spell 449982
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.improved_hamstring	|T136000:0|t Spell 23694
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.infusion_of_light	|T136000:0|t Spell 437063
