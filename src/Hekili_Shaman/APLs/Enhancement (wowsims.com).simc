@@ -8,7 +8,6 @@
 # Omitted: default #8: autocastOtherCooldowns: unmapped item 9449
 # Omitted: default #8: autocastOtherCooldowns: unmapped item 249469
 # Omitted: default #9: itemSwap
-# Omitted: aoe_rotation #1: dropped the unresolved aura 17364 (its branch only)
 
 actions.precombat=flametongue_weapon,if=!buff.main_hand_enchant.up
 actions.precombat+=/rockbiter_weapon,if=!buff.main_hand_enchant.up&!action.flametongue_weapon.known
@@ -38,7 +37,7 @@ actions.single_target_rotation+=/stormstrike
 actions.single_target_rotation+=/lightning_bolt,focus=1,if=(talent.maelstrom_weapon.enabled&buff.maelstrom_weapon.stack=5)
 actions.single_target_rotation+=/earth_shock
 actions.single_target_rotation+=/fire_nova
-actions.aoe_rotation=chain_lightning,if=(talent.elemental_alacrity.rank>=3&min(mainhand_remains,offhand_remains)>action.chain_lightning.cast)
+actions.aoe_rotation=chain_lightning,if=(talent.elemental_alacrity.rank>=3&(!action.stormstrike.known|debuff.stormstrike.up)&min(mainhand_remains,offhand_remains)>action.chain_lightning.cast)
 actions.aoe_rotation+=/fire_nova
 actions.aoe_rotation+=/flame_shock,focus=2,if=debuff.flame_shock.remains<=0
 actions.aoe_rotation+=/stormstrike
