@@ -214,12 +214,15 @@ M.MAP = {
             end
         end,
     },
-    -- shortcut: the class file's own model restated (its `now`): four charges and their 20 rage at the cast; our swings do not
-    -- spend the charges (warrior-1). Upgrade with the belief's own-swing consumption.
+    -- wowsims talents_fury.go:360-391: four charges for 8 s, each landed white hit spends one and pays 5 rage (M.Fury.gain
+    -- pays them). shortcut: a charge left at a fight's end carries into the next fight's first hits.
     reckless_swings = {
         effect = function(W, e, _, X)
             aura(W, X, e, "reckless_swings", 4)
-            W.gain(e, 20)
+            M.charges = 4
+            W.at(W.t + X.aura.reckless_swings.duration, function()
+                M.charges = 0
+            end)
         end,
     },
     recklessness = selfAura("recklessness"),
@@ -447,6 +450,7 @@ end
 -- of the first Tag 1 and Tag 2 swing pairs of tests/Forever/wowsims/warrior_fury.log (2.1 s, 1.9 s); damage UNMEASURED.
 -- Mortal Strike is an Arms talent, so the Fury character does not know it.
 local FURY_SPEED = { 2.1, 1.9 }
+M.charges = 0 -- Reckless Swings' charges left (its effect sets them)
 local DUAL_WIELD_SPEC = 23584
 M.Fury = setmetatable({
     WORLD = setmetatable(
@@ -473,7 +477,11 @@ M.Fury = setmetatable({
     -- doubles the swing's rage (W1). Unbridled Wrath's procs are not modelled.
     gain = function(_, hand, _, flag, character)
         local rate = hand == 1 and 3.46 or 1.73 * (1 + 0.1 * (character.talents[DUAL_WIELD_SPEC] or 0))
-        return rate * FURY_SPEED[hand] * (flag == "CRITICAL" and 2 or 1)
+        local paid = 0
+        if M.charges > 0 then -- Reckless Swings' charge: 5 rage on a white hit
+            M.charges, paid = M.charges - 1, 5
+        end
+        return rate * FURY_SPEED[hand] * (flag == "CRITICAL" and 2 or 1) + paid
     end,
 }, { __index = M })
 
