@@ -1861,9 +1861,9 @@ function Hekili.Update()
 
                     local cast_target = i == 1 and state.cast_target ~= "nobody" and state.cast_target or state.target.unit
 
-                    if slot.indicator == "cycle" then
+                    local cycled = slot.indicator == "cycle" or nil -- its events are flagged (QueueEvent's cycle)
+                    if cycled then
                         state.SetupCycle( ability, nil, state.args.other_target == 1 )
-                        cast_target = cast_target .. "c"
                     end
 
                     if debug then scripts:ImplantDebugData( slot ) end
@@ -1912,7 +1912,7 @@ function Hekili.Update()
                                 if debug then Hekili:Debug( "Queueing %s cast finish at %.2f [+%.2f] on %s.", action, state.query_time + cast, state.offset + cast, cast_target ) end
 
                                 state.applyBuff( "casting", ability.cast, nil, ability.id, nil, false )
-                                state:QueueEvent( action, state.query_time, state.query_time + cast, "CAST_FINISH", cast_target )
+                                state:QueueEvent( action, state.query_time, state.query_time + cast, "CAST_FINISH", cast_target, nil, cycled )
                             else
                                 if ability.charges and ability.charges > 1 and ability.recharge > 0 then
                                     state.spendCharges( action, 1 )
@@ -1923,19 +1923,19 @@ function Hekili.Update()
                                 end
 
                                 if debug then Hekili:Debug( "Queueing %s channel finish at %.2f [%.2f+%.2f].", action, state.query_time + cast, state.offset, cast, cast_target ) end
-                                state:QueueEvent( action, state.query_time, state.query_time + cast, "CHANNEL_FINISH", cast_target )
+                                state:QueueEvent( action, state.query_time, state.query_time + cast, "CHANNEL_FINISH", cast_target, nil, cycled )
 
                                 -- Queue ticks because we may not have an ability.tick function, but may have resources tied to an aura.
                                 if ability.tick_time then
                                     local ticks = floor( cast / ability.tick_time )
                                     for i = 1, ticks do
-                                        state:QueueEvent( action, state.query_time, state.query_time + ( i * ability.tick_time ), "CHANNEL_TICK", cast_target )
+                                        state:QueueEvent( action, state.query_time, state.query_time + ( i * ability.tick_time ), "CHANNEL_TICK", cast_target, nil, cycled )
                                     end
                                     if debug then Hekili:Debug( "Queued %d ticks of channel %s.", ticks, action ) end
                                 end
 
                                 if Hekili.Scripts.Channels and Hekili.Scripts.Channels[ packName ] and Hekili.Scripts.Channels[ packName ][ action ] then
-                                    state:QueueEvent( action, state.query_time, state.cooldown.global_cooldown.expires, "GCD_FINISH", cast_target )
+                                    state:QueueEvent( action, state.query_time, state.cooldown.global_cooldown.expires, "GCD_FINISH", cast_target, nil, cycled )
                                 end
 
                                 state.cycle = slot.indicator == "cycle" or nil -- on another target: its debuffs count, the target's stand
@@ -1961,7 +1961,7 @@ function Hekili.Update()
 
                         -- Projectile spells have two handlers, effectively.  A handler (run on cast/channel finish), and then an impact handler.
                         if ability.isProjectile then
-                            state:QueueEvent( action, state.query_time + cast, nil, "PROJECTILE_IMPACT", cast_target )
+                            state:QueueEvent( action, state.query_time + cast, nil, "PROJECTILE_IMPACT", cast_target, nil, cycled )
                         end
 
                         if state.trinket.t1.is[ action ] and state.trinket.t2.has_cooldown then

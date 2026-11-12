@@ -788,6 +788,11 @@ describe("Forever Warlock through the engine", function()
         H.Fire("PLAYER_TARGET_CHANGED")
         assert.is_false(havoc(), "remembered on mob A after the tab")
         assert.are.equal(1, H.Hekili.State.active_dot.bane_of_havoc)
+        -- review M1: mob B dies, no target, two enemies left: the count is unknown (saturated, never 0), no Havoc flash
+        H.ctl.exists.target, H.ctl.guid.target = false, nil
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_false(havoc(), "no target: Havoc is not shown again")
+        assert.are_not.equal(0, H.Hekili.State.active_dot.bane_of_havoc)
         spec.cycle = false
         assert.are.same({}, H.errors)
     end)
