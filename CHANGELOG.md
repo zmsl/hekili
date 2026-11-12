@@ -16,7 +16,7 @@
 ### Fixed
 - In dungeons (and in raids, if the game hides targets there too), switching targets with Tab no longer makes a debuff that the Cooldown Manager shows on your new target (such as Faerie Fire) look missing, so it is no longer recommended again.
 - In dungeons (and in raids, if the game hides targets there too), the debuffs you put on an enemy are remembered when you Tab away and back, as long as its nameplate stays shown, so they are not recommended again while they are still up.
-- If the range library stops answering during a fight, Hekili now treats your target's distance as unknown after 1.5 seconds instead of keeping the last distance it read, and in dungeons it now asks the library about every enemy, not only your target.
+- If the range library stops answering during a fight, Hekili now treats your target's distance as unknown after 1.5 seconds instead of keeping the last distance it read. In dungeons, enemies beyond the range set for counting targets are now left out of the count.
 - A display style whose range check is set to melee no longer raises a Lua error in dungeons while you target an enemy: Hekili now ships the newer LibRangeCheck-3.0.
 - Gnome Warriors, Rogues, Mages, Warlocks and Priests: Eureka! now lasts 8 seconds and makes every ability it covers cost 10% less (it was 15 seconds and three casts), so it is still suggested closer to the end of a fight.
 - Protection Warriors: the default priority's Thunder Clap line again checks for the Thunderfury slow; it reads down in combat, so nothing changes unless you can see the debuff.
