@@ -144,17 +144,23 @@ describe("the Hunter at range, then in melee", function()
                 end
                 assert.are.equal(5, gated) -- Raptor Strike, Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip
                 local MELEE = { mongoose_bite = true, strider_kick = true, immolation_trap = true, wing_clip = true }
-                local seen = { far = {}, near = {}, secret = {} }
+                local seen = { far = {}, near = {}, secret = {}, aged = {} }
                 local run = loop.run(L, 1, {
                     duration = 30,
                     on = function(r, steps, t)
-                        if t < loop.PULL + 1 or (t >= MOVE and t < MOVE + 1) then -- the pull's and the move's first second
-                            return
-                        end
-                        local phase = t < MOVE and "far" or (t < SECRET and "near" or "secret")
                         if t >= SECRET then
                             H.ctl.distance.target = fake.SECRET -- every range read secret from here
                         end
+                        -- the pull's and the move's first second, and the second around the 1.5 s age-out (review I1)
+                        if
+                            t < loop.PULL + 1
+                            or (t >= MOVE and t < MOVE + 1)
+                            or (t >= SECRET + 1 and t < SECRET + 2)
+                        then
+                            return
+                        end
+                        local phase = t < MOVE and "far"
+                            or (t < SECRET and "near" or (t < SECRET + 1 and "secret" or "aged"))
                         local tg = H.Hekili.State.target
                         local s = seen[phase]
                         -- each read's one value over the phase ("mixed" when it changed)
@@ -185,6 +191,10 @@ describe("the Hunter at range, then in melee", function()
                 assert.are.same({ false, true, false, false, 22.5 }, view(seen.far))
                 assert.are.same({ true, false, true, true, 2.5 }, view(seen.near)) -- [0, 5]
                 assert.are.same({ true, false, true, true, 2.5 }, view(seen.secret)) -- the last plain bracket stays
+                -- 1.5 s with no plain answer: unknown (review I1), which never blocks
+                local aged = view(seen.aged)
+                assert.are.same({ true, true, true, true }, { aged[1], aged[2], aged[3], aged[4] }, aged[5])
+                assert.is_true(seen.aged.melee > 0)
                 assert.are.equal(0, seen.far.melee)
                 assert.is_true(seen.near.melee > 0)
                 assert.is_nil(run.refused.range) -- nothing recommended out of its range, Raptor Strike included

@@ -46,14 +46,14 @@ local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true 
 -- LIVE40 (Subtlety only; the others keep the 6 s bar): 6.4 measured at L40 on integ/0.7 a9c8a44c0, Hemorrhage usable.
 -- Cause: wowsims's own gates (Garrote remaining 6.6 -> 0.6 s, Ghostly Strike likely cooling; translator-2 review S3).
 -- Owner ruling Q11 2026-11-09 (ledger L342): accepted as faithful to wowsims. A larger idle still fails.
--- LIVE40 6.4 -> 8.2 (aura lane ROHU round 2; owner rule 2026-11-11: follow wowsims): the world now gives Shank's +2
--- combo points at Boot Knife 5/5 (as wowsims's log: "Gained 2 combo points from {SpellID: 1329285}", 17 rows, 4.00 3 -> 5,
--- 26.00 2 -> 4), which moves the finishers; the 8.2 s stretch (traced at 66.4-74.6 s, seed 1) is 0 combo points, 60-92
--- energy, Garrote up with 8 s or less left, Shank and Ghostly Strike cooling: every builder line is shut by wowsims's
--- own gates (Hemorrhage "garrote.remains>=8", Ghostly Strike "garrote.remains<=4" and its cooldown, Shank's 10 s
--- cooldown; Sinister Strike needs !Hemorrhage), and Garrote waits for the debuff to end ("combo_points<5&!debuff.garrote.up").
--- wowsims idles the same way in tests/Forever/wowsims/rogue_subtlety.log: 18.00 -> 24.00 (6 s), 51.10 -> 55.10 Garrote,
--- 99.08 -> 105.18 (6.1 s); the idle is bounded by Hemorrhage's 8 s window.
+-- LIVE40 6.4 -> 8.2 (aura lane ROHU round 2; owner rule 2026-11-11: follow wowsims; cause traced in its round 3, batch
+-- review M8). The cause is the L40 talent cut, not Boot Knife: tests/Forever/helpers/wowsims.lua:177-206 keeps 31
+-- points, dominant tree first, so Blood Splatter is not learned and Garrote lasts 18 s, not wowsims's 27 s
+-- (tests/Forever/helpers/rogue_world.lua:135). In the 8.2 s stretch (66.6-74.6 s, seed 1) Hemorrhage is shut by
+-- "garrote.remains>=8", Ghostly Strike's 20 s cooldown runs to 75.6 (its "garrote.remains<=4" window opens at 70.6),
+-- Shank waits on energy, and Garrote waits for the debuff to end ("combo_points<5&!debuff.garrote.up"). With Blood
+-- Splatter learned (counterfactual, 4 seeds) the worst idle is 5.0 s, against wowsims's longest idles of about
+-- 6.0-6.1 s in tests/Forever/wowsims/rogue_subtlety.log (rows 18.00-24.00 and 99.08-105.18). The bar stays 8.2.
 local PACKS = {
     { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.97, 5.2, MUTILATE_HANDS },
     { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.99, 3.0 },

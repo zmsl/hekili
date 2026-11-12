@@ -9,9 +9,9 @@
 -- (the wowsims.com packs, translated from wowsims/forever's Melee Weave; no in-game check yet).
 -- Research: docs/research/2026-10-15-forever-hunter/research.md and the class-completion research §5.
 -- Unmodelled: ranged haste on the auto-shot clock and Rapid Fire's +40% melee haste on the main-hand swing (Rapid Fire,
--- Quick Shots; their haste on Aimed, Multi and Sniper Shot's casts is modelled; both wait for the core's haste-rescales-
--- the-swing item), Quick Shots itself (nothing applies it: its Deadly Aspects roll is unobservable, and whether the
--- player aura or the Cooldown Manager shows it in combat is unprobed), the pet and its abilities (D6), Aspect of the Viper and the other runes no priority names,
+-- Quick Shots; their haste on Aimed, Multi and Sniper Shot's casts is modelled; the core's aura field `swingHaste`
+-- (C5) can carry both, not set here yet: one multiplier for every hand), Quick Shots itself (nothing applies it: its
+-- Deadly Aspects roll is unobservable, and whether the player aura or the Cooldown Manager shows it in combat is unprobed), the pet and its abilities (D6), Aspect of the Viper and the other runes no priority names,
 -- Improved Aimed Shot's +2 s cast, Sniper Shot's range buff, Expose Prey's own Mongoose Bite window (the usability read
 -- covers it), Resourcefulness's second effect (1242688: the 30 s aura follows a crit, which only the client's aura read
 -- shows, out of combat or through the Cooldown Manager; its `share` entry is in the mana model) and Rapid Killing's buff

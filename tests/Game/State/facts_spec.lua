@@ -207,7 +207,7 @@ describe("facts and polls", function()
     end)
 
     -- range plan R2 (owner amendment 2026-11-11): the bracket is LibRangeCheck's (fake_api's double: 5 yd steps)
-    it("brackets the target's distance from LibRangeCheck, keeping the last through secret and silent reads", function()
+    it("brackets the target's distance from LibRangeCheck, keeping the last through brief silences", function()
         ctl.known[fs.SPENDER_A], ctl.known[fs.SPENDER_C] = true, true
         ctl.ranges[fs.SPENDER_A], ctl.ranges[fs.SPENDER_C] = { 0, 5 }, { 8, 35 } -- a melee strike, a band
         ctl.Fire("SPELLS_CHANGED")
@@ -230,7 +230,7 @@ describe("facts and polls", function()
         assert.are.same({ 100, math.huge, 100, "observed" }, bracket(150, 6)) -- past the last check: no upper bound
         assert.are.same({ 100, math.huge, 100, "observed" }, bracket(fake.SECRET, 7)) -- secret: the last stays
         ctl.rangeLib = "none"
-        assert.are.same({ 100, math.huge, 100, "observed" }, bracket(20, 8)) -- silent: the last stays
+        assert.are.same({ 100, math.huge, 100, "observed" }, bracket(20, 7.4)) -- silent: the last stays (under 1.5 s)
         assert.are.equal(6, VS.TargetRange().last.observed.t)
         ctl.rangeLib, ctl.distance.target = nil, fake.SECRET
         ctl.Fire("PLAYER_TARGET_CHANGED")
@@ -242,6 +242,50 @@ describe("facts and polls", function()
         ctl.Fire("PLAYER_TARGET_CHANGED")
         drain(11)
         assert.are.same({ 15, 20, 17.5, "observed" }, bracket(18, 12))
+    end)
+
+    -- batch review I1: a library that stops answering plain in combat never freezes the bracket for the fight
+    it("ages the bracket to unknown after 1.5 s with no plain answer, the next plain answer restoring it", function()
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        local function bracket(d, t)
+            ctl.distance.target = d
+            drain(t)
+            local r = VS.TargetRange()
+            return { r.lo, r.hi, r.basis }
+        end
+        local logged = 0
+        I.On(Obs.TargetRange, function()
+            logged = logged + 1
+        end)
+        local function rows()
+            return logged
+        end
+        local unknown = { 0, math.huge, "unknown" }
+        for _, map in ipairs({ false, true }) do -- the second pass under the Map restriction: a secret target GUID
+            ctl.guid.target = map and fake.SECRET or "Creature-1"
+            ctl.rangeLib = nil
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            local t = map and 20 or 2
+            assert.are.same({ 15, 20, "observed" }, bracket(18, t))
+            for _, how in ipairs({ "raise", "none" }) do
+                ctl.rangeLib = how
+                assert.are.same({ 15, 20, "observed" }, bracket(18, t + 1)) -- 1 s: kept
+                assert.are.same(unknown, bracket(18, t + 1.5)) -- 1.5 s with no plain answer: unknown
+                local n = rows()
+                assert.are.same(unknown, bracket(18, t + 2)) -- logged once
+                assert.are.equal(n, rows())
+                ctl.rangeLib = nil
+                assert.are.same({ 15, 20, "observed" }, bracket(18, t + 2.5)) -- the same bracket again: back
+                t = t + 2.5
+            end
+            ctl.distance.target = fake.SECRET -- a secret answer counts as none too
+            assert.are.same({ 15, 20, "observed" }, bracket(fake.SECRET, t + 1))
+            assert.are.same(unknown, bracket(fake.SECRET, t + 1.5))
+            ctl.Fire("PLAYER_TARGET_CHANGED") -- a swap still forgets at once
+            assert.are.same({ 5, 10, "observed" }, bracket(7, t + 1.6))
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            assert.are.same(unknown, bracket(fake.SECRET, t + 1.7))
+        end
     end)
 
     it("reads the live client's maxRange 0 on a hostile strike as melee, never a self-centred spell's", function()

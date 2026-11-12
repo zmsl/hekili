@@ -4,7 +4,7 @@
 
 ### New
 - Shaman: Stormstrike's debuff on the target (the extra damage your next Lightning Bolt, Chain Lightning or Earth Shock deals) now shows with the other auras.
-- Shaman: a totem you drop now shows its buff for the totem's life and takes down the buff of the totem it replaces, Mana Tide Totem adds its mana, Improved Stormstrike (2/2) is applied by Stormstrike and a dodge or parry on you readies Stormstrike, Maelstrom Weapon cuts Lightning Bolt by 4% a talent rank a stack, Nature's Swiftness makes the next Lightning Bolt or Chain Lightning instant, the Burning Totem relic lengthens Flame Shock, and Flurry, Elemental Devastation and Windfury Totem's attack-power buff are registered.
+- Shaman: a totem you drop now shows its buff for the totem's life and takes down the buff of the totem it replaces, Mana Tide Totem adds its mana, Improved Stormstrike (2/2) is applied by Stormstrike and a dodge or parry on you readies Stormstrike, Maelstrom Weapon cuts Lightning Bolt by 4% a talent rank a stack, Nature's Swiftness makes the next Lightning Bolt or Chain Lightning instant, the Burning Totem relic lengthens Flame Shock, and Flurry, Elemental Devastation and Windfury Totem's attack-power buff are now known to the addon and shown when the game reports them.
 - A new Action Bar Glow page in the options can glow your real action bar buttons: the buttons that cast the first recommendation of a display in gold, and the second recommendation's in blue. It works on the game's keyboard and gamepad bars and on ElvUI, Bartender and Dominos, follows the display you choose, glows in combat only unless you change that, and works with the icons hidden. It is off by default.
 
 ### Changed
@@ -16,15 +16,16 @@
 ### Fixed
 - In dungeons (and in raids, if the game hides targets there too), switching targets with Tab no longer makes a debuff that the Cooldown Manager shows on your new target (such as Faerie Fire) look missing, so it is no longer recommended again.
 - In dungeons (and in raids, if the game hides targets there too), the debuffs you put on an enemy are remembered when you Tab away and back, as long as its nameplate stays shown, so they are not recommended again while they are still up.
+- If the range library stops answering during a fight, Hekili now treats your target's distance as unknown after 1.5 seconds instead of keeping the last distance it read. In dungeons, enemies beyond the range set for counting targets are now left out of the count.
 - A display style whose range check is set to melee no longer raises a Lua error in dungeons while you target an enemy: Hekili now ships the newer LibRangeCheck-3.0.
-- Gnome Warriors, Rogues, Mages, Warlocks and Priests: Eureka! is modelled as the sim has it, 8 seconds with every ability in its scope costing 10% less (it was 15 seconds and three casts), so the last seconds of a fight no longer hide Eureka! as early.
+- Gnome Warriors, Rogues, Mages, Warlocks and Priests: Eureka! now lasts 8 seconds and makes every ability it covers cost 10% less (it was 15 seconds and three casts), so it is still suggested closer to the end of a fight.
 - Protection Warriors: the default priority's Thunder Clap line again checks for the Thunderfury slow; it reads down in combat, so nothing changes unless you can see the debuff.
 - Druid: Balance now reads the Eclipse and Nature's Grace buffs in combat through the Cooldown Manager's talent entries, Starfire's cast time follows Improved Starfire, the Eclipse charge and Nature's Grace (Wrath follows Nature's Grace too), Nature's Swiftness makes the next Wrath instant, and the Haruspex's Garb 3-piece lengthens Faerie Fire by 5 seconds.
 - Warrior: Deep Wound is read from the Cooldown Manager's copy of the debuff, Flurry counts its three charges, Retaliation its 30, and Gore Drinker's buff is tracked from the abilities that grant it.
 - Warlock: Affliction and Shadow Brand (wowsims.com) now react to the Revelation weapon enchant's proc, Decimation and Shadow Trance are now also read from the spell's glow in combat where the game lights it, and Destruction (wowsims.com) now tracks Shadow and Flame's buffs the way wowsims does.
 - Priest: Shadow (wowsims.com) now counts Dark Inspiration as soon as you cast Mind Blast, so the mana estimate no longer ignores it.
-- Paladin: Seal of Justice, Light and Wisdom now count as a seal for Judgement, and Protection (wowsims.com) suggests Templar's Bulwark at the pull.
-- Mage: Fingers of Frost is followed under the id the game shows, Combustion ends with its crit counter, and a crit on a Fire or Frost spell now counts Master of Elements' mana refund.
+- Paladin: Seal of Justice, Light and Wisdom now count as a seal for Judgement, and Protection (wowsims.com) suggests Templar's Bulwark whenever it is ready and Cooldowns are on.
+- Mage: Fingers of Frost is followed under the id the game shows, Combustion ends with its crit counter, and Master of Elements' mana refund now counts when the crit of a Fire or Frost spell is seen.
 
 ### Known issues
 

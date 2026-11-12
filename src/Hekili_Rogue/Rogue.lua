@@ -231,7 +231,8 @@ spec:RegisterAuras({
         max_stack = 1,
     },
     -- Slice and Dice (5171) and Blade Flurry (13877) each give +20% melee haste (A_MOD_MELEE_HASTE_3, pin spell rows):
-    -- unmodelled until CORE C5's haste hook lets a pack aura rescale the swing clock (attack speed is secret in combat).
+    -- unmodelled: the core's aura field `swingHaste` (C5) would rescale the swing clock, not set here yet (attack speed
+    -- is secret in combat).
     blade_flurry = {
         id = 13877,
         duration = 15,

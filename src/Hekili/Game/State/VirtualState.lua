@@ -55,6 +55,7 @@ VS.Obs = {
     TargetDamage = 35, -- b: a WOUND amount the target took (UNIT_COMBAT, plain); VirtualState's own, past TDF's range
     PlayerHit = 36, -- a: I.HitKind; b: the amount (0: none, -1: a wound's secret amount); c: the attacker's level
     TargetRange = 37, -- a: the target's least distance in yards; b: its greatest (math.huge: no bound), the range poll's
+    -- (a = -1: the poll's age-out, no plain answer for 1.5 s: unknown)
     Avoided = 38, -- a: ability index; b: its cast's time; c: I.HitKind (DODGE, PARRY, MISS): our cast's own outcome on
     -- the target (Events/Rows.lua's pairing in its landing window, GAP AX); Families/Now.lua undoes and refunds it
     Crit = 39, -- a: ability index; b: its cast's time: our cast's own CRITICAL wound on the target (the same pairing);

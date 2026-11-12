@@ -107,7 +107,7 @@ end
 --- A `swingHaste` aura's gain (f, its multiplier) or fall (1 / f) at t (Families/Auras.lua, aura audit C5): each
 --- hand's swing in flight lands after (its time left) / f and the speed is speed / f, as the client rescales a running
 --- swing; the next PLAYER_SWING's duration is then the hasted one as observed. shortcut: one multiplier for every hand
---- (Rapid Fire's melee and ranged); a per-hand table when a pack needs one. Allocates nothing.
+--- (an aura that hastes melee and ranged alike); a per-hand table when a pack needs one. Allocates nothing.
 function I.SwingHaste(f, t)
     for h = 1, 3 do
         local sp = speed[h]
