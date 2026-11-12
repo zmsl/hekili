@@ -15932,6 +15932,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
@@ -16062,6 +16063,238 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).profile.signature.date	n
 options.packs.beast_mastery.Beast Mastery (wowsims.com).profile.signature.source	desc	If the Priority is based on a SimulationCraft profile or a popular guide, it is a good idea to provide a link to the source (especially before sharing).
 options.packs.beast_mastery.Beast Mastery (wowsims.com).profile.signature.source	name	Source
 options.packs.beast_mastery.Beast Mastery (wowsims.com).profile.warnings	name	Import Log
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com)	name	|cFF00B4FFBeast Mastery Turret (wowsims.com)|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).export	name	Export
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).export.exportString	name	Priority Export String
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).export.stressResults	name	Stress Test Results
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists	desc	Action Lists are used to determine which abilities should be used at what time.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists	name	Action Lists
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	desc	Select the action that will be recommended when this entry's criteria are met.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	name	Action
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.aimed_shot	|T136000:0|t Spell 19434
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.arcane_shot	|T136000:0|t Spell 3044
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.immolation_trap	|T136000:0|t Spell 13795
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.mongoose_bite	|T136000:0|t Spell 1495
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.sniper_shot	|T136000:0|t Spell 1310687
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.summon_hawk	|T136000:0|t Spell 1293241
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.wing_clip	|T136000:0|t Spell 2974
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	name	Entry
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 19574 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 3044
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 19434
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1310687
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	name	Action Name
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.arcane_shot	|T136000:0|t Spell 3044
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.immolation_trap	|T136000:0|t Spell 13795
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.mongoose_bite	|T136000:0|t Spell 1495
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.sniper_shot	|T136000:0|t Spell 1310687
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.summon_hawk	|T136000:0|t Spell 1293241
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.wing_clip	|T136000:0|t Spell 2974
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.defensive_state	|T136000:0|t Spell 5302
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.expose_prey	|T136000:0|t Spell 1310726
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.immolation_trap	|T136000:0|t Spell 14301
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.lacerating_strikes	|T136000:0|t Spell 1310536
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.rapid_killing	|T136000:0|t Spell 415407
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.sniper_shot	|T136000:0|t Spell 1310786
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.caption	name	Caption
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.criteria	name	Conditions
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.delListBtn	desc	Delete this Action List
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.description	name	Description
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.enabled	name	Enabled
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.listName	desc	Select the action list to view or modify.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.listName	name	Action List
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.list_name	name	Action List
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.max_energy	name	Max Energy
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAPL.strict_if	desc	If entered, these Immediate Criteria must be met before the Conditions above will be tested.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAPL.strict_if	name	Additional Immediate Criteria
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAsyncUsage.focus	desc	Timeline style: 0 is off; a tier (1 highest) makes this entry a focus candidate. When it is predicted within the focus horizon it takes the Now circle; the lowest tier wins, then the soonest.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAsyncUsage.focus	name	Focus Tier
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAsyncUsage.only_cwc	desc	If checked, this entry can only be used if you are channeling another spell.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAsyncUsage.only_cwc	name	During Channel
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAsyncUsage.use_off_gcd	desc	If checked, this entry can be checked even if the global cooldown (GCD) is active.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAsyncUsage.use_off_gcd	name	Use Off GCD
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAsyncUsage.use_while_casting	desc	If checked, this entry can be checked even if you are already casting or channeling.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAsyncUsage.use_while_casting	name	Use While Casting
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modCooldown.line_cd	desc	If set, this entry cannot be recommended unless this time has passed since the last time the ability was used.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modCooldown.line_cd	name	Entry Cooldown
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modCycle.cycle_targets	desc	If checked, the addon will check each available target and show whether to switch targets.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modCycle.cycle_targets	name	Cycle Targets
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modCycle.max_cycle_targets	desc	If cycle targets is checked, the addon will check up to the specified number of targets.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modCycle.max_cycle_targets	name	Max Cycle Targets
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modMoving.enable_moving	desc	If checked, this entry can only be recommended when your character movement matches the setting.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modMoving.enable_moving	name	Check Movement
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modMoving.moving	desc	If set, this entry can only be recommended when your movement matches the setting.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modMoving.moving	name	Movement
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modMoving.moving	values.0	Stationary
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modMoving.moving	values.1	Moving
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 20572)
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.newListBtn	desc	Create a New Action List
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.newListGroup.cancel	name	Cancel
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.newListGroup.createList	name	Add List
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.newListGroup.newListName	name	List Name
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	name	Operation
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.add	Add Value
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.ceil	Ceiling of Value
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.default	Set Default Value
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.div	Divide Value
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.floor	Floor of Value
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.max	Maximum of Values
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.min	Minimum of Values
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.mod	Modulo of Value
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.mul	Multiply Value
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.pow	Raise Value to X Power
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.reset	Reset to Default
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.set	Set Value
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.setif	Set Value If...
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.op	values.sub	Subtract Value
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.potion	name	Potion
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.sec	name	Seconds
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.showModifiers	desc	If checked, additional modifiers that are not currently used by this entry.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.showModifiers	name	Show Unused Modifiers (if applicable)
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.value	desc	Provide the value to store (or calculate) when this variable is invoked.\n\nIf Conditions are provided, this value is set when Conditions are met.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.value	name	Value
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.value_else	desc	Provide the value to store (or calculate) if Conditions are not met.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.var_name	name	Variable Name
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	name	Window Name
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	values.hha	hha
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	values.weave	weave
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack	name	|cFF00B4FFSummary|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.copyPack	desc	Copy Priority
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.deletePack	desc	Delete Priority
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.desc	name	Description
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.isBuiltIn	name	|cFF00B4FFThis is a default priority package.  It will be automatically updated when the addon is updated.  If you want to customize this priority, make a copy by clicking |TInterface\\Addons\\Hekili\\Textures\\WhiteCopy:0|t.|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.packName	name	Priority Name
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.reloadPack	desc	Reload Priority
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.spec	name	Specialization
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.spec	values.100031	|W|T132164:0::::64:64:4:60:4:60|t Beast Mastery|w
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.spec	values.100032	|W|T132222:0::::64:64:4:60:4:60|t Marksmanship|w
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.spec	values.100033	|W|T132215:0::::64:64:4:60:4:60|t Survival|w
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.toggleActive	desc	If checked, the addon's recommendations for this specialization are based on this priority package.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.toggleActive	name	|cFF00B4FFActive|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile	desc	If this Priority was generated with a SimulationCraft profile, the profile can be stored or retrieved here.  The profile can also be re-imported or overwritten with a newer profile.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile	name	Source
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.importWarning	name	You must be in the |T132164:0|t |cFFFFD100Beast Mastery|r specialization to import this priority.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.importWarningSpace	name	\032
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.profile	desc	If this pack's action lists were imported from a SimulationCraft profile, the profile is included here.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.profile	name	Priority (SimulationCraft Action Priority List)
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.profileConsiderations	name	\n|cFF00CCFFBefore trying to import a profile, please consider the following:|r\n\n |cFFFFD100•|r SimulationCraft action lists tend not to change significantly for individual characters.  The profiles are written to include conditions that work for all gear, talent, and other factors combined.\n\n |cFFFFD100•|r Most SimulationCraft action lists require some additional customization to work with the addon.  For example, |cFFFFD100target_if|r conditions don't translate directly to the addon and have to be rewritten.\n\n |cFFFFD100•|r Some SimulationCraft action profiles are revised for the addon to be more efficient and use less processing time.\n\n |cFFFFD100•|r This feature has been left in for tinkerers and advanced users.\n\n
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.profilewarning	name	|cFFFF0000You do not need to import a SimulationCraft profile to use this addon. No support is offered for custom or imported priorities from elsewhere.|r\n\n|cFF00CCFFThe default priorities included within the addon are kept up to date, are compatible with your character, and do not require additional changes.|r\n\n
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.reimport	desc	Clear existing action list(s) and load the priority above.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.reimport	name	Import
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.signature.author	desc	The author field is automatically filled out when creating a new Priority.  You can update it here.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.signature.author	name	Author
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.signature.date	desc	This date is automatically updated when any changes are made to the action lists for this Priority.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.signature.date	name	Last Updated
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.signature.source	desc	If the Priority is based on a SimulationCraft profile or a popular guide, it is a good idea to provide a link to the source (especially before sharing).
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.signature.source	name	Source
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).profile.warnings	name	Import Log
 options.packs.beast_mastery.core	desc	Core features and specialization options for |W|T132164:0::::64:64:4:60:4:60|t Beast Mastery|w.
 options.packs.beast_mastery.core	name	Specialization Settings
 options.packs.beast_mastery.core.activate	desc	Recommend for Beast Mastery from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
@@ -16075,6 +16308,7 @@ options.packs.beast_mastery.core.package	desc	The addon will use the selected pa
 options.packs.beast_mastery.core.package	name	Priority
 options.packs.beast_mastery.core.package	values.(none)	(none)
 options.packs.beast_mastery.core.package	values.Beast Mastery (wowsims.com)	|W|T132164:0::::64:64:4:60:4:60|t |cFF00B4FFBeast Mastery (wowsims.com)|r|w
+options.packs.beast_mastery.core.package	values.Beast Mastery Turret (wowsims.com)	|W|T132164:0::::64:64:4:60:4:60|t |cFF00B4FFBeast Mastery Turret (wowsims.com)|r|w
 options.packs.beast_mastery.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.beast_mastery.core.potion	name	Potion
 options.packs.beast_mastery.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
@@ -20085,6 +20319,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.w
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
@@ -20215,6 +20450,237 @@ options.packs.marksmanship.Marksmanship (wowsims.com).profile.signature.date	nam
 options.packs.marksmanship.Marksmanship (wowsims.com).profile.signature.source	desc	If the Priority is based on a SimulationCraft profile or a popular guide, it is a good idea to provide a link to the source (especially before sharing).
 options.packs.marksmanship.Marksmanship (wowsims.com).profile.signature.source	name	Source
 options.packs.marksmanship.Marksmanship (wowsims.com).profile.warnings	name	Import Log
+options.packs.marksmanship.Marksmanship Turret (wowsims.com)	name	|cFF00B4FFMarksmanship Turret (wowsims.com)|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).export	name	Export
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).export.exportString	name	Priority Export String
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).export.stressResults	name	Stress Test Results
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists	desc	Action Lists are used to determine which abilities should be used at what time.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists	name	Action Lists
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	desc	Select the action that will be recommended when this entry's criteria are met.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	name	Action
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.aimed_shot	|T136000:0|t Spell 19434
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.arcane_shot	|T136000:0|t Spell 3044
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.immolation_trap	|T136000:0|t Spell 13795
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.mongoose_bite	|T136000:0|t Spell 1495
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.sniper_shot	|T136000:0|t Spell 1310687
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.summon_hawk	|T136000:0|t Spell 1293241
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.wing_clip	|T136000:0|t Spell 2974
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	name	Entry
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 3044
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 19434
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1310687
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	name	Action Name
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.arcane_shot	|T136000:0|t Spell 3044
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.immolation_trap	|T136000:0|t Spell 13795
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.mongoose_bite	|T136000:0|t Spell 1495
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.sniper_shot	|T136000:0|t Spell 1310687
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.summon_hawk	|T136000:0|t Spell 1293241
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.wing_clip	|T136000:0|t Spell 2974
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.defensive_state	|T136000:0|t Spell 5302
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.expose_prey	|T136000:0|t Spell 1310726
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.immolation_trap	|T136000:0|t Spell 14301
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.lacerating_strikes	|T136000:0|t Spell 1310536
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.rapid_killing	|T136000:0|t Spell 415407
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.sniper_shot	|T136000:0|t Spell 1310786
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.caption	name	Caption
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.criteria	name	Conditions
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.delListBtn	desc	Delete this Action List
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.description	name	Description
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.enabled	name	Enabled
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.listName	desc	Select the action list to view or modify.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.listName	name	Action List
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.list_name	name	Action List
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.max_energy	name	Max Energy
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAPL.strict_if	desc	If entered, these Immediate Criteria must be met before the Conditions above will be tested.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAPL.strict_if	name	Additional Immediate Criteria
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAsyncUsage.focus	desc	Timeline style: 0 is off; a tier (1 highest) makes this entry a focus candidate. When it is predicted within the focus horizon it takes the Now circle; the lowest tier wins, then the soonest.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAsyncUsage.focus	name	Focus Tier
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAsyncUsage.only_cwc	desc	If checked, this entry can only be used if you are channeling another spell.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAsyncUsage.only_cwc	name	During Channel
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAsyncUsage.use_off_gcd	desc	If checked, this entry can be checked even if the global cooldown (GCD) is active.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAsyncUsage.use_off_gcd	name	Use Off GCD
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAsyncUsage.use_while_casting	desc	If checked, this entry can be checked even if you are already casting or channeling.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAsyncUsage.use_while_casting	name	Use While Casting
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modCooldown.line_cd	desc	If set, this entry cannot be recommended unless this time has passed since the last time the ability was used.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modCooldown.line_cd	name	Entry Cooldown
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modCycle.cycle_targets	desc	If checked, the addon will check each available target and show whether to switch targets.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modCycle.cycle_targets	name	Cycle Targets
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modCycle.max_cycle_targets	desc	If cycle targets is checked, the addon will check up to the specified number of targets.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modCycle.max_cycle_targets	name	Max Cycle Targets
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modMoving.enable_moving	desc	If checked, this entry can only be recommended when your character movement matches the setting.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modMoving.enable_moving	name	Check Movement
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modMoving.moving	desc	If set, this entry can only be recommended when your movement matches the setting.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modMoving.moving	name	Movement
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modMoving.moving	values.0	Stationary
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modMoving.moving	values.1	Moving
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 20572)
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.newListBtn	desc	Create a New Action List
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.newListGroup.cancel	name	Cancel
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.newListGroup.createList	name	Add List
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.newListGroup.newListName	name	List Name
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	name	Operation
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.add	Add Value
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.ceil	Ceiling of Value
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.default	Set Default Value
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.div	Divide Value
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.floor	Floor of Value
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.max	Maximum of Values
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.min	Minimum of Values
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.mod	Modulo of Value
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.mul	Multiply Value
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.pow	Raise Value to X Power
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.reset	Reset to Default
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.set	Set Value
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.setif	Set Value If...
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.op	values.sub	Subtract Value
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.potion	name	Potion
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.sec	name	Seconds
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.showModifiers	desc	If checked, additional modifiers that are not currently used by this entry.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.showModifiers	name	Show Unused Modifiers (if applicable)
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.value	desc	Provide the value to store (or calculate) when this variable is invoked.\n\nIf Conditions are provided, this value is set when Conditions are met.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.value	name	Value
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.value_else	desc	Provide the value to store (or calculate) if Conditions are not met.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.var_name	name	Variable Name
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	name	Window Name
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	values.hha	hha
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	values.weave	weave
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack	name	|cFF00B4FFSummary|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.copyPack	desc	Copy Priority
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.deletePack	desc	Delete Priority
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.desc	name	Description
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.isBuiltIn	name	|cFF00B4FFThis is a default priority package.  It will be automatically updated when the addon is updated.  If you want to customize this priority, make a copy by clicking |TInterface\\Addons\\Hekili\\Textures\\WhiteCopy:0|t.|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.packName	name	Priority Name
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.reloadPack	desc	Reload Priority
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.spec	name	Specialization
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.spec	values.100031	|W|T132164:0::::64:64:4:60:4:60|t Beast Mastery|w
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.spec	values.100032	|W|T132222:0::::64:64:4:60:4:60|t Marksmanship|w
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.spec	values.100033	|W|T132215:0::::64:64:4:60:4:60|t Survival|w
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.toggleActive	desc	If checked, the addon's recommendations for this specialization are based on this priority package.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.toggleActive	name	|cFF00B4FFActive|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile	desc	If this Priority was generated with a SimulationCraft profile, the profile can be stored or retrieved here.  The profile can also be re-imported or overwritten with a newer profile.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile	name	Source
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.importWarning	name	You must be in the |T132222:0|t |cFFFFD100Marksmanship|r specialization to import this priority.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.importWarningSpace	name	\032
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.profile	desc	If this pack's action lists were imported from a SimulationCraft profile, the profile is included here.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.profile	name	Priority (SimulationCraft Action Priority List)
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.profileConsiderations	name	\n|cFF00CCFFBefore trying to import a profile, please consider the following:|r\n\n |cFFFFD100•|r SimulationCraft action lists tend not to change significantly for individual characters.  The profiles are written to include conditions that work for all gear, talent, and other factors combined.\n\n |cFFFFD100•|r Most SimulationCraft action lists require some additional customization to work with the addon.  For example, |cFFFFD100target_if|r conditions don't translate directly to the addon and have to be rewritten.\n\n |cFFFFD100•|r Some SimulationCraft action profiles are revised for the addon to be more efficient and use less processing time.\n\n |cFFFFD100•|r This feature has been left in for tinkerers and advanced users.\n\n
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.profilewarning	name	|cFFFF0000You do not need to import a SimulationCraft profile to use this addon. No support is offered for custom or imported priorities from elsewhere.|r\n\n|cFF00CCFFThe default priorities included within the addon are kept up to date, are compatible with your character, and do not require additional changes.|r\n\n
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.reimport	desc	Clear existing action list(s) and load the priority above.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.reimport	name	|A:UI-LFG-DeclineMark:16:16|a Import
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.signature.author	desc	The author field is automatically filled out when creating a new Priority.  You can update it here.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.signature.author	name	Author
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.signature.date	desc	This date is automatically updated when any changes are made to the action lists for this Priority.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.signature.date	name	Last Updated
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.signature.source	desc	If the Priority is based on a SimulationCraft profile or a popular guide, it is a good idea to provide a link to the source (especially before sharing).
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.signature.source	name	Source
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).profile.warnings	name	Import Log
 options.packs.marksmanship.core	desc	Core features and specialization options for |W|T132222:0::::64:64:4:60:4:60|t Marksmanship|w.
 options.packs.marksmanship.core	name	Specialization Settings
 options.packs.marksmanship.core.activate	desc	Recommend for Marksmanship from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
@@ -20228,6 +20694,7 @@ options.packs.marksmanship.core.package	desc	The addon will use the selected pac
 options.packs.marksmanship.core.package	name	Priority
 options.packs.marksmanship.core.package	values.(none)	(none)
 options.packs.marksmanship.core.package	values.Marksmanship (wowsims.com)	|W|T132222:0::::64:64:4:60:4:60|t |cFF00B4FFMarksmanship (wowsims.com)|r|w
+options.packs.marksmanship.core.package	values.Marksmanship Turret (wowsims.com)	|W|T132222:0::::64:64:4:60:4:60|t |cFF00B4FFMarksmanship Turret (wowsims.com)|r|w
 options.packs.marksmanship.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.marksmanship.core.potion	name	Potion
 options.packs.marksmanship.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
@@ -21403,6 +21870,7 @@ options.packs.sharePacks.export.actionPack	values.Arms (wowsims.com)	Arms (wowsi
 options.packs.sharePacks.export.actionPack	values.Assassination (wowsims.com)	Assassination (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Balance (wowsims.com)	Balance (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Beast Mastery (wowsims.com)	Beast Mastery (wowsims.com)
+options.packs.sharePacks.export.actionPack	values.Beast Mastery Turret (wowsims.com)	Beast Mastery Turret (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Combat (wowsims.com)	Combat (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Demonology (wowsims.com)	Demonology (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Destruction (wowsims.com)	Destruction (wowsims.com)
@@ -21414,6 +21882,7 @@ options.packs.sharePacks.export.actionPack	values.Frostfire (wowsims.com)	Frostf
 options.packs.sharePacks.export.actionPack	values.Fury (wowsims.com)	Fury (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Guardian (wowsims.com)	Guardian (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Marksmanship (wowsims.com)	Marksmanship (wowsims.com)
+options.packs.sharePacks.export.actionPack	values.Marksmanship Turret (wowsims.com)	Marksmanship Turret (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Protection (wowsims.com)	Protection (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Retribution (wowsims.com)	Retribution (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.SM Ruin (wowsims.com)	SM Ruin (wowsims.com)
@@ -21422,6 +21891,8 @@ options.packs.sharePacks.export.actionPack	values.Shadow Brand (wowsims.com)	Sha
 options.packs.sharePacks.export.actionPack	values.Smite (wowsims.com)	Smite (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Subtlety (wowsims.com)	Subtlety (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Survival (wowsims.com)	Survival (wowsims.com)
+options.packs.sharePacks.export.actionPack	values.Survival Melee (wowsims.com)	Survival Melee (wowsims.com)
+options.packs.sharePacks.export.actionPack	values.Survival Turret (wowsims.com)	Survival Turret (wowsims.com)
 options.packs.sharePacks.export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
 options.packs.sharePacks.export.exportString	name	Priority Export String
 options.packs.sharePacks.export.guide	name	Select a Priority pack to export.
@@ -21879,6 +22350,7 @@ options.packs.survival.Survival (wowsims.com).lists.action_name	values.wait	|T13
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.survival.Survival (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
 options.packs.survival.Survival (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
@@ -22009,6 +22481,477 @@ options.packs.survival.Survival (wowsims.com).profile.signature.date	name	Last U
 options.packs.survival.Survival (wowsims.com).profile.signature.source	desc	If the Priority is based on a SimulationCraft profile or a popular guide, it is a good idea to provide a link to the source (especially before sharing).
 options.packs.survival.Survival (wowsims.com).profile.signature.source	name	Source
 options.packs.survival.Survival (wowsims.com).profile.warnings	name	Import Log
+options.packs.survival.Survival Melee (wowsims.com)	name	|cFF00B4FFSurvival Melee (wowsims.com)|r
+options.packs.survival.Survival Melee (wowsims.com).export	name	Export
+options.packs.survival.Survival Melee (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
+options.packs.survival.Survival Melee (wowsims.com).export.exportString	name	Priority Export String
+options.packs.survival.Survival Melee (wowsims.com).export.stressResults	name	Stress Test Results
+options.packs.survival.Survival Melee (wowsims.com).lists	desc	Action Lists are used to determine which abilities should be used at what time.
+options.packs.survival.Survival Melee (wowsims.com).lists	name	Action Lists
+options.packs.survival.Survival Melee (wowsims.com).lists.action	desc	Select the action that will be recommended when this entry's criteria are met.
+options.packs.survival.Survival Melee (wowsims.com).lists.action	name	Action
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.aimed_shot	|T136000:0|t Spell 19434
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.arcane_shot	|T136000:0|t Spell 3044
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.immolation_trap	|T136000:0|t Spell 13795
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.mongoose_bite	|T136000:0|t Spell 1495
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.sniper_shot	|T136000:0|t Spell 1310687
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.summon_hawk	|T136000:0|t Spell 1293241
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.wing_clip	|T136000:0|t Spell 2974
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	name	Entry
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2974 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffwalk_in|r, if |cffffd100target.outside5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 13795
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1293241
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 2974 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	name	Action Name
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.arcane_shot	|T136000:0|t Spell 3044
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.immolation_trap	|T136000:0|t Spell 13795
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.mongoose_bite	|T136000:0|t Spell 1495
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.sniper_shot	|T136000:0|t Spell 1310687
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.summon_hawk	|T136000:0|t Spell 1293241
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.wing_clip	|T136000:0|t Spell 2974
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.defensive_state	|T136000:0|t Spell 5302
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.expose_prey	|T136000:0|t Spell 1310726
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.immolation_trap	|T136000:0|t Spell 14301
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.lacerating_strikes	|T136000:0|t Spell 1310536
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.rapid_killing	|T136000:0|t Spell 415407
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.sniper_shot	|T136000:0|t Spell 1310786
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.survival.Survival Melee (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
+options.packs.survival.Survival Melee (wowsims.com).lists.caption	name	Caption
+options.packs.survival.Survival Melee (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
+options.packs.survival.Survival Melee (wowsims.com).lists.criteria	name	Conditions
+options.packs.survival.Survival Melee (wowsims.com).lists.delListBtn	desc	Delete this Action List
+options.packs.survival.Survival Melee (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
+options.packs.survival.Survival Melee (wowsims.com).lists.description	name	Description
+options.packs.survival.Survival Melee (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
+options.packs.survival.Survival Melee (wowsims.com).lists.enabled	name	Enabled
+options.packs.survival.Survival Melee (wowsims.com).lists.listName	desc	Select the action list to view or modify.
+options.packs.survival.Survival Melee (wowsims.com).lists.listName	name	Action List
+options.packs.survival.Survival Melee (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
+options.packs.survival.Survival Melee (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
+options.packs.survival.Survival Melee (wowsims.com).lists.listName	values.walk_in	walk_in
+options.packs.survival.Survival Melee (wowsims.com).lists.list_name	name	Action List
+options.packs.survival.Survival Melee (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
+options.packs.survival.Survival Melee (wowsims.com).lists.list_name	values.walk_in	walk_in
+options.packs.survival.Survival Melee (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.survival.Survival Melee (wowsims.com).lists.max_energy	name	Max Energy
+options.packs.survival.Survival Melee (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
+options.packs.survival.Survival Melee (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
+options.packs.survival.Survival Melee (wowsims.com).lists.modAPL.strict_if	desc	If entered, these Immediate Criteria must be met before the Conditions above will be tested.
+options.packs.survival.Survival Melee (wowsims.com).lists.modAPL.strict_if	name	Additional Immediate Criteria
+options.packs.survival.Survival Melee (wowsims.com).lists.modAsyncUsage.focus	desc	Timeline style: 0 is off; a tier (1 highest) makes this entry a focus candidate. When it is predicted within the focus horizon it takes the Now circle; the lowest tier wins, then the soonest.
+options.packs.survival.Survival Melee (wowsims.com).lists.modAsyncUsage.focus	name	Focus Tier
+options.packs.survival.Survival Melee (wowsims.com).lists.modAsyncUsage.only_cwc	desc	If checked, this entry can only be used if you are channeling another spell.
+options.packs.survival.Survival Melee (wowsims.com).lists.modAsyncUsage.only_cwc	name	During Channel
+options.packs.survival.Survival Melee (wowsims.com).lists.modAsyncUsage.use_off_gcd	desc	If checked, this entry can be checked even if the global cooldown (GCD) is active.
+options.packs.survival.Survival Melee (wowsims.com).lists.modAsyncUsage.use_off_gcd	name	Use Off GCD
+options.packs.survival.Survival Melee (wowsims.com).lists.modAsyncUsage.use_while_casting	desc	If checked, this entry can be checked even if you are already casting or channeling.
+options.packs.survival.Survival Melee (wowsims.com).lists.modAsyncUsage.use_while_casting	name	Use While Casting
+options.packs.survival.Survival Melee (wowsims.com).lists.modCooldown.line_cd	desc	If set, this entry cannot be recommended unless this time has passed since the last time the ability was used.
+options.packs.survival.Survival Melee (wowsims.com).lists.modCooldown.line_cd	name	Entry Cooldown
+options.packs.survival.Survival Melee (wowsims.com).lists.modCycle.cycle_targets	desc	If checked, the addon will check each available target and show whether to switch targets.
+options.packs.survival.Survival Melee (wowsims.com).lists.modCycle.cycle_targets	name	Cycle Targets
+options.packs.survival.Survival Melee (wowsims.com).lists.modCycle.max_cycle_targets	desc	If cycle targets is checked, the addon will check up to the specified number of targets.
+options.packs.survival.Survival Melee (wowsims.com).lists.modCycle.max_cycle_targets	name	Max Cycle Targets
+options.packs.survival.Survival Melee (wowsims.com).lists.modMoving.enable_moving	desc	If checked, this entry can only be recommended when your character movement matches the setting.
+options.packs.survival.Survival Melee (wowsims.com).lists.modMoving.enable_moving	name	Check Movement
+options.packs.survival.Survival Melee (wowsims.com).lists.modMoving.moving	desc	If set, this entry can only be recommended when your movement matches the setting.
+options.packs.survival.Survival Melee (wowsims.com).lists.modMoving.moving	name	Movement
+options.packs.survival.Survival Melee (wowsims.com).lists.modMoving.moving	values.0	Stationary
+options.packs.survival.Survival Melee (wowsims.com).lists.modMoving.moving	values.1	Moving
+options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
+options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
+options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
+options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 20572)
+options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.wait	name	Pooling Time
+options.packs.survival.Survival Melee (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
+options.packs.survival.Survival Melee (wowsims.com).lists.newListBtn	desc	Create a New Action List
+options.packs.survival.Survival Melee (wowsims.com).lists.newListGroup.cancel	name	Cancel
+options.packs.survival.Survival Melee (wowsims.com).lists.newListGroup.createList	name	Add List
+options.packs.survival.Survival Melee (wowsims.com).lists.newListGroup.newListName	name	List Name
+options.packs.survival.Survival Melee (wowsims.com).lists.op	name	Operation
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.add	Add Value
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.ceil	Ceiling of Value
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.default	Set Default Value
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.div	Divide Value
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.floor	Floor of Value
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.max	Maximum of Values
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.min	Minimum of Values
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.mod	Modulo of Value
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.mul	Multiply Value
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.pow	Raise Value to X Power
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.reset	Reset to Default
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.set	Set Value
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.setif	Set Value If...
+options.packs.survival.Survival Melee (wowsims.com).lists.op	values.sub	Subtract Value
+options.packs.survival.Survival Melee (wowsims.com).lists.potion	name	Potion
+options.packs.survival.Survival Melee (wowsims.com).lists.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.survival.Survival Melee (wowsims.com).lists.sec	name	Seconds
+options.packs.survival.Survival Melee (wowsims.com).lists.showModifiers	desc	If checked, additional modifiers that are not currently used by this entry.
+options.packs.survival.Survival Melee (wowsims.com).lists.showModifiers	name	Show Unused Modifiers (if applicable)
+options.packs.survival.Survival Melee (wowsims.com).lists.value	desc	Provide the value to store (or calculate) when this variable is invoked.\n\nIf Conditions are provided, this value is set when Conditions are met.
+options.packs.survival.Survival Melee (wowsims.com).lists.value	name	Value
+options.packs.survival.Survival Melee (wowsims.com).lists.value_else	desc	Provide the value to store (or calculate) if Conditions are not met.
+options.packs.survival.Survival Melee (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
+options.packs.survival.Survival Melee (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
+options.packs.survival.Survival Melee (wowsims.com).lists.var_name	name	Variable Name
+options.packs.survival.Survival Melee (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.survival.Survival Melee (wowsims.com).lists.window_name	name	Window Name
+options.packs.survival.Survival Melee (wowsims.com).lists.window_name	values.hha	hha
+options.packs.survival.Survival Melee (wowsims.com).lists.window_name	values.weave	weave
+options.packs.survival.Survival Melee (wowsims.com).pack	name	|cFF00B4FFSummary|r
+options.packs.survival.Survival Melee (wowsims.com).pack.copyPack	desc	Copy Priority
+options.packs.survival.Survival Melee (wowsims.com).pack.deletePack	desc	Delete Priority
+options.packs.survival.Survival Melee (wowsims.com).pack.desc	name	Description
+options.packs.survival.Survival Melee (wowsims.com).pack.isBuiltIn	name	|cFF00B4FFThis is a default priority package.  It will be automatically updated when the addon is updated.  If you want to customize this priority, make a copy by clicking |TInterface\\Addons\\Hekili\\Textures\\WhiteCopy:0|t.|r
+options.packs.survival.Survival Melee (wowsims.com).pack.packName	name	Priority Name
+options.packs.survival.Survival Melee (wowsims.com).pack.reloadPack	desc	Reload Priority
+options.packs.survival.Survival Melee (wowsims.com).pack.spec	name	Specialization
+options.packs.survival.Survival Melee (wowsims.com).pack.spec	values.100031	|W|T132164:0::::64:64:4:60:4:60|t Beast Mastery|w
+options.packs.survival.Survival Melee (wowsims.com).pack.spec	values.100032	|W|T132222:0::::64:64:4:60:4:60|t Marksmanship|w
+options.packs.survival.Survival Melee (wowsims.com).pack.spec	values.100033	|W|T132215:0::::64:64:4:60:4:60|t Survival|w
+options.packs.survival.Survival Melee (wowsims.com).pack.toggleActive	desc	If checked, the addon's recommendations for this specialization are based on this priority package.
+options.packs.survival.Survival Melee (wowsims.com).pack.toggleActive	name	|cFF00B4FFActive|r
+options.packs.survival.Survival Melee (wowsims.com).profile	desc	If this Priority was generated with a SimulationCraft profile, the profile can be stored or retrieved here.  The profile can also be re-imported or overwritten with a newer profile.
+options.packs.survival.Survival Melee (wowsims.com).profile	name	Source
+options.packs.survival.Survival Melee (wowsims.com).profile.importWarning	name	You must be in the |T132215:0|t |cFFFFD100Survival|r specialization to import this priority.
+options.packs.survival.Survival Melee (wowsims.com).profile.importWarningSpace	name	\032
+options.packs.survival.Survival Melee (wowsims.com).profile.profile	desc	If this pack's action lists were imported from a SimulationCraft profile, the profile is included here.
+options.packs.survival.Survival Melee (wowsims.com).profile.profile	name	Priority (SimulationCraft Action Priority List)
+options.packs.survival.Survival Melee (wowsims.com).profile.profileConsiderations	name	\n|cFF00CCFFBefore trying to import a profile, please consider the following:|r\n\n |cFFFFD100•|r SimulationCraft action lists tend not to change significantly for individual characters.  The profiles are written to include conditions that work for all gear, talent, and other factors combined.\n\n |cFFFFD100•|r Most SimulationCraft action lists require some additional customization to work with the addon.  For example, |cFFFFD100target_if|r conditions don't translate directly to the addon and have to be rewritten.\n\n |cFFFFD100•|r Some SimulationCraft action profiles are revised for the addon to be more efficient and use less processing time.\n\n |cFFFFD100•|r This feature has been left in for tinkerers and advanced users.\n\n
+options.packs.survival.Survival Melee (wowsims.com).profile.profilewarning	name	|cFFFF0000You do not need to import a SimulationCraft profile to use this addon. No support is offered for custom or imported priorities from elsewhere.|r\n\n|cFF00CCFFThe default priorities included within the addon are kept up to date, are compatible with your character, and do not require additional changes.|r\n\n
+options.packs.survival.Survival Melee (wowsims.com).profile.reimport	desc	Clear existing action list(s) and load the priority above.
+options.packs.survival.Survival Melee (wowsims.com).profile.reimport	name	|A:UI-LFG-DeclineMark:16:16|a Import
+options.packs.survival.Survival Melee (wowsims.com).profile.signature.author	desc	The author field is automatically filled out when creating a new Priority.  You can update it here.
+options.packs.survival.Survival Melee (wowsims.com).profile.signature.author	name	Author
+options.packs.survival.Survival Melee (wowsims.com).profile.signature.date	desc	This date is automatically updated when any changes are made to the action lists for this Priority.
+options.packs.survival.Survival Melee (wowsims.com).profile.signature.date	name	Last Updated
+options.packs.survival.Survival Melee (wowsims.com).profile.signature.source	desc	If the Priority is based on a SimulationCraft profile or a popular guide, it is a good idea to provide a link to the source (especially before sharing).
+options.packs.survival.Survival Melee (wowsims.com).profile.signature.source	name	Source
+options.packs.survival.Survival Melee (wowsims.com).profile.warnings	name	Import Log
+options.packs.survival.Survival Turret (wowsims.com)	name	|cFF00B4FFSurvival Turret (wowsims.com)|r
+options.packs.survival.Survival Turret (wowsims.com).export	name	Export
+options.packs.survival.Survival Turret (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
+options.packs.survival.Survival Turret (wowsims.com).export.exportString	name	Priority Export String
+options.packs.survival.Survival Turret (wowsims.com).export.stressResults	name	Stress Test Results
+options.packs.survival.Survival Turret (wowsims.com).lists	desc	Action Lists are used to determine which abilities should be used at what time.
+options.packs.survival.Survival Turret (wowsims.com).lists	name	Action Lists
+options.packs.survival.Survival Turret (wowsims.com).lists.action	desc	Select the action that will be recommended when this entry's criteria are met.
+options.packs.survival.Survival Turret (wowsims.com).lists.action	name	Action
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.aimed_shot	|T136000:0|t Spell 19434
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.arcane_shot	|T136000:0|t Spell 3044
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.immolation_trap	|T136000:0|t Spell 13795
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.mongoose_bite	|T136000:0|t Spell 1495
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.sniper_shot	|T136000:0|t Spell 1310687
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.summon_hawk	|T136000:0|t Spell 1293241
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.wing_clip	|T136000:0|t Spell 2974
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	name	Entry
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 3044
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 19434
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1310687
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	name	Action Name
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.arcane_shot	|T136000:0|t Spell 3044
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.immolation_trap	|T136000:0|t Spell 13795
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.mongoose_bite	|T136000:0|t Spell 1495
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.multi_shot	|T136000:0|t Spell 2643
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.sniper_shot	|T136000:0|t Spell 1310687
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.summon_hawk	|T136000:0|t Spell 1293241
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.wing_clip	|T136000:0|t Spell 2974
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.aspect_of_the_beast	|T136000:0|t Spell 13161
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.aspect_of_the_cheetah	|T136000:0|t Spell 5118
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.aspect_of_the_hawk	|T136000:0|t Spell 13165
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.defensive_state	|T136000:0|t Spell 5302
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.expose_prey	|T136000:0|t Spell 1310726
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.hunters_mark	|T136000:0|t Spell 1130
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.immolation_trap	|T136000:0|t Spell 14301
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.lacerating_strikes	|T136000:0|t Spell 1310536
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.quick_shots	|T136000:0|t Spell 6150
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.rapid_fire	|T136000:0|t Spell 3045
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.rapid_killing	|T136000:0|t Spell 415407
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.rapid_recuperation	|T136000:0|t Spell 1242512
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.resourcefulness	|T136000:0|t Spell 1242688
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.serpent_sting	|T136000:0|t Spell 1978
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.sniper_shot	|T136000:0|t Spell 1310786
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
+options.packs.survival.Survival Turret (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
+options.packs.survival.Survival Turret (wowsims.com).lists.caption	name	Caption
+options.packs.survival.Survival Turret (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
+options.packs.survival.Survival Turret (wowsims.com).lists.criteria	name	Conditions
+options.packs.survival.Survival Turret (wowsims.com).lists.delListBtn	desc	Delete this Action List
+options.packs.survival.Survival Turret (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
+options.packs.survival.Survival Turret (wowsims.com).lists.description	name	Description
+options.packs.survival.Survival Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
+options.packs.survival.Survival Turret (wowsims.com).lists.enabled	name	Enabled
+options.packs.survival.Survival Turret (wowsims.com).lists.listName	desc	Select the action list to view or modify.
+options.packs.survival.Survival Turret (wowsims.com).lists.listName	name	Action List
+options.packs.survival.Survival Turret (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
+options.packs.survival.Survival Turret (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
+options.packs.survival.Survival Turret (wowsims.com).lists.list_name	name	Action List
+options.packs.survival.Survival Turret (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
+options.packs.survival.Survival Turret (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.survival.Survival Turret (wowsims.com).lists.max_energy	name	Max Energy
+options.packs.survival.Survival Turret (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
+options.packs.survival.Survival Turret (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
+options.packs.survival.Survival Turret (wowsims.com).lists.modAPL.strict_if	desc	If entered, these Immediate Criteria must be met before the Conditions above will be tested.
+options.packs.survival.Survival Turret (wowsims.com).lists.modAPL.strict_if	name	Additional Immediate Criteria
+options.packs.survival.Survival Turret (wowsims.com).lists.modAsyncUsage.focus	desc	Timeline style: 0 is off; a tier (1 highest) makes this entry a focus candidate. When it is predicted within the focus horizon it takes the Now circle; the lowest tier wins, then the soonest.
+options.packs.survival.Survival Turret (wowsims.com).lists.modAsyncUsage.focus	name	Focus Tier
+options.packs.survival.Survival Turret (wowsims.com).lists.modAsyncUsage.only_cwc	desc	If checked, this entry can only be used if you are channeling another spell.
+options.packs.survival.Survival Turret (wowsims.com).lists.modAsyncUsage.only_cwc	name	During Channel
+options.packs.survival.Survival Turret (wowsims.com).lists.modAsyncUsage.use_off_gcd	desc	If checked, this entry can be checked even if the global cooldown (GCD) is active.
+options.packs.survival.Survival Turret (wowsims.com).lists.modAsyncUsage.use_off_gcd	name	Use Off GCD
+options.packs.survival.Survival Turret (wowsims.com).lists.modAsyncUsage.use_while_casting	desc	If checked, this entry can be checked even if you are already casting or channeling.
+options.packs.survival.Survival Turret (wowsims.com).lists.modAsyncUsage.use_while_casting	name	Use While Casting
+options.packs.survival.Survival Turret (wowsims.com).lists.modCooldown.line_cd	desc	If set, this entry cannot be recommended unless this time has passed since the last time the ability was used.
+options.packs.survival.Survival Turret (wowsims.com).lists.modCooldown.line_cd	name	Entry Cooldown
+options.packs.survival.Survival Turret (wowsims.com).lists.modCycle.cycle_targets	desc	If checked, the addon will check each available target and show whether to switch targets.
+options.packs.survival.Survival Turret (wowsims.com).lists.modCycle.cycle_targets	name	Cycle Targets
+options.packs.survival.Survival Turret (wowsims.com).lists.modCycle.max_cycle_targets	desc	If cycle targets is checked, the addon will check up to the specified number of targets.
+options.packs.survival.Survival Turret (wowsims.com).lists.modCycle.max_cycle_targets	name	Max Cycle Targets
+options.packs.survival.Survival Turret (wowsims.com).lists.modMoving.enable_moving	desc	If checked, this entry can only be recommended when your character movement matches the setting.
+options.packs.survival.Survival Turret (wowsims.com).lists.modMoving.enable_moving	name	Check Movement
+options.packs.survival.Survival Turret (wowsims.com).lists.modMoving.moving	desc	If set, this entry can only be recommended when your movement matches the setting.
+options.packs.survival.Survival Turret (wowsims.com).lists.modMoving.moving	name	Movement
+options.packs.survival.Survival Turret (wowsims.com).lists.modMoving.moving	values.0	Stationary
+options.packs.survival.Survival Turret (wowsims.com).lists.modMoving.moving	values.1	Moving
+options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
+options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
+options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
+options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 20572)
+options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
+options.packs.survival.Survival Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
+options.packs.survival.Survival Turret (wowsims.com).lists.newListBtn	desc	Create a New Action List
+options.packs.survival.Survival Turret (wowsims.com).lists.newListGroup.cancel	name	Cancel
+options.packs.survival.Survival Turret (wowsims.com).lists.newListGroup.createList	name	Add List
+options.packs.survival.Survival Turret (wowsims.com).lists.newListGroup.newListName	name	List Name
+options.packs.survival.Survival Turret (wowsims.com).lists.op	name	Operation
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.add	Add Value
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.ceil	Ceiling of Value
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.default	Set Default Value
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.div	Divide Value
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.floor	Floor of Value
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.max	Maximum of Values
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.min	Minimum of Values
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.mod	Modulo of Value
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.mul	Multiply Value
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.pow	Raise Value to X Power
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.reset	Reset to Default
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.set	Set Value
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.setif	Set Value If...
+options.packs.survival.Survival Turret (wowsims.com).lists.op	values.sub	Subtract Value
+options.packs.survival.Survival Turret (wowsims.com).lists.potion	name	Potion
+options.packs.survival.Survival Turret (wowsims.com).lists.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.survival.Survival Turret (wowsims.com).lists.sec	name	Seconds
+options.packs.survival.Survival Turret (wowsims.com).lists.showModifiers	desc	If checked, additional modifiers that are not currently used by this entry.
+options.packs.survival.Survival Turret (wowsims.com).lists.showModifiers	name	Show Unused Modifiers (if applicable)
+options.packs.survival.Survival Turret (wowsims.com).lists.value	desc	Provide the value to store (or calculate) when this variable is invoked.\n\nIf Conditions are provided, this value is set when Conditions are met.
+options.packs.survival.Survival Turret (wowsims.com).lists.value	name	Value
+options.packs.survival.Survival Turret (wowsims.com).lists.value_else	desc	Provide the value to store (or calculate) if Conditions are not met.
+options.packs.survival.Survival Turret (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
+options.packs.survival.Survival Turret (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
+options.packs.survival.Survival Turret (wowsims.com).lists.var_name	name	Variable Name
+options.packs.survival.Survival Turret (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.survival.Survival Turret (wowsims.com).lists.window_name	name	Window Name
+options.packs.survival.Survival Turret (wowsims.com).lists.window_name	values.hha	hha
+options.packs.survival.Survival Turret (wowsims.com).lists.window_name	values.weave	weave
+options.packs.survival.Survival Turret (wowsims.com).pack	name	|cFF00B4FFSummary|r
+options.packs.survival.Survival Turret (wowsims.com).pack.copyPack	desc	Copy Priority
+options.packs.survival.Survival Turret (wowsims.com).pack.deletePack	desc	Delete Priority
+options.packs.survival.Survival Turret (wowsims.com).pack.desc	name	Description
+options.packs.survival.Survival Turret (wowsims.com).pack.isBuiltIn	name	|cFF00B4FFThis is a default priority package.  It will be automatically updated when the addon is updated.  If you want to customize this priority, make a copy by clicking |TInterface\\Addons\\Hekili\\Textures\\WhiteCopy:0|t.|r
+options.packs.survival.Survival Turret (wowsims.com).pack.packName	name	Priority Name
+options.packs.survival.Survival Turret (wowsims.com).pack.reloadPack	desc	Reload Priority
+options.packs.survival.Survival Turret (wowsims.com).pack.spec	name	Specialization
+options.packs.survival.Survival Turret (wowsims.com).pack.spec	values.100031	|W|T132164:0::::64:64:4:60:4:60|t Beast Mastery|w
+options.packs.survival.Survival Turret (wowsims.com).pack.spec	values.100032	|W|T132222:0::::64:64:4:60:4:60|t Marksmanship|w
+options.packs.survival.Survival Turret (wowsims.com).pack.spec	values.100033	|W|T132215:0::::64:64:4:60:4:60|t Survival|w
+options.packs.survival.Survival Turret (wowsims.com).pack.toggleActive	desc	If checked, the addon's recommendations for this specialization are based on this priority package.
+options.packs.survival.Survival Turret (wowsims.com).pack.toggleActive	name	|cFF00B4FFActive|r
+options.packs.survival.Survival Turret (wowsims.com).profile	desc	If this Priority was generated with a SimulationCraft profile, the profile can be stored or retrieved here.  The profile can also be re-imported or overwritten with a newer profile.
+options.packs.survival.Survival Turret (wowsims.com).profile	name	Source
+options.packs.survival.Survival Turret (wowsims.com).profile.importWarning	name	You must be in the |T132215:0|t |cFFFFD100Survival|r specialization to import this priority.
+options.packs.survival.Survival Turret (wowsims.com).profile.importWarningSpace	name	\032
+options.packs.survival.Survival Turret (wowsims.com).profile.profile	desc	If this pack's action lists were imported from a SimulationCraft profile, the profile is included here.
+options.packs.survival.Survival Turret (wowsims.com).profile.profile	name	Priority (SimulationCraft Action Priority List)
+options.packs.survival.Survival Turret (wowsims.com).profile.profileConsiderations	name	\n|cFF00CCFFBefore trying to import a profile, please consider the following:|r\n\n |cFFFFD100•|r SimulationCraft action lists tend not to change significantly for individual characters.  The profiles are written to include conditions that work for all gear, talent, and other factors combined.\n\n |cFFFFD100•|r Most SimulationCraft action lists require some additional customization to work with the addon.  For example, |cFFFFD100target_if|r conditions don't translate directly to the addon and have to be rewritten.\n\n |cFFFFD100•|r Some SimulationCraft action profiles are revised for the addon to be more efficient and use less processing time.\n\n |cFFFFD100•|r This feature has been left in for tinkerers and advanced users.\n\n
+options.packs.survival.Survival Turret (wowsims.com).profile.profilewarning	name	|cFFFF0000You do not need to import a SimulationCraft profile to use this addon. No support is offered for custom or imported priorities from elsewhere.|r\n\n|cFF00CCFFThe default priorities included within the addon are kept up to date, are compatible with your character, and do not require additional changes.|r\n\n
+options.packs.survival.Survival Turret (wowsims.com).profile.reimport	desc	Clear existing action list(s) and load the priority above.
+options.packs.survival.Survival Turret (wowsims.com).profile.reimport	name	|A:UI-LFG-DeclineMark:16:16|a Import
+options.packs.survival.Survival Turret (wowsims.com).profile.signature.author	desc	The author field is automatically filled out when creating a new Priority.  You can update it here.
+options.packs.survival.Survival Turret (wowsims.com).profile.signature.author	name	Author
+options.packs.survival.Survival Turret (wowsims.com).profile.signature.date	desc	This date is automatically updated when any changes are made to the action lists for this Priority.
+options.packs.survival.Survival Turret (wowsims.com).profile.signature.date	name	Last Updated
+options.packs.survival.Survival Turret (wowsims.com).profile.signature.source	desc	If the Priority is based on a SimulationCraft profile or a popular guide, it is a good idea to provide a link to the source (especially before sharing).
+options.packs.survival.Survival Turret (wowsims.com).profile.signature.source	name	Source
+options.packs.survival.Survival Turret (wowsims.com).profile.warnings	name	Import Log
 options.packs.survival.core	desc	Core features and specialization options for |W|T132215:0::::64:64:4:60:4:60|t Survival|w.
 options.packs.survival.core	name	Specialization Settings
 options.packs.survival.core.activate	desc	Recommend for Survival from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
@@ -22022,6 +22965,8 @@ options.packs.survival.core.package	desc	The addon will use the selected package
 options.packs.survival.core.package	name	Priority
 options.packs.survival.core.package	values.(none)	(none)
 options.packs.survival.core.package	values.Survival (wowsims.com)	|W|T132215:0::::64:64:4:60:4:60|t |cFF00B4FFSurvival (wowsims.com)|r|w
+options.packs.survival.core.package	values.Survival Melee (wowsims.com)	|W|T132215:0::::64:64:4:60:4:60|t |cFF00B4FFSurvival Melee (wowsims.com)|r|w
+options.packs.survival.core.package	values.Survival Turret (wowsims.com)	|W|T132215:0::::64:64:4:60:4:60|t |cFF00B4FFSurvival Turret (wowsims.com)|r|w
 options.packs.survival.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.survival.core.potion	name	Potion
 options.packs.survival.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
@@ -22235,13 +23180,14 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili help	Use |cFFFFD100/hekili set|r to adjust toggles, display modes, and specialization settings via chat commands or macros.\n\n
 ~message	/hekili lock	UI locked.
 ~message	/hekili priority	Use |cFFFFD100/hekili priority name|r to change your current specialization's priority via command-line or macro.\nValid priority |cFFFFD100name|rs are:\n - |cFFFFD100Affliction (wowsims.com)|r |cFF00FF00(current)|r\n - |cFFFFD100SM Ruin (wowsims.com)|r \n\nTo create a new priority, see |cFFFFD100/hekili|r > |cFFFFD100Priorities|r.
+~message	/hekili priority	Use |cFFFFD100/hekili priority name|r to change your current specialization's priority via command-line or macro.\nValid priority |cFFFFD100name|rs are:\n - |cFFFFD100Beast Mastery (wowsims.com)|r |cFF00FF00(current)|r\n - |cFFFFD100Beast Mastery Turret (wowsims.com)|r \n\nTo create a new priority, see |cFFFFD100/hekili|r > |cFFFFD100Priorities|r.
 ~message	/hekili priority	Use |cFFFFD100/hekili priority name|r to change your current specialization's priority via command-line or macro.\n\n|cFFFF0000You must have multiple priorities for your specialization to use this feature.|r\n\nTo create a new priority, see |cFFFFD100/hekili|r > |cFFFFD100Priorities|r.
 ~message	/hekili priority Nope	No match found for priority 'nope'.\nValid options are: |cFFFFD100Affliction (wowsims.com)|r, |cFFFFD100SM Ruin (wowsims.com)|r.
 ~message	/hekili priority Nope	No match found for priority 'nope'.\nValid options are: |cFFFFD100Arcane (wowsims.com)|r.
 ~message	/hekili priority Nope	No match found for priority 'nope'.\nValid options are: |cFFFFD100Arms (wowsims.com)|r.
 ~message	/hekili priority Nope	No match found for priority 'nope'.\nValid options are: |cFFFFD100Assassination (wowsims.com)|r.
 ~message	/hekili priority Nope	No match found for priority 'nope'.\nValid options are: |cFFFFD100Balance (wowsims.com)|r.
-~message	/hekili priority Nope	No match found for priority 'nope'.\nValid options are: |cFFFFD100Beast Mastery (wowsims.com)|r.
+~message	/hekili priority Nope	No match found for priority 'nope'.\nValid options are: |cFFFFD100Beast Mastery (wowsims.com)|r, |cFFFFD100Beast Mastery Turret (wowsims.com)|r.
 ~message	/hekili priority Nope	No match found for priority 'nope'.\nValid options are: |cFFFFD100Elemental (wowsims.com)|r.
 ~message	/hekili priority Nope	No match found for priority 'nope'.\nValid options are: |cFFFFD100Protection (wowsims.com)|r.
 ~message	/hekili priority Nope	No match found for priority 'nope'.\nValid options are: |cFFFFD100Smite (wowsims.com)|r.
