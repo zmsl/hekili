@@ -404,18 +404,24 @@ describe("Forever Warrior", function()
     end)
 
     -- wowsims talents_fury.go:360-391: the aura's four charges each pay 5 rage on a white hit, none at the cast
-    it("pays Reckless Swings' 20 rage as four 5-rage ticks of its aura, not at the cast", function()
+    it("pays Reckless Swings' rage per landed white swing (a charge each), none at the cast", function()
         local e = lw.env(w)
         lw.run(w.abilities.reckless_swings.now, e)
         assert.are.same({}, e.gained)
         e = lw.env(w)
         lw.run(w.abilities.reckless_swings.handler, e)
         assert.are.same({}, e.gained)
-        local m = w.resource[2].reckless_swings
-        assert.are.same({ "reckless_swings", 2, 5 }, { m.aura, m.interval, m.value })
-        w.state.buff = { reckless_swings = { applied = 10 } }
-        w.state.query_time = 13.4
-        assert.are.equal(12, m.last())
+        assert.is_nil(w.resource[2].reckless_swings) -- no timed entry: the swings pay
+        local r = w.reactions.reckless_swings
+        assert.are.same({ "target", "land", nil }, { r.who, r.outcome, r.hand })
+        e = lw.env(w)
+        lw.run(r.now, e) -- aura down: nothing
+        assert.are.same({}, e.gained)
+        e = lw.env(w)
+        e.buff.reckless_swings = { up = true, stack = 4 }
+        lw.run(r.now, e)
+        assert.are.same({ 5 }, e.gained)
+        assert.are.same({ "reckless_swings" }, e.stackRemoved)
     end)
 
     it("spends the rest of the rage after Execute's cost in the belief, as the sim's handler and wowsims do", function()

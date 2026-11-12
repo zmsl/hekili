@@ -363,22 +363,6 @@ spec:RegisterResource(
                 return 1 + 0.25 * talent.improved_bloodrage.rank
             end,
         },
-
-        -- Reckless Swings' aura (1329555): four charges, each white hit pays 5 rage (wowsims talents_fury.go:360-391).
-        -- shortcut: the belief times a tick per `interval` of the aura's 8 s, not per swing (a charge-spending swing is
-        -- not readable): 2 s makes four ticks, 20 rage, the dual-wield pace; a two-hander's 3.5-4.5 s swings pay
-        -- fewer in 8 s. Upgrade when the entries can follow a swing clock and a charge count.
-        reckless_swings = {
-            aura = "reckless_swings",
-
-            last = function()
-                local app = state.buff.reckless_swings.applied
-                return app + floor((state.query_time - app) / 2) * 2
-            end,
-
-            interval = 2,
-            value = 5,
-        },
     },
     nil,
     {
@@ -902,6 +886,19 @@ end)
 local function stanceReady()
     return max(cooldown.battle_stance.remains, cooldown.defensive_stance.remains, cooldown.berserker_stance.remains)
 end
+
+-- Reckless Swings' charges (wowsims talents_fury.go:360-391): each landed white swing of either hand spends one and pays
+-- 5 rage, at the swing's own time (a reaction at the landed outcome; Families/Now.lua).
+spec:RegisterReaction("reckless_swings", {
+    who = "target",
+    outcome = "land",
+    now = function()
+        if buff.reckless_swings.up then
+            gain(5, "rage")
+            removeStack("reckless_swings")
+        end
+    end,
+})
 
 spec:RegisterAbilities({
     battle_shout = {
