@@ -74,9 +74,9 @@ return {
         { before = "multi_shot", line = "summon_hawk,if=action.summon_hawk.known&pet.hawk.count<2" },
         {
             before = "multi_shot",
-            line = "aimed_shot,if=active_enemies=1&target.outside8",
+            line = "aimed_shot,if=active_enemies=1&target.outside8&!moving",
         },
-        { before = "call_action_list", line = "volley,if=active_enemies>1&target.outside8" },
+        { before = "call_action_list", line = "volley,if=active_enemies>1&target.outside8&!moving" },
         { before = "call_action_list", line = "arcane_shot,if=target.outside8" },
     },
     leveling = {},
