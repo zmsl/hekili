@@ -7,11 +7,25 @@
 ### Changed
 
 ### Fixed
-- Life Tap (Warlock), Innervate (Feral, and Guardian in Cat Form) and Dark Sacrifice (Shadow Priest) are no longer recommended at full mana on characters with less mana than the level-60 character these priorities were written for (for example while leveling); they now wait until your mana is low for your own pool.
 
 ### Known issues
 
 ### Upgrade notes
+
+## v0.8.1
+
+_Released 2026-11-13_
+
+This release stops several mana abilities from being recommended at full mana on lower-level characters.
+
+### Druid
+- Feral, and Guardian in Cat Form: Innervate is no longer recommended at full mana on characters below level 60. It now waits until your mana is low for your own mana pool.
+
+### Priest
+- Shadow: Dark Sacrifice is no longer recommended at full mana on characters below level 60. It now waits until your mana is low for your own mana pool.
+
+### Warlock
+- Affliction, Demonology and Destruction: Life Tap is no longer recommended every global cooldown at full mana on characters below level 60. It now waits until your mana is low for your own mana pool.
 
 ## v0.8.0
 
