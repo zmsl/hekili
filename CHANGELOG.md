@@ -3,58 +3,92 @@
 ## Unreleased
 
 ### New
-- Recommend Target Swaps now works with the wowsims.com priorities. With the target-swap icon, Affliction Warlocks are shown their curse and Corruption on another enemy, Demonology, Shadow Brand and Destruction Warlocks their curse, Corruption and Immolate, and Elemental and Enhancement Shamans their Flame Shock (up to 3 enemies), until every enemy in the fight carries it. SM Ruin suggests no swaps. Destruction is also shown Bane of Havoc for another enemy, one at a time. It is off by default: turn on Recommend Target Swaps (right-click a display) or Allow Target Swaps in the spec's options. Hekili remembers the debuffs you put on each enemy you target; in dungeons it remembers enemies by their nameplate.
-- In dungeons, Hekili now counts the enemies around you from their nameplates: area-of-effect recommendations and target swaps work there. It counts the enemies you can attack whose nameplates are shown and that are within the spec's Enemy Range Radius, and your target once. With enemy nameplates off, or Count Nameplates off in the spec's options, it counts one enemy. When an enemy leaves, the count drops a moment later, so it does not flicker.
-- Target swaps, known limits: an enemy whose nameplate disappears is forgotten, so its debuff may be suggested again; how long your debuff has left on the enemies you are not targeting is estimated, not read; a debuff that spreads on its own counts only where Hekili models the spread; swaps need enemy nameplates shown (Show Enemy Nameplates and Show All Nameplates), in the open world too, since the enemies are counted by their nameplates.
-- Ranged specs now count enemies out to 30 yards, Hunters 35 (the Enemy Range Radius default; melee specs stay at 10), so area-of-effect lines and target swaps can now show at range. Beyond 10 yards, or when Hekili cannot tell the distance, only enemies in combat are counted (in dungeons too), so wildlife and mobs nobody has pulled are not; a mob in combat with another player nearby still counts.
-- Shaman: Stormstrike's debuff on the target (the extra damage your next Lightning Bolt, Chain Lightning or Earth Shock deals) now shows with the other auras.
-- Shaman: a totem you drop now shows its buff for the totem's life and takes down the buff of the totem it replaces, Mana Tide Totem adds its mana, Improved Stormstrike (2/2) is applied by Stormstrike and a dodge or parry on you readies Stormstrike, Maelstrom Weapon cuts Lightning Bolt by 4% a talent rank a stack, Nature's Swiftness makes the next Lightning Bolt or Chain Lightning instant, the Burning Totem relic lengthens Flame Shock, and Flurry, Elemental Devastation and Windfury Totem's attack-power buff are now known to the addon and shown when the game reports them.
-- A new Action Bar Glow page in the options can glow your real action bar buttons: the buttons that cast the first recommendation of a display in gold, and the second recommendation's in blue. It works on the game's keyboard and gamepad bars and on ElvUI, Bartender and Dominos, follows the display you choose, glows in combat only unless you change that, and works with the icons hidden. It is off by default.
-- Mage, Priest, Druid, Hunter and Paladin: the Revelation buff of the weapon enchant of that name now shows with the other auras when the game reports it; the Undead's Touch of the Grave likewise. They are shown, not predicted.
-- Custom priorities can check the kind of weapon you wear: `main_hand`, `off_hand` and `ranged` each answer `dagger`, `sword`, `axe`, `mace`, `fist`, `staff`, `polearm`, `bow`, `gun`, `crossbow`, `thrown` or `wand` (for example `main_hand.axe&main_hand.two_handed` for a two-handed axe).
-- Warlock: the Doomcaller's Attire set bonuses are counted when you wear them.
-- Priest: utility auras are now known to the addon, for custom priorities.
-- Custom priorities can label a recommendation: `label=R6` on a line shows "R6" on its icon, and `label_if=<condition>` shows it only while the condition holds (for example to mark a lower spell rank). `icon=` (a texture file ID or a texture path) with `icon_if=<condition>` asks the display to show a different icon for that line; a path the game does not have keeps the normal icon and adds a line to the Warnings, while a wrong file ID shows a blank icon (the game cannot tell).
-- Warrior: Weaponmaster now shows its three auras (`weaponmaster_axe_polearm`, `weaponmaster_mace_staff`, `weaponmaster_sword`) while you have the talent and hold that kind of weapon, for custom priorities. The sword's extra attack is not predicted.
 
 ### Changed
-- The Filter by Time-to-Die option under target swaps is hidden: the game never tells an addon how long an enemy will live, so it changed nothing.
-- Druid: in Cat Form, Feral and Guardian now recommend Claw instead of Shred while your target is attacking you (you cannot get behind it), and also when you have fewer than 2 points in Shredding Attacks, where Claw does more damage for its energy; Shred is still recommended with Clearcasting unless the target is attacking you. Claw is now shown as soon as you have its energy. Who your target is attacking can be read in the open world; in dungeons the game hides it, so Shred is assumed as before (or "Always Behind" decides). Turn on "Always Behind" if you can always get behind your target.
-- The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
-- Hekili now reads your target's distance from LibRangeCheck, the range library other addons use, instead of from your abilities' ranges. Priorities that check how far away the target is use its answer, which comes in steps of about 5 yards. The melee range check of a display style shows the target as in melee while its distance is unknown.
-- Rogue: a Shank at 5 of 5 Boot Knife now counts its 2 combo points in the forecast, and the opening Poised discount (10 energy, plus Composure's 5 or 10) is priced on the abilities it covers, so the first recommendations after a pull see the energy you really have. The Remorseless buff is known to the addon and shown when the game reports it.
-- Hunter: Rapid Killing now shortens Rapid Fire's cooldown (60 seconds a rank), so a long fight shows the second Rapid Fire sooner. Aspect of the Cheetah and Dazed are known to the addon for custom priorities, and the Cryptstalker set bonuses (Rapid Fire 4 seconds longer, Multi-Shot and Aimed Shot 20 mana cheaper) are counted when you wear them.
 
 ### Fixed
-- Warlock: with your damage-over-time spells up, a Warlock without the spec's usual filler (Wrack, Incinerate or Searing Pain: a talent you did not take, or a spell you have not learned yet) is now shown Shadow Bolt instead of Life Tap at full mana. Life Tap at the end of the priority now shows only when you do not have the mana for Shadow Bolt. Destruction without Incinerate (before level 18, or at any level without the Incinerate talent while Bane of Doom is running out) no longer shows Immolate on every global cooldown while Immolate is up: Immolate shows again only when it would wear off within a Shadow Bolt cast.
-- In dungeons (and in raids, if the game hides targets there too), switching targets with Tab no longer makes a debuff that the Cooldown Manager shows on your new target (such as Faerie Fire) look missing, so it is no longer recommended again.
-- In dungeons (and in raids, if the game hides targets there too), the debuffs you put on an enemy are remembered when you Tab away and back, as long as its nameplate stays shown, so they are not recommended again while they are still up.
-- If the range library stops answering during a fight, Hekili now treats your target's distance as unknown after 1.5 seconds instead of keeping the last distance it read. In dungeons, enemies beyond the range set for counting targets are now left out of the count.
-- A display style whose range check is set to melee no longer raises a Lua error in dungeons while you target an enemy: Hekili now ships the newer LibRangeCheck-3.0.
-- Gnome Warriors, Rogues, Mages, Warlocks and Priests: Eureka! now lasts 8 seconds and makes every ability it covers cost 10% less (it was 15 seconds and three casts), so it is still suggested closer to the end of a fight.
-- Protection Warriors: the default priority's Thunder Clap line again checks for the Thunderfury slow; it reads down in combat, so nothing changes unless you can see the debuff.
-- Druid: Balance now reads the Eclipse and Nature's Grace buffs in combat through the Cooldown Manager's talent entries, Starfire's cast time follows Improved Starfire, the Eclipse charge and Nature's Grace (Wrath follows Nature's Grace too), Nature's Swiftness makes the next Wrath instant, and the Haruspex's Garb 3-piece lengthens Faerie Fire by 5 seconds.
-- Druid: the Wrath that Nature's Swiftness makes instant now uses the buff up as soon as you cast it, so the next Wrath is no longer shown as instant.
-- Druid: each Starfire you cast now uses up one Eclipse charge, so the next Starfire is no longer shown with the shorter cast of a charge already used.
-- Druid: Nature's Grace now shortens the global cooldown too (about 1.23 seconds on Wrath, Starfire, Moonfire and the other Balance and healing spells, 1.36 on the rest), so the recommendations after a crit come on time.
-- Druid and Warrior: rage now runs down out of combat at the measured 1.25 a second, in any form and between the addon's updates, and the highest rage the addon allows for falls with it, so an out-of-combat Cat Form no longer keeps a few points of rage you do not have. Feral Charge's usable answers stop setting a rage floor outside Bear Form, and a Feral Charge outside Bear Form spends no rage. Shifting into Bear Form now counts Furor's 10 rage: certain at 5/5, possible below.
-- Druid: shifting into Cat Form now sets your energy as the game does: none without Furor, and with Furor its 20% a rank of the energy you left Cat Form with plus 10 a second you spent out of Bear Form, so the first recommendations after a shift no longer count energy you do not have.
-- Warrior: Deep Wound is read from the Cooldown Manager's copy of the debuff, Flurry counts its three charges, Retaliation its 30, and Gore Drinker's buff is tracked from the abilities that grant it.
-- Warlock: Affliction and Shadow Brand (wowsims.com) now react to the Revelation weapon enchant's proc, Decimation and Shadow Trance are now also read from the spell's glow in combat where the game lights it, and Destruction (wowsims.com) now tracks Shadow and Flame's buffs the way wowsims does.
-- Priest: Shadow (wowsims.com) now counts Dark Inspiration as soon as you cast Mind Blast, so the mana estimate no longer ignores it.
-- Paladin: Seal of Justice, Light and Wisdom now count as a seal for Judgement, and Protection (wowsims.com) suggests Templar's Bulwark whenever it is ready and Cooldowns are on.
-- Mage: Fingers of Frost is followed under the id the game shows, Combustion ends with its crit counter, and Master of Elements' mana refund now counts when the crit of a Fire or Frost spell is seen.
-- Paladin: a landed Shieldsworn Holy Strike returns its mana, but only when the game shows target hit data (it does not on live today).
-- Warlock: a hard-cast Shadow Bolt no longer uses up Shadow Trance.
-- Mage: Fire Blast spends a Fingers of Frost charge at the cast.
-- Retribution Paladins: each landed melee swing now stores an Echo of the seal that was up when you swung, even when you change seals before the hit shows, so a seal twist is timed from the right Echo.
-- Druids and Rogues: after a /reload in combat, the estimate of your energy now refills at 10 a second straight away, instead of staying low until you leave combat.
-- Druid: Faerie Fire in Cat Form now takes the cat's 1 second global cooldown, as the game gives it, so the ability after it (such as Rake) is no longer shown about half a second late.
 
 ### Known issues
 
 ### Upgrade notes
-- Update the core addon (Hekili) together with its class addons (content API 14). A mismatched pair loads no priorities and says "update the older one".
+
+## v0.8.0
+
+_Released 2026-11-13_
+
+v0.8.0 adds target-swap suggestions to the wowsims.com priorities, counts dungeon enemies from their nameplates, can glow your real action bar buttons, and fixes many class recommendations.
+
+### Druid
+- Feral and Guardian (Cat Form): Claw replaces Shred while your target is attacking you, or with fewer than 2 points in Shredding Attacks. Shred still shows with Clearcasting unless the target is attacking you.
+- Claw now shows as soon as you have its energy. In dungeons the game hides who your target is attacking, so Shred is assumed as before. Turn on "Always Behind" if you can always get behind your target.
+- Balance: Eclipse and Nature's Grace are read in combat. Starfire's cast time follows Improved Starfire, Eclipse and Nature's Grace, and Wrath's follows Nature's Grace.
+- Balance: Nature's Swiftness makes only the next Wrath instant, and each Starfire uses up one Eclipse charge, so later casts no longer show the wrong cast time.
+- Balance: Nature's Grace now shortens the global cooldown too, so recommendations after a crit come on time.
+- The Haruspex's Garb 3-piece bonus lengthens Faerie Fire by 5 seconds.
+- Faerie Fire in Cat Form now takes the 1-second global cooldown, so the next ability (such as Rake) is no longer shown about half a second late.
+- Shifting into Cat Form sets your energy as the game does: none without Furor. Shifting into Bear Form counts Furor's 10 rage.
+- Rage now drains out of combat at 1.25 a second in any form, so Cat Form no longer keeps rage you don't have. Feral Charge outside Bear Form costs no rage.
+- After a /reload in combat, energy refills at 10 a second right away instead of staying low.
+### Hunter
+- Rapid Killing now shortens Rapid Fire's cooldown by 60 seconds a rank, so the second Rapid Fire shows sooner in long fights.
+- Cryptstalker set bonuses are counted: Rapid Fire lasts 4 seconds longer, and Multi-Shot and Aimed Shot cost 20 less mana.
+- Custom priorities can check Aspect of the Cheetah and Dazed.
+### Mage
+- Fingers of Frost is tracked correctly, and Fire Blast uses a charge when you cast it.
+- Combustion ends with its crit counter, and Master of Elements' mana refund counts when you see a Fire or Frost spell crit.
+### Paladin
+- Seal of Justice, Seal of Light and Seal of Wisdom now count as a seal for Judgement.
+- Protection (wowsims.com) suggests Templar's Bulwark whenever it is ready and Cooldowns are on.
+- Retribution: each landed swing stores an Echo of the seal that was up when you swung, even if you change seals before the hit shows, so seal twists are timed correctly.
+### Priest
+- Shadow (wowsims.com) counts Dark Inspiration as soon as you cast Mind Blast, so the mana estimate includes it.
+- Utility auras are now available to custom priorities.
+### Rogue
+- A Shank at 5/5 Boot Knife counts its 2 combo points. The opening Poised discount (plus Composure) is now priced in, so the first recommendations after a pull see your real energy.
+- The Remorseless buff now shows when the game reports it.
+- After a /reload in combat, energy refills at 10 a second right away.
+### Shaman
+- Elemental and Enhancement (wowsims.com): with Recommend Target Swaps on, Flame Shock is suggested on other enemies, up to 3.
+- Stormstrike's debuff on your target now shows with your other auras.
+- A totem you drop shows its buff for the totem's life and removes the buff of the totem it replaces. Mana Tide Totem adds its mana.
+- Improved Stormstrike (2/2) is applied by Stormstrike, and a dodge or parry on you readies Stormstrike.
+- Maelstrom Weapon's effect on Lightning Bolt now scales with talent rank: 4% a rank, per stack.
+- Nature's Swiftness makes the next Lightning Bolt or Chain Lightning instant. The Burning Totem relic lengthens Flame Shock.
+- Flurry, Elemental Devastation and Windfury Totem's attack power buff now show when the game reports them.
+### Warlock
+- wowsims.com priorities: with Recommend Target Swaps on, you are shown your curse and Corruption on other enemies (plus Immolate for Demonology, Shadow Brand and Destruction).
+- Destruction is also shown Bane of Havoc on another enemy, one at a time. SM Ruin suggests no swaps.
+- If you lack your spec's usual filler (Wrack, Incinerate or Searing Pain), you are now shown Shadow Bolt instead of Life Tap at full mana once your damage-over-time spells are up.
+- The final Life Tap now shows only when you can't afford Shadow Bolt.
+- Destruction without Incinerate no longer shows Immolate on every global cooldown. It returns only when Immolate would wear off within a Shadow Bolt cast.
+- A hard-cast Shadow Bolt no longer uses up Shadow Trance. Shadow Trance and Decimation are also read from the spell's glow in combat.
+- Affliction and Shadow Brand (wowsims.com) react to the Revelation enchant's proc. Destruction (wowsims.com) tracks Shadow and Flame the way wowsims does.
+- Doomcaller's Attire set bonuses are counted when you wear them.
+### Warrior
+- Deep Wound, Flurry's three charges, Retaliation's 30 charges and Gore Drinker's buff are now tracked correctly.
+- Custom priorities can check Weaponmaster's auras while you hold the matching weapon. The sword's extra attack is not predicted.
+- Rage drains out of combat at 1.25 a second, so you are no longer shown rage you don't have.
+### Core and display
+- Recommend Target Swaps now works with the wowsims.com priorities. It is off by default: right-click a display, or turn on Allow Target Swaps in the spec's options.
+- Hekili remembers the debuffs you put on each enemy you target; in dungeons it remembers enemies by their nameplate.
+- Dungeons: enemies are now counted from their nameplates, so area-of-effect recommendations and target swaps work there. With enemy nameplates or Count Nameplates off, Hekili counts one enemy.
+- Ranged specs now count enemies out to 30 yards and Hunters to 35; melee specs stay at 10. Beyond 10 yards, only enemies in combat count.
+- New Action Bar Glow page (off by default): your real buttons glow gold for the first recommendation and blue for the second.
+- Action Bar Glow works on the game's keyboard and gamepad bars and on ElvUI, Bartender and Dominos, even with the icons hidden.
+- SpellFlash options are removed (they never worked on Forever) and saved SpellFlash settings are ignored. The useless Filter by Time-to-Die option is hidden.
+- Target distance now comes from LibRangeCheck in steps of about 5 yards. If it stops answering, the distance counts as unknown after 1.5 seconds.
+- A display style's melee range check no longer causes a Lua error in dungeons.
+- Dungeons: tabbing between targets no longer makes debuffs you already applied (such as Faerie Fire) look missing and get recommended again.
+- The Revelation weapon enchant buff (Mage, Priest, Druid, Hunter, Paladin) and the Undead's Touch of the Grave now show when the game reports them.
+- Gnomes: Eureka! now lasts 8 seconds and makes covered abilities cost 10% less, so it is still suggested closer to the end of a fight.
+- Custom priorities can check the kind of weapon in your main hand, off hand and ranged slot (dagger, sword, axe, bow, wand and more).
+- Custom priorities can put a text label on a line's icon or show a different icon, each optionally only while a condition holds.
+- Update Hekili and its class addons together: a mismatched pair loads no priorities and says to update the older one.
+### Known issues
+- Target swaps need enemy nameplates shown (Show Enemy Nameplates and Show All Nameplates), in the open world too.
+- An enemy whose nameplate disappears is forgotten, so its debuff may be suggested again.
+- Time left on your debuffs on enemies you aren't targeting is estimated, not read.
+- A debuff that spreads on its own is counted only where Hekili models the spread.
 
 ## v0.7.3
 
