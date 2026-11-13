@@ -107,13 +107,16 @@ local IMPROVED_EXPOSE_ARMOR = { [0] = 0, 5, 10 }
 local EFFICIENT_STRIKES = { [0] = 0, 3, 5 }
 -- Composure (1329265, the rank curve {-5, -10}): joins Poised's own discount, on the abilities the buff names (wowsims
 -- poised.go). The -10 is the cost modifier below; this is the talent's part, a cost step the abilities' `spend` takes
--- while the aura is up (`buff` and `talent` are the caller's: the sim's state or the belief's).
+-- while the aura is up (`buff` and `talent` are the caller's: the sim's state or the belief's). `mult`: a percent cost
+-- talent's factor (Dirty Tricks). wowsims applies the flat modifiers before the percent ones (core/spell.go:1056-1058),
+-- while the core's Poised -10 lands after `spend`, so with Poised up `spend` returns (cost - Composure - 10) x mult + 10.
 local COMPOSURE = { [0] = 0, 5, 10 }
-local function poised(buff, talent, cost)
+local function poised(buff, talent, cost, mult)
+    mult = mult or 1
     if buff.poised.up then
-        cost = cost - COMPOSURE[talent.composure.rank]
+        return max(0, (cost - COMPOSURE[talent.composure.rank] - 10) * mult + 10)
     end
-    return max(0, cost)
+    return max(0, cost * mult)
 end
 
 local function rest(ids)
@@ -149,7 +152,7 @@ spec:RegisterResource(Enum.PowerType.ComboPoints)
 -- refundOnAvoid: the share of the energy an ability flagged `refundOnAvoid = true` gives back when dodged, parried or
 -- missed (wowsims/forever's MissRefund, spelldata/attributes.go: 0.8 where the DB2 flags Discount Power On Miss and the
 -- spell issues the refund). Not Slice and Dice, Vanish or the poisons; Gouge is flagged in the DB2 but wowsims issues
--- no refund for it (and the kit has no Gouge).
+-- no refund for it, so its registration below leaves `refundOnAvoid` off.
 spec:RegisterResource(Enum.PowerType.Energy, {
     adrenaline_rush = { aura = "adrenaline_rush", mult = 2 },
 }, nil, { regen = 10, refundOnAvoid = 0.8 })
@@ -483,7 +486,21 @@ local function poison(name, items, slot, key)
     }
 end
 
-spec:RegisterAbilities({
+-- Preparation's reset set (owner, ledger L854: Forever's Preparation finishes the cooldown of every other Rogue
+-- ability, as the Classic tooltip says; wowsims's list is narrower): every Rogue ability this file registers with a
+-- cooldown, from the two Rogue tables below (not the poisons, racials or items, registered elsewhere). Load time only.
+local PREPARATION_RESETS = {}
+local function rogue(abilities)
+    for key, a in pairs(abilities) do
+        if key ~= "preparation" and a.cooldown ~= 0 then
+            PREPARATION_RESETS[#PREPARATION_RESETS + 1] = key
+        end
+    end
+    table.sort(PREPARATION_RESETS)
+    return abilities
+end
+
+spec:RegisterAbilities(rogue({
     adrenaline_rush = {
         id = 13750,
         cast = 0,
@@ -853,8 +870,8 @@ spec:RegisterAbilities({
         end,
     },
 
-    -- Finishes the cooldowns of Cold Blood, Premeditation, Vanish, Ghostly Strike, Blade Flurry, Adrenaline Rush and Riposte
-    -- (wowsims's list: a server script, no client data).
+    -- Finishes the cooldowns of every other Rogue ability (PREPARATION_RESETS, above; owner, ledger L854). `resets`
+    -- names the set for the harness world.
     preparation = {
         id = 14185,
         cast = 0,
@@ -864,25 +881,18 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows(PREPARATION),
         toggle = "cooldowns",
+        resets = PREPARATION_RESETS,
 
         now = function()
-            setCooldown("cold_blood", 0)
-            setCooldown("premeditation", 0)
-            setCooldown("vanish", 0)
-            setCooldown("ghostly_strike", 0)
-            setCooldown("blade_flurry", 0)
-            setCooldown("adrenaline_rush", 0)
-            setCooldown("riposte", 0)
+            for i = 1, #PREPARATION_RESETS do
+                setCooldown(PREPARATION_RESETS[i], 0)
+            end
         end,
 
         handler = function()
-            setCooldown("cold_blood", 0)
-            setCooldown("premeditation", 0)
-            setCooldown("vanish", 0)
-            setCooldown("ghostly_strike", 0)
-            setCooldown("blade_flurry", 0)
-            setCooldown("adrenaline_rush", 0)
-            setCooldown("riposte", 0)
+            for i = 1, #PREPARATION_RESETS do
+                setCooldown(PREPARATION_RESETS[i], 0)
+            end
         end,
     },
 
@@ -1091,7 +1101,7 @@ spec:RegisterAbilities({
             spend(combo_points.current, "combo_points")
         end,
     },
-})
+}))
 
 -- The manual-press abilities (registered so a press costs what it costs and starts its cooldown; no priority
 -- recommends them; costs, cooldowns and GCDs from the pin's spells_auto_gen.go). The ones that strike break Stealth and
@@ -1107,7 +1117,7 @@ local SPRINT = { 2983, 8696, 11305 }
 local DISTRACT = { 1725 }
 local REDIRECT = { 438040 } -- unverified on Forever: `known` hides it where the spellbook has no such spell
 
-spec:RegisterAbilities({
+spec:RegisterAbilities(rogue({
     -- 20 energy, 10 s; wowsims refunds a dodged or parried one (feint.go).
     feint = {
         id = 1966,
@@ -1225,7 +1235,7 @@ spec:RegisterAbilities({
         gcd = "totem",
 
         spend = function()
-            return poised(buff, talent, 65 * (1 - 0.25 * talent.dirty_tricks.rank))
+            return poised(buff, talent, 65, 1 - 0.25 * talent.dirty_tricks.rank)
         end,
         spendType = "energy",
 
@@ -1242,7 +1252,7 @@ spec:RegisterAbilities({
         end,
     },
 
-    -- 30 energy (Dirty Tricks -25% a rank), 300 s (Elusiveness -45 s a rank); a Flash Powder is the client's to check.
+    -- 30 energy (Dirty Tricks -25% a rank), 300 s (Elusiveness -45 s a rank); a Blinding Powder is the client's to check.
     blind = {
         id = 2094,
         cast = 0,
@@ -1252,7 +1262,7 @@ spec:RegisterAbilities({
         gcd = "totem",
 
         spend = function()
-            return poised(buff, talent, 30 * (1 - 0.25 * talent.dirty_tricks.rank))
+            return poised(buff, talent, 30, 1 - 0.25 * talent.dirty_tricks.rank)
         end,
         spendType = "energy",
 
@@ -1333,7 +1343,7 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows(REDIRECT),
     },
-})
+}))
 
 -- The poison reminders (no wowsims.com list recommends them yet).
 spec:RegisterAbilities({

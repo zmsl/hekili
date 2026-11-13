@@ -260,19 +260,30 @@ describe("Forever Rogue", function()
 
     -- Relentless Strikes (14179, rank curve {4..20} % a point, 14181's 25 energy): the expectation, chance x points x 25
     it("refunds Relentless Strikes's expected energy by rank and points, on every finisher in its mask", function()
-        local function gain(key, cp, n)
+        local function gain(key, cp, n, field)
             local env = ld.env(w)
             env.talent = rank(n)
             env.combo_points.current = cp
-            ld.run(w.abilities[key].handler, env)
+            ld.run(w.abilities[key][field], env)
             return env.gained[1] and env.gained[1][1] or 0
         end
-        for _, key in ipairs({ "eviscerate", "expose_armor", "rupture", "slice_and_dice", "death_mark", "kidney_shot" }) do
-            assert.are.equal(0, gain(key, 5, 0), key)
-            assert.is_true(math.abs(gain(key, 3, 2) - 25 * 0.24) < 1e-9, key)
-            assert.is_true(math.abs(gain(key, 1, 1) - 25 * 0.04) < 1e-9, key)
-            assert.are.equal(25, gain(key, 5, 5), key)
-            assert.is_true(math.abs(gain(key, 5, 3) - 25 * 0.6) < 1e-9, key) -- 12% a point x 5 points: 60%
+        -- the sim's `handler` and the belief's `now` both pay it
+        for _, field in ipairs({ "handler", "now" }) do
+            for _, key in ipairs({
+                "eviscerate",
+                "expose_armor",
+                "rupture",
+                "slice_and_dice",
+                "death_mark",
+                "kidney_shot",
+            }) do
+                local at = key .. " " .. field
+                assert.are.equal(0, gain(key, 5, 0, field), at)
+                assert.is_true(math.abs(gain(key, 3, 2, field) - 25 * 0.24) < 1e-9, at)
+                assert.is_true(math.abs(gain(key, 1, 1, field) - 25 * 0.04) < 1e-9, at)
+                assert.are.equal(25, gain(key, 5, 5, field), at)
+                assert.is_true(math.abs(gain(key, 5, 3, field) - 25 * 0.6) < 1e-9, at) -- 12% a point x 5 points: 60%
+            end
         end
     end)
 
@@ -293,6 +304,46 @@ describe("Forever Rogue", function()
         for n, want in ipairs({ 8, 6, 4 }) do -- Camouflage 13975's second effect: -2 s a rank on Stealth
             assert.are.equal(want, cd("stealth", "camouflage", n))
         end
+        -- the runHandler hook: a combat-starting press out of Stealth starts Stealth's cooldown, Camouflage's too
+        for n, want in pairs({ [0] = 10, 8, 6, 4 }) do
+            local env = ld.env(w)
+            env.talent = setmetatable({ camouflage = { rank = n, enabled = n > 0 } }, { __index = rank(0) })
+            env.buff = setmetatable({ stealth = { up = true } }, {
+                __index = function()
+                    return { up = false }
+                end,
+            })
+            env.class = { abilities = { sap = { startsCombat = true } } }
+            ld.run(w.hooks.runHandler, env, "sap")
+            assert.are.same({ { "stealth", want } }, env.cooldowns, "camouflage " .. n)
+        end
+    end)
+
+    -- Preparation (owner, ledger L854): every other Rogue ability's cooldown, the set taken from the pack's own tables
+    it("finishes every other Rogue cooldown on Preparation, Evasion and Sprint among them", function()
+        local set = {}
+        for _, key in ipairs(w.abilities.preparation.resets) do
+            set[key] = true
+        end
+        for _, key in ipairs({ "evasion", "sprint", "vanish", "kick", "cold_blood", "kidney_shot", "gouge", "blind" }) do
+            assert.is_true(set[key], key)
+        end
+        for _, key in ipairs({ "feint", "distract", "stealth", "shank", "riposte", "adrenaline_rush", "premeditation" }) do
+            assert.is_true(set[key], key)
+        end
+        for _, key in ipairs({ "preparation", "instant_poison", "deadly_poison", "eviscerate", "sap" }) do
+            assert.is_nil(set[key], key) -- itself, the poisons (items), and the cooldown-less
+        end
+        for _, field in ipairs({ "now", "handler" }) do
+            local env = ld.env(w)
+            env.cooldowns = { { "evasion", 120 }, { "sprint", 120 } } -- both on cooldown
+            ld.run(w.abilities.preparation[field], env)
+            local at = {}
+            for _, c in ipairs(env.cooldowns) do
+                at[c[1]] = c[2]
+            end
+            assert.are.same({ 0, 0 }, { at.evasion, at.sprint }, field) -- both ready
+        end
     end)
 
     it("prices Dirty Tricks on Sap and Blind and Dirty Deeds on Cheap Shot, Composure joining them", function()
@@ -312,6 +363,10 @@ describe("Forever Rogue", function()
         assert.are.equal(30, cost("blind", "dirty_tricks", 0))
         assert.are.equal(22.5, cost("blind", "dirty_tricks", 1))
         assert.are.equal(15, cost("blind", "dirty_tricks", 2))
+        -- stealthed at full energy (Poised up), Dirty Tricks 2: wowsims takes the flat -10 before the -50% (core/spell.go
+        -- 1056-1058), 27.5; `spend` returns 37.5 and the core's Poised cost mod (-10, asserted above) takes it to 27.5
+        assert.are.equal(27.5, cost("sap", "dirty_tricks", 2, true) - 10)
+        assert.are.equal(10, cost("blind", "dirty_tricks", 2, true) - 10) -- (30 - 10) x 0.5
         assert.are.equal(60, cost("cheap_shot", "dirty_deeds", 0))
         assert.are.equal(50, cost("cheap_shot", "dirty_deeds", 1))
         assert.are.equal(40, cost("cheap_shot", "dirty_deeds", 2))

@@ -196,11 +196,11 @@ M.MAP = {
             p.gain = { POINTS, 2 }
         end,
     },
-    preparation = { -- the world's cooldowns and the client's answers (every rank)
+    -- the world's cooldowns and the client's answers (every rank): every other Rogue ability the pack registers (its
+    -- `resets`; owner, ledger L854: Forever's Preparation resets them all, wowsims's list is narrower)
+    preparation = {
         effect = function(W, e)
-            local list =
-                { "cold_blood", "premeditation", "vanish", "ghostly_strike", "blade_flurry", "adrenaline_rush" }
-            for _, key in ipairs(list) do
+            for _, key in ipairs(assert(class().abilities.preparation.resets, "preparation.resets")) do
                 local a = class().abilities[key]
                 local ids = { a.id }
                 for _, id in ipairs(type(a.copy) == "table" and a.copy or {}) do
