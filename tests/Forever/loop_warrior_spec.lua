@@ -46,6 +46,26 @@ describe("the Warrior world mapping", function()
         end
     )
 
+    it("ends the Reckless Swings aura when the last charge is spent", function()
+        local emitted, id = {}, 1329555
+        local e = { auras = { [id] = { stacks = 4 } } }
+        local W = {
+            t = 1,
+            at = function(_, f)
+                f()
+            end,
+            emit = function(ev)
+                emitted[#emitted + 1] = ev
+            end,
+        }
+        ww.charges, ww.chargesW, ww.chargesE, ww.chargesX = 1, W, e, { aura = { reckless_swings = { id = id } } }
+        ww.Fury.gain(nil, 1, nil, "HIT", { talents = {} })
+        assert.are.equal(0, ww.charges)
+        assert.is_nil(e.auras[id])
+        assert.are.equal(0, emitted[1].stacks)
+        ww.charges, ww.chargesW, ww.chargesE, ww.chargesX = 0, nil, nil, nil
+    end)
+
     it("maps every ability the Arms pack can recommend that the character knows; an unmapped key fails", function()
         local unmapped = {}
         for _, list in pairs(H.Hekili.DB.profile.packs[ww.PACK].lists) do

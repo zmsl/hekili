@@ -629,7 +629,8 @@ spec:RegisterAuras({
         max_stack = 1,
     },
     -- Bloodthrill's own aura (1289681), the buff the CDM links; its proc opens the overpower_ready window above, which
-    -- the plain usability read observes. Declared for the CDM mapping only: never applied.
+    -- the plain usability read observes. Declared for the CDM mapping only: never applied. The 5 s is unsourced:
+    -- it matches the Overpower window 1282733 (1289681 is not in the pin's spell data).
     bloodthrill = {
         id = 1289681,
         duration = 5,

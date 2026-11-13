@@ -636,7 +636,7 @@ describe("Forever Warrior", function()
         assert.are.same({ 29131, 10 }, { w.auras.bloodrage.id, w.auras.bloodrage.duration })
     end)
 
-    -- the buffs the owner's Cooldown Manager export links (tests/Forever/fixtures/cdm/warrior.lua on cdm-fixture)
+    -- the buffs the owner's Cooldown Manager export links (tests/Forever/fixtures/cdm/warrior.lua)
     it("registers the CDM-linked auras: Bloodthrill, Disarm, Concussion Blow, Improved Shield Bash", function()
         assert.are.equal(1289681, w.auras.bloodthrill.id)
         assert.are.same({ 1324558 }, w.auras.disarm.copy)

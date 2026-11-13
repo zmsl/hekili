@@ -170,6 +170,17 @@ local function selfAura(key)
         end,
     }
 end
+-- Ends the world's Reckless Swings aura now (at the swing's own time); a no-op once it expired.
+function M.dropReckless()
+    local W, e, X = M.chargesW, M.chargesE, M.chargesX
+    local id = X.aura.reckless_swings.id
+    W.at(W.t, function()
+        if e.auras[id] then
+            e.auras[id] = nil
+            W.emit({ kind = "aura", dst = e, aura = id, stacks = 0, expires = 0, duration = 0 })
+        end
+    end)
+end
 local function strike(amount, key) -- a hit on the target for `amount` (nil: none), and debuff `key` when it lands
     return {
         effect = function(W, e, _, X)
@@ -226,7 +237,7 @@ M.MAP = {
     reckless_swings = {
         effect = function(W, e, _, X)
             aura(W, X, e, "reckless_swings", 4)
-            M.charges, M.chargesW = 4, W
+            M.charges, M.chargesW, M.chargesE, M.chargesX = 4, W, e, X
             W.at(W.t + X.aura.reckless_swings.duration, function()
                 M.charges = 0
             end)
@@ -487,6 +498,9 @@ M.Fury = setmetatable({
         local paid = 0
         if M.charges > 0 then -- Reckless Swings' charge: 5 rage on a white hit
             M.charges, paid = M.charges - 1, 5
+            if M.charges == 0 then -- wowsims's RemoveStack ends the aura at the last charge
+                M.dropReckless()
+            end
         end
         return rate * FURY_SPEED[hand] * (flag == "CRITICAL" and 2 or 1) + paid
     end,

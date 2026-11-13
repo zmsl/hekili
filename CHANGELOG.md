@@ -18,6 +18,7 @@
 - Warrior: Weaponmaster now shows its three auras (`weaponmaster_axe_polearm`, `weaponmaster_mace_staff`, `weaponmaster_sword`) while you have the talent and hold that kind of weapon, for custom priorities. The sword's extra attack is not predicted.
 
 ### Changed
+- Warrior: Improved Berserker Rage now gives 5 or 10 rage, and Improved Intercept, Improved Shield Wall and Improved Disarm now shorten those cooldowns as the talents do.
 - The Filter by Time-to-Die option under target swaps is hidden: the game never tells an addon how long an enemy will live, so it changed nothing.
 - Druid: in Cat Form, Feral and Guardian now recommend Claw instead of Shred while your target is attacking you (you cannot get behind it), and also when you have fewer than 2 points in Shredding Attacks, where Claw does more damage for its energy; Shred is still recommended with Clearcasting unless the target is attacking you. Claw is now shown as soon as you have its energy. Who your target is attacking can be read in the open world; in dungeons the game hides it, so Shred is assumed as before (or "Always Behind" decides). Turn on "Always Behind" if you can always get behind your target.
 - The SpellFlash options are gone: SpellFlash never worked on Forever, and Action Bar Glow replaces it. Settings you saved for it are ignored.
@@ -26,6 +27,7 @@
 - Hunter: Rapid Killing now shortens Rapid Fire's cooldown (60 seconds a rank), so a long fight shows the second Rapid Fire sooner. Aspect of the Cheetah and Dazed are known to the addon for custom priorities, and the Cryptstalker set bonuses (Rapid Fire 4 seconds longer, Multi-Shot and Aimed Shot 20 mana cheaper) are counted when you wear them.
 
 ### Fixed
+- Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - Warlock: with your damage-over-time spells up, a Warlock without the spec's usual filler (Wrack, Incinerate or Searing Pain: a talent you did not take, or a spell you have not learned yet) is now shown Shadow Bolt instead of Life Tap at full mana. Life Tap at the end of the priority now shows only when you do not have the mana for Shadow Bolt. Destruction without Incinerate (before level 18, or at any level without the Incinerate talent while Bane of Doom is running out) no longer shows Immolate on every global cooldown while Immolate is up: Immolate shows again only when it would wear off within a Shadow Bolt cast.
 - In dungeons (and in raids, if the game hides targets there too), switching targets with Tab no longer makes a debuff that the Cooldown Manager shows on your new target (such as Faerie Fire) look missing, so it is no longer recommended again.
 - In dungeons (and in raids, if the game hides targets there too), the debuffs you put on an enemy are remembered when you Tab away and back, as long as its nameplate stays shown, so they are not recommended again while they are still up.
