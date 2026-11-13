@@ -81,7 +81,7 @@ describe("Forever Hunter", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(18, n)
+        assert.are.equal(19, n)
         assert.are.equal("HUNTER", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.rapid_fire.toggle)
