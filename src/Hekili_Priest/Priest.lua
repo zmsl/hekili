@@ -853,7 +853,7 @@ spec:RegisterAbilities({
 -- lockout (`unlocked`): no priority casts them, and the belief reads no locked_out_*.
 -- Unregistered: Mind Control and Mind Vision (channels of unmeasured shape), Levitate (a reagent), Binding Heal and
 -- Pain Suppression (absent from wowsims's Priest kit), Prayer of Shadow Protection (ID unknown).
--- shortcut: Improved Psychic Scream's -2 s a rank (DB2 15392 holds only the top rank's -4 s); upgrade on a measured rank 1.
+-- Improved Psychic Scream: -2 s a rank (the wowsims pin's rank curve for 15392 is {-2000, -4000} ms).
 local function selfBuff(key)
     return function()
         applyBuff(key)
