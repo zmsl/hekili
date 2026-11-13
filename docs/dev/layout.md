@@ -246,7 +246,10 @@ Subtlety solo: fights=20 agreement 0.986 (10526 ticks); react median 0 p90 0 nev
 
 `tests/Forever/loop_paladin_spec.lua` runs 3 fights a Paladin pack in `make check` (seeds 1-3, `#slow`) and 20 in
 `make test-paladin` (`#paladin`), asserting its flagged lines ran (Retribution: the seal twist at tier 1; Protection:
-Seal of Fury and Holy Shield at tier 2). The mob swings at us in both worlds: Holy Shield raises the block chance and
+Seal of Fury and Holy Shield at tier 2; Holy Shock (wowsims.com), Retribution's second pack picked by its talents,
+Paladin.lua's `holy_shock` selector: Hammer of Wrath at tier 1, the seal and Consecration at tier 2, its 20-fight gate
+`loop_paladin_holy_shock_spec.lua`, its world `HolyShock` with wowsims's builds/holy_shock.siml talents, pool 4667).
+The mob swings at us in every world: Holy Shield raises the block chance and
 each block spends a charge (the world's class-neutral `taking`/`took`); our landed swing spends an Echo (`landed`); mana
 runs under the five-second rule (`fsr`: wowsims's logs, Retribution 13.65 spirit / 8.25 mp5, Protection 17.38 / 0, an
 empty pool; Task 7 floored Retribution 0.9 and Protection 0.8 for gap AB, 0.6 and 0.2 since gap CE). Both packs are gated by `pack_gate.gate`; both
@@ -440,12 +443,16 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
 - H21: Rapid Fire and Blood Fury recommended from 5 s into a fight, off the GCD (rule 13's automatic cooldowns).
 
 `tests/Forever/loop_mage_spec.lua` runs 3 fights of each Mage pack in `make check` (seeds 1-3, `#slow`) and 20 in `make
-test-mage` (`#mage`, `loop_mage_arcane_spec.lua`, `loop_mage_fire_spec.lua`, `loop_mage_frostfire_spec.lua`), gated by
+test-mage` (`#mage`, `loop_mage_arcane_spec.lua`, `loop_mage_fire_spec.lua`, `loop_mage_frostfire_spec.lua`,
+`loop_mage_frost_spec.lua`), gated by
 `pack_gate.solo` and asserting that some focus line ran (Arcane: Missiles on Missile Barrage at tier 1, Evocation at
 tier 2; Fire also Pyroblast on Heating Up at tier 1 and Scorch at tier 2: ruling M5; Frostfire Pyroblast and Fire Blast
-(unless two Fingers of Frost charges are up) at tier 1, Scorch and Evocation at tier 2). The packs are Arcane and Fire
-(wowsims.com) (Task 12 of the wowsims packs plan) and Frostfire (wowsims.com) (Task FFB: Fire's second pack, its talents
-29 Fire points to 22 Frost; Frost unsupported), their replay and leveling gates `tests/Forever/wowsims_mage_spec.lua`.
+(unless two Fingers of Frost charges are up) at tier 1, Scorch and Evocation at tier 2; Frost Cone of Cold on five
+Winter's Chill stacks and Ice Lance (one Fingers of Frost charge while Frostbolt casts; wowsims's fight casts it 0
+times) at tier 1, Ice Barrier at tier 2). The packs are Arcane
+and Fire (wowsims.com) (Task 12 of the wowsims packs plan), Frostfire (wowsims.com) (Task FFB: Fire's second pack, its
+talents 29 Fire points to 22 Frost) and Frost (wowsims.com) (new packs, 2026-11-12: the Frost Incin build, 31 Frost
+points, pool 6348), their replay and leveling gates `tests/Forever/wowsims_mage_spec.lua`.
 The worlds (`tests/Forever/helpers/mage_world.lua`) cast at 25 yd with cast bars and channels (Arcane Missiles,
 Evocation: any press at 99% mana clips it); the character is trainer-taught (no book ranks, as wowsims's), its pool and
 regen are the logs' (Arcane 6678, Fire 6168; 29.13 a second outside the five-second rule, all of it while casting for
@@ -610,6 +617,7 @@ beside the number (DEVELOPMENT.md).
 | Combat (wowsims.com) | 0.99 | 0.24, 21 |
 | Subtlety (wowsims.com) | 0.98 | 0.17, 40 |
 | Retribution (wowsims.com) | 0.93 | 0.10, 7 |
+| Holy Shock (wowsims.com) | 0.97 | 0.24, 5 |
 | Protection (wowsims.com), Paladin | 0.95 | 0.43, 1 |
 | Enhancement (wowsims.com) | 0.96 | 0.38, 34 |
 | Elemental (wowsims.com) | 0.89 | 2.20, 3 |
@@ -619,6 +627,7 @@ beside the number (DEVELOPMENT.md).
 | Arcane (wowsims.com) | 0.95 | 0.76, 9 |
 | Fire (wowsims.com) | 0.96 | 0.45, 10 |
 | Frostfire (wowsims.com) | 0.96 | 0.42, 9 |
+| Frost (wowsims.com) | 0.93 | 0.23, 3 |
 | Shadow (wowsims.com) | 1.00 | 1.50, 36 |
 | Smite (wowsims.com) | 0.93 | 0.70, 11 |
 | Affliction (wowsims.com) | 0.83 | 0.00, 0 |

@@ -27,6 +27,14 @@ local KIT = {
     arcane_power = { { 12042 }, 0, 180, "off" },
     presence_of_mind = { { 12043 }, 0, 180, "off" },
     combustion = { { 11129 }, 0, 180, "off" },
+    -- Frost (the pin's rows where the DB2's lack: Ice Lance's ladder, Cold Snap's 600 s off the GCD, Ice Block's 15)
+    cone_of_cold = { { 120, 8492, 10159, 10160, 10161 }, 555, 10, "spell" },
+    ice_lance = { { 1312002, 400640, 1240044, 1240045, 1240046, 1240047 }, 160, 8, "spell" },
+    ice_barrier = { { 11426, 13031, 13032, 13033 }, 480, 30, "spell" },
+    cold_snap = { { 12472 }, 0, 600, "off" },
+    blizzard = { { 10, 6141, 8427, 10185, 10186, 10187 }, 1400, 0, "spell" },
+    frost_nova = { { 122, 865, 6131, 10230 }, 145, 25, "spell" },
+    ice_block = { { 11958 }, 15, 300, "spell" },
 }
 
 local function idsOf(a)
@@ -58,7 +66,7 @@ describe("Forever Mage", function()
         w = ld.load(nil, FILE, "MAGE")
     end)
 
-    it("declares Arcane and Fire on trees 1 and 2 with their wowsims.com packs, Frost unsupported", function()
+    it("declares Arcane, Fire and Frost on trees 1, 2 and 3 with their wowsims.com packs", function()
         assert.are.equal("MAGE", w.class)
         local out = {}
         for _, s in ipairs(w.def.specs) do
@@ -67,7 +75,7 @@ describe("Forever Mage", function()
         assert.are.same({
             { "arcane", 1, "attack", true, false, "Arcane (wowsims.com)" },
             { "fire", 2, "attack", true, false, "Fire (wowsims.com)" },
-            { "frost", 3, "attack", true, true, false },
+            { "frost", 3, "attack", true, false, "Frost (wowsims.com)" },
         }, out)
         assert.is_nil(w.options)
     end)
@@ -91,10 +99,11 @@ describe("Forever Mage", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(14, n)
-        for _, key in ipairs({ "arcane_power", "presence_of_mind", "combustion" }) do
+        assert.are.equal(21, n)
+        for _, key in ipairs({ "arcane_power", "presence_of_mind", "combustion", "cold_snap" }) do
             assert.are.equal("cooldowns", w.abilities[key].toggle, key)
         end
+        assert.are.equal("defensives", w.abilities.ice_block.toggle)
     end)
 
     it("places every talent in its tree (Forever's)", function()
@@ -384,7 +393,8 @@ describe("Forever Mage", function()
             by[m.aura .. (m.unless and (" unless " .. m.unless) or "")] = { m.pct, m.charges or false, spells }
         end
         assert.are.same({
-            clearcasting = { -1, 1, { 116, 133, 2136, 2948, 11366, 400574, 401502, 1326079 } },
+            -- Frost's too: Blizzard, Cone of Cold, Frost Nova, Ice Lance (the mask's bits 7, 9, 6, 17)
+            clearcasting = { -1, 1, { 10, 116, 120, 122, 133, 2136, 2948, 11366, 400574, 401502, 1312002, 1326079 } },
             ["clearcasting unless missile_barrage"] = { -1, 1, { 5143 } },
             missile_barrage = { -1, 1, { 5143 } },
             -- Arcane Wrath too: wowsims's mask (0x9000 of word 1 covers its 0x8000), its log's 513.5 = 395 x 1.3
@@ -466,8 +476,8 @@ describe("Forever Mage through the engine", function()
             assert.are.same({}, H.loadErrors)
             local specs = H.Hekili.Class.specs
             assert.are.same(
-                { "arcane", "fire", "frost", true },
-                { specs[100081].key, specs[100082].key, specs[100083].key, specs[100083].unsupported }
+                { "arcane", "fire", "frost", false },
+                { specs[100081].key, specs[100082].key, specs[100083].key, specs[100083].unsupported or false }
             )
             local _, w = character()
             local I = H.ns.VirtualStateInternal
@@ -623,7 +633,7 @@ describe("Forever Mage priorities", function()
         for _, sp in ipairs(cls.def.specs) do
             names[#names + 1] = sp.package or "none"
         end
-        assert.are.same({ "Arcane (wowsims.com)", "Fire (wowsims.com)", "none" }, names)
+        assert.are.same({ "Arcane (wowsims.com)", "Fire (wowsims.com)", "Frost (wowsims.com)" }, names)
     end)
 
     it("names only registered abilities and auras", function()

@@ -10,7 +10,7 @@ local pw = require("Forever.helpers.paladin_world")
 
 -- the contents (paladin_world.lua): each on its wowsims.com pack. Central fix 22 round 2 (presses resolve from the
 -- current state, not Update's leftover prediction): Protection's seeds 1-3 0.977 -> 0.997, flicker 0.49 -> 0.50/min
-local PACKS = { "Retribution", "Protection" }
+local PACKS = { "Retribution", "Protection", "HolyShock" }
 
 describe("the Paladin loop worlds", function()
     for _, name in ipairs(PACKS) do

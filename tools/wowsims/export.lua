@@ -48,7 +48,11 @@ M.SPEC_PIN = {
 
     mage_fire = NEW,
 
+    mage_frost = NEW,
+
     mage_frostfire = NEW,
+
+    paladin_holy_shock = NEW,
 
     paladin_protection = NEW,
 

@@ -83,6 +83,8 @@ local PACKS = {
         "seal_of_righteousness=1",
         "consecration=2",
     },
+    -- Holy Shock (new pack): Hammer of Wrath's window 1; Consecration and the selected seal kept up 2; Holy Shock a strike
+    ["Paladin/APLs/Holy Shock"] = { "consecration=2", "hammer_of_wrath=1", "seal_of_righteousness=2" },
     -- the totems carry none (the user, 2026-10-21)
     ["Shaman/APLs/Enhancement"] = {
         "water_shield=2",
@@ -97,6 +99,16 @@ local PACKS = {
     -- re-pin e5a9cd2a2d: the adaptive list puts the upkeep Lacerate and Roar first, the rage dump (Maul) last
     ["Druid/APLs/Guardian"] = { "lacerate=2", "demoralizing_roar=2", "lacerate=2", "maul=1", "maul=2" },
     ["Mage/APLs/Arcane"] = { "arcane_missiles=1" },
+    -- Frost (new pack): Cone of Cold on five Winter's Chill stacks and Ice Lance on a Fingers of Frost charge 1, Ice
+    -- Barrier kept for Frigid Power 2 (the AoE list's too); Cold Snap a cooldown (none)
+    ["Mage/APLs/Frost"] = {
+        "cone_of_cold=1",
+        "ice_lance=1",
+        "ice_barrier=2",
+        "cone_of_cold=1",
+        "ice_lance=1",
+        "ice_barrier=2",
+    },
     -- re-pin e2842f0a78: the closing second Scorch line is the filler, untiered (`scorch = { 2, false }`)
     ["Mage/APLs/Fire"] = { "pyroblast=1", "scorch=2", "arcane_missiles=1" },
     -- the DoTs, Banes, curses and Searing Pain's Demonic Brand upkeep at 2; Shadow Bolt on Shadow Trance and Soul Fire on

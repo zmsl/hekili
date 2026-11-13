@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### New
+- Mage: Frost now has a priority, Frost (wowsims.com), built from wowsims.com's Frost list: Frostbolt, Cone of Cold once Winter's Chill is at 5 stacks on your target, Cold Snap to reset Cone of Cold, Ice Barrier kept up for its Frigid Power buff, and Ice Lance when one Fingers of Frost charge is up while Frostbolt is casting. A Mage with the most points in Frost now gets it automatically. Frost Nova and Ice Block are known to the addon too (Cold Snap resets them), Ice Block under the Defensives toggle.
+- Retribution Paladin: a second priority, Holy Shock (wowsims.com), built from wowsims.com's Holy Shock list (Judgement, Consecration, Seal of Righteousness, Holy Strike, Divine Favor with Holy Shock, Hammer of Wrath). It is picked automatically when you have Holy Shock talented and the most points in Retribution; other Retribution builds keep Retribution (wowsims.com). `/hekili priority` still lets you choose either.
 - The priority editor (Action Lists) now has Label, Label Condition, Icon and Icon Condition fields under Caption, so labels and icon overrides can be set without importing a line. The Icon field previews the texture it resolves to and says so when a path is not a texture file.
 
 ### Changed

@@ -275,6 +275,7 @@ local WORLDS = {
     druid = require("Forever.helpers.druid_loop_world").Feral,
     mage = require("Forever.helpers.mage_world").Fire,
     warlock = require("Forever.helpers.warlock_world").Affliction,
+    paladin = require("Forever.helpers.paladin_world").Retribution,
 }
 
 -- Logs in a character of `class` with `talents` (no pack forced); counts notifications.
@@ -317,6 +318,10 @@ local SHIPPED = {
     mage_arcane = { "mage", 100081, "Arcane (wowsims.com)" },
     mage_fire = { "mage", 100082, "Fire (wowsims.com)" },
     mage_frostfire = { "mage", 100082, "Frostfire (wowsims.com)", "frostfire" },
+    mage_frost = { "mage", 100083, "Frost (wowsims.com)" },
+    -- Holy Shock talents pick the Holy Shock pack; the Unsealed Wrath build (no Holy Shock) the default
+    paladin_retribution = { "paladin", 100023, "Retribution (wowsims.com)" },
+    paladin_holy_shock = { "paladin", 100023, "Holy Shock (wowsims.com)", "holy_shock" },
     warlock_affliction = { "warlock", 100091, "Affliction (wowsims.com)" },
     warlock_sm_ruin = { "warlock", 100091, "SM Ruin (wowsims.com)", "sm_ruin" },
     warlock_demonology = { "warlock", 100092, "Demonology (wowsims.com)" },
@@ -337,11 +342,13 @@ describe("the shipped selectors (headless)", function()
     end
 
     it(
-        "moves between neighbours on a respec: Feral and Guardian, Fire and Frostfire, Affliction and SM Ruin",
+        "moves between neighbours on a respec: Feral and Guardian, Fire and Frostfire, Affliction and SM Ruin, "
+            .. "Retribution and Holy Shock",
         function()
             for _, pair in ipairs({
                 { "druid_feral", "druid_guardian", 1 }, -- to Guardian: the selector's spec switch; back: the tree's rule
                 { "mage_fire", "mage_frostfire", 2 }, -- a pack switch each way (back: no selector, the default again)
+                { "paladin_retribution", "paladin_holy_shock", 2 },
                 { "warlock_affliction", "warlock_sm_ruin", 2 },
                 { "warlock_demonology", "warlock_shadow_brand", 2 },
             }) do

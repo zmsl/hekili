@@ -828,6 +828,18 @@ spec:RegisterWindow("move2", {
     steps = { "judgement", "seal_of_righteousness" },
 })
 
+-- Pack from the talents (Engine/Schema/Selectors.lua; after the Hekili classic branch's pack selectors), as wowsims's
+-- own Retribution page picks its APL (ui/specs/paladin/retribution/spec.ts: `holyShock` talented, the Holy Shock list):
+-- Retribution ahead with Holy Shock taken (wowsims's Holy Shock build is 23/0/28) runs Holy Shock (wowsims.com); any other
+-- Retribution build runs the default, Retribution (wowsims.com). A Holy-dominant build stays on Holy.
+spec:RegisterSelector(
+    "holy_shock",
+    { spec = "retribution", pack = "Holy Shock (wowsims.com)" },
+    function(tab1, tab2, tab3)
+        return tab3 > tab1 and tab3 > tab2 and talent.holy_shock.rank > 0
+    end
+)
+
 -- The priorities, one a spec, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit
 -- those (a wowsims.com pack: its recipe, tools/wowsims/specs/) and run it, never these blocks
 -- (tests/Forever/paladin_spec.lua checks they match).
@@ -840,6 +852,11 @@ spec:RegisterPack(
     "Protection (wowsims.com)",
     20261111000,
     [[Hekili:Lwv3oonpq0NL9gOvSFjTf2LVTIEXIwHyrWkKcx7eh7jnM6gh5FOujuE2zCAB2K0Kcs0lsD8CMZmEMJNqMt(gjItTa5PfZwC7C83SzZir29LajQKY2qxJlkOBXNFvRSaZkufvjt2P2zeBnbm12PEK7Lkk3ZwQtiTpwqshKytjWqMU)Z3)WJpTSSHrsuUGZHdUbg2fI2YQeBouLCCVWmLg(bORs4qg1jTvj3)1pxLGBxL0HeNi0hEtyjvs5IIWNdFiTuAcpsqa(sasTC61yO00cJepiCCTYhAHPkHY5QIxIl2a7nbvjpqT0LdKst(YJFdjj3AlnlddxlS5Uu)PiSh0PiNyMd3qVJXxqxWZybyzvRYesS0tRZstqPgqNtP2vAX6ClOCM4mNE)1ISvxL6YYc6UFGRS6tN58RwfQbRwK68gIPonTfb9SmkfgGkJvzXyZiMPDgkh0ptZqwBt1kJvva4PFBZwiNwyBPKQnXPo5oQEZ1odGSKfVMXxnVnYV74RHTqHDCiMDImB8ia9z6KRoaoObtWMc1UIFXukjhx0YGg2sffM3TAYag5yDYt0)nB60ozWXIqDlktXCMvlQdCNsuDJ6e)(N50cE8XnEXvNJ1v2jkm8pGDidAVFUsUp2KRyBoCyTuPpzBGd841ALRGhaf0ujW)fhQd2ai6fYJulaj)056CZOoAd0EB4NkntyWoojc18g)9(UJhKcJ1upt6WvrC5t1ZOoMHK3F6Uaok5KaIyrw6bQvV2ZqJt9fyEFF9FPVn9BVtV5V0PEIqsetlSGwqjrJk)(N0F(K7MEjxRy(pR8AD0AzHevld8ncm(3oslRTs1J7TJG7zLB361FwbFzjSpM))LJPxs39WC3fDOwK7HnF2i4oP6jEDtuZe0ljT7oeVDnyKH8dDfOHSEd0hGUZh5p09I(992J2pN0r(aqDvaRduNnxHU9ryJqkWVu(HJFiS2m53d]]
+)
+spec:RegisterPack(
+    "Holy Shock (wowsims.com)",
+    20261112001,
+    [[Hekili:9AvyVnUnm0Fl3xULGLzNKT72wX8a6WHHRd3kkG7NTnJeDSwuScKKBxak8V9rfN4iN44lfO7qbAvjPEpkjYhDYSKhtI5GftUF(05FC2SzZNoDwsSD7gmjEdWwblPfLWA63Fwj3wNfxOyRQZg9S6zJyTjGPwp2f6wPc4o4wujK27ktw0lYMnilj(HB)YTF6U7VrJwTyrLvOktIleCo2Sp0WgIVBQZSfyD2EBH5kn(eQRZ4youjT1z3(WxQZiZ1zDrPse6Yat4gqcCrzOxgecBKMWck(uJl8a6)di8LJNq8PHsJKopCATYXVWuNbCUQ87OfRWTMG6Spbw4MEYRr)9DpsGuyTBm3egUuylQw4okHNe6yctk9Xpa)kJphMZZzb0TRwLlK0taWCjQjyJgPnVaSrmqktBmNkfg7e3BvKZWtuYMcgJyzjYtHknu)xNT)VpkSFeyGXEC3)tfFjUglTTqe1AAsLbtv55Plz8OzTb4qM(dY0G7)NKRyvMO5D8FzMnOez0LnTaKte5rJg1eyGZarxQwSSWIQktjAmbRkvpx((3TOkp)cruTz8lJg9UVokVmaiACnikn)w0SPJF)vbwBq(xg79XukjNw013Eo(9ObrNUSh)AtbVs7tsapp)Ftp1UTc7N)gxVIey8y)Yjpq8nZfpjkX0C4jLUBT6U6Qx5LdW32dP7ux8TcRxJAxw)m9QwSV4VHWd81nKaxzF00xCN9cOKNE4AO1aPBH8FyAW8o8J)RsZeM1h7T7V3pYtOBNbxU00VCQhQv5iAxqhi6WRcPdNY0vgGJ6Jq2N3ZHTttEuVVZhLnsIj5rdT5tgO4eomU5oNdjz9(Dt4WsyHe5j)XbfuAouFSLeVJoIHel9t8(Xj9HJxHKZzlUT3q0(jy6NC)(9oCE)pEYoyAHf1cij(nra8kvaFBLahud8BLi4aQGFBKbhsh8nqi0R46KPQnTiPnFdxpnjuv3pDH6uVSXf2hUYEaFf3oLWV2NaNyRJ4poy(5c2f1pF5ENH1CVkrxpw7IsBd8mxs8lxivpOt3iS0(9xdjrn4dz)Q8dk68vRloxMVjBVKZRqE1FaG)lYGJjAy9cNWbi90bzNtypJ6s2FiHkBHRC9Z4kHuqFY(FU)lY35o5)(d]]
 )
 
 -- The hand-built lists the wowsims.com priorities replaced: a saved choice of one falls back to its spec's default.
