@@ -6,7 +6,7 @@ local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
 
 describe("token-keyed target memory (lane T2m)", function()
-    local VS, I, S, Obs, ctl, api, def, ti
+    local VS, I, S, Obs, ctl, api, def, ti, ns
     local REND = 2 -- the target debuff (fs.SPENDER_C)
     local world -- "token": secret GUIDs, plates answer; "guid": plain GUIDs (the twin)
 
@@ -69,7 +69,7 @@ describe("token-keyed target memory (lane T2m)", function()
     local function start(w, plates, cdm)
         world = w
         api, ctl = fake.new()
-        local ns = load.module()
+        ns = load.module()
         VS, I = ns.VirtualState, ns.VirtualStateInternal
         S, Obs = I.Sources, VS.Obs
         ctl.guid.target = nil
@@ -446,5 +446,46 @@ describe("token-keyed target memory (lane T2m)", function()
         assert.are.same({ slot }, gone) -- released at the next swap
         tab(2, 15)
         assert.is_nil(est(15.1), "plate 2's memory was forgotten")
+    end)
+
+    -- Option D (owner decision 2, 2026-11-11): Facade.DebuffCount, the core's count of enemies carrying our debuff: the
+    -- target and every remembered slot, by GUID in the open world and by plate under Map; nil when unknown.
+    it("Facade.DebuffCount counts the debuff across tabs in both worlds; nil with no slot (option D)", function()
+        local got = {}
+        for _, w in ipairs(WORLDS) do
+            start(w)
+            local count = function(t)
+                return ns.Facade.DebuffCount(fs.SPENDER_C, t) or "nil"
+            end
+            local out = {}
+            tab(1, 10)
+            out[#out + 1] = count(10.05) -- none yet
+            castX(10.1, 15) -- on A: 25.1
+            tab(2, 13)
+            out[#out + 1] = count(13.05) -- A's, remembered
+            castX(13.1, 15) -- on B: 28.1
+            out[#out + 1] = count(13.2)
+            tab(1, 14)
+            out[#out + 1] = count(14.05) -- still both
+            out[#out + 1] = count(25.2) -- A's ran out
+            if w == "token" then
+                plate("NAME_PLATE_UNIT_REMOVED", 2, 14.5) -- B's plate left: its memory goes (a known limit)
+            else
+                ctl.Fire("UNIT_DIED", "Creature-2") -- B died
+            end
+            fold(14.6)
+            out[#out + 1] = count(14.6)
+            got[w] = out
+        end
+        assert.are.same({ 0, 1, 2, 2, 1, 1 }, got.token)
+        assert.are.same(got.token, got.guid)
+        start("token", 0) -- plates off: the target has no slot, so the count is unknown
+        tab(1, 10)
+        assert.is_nil(ns.Facade.DebuffCount(fs.SPENDER_C, 10.1))
+        start("guid")
+        tab(1, 10)
+        assert.is_nil(ns.Facade.DebuffCount(999999, 10.1), "an aura the belief does not track: unknown")
+        tab(nil, 11)
+        assert.is_nil(ns.Facade.DebuffCount(fs.SPENDER_C, 11.1), "no target: no slot")
     end)
 end)

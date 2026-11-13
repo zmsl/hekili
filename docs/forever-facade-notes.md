@@ -184,7 +184,7 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `UnitName` | present | plain in combat [W PR14; gate spike] | passthrough | — | Utils.lua, State.lua, Events.lua, Targets.lua, Options/Options.lua |
 | `UnitOnTaxi` | present | unprobed | passthrough | — | UI.lua |
 | `UnitPartialPower` | present | secret always [W PR16] | stub | `0` | State.lua |
-| `UnitPhaseReason` | present | unprobed | passthrough | — | Targets.lua |
+| `UnitPhaseReason` | present | unprobed | hybrid (secret: nothing, T1) | — | Targets.lua |
 | `UnitPower` | present | secret always [W PR16] | stub | `0` | State.lua, Events.lua |
 | `UnitPowerMax` | present | plain (100 for rage) [W PR16] | passthrough | — | State.lua, Options/DevTools.lua |
 | `UnitPowerType` | present | plain [W PR16] | passthrough | — | State.lua |

@@ -36,6 +36,7 @@ local A = {
     ch = {},
     chNext = {},
     gcdKind = {}, -- 0 off the GCD, 1 spell (1.5 s / haste), 2 totem (Hekili's fixed 1.0 s)
+    gcdFn = {}, -- a declared `gcd` function (its kind by state, kindAt), else false
     -- the query ID's range in yards (C_Spell.GetSpellInfo's maxRange, Sources/Spellbook.lua; 5 for a hostile spell's
     -- 0); 0: no range check (self-cast, or on-next-swing: the client answers those in range at any distance)
     rMax = {},
@@ -144,6 +145,16 @@ local function gcdMult(a, t)
     return f
 end
 
+-- Ability a's GCD kind at t: a declared `gcd` function's answer in the belief's context ("totem" 2, anything else or a
+-- raise the spell kind 1; never off), else its fixed kind. Allocates nothing.
+local function kindAt(a, t)
+    local f = A.gcdFn[a]
+    if not f then
+        return A.gcdKind[a]
+    end
+    return I.Eval(f, t) == "totem" and 2 or 1
+end
+
 --- The length of a GCD that ability a (0: none known, the last opener's kind) opens at t: its declared `gcdTime`,
 --- else its kind's learned length, else 1.0 for the totem kind and max(1.0, 1.5 / spell haste) for the spell kind; a
 --- spell-kind one then x the GCD modifiers up in its scope (aura audit C12), floored at 1.0 (wowsims: the multiplier
@@ -156,7 +167,7 @@ function I.GcdLen(a, t, t0)
         if type(g) == "number" and g > 0 then
             return g
         end
-        kind = A.gcdKind[a]
+        kind = kindAt(a, t)
     end
     if kind == 0 then
         return 0
@@ -177,7 +188,7 @@ end
 -- however the modifier's aura moved since.
 local gcdCut = false
 local function cutAt(a, t)
-    return a > 0 and A.gcdKind[a] == 1 and GM.n > 0 and gcdMult(a, t) ~= 1
+    return a > 0 and GM.n > 0 and kindAt(a, t) == 1 and gcdMult(a, t) ~= 1 -- a totem-kind GCD is never cut (GcdLen)
 end
 
 local function maxCharges(a)
@@ -218,6 +229,7 @@ I.OnBuild(function(def, now)
         A.rMax[a] = 0
         local g, extra = obj.gcd, type(obj.key) == "string" and obj.key:sub(1, 6) == "track_" -- a passive: no GCD
         A.gcdKind[a] = (g == "off" or extra) and 0 or (g == "totem" and 2 or 1) -- anything else: State.lua's "spell"
+        A.gcdFn[a] = not extra and type(g) == "function" and g or false -- on the GCD; its kind at each cast
         A.cd[a] = I.NewBelief("cooldown " .. tostring(obj.key))
         I.Sample(A.cd[a], "default", 0, now, 0)
         if maxCharges(a) > 1 then
@@ -274,7 +286,7 @@ local function opener(a, at, t)
         return -- off the GCD (an on-next-swing strike's success at its swing): never an opener
     end
     if I.gcdStart > 0 and I.gcdOwner == 0 and at >= gcdEdge and at - gcdEdge <= GCD_EDGE then
-        I.gcdOwner, I.gcdKindLast, gcdCut = a, A.gcdKind[a], cutAt(a, gcdEdge)
+        I.gcdOwner, I.gcdKindLast, gcdCut = a, kindAt(a, t), cutAt(a, gcdEdge)
         if not I.gcdRead then
             I.gcdDur = quantise(I.GcdLen(a, t, gcdEdge))
             pinGcd(t)
@@ -282,7 +294,7 @@ local function opener(a, at, t)
         lastGcdA = 0
     else
         lastGcdA, lastGcdT = a, at
-        I.gcdOwner, I.gcdKindLast, I.gcdRead, gcdCut = a, A.gcdKind[a], false, cutAt(a, at)
+        I.gcdOwner, I.gcdKindLast, I.gcdRead, gcdCut = a, kindAt(a, t), false, cutAt(a, at)
         -- no pinned sample: the gcd belief's modelled one is Families/Now.lua's, and only an edge pins it
         I.gcdStart, I.gcdDur, gcdEdge = quantise(at), quantise(I.GcdLen(a, t, at)), at
     end
@@ -363,7 +375,7 @@ I.On(Obs.Cooldown, function(o, t)
             lastGcdA = 0
             I.gcdOwner, I.gcdRead, gcdCut = owner, false, cutAt(owner, o.t)
             if owner > 0 then
-                I.gcdKindLast = A.gcdKind[owner]
+                I.gcdKindLast = kindAt(owner, t)
             end
             I.gcdStart, I.gcdDur, gcdEdge = quantise(o.t), quantise(I.GcdLen(owner, t, o.t)), o.t
             pinGcd(t)
@@ -372,7 +384,7 @@ I.On(Obs.Cooldown, function(o, t)
             -- SPELL_UPDATE_COOLDOWN): it neither ends this one nor teaches a length
         else
             local len, owner = o.t - I.gcdStart, I.gcdOwner
-            local kind = owner > 0 and A.gcdKind[owner] or 0
+            local kind = owner > 0 and I.gcdKindLast or 0 -- the kind its owner opened it at (kindAt)
             local g = owner > 0 and gcdTime(owner, t)
             -- an ownerless GCD, one of a declared length, or one a GCD modifier cut (aura audit C12; latched at its
             -- opening, review M2) teaches nothing

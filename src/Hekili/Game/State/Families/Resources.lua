@@ -119,6 +119,7 @@ local R = {
     decay = {},
     decayIv = {},
     decayNext = {},
+    topNext = {},
     maxDef = {},
     maxMods = {},
     maxRead = {},
@@ -179,7 +180,8 @@ R.regenMult = M
 -- evaluated at the build and at each combat end (talent ranks change out of combat only). With a `decayInterval`
 -- (seconds, `decayIv[r]`; 0: continuous) it is lost in quanta of decay x interval, the first at once when the decay
 -- starts and one at the start of each interval after it (`decayNext[r]`: the next one's time, 0 while inactive;
--- stepped-decay design §3.2). Allocates nothing.
+-- stepped-decay design §3.2; `topNext[r]`: the top's next one on the same grid while the estimate rests below it, 0
+-- otherwise). Allocates nothing.
 -- `v`, or a function's return, when it is a finite number; else nil (a NaN, infinity, nil or thrown value is inert).
 -- Only at the build and the combat edges, so a function that raised is run again (I.Eval's `retry`).
 local function finite(v)
@@ -406,7 +408,7 @@ I.OnBuild(function(def, now)
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
         R.decay[r] = 0
-        R.decayIv[r], R.decayNext[r] = 0, 0
+        R.decayIv[r], R.decayNext[r], R.topNext[r] = 0, 0, 0
         R.taken[r] = type(d.taken) == "function" and setfenv(d.taken, I.nowCtx) or false
         R.takenBin[r], R.takenSec[r] = {}, {}
         for i = 1, I.TAKEN_WINDOW do
@@ -671,7 +673,8 @@ local function decayFrom(r, from, to)
 end
 
 -- One stepped decay quantum of slot r at t: the interval down by decay x interval, never below rest, as a `modelled`
--- sample at t, kept out of the regen measurement; the next one an interval later, none once the estimate rests.
+-- sample at t, kept out of the regen measurement; the next one an interval later, none once the estimate rests (a top
+-- above it then keeps the grid: topBeat).
 local function beat(r, t)
     local rest, step, before = R.rest[r], R.decay[r] * R.decayIv[r], R.est0[r]
     if before > rest then
@@ -688,6 +691,15 @@ local function beat(r, t)
         I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.CombatEnd)
     end
     R.decayNext[r] = R.est0[r] > rest and t + R.decayIv[r] or 0
+    R.topNext[r] = R.decayNext[r] == 0 and R.hi0[r] > rest and t + R.decayIv[r] or 0
+end
+
+-- The top's quantum of slot r at t while the estimate rests: whole quanta on the estimate's grid, so it never sits
+-- under a stepped truth. Allocates nothing.
+local function topBeat(r, t)
+    local rest, h = R.rest[r], R.hi0[r] - R.decay[r] * R.decayIv[r]
+    R.hi0[r] = h > rest and h or rest
+    R.topNext[r] = h > rest and t + R.decayIv[r] or 0
 end
 
 -- Continuous regen between pins (swing-paid slots move only at swings), then aura-gated regen, kept out of the
@@ -729,13 +741,20 @@ I.OnAdvance(function(from, to)
         local d = R.decay[r]
         local start = d > 0 and decayFrom(r, from, to)
         if R.decayIv[r] > 0 then
+            -- quanta while the estimate is above rest; with it resting, a top above it keeps the grid in the same fold,
+            -- so lo and hi reach rest too (decayAhead counts the same quanta)
             if not start then
-                R.decayNext[r] = 0
+                R.decayNext[r], R.topNext[r] = 0, 0
             elseif start > from or R.decayNext[r] == 0 and R.est0[r] > R.rest[r] then
-                R.decayNext[r] = start -- it starts: at a tick aura's expiry, or at a rise above rest
+                R.decayNext[r], R.topNext[r] = start, 0 -- it starts: at a tick aura's expiry, or at a rise above rest
+            elseif R.decayNext[r] == 0 and R.topNext[r] == 0 and R.hi0[r] > R.rest[r] then
+                R.topNext[r] = start + R.decayIv[r] -- a top risen over the resting estimate: the latest a truth's can be
             end
             while R.decayNext[r] > 0 and R.decayNext[r] <= to do
                 beat(r, R.decayNext[r])
+            end
+            while R.topNext[r] > 0 and R.topNext[r] <= to do
+                topBeat(r, R.topNext[r])
             end
         elseif start then
             local rest, drop, before = R.rest[r], d * (to - start), R.est0[r]
@@ -1682,7 +1701,7 @@ I.On(Obs.CombatStart, function(o, t)
     fighting, fightT = true, t
     refresh()
     for r = 1, R.n do
-        R.decayNext[r] = 0
+        R.decayNext[r], R.topNext[r] = 0, 0
         R.pinN[r], R.pinErr[r] = 0, 0
     end
 end)
@@ -1857,9 +1876,47 @@ function I.Refund(r, d, t)
     end
 end
 
+--- Our own cast set slot r to [v, v + width] (`width`: what a roll the belief does not see may add): the estimate
+--- takes the floor, moved as a cast's change (I.ResourceShift), and the interval is exactly that; the top leaves an
+--- older top's decay grid (I.OnAdvance starts its own). Allocates nothing.
+function I.ResourceSet(r, v, width, t, event)
+    I.ResourceShift(r, v - R.est0[r], t, event)
+    local max = R.max[r]
+    R.lo0[r], R.over[r], R.hi0[r], R.topNext[r] = clamp(v, max), 0, clamp(v + width, max), 0
+end
+
+-- What slot r's out-of-combat decay takes from the clock to `now`, as a fold from the clock to `now` (I.OnAdvance)
+-- takes it from each of the estimate, lo and the top above rest: the continuous fall, or the grid's quanta at or before
+-- `now` (`up`: the projected estimate is above rest, as a gain before the decay starts it; with the estimate resting,
+-- the top's grid). 0 in combat. Allocates nothing.
+local function decayAhead(r, now, up)
+    local d = R.decay[r]
+    if fighting or d <= 0 or now <= I.clock then
+        return 0
+    end
+    local start = decayFrom(r, I.clock, now)
+    if not start then
+        return 0
+    end
+    local iv = R.decayIv[r]
+    if iv <= 0 then
+        return d * (now - start)
+    end
+    local n = R.decayNext[r]
+    if start > I.clock or n == 0 and up then
+        n = start
+    elseif n == 0 then
+        n = R.topNext[r] > 0 and R.topNext[r] or start + iv -- the estimate rests: the top's grid (I.OnAdvance)
+    end
+    if n > now then
+        return 0
+    end
+    return (floor((now - n) / iv) + 1) * d * iv -- nonzero: iv > 0 checked
+end
+
 --- (spec §3.2) The believed amount of a power type at `now`: the clock values plus continuous regen x dt and the
---- aura-gated ticks to `now`, each clamped to [0, max]; conf 1 - (hi - lo) / max, halved within SNAP_HOLD of a snap.
---- Allocates nothing.
+--- aura-gated ticks to `now`, each clamped to [0, max], less the out-of-combat decay to `now` (never below rest);
+--- conf 1 - (hi - lo) / max, halved within SNAP_HOLD of a snap. Allocates nothing.
 function VS.Power(powerType, now)
     local r = R.slotOf[powerType]
     if not r then
@@ -1882,6 +1939,13 @@ function VS.Power(powerType, now)
     local est = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + gain, max)
     local lo = clamp(R.lo0[r] + R.over[r] + R.regL[r] * a + R.spL[r] * b + gain, max)
     local hi = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b + gain, max)
+    local rest = R.rest[r]
+    local drop = decayAhead(r, now, est > rest)
+    if drop > 0 then -- a swing-paid slot too: its decay runs by time (I.OnAdvance)
+        est = est > rest and (est - drop > rest and est - drop or rest) or est
+        lo = lo > rest and (lo - drop > rest and lo - drop or rest) or lo
+        hi = hi > rest and (hi - drop > rest and hi - drop or rest) or hi
+    end
     if lo > est then
         lo = est
     end

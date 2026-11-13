@@ -25,6 +25,7 @@ describe("Engine/Driver.lua through the engine frame", function()
 
     after_each(function()
         H.Hekili.Update = upd
+        H.Hekili.Engine.settings.specs[ww.SPEC].cycle = false
     end)
 
     -- The clock and the timers on, then one due refresh: frames until the Driver finishes the Update it starts.
@@ -81,6 +82,80 @@ describe("Engine/Driver.lua through the engine frame", function()
         assert.are.equal(81, runs)
         assert.is_true(stackCalls > 0)
         assert.are.equal(0, stackBytes * 1024)
+        assert.are.equal(0, bytes)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("allocates 0 B per Update with label=/label_if= and icon=/icon_if= on every default entry", function()
+        local pack = H.Hekili.Engine.Output.Primary.recs[1].pack
+        for name, list in pairs(H.Hekili.DB.profile.packs[pack].lists) do
+            for id, e in ipairs(list) do
+                e.label, e.label_if, e.icon, e.icon_if = "R6", "time>=0", "Interface/Icons/X", "time>=0"
+                H.Hekili:LoadScript(pack, name, id)
+            end
+        end
+        for _ = 1, 35 do
+            tick()
+        end
+        local bytes = perUpdate(45)
+        local r = H.Hekili.Engine.Output.Primary.recs[1]
+        assert.are.equal("R6", r.label)
+        assert.are.equal(134400, r.iconOverride) -- the path's file ID (the fake client's answer)
+        assert.are.equal(0, bytes)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- Option D review I1: Recommend Target Swaps on, three mobs all carrying the DoT (the feature's resting state): the
+    -- swap lines (cycle_targets=1 and other_target=1) find no other target every Update and build nothing. The enemy
+    -- count grows each refresh, the count with it (all DoTed), so text built from the counts would be new each time
+    -- (an unchanged text is interned once and would read 0 here).
+    it("allocates 0 B per Update with Recommend Target Swaps on and every enemy carrying the DoT", function()
+        local rendId = H.Hekili.Class.auras.rend.id
+        H.Hekili.DB.profile.packs[ww.PACK].lists = {
+            default = {
+                { enabled = true, action = "rend", criteria = "!debuff.rend.up", cycle_targets = 1 },
+                { enabled = true, action = "rend", other_target = 1 },
+                { enabled = true, action = "battle_shout" },
+            },
+        }
+        H.Hekili:LoadScripts()
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        H.ctl.power[1] = 100 -- the rage for Rend and Battle Shout
+        local enemies = 3
+        H.ns.Facade.DebuffCount = function(id)
+            return id == rendId and enemies or 0
+        end
+        H.ns.getNumberTargets = function()
+            return enemies, enemies
+        end
+        H.ctl.auras.target.HARMFUL[1] = {
+            name = "Rend",
+            spellId = rendId,
+            expirationTime = H.ctl.now + 600,
+            duration = 21,
+            applications = 1,
+            sourceUnit = "player",
+        }
+        H.Fire("UNIT_AURA", "target")
+        H.Hekili.Engine.settings.specs[ww.SPEC].cycle = true
+        for _ = 1, 35 do
+            tick()
+        end
+        local st = H.Hekili.State
+        local setup, setupFn, upd_ = 0, st.SetupCycle, H.Hekili.Update
+        local bytes = perUpdate(45, function()
+            st.SetupCycle = function(...)
+                setup = setup + 1
+                return setupFn(...)
+            end
+            H.Hekili.Update = function(...)
+                enemies = enemies + 1
+                return upd_(...)
+            end
+        end)
+        st.SetupCycle = setupFn
+        assert.is_true(setup >= 90, "both swap lines set up a cycle every Update: " .. setup)
+        assert.are.equal("battle_shout", H.Hekili.Engine.Output.Primary.recs[1].actionName)
         assert.are.equal(0, bytes)
         assert.are.same({}, H.errors)
     end)

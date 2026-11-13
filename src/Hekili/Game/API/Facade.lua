@@ -923,6 +923,9 @@ hybrid("UnitIsUnit", function(a, b)
     end
 end, IDENTITY .. "; true for a token and itself, else nothing")
 hybrid("UnitName", nothing, IDENTITY .. "; nothing")
+-- T1 (plate count plan v2 §3): the plate count's phase test (Targets.lua UnitInPhase) on a plate stored while its GUID
+-- was plain; a secret reason (a restriction turned on since) is unknown: nothing, in phase.
+hybrid("UnitPhaseReason", nothing, "plain [W sweep 2026-10-16]; unprobed under the Map restriction; nothing")
 hybrid(
     "UnitTokenFromGUID",
     nothing,
@@ -1268,6 +1271,7 @@ local PASSTHROUGH = {
     { "GetCVar", "plain [W sweep 2026-10-16]" },
     { "GetClassInfo", "plain [W sweep 2026-10-16]" },
     { "GetCursorInfo", "plain [W sweep 2026-10-16]" },
+    { "GetFileIDFromPath", "plain [owner probe 2026-11-12: nil for a missing path]; read at script load (APL icon=)" },
     { "GetFrameCPUUsage", "plain [W sweep 2026-10-16]" },
     { "GetFramerate", "plain [W sweep 2026-10-16]" },
     { "GetInstanceInfo", "plain [W sweep 2026-10-16]" },
@@ -1321,7 +1325,6 @@ local PASSTHROUGH = {
     { "UnitIsTrivial", "plain [W sweep 2026-10-16]" },
     { "UnitLevel", "plain in combat [W PR14; gate spike]" },
     { "UnitOnTaxi", "plain [W sweep 2026-10-16]" },
-    { "UnitPhaseReason", "plain [W sweep 2026-10-16]" },
     { "UnitPowerType", "plain [W PR16]" },
     { "UnitRace", "plain [W sweep 2026-10-16]" },
     { "UnitSex", "plain [W sweep 2026-10-16]" },
@@ -1365,6 +1368,18 @@ end
 --- Belief-only, like KnownRank: the core's one window read (owner "yes"), never the aura copy. Allocates nothing.
 function Facade.Window(name)
     return VS.Window(name)
+end
+
+--- (option D, owner decision 2, 2026-11-11) How many enemies the belief holds aura `spellID` (any of its ranks) up on
+--- at `now`: the target and every remembered target slot (Families/Auras.lua VS.Count.WithAura; slots keyed by GUID,
+--- under Map by plate: Sources/Target.lua). nil when unknown: the current target holds no memory slot (no target, Map
+--- with no plate answering, plates off) or the belief does not track the aura. Belief-only, like Window: the core's
+--- second belief read (`active_dot`). Allocates nothing.
+function Facade.DebuffCount(spellID, now)
+    if I.curSlot == 0 or I.auras.bySpell[spellID] == nil or I.auras.n < 2 then
+        return nil
+    end
+    return VS.Count.WithAura(spellID, now)
 end
 
 Facade.Display = {}

@@ -42,6 +42,7 @@ local MAX_TICKS = 31 -- the ruler's ticks for the horizon's maximum (30 s)
 local SWIPE_EPS = 0.1 -- TDF Render.SWIPE_EPS: the sweep is re-set when its end moves this much (seconds)
 local READY_EPS = 0.05 -- a wait this close to its time is due: its ETA hides and a flagged record 1 turns ready
 local MOVE_EPS = 0.25 -- a lane icon is re-anchored when it moved this many pixels
+local LABEL_COLOR = { 1, 1, 0, 1 }
 local CROP = 0.08 -- TDF Render.NewCell's texture crop
 local GOLD = { 1, 0.8, 0.1 } -- TDF Render.GOLD
 local CIRCLE = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
@@ -215,6 +216,8 @@ local function newCell( d, T, i )
     b.Eta = track( T, top:CreateFontString( name .. "_ETA", "OVERLAY" ), L .. ".Eta" )
     b.Keybinding = track( T, top:CreateFontString( name .. "_KB", "OVERLAY" ), L .. ".Keybinding" )
     b.Caption = track( T, top:CreateFontString( name .. "_Caption", "OVERLAY" ), L .. ".Caption" )
+    -- the APL line's label=: on Top, so Clear hides it with Top; untracked, so the recorded draw fixture stays as it was
+    b.Label = top:CreateFontString( name .. "_Label", "OVERLAY" )
     if i <= 2 then -- either may draw the press record (roles)
         b.Targets = track( T, top:CreateFontString( name .. "_Targets", "OVERLAY" ), L .. ".Targets" )
         b.Highlight = track( T, top:CreateTexture( nil, "OVERLAY" ), L .. ".Highlight" )
@@ -350,6 +353,12 @@ local function dress( T, b, i, size, tl )
     b.Caption:SetPoint( ca, b, ca, cap[ zkey( z, "x" ) ], cap[ zkey( z, "y" ) ] )
     b.Caption:SetJustifyH( cap[ zkey( z, "align" ) ] or "CENTER" )
     b.Caption:SetText( nil )
+
+    setFont( b.Label, cap.font, 12, "OUTLINE", LABEL_COLOR ) -- tbc's Label: top centre, yellow
+    b.Label:ClearAllPoints()
+    b.Label:SetPoint( "TOP", b, "TOP", 0, -2 )
+    b.Label:SetJustifyH( "CENTER" )
+    b.Label:SetText( nil )
 
     setFont( b.Keybinding, kb[ zkey( z, "font" ) ], kb[ zkey( z, "fontSize" ) ], kb[ zkey( z, "fontStyle" ) ], kb[ zkey( z, "color" ) ] )
     b.Keybinding:ClearAllPoints()
@@ -674,7 +683,8 @@ local function assign( d, T, tl, conf, out, now, combat )
 
         if ability then
             local queued = i > 1
-            b.Texture:SetTexture( r.texture )
+            ns.UI.SetRecTexture( b.Texture, r ) -- the APL line's icon= first (a style may ignore it)
+            b.Label:SetText( r.label )
             local indicator = r.indicator
             if ind.enabled and indicator and ( not queued or ind.queued ) then
                 if indicator == "cycle" then b.Icon:SetTexture( CYCLE ) end

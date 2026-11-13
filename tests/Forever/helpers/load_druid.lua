@@ -269,6 +269,10 @@ function M.env(w)
     function e.gain(n, resource)
         table.insert(e.gained, { n, resource })
     end
+    e.reset = {} -- the belief's resetResource (Families/Now.lua): { resource, amount, upto } in call order
+    function e.resetResource(resource, amount, upto)
+        table.insert(e.reset, { resource, amount, upto or 0 })
+    end
     e.opened, e.closed = {}, {} -- the window verbs (openWindow / closeWindow), by name in call order
     function e.openWindow(name)
         table.insert(e.opened, name)

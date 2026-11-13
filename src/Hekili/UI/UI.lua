@@ -147,6 +147,13 @@ local function fontFlags( style )
 end
 ns.UI.FontFlags = fontFlags
 
+--- Draws record `rec`'s icon on texture `tex`: the APL line's icon= (`rec.iconOverride`, a file ID) when it has one,
+--- else `rec.texture`. No check here: the client's SetTexture returns true even for a missing file (owner probe
+--- 2026-11-12); Scripts.lua checks a path at load. A style that ignores overrides calls tex:SetTexture( rec.texture ).
+function ns.UI.SetRecTexture( tex, rec )
+    tex:SetTexture( rec.iconOverride or rec.texture )
+end
+
 --- Sets keybinding text `text` on font string `fs` of icon `b`, at the keyboard anchor (`anchor`, offsets `x`, `y`);
 --- a gamepad binding's pictures at the gamepad group `g`'s own (anchor, x, y), justified from it the same way. The points
 --- change only when the kind of text, the anchor or the offsets do.
