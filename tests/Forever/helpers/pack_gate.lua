@@ -306,7 +306,7 @@ M.FLICKER = {
     -- readyShort 0; heldReady the worst set, the Hunter rows' cost-crossing class (the floor a few units under the
     -- truth, gap BT), not traced per tick; agreement .996 or better each set (Survival Melee .993)
     ["Beast Mastery Turret"] = { flicker = 0, retracted = 0, heldReady = 128 }, -- heldReady 125 / 128 / 118
-    ["Marksmanship Turret"] = { flicker = 0, retracted = 0, heldReady = 116 }, -- heldReady 101 / 116 / 104
+    ["Marksmanship Turret"] = { flicker = 0, retracted = 0, heldReady = 118 }, -- heldReady 101 / 116 / 104; 118 / 102 / 101 after the seeded regen phase (L667, cause harness)
     ["Survival Turret"] = { flicker = 0, retracted = 0, heldReady = 117 }, -- heldReady 115 / 117 / 106
     ["Survival Melee"] = { flicker = 0, retracted = 0, heldReady = 183 }, -- heldReady 166 / 183 / 177
     -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
