@@ -86,6 +86,25 @@ describe("Engine/Driver.lua through the engine frame", function()
         assert.are.same({}, H.errors)
     end)
 
+    it("allocates 0 B per Update with label=/label_if= and icon=/icon_if= on every default entry", function()
+        local pack = H.Hekili.Engine.Output.Primary.recs[1].pack
+        for name, list in pairs(H.Hekili.DB.profile.packs[pack].lists) do
+            for id, e in ipairs(list) do
+                e.label, e.label_if, e.icon, e.icon_if = "R6", "time>=0", "Interface/Icons/X", "time>=0"
+                H.Hekili:LoadScript(pack, name, id)
+            end
+        end
+        for _ = 1, 35 do
+            tick()
+        end
+        local bytes = perUpdate(45)
+        local r = H.Hekili.Engine.Output.Primary.recs[1]
+        assert.are.equal("R6", r.label)
+        assert.are.equal(134400, r.iconOverride) -- the path's file ID (the fake client's answer)
+        assert.are.equal(0, bytes)
+        assert.are.same({}, H.errors)
+    end)
+
     -- Option D review I1: Recommend Target Swaps on, three mobs all carrying the DoT (the feature's resting state): the
     -- swap lines (cycle_targets=1 and other_target=1) find no other target every Update and build nothing. The enemy
     -- count grows each refresh, the count with it (all DoTed), so text built from the counts would be new each time

@@ -37,13 +37,15 @@ function M.boot(ns, api, edit)
             key = key,
             id = a.id,
             copy = a.copy,
-            spend = a.spend ~= nil and ld.run(a.spend, e) or nil,
+            -- Feral Charge's cost reads the form (Bear Form's only): the belief runs it (Engine/Schema/Tracked.lua)
+            spend = key == "feral_charge" and a.spend or (a.spend ~= nil and ld.run(a.spend, e) or nil),
             spendType = a.spendType,
             cooldown = ld.run(a.cooldown, e),
             gcd = a.gcd,
             onNextSwing = a.onNextSwing,
             startsCombat = ld.run(a.startsCombat, e), -- Rows.lua credits a strike's hit to its cast
             refundOnAvoid = a.refundOnAvoid, -- an avoid's refund (Families/Now.lua)
+            ladder = a.ladder, -- `false`: its answers are no rungs (Families/Resources.lua)
             expects = a.expects, -- the declared outcome (Families/Expect.lua): which rows its ticket takes
             velocity = a.velocity,
             school = a.school,

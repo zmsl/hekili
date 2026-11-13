@@ -14,6 +14,7 @@
 - Custom priorities can check the kind of weapon you wear: `main_hand`, `off_hand` and `ranged` each answer `dagger`, `sword`, `axe`, `mace`, `fist`, `staff`, `polearm`, `bow`, `gun`, `crossbow`, `thrown` or `wand` (for example `main_hand.axe&main_hand.two_handed` for a two-handed axe).
 - Warlock: the Doomcaller's Attire set bonuses are counted when you wear them.
 - Priest: utility auras are now known to the addon, for custom priorities.
+- Custom priorities can label a recommendation: `label=R6` on a line shows "R6" on its icon, and `label_if=<condition>` shows it only while the condition holds (for example to mark a lower spell rank). `icon=` (a texture file ID or a texture path) with `icon_if=<condition>` asks the display to show a different icon for that line; a path the game does not have keeps the normal icon and adds a line to the Warnings, while a wrong file ID shows a blank icon (the game cannot tell).
 - Warrior: Weaponmaster now shows its three auras (`weaponmaster_axe_polearm`, `weaponmaster_mace_staff`, `weaponmaster_sword`) while you have the talent and hold that kind of weapon, for custom priorities. The sword's extra attack is not predicted.
 
 ### Changed
@@ -36,6 +37,7 @@
 - Druid: the Wrath that Nature's Swiftness makes instant now uses the buff up as soon as you cast it, so the next Wrath is no longer shown as instant.
 - Druid: each Starfire you cast now uses up one Eclipse charge, so the next Starfire is no longer shown with the shorter cast of a charge already used.
 - Druid: Nature's Grace now shortens the global cooldown too (about 1.23 seconds on Wrath, Starfire, Moonfire and the other Balance and healing spells, 1.36 on the rest), so the recommendations after a crit come on time.
+- Druid and Warrior: rage now runs down out of combat at the measured 1.25 a second, in any form and between the addon's updates, and the highest rage the addon allows for falls with it, so an out-of-combat Cat Form no longer keeps a few points of rage you do not have. Feral Charge's usable answers stop setting a rage floor outside Bear Form, and a Feral Charge outside Bear Form spends no rage. Shifting into Bear Form now counts Furor's 10 rage: certain at 5/5, possible below.
 - Druid: shifting into Cat Form now sets your energy as the game does: none without Furor, and with Furor its 20% a rank of the energy you left Cat Form with plus 10 a second you spent out of Bear Form, so the first recommendations after a shift no longer count energy you do not have.
 - Warrior: Deep Wound is read from the Cooldown Manager's copy of the debuff, Flurry counts its three charges, Retaliation its 30, and Gore Drinker's buff is tracked from the abilities that grant it.
 - Warlock: Affliction and Shadow Brand (wowsims.com) now react to the Revelation weapon enchant's proc, Decimation and Shadow Trance are now also read from the spell's glow in combat where the game lights it, and Destruction (wowsims.com) now tracks Shadow and Flame's buffs the way wowsims does.
