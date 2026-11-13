@@ -110,6 +110,13 @@ M.WORLD = {
     max = 100,
     mobHealth = 15000,
     decay = { pt = 1, rate = 1.25 * (1 - 0.3), interval = 1 },
+    -- at each world's pull (scenarios.lua's o.script): Reckless Swings' charges left by another world (a fight or run that
+    -- ended inside the aura) are dropped; a precombat cast in this world keeps its own
+    script = function(W)
+        if M.chargesW ~= W then
+            M.charges = 0
+        end
+    end,
 }
 
 -- True rage per landed white wound: the class file's own model restated (Hekili_Warrior/Warrior.lua, "Rage per white
@@ -215,11 +222,11 @@ M.MAP = {
         end,
     },
     -- wowsims talents_fury.go:360-391: four charges for 8 s, each landed white hit spends one and pays 5 rage (M.Fury.gain
-    -- pays them). shortcut: a charge left at a fight's end carries into the next fight's first hits.
+    -- pays them); M.WORLD's script drops charges another world left.
     reckless_swings = {
         effect = function(W, e, _, X)
             aura(W, X, e, "reckless_swings", 4)
-            M.charges = 4
+            M.charges, M.chargesW = 4, W
             W.at(W.t + X.aura.reckless_swings.duration, function()
                 M.charges = 0
             end)

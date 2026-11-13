@@ -32,6 +32,20 @@ describe("the Warrior world mapping", function()
         H = headless.new({ character = ww.character(), pack = ww.PACK })
     end)
 
+    it(
+        "drops Reckless Swings' charges another world left at a pull; this world's own precombat charges stay",
+        function()
+            local old, new = {}, {}
+            ww.charges, ww.chargesW = 2, old
+            ww.WORLD.script(new)
+            assert.are.equal(0, ww.charges)
+            ww.charges, ww.chargesW = 4, new
+            ww.WORLD.script(new)
+            assert.are.equal(4, ww.charges)
+            ww.charges, ww.chargesW = 0, nil
+        end
+    )
+
     it("maps every ability the Arms pack can recommend that the character knows; an unmapped key fails", function()
         local unmapped = {}
         for _, list in pairs(H.Hekili.DB.profile.packs[ww.PACK].lists) do
