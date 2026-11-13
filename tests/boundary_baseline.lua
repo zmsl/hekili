@@ -74,11 +74,13 @@ return {
         ["consecration"] = 2,
         ["execute"] = 1,
         ["main_hand"] = 5,
+        ["remaining_winters_chill"] = 1,
         ["rogue"] = 1,
         ["shadowmeld"] = 1,
         ["trinket1"] = 2,
         ["trinket2"] = 2,
         ["vanish"] = 1,
+        ["winters_chill"] = 1,
     },
     ["src/Hekili/Engine/Sim/State.lua"] = {
         ["DEATHKNIGHT"] = 1,
