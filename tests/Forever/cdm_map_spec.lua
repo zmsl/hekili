@@ -205,10 +205,6 @@ local GAPS = {
         [200428] = { "Bane of Havoc", "unmapped, cat 2; no aura has any of 1324473; lane cov-warlock" },
     },
     WARRIOR = {
-        [199695] = { "Bloodthrill", "unmapped, cat 2; no aura has any of 1289681; lane cov-warrior" },
-        [199667] = { "Disarm", "unmapped, cat 2; no aura has any of 1324558; lane cov-warrior" },
-        [199699] = { "Concussion Blow", "unmapped, cat 2; no aura has any of 1324556; lane cov-warrior" },
-        [199677] = { "Improved Shield Bash", "unmapped, cat 2; no aura has any of 1324551; lane cov-warrior" },
         [199716] = { "Stances", "ambiguous, cat 2; auras battle_stance,defensive_stance,berserker_stance; abilities battle_stance,defensive_stance,berserker_stance; lane core: one item for a family of auras, ambiguous by the map's one-aura rule" },
         [200174] = { "Plainsrunning", "unmapped, cat 2; no aura has any of 1259918; lane shared races (Tauren.lua: a passive, no aura registered)" },
     },

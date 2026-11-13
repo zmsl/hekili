@@ -370,7 +370,58 @@ describe("Forever Warrior", function()
         e = lw.env(w)
         e.talent.improved_berserker_rage = { rank = 2, enabled = true }
         lw.run(w.abilities.berserker_rage.now, e)
-        assert.are.same({ 20 }, e.gained)
+        assert.are.same({ 10 }, e.gained) -- wowsims spell data curve {50, 100} tenths: 5 / 10 rage a rank (pin e5a9cd2a2d)
+        e = lw.env(w)
+        e.talent.improved_berserker_rage = { rank = 1, enabled = true }
+        lw.run(w.abilities.berserker_rage.handler, e)
+        assert.are.same({ 5 }, e.gained)
+    end)
+
+    -- pin spell data curves: Improved Intercept {-5000, -10000}, Improved Shield Wall {-330000, -660000}, Improved Disarm
+    -- {-7000, -13000, -20000} ms
+    it("takes the cooldown cuts of Improved Intercept, Improved Shield Wall and Improved Disarm", function()
+        local function cd(name, talent, rank)
+            local e = lw.env(w)
+            e.talent[talent] = { rank = rank, enabled = rank > 0 }
+            return lw.run(w.abilities[name].cooldown, e)
+        end
+        assert.are.same({ 30, 25, 20 }, {
+            cd("intercept", "improved_intercept", 0),
+            cd("intercept", "improved_intercept", 1),
+            cd("intercept", "improved_intercept", 2),
+        })
+        assert.are.same({ 900, 570, 240 }, {
+            cd("shield_wall", "improved_shield_wall", 0),
+            cd("shield_wall", "improved_shield_wall", 1),
+            cd("shield_wall", "improved_shield_wall", 2),
+        })
+        assert.are.same({ 60, 53, 47, 40 }, {
+            cd("disarm", "improved_disarm", 0),
+            cd("disarm", "improved_disarm", 1),
+            cd("disarm", "improved_disarm", 2),
+            cd("disarm", "improved_disarm", 3),
+        })
+    end)
+
+    -- wowsims talents_fury.go:360-391: the aura's four charges each pay 5 rage on a white hit, none at the cast
+    it("pays Reckless Swings' rage per landed white swing (a charge each), none at the cast", function()
+        local e = lw.env(w)
+        lw.run(w.abilities.reckless_swings.now, e)
+        assert.are.same({}, e.gained)
+        e = lw.env(w)
+        lw.run(w.abilities.reckless_swings.handler, e)
+        assert.are.same({}, e.gained)
+        assert.is_nil(w.resource[2].reckless_swings) -- no timed entry: the swings pay
+        local r = w.reactions.reckless_swings
+        assert.are.same({ "target", "land", nil }, { r.who, r.outcome, r.hand })
+        e = lw.env(w)
+        lw.run(r.now, e) -- aura down: nothing
+        assert.are.same({}, e.gained)
+        e = lw.env(w)
+        e.buff.reckless_swings = { up = true, stack = 4 }
+        lw.run(r.now, e)
+        assert.are.same({ 5 }, e.gained)
+        assert.are.same({ "reckless_swings" }, e.stackRemoved)
     end)
 
     it("spends the rest of the rage after Execute's cost in the belief, as the sim's handler and wowsims do", function()
@@ -583,6 +634,14 @@ describe("Forever Warrior", function()
         assert.are.same({ 12328, 12292 }, { w.auras.death_wish.id, w.auras.sweeping_strikes.id })
         assert.are.same({ 1282733, 5 }, { w.auras.overpower_ready.id, w.auras.overpower_ready.duration })
         assert.are.same({ 29131, 10 }, { w.auras.bloodrage.id, w.auras.bloodrage.duration })
+    end)
+
+    -- the buffs the owner's Cooldown Manager export links (tests/Forever/fixtures/cdm/warrior.lua)
+    it("registers the CDM-linked auras: Bloodthrill, Disarm, Concussion Blow, Improved Shield Bash", function()
+        assert.are.equal(1289681, w.auras.bloodthrill.id)
+        assert.are.same({ 1324558 }, w.auras.disarm.copy)
+        assert.are.same({ 1324556 }, w.auras.concussion_blow.copy)
+        assert.are.same({ 1324551 }, w.auras.shield_bash_silenced.copy)
     end)
 
     -- A `shared = "target"` aura is read from the target's debuffs, anyone's (src/Hekili/Engine/Sim/State.lua's debuff
@@ -874,10 +933,16 @@ describe("Forever Warrior", function()
     it("gains Bloodrage's rage over time through an aura-gated regen entry", function()
         local models = w.resource[2]
         assert.are.equal(1, w.resource[1])
-        assert.are.same(
-            { "bloodrage", 1, 1, true },
-            { models.bloodrage.aura, models.bloodrage.interval, models.bloodrage.value, models.bloodrage.pausesDecay }
-        )
+        assert.are.same({ "bloodrage", 1, 1, true }, {
+            models.bloodrage.aura,
+            models.bloodrage.interval,
+            lw.run(models.bloodrage.value, lw.env(w)),
+            models.bloodrage.pausesDecay,
+        })
+        -- Improved Bloodrage's +25% a rank on the ticks too (wowsims bloodrage.go:21-23)
+        local e = lw.env(w)
+        e.talent.improved_bloodrage = { rank = 2, enabled = true }
+        assert.are.equal(1.5, lw.run(models.bloodrage.value, e))
         w.state.buff = { bloodrage = { applied = 10 } }
         w.state.query_time = 13.4
         assert.are.equal(13, models.bloodrage.last())

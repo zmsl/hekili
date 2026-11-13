@@ -67,6 +67,7 @@ local DEMORALIZING_SHOUT = { 1160, 6190, 11554, 11555, 11556 }
 local EXECUTE = { 5308, 20658, 20660, 20661, 20662 }
 local HAMSTRING = { 1715, 7372, 7373 }
 local INTERCEPT = { 20252, 20616, 20617 }
+local IMPROVED_DISARM = { [0] = 0, 7, 13, 20 } -- the cooldown cut by Improved Disarm's rank
 local MOCKING_BLOW = { 694, 7400, 7402, 20559, 20560 }
 local MORTAL_STRIKE = { 12294, 21551, 21552, 21553 }
 local OVERPOWER = { 7384, 7887, 11584, 11585 }
@@ -357,9 +358,10 @@ spec:RegisterResource(
             end,
 
             interval = 1,
-            -- shortcut: Improved Bloodrage's +25% (12301) is unmodelled here, the belief's entries take a number fixed at
-            -- build; the handler's instant gain carries it. Upgrade if the regen entries learn talent-scaled values.
-            value = 1,
+            -- Improved Bloodrage (12301): +25% a rank on each tick too (wowsims bloodrage.go:21-23)
+            value = function()
+                return 1 + 0.25 * talent.improved_bloodrage.rank
+            end,
         },
     },
     nil,
@@ -509,6 +511,7 @@ spec:RegisterAuras({
     },
     concussion_blow = {
         id = 12809,
+        copy = { 1324556 }, -- the CDM item's spell
         duration = 5,
         max_stack = 1,
     },
@@ -536,6 +539,7 @@ spec:RegisterAuras({
     },
     disarm = {
         id = 676,
+        copy = { 1324558 }, -- the CDM item's spell
         duration = 10,
         max_stack = 1,
     },
@@ -624,6 +628,14 @@ spec:RegisterAuras({
         duration = 5,
         max_stack = 1,
     },
+    -- Bloodthrill's own aura (1289681), the buff the CDM links; its proc opens the overpower_ready window above, which
+    -- the plain usability read observes. Declared for the CDM mapping only: never applied. The 5 s is unsourced:
+    -- it matches the Overpower window 1282733 (1289681 is not in the pin's spell data).
+    bloodthrill = {
+        id = 1289681,
+        duration = 5,
+        max_stack = 1,
+    },
     piercing_howl = {
         id = 12323,
         duration = 6,
@@ -668,6 +680,7 @@ spec:RegisterAuras({
     },
     shield_bash_silenced = {
         id = 18498,
+        copy = { 1324551 }, -- the CDM item's spell (Improved Shield Bash, "Silenced")
         duration = 3,
         max_stack = 1,
     },
@@ -875,6 +888,19 @@ local function stanceReady()
     return max(cooldown.battle_stance.remains, cooldown.defensive_stance.remains, cooldown.berserker_stance.remains)
 end
 
+-- Reckless Swings' charges (wowsims talents_fury.go:360-391): each landed white swing of either hand spends one and pays
+-- 5 rage, at the swing's own time (a reaction at the landed outcome; Families/Now.lua).
+spec:RegisterReaction("reckless_swings", {
+    who = "target",
+    outcome = "land",
+    now = function()
+        if buff.reckless_swings.up then
+            gain(5, "rage")
+            removeStack("reckless_swings")
+        end
+    end,
+})
+
 spec:RegisterAbilities({
     battle_shout = {
         id = 6673,
@@ -944,7 +970,7 @@ spec:RegisterAbilities({
                 applyBuff("gore_drinker", nil, 3)
             end
             if talent.improved_berserker_rage.enabled then
-                gain(10 * talent.improved_berserker_rage.rank, "rage")
+                gain(5 * talent.improved_berserker_rage.rank, "rage")
             end
         end,
 
@@ -953,9 +979,9 @@ spec:RegisterAbilities({
             if talent.gore_drinker.rank > 0 then
                 applyBuff("gore_drinker", nil, 3)
             end
-            -- DB2 20500: energize 100 (10 rage) a rank.
+            -- wowsims spell data curve {50, 100} tenths: 5 / 10 rage (the DB2's 100 on rank 1 is not it; wowsims wins)
             if talent.improved_berserker_rage.enabled then
-                gain(10 * talent.improved_berserker_rage.rank, "rage")
+                gain(5 * talent.improved_berserker_rage.rank, "rage")
             end
         end,
     },
@@ -1248,7 +1274,10 @@ spec:RegisterAbilities({
         id = 676,
         expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         cast = 0,
-        cooldown = 60,
+        -- Improved Disarm (12313): -7 / -13 / -20 s (the pin's spell data curve)
+        cooldown = function()
+            return 60 - IMPROVED_DISARM[talent.improved_disarm.rank]
+        end,
         gcd = "spell",
 
         spend = function()
@@ -1368,7 +1397,10 @@ spec:RegisterAbilities({
         id = 20252,
         copy = rest(INTERCEPT),
         cast = 0,
-        cooldown = 30,
+        -- Improved Intercept (20504): -5 s a rank
+        cooldown = function()
+            return 30 - 5 * talent.improved_intercept.rank
+        end,
         gcd = "off",
 
         spend = function()
@@ -1576,8 +1608,8 @@ spec:RegisterAbilities({
 
     -- Fury talent (1329555, new at 4b0030a44b): 15 s cooldown, a 1 s GCD, 25% of base health (unsimulated, like
     -- Bloodrage's: the player's health is secret) for 4 charges in 8 s; each white swing spends one and gives 5 rage.
-    -- shortcut: the belief cannot spend a charge on our own swing (consumedBy reads hits on us only), so the four
-    -- swings' 20 rage are granted at the cast; upgrade when central support exists (blocker note warrior-1).
+    -- The belief pays it at each landed white swing (the reckless_swings reaction), not at the cast; Hekili's own
+    -- forecast does not see it (the reaction is belief-only).
     reckless_swings = {
         id = 1329555,
         cast = 0,
@@ -1594,7 +1626,6 @@ spec:RegisterAbilities({
             if talent.gore_drinker.rank > 0 then
                 applyBuff("gore_drinker", nil, 3)
             end
-            gain(20, "rage")
         end,
 
         handler = function()
@@ -1602,7 +1633,6 @@ spec:RegisterAbilities({
             if talent.gore_drinker.rank > 0 then
                 applyBuff("gore_drinker", nil, 3)
             end
-            gain(20, "rage")
         end,
     },
 
@@ -1778,7 +1808,10 @@ spec:RegisterAbilities({
     shield_wall = {
         id = 871,
         cast = 0,
-        cooldown = 900,
+        -- Improved Shield Wall (12312): -330 s a rank (the pin's curve, 900 -> 570 / 240; the 240 is unmeasured in game)
+        cooldown = function()
+            return 900 - 330 * talent.improved_shield_wall.rank
+        end,
         gcd = "spell", -- the DB2's (start recovery 1500 ms); Classic had it off the GCD (checkpoint question)
 
         startsCombat = false,

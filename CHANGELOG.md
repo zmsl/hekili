@@ -9,6 +9,7 @@
 - The priority editor (Action Lists) now has Label, Label Condition, Icon and Icon Condition fields under Caption, so labels and icon overrides can be set without importing a line. The Icon field previews the texture it resolves to and says so when a path is not a texture file.
 
 ### Changed
+- Warrior: Improved Berserker Rage now gives 5 or 10 rage, and Improved Intercept, Improved Shield Wall and Improved Disarm now shorten those cooldowns as the talents do.
 - Hunter: the Turret priorities are now the default for Beast Mastery, Marksmanship and Survival; the melee-weave priorities and Survival Melee are still there to pick by hand. A Hunter who never picked a priority moves to the Turret one; a priority you picked stays.
 - An ability that becomes affordable just after the global cooldown ends now keeps its place instead of briefly giving way to a lower one, so there are fewer brief icon flashes (for example Shifting Power for Feral).
 - Rogue: Relentless Strikes now counts the energy it gives on average at every rank and combo-point count, not only at 5/5 with 5 points. Feint, Gouge, Kidney Shot, Cheap Shot, Sap, Blind, Evasion, Sprint and Distract are now known to the addon, so using one by hand spends its energy and starts its cooldown in Hekili's forecast. Elusiveness, Endurance, Camouflage, Dirty Tricks and Dirty Deeds change their cooldowns and costs as the talents do. Preparation now finishes the cooldown of every other Rogue ability, as it does in the game.
@@ -16,6 +17,7 @@
 - The options' Priorities list now opens on your current spec, and marks the priority that is active with a green check.
 
 ### Fixed
+- Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - Life Tap (Warlock), Innervate (Feral, and Guardian in Cat Form) and Dark Sacrifice (Shadow Priest) are no longer recommended at full mana on characters with less mana than the level-60 character these priorities were written for (for example while leveling); they now wait until your mana is low for your own pool.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 
