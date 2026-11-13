@@ -113,17 +113,18 @@ end
 --- Sets `spec`'s pack in its profile table `sp` to selector `sel`'s (nil: no selector holds, so back to the spec's
 --- default) when the pack in place is not the player's: `sp.packManual` (a pick in the options or by command) blocks
 --- it, and so does any pack but the default or the one a selector set (`sp.packAuto`, its name), so a profile from
---- before selectors keeps a non-default pick. A custom priority (no `builtIn`) is never replaced, and only a built-in
+--- before selectors keeps a non-default pick (but a spec's `formerPackages`, its replaced defaults, count as the default). A custom priority (no `builtIn`) is never replaced, and only a built-in
 --- priority of `spec` that exists in `packs` is written. Returns true when it changed the pack.
 function ns.SelectPack(sp, packs, spec, sel)
     if type(sp) ~= "table" or sp.packManual then
         return false
     end
     local cur, auto, default = sp.package, sp.packAuto, spec.options.package
-    if cur ~= nil and cur ~= default and cur ~= auto then
+    local former = cur ~= nil and spec.options.formerPackages and spec.options.formerPackages[cur] -- a replaced default
+    if cur ~= nil and cur ~= default and cur ~= auto and not former then
         return false
     end
-    if sel == nil and (auto == nil or cur ~= auto) then
+    if sel == nil and (auto == nil or cur ~= auto) and not former then
         return false -- no selector holds: only a selector's own pick goes back to the default
     end
     local have = cur ~= nil and rawget(packs, cur)

@@ -127,24 +127,33 @@ local PACKS = {
     -- Live limits over 6 s, TRACED per tick (2026-11-13, a probe over ws.live's own idle test, worst streak of the first
     -- fight): the weave rows' R41 class, mana dry. Each worst streak starts with the pool at 2-17 of 5000 and ends when
     -- it reaches Arcane Shot's cost (95 at L40 for Marksmanship Turret, 106 at L40 for Survival Melee, 167-190 at
-    -- L60: 2 -> 167 in 14.0 s, 17 -> 190 in 12.8 s, 2 -> 190 in 15.4 s, 3 -> 190 in 15.2 s), the regen of the pool
-    -- (12-13 mana a second) and nothing else; the abilities the world answers usable meanwhile (Hunter's Mark, Aspect,
-    -- Wing Clip, traps) are not the pack's, as in the weave rows. Rows: MM Turret L40 9.4 (t 110.8-120.0) / L60 14.0 (t
+    -- L60: 2 -> 167 in 14.0 s, 17 -> 190 in 12.8 s, 2 -> 190 in 15.4 s, 3 -> 190 in 15.4 s), the regen of the pool
+    -- (about 10 mana a second at L40, 12-13 at L60) and nothing else. What the world answers usable meanwhile: Shatter
+    -- Curse from the first tick (no trap appears); Hunter's Mark and the Aspect are pack lines the probe did not trace
+    -- (possibly already up); Survival Melee's Wing Clip, Strider Kick and Mongoose Bite are pack lines held by the
+    -- melee range conditions at the live world's 11 yd (R63). Rows: MM Turret L40 9.4 (t 110.8-120.0) / L60 14.0 (t
     -- 61.2-75.0), BM Turret L60 13.0 (12.8, t 65.0-77.6), SV Turret L60 15.4 (t 82.8-98.0), SV Melee L40 10.0 (t
     -- 81.6-91.4) / L60 15.4 (t 65.8-81.0).
-    -- ON flicker ceilings, traced per tick: MM Turret 1.7 (5 flips) and SV Turret 1.0 (3 flips): 7 of the 8 flips read
-    -- ours aimed_shot -> arcane_shot -> aimed_shot against the log's arcane_shot, arcane_shot, aimed_shot: our first icon
-    -- is Aimed Shot a tick before wowsims's Arcane Shot decision, then Arcane Shot at the cast, then Aimed Shot again
-    -- once the shot is taken (why Arcane Shot is first only at the cast tick: not traced further). loop.replay's flips() has no press array (a replay
-    -- records none), so the A, B, A of "shown, then cast" counts here where a live run's press excludes it: Beast
-    -- Mastery's note above (the replay's no-press-exclusion lead). The 8th (MM Turret, 110.2 s) is arcane_shot ->
-    -- serpent_sting -> arcane_shot against sting, sting, arcane: the Serpent Sting class of the misses.
+    -- ON flicker ceilings, traced per tick: MM Turret 1.7 (5 flips) and SV Turret 1.0 (3 flips). 7 of the 8 flips drop
+    -- out once the log's own presses are applied (loop.flips with a press array: the replay passes none, so "shown, then
+    -- cast" counts here where a live run's press excludes it; Beast Mastery's note above, the no-press-exclusion lead):
+    -- 6 read ours aimed_shot -> arcane_shot -> aimed_shot against the log's arcane_shot, arcane_shot, aimed_shot (why
+    -- Arcane Shot is first only at the cast tick: not traced further), and the 110.2 s one (MM Turret) reads
+    -- arcane_shot -> serpent_sting -> arcane_shot against sting, sting, arcane, the log pressing the sting at the middle
+    -- tick (the Serpent Sting class of the misses is its other reason). The 1 that survives, MM Turret tick 288 (57.6 s;
+    -- ceiling 1.7 holds it): ours arcane -> aimed -> arcane while the log shows arcane x3, then aimed at 291. Traced
+    -- (per-tick queue dump): wowsims casts Sniper Shot at 57.65 (a decision our first icon missed: it showed Arcane
+    -- Shot, one of the profile's 3 decision misses), which spends 102 of the believed mana (467 -> 365) and applies an
+    -- aura at tick 289; the queue then ranks Aimed Shot (272.8, wait 0.10) over Arcane Shot (167.2, wait 0.26) for that
+    -- tick and Arcane Shot (wait 0.06) the next, Aimed Shot back at 291 after the log's Arcane Shot: the cost-crossing
+    -- re-rank of the Hunter rows (gap BT) on the mana the missed Sniper Shot spent. The last link (why Aimed Shot leaves
+    -- the queue's first three at tick 290) is read from the waits, not traced further.
     {
         "hunter_beast_mastery_turret",
         "BeastMasteryTurret",
         "Beast Mastery Turret (wowsims.com)",
         1.00, -- 1.000 (59)
-        { [10] = 6, [40] = 6, [60] = 13.0 }, -- 4.4 / 4.4 / 13.0
+        { [10] = 6, [40] = 6, [60] = 13.0 }, -- 4.4 / 4.4 / 12.8
         0, -- 0.00
         nil,
         {},

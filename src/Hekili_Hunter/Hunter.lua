@@ -6,7 +6,7 @@
 -- the shared cooldowns (Arcane Shot and Summon Hawk; Aimed Shot and Multi-Shot), Raptor Strike on the next swing,
 -- Mongoose Bite's window from the plain usability read, Immolation Trap, Resourcefulness's cheaper strikes and traps,
 -- the time to the next main-hand swing (`mainhand_remains`, the weave's Multi-Shot gap), and the default priorities
--- (the wowsims.com packs, translated from wowsims/forever's Melee Weave; no in-game check yet).
+-- (the wowsims.com packs: the Turret lists are the default, the Melee Weave and Survival Melee are picked by hand; no in-game check yet).
 -- Research: docs/research/2026-10-15-forever-hunter/research.md and the class-completion research §5.
 -- Unmodelled: ranged haste on the auto-shot clock and Rapid Fire's +40% melee haste on the main-hand swing (Rapid Fire,
 -- Quick Shots; their haste on Aimed, Multi and Sniper Shot's casts is modelled; the core's aura field `swingHaste`
@@ -44,7 +44,8 @@ local spec = Hekili:NewClass("HUNTER", {
             role = "attack",
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
-            package = "Beast Mastery (wowsims.com)",
+            package = "Beast Mastery Turret (wowsims.com)", -- the default (owner 2026-11-13, L859); the weave is picked by hand
+            formerPackages = { ["Beast Mastery (wowsims.com)"] = true }, -- the weave was the default: a profile that never picked moves
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
         {
@@ -55,7 +56,8 @@ local spec = Hekili:NewClass("HUNTER", {
             role = "attack",
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
-            package = "Marksmanship (wowsims.com)",
+            package = "Marksmanship Turret (wowsims.com)", -- the default (owner 2026-11-13, L859); the weave is picked by hand
+            formerPackages = { ["Marksmanship (wowsims.com)"] = true }, -- the weave was the default: a profile that never picked moves
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
         {
@@ -66,7 +68,8 @@ local spec = Hekili:NewClass("HUNTER", {
             role = "attack",
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
-            package = "Survival (wowsims.com)",
+            package = "Survival Turret (wowsims.com)", -- the default (owner 2026-11-13, L859); the weave is picked by hand
+            formerPackages = { ["Survival (wowsims.com)"] = true }, -- the weave was the default: a profile that never picked moves
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
     },
@@ -822,46 +825,6 @@ spec:RegisterTalents({
     lightning_reflexes = { 3, 19168, 5 },
     lacerating_strikes = { 3, 1310533, 1 },
 })
-
--- Packs from the talents (Engine/Schema/Selectors.lua; after the Hekili classic branch's pack selectors): each tree's
--- default is wowsims's Melee Weave; wowsims's non-weave builds (owner 2026-11-12, ledger L661) are told apart by a
--- talent only that build takes, so a build without one keeps the weave default (a partial or leveling build that
--- already holds that talent, e.g. Survivalist in the second Survival row, takes the non-weave pack).
--- - Beast Mastery: both builds are 31/16/4; the Turret build takes Improved Arcane Shot (3/5) in Marksmanship, the
---   weave Efficiency (2/5) instead. A build with both stays on the weave.
--- - Marksmanship: the Turret build (5/41/5) takes Sniper Shot, the 41-point talent its list fills with; the weave
---   build (0/26/25) cannot reach it.
--- - Survival: the Turret build (1/20/30) takes Survivalist (5/5) and stops before Strider Kick; the weave and melee
---   builds take Strider Kick and no Survivalist. The Melee build (16/10/25) is the only one with Survivalist's
---   Discipline (2/2).
-spec:RegisterSelector(
-    "bm_turret",
-    { spec = "beast_mastery", pack = "Beast Mastery Turret (wowsims.com)" },
-    function(tab1, tab2, tab3)
-        return tab1 > tab2 and tab1 > tab3 and talent.improved_arcane_shot.rank > 0 and talent.efficiency.rank == 0
-    end
-)
-spec:RegisterSelector(
-    "mm_turret",
-    { spec = "marksmanship", pack = "Marksmanship Turret (wowsims.com)" },
-    function(tab1, tab2, tab3)
-        return tab2 > tab1 and tab2 > tab3 and talent.sniper_shot.rank > 0
-    end
-)
-spec:RegisterSelector(
-    "sv_turret",
-    { spec = "survival", pack = "Survival Turret (wowsims.com)" },
-    function(tab1, tab2, tab3)
-        return tab3 > tab1 and tab3 > tab2 and talent.survivalist.rank > 0 and talent.strider_kick.rank == 0
-    end
-)
-spec:RegisterSelector(
-    "sv_melee",
-    { spec = "survival", pack = "Survival Melee (wowsims.com)" },
-    function(tab1, tab2, tab3)
-        return tab3 > tab1 and tab3 > tab2 and talent.survivalists_discipline.rank > 0
-    end
-)
 
 -- Beast Mastery's HHA (re-pin ruling R15; wowsims bm_weave's default_hawks APL at e2842f0a78: a sequence of Summon
 -- Hawk, Summon Hawk, Arcane Shot under "Use Summon Hawk" and "Use Arcane Shot", reset when complete): a stepped window

@@ -135,7 +135,7 @@ function Hekili:NewClass( token, def )
             melee = not d.ranged,
             kit = kit,
             settings = {},
-            options = { package = d.package, movement = d.movement, nameplateRange = d.nameplateRange or ( d.ranged and 30 ) or nil }, -- per spec: the kit's RegisterOptions reaches every tree
+            options = { package = d.package, formerPackages = d.formerPackages, movement = d.movement, nameplateRange = d.nameplateRange or ( d.ranged and 30 ) or nil }, -- per spec: the kit's RegisterOptions reaches every tree
         }, { __index = kit } )
         if d.unsupported then s.options.enabled = false end -- no priorities: no displays
 

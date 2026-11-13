@@ -393,9 +393,9 @@ Survival solo: fights=20 agreement 0.958 (18040 ticks); react median 0 p90 1 nev
 wowsims's non-weave Hunter builds (owner 2026-11-12, ledger L661) ship beside the weave packs: Beast Mastery Turret,
 Marksmanship Turret and Survival Turret (wowsims's `bm`, `mm` and `sv` builds on `turret.apl.siml`: Hunter's Mark,
 Serpent Sting, Arcane Shot, Aimed Shot, Sniper Shot as the filler and the pull's opener, no melee) and Survival Melee
-(`sv_melee.siml` on `melee.apl.siml`). Hunter.lua's selectors pick them from the talents, each by a talent only that
-build takes: Improved Arcane Shot without Efficiency (Beast Mastery), Sniper Shot (Marksmanship), Survivalist without
-Strider Kick (Survival Turret), Survivalist's Discipline (Survival Melee); any other build keeps the tree's weave pack.
+(`sv_melee.siml` on `melee.apl.siml`). The Turret packs are each Hunter spec's default (owner 2026-11-13, L859: `package` in Hunter.lua; the weave packs and Survival
+Melee are picked by hand). The weave was the default before, so each spec lists it in `formerPackages`: a profile that
+names it without a hand pick (`packManual`) moves to the Turret (`ns.SelectPack`), one picked by hand stays.
 Their worlds take the export's whole talent string; the Turret worlds stand at 12 yd shooting, Survival Melee at 5 yd
 with two one-handers (its live bars at 11 yd, R63, `W.SurvivalMeleeRanged`). Replay decisions on-GCD: 1.000 (59),
 0.955 (66), 0.962 (53), 0.942 (86); the 20-fight lines (seeds 1-20, after the seeded regen phase) read agreement 0.998 / 1.000 /

@@ -441,10 +441,11 @@ describe("Forever Hunter priorities", function()
         for _, sp in ipairs(cls.def.specs) do
             names[#names + 1] = sp.package
         end
-        assert.are.same(
-            { "Beast Mastery (wowsims.com)", "Marksmanship (wowsims.com)", "Survival (wowsims.com)" },
-            names
-        )
+        assert.are.same({
+            "Beast Mastery Turret (wowsims.com)",
+            "Marksmanship Turret (wowsims.com)",
+            "Survival Turret (wowsims.com)",
+        }, names)
         assert.is_truthy(src:find('spec:RetirePacks({ "BeastMastery", "Marksmanship", "Survival" })', 1, true))
     end)
 
