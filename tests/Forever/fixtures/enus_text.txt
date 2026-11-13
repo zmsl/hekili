@@ -14059,6 +14059,14 @@ options.packs.affliction.Affliction (wowsims.com).lists.description	desc	This al
 options.packs.affliction.Affliction (wowsims.com).lists.description	name	Description
 options.packs.affliction.Affliction (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.affliction.Affliction (wowsims.com).lists.enabled	name	Enabled
+options.packs.affliction.Affliction (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.affliction.Affliction (wowsims.com).lists.icon	name	Icon
+options.packs.affliction.Affliction (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.affliction.Affliction (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.affliction.Affliction (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.affliction.Affliction (wowsims.com).lists.label	name	Label
+options.packs.affliction.Affliction (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.affliction.Affliction (wowsims.com).lists.label_if	name	Label Condition
 options.packs.affliction.Affliction (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.affliction.Affliction (wowsims.com).lists.listName	name	Action List
 options.packs.affliction.Affliction (wowsims.com).lists.listName	values.cooldowns	cooldowns
@@ -14339,6 +14347,14 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.description	desc	This allow
 options.packs.affliction.SM Ruin (wowsims.com).lists.description	name	Description
 options.packs.affliction.SM Ruin (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.affliction.SM Ruin (wowsims.com).lists.enabled	name	Enabled
+options.packs.affliction.SM Ruin (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.affliction.SM Ruin (wowsims.com).lists.icon	name	Icon
+options.packs.affliction.SM Ruin (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.affliction.SM Ruin (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.affliction.SM Ruin (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.affliction.SM Ruin (wowsims.com).lists.label	name	Label
+options.packs.affliction.SM Ruin (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.affliction.SM Ruin (wowsims.com).lists.label_if	name	Label Condition
 options.packs.affliction.SM Ruin (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.affliction.SM Ruin (wowsims.com).lists.listName	name	Action List
 options.packs.affliction.SM Ruin (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -14621,6 +14637,14 @@ options.packs.arcane.Arcane (wowsims.com).lists.description	desc	This allows you
 options.packs.arcane.Arcane (wowsims.com).lists.description	name	Description
 options.packs.arcane.Arcane (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.arcane.Arcane (wowsims.com).lists.enabled	name	Enabled
+options.packs.arcane.Arcane (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.arcane.Arcane (wowsims.com).lists.icon	name	Icon
+options.packs.arcane.Arcane (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.arcane.Arcane (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.arcane.Arcane (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.arcane.Arcane (wowsims.com).lists.label	name	Label
+options.packs.arcane.Arcane (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.arcane.Arcane (wowsims.com).lists.label_if	name	Label Condition
 options.packs.arcane.Arcane (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.arcane.Arcane (wowsims.com).lists.listName	name	Action List
 options.packs.arcane.Arcane (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -14992,6 +15016,14 @@ options.packs.arms.Arms (wowsims.com).lists.description	desc	This allows you to 
 options.packs.arms.Arms (wowsims.com).lists.description	name	Description
 options.packs.arms.Arms (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.arms.Arms (wowsims.com).lists.enabled	name	Enabled
+options.packs.arms.Arms (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.arms.Arms (wowsims.com).lists.icon	name	Icon
+options.packs.arms.Arms (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.arms.Arms (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.arms.Arms (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.arms.Arms (wowsims.com).lists.label	name	Label
+options.packs.arms.Arms (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.arms.Arms (wowsims.com).lists.label_if	name	Label Condition
 options.packs.arms.Arms (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.arms.Arms (wowsims.com).lists.listName	name	Action List
 options.packs.arms.Arms (wowsims.com).lists.listName	values.cd_racials	cd_racials
@@ -15319,6 +15351,14 @@ options.packs.assassination.Assassination (wowsims.com).lists.description	desc	T
 options.packs.assassination.Assassination (wowsims.com).lists.description	name	Description
 options.packs.assassination.Assassination (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.assassination.Assassination (wowsims.com).lists.enabled	name	Enabled
+options.packs.assassination.Assassination (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.assassination.Assassination (wowsims.com).lists.icon	name	Icon
+options.packs.assassination.Assassination (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.assassination.Assassination (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.assassination.Assassination (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.assassination.Assassination (wowsims.com).lists.label	name	Label
+options.packs.assassination.Assassination (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.assassination.Assassination (wowsims.com).lists.label_if	name	Label Condition
 options.packs.assassination.Assassination (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.assassination.Assassination (wowsims.com).lists.listName	name	Action List
 options.packs.assassination.Assassination (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -15674,6 +15714,14 @@ options.packs.balance.Balance (wowsims.com).lists.description	desc	This allows y
 options.packs.balance.Balance (wowsims.com).lists.description	name	Description
 options.packs.balance.Balance (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.balance.Balance (wowsims.com).lists.enabled	name	Enabled
+options.packs.balance.Balance (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.balance.Balance (wowsims.com).lists.icon	name	Icon
+options.packs.balance.Balance (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.balance.Balance (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.balance.Balance (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.balance.Balance (wowsims.com).lists.label	name	Label
+options.packs.balance.Balance (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.balance.Balance (wowsims.com).lists.label_if	name	Label Condition
 options.packs.balance.Balance (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.balance.Balance (wowsims.com).lists.listName	name	Action List
 options.packs.balance.Balance (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -15999,6 +16047,14 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.description	desc	T
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.description	name	Description
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.enabled	name	Enabled
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.icon	name	Icon
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.label	name	Label
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.label_if	name	Label Condition
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.listName	name	Action List
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -16313,6 +16369,14 @@ options.packs.combat.Combat (wowsims.com).lists.description	desc	This allows you
 options.packs.combat.Combat (wowsims.com).lists.description	name	Description
 options.packs.combat.Combat (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.combat.Combat (wowsims.com).lists.enabled	name	Enabled
+options.packs.combat.Combat (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.combat.Combat (wowsims.com).lists.icon	name	Icon
+options.packs.combat.Combat (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.combat.Combat (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.combat.Combat (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.combat.Combat (wowsims.com).lists.label	name	Label
+options.packs.combat.Combat (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.combat.Combat (wowsims.com).lists.label_if	name	Label Condition
 options.packs.combat.Combat (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.combat.Combat (wowsims.com).lists.listName	name	Action List
 options.packs.combat.Combat (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -16648,6 +16712,14 @@ options.packs.demonology.Demonology (wowsims.com).lists.description	desc	This al
 options.packs.demonology.Demonology (wowsims.com).lists.description	name	Description
 options.packs.demonology.Demonology (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.demonology.Demonology (wowsims.com).lists.enabled	name	Enabled
+options.packs.demonology.Demonology (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.demonology.Demonology (wowsims.com).lists.icon	name	Icon
+options.packs.demonology.Demonology (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.demonology.Demonology (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.demonology.Demonology (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.demonology.Demonology (wowsims.com).lists.label	name	Label
+options.packs.demonology.Demonology (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.demonology.Demonology (wowsims.com).lists.label_if	name	Label Condition
 options.packs.demonology.Demonology (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.demonology.Demonology (wowsims.com).lists.listName	name	Action List
 options.packs.demonology.Demonology (wowsims.com).lists.listName	values.cooldowns	cooldowns
@@ -16928,6 +17000,14 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.description	desc	This 
 options.packs.demonology.Shadow Brand (wowsims.com).lists.description	name	Description
 options.packs.demonology.Shadow Brand (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.enabled	name	Enabled
+options.packs.demonology.Shadow Brand (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.demonology.Shadow Brand (wowsims.com).lists.icon	name	Icon
+options.packs.demonology.Shadow Brand (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.demonology.Shadow Brand (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.demonology.Shadow Brand (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.demonology.Shadow Brand (wowsims.com).lists.label	name	Label
+options.packs.demonology.Shadow Brand (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.demonology.Shadow Brand (wowsims.com).lists.label_if	name	Label Condition
 options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	name	Action List
 options.packs.demonology.Shadow Brand (wowsims.com).lists.listName	values.cooldowns	cooldowns
@@ -17281,6 +17361,14 @@ options.packs.destruction.Destruction (wowsims.com).lists.description	desc	This 
 options.packs.destruction.Destruction (wowsims.com).lists.description	name	Description
 options.packs.destruction.Destruction (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.destruction.Destruction (wowsims.com).lists.enabled	name	Enabled
+options.packs.destruction.Destruction (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.destruction.Destruction (wowsims.com).lists.icon	name	Icon
+options.packs.destruction.Destruction (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.destruction.Destruction (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.destruction.Destruction (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.destruction.Destruction (wowsims.com).lists.label	name	Label
+options.packs.destruction.Destruction (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.destruction.Destruction (wowsims.com).lists.label_if	name	Label Condition
 options.packs.destruction.Destruction (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.destruction.Destruction (wowsims.com).lists.listName	name	Action List
 options.packs.destruction.Destruction (wowsims.com).lists.listName	values.cooldowns	cooldowns
@@ -17583,6 +17671,14 @@ options.packs.discipline.Smite (wowsims.com).lists.description	desc	This allows 
 options.packs.discipline.Smite (wowsims.com).lists.description	name	Description
 options.packs.discipline.Smite (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.discipline.Smite (wowsims.com).lists.enabled	name	Enabled
+options.packs.discipline.Smite (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.discipline.Smite (wowsims.com).lists.icon	name	Icon
+options.packs.discipline.Smite (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.discipline.Smite (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.discipline.Smite (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.discipline.Smite (wowsims.com).lists.label	name	Label
+options.packs.discipline.Smite (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.discipline.Smite (wowsims.com).lists.label_if	name	Label Condition
 options.packs.discipline.Smite (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.discipline.Smite (wowsims.com).lists.listName	name	Action List
 options.packs.discipline.Smite (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -17907,6 +18003,14 @@ options.packs.elemental.Elemental (wowsims.com).lists.description	desc	This allo
 options.packs.elemental.Elemental (wowsims.com).lists.description	name	Description
 options.packs.elemental.Elemental (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.elemental.Elemental (wowsims.com).lists.enabled	name	Enabled
+options.packs.elemental.Elemental (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.elemental.Elemental (wowsims.com).lists.icon	name	Icon
+options.packs.elemental.Elemental (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.elemental.Elemental (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.elemental.Elemental (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.elemental.Elemental (wowsims.com).lists.label	name	Label
+options.packs.elemental.Elemental (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.elemental.Elemental (wowsims.com).lists.label_if	name	Label Condition
 options.packs.elemental.Elemental (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.elemental.Elemental (wowsims.com).lists.listName	name	Action List
 options.packs.elemental.Elemental (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -18231,6 +18335,14 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.description	desc	This 
 options.packs.enhancement.Enhancement (wowsims.com).lists.description	name	Description
 options.packs.enhancement.Enhancement (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.enhancement.Enhancement (wowsims.com).lists.enabled	name	Enabled
+options.packs.enhancement.Enhancement (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.enhancement.Enhancement (wowsims.com).lists.icon	name	Icon
+options.packs.enhancement.Enhancement (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.enhancement.Enhancement (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.enhancement.Enhancement (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.enhancement.Enhancement (wowsims.com).lists.label	name	Label
+options.packs.enhancement.Enhancement (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.enhancement.Enhancement (wowsims.com).lists.label_if	name	Label Condition
 options.packs.enhancement.Enhancement (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.enhancement.Enhancement (wowsims.com).lists.listName	name	Action List
 options.packs.enhancement.Enhancement (wowsims.com).lists.listName	values.aoe_rotation	aoe_rotation
@@ -18595,6 +18707,14 @@ options.packs.feral.Feral (wowsims.com).lists.description	desc	This allows you t
 options.packs.feral.Feral (wowsims.com).lists.description	name	Description
 options.packs.feral.Feral (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.feral.Feral (wowsims.com).lists.enabled	name	Enabled
+options.packs.feral.Feral (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.feral.Feral (wowsims.com).lists.icon	name	Icon
+options.packs.feral.Feral (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.feral.Feral (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.feral.Feral (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.feral.Feral (wowsims.com).lists.label	name	Label
+options.packs.feral.Feral (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.feral.Feral (wowsims.com).lists.label_if	name	Label Condition
 options.packs.feral.Feral (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.feral.Feral (wowsims.com).lists.listName	name	Action List
 options.packs.feral.Feral (wowsims.com).lists.listName	values.bear	bear
@@ -18882,6 +19002,14 @@ options.packs.fire.Fire (wowsims.com).lists.description	desc	This allows you to 
 options.packs.fire.Fire (wowsims.com).lists.description	name	Description
 options.packs.fire.Fire (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.fire.Fire (wowsims.com).lists.enabled	name	Enabled
+options.packs.fire.Fire (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.fire.Fire (wowsims.com).lists.icon	name	Icon
+options.packs.fire.Fire (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.fire.Fire (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.fire.Fire (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.fire.Fire (wowsims.com).lists.label	name	Label
+options.packs.fire.Fire (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.fire.Fire (wowsims.com).lists.label_if	name	Label Condition
 options.packs.fire.Fire (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.fire.Fire (wowsims.com).lists.listName	name	Action List
 options.packs.fire.Fire (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -19094,6 +19222,14 @@ options.packs.fire.Frostfire (wowsims.com).lists.description	desc	This allows yo
 options.packs.fire.Frostfire (wowsims.com).lists.description	name	Description
 options.packs.fire.Frostfire (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.fire.Frostfire (wowsims.com).lists.enabled	name	Enabled
+options.packs.fire.Frostfire (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.fire.Frostfire (wowsims.com).lists.icon	name	Icon
+options.packs.fire.Frostfire (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.fire.Frostfire (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.fire.Frostfire (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.fire.Frostfire (wowsims.com).lists.label	name	Label
+options.packs.fire.Frostfire (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.fire.Frostfire (wowsims.com).lists.label_if	name	Label Condition
 options.packs.fire.Frostfire (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.fire.Frostfire (wowsims.com).lists.listName	name	Action List
 options.packs.fire.Frostfire (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -19464,6 +19600,14 @@ options.packs.fury.Fury (wowsims.com).lists.description	desc	This allows you to 
 options.packs.fury.Fury (wowsims.com).lists.description	name	Description
 options.packs.fury.Fury (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.fury.Fury (wowsims.com).lists.enabled	name	Enabled
+options.packs.fury.Fury (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.fury.Fury (wowsims.com).lists.icon	name	Icon
+options.packs.fury.Fury (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.fury.Fury (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.fury.Fury (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.fury.Fury (wowsims.com).lists.label	name	Label
+options.packs.fury.Fury (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.fury.Fury (wowsims.com).lists.label_if	name	Label Condition
 options.packs.fury.Fury (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.fury.Fury (wowsims.com).lists.listName	name	Action List
 options.packs.fury.Fury (wowsims.com).lists.listName	values.cd_racials	cd_racials
@@ -19839,6 +19983,14 @@ options.packs.guardian.Guardian (wowsims.com).lists.description	desc	This allows
 options.packs.guardian.Guardian (wowsims.com).lists.description	name	Description
 options.packs.guardian.Guardian (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.guardian.Guardian (wowsims.com).lists.enabled	name	Enabled
+options.packs.guardian.Guardian (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.guardian.Guardian (wowsims.com).lists.icon	name	Icon
+options.packs.guardian.Guardian (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.guardian.Guardian (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.guardian.Guardian (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.guardian.Guardian (wowsims.com).lists.label	name	Label
+options.packs.guardian.Guardian (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.guardian.Guardian (wowsims.com).lists.label_if	name	Label Condition
 options.packs.guardian.Guardian (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.guardian.Guardian (wowsims.com).lists.listName	name	Action List
 options.packs.guardian.Guardian (wowsims.com).lists.listName	values.cat	cat
@@ -20164,6 +20316,14 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.description	desc	Thi
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.description	name	Description
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.enabled	name	Enabled
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.icon	name	Icon
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.label	name	Label
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.label_if	name	Label Condition
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.listName	name	Action List
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -20642,6 +20802,14 @@ options.packs.protection.Protection (wowsims.com).lists.description	desc	This al
 options.packs.protection.Protection (wowsims.com).lists.description	name	Description
 options.packs.protection.Protection (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.protection.Protection (wowsims.com).lists.enabled	name	Enabled
+options.packs.protection.Protection (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.protection.Protection (wowsims.com).lists.icon	name	Icon
+options.packs.protection.Protection (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.protection.Protection (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.protection.Protection (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.protection.Protection (wowsims.com).lists.label	name	Label
+options.packs.protection.Protection (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.protection.Protection (wowsims.com).lists.label_if	name	Label Condition
 options.packs.protection.Protection (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.protection.Protection (wowsims.com).lists.listName	name	Action List
 options.packs.protection.Protection (wowsims.com).lists.listName	values.cd_racials	cd_racials
@@ -20972,6 +21140,14 @@ options.packs.retribution.Retribution (wowsims.com).lists.description	desc	This 
 options.packs.retribution.Retribution (wowsims.com).lists.description	name	Description
 options.packs.retribution.Retribution (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.retribution.Retribution (wowsims.com).lists.enabled	name	Enabled
+options.packs.retribution.Retribution (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.retribution.Retribution (wowsims.com).lists.icon	name	Icon
+options.packs.retribution.Retribution (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.retribution.Retribution (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.retribution.Retribution (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.retribution.Retribution (wowsims.com).lists.label	name	Label
+options.packs.retribution.Retribution (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.retribution.Retribution (wowsims.com).lists.label_if	name	Label Condition
 options.packs.retribution.Retribution (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.retribution.Retribution (wowsims.com).lists.listName	name	Action List
 options.packs.retribution.Retribution (wowsims.com).lists.listName	values.activate_assigned_aura	activate_assigned_aura
@@ -21278,6 +21454,14 @@ options.packs.shadow.Shadow (wowsims.com).lists.description	desc	This allows you
 options.packs.shadow.Shadow (wowsims.com).lists.description	name	Description
 options.packs.shadow.Shadow (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.shadow.Shadow (wowsims.com).lists.enabled	name	Enabled
+options.packs.shadow.Shadow (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.shadow.Shadow (wowsims.com).lists.icon	name	Icon
+options.packs.shadow.Shadow (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.shadow.Shadow (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.shadow.Shadow (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.shadow.Shadow (wowsims.com).lists.label	name	Label
+options.packs.shadow.Shadow (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.shadow.Shadow (wowsims.com).lists.label_if	name	Label Condition
 options.packs.shadow.Shadow (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.shadow.Shadow (wowsims.com).lists.listName	name	Action List
 options.packs.shadow.Shadow (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -21641,6 +21825,14 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.description	desc	This allows
 options.packs.subtlety.Subtlety (wowsims.com).lists.description	name	Description
 options.packs.subtlety.Subtlety (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.subtlety.Subtlety (wowsims.com).lists.enabled	name	Enabled
+options.packs.subtlety.Subtlety (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.subtlety.Subtlety (wowsims.com).lists.icon	name	Icon
+options.packs.subtlety.Subtlety (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.subtlety.Subtlety (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.subtlety.Subtlety (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.subtlety.Subtlety (wowsims.com).lists.label	name	Label
+options.packs.subtlety.Subtlety (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.subtlety.Subtlety (wowsims.com).lists.label_if	name	Label Condition
 options.packs.subtlety.Subtlety (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.subtlety.Subtlety (wowsims.com).lists.listName	name	Action List
 options.packs.subtlety.Subtlety (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -21958,6 +22150,14 @@ options.packs.survival.Survival (wowsims.com).lists.description	desc	This allows
 options.packs.survival.Survival (wowsims.com).lists.description	name	Description
 options.packs.survival.Survival (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.survival.Survival (wowsims.com).lists.enabled	name	Enabled
+options.packs.survival.Survival (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.survival.Survival (wowsims.com).lists.icon	name	Icon
+options.packs.survival.Survival (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.survival.Survival (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.survival.Survival (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.survival.Survival (wowsims.com).lists.label	name	Label
+options.packs.survival.Survival (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.survival.Survival (wowsims.com).lists.label_if	name	Label Condition
 options.packs.survival.Survival (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.survival.Survival (wowsims.com).lists.listName	name	Action List
 options.packs.survival.Survival (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
