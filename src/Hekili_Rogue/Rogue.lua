@@ -90,9 +90,16 @@ local PREPARATION = { 14185 }
 local INSTANT_POISON = { 8928, 8927, 8926, 6950, 6949, 6947 }
 local DEADLY_POISON = { 20844, 8985, 8984, 2893, 2892 }
 
--- Relentless Strikes (14179, 4% a rank a combo point to restore 14181's 25 energy): only the certain part, 5 ranks at
--- 5 points (the rank curve {4, 8, 12, 16, 20}).
+-- Relentless Strikes (14179, rank curve {4, 8, 12, 16, 20} % a combo point to restore 14181's 25 energy; wowsims
+-- rogue.go ApplyFinisher: chance x points, one proc): the expected energy, since energy is secret and the belief cannot
+-- see which finisher proc'd. `talent` and `gain` are the caller's: the sim's state or the belief's.
 local RELENTLESS_ENERGY = 25
+local function relentless(talent, points, gain)
+    local energy = RELENTLESS_ENERGY * math.min(1, 0.04 * talent.relentless_strikes.rank * points)
+    if energy > 0 then
+        gain(energy, "energy")
+    end
+end
 
 -- Improved Expose Armor (14168): the energy curve {-5, -10} by rank (the old rank x 10 priced rank 2 at 5, not 15).
 local IMPROVED_EXPOSE_ARMOR = { [0] = 0, 5, 10 }
@@ -100,13 +107,16 @@ local IMPROVED_EXPOSE_ARMOR = { [0] = 0, 5, 10 }
 local EFFICIENT_STRIKES = { [0] = 0, 3, 5 }
 -- Composure (1329265, the rank curve {-5, -10}): joins Poised's own discount, on the abilities the buff names (wowsims
 -- poised.go). The -10 is the cost modifier below; this is the talent's part, a cost step the abilities' `spend` takes
--- while the aura is up (`buff` and `talent` are the caller's: the sim's state or the belief's).
+-- while the aura is up (`buff` and `talent` are the caller's: the sim's state or the belief's). `mult`: a percent cost
+-- talent's factor (Dirty Tricks). wowsims applies the flat modifiers before the percent ones (core/spell.go:1056-1058),
+-- while the core's Poised -10 lands after `spend`, so with Poised up `spend` returns (cost - Composure - 10) x mult + 10.
 local COMPOSURE = { [0] = 0, 5, 10 }
-local function poised(buff, talent, cost)
+local function poised(buff, talent, cost, mult)
+    mult = mult or 1
     if buff.poised.up then
-        cost = cost - COMPOSURE[talent.composure.rank]
+        return max(0, (cost - COMPOSURE[talent.composure.rank] - 10) * mult + 10)
     end
-    return max(0, cost)
+    return max(0, cost * mult)
 end
 
 local function rest(ids)
@@ -142,7 +152,7 @@ spec:RegisterResource(Enum.PowerType.ComboPoints)
 -- refundOnAvoid: the share of the energy an ability flagged `refundOnAvoid = true` gives back when dodged, parried or
 -- missed (wowsims/forever's MissRefund, spelldata/attributes.go: 0.8 where the DB2 flags Discount Power On Miss and the
 -- spell issues the refund). Not Slice and Dice, Vanish or the poisons; Gouge is flagged in the DB2 but wowsims issues
--- no refund for it (and the kit has no Gouge).
+-- no refund for it, so its registration below leaves `refundOnAvoid` off.
 spec:RegisterResource(Enum.PowerType.Energy, {
     adrenaline_rush = { aura = "adrenaline_rush", mult = 2 },
 }, nil, { regen = 10, refundOnAvoid = 0.8 })
@@ -228,6 +238,7 @@ spec:RegisterAuras({
     -- kill opens it and no event here ties a death to our kill, so only a client or Cooldown Manager read shows it.
     remorseless = {
         id = 14143,
+        copy = { 14144 }, -- the Cooldown Manager's entry links the talent's id
         duration = 20,
         max_stack = 1,
     },
@@ -305,7 +316,7 @@ spec:RegisterAuras({
     },
     vanish = {
         id = 11327,
-        copy = { 11329 },
+        copy = { 11329, 1856, 1857 }, -- the Cooldown Manager's Vanish entries link the spell ids 1856 and 1857
         duration = 10,
         max_stack = 1,
         isStealthed = true,
@@ -320,6 +331,28 @@ spec:RegisterAuras({
         duration = 3600,
         max_stack = 1,
     },
+    -- Sprint (2983, ranks 8696 and 11305; the buff is the spell) and Evasion (5277): 15 s, off the GCD.
+    sprint = {
+        id = 2983,
+        copy = { 8696, 11305 },
+        duration = 15,
+        max_stack = 1,
+    },
+    evasion = {
+        id = 5277,
+        duration = 15,
+        max_stack = 1,
+    },
+    -- Auras the Cooldown Manager's buff entries link (cdm fixture, the owner's export): the abilities' own ids and
+    -- Forever's debuff ids, every rank. Effects on the target or no stated effect: durations are the DB2's, nothing reads them.
+    distract = { id = 1725, duration = 10, max_stack = 1 },
+    feint = { id = 1966, copy = { 6768, 8637, 11303, 25302 }, duration = 1, max_stack = 1 },
+    cheap_shot = { id = 1833, duration = 4, max_stack = 1 },
+    blind = { id = 1324477, copy = { 2094 }, duration = 10, max_stack = 1 },
+    gouge = { id = 1324481, copy = { 1776, 1777, 8629, 11285, 11286 }, duration = 4, max_stack = 1 },
+    kidney_shot = { id = 1324474, copy = { 1324475, 408, 8643 }, duration = 6, max_stack = 1 },
+    sap = { id = 1324482, copy = { 1324483, 1324484 }, duration = 45, max_stack = 1 },
+    silenced_kick = { id = 1324485, duration = 3, max_stack = 1 },
     -- Venom (talent 1329328): Shank gives +30% poison damage for 6 s.
     venom = {
         id = 1310703,
@@ -335,7 +368,30 @@ spec:RegisterCostMod({
     aura = "poised",
     flat = -10,
     charges = 1,
-    spells = { 8676, 53, 13877, 2098, 8647, 703, 14278, 16511, 1766, 399956, 14251, 1943, 1752, 5171 },
+    -- ... and Feint, Gouge, Kidney Shot, Cheap Shot, Sap, Blind and Distract (mask bits 27, 3, 21, 10, 7, 24, 12)
+    spells = {
+        8676,
+        53,
+        13877,
+        2098,
+        8647,
+        703,
+        14278,
+        16511,
+        1766,
+        399956,
+        14251,
+        1943,
+        1752,
+        5171,
+        1966,
+        1776,
+        408,
+        1833,
+        6770,
+        2094,
+        1725,
+    },
 })
 
 -- Stealth by kind (Hekili's Classic table, Forever's two auras): the APLs and Hekili's keybinding order read `.all`.
@@ -359,7 +415,7 @@ spec:RegisterHook("runHandler", function(key)
     local a = class.abilities[key]
     if (not a or a.startsCombat) and (buff.stealth.up or buff.vanish.up) then
         if buff.stealth.up then
-            setCooldown("stealth", 10)
+            setCooldown("stealth", 10 - 2 * talent.camouflage.rank)
         end
         removeBuff("stealth")
         removeBuff("vanish")
@@ -430,7 +486,21 @@ local function poison(name, items, slot, key)
     }
 end
 
-spec:RegisterAbilities({
+-- Preparation's reset set (owner, ledger L854: Forever's Preparation finishes the cooldown of every other Rogue
+-- ability, as the Classic tooltip says; wowsims's list is narrower): every Rogue ability this file registers with a
+-- cooldown, from the two Rogue tables below (not the poisons, racials or items, registered elsewhere). Load time only.
+local PREPARATION_RESETS = {}
+local function rogue(abilities)
+    for key, a in pairs(abilities) do
+        if key ~= "preparation" and a.cooldown ~= 0 then
+            PREPARATION_RESETS[#PREPARATION_RESETS + 1] = key
+        end
+    end
+    table.sort(PREPARATION_RESETS)
+    return abilities
+end
+
+spec:RegisterAbilities(rogue({
     adrenaline_rush = {
         id = 13750,
         cast = 0,
@@ -574,16 +644,12 @@ spec:RegisterAbilities({
 
         now = function()
             removeBuff("cold_blood")
-            if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
-                gain(RELENTLESS_ENERGY, "energy")
-            end
+            relentless(talent, combo_points.current, gain)
         end,
 
         handler = function()
             removeBuff("cold_blood")
-            if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
-                gain(RELENTLESS_ENERGY, "energy")
-            end
+            relentless(talent, combo_points.current, gain)
             spend(combo_points.current, "combo_points")
         end,
     },
@@ -609,16 +675,12 @@ spec:RegisterAbilities({
 
         now = function()
             applyDebuff("target", "expose_armor")
-            if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
-                gain(RELENTLESS_ENERGY, "energy")
-            end
+            relentless(talent, combo_points.current, gain)
         end,
 
         handler = function()
             applyDebuff("target", "expose_armor")
-            if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
-                gain(RELENTLESS_ENERGY, "energy")
-            end
+            relentless(talent, combo_points.current, gain)
             spend(combo_points.current, "combo_points")
         end,
     },
@@ -808,8 +870,8 @@ spec:RegisterAbilities({
         end,
     },
 
-    -- Finishes the cooldowns of Cold Blood, Premeditation, Vanish, Ghostly Strike, Blade Flurry, Adrenaline Rush and Riposte
-    -- (wowsims's list: a server script, no client data).
+    -- Finishes the cooldowns of every other Rogue ability (PREPARATION_RESETS, above; owner, ledger L854). `resets`
+    -- names the set for the harness world.
     preparation = {
         id = 14185,
         cast = 0,
@@ -819,25 +881,18 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows(PREPARATION),
         toggle = "cooldowns",
+        resets = PREPARATION_RESETS,
 
         now = function()
-            setCooldown("cold_blood", 0)
-            setCooldown("premeditation", 0)
-            setCooldown("vanish", 0)
-            setCooldown("ghostly_strike", 0)
-            setCooldown("blade_flurry", 0)
-            setCooldown("adrenaline_rush", 0)
-            setCooldown("riposte", 0)
+            for i = 1, #PREPARATION_RESETS do
+                setCooldown(PREPARATION_RESETS[i], 0)
+            end
         end,
 
         handler = function()
-            setCooldown("cold_blood", 0)
-            setCooldown("premeditation", 0)
-            setCooldown("vanish", 0)
-            setCooldown("ghostly_strike", 0)
-            setCooldown("blade_flurry", 0)
-            setCooldown("adrenaline_rush", 0)
-            setCooldown("riposte", 0)
+            for i = 1, #PREPARATION_RESETS do
+                setCooldown(PREPARATION_RESETS[i], 0)
+            end
         end,
     },
 
@@ -862,16 +917,12 @@ spec:RegisterAbilities({
 
         now = function()
             applyDebuff("target", "rupture", 6 + 2 * combo_points.current + 6 * talent.blood_splatter.rank)
-            if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
-                gain(RELENTLESS_ENERGY, "energy")
-            end
+            relentless(talent, combo_points.current, gain)
         end,
 
         handler = function()
             applyDebuff("target", "rupture", 6 + 2 * combo_points.current + 6 * talent.blood_splatter.rank)
-            if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
-                gain(RELENTLESS_ENERGY, "energy")
-            end
+            relentless(talent, combo_points.current, gain)
             spend(combo_points.current, "combo_points")
         end,
     },
@@ -922,16 +973,12 @@ spec:RegisterAbilities({
         -- Replaces the running one (checkpoint Q8).
         now = function()
             applyBuff("slice_and_dice", sndDuration(combo_points.current, talent.improved_slice_and_dice.rank))
-            if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
-                gain(RELENTLESS_ENERGY, "energy")
-            end
+            relentless(talent, combo_points.current, gain)
         end,
 
         handler = function()
             applyBuff("slice_and_dice", sndDuration(combo_points.current, talent.improved_slice_and_dice.rank))
-            if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
-                gain(RELENTLESS_ENERGY, "energy")
-            end
+            relentless(talent, combo_points.current, gain)
             spend(combo_points.current, "combo_points")
         end,
     },
@@ -940,7 +987,9 @@ spec:RegisterAbilities({
         id = 1784,
         copy = rest(STEALTH),
         cast = 0,
-        cooldown = 10,
+        cooldown = function()
+            return 10 - 2 * talent.camouflage.rank -- Camouflage 13975's second effect: -2 / -4 / -6 s on Stealth's mask
+        end,
         gcd = "off",
 
         startsCombat = false,
@@ -964,7 +1013,9 @@ spec:RegisterAbilities({
         id = 1856,
         copy = rest(VANISH),
         cast = 0,
-        cooldown = 300,
+        cooldown = function()
+            return 300 - 45 * talent.elusiveness.rank -- Elusiveness 13981: -45 / -90 s, on Vanish and Blind
+        end,
         gcd = "off",
 
         startsCombat = false,
@@ -1041,20 +1092,258 @@ spec:RegisterAbilities({
 
         now = function()
             applyDebuff("target", "death_mark")
-            if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
-                gain(RELENTLESS_ENERGY, "energy")
-            end
+            relentless(talent, combo_points.current, gain)
         end,
 
         handler = function()
             applyDebuff("target", "death_mark")
-            if talent.relentless_strikes.rank >= 5 and combo_points.current >= 5 then
-                gain(RELENTLESS_ENERGY, "energy")
-            end
+            relentless(talent, combo_points.current, gain)
             spend(combo_points.current, "combo_points")
         end,
     },
-})
+}))
+
+-- The manual-press abilities (registered so a press costs what it costs and starts its cooldown; no priority
+-- recommends them; costs, cooldowns and GCDs from the pin's spells_auto_gen.go). The ones that strike break Stealth and
+-- Vanish as the opener does.
+local FEINT = { 1966, 6768, 8637, 11303, 25302 }
+local GOUGE = { 1776, 1777, 8629, 11285, 11286 }
+local KIDNEY_SHOT = { 408, 8643 }
+local CHEAP_SHOT = { 1833 }
+local SAP = { 6770, 2070, 11297 }
+local BLIND = { 2094 }
+local EVASION = { 5277 }
+local SPRINT = { 2983, 8696, 11305 }
+local DISTRACT = { 1725 }
+local REDIRECT = { 438040 } -- unverified on Forever: `known` hides it where the spellbook has no such spell
+
+spec:RegisterAbilities(rogue({
+    -- 20 energy, 10 s; wowsims refunds a dodged or parried one (feint.go).
+    feint = {
+        id = 1966,
+        copy = rest(FEINT),
+        cast = 0,
+        cooldown = 10,
+        gcd = "totem",
+
+        spend = function()
+            return poised(buff, talent, 20)
+        end,
+        spendType = "energy",
+
+        startsCombat = true,
+        refundOnAvoid = true,
+        known = knows(FEINT),
+
+        now = function()
+            removeBuff("stealth")
+            removeBuff("vanish")
+        end,
+    },
+
+    -- 45 energy, 10 s, +1 combo point (the pin's Energize effect).
+    gouge = {
+        id = 1776,
+        copy = rest(GOUGE),
+        cast = 0,
+        cooldown = 10,
+        gcd = "totem",
+
+        spend = function()
+            return poised(buff, talent, 45)
+        end,
+        spendType = "energy",
+
+        startsCombat = true,
+        known = knows(GOUGE),
+
+        now = function()
+            removeBuff("stealth")
+            removeBuff("vanish")
+        end,
+
+        handler = function()
+            gain(1, "combo_points")
+        end,
+    },
+
+    -- A finisher: 25 energy and every combo point, 20 s; in Relentless Strikes's mask.
+    kidney_shot = {
+        id = 408,
+        copy = rest(KIDNEY_SHOT),
+        cast = 0,
+        cooldown = 20,
+        gcd = "totem",
+
+        spend = function()
+            return poised(buff, talent, 25)
+        end,
+        spendType = "energy",
+
+        startsCombat = true,
+        known = knows(KIDNEY_SHOT),
+        ladder = false,
+        usable = finisherUsable,
+
+        now = function()
+            removeBuff("stealth")
+            removeBuff("vanish")
+            relentless(talent, combo_points.current, gain)
+        end,
+
+        handler = function()
+            relentless(talent, combo_points.current, gain)
+            spend(combo_points.current, "combo_points")
+        end,
+    },
+
+    -- The Stealth opener: 60 energy (Dirty Deeds -10 a rank), +2 combo points.
+    cheap_shot = {
+        id = 1833,
+        cast = 0,
+        cooldown = 0,
+        gcd = "totem",
+
+        spend = function()
+            return poised(buff, talent, max(0, 60 - 10 * talent.dirty_deeds.rank))
+        end,
+        spendType = "energy",
+
+        startsCombat = true,
+        known = knows(CHEAP_SHOT),
+
+        usable = function()
+            return buff.stealth.up or buff.vanish.up, "requires stealth"
+        end,
+
+        now = function()
+            removeBuff("stealth")
+            removeBuff("vanish")
+        end,
+
+        handler = function()
+            gain(2, "combo_points")
+        end,
+    },
+
+    -- 65 energy (Dirty Tricks -25% a rank), from Stealth.
+    sap = {
+        id = 6770,
+        copy = rest(SAP),
+        cast = 0,
+        cooldown = 0,
+        gcd = "totem",
+
+        spend = function()
+            return poised(buff, talent, 65, 1 - 0.25 * talent.dirty_tricks.rank)
+        end,
+        spendType = "energy",
+
+        startsCombat = true,
+        known = knows(SAP),
+
+        usable = function()
+            return buff.stealth.up or buff.vanish.up, "requires stealth"
+        end,
+
+        now = function()
+            removeBuff("stealth")
+            removeBuff("vanish")
+        end,
+    },
+
+    -- 30 energy (Dirty Tricks -25% a rank), 300 s (Elusiveness -45 s a rank); a Blinding Powder is the client's to check.
+    blind = {
+        id = 2094,
+        cast = 0,
+        cooldown = function()
+            return 300 - 45 * talent.elusiveness.rank
+        end,
+        gcd = "totem",
+
+        spend = function()
+            return poised(buff, talent, 30, 1 - 0.25 * talent.dirty_tricks.rank)
+        end,
+        spendType = "energy",
+
+        startsCombat = true,
+        known = knows(BLIND),
+
+        now = function()
+            removeBuff("stealth")
+            removeBuff("vanish")
+        end,
+    },
+
+    -- 15 s, 300 s (Endurance -30% a rank), off the GCD; no energy.
+    evasion = {
+        id = 5277,
+        cast = 0,
+        cooldown = function()
+            return 300 * (1 - 0.3 * talent.endurance.rank)
+        end,
+        gcd = "off",
+
+        startsCombat = false,
+        known = knows(EVASION),
+
+        now = function()
+            applyBuff("evasion")
+        end,
+
+        handler = function()
+            applyBuff("evasion")
+        end,
+    },
+
+    sprint = {
+        id = 2983,
+        copy = rest(SPRINT),
+        cast = 0,
+        cooldown = function()
+            return 300 * (1 - 0.3 * talent.endurance.rank)
+        end,
+        gcd = "off",
+
+        startsCombat = false,
+        known = knows(SPRINT),
+
+        now = function()
+            applyBuff("sprint")
+        end,
+
+        handler = function()
+            applyBuff("sprint")
+        end,
+    },
+
+    -- 30 energy, 30 s, a 1.5 s GCD; keeps Stealth.
+    distract = {
+        id = 1725,
+        cast = 0,
+        cooldown = 30,
+        gcd = "spell",
+
+        spend = function()
+            return poised(buff, talent, 30)
+        end,
+        spendType = "energy",
+
+        startsCombat = false,
+        known = knows(DISTRACT),
+    },
+
+    -- 10 s, off the GCD, no energy; the points move to a new target, so the player's own count is unchanged.
+    redirect = {
+        id = 438040,
+        cast = 0,
+        cooldown = 10,
+        gcd = "off",
+
+        startsCombat = false,
+        known = knows(REDIRECT),
+    },
+}))
 
 -- The poison reminders (no wowsims.com list recommends them yet).
 spec:RegisterAbilities({

@@ -72,15 +72,17 @@ local function strike(key, debuffKey)
         points = key == "mutilate" and 2 or 1,
     }
 end
--- A finisher: `effect(W, e, cp, X)` before its points go; Relentless Strikes's certain 25 at 5 points.
+-- A finisher: `effect(W, e, cp, X)` before its points go; Relentless Strikes's expected 25.
 local function finisher(effect)
     return {
         effect = function(W, e, _, X)
             local cp = W.res(e, POINTS)
             effect(W, e, cp, X)
             -- an avoided finisher keeps its points and procs nothing (wowsims ApplyFinisher runs on a landed one only)
-            if X.relentless and cp >= 5 and (not e.lastHit or e.lastHit.act == "WOUND") then
-                W.emit({ kind = "gain", src = e, pt = ENERGY, rage = RELENTLESS })
+            -- the proc is chance x points (rank x 4% a point, one proc); the world pays its mean, as the belief expects it
+            local share = math.min(1, 0.04 * X.relentless * cp)
+            if share > 0 and (not e.lastHit or e.lastHit.act == "WOUND") then
+                W.emit({ kind = "gain", src = e, pt = ENERGY, rage = RELENTLESS * share })
             end
         end,
         points = "all",
@@ -194,11 +196,11 @@ M.MAP = {
             p.gain = { POINTS, 2 }
         end,
     },
-    preparation = { -- the world's cooldowns and the client's answers (every rank)
+    -- the world's cooldowns and the client's answers (every rank): every other Rogue ability the pack registers (its
+    -- `resets`; owner, ledger L854: Forever's Preparation resets them all, wowsims's list is narrower)
+    preparation = {
         effect = function(W, e)
-            local list =
-                { "cold_blood", "premeditation", "vanish", "ghostly_strike", "blade_flurry", "adrenaline_rush" }
-            for _, key in ipairs(list) do
+            for _, key in ipairs(assert(class().abilities.preparation.resets, "preparation.resets")) do
                 local a = class().abilities[key]
                 local ids = { a.id }
                 for _, id in ipairs(type(a.copy) == "table" and a.copy or {}) do
@@ -299,7 +301,7 @@ local function classData(H)
         end
     end
     local talent = H.Hekili.State.talent
-    X.relentless = (talent.relentless_strikes.rank or 0) >= 5
+    X.relentless = talent.relentless_strikes.rank or 0
     X.fos = talent.flash_of_steel.rank or 0
     X.venom = talent.venom.enabled == true
     X.boot = (talent.boot_knife.rank or 0) >= 5

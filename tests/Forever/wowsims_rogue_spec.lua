@@ -54,6 +54,10 @@ local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true 
 -- Shank waits on energy, and Garrote waits for the debuff to end ("combo_points<5&!debuff.garrote.up"). With Blood
 -- Splatter learned (counterfactual, 4 seeds) the worst idle is 5.0 s, against wowsims's longest idles of about
 -- 6.0-6.1 s in tests/Forever/wowsims/rogue_subtlety.log (rows 18.00-24.00 and 99.08-105.18). The bar stays 8.2.
+-- Assassination timing fixture re-recorded (cov-rogue round 1 ruling): 37 rows moved, most less late (decision 9, 10.2 s
+-- Mutilate, 0.19 -> 0.20 s, among the few later), and the count floor 35 -> 36 (tests/Forever/helpers/wowsims.lua:447-450).
+-- Cause: the belief's Relentless Strikes rule (expected energy 25 x min(1, 4% x rank x points) on every finisher, was
+-- 25 at 5/5 and 5 points only); the wowsims log's procs are real rolls, the belief pays the mean.
 local PACKS = {
     { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.97, 5.2, MUTILATE_HANDS },
     { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.99, 3.0 },

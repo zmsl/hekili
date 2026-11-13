@@ -8,6 +8,7 @@
 - The priority editor (Action Lists) now has Label, Label Condition, Icon and Icon Condition fields under Caption, so labels and icon overrides can be set without importing a line. The Icon field previews the texture it resolves to and says so when a path is not a texture file.
 
 ### Changed
+- Rogue: Relentless Strikes now counts the energy it gives on average at every rank and combo-point count, not only at 5/5 with 5 points. Feint, Gouge, Kidney Shot, Cheap Shot, Sap, Blind, Evasion, Sprint and Distract are now known to the addon, so using one by hand spends its energy and starts its cooldown in Hekili's forecast. Elusiveness, Endurance, Camouflage, Dirty Tricks and Dirty Deeds change their cooldowns and costs as the talents do. Preparation now finishes the cooldown of every other Rogue ability, as it does in the game.
 - Priest: the heals and utility spells (Flash Heal, Heal, Greater Heal, Renew, Prayer of Healing, Prayer of Mending, Fade, Psychic Scream, dispels and others) are now known to the addon, so casting one by hand spends its mana and starts its cooldown in Hekili's forecast. Soul Warding, Improved Healing, Divine Fury, Improved Mana Burn and Improved Psychic Scream now change those spells' costs, cast times and cooldowns as the talents do.
 
 ### Fixed
