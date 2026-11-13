@@ -90,7 +90,10 @@ M.FLICKER = {
     -- regen phase lane, cause harness: the indexed poll clock (ledger L606/L667; a rage world has no regen grid) (R6;
     -- seeds 1-20 / 21-40 / 41-60 flicker 0.24 / 0.32 / 0.40, retracted 0.20 / 0.00 / 0.00, readyShort 26 / 7 / 1,
     -- heldReady 150 / 136 / 228): flicker 0.31 -> 0.41
-    ["Fury L60"] = { flicker = 0.41, flickerK = 0.6, retracted = 0.21, readyShort = 26, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
+    -- 0.41 -> 0.49 (L871): wowsims's per-swing Reckless Swings (world and addon) puts the opener's rage between Death Wish's
+    -- 10 and Sunder's 15. 4 of the 6 opener flips (seeds 1-20) are a cooldown near-tie at the EARLY_EXIT edge (Core.lua:627/:786);
+    -- 2 involve a landed, unpaid swing. Measured .48 / .39 / .44 (seeds 1-20 / 21-40 / 41-60) after the world charge fix 8a5dfbf2a.
+    ["Fury L60"] = { flicker = 0.49, flickerK = 0.6, retracted = 0.21, readyShort = 26, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
