@@ -3,8 +3,8 @@
 -- this file) and each pack's spec key. Dev-only (no TOC lists it); the pack date lives in Hunter.lua's generated
 -- blocks, and `make packs` sets it to today only when a pack changed.
 -- Each pack is generated from wowsims/forever's APLs (ui/specs/hunter/dps/apls/; MIT) by `make wowsims-packs` from its
--- recipe in tools/wowsims/specs/: the Melee Weave packs (each tree's default), the Turret packs and Survival Melee
--- (wowsims's non-weave builds, picked from the talents by Hunter.lua's selectors).
+-- recipe in tools/wowsims/specs/: the Turret packs (each tree's default, Hunter.lua's `package`), the Melee Weave
+-- packs and Survival Melee (wowsims's other builds, picked by hand).
 
 return {
     class = "HUNTER",

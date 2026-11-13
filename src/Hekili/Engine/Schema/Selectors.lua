@@ -140,5 +140,5 @@ function ns.SelectPack(sp, packs, spec, sel)
         return false
     end
     sp.package, sp.packAuto = name, sel and name or nil
-    return true
+    return true, former and true or nil -- the second: moved off a replaced default (no selector's doing)
 end

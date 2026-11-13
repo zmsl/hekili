@@ -316,7 +316,7 @@ PACKS.SurvivalRanged = setmetatable({ distance = 11, ranged = { 140, 200, 3.0 } 
 
 -- The non-weave builds (owner 2026-11-12, ledger L661): each world takes its export's whole talent string (the log
 -- header's), so the costs (Efficiency, Resourcefulness), Improved Arcane Shot's cooldown and Quick Shots' chance (Deadly
--- Aspects) are the build's, and the selectors pick the world's own pack. The kit is what the build knows that its list
+-- Aspects) are the build's, and each world runs its own pack. The kit is what the build knows that its list
 -- casts. The Turret worlds stand at the list's 12 yd shoot spot, shooting; Survival Melee in melee with two one-handers
 -- (p1_melee's Annihilator and Heartseeker, 1.7 s each; the amounts UNMEASURED) under Aspect of the Beast.
 -- Known gap: Quick Strikes (aura 1299448, melee haste) is not modelled. wowsims procs it off our white melee hits under

@@ -143,11 +143,11 @@ local PACKS = {
     -- tick (the Serpent Sting class of the misses is its other reason). The 1 that survives, MM Turret tick 288 (57.6 s;
     -- ceiling 1.7 holds it): ours arcane -> aimed -> arcane while the log shows arcane x3, then aimed at 291. Traced
     -- (per-tick queue dump): wowsims casts Sniper Shot at 57.65 (a decision our first icon missed: it showed Arcane
-    -- Shot, one of the profile's 3 decision misses), which spends 102 of the believed mana (467 -> 365) and applies an
-    -- aura at tick 289; the queue then ranks Aimed Shot (272.8, wait 0.10) over Arcane Shot (167.2, wait 0.26) for that
-    -- tick and Arcane Shot (wait 0.06) the next, Aimed Shot back at 291 after the log's Arcane Shot: the cost-crossing
-    -- re-rank of the Hunter rows (gap BT) on the mana the missed Sniper Shot spent. The last link (why Aimed Shot leaves
-    -- the queue's first three at tick 290) is read from the waits, not traced further.
+    -- Shot, one of the profile's 3 decision misses), which spends 102 of the believed mana (467 -> 365: both shots stay
+    -- affordable) and applies an aura at tick 289. Then a cooldown near-tie at the EARLY_EXIT edge (gap DB): at tick 289
+    -- Arcane Shot, higher in the list, waits 0.26, over EARLY_EXIT's 0.2 (Core.lua:627, the list exit), and Aimed Shot
+    -- (wait 0.10) is more than 0.05 s sooner (Core.lua:786), so Aimed Shot takes the icon; at 290 Arcane Shot's 0.06 is
+    -- inside EARLY_EXIT and holds, and Aimed Shot returns at 291 after the log's Arcane Shot.
     {
         "hunter_beast_mastery_turret",
         "BeastMasteryTurret",

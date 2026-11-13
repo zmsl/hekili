@@ -568,6 +568,9 @@ describe("the shipped selectors (headless)", function()
             local old = { profiles = { Default = { specs = { [id] = { package = names[1] } } } } }
             H = boot("hunter", build(names[3], "hunter"), old)
             assert.are.same({ id, names[2] }, { active(H) })
+            for _, note in ipairs(H.notes) do -- the default changed under it: no "picked from your talents"
+                assert.is_nil(note:find("picked from your talents", 1, true), note)
+            end
             -- (c) the same pack picked by hand (packManual): kept
             old = { profiles = { Default = { specs = { [id] = { package = names[1], packManual = true } } } } }
             H = boot("hunter", build(names[3], "hunter"), old)
