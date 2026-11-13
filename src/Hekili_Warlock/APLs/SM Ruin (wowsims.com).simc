@@ -26,4 +26,4 @@ actions+=/siphon_life,focus=2,if=debuff.siphon_life.remains<=action.siphon_life.
 actions+=/immolate,focus=2,if=debuff.immolate.remains<=action.immolate.cast
 actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 actions+=/shadow_bolt
-actions+=/life_tap
+actions+=/life_tap,if=!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost

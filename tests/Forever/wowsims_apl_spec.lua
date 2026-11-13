@@ -175,6 +175,67 @@ describe("the wowsims APL translator", function()
         end, "extra: no big_hit line in actions")
     end)
 
+    it("puts a recipe extra line marked `last` before the last line of its anchor action", function()
+        local text = apl.translate(
+            { priorityList = { cast(100), cast(200), cast(100) } },
+            ctx({ extra = { { before = "strike", last = true, line = "dot" } } })
+        )
+        assert.are.equal(
+            table.concat({ "actions=strike", "actions+=/big_hit", "actions+=/dot", "actions+=/strike" }, "\n"),
+            text
+        )
+    end)
+
+    it("guards a cast entry keyed `<list> #<n>` on that entry's line only, after its own condition", function()
+        local text = apl.translate(
+            { priorityList = { cast(100), cast(200), cast(100, E) } },
+            ctx({
+                executePhase = "execute_phase",
+                guard = {
+                    ["default #1"] = { expect = "strike", cond = "buff.fury.up" },
+                    ["default #3"] = { expect = "strike", cond = "time>1" },
+                },
+            })
+        )
+        assert.are.equal(
+            table.concat({
+                "actions=strike,if=buff.fury.up",
+                "actions+=/big_hit",
+                "actions+=/strike,if=execute_phase&time>1",
+            }, "\n"),
+            text
+        )
+    end)
+
+    -- A positional key names an entry by its place: a re-pin that shifts the list must raise, not guard another line.
+    it("raises at build when a positional guard's entry is not the action it expects, or names none", function()
+        local hidden = { hide = true, action = { castSpell = { spellId = { spellId = 200 } } } }
+        local function build(guard, list)
+            return apl.translate(
+                { priorityList = list or { cast(100), cast(200), cast(100) } },
+                ctx({ pack = "Test (wowsims.com)", guard = guard })
+            )
+        end
+        assert.has_error(function()
+            build({ ["default #2"] = { expect = "strike", cond = "time>1" } })
+        end, "guard: Test (wowsims.com) default #2 is big_hit, not strike")
+        assert.has_error(function()
+            build({ ["default #2"] = "time>1" })
+        end, 'guard: Test (wowsims.com) default #2 names no expected action (expect = "big_hit")')
+        assert.has_error(function() -- an omitted entry is checked too
+            build({ ["default #2"] = { expect = "strike", cond = "time>1" } }, { cast(100), hidden })
+        end, "guard: Test (wowsims.com) default #2 is big_hit, not strike")
+        assert.has_no_error(function()
+            build({ ["default #2"] = { expect = "big_hit", cond = "time>1" } }, { cast(100), hidden })
+        end)
+        assert.has_error(function() -- review M2: a group no line calls is never translated, so never checked
+            apl.translate(
+                { priorityList = { cast(100) }, groups = { { name = "Unused", actions = { cast(100) } } } },
+                ctx({ pack = "Test (wowsims.com)", guard = { ["unused #1"] = { expect = "strike", cond = "time>1" } } })
+            )
+        end, "guard: Test (wowsims.com) unused #1: its list is never translated")
+    end)
+
     it("actionGroupUsed of a group with actions is wowsims's constant: a shown reference to it exists", function()
         local function used(name)
             return { actionGroupUsed = { name = name } }
@@ -2914,6 +2975,7 @@ describe("the wowsims APL translator on the Warlocks' assigned-curse check", fun
         local r = dofile("tools/wowsims/specs/warlock_demonology.lua")
         local set = require("Forever.helpers.engine").abilitySet(r.class)
         local player = { warlock = { options = { classOptions = {} } } } -- the zero value, Elements
+        r.extra, r.guard = nil, nil -- the filler lines anchor on the shipped list's last Life Tap, not in this one
         r.select.castWarlockAssignedCurse.is = nil -- the shipped recipes name it now (CN3, the 0.7 re-pin): drop it for the "before"
         local before, omitted = apl.translate(rotation, apl.context(set, r, nil, player))
         assert.are.equal("", before)

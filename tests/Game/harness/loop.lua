@@ -495,7 +495,7 @@ function M.run(L, seed, o, drivers)
         errors0[i] = #st.H.errors
     end
     local stopAt = W.stopAt
-    local t = 0
+    local t, polls = 0, 0 -- the poll clock, indexed: t = polls x tick, never a running sum (L606)
     local lastRefused, readySince = false, {}
     -- option D's driver (ab.lua world.followCycle): a pressed record with the cycle icon is pressed on the first live
     -- mob whose truth lacks its debuff, and the target goes back to mob 1 at the next tick
@@ -612,7 +612,7 @@ function M.run(L, seed, o, drivers)
     while t < stopAt and not W.killAt do
         -- wowsims's decisions before this tick (replay): a cycle just before each cast; the on-GCD ones scored
         -- against our first on-GCD icon (an off-GCD cast would agree with whatever shows during a GCD)
-        while R and R.decisions[di] and R.decisions[di].t < t + tick do
+        while R and R.decisions[di] and R.decisions[di].t < (polls + 1) * tick do
             local d = R.decisions[di]
             di = di + 1
             if d.t > t then
@@ -630,7 +630,8 @@ function M.run(L, seed, o, drivers)
                 tickPolled = false
             end
         end
-        t = t + tick
+        polls = polls + 1
+        t = polls * tick
         step(t)
         if vt then -- this tick's closes against the world as the drain saw it: before this tick's press
             if not vt.pulled and t >= wo.pull then -- the belief zeroed its counts at this tick's PLAYER_REGEN_DISABLED:
@@ -826,7 +827,8 @@ function M.run(L, seed, o, drivers)
     -- reorders the next fights' float sums: Feral's flicker 2.12 -> 2.34 with the gap ending at the kill + 1 s)
     local tEnd = t
     while W.killAt and tEnd < W.killAt + observer.COMBAT_END do
-        tEnd = tEnd + tick
+        polls = polls + 1
+        tEnd = polls * tick
     end
     for i, st in ipairs(steps) do
         feed(st.H, st.obs, tEnd, st.base, st.sink)

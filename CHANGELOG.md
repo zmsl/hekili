@@ -14,6 +14,7 @@
 - Custom priorities can check the kind of weapon you wear: `main_hand`, `off_hand` and `ranged` each answer `dagger`, `sword`, `axe`, `mace`, `fist`, `staff`, `polearm`, `bow`, `gun`, `crossbow`, `thrown` or `wand` (for example `main_hand.axe&main_hand.two_handed` for a two-handed axe).
 - Warlock: the Doomcaller's Attire set bonuses are counted when you wear them.
 - Priest: utility auras are now known to the addon, for custom priorities.
+- Custom priorities can label a recommendation: `label=R6` on a line shows "R6" on its icon, and `label_if=<condition>` shows it only while the condition holds (for example to mark a lower spell rank). `icon=` (a texture file ID or a texture path) with `icon_if=<condition>` asks the display to show a different icon for that line; a path the game does not have keeps the normal icon and adds a line to the Warnings, while a wrong file ID shows a blank icon (the game cannot tell).
 - Warrior: Weaponmaster now shows its three auras (`weaponmaster_axe_polearm`, `weaponmaster_mace_staff`, `weaponmaster_sword`) while you have the talent and hold that kind of weapon, for custom priorities. The sword's extra attack is not predicted.
 
 ### Changed
@@ -25,6 +26,7 @@
 - Hunter: Rapid Killing now shortens Rapid Fire's cooldown (60 seconds a rank), so a long fight shows the second Rapid Fire sooner. Aspect of the Cheetah and Dazed are known to the addon for custom priorities, and the Cryptstalker set bonuses (Rapid Fire 4 seconds longer, Multi-Shot and Aimed Shot 20 mana cheaper) are counted when you wear them.
 
 ### Fixed
+- Warlock: with your damage-over-time spells up, a Warlock without the spec's usual filler (Wrack, Incinerate or Searing Pain: a talent you did not take, or a spell you have not learned yet) is now shown Shadow Bolt instead of Life Tap at full mana. Life Tap at the end of the priority now shows only when you do not have the mana for Shadow Bolt. Destruction without Incinerate (before level 18, or at any level without the Incinerate talent while Bane of Doom is running out) no longer shows Immolate on every global cooldown while Immolate is up: Immolate shows again only when it would wear off within a Shadow Bolt cast.
 - In dungeons (and in raids, if the game hides targets there too), switching targets with Tab no longer makes a debuff that the Cooldown Manager shows on your new target (such as Faerie Fire) look missing, so it is no longer recommended again.
 - In dungeons (and in raids, if the game hides targets there too), the debuffs you put on an enemy are remembered when you Tab away and back, as long as its nameplate stays shown, so they are not recommended again while they are still up.
 - If the range library stops answering during a fight, Hekili now treats your target's distance as unknown after 1.5 seconds instead of keeping the last distance it read. In dungeons, enemies beyond the range set for counting targets are now left out of the count.
@@ -35,6 +37,7 @@
 - Druid: the Wrath that Nature's Swiftness makes instant now uses the buff up as soon as you cast it, so the next Wrath is no longer shown as instant.
 - Druid: each Starfire you cast now uses up one Eclipse charge, so the next Starfire is no longer shown with the shorter cast of a charge already used.
 - Druid: Nature's Grace now shortens the global cooldown too (about 1.23 seconds on Wrath, Starfire, Moonfire and the other Balance and healing spells, 1.36 on the rest), so the recommendations after a crit come on time.
+- Druid and Warrior: rage now runs down out of combat at the measured 1.25 a second, in any form and between the addon's updates, and the highest rage the addon allows for falls with it, so an out-of-combat Cat Form no longer keeps a few points of rage you do not have. Feral Charge's usable answers stop setting a rage floor outside Bear Form, and a Feral Charge outside Bear Form spends no rage. Shifting into Bear Form now counts Furor's 10 rage: certain at 5/5, possible below.
 - Druid: shifting into Cat Form now sets your energy as the game does: none without Furor, and with Furor its 20% a rank of the energy you left Cat Form with plus 10 a second you spent out of Bear Form, so the first recommendations after a shift no longer count energy you do not have.
 - Warrior: Deep Wound is read from the Cooldown Manager's copy of the debuff, Flurry counts its three charges, Retaliation its 30, and Gore Drinker's buff is tracked from the abilities that grant it.
 - Warlock: Affliction and Shadow Brand (wowsims.com) now react to the Revelation weapon enchant's proc, Decimation and Shadow Trance are now also read from the spell's glow in combat where the game lights it, and Destruction (wowsims.com) now tracks Shadow and Flame's buffs the way wowsims does.
@@ -46,6 +49,7 @@
 - Mage: Fire Blast spends a Fingers of Frost charge at the cast.
 - Retribution Paladins: each landed melee swing now stores an Echo of the seal that was up when you swung, even when you change seals before the hit shows, so a seal twist is timed from the right Echo.
 - Druids and Rogues: after a /reload in combat, the estimate of your energy now refills at 10 a second straight away, instead of staying low until you leave combat.
+- Druid: Faerie Fire in Cat Form now takes the cat's 1 second global cooldown, as the game gives it, so the ability after it (such as Rake) is no longer shown about half a second late.
 
 ### Known issues
 

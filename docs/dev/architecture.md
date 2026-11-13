@@ -83,7 +83,8 @@ through it.
 - `version` (bumps each publish), `count` (records in `recs`), `recs` (the last complete set, up to 10 records).
 - A record holds the recommendation (`Sim/Core.lua`'s `slot.*` writes are the list): `index`, `depth`, `display`,
   `pack`, `list`, `listName`, `action`, `actionName`, `actionID` (negative for an item), `name`, `texture`, `caption`,
-  `indicator`, `focus` (the tier N from a `focus=N` entry), `item` (the item id), `keybind`, `keybindFrom`, `time`, `exact_time`,
+  `indicator`, `focus` (the tier N from a `focus=N` entry), `label` and `iconOverride` (the entry's `label=` and
+  `icon=`, below), `item` (the item id), `keybind`, `keybindFrom`, `time`, `exact_time`,
   `delay`, `since`, `wait`, `waitSec`, `offGCD`, `interrupt`, `castStart`, `resource`, `resource_type`, `cost`, `busy`,
   `scriptType`, `script`, `hook`, plus the tables `resources`, `alts` (§7) and `belief` (empty until an annotator fills it).
 - `payload`: the WeakAuras copy, set by `Integrations/WeakAuras.lua` (a passive subscriber, outside `Engine/`) only
@@ -536,6 +537,20 @@ is not a whole number; the priority editor's Focus Tier slider sets it (0 is off
 ability. The Druid pack flags Feral's `rip` (tier 1); the Warrior pack's Fury tiers Heroic Strike and Cleave 1 near the
 rage cap and 2 otherwise.
 
+Four more, from the tbc branch's `label` (no shipped pack uses them): `label=<text>` puts the text on the pick's
+record as `label` (the displays draw it on the icon, top centre), `label_if=<condition>` keeps it only while the
+condition holds; `icon=<texture file ID or texture path>` puts a second icon on the record as `iconOverride` (a file
+ID, a number; `texture` is never changed), `icon_if=<condition>` likewise. A bare number is a texture file ID, used as
+given and not checked (the client cannot tell a missing file ID: its `SetTexture` returns true and draws a blank
+icon). Anything else is a texture path, resolved once when the line's script loads (`textSource` in
+`Sim/Scripts.lua`, through `ns.Facade.GetFileIDFromPath`) to its file ID; a path the client lacks gives the line no
+override and one warning (the Warnings log, the snapshot's `### Warnings`) naming the line (`pack:list:index`, the
+action) and the value. Spell IDs are not supported (owner 2026-11-12). Without its `_if` each always applies; an
+error in any of them leaves the field nil. Core evaluates them at each pick (`markPick` in `Sim/Core.lua`), in that
+queue slot's state; the value is taken verbatim (Scripts.lua's `text` modifier type), so it may not hold a comma.
+Both default renderers draw the record's icon through `ns.UI.SetRecTexture` (UI.lua): `iconOverride` when set, else
+`texture`. A style that ignores overrides sets `texture` itself. Example: `starfire,label=R6,label_if=mana.pct<20`.
+
 **Pre-pull guards.** Upstream Hekili walks `precombat` before `default` on every refresh and skips its non-essential
 entries once `time > 0`; out of combat it is a plain priority. The fork keeps it so (owner ruling 2026-10-21: "a guard
 against recasting"; the player decides when to press): the engine holds no schedule and no per-episode state, and a
@@ -626,7 +641,7 @@ and the display reset in `ChatCommands.lua` name `classic` directly.
 `d.styleState` is per-display scratch shared by every style the display has bound; state of the style's own goes on
 `d.styleFrames[name]`. `out` is
 `Hekili.Engine.Output[id]`: `out.count`, `out.version`, `out.acts` (the `Output.Acted` count at the last publish) and `out.recs[1..count]`, each record with `actionName`,
-`actionID`, `texture`, `caption`, `indicator`, `focus`, `keybind`, `offGCD`, `time`, `exact_time`, `delay`, `since`, `wait`,
+`actionID`, `texture`, `caption`, `indicator`, `focus`, `label`, `iconOverride`, `keybind`, `offGCD`, `time`, `exact_time`, `delay`, `since`, `wait`,
 `resource_type`, `resources`, `cost` (the amount of `resource_type` the pick spends; a fractional spend is multiplied by the resource's maximum),
 `busy` (seconds the pick keeps the player busy: its GCD, or its cast when longer), `script`, `list`, `action`, `pack`,
 and `alts` (`alts.n` entries of

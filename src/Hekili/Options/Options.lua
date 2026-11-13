@@ -4632,7 +4632,7 @@ found = true end
             if val:len() == 0 then val = nil end
         end
 
-        if option == "caption" then
+        if option == "caption" and val then
             val = val:gsub( "||", "|" )
         end
 
@@ -8581,10 +8581,14 @@ do
                         -- TODO:  Automerge multiple criteria.
                         if key == 'if' or key == 'condition' then key = 'criteria' end
 
-                        if key == 'criteria' or key == 'target_if' or key == 'value' or key == 'value_else' or key == 'sec' or key == 'wait' or key == 'strict_if' then
+                        if key == 'criteria' or key == 'target_if' or key == 'value' or key == 'value_else' or key == 'sec' or key == 'wait' or key == 'strict_if' or key == 'label_if' or key == 'icon_if' then
                             value = Sanitize( 'c', value, line, warnings )
                             value = SpaceOut( value )
                         end
+
+                        -- an empty value is no option: label= would draw nothing, icon= would name no file, and an
+                        -- empty label_if= or icon_if= would compile `return ` (Scripts.lua)
+                        if value == "" and ( key == 'label' or key == 'label_if' or key == 'icon' or key == 'icon_if' ) then value = nil end
 
                         if key == 'caption' then
                             value = value:gsub( "||", "|" ):gsub( ";", "," )

@@ -79,8 +79,8 @@
 --    the `levelingFirst` lines lead a non-empty precombat list too (its pre-pull cast would show before the form):
 --    `leveling` lines are silent at 60, `levelingFirst` lines whenever their form is up. Each recipe `extra`
 --    ({ before = action, line = text }, content outside wowsims's model) goes just before the first `actions` line of
---    `before` (an error when there is none). The recipe's `settings` ({ [key] = { default = bool, desc = text } }) are
---    pack settings like an ON/OFF group's: a line reads one as `settings.<key>`, and the header lists each one read.
+--    `before`, its last with `last = true` (an error when there is none). The recipe's `settings` ({ [key] = {
+--    default = bool, desc = text } }) are pack settings like an ON/OFF group's: a line reads one as `settings.<key>`, and the header lists each one read.
 --    The recipe's `prepullSkip` ({ action key, ... }: an owner ruling against a wowsims pre-pull cast) omits that
 --    action's precombat lines, listed (an error when there is none).
 --    The recipe's `requires` ({ [action key or group's snake name] = talent key }) puts `talent.<key>.enabled&` before
@@ -89,7 +89,9 @@
 --    talent, e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
 --    The recipe's `guard` ({ [action key or group's snake name] = SimC expression }) appends `&(<expression>)` to the
 --    condition of each such entry (rule 13's automatic lines too), in every list (after a required talent); keyed
---    "<list> #<n>", to a move entry's condition, which its reached lines carry (rule 19, the ON variant): a
+--    "<list> #<n>", to that entry's cast line, or a move entry's condition, which its reached lines carry (rule 19,
+--    the ON variant), its value { expect = action, cond = expression }: the build raises when that entry is not the
+--    expected action (its cast key, else its kind), names none, or sits in a list never translated: a
 --    documented deviation from wowsims, each
 --    with its reason in the recipe and docs/dev/wowsims-packs.md.
 --    The recipe's `condition` ({ [action key] = SimC expression }) replaces the APL's condition of each cast line of
@@ -539,7 +541,6 @@ function M.context(set, r, log, player, encounter, tank)
         prepullSkip = r.prepullSkip or {},
         exclusive = r.exclusive or {},
         requires = r.requires or {},
-        guard = r.guard or {},
         condition = r.condition or {}, -- rule 7: { [action key] = SimC expression }, an owner deviation's condition
         windowVars = r.windowVars or {}, -- rule 10: { [variable name] = window }, a time since read from the window
         ranges = r.ranges or {}, -- rule 19: { [action key] = { min, max } yards }, the DB2's, where the APL gives none
@@ -551,6 +552,15 @@ function M.context(set, r, log, player, encounter, tank)
     table.sort(c.maintenance, function(x, y)
         return x[1] < y[1]
     end)
+    -- rule 7: a guard value is an expression or { expect = action, cond = expression } (a positional key's form)
+    c.recipe, c.guard, c.guardExpect, c.expectChecked = r.pack or r.name or "the recipe", {}, {}, {}
+    for k, v in pairs(r.guard or {}) do
+        if type(v) == "table" then
+            c.guard[k], c.guardExpect[k] = v.cond, v.expect
+        else
+            c.guard[k] = v
+        end
+    end
     c.select, c.selectValue = {}, {} -- rule 16: by wowsims action; by value name -> { kind, select }
     for action, x in pairs(r.select or {}) do
         local choice
@@ -1745,6 +1755,31 @@ local function guarded(c, key, cond)
     return cond and (paren(cond) .. "&" .. paren(g)) or g
 end
 
+-- Rule 7: a guard keyed by entry `pos` ("<list> #<n>", entry action `a`) names the action it expects there (its cast
+-- key, else its kind, e.g. "move"), so a re-pin that shifts the list raises instead of guarding another line.
+local function expected(c, pos, a)
+    if not c.guard[pos] then
+        return
+    end
+    local kind
+    for k in pairs(a) do
+        if k ~= "condition" then
+            kind = k
+        end
+    end
+    local id = kind
+    if kind == "castSpell" or kind == "channelSpell" then
+        id = spellLookup(c, a[kind].spellId) or kind
+    end
+    local want = c.guardExpect[pos]
+    if want == nil then
+        error(('guard: %s %s names no expected action (expect = "%s")'):format(c.recipe, pos, tostring(id)), 0)
+    elseif want ~= id then
+        error(("guard: %s %s is %s, not %s"):format(c.recipe, pos, tostring(id), want), 0)
+    end
+    c.expectChecked[pos] = true
+end
+
 -- Rule 14: a strictSequence's members (casts) as consecutive lines, each a member's own line (`entry`'s) whose
 -- condition also says the sequence is at it: the first under the sequence's condition `cond`; a later one when the
 -- member before it is the last cast (`prev.1.<key>`), or, while that member is unlearned (wowsims drops it from the
@@ -2051,6 +2086,7 @@ local function entryBody(c, e)
         cond, c.conditioned[key] = c.condition[key], true
     end
     cond = guarded(c, key, required(c, key, cond))
+    cond = guarded(c, c.listName .. " #" .. c.entryNo, cond) -- rule 7: the entry's own guard
     return cond and (body .. ",if=" .. cond) or body
 end
 local function restoreMods(c, mods, ...)
@@ -2797,6 +2833,7 @@ function M.translate(rotation, c)
         for _, i in ipairs(order) do
             local e = entries[i]
             local when = at and at[i] -- seconds before the pull (0: at it), or why wowsims ignores the entry
+            expected(c, name .. " #" .. i, e.action or {})
             if e.hide then
                 omitted[#omitted + 1] = ("%s #%d: hidden"):format(name, i)
             elseif type(when) == "string" then
@@ -2912,7 +2949,9 @@ function M.translate(rotation, c)
         for i, body in ipairs(byName.default) do
             if body:match("^[%w_]+") == x.before then
                 at = i
-                break
+                if not x.last then
+                    break
+                end
             end
         end
         if not at then
@@ -2947,6 +2986,9 @@ function M.translate(rotation, c)
             local has = field == "windowVars" and c.vars or c.entryNames -- an entry of that name, emitted or not
             if not (c.keyUsed[field .. ":" .. key] or has[key]) then
                 error(("%s: no %s %s"):format(field, key, field == "windowVars" and "read" or "line"), 0)
+            end
+            if field == "guard" and key:find(" #%d+$") and not c.expectChecked[key] then -- rule 7: never checked
+                error(("guard: %s %s: its list is never translated"):format(c.recipe, key), 0)
             end
         end
     end

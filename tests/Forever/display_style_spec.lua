@@ -125,7 +125,8 @@ local SET = {
     { "rend", 2.5, nil },
 }
 
-local function publish(H)
+-- `edit( s )` changes the records before the publish.
+local function publish(H, edit)
     local abilities = H.Hekili.Engine.Registry.Abilities()
     local now = H.ctl.now
     local s = H.ns.Output.Begin("Primary")
@@ -134,6 +135,9 @@ local function publish(H)
         r.actionName, r.actionID = e[1], abilities[e[1]].id
         r.texture, r.caption, r.keybind, r.indicator = "tex" .. i, "cap" .. i, "K" .. i, e[3]
         r.time, r.exact_time = e[2], now + e[2]
+    end
+    if edit then
+        edit(s)
     end
     H.ns.Output.Publish("Primary", #SET)
 end
@@ -261,6 +265,35 @@ describe("the classic display style", function()
         for i, l in ipairs(want) do
             assert.are.equal(l, lines[i], "line " .. i)
         end
+    end)
+
+    -- APL label= and icon= (owner 2026-11-12): the record's label as text on its icon; iconOverride drawn in place of
+    -- the texture (the default renderers' choice).
+    it("draws a record's label and iconOverride, and clears both when the next publish has none", function()
+        local H, d = boot()
+        for _, b in ipairs(d.Buttons) do
+            instrument(b.Label)
+        end
+        local f = d.__scripts.OnUpdate
+        local function draw(edit)
+            publish(H, edit)
+            H.ctl.now = H.ctl.now + 0.2
+            f(d, 0.2)
+        end
+        draw(function(s)
+            s[1].label, s[1].iconOverride, s[3].label = "R6", "ovr1", "R3"
+        end)
+        local b = d.Buttons
+        assert.are.equal("R6", b[1].Label:GetText())
+        assert.is_nil(b[2].Label:GetText())
+        assert.are.equal("R3", b[3].Label:GetText())
+        assert.are.equal("ovr1", b[1].Texture:GetTexture())
+        assert.are.equal("tex2", b[2].Texture:GetTexture())
+        draw()
+        assert.is_nil(b[1].Label:GetText())
+        assert.is_nil(b[3].Label:GetText())
+        assert.are.equal("tex1", b[1].Texture:GetTexture())
+        assert.are.same({}, H.errors)
     end)
 
     it("allocates nothing over 1,000 display frames after the first publish", function()
@@ -916,6 +949,40 @@ describe("the timeline display style", function()
         for i, l in ipairs(want) do
             assert.are.equal(l, lines[i], "line " .. i)
         end
+    end)
+
+    it("draws a record's label and iconOverride on its cell, and clears both when the next publish has none", function()
+        local H, d, T = tlBoot()
+        for _, b in ipairs(T.cells) do
+            for k, fn in pairs(tlrec) do
+                rawset(b.Label, k, fn)
+            end
+        end
+        local function draw(edit)
+            tlPublish(H, nil, edit)
+            H.ctl.now = H.ctl.now + 0.2
+            d.__scripts.OnUpdate(d, 0.2)
+        end
+        local function cell(i) -- the cell drawing record i
+            for _, b in ipairs(T.cells) do
+                if b.recIndex == i then
+                    return b
+                end
+            end
+        end
+        draw(function(s)
+            s[1].label, s[1].iconOverride, s[3].label = "R6", "ovr1", "R3"
+        end)
+        assert.are.equal("R6", cell(1).Label:GetText())
+        assert.is_nil(cell(2).Label:GetText())
+        assert.are.equal("R3", cell(3).Label:GetText())
+        assert.are.equal("ovr1", cell(1).Texture:GetTexture())
+        assert.are.equal("tex2", cell(2).Texture:GetTexture())
+        draw()
+        assert.is_nil(cell(1).Label:GetText())
+        assert.is_nil(cell(3).Label:GetText())
+        assert.are.equal("tex1", cell(1).Texture:GetTexture())
+        assert.are.same({}, H.errors)
     end)
 
     it(

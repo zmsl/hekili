@@ -209,9 +209,10 @@ describe("zero allocation", function()
         assert.are.equal(0, bytes)
     end)
 
-    it(
-        "allocates nothing over 1000 casts mixing GCD kinds, the GCD's rising edge before and after each success",
-        function()
+    -- gcdFn: spender_t's `gcd` declared as a function (its kind by state at each opening, Families/Casts.lua kindAt; the
+    -- druid-ff review's open item), else the plain "totem" string
+    local function gcdKinds(gcdFn)
+        return function()
             local api, ctl = fake.new()
             local saved = {}
             for k, v in pairs({
@@ -225,7 +226,9 @@ describe("zero allocation", function()
             ctl.now = 1
             local ns = load.module()
             local VS, I = ns.VirtualState, ns.VirtualStateInternal
-            I.Build(fs.def(fs.new(9, true)), 1)
+            local hk = fs.new(9, true)
+            hk.Class.abilities.spender_t.gcd = gcdFn or "totem"
+            I.Build(fs.def(hk), 1)
             VS.Start(api)
             local IDS = { fs.SPENDER_C, fs.SPENDER_T, fs.SPENDER_U } -- spell, totem, a declared gcdTime
             local UP, DOWN = { isActive = true, isOnGCD = false }, { isActive = false, isOnGCD = false }
@@ -259,6 +262,16 @@ describe("zero allocation", function()
             assert.are.equal(0, bytes)
             assert.is_true(I.gcdLearned[1] > 0 and I.gcdLearned[2] > 0, "both kinds learned")
         end
+    end
+    it(
+        "allocates nothing over 1000 casts mixing GCD kinds, the GCD's rising edge before and after each success",
+        gcdKinds()
+    )
+    it(
+        "allocates nothing over 1000 casts mixing GCD kinds with one kind declared as a function of state",
+        gcdKinds(function()
+            return buff.spender_a.up and "spell" or "totem"
+        end)
     )
 
     -- The sweep (cdm-default §3.2, plan Task 3b): the item fields are written directly (ctl.ViewerAura logs its writes,

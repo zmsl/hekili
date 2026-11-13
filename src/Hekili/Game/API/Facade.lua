@@ -1271,6 +1271,7 @@ local PASSTHROUGH = {
     { "GetCVar", "plain [W sweep 2026-10-16]" },
     { "GetClassInfo", "plain [W sweep 2026-10-16]" },
     { "GetCursorInfo", "plain [W sweep 2026-10-16]" },
+    { "GetFileIDFromPath", "plain [owner probe 2026-11-12: nil for a missing path]; read at script load (APL icon=)" },
     { "GetFrameCPUUsage", "plain [W sweep 2026-10-16]" },
     { "GetFramerate", "plain [W sweep 2026-10-16]" },
     { "GetInstanceInfo", "plain [W sweep 2026-10-16]" },

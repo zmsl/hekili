@@ -28,7 +28,8 @@ actions+=/call_action_list,name=cooldowns,if=(!action.bane_of_doom.known|((actio
 actions+=/death_coil,if=(!action.shadow_bolt.known|(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)
 actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 actions+=/wrack
-actions+=/life_tap
+actions+=/shadow_bolt
+actions+=/life_tap,if=!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost
 actions.single_multi_target_curse_logic=curse_of_the_elements,cycle_targets=1,focus=2,if=settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)|(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)|(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))
 actions.single_multi_target_curse_logic+=/curse_of_recklessness,cycle_targets=1,focus=2,if=settings.assigned_curse='recklessness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)|(settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)|(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))
 actions.single_multi_target_curse_logic+=/curse_of_weakness,cycle_targets=1,focus=2,if=settings.assigned_curse='weakness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)|(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)|(settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))
