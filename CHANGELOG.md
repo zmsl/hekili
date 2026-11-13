@@ -15,6 +15,7 @@
 - Warlock: the Doomcaller's Attire set bonuses are counted when you wear them.
 - Priest: utility auras are now known to the addon, for custom priorities.
 - Custom priorities can label a recommendation: `label=R6` on a line shows "R6" on its icon, and `label_if=<condition>` shows it only while the condition holds (for example to mark a lower spell rank). `icon=` (a texture file ID or a texture path) with `icon_if=<condition>` asks the display to show a different icon for that line; a path the game does not have keeps the normal icon and adds a line to the Warnings, while a wrong file ID shows a blank icon (the game cannot tell).
+- The priority editor (Action Lists) now has Label, Label Condition, Icon and Icon Condition fields under Caption, so labels and icon overrides can be set without importing a line. The Icon field previews the texture it resolves to and says so when a path is not a texture file.
 - Warrior: Weaponmaster now shows its three auras (`weaponmaster_axe_polearm`, `weaponmaster_mace_staff`, `weaponmaster_sword`) while you have the talent and hold that kind of weapon, for custom priorities. The sword's extra attack is not predicted.
 
 ### Changed
