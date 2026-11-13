@@ -444,7 +444,10 @@ M.READY = {
     -- GCD after the 32.20 Mutilate), 47.10 Eviscerate 0.71 (the same, behind the 46.08 unseen Energize), 63.60 Mutilate
     -- 1.12 (25 + Relentless Strikes 14179's 25 at 62.60 + regen = 60 = cost at the GCD's end; the belief's lo ~11 under,
     -- not traced further)
-    rogue_assassination = { 0.20, 35 }, -- 0.200, 35
+    -- 35 -> 36 (cov-rogue, follow-wowsims re-floor): the wowsims-true Relentless Strikes expected-value belief rule (25 x
+    -- min(1, 4% x rank x points) on every finisher, was 25 at 5/5 and 5 points only); fixture re-recorded, 37 rows moved,
+    -- most less late (lo-truth gaps shrink); median 0.200 -> 0.190, late 35 -> 36
+    rogue_assassination = { 0.20, 36 }, -- 0.190, 36
     -- { 0.20, 18 } -> { 0.24, 20 } re-pin e2842f0a78: cost class; 6 of the 7 large rows follow a 27788 energize (6 in
     -- the new log, 2 in the old: 21.18, 56.26, 64.69, 65.49, 69.00, 83.96), the rest the floor's lag (gap BQ/CE)
     -- { 0.24, 20 } -> { 0.24, 21 } R42 (the replay answers fight_remains from the log): only rows that were
