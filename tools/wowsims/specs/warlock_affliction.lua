@@ -21,8 +21,9 @@
 -- 0.989, 87: within tolerance). The build is still Orc and still carries
 -- `curseOptions: Elements`, so `select` stays (no Bane rule); the request drops executeProportion25/45/90 and sends
 -- Greater Blessing of Wisdom at 2, the top rank (R25; the build's rank 1 measured 0.977). Omitted 2 -> 2.
--- Follow-up: the world and kit regen were not refreshed from the new log (pool 5053, was 5353; casting tick 1.12, was
--- 1.04; warlock_world.lua and Warlock.lua keep the old values): within tolerance, lane 10's precedent.
+-- Follow-up: the world and kit regen were not refreshed from the new log (the world's pool 5353, the log's 6277 at
+-- e5a9cd2a2d; casting tick 1.12, was 1.04; warlock_world.lua and Warlock.lua keep the old values): within tolerance,
+-- lane 10's precedent.
 -- Fix 31 (G4: an outcome past an unmapped cast's frame is nobody's) took the dynamite's two misses off Corruption:
 -- 0.728 -> 0.877.
 -- Worked (P6): Corruption's `now` passes its rank's duration (the belief wrote nothing for a function duration);

@@ -6,6 +6,7 @@
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warlock_world")
 local dlw = require("Forever.helpers.druid_loop_world")
+local pw = require("Forever.helpers.priest_world")
 
 local MANA, ENERGY = 0, 3
 
@@ -35,6 +36,7 @@ local function engine(ch, pack, text, max, distance)
     end
     H.Hekili.DB.profile.packs[pack].lists = { precombat = {}, default = lines }
     H.Hekili:LoadScripts()
+    H.Hekili.DB.profile.toggles.cooldowns.value = true -- Dark Sacrifice is a cooldowns-toggle ability
     H.Fire("PLAYER_REGEN_DISABLED")
     local VS = H.ns.VirtualState
     local power, pools = VS.Power, {}
@@ -59,6 +61,8 @@ describe("a wowsims pack's absolute mana threshold on a small pool (rule 22)", f
     for _, p in ipairs({
         { "Affliction", 6277, 1800 }, -- the kit's pool: tests/Forever/wowsims/warlock_affliction.log
         { "Destruction", 5503, 2600 }, -- warlock_destruction.log
+        { "Demonology", 6328, 2600 }, -- warlock_demonology.log
+        { "ShadowBrand", 6328, 2600 }, -- warlock_shadow_brand.log
     }) do
         local name, kit, n = p[1], p[2], p[3]
         local function at(max)
@@ -95,5 +99,25 @@ describe("a wowsims pack's absolute mana threshold on a small pool (rule 22)", f
     it("Feral: the kit's pool (2584) still innervates under 1400, not over", function()
         local d = innervate(2584) -- tests/Forever/wowsims/druid_feral.log
         assert.are.same({ "innervate", "none" }, { d(1399, 20), d(1401, 20) or "none" })
+    end)
+
+    -- Shadow Priest: Dark Sacrifice's `<=` line, Shadow Word: Pain after it
+    local function sacrifice(max)
+        local C = pw.Shadow
+        local text = line("Priest", C.PACK, "actions+=/dark_sacrifice") .. "\nactions+=/shadow_word_pain"
+        assert.is_truthy(text:find("mana.lo<=2000", 1, true), text)
+        local ch = C.character()
+        ch.known[#ch.known + 1] = 1277324 -- Dark Sacrifice, the Undead's: the Shadow world's kit has no racial
+        return engine(ch, C.PACK, text, max, 25)
+    end
+
+    it("Shadow Priest: no Dark Sacrifice at full mana on a 1132 pool (level 20), one near empty", function()
+        local d = sacrifice(1132)
+        assert.are.same({ "shadow_word_pain", "dark_sacrifice" }, { d(1132), d(300) })
+    end)
+
+    it("Shadow Priest: the kit's pool (4846) still sacrifices at 2000 and under, not over", function()
+        local d = sacrifice(4846) -- tests/Forever/wowsims/priest_shadow.log
+        assert.are.same({ "dark_sacrifice", "dark_sacrifice", "shadow_word_pain" }, { d(1999), d(2000), d(2001) })
     end)
 end)

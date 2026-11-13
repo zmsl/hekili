@@ -7,7 +7,7 @@
 ### Changed
 
 ### Fixed
-- Warlock: Life Tap is no longer recommended at full mana on characters with a small mana pool (below level 60); Feral's Innervate and Shadow's Dark Sacrifice likewise.
+- Life Tap (Warlock), Innervate (Feral, and Guardian in Cat Form) and Dark Sacrifice (Shadow Priest) are no longer recommended at full mana on characters with less mana than the level-60 character these priorities were written for (for example while leveling); they now wait until your mana is low for your own pool.
 
 ### Known issues
 

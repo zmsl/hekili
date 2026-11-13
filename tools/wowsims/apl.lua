@@ -278,8 +278,9 @@
 --    writes for its kit's pool, is `(mana.lo<N&mana.pct_lo<P)` (the op kept): P is N's share of the kit's pool, the
 --    spec's exported log's first "... mana ... of <max> total" line of our character (the replay's UnitPowerMax,
 --    tests/Game/harness/replay.lua M.pools), rounded up, so at the kit's pool the share never binds and a smaller
---    pool (a lower level, whose N may exceed its whole pool) reads the share. No log: unsupported (rule 2). No APL at
---    the pins compares our mana `>` a number; one would stay absolute.
+--    pool (a lower level, whose N may exceed its whole pool) reads the share. No log: unsupported (rule 2). A `not` of
+--    our mana under a number is rewritten too (`!(mana.lo<N&mana.pct_lo<P)`), while a direct `>` or `>=` a number
+--    stays absolute; no APL at the pins has either form.
 -- 14b. A `sequence` (wowsims: its members in order, each once, once per reset; design §3a) is a stepped window `<w>`
 --    (the snake of its name) whose steps are its cast members: one line a cast, `<key>,if=window.<w>.next.<key>`, its
 --    own condition after, consecutive equal lines once. A distance-only waitUntil member is the next cast's range gate,
@@ -1345,6 +1346,8 @@ local function bool(c, n)
             return nil, nil, true
         end
         -- rule 22: our mana under a number, as the number's share of the kit's pool too
+        -- shortcut: a whole-number share with `<=` can miss lo == N at the kit's pool by float error (the engine's
+        -- 100*(lo/max)); none at the pins, add a margin if one appears.
         local flip = r == "mana.lo" and tonumber(l) ~= nil
         local under = flip and FLIP[v.op] or v.op
         if (flip or l == "mana.lo" and tonumber(r)) and (under == "OpLt" or under == "OpLe") then
