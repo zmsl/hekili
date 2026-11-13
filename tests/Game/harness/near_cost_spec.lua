@@ -21,6 +21,7 @@ describe("the sim's near-cost mark (TimeToReady)", function()
             surge = { id = -9201, spend = 370, spendType = "mana" },
             focus = { id = -9202, spend = 121, spendType = "mana" },
             veil = { id = -9203, spend = 370, spendType = "mana", nobuff = "veil_up" },
+            snap = { id = -9204, spend = 370, spendType = "mana", toggle = "interrupts" }, -- off the GCD
         }
         for k, d in pairs(defs) do
             spec:RegisterAbility(k, d)
@@ -121,6 +122,23 @@ describe("the sim's near-cost mark (TimeToReady)", function()
         rawset(S.cooldown, "surge", nil)
         assert.is_true(w >= 0.73 and w <= 0.74, w)
         assert.is_false(near)
+    end)
+
+    it("keeps the window at now for a pick off the GCD (an interrupt): the running GCD does not hold it", function()
+        local gcd = S.cooldown.global_cooldown
+        gcd.remains = 0.4
+        r.actual, r.actual_lo, r.actual_hi = 366, 342, 366 -- as the GCD case: near there, at pre 0.4
+        S.forecastResources("mana")
+        local w = S:TimeToReady("snap")
+        local near, pre = S.nearCost, S.nearPre
+        S:TimeToReady("surge") -- the same state on the GCD: near, pre 0.4
+        local gNear, gPre = S.nearCost, S.nearPre
+        gcd.remains = 0
+        assert.is_true(w >= 0.73 and w <= 0.74, w)
+        assert.are.equal(0, pre)
+        assert.is_false(near) -- the floor's 0.74 s is past now + EARLY_EXIT + one update
+        assert.is_true(gNear)
+        assert.are.equal(0.4, gPre)
     end)
 
     it("does not mark a swing-paid resource: it moves only at swings, so no regen is answered late", function()

@@ -7598,7 +7598,6 @@ function state:TimeToReady( action, pool )
         nearRes = not z.swingGen
             and wait <= pre + ns.EARLY_EXIT + 0.2 -- the driver's combat update interval
             and self:TimeToResource( z, spend ) <= pre + ns.EARLY_EXIT
-        self.nearPre = pre
         waitRes = wait
     end
 
@@ -7666,6 +7665,7 @@ function state:TimeToReady( action, pool )
     wait = ns.callHook( "TimeToReady", wait, action )
 
     self.nearCost = nearRes and wait <= waitRes
+    self.nearPre = pre -- set here, after the sync recursion (TimeToReady( sync ) above), which writes its own
     state.delay = delay
     return max( wait, self.delayMin )
 end

@@ -111,11 +111,12 @@ end)
 describe("the Clash setting on a booted Mage", function()
     -- the pick's Clash: Fireball (0.31 s on its floor, no near mark) is treated as ready `clash` sooner, so Scorch,
     -- ready 0.31 s sooner (under clash + the 0.05 s pad), does not displace it
-    local function clashed(clash)
+    local function clashed(clash, key)
+        key = key or "fireball"
         return function(H)
             local S = H.Hekili.State
-            H.Hekili.Engine.settings.specs[S.spec.id].abilities.fireball.clash = clash
-            assert.are.equal(clash, S:ClashOffset("fireball"))
+            H.Hekili.Engine.settings.specs[S.spec.id].abilities[key].clash = clash
+            assert.are.equal(clash, S:ClashOffset(key))
         end
     end
 
@@ -128,5 +129,29 @@ describe("the Clash setting on a booted Mage", function()
     it("lets a later entry ready more than the pick's Clash + 0.05 s sooner through", function()
         local slot = first(0, nil, clashed(0.2))
         assert.are.equal("scorch", slot.actionName)
+    end)
+
+    -- the later entry's Clash: Fireball (off the GCD, 0.31 s on its floor) and Scorch at the GCD's end (0.29 s) are
+    -- within the 0.05 s pad; Scorch's Clash 0.3 makes it ready sooner by more, so it takes over
+    local function scorchClash(clash)
+        local set = clashed(clash, "scorch")
+        return function(H)
+            H.ns.VirtualState.GcdInfo = function(t)
+                return t - 1.21, 1.5 -- 0.29 s left
+            end
+            set(H)
+        end
+    end
+    local OFF = { { enabled = true, action = "fireball", use_off_gcd = 1 }, { enabled = true, action = "scorch" } }
+
+    it("lets a later entry with Clash take over a pick ready less than its Clash sooner", function()
+        local slot = first(0, nil, scorchClash(0.3), OFF)
+        assert.are.equal("scorch", slot.actionName)
+        assert.is_true(slot.wait > 0.28 and slot.wait < 0.3, slot.wait) -- its real wait: the GCD's end
+    end)
+
+    it("keeps the pick over that entry with no Clash: under the 0.05 s pad", function()
+        local slot = first(0, nil, scorchClash(0), OFF)
+        assert.are.equal("fireball", slot.actionName)
     end)
 end)
