@@ -17483,7 +17483,7 @@ options.packs.balance.targets.targetsHeader	name	These settings control how targ
 options.packs.balance.targets.yourTarget	desc	Your actual target is always counted as an enemy, even if you do not have a target.\n\nThis setting cannot be disabled.
 options.packs.balance.targets.yourTarget	name	Your Target
 options.packs.beast_mastery	name	|cFFFFD100Beast Mastery|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com)	name	|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t |cFF00B4FFBeast Mastery (wowsims.com)|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com)	name	|cFF00B4FFBeast Mastery (wowsims.com)|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).export	name	Export
 options.packs.beast_mastery.Beast Mastery (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).export.exportString	name	Priority Export String
@@ -17754,7 +17754,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).profile.signature.date	n
 options.packs.beast_mastery.Beast Mastery (wowsims.com).profile.signature.source	desc	If the Priority is based on a SimulationCraft profile or a popular guide, it is a good idea to provide a link to the source (especially before sharing).
 options.packs.beast_mastery.Beast Mastery (wowsims.com).profile.signature.source	name	Source
 options.packs.beast_mastery.Beast Mastery (wowsims.com).profile.warnings	name	Import Log
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com)	name	|cFF00B4FFBeast Mastery Turret (wowsims.com)|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com)	name	|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t |cFF00B4FFBeast Mastery Turret (wowsims.com)|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).export	name	Export
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).export.exportString	name	Priority Export String
@@ -17883,6 +17883,14 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.description
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.description	name	Description
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.enabled	name	Enabled
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.icon	name	Icon
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.label	name	Label
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.label_if	name	Label Condition
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.listName	name	Action List
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -22803,6 +22811,14 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.description	d
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.description	name	Description
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.enabled	name	Enabled
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.icon	name	Icon
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.label	name	Label
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.label_if	name	Label Condition
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.listName	name	Action List
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -25228,6 +25244,14 @@ options.packs.survival.Survival Melee (wowsims.com).lists.description	desc	This 
 options.packs.survival.Survival Melee (wowsims.com).lists.description	name	Description
 options.packs.survival.Survival Melee (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.survival.Survival Melee (wowsims.com).lists.enabled	name	Enabled
+options.packs.survival.Survival Melee (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.survival.Survival Melee (wowsims.com).lists.icon	name	Icon
+options.packs.survival.Survival Melee (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.survival.Survival Melee (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.survival.Survival Melee (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.survival.Survival Melee (wowsims.com).lists.label	name	Label
+options.packs.survival.Survival Melee (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.survival.Survival Melee (wowsims.com).lists.label_if	name	Label Condition
 options.packs.survival.Survival Melee (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.survival.Survival Melee (wowsims.com).lists.listName	name	Action List
 options.packs.survival.Survival Melee (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
@@ -25461,6 +25485,14 @@ options.packs.survival.Survival Turret (wowsims.com).lists.description	desc	This
 options.packs.survival.Survival Turret (wowsims.com).lists.description	name	Description
 options.packs.survival.Survival Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.survival.Survival Turret (wowsims.com).lists.enabled	name	Enabled
+options.packs.survival.Survival Turret (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
+options.packs.survival.Survival Turret (wowsims.com).lists.icon	name	Icon
+options.packs.survival.Survival Turret (wowsims.com).lists.icon_if	desc	If entered, the Icon shows only while this is true.
+options.packs.survival.Survival Turret (wowsims.com).lists.icon_if	name	Icon Condition
+options.packs.survival.Survival Turret (wowsims.com).lists.label	desc	Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note.
+options.packs.survival.Survival Turret (wowsims.com).lists.label	name	Label
+options.packs.survival.Survival Turret (wowsims.com).lists.label_if	desc	If entered, the Label shows only while this is true.
+options.packs.survival.Survival Turret (wowsims.com).lists.label_if	name	Label Condition
 options.packs.survival.Survival Turret (wowsims.com).lists.listName	desc	Select the action list to view or modify.
 options.packs.survival.Survival Turret (wowsims.com).lists.listName	name	Action List
 options.packs.survival.Survival Turret (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
