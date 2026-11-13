@@ -541,13 +541,17 @@ local function sacrificeOn(W, e, id)
     W.applyAura(e, id, 7200, 1, 1)
     if id == 18792 then -- Fel Energy: 2% of the pool every 4 s while it is up (DB2 aura 21; wowsims talents_demonology.go)
         local a = e.auras[id]
+        -- indexed: t0 + (k - phase) x 4, never a running sum (L606); the phase a draw in [0, 1) as the world's regen
+        -- grids' (W.regenPhase, L668), so the first gain falls in (0, 4] s after the Sacrifice
+        local t0, k, ph = W.t, 1, W.prng.next()
         local function step()
             if e.auras[id] == a then
                 W.emit({ kind = "gain", src = e, pt = MANA, rage = 0.02 * e.powerMax }) -- scenarios.world sets powerMax from WORLD.max
-                W.at(W.t + 4, step)
+                k = k + 1
+                W.at(t0 + (k - ph) * 4, step)
             end
         end
-        W.at(W.t + 4, step)
+        W.at(t0 + (1 - ph) * 4, step)
     end
 end
 local function sacrificeOff(W, e, id)

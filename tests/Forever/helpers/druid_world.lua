@@ -231,6 +231,16 @@ function M.press(key, R, o)
     if pt == M.MANA or cost < 1 then
         cost, pt = 0, nil
     end
+    local gcd = M.GCD[a.gcd or "spell"]
+    if type(a.gcd) == "function" then -- a kind by form (Faerie Fire's in Cat Form): the client's, from the true form
+        gcd = function(_, us)
+            local buff = {}
+            for i, k in ipairs(M.FORMS) do
+                buff[k] = { up = us.form == i }
+            end
+            return M.GCD[ld.run(a.gcd, { buff = buff })]
+        end
+    end
     local share = a.refundOnAvoid -- the belief's: true takes the resource meta's
     if share == true then
         share = pt and w.resources[pt] and w.resources[pt].meta and w.resources[pt].meta.refundOnAvoid
@@ -242,7 +252,7 @@ function M.press(key, R, o)
         refund = type(share) == "number" and share or nil, -- an avoid gives back the kit's share (W.hit)
         outcomes = M.OUTCOMES[key], -- nil: the special melee tables
         cooldown = ld.run(a.cooldown, e) or 0,
-        gcd = M.GCD[a.gcd or "spell"],
+        gcd = gcd,
         onNextSwing = a.onNextSwing,
         amount = m.amount,
         effect = m.effect,

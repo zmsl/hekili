@@ -236,6 +236,36 @@ describe("the simulation's GCD by kind in energy (core edit E10)", function()
         assert.are.equal(1, S.gcd.max) -- no ability context: the clause E10 keeps
     end)
 
+    -- L578: a `gcd` declared as a function picks the kind by state, in the sim and in the belief's build record.
+    it("prices Faerie Fire at the totem kind in Cat Form, the spell kind in caster and Bear Form", function()
+        local H = headless.new({
+            character = {
+                class = "DRUID",
+                classID = 11,
+                specID = 1483,
+                level = 60,
+                known = { 768, 5487, 5221, 770 },
+                power = { type = 3, token = "ENERGY", max = 100 },
+            },
+        })
+        assert.are.same({}, H.loadErrors)
+        local S = H.Hekili.State
+        S.this_action = "faerie_fire"
+        assert.are.equal(1.5 * S.haste, S.gcd.execute)
+        S.applyBuff("cat_form")
+        assert.are.equal(1, S.gcd.execute)
+        S.removeBuff("cat_form")
+        S.applyBuff("bear_form")
+        assert.are.equal(1.5 * S.haste, S.gcd.execute)
+        local kind -- the belief's build record keeps the function, so each cast picks its kind (Families/Casts.lua)
+        for _, rec in ipairs(H.ns.VirtualStateInternal.def.abilities) do
+            if rec.key == "faerie_fire" then
+                kind = type(rec.gcd)
+            end
+        end
+        assert.are.equal("function", kind)
+    end)
+
     -- aura audit C12: a class's GCD modifiers (spec:RegisterGcdMod; the Druid's Nature's Grace: 10% cast speed on
     -- every spell GCD, 10% more on its mask) cut a spell-kind press while their aura is up in the simulation; with the
     -- aura down the press keeps 1.5 x haste.

@@ -223,7 +223,8 @@ describe("Forever Druid", function()
                 local want = KIT[key]
                 assert.is_not_nil(want, "unexpected ability " .. key)
                 assert.are.same(want[1], idsOf(a), key)
-                assert.are.same({ want[3], want[4], want[5] }, { a.spendType, ld.run(a.cooldown, e), a.gcd }, key)
+                local cd, gcd = ld.run(a.cooldown, e), ld.run(a.gcd, e) -- caster form's (Faerie Fire's gcd is a function)
+                assert.are.same({ want[3], want[4], want[5] }, { a.spendType, cd, gcd }, key)
                 assert.are.equal("function", type(a.known), key)
                 if type(want[2]) == "table" then
                     for r, cost in ipairs(want[2]) do -- the cost of each rank, as the spellbook learns it
@@ -1450,6 +1451,36 @@ describe("Forever Druid in VirtualState's now context", function()
         ctl.casting = nil
         assert.are.equal(1.5, gcd(12.02, 1.5))
         assert.is_truthy(VS.Snapshot():find("learned=1.5000/1.0000", 1, true))
+    end)
+
+    -- L578: the Cat Form passive's GCD mod (pin e5a9cd2a2d spells_auto_gen.go:2014, 3025 effect 4: -500 ms on Faerie
+    -- Fire's mask) makes Faerie Fire a 1 s GCD in Cat Form; the Bear Form passives carry no GCD mod (1178, 9635).
+    it("opens Faerie Fire's GCD at the totem kind's learned length in Cat Form, the spell kind's otherwise", function()
+        local Direct, Obs = I.Sources.Direct, VS.Obs
+        local function gcd(t, len)
+            Direct(Obs.Cooldown, t, 0, 1, 1)
+            VS.Drain(t + 0.03)
+            local _, d = VS.GcdInfo(t + 0.03)
+            Direct(Obs.Cooldown, t + len, 0, 0, 1)
+            VS.Drain(t + len + 0.01)
+            return d
+        end
+        cast(770, 2) -- caster form: the spell kind
+        near(1.5, gcd(2, 1.5))
+        cast(768, 4) -- Cat Form
+        gcd(4, 1.5)
+        cast(5221, 6) -- Shred: the totem kind learns 0.95
+        gcd(6, 0.95)
+        local learned = I.Quantise(0.95)
+        cast(770, 8)
+        near(learned, gcd(8, 0.95)) -- the cat's 1 s GCD as the client shows it, not the spell kind's 1.5
+        cast(5487, 10) -- Bear Form
+        gcd(10, 1.5)
+        cast(770, 12)
+        near(1.5, gcd(12, 1.5))
+        near(1.5, I.gcdLearned[1])
+        near(learned, I.gcdLearned[2])
+        assert.are.equal(0, I.nowErrors, tostring(I.nowError))
     end)
 
     it("runs every declared `now` in the context without an error", function()
