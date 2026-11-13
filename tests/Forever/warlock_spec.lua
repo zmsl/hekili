@@ -975,13 +975,16 @@ describe("Forever Warlock without the endgame filler", function()
     local ww = require("Forever.helpers.warlock_world")
     local ws = require("Forever.helpers.wowsims")
 
-    -- The pack's `actions` lines from the last line that is `filler` alone (a `filler` ending in "," its prefix).
-    local function tail(pack, filler)
+    -- The pack's `actions` lines (`list`: its `actions.<list>` lines, as `actions` ones) from the last line that is
+    -- `filler` alone (a `filler` ending in "," its prefix).
+    local function tail(pack, filler, list)
         local f = assert(io.open("src/Hekili_Warlock/APLs/" .. pack .. ".simc"))
         local s = f:read("*a")
         f:close()
         local lines, from = {}, nil
-        for l in s:gmatch("\n(actions%+=/[^\n]+)") do
+        local at = list and "actions%." .. list .. "%+=/" or "actions%+=/"
+        for l in s:gmatch("\n(" .. at .. "[^\n]+)") do
+            l = l:gsub("^" .. at, "actions+=/")
             lines[#lines + 1] = l
             local head = "actions+=/" .. filler
             if l == head or (filler:sub(-1) == "," and l:sub(1, #head) == head) then
@@ -992,16 +995,18 @@ describe("Forever Warlock without the endgame filler", function()
         return table.concat(lines, "\n", from)
     end
 
-    -- `spec` (a wowsims recipe name) with `level`: the build's character at that level (wowsims_warlock_spec's brackets).
-    local function world(name, filler, unknown, spec, level)
+    -- `o.spec` (a wowsims recipe name) with `o.level`: the build's character at that level (wowsims_warlock_spec's
+    -- brackets); `o.list`: tail's; `o.after`: an action line after the tail.
+    local function world(name, filler, unknown, o)
+        o = o or {}
         local C = ww[name]
-        if level then
+        if o.level then
             C = ws.content(C, {
                 pack = C.PACK,
-                level = level,
-                talents = ws.header(spec).talents,
+                level = o.level,
+                talents = ws.header(o.spec).talents,
                 learn = ws.learn("WARLOCK"),
-                race = ws.race(spec),
+                race = ws.race(o.spec),
             })
         end
         local ch = C.character()
@@ -1028,10 +1033,11 @@ describe("Forever Warlock without the endgame filler", function()
         H.Fire("PLAYER_TARGET_CHANGED")
         local t = H.ctl.now + 0.2
         assert(headless.cycle(H, t))
-        local lines = H.Hekili:ParseActionList(tail(C.PACK, filler))
+        local lines = H.Hekili:ParseActionList(tail(C.PACK, filler, o.list))
         for _, l in ipairs(lines) do
             l.enabled = true
         end
+        lines[#lines + 1] = o.after and { enabled = true, action = o.after } or nil
         H.Hekili.DB.profile.packs[C.PACK].lists = { precombat = {}, default = lines }
         H.Hekili:LoadScripts()
         H.Fire("PLAYER_REGEN_DISABLED")
@@ -1073,11 +1079,27 @@ describe("Forever Warlock without the endgame filler", function()
 
     -- Review I1: wowsims's `immolate,if=!action.incinerate.known|debuff.immolate.remains<action.incinerate.cast` is
     -- always true without Incinerate, so below 18 (no Searing Pain either) it showed Immolate every GCD. At level 10,
-    -- from that line down: Shadow Bolt with Immolate up, Immolate once it falls off inside Immolate's cast.
+    -- from that line down: Shadow Bolt with Immolate up, Immolate once it falls off inside the filler's (Shadow Bolt's)
+    -- cast, as wowsims's line refreshes inside Incinerate's.
     it("Destruction at level 10: Shadow Bolt with Immolate up, Immolate when it is about to fall off", function()
-        local at = world("Destruction", "immolate,focus=2,", nil, "warlock_destruction", 10)
+        local at = world("Destruction", "immolate,focus=2,", nil, { spec = "warlock_destruction", level = 10 })
         local max = ww.Destruction.WORLD.max
-        -- down; cast (rank 1, 15 s) and 0.2 s on; 14.2 s after it (0.8 s left, under its cast)
+        -- down; cast (rank 1, 15 s) and 0.2 s on; 14.2 s after it (0.8 s left, under Shadow Bolt's cast)
         assert.are.same({ "immolate", "shadow_bolt", "immolate" }, { at(max), at(max, 0.2, 348), at(max, 14) })
+    end)
+
+    -- Review N1: Incinerate is a talent, so a level-60 Destruction Warlock may lack it; the cooldowns list's
+    -- `immolate,if=...&(!action.incinerate.known|debuff.immolate.remains<action.incinerate.cast)` (Bane of Doom up under
+    -- 15 s, one enemy) was then always true. From that line down, Shadow Bolt after it: Bane of Doom up with 14 s left.
+    it("Destruction at 60 without Incinerate: the cooldowns Immolate only inside Shadow Bolt's cast", function()
+        local at =
+            world("Destruction", "immolate,focus=2,", "incinerate", { list = "cooldowns", after = "shadow_bolt" })
+        local max = ww.Destruction.WORLD.max
+        -- Bane of Doom (603, 60 s) and 46 s on: Immolate down; Immolate (25309, 15 s) and 0.2 s on; 12.5 s later (2.3 s
+        -- left: over Immolate's cast, under Shadow Bolt's; Bane of Doom 1.3 s left)
+        assert.are.same(
+            { "immolate", "shadow_bolt", "immolate" },
+            { at(max, 46, 603), at(max, 0.2, 25309), at(max, 12.5) }
+        )
     end)
 end)

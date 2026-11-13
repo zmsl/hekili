@@ -17182,7 +17182,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0013	|
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 5676 - |cFFFFD100|cffffd100(!action.incinerate.known||(action.incinerate.cast+action.incinerate.travel_time)>fight_remains)|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<35&fight_remains>60)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 348 - |cFFFFD100|cffffd100(!action.incinerate.known||debuff.immolate.remains<action.incinerate.cast)&(action.incinerate.known||debuff.immolate.remains<action.immolate.cast)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 348 - |cFFFFD100|cffffd100(!action.incinerate.known||debuff.immolate.remains<action.incinerate.cast)&(action.incinerate.known||(action.shadow_bolt.known&debuff.immolate.remains<action.shadow_bolt.cast))|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 412758
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 686
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 1454 - |cFFFFD100|cffffd100!action.shadow_bolt.known||mana.lo<action.shadow_bolt.cost|r|r
