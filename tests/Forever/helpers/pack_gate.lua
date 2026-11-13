@@ -301,6 +301,16 @@ M.FLICKER = {
     -- 41-60 flicker 0.02 / 0.03 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 147 / 147 / 155):
     -- flicker 0 -> 0.04, heldReady 156 -> 155
     ["Beast Mastery"] = { flicker = 0.04, retracted = 0, heldReady = 155 }, -- 0 / 0.03 / 0, 0 (gap CE)
+    -- wowsims's non-weave builds (owner 2026-11-12, ledger L661), first measured (R6; seeds 1-20 / 21-40 / 41-60, steady
+    -- icons on): flicker 0 / 0 / 0 each (Survival Melee's oracle 0.02 / 0.03 / 0.02, the others' 0), retracted 0,
+    -- readyShort 0; heldReady the Hunter rows' cost-crossing class (the floor a few units under the truth, gap BT),
+    -- not traced per tick; agreement .993 or better each set (Survival Melee .993). Re-measured after the seeded regen
+    -- phase (L667, cause harness), seeds 1-20 / 21-40 / 41-60 flicker 0 each, retracted 0, readyShort 0; floors the
+    -- worst of the two measurements (first, then after L667)
+    ["Beast Mastery Turret"] = { flicker = 0, retracted = 0, heldReady = 128 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
+    ["Marksmanship Turret"] = { flicker = 0, retracted = 0, heldReady = 118 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
+    ["Survival Turret"] = { flicker = 0, retracted = 0, heldReady = 117 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
+    ["Survival Melee"] = { flicker = 0, retracted = 0, heldReady = 183 }, -- heldReady 166 / 183 / 177; after L667 173 / 169 / 174
     -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
     -- wowsims's logged regen (Ret 8.25/s casting) runs the world at an empty mana pool; the oracle's flicker rose too; our
     -- extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike); controller ruling

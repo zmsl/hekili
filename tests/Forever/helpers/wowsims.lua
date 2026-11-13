@@ -398,6 +398,13 @@ M.READY = {
     -- 2.34, wing_clip 6 max 2.80, immolation_trap 3): the walk the replay cannot forecast (triage Case 1) and the weave's omitted
     -- `wait` rows #2/#3 (CN19, second translator lane); the median fell as the set grew
     hunter_survival = { 0.29, 22 },
+    -- wowsims's non-weave builds (owner 2026-11-12, ledger L661): first measurement (fixtures recorded once). Turrets:
+    -- Serpent Sting early (the cast-anchored dot) and Arcane Shot cost rows; Survival Melee: wing_clip 2 (max 3.10),
+    -- strider_kick 1
+    hunter_beast_mastery_turret = { 0.36, 4 },
+    hunter_marksmanship_turret = { 0.42, 4 },
+    hunter_survival_turret = { 0.30, 5 },
+    hunter_survival_melee = { 0.41, 3 },
     -- { 0.47, 21 } -> { 0.76, 9 } re-pin e2842f0a78 (the new log): the 9 real rows late, cost class (gap BQ: lo reaches
     -- a cost after the truth), fire_blast 7 (max 0.76: the dry-mana waits on its 340)
     mage_arcane = { 0.76, 9 }, -- 0.760, 9 (ruling M13)

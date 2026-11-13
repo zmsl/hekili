@@ -6,7 +6,7 @@
 -- the shared cooldowns (Arcane Shot and Summon Hawk; Aimed Shot and Multi-Shot), Raptor Strike on the next swing,
 -- Mongoose Bite's window from the plain usability read, Immolation Trap, Resourcefulness's cheaper strikes and traps,
 -- the time to the next main-hand swing (`mainhand_remains`, the weave's Multi-Shot gap), and the default priorities
--- (the wowsims.com packs, translated from wowsims/forever's Melee Weave; no in-game check yet).
+-- (the wowsims.com packs: the Turret lists are the default, the Melee Weave and Survival Melee are picked by hand; no in-game check yet).
 -- Research: docs/research/2026-10-15-forever-hunter/research.md and the class-completion research §5.
 -- Unmodelled: ranged haste on the auto-shot clock and Rapid Fire's +40% melee haste on the main-hand swing (Rapid Fire,
 -- Quick Shots; their haste on Aimed, Multi and Sniper Shot's casts is modelled; the core's aura field `swingHaste`
@@ -44,7 +44,8 @@ local spec = Hekili:NewClass("HUNTER", {
             role = "attack",
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
-            package = "Beast Mastery (wowsims.com)",
+            package = "Beast Mastery Turret (wowsims.com)", -- the default (owner 2026-11-13, L859); the weave is picked by hand
+            formerPackages = { ["Beast Mastery (wowsims.com)"] = true }, -- the weave was the default: a profile that never picked moves
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
         {
@@ -55,7 +56,8 @@ local spec = Hekili:NewClass("HUNTER", {
             role = "attack",
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
-            package = "Marksmanship (wowsims.com)",
+            package = "Marksmanship Turret (wowsims.com)", -- the default (owner 2026-11-13, L859); the weave is picked by hand
+            formerPackages = { ["Marksmanship (wowsims.com)"] = true }, -- the weave was the default: a profile that never picked moves
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
         {
@@ -66,7 +68,8 @@ local spec = Hekili:NewClass("HUNTER", {
             role = "attack",
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
-            package = "Survival (wowsims.com)",
+            package = "Survival Turret (wowsims.com)", -- the default (owner 2026-11-13, L859); the weave is picked by hand
+            formerPackages = { ["Survival (wowsims.com)"] = true }, -- the weave was the default: a profile that never picked moves
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
     },
@@ -855,6 +858,26 @@ spec:RegisterPack(
     "Survival (wowsims.com)",
     20261110000,
     [[Hekili:LR13poQnq4)w2xsjQBjBY296ERAwPw1wDxv7QtLTVcXbBsCdGr2MeTsN4V9oM8lWjqCa27fUhorGXFZN)S9mdZI7y3xDDWijX9Lj3n5dJhp(o4FUoY3siUoji)vOfWfXOi4)Ds5RPRrHzZS2W2iOrcBFw0qLDVfYqyfwZtPHYph7o)SWksi(UoF6FF51F)FEsSdoxNLumMSDmeHFLo6PSzYLKSz7U3OagNSMWZMHjbO0qz2SF5l)v2m42zZkarkDKYVIrltJLe(iCIyKIMyXiXAVne0AInGx4WBb85OyriqCmCnt5pQiBgcJzXFhCXkYBc7Sz)gsIE6m8W6V)8RailLYeXtJgTGkxMoxr9rAMoeWeOl5b0h9XtqtWb(2GmYzb0qqOr(sklwyNWjWGNJKt3sDHxeIV6wAW0BWK5Pbb2fVVDAs2FEYq)(PJqQPV0Jf4bYN3s0MTqKdWPpRimt5Oek2lGYj3MkiGzbEl8XthRaqI4lisBwQuqXKhgiPrKNN(WHbdEMeMgteEH0flLNbGTdyGgqfbyEiJb(pL)wZgoOne(kA8IgnCmjIft994WSOraeH(pghwCIrEjm1nBekLw8dy(PIPtmztamuy9tcmqi50v6tHTivCPCdSHLgxY3QrIjCVvu)v1BjivlymWdZPss9MsJIyWHm4xEWbUK6nEdS655hsZnZ6MTpWUiVSxfZ2e)vRkF0aFgledxu(zCseIglEES9ddhoOgnGWtiXsqfvBKkiB7xakzaScOTy(yrWqCFumXtSKjp9qujlJGqAutmS2dPSflcj2rS1KiGIdSut5LOyS3Uz)pF4gqKac(hu7hhyDJ1bLUaH3j0N5b0ypiY5cYWbww5xCe)P391Y355P7nzRhl)RY2oC4q9rxY67adg2Iip9a15QdN230etYr0Z0edt81ZuLRjBEptAAqkYEMcPN3VNn91kMPNn7VMk0UXsNyL5LMYORCDz5qTMkTT2JULanirFNsGMLvTtPqlsH1P8O95l6u6CHGZDQVQpsyN6ktF7Fno0oguB3dE380PDF4DZvNR7fVBo7Bw3p64zGRZAiClqiToahsfsrEtN32Zw4YxYBcnjgnpKGD)vxNcBuvpCx7qDDoMf11XNdRZCkY1PI2q6kbpBiWfZowc6Z3Bof03Bi0hZ6ziW)OPaFiBMHa)GHaxmlLHq)bdH(KSpgI)pPH)Xbvrlqp6YIpW1jpONAFba6JvcA5obEyuJRDN5XaTkW)Og47nS4jWACjGW47QaIsr6Uag6NS2JHwiSlGI(XO9OCi2uXXxxmQwhK6uUPFo80TgxQ5SfwCkAzHLDLF0pwUFmfQCO6GspMdH(bWdlOhki4siy65Skcu(o8sxx)BD1Yx76YV3vXeaJ1JC04ma9dTlxZ0dm2WuB9iftpAFdZz3FuSj6j3ACXi9inZ0YKnRkREKWPx)Ij1i0tKhtQ9zIEnwxQ2NEI2PKMQklSIA66rkJPVUPz1Q262IvQTaMwh91wvyRzzo7mTM1RR(RUHBgxB4vvPt3WntRc7ARPOty39MwXtJYE3nuuVaJgKNS9eXKms3xvhjmmJu7zPIevLw0Sy)Ddh0Z)uT)AN3AutWUVQoEuzxW6woROGEO(dlsv2fTUNd6b03ZH66cx3Zc9q37zX3(U411ZnP6tNE3N7S7z(7jSFMwUxWxUjYYt)liCiqJq)ZMUeGv)PvNtxGWOu5sg315tKv0qA2mR)y3xgE(JD)))]]
+)
+spec:RegisterPack(
+    "Beast Mastery Turret (wowsims.com)",
+    20261112000,
+    [[Hekili:nAzuVTjmqC8pl7P1QfbHS1U1iXKw12060A10i7vdg8rWlGnY2SO8cF23zOJqibvRiLyzF3pF35)NDibKnKig1aKNwTC1TbbbRwUCjjYCOgir10SD0T4abTc)(EGQnTjpIFdQdTjBAukaN4Q9Y9AEL2ltwDT1RdLskZsoTHxAEqqsV4MORHms03(9tB(YVwNAHhx1ZMevWzmO3rqN54EVUnXuaTjppNFUub)fuTjmiN2uIM)PF(J2eC62Kzb2W9TbM2VOrGl5ZQ1(28GH)u5HClVEbUpkQqxI5edhlT7lx3MqzmP414GDWbTxBYNPg66lepx94dBqifgtTETV)wUPOj1Mc(tm9AKjguWn07YyRORy5zEyfwjZ5L4jcnZWLcTxTcqNtPMW(GwJfs1Uf88WxXG0M8CVXZ71u3(9ZC9nH(uBIBIL5XyzmUGUVhrhGZxBwmAbVguX6cPzWGqOSra64s(2cZIgnGKYJ3MXcdS7HHxbFm8MbZrkPLsjloVrDWnZXSdu74IToAU2WPLX7vutHtEOO1CmE4kWjZzqLuWZIvyA7Kdv0)iv45JGgxlTt6KxNCENlZA0HRC5C3EmbQAqyIXcbw069nySVNyWeNPQmQao9m2ongHSZM9ebbjc11ACLj3guY1gD31r9nR4WN6UEce00sGrUNenQIyx8z9pAYiXfjktXXCMtXRX6lyedUxoI6OSBgqV1vqdcYza9oNbnsQodRBCK1rr8mGU1rqJL3ZG69oI6mH)m8(WeEhnAgX(XTy8cKOoPUvrGqV7fHoTl4i1twzaBGfBWYjC)VpJ6B6SBQcFWUHgPoZMQEhcHJDwe7NOH7HVu7ZLlhVCD8cTpdX5zplCcW5F64sTsZLvyErBmfsf(VfGD8so(c6xF(bYULj)7d]]
+)
+spec:RegisterPack(
+    "Marksmanship Turret (wowsims.com)",
+    20261112000,
+    [[Hekili:nwz0oUPoqy4NLEv3OgbHC6UTBK4i1Q2QUvDxvvsV1WaEi4gWgzB6QCdp7DCskHqcArrkYY(F(8mJ)THfWwZI4GfzpTCXY7cccwUyXcwKDxnYIQHSTWgAGeQO)Fe0BnvG0uiQBtw3O1OTn5MNvpBevgVmv1mxm7kva3XnTruAFqYsV6wyQXmw0x)1tR)8pxv1dnlQqW54H4qt2K24vTj2cSn54C(5kn(hu3MWXCOPKK)HF892eA62KrW1i8D5KXVOrArTpV247kbUXVQYJOwoBoTlAkWsQC40yLBxfM2eGZvYxtd2I7mETjFcSWQRKn384dRjifwBTzLV)gHTOj1va(dKoJysjfElCFgFjSKNN5rnxTkxushfqMvOKgVAnsbNc2WdjTj21jNlYdFfhtBYZ96pVxtD73Ui03e6dUc3gRYJPMyCb88be7bC5AJIXif1Oo2uOSDccXYgjAIlfBkSZBmirkpEtgpmWThwrf()H32jNOKwQu848g9UPjNQouVvi3mj5AOwq0fACsY5yLskYI1urmPaQGFR0u3wcX1k3KtkQZo9YvznMWLt5u010rDnkTXgRRfCi2G(XEMGbbd6mqINFI5MMYq(fZE2XllICPgALbxRlfgRz)RkhU4rdFA)RmOeslro7JSOEDe3IhDZKKEwfwuMwq1SaOxJo0WywAVMiQtMOra9FtfuN9AeqVDIGoz8gb0TteuFl5iOUBIOUWSocV3nG3jrJyqpTf9xGfT3E6ofjOV)fHo05EI6zR0HnWH9(by)xi9S6ozblgtxN3FVSHE3Um40LbM7xu3dHxZXF9UXl3gVIJVlpV4D5Zao(B3xZ9pwvr1f0yluA6l14wrPG(e2xo(fQ9lZ(7p]]
+)
+spec:RegisterPack(
+    "Survival Turret (wowsims.com)",
+    20261112000,
+    [[Hekili:nw5BVTjmqy8pl7vRrRcczRDRrIjTPTP1QTOPr2BnyWhbVa2i)NuL3WN9DojJqiGkksrw2p3pF35hBibK1Kig1aKvlMV4(GGGfZNpNez2xdKOAA2w6gCGGwH)hzv747OLnjRTkfyAsU5z5ZAEL2ltwnZPFFPKYCmtT8sZJcs6G411qgj67)z16V(7L6tyjrfCgdogdOZEXnCztIPaAsonNFUub7avtcdYP2su(N(1pAsWPBsgaLL77YdTFHvyaLpRw77sBM2xVZdjwo7wChuuHUelbgow62rUUjHYysXRXbBH9AVMKVqn0LdKj38ZhxJqkmMA9sF)nCtHn1L8(9KodzIjfCh9Hm2c6cwEMh2qvYCEj26PzgUuO9QvagCk1eEmP1Xvu12B55HVIbP28CVUZ7zRBE6QqFtOp1v4MyzEm2aJlOpFeXbaxV2Oy0cEnOI1fstRGqO0kaDCjFtH5wRgqs5XBYyHbU9WWRGpgExRCKsAPuYIZTQ9ttowDGAlxSzsYv0AosNRGjjNbvsbplwHfXKcOI(xPc72cACT0n5KI6ItVCzMvhUykNIUMoOQbHjwBCTGJXg0n2le0lyQkJkGlpXCtJzi7QzV44LeHUunUsVRYLCTrF4vKJx6WHRo8QciOPLaJ8zsuNoIBXtUzushRcjktXXAMtXxFo2WigCVMiQZMOra92PcQ1EncO3nrqNnEJa6UjcQRLCeu3pruxzwhH377X7SOrmON3IUlqIoypDNIi0p8Iq77Cpt9IvAXg4W(qpS)pKowDNSG5JPR17FqwFVBBgC(YaX9lQ9HWHC8d3nE524ao(288Q3LVa44VDpK7FSQcRlQ1uiv4xNHT8so(jSVD6luhwM8Vp]]
+)
+spec:RegisterPack(
+    "Survival Melee (wowsims.com)",
+    20261112000,
+    [[Hekili:LJvupoQnq4Fl7lBjQBHK0Ux7TQCsTQT6UQ7wvv2(kgdEG4cyJSnjALoXV9ooHKaeijxV32vR0kh7z(8mJnFFJC4IWNcdyude(4Y5lFZIflwoF(8WaZZvqyqfnjNMHde0s8)b1Q1810IMOpbfa0e5SrUrZl1UjYYzwZFUqszwiJR5fMpicJhfDDfKeg8()5XN(9)(bDlQHbR4mgSZhqNCP97HMiZkCY258sLkynOAIyqkTUW0e9l)1hBIWPBIofPAUNnk0ERQfgq5XQ0E2GMP90RjLwRCrylMDhUnkQqxGPbdhlTBlx3erzmP4BWb5WZA3MOFJAOpms448Pp8ecYkJPs)GNxg3SQo2MbEdmDgIjg1W903MWwsxYstCXIQsMYlWQpnXWLcTBLcqNJPg)DHUMusv53Xt9VHbX1PPUDN3TUQ5ppX1V13JAtFdrMsWQijgOAZwm2IWil2fiFOOwaAsbpBL5UAnGwMsYsy(lSyy4LW78V)G54UfxiLmsAT65RZCm8bvoxKDvMxs)xPctxbLujTtEvEXGsPGNquyUCvoOOvCmj4QR2CdgwAJINp0JuzsTU1tQkdmUBW7fCrpa6D(UZJLxZ58xWElZYka3s5AOeeMBDAdgzTrZzW936CJJZn7G1LQsOcGOxjnU5c5gXNhzbUGGFTKbZU1Xz7agrbLuUq)Z(Z)C)zEN)EtWRBa776)R(2oB2SHE3Z65ObZ6DNqkYKsmXJ5g4fEUApMzGIKZtYFHNQBqobssbV6fEEMqlki7(jsZICZwjy)n0ICcx0H2yFQE(R(tsXCYnNjTKxwkrnqB8G6H9iB014AcYk6M8PpQghy32mYhP7RWJqKXYs63HIApzxpd6PQ1cHvt74j5ylxIDfWBxnmavC1ObdAnXwR12oyADdh(42MKabnUayH)AyqIcRRkonmyQGBVAn2Qt3vcd2Mywen4(oa29U0jlSM99ty2XSj0(xqBBpJfWD4)TlEaIUY4DtRwXSXcYPG6Oa)eanmnMeOds)ta0pCLaDstbtG39xjEDBxycOEZvc1XgjMaOFCYBC9)oQZfQZTzhBfWc(pDXRZdAS4iwDx4WEV0c6BNoI)6iP)YzP)kPPVmp9)RQ(I5t9DCx26x4foBDyi50bMYosrVckdtX(Fq18vqnyOMWj0C7ZVJLNH9fTtXMS7bk2RzBXEOmXL)CRpZQfJHsdx8Q6PqmusypedANARTdz9pSDh7VARDdjWp)vNHXKX(McTVdWynlmox)LfjoxhnN(Cc9q8mV5qyB3n0AZkPkm49qoVG3e58hTpAY2Ld)V]]
 )
 
 -- The hand-built lists the wowsims.com packs replaced: a saved choice of one falls back to the spec's default.

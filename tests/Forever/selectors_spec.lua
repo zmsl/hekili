@@ -273,6 +273,7 @@ end
 
 local WORLDS = {
     druid = require("Forever.helpers.druid_loop_world").Feral,
+    hunter = require("Forever.helpers.hunter_world").BeastMastery,
     mage = require("Forever.helpers.mage_world").Fire,
     warlock = require("Forever.helpers.warlock_world").Affliction,
     paladin = require("Forever.helpers.paladin_world").Retribution,
@@ -315,6 +316,14 @@ local SHIPPED = {
     druid_balance = { "druid", 100111, "Balance (wowsims.com)" },
     druid_feral = { "druid", 100112, "Feral (wowsims.com)" },
     druid_guardian = { "druid", 100113, "Guardian (wowsims.com)", "guardian" },
+    -- Hunter: no selectors, the Turret pack is each spec's default whatever the build (owner 2026-11-13, L859)
+    hunter_beast_mastery = { "hunter", 100031, "Beast Mastery Turret (wowsims.com)" },
+    hunter_beast_mastery_turret = { "hunter", 100031, "Beast Mastery Turret (wowsims.com)" },
+    hunter_marksmanship = { "hunter", 100032, "Marksmanship Turret (wowsims.com)" },
+    hunter_marksmanship_turret = { "hunter", 100032, "Marksmanship Turret (wowsims.com)" },
+    hunter_survival = { "hunter", 100033, "Survival Turret (wowsims.com)" },
+    hunter_survival_turret = { "hunter", 100033, "Survival Turret (wowsims.com)" },
+    hunter_survival_melee = { "hunter", 100033, "Survival Turret (wowsims.com)" },
     mage_arcane = { "mage", 100081, "Arcane (wowsims.com)" },
     mage_fire = { "mage", 100082, "Fire (wowsims.com)" },
     mage_frostfire = { "mage", 100082, "Frostfire (wowsims.com)", "frostfire" },
@@ -368,6 +377,8 @@ describe("the shipped selectors (headless)", function()
             { "druid", { [16942] = 2, [16934] = 5 }, 100112, "Feral (wowsims.com)" }, -- Sharpened Claws, Ferocity
             { "mage", { [11069] = 5, [11119] = 5 }, 100082, "Fire (wowsims.com)" }, -- Improved Fireball, Ignite
             { "warlock", { [18174] = 5, [17810] = 3 }, 100091, "Affliction (wowsims.com)" }, -- Suppression, Imp. Corr.
+            -- a partial Survival build: the Turret default
+            { "hunter", { [19159] = 2, [19295] = 5, [19290] = 3 }, 100033, "Survival Turret (wowsims.com)" },
         }) do
             local H = boot(case[1], case[2])
             assert.are.same({ case[3], case[4] }, { active(H) }, case[1])
@@ -534,6 +545,45 @@ describe("the shipped selectors (headless)", function()
         assert.is_true(sp.packManual)
         respec(H, build("mage_frostfire", "mage"))
         assert.are.equal("Fire (wowsims.com)", sp.package)
+    end)
+
+    it("lets /hekili priority pick a Hunter weave pack by hand, and the default hands the Turret back", function()
+        local H = boot("hunter", build("hunter_survival_melee", "hunter"))
+        local sp = H.Hekili.DB.profile.specs[100033]
+        assert.are.equal("Survival Turret (wowsims.com)", sp.package)
+        H.Hekili:HandlePriorityCommand({ "priority", "survival", "(wowsims.com)" }) -- the weave pack, by name
+        assert.are.same({ 100033, "Survival (wowsims.com)" }, { active(H) })
+        assert.is_true(sp.packManual)
+        respec(H, build("hunter_survival_turret", "hunter"))
+        assert.are.equal("Survival (wowsims.com)", sp.package) -- (c) a hand pick stays through a respec
+        H.Hekili:HandlePriorityCommand({ "priority", "default" })
+        respec(H, build("hunter_survival_melee", "hunter"))
+        assert.are.equal("Survival Turret (wowsims.com)", sp.package)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("gives a Hunter profile that never picked a pack the Turret, and keeps one picked by hand", function()
+        for id, names in pairs({
+            [100031] = { "Beast Mastery (wowsims.com)", "Beast Mastery Turret (wowsims.com)", "hunter_beast_mastery" },
+            [100032] = { "Marksmanship (wowsims.com)", "Marksmanship Turret (wowsims.com)", "hunter_marksmanship" },
+            [100033] = { "Survival (wowsims.com)", "Survival Turret (wowsims.com)", "hunter_survival" },
+        }) do
+            -- (a) a new profile
+            local H = boot("hunter", build(names[3], "hunter"))
+            assert.are.equal(names[2], H.Hekili.DB.profile.specs[id].package)
+            -- (b) an older profile naming the old default (the weave) without a pick: the Turret
+            local old = { profiles = { Default = { specs = { [id] = { package = names[1] } } } } }
+            H = boot("hunter", build(names[3], "hunter"), old)
+            assert.are.same({ id, names[2] }, { active(H) })
+            for _, note in ipairs(H.notes) do -- the default changed under it: no "picked from your talents"
+                assert.is_nil(note:find("picked from your talents", 1, true), note)
+            end
+            -- (c) the same pack picked by hand (packManual): kept
+            old = { profiles = { Default = { specs = { [id] = { package = names[1], packManual = true } } } } }
+            H = boot("hunter", build(names[3], "hunter"), old)
+            assert.are.same({ id, names[1] }, { active(H) })
+            assert.are.same({}, H.errors)
+        end
     end)
 
     it("leaves a custom priority alone", function()

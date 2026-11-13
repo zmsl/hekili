@@ -70,6 +70,12 @@ local PACKS = {
     ["Hunter/APLs/Beast Mastery"] = HUNTER,
     ["Hunter/APLs/Marksmanship"] = HUNTER_MM,
     ["Hunter/APLs/Survival"] = HUNTER,
+    -- the non-weave builds (ledger L661): the Turret list has no strikes; Survival Melee's Raptor Strike leads, its
+    -- move arm follows the Mark, and the walk in's Serpent Sting is the group's (file order)
+    ["Hunter/APLs/Beast Mastery Turret"] = { "hunters_mark=2", "serpent_sting=1" },
+    ["Hunter/APLs/Marksmanship Turret"] = { "hunters_mark=2", "serpent_sting=1" },
+    ["Hunter/APLs/Survival Turret"] = { "hunters_mark=2", "serpent_sting=1" },
+    ["Hunter/APLs/Survival Melee"] = { "raptor_strike=1", "hunters_mark=2", "raptor_strike=1", "serpent_sting=1" },
     ["Paladin/APLs/Protection"] = { "seal_of_fury=2", "holy_shield=2" }, -- R41: the leveling refresh (R28) is gone
     -- the Twist of Light seals (1): open
     ["Paladin/APLs/Retribution"] = {

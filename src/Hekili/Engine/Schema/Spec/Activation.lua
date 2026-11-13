@@ -384,9 +384,11 @@ local function selectPack()
     local settings = Hekili.Engine.settings
     -- no points or a tie (a walk before the ranks arrive, a talent wipe): keep the last pack (review I2)
     if not picked or not pickedTree or picked.unsupported or not settings.specs then return false end
-    if not ns.SelectPack( rawget( settings.specs, picked.id ), settings.packs, picked, pickedBy ) then return false end
+    local changed, former = ns.SelectPack( rawget( settings.specs, picked.id ), settings.packs, picked, pickedBy )
+    if not changed then return false end
     ns.queueGearUpdate() -- the gear re-read rebuilds the usable items for the new pack, as a spec change does
     Hekili:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
+    if former then return true end -- the spec's default changed under a profile that never picked: no "picked from your talents"
     local label = Hekili.Engine.Registry.PackLabel
     note = string.format( L["%s: the |cFFFFD100%s|r priority, picked from your talents."], picked.name, label( settings.specs[ picked.id ].package ) )
     C_Timer.After( 5, notifyPick )

@@ -29,8 +29,9 @@ local RESOURCEFULNESS = 1242688 -- its aura: +50% of the spirit regen while cast
 -- The share of a landed melee or ranged ability (not Auto Shot) that crits, counted in wowsims's logs (the abilities
 -- that gave Resourcefulness there: Raptor Strike, Mongoose Bite, Arcane Shot, Multi-Shot, Strider Kick): Marksmanship
 -- 5 of 43, Survival 8 of 42. The world's shots do not roll crits, so the aura rolls this itself.
-local CRIT = { Marksmanship = 5 / 43, Survival = 8 / 42, SurvivalRanged = 8 / 42 }
-local QUICK_SHOTS = 0.1 -- wowsims aspects.go: Deadly Aspects' 2% a rank, 5 ranks
+-- Survival Turret: 7 of its 41 Arcane and Aimed Shots crit in its log (hunter_survival_turret.log).
+local CRIT = { Marksmanship = 5 / 43, Survival = 8 / 42, SurvivalRanged = 8 / 42, SurvivalTurret = 7 / 41 }
+local DEADLY_ASPECTS = 19552 -- wowsims aspects.go: Quick Shots' chance is Deadly Aspects' 2% a rank (5 ranks: 10%)
 local AUTO_SHOT = 75
 
 -- Each rank's mana cost (DB2), lowest rank first, the world's truth the class file's costs are measured against (a
@@ -313,6 +314,101 @@ local PACKS = {
 -- replay worlds stay M.Survival.
 PACKS.SurvivalRanged = setmetatable({ distance = 11, ranged = { 140, 200, 3.0 } }, { __index = PACKS.Survival })
 
+-- The non-weave builds (owner 2026-11-12, ledger L661): each world takes its export's whole talent string (the log
+-- header's), so the costs (Efficiency, Resourcefulness), Improved Arcane Shot's cooldown and Quick Shots' chance (Deadly
+-- Aspects) are the build's, and each world runs its own pack. The kit is what the build knows that its list
+-- casts. The Turret worlds stand at the list's 12 yd shoot spot, shooting; Survival Melee in melee with two one-handers
+-- (p1_melee's Annihilator and Heartseeker, 1.7 s each; the amounts UNMEASURED) under Aspect of the Beast.
+-- Known gap: Quick Strikes (aura 1299448, melee haste) is not modelled. wowsims procs it off our white melee hits under
+-- Aspect of the Beast with Deadly Aspects 5/5 (sim/hunter/aspects.go:103-111; 5 gains in hunter_survival_melee.log), so
+-- the Survival Melee world swings at its base speed where the log's character is hasted for those windows.
+local function header(spec) -- the export's talents: { [rank-1 spell] = rank }
+    local f = assert(io.open("tests/Forever/wowsims/" .. spec .. ".log"))
+    f:read("*l")
+    local line = f:read("*l")
+    f:close()
+    local out = {}
+    for spell, rank in line:gmatch("(%d+)=(%d+)@%d") do
+        out[tonumber(spell)] = tonumber(rank)
+    end
+    return out
+end
+local function turret(pack, spec, extra, fsr, uptime)
+    local kit = {
+        "auto_shot",
+        "aspect_of_the_hawk",
+        "hunters_mark",
+        "rapid_fire",
+        "arcane_shot",
+        "serpent_sting",
+        "aimed_shot",
+    }
+    for _, k in ipairs(extra) do
+        kit[#kit + 1] = k
+    end
+    return {
+        pack = pack,
+        distance = 12, -- the list's Shoot spot (walk_in.apl.siml) and the build's distance_from_target
+        kit = kit,
+        weapon = { 150, 220, 3.5 },
+        ranged = { 140, 200, 3.0 },
+        aspect = "aspect_of_the_hawk",
+        talents = header(spec),
+        fsr = fsr,
+        uptime = uptime or { "serpent_sting", "hunters_mark" },
+    }
+end
+PACKS.BeastMasteryTurret = turret(
+    "Beast Mastery Turret (wowsims.com)",
+    "hunter_beast_mastery_turret",
+    { "bestial_wrath" },
+    PACKS.BeastMastery.fsr -- Bestial Discipline 2/2, as the weave build
+)
+PACKS.MarksmanshipTurret = turret(
+    "Marksmanship Turret (wowsims.com)",
+    "hunter_marksmanship_turret",
+    { "sniper_shot" },
+    { 15.88, 0 } -- no Resourcefulness in this build
+)
+PACKS.SurvivalTurret = turret(
+    "Survival Turret (wowsims.com)",
+    "hunter_survival_turret",
+    {},
+    PACKS.Survival.fsr -- Resourcefulness 2/2, as the weave build
+)
+PACKS.SurvivalMelee = {
+    pack = "Survival Melee (wowsims.com)",
+    distance = 5, -- the build's distance_from_target: in melee
+    kit = {
+        "auto_shot",
+        "aspect_of_the_beast",
+        "hunters_mark",
+        "rapid_fire",
+        "raptor_strike",
+        "mongoose_bite",
+        "strider_kick",
+        "immolation_trap",
+        "summon_hawk",
+        "wing_clip",
+        "serpent_sting",
+        "arcane_shot",
+        "multi_shot",
+    },
+    weapon = { 49, 92, 1.7 },
+    offhand = { 49, 92, 1.7 },
+    aspect = "aspect_of_the_beast",
+    talents = header("hunter_survival_melee"),
+    fsr = { 15.88, 0 }, -- no Resourcefulness in this build
+    uptime = { "hunters_mark" },
+}
+-- Survival Melee's live bars only, at the weave's range with a ranged weapon (R63, as SurvivalRanged): in melee at
+-- level 10 the GCD-idle metric counts Arcane Shot usable on cost though it is out of range (8-35 yd), and Raptor Strike
+-- is off the GCD, so the in-melee world read 116.8 s idle; its loop and replay worlds stay in melee.
+PACKS.SurvivalMeleeRanged = setmetatable(
+    { distance = 11, ranged = { 140, 200, 3.0 } },
+    { __index = PACKS.SurvivalMelee }
+)
+
 -- The class data a press reads from a booted instance `H` (once per instance): each aura's ID, duration and stacks.
 local cache = setmetatable({}, { __mode = "k" })
 local function classData(H)
@@ -387,7 +483,18 @@ local function content(name)
     -- Resourcefulness's proc: 50% a rank of a crit (wowsims: 440529 effect 2); nil: the build lacks the talent
     local res = P.talents and P.talents[440529]
     local rate = res and CRIT[name] * res / 2
-    C.SPEC = ({ BeastMastery = 100031, Marksmanship = 100032, Survival = 100033, SurvivalRanged = 100033 })[name]
+    C.SPEC = ({
+        BeastMastery = 100031,
+        Marksmanship = 100032,
+        Survival = 100033,
+        SurvivalRanged = 100033,
+        BeastMasteryTurret = 100031,
+        MarksmanshipTurret = 100032,
+        SurvivalTurret = 100033,
+        SurvivalMelee = 100033,
+        SurvivalMeleeRanged = 100033,
+    })[name]
+    local quickShots = 0.02 * ((P.talents or {})[DEADLY_ASPECTS] or 5) -- the weave worlds carry no Deadly Aspects: 5/5
 
     function C.character()
         local w = class()
@@ -419,7 +526,7 @@ local function content(name)
             known = known,
             talents = P.talents or {},
             power = { type = MANA, token = "MANA", max = MAX },
-            speed = { P.weapon[3] },
+            speed = { P.weapon[3], P.offhand and P.offhand[3] },
             ranges = ranges,
         }
     end
@@ -452,7 +559,7 @@ local function content(name)
             if not us.rangedOn then
                 return
             end
-            if us.auras[hawk] and W.rng.chance(QUICK_SHOTS) then
+            if us.auras[hawk] and W.rng.chance(quickShots) then
                 W.applyAura(us, qs.id, qs.duration, 1, qs.max_stack)
             end
             W.at(W.t + P.ranged[3], roll)
@@ -466,7 +573,7 @@ local function content(name)
     -- quirk shaman_world works around the same way).
     C.WORLD = {
         level = 60,
-        weapons = { P.weapon },
+        weapons = { P.weapon, P.offhand },
         ranged = P.ranged,
         max = MAX,
         fsr = { [MANA] = P.fsr or FSR },
@@ -602,5 +709,10 @@ M.BeastMastery = content("BeastMastery")
 M.Marksmanship = content("Marksmanship")
 M.Survival = content("Survival")
 M.SurvivalRanged = content("SurvivalRanged")
+M.BeastMasteryTurret = content("BeastMasteryTurret")
+M.MarksmanshipTurret = content("MarksmanshipTurret")
+M.SurvivalTurret = content("SurvivalTurret")
+M.SurvivalMelee = content("SurvivalMelee")
+M.SurvivalMeleeRanged = content("SurvivalMeleeRanged")
 
 return M
