@@ -4632,7 +4632,7 @@ found = true end
             if val:len() == 0 then val = nil end
         end
 
-        if option == "caption" then
+        if option == "caption" and val then
             val = val:gsub( "||", "|" )
         end
 
