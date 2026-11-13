@@ -38,7 +38,7 @@ actions+=/hellfire,if=active_enemies>=3&target.within5
 actions+=/searing_pain,if=(!action.incinerate.known|(action.incinerate.cast+action.incinerate.travel_time)>fight_remains)
 actions+=/death_coil,if=(!action.searing_pain.known|action.searing_pain.cast>fight_remains)
 actions+=/life_tap,if=(mana.pct_lo<35&fight_remains>60)
-actions+=/immolate,focus=2,if=(!action.incinerate.known|debuff.immolate.remains<action.incinerate.cast)
+actions+=/immolate,focus=2,if=(!action.incinerate.known|debuff.immolate.remains<action.incinerate.cast)&(action.incinerate.known|debuff.immolate.remains<action.immolate.cast)
 actions+=/incinerate
 actions+=/shadow_bolt
 actions+=/life_tap,if=!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost

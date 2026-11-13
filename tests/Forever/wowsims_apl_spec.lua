@@ -228,6 +228,12 @@ describe("the wowsims APL translator", function()
         assert.has_no_error(function()
             build({ ["default #2"] = { expect = "big_hit", cond = "time>1" } }, { cast(100), hidden })
         end)
+        assert.has_error(function() -- review M2: a group no line calls is never translated, so never checked
+            apl.translate(
+                { priorityList = { cast(100) }, groups = { { name = "Unused", actions = { cast(100) } } } },
+                ctx({ pack = "Test (wowsims.com)", guard = { ["unused #1"] = { expect = "strike", cond = "time>1" } } })
+            )
+        end, "guard: Test (wowsims.com) unused #1: its list is never translated")
     end)
 
     it("actionGroupUsed of a group with actions is wowsims's constant: a shown reference to it exists", function()

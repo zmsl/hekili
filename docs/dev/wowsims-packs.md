@@ -410,6 +410,10 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   level 1). It is not a filler for filling's sake (R41): Shadow Bolt is the class's core cast, and it is not silent
   at 60 for a build without the filler. The builds' fillers cost less than Shadow Bolt and are always castable above
   their cost, so the replay and loop numbers do not move (measured, three seed sets). Not checked in game.
+  Destruction's Immolate refresh, `immolate,if=!action.incinerate.known|debuff.immolate.remains<action.incinerate.cast`
+  (default #16), is always true without Incinerate, so below 18 (no Searing Pain either) it showed Immolate every GCD
+  with Immolate up. Its recipe guards it with `action.incinerate.known|debuff.immolate.remains<action.immolate.cast`:
+  without Incinerate Immolate shows only inside its own cast of falling off, with Incinerate the line is wowsims's.
 
 ## Pack notes
 

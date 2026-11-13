@@ -973,8 +973,9 @@ end)
 -- under Shadow Bolt's cost. The tail stands for "every line above it is quiet" (the dots up), not a dotted rotation.
 describe("Forever Warlock without the endgame filler", function()
     local ww = require("Forever.helpers.warlock_world")
+    local ws = require("Forever.helpers.wowsims")
 
-    -- The pack's `actions` lines from the last line that is `filler` alone.
+    -- The pack's `actions` lines from the last line that is `filler` alone (a `filler` ending in "," its prefix).
     local function tail(pack, filler)
         local f = assert(io.open("src/Hekili_Warlock/APLs/" .. pack .. ".simc"))
         local s = f:read("*a")
@@ -982,7 +983,8 @@ describe("Forever Warlock without the endgame filler", function()
         local lines, from = {}, nil
         for l in s:gmatch("\n(actions%+=/[^\n]+)") do
             lines[#lines + 1] = l
-            if l == "actions+=/" .. filler then
+            local head = "actions+=/" .. filler
+            if l == head or (filler:sub(-1) == "," and l:sub(1, #head) == head) then
                 from = #lines
             end
         end
@@ -990,8 +992,18 @@ describe("Forever Warlock without the endgame filler", function()
         return table.concat(lines, "\n", from)
     end
 
-    local function world(name, filler, unknown)
+    -- `spec` (a wowsims recipe name) with `level`: the build's character at that level (wowsims_warlock_spec's brackets).
+    local function world(name, filler, unknown, spec, level)
         local C = ww[name]
+        if level then
+            C = ws.content(C, {
+                pack = C.PACK,
+                level = level,
+                talents = ws.header(spec).talents,
+                learn = ws.learn("WARLOCK"),
+                race = ws.race(spec),
+            })
+        end
         local ch = C.character()
         local w = ld.load(nil, FILE, "WARLOCK")
         local drop, talents = {}, {}
@@ -1030,9 +1042,13 @@ describe("Forever Warlock without the endgame filler", function()
         end
         local out = H.Hekili.Engine.Output.Primary
         assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
-        return function(m)
+        return function(m, dt, cast) -- `cast`: a spell ID that succeeds first; then `dt` [0.2] s on
+            if cast then
+                H.ctl.now = t
+                H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. cast, cast)
+            end
             mana.est, mana.lo, mana.hi, mana.conf = m, m, m, 1
-            t = t + 0.2
+            t = t + (dt or 0.2)
             assert(headless.cycle(H, t))
             assert.are.same({}, H.errors)
             return out.recs[1] and out.recs[1].actionName
@@ -1054,4 +1070,14 @@ describe("Forever Warlock without the endgame filler", function()
             end
         )
     end
+
+    -- Review I1: wowsims's `immolate,if=!action.incinerate.known|debuff.immolate.remains<action.incinerate.cast` is
+    -- always true without Incinerate, so below 18 (no Searing Pain either) it showed Immolate every GCD. At level 10,
+    -- from that line down: Shadow Bolt with Immolate up, Immolate once it falls off inside Immolate's cast.
+    it("Destruction at level 10: Shadow Bolt with Immolate up, Immolate when it is about to fall off", function()
+        local at = world("Destruction", "immolate,focus=2,", nil, "warlock_destruction", 10)
+        local max = ww.Destruction.WORLD.max
+        -- down; cast (rank 1, 15 s) and 0.2 s on; 14.2 s after it (0.8 s left, under its cast)
+        assert.are.same({ "immolate", "shadow_bolt", "immolate" }, { at(max), at(max, 0.2, 348), at(max, 14) })
+    end)
 end)

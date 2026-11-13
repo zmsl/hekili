@@ -18,16 +18,21 @@
 -- so Conflagrate's condition reads it (no "dropped the unresolved aura" note for 1293816). Option D registers Bane of
 -- Havoc and its debuff (1225228): the multi-target lines' "not on the Havoc target" reads resolve.
 -- Leveling note: without Incinerate (40) the list fills with its `searing_pain,if=!action.incinerate.known|...` line,
--- and below Searing Pain (18) with the Shadow Bolt below.
+-- and below Searing Pain (18) with the Shadow Bolt below (the Immolate refresh guard below keeps Immolate out of it).
 -- Deviations: Berserking (Troll) and
 -- Eureka! and Blood Fury are other races' racials, never known to the Human. The Weakness Analyzer trinket (272438) is `use_items` (rule
 -- 13).
 -- Filler (owner 2026-11-12, a player's report: "after putting my dots, Hekili wants me to spam Life Tap, even with full
--- mana"; owner: "Life tap is not a good filler"): wowsims's list ends `incinerate` then an unconditional Life Tap, so a
--- Warlock with neither Incinerate nor Searing Pain was shown Life Tap at full mana. An `extra` Shadow Bolt (known at 1)
--- goes before that last Life Tap, and `guard` "default #18" shows the Life Tap only under Shadow Bolt's cost. In
--- wowsims's build Incinerate (325 mana less Cataclysm) is cheaper than Shadow Bolt and always castable above its cost,
--- so neither line moves the replay or the loops (docs/dev/wowsims-packs.md, Deviations by ruling).
+-- mana"; owner: "Life tap is not a good filler"): wowsims's list ends `incinerate` then an unconditional Life Tap. An
+-- `extra` Shadow Bolt (known at 1) goes before that last Life Tap, and `guard` "default #18" shows the Life Tap only
+-- under Shadow Bolt's cost. In wowsims's build Incinerate (325 mana less Cataclysm) is cheaper than Shadow Bolt and
+-- always castable above its cost, so neither line moves the replay or the loops (docs/dev/wowsims-packs.md, Deviations
+-- by ruling).
+-- Immolate refresh (review I1, the same ruling): wowsims's `immolate,if=!action.incinerate.known|debuff.immolate.
+-- remains<action.incinerate.cast` (default #16) is always true without Incinerate, so below 18 (no Searing Pain either)
+-- it showed Immolate every GCD with Immolate up. `guard` "default #16" adds
+-- `action.incinerate.known|debuff.immolate.remains<action.immolate.cast`: without Incinerate Immolate shows only inside
+-- its own cast of falling off (Shadow Bolt fills); with Incinerate the term is true, so the line is wowsims's.
 -- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in Shadow Bolt then Life Tap under its cost,
 -- so no bracket idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
 return {
@@ -72,6 +77,11 @@ return {
     },
     extra = { { before = "life_tap", last = true, line = "shadow_bolt" } }, -- the filler (header)
     guard = {
+        -- the Immolate refresh without Incinerate (header)
+        ["default #16"] = {
+            expect = "immolate",
+            cond = "action.incinerate.known|debuff.immolate.remains<action.immolate.cast",
+        },
         ["default #18"] = { expect = "life_tap", cond = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" },
     }, -- the final Life Tap (header)
     leveling = {},
