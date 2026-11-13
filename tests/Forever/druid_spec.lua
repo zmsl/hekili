@@ -223,7 +223,8 @@ describe("Forever Druid", function()
                 local want = KIT[key]
                 assert.is_not_nil(want, "unexpected ability " .. key)
                 assert.are.same(want[1], idsOf(a), key)
-                assert.are.same({ want[3], want[4], want[5] }, { a.spendType, ld.run(a.cooldown, e), a.gcd }, key)
+                local cd, gcd = ld.run(a.cooldown, e), ld.run(a.gcd, e) -- caster form's (Faerie Fire's gcd is a function)
+                assert.are.same({ want[3], want[4], want[5] }, { a.spendType, cd, gcd }, key)
                 assert.are.equal("function", type(a.known), key)
                 if type(want[2]) == "table" then
                     for r, cost in ipairs(want[2]) do -- the cost of each rank, as the spellbook learns it
@@ -231,6 +232,7 @@ describe("Forever Druid", function()
                         assert.are.equal(cost, priced(w, ld.run(a.spend, e), a.spendType), key .. " rank " .. r)
                     end
                 else
+                    e.buff.bear_form = key == "feral_charge" and { up = true } or nil -- its cost is Bear Form's only
                     assert.are.equal(want[2], priced(w, ld.run(a.spend, e), a.spendType) or 0, key)
                 end
             end
@@ -747,7 +749,7 @@ describe("Forever Druid", function()
             local e = ld.env(w)
             e.rage.current = 40
             ld.run(w.abilities.bear_form.now, e)
-            assert.are.same({ { 40, "rage" } }, e.spent)
+            assert.are.same({ { "rage", 0, 0 } }, e.reset) -- all rage gone, untalented no Furor
             assert.are.same(
                 { "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form", "maul" },
                 e.removed
@@ -762,10 +764,24 @@ describe("Forever Druid", function()
                 assert.are.same({ { x[2], "energy" }, { x[2], "energy" } }, e.spent, "Furor " .. x[1])
                 assert.are.same({ {}, { "cat_form", "cat_form" } }, { e.gained, e.applied })
             end
-            e = ld.env(w)
-            e.rage.current = 30
-            e.swap_form("bear_form")
-            assert.are.same({ { 30, "rage" } }, e.spent)
+            -- Furor's 10 into Bear (wowsims furorRageOnEnterBear): 20% a rank, so the belief's `now` sets [0, 10] at 1-4/5
+            -- and 10 at 5/5; the sim, from its floor, gains it at 5/5 only
+            for _, x in ipairs({
+                { 0, { "rage", 0, 0 }, {} },
+                { 3, { "rage", 0, 10 }, {} },
+                { 5, { "rage", 10, 0 }, { { 10, "rage" } } },
+            }) do
+                local talent = setmetatable({ furor = { rank = x[1] } }, getmetatable(rank(0)))
+                e = ld.env(w)
+                e.talent = talent
+                ld.run(w.abilities.bear_form.now, e)
+                assert.are.same({ x[2] }, e.reset, "Furor " .. x[1])
+                e = ld.env(w)
+                e.talent = talent
+                e.rage.current = 30
+                e.swap_form("bear_form")
+                assert.are.same({ { { 30, "rage" } }, x[3] }, { e.spent, e.gained }, "Furor " .. x[1])
+            end
         end
     )
 
@@ -1164,10 +1180,10 @@ describe("Forever Druid in VirtualState's now context", function()
         I.Sources.Direct(VS.Obs.Swing, 8, 1, 2.5, 4) -- PLAYER_SWING, then Rows.lua's landed wound
         I.Sources.Direct(VS.Obs.Swing, 8, 1, 0, 1)
         VS.Drain(8)
-        near(11.25, power(1, 8))
+        near(10 + 11.25, power(1, 8)) -- Furor 5/5's certain 10 at the entry, then the swing
         cast(5229, 9) -- Enrage: 10 now, 2 a second
         I.Settle(12)
-        near(11.25 + 10 + 6, power(1, 12))
+        near(10 + 11.25 + 10 + 6, power(1, 12))
         cast(414644, 13) -- Lacerate twice: 2 stacks
         cast(414644, 14)
         assert.are.equal(2, select(2, VS.Aura("target", 414644, 14.1)))
@@ -1252,6 +1268,146 @@ describe("Forever Druid in VirtualState's now context", function()
         )
     end
 
+    -- Rage outside Bear Form (owner 2026-11-12: Cat Form out of combat, the client at 0, the belief pinned at 5). wowsims's
+    -- Cat entry leaves rage alone (forms.go RegisterCatFormAura) and wowsims has no out-of-combat decay; the class file's
+    -- 1.25 a second, stepped and front-loaded, runs on the swing-paid pool in any form (Resources.lua I.OnAdvance).
+    -- Bear at 2, a swing's 11.25 at 3, Cat at 4 (in combat: kept), the combat ends at 5: beats at 5..13.
+    local function bearSwingCat()
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+        cast(5487, 2)
+        I.Sources.Direct(VS.Obs.Swing, 3, 1, 2.5, 4)
+        I.Sources.Direct(VS.Obs.Swing, 3, 1, 0, 1)
+        VS.Drain(3)
+        cast(768, 4)
+        near(11.25, power(1, 4.1)) -- Cat Form keeps the rage (wowsims)
+    end
+    local function settle(t)
+        I.Settle(t)
+        return VS.Power(1, t)
+    end
+
+    it("decays rage out of combat in Cat Form at 1.25 a second to 0, lo and hi with it", function()
+        bearSwingCat()
+        I.Sources.Direct(VS.Obs.CombatEnd, 5)
+        VS.Drain(5)
+        near(10, settle(5.5).est) -- the first quantum at once
+        -- read ahead of the fold (no drain since 5.5): the projection takes the quanta the fold will
+        near(5, VS.Power(1, 9.5).est) -- beats at 5, 6, 7, 8, 9
+        near(5, settle(9.5).est)
+        local r = settle(13.5)
+        assert.are.same({ 0, 0 }, { r.est, r.lo })
+        r = VS.Power(1, 100) -- the top too, projected: 100 at most, 80 s
+        assert.are.same({ 0, 0, 0 }, { r.est, r.lo, r.hi })
+        r = settle(100)
+        assert.are.same({ 0, 0, 0 }, { r.est, r.lo, r.hi })
+        assert.are.equal(0, I.nowErrors, tostring(I.nowError))
+    end)
+
+    local function feralCharge()
+        for a = 1, I.ab.n do
+            if I.ab.key[a] == "feral_charge" then
+                return a
+            end
+        end
+    end
+
+    -- Feral Charge (1238122) is the 5-rage spender whose DB2 stance mask holds Cat Form too: its cost is 5 in Bear Form
+    -- only (0 elsewhere), so the poll repeating the client's yes in Cat Form every pass cannot hold the floor at 5 (the
+    -- owner's P=5.00#1), and a Cat-Form charge spends no rage.
+    it("takes no rage floor from Feral Charge's answers in Cat Form out of combat", function()
+        bearSwingCat()
+        cast(1238122, 4.5) -- in Cat Form, in combat: no rage spent
+        near(11.25, power(1, 4.6))
+        I.Sources.Direct(VS.Obs.CombatEnd, 5)
+        VS.Drain(5)
+        local fc = feralCharge()
+        for t = 14, 20 do -- the usability poll's yes, every pass
+            I.Sources.Direct(VS.Obs.Usable, t, fc, 1, 0)
+            VS.Drain(t)
+        end
+        local r = VS.Power(1, 20)
+        assert.are.same({ 0, 0 }, { r.est, r.lo })
+    end)
+
+    it("keeps Feral Charge's 5-rage rung in Bear Form", function()
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+        cast(5487, 2)
+        local fc = feralCharge()
+        I.Sources.Direct(VS.Obs.Usable, 2.5, fc, 0, 1) -- short
+        VS.Drain(2.5)
+        I.Sources.Direct(VS.Obs.Usable, 3, fc, 1, 0) -- yes: 5 at least
+        VS.Drain(3)
+        local r = VS.Power(1, 3)
+        assert.are.same({ 5, 5 }, { r.est, r.lo })
+    end)
+
+    -- Into Bear Form (wowsims forms.go registerShapeshiftSpell, furorRageOnEnterBear): all rage goes, then Furor's 10
+    -- (17057's energize) at its rank's chance, 20% a rank (17056 effect 1): certain at 5/5, an unseen roll at 1-4/5 (the
+    -- floor, the top 10 higher), none untalented.
+    for _, x in ipairs({ { 0, { 0, 0, 0 } }, { 3, { 0, 0, 10 } }, { 5, { 10, 10, 10 } } }) do
+        it(("sets rage on a Cat to Bear shift with Furor %d/5 to [%d, %d]"):format(x[1], x[2][2], x[2][3]), function()
+            bearSwingCat()
+            I.SetTalentRank(I.talents.bySpell[17056], x[1])
+            cast(5487, 5)
+            local r = VS.Power(1, 5.1)
+            assert.are.same(x[2], { r.est, r.lo, r.hi })
+            assert.are.equal(0, I.nowErrors, tostring(I.nowError))
+        end)
+    end
+
+    -- Furor 3/5's unseen roll leaves the top 10 over the estimate. The estimate rests at its beat at 13; the top keeps
+    -- the same grid (6, 7, ...) in whole quanta, so it never sits under a stepped truth, and the read ahead of the fold
+    -- takes the same quanta as the fold, also in the update where the estimate comes to rest.
+    it(
+        "drops the top in whole quanta on the decay's grid once the estimate rests, read ahead and folded alike",
+        function()
+            I.SetTalentRank(I.talents.bySpell[17056], 3)
+            bearSwingCat()
+            I.Sources.Direct(VS.Obs.CombatEnd, 5)
+            VS.Drain(5)
+            local h = VS.Power(1, 5).hi -- after the first quantum, at once
+            local function top(t) -- a quantum at each whole second after 5
+                local v = h - 1.25 * math.floor(t - 5)
+                return v > 0 and v or 0
+            end
+            for _, t in ipairs({ 12.5, 13.2, 14.5, 16.5, 21.5, 40 }) do
+                near(top(t), VS.Power(1, t).hi) -- read ahead from 5
+            end
+            local r = VS.Power(1, 14.5)
+            local ahead = { r.est, r.lo, r.hi }
+            assert.is_true(ahead[3] > 0)
+            r = settle(14.5) -- one fold from 5: the estimate rests in it
+            assert.are.same(ahead, { r.est, r.lo, r.hi })
+            for _, t in ipairs({ 16.5, 21.5, 40 }) do
+                near(top(t), settle(t).hi)
+            end
+        end
+    )
+
+    -- A top risen over the resting estimate out of combat (Bear Form at Furor 3/5: [0, 10]) has no grid of its own: its
+    -- first quantum an interval after the decay picks it up, the latest a truth's can come.
+    it("drops a top risen over the resting estimate out of combat no sooner than an interval on", function()
+        I.SetTalentRank(I.talents.bySpell[17056], 3)
+        cast(5487, 10)
+        near(10, VS.Power(1, 10.9).hi)
+        near(10, settle(10.9).hi)
+        assert.are.equal(0, settle(30).hi)
+    end)
+
+    -- The same while an older top still falls on the decay's grid (5, 6, ... its next quantum at 15): the reset's top
+    -- leaves that grid and starts its own, an interval after the decay picks it up.
+    it("restarts the top's quanta at a reset out of combat while an older top still falls", function()
+        I.SetTalentRank(I.talents.bySpell[17056], 3)
+        bearSwingCat()
+        I.Sources.Direct(VS.Obs.CombatEnd, 5)
+        VS.Drain(5)
+        assert.is_true(settle(14.5).hi > 0) -- the estimate rests since 13, the top above it
+        cast(5487, 14.6) -- Cat to Bear: [0, 10]
+        near(10, VS.Power(1, 15.5).hi) -- no quantum at the old grid's 15
+        near(10, settle(15.5).hi)
+        assert.are.equal(0, settle(30).hi)
+    end)
+
     -- wowsims talents_balance.go applyNaturesGrace, its Balance log: under Nature's Grace a GCD takes the 10% cast speed
     -- and, on the buff's class mask, the 10% cut: Moonfire 1.227 s, Innervate 1.364 s, 1.5 s without it.
     it("cuts the GCD under Nature's Grace: 1.227 s on its mask's spells, 1.364 s on the others", function()
@@ -1295,6 +1451,36 @@ describe("Forever Druid in VirtualState's now context", function()
         ctl.casting = nil
         assert.are.equal(1.5, gcd(12.02, 1.5))
         assert.is_truthy(VS.Snapshot():find("learned=1.5000/1.0000", 1, true))
+    end)
+
+    -- L578: the Cat Form passive's GCD mod (pin e5a9cd2a2d spells_auto_gen.go:2014, 3025 effect 4: -500 ms on Faerie
+    -- Fire's mask) makes Faerie Fire a 1 s GCD in Cat Form; the Bear Form passives carry no GCD mod (1178, 9635).
+    it("opens Faerie Fire's GCD at the totem kind's learned length in Cat Form, the spell kind's otherwise", function()
+        local Direct, Obs = I.Sources.Direct, VS.Obs
+        local function gcd(t, len)
+            Direct(Obs.Cooldown, t, 0, 1, 1)
+            VS.Drain(t + 0.03)
+            local _, d = VS.GcdInfo(t + 0.03)
+            Direct(Obs.Cooldown, t + len, 0, 0, 1)
+            VS.Drain(t + len + 0.01)
+            return d
+        end
+        cast(770, 2) -- caster form: the spell kind
+        near(1.5, gcd(2, 1.5))
+        cast(768, 4) -- Cat Form
+        gcd(4, 1.5)
+        cast(5221, 6) -- Shred: the totem kind learns 0.95
+        gcd(6, 0.95)
+        local learned = I.Quantise(0.95)
+        cast(770, 8)
+        near(learned, gcd(8, 0.95)) -- the cat's 1 s GCD as the client shows it, not the spell kind's 1.5
+        cast(5487, 10) -- Bear Form
+        gcd(10, 1.5)
+        cast(770, 12)
+        near(1.5, gcd(12, 1.5))
+        near(1.5, I.gcdLearned[1])
+        near(learned, I.gcdLearned[2])
+        assert.are.equal(0, I.nowErrors, tostring(I.nowError))
     end)
 
     it("runs every declared `now` in the context without an error", function()

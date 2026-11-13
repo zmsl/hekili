@@ -12,6 +12,7 @@ local UnitHealth, UnitHealthMax, UnitInParty, UnitInRaid = Facade.UnitHealth, Fa
 local UnitIsDead, UnitIsFriend, UnitIsPVP, UnitIsPlayer = Facade.UnitIsDead, Facade.UnitIsFriend, Facade.UnitIsPVP, Facade.UnitIsPlayer
 local UnitIsTrivial, UnitIsUnit, UnitLevel, UnitName = Facade.UnitIsTrivial, Facade.UnitIsUnit, Facade.UnitLevel, Facade.UnitName
 local UnitPhaseReason, UnitTokenFromGUID = Facade.UnitPhaseReason, Facade.UnitTokenFromGUID
+local issecretvalue = Facade.issecretvalue
 local Hekili = _G[addon]
 
 local class = Hekili.Class
@@ -42,10 +43,14 @@ local unitIDs = { "target", "targettarget", "focus", "focustarget", "boss1", "bo
 
 local npGUIDs = {}
 local npUnits = {}
+-- T1 (plate count plan v2 §3): the plate tokens whose GUID answered nothing at ADDED (the Map restriction), [token] =
+-- true. Presence only: tokens are recycled, so nothing per mob is kept by them. A token is in npGUIDs or here, never both.
+local npTokens = {}
 
 Hekili.unitIDs = unitIDs
 Hekili.npGUIDs = npGUIDs
 Hekili.npUnits = npUnits
+Hekili.npTokens = npTokens
 
 
 function Hekili:GetNameplateUnitForGUID( id )
@@ -247,26 +252,56 @@ if Hekili.IsDev then
     enemyExclusions[202969] = 404705 -- Empty Recollection
 end
 
--- Under the Map addon restriction a unit's identity is secret, which the facade answers as nil (unknown): a nil GUID
--- keys nothing, and a plate whose GUID turned secret is dropped by the GUID stored while it was plain.
-RegisterEvent( "NAME_PLATE_UNIT_ADDED", function( event, unit )
-    local id = UnitGUID( unit )
+-- A client answer, or nil when it is secret: never truth-tested, compared or used as a key (T1).
+local function plain( v )
+    if issecretvalue( v ) then return nil end
+    return v
+end
 
-    if id == nil or UnitIsFriend( "player", unit ) then
-        npGUIDs[ unit ] = nil
-        if id ~= nil then npUnits[ id ] = nil end
+-- Under the Map addon restriction a unit's identity is secret, which the facade answers as nil (unknown): a nil GUID
+-- keys nothing, and a plate whose GUID turned secret is dropped by the GUID stored while it was plain. Such a plate is
+-- kept by its token (npTokens, T1), so the count still sees it.
+local function plateAdded( unit )
+    local old = npGUIDs[ unit ]
+    npGUIDs[ unit ], npTokens[ unit ] = nil, nil
+    if old ~= nil and npUnits[ old ] == unit then npUnits[ old ] = nil end
+
+    if plain( UnitIsFriend( "player", unit ) ) then return end
+
+    local id = UnitGUID( unit )
+    if id == nil then
+        npTokens[ unit ] = true
         return
     end
 
     npGUIDs[ unit ] = id
     npUnits[ id ]   = unit
+end
+
+RegisterEvent( "NAME_PLATE_UNIT_ADDED", function( event, unit )
+    plateAdded( unit )
 end )
+
+-- Plates already up at a login or /reload: their ADDED may not fire again (assumed until probe P14, ledger L77), so
+-- each existing token is taken as added.
+do
+    local TOKENS = {}
+    for i = 1, 40 do TOKENS[ i ] = "nameplate" .. i end
+
+    RegisterEvent( "PLAYER_ENTERING_WORLD", function( event, login, reload )
+        if not ( login or reload ) then return end
+        for i = 1, 40 do
+            local unit = TOKENS[ i ]
+            if plain( UnitExists( unit ) ) then plateAdded( unit ) end
+        end
+    end )
+end
 
 RegisterEvent( "NAME_PLATE_UNIT_REMOVED", function( event, unit )
     local storedGUID = npGUIDs[ unit ]
     local id = UnitGUID( unit )
 
-    npGUIDs[ unit ] = nil
+    npGUIDs[ unit ], npTokens[ unit ] = nil, nil -- never UnitExists here: it still answers true during the event
 
     if npUnits[ id ] and npUnits[ id ] == unit then npUnits[ id ] = nil end
     if npUnits[ storedGUID ] and npUnits[ storedGUID ] == unit then npUnits[ storedGUID ] = nil end
@@ -275,22 +310,25 @@ end )
 RegisterEvent( "UNIT_FLAGS", function( event, unit )
     if unit == "player" or UnitIsUnit( unit, "player" ) then return end
 
-    if UnitIsFriend( "player", unit ) then
+    if plain( UnitIsFriend( "player", unit ) ) then
         local id = UnitGUID( unit ) or npGUIDs[ unit ] -- secret: the GUID stored while it was plain
         if id ~= nil then
             ns.eliminateUnit( id )
             npUnits[ id ] = nil
         end
-        npGUIDs[ unit ] = nil
+        npGUIDs[ unit ], npTokens[ unit ] = nil, nil
     end
 end )
 
 
 local RC = Facade.LibRangeCheck -- the one range source (range plan R2): LibRangeCheck through the facade
+local NEAR_YD = 10 -- caster range (L644): within this many yards a plate counts in or out of combat, as melee always did
 local LSR = LibStub( "SpellRange-1.0" )
 
 local lastCount = 1
 local lastStationary = 1
+local heldLow = false -- the token count's fall held this update (T1)
+local unheldCount = 1 -- the count before the hold: what target swaps read (integ/dot I1)
 
 
 -- War Mode
@@ -370,7 +408,7 @@ do
     -- New Nameplate Proximity System
     function ns.getNumberTargets( forceUpdate )
         if not forceUpdate then
-            return lastCount, lastStationary
+            return lastCount, lastStationary, unheldCount
         end
 
         local debugging = Hekili.ActiveDebug
@@ -380,6 +418,8 @@ do
         wipe( counted )
 
         local count, stationary = 0, 0
+        -- T1: a plate counted as the target; a target compare answered secret; token plates counted (the hold's mode)
+        local targetSeen, unknown, tokenMode = false, false, false
         if debugging then details = format( "Nameplates are %s.", showNPs and "enabled" or "disabled" ) end
 
         local spec = state.spec.id
@@ -400,7 +440,9 @@ do
                     local npcid = tonumber( guid:match( "(%d+)-%x-$" ) or 0 )
 
                     if UnitExists( unit ) and not UnitIsDead( unit ) and UnitCanAttack( "player", unit ) and UnitInPhase( unit ) and ( UnitHealth( unit ) > 1 or TargetDummies[ npcid ] ) and ( not inGroup or not FriendCheck( unit ) ) and ( UnitIsPVP( "player" ) or not UnitIsPlayer( unit ) ) then
-                        local excluded = not UnitIsUnit( unit, "target" )
+                        local isT = UnitIsUnit( unit, "target" ) -- nil: secret (an identity turned secret since ADDED)
+                        local excluded = not isT
+                        if isT then targetSeen = true elseif isT == nil then unknown = true end
                         local _, range = nil, -1
 
                         if debugging then details = format( "%s\n - Checking nameplate list for %s [ %s ] %s.", details, unit, guid, UnitName( unit ) or "Unknown" ) end
@@ -444,6 +486,15 @@ do
                                 if debugging and excluded then
                                     details = format( "%s\n    - Excluded by range (%d > %d).", details, maxR, checkPlates )
                                 end
+
+                                -- caster range (L644): past the near band a plate counts only while plainly in combat
+                                if not excluded and checkPlates > NEAR_YD and ( maxR == nil or maxR > NEAR_YD ) then
+                                    excluded = plain( UnitAffectingCombat( unit ) ) ~= true
+
+                                    if debugging and excluded then
+                                        details = format( "%s\n    - Excluded: not in combat beyond %d yd.", details, NEAR_YD )
+                                    end
+                                end
                             end
 
                             if not excluded and showNPs and spec.damageOnScreen and not npUnits[ guid ] then
@@ -468,6 +519,40 @@ do
                     end
 
                     counted[ guid ] = counted[ guid ] or false
+                end
+
+                -- T1: the plates with no GUID (the Map restriction), by the reads measured plain on plate tokens in a
+                -- dungeon in combat (UnitExists, UnitCanAttack, the target compare); every other read is unknown when
+                -- secret and never excludes. Deliberately absent: UnitHealth (its row answers 0 for a secret UnitIsDead
+                -- and would drop every plate), UnitInPhase (identity, a constant under Map), the npcid exclusions (no
+                -- GUID), GetUnitSpeed (0 for any other unit: stationary), time to die, and `counted` (GUID-keyed).
+                for unit in pairs( npTokens ) do
+                    tokenMode = true
+                    if plain( UnitExists( unit ) ) and plain( UnitCanAttack( "player", unit ) ) and plain( UnitIsDead( unit ) ) ~= true
+                        and not ( inGroup and plain( FriendCheck( unit ) ) )
+                        and ( plain( UnitIsPVP( "player" ) ) or not plain( UnitIsPlayer( unit ) ) ) then
+                        local isT = UnitIsUnit( "target", unit ) -- true / false / nil (secret); the measured order
+                        if isT == true then targetSeen = true elseif isT == nil then unknown = true end
+
+                        local excluded = false
+                        if isT ~= true and checkPets then excluded = plain( Hekili:TargetIsNearPet( unit ) ) == false end
+                        if isT ~= true and not excluded and checkPlates then
+                            local _, maxR = RC:GetRange( unit ) -- nil: unknown, kept
+                            excluded = maxR ~= nil and maxR > checkPlates
+                            -- caster range (L644): past the near band a plate counts only while plainly in combat
+                            -- (UnitAffectingCombat on plates plain under forced Map: owner 2026-11-12, 109/120 ticks)
+                            if not excluded and checkPlates > NEAR_YD and ( maxR == nil or maxR > NEAR_YD ) then
+                                excluded = plain( UnitAffectingCombat( unit ) ) ~= true
+                            end
+                        end
+
+                        if not excluded then
+                            count = count + 1
+                            stationary = stationary + 1
+                        end
+
+                        if debugging then details = format( "%s\n    %-12s - token - %s%s", details, unit, isT == nil and "S" or isT and "T" or "-", excluded and " (excluded)" or "" ) end
+                    end
                 end
 
                 for _, unit in ipairs( unitIDs ) do
@@ -603,7 +688,7 @@ do
 
         local targetGUID = UnitGUID( "target" )
         if targetGUID then
-            if counted[ targetGUID ] == nil and UnitExists( "target" ) and not UnitIsDead( "target" ) and UnitCanAttack( "player", "target" ) and UnitInPhase( "target" ) and ( UnitIsPVP( "player" ) or not UnitIsPlayer( "target" ) ) then
+            if not targetSeen and counted[ targetGUID ] == nil and UnitExists( "target" ) and not UnitIsDead( "target" ) and UnitCanAttack( "player", "target" ) and UnitInPhase( "target" ) and ( UnitIsPVP( "player" ) or not UnitIsPlayer( "target" ) ) then
                 count = count + 1
                 counted[ targetGUID ] = true
 
@@ -617,9 +702,28 @@ do
             else
                 counted[ targetGUID ] = false
             end
+        elseif plain( UnitExists( "target" ) ) then
+            -- T1: the target's identity is secret (Map). Counted unless a plate was it, or a secret compare may have
+            -- made it one of the counted plates.
+            if not targetSeen and ( not unknown or count == 0 ) and plain( UnitCanAttack( "player", "target" ) )
+                and plain( UnitIsDead( "target" ) ) ~= true and ( plain( UnitIsPVP( "player" ) ) or not plain( UnitIsPlayer( "target" ) ) ) then
+                count = count + 1
+                stationary = stationary + 1
+                if debugging then details = format( "%s\n    %-12s - token", details, "target" ) end
+            end
         end
 
         count = max( 1, count )
+
+        -- T1, the owner's no-jitter rule: with token plates, a fall publishes on the next forced update if it holds
+        -- (0.1-0.5 s later); a rise at once. The GUID and damage paths are untouched.
+        unheldCount = count
+        if tokenMode and count < lastCount and not heldLow then
+            heldLow = true
+            count, stationary = lastCount, lastStationary
+        else
+            heldLow = false
+        end
 
         if count ~= lastCount or stationary ~= lastStationary then
             lastCount = count

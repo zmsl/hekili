@@ -116,7 +116,9 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- fix merged: Heroic Strike now hides out of melee): Slam's cooldown is now 15 s (no Improved Slam at L40) and Mortal Strike is
     -- not learned. Traced (seed 1, 38.2-48.2 s): the only on-GCD ability the world would accept was Rend (772), whose debuff is
     -- up, so the pack correctly does not recast it: nothing useful to cast (R41)
-    local ARMS_LIVE = { [10] = 7.4, [40] = 10.0, [60] = 6 } -- 7.4 / 10.0 / 6.0
+    -- L60 6.0 -> 6.2 (regen phase lane, R22 LIVE60 = the pack's own worst idle at 60; cause harness: the indexed poll
+    -- clock (ledger L606/L667; a rage world has no regen grid) re-times the fight: worst idle 6.2 s, presses 49)
+    local ARMS_LIVE = { [10] = 7.4, [40] = 10.0, [60] = 6.2 } -- 7.4 / 10.0 / 6.2
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Arms (wowsims.com) stays live at level " .. level, function()
             ws.live(

@@ -8,6 +8,11 @@ local behaviours = require("Game.harness.behaviours")
 describe("the world's resources", function()
     local W, us, mob
     local SWUNG, POOL, POINTS = 1, 3, 4 -- the swing-paid type, a regenerating pool, a points resource
+    local PHASE0 = {
+        next = function() -- W.prng stubbed: regen at phase 0, the old grid's times (L668)
+            return 0
+        end,
+    }
 
     local function setup(o)
         W = world.new(3)
@@ -155,6 +160,7 @@ describe("the world's resources", function()
 
     it("regenerates at its rate every tick, capped, and by the ramp after its seconds in one form", function()
         setup()
+        W.prng = PHASE0
         W.startRegen(us, { [POOL] = 10 }, 0.1, { s = 5, k = 1.25 })
         W.run(4.05)
         assert.is_true(math.abs(W.res(us, POOL) - 90) < 1e-6, tostring(W.res(us, POOL)))
@@ -165,6 +171,62 @@ describe("the world's resources", function()
         assert.is_true(math.abs(W.res(us, POOL) - 12.5) < 1e-6, tostring(W.res(us, POOL)))
         local last = W.truth[#W.truth]
         assert.are.same({ "regen", POOL }, { last.kind, last.pt })
+    end)
+
+    it(
+        "ticks each resource's regen on an indexed grid at its seeded phase, t0 + (k - phase) x every (L606, L668)",
+        function()
+            setup()
+            W.startRegen(us, { [POOL] = 0.001, [POINTS] = 0.001 }, 0.1) -- never capped over the run
+            local ph = { [POOL] = W.regenPhase[POOL], [POINTS] = W.regenPhase[POINTS] }
+            local k = { [POOL] = 0, [POINTS] = 0 }
+            W.run(200)
+            for _, ev in ipairs(W.truth) do
+                if ev.kind == "regen" then
+                    k[ev.pt] = k[ev.pt] + 1
+                    assert.are.equal((k[ev.pt] - ph[ev.pt]) * 0.1, ev.t) -- computed from k, never a running sum
+                end
+            end
+            assert.are.same({ 2000, 2000 }, { k[POOL], k[POINTS] })
+            assert.are_not.equal(ph[POOL], ph[POINTS]) -- one phase per resource
+        end
+    )
+
+    it("ticks the pet's regen on an indexed grid at its seeded phase (L606, L668)", function()
+        setup()
+        us.pet = { up = true, power = 0, max = 1e9, regen = 1, tick = 0.1 }
+        W.startPetRegen(us)
+        local ph, k = W.regenPhase.pet, 0
+        W.emit = function(ev) -- the pet's power events, timed
+            if ev.kind == "petPower" then
+                k = k + 1
+                assert.are.equal((k - ph) * 0.1, W.t)
+            end
+        end
+        W.run(200)
+        assert.are.equal(2000, k)
+    end)
+
+    it("draws each regen phase in [0, 1) of a tick from the fight's seed, apart from its other draws (L668)", function()
+        local function phases(seed)
+            W = world.new(seed)
+            us = W.add(entities.new({
+                guid = "Player-1",
+                res = { [POOL] = { cur = 0, max = 100 }, [POINTS] = { cur = 0, max = 5 } },
+                pet = { up = true, power = 0, max = 100, regen = 1, tick = 2 },
+            }))
+            W.startPetRegen(us)
+            W.startRegen(us, { [POOL] = 1, [POINTS] = 1 }, 0.1)
+            assert.are.equal(world.new(seed).rng.next(), W.rng.next()) -- the fight's own stream is untouched
+            return { W.regenPhase[POOL], W.regenPhase[POINTS], W.regenPhase.pet }
+        end
+        local a = phases(3)
+        assert.are.same(a, phases(3)) -- reproduces
+        local b = phases(4)
+        for i = 1, 3 do
+            assert.is_true(a[i] >= 0 and a[i] < 1 and b[i] >= 0 and b[i] < 1)
+            assert.are_not.equal(a[i], b[i]) -- differs across seeds
+        end
     end)
 
     it("runs wowsims's spirit multiplier and capped casting share while an fsr aura is up", function()
@@ -190,6 +252,7 @@ describe("the world's resources", function()
 
     it("regenerates an `fsr` pool's spirit part only 5 s after our last cast's spend, the read naming both", function()
         setup()
+        W.prng = PHASE0
         W.startRegen(us, {}, 0.1, nil, { [POOL] = { 10, 2 } }) -- spirit 10/s, mp5 2/s
         W.run(1.05)
         assert.is_true(math.abs(W.res(us, POOL) - 62) < 1e-6, tostring(W.res(us, POOL)))
@@ -576,6 +639,11 @@ describe("the character's bags, pet and stats", function()
 
     local function setup()
         local W = world.new(5)
+        W.prng = {
+            next = function() -- phase 0 (L668's draw stubbed): the pet ticks at the old grid's times
+                return 0
+            end,
+        }
         local us = W.add(entities.new({
             guid = "Player-1",
             bags = { [ITEM] = 2 },

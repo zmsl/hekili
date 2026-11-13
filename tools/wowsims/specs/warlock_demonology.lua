@@ -20,8 +20,8 @@
 --   the rest (5: 10.9 searing_pain -> corruption, 81.8 / 92.3 / 93.9 / 125.6): Searing Pain / Life Tap near-ties with
 --   lo 32 under the truth, not traced one by one.
 --   The measured top also has corruption -> searing_pain (2) and bane_of_agony -> searing_pain (1), the other way: untraced.
--- Omitted 2 -> 10 (dry.lua 10): petAttack, the pre-pull doAtValue (C), the move (R8: it reaches Hellfire; the
--- spec opts into Movement), five changeTarget, the APL's trinket 18820 (not worn) and the Major Spellblasting Potion
+-- Omitted 2 -> 7 (dry.lua 10 before option D): petAttack, the pre-pull doAtValue (C), the move (R8: it reaches
+-- Hellfire; the spec opts into Movement), two changeTarget (rule 20 absorbs the other three: option D), the APL's trinket 18820 (not worn) and the Major Spellblasting Potion
 -- 250937; unitIsMoving dropped (Task 5), listed.
 -- Known API deviations: the demon's attacks spend Demonic Brand's charges, unseen (the kit keeps
 -- the brand its full 10 s); before the Demonic Brand talent the brand is never up, so `searing_pain,if=!debuff.
@@ -30,8 +30,14 @@
 -- Deviations: Berserking (Troll) and
 -- Eureka! and Blood Fury are other races' racials, never known to the Human. The Weakness Analyzer trinket (272438) is `use_items` (rule
 -- 13).
--- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket
--- idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2). Below Searing Pain (18) it fills with Life Tap between its DoTs.
+-- Filler (owner 2026-11-12, a player's report: "after putting my dots, Hekili wants me to spam Life Tap, even with full
+-- mana"; owner: "Life tap is not a good filler"): wowsims's list ends `searing_pain` then an unconditional Life Tap, so
+-- a Warlock below Searing Pain (18) was shown Life Tap at full mana. An `extra` Shadow Bolt (known at 1) goes before
+-- that last Life Tap, and `guard` "default #14" shows the Life Tap only under Shadow Bolt's cost. In wowsims's build
+-- Searing Pain (168 mana) is cheaper than Shadow Bolt and always castable above its cost, so neither line moves the
+-- replay or the loops (docs/dev/wowsims-packs.md, Deviations by ruling).
+-- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in Shadow Bolt then Life Tap under its cost,
+-- so no bracket idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
 return {
     class = "WARLOCK",
     pack = "Demonology (wowsims.com)",
@@ -53,6 +59,7 @@ return {
                 NoCurse = false,
             },
             active = "warlockAssignedCurseIsActive",
+            activeAll = "warlockAssignedCurseIsActiveOnAllTargets", -- rule 20: its swap is the curse lines' cycle_targets=1
             is = "warlockIsAssignedCurse",
         },
     },
@@ -69,10 +76,14 @@ return {
         curse_of_recklessness = 2,
         curse_of_weakness = 2,
     },
-    -- the low-level behaviour (owner ruling 2026-10-21: no low-level filler), in the pack's description
+    -- the low-level behaviour, in the pack's description
     notes = {
-        "Below level 18 (before Searing Pain) this priority has no filler and shows Life Tap between its DoTs, as wowsims's own list would at that level.",
+        "Below level 18 (before Searing Pain) this priority fills with Shadow Bolt.",
         "Before the Demonic Brand talent, Searing Pain leads the list (its brand is never up), as wowsims's own list would.",
     },
+    extra = { { before = "life_tap", last = true, line = "shadow_bolt" } }, -- the filler (header)
+    guard = {
+        ["default #14"] = { expect = "life_tap", cond = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" },
+    }, -- the final Life Tap (header)
     leveling = {},
 }

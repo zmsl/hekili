@@ -332,6 +332,21 @@ end
 function NAMES.spend(amount, resource)
     shift(type(amount) == "number" and -amount or amount, resource)
 end
+-- The belief's own verb (Hekili's handlers spend and gain): the cast set `resource` to `amount`, or up to `upto` more by
+-- a roll the belief does not see (the estimate at the floor, the top `upto` above it).
+function NAMES.resetResource(resource, amount, upto)
+    if not live then
+        return
+    end
+    local r = resByKey[resource]
+    if not r then
+        error("now: no tracked resource " .. tostring(resource), 2) -- counted as the `now`'s error; no write
+    end
+    if type(amount) ~= "number" then
+        return
+    end
+    I.ResourceSet(r, amount, type(upto) == "number" and upto > 0 and upto or 0, T, CAST)
+end
 
 local function aura(u, key, duration, stacks)
     local j = auraByKey[key]

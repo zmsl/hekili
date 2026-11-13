@@ -314,6 +314,24 @@ local function gcdLength( action )
     return length
 end
 
+-- An entry's label= and icon= on the pick it made (Scripts.lua's 'text' modifiers), each only while its label_if /
+-- icon_if holds (absent: holds); an error in any of them gives nil. Both are set on every pick: the slot is reused.
+local function modValue( f )
+    local ok, v = pcall( f )
+    return ok and v or nil
+end
+
+local function markPick( slot, mods )
+    local label, icon
+    if mods then
+        if mods.label and ( not mods.label_if or modValue( mods.label_if ) ) then label = modValue( mods.label ) end
+        if mods.icon and ( not mods.icon_if or modValue( mods.icon_if ) ) then
+            icon = modValue( mods.icon ) -- a texture file ID (Scripts.lua resolved a path at load)
+        end
+    end
+    slot.label, slot.iconOverride = label, icon
+end
+
 local default_modifiers = {
     early_chain_if = return_false,
     chain = return_false,
@@ -875,8 +893,10 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                 else
                                     -- Target Cycling.
                                     -- We have to determine *here* whether the ability would be used on the current target or a different target.
-                                    if state.args.cycle_targets == 1 and state.settings.cycle and state.active_enemies > 1 then
-                                        state.SetupCycle( ability )
+                                    -- other_target=1: another target only (a forced cycle, option D), never the current one.
+                                    local other = state.args.other_target == 1
+                                    if ( state.args.cycle_targets == 1 or other ) and state.settings.cycle and state.active_enemies > 1 then
+                                        state.SetupCycle( ability, nil, other )
 
                                         if state.cycle_enemies == 1 then
                                             if debug then Hekili:Debug( "There is only 1 valid enemy for target cycling; canceling cycle." ) end
@@ -889,6 +909,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                     Timer:Track("Post Cycle")
 
                                     local usable, why = state:IsUsable()
+                                    if other and not state.IsCycling( nil, true ) then usable, why = false, "another target only" end
 
                                     Timer:Track("Post Usable")
 
@@ -1069,6 +1090,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                             slot.texture = ability.texture
                                                             slot.indicator = ability.indicator
                                                             slot.focus = entry.focus
+                                                            markPick( slot, script.Modifiers )
 
                                                             if ability.interrupt and state.buff.casting.up then
                                                                 slot.interrupt = true
@@ -1178,6 +1200,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                         slot.texture = ability.texture
                                                         slot.indicator = ability.indicator
                                                         slot.focus = entry.focus
+                                                        markPick( slot, script.Modifiers )
 
                                                         if ability.interrupt and state.buff.casting.up then
                                                             slot.interrupt = true
@@ -1858,9 +1881,9 @@ function Hekili.Update()
 
                     local cast_target = i == 1 and state.cast_target ~= "nobody" and state.cast_target or state.target.unit
 
-                    if slot.indicator == "cycle" then
-                        state.SetupCycle( ability )
-                        cast_target = cast_target .. "c"
+                    local cycled = slot.indicator == "cycle" or nil -- its events are flagged (QueueEvent's cycle)
+                    if cycled then
+                        state.SetupCycle( ability, nil, state.args.other_target == 1 )
                     end
 
                     if debug then scripts:ImplantDebugData( slot ) end
@@ -1909,7 +1932,7 @@ function Hekili.Update()
                                 if debug then Hekili:Debug( "Queueing %s cast finish at %.2f [+%.2f] on %s.", action, state.query_time + cast, state.offset + cast, cast_target ) end
 
                                 state.applyBuff( "casting", ability.cast, nil, ability.id, nil, false )
-                                state:QueueEvent( action, state.query_time, state.query_time + cast, "CAST_FINISH", cast_target )
+                                state:QueueEvent( action, state.query_time, state.query_time + cast, "CAST_FINISH", cast_target, nil, cycled )
                             else
                                 if ability.charges and ability.charges > 1 and ability.recharge > 0 then
                                     state.spendCharges( action, 1 )
@@ -1920,22 +1943,24 @@ function Hekili.Update()
                                 end
 
                                 if debug then Hekili:Debug( "Queueing %s channel finish at %.2f [%.2f+%.2f].", action, state.query_time + cast, state.offset, cast, cast_target ) end
-                                state:QueueEvent( action, state.query_time, state.query_time + cast, "CHANNEL_FINISH", cast_target )
+                                state:QueueEvent( action, state.query_time, state.query_time + cast, "CHANNEL_FINISH", cast_target, nil, cycled )
 
                                 -- Queue ticks because we may not have an ability.tick function, but may have resources tied to an aura.
                                 if ability.tick_time then
                                     local ticks = floor( cast / ability.tick_time )
                                     for i = 1, ticks do
-                                        state:QueueEvent( action, state.query_time, state.query_time + ( i * ability.tick_time ), "CHANNEL_TICK", cast_target )
+                                        state:QueueEvent( action, state.query_time, state.query_time + ( i * ability.tick_time ), "CHANNEL_TICK", cast_target, nil, cycled )
                                     end
                                     if debug then Hekili:Debug( "Queued %d ticks of channel %s.", ticks, action ) end
                                 end
 
                                 if Hekili.Scripts.Channels and Hekili.Scripts.Channels[ packName ] and Hekili.Scripts.Channels[ packName ][ action ] then
-                                    state:QueueEvent( action, state.query_time, state.cooldown.global_cooldown.expires, "GCD_FINISH", cast_target )
+                                    state:QueueEvent( action, state.query_time, state.cooldown.global_cooldown.expires, "GCD_FINISH", cast_target, nil, cycled )
                                 end
 
+                                state.cycle = slot.indicator == "cycle" or nil -- on another target: its debuffs count, the target's stand
                                 state:RunHandler( action )
+                                state.cycle = nil
                                 ns.spendResources( action )
                             end
                         else
@@ -1949,12 +1974,14 @@ function Hekili.Update()
                             end
 
                             ns.spendResources( action )
+                            state.cycle = slot.indicator == "cycle" or nil -- on another target: its debuffs count, the target's stand
                             state:RunHandler( action )
+                            state.cycle = nil
                         end
 
                         -- Projectile spells have two handlers, effectively.  A handler (run on cast/channel finish), and then an impact handler.
                         if ability.isProjectile then
-                            state:QueueEvent( action, state.query_time + cast, nil, "PROJECTILE_IMPACT", cast_target )
+                            state:QueueEvent( action, state.query_time + cast, nil, "PROJECTILE_IMPACT", cast_target, nil, cycled )
                         end
 
                         if state.trinket.t1.is[ action ] and state.trinket.t2.has_cooldown then
