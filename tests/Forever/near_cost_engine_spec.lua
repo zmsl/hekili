@@ -10,15 +10,16 @@ local REGEN = 38 -- mana a second, casting or not
 local UNDER = 8 -- the floor under Fireball's cost: 0.31 s away (8 / 38 plus the forecast's 0.1 s tick), past EARLY_EXIT
 -- (0.2) and within one update (0.2)
 
--- Boots, targets, hand-sets the mana belief (the floor `UNDER` below Fireball's cost, the estimate `gap` above the
--- floor, `frac` of a mana above a whole floor if given), loads the list (`list` if given), calls `before(H)` if given
--- and runs one cycle; returns the first slot and the cost.
-local function first(gap, frac, before, list)
+-- Boots, targets, hand-sets the mana belief (the floor `under` [UNDER] below Fireball's cost, the estimate `gap` above
+-- the floor, `frac` of a mana above a whole floor if given), loads the list (`list` if given), calls `before(H)` if
+-- given and runs one cycle; returns the first slot and the cost.
+local function first(gap, frac, before, list, under)
+    under = under or UNDER
     local C = mw.Fire
     local H = headless.new({ character = C.character(), pack = C.PACK })
     assert.are.same({}, H.loadErrors)
     local cost = H.Hekili.State.action.fireball.cost
-    local lo = frac and math.floor(cost) - UNDER + frac or cost - UNDER
+    local lo = frac and math.floor(cost) - under + frac or cost - under
     local power = { est = lo + gap, lo = lo, hi = lo + gap, conf = 1 }
     local regen = { est = REGEN, lo = REGEN, hi = REGEN, conf = 1 }
     local VS = H.ns.VirtualState
@@ -73,6 +74,37 @@ describe("the engine's near-cost hold on a booted Mage", function()
         assert.is_true(cost > 150) -- Scorch's top rank, affordable at the floor
         assert.are.equal("scorch", slot.actionName)
         assert.are.equal(0, slot.wait)
+    end)
+end)
+
+describe("the near-cost hold behind a running GCD (L628 option A)", function()
+    local GCD_LEFT = 0.6
+    -- the GCD runs GCD_LEFT more (the belief's GCD stubbed as VS.Power is); Fireball's floor reaches its cost 0.89 s
+    -- away (30 under), its estimate 0.2 s away (4 under): the crossing falls under the GCD, as a free filler's GCD end
+    -- meets a pick's resource crossing
+    local function gcd(H)
+        H.ns.VirtualState.GcdInfo = function(t)
+            return t - (1.5 - GCD_LEFT), 1.5
+        end
+    end
+    it("keeps the pick first over an entry ready at the GCD's end: the window opens where the GCD ends", function()
+        local slot = first(26, nil, gcd, nil, 30)
+        assert.is_true(slot.wait > GCD_LEFT - 0.01, slot.wait) -- the GCD reached the sim: whichever wins waits for it
+        assert.are.equal("fireball", slot.actionName)
+        assert.is_true(slot.wait > GCD_LEFT + 0.05 and slot.wait < 1.0, slot.wait) -- the floor's wait, past the GCD
+    end)
+
+    it("lets an entry ready before the GCD's end through (use_off_gcd): the hold covers the GCD's end on", function()
+        local slot = first(26, nil, gcd, {
+            { enabled = true, action = "fireball" },
+            { enabled = true, action = "scorch", use_off_gcd = 1 },
+        }, 30)
+        assert.are.equal("scorch", slot.actionName)
+    end)
+
+    it("does not hold when the estimate reaches the cost past the GCD's end + EARLY_EXIT", function()
+        local slot = first(0, nil, gcd, nil, 30) -- the estimate is the floor: 0.89 s, past 0.6 + 0.2
+        assert.are.equal("scorch", slot.actionName)
     end)
 end)
 

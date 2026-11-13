@@ -5,8 +5,10 @@
 ### New
 
 ### Changed
+- An ability that becomes affordable just after the global cooldown ends now keeps its place instead of briefly giving way to a lower one, so there are fewer brief icon flashes (for example Shifting Power for Feral).
 
 ### Fixed
+- An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 
 ### Known issues
 
