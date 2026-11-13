@@ -21,6 +21,7 @@ describe("the sim's near-cost mark (TimeToReady)", function()
             surge = { id = -9201, spend = 370, spendType = "mana" },
             focus = { id = -9202, spend = 121, spendType = "mana" },
             veil = { id = -9203, spend = 370, spendType = "mana", nobuff = "veil_up" },
+            snap = { id = -9204, spend = 370, spendType = "mana", toggle = "interrupts" }, -- off the GCD
         }
         for k, d in pairs(defs) do
             spec:RegisterAbility(k, d)
@@ -83,6 +84,61 @@ describe("the sim's near-cost mark (TimeToReady)", function()
         assert.are.equal(12, w)
         assert.is_false(S.nearCost)
         rawset(S.buff, "veil_up", nil)
+    end)
+
+    -- L628 option A (GCD only): the window opens at the end of the running GCD, so a crossing that falls under it is
+    -- near; `nearPre` carries the GCD's remains to Core's hold
+    it("measures the window from the end of the GCD when the resource's wait runs past it", function()
+        local gcd = S.cooldown.global_cooldown
+        gcd.remains = 0.4
+        r.actual, r.actual_lo, r.actual_hi = 366, 342, 366 -- the estimate 0.11 s, the floor 0.74 s: under 0.4 + 0.4
+        S.forecastResources("mana")
+        local w = S:TimeToReady("surge")
+        local near, pre = S.nearCost, S.nearPre
+        r.actual, r.actual_hi = 345, 345 -- the estimate 0.66 s: past 0.4 + EARLY_EXIT
+        S.forecastResources("mana")
+        S:TimeToReady("surge")
+        local estLate = S.nearCost
+        r.actual, r.actual_lo, r.actual_hi = 366, 335, 366 -- the floor 0.92 s: past 0.4 + EARLY_EXIT + one update
+        S.forecastResources("mana")
+        S:TimeToReady("surge")
+        local floorLate = S.nearCost
+        gcd.remains = 0
+        assert.is_true(w >= 0.73 and w <= 0.74, w) -- the floor's wait, as ever
+        assert.is_true(near)
+        assert.are.equal(0.4, pre)
+        assert.is_false(estLate)
+        assert.is_false(floorLate)
+    end)
+
+    -- only the GCD opens it: a cast in progress or the ability's own cooldown runs further out, where the forecast is
+    -- less settled (the gate-wide window toggled the mark on cast-time specs: Elemental flicker and readyShort)
+    it("keeps the window at now when the gate before the resource is the ability's cooldown, not the GCD", function()
+        rawset(S.cooldown, "surge", { remains = 0.4 })
+        r.actual, r.actual_lo, r.actual_hi = 366, 342, 366 -- as above: near, were the window opened at 0.4
+        S.forecastResources("mana")
+        local w = S:TimeToReady("surge")
+        local near = S.nearCost
+        rawset(S.cooldown, "surge", nil)
+        assert.is_true(w >= 0.73 and w <= 0.74, w)
+        assert.is_false(near)
+    end)
+
+    it("keeps the window at now for a pick off the GCD (an interrupt): the running GCD does not hold it", function()
+        local gcd = S.cooldown.global_cooldown
+        gcd.remains = 0.4
+        r.actual, r.actual_lo, r.actual_hi = 366, 342, 366 -- as the GCD case: near there, at pre 0.4
+        S.forecastResources("mana")
+        local w = S:TimeToReady("snap")
+        local near, pre = S.nearCost, S.nearPre
+        S:TimeToReady("surge") -- the same state on the GCD: near, pre 0.4
+        local gNear, gPre = S.nearCost, S.nearPre
+        gcd.remains = 0
+        assert.is_true(w >= 0.73 and w <= 0.74, w)
+        assert.are.equal(0, pre)
+        assert.is_false(near) -- the floor's 0.74 s is past now + EARLY_EXIT + one update
+        assert.is_true(gNear)
+        assert.are.equal(0.4, gPre)
     end)
 
     it("does not mark a swing-paid resource: it moves only at swings, so no regen is answered late", function()

@@ -96,6 +96,8 @@ state.delay = 0
 -- merely ready sooner).
 state.nearCost = false
 state.nearAction = false
+state.nearPre = 0 -- TimeToReady: the running GCD's remains the near-cost window opens after (L628)
+state.nearHoldFrom = 0 -- Core: the held pick's nearPre
 state.delayMin = 0
 state.delayMax = 15
 
@@ -7531,8 +7533,10 @@ function state:TimeToReady( action, pool )
     -- 1. The "use_off_gcd" flag is set in the priority.
     -- 2. The ability is flagged as an interrupt or defensive.
     local requires = ability.toggle
+    local pre = 0 -- the GCD this ability waits on: the near-cost window opens at its end (L628)
     if requires ~= "interrupts" and requires ~= "defensives" and not self.safebool( self.args.use_off_gcd ) then
-        wait = max( wait, self.cooldown.global_cooldown.remains )
+        pre = self.cooldown.global_cooldown.remains
+        wait = max( wait, pre )
     end
 
     if not state.channel_breakable and not ability.dual_cast then
@@ -7587,10 +7591,13 @@ function state:TimeToReady( action, pool )
         -- mana under the truth there). Core keeps such a pick over a later entry that is merely ready sooner; the wait
         -- stays the floor's (a countdown, never ready early). Confirmed below: nothing but the resource may hold it.
         -- Never for a swing-paid resource (swingGen): it moves only at swings, so no regen is answered late.
+        -- Both reaches count from the end of a running GCD (`pre`, L628): a crossing under the GCD is near too, the
+        -- list's order decided where the GCD ends. Only the GCD: a cast in progress or the ability's own cooldown runs
+        -- further out, where the forecast is less settled (measured: the mark toggled, flicker and readyShort rose).
         z = self[ resource ]
         nearRes = not z.swingGen
-            and wait <= ns.EARLY_EXIT + 0.2 -- the driver's combat update interval
-            and self:TimeToResource( z, spend ) <= ns.EARLY_EXIT
+            and wait <= pre + ns.EARLY_EXIT + 0.2 -- the driver's combat update interval
+            and self:TimeToResource( z, spend ) <= pre + ns.EARLY_EXIT
         waitRes = wait
     end
 
@@ -7658,6 +7665,7 @@ function state:TimeToReady( action, pool )
     wait = ns.callHook( "TimeToReady", wait, action )
 
     self.nearCost = nearRes and wait <= waitRes
+    self.nearPre = pre -- set here, after the sync recursion (TimeToReady( sync ) above), which writes its own
     state.delay = delay
     return max( wait, self.delayMin )
 end
