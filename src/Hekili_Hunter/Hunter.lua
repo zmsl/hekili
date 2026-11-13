@@ -825,7 +825,8 @@ spec:RegisterTalents({
 
 -- Packs from the talents (Engine/Schema/Selectors.lua; after the Hekili classic branch's pack selectors): each tree's
 -- default is wowsims's Melee Weave; wowsims's non-weave builds (owner 2026-11-12, ledger L661) are told apart by a
--- talent only that build takes, so partial and leveling builds keep the weave default.
+-- talent only that build takes, so a build without one keeps the weave default (a partial or leveling build that
+-- already holds that talent, e.g. Survivalist in the second Survival row, takes the non-weave pack).
 -- - Beast Mastery: both builds are 31/16/4; the Turret build takes Improved Arcane Shot (3/5) in Marksmanship, the
 --   weave Efficiency (2/5) instead. A build with both stays on the weave.
 -- - Marksmanship: the Turret build (5/41/5) takes Sniper Shot, the 41-point talent its list fills with; the weave

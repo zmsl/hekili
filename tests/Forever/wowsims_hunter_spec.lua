@@ -121,10 +121,24 @@ local PACKS = {
     -- replay is one fight at the log's seed). The Turret worlds know every ability their list casts (no extra kit);
     -- Survival Melee's replay opens Mongoose Bite on Expose Prey as the weave's (REPLAY_EXTRA). Replay misses: the
     -- Turrets' are Serpent Sting against Arcane Shot (the sting believed up at the cast, about 0.33 s before it lands:
-    -- the weave rows' class, no belief landing hook); Survival Melee's immolation_trap -> wing_clip 2, immolation_trap
-    -- -> summon_hawk 1, strider_kick -> wing_clip 1 (untraced). Live L40/L60 over 6 s: the weave rows' R41 class (mana
-    -- dry in the 5000 pool, the shots waiting on their cost), not traced per tick. ON flicker: Marksmanship Turret 1.66
-    -- and Survival Turret 1.00 measured, the replay's no-press-exclusion lead (Beast Mastery's note above), untraced.
+    -- the weave rows' class, no belief landing hook); Survival Melee's 5 (traced to the decision, not to the cause): the
+    -- log's immolation_trap against our wing_clip 2 and summon_hawk 1, summon_hawk against wing_clip 1, strider_kick against
+    -- wing_clip 1 (untraced).
+    -- Live limits over 6 s, TRACED per tick (2026-11-13, a probe over ws.live's own idle test, worst streak of the first
+    -- fight): the weave rows' R41 class, mana dry. Each worst streak starts with the pool at 2-17 of 5000 and ends when
+    -- it reaches Arcane Shot's cost (95 at L40 for Marksmanship Turret, 106 at L40 for Survival Melee, 167-190 at
+    -- L60: 2 -> 167 in 14.0 s, 17 -> 190 in 12.8 s, 2 -> 190 in 15.4 s, 3 -> 190 in 15.2 s), the regen of the pool
+    -- (12-13 mana a second) and nothing else; the abilities the world answers usable meanwhile (Hunter's Mark, Aspect,
+    -- Wing Clip, traps) are not the pack's, as in the weave rows. Rows: MM Turret L40 9.4 (t 110.8-120.0) / L60 14.0 (t
+    -- 61.2-75.0), BM Turret L60 13.0 (12.8, t 65.0-77.6), SV Turret L60 15.4 (t 82.8-98.0), SV Melee L40 10.0 (t
+    -- 81.6-91.4) / L60 15.4 (t 65.8-81.0).
+    -- ON flicker ceilings, traced per tick: MM Turret 1.7 (5 flips) and SV Turret 1.0 (3 flips): 7 of the 8 flips read
+    -- ours aimed_shot -> arcane_shot -> aimed_shot against the log's arcane_shot, arcane_shot, aimed_shot: our first icon
+    -- is Aimed Shot a tick before wowsims's Arcane Shot decision, then Arcane Shot at the cast, then Aimed Shot again
+    -- once the shot is taken (why Arcane Shot is first only at the cast tick: not traced further). loop.replay's flips() has no press array (a replay
+    -- records none), so the A, B, A of "shown, then cast" counts here where a live run's press excludes it: Beast
+    -- Mastery's note above (the replay's no-press-exclusion lead). The 8th (MM Turret, 110.2 s) is arcane_shot ->
+    -- serpent_sting -> arcane_shot against sting, sting, arcane: the Serpent Sting class of the misses.
     {
         "hunter_beast_mastery_turret",
         "BeastMasteryTurret",

@@ -398,8 +398,9 @@ build takes: Improved Arcane Shot without Efficiency (Beast Mastery), Sniper Sho
 Strider Kick (Survival Turret), Survivalist's Discipline (Survival Melee); any other build keeps the tree's weave pack.
 Their worlds take the export's whole talent string; the Turret worlds stand at 12 yd shooting, Survival Melee at 5 yd
 with two one-handers (its live bars at 11 yd, R63, `W.SurvivalMeleeRanged`). Replay decisions on-GCD: 1.000 (59),
-0.955 (66), 0.962 (53), 0.942 (86); the 20-fight lines (seeds 1-20) read agreement 0.998 / 1.000 / 0.996 / 0.997,
-flicker 0, held while ready 125 / 101 / 115 / 166 (rows in `pack_gate.FLICKER`, the worst of three seed sets).
+0.955 (66), 0.962 (53), 0.942 (86); the 20-fight lines (seeds 1-20, after the seeded regen phase) read agreement 0.998 / 1.000 /
+1.000 / 0.994, flicker 0, held while ready 121 / 118 / 104 / 173 (rows in `pack_gate.FLICKER`: floors at or above the worst of
+three seed sets, 127 / 118 / 105 / 174 measured).
 
 Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter
 research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`), plus:

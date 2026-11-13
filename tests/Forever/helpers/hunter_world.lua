@@ -319,6 +319,9 @@ PACKS.SurvivalRanged = setmetatable({ distance = 11, ranged = { 140, 200, 3.0 } 
 -- Aspects) are the build's, and the selectors pick the world's own pack. The kit is what the build knows that its list
 -- casts. The Turret worlds stand at the list's 12 yd shoot spot, shooting; Survival Melee in melee with two one-handers
 -- (p1_melee's Annihilator and Heartseeker, 1.7 s each; the amounts UNMEASURED) under Aspect of the Beast.
+-- Known gap: Quick Strikes (aura 1299448, melee haste) is not modelled. wowsims procs it off our white melee hits under
+-- Aspect of the Beast with Deadly Aspects 5/5 (sim/hunter/aspects.go:103-111; 5 gains in hunter_survival_melee.log), so
+-- the Survival Melee world swings at its base speed where the log's character is hasted for those windows.
 local function header(spec) -- the export's talents: { [rank-1 spell] = rank }
     local f = assert(io.open("tests/Forever/wowsims/" .. spec .. ".log"))
     f:read("*l")
