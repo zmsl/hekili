@@ -7,6 +7,7 @@
 ### Changed
 
 ### Fixed
+- Warlock: Life Tap is no longer recommended at full mana on characters with a small mana pool (below level 60); Feral's Innervate and Shadow's Dark Sacrifice likewise.
 
 ### Known issues
 
