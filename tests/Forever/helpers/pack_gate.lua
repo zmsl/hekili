@@ -354,8 +354,12 @@ M.FLICKER = {
     -- measured worst + 0.01: the line rounds to two decimals), heldReady 94 (the worst set)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.06 / 0.00 / 0.00 (oracle 0 / 0 / 0), retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0,
-    -- heldReady 53 / 80 / 67, agreement .994 / .994 / .999): flicker 0.01 -> 0.07 (a rise: our flips, the oracle's 0;
-    -- untraced), heldReady 94 -> 80
+    -- heldReady 53 / 80 / 67, agreement .994 / .994 / .999): flicker 0.01 -> 0.07 (a rise: our flips, the oracle's 0),
+    -- heldReady 94 -> 80. Traced (2 flips, seeds 1-20; none in 21-40, 41-60): gap AB's class, a mana wait against a
+    -- cooldown countdown at a near-tie, one regen tick from the cost. Fight 3 t 96.4: Judgement (off cooldown, its
+    -- mana short until the regen tick at 96.8; truth 80.0) -> Holy Strike (0.2 s cooldown left) for one poll; fight 6 t 21.8: Exorcism (mana
+    -- wait) <-> Judgement (0.4 s left). The seeded regen phase moved where the ticks fall against the costs. Core, not
+    -- the pack (wowsims's own order; no pack line reads the tie)
     ["Holy Shock"] = { flicker = 0.07, retracted = 0, readyShort = 0, heldReady = 80 },
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)

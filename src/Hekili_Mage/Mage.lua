@@ -141,7 +141,8 @@ local function byRank(values, ids)
 end
 
 -- The same, less Frost Channeling's -5% a rank (DB2 11160 effect 0, aura 108 misc 14 -15% at the top rank; its mask
--- names Frostbolt and Frostfire Bolt; wowsims's FFB log: 314.5 = 370 x 0.85 at 3/3).
+-- names Frostbolt, Frostfire Bolt, Cone of Cold, Ice Lance, Ice Barrier, Blizzard, Frost Nova and Ice Block (bit 19);
+-- wowsims's FFB log: 314.5 = 370 x 0.85 at 3/3, its Frost log: Cone of Cold 527.25, Ice Barrier 456).
 local function frostChanneled(values, ids)
     return function()
         return (values[knownRank(ids)] or values[1]) * (1 - 0.05 * talent.frost_channeling.rank)

@@ -11,7 +11,7 @@
 --   sequence omitted, follows the priority, Consecration first. A deviation (below).
 -- Deviations: the item swaps (precombat itemSwap, the mcp_swap group: wowsims swaps a Manual Crowd Pummeler in) are
 -- omitted, so the request's gear stays on; the move_to_melee sequence of a group reference and autocast (none in the
--- log) are omitted (the pack's 14 `# Omitted:` lines); wowsims casts and logs Holy Shock as rank 3's damage row 25902
+-- log) are omitted (the pack's 11 `# Omitted:` lines); wowsims casts and logs Holy Shock as rank 3's damage row 25902
 -- (the DB2's 20930 is a dummy the server turns into 25902 or the heal 25903), so the map names 25902 and the replay
 -- renames it to the kit's 20930 (wowsims_paladin_spec.lua's `alias`, tests/Game/harness/replay.lua).
 -- Loops (20 fights, seeds 1-20 / 21-40 / 41-60; the harness's seeded regen phase, 2026-11-13): agreement .994 / .994 /

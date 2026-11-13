@@ -39,7 +39,7 @@ return {
     },
     -- the Talisman of Ephemeral Power (ItemSparse 18820: a trinket, InventoryType 12)
     map = { ["item:18820"] = "use_items" },
-    -- by role (docs/dev/wowsims-packs.md): Cone of Cold on five Winter's Chill stacks and Ice Lance on a Fingers of
-    -- Frost charge are windows to catch (1); Ice Barrier, kept up for Frigid Power, is upkeep (2)
+    -- by role (docs/dev/wowsims-packs.md): Cone of Cold on five Winter's Chill stacks and Ice Lance (one Fingers of
+    -- Frost charge while Frostbolt casts; 0 casts in wowsims's fight) are windows to catch (1); Ice Barrier, kept up for Frigid Power, is upkeep (2)
     focus = { cone_of_cold = 1, ice_lance = 1, ice_barrier = 2 },
 }

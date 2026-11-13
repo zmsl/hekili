@@ -448,7 +448,8 @@ test-mage` (`#mage`, `loop_mage_arcane_spec.lua`, `loop_mage_fire_spec.lua`, `lo
 `pack_gate.solo` and asserting that some focus line ran (Arcane: Missiles on Missile Barrage at tier 1, Evocation at
 tier 2; Fire also Pyroblast on Heating Up at tier 1 and Scorch at tier 2: ruling M5; Frostfire Pyroblast and Fire Blast
 (unless two Fingers of Frost charges are up) at tier 1, Scorch and Evocation at tier 2; Frost Cone of Cold on five
-Winter's Chill stacks and Ice Lance on a Fingers of Frost charge at tier 1, Ice Barrier at tier 2). The packs are Arcane
+Winter's Chill stacks and Ice Lance (one Fingers of Frost charge while Frostbolt casts; wowsims's fight casts it 0
+times) at tier 1, Ice Barrier at tier 2). The packs are Arcane
 and Fire (wowsims.com) (Task 12 of the wowsims packs plan), Frostfire (wowsims.com) (Task FFB: Fire's second pack, its
 talents 29 Fire points to 22 Frost) and Frost (wowsims.com) (new packs, 2026-11-12: the Frost Incin build, 31 Frost
 points, pool 6348), their replay and leveling gates `tests/Forever/wowsims_mage_spec.lua`.

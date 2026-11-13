@@ -79,7 +79,11 @@ local PACKS = {
     { "mage_fire", "Fire", "Fire (wowsims.com)", 0.96, 6.2, 0.34 },
     { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8, 0 },
     -- Frost (new pack, 2026-11-12, R6 first measurement): 0.93 (0.934, 57 of 61; the recipe's header names the misses),
-    -- LIVE60 6.0 (the 6 s bar: 6.0 measured, L10 0.2, L40 0.0), flicker 0 (0.00/min measured)
+    -- LIVE60 6.0 (the 6 s bar: 6.0 measured, L10 0.2, L40 0.0), flicker 0 (0.00/min measured). LIVE60's cause (traced
+    -- 2026-11-13): a dry-pool wait for Frostbolt (117.2-123.0 s; the client answers it unusable, the mana under its
+    -- cost), Evocation cooling (424 s left) and Cold Snap spent, as Fire's Scorch wait. Arcane L10/L40 0.4 -> 0.2 s
+    -- (47 -> 48, 53 -> 54 presses): Arcane Wrath's learn levels (25/36/48/60) entered learn_mage.lua with this pack;
+    -- without those four lines the numbers are forever's again (measured)
     { "mage_frost", "Frost", "Frost (wowsims.com)", 0.93, 6.0, 0 },
 }
 
