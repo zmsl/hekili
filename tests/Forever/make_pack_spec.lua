@@ -305,6 +305,20 @@ describe("tools/make_pack.lua", function()
         assert.are.same(lists, mp.parse(mp.unparse(lists)))
     end)
 
+    it("round-trips the target-swap modifiers as numbers, after use_off_gcd= and before focus=", function()
+        local simc = "actions=x,cycle_targets=1,max_cycle_targets=3,other_target=1,if=a\n"
+            .. "actions+=/y,use_off_gcd=1,cycle_targets=1,focus=2\n"
+        local lists = mp.parse(simc)
+        assert.are.same(
+            { action = "x", enabled = true, cycle_targets = 1, max_cycle_targets = 3, other_target = 1, criteria = "a" },
+            lists.default[1]
+        )
+        assert.are.equal(simc, mp.unparse(lists))
+        assert.has_error(function()
+            mp.parse("actions=x,cycle_targets=yes\n")
+        end, "bad value cycle_targets=yes in: actions=x,cycle_targets=yes")
+    end)
+
     it("round-trips cancel_buff's buff_name as a string, written after name=", function()
         local simc = "actions=cancel_buff,buff_name=cat_form,if=a\n"
         local lists = mp.parse(simc)
@@ -326,6 +340,27 @@ describe("tools/make_pack.lua", function()
                 mp.parse(line .. "\n")
             end, "bad value focus=" .. bad .. " in: " .. line)
         end
+    end)
+
+    it("round-trips label=, label_if=, icon= and icon_if= as strings, written before if=, never read as if=", function()
+        local simc = "actions=starfire,label=R6,label_if=mana.pct<20,icon=Interface/Icons/Spell_Arcane_StarFire,"
+            .. "icon_if=a&b,if=c\nactions+=/wrath,icon=136006\n"
+        local lists = mp.parse(simc)
+        assert.are.same({
+            action = "starfire",
+            enabled = true,
+            label = "R6",
+            label_if = "mana.pct<20",
+            icon = "Interface/Icons/Spell_Arcane_StarFire",
+            icon_if = "a&b",
+            criteria = "c",
+        }, lists.default[1])
+        assert.are.same({ action = "wrath", enabled = true, icon = "136006" }, lists.default[2])
+        assert.are.equal(simc, mp.unparse(lists))
+        assert.are.same(
+            { action = "rip", enabled = true, label_if = "x" },
+            mp.parse("actions=rip,label_if=x\n").default[1]
+        )
     end)
 
     it("refuses prepull_at: pre-pull lines carry their guard in the condition (wowsims rule 1)", function()

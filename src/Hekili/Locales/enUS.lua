@@ -452,7 +452,7 @@ L["If checked, the damage-based target system will only count enemies that are o
 L["|cFFFF0000Requires Enemy Nameplates|r"] = true
 L["|cFF00FF00Requires Enemy Nameplates|r"] = true
 L["Count Nameplates Near You"] = true
-L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Discouraged for ranged specializations."] = true
+L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Ranged specializations count enemies in combat out to the radius; target swaps need it."] = true
 L["Count Targets Near Your Pet"] = true
 L["If checked and properly configured, the addon will count targets near your pet as valid targets, when your target is also within range of your pet."] = true
 L["%s|w|r is on your action bar and will be used for all your %s pets."] = true
@@ -472,7 +472,7 @@ L["If checked, enemy nameplates will be displayed and can be used to count enemy
 L["Show All Nameplates"] = true
 L["If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets."] = true
 L["Enemy Range Radius"] = true
-L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."] = true
+L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."] = true
 L["Allow Target Swaps |TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t"] = true
 L["When target swapping is enabled, an icon (|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t) may be shown when you should use an ability on a different target.\n\nThis works well for some specs that simply want to apply a debuff to another target, but can be less-effective for specializations that are concerned with maintaining dots/debuffs based on their durations.\n\nThis feature is targeted for improvement in a future update."] = true
 L["Secondary Targets"] = true

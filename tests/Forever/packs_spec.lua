@@ -27,6 +27,25 @@ describe("Forever priorities", function()
         assert.are.same({}, hits)
     end)
 
+    -- Per-enemy time to die is never known on Forever (option D): `max_ttd` would make cycle_enemies 1 (State.lua's
+    -- GetNumTTDsAfter answers every enemy) and spell_targets 0, `min_ttd` would gate on a number that never comes. No
+    -- content addon may declare either.
+    it("declare no min_ttd or max_ttd on any ability (time to die is never known on Forever)", function()
+        local hits = {}
+        local pipe = assert(io.popen("find src/Hekili_* -name '*.lua' | sort"))
+        for file in pipe:lines() do
+            local n = 0
+            for line in io.lines(file) do
+                n = n + 1
+                if line:gsub("%-%-.*$", ""):match("m[ai][xn]_ttd%s*=") then
+                    hits[#hits + 1] = file .. ":" .. n
+                end
+            end
+        end
+        pipe:close()
+        assert.are.same({}, hits)
+    end)
+
     -- the class files' recording loads (the Rogue's through load_druid)
     local LOADS = {
         warrior = function()

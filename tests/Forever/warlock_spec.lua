@@ -19,6 +19,7 @@ local KIT = {
     corruption = { { 172, 6222, 6223, 7648, 11671, 11672, 25311 }, 340, 0, "spell" },
     bane_of_agony = { { 980, 1014, 6217, 11711, 11712, 11713 }, 215, 0, "spell" },
     bane_of_doom = { { 603 }, 300, 60, "spell" },
+    bane_of_havoc = { { 1225228 }, 0.05, 0, "off" }, -- 5% of base mana; off the GCD as wowsims (its TODO)
     curse_of_the_elements = { { 440892, 1311676, 1311677, 1311680 }, 200, 0, "spell" },
     curse_of_recklessness = { { 704, 7658, 7659, 11717 }, 115, 0, "spell" },
     curse_of_weakness = { { 702, 1108, 6205, 7646, 11707, 11708 }, 175, 0, "spell" },
@@ -120,7 +121,7 @@ describe("Forever Warlock", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(28, n)
+        assert.are.equal(29, n)
         assert.are.equal("cooldowns", w.abilities.amplify_curse.toggle)
         for _, key in ipairs({
             "summon_imp",
@@ -749,6 +750,53 @@ describe("Forever Warlock through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- Option D (owner decisions 1 and 2): Destruction's Bane of Havoc line (other_target=1) through the belief's real
+    -- count: shown only with Recommend Target Swaps on and two enemies, with the cycle icon; once it lands on mob A, a
+    -- tab to mob B finds it remembered there (one Havoc at a time), so it is not shown again.
+    it("shows Bane of Havoc for another target only, with Recommend Target Swaps on, one at a time", function()
+        local H = headless.new({ character = character(), pack = "Destruction (wowsims.com)" })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        H.ns.getNumberTargets = function()
+            return 2, 2
+        end
+        local spec = H.Hekili.Engine.settings.specs[100093]
+        local t = H.ctl.now
+        local function havoc() -- the Havoc record's indicator ("" none), or false when it is not shown
+            for _ = 1, 2 do -- the update after the change, and the published set it builds
+                t = t + 0.6
+                assert.is_true(headless.cycle(H, t))
+            end
+            local out = H.Hekili.Engine.Output.Primary
+            for i = 1, out.count do
+                if out.recs[i].actionName == "bane_of_havoc" then
+                    return out.recs[i].indicator or ""
+                end
+            end
+            return false
+        end
+        assert.is_false(havoc())
+        spec.cycle = true
+        assert.are.equal("cycle", havoc())
+        t = t + 0.1
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-havoc", 1225228) -- landed on mob A, the target then
+        assert.is_false(havoc(), "one Havoc at a time")
+        H.ctl.guid.target = "Creature-2"
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_false(havoc(), "remembered on mob A after the tab")
+        assert.are.equal(1, H.Hekili.State.active_dot.bane_of_havoc)
+        -- review M1: mob B dies, no target, two enemies left: the count is unknown (saturated, never 0), no Havoc flash
+        H.ctl.exists.target, H.ctl.guid.target = false, nil
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_false(havoc(), "no target: Havoc is not shown again")
+        assert.are_not.equal(0, H.Hekili.State.active_dot.bane_of_havoc)
+        spec.cycle = false
+        assert.are.same({}, H.errors)
+    end)
+
     -- C1: a summon models the demon up until the pet unit's first observation (UNIT_PET), which overrides it.
     it("models the summoned demon up in the belief until the pet unit is observed", function()
         local H = headless.new({ character = character() })
@@ -917,4 +965,141 @@ describe("Forever Warlock Movement (R8)", function()
             assert.are.same({ "hellfire", "hellfire" }, { far(true), near(true) })
         end)
     end
+end)
+
+-- A player's report (2026-11-12): with the dots up, a Warlock without the spec's endgame filler (Wrack, Incinerate,
+-- Searing Pain: talents or a later level) was shown Life Tap at full mana. Each pack's list tail, from its unconditional
+-- filler line to the end of `actions`, through the engine without the filler: Shadow Bolt at full mana, Life Tap only
+-- under Shadow Bolt's cost. The tail stands for "every line above it is quiet" (the dots up), not a dotted rotation.
+describe("Forever Warlock without the endgame filler", function()
+    local ww = require("Forever.helpers.warlock_world")
+    local ws = require("Forever.helpers.wowsims")
+
+    -- The pack's `actions` lines (`list`: its `actions.<list>` lines, as `actions` ones) from the last line that is
+    -- `filler` alone (a `filler` ending in "," its prefix).
+    local function tail(pack, filler, list)
+        local f = assert(io.open("src/Hekili_Warlock/APLs/" .. pack .. ".simc"))
+        local s = f:read("*a")
+        f:close()
+        local lines, from = {}, nil
+        local at = list and "actions%." .. list .. "%+=/" or "actions%+=/"
+        for l in s:gmatch("\n(" .. at .. "[^\n]+)") do
+            l = l:gsub("^" .. at, "actions+=/")
+            lines[#lines + 1] = l
+            local head = "actions+=/" .. filler
+            if l == head or (filler:sub(-1) == "," and l:sub(1, #head) == head) then
+                from = #lines
+            end
+        end
+        assert(from, pack)
+        return table.concat(lines, "\n", from)
+    end
+
+    -- `o.spec` (a wowsims recipe name) with `o.level`: the build's character at that level (wowsims_warlock_spec's
+    -- brackets); `o.list`: tail's; `o.after`: an action line after the tail.
+    local function world(name, filler, unknown, o)
+        o = o or {}
+        local C = ww[name]
+        if o.level then
+            C = ws.content(C, {
+                pack = C.PACK,
+                level = o.level,
+                talents = ws.header(o.spec).talents,
+                learn = ws.learn("WARLOCK"),
+                race = ws.race(o.spec),
+            })
+        end
+        local ch = C.character()
+        local w = ld.load(nil, FILE, "WARLOCK")
+        local drop, talents = {}, {}
+        for _, id in ipairs(unknown and idsOf(w.abilities[unknown]) or {}) do
+            drop[id] = true
+        end
+        local known = {}
+        for _, id in ipairs(ch.known) do
+            if not drop[id] then
+                known[#known + 1] = id
+            end
+        end
+        for id, rank in pairs(ch.talents) do -- a copy: the world's table is shared
+            if not drop[id] then
+                talents[id] = rank
+            end
+        end
+        ch.known, ch.talents = known, talents
+        local H = headless.new({ character = ch, pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, 25
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        local lines = H.Hekili:ParseActionList(tail(C.PACK, filler, o.list))
+        for _, l in ipairs(lines) do
+            l.enabled = true
+        end
+        lines[#lines + 1] = o.after and { enabled = true, action = o.after } or nil
+        H.Hekili.DB.profile.packs[C.PACK].lists = { precombat = {}, default = lines }
+        H.Hekili:LoadScripts()
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local VS = H.ns.VirtualState
+        local power, mana = VS.Power, {}
+        VS.Power = function(pt, now)
+            return pt == 0 and mana or power(pt, now)
+        end
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        return function(m, dt, cast) -- `cast`: a spell ID that succeeds first; then `dt` [0.2] s on
+            if cast then
+                H.ctl.now = t
+                H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. cast, cast)
+            end
+            mana.est, mana.lo, mana.hi, mana.conf = m, m, m, 1
+            t = t + (dt or 0.2)
+            assert(headless.cycle(H, t))
+            assert.are.same({}, H.errors)
+            return out.recs[1] and out.recs[1].actionName
+        end
+    end
+
+    for _, p in ipairs({
+        { "Affliction", "wrack", "wrack" },
+        { "Destruction", "incinerate", "incinerate" },
+        { "Demonology", "searing_pain", "searing_pain" },
+        { "SMRuin", "shadow_bolt" },
+        { "ShadowBrand", "shadow_bolt" },
+    }) do
+        it(
+            p[1] .. ": Shadow Bolt at full mana" .. (p[3] and " without " .. p[3] or "") .. ", Life Tap under its cost",
+            function()
+                local at = world(p[1], p[2], p[3])
+                assert.are.same({ "shadow_bolt", "life_tap" }, { at(ww[p[1]].WORLD.max), at(50) })
+            end
+        )
+    end
+
+    -- Review I1: wowsims's `immolate,if=!action.incinerate.known|debuff.immolate.remains<action.incinerate.cast` is
+    -- always true without Incinerate, so below 18 (no Searing Pain either) it showed Immolate every GCD. At level 10,
+    -- from that line down: Shadow Bolt with Immolate up, Immolate once it falls off inside the filler's (Shadow Bolt's)
+    -- cast, as wowsims's line refreshes inside Incinerate's.
+    it("Destruction at level 10: Shadow Bolt with Immolate up, Immolate when it is about to fall off", function()
+        local at = world("Destruction", "immolate,focus=2,", nil, { spec = "warlock_destruction", level = 10 })
+        local max = ww.Destruction.WORLD.max
+        -- down; cast (rank 1, 15 s) and 0.2 s on; 14.2 s after it (0.8 s left, under Shadow Bolt's cast)
+        assert.are.same({ "immolate", "shadow_bolt", "immolate" }, { at(max), at(max, 0.2, 348), at(max, 14) })
+    end)
+
+    -- Review N1: Incinerate is a talent, so a level-60 Destruction Warlock may lack it; the cooldowns list's
+    -- `immolate,if=...&(!action.incinerate.known|debuff.immolate.remains<action.incinerate.cast)` (Bane of Doom up under
+    -- 15 s, one enemy) was then always true. From that line down, Shadow Bolt after it: Bane of Doom up with 14 s left.
+    it("Destruction at 60 without Incinerate: the cooldowns Immolate only inside Shadow Bolt's cast", function()
+        local at =
+            world("Destruction", "immolate,focus=2,", "incinerate", { list = "cooldowns", after = "shadow_bolt" })
+        local max = ww.Destruction.WORLD.max
+        -- Bane of Doom (603, 60 s) and 46 s on: Immolate down; Immolate (25309, 15 s) and 0.2 s on; 12.5 s later (2.3 s
+        -- left: over Immolate's cast, under Shadow Bolt's; Bane of Doom 1.3 s left)
+        assert.are.same(
+            { "immolate", "shadow_bolt", "immolate" },
+            { at(max, 46, 603), at(max, 0.2, 25309), at(max, 12.5) }
+        )
+    end)
 end)

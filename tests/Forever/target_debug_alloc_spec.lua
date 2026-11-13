@@ -79,6 +79,24 @@ describe("Engine/Sim/Targets.lua's nameplate log", function()
         assert.are.same({ 0, 0, 0 }, got, "bytes per count at 0/5/15 plates")
     end)
 
+    -- caster range (L644): the engaged rule beyond 10 yd (a radius of 40, as a ranged spec's default) reads each far
+    -- plate's combat answer and allocates nothing, in combat or out
+    it("counts 15 far plates by their combat answer, allocating nothing per count", function()
+        H.Hekili.ActiveDebug = false
+        H.Hekili.DB.profile.specs[ww.SPEC].nameplateRange = 40
+        plates(15)
+        local counts, got = {}, {}
+        for _, engaged in ipairs({ true, false }) do
+            for i = 1, 15 do
+                H.ctl.distance["nameplate" .. i], H.ctl.unitCombat["nameplate" .. i] = 30, engaged
+            end
+            counts[#counts + 1] = H.ns.getNumberTargets(true)
+            got[#got + 1] = bytes()
+        end
+        assert.are.same({ 16, 1 }, counts)
+        assert.are.same({ 0, 0 }, got, "bytes per count at 15 far plates, in combat and out")
+    end)
+
     it("keeps the log, a line per plate, while debug is on", function()
         plates(15)
         H.Hekili.ActiveDebug = true
@@ -86,5 +104,68 @@ describe("Engine/Sim/Targets.lua's nameplate log", function()
         H.ns.getNumberTargets(true)
         assert.is_truthy(tostring(H.Hekili.TargetDebug):find("Nameplates are enabled", 1, true))
         assert.is_true(select(2, H.Hekili.TargetDebug:gsub("nameplate", "")) > 0, "no plate line in the log")
+    end)
+
+    -- T1: under the Map restriction the plates are kept by token; a count and each plate handler allocate nothing.
+    it("allocates nothing per count at 0, 5 and 15 token plates (Map), nor per plate event", function()
+        local got, counts = {}, {}
+        H.Hekili.ActiveDebug = false
+        H.ctl.guid.target, H.ctl.unitIs.target = fake.SECRET, "nameplate1"
+        local function tokens(from, n)
+            for i = from, n do
+                local unit = "nameplate" .. i
+                H.ctl.guid[unit], H.ctl.exists[unit], H.ctl.distance[unit] = fake.SECRET, true, 3
+                H.Fire("NAME_PLATE_UNIT_ADDED", unit)
+            end
+        end
+        for _, n in ipairs({ 0, 5, 15 }) do
+            tokens(1, n)
+            counts[#counts + 1] = H.ns.getNumberTargets(true)
+            got[#got + 1] = bytes()
+        end
+        print("token counts at 0/5/15 plates: " .. table.concat(counts, "/") .. "; bytes " .. table.concat(got, "/"))
+        assert.are.same({ 1, 5, 15 }, counts)
+        assert.are.same({ 0, 0, 0 }, got, "bytes per count at 0/5/15 token plates")
+        -- a REMOVED, an ADDED and a friendly flag on token plates, the second round measured (the first warms up)
+        local function events()
+            H.Fire("NAME_PLATE_UNIT_REMOVED", "nameplate6")
+            H.Fire("NAME_PLATE_UNIT_ADDED", "nameplate6")
+            H.Fire("UNIT_FLAGS", "nameplate8")
+        end
+        H.ctl.friendly.nameplate8 = true
+        events()
+        collectgarbage("collect")
+        collectgarbage("stop")
+        local b = collectgarbage("count")
+        events()
+        local d = (collectgarbage("count") - b) * 1024
+        collectgarbage("restart")
+        H.ctl.friendly.nameplate8 = nil
+        assert.is_nil(H.Hekili.npTokens.nameplate8)
+        assert.are.equal(0, d, "bytes per plate event")
+    end)
+
+    -- integ/dot review M2: token plates past 10 yd with a ranged radius reach the engaged rule's combat read; a count
+    -- allocates nothing, in combat or out (the target's plate is exempt, so out of combat counts 1)
+    it("counts 15 far token plates (Map) by their combat answer, allocating nothing per count", function()
+        H.Hekili.ActiveDebug = false
+        H.Hekili.DB.profile.specs[ww.SPEC].nameplateRange = 40
+        H.ctl.guid.target, H.ctl.unitIs.target = fake.SECRET, "nameplate1"
+        for i = 1, 15 do
+            local unit = "nameplate" .. i
+            H.ctl.guid[unit], H.ctl.exists[unit], H.ctl.distance[unit] = fake.SECRET, true, 30
+            H.Fire("NAME_PLATE_UNIT_ADDED", unit)
+        end
+        local counts, got = {}, {}
+        for _, engaged in ipairs({ true, false }) do
+            for i = 1, 15 do
+                H.ctl.unitCombat["nameplate" .. i] = engaged
+            end
+            H.ns.getNumberTargets(true) -- a fall is held one update (T1)
+            counts[#counts + 1] = H.ns.getNumberTargets(true)
+            got[#got + 1] = bytes()
+        end
+        assert.are.same({ 15, 1 }, counts)
+        assert.are.same({ 0, 0 }, got, "bytes per count at 15 far token plates, in combat and out")
     end)
 end)

@@ -128,6 +128,7 @@ local DOT = {
     immolate = { 15, 3, 4 },
     bane_of_agony = { 24, 2, 32, "bane" },
     bane_of_doom = { 60, 60, 32, "bane" },
+    bane_of_havoc = { 300, nil, 1, "bane" }, -- no tick (a dummy aura), wowsims's school 1; replaces our other Bane there
     siphon_life = { 30, 3, 32 },
     curse_of_the_elements = { 300, nil, 32, "curse" },
     curse_of_recklessness = { 120, nil, 32, "curse" },
@@ -540,13 +541,17 @@ local function sacrificeOn(W, e, id)
     W.applyAura(e, id, 7200, 1, 1)
     if id == 18792 then -- Fel Energy: 2% of the pool every 4 s while it is up (DB2 aura 21; wowsims talents_demonology.go)
         local a = e.auras[id]
+        -- indexed: t0 + (k - phase) x 4, never a running sum (L606); the phase a draw in [0, 1) as the world's regen
+        -- grids' (W.regenPhase, L668), so the first gain falls in (0, 4] s after the Sacrifice
+        local t0, k, ph = W.t, 1, W.prng.next()
         local function step()
             if e.auras[id] == a then
                 W.emit({ kind = "gain", src = e, pt = MANA, rage = 0.02 * e.powerMax }) -- scenarios.world sets powerMax from WORLD.max
-                W.at(W.t + 4, step)
+                k = k + 1
+                W.at(t0 + (k - ph) * 4, step)
             end
         end
-        W.at(W.t + 4, step)
+        W.at(t0 + (1 - ph) * 4, step)
     end
 end
 local function sacrificeOff(W, e, id)
@@ -600,6 +605,7 @@ M.MAP = {
     corruption = lands("corruption"),
     bane_of_agony = lands("bane_of_agony"),
     bane_of_doom = lands("bane_of_doom"),
+    bane_of_havoc = lands("bane_of_havoc"), -- option D: Destruction's other_target=1 line, pressed by a following driver
     curse_of_the_elements = lands("curse_of_the_elements"),
     curse_of_recklessness = lands("curse_of_recklessness"),
     curse_of_weakness = lands("curse_of_weakness"),

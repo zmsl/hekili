@@ -17,6 +17,7 @@ local roundUp = ns.roundUp
 local safeMax = ns.safeMax
 
 local format, trim = string.format, string.trim
+local GetFileIDFromPath, issecretvalue = ns.Facade.GetFileIDFromPath, ns.Facade.issecretvalue
 
 local twipe, insert = table.wipe, table.insert
 
@@ -1297,6 +1298,7 @@ local newModifiers = {
     extra_amount = 'raw',
     line_cd = 'raw',
     max_cycle_targets = 'raw',
+    other_target = 'raw', -- 1: for another target only (a forced cycle, option D)
     sec = 'raw',
     value = 'raw',
     value_else = 'raw',
@@ -1313,7 +1315,26 @@ local newModifiers = {
     window_name = 'string',
     refresh = 'raw',
     duration = 'raw',
+
+    -- shown with the pick (Core's markPick): text on its icon, and an icon a display may draw instead, each only while
+    -- its _if holds. 'text' is the line's value verbatim: no SimC translation, so a texture path keeps its backslashes.
+    label = 'text', -- a modifier type, not player text -- l10n: verbatim
+    label_if = 'bool',
+    icon = 'text',
+    icon_if = 'bool',
 }
+
+
+-- A 'text' modifier's Lua source: the value verbatim, except icon=, always a texture file ID as a number literal
+-- (SetTexture( "136006" ) would look up a path): a bare number as given (the client cannot tell a missing one), a path
+-- resolved here once; a path the client lacks (or answers secret) gives the line no icon override (nil) and one
+-- warning naming the line.
+local function textSource( m, v, header, action )
+    if m ~= 'icon' then return format( "%q", tostring( v ) ) end
+    local id = tonumber( v ) or GetFileIDFromPath( tostring( v ) )
+    if not issecretvalue( id ) and id then return tostring( id ) end -- secrecy first: no boolean test on a secret
+    Hekili:Error( "Priority line %s (%s): icon=%s is not a texture file; the line's icon is not overridden.", tostring( header ), tostring( action ), tostring( v ) )
+end
 
 
 local valueModifiers = {
@@ -1508,9 +1529,10 @@ local function ConvertScript( node, hasModifiers, header )
 
     if hasModifiers then
         for m, value in pairs( newModifiers ) do
-            if node[ m ] then
+            local text = node[ m ] and value == 'text' and textSource( m, node[ m ], header, node.action )
+            if node[ m ] and ( value ~= 'text' or text ) then
                 local emulated
-                local o = SimToLua( node[ m ] )
+                local o = text or SimToLua( node[ m ] )
 
                 specialMods = specialMods .. " - " .. m .. " : " .. o
 
@@ -1522,6 +1544,8 @@ local function ConvertScript( node, hasModifiers, header )
                 elseif value == 'raw' then
                     emulated = node[ m ] ~= "" and node[ m ]
                     emulated = SimToLua( scripts:EmulateSyntax( emulated, true ) )
+                elseif value == 'text' then
+                    emulated = o
                 else -- string
                     o = "'" .. o .. "'"
                     emulated = o
@@ -1534,7 +1558,7 @@ local function ConvertScript( node, hasModifiers, header )
                 if sf then
                     setfenv( sf, state )
                     modifiers[ m ] = sf
-                    modElements[ m ] = GetScriptElements( o )
+                    modElements[ m ] = value ~= 'text' and GetScriptElements( o ) or nil
 
                     if modElements[ m ] then
                         for k, v in pairs( modElements[ m ] ) do

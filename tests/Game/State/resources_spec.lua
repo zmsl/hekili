@@ -1435,6 +1435,13 @@ describe("resources", function()
             assert.are.same({ 13, 12 }, { I.res.decayNext[1], VS.DecayAnchor(fs.RAGE) })
             I.Settle(60)
             assert.are.same({ 0, 0, 0 }, { VS.Power(fs.RAGE, 60).est, I.res.decayNext[1], VS.DecayAnchor(fs.RAGE) })
+            -- the top: 50 at 49 (96.25 - 37 x 1.25), the estimate resting there; it keeps the same grid in whole quanta
+            -- (50 .. 60) in the same fold, never under a stepped truth (rage-fix)
+            assert.are.equal(36.25, VS.Power(fs.RAGE, 60).hi)
+            assert.are.equal(11.25, VS.Power(fs.RAGE, 80).hi) -- projected ahead of the fold: 61 .. 80
+            I.Settle(100)
+            r = VS.Power(fs.RAGE, 100)
+            assert.are.same({ 0, 0, 0 }, { r.est, r.lo, r.hi })
         end)
 
         it("lands regen_aura_a's tenth tick at its expiry, then the first quantum at once: 10 - 1.25", function()

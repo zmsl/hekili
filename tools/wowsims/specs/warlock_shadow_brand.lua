@@ -21,7 +21,7 @@
 --   faded), and wowsims recasts Searing Pain on the early fade; ours keeps it the full 10 s (the target's charges
 --   unreadable, the demon's hits unseen): 157-170 s (8, all Searing Pain pairs), 74-99 (4) and 138.9 (1) show the
 --   brand 6-9.5 s left in ours too (not verified row by row); 10.88 is C's knock-on. Without A and C 0.841.
--- Omitted 2 -> 11 (dry.lua 11): Demonology's ten plus a `never` (default #9); unitIsMoving dropped, listed. Aura lane
+-- Omitted 2 -> 8 (dry.lua 11 before option D): Demonology's seven plus a `never` (default #9); unitIsMoving dropped, listed. Aura lane
 -- 2026-11-11: the kit now registers Revelation (1323392), so default #9 is translated, not omitted (knownAs: the
 -- build's "Improved Shadow Bolt Known" variable is the talent).
 -- Known deviations: warlock_demonology.lua's (the same list but Shadow Bolt the filler and the Life Tap line's constant
@@ -29,8 +29,13 @@
 -- Deviations: Berserking (Troll) and
 -- Eureka! and Blood Fury are other races' racials, never known to the Human. The Weakness Analyzer trinket (272438) is `use_items` (rule
 -- 13).
--- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket
--- idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
+-- Filler (owner 2026-11-12, a player's report: "after putting my dots, Hekili wants me to spam Life Tap, even with full
+-- mana"; owner: "Life tap is not a good filler"): wowsims's list ends `shadow_bolt` then an unconditional Life Tap;
+-- `guard` "default #15" shows that Life Tap only under Shadow Bolt's cost, so never at full mana. In wowsims's build it
+-- fires only when Shadow Bolt cannot be paid, so the guard moves neither the replay nor the loops
+-- (docs/dev/wowsims-packs.md, Deviations by ruling).
+-- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in Shadow Bolt then Life Tap under its cost,
+-- so no bracket idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
 return {
     class = "WARLOCK",
     pack = "Shadow Brand (wowsims.com)",
@@ -54,6 +59,7 @@ return {
                 NoCurse = false,
             },
             active = "warlockAssignedCurseIsActive",
+            activeAll = "warlockAssignedCurseIsActiveOnAllTargets", -- rule 20: its swap is the curse lines' cycle_targets=1
             is = "warlockIsAssignedCurse",
         },
     },
@@ -74,5 +80,8 @@ return {
     notes = {
         "Before the Demonic Brand talent, Searing Pain leads the list (its brand is never up), as wowsims's own list would.",
     },
+    guard = {
+        ["default #15"] = { expect = "life_tap", cond = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" },
+    }, -- the final Life Tap (header)
     leveling = {},
 }

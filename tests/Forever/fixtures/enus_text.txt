@@ -562,6 +562,39 @@ options.abilities.bane_of_doom.toggle	values.interrupts	Interrupts
 options.abilities.bane_of_doom.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.bane_of_doom.toggle	values.none	None
 options.abilities.bane_of_doom.toggle	values.potions	Potions
+options.abilities.bane_of_havoc	name	Spell 1225228
+options.abilities.bane_of_havoc.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1225228 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1225228 can be recommended in any type of fight.
+options.abilities.bane_of_havoc.boss	name	Boss Encounter Only
+options.abilities.bane_of_havoc.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1225228 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.bane_of_havoc.clash	name	Clash
+options.abilities.bane_of_havoc.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1225228.
+options.abilities.bane_of_havoc.disabled	name	Disable |T136000:0|t Spell 1225228
+options.abilities.bane_of_havoc.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.bane_of_havoc.dotCap	name	Maximum Applications
+options.abilities.bane_of_havoc.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.bane_of_havoc.hasIcon	name	Icon Replacement
+options.abilities.bane_of_havoc.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.bane_of_havoc.keybind	name	Override Keybind Text
+options.abilities.bane_of_havoc.lineBreak1	name	\032
+options.abilities.bane_of_havoc.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.bane_of_havoc.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.bane_of_havoc.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.bane_of_havoc.noIcon	name	Icon Replacement
+options.abilities.bane_of_havoc.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1225228 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.bane_of_havoc.targetMax	name	Maximum Targets
+options.abilities.bane_of_havoc.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1225228 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.bane_of_havoc.targetMin	name	Minimum Targets
+options.abilities.bane_of_havoc.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.bane_of_havoc.toggle	name	Require Toggle
+options.abilities.bane_of_havoc.toggle	values.cooldowns	Cooldowns
+options.abilities.bane_of_havoc.toggle	values.custom1	Custom 1
+options.abilities.bane_of_havoc.toggle	values.custom2	Custom 2
+options.abilities.bane_of_havoc.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.bane_of_havoc.toggle	values.defensives	Defensives
+options.abilities.bane_of_havoc.toggle	values.interrupts	Interrupts
+options.abilities.bane_of_havoc.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.bane_of_havoc.toggle	values.none	None
+options.abilities.bane_of_havoc.toggle	values.potions	Potions
 options.abilities.barkskin	name	Spell 22812
 options.abilities.barkskin.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 22812 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 22812 can be recommended in any type of fight.
 options.abilities.barkskin.boss	name	Boss Encounter Only
@@ -14198,6 +14231,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action	name	Action
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.Affliction (wowsims.com).lists.action	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -14258,12 +14292,14 @@ options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0011	|cF
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 6789 - |cFFFFD100|cffffd100(!action.shadow_bolt.known||(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)|r|r
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1316697
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1454
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 686
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454 - |cFFFFD100|cffffd100!action.shadow_bolt.known||mana.lo<action.shadow_bolt.cost|r|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	name	Action Name
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -14313,6 +14349,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
@@ -14473,6 +14510,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action	name	Action
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -14535,12 +14573,13 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0013	|cFFFF
 options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 348 - |cFFFFD100|cffffd100debuff.immolate.remains<=action.immolate.cast|r|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 686
-options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1454
+options.packs.affliction.SM Ruin (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1454 - |cFFFFD100|cffffd100!action.shadow_bolt.known||mana.lo<action.shadow_bolt.cost|r|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	name	Action Name
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -14590,6 +14629,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
@@ -14781,10 +14821,10 @@ options.packs.affliction.targets.dmgGroup.damageOnScreen	desc	If checked, the da
 options.packs.affliction.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.affliction.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.affliction.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.affliction.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.affliction.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.affliction.targets.nameplates	name	Count Nameplates Near You
 options.packs.affliction.targets.npGroup	name	Nameplate Detection
-options.packs.affliction.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.affliction.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.affliction.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.affliction.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.affliction.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -15057,10 +15097,10 @@ options.packs.arcane.targets.dmgGroup.damageOnScreen	desc	If checked, the damage
 options.packs.arcane.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.arcane.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.arcane.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.arcane.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.arcane.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.arcane.targets.nameplates	name	Count Nameplates Near You
 options.packs.arcane.targets.npGroup	name	Nameplate Detection
-options.packs.arcane.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.arcane.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.arcane.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.arcane.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.arcane.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -15443,10 +15483,10 @@ options.packs.arms.targets.dmgGroup.damageOnScreen	desc	If checked, the damage-b
 options.packs.arms.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.arms.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.arms.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.arms.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.arms.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.arms.targets.nameplates	name	Count Nameplates Near You
 options.packs.arms.targets.npGroup	name	Nameplate Detection
-options.packs.arms.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.arms.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.arms.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.arms.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.arms.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -15778,10 +15818,10 @@ options.packs.assassination.targets.dmgGroup.damageOnScreen	desc	If checked, the
 options.packs.assassination.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.assassination.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.assassination.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.assassination.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.assassination.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.assassination.targets.nameplates	name	Count Nameplates Near You
 options.packs.assassination.targets.npGroup	name	Nameplate Detection
-options.packs.assassination.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.assassination.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.assassination.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.assassination.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.assassination.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -16136,10 +16176,10 @@ options.packs.balance.targets.dmgGroup.damageOnScreen	desc	If checked, the damag
 options.packs.balance.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.balance.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.balance.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.balance.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.balance.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.balance.targets.nameplates	name	Count Nameplates Near You
 options.packs.balance.targets.npGroup	name	Nameplate Detection
-options.packs.balance.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.balance.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.balance.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.balance.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.balance.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -16459,10 +16499,10 @@ options.packs.beast_mastery.targets.dmgGroup.damageOnScreen	desc	If checked, the
 options.packs.beast_mastery.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.beast_mastery.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.beast_mastery.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.beast_mastery.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.beast_mastery.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.beast_mastery.targets.nameplates	name	Count Nameplates Near You
 options.packs.beast_mastery.targets.npGroup	name	Nameplate Detection
-options.packs.beast_mastery.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.beast_mastery.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.beast_mastery.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.beast_mastery.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.beast_mastery.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -16795,10 +16835,10 @@ options.packs.combat.targets.dmgGroup.damageOnScreen	desc	If checked, the damage
 options.packs.combat.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.combat.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.combat.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.combat.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.combat.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.combat.targets.nameplates	name	Count Nameplates Near You
 options.packs.combat.targets.npGroup	name	Nameplate Detection
-options.packs.combat.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.combat.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.combat.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.combat.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.combat.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -16825,6 +16865,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action	name	Action
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Demonology (wowsims.com).lists.action	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -16886,12 +16927,14 @@ options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0012	|cF
 options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
 options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<35&fight_remains>60)|r|r
 options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 5676
-options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 686
+options.packs.demonology.Demonology (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1454 - |cFFFFD100|cffffd100!action.shadow_bolt.known||mana.lo<action.shadow_bolt.cost|r|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	name	Action Name
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -16941,6 +16984,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.buff_name	name	Buff Name
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
@@ -17101,6 +17145,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action	name	Action
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -17163,12 +17208,13 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0013	|
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 686
-options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1454
+options.packs.demonology.Shadow Brand (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1454 - |cFFFFD100|cffffd100!action.shadow_bolt.known||mana.lo<action.shadow_bolt.cost|r|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	name	Action Name
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -17218,6 +17264,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	name	Buff Na
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
@@ -17419,10 +17466,10 @@ options.packs.demonology.targets.dmgGroup.damageOnScreen	desc	If checked, the da
 options.packs.demonology.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.demonology.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.demonology.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.demonology.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.demonology.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.demonology.targets.nameplates	name	Count Nameplates Near You
 options.packs.demonology.targets.npGroup	name	Nameplate Detection
-options.packs.demonology.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.demonology.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.demonology.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.demonology.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.demonology.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -17448,6 +17495,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action	name	Action
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.destruction.Destruction (wowsims.com).lists.action	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -17500,23 +17548,26 @@ options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0003	|
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_multi_target_curse_logic|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&toggle.movement&(active_enemies>=3&target.outside5)|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 603 - |cFFFFD100|cffffd100fight_remains>debuff.bane_of_doom.duration|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1293817 - |cFFFFD100|cffffd100((action.immolate.known&debuff.immolate.up)||!buff.shadow_and_flame_shadow.up)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 17877
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||((action.bane_of_doom.known&debuff.bane_of_doom.up)||(active_enemies>=3&target.within5)))|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 5676 - |cFFFFD100|cffffd100(!action.incinerate.known||(action.incinerate.cast+action.incinerate.travel_time)>fight_remains)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<35&fight_remains>60)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 348 - |cFFFFD100|cffffd100(!action.incinerate.known||debuff.immolate.remains<action.incinerate.cast)|r|r
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 412758
-options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 1454
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1225228 - |cFFFFD100|cffffd100(active_enemies>1&!(active_dot.bane_of_havoc>0))|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1293817 - |cFFFFD100|cffffd100((action.immolate.known&debuff.immolate.up)||!buff.shadow_and_flame_shadow.up)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 17877
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100((action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||((action.bane_of_doom.known&debuff.bane_of_doom.up)||(active_enemies>=3&target.within5)))|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1949 - |cFFFFD100|cffffd100active_enemies>=3&target.within5|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 5676 - |cFFFFD100|cffffd100(!action.incinerate.known||(action.incinerate.cast+action.incinerate.travel_time)>fight_remains)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 6789 - |cFFFFD100|cffffd100(!action.searing_pain.known||action.searing_pain.cast>fight_remains)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<35&fight_remains>60)|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 348 - |cFFFFD100|cffffd100(!action.incinerate.known||debuff.immolate.remains<action.incinerate.cast)&(action.incinerate.known||(action.shadow_bolt.known&debuff.immolate.remains<action.shadow_bolt.cast))|r|r
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 412758
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 686
+options.packs.destruction.Destruction (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 1454 - |cFFFFD100|cffffd100!action.shadow_bolt.known||mana.lo<action.shadow_bolt.cost|r|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	name	Action Name
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
@@ -17566,6 +17617,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.buff_name	name	Buff Na
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.amplify_curse	|T136000:0|t Spell 18288
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.bane_of_agony	|T136000:0|t Spell 980
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.bane_of_doom	|T136000:0|t Spell 603
+options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.bane_of_havoc	|T136000:0|t Spell 1225228
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.blood_pact	|T136000:0|t Spell 11767
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.burning_shadow	|T136000:0|t Spell 18789
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.corruption	|T136000:0|t Spell 172
@@ -17766,10 +17818,10 @@ options.packs.destruction.targets.dmgGroup.damageOnScreen	desc	If checked, the d
 options.packs.destruction.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.destruction.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.destruction.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.destruction.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.destruction.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.destruction.targets.nameplates	name	Count Nameplates Near You
 options.packs.destruction.targets.npGroup	name	Nameplate Detection
-options.packs.destruction.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.destruction.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.destruction.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.destruction.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.destruction.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -18051,10 +18103,10 @@ options.packs.discipline.targets.dmgGroup.damageOnScreen	desc	If checked, the da
 options.packs.discipline.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.discipline.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.discipline.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.discipline.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.discipline.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.discipline.targets.nameplates	name	Count Nameplates Near You
 options.packs.discipline.targets.npGroup	name	Nameplate Detection
-options.packs.discipline.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.discipline.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.discipline.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.discipline.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.discipline.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -18375,10 +18427,10 @@ options.packs.elemental.targets.dmgGroup.damageOnScreen	desc	If checked, the dam
 options.packs.elemental.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.elemental.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.elemental.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.elemental.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.elemental.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.elemental.targets.nameplates	name	Count Nameplates Near You
 options.packs.elemental.targets.npGroup	name	Nameplate Detection
-options.packs.elemental.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.elemental.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.elemental.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.elemental.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.elemental.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -18703,10 +18755,10 @@ options.packs.enhancement.targets.dmgGroup.damageOnScreen	desc	If checked, the d
 options.packs.enhancement.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.enhancement.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.enhancement.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.enhancement.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.enhancement.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.enhancement.targets.nameplates	name	Count Nameplates Near You
 options.packs.enhancement.targets.npGroup	name	Nameplate Detection
-options.packs.enhancement.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.enhancement.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.enhancement.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.enhancement.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.enhancement.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -19076,10 +19128,10 @@ options.packs.feral.targets.dmgGroup.damageOnScreen	desc	If checked, the damage-
 options.packs.feral.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.feral.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.feral.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.feral.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.feral.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.feral.targets.nameplates	name	Count Nameplates Near You
 options.packs.feral.targets.npGroup	name	Nameplate Detection
-options.packs.feral.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.feral.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.feral.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.feral.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.feral.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -19565,10 +19617,10 @@ options.packs.fire.targets.dmgGroup.damageOnScreen	desc	If checked, the damage-b
 options.packs.fire.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.fire.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.fire.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.fire.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.fire.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.fire.targets.nameplates	name	Count Nameplates Near You
 options.packs.fire.targets.npGroup	name	Nameplate Detection
-options.packs.fire.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.fire.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.fire.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.fire.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.fire.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -19947,10 +19999,10 @@ options.packs.fury.targets.dmgGroup.damageOnScreen	desc	If checked, the damage-b
 options.packs.fury.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.fury.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.fury.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.fury.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.fury.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.fury.targets.nameplates	name	Count Nameplates Near You
 options.packs.fury.targets.npGroup	name	Nameplate Detection
-options.packs.fury.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.fury.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.fury.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.fury.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.fury.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -20320,10 +20372,10 @@ options.packs.guardian.targets.dmgGroup.damageOnScreen	desc	If checked, the dama
 options.packs.guardian.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.guardian.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.guardian.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.guardian.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.guardian.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.guardian.targets.nameplates	name	Count Nameplates Near You
 options.packs.guardian.targets.npGroup	name	Nameplate Detection
-options.packs.guardian.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.guardian.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.guardian.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.guardian.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.guardian.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -20635,10 +20687,10 @@ options.packs.marksmanship.targets.dmgGroup.damageOnScreen	desc	If checked, the 
 options.packs.marksmanship.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.marksmanship.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.marksmanship.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.marksmanship.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.marksmanship.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.marksmanship.targets.nameplates	name	Count Nameplates Near You
 options.packs.marksmanship.targets.npGroup	name	Nameplate Detection
-options.packs.marksmanship.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.marksmanship.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.marksmanship.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.marksmanship.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.marksmanship.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -21126,10 +21178,10 @@ options.packs.protection.targets.dmgGroup.damageOnScreen	desc	If checked, the da
 options.packs.protection.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.protection.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.protection.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.protection.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.protection.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.protection.targets.nameplates	name	Count Nameplates Near You
 options.packs.protection.targets.npGroup	name	Nameplate Detection
-options.packs.protection.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.protection.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.protection.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.protection.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.protection.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -21452,10 +21504,10 @@ options.packs.retribution.targets.dmgGroup.damageOnScreen	desc	If checked, the d
 options.packs.retribution.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.retribution.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.retribution.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.retribution.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.retribution.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.retribution.targets.nameplates	name	Count Nameplates Near You
 options.packs.retribution.targets.npGroup	name	Nameplate Detection
-options.packs.retribution.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.retribution.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.retribution.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.retribution.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.retribution.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -21750,10 +21802,10 @@ options.packs.shadow.targets.dmgGroup.damageOnScreen	desc	If checked, the damage
 options.packs.shadow.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.shadow.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.shadow.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.shadow.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.shadow.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.shadow.targets.nameplates	name	Count Nameplates Near You
 options.packs.shadow.targets.npGroup	name	Nameplate Detection
-options.packs.shadow.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.shadow.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.shadow.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.shadow.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.shadow.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -22134,10 +22186,10 @@ options.packs.subtlety.targets.dmgGroup.damageOnScreen	desc	If checked, the dama
 options.packs.subtlety.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.subtlety.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.subtlety.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.subtlety.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.subtlety.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.subtlety.targets.nameplates	name	Count Nameplates Near You
 options.packs.subtlety.targets.npGroup	name	Nameplate Detection
-options.packs.subtlety.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.subtlety.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.subtlety.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.subtlety.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.subtlety.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
@@ -22452,10 +22504,10 @@ options.packs.survival.targets.dmgGroup.damageOnScreen	desc	If checked, the dama
 options.packs.survival.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
 options.packs.survival.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
 options.packs.survival.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
-options.packs.survival.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-redx Discouraged for ranged specializations.
+options.packs.survival.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
 options.packs.survival.targets.nameplates	name	Count Nameplates Near You
 options.packs.survival.targets.npGroup	name	Nameplate Detection
-options.packs.survival.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.survival.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.survival.targets.npGroup.nameplateRange	name	Enemy Range Radius
 options.packs.survival.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
 options.packs.survival.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.

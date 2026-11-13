@@ -175,6 +175,67 @@ describe("the wowsims APL translator", function()
         end, "extra: no big_hit line in actions")
     end)
 
+    it("puts a recipe extra line marked `last` before the last line of its anchor action", function()
+        local text = apl.translate(
+            { priorityList = { cast(100), cast(200), cast(100) } },
+            ctx({ extra = { { before = "strike", last = true, line = "dot" } } })
+        )
+        assert.are.equal(
+            table.concat({ "actions=strike", "actions+=/big_hit", "actions+=/dot", "actions+=/strike" }, "\n"),
+            text
+        )
+    end)
+
+    it("guards a cast entry keyed `<list> #<n>` on that entry's line only, after its own condition", function()
+        local text = apl.translate(
+            { priorityList = { cast(100), cast(200), cast(100, E) } },
+            ctx({
+                executePhase = "execute_phase",
+                guard = {
+                    ["default #1"] = { expect = "strike", cond = "buff.fury.up" },
+                    ["default #3"] = { expect = "strike", cond = "time>1" },
+                },
+            })
+        )
+        assert.are.equal(
+            table.concat({
+                "actions=strike,if=buff.fury.up",
+                "actions+=/big_hit",
+                "actions+=/strike,if=execute_phase&time>1",
+            }, "\n"),
+            text
+        )
+    end)
+
+    -- A positional key names an entry by its place: a re-pin that shifts the list must raise, not guard another line.
+    it("raises at build when a positional guard's entry is not the action it expects, or names none", function()
+        local hidden = { hide = true, action = { castSpell = { spellId = { spellId = 200 } } } }
+        local function build(guard, list)
+            return apl.translate(
+                { priorityList = list or { cast(100), cast(200), cast(100) } },
+                ctx({ pack = "Test (wowsims.com)", guard = guard })
+            )
+        end
+        assert.has_error(function()
+            build({ ["default #2"] = { expect = "strike", cond = "time>1" } })
+        end, "guard: Test (wowsims.com) default #2 is big_hit, not strike")
+        assert.has_error(function()
+            build({ ["default #2"] = "time>1" })
+        end, 'guard: Test (wowsims.com) default #2 names no expected action (expect = "big_hit")')
+        assert.has_error(function() -- an omitted entry is checked too
+            build({ ["default #2"] = { expect = "strike", cond = "time>1" } }, { cast(100), hidden })
+        end, "guard: Test (wowsims.com) default #2 is big_hit, not strike")
+        assert.has_no_error(function()
+            build({ ["default #2"] = { expect = "big_hit", cond = "time>1" } }, { cast(100), hidden })
+        end)
+        assert.has_error(function() -- review M2: a group no line calls is never translated, so never checked
+            apl.translate(
+                { priorityList = { cast(100) }, groups = { { name = "Unused", actions = { cast(100) } } } },
+                ctx({ pack = "Test (wowsims.com)", guard = { ["unused #1"] = { expect = "strike", cond = "time>1" } } })
+            )
+        end, "guard: Test (wowsims.com) unused #1: its list is never translated")
+    end)
+
     it("actionGroupUsed of a group with actions is wowsims's constant: a shown reference to it exists", function()
         local function used(name)
             return { actionGroupUsed = { name = name } }
@@ -750,7 +811,7 @@ describe("the wowsims APL translator", function()
         )
     end)
 
-    it("omits a cast aimed at another target (castSpell target index 1), never on the current one", function()
+    it("casts on another target (castSpell target index 1) as other_target=1, never on the current one", function()
         local function at(target)
             return { action = { castSpell = { spellId = { spellId = 100 }, target = target } } }
         end
@@ -761,9 +822,10 @@ describe("the wowsims APL translator", function()
                 { action = { changeTarget = { newTarget = { type = "NextTarget" } } } }, -- never a current-target line
             },
         }, ctx())
-        assert.are.equal("actions=strike,focus=1", text) -- ctx()'s recipe gives strike focus tier 1
+        -- ctx()'s recipe gives strike focus tier 1; rule 21 (option D): wowsims's second target is any other one
+        assert.are.equal("actions=strike,other_target=1,focus=1\nactions+=/strike,focus=1", text)
         assert.are.same(
-            { "default #1: castSpell on another target (Target index 1)", "default #3: changeTarget" },
+            { "default #3: changeTarget NextTarget: no on-all-targets read of a cast before it in this list" },
             omitted
         )
     end)
@@ -1270,14 +1332,15 @@ describe("the wowsims APL translator", function()
         }, ctx({}))
         assert.are.equal(
             table.concat({
-                "actions=dot,if=debuff.dot.remains<=0",
-                "actions+=/dot,if=(rage.lo>10&debuff.dot.remains<=2)",
-                "actions+=/dot,if=debuff.dot.remains<=0",
+                "actions=dot,cycle_targets=1,max_cycle_targets=3,if=debuff.dot.remains<=0",
+                "actions+=/dot,cycle_targets=1,max_cycle_targets=3,if=(rage.lo>10&debuff.dot.remains<=2)",
+                "actions+=/dot,cycle_targets=1,max_cycle_targets=3,if=debuff.dot.remains<=0",
             }, "\n"),
             text
         )
         assert.are.same({ "default #4: spell 999" }, omitted)
-        local dev = "multidot keeps the DoT on up to 3 targets in wowsims; this line is for the current target only."
+        local dev = "multidot keeps the DoT on the first 3 targets in wowsims; here on up to 3, the current one first,"
+            .. " with Recommend Target Swaps on."
         assert.are.same({
             "# Deviation: default #1: " .. dev,
             "# Deviation: default #2: " .. dev,
@@ -1941,37 +2004,39 @@ describe("the wowsims APL translator's re-pin reads", function()
 
     -- CN4: the APL values upstream added after the pin (apl.proto 13813515ea, 39b31a66ee, baf3cc4c10; read at
     -- upstream/master 4b0030a44b, sim/core apl_values_targets.go, apl_values_aura.go, apl_values_dot.go)
-    it("reads the on-any/all-target auras and DoTs on the current target, each with its deviation", function()
-        local aura = function(k, id)
-            return { [k] = { auraId = { spellId = id }, includeReactionTime = true } }
+    it(
+        "reads the on-all/any-target reads on the current target with a deviation, auraIsActiveOnAnyTarget as active_dot",
+        function()
+            local aura = function(k, id)
+                return { [k] = { auraId = { spellId = id }, includeReactionTime = true } }
+            end
+            local text, omitted, _, header = apl.translate({
+                priorityList = {
+                    cast(100, aura("auraIsActiveOnAllTargets", 400)),
+                    cast(100, aura("auraIsActiveOnAnyTarget", 400)),
+                    cast(100, NOT(spell("dotIsActiveOnAnyTarget", 400))),
+                    cast(100, aura("auraIsActiveOnAnyTarget", 999)), -- unresolved: wowsims's nil, dropped
+                },
+            }, ctx({}))
+            assert.are.equal(
+                table.concat({
+                    "actions=strike,if=(!action.dot.known|debuff.dot.up)",
+                    "actions+=/strike,if=(!action.dot.known|active_dot.dot>0)", -- option D: the belief's count
+                    "actions+=/strike,if=(!action.dot.known|!debuff.dot.up)",
+                    "actions+=/strike",
+                }, "\n"),
+                text
+            )
+            assert.are.same({ "default #4: dropped the unresolved aura 999 (its branch only)" }, omitted)
+            local all, any =
+                'an "on all targets" read is the current target\'s only.',
+                'an "on any target" read is the current target\'s only.'
+            assert.are.same({
+                "# Deviation: default #1: " .. all,
+                "# Deviation: default #3: " .. any,
+            }, header)
         end
-        local text, omitted, _, header = apl.translate({
-            priorityList = {
-                cast(100, aura("auraIsActiveOnAllTargets", 400)),
-                cast(100, aura("auraIsActiveOnAnyTarget", 400)),
-                cast(100, NOT(spell("dotIsActiveOnAnyTarget", 400))),
-                cast(100, aura("auraIsActiveOnAnyTarget", 999)), -- unresolved: wowsims's nil, dropped
-            },
-        }, ctx({}))
-        assert.are.equal(
-            table.concat({
-                "actions=strike,if=(!action.dot.known|debuff.dot.up)",
-                "actions+=/strike,if=(!action.dot.known|debuff.dot.up)",
-                "actions+=/strike,if=(!action.dot.known|!debuff.dot.up)",
-                "actions+=/strike",
-            }, "\n"),
-            text
-        )
-        assert.are.same({ "default #4: dropped the unresolved aura 999 (its branch only)" }, omitted)
-        local all, any =
-            'an "on all targets" read is the current target\'s only.',
-            'an "on any target" read is the current target\'s only.'
-        assert.are.same({
-            "# Deviation: default #1: " .. all,
-            "# Deviation: default #2: " .. any,
-            "# Deviation: default #3: " .. any,
-        }, header)
-    end)
+    )
 
     it("reads the current target as active now and its death at the fight's end; other units unsupported", function()
         local other = { type = "Target", index = 1 }
@@ -2012,11 +2077,11 @@ describe("the wowsims APL translator's re-pin reads", function()
         local text, omitted, _, header = apl.translate({
             priorityList = { { action = { strictMultidot = m } } },
         }, ctx({}))
-        assert.are.equal("actions=dot,if=debuff.dot.remains<=1", text)
+        assert.are.equal("actions=dot,cycle_targets=1,max_cycle_targets=2,if=debuff.dot.remains<=1", text)
         assert.are.same({}, omitted)
         assert.are.same({
-            "# Deviation: default #1: multidot keeps the DoT on up to 2 targets in wowsims;"
-                .. " this line is for the current target only.",
+            "# Deviation: default #1: multidot keeps the DoT on the first 2 targets in wowsims; here on up to 2,"
+                .. " the current one first, with Recommend Target Swaps on.",
         }, header)
     end)
 end)
@@ -2910,6 +2975,7 @@ describe("the wowsims APL translator on the Warlocks' assigned-curse check", fun
         local r = dofile("tools/wowsims/specs/warlock_demonology.lua")
         local set = require("Forever.helpers.engine").abilitySet(r.class)
         local player = { warlock = { options = { classOptions = {} } } } -- the zero value, Elements
+        r.extra, r.guard = nil, nil -- the filler lines anchor on the shipped list's last Life Tap, not in this one
         r.select.castWarlockAssignedCurse.is = nil -- the shipped recipes name it now (CN3, the 0.7 re-pin): drop it for the "before"
         local before, omitted = apl.translate(rotation, apl.context(set, r, nil, player))
         assert.are.equal("", before)
@@ -3177,5 +3243,158 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
             "actions.precombat=big_hit\nactions.precombat+=/bolt\nactions.precombat+=/strike",
             (apl.translate(rot, ctx({})))
         )
+    end)
+end)
+
+-- Option D (owner 2026-11-11): wowsims's target logic on Recommend Target Swaps. Rule 20: a NextTarget changeTarget
+-- on "X up here and not on every target" after a cast of X is that cast's cycle_targets=1; rule 17 (maxDots > 1):
+-- cycle_targets with max_cycle_targets; rule 21: a cast on another target (Target index > 0) is other_target=1; CN4's
+-- auraIsActiveOnAnyTarget is the belief's count, active_dot.
+describe("the wowsims APL translator's target swaps (option D)", function()
+    local up = { dotIsActive = { spellId = { spellId = 400 } } }
+    local all = { dotIsActiveOnAllTargets = { spellId = { spellId = 400 } } }
+    local many = cmp("OpGt", { numberTargets = {} }, const("1"))
+    local function swap(cond, kind)
+        return { action = { changeTarget = { newTarget = { type = kind or "NextTarget" } }, condition = cond } }
+    end
+    local CYCLE = "# Cycle: default #2 changeTarget -> #1 dot: cycle_targets=1 (shown with Recommend Target Swaps on)"
+
+    it("rule 20: absorbs the swap after a cast of the DoT into that cast's cycle_targets=1", function()
+        local text, omitted, _, header = apl.translate({
+            priorityList = { cast(400, NOT(up)), swap(AND(up, NOT(all), many)), cast(100) },
+        }, ctx({}))
+        assert.are.equal("actions=dot,cycle_targets=1,if=!debuff.dot.up\nactions+=/strike", text)
+        assert.are.same({}, omitted)
+        assert.are.same({ CYCLE }, header)
+    end)
+
+    it("rule 20: absorbs a select's swap (active, activeAll) into every candidate line", function()
+        local r = {
+            select = {
+                castAssigned = {
+                    setting = "pick",
+                    option = "pickOption",
+                    zero = "Elements",
+                    candidates = { Elements = "dot", Weakness = "strike", NoCurse = false },
+                    active = "assignedIsActive",
+                    activeAll = "assignedIsActiveOnAllTargets",
+                    is = "isAssigned",
+                },
+            },
+        }
+        local text, omitted, _, header = apl.translate({
+            priorityList = {
+                { action = { castAssigned = {} } },
+                swap(AND({ assignedIsActive = {} }, NOT({ assignedIsActiveOnAllTargets = {} }), many)),
+            },
+        }, ctx(r, { warlock = { options = { classOptions = {} } } }))
+        assert.are.equal(
+            "actions=dot,cycle_targets=1,if=settings.pick='elements'\n"
+                .. "actions+=/strike,cycle_targets=1,if=settings.pick='weakness'",
+            text
+        )
+        assert.are.same({}, omitted)
+        assert.are.same(
+            "# Cycle: default #2 changeTarget -> #1 dot, strike: cycle_targets=1 (shown with Recommend Target Swaps on)",
+            header[2]
+        )
+    end)
+
+    it("rule 20: names the swap's other terms in one deviation line", function()
+        local fury = { auraIsActive = { auraId = { spellId = 900 } } }
+        local long = cmp("OpGt", { remainingTime = {} }, { dotBaseDuration = { spellId = { spellId = 400 } } })
+        local _, omitted, _, header = apl.translate({
+            priorityList = { cast(400, NOT(up)), swap(AND(up, NOT(all), OR(fury, NOT(many)), long)) },
+        }, ctx({}))
+        assert.are.same({}, omitted)
+        assert.are.same({
+            CYCLE,
+            "# Deviation: default #2: the swap's other terms (auraIsActive, dotBaseDuration, numberTargets,"
+                .. " remainingTime) are not carried; the list's order gives them",
+        }, header)
+    end)
+
+    it("rule 20: omits a swap it cannot absorb, saying why", function()
+        local other = { dotIsActive = { spellId = { spellId = 999 } } }
+        local text, omitted = apl.translate({
+            priorityList = {
+                swap(AND(up, NOT(all))), -- no earlier cast of the DoT
+                cast(400, NOT(up)),
+                swap(AND(OR(up, other), NOT({ warlockBaneIsActiveOnAllTargets = {} }))), -- no on-all read of a cast
+                swap(AND(other, NOT(all))), -- the on-all read's DoT is not the one read up here
+                swap(nil, "Target"), -- back to the main target
+            },
+        }, ctx({}))
+        assert.are.equal("actions=dot,if=!debuff.dot.up", text)
+        local next = "changeTarget NextTarget: no on-all-targets read of a cast before it in this list"
+        assert.are.same({
+            "default #1: " .. next,
+            "default #3: " .. next,
+            "default #4: " .. next,
+            "default #5: changeTarget Target: no main target in Hekili",
+        }, omitted)
+    end)
+
+    it("rule 17: multidot on more than one target is cycle_targets with max_cycle_targets", function()
+        local function multidot(dots)
+            return { action = { multidot = { spellId = { spellId = 400 }, maxDots = dots, maxOverlap = const("0ms") } } }
+        end
+        local text, _, _, header = apl.translate({ priorityList = { multidot(3), multidot(1) } }, ctx({}))
+        assert.are.equal(
+            "actions=dot,cycle_targets=1,max_cycle_targets=3,if=debuff.dot.remains<=0\n"
+                .. "actions+=/dot,if=debuff.dot.remains<=0",
+            text
+        )
+        assert.are.same({
+            "# Deviation: default #1: multidot keeps the DoT on the first 3 targets in wowsims; here on up to 3,"
+                .. " the current one first, with Recommend Target Swaps on.",
+            "# Deviation: default #2: multidot keeps the DoT on up to 1 targets in wowsims;"
+                .. " this line is for the current target only.",
+        }, header)
+    end)
+
+    it("keeps a sequence member's swap modifier on that member only (review M2)", function()
+        local text = apl.translate({
+            priorityList = {
+                {
+                    action = {
+                        strictSequence = {
+                            actions = {
+                                {
+                                    castSpell = { spellId = { spellId = 100 }, target = { index = 1, type = "Target" } },
+                                },
+                                { castSpell = { spellId = { spellId = 400 } } },
+                            },
+                        },
+                    },
+                },
+            },
+        }, ctx({}))
+        local first, second = text:match("^actions=([^\n]*)\nactions%+=/([^\n]*)$")
+        assert.is_truthy(first and first:find("^strike,other_target=1"), text)
+        assert.is_truthy(second and second:find("^dot"), text)
+        assert.is_falsy(second:find("other_target"), text)
+    end)
+
+    it("absorbs no swap into a hidden cast (review M2)", function()
+        local hidden = cast(400, NOT(up))
+        hidden.hide = true
+        local text, omitted, _, header = apl.translate({
+            priorityList = { hidden, swap(AND(up, NOT(all), many)) },
+        }, ctx({}))
+        assert.are.equal("", text)
+        assert.are.same({
+            "default #1: hidden",
+            "default #2: changeTarget NextTarget: no on-all-targets read of a cast before it in this list",
+        }, omitted)
+        assert.are.same({}, header)
+    end)
+
+    it("CN4: auraIsActiveOnAnyTarget is the belief's count of enemies carrying it, with no deviation", function()
+        local any = { auraIsActiveOnAnyTarget = { auraId = { spellId = 400 } } }
+        local text, omitted, _, header = apl.translate({ priorityList = { cast(400, NOT(any)) } }, ctx({}))
+        assert.are.equal("actions=dot,if=!(active_dot.dot>0)", text)
+        assert.are.same({}, omitted)
+        assert.are.same({}, header)
     end)
 end)
