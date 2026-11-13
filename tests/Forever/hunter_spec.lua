@@ -1005,3 +1005,26 @@ describe("Immune checks", function()
         assert.are.equal(3, seen)
     end)
 end)
+
+describe("Stationary cast checks", function()
+    local function profile()
+        local f = assert(io.open("src/Hekili_Hunter/APLs/Beast Mastery (wowsims.com).simc"))
+        local text = f:read("*a")
+        f:close()
+        return text
+    end
+
+    it("does not recommend Aimed Shot or Volley while moving", function()
+        local text = profile()
+        for _, action in ipairs({ "aimed_shot", "volley" }) do
+            local seen = 0
+            for line in text:gmatch("[^\n]+") do
+                if line:find(action, 1, true) and not line:match("^#") then
+                    seen = seen + 1
+                    assert.is_truthy(line:find("!moving", 1, true), line)
+                end
+            end
+            assert.are.equal(1, seen, action)
+        end
+    end)
+end)
