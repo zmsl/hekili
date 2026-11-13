@@ -585,6 +585,15 @@ L["When checked, this entry will require that the player have enough energy to t
 L["Caption"] = true
 L["Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display."] = true
 L["Caption text should be 20 characters or less."] = true
+L["Label"] = true
+L["Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note."] = true
+L["Label Condition"] = true
+L["If entered, the Label shows only while this is true."] = true
+L["Icon"] = true
+L["A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked."] = true
+L["Not a texture file; this line's icon is not overridden."] = true
+L["Icon Condition"] = true
+L["If entered, the Icon shows only while this is true."] = true
 L["This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended."] = true
 L["Variable Name"] = true
 L["Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore."] = true

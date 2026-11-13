@@ -4534,7 +4534,23 @@ found = true end
         use_while_casting = true
     }
 
-    local function GetListEntry( pack )
+    -- the file ID an icon= value names (a bare number as given, a path resolved), nil if the client has none
+    local function iconFileID( v )
+        local id = tonumber( v ) or ns.Facade.GetFileIDFromPath( tostring( v ) )
+        if ns.Facade.issecretvalue( id ) then return nil end
+        return id
+    end
+
+    local GetListEntry
+
+    -- the label and icon fields sit with the caption, hidden where it is (a pseudo-ability has no icon to mark)
+    local function hideNoAbility( pack )
+        local e = GetListEntry( pack )
+        local ability = e.action and Registry.Abilities()[ e.action ]
+        return not ability or ( ability.id < 0 and ability.id > -10 )
+    end
+
+    function GetListEntry( pack )
         local entry = rawget( Hekili.DB.profile.packs, pack )
 
         if rawget( entry.lists, packControl.listName ) == nil then
@@ -6036,6 +6052,70 @@ packControl.actionID = format( "%04d", id ) end
 
                                         return not ability or ( ability.id < 0 and ability.id > -10 )
                                     end,
+                                },
+
+                                label = {
+                                    type = "input",
+                                    name = L["Label"],
+                                    desc = L["Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note."],
+                                    order = 3.203,
+                                    width = 1.5,
+                                    hidden = function() return hideNoAbility( pack ) end,
+                                },
+
+                                label_if = {
+                                    type = "input",
+                                    name = L["Label Condition"],
+                                    desc = L["If entered, the Label shows only while this is true."],
+                                    order = 3.2031,
+                                    width = "full",
+                                    multiline = 2,
+                                    dialogControl = "HekiliCustomEditor",
+                                    arg = function( info )
+                                        return Hekili.Engine.Evaluate( pack, packControl.listName, tonumber( packControl.actionID ), "label_if", {} )
+                                    end,
+                                    hidden = function() return hideNoAbility( pack ) end,
+                                },
+
+                                icon = {
+                                    type = "input",
+                                    name = L["Icon"],
+                                    desc = L["A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked."],
+                                    order = 3.2032,
+                                    width = 1.5,
+                                    hidden = function() return hideNoAbility( pack ) end,
+                                },
+
+                                iconPreview = {
+                                    type = "description",
+                                    name = function()
+                                        local v = GetListEntry( pack ).icon
+                                        if v and not iconFileID( v ) then return L["Not a texture file; this line's icon is not overridden."] end
+                                        return ""
+                                    end,
+                                    image = function()
+                                        local v = GetListEntry( pack ).icon
+                                        return v and iconFileID( v ) or nil
+                                    end,
+                                    imageWidth = 24,
+                                    imageHeight = 24,
+                                    order = 3.2033,
+                                    width = 1.5,
+                                    hidden = function() return hideNoAbility( pack ) or not GetListEntry( pack ).icon end,
+                                },
+
+                                icon_if = {
+                                    type = "input",
+                                    name = L["Icon Condition"],
+                                    desc = L["If entered, the Icon shows only while this is true."],
+                                    order = 3.2034,
+                                    width = "full",
+                                    multiline = 2,
+                                    dialogControl = "HekiliCustomEditor",
+                                    arg = function( info )
+                                        return Hekili.Engine.Evaluate( pack, packControl.listName, tonumber( packControl.actionID ), "icon_if", {} )
+                                    end,
+                                    hidden = function() return hideNoAbility( pack ) end,
                                 },
 
                                 description = {
