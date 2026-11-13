@@ -14,7 +14,9 @@
 -- log) are omitted (the pack's 14 `# Omitted:` lines); wowsims casts and logs Holy Shock as rank 3's damage row 25902
 -- (the DB2's 20930 is a dummy the server turns into 25902 or the heal 25903), so the map names 25902 and the replay
 -- renames it to the kit's 20930 (wowsims_paladin_spec.lua's `alias`, tests/Game/harness/replay.lua).
--- Loops (20 fights, seeds 1-20 / 21-40 / 41-60): agreement .998 / .999 / .997, flicker 0 x3, heldReady 65 / 70 / 94.
+-- Loops (20 fights, seeds 1-20 / 21-40 / 41-60; the harness's seeded regen phase, 2026-11-13): agreement .994 / .994 /
+-- .999, flicker 0.06 / 0 / 0 (oracle 0 x3), heldReady 53 / 80 / 67 (first measurement: .998 / .999 / .997, 0 x3, 65 /
+-- 70 / 94).
 return {
     class = "PALADIN",
     pack = "Holy Shock (wowsims.com)",

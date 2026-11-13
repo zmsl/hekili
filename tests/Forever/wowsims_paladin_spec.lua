@@ -47,8 +47,11 @@ end
 
 -- Holy Shock (wowsims.com)'s floors (new pack, 2026-11-12, R6 first measurement): replay decisions on-GCD 0.97 (0.977,
 -- 43 of 44: seal_of_righteousness -> consecration once, the recipe's header), its ON flicker ceiling 0.7 (0.67/min
--- measured, 2 flips), the live limits per level: L40 4.8 and L60 4.8 under the 6 s bar; L10 8.4 (cause not yet
--- traced; expected Retribution L10's shape: Holy Strike and Judgement cooling, Seal of Righteousness up)
+-- measured, 2 flips), the live limits per level: L40 4.8 and L60 4.8 under the 6 s bar; L10 8.4, traced 2026-11-13:
+-- Retribution L10's shape, nothing useful to cast (t 5.0-13.2): Holy Strike cooling (10 s, no Shieldsworn yet; 8.4 s
+-- left at 5.0), Seal of Righteousness and Retribution Aura up, Judgement (off the GCD) cooling, Exorcism (level 20),
+-- Consecration and Holy Shock (talents) not reachable at 10. Re-measured after the seeded regen phase (forever
+-- c740f3242): replay 0.977, flicker 0.67, live 8.4 / 4.8 / 4.8, the same; only the timing fixture's cost rows moved
 local HS_FLOOR, HS_FLICKER, HS_LIVE_LIMIT = 0.97, 0.7, { [10] = 8.4, [40] = 6, [60] = 6 }
 
 -- wowsims's Paladin knows the 879 ranks of Exorcism only (Undead or Demon targets; its target is Mechanical).

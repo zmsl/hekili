@@ -925,6 +925,39 @@ options.abilities.blade_flurry.toggle	values.interrupts	Interrupts
 options.abilities.blade_flurry.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.blade_flurry.toggle	values.none	None
 options.abilities.blade_flurry.toggle	values.potions	Potions
+options.abilities.blizzard	name	Spell 10
+options.abilities.blizzard.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 10 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 10 can be recommended in any type of fight.
+options.abilities.blizzard.boss	name	Boss Encounter Only
+options.abilities.blizzard.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 10 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.blizzard.clash	name	Clash
+options.abilities.blizzard.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 10.
+options.abilities.blizzard.disabled	name	Disable |T136000:0|t Spell 10
+options.abilities.blizzard.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.blizzard.dotCap	name	Maximum Applications
+options.abilities.blizzard.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.blizzard.hasIcon	name	Icon Replacement
+options.abilities.blizzard.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.blizzard.keybind	name	Override Keybind Text
+options.abilities.blizzard.lineBreak1	name	\032
+options.abilities.blizzard.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.blizzard.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.blizzard.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.blizzard.noIcon	name	Icon Replacement
+options.abilities.blizzard.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 10 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.blizzard.targetMax	name	Maximum Targets
+options.abilities.blizzard.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 10 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.blizzard.targetMin	name	Minimum Targets
+options.abilities.blizzard.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.blizzard.toggle	name	Require Toggle
+options.abilities.blizzard.toggle	values.cooldowns	Cooldowns
+options.abilities.blizzard.toggle	values.custom1	Custom 1
+options.abilities.blizzard.toggle	values.custom2	Custom 2
+options.abilities.blizzard.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.blizzard.toggle	values.defensives	Defensives
+options.abilities.blizzard.toggle	values.interrupts	Interrupts
+options.abilities.blizzard.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.blizzard.toggle	values.none	None
+options.abilities.blizzard.toggle	values.potions	Potions
 options.abilities.bloodrage	name	Spell 2687
 options.abilities.bloodrage.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 2687 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 2687 can be recommended in any type of fight.
 options.abilities.bloodrage.boss	name	Boss Encounter Only
@@ -1255,6 +1288,39 @@ options.abilities.cold_blood.toggle	values.interrupts	Interrupts
 options.abilities.cold_blood.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.cold_blood.toggle	values.none	None
 options.abilities.cold_blood.toggle	values.potions	Potions
+options.abilities.cold_snap	name	Spell 12472
+options.abilities.cold_snap.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 12472 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 12472 can be recommended in any type of fight.
+options.abilities.cold_snap.boss	name	Boss Encounter Only
+options.abilities.cold_snap.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 12472 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.cold_snap.clash	name	Clash
+options.abilities.cold_snap.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 12472.
+options.abilities.cold_snap.disabled	name	Disable |T136000:0|t Spell 12472
+options.abilities.cold_snap.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.cold_snap.dotCap	name	Maximum Applications
+options.abilities.cold_snap.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.cold_snap.hasIcon	name	Icon Replacement
+options.abilities.cold_snap.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.cold_snap.keybind	name	Override Keybind Text
+options.abilities.cold_snap.lineBreak1	name	\032
+options.abilities.cold_snap.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.cold_snap.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.cold_snap.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.cold_snap.noIcon	name	Icon Replacement
+options.abilities.cold_snap.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 12472 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.cold_snap.targetMax	name	Maximum Targets
+options.abilities.cold_snap.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 12472 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.cold_snap.targetMin	name	Minimum Targets
+options.abilities.cold_snap.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.cold_snap.toggle	name	Require Toggle
+options.abilities.cold_snap.toggle	values.cooldowns	Cooldowns
+options.abilities.cold_snap.toggle	values.custom1	Custom 1
+options.abilities.cold_snap.toggle	values.custom2	Custom 2
+options.abilities.cold_snap.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.cold_snap.toggle	values.defensives	Defensives
+options.abilities.cold_snap.toggle	values.interrupts	Interrupts
+options.abilities.cold_snap.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.cold_snap.toggle	values.none	None
+options.abilities.cold_snap.toggle	values.potions	Potions
 options.abilities.combustion	name	Spell 11129
 options.abilities.combustion.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 11129 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 11129 can be recommended in any type of fight.
 options.abilities.combustion.boss	name	Boss Encounter Only
@@ -1321,6 +1387,39 @@ options.abilities.concussion_blow.toggle	values.interrupts	Interrupts
 options.abilities.concussion_blow.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.concussion_blow.toggle	values.none	None
 options.abilities.concussion_blow.toggle	values.potions	Potions
+options.abilities.cone_of_cold	name	Spell 120
+options.abilities.cone_of_cold.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 120 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 120 can be recommended in any type of fight.
+options.abilities.cone_of_cold.boss	name	Boss Encounter Only
+options.abilities.cone_of_cold.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 120 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.cone_of_cold.clash	name	Clash
+options.abilities.cone_of_cold.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 120.
+options.abilities.cone_of_cold.disabled	name	Disable |T136000:0|t Spell 120
+options.abilities.cone_of_cold.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.cone_of_cold.dotCap	name	Maximum Applications
+options.abilities.cone_of_cold.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.cone_of_cold.hasIcon	name	Icon Replacement
+options.abilities.cone_of_cold.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.cone_of_cold.keybind	name	Override Keybind Text
+options.abilities.cone_of_cold.lineBreak1	name	\032
+options.abilities.cone_of_cold.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.cone_of_cold.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.cone_of_cold.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.cone_of_cold.noIcon	name	Icon Replacement
+options.abilities.cone_of_cold.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 120 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.cone_of_cold.targetMax	name	Maximum Targets
+options.abilities.cone_of_cold.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 120 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.cone_of_cold.targetMin	name	Minimum Targets
+options.abilities.cone_of_cold.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.cone_of_cold.toggle	name	Require Toggle
+options.abilities.cone_of_cold.toggle	values.cooldowns	Cooldowns
+options.abilities.cone_of_cold.toggle	values.custom1	Custom 1
+options.abilities.cone_of_cold.toggle	values.custom2	Custom 2
+options.abilities.cone_of_cold.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.cone_of_cold.toggle	values.defensives	Defensives
+options.abilities.cone_of_cold.toggle	values.interrupts	Interrupts
+options.abilities.cone_of_cold.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.cone_of_cold.toggle	values.none	None
+options.abilities.cone_of_cold.toggle	values.potions	Potions
 options.abilities.conflagrate	name	Spell 1293817
 options.abilities.conflagrate.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1293817 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1293817 can be recommended in any type of fight.
 options.abilities.conflagrate.boss	name	Boss Encounter Only
@@ -2773,6 +2872,39 @@ options.abilities.frenzied_regeneration.toggle	values.interrupts	Interrupts
 options.abilities.frenzied_regeneration.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.frenzied_regeneration.toggle	values.none	None
 options.abilities.frenzied_regeneration.toggle	values.potions	Potions
+options.abilities.frost_nova	name	Spell 122
+options.abilities.frost_nova.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 122 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 122 can be recommended in any type of fight.
+options.abilities.frost_nova.boss	name	Boss Encounter Only
+options.abilities.frost_nova.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 122 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.frost_nova.clash	name	Clash
+options.abilities.frost_nova.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 122.
+options.abilities.frost_nova.disabled	name	Disable |T136000:0|t Spell 122
+options.abilities.frost_nova.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.frost_nova.dotCap	name	Maximum Applications
+options.abilities.frost_nova.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.frost_nova.hasIcon	name	Icon Replacement
+options.abilities.frost_nova.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.frost_nova.keybind	name	Override Keybind Text
+options.abilities.frost_nova.lineBreak1	name	\032
+options.abilities.frost_nova.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.frost_nova.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.frost_nova.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.frost_nova.noIcon	name	Icon Replacement
+options.abilities.frost_nova.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 122 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.frost_nova.targetMax	name	Maximum Targets
+options.abilities.frost_nova.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 122 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.frost_nova.targetMin	name	Minimum Targets
+options.abilities.frost_nova.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.frost_nova.toggle	name	Require Toggle
+options.abilities.frost_nova.toggle	values.cooldowns	Cooldowns
+options.abilities.frost_nova.toggle	values.custom1	Custom 1
+options.abilities.frost_nova.toggle	values.custom2	Custom 2
+options.abilities.frost_nova.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.frost_nova.toggle	values.defensives	Defensives
+options.abilities.frost_nova.toggle	values.interrupts	Interrupts
+options.abilities.frost_nova.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.frost_nova.toggle	values.none	None
+options.abilities.frost_nova.toggle	values.potions	Potions
 options.abilities.frost_resistance_totem	name	Spell 8181
 options.abilities.frost_resistance_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8181 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8181 can be recommended in any type of fight.
 options.abilities.frost_resistance_totem.boss	name	Boss Encounter Only
@@ -3565,6 +3697,105 @@ options.abilities.hurricane.toggle	values.interrupts	Interrupts
 options.abilities.hurricane.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.hurricane.toggle	values.none	None
 options.abilities.hurricane.toggle	values.potions	Potions
+options.abilities.ice_barrier	name	Spell 11426
+options.abilities.ice_barrier.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 11426 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 11426 can be recommended in any type of fight.
+options.abilities.ice_barrier.boss	name	Boss Encounter Only
+options.abilities.ice_barrier.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 11426 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.ice_barrier.clash	name	Clash
+options.abilities.ice_barrier.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 11426.
+options.abilities.ice_barrier.disabled	name	Disable |T136000:0|t Spell 11426
+options.abilities.ice_barrier.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.ice_barrier.dotCap	name	Maximum Applications
+options.abilities.ice_barrier.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.ice_barrier.hasIcon	name	Icon Replacement
+options.abilities.ice_barrier.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.ice_barrier.keybind	name	Override Keybind Text
+options.abilities.ice_barrier.lineBreak1	name	\032
+options.abilities.ice_barrier.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.ice_barrier.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.ice_barrier.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.ice_barrier.noIcon	name	Icon Replacement
+options.abilities.ice_barrier.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 11426 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ice_barrier.targetMax	name	Maximum Targets
+options.abilities.ice_barrier.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 11426 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ice_barrier.targetMin	name	Minimum Targets
+options.abilities.ice_barrier.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.ice_barrier.toggle	name	Require Toggle
+options.abilities.ice_barrier.toggle	values.cooldowns	Cooldowns
+options.abilities.ice_barrier.toggle	values.custom1	Custom 1
+options.abilities.ice_barrier.toggle	values.custom2	Custom 2
+options.abilities.ice_barrier.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.ice_barrier.toggle	values.defensives	Defensives
+options.abilities.ice_barrier.toggle	values.interrupts	Interrupts
+options.abilities.ice_barrier.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.ice_barrier.toggle	values.none	None
+options.abilities.ice_barrier.toggle	values.potions	Potions
+options.abilities.ice_block	name	Spell 11958
+options.abilities.ice_block.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 11958 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 11958 can be recommended in any type of fight.
+options.abilities.ice_block.boss	name	Boss Encounter Only
+options.abilities.ice_block.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 11958 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.ice_block.clash	name	Clash
+options.abilities.ice_block.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 11958.
+options.abilities.ice_block.disabled	name	Disable |T136000:0|t Spell 11958
+options.abilities.ice_block.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.ice_block.dotCap	name	Maximum Applications
+options.abilities.ice_block.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.ice_block.hasIcon	name	Icon Replacement
+options.abilities.ice_block.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.ice_block.keybind	name	Override Keybind Text
+options.abilities.ice_block.lineBreak1	name	\032
+options.abilities.ice_block.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.ice_block.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.ice_block.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.ice_block.noIcon	name	Icon Replacement
+options.abilities.ice_block.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 11958 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ice_block.targetMax	name	Maximum Targets
+options.abilities.ice_block.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 11958 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ice_block.targetMin	name	Minimum Targets
+options.abilities.ice_block.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.ice_block.toggle	name	Require Toggle
+options.abilities.ice_block.toggle	values.cooldowns	Cooldowns
+options.abilities.ice_block.toggle	values.custom1	Custom 1
+options.abilities.ice_block.toggle	values.custom2	Custom 2
+options.abilities.ice_block.toggle	values.default	Default |cffffd100(defensives)|r
+options.abilities.ice_block.toggle	values.defensives	Defensives
+options.abilities.ice_block.toggle	values.interrupts	Interrupts
+options.abilities.ice_block.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.ice_block.toggle	values.none	None
+options.abilities.ice_block.toggle	values.potions	Potions
+options.abilities.ice_lance	name	Spell 1312002
+options.abilities.ice_lance.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1312002 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1312002 can be recommended in any type of fight.
+options.abilities.ice_lance.boss	name	Boss Encounter Only
+options.abilities.ice_lance.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1312002 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.ice_lance.clash	name	Clash
+options.abilities.ice_lance.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1312002.
+options.abilities.ice_lance.disabled	name	Disable |T136000:0|t Spell 1312002
+options.abilities.ice_lance.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.ice_lance.dotCap	name	Maximum Applications
+options.abilities.ice_lance.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.ice_lance.hasIcon	name	Icon Replacement
+options.abilities.ice_lance.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.ice_lance.keybind	name	Override Keybind Text
+options.abilities.ice_lance.lineBreak1	name	\032
+options.abilities.ice_lance.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.ice_lance.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.ice_lance.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.ice_lance.noIcon	name	Icon Replacement
+options.abilities.ice_lance.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1312002 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ice_lance.targetMax	name	Maximum Targets
+options.abilities.ice_lance.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1312002 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ice_lance.targetMin	name	Minimum Targets
+options.abilities.ice_lance.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.ice_lance.toggle	name	Require Toggle
+options.abilities.ice_lance.toggle	values.cooldowns	Cooldowns
+options.abilities.ice_lance.toggle	values.custom1	Custom 1
+options.abilities.ice_lance.toggle	values.custom2	Custom 2
+options.abilities.ice_lance.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.ice_lance.toggle	values.defensives	Defensives
+options.abilities.ice_lance.toggle	values.interrupts	Interrupts
+options.abilities.ice_lance.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.ice_lance.toggle	values.none	None
+options.abilities.ice_lance.toggle	values.potions	Potions
 options.abilities.immolate	name	Spell 348
 options.abilities.immolate.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 348 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 348 can be recommended in any type of fight.
 options.abilities.immolate.boss	name	Boss Encounter Only
@@ -6925,6 +7156,7 @@ options.abilities.spec	values.100071	|W|T136048:0::::64:64:4:60:4:60|t Elemental
 options.abilities.spec	values.100072	|W|T136051:0::::64:64:4:60:4:60|t Enhancement|w
 options.abilities.spec	values.100081	|W|T135932:0::::64:64:4:60:4:60|t Arcane|w
 options.abilities.spec	values.100082	|W|T135810:0::::64:64:4:60:4:60|t Fire|w
+options.abilities.spec	values.100083	|W|T135846:0::::64:64:4:60:4:60|t Frost|w
 options.abilities.spec	values.100091	|W|T136145:0::::64:64:4:60:4:60|t Affliction|w
 options.abilities.spec	values.100092	|W|T136172:0::::64:64:4:60:4:60|t Demonology|w
 options.abilities.spec	values.100093	|W|T136186:0::::64:64:4:60:4:60|t Destruction|w
@@ -13858,6 +14090,7 @@ options.items.spec	values.100071	|W|T136048:0::::64:64:4:60:4:60|t Elemental|w
 options.items.spec	values.100072	|W|T136051:0::::64:64:4:60:4:60|t Enhancement|w
 options.items.spec	values.100081	|W|T135932:0::::64:64:4:60:4:60|t Arcane|w
 options.items.spec	values.100082	|W|T135810:0::::64:64:4:60:4:60|t Fire|w
+options.items.spec	values.100083	|W|T135846:0::::64:64:4:60:4:60|t Frost|w
 options.items.spec	values.100091	|W|T136145:0::::64:64:4:60:4:60|t Affliction|w
 options.items.spec	values.100092	|W|T136172:0::::64:64:4:60:4:60|t Demonology|w
 options.items.spec	values.100093	|W|T136186:0::::64:64:4:60:4:60|t Destruction|w
@@ -14521,19 +14754,26 @@ options.packs.arcane.Arcane (wowsims.com).lists.action	values.arcane_blast	|T136
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.arcane_missiles	|T136000:0|t Spell 5143
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.arcane_power	|T136000:0|t Spell 12042
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.arcane_wrath	|T136000:0|t Spell 1326079
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.blizzard	|T136000:0|t Spell 10
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.cold_snap	|T136000:0|t Spell 12472
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.combustion	|T136000:0|t Spell 11129
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.cone_of_cold	|T136000:0|t Spell 120
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.counterspell	|T136000:0|t Spell 2139
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.evocation	|T136000:0|t Spell 12051
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.fireball	|T136000:0|t Spell 133
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.frost_nova	|T136000:0|t Spell 122
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.frostbolt	|T136000:0|t Spell 116
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -14572,19 +14812,26 @@ options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.arcane_blast	
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.arcane_missiles	|T136000:0|t Spell 5143
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.arcane_power	|T136000:0|t Spell 12042
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.arcane_wrath	|T136000:0|t Spell 1326079
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.blizzard	|T136000:0|t Spell 10
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.cold_snap	|T136000:0|t Spell 12472
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.combustion	|T136000:0|t Spell 11129
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.cone_of_cold	|T136000:0|t Spell 120
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.counterspell	|T136000:0|t Spell 2139
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.fireball	|T136000:0|t Spell 133
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.frost_nova	|T136000:0|t Spell 122
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.frostbolt	|T136000:0|t Spell 116
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -14609,9 +14856,13 @@ options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.clearcasting	|T
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.fingers_of_frost	|T136000:0|t Spell 400669
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.fire_vulnerability	|T136000:0|t Spell 22959
+options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.frigid_power	|T136000:0|t Spell 1326891
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.heating_up	|T136000:0|t Spell 400625
+options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.ice_block	|T136000:0|t Spell 11958
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.missile_barrage	|T136000:0|t Spell 400589
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.presence_of_mind	|T136000:0|t Spell 12043
+options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
 options.packs.arcane.Arcane (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.arcane.Arcane (wowsims.com).lists.caption	name	Caption
 options.packs.arcane.Arcane (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
@@ -14704,6 +14955,7 @@ options.packs.arcane.Arcane (wowsims.com).pack.reloadPack	desc	Reload Priority
 options.packs.arcane.Arcane (wowsims.com).pack.spec	name	Specialization
 options.packs.arcane.Arcane (wowsims.com).pack.spec	values.100081	|W|T135932:0::::64:64:4:60:4:60|t Arcane|w
 options.packs.arcane.Arcane (wowsims.com).pack.spec	values.100082	|W|T135810:0::::64:64:4:60:4:60|t Fire|w
+options.packs.arcane.Arcane (wowsims.com).pack.spec	values.100083	|W|T135846:0::::64:64:4:60:4:60|t Frost|w
 options.packs.arcane.Arcane (wowsims.com).pack.toggleActive	desc	If checked, the addon's recommendations for this specialization are based on this priority package.
 options.packs.arcane.Arcane (wowsims.com).pack.toggleActive	name	|cFF00B4FFActive|r
 options.packs.arcane.Arcane (wowsims.com).profile	desc	If this Priority was generated with a SimulationCraft profile, the profile can be stored or retrieved here.  The profile can also be re-imported or overwritten with a newer profile.
@@ -18782,19 +19034,26 @@ options.packs.fire.Fire (wowsims.com).lists.action	values.arcane_blast	|T136000:
 options.packs.fire.Fire (wowsims.com).lists.action	values.arcane_missiles	|T136000:0|t Spell 5143
 options.packs.fire.Fire (wowsims.com).lists.action	values.arcane_power	|T136000:0|t Spell 12042
 options.packs.fire.Fire (wowsims.com).lists.action	values.arcane_wrath	|T136000:0|t Spell 1326079
+options.packs.fire.Fire (wowsims.com).lists.action	values.blizzard	|T136000:0|t Spell 10
 options.packs.fire.Fire (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.fire.Fire (wowsims.com).lists.action	values.cold_snap	|T136000:0|t Spell 12472
 options.packs.fire.Fire (wowsims.com).lists.action	values.combustion	|T136000:0|t Spell 11129
+options.packs.fire.Fire (wowsims.com).lists.action	values.cone_of_cold	|T136000:0|t Spell 120
 options.packs.fire.Fire (wowsims.com).lists.action	values.counterspell	|T136000:0|t Spell 2139
 options.packs.fire.Fire (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.fire.Fire (wowsims.com).lists.action	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Fire (wowsims.com).lists.action	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.fire.Fire (wowsims.com).lists.action	values.fireball	|T136000:0|t Spell 133
+options.packs.fire.Fire (wowsims.com).lists.action	values.frost_nova	|T136000:0|t Spell 122
 options.packs.fire.Fire (wowsims.com).lists.action	values.frostbolt	|T136000:0|t Spell 116
 options.packs.fire.Fire (wowsims.com).lists.action	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.fire.Fire (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.fire.Fire (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.fire.Fire (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
+options.packs.fire.Fire (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.fire.Fire (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Fire (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -18833,19 +19092,26 @@ options.packs.fire.Fire (wowsims.com).lists.action_name	values.arcane_blast	|T13
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.arcane_missiles	|T136000:0|t Spell 5143
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.arcane_power	|T136000:0|t Spell 12042
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.arcane_wrath	|T136000:0|t Spell 1326079
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.blizzard	|T136000:0|t Spell 10
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.cold_snap	|T136000:0|t Spell 12472
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.combustion	|T136000:0|t Spell 11129
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.cone_of_cold	|T136000:0|t Spell 120
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.counterspell	|T136000:0|t Spell 2139
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.fireball	|T136000:0|t Spell 133
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.frost_nova	|T136000:0|t Spell 122
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.frostbolt	|T136000:0|t Spell 116
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -18870,9 +19136,13 @@ options.packs.fire.Fire (wowsims.com).lists.buff_name	values.clearcasting	|T1360
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.fingers_of_frost	|T136000:0|t Spell 400669
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.fire_vulnerability	|T136000:0|t Spell 22959
+options.packs.fire.Fire (wowsims.com).lists.buff_name	values.frigid_power	|T136000:0|t Spell 1326891
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.heating_up	|T136000:0|t Spell 400625
+options.packs.fire.Fire (wowsims.com).lists.buff_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.fire.Fire (wowsims.com).lists.buff_name	values.ice_block	|T136000:0|t Spell 11958
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.missile_barrage	|T136000:0|t Spell 400589
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.presence_of_mind	|T136000:0|t Spell 12043
+options.packs.fire.Fire (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
 options.packs.fire.Fire (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.fire.Fire (wowsims.com).lists.caption	name	Caption
 options.packs.fire.Fire (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
@@ -18965,6 +19235,7 @@ options.packs.fire.Fire (wowsims.com).pack.reloadPack	desc	Reload Priority
 options.packs.fire.Fire (wowsims.com).pack.spec	name	Specialization
 options.packs.fire.Fire (wowsims.com).pack.spec	values.100081	|W|T135932:0::::64:64:4:60:4:60|t Arcane|w
 options.packs.fire.Fire (wowsims.com).pack.spec	values.100082	|W|T135810:0::::64:64:4:60:4:60|t Fire|w
+options.packs.fire.Fire (wowsims.com).pack.spec	values.100083	|W|T135846:0::::64:64:4:60:4:60|t Frost|w
 options.packs.fire.Fire (wowsims.com).pack.toggleActive	desc	If checked, the addon's recommendations for this specialization are based on this priority package.
 options.packs.fire.Fire (wowsims.com).pack.toggleActive	name	|cFF00B4FFActive|r
 options.packs.fire.Fire (wowsims.com).profile	desc	If this Priority was generated with a SimulationCraft profile, the profile can be stored or retrieved here.  The profile can also be re-imported or overwritten with a newer profile.
@@ -18997,19 +19268,26 @@ options.packs.fire.Frostfire (wowsims.com).lists.action	values.arcane_blast	|T13
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.arcane_missiles	|T136000:0|t Spell 5143
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.arcane_power	|T136000:0|t Spell 12042
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.arcane_wrath	|T136000:0|t Spell 1326079
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.blizzard	|T136000:0|t Spell 10
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.cold_snap	|T136000:0|t Spell 12472
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.combustion	|T136000:0|t Spell 11129
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.cone_of_cold	|T136000:0|t Spell 120
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.counterspell	|T136000:0|t Spell 2139
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.fireball	|T136000:0|t Spell 133
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.frost_nova	|T136000:0|t Spell 122
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.frostbolt	|T136000:0|t Spell 116
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -19045,19 +19323,26 @@ options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.arcane_blast
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.arcane_missiles	|T136000:0|t Spell 5143
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.arcane_power	|T136000:0|t Spell 12042
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.arcane_wrath	|T136000:0|t Spell 1326079
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.blizzard	|T136000:0|t Spell 10
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.cold_snap	|T136000:0|t Spell 12472
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.combustion	|T136000:0|t Spell 11129
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.cone_of_cold	|T136000:0|t Spell 120
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.counterspell	|T136000:0|t Spell 2139
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.fireball	|T136000:0|t Spell 133
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.frost_nova	|T136000:0|t Spell 122
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.frostbolt	|T136000:0|t Spell 116
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -19082,9 +19367,13 @@ options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.clearcasting	|
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.fingers_of_frost	|T136000:0|t Spell 400669
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.fire_vulnerability	|T136000:0|t Spell 22959
+options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.frigid_power	|T136000:0|t Spell 1326891
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.heating_up	|T136000:0|t Spell 400625
+options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.ice_block	|T136000:0|t Spell 11958
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.missile_barrage	|T136000:0|t Spell 400589
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.presence_of_mind	|T136000:0|t Spell 12043
+options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
 options.packs.fire.Frostfire (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.fire.Frostfire (wowsims.com).lists.caption	name	Caption
 options.packs.fire.Frostfire (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
@@ -19177,6 +19466,7 @@ options.packs.fire.Frostfire (wowsims.com).pack.reloadPack	desc	Reload Priority
 options.packs.fire.Frostfire (wowsims.com).pack.spec	name	Specialization
 options.packs.fire.Frostfire (wowsims.com).pack.spec	values.100081	|W|T135932:0::::64:64:4:60:4:60|t Arcane|w
 options.packs.fire.Frostfire (wowsims.com).pack.spec	values.100082	|W|T135810:0::::64:64:4:60:4:60|t Fire|w
+options.packs.fire.Frostfire (wowsims.com).pack.spec	values.100083	|W|T135846:0::::64:64:4:60:4:60|t Frost|w
 options.packs.fire.Frostfire (wowsims.com).pack.toggleActive	desc	If checked, the addon's recommendations for this specialization are based on this priority package.
 options.packs.fire.Frostfire (wowsims.com).pack.toggleActive	name	|cFF00B4FFActive|r
 options.packs.fire.Frostfire (wowsims.com).profile	desc	If this Priority was generated with a SimulationCraft profile, the profile can be stored or retrieved here.  The profile can also be re-imported or overwritten with a newer profile.
@@ -19258,11 +19548,300 @@ options.packs.fire.targets.targetsHeader	name	These settings control how targets
 options.packs.fire.targets.yourTarget	desc	Your actual target is always counted as an enemy, even if you do not have a target.\n\nThis setting cannot be disabled.
 options.packs.fire.targets.yourTarget	name	Your Target
 options.packs.frost	name	Frost
+options.packs.frost.Frost (wowsims.com)	name	|cFF00B4FFFrost (wowsims.com)|r
+options.packs.frost.Frost (wowsims.com).export	name	Export
+options.packs.frost.Frost (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
+options.packs.frost.Frost (wowsims.com).export.exportString	name	Priority Export String
+options.packs.frost.Frost (wowsims.com).export.stressResults	name	Stress Test Results
+options.packs.frost.Frost (wowsims.com).lists	desc	Action Lists are used to determine which abilities should be used at what time.
+options.packs.frost.Frost (wowsims.com).lists	name	Action Lists
+options.packs.frost.Frost (wowsims.com).lists.action	desc	Select the action that will be recommended when this entry's criteria are met.
+options.packs.frost.Frost (wowsims.com).lists.action	name	Action
+options.packs.frost.Frost (wowsims.com).lists.action	values.arcane_blast	|T136000:0|t Spell 400574
+options.packs.frost.Frost (wowsims.com).lists.action	values.arcane_missiles	|T136000:0|t Spell 5143
+options.packs.frost.Frost (wowsims.com).lists.action	values.arcane_power	|T136000:0|t Spell 12042
+options.packs.frost.Frost (wowsims.com).lists.action	values.arcane_wrath	|T136000:0|t Spell 1326079
+options.packs.frost.Frost (wowsims.com).lists.action	values.blizzard	|T136000:0|t Spell 10
+options.packs.frost.Frost (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.cold_snap	|T136000:0|t Spell 12472
+options.packs.frost.Frost (wowsims.com).lists.action	values.combustion	|T136000:0|t Spell 11129
+options.packs.frost.Frost (wowsims.com).lists.action	values.cone_of_cold	|T136000:0|t Spell 120
+options.packs.frost.Frost (wowsims.com).lists.action	values.counterspell	|T136000:0|t Spell 2139
+options.packs.frost.Frost (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.frost.Frost (wowsims.com).lists.action	values.evocation	|T136000:0|t Spell 12051
+options.packs.frost.Frost (wowsims.com).lists.action	values.fire_blast	|T136000:0|t Spell 2136
+options.packs.frost.Frost (wowsims.com).lists.action	values.fireball	|T136000:0|t Spell 133
+options.packs.frost.Frost (wowsims.com).lists.action	values.frost_nova	|T136000:0|t Spell 122
+options.packs.frost.Frost (wowsims.com).lists.action	values.frostbolt	|T136000:0|t Spell 116
+options.packs.frost.Frost (wowsims.com).lists.action	values.frostfire_bolt	|T136000:0|t Spell 401502
+options.packs.frost.Frost (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.frost.Frost (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
+options.packs.frost.Frost (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
+options.packs.frost.Frost (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.frost.Frost (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.frost.Frost (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.presence_of_mind	|T136000:0|t Spell 12043
+options.packs.frost.Frost (wowsims.com).lists.action	values.pyroblast	|T136000:0|t Spell 11366
+options.packs.frost.Frost (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.scorch	|T136000:0|t Spell 2948
+options.packs.frost.Frost (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.frost.Frost (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
+options.packs.frost.Frost (wowsims.com).lists.actionID	name	Entry
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmana_tools|r, if |cffffd100mana.pct_lo<=5|r|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1259813 - |cFFFFD100|cffffd100buff.fingers_of_frost.up|r|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20572 - |cFFFFD100|cffffd100buff.fingers_of_frost.up|r|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 20554 - |cFFFFD100|cffffd100buff.fingers_of_frost.up|r|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Use Items]|r - |cFFFFD100|cffffd100buff.fingers_of_frost.up|r|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 5514] - |cFFFFD100|cffffd100buff.fingers_of_frost.up|r|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffaoe|r, if |cffffd100active_enemies>=3|r|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 12472 - |cFFFFD100|cffffd100(!action.cone_of_cold.known||cooldown.cone_of_cold.remains>=7)|r|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 120 - |cFFFFD100|cffffd100debuff.winters_chill.stack=5|r|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1312002 - |cFFFFD100|cffffd100(buff.fingers_of_frost.stack=1&(!action.frostbolt.known||action.frostbolt.executing))|r|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 11426 - |cFFFFD100|cffffd100buff.frigid_power.remains<=3|r|r
+options.packs.frost.Frost (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 116
+options.packs.frost.Frost (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
+options.packs.frost.Frost (wowsims.com).lists.action_name	name	Action Name
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.arcane_blast	|T136000:0|t Spell 400574
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.arcane_missiles	|T136000:0|t Spell 5143
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.arcane_power	|T136000:0|t Spell 12042
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.arcane_wrath	|T136000:0|t Spell 1326079
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.blizzard	|T136000:0|t Spell 10
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.cold_snap	|T136000:0|t Spell 12472
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.combustion	|T136000:0|t Spell 11129
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.cone_of_cold	|T136000:0|t Spell 120
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.counterspell	|T136000:0|t Spell 2139
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.evocation	|T136000:0|t Spell 12051
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.fire_blast	|T136000:0|t Spell 2136
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.fireball	|T136000:0|t Spell 133
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.frost_nova	|T136000:0|t Spell 122
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.frostbolt	|T136000:0|t Spell 116
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.frostfire_bolt	|T136000:0|t Spell 401502
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.presence_of_mind	|T136000:0|t Spell 12043
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.pyroblast	|T136000:0|t Spell 11366
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.scorch	|T136000:0|t Spell 2948
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.frost.Frost (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
+options.packs.frost.Frost (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.arcane_blast	|T136000:0|t Spell 400573
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.arcane_power	|T136000:0|t Spell 12042
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.clearcasting	|T136000:0|t Spell 12536
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.evocation	|T136000:0|t Spell 12051
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.fingers_of_frost	|T136000:0|t Spell 400669
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.fire_vulnerability	|T136000:0|t Spell 22959
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.frigid_power	|T136000:0|t Spell 1326891
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.heating_up	|T136000:0|t Spell 400625
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.ice_block	|T136000:0|t Spell 11958
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.missile_barrage	|T136000:0|t Spell 400589
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.presence_of_mind	|T136000:0|t Spell 12043
+options.packs.frost.Frost (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
+options.packs.frost.Frost (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
+options.packs.frost.Frost (wowsims.com).lists.caption	name	Caption
+options.packs.frost.Frost (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
+options.packs.frost.Frost (wowsims.com).lists.criteria	name	Conditions
+options.packs.frost.Frost (wowsims.com).lists.delListBtn	desc	Delete this Action List
+options.packs.frost.Frost (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
+options.packs.frost.Frost (wowsims.com).lists.description	name	Description
+options.packs.frost.Frost (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
+options.packs.frost.Frost (wowsims.com).lists.enabled	name	Enabled
+options.packs.frost.Frost (wowsims.com).lists.listName	desc	Select the action list to view or modify.
+options.packs.frost.Frost (wowsims.com).lists.listName	name	Action List
+options.packs.frost.Frost (wowsims.com).lists.listName	values.aoe	aoe
+options.packs.frost.Frost (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
+options.packs.frost.Frost (wowsims.com).lists.listName	values.mana_tools	mana_tools
+options.packs.frost.Frost (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
+options.packs.frost.Frost (wowsims.com).lists.list_name	name	Action List
+options.packs.frost.Frost (wowsims.com).lists.list_name	values.aoe	aoe
+options.packs.frost.Frost (wowsims.com).lists.list_name	values.mana_tools	mana_tools
+options.packs.frost.Frost (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
+options.packs.frost.Frost (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.frost.Frost (wowsims.com).lists.max_energy	name	Max Energy
+options.packs.frost.Frost (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
+options.packs.frost.Frost (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
+options.packs.frost.Frost (wowsims.com).lists.modAPL.strict_if	desc	If entered, these Immediate Criteria must be met before the Conditions above will be tested.
+options.packs.frost.Frost (wowsims.com).lists.modAPL.strict_if	name	Additional Immediate Criteria
+options.packs.frost.Frost (wowsims.com).lists.modAsyncUsage.focus	desc	Timeline style: 0 is off; a tier (1 highest) makes this entry a focus candidate. When it is predicted within the focus horizon it takes the Now circle; the lowest tier wins, then the soonest.
+options.packs.frost.Frost (wowsims.com).lists.modAsyncUsage.focus	name	Focus Tier
+options.packs.frost.Frost (wowsims.com).lists.modAsyncUsage.only_cwc	desc	If checked, this entry can only be used if you are channeling another spell.
+options.packs.frost.Frost (wowsims.com).lists.modAsyncUsage.only_cwc	name	During Channel
+options.packs.frost.Frost (wowsims.com).lists.modAsyncUsage.use_off_gcd	desc	If checked, this entry can be checked even if the global cooldown (GCD) is active.
+options.packs.frost.Frost (wowsims.com).lists.modAsyncUsage.use_off_gcd	name	Use Off GCD
+options.packs.frost.Frost (wowsims.com).lists.modAsyncUsage.use_while_casting	desc	If checked, this entry can be checked even if you are already casting or channeling.
+options.packs.frost.Frost (wowsims.com).lists.modAsyncUsage.use_while_casting	name	Use While Casting
+options.packs.frost.Frost (wowsims.com).lists.modCooldown.line_cd	desc	If set, this entry cannot be recommended unless this time has passed since the last time the ability was used.
+options.packs.frost.Frost (wowsims.com).lists.modCooldown.line_cd	name	Entry Cooldown
+options.packs.frost.Frost (wowsims.com).lists.modCycle.cycle_targets	desc	If checked, the addon will check each available target and show whether to switch targets.
+options.packs.frost.Frost (wowsims.com).lists.modCycle.cycle_targets	name	Cycle Targets
+options.packs.frost.Frost (wowsims.com).lists.modCycle.max_cycle_targets	desc	If cycle targets is checked, the addon will check up to the specified number of targets.
+options.packs.frost.Frost (wowsims.com).lists.modCycle.max_cycle_targets	name	Max Cycle Targets
+options.packs.frost.Frost (wowsims.com).lists.modMoving.enable_moving	desc	If checked, this entry can only be recommended when your character movement matches the setting.
+options.packs.frost.Frost (wowsims.com).lists.modMoving.enable_moving	name	Check Movement
+options.packs.frost.Frost (wowsims.com).lists.modMoving.moving	desc	If set, this entry can only be recommended when your movement matches the setting.
+options.packs.frost.Frost (wowsims.com).lists.modMoving.moving	name	Movement
+options.packs.frost.Frost (wowsims.com).lists.modMoving.moving	values.0	Stationary
+options.packs.frost.Frost (wowsims.com).lists.modMoving.moving	values.1	Moving
+options.packs.frost.Frost (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
+options.packs.frost.Frost (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
+options.packs.frost.Frost (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
+options.packs.frost.Frost (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 1259813)
+options.packs.frost.Frost (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.frost.Frost (wowsims.com).lists.modPooling.wait	name	Pooling Time
+options.packs.frost.Frost (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
+options.packs.frost.Frost (wowsims.com).lists.newListBtn	desc	Create a New Action List
+options.packs.frost.Frost (wowsims.com).lists.newListGroup.cancel	name	Cancel
+options.packs.frost.Frost (wowsims.com).lists.newListGroup.createList	name	Add List
+options.packs.frost.Frost (wowsims.com).lists.newListGroup.newListName	name	List Name
+options.packs.frost.Frost (wowsims.com).lists.op	name	Operation
+options.packs.frost.Frost (wowsims.com).lists.op	values.add	Add Value
+options.packs.frost.Frost (wowsims.com).lists.op	values.ceil	Ceiling of Value
+options.packs.frost.Frost (wowsims.com).lists.op	values.default	Set Default Value
+options.packs.frost.Frost (wowsims.com).lists.op	values.div	Divide Value
+options.packs.frost.Frost (wowsims.com).lists.op	values.floor	Floor of Value
+options.packs.frost.Frost (wowsims.com).lists.op	values.max	Maximum of Values
+options.packs.frost.Frost (wowsims.com).lists.op	values.min	Minimum of Values
+options.packs.frost.Frost (wowsims.com).lists.op	values.mod	Modulo of Value
+options.packs.frost.Frost (wowsims.com).lists.op	values.mul	Multiply Value
+options.packs.frost.Frost (wowsims.com).lists.op	values.pow	Raise Value to X Power
+options.packs.frost.Frost (wowsims.com).lists.op	values.reset	Reset to Default
+options.packs.frost.Frost (wowsims.com).lists.op	values.set	Set Value
+options.packs.frost.Frost (wowsims.com).lists.op	values.setif	Set Value If...
+options.packs.frost.Frost (wowsims.com).lists.op	values.sub	Subtract Value
+options.packs.frost.Frost (wowsims.com).lists.potion	name	Potion
+options.packs.frost.Frost (wowsims.com).lists.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.frost.Frost (wowsims.com).lists.sec	name	Seconds
+options.packs.frost.Frost (wowsims.com).lists.showModifiers	desc	If checked, additional modifiers that are not currently used by this entry.
+options.packs.frost.Frost (wowsims.com).lists.showModifiers	name	Show Unused Modifiers (if applicable)
+options.packs.frost.Frost (wowsims.com).lists.value	desc	Provide the value to store (or calculate) when this variable is invoked.\n\nIf Conditions are provided, this value is set when Conditions are met.
+options.packs.frost.Frost (wowsims.com).lists.value	name	Value
+options.packs.frost.Frost (wowsims.com).lists.value_else	desc	Provide the value to store (or calculate) if Conditions are not met.
+options.packs.frost.Frost (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
+options.packs.frost.Frost (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
+options.packs.frost.Frost (wowsims.com).lists.var_name	name	Variable Name
+options.packs.frost.Frost (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.frost.Frost (wowsims.com).lists.window_name	name	Window Name
+options.packs.frost.Frost (wowsims.com).pack	name	|cFF00B4FFSummary|r
+options.packs.frost.Frost (wowsims.com).pack.copyPack	desc	Copy Priority
+options.packs.frost.Frost (wowsims.com).pack.deletePack	desc	Delete Priority
+options.packs.frost.Frost (wowsims.com).pack.desc	name	Description
+options.packs.frost.Frost (wowsims.com).pack.isBuiltIn	name	|cFF00B4FFThis is a default priority package.  It will be automatically updated when the addon is updated.  If you want to customize this priority, make a copy by clicking |TInterface\\Addons\\Hekili\\Textures\\WhiteCopy:0|t.|r
+options.packs.frost.Frost (wowsims.com).pack.packName	name	Priority Name
+options.packs.frost.Frost (wowsims.com).pack.reloadPack	desc	Reload Priority
+options.packs.frost.Frost (wowsims.com).pack.spec	name	Specialization
+options.packs.frost.Frost (wowsims.com).pack.spec	values.100081	|W|T135932:0::::64:64:4:60:4:60|t Arcane|w
+options.packs.frost.Frost (wowsims.com).pack.spec	values.100082	|W|T135810:0::::64:64:4:60:4:60|t Fire|w
+options.packs.frost.Frost (wowsims.com).pack.spec	values.100083	|W|T135846:0::::64:64:4:60:4:60|t Frost|w
+options.packs.frost.Frost (wowsims.com).pack.toggleActive	desc	If checked, the addon's recommendations for this specialization are based on this priority package.
+options.packs.frost.Frost (wowsims.com).pack.toggleActive	name	|cFF00B4FFActive|r
+options.packs.frost.Frost (wowsims.com).profile	desc	If this Priority was generated with a SimulationCraft profile, the profile can be stored or retrieved here.  The profile can also be re-imported or overwritten with a newer profile.
+options.packs.frost.Frost (wowsims.com).profile	name	Source
+options.packs.frost.Frost (wowsims.com).profile.importWarning	name	You must be in the |T135846:0|t |cFFFFD100Frost|r specialization to import this priority.
+options.packs.frost.Frost (wowsims.com).profile.importWarningSpace	name	\032
+options.packs.frost.Frost (wowsims.com).profile.profile	desc	If this pack's action lists were imported from a SimulationCraft profile, the profile is included here.
+options.packs.frost.Frost (wowsims.com).profile.profile	name	Priority (SimulationCraft Action Priority List)
+options.packs.frost.Frost (wowsims.com).profile.profileConsiderations	name	\n|cFF00CCFFBefore trying to import a profile, please consider the following:|r\n\n |cFFFFD100•|r SimulationCraft action lists tend not to change significantly for individual characters.  The profiles are written to include conditions that work for all gear, talent, and other factors combined.\n\n |cFFFFD100•|r Most SimulationCraft action lists require some additional customization to work with the addon.  For example, |cFFFFD100target_if|r conditions don't translate directly to the addon and have to be rewritten.\n\n |cFFFFD100•|r Some SimulationCraft action profiles are revised for the addon to be more efficient and use less processing time.\n\n |cFFFFD100•|r This feature has been left in for tinkerers and advanced users.\n\n
+options.packs.frost.Frost (wowsims.com).profile.profilewarning	name	|cFFFF0000You do not need to import a SimulationCraft profile to use this addon. No support is offered for custom or imported priorities from elsewhere.|r\n\n|cFF00CCFFThe default priorities included within the addon are kept up to date, are compatible with your character, and do not require additional changes.|r\n\n
+options.packs.frost.Frost (wowsims.com).profile.reimport	desc	Clear existing action list(s) and load the priority above.
+options.packs.frost.Frost (wowsims.com).profile.reimport	name	|A:UI-LFG-DeclineMark:16:16|a Import
+options.packs.frost.Frost (wowsims.com).profile.signature.author	desc	The author field is automatically filled out when creating a new Priority.  You can update it here.
+options.packs.frost.Frost (wowsims.com).profile.signature.author	name	Author
+options.packs.frost.Frost (wowsims.com).profile.signature.date	desc	This date is automatically updated when any changes are made to the action lists for this Priority.
+options.packs.frost.Frost (wowsims.com).profile.signature.date	name	Last Updated
+options.packs.frost.Frost (wowsims.com).profile.signature.source	desc	If the Priority is based on a SimulationCraft profile or a popular guide, it is a good idea to provide a link to the source (especially before sharing).
+options.packs.frost.Frost (wowsims.com).profile.signature.source	name	Source
+options.packs.frost.Frost (wowsims.com).profile.warnings	name	Import Log
+options.packs.frost.core	desc	Core features and specialization options for |W|T135846:0::::64:64:4:60:4:60|t Frost|w.
 options.packs.frost.core	name	Specialization Settings
 options.packs.frost.core.activate	desc	Recommend for Frost from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.frost.core.activate	name	Activate Frost
 options.packs.frost.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.frost.core.notice	name	No priorities on Forever for Frost: Hekili Forever recommends nothing while this specialization is active.
+options.packs.frost.core.disableSpacer	name	\032
+options.packs.frost.core.enabled	desc	No recommendations while this specialization is active.
+options.packs.frost.core.enabled	name	Disable Frost
+options.packs.frost.core.openPackage	desc	Open and view this priority pack and its action lists.
+options.packs.frost.core.package	desc	The addon will use the selected package when making its priority recommendations.
+options.packs.frost.core.package	name	Priority
+options.packs.frost.core.package	values.(none)	(none)
+options.packs.frost.core.package	values.Frost (wowsims.com)	|W|T135846:0::::64:64:4:60:4:60|t |cFF00B4FFFrost (wowsims.com)|r|w
+options.packs.frost.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
+options.packs.frost.core.potion	name	Potion
+options.packs.frost.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.frost.performance	name	Performance
+options.packs.frost.performance.forecastHeader	name	Forecast
+options.packs.frost.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
+options.packs.frost.performance.forecastWindow	name	Forecast window (s)
+options.packs.frost.performance.forecastWindowInfo	name	\nThis setting determines how far ahead the Primary and AOE recommendations look for the next affordable action, and how far the resource forecast runs.\n\n|cFFFFD100• Higher values|r show the next action while a resource paid by swings is still building, so the queue |cFF00FF00stays filled at the pull|r, at a small cost per recommendation that grows with the window.\n|cFFFFD100• Lower values|r |cFF00FF00cost less|r and suit a resource that regenerates steadily.\n\nThe other displays (Cooldowns, Defensives, Interrupts) keep their own |cFFFFD100Forecast Period|r in their display settings.\n\n|cFF00B4FFDefault|r: |cFFFFD10015 s|r\n\nCurrent window: |cFF00FF0015 s|r
+options.packs.frost.performance.frameBudget	desc	This setting determines how much time can be used to calculate recommendations.
+options.packs.frost.performance.frameBudget	name	Frame Budget
+options.packs.frost.performance.frameBudgetInfo	name	\nThis setting determines how much time can be used to generate recommendations.\n\n|cFFFFD100• Higher values|r allow recommendations to |cFF00FF00update more quickly|r but may risk lowering your frame rate, especially when other addons are working at the same time.\n|cFFFFD100• Lower values|r mean recommendations may update more slowly but may |cFF00FF00preserve your frame rate|r.\n\nAdjust this budget to balance |cFF00FF00smooth gameplay|r and |cFF00FF00responsive recommendations|r. Use the highest value that feels smooth on your system without your screen freezing or stuttering.\n\n|cFF00B4FFDefault (recommended)|r: |cFFFFD10070%|r\n\nAt |cFFFFD70060.0 FPS|r, a budget of |cFFFFD70070%|r allows up to |cFFFFD70011.67 ms|r of frame time per update. Recommendations that take longer to calculate will be delayed by at least 1 frame.
+options.packs.frost.targets	desc	Settings related to how enemies are identified and counted.
+options.packs.frost.targets	name	Targeting
+options.packs.frost.targets.aoe	desc	When the AOE display is shown (or AOE mode is active), its recommendations will assume that there are at least this many targets available. \n\nThis can be useful with the Dual display mode to guarantee your AOE priority is shown if it doesn't normally change until, for example, 5 targets. \n\nUsing a setting of 5 would make sure the right priority is followed for "AOE" mode. Different values may be optimal different specializations and builds.
+options.packs.frost.targets.aoe	name	Minimum Targets for Dedicated AOE Recommendations
+options.packs.frost.targets.cycle	desc	When target swapping is enabled, an icon (|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t) may be shown when you should use an ability on a different target.\n\nThis works well for some specs that simply want to apply a debuff to another target, but can be less-effective for specializations that are concerned with maintaining dots/debuffs based on their durations.\n\nThis feature is targeted for improvement in a future update.
+options.packs.frost.targets.cycle	name	Allow Target Swaps |TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t
+options.packs.frost.targets.cycleGroup	name	Secondary Targets
+options.packs.frost.targets.cycleGroup.cycle_min	desc	When |cffffd100Recommend Target Swaps|r is checked, this value determines which targets are counted for target swapping purposes.  If set to 5, target swapping will not be recommended if no other target will live 5 seconds or longer.  This can be beneficial to avoid applying damage-over-time effects to a target that will die too quickly to be damaged by them.\n\nSet to 0 to count all detected targets.
+options.packs.frost.targets.cycleGroup.cycle_min	name	Filter by Time-to-Die
+options.packs.frost.targets.damage	desc	If checked, targets you've damaged will be counted as a valid enemy for several seconds, distinguishing them from other enemies that you have not attacked.\n\n Auto-enabled when nameplates are disabled\n\n Recommended for |cffffd100ranged|r unable to use |cffffd100Pet-Based Target Detection|r
+options.packs.frost.targets.damage	name	Count Damaged Enemies
+options.packs.frost.targets.dmgGroup	name	Damage Detection
+options.packs.frost.targets.dmgGroup.damageDots	desc	When checked, enemies that have your debuffs or damage-over-time effects will be counted as targets, regardless of their location on the battlefield.\n\nThis may not be ideal for melee specializations, as enemies may wander away after you've applied your dots/bleeds.  If |cFFFFD100Count Nameplates|r is enabled, enemies that are no longer in range will be filtered.\n\nRecommended for ranged specializations that will DoT multiple enemies and do not rely on the enemy being stacked for AOE damage.
+options.packs.frost.targets.dmgGroup.damageDots	name	Include Enemies With Your DOTs / Debuffs
+options.packs.frost.targets.dmgGroup.damageExpiration	desc	Enemies will be counted until they have been ignored/undamaged for this period of time (or they die).\n\nIdeally, this period should reflect enough time that to continue to do AOE/cleave damage to enemies in this period, but not so long that enemies could have wandered out of range.
+options.packs.frost.targets.dmgGroup.damageExpiration	name	Timeout
+options.packs.frost.targets.dmgGroup.damageOnScreen	desc	If checked, the damage-based target system will only count enemies that are on screen.  If unchecked, offscreen targets can be included in target counts.\n\n|cFF00FF00Requires Enemy Nameplates|r
+options.packs.frost.targets.dmgGroup.damageOnScreen	name	Filter Off-Screen (Nameplate-less) Enemies
+options.packs.frost.targets.dmgGroup.damagePets	desc	If checked, the addon will count enemies that your pets or minions have hit (or hit you) within the past several seconds.  This may give misleading target counts if your pet/minions are spread out over the battlefield.
+options.packs.frost.targets.dmgGroup.damagePets	name	Include Enemies Damaged by Your Pets and Minions
+options.packs.frost.targets.nameplates	desc	If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\ncommon-icon-checkmark Recommended for melee specializations using a range of 10 yds or fewer\n\ncommon-icon-checkmark Ranged specializations count enemies in combat out to the radius; target swaps need it.
+options.packs.frost.targets.nameplates	name	Count Nameplates Near You
+options.packs.frost.targets.npGroup	name	Nameplate Detection
+options.packs.frost.targets.npGroup.nameplateRange	desc	If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts. Beyond 10 yards, only enemies in combat are counted.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.frost.targets.npGroup.nameplateRange	name	Enemy Range Radius
+options.packs.frost.targets.npGroup.nameplateRequirements	name	This feature requires that |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled.
+options.packs.frost.targets.npGroup.nameplateShowAll	desc	If checked, all enemy nameplates (rather than just your target) will be displayed and can be used to count enemy targets.
+options.packs.frost.targets.npGroup.nameplateShowAll	name	Show All Nameplates
+options.packs.frost.targets.npGroup.nameplateShowEnemies	desc	If checked, enemy nameplates will be displayed and can be used to count enemy targets.
+options.packs.frost.targets.npGroup.nameplateShowEnemies	name	Show Enemy Nameplates
+options.packs.frost.targets.petbased	desc	If checked and properly configured, the addon will count targets near your pet as valid targets, when your target is also within range of your pet.\n\n|cFFFF0000Requires pet ability on one of your action bars.|r\n\n|cFFFF0000Requires enemy nameplates.|r
+options.packs.frost.targets.petbased	name	Count Targets Near Your Pet
+options.packs.frost.targets.petbasedGuidance	name	\032
+options.packs.frost.targets.targetsHeader	name	These settings control how targets are counted when generating ability recommendations.\n\nBy default, the number of targets is shown on the bottom-right of the primary icon in the Primary and AOE displays, unless only one target is detected.\n\nYour true in-game target is always counted. \n\n|cFFFF0000WARNING:|r 'Soft' targets from the Action Targeting system are not presently supported.\n\n
+options.packs.frost.targets.yourTarget	desc	Your actual target is always counted as an enemy, even if you do not have a target.\n\nThis setting cannot be disabled.
+options.packs.frost.targets.yourTarget	name	Your Target
 options.packs.fury	name	Fury
 options.packs.fury.Fury (wowsims.com)	name	|cFF00B4FFFury (wowsims.com)|r
 options.packs.fury.Fury (wowsims.com).export	name	Export
@@ -20348,6 +20927,7 @@ options.packs.newPackSpec	values.100071	|W|T136048:0::::64:64:4:60:4:60|t Elemen
 options.packs.newPackSpec	values.100072	|W|T136051:0::::64:64:4:60:4:60|t Enhancement|w
 options.packs.newPackSpec	values.100081	|W|T135932:0::::64:64:4:60:4:60|t Arcane|w
 options.packs.newPackSpec	values.100082	|W|T135810:0::::64:64:4:60:4:60|t Fire|w
+options.packs.newPackSpec	values.100083	|W|T135846:0::::64:64:4:60:4:60|t Frost|w
 options.packs.newPackSpec	values.100091	|W|T136145:0::::64:64:4:60:4:60|t Affliction|w
 options.packs.newPackSpec	values.100092	|W|T136172:0::::64:64:4:60:4:60|t Demonology|w
 options.packs.newPackSpec	values.100093	|W|T136186:0::::64:64:4:60:4:60|t Destruction|w
@@ -20825,6 +21405,257 @@ options.packs.restoration.core.activate	name	Activate Restoration
 options.packs.restoration.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.restoration.core.notice	name	No priorities on Forever for Restoration: Hekili Forever recommends nothing while this specialization is active.
 options.packs.retribution	name	Retribution
+options.packs.retribution.Holy Shock (wowsims.com)	name	|cFF00B4FFHoly Shock (wowsims.com)|r
+options.packs.retribution.Holy Shock (wowsims.com).export	name	Export
+options.packs.retribution.Holy Shock (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
+options.packs.retribution.Holy Shock (wowsims.com).export.exportString	name	Priority Export String
+options.packs.retribution.Holy Shock (wowsims.com).export.stressResults	name	Stress Test Results
+options.packs.retribution.Holy Shock (wowsims.com).lists	desc	Action Lists are used to determine which abilities should be used at what time.
+options.packs.retribution.Holy Shock (wowsims.com).lists	name	Action Lists
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	desc	Select the action that will be recommended when this entry's criteria are met.
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	name	Action
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.consecration	|T136000:0|t Spell 26573
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.divine_favor	|T136000:0|t Spell 20216
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.exorcism	|T136000:0|t Spell 879
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.hammer_of_wrath	|T136000:0|t Spell 24275
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.holy_shield	|T136000:0|t Spell 20925
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.holy_shock	|T136000:0|t Spell 1311606
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.holy_strike	|T136000:0|t Spell 679
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.judgement	|T136000:0|t Spell 20271
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.retribution_aura	|T136000:0|t Spell 7294
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.righteous_fury	|T136000:0|t Spell 25780
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.seal_of_command	|T136000:0|t Spell 20375
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.seal_of_fury	|T136000:0|t Spell 1311649
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.seal_of_justice	|T136000:0|t Spell 20164
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.seal_of_light	|T136000:0|t Spell 20165
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.seal_of_righteousness	|T136000:0|t Spell 20154
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.seal_of_the_crusader	|T136000:0|t Spell 21082
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.seal_of_wisdom	|T136000:0|t Spell 20166
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.swift_judgement	|T136000:0|t Spell 1310994
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.templars_bulwark	|T136000:0|t Spell 1311015
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
+options.packs.retribution.Holy Shock (wowsims.com).lists.actionID	name	Entry
+options.packs.retribution.Holy Shock (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 20271
+options.packs.retribution.Holy Shock (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 26573
+options.packs.retribution.Holy Shock (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcast_selected_seal|r, if |cffffd100((action.seal_of_righteousness.known&!buff.seal_of_righteousness.up)||((!action.seal_of_righteousness.known||buff.seal_of_righteousness.remains<=10)&(!action.seal_of_righteousness.known||(!action.consecration.known||cooldown.consecration.remains>=action.seal_of_righteousness.gcd))&(!action.seal_of_righteousness.known||(!action.holy_shock.known||cooldown.holy_shock.remains>=action.seal_of_righteousness.gcd))&(!action.seal_of_righteousness.known||(!action.holy_strike.known||cooldown.holy_strike.remains>=action.seal_of_righteousness.gcd))))|r|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 679
+options.packs.retribution.Holy Shock (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20216 - |cFFFFD100|cffffd100(!action.holy_shock.known||cooldown.holy_shock.ready)|r|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1311606
+options.packs.retribution.Holy Shock (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 24275 - |cFFFFD100|cffffd100(action.hammer_of_wrath.cast=0||mainhand_remains>mainhand_speed-0.2)|r|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 879
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	name	Action Name
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.consecration	|T136000:0|t Spell 26573
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.divine_favor	|T136000:0|t Spell 20216
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.exorcism	|T136000:0|t Spell 879
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.hammer_of_wrath	|T136000:0|t Spell 24275
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.holy_shield	|T136000:0|t Spell 20925
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.holy_shock	|T136000:0|t Spell 1311606
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.holy_strike	|T136000:0|t Spell 679
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.judgement	|T136000:0|t Spell 20271
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.open_window	|T136243:0|t |cff00ccff[Open Window]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.retribution_aura	|T136000:0|t Spell 7294
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.righteous_fury	|T136000:0|t Spell 25780
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.seal_of_command	|T136000:0|t Spell 20375
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.seal_of_fury	|T136000:0|t Spell 1311649
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.seal_of_justice	|T136000:0|t Spell 20164
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.seal_of_light	|T136000:0|t Spell 20165
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.seal_of_righteousness	|T136000:0|t Spell 20154
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.seal_of_the_crusader	|T136000:0|t Spell 21082
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.seal_of_wisdom	|T136000:0|t Spell 20166
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.swift_judgement	|T136000:0|t Spell 1310994
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.templars_bulwark	|T136000:0|t Spell 1311015
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.trinket1	|T136243:0|t |cff00ccff[Trinket #1]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.trinket2	|T136243:0|t |cff00ccff[Trinket #2]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.use_items	|T136243:0|t |cff00ccff[Use Items]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.variable	|T136243:0|t |cff00ccff[Variable]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.wait	|T136243:0|t |cff00ccff[Wait]|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	desc	Specify the buff to remove.
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	name	Buff Name
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.concentration_aura	|T136000:0|t Spell 19746
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.consecrated_ground	|T136000:0|t Spell 1280353
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.divine_favor	|T136000:0|t Spell 20216
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.echo_of_command	|T136000:0|t Spell 1311703
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.echo_of_fury	|T136000:0|t Spell 1311701
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.echo_of_justice	|T136000:0|t Spell 1311705
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.echo_of_light	|T136000:0|t Spell 1328198
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.echo_of_righteousness	|T136000:0|t Spell 1311704
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.echo_of_wisdom	|T136000:0|t Spell 1328206
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.forbearance	|T136000:0|t Spell 25771
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.holy_alacrity	|T136000:0|t Spell 449982
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.infusion_of_light	|T136000:0|t Spell 437063
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.iron_creed	|T136000:0|t Spell 1311033
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.judgement_of_fury	|T136000:0|t Spell 20232
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.judgement_of_justice	|T136000:0|t Spell 20184
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.justice_armor_5pc	|T136000:0|t Spell 1301694
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.justice_battlegear_5pc	|T136000:0|t Spell 1301702
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.justice_battleplate_5pc	|T136000:0|t Spell 1301697
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.oath_of_light	|T136000:0|t Spell 1328548
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.reckoning	|T136000:0|t Spell 1326084
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.redoubt	|T136000:0|t Spell 20128
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.retribution_aura	|T136000:0|t Spell 7294
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.righteous_fury	|T136000:0|t Spell 25780
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.seal_of_command	|T136000:0|t Spell 20375
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.seal_of_fury	|T136000:0|t Spell 1311649
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.seal_of_justice	|T136000:0|t Spell 20164
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.seal_of_light	|T136000:0|t Spell 20165
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.seal_of_righteousness	|T136000:0|t Spell 20154
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.seal_of_the_crusader	|T136000:0|t Spell 21082
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.seal_of_wisdom	|T136000:0|t Spell 20166
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.shieldsworn_block	|T136000:0|t Spell 1328551
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.templars_bulwark	|T136000:0|t Spell 1311015
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.tenets_of_the_silver_hand	|T136000:0|t Spell 1302545
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.vengeance	|T136000:0|t Spell 20050
+options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.vindication	|T136000:0|t Spell 440667
+options.packs.retribution.Holy Shock (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
+options.packs.retribution.Holy Shock (wowsims.com).lists.caption	name	Caption
+options.packs.retribution.Holy Shock (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
+options.packs.retribution.Holy Shock (wowsims.com).lists.criteria	name	Conditions
+options.packs.retribution.Holy Shock (wowsims.com).lists.delListBtn	desc	Delete this Action List
+options.packs.retribution.Holy Shock (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
+options.packs.retribution.Holy Shock (wowsims.com).lists.description	name	Description
+options.packs.retribution.Holy Shock (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
+options.packs.retribution.Holy Shock (wowsims.com).lists.enabled	name	Enabled
+options.packs.retribution.Holy Shock (wowsims.com).lists.listName	desc	Select the action list to view or modify.
+options.packs.retribution.Holy Shock (wowsims.com).lists.listName	name	Action List
+options.packs.retribution.Holy Shock (wowsims.com).lists.listName	values.activate_assigned_aura	activate_assigned_aura
+options.packs.retribution.Holy Shock (wowsims.com).lists.listName	values.cast_assigned_judgement	cast_assigned_judgement
+options.packs.retribution.Holy Shock (wowsims.com).lists.listName	values.cast_selected_seal	cast_selected_seal
+options.packs.retribution.Holy Shock (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.list_name	name	Action List
+options.packs.retribution.Holy Shock (wowsims.com).lists.list_name	values.activate_assigned_aura	activate_assigned_aura
+options.packs.retribution.Holy Shock (wowsims.com).lists.list_name	values.cast_assigned_judgement	cast_assigned_judgement
+options.packs.retribution.Holy Shock (wowsims.com).lists.list_name	values.cast_selected_seal	cast_selected_seal
+options.packs.retribution.Holy Shock (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.retribution.Holy Shock (wowsims.com).lists.max_energy	name	Max Energy
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAPL.strict_if	desc	If entered, these Immediate Criteria must be met before the Conditions above will be tested.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAPL.strict_if	name	Additional Immediate Criteria
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAsyncUsage.focus	desc	Timeline style: 0 is off; a tier (1 highest) makes this entry a focus candidate. When it is predicted within the focus horizon it takes the Now circle; the lowest tier wins, then the soonest.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAsyncUsage.focus	name	Focus Tier
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAsyncUsage.only_cwc	desc	If checked, this entry can only be used if you are channeling another spell.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAsyncUsage.only_cwc	name	During Channel
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAsyncUsage.use_off_gcd	desc	If checked, this entry can be checked even if the global cooldown (GCD) is active.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAsyncUsage.use_off_gcd	name	Use Off GCD
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAsyncUsage.use_while_casting	desc	If checked, this entry can be checked even if you are already casting or channeling.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modAsyncUsage.use_while_casting	name	Use While Casting
+options.packs.retribution.Holy Shock (wowsims.com).lists.modCooldown.line_cd	desc	If set, this entry cannot be recommended unless this time has passed since the last time the ability was used.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modCooldown.line_cd	name	Entry Cooldown
+options.packs.retribution.Holy Shock (wowsims.com).lists.modCycle.cycle_targets	desc	If checked, the addon will check each available target and show whether to switch targets.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modCycle.cycle_targets	name	Cycle Targets
+options.packs.retribution.Holy Shock (wowsims.com).lists.modCycle.max_cycle_targets	desc	If cycle targets is checked, the addon will check up to the specified number of targets.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modCycle.max_cycle_targets	name	Max Cycle Targets
+options.packs.retribution.Holy Shock (wowsims.com).lists.modMoving.enable_moving	desc	If checked, this entry can only be recommended when your character movement matches the setting.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modMoving.enable_moving	name	Check Movement
+options.packs.retribution.Holy Shock (wowsims.com).lists.modMoving.moving	desc	If set, this entry can only be recommended when your movement matches the setting.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modMoving.moving	name	Movement
+options.packs.retribution.Holy Shock (wowsims.com).lists.modMoving.moving	values.0	Stationary
+options.packs.retribution.Holy Shock (wowsims.com).lists.modMoving.moving	values.1	Moving
+options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
+options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 26573)
+options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.wait	name	Pooling Time
+options.packs.retribution.Holy Shock (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
+options.packs.retribution.Holy Shock (wowsims.com).lists.newListBtn	desc	Create a New Action List
+options.packs.retribution.Holy Shock (wowsims.com).lists.newListGroup.cancel	name	Cancel
+options.packs.retribution.Holy Shock (wowsims.com).lists.newListGroup.createList	name	Add List
+options.packs.retribution.Holy Shock (wowsims.com).lists.newListGroup.newListName	name	List Name
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	name	Operation
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.add	Add Value
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.ceil	Ceiling of Value
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.default	Set Default Value
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.div	Divide Value
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.floor	Floor of Value
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.max	Maximum of Values
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.min	Minimum of Values
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.mod	Modulo of Value
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.mul	Multiply Value
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.pow	Raise Value to X Power
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.reset	Reset to Default
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.set	Set Value
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.setif	Set Value If...
+options.packs.retribution.Holy Shock (wowsims.com).lists.op	values.sub	Subtract Value
+options.packs.retribution.Holy Shock (wowsims.com).lists.potion	name	Potion
+options.packs.retribution.Holy Shock (wowsims.com).lists.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.retribution.Holy Shock (wowsims.com).lists.sec	name	Seconds
+options.packs.retribution.Holy Shock (wowsims.com).lists.showModifiers	desc	If checked, additional modifiers that are not currently used by this entry.
+options.packs.retribution.Holy Shock (wowsims.com).lists.showModifiers	name	Show Unused Modifiers (if applicable)
+options.packs.retribution.Holy Shock (wowsims.com).lists.value	desc	Provide the value to store (or calculate) when this variable is invoked.\n\nIf Conditions are provided, this value is set when Conditions are met.
+options.packs.retribution.Holy Shock (wowsims.com).lists.value	name	Value
+options.packs.retribution.Holy Shock (wowsims.com).lists.value_else	desc	Provide the value to store (or calculate) if Conditions are not met.
+options.packs.retribution.Holy Shock (wowsims.com).lists.value_else	name	Value when Conditions are Not Met
+options.packs.retribution.Holy Shock (wowsims.com).lists.var_name	desc	Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore.
+options.packs.retribution.Holy Shock (wowsims.com).lists.var_name	name	Variable Name
+options.packs.retribution.Holy Shock (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
+options.packs.retribution.Holy Shock (wowsims.com).lists.window_name	name	Window Name
+options.packs.retribution.Holy Shock (wowsims.com).lists.window_name	values.move1	move1
+options.packs.retribution.Holy Shock (wowsims.com).lists.window_name	values.move2	move2
+options.packs.retribution.Holy Shock (wowsims.com).pack	name	|cFF00B4FFSummary|r
+options.packs.retribution.Holy Shock (wowsims.com).pack.copyPack	desc	Copy Priority
+options.packs.retribution.Holy Shock (wowsims.com).pack.deletePack	desc	Delete Priority
+options.packs.retribution.Holy Shock (wowsims.com).pack.desc	name	Description
+options.packs.retribution.Holy Shock (wowsims.com).pack.isBuiltIn	name	|cFF00B4FFThis is a default priority package.  It will be automatically updated when the addon is updated.  If you want to customize this priority, make a copy by clicking |TInterface\\Addons\\Hekili\\Textures\\WhiteCopy:0|t.|r
+options.packs.retribution.Holy Shock (wowsims.com).pack.packName	name	Priority Name
+options.packs.retribution.Holy Shock (wowsims.com).pack.reloadPack	desc	Reload Priority
+options.packs.retribution.Holy Shock (wowsims.com).pack.spec	name	Specialization
+options.packs.retribution.Holy Shock (wowsims.com).pack.spec	values.100022	|W|T135893:0::::64:64:4:60:4:60|t Protection|w
+options.packs.retribution.Holy Shock (wowsims.com).pack.spec	values.100023	|W|T135873:0::::64:64:4:60:4:60|t Retribution|w
+options.packs.retribution.Holy Shock (wowsims.com).pack.toggleActive	desc	If checked, the addon's recommendations for this specialization are based on this priority package.
+options.packs.retribution.Holy Shock (wowsims.com).pack.toggleActive	name	|cFF00B4FFActive|r
+options.packs.retribution.Holy Shock (wowsims.com).profile	desc	If this Priority was generated with a SimulationCraft profile, the profile can be stored or retrieved here.  The profile can also be re-imported or overwritten with a newer profile.
+options.packs.retribution.Holy Shock (wowsims.com).profile	name	Source
+options.packs.retribution.Holy Shock (wowsims.com).profile.importWarning	name	You must be in the |T135873:0|t |cFFFFD100Retribution|r specialization to import this priority.
+options.packs.retribution.Holy Shock (wowsims.com).profile.importWarningSpace	name	\032
+options.packs.retribution.Holy Shock (wowsims.com).profile.profile	desc	If this pack's action lists were imported from a SimulationCraft profile, the profile is included here.
+options.packs.retribution.Holy Shock (wowsims.com).profile.profile	name	Priority (SimulationCraft Action Priority List)
+options.packs.retribution.Holy Shock (wowsims.com).profile.profileConsiderations	name	\n|cFF00CCFFBefore trying to import a profile, please consider the following:|r\n\n |cFFFFD100•|r SimulationCraft action lists tend not to change significantly for individual characters.  The profiles are written to include conditions that work for all gear, talent, and other factors combined.\n\n |cFFFFD100•|r Most SimulationCraft action lists require some additional customization to work with the addon.  For example, |cFFFFD100target_if|r conditions don't translate directly to the addon and have to be rewritten.\n\n |cFFFFD100•|r Some SimulationCraft action profiles are revised for the addon to be more efficient and use less processing time.\n\n |cFFFFD100•|r This feature has been left in for tinkerers and advanced users.\n\n
+options.packs.retribution.Holy Shock (wowsims.com).profile.profilewarning	name	|cFFFF0000You do not need to import a SimulationCraft profile to use this addon. No support is offered for custom or imported priorities from elsewhere.|r\n\n|cFF00CCFFThe default priorities included within the addon are kept up to date, are compatible with your character, and do not require additional changes.|r\n\n
+options.packs.retribution.Holy Shock (wowsims.com).profile.reimport	desc	Clear existing action list(s) and load the priority above.
+options.packs.retribution.Holy Shock (wowsims.com).profile.reimport	name	|A:UI-LFG-DeclineMark:16:16|a Import
+options.packs.retribution.Holy Shock (wowsims.com).profile.signature.author	desc	The author field is automatically filled out when creating a new Priority.  You can update it here.
+options.packs.retribution.Holy Shock (wowsims.com).profile.signature.author	name	Author
+options.packs.retribution.Holy Shock (wowsims.com).profile.signature.date	desc	This date is automatically updated when any changes are made to the action lists for this Priority.
+options.packs.retribution.Holy Shock (wowsims.com).profile.signature.date	name	Last Updated
+options.packs.retribution.Holy Shock (wowsims.com).profile.signature.source	desc	If the Priority is based on a SimulationCraft profile or a popular guide, it is a good idea to provide a link to the source (especially before sharing).
+options.packs.retribution.Holy Shock (wowsims.com).profile.signature.source	name	Source
+options.packs.retribution.Holy Shock (wowsims.com).profile.warnings	name	Import Log
 options.packs.retribution.Retribution (wowsims.com)	name	|cFF00B4FFRetribution (wowsims.com)|r
 options.packs.retribution.Retribution (wowsims.com).export	name	Export
 options.packs.retribution.Retribution (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
@@ -21096,6 +21927,7 @@ options.packs.retribution.core.openPackage	desc	Open and view this priority pack
 options.packs.retribution.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.retribution.core.package	name	Priority
 options.packs.retribution.core.package	values.(none)	(none)
+options.packs.retribution.core.package	values.Holy Shock (wowsims.com)	|W|T135873:0::::64:64:4:60:4:60|t |cFF00B4FFHoly Shock (wowsims.com)|r|w
 options.packs.retribution.core.package	values.Retribution (wowsims.com)	|W|T135873:0::::64:64:4:60:4:60|t |cFF00B4FFRetribution (wowsims.com)|r|w
 options.packs.retribution.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.retribution.core.potion	name	Potion
@@ -21462,9 +22294,11 @@ options.packs.sharePacks.export.actionPack	values.Elemental (wowsims.com)	Elemen
 options.packs.sharePacks.export.actionPack	values.Enhancement (wowsims.com)	Enhancement (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Feral (wowsims.com)	Feral (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Fire (wowsims.com)	Fire (wowsims.com)
+options.packs.sharePacks.export.actionPack	values.Frost (wowsims.com)	Frost (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Frostfire (wowsims.com)	Frostfire (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Fury (wowsims.com)	Fury (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Guardian (wowsims.com)	Guardian (wowsims.com)
+options.packs.sharePacks.export.actionPack	values.Holy Shock (wowsims.com)	Holy Shock (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Marksmanship (wowsims.com)	Marksmanship (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Protection (wowsims.com)	Protection (wowsims.com)
 options.packs.sharePacks.export.actionPack	values.Retribution (wowsims.com)	Retribution (wowsims.com)
@@ -22332,7 +23166,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili set spec wowsims_recklessness	wowsims_recklessness set to |cFF00FF00ON|r.
 ~message	/hekili set spec wowsims_stance_dance	wowsims_stance_dance set to |cFF00FF00ON|r.
 ~message	/hekili spec	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100affliction|r |cFF00FF00(current)|r\n - |cFFFFD100demonology|r\n - |cFFFFD100destruction|r
-~message	/hekili spec	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100arcane|r |cFF00FF00(current)|r\n - |cFFFFD100fire|r\n - |cFFFFD100frost|r (no priorities on Forever)
+~message	/hekili spec	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100arcane|r |cFF00FF00(current)|r\n - |cFFFFD100fire|r\n - |cFFFFD100frost|r
 ~message	/hekili spec	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100arms|r |cFF00FF00(current)|r\n - |cFFFFD100fury|r\n - |cFFFFD100protection|r
 ~message	/hekili spec	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100assassination|r |cFF00FF00(current)|r\n - |cFFFFD100combat|r\n - |cFFFFD100subtlety|r
 ~message	/hekili spec	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100balance|r |cFF00FF00(current)|r\n - |cFFFFD100feral|r\n - |cFFFFD100guardian|r\n - |cFFFFD100restoration|r (no priorities on Forever)
@@ -22342,7 +23176,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili spec	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100holy|r (no priorities on Forever)\n - |cFFFFD100protection|r |cFF00FF00(current)|r\n - |cFFFFD100retribution|r
 ~message	/hekili spec nope	No single specialization matches 'nope'.
 ~message	/hekili spec nope	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100affliction|r |cFF00FF00(current)|r\n - |cFFFFD100demonology|r\n - |cFFFFD100destruction|r
-~message	/hekili spec nope	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100arcane|r |cFF00FF00(current)|r\n - |cFFFFD100fire|r\n - |cFFFFD100frost|r (no priorities on Forever)
+~message	/hekili spec nope	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100arcane|r |cFF00FF00(current)|r\n - |cFFFFD100fire|r\n - |cFFFFD100frost|r
 ~message	/hekili spec nope	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100arms|r |cFF00FF00(current)|r\n - |cFFFFD100fury|r\n - |cFFFFD100protection|r
 ~message	/hekili spec nope	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100assassination|r |cFF00FF00(current)|r\n - |cFFFFD100combat|r\n - |cFFFFD100subtlety|r
 ~message	/hekili spec nope	Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:\n - |cFFFFD100balance|r |cFF00FF00(current)|r\n - |cFFFFD100feral|r\n - |cFFFFD100guardian|r\n - |cFFFFD100restoration|r (no priorities on Forever)

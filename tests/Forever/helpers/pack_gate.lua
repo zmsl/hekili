@@ -352,7 +352,11 @@ M.FLICKER = {
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0.08), retracted 0, readyShort 0 / 0 / 0, heldReady 65 / 70 / 94, agreement .998 / .999 / .997): flicker 0.01 (the
     -- measured worst + 0.01: the line rounds to two decimals), heldReady 94 (the worst set)
-    ["Holy Shock"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 94 },
+    -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
+    -- 41-60 flicker 0.06 / 0.00 / 0.00 (oracle 0 / 0 / 0), retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0,
+    -- heldReady 53 / 80 / 67, agreement .994 / .994 / .999): flicker 0.01 -> 0.07 (a rise: our flips, the oracle's 0;
+    -- untraced), heldReady 94 -> 80
+    ["Holy Shock"] = { flicker = 0.07, retracted = 0, readyShort = 0, heldReady = 80 },
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was
@@ -408,7 +412,10 @@ M.FLICKER = {
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0), retracted 0, readyShort 0 / 0 / 0, heldReady 113 / 113 / 109, agreement .999 / .998 / .997): flicker 0.01 (the
     -- measured worst + 0.01), heldReady 113 (the worst set)
-    ["Frost"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 113 },
+    -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
+    -- 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 / 0), retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0,
+    -- heldReady 112 / 111 / 109, agreement .996 / .998 / .998): heldReady 113 -> 112, flicker kept
+    ["Frost"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 112 },
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 396 / 398 / 399):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- Priest re-pin lane (pin e5a9cd2a2dfc, CN8 merged, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, readyShort 0, heldReady 395 / 395 / 397):

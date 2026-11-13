@@ -16,7 +16,8 @@
 -- (the kit's shortcut; this build is 5/5); the kit declares Fire's regen starting point for Frost (Mage Armor's half
 -- while casting, 14.56 mp5), which the out-of-combat read and the in-combat calibration replace, where the world runs
 -- the log's pool (6348).
--- Loops (20 fights, seeds 1-20 / 21-40 / 41-60): agreement .999 / .998 / .997, flicker 0 x3, heldReady 113 / 113 / 109.
+-- Loops (20 fights, seeds 1-20 / 21-40 / 41-60; the harness's seeded regen phase, 2026-11-13): agreement .996 / .998 /
+-- .998, flicker 0 x3, heldReady 112 / 111 / 109.
 return {
     class = "MAGE",
     pack = "Frost (wowsims.com)",
