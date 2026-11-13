@@ -1607,7 +1607,8 @@ spec:RegisterAbilities({
 
     -- Fury talent (1329555, new at 4b0030a44b): 15 s cooldown, a 1 s GCD, 25% of base health (unsimulated, like
     -- Bloodrage's: the player's health is secret) for 4 charges in 8 s; each white swing spends one and gives 5 rage.
-    -- The rage comes in the resource's reckless_swings entry (four 5-rage ticks of the aura), not at the cast.
+    -- The belief pays it at each landed white swing (the reckless_swings reaction), not at the cast; Hekili's own
+    -- forecast does not see it (the reaction is belief-only).
     reckless_swings = {
         id = 1329555,
         cast = 0,
