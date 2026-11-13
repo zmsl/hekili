@@ -15442,7 +15442,7 @@ options.items.thistle_tea.toggle	values.potions	Potions
 options.packs	desc	Priorities (or action packs) are bundles of action lists used to make recommendations for each specialization.
 options.packs	name	Priorities
 options.packs.affliction	name	|cFFFFD100Affliction|r
-options.packs.affliction.Affliction (wowsims.com)	name	|cFF00B4FFAffliction (wowsims.com)|r
+options.packs.affliction.Affliction (wowsims.com)	name	|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t |cFF00B4FFAffliction (wowsims.com)|r
 options.packs.affliction.Affliction (wowsims.com).export	name	Export
 options.packs.affliction.Affliction (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
 options.packs.affliction.Affliction (wowsims.com).export.exportString	name	Priority Export String
@@ -16077,7 +16077,7 @@ options.packs.affliction.targets.targetsHeader	name	These settings control how t
 options.packs.affliction.targets.yourTarget	desc	Your actual target is always counted as an enemy, even if you do not have a target.\n\nThis setting cannot be disabled.
 options.packs.affliction.targets.yourTarget	name	Your Target
 options.packs.arcane	name	|cFFFFD100Arcane|r
-options.packs.arcane.Arcane (wowsims.com)	name	|cFF00B4FFArcane (wowsims.com)|r
+options.packs.arcane.Arcane (wowsims.com)	name	|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t |cFF00B4FFArcane (wowsims.com)|r
 options.packs.arcane.Arcane (wowsims.com).export	name	Export
 options.packs.arcane.Arcane (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
 options.packs.arcane.Arcane (wowsims.com).export.exportString	name	Priority Export String
@@ -16380,7 +16380,7 @@ options.packs.arcane.targets.targetsHeader	name	These settings control how targe
 options.packs.arcane.targets.yourTarget	desc	Your actual target is always counted as an enemy, even if you do not have a target.\n\nThis setting cannot be disabled.
 options.packs.arcane.targets.yourTarget	name	Your Target
 options.packs.arms	name	|cFFFFD100Arms|r
-options.packs.arms.Arms (wowsims.com)	name	|cFF00B4FFArms (wowsims.com)|r
+options.packs.arms.Arms (wowsims.com)	name	|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t |cFF00B4FFArms (wowsims.com)|r
 options.packs.arms.Arms (wowsims.com).export	name	Export
 options.packs.arms.Arms (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
 options.packs.arms.Arms (wowsims.com).export.exportString	name	Priority Export String
@@ -16774,7 +16774,7 @@ options.packs.arms.targets.targetsHeader	name	These settings control how targets
 options.packs.arms.targets.yourTarget	desc	Your actual target is always counted as an enemy, even if you do not have a target.\n\nThis setting cannot be disabled.
 options.packs.arms.targets.yourTarget	name	Your Target
 options.packs.assassination	name	|cFFFFD100Assassination|r
-options.packs.assassination.Assassination (wowsims.com)	name	|cFF00B4FFAssassination (wowsims.com)|r
+options.packs.assassination.Assassination (wowsims.com)	name	|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t |cFF00B4FFAssassination (wowsims.com)|r
 options.packs.assassination.Assassination (wowsims.com).export	name	Export
 options.packs.assassination.Assassination (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
 options.packs.assassination.Assassination (wowsims.com).export.exportString	name	Priority Export String
@@ -17117,7 +17117,7 @@ options.packs.assassination.targets.targetsHeader	name	These settings control ho
 options.packs.assassination.targets.yourTarget	desc	Your actual target is always counted as an enemy, even if you do not have a target.\n\nThis setting cannot be disabled.
 options.packs.assassination.targets.yourTarget	name	Your Target
 options.packs.balance	name	|cFFFFD100Balance|r
-options.packs.balance.Balance (wowsims.com)	name	|cFF00B4FFBalance (wowsims.com)|r
+options.packs.balance.Balance (wowsims.com)	name	|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t |cFF00B4FFBalance (wowsims.com)|r
 options.packs.balance.Balance (wowsims.com).export	name	Export
 options.packs.balance.Balance (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
 options.packs.balance.Balance (wowsims.com).export.exportString	name	Priority Export String
@@ -17483,7 +17483,7 @@ options.packs.balance.targets.targetsHeader	name	These settings control how targ
 options.packs.balance.targets.yourTarget	desc	Your actual target is always counted as an enemy, even if you do not have a target.\n\nThis setting cannot be disabled.
 options.packs.balance.targets.yourTarget	name	Your Target
 options.packs.beast_mastery	name	|cFFFFD100Beast Mastery|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com)	name	|cFF00B4FFBeast Mastery (wowsims.com)|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com)	name	|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t |cFF00B4FFBeast Mastery (wowsims.com)|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).export	name	Export
 options.packs.beast_mastery.Beast Mastery (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).export.exportString	name	Priority Export String
@@ -19165,7 +19165,7 @@ options.packs.destruction.targets.targetsHeader	name	These settings control how 
 options.packs.destruction.targets.yourTarget	desc	Your actual target is always counted as an enemy, even if you do not have a target.\n\nThis setting cannot be disabled.
 options.packs.destruction.targets.yourTarget	name	Your Target
 options.packs.discipline	name	|cFFFFD100Discipline|r
-options.packs.discipline.Smite (wowsims.com)	name	|cFF00B4FFSmite (wowsims.com)|r
+options.packs.discipline.Smite (wowsims.com)	name	|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t |cFF00B4FFSmite (wowsims.com)|r
 options.packs.discipline.Smite (wowsims.com).export	name	Export
 options.packs.discipline.Smite (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
 options.packs.discipline.Smite (wowsims.com).export.exportString	name	Priority Export String
@@ -19518,7 +19518,7 @@ options.packs.discipline.targets.targetsHeader	name	These settings control how t
 options.packs.discipline.targets.yourTarget	desc	Your actual target is always counted as an enemy, even if you do not have a target.\n\nThis setting cannot be disabled.
 options.packs.discipline.targets.yourTarget	name	Your Target
 options.packs.elemental	name	|cFFFFD100Elemental|r
-options.packs.elemental.Elemental (wowsims.com)	name	|cFF00B4FFElemental (wowsims.com)|r
+options.packs.elemental.Elemental (wowsims.com)	name	|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t |cFF00B4FFElemental (wowsims.com)|r
 options.packs.elemental.Elemental (wowsims.com).export	name	Export
 options.packs.elemental.Elemental (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.
 options.packs.elemental.Elemental (wowsims.com).export.exportString	name	Priority Export String
@@ -22531,6 +22531,7 @@ options.packs.newPackSpec	values.100113	|W|T132276:0::::64:64:4:60:4:60|t Guardi
 options.packs.packDesc	name	Priorities (or action packs) are bundles of action lists used to make recommendations for each specialization.  They can be customized and shared.  |cFFFF0000Imported SimulationCraft priorities often require some translation before they will work with this addon.  No support is offered for customized or imported priorities.|r
 options.packs.protection	name	Protection
 options.packs.protection	name	|cFFFFD100Protection|r
+options.packs.protection.Protection (wowsims.com)	name	|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t |cFF00B4FFProtection (wowsims.com)|r
 options.packs.protection.Protection (wowsims.com)	name	|cFF00B4FFProtection (wowsims.com)|r
 options.packs.protection.Protection (wowsims.com).export	name	Export
 options.packs.protection.Protection (wowsims.com).export.exportString	desc	Press CTRL+A to select, then CTRL+C to copy.

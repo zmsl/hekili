@@ -492,6 +492,19 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
             protection = { "Protection (wowsims.com)" },
         }, kids)
         assert.is_true(ACD:GetStatusTable("Hekili").groups.groups.packs) -- Priorities starts expanded
+        -- the current spec's node starts expanded too, the others not; its active priority wears the ready check
+        local Status = H.Hekili.Engine.Output.status
+        local groups = ACD:GetStatusTable("Hekili").groups.groups
+        assert.is_true(groups["packs\001" .. Status.specKey])
+        for _, k in ipairs({ "arms", "fury", "protection" }) do
+            if k ~= Status.specKey then
+                assert.is_nil(groups["packs\001" .. k])
+            end
+        end
+        local cur = nodes[Status.specKey].plugins.packs[Status.specKey:gsub("^%l", string.upper) .. " (wowsims.com)"]
+        assert.is_truthy(cur.name():find("ReadyCheck-Ready", 1, true))
+        H.Hekili.DB.profile.specs[Status.specID].package = "(none)"
+        assert.is_nil(cur.name():find("ReadyCheck-Ready", 1, true))
         tree:SelectByValue("packs\001fury") -- the spec's page: its three tabs, no priority among them
         local tabs = {}
         for _, e in ipairs(tree.children[1]:GetUserData("tablist")) do

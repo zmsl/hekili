@@ -2731,6 +2731,7 @@ end
 -- path length): the tree (0) sees "tree" and only the priorities; the spec's page (2: packs, spec) sees "tab" and only
 -- the tabs. If another AceConfigDialog replaces FeedGroup, feedDepth stays nil and the priorities show as further tabs
 -- of their spec.
+local ACTIVE_MARK = "|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t " -- before the active priority's name in the tree
 local feedDepth
 local specNodeMeta = {
     __index = function( _, k )
@@ -2779,6 +2780,9 @@ local function FeedGroup( dialog, appName, options, container, rootframe, path, 
         status.groups = status.groups or {}
         status.groups.groups = status.groups.groups or {}
         if status.groups.groups.packs == nil then status.groups.groups.packs = true end
+        -- the current spec's row opens too (set once: a later manual collapse stays)
+        local key = Status.specKey and ( "packs\001" .. Status.specKey )
+        if key and status.groups.groups[ key ] == nil then status.groups.groups[ key ] = true end
     end
     local outer = feedDepth
     feedDepth = #path
@@ -5136,8 +5140,11 @@ found = true end
                     hidden = under and SpecPackHidden or nil,
                     name = function ()
                         local p = rawget( Hekili.DB.profile.packs, pack )
-                        if p.builtIn then return '|cFF00B4FF' .. Registry.PackLabel( pack ) .. '|r' end
-                        return pack
+                        local sp = Hekili.DB.profile.specs[ p.spec ]
+                        -- the current spec's active priority wears a ready check
+                        local on = sp and sp.package == pack and Status.specID == p.spec and ACTIVE_MARK or ""
+                        if p.builtIn then return on .. '|cFF00B4FF' .. Registry.PackLabel( pack ) .. '|r' end
+                        return on .. pack
                     end,
                     icon = function()
                         return Registry.Specs()[ data.spec ].texture
