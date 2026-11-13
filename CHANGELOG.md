@@ -6,6 +6,8 @@
 
 ### Changed
 
+- The options' Priorities list now opens on your current spec, and marks the priority that is active with a green check.
+
 ### Fixed
 
 ### Known issues
