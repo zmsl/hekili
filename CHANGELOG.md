@@ -16,6 +16,7 @@
 - The options' Priorities list now opens on your current spec, and marks the priority that is active with a green check.
 
 ### Fixed
+- Life Tap (Warlock), Innervate (Feral, and Guardian in Cat Form) and Dark Sacrifice (Shadow Priest) are no longer recommended at full mana on characters with less mana than the level-60 character these priorities were written for (for example while leveling); they now wait until your mana is low for your own pool.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 
 ### Known issues

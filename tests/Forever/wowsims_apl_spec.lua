@@ -2,7 +2,7 @@
 -- wowsims/forever's JSON shape (MIT) with a stand-in class context.
 local apl = require("tools.wowsims.apl")
 
-local function ctx(r, player, encounter)
+local function ctx(r, player, encounter, log)
     local kit = {
         abilities = {
             strike = { key = "strike", id = 100, copy = { 101 }, gcd = "spell" },
@@ -32,7 +32,7 @@ local function ctx(r, player, encounter)
         },
         talents = { furious = { 2, 900, 1 }, cuts = { 1, 950, 1 } },
     }
-    return apl.context(kit, r or { executePhase = "execute_phase", focus = { strike = 1 } }, nil, player, encounter)
+    return apl.context(kit, r or { executePhase = "execute_phase", focus = { strike = 1 } }, log, player, encounter)
 end
 local function cast(id, cond)
     return { action = { castSpell = { spellId = { spellId = id } }, condition = cond } }
@@ -651,6 +651,37 @@ describe("the wowsims APL translator", function()
             text
         )
         assert.are.same({ "default #2: currentManaPercent of Pet" }, omitted)
+    end)
+
+    it("writes our mana under a number as that number's share of the kit's pool too (rule 22)", function()
+        local mana = { currentMana = {} }
+        local rotation = {
+            priorityList = {
+                cast(100, cmp("OpLt", mana, const("1800"))),
+                cast(200, cmp("OpGt", const("1000"), mana)), -- the number first
+                cast(300, cmp("OpLe", mana, const("1401"))), -- 35.025 rounds up
+                cast(400, cmp("OpGt", mana, const("500"))), -- over: stays absolute
+            },
+        }
+        -- our character's first mana line is the kit's pool; the pet's (" - Imp") is not
+        local log = table.concat({
+            "[-1.00] [Spec (#1) - Imp] Gained 1.700 mana from {OtherID: 2, Tag: 1} (99.000 --> 99.000) of 100 total.",
+            "[-1.00] [Spec (#1)] Gained 1.500 mana from {OtherID: 2, Tag: 1} (4000.000 --> 4000.000) of 4000 total.",
+        }, "\n")
+        local text, omitted = apl.translate(rotation, ctx(nil, nil, nil, log))
+        assert.are.equal(
+            table.concat({
+                "actions=strike,focus=1,if=(mana.lo<1800&mana.pct_lo<45)",
+                "actions+=/big_hit,if=(mana.lo<1000&mana.pct_lo<25)",
+                "actions+=/roar,use_off_gcd=1,if=(mana.lo<=1401&mana.pct_lo<=36)",
+                "actions+=/dot,if=mana.lo>500",
+            }, "\n"),
+            text
+        )
+        assert.are.same({}, omitted)
+        -- no log: the kit's pool is unknown, so the entry is omitted
+        local _, none = apl.translate({ priorityList = { cast(100, cmp("OpLt", mana, const("1800"))) } }, ctx())
+        assert.are.same({ "default #1: currentMana against a number (no log: the kit's pool unknown)" }, none)
     end)
 
     it("reads auraIsKnown as registered on Self or the target; another unit's or player's is false", function()
