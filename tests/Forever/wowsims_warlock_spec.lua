@@ -26,8 +26,9 @@ end
 -- Ruin 0.60 -> 0.70 (0.702), G4 (wowsims's dynamite miss no longer undoes our Corruption); Demonology 0.76 -> 0.77
 -- (0.776), G5 (the replay's pet mana: the `pet.mana<115` Life Tap). The rest is mostly API-forced (`fight_remains`
 -- 3600 s: wowsims's last-minute Bane of Agony) and G6 (Shadow Bolt's travel, central fix 32).
--- LIVE60 0.2 in every pack: each list ends in an unconditional Life Tap, so no bracket idles (worst 0.2 s at 10, 40
--- and 60); no low-level filler (owner ruling 2026-10-21). The L10/L40 brackets keep 6 s, only L60 may follow LIVE60 (R22).
+-- LIVE60 0.2 in every pack: each list ends in Shadow Bolt, then Life Tap under Shadow Bolt's cost (owner 2026-11-12:
+-- "Life tap is not a good filler"), so no bracket idles (worst 0.2 s at 10, 40 and 60); no other low-level filler (owner
+-- ruling 2026-10-21). The L10/L40 brackets keep 6 s, only L60 may follow LIVE60 (R22).
 -- Re-pin e2842f0a78 (Task 11): Affliction 0.87 -> 0.98 (0.988, 84; was 0.989, 87), replay flicker 0.00/min before and
 -- after, LIVE60 0.2 -> 0.2.
 -- Re-pin e2842f0a78 (Task 16; the four new Human builds and Sesam's lists; the replay answers fight_remains from the

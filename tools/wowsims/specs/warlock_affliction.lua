@@ -31,8 +31,14 @@
 -- (rule 2); the Ez-Thro Dynamite II (18588, rule 13) is unmapped (no shared key), listed; Berserking (Troll) and
 -- Eureka! are other races' racials, never known to the Orc. The Weakness Analyzer trinket (272438) is `use_items` (rule
 -- 13).
--- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket
--- idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
+-- Filler (owner 2026-11-12, a player's report: "after putting my dots, Hekili wants me to spam Life Tap, even with full
+-- mana"; owner: "Life tap is not a good filler"): wowsims's list ends `wrack` then an unconditional Life Tap, so a
+-- Warlock without Wrack (the talent) was shown Life Tap at full mana. An `extra` Shadow Bolt (known at 1) goes before
+-- that last Life Tap, and `guard` "default #12" shows the Life Tap only under Shadow Bolt's cost. In wowsims's build
+-- Wrack (200 mana) is cheaper than Shadow Bolt and always castable above its cost, so neither line moves the replay or
+-- the loops (docs/dev/wowsims-packs.md, Deviations by ruling).
+-- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in Shadow Bolt then Life Tap under its cost,
+-- so no bracket idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
 return {
     class = "WARLOCK",
     pack = "Affliction (wowsims.com)",
@@ -56,6 +62,7 @@ return {
                 NoCurse = false,
             },
             active = "warlockAssignedCurseIsActive",
+            activeAll = "warlockAssignedCurseIsActiveOnAllTargets", -- rule 20: its swap is the curse lines' cycle_targets=1
             is = "warlockIsAssignedCurse",
         },
     },
@@ -71,5 +78,9 @@ return {
         curse_of_recklessness = 2,
         curse_of_weakness = 2,
     },
+    extra = { { before = "life_tap", last = true, line = "shadow_bolt" } }, -- the filler (header)
+    guard = {
+        ["default #12"] = { expect = "life_tap", cond = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" },
+    }, -- the final Life Tap (header)
     leveling = {},
 }

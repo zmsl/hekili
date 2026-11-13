@@ -49,6 +49,10 @@ function M.new(seed)
     local W = { t = 0, q = {}, seq = 0, truth = {}, rng = rng.new(seed), crng = rng.new(seed + 7919), ents = {} }
     W.grng = rng.new(seed + 15485863) -- the GCD flag's order against its cast (W.press), apart from both
     W.mrng = rng.new(seed + 32452843) -- the meter and viewer shapes, apart from every other draw
+    -- the stepped regen grids' phases (L668): each W.startRegen resource and W.startPetRegen ticks at t0 + (k - phase) x
+    -- its tick, the phase a draw in [0, 1) (regenPhase[pt] / .pet), as live's server ticks fall at an arbitrary phase
+    -- to the client's polls; apart from every other draw
+    W.prng, W.regenPhase = rng.new(seed + 49979687), {}
     W.combat = false
     W.rates = {} -- [powerType] = regen per second (W.startRegen)
     W.fsr = {} -- [powerType] = { spirit, mp5, share?, mp5?, auras? } per second: the five-second rule's two parts (W.startRegen)
@@ -202,7 +206,8 @@ function M.new(seed)
 
     --- The player `e` pressed `key` now. `p` is the content's resolved press { spell, ids (every rank's: the client
     --- answers their cooldown and IsCurrentSpell together; default { spell }), cost, pt (the cost's power type; default
-    --- the swing-paid one), cooldown, gcd (seconds; 0 or offGcd: off the GCD), offGcd, onNextSwing, amount ({ lo, hi } of
+    --- the swing-paid one), cooldown, gcd (seconds, or fn(W, e) -> seconds at the press; 0 or offGcd: off the GCD),
+    --- offGcd, onNextSwing, amount ({ lo, hi } of
     --- a queued strike), reagent ({ itemID, n [1] }: a bag count the press needs, paid when its cast lands; short:
     --- "reagent"), cast (a cast time in seconds), channel ({ length, tick, gain = { pt, amount }, effect = fn(W, e,
     --- p, n) }: a channel of `length` s ticking every `tick` s, each tick's gain and effect; the cast, its cost and its
@@ -260,7 +265,11 @@ function M.new(seed)
         if clip then
             W.stopChannel(e)
         end
-        local gcdLen = not offGcd and (p.gcd or 1.5) + (e.gcdLatency or 0) or nil
+        local g = p.gcd
+        if type(g) == "function" then
+            g = g(W, e)
+        end
+        local gcdLen = not offGcd and (g or 1.5) + (e.gcdLatency or 0) or nil
         if gcdLen then
             e.gcdUntil = t + gcdLen
         end
@@ -466,12 +475,15 @@ function M.new(seed)
 
     --- `e`'s pet regenerates `regen` a second from now, `tick` s at a time (its own declared rate).
     function W.startPetRegen(e)
-        local p = e.pet
+        local p, ph = e.pet, W.prng.next()
+        local t0, k = W.t, 1 -- indexed: t0 + (k - phase) x tick, never a running sum (L606, L668)
+        W.regenPhase.pet = ph
         local function step()
             W.petGain(e, p.regen * p.tick)
-            W.at(W.t + p.tick, step)
+            k = k + 1
+            W.at(t0 + (k - ph) * p.tick, step)
         end
-        W.at(W.t + p.tick, step)
+        W.at(t0 + (1 - ph) * p.tick, step)
     end
 
     --- `e` changes form (after the shift's own cast): `sh` { form, speed (the main hand's new period; default
@@ -543,8 +555,8 @@ function M.new(seed)
         return r
     end
 
-    --- Continuous regen of `e`'s resources at `rates` ({ [pt] = per second }) from now, applied every `every` s (0.1)
-    --- as a "regen" gain, capped at the maximum (no event at it); `after` { s, k }: the rate x k after s seconds in one
+    --- Continuous regen of `e`'s resources at `rates` ({ [pt] = per second }) from now, applied every `every` s (0.1),
+    --- each resource at its own seeded phase (W.regenPhase), as a "regen" gain, capped at the maximum (no event at it); `after` { s, k }: the rate x k after s seconds in one
     --- form (an unmeasured in-form ramp's knob); `fsr` ({ [pt] = { spirit, mp5, share?, auras? } }): those types by W.regenRate's
     --- five-second rule instead.
     function W.startRegen(e, rates, every, after, fsr)
@@ -555,17 +567,25 @@ function M.new(seed)
         for pt, f in pairs(fsr or {}) do
             W.fsr[pt], W.rates[pt] = f, 0
         end
-        local function step()
-            for pt in pairs(W.rates) do
+        local pts = {}
+        for pt in pairs(W.rates) do
+            pts[#pts + 1] = pt
+        end
+        table.sort(pts) -- the phases drawn in one order
+        for _, pt in ipairs(pts) do -- one grid per resource, at its own phase (L668)
+            local t0, k, ph = W.t, 1, W.prng.next() -- indexed: t0 + (k - phase) x every, never a running sum (L606)
+            W.regenPhase[pt] = ph
+            local function step()
                 local r = e.res[pt] or { cur = e.power, max = e.powerMax }
                 local add = math.min(W.regenRate(e, pt) * every, r.max - r.cur)
                 if add > 0 then
                     W.emit({ kind = "regen", src = e, pt = pt, rage = add })
                 end
+                k = k + 1
+                W.at(t0 + (k - ph) * every, step)
             end
-            W.at(W.t + every, step)
+            W.at(t0 + (1 - ph) * every, step)
         end
-        W.at(W.t + every, step)
     end
 
     --- `e`'s out-of-combat decay of power type `d.pt` from now (call it at the combat's end): `d.rate` a second, stepped
