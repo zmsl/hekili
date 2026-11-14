@@ -15,7 +15,7 @@ The **pack API** is the set of calls a content addon uses to declare a class, th
 
 ## Every call
 
-The table is generated from the definitions. The "Offered by" column names the object that has the call, and "Used by" the content addons that call it today.
+The table is generated from the definitions. The "Offered by" column names the object that has the call, and "Used by" the content addons that call it.
 
 <!-- GENERATED:register-api -->
 <!-- /GENERATED -->

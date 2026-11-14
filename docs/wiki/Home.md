@@ -13,7 +13,7 @@ The built-in priorities are translated from the rotations at [wowsims.com](https
 | To do this | Read |
 |---|---|
 | Install the addon and see a first recommendation | [Installing](Installing), then [Getting started](Getting-Started) |
-| Learn what changed from retail Hekili | [Coming from retail Hekili](Coming-From-Retail-Hekili) |
+| Learn how Hekili Forever differs from retail Hekili | [Coming from retail Hekili](Coming-From-Retail-Hekili) |
 | Fix a display that shows nothing, or shows the wrong thing | [Troubleshooting and FAQ](Troubleshooting-And-FAQ) |
 | Report a wrong recommendation | [Reporting a problem](Reporting-A-Problem) |
 | Change a line in a priority | [APL overview](APL-Overview) |

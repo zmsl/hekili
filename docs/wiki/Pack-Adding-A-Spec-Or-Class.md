@@ -120,7 +120,7 @@ Each entry of `def.specs` in `Hekili:NewClass` describes one spec. The fields, f
 | `package` | The spec's default priority, such as `"Feral (wowsims.com)"`. |
 | `movement` | `true` when the spec's priority reads `toggle.movement`; the options then show the Movement toggle for it. `tests/Forever/packs_spec.lua` checks that the two agree. |
 | `unsupported` | `true` for a spec with no priority on Forever. Its displays are off, the engine idles and the options page says so. |
-| `formerPackages` | Earlier default priorities the spec's `package` replaced. A player still on one of them counts as on the default when the spec picks its priority. |
+| `formerPackages` | Priority names that count as the spec's default: a player on one of them counts as on the default when the spec picks its priority. |
 
 From `src/Hekili_Druid/Druid.lua`:
 

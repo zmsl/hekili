@@ -129,7 +129,7 @@ The Druid spec also checks every ability against two tables at its top, and both
 - `KIT` lists each ability's spell IDs, cost, cost type, cooldown and GCD, checked against the game's spell data: `barkskin = { { 22812 }, 0, nil, 60, "spell" }`.
 - `NOW` lists the abilities that must have a `now`, and the test fails for an ability that has one and is not listed, or is listed and has none.
 
-For a new ability, add a row to `KIT`, add its key to `NOW` if it has a `now`, and raise the ability count that the first test asserts (`assert.are.equal(45, n)` today).
+For a new ability, add a row to `KIT`, add its key to `NOW` if it has a `now`, and raise the ability count that the first test asserts (such as `assert.are.equal(45, n)`).
 
 Run the class spec:
 

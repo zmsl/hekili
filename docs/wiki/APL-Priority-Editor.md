@@ -48,7 +48,7 @@ These fields are shown and saved, but nothing in Hekili Forever reads them:
 
 | Field | Shown for | Note |
 |---|---|---|
-| **Max Energy** | A Ferocious Bite line | Left from an older pooling option |
+| **Max Energy** | A Ferocious Bite line | Part of a pooling option that nothing reads |
 | **Pooling Time** | A `pool_resource` line without pooling for the next entry | Pooling for a fixed time is not implemented. |
 | **Use While Casting** | Every ability line | |
 | **Test Conditions Immediately**, **Additional Immediate Criteria** | Every line | They act only on `call_action_list`, `run_action_list` and `use_items` lines. |

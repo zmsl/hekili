@@ -78,7 +78,7 @@ These options are accepted and stored, but nothing in Hekili Forever reads them:
 | Option | Editor field | Note |
 |---|---|---|
 | `wait` on `pool_resource` | **Pooling Time** | Pooling for a fixed time is not implemented. |
-| `max_energy` | **Max Energy** | Shown only for Ferocious Bite, left from an older pooling option |
+| `max_energy` | **Max Energy** | Shown only for Ferocious Bite; part of a pooling option that nothing reads |
 | `use_while_casting` | **Use While Casting** | |
 | `interrupt_global` | none | The channel-breaking options that work are `interrupt`, `interrupt_if`, `interrupt_immediate`, `chain` and `early_chain_if`. |
 | `strict`, `strict_if` on an ability line | **Test Conditions Immediately**, **Additional Immediate Criteria** | They act only on `call_action_list`, `run_action_list` and `use_items` lines. |

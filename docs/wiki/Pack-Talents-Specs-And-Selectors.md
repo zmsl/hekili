@@ -55,7 +55,7 @@ Each entry of `specs` in `Hekili:NewClass(token, { specs = { ... } })` is one sp
 | `ranged` | True for a ranged spec. Sets the default **Enemy Range Radius** to 30 yards instead of 10. |
 | `nameplateRange` | The spec's own **Enemy Range Radius** default, in yards, when neither 30 nor 10 fits |
 | `package` | The spec's default priority, by name, such as `"Feral (wowsims.com)"` |
-| `formerPackages` | A set of priority names that used to be the default. A profile still on one of them counts as being on the default. |
+| `formerPackages` | A set of priority names that count as the default: a profile on one of them counts as being on the default. |
 | `movement` | True when the spec's priorities read the Movement toggle, whose options row is then shown |
 | `unsupported` | True for a spec with no priorities on Forever: its displays are off and its options page says so |
 

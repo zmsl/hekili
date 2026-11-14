@@ -11,7 +11,7 @@ Problems with Hekili Forever are reported to the Hekili Forever project ([Report
 ## What carried over
 
 - **The simulation.** As in the original, each recommendation comes from simulating the next few seconds of the fight with the active priority. The first icon is the ability to press now, and the next icons follow from it.
-- **The displays.** **Primary**, **AOE**, **Cooldowns**, **Interrupts** and **Defensives**, in the original's icon-row look, now called the Classic style.
+- **The displays.** **Primary**, **AOE**, **Cooldowns**, **Interrupts** and **Defensives**, in the original's icon-row look, called the Classic style here.
 - **The toggles.** Major and minor cooldowns, interrupts, defensives, potions and the two custom toggles, with the same default keys, and the same display modes.
 - **Priorities.** Action priority lists in the SimulationCraft dialect the original used, with the same editor, import and export.
 - **Snapshots** and the **Pause** key, to see why an ability was recommended.
@@ -37,8 +37,8 @@ Problems with Hekili Forever are reported to the Hekili Forever project ([Report
 - **The player's health.** While the game hides it, the player's health reads as full, so a defensive line based on low health does not fire.
 - **Counting damaged enemies.** The game does not report hits landed on other enemies, so **Count Damaged Enemies** finds fewer targets. Nameplate counting is the reliable method ([How targets are counted](How-Targets-Are-Counted)).
 - **Resource pooling.** `pool_resource` works only in its `for_next=1` form, which waits for the next line's cost. Other forms are ignored: the forecast already waits until a cost is covered.
-- **Minor Cooldowns.** In `/hekili set`, the **Minor Cooldowns** toggle is `minor_cooldowns`; the older word `essences`, used by retail macros, still works.
-- **SpellFlash.** SpellFlash support was removed; it never worked on Forever.
+- **Minor Cooldowns.** In `/hekili set`, the **Minor Cooldowns** toggle is `minor_cooldowns`; the word `essences`, used by retail macros, also works.
+- **SpellFlash.** Hekili Forever has no SpellFlash support.
 - **Imported priorities.** A priority exported from retail Hekili names another game's specializations and abilities. It needs translating before it works ([APL Forever differences](APL-Forever-Differences)).
 
 ## Why recommendations can lag

@@ -71,7 +71,7 @@ A copy of a built-in priority keeps the lines it had when it was copied. When a 
 To keep up with updates:
 
 - Use the built-in priority where possible. The per-ability options and toggles change what it recommends without a copy ([Abilities and items](Abilities-And-Items), [Toggles](Toggles)).
-- If you keep a copy, compare it with the built-in priority after each update, and copy again when the built-in one has changed.
+- If you keep a copy, compare it with the built-in priority after each update, and copy again when the two differ.
 
 ## See also
 

@@ -36,7 +36,7 @@ Hekili Forever uses the original Hekili's folder name, `Hekili`, and its saved s
 2. Delete the old `Hekili` folder, and any old `Hekili_` folders, from `_forever_\Interface\AddOns\`.
 3. Copy the new folders in, as above.
 
-Replace the folders rather than copying the new files over the old ones: a file that the new release no longer ships would stay behind and could still load. <!-- UNVERIFIED: these steps have not been checked in game. -->
+Replace the folders rather than copying the new files over the old ones: a file that the new release does not ship would stay behind and could still load. <!-- UNVERIFIED: these steps have not been checked in game. -->
 
 ## Keep the addons on one version
 

@@ -58,7 +58,7 @@ The accuracy table reads `docs/wiki/data/accuracy.json`, a copy of the report of
 - a bold options path, such as **/hekili > Priorities**, whose parts are not option labels, or a bold Title Case label that is not an option label in English;
 - a chat command in code that is not a published command or alias;
 - a command in the addon that `docs/wiki/data/commands.lua` lists neither as public nor as internal;
-- an expression key in the scan with no meaning in `docs/wiki/data/expressions.lua`, a meaning that no longer evaluates, or an example that does not compile;
+- an expression key in the scan with no meaning in `docs/wiki/data/expressions.lua`, a meaning that does not evaluate, or an example that does not compile;
 - a link to a page or heading that does not exist, or to a site other than GitHub, wowsims.com and CurseForge;
 - a local file path, a hidden debug switch, an internal reference number, or a link to a private artifact.
 

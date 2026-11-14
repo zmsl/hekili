@@ -11,7 +11,7 @@ Read [APL overview](APL-Overview) first if lists, lines and conditions are new t
 ## What you will have at the end
 
 - A priority named "Feral (wowsims.com) (2)", active for Feral, identical to the built-in one except for its Faerie Fire line.
-- The changed line: Faerie Fire is no longer recommended while you hold five combo points, so the points go to a finisher first.
+- The edited line: Faerie Fire is not recommended while you hold five combo points, so the points go to a finisher first.
 - A share string of the priority that another player can import.
 
 ## Copy a built-in priority
@@ -55,7 +55,7 @@ If the condition has a typing error, an error appears in **Warnings** and the li
 ## Test it
 
 1. Close the options and attack an enemy in the open world. Forever has no target dummies.
-2. Build five combo points while Faerie Fire is missing from the target, so that the changed line matters.
+2. Build five combo points while Faerie Fire is missing from the target, so that the edited line matters.
 3. Type `/hekili snapshot`.
 4. Open `/hekili` again, then **Snapshots (Troubleshooting)**, and choose the newest snapshot in **Select a Snapshot**.
 5. Find the `faerie_fire` entry of the `default` list. Its criteria read FAILS, with `combo_points.current` shown as 5. A finisher is recommended instead.

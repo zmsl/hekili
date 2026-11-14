@@ -53,7 +53,7 @@ The **Gear and Items** page lists the items that the class addon knows for the s
 
 ## Check that it works
 
-Close the options and fight an enemy. A disabled ability no longer appears. An ability tied to a toggle disappears when you turn that toggle off. An overridden keybind shows its new text on the icon.
+Close the options and fight an enemy. A disabled ability does not appear. An ability tied to a toggle disappears when you turn that toggle off. An overridden keybind shows its new text on the icon.
 
 ## See also
 
