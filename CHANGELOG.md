@@ -36,6 +36,7 @@
 - Importing a priority no longer breaks lines that use min(), max() or the ^ operator. Re-importing Fury (wowsims.com) or Enhancement (wowsims.com) from a copy's Source tab now keeps every line intact.
 - `prev.last` in a priority condition now names the last ability you cast, and `prev.<ability>` is true when it was that ability. Before, for the ability Hekili shows first, `prev.last` read "none" and `prev.<ability>` was always false.
 - A priority line's `interrupt=` option now works: while you channel that spell, Hekili shows the next ability at the channel's next tick once your global cooldown is ready. Before, `interrupt=` did nothing.
+- Paladins: Judgement being usable now corrects Hekili's mana estimate, so abilities are held back less often after a seal. Rogue finishers being usable now correct the energy estimate the same way.
 
 ### Known issues
 - The Hunter Turret priorities have not been checked in the game yet.

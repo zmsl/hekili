@@ -439,7 +439,7 @@ spec:RegisterWindow("riposte", {
     close_on_false = true,
 })
 
--- A finisher needs a combo point (its `usable`; with `ladder = false` its answers are no energy rungs, C9).
+-- A finisher needs a combo point (its `usable`; with `ladder = false` its short answers are no energy rungs, C9).
 local function finisherUsable()
     return combo_points.current > 0, "requires combo points"
 end
