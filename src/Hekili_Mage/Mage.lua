@@ -684,7 +684,7 @@ spec:RegisterAbilities({
 -- Cold Snap to reset it, Ice Barrier kept for Frigid Power, Ice Lance on a Fingers of Frost charge, and the AoE list's
 -- Blizzard. Values from the DB2 (costs, cooldowns, durations, the class masks: Frost Channeling's bit 19 names Cone of
 -- Cold, Ice Lance, Ice Barrier and Blizzard) where wowsims's log agrees (Cone of Cold 527.25 = 555 x 0.95 and Ice
--- Barrier 456 = 480 x 0.95 under Frost Channeling 1/3). Blink (the list's pre-pull leap) is not registered: its line's
+-- Barrier 456 = 480 x 0.95 under Frost Channeling 1/3). Blink (the list's pre-pull leap) is not in the pack: its line's
 -- time reads Blink's aura duration, which the translator does not fold (the pack's `# Omitted:` line).
 spec:RegisterAuras({
     -- The target's (unreadable in combat), modelled from our Frostbolts: Winter's Chill, 5 at most, 15 s.
@@ -1037,6 +1037,9 @@ do
         -- 35% of base mana, 15 s, on the GCD (the pin's row; wowsims blink.go).
         blink = {
             id = 1953,
+            -- a move step Hekili never recommends (owner, L844): the wowsims replay keeps it out of the decisions (read by
+            -- the replay only)
+            movesOnly = true,
             school = "arcane",
             cast = 0,
             cooldown = 15,

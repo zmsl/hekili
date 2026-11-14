@@ -84,7 +84,7 @@ local PACKS = {
     -- cost), Evocation cooling (424 s left) and Cold Snap spent, as Fire's Scorch wait. Arcane L10/L40 0.4 -> 0.2 s
     -- (47 -> 48, 53 -> 54 presses): Arcane Wrath's learn levels (25/36/48/60) entered learn_mage.lua with this pack;
     -- without those four lines the numbers are forever's again (measured)
-    { "mage_frost", "Frost", "Frost (wowsims.com)", 0.91, 6.0, 0 }, -- 0.93 -> 0.91: Blink (registered by the coverage lane) is the log's pre-pull cast the pack omits, one more decision miss (57/62 = 0.919, was at least 0.93)
+    { "mage_frost", "Frost", "Frost (wowsims.com)", 0.93, 6.0, 0 },
 }
 
 describe("the Mage wowsims.com packs #slow #wowsims", function()
