@@ -284,9 +284,24 @@ describe("Forever Warlock", function()
     it("keeps one Curse and one Bane on the target, Amplify Curse spent by Agony and Weakness", function()
         local A = w.abilities
         for _, case in ipairs({
-            { "curse_of_the_elements", { "curse_of_recklessness", "curse_of_weakness" } },
-            { "curse_of_recklessness", { "curse_of_the_elements", "curse_of_weakness" } },
-            { "curse_of_weakness", { "curse_of_the_elements", "curse_of_recklessness", "amplify_curse" } },
+            {
+                "curse_of_the_elements",
+                { "curse_of_recklessness", "curse_of_weakness", "curse_of_tongues", "curse_of_exhaustion" },
+            },
+            {
+                "curse_of_recklessness",
+                { "curse_of_the_elements", "curse_of_weakness", "curse_of_tongues", "curse_of_exhaustion" },
+            },
+            {
+                "curse_of_weakness",
+                {
+                    "curse_of_the_elements",
+                    "curse_of_recklessness",
+                    "curse_of_tongues",
+                    "curse_of_exhaustion",
+                    "amplify_curse",
+                },
+            },
             { "bane_of_agony", { "bane_of_doom", "amplify_curse" } },
             { "bane_of_doom", { "bane_of_agony" } },
             { "corruption", {} },
@@ -511,13 +526,14 @@ describe("Forever Warlock", function()
         })
         e = env({})
         e.buff = buffs({ fel_domination = 1 })
-        assert.are.same({ 4.5, 0.3 }, {
+        assert.are.same({ 4.5, 0.4 }, {
             near(ld.run(A.summon_imp.cast, e)),
             near(ld.run(A.summon_imp.spend, e)),
-        }) -- 10 - 5.5 s; 0.8 - 0.5
+        }) -- 10 - 5.5 s; 0.8 x (1 - 0.5)
         e = env({})
+        e.summonPet, e.dismissPet = function() end, function() end
         ld.run(A.summon_imp.handler, e)
-        assert.is_true(#e.removed > 0)
+        assert.are.equal("fel_domination", e.removed[1])
         e = env({})
         ld.run(A.fel_domination.handler, e)
         assert.are.same({ "fel_domination" }, e.applied)
@@ -632,12 +648,12 @@ describe("Forever Warlock", function()
             for _, field in ipairs({ "now", "handler" }) do
                 local e = run(field)
                 assert.are.same(
-                    { { "imp" }, { "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" } },
+                    { { "imp" }, { "fel_domination", "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" } },
                     { e.summoned, e.removed },
                     field
                 )
                 e = run(field, { demonic_pact = 1 })
-                assert.are.same({ { "imp" }, { "burning_shadow" } }, { e.summoned, e.removed }, field)
+                assert.are.same({ { "imp" }, { "fel_domination", "burning_shadow" } }, { e.summoned, e.removed }, field)
                 -- the simulation dismisses only the demon out first (wowsims summon.go: the same demon included)
                 assert.are.same({ "-succubus", "imp" }, run(field, nil, "succubus").summoned, field)
                 assert.are.same({ "-imp", "imp" }, run(field, nil, "imp").summoned, field)
