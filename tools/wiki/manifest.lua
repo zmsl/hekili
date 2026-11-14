@@ -5,9 +5,11 @@
 -- collector (tools/wiki/collect/<collector>.lua), the collector's arguments, the table's headers and, for an "n/a"
 -- cell, the note under the table that says what it means. A name a page uses that is not here is an error.
 local OPTION_COLUMNS = { "section", "label", "type", "shown", "default", "range", "description" }
-local OPTION_HEADERS = { "Section", "Option", "Type", "Shown", "Default", "Values", "Description" }
-local SHOWN_NOTE = "Shown: In some cases means the option appears only in some cases, for example while another "
-    .. "option is on, for a class with a pet, for one kind of entry, or with Advanced checked."
+local OPTION_HEADERS = { "Section", "Option", "Type", "Shown by default", "Default", "Values", "Description" }
+local SHOWN_NOTE = "Shown by default: Yes means the option shows with the default settings; it can still hide when "
+    .. "another setting changes. In some cases means it is hidden with the default settings and appears only in some "
+    .. "cases, for example while another option is on, for a class with a pet, for one kind of entry, or with "
+    .. "Advanced checked."
 local OPTION_NOTE = "n/a: no fixed default (a keybind not set, or a value that follows the game or another option), "
     .. "no range, or no description. "
     .. SHOWN_NOTE
@@ -87,7 +89,7 @@ return {
         collector = "options",
         path = { "packs", "<spec>", "<pack>" },
         columns = { "section", "label", "type", "shown", "range", "description" },
-        headers = { "Section", "Field", "Type", "Shown", "Values", "Description" },
+        headers = { "Section", "Field", "Type", "Shown by default", "Values", "Description" },
         note = "n/a: free text, or no description. " .. SHOWN_NOTE,
     },
     ["options-displays-all"] = {

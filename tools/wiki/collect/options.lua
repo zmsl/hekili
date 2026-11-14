@@ -2,8 +2,10 @@
 -- built in a headless boot), one row per option: its section, label, type, default (the option's own `get` on a
 -- fresh profile), values and description. Spacers, headers and text-only rows are left out; so is an option that is
 -- hidden for good (`hidden = true`; an always-hidden function is named in the manifest's `exclude`). An option whose
--- `hidden` function (its own or a group's) answers true at the headless boot is kept with `shown` "In some cases": it
--- shows in other states (a pet, an entry's action, Advanced checked). M.labels() still lists every option.
+-- `hidden` function (its own or a group's) answers true at the headless boot (the default settings) is kept with
+-- `shown` "In some cases": it shows in other states (a pet, an entry's action, Advanced checked); every other row is
+-- "Yes", shown with the default settings, though it can still hide when a setting changes. M.labels() still lists
+-- every option.
 local boot = require("tools.wiki.boot")
 local text = require("tools.wiki.text")
 
@@ -56,6 +58,8 @@ local function current(node, info, inherited)
         return nil
     elseif node.type == "color" then
         return hex(a, b, c)
+    elseif node.type == "toggle" and a == nil and not node.tristate then
+        return false -- AceConfig draws a toggle whose getter answers nil unchecked
     end
     return a
 end
@@ -83,12 +87,11 @@ local function valueList(node, info)
 end
 
 local function shown(node, info, value)
-    local t = node.type
-    if t == "toggle" and not node.tristate then
-        return value and "On" or "Off" -- AceConfig draws a nil toggle unchecked
-    elseif value == nil then
+    if value == nil then
         return nil
-    elseif t == "toggle" then
+    end
+    local t = node.type
+    if t == "toggle" then
         return value and "On" or "Off"
     elseif t == "range" then
         local pct = node.isPercent and type(value) == "number"

@@ -13,11 +13,18 @@ end
 --- The first sentence of `s` (stripped): up to the first ". ", "? " or "! ", or all of it.
 function M.sentence(s)
     s = M.strip(s)
-    local i = s:find("[%.%?!] ")
-    if i then
-        s = s:sub(1, i)
+    local from = 1
+    while true do
+        local i = s:find("[%.%?!] ", from)
+        if not i then
+            return s
+        end
+        local before = s:sub(math.max(1, i - 3), i)
+        if before ~= "e.g." and before ~= "i.e." then -- an abbreviation ends no sentence
+            return s:sub(1, i)
+        end
+        from = i + 1
     end
-    return s
 end
 
 --- `s` safe inside a Markdown table cell; "n/a" for an empty one.

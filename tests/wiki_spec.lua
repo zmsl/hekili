@@ -384,11 +384,18 @@ describe("the options collector", function()
     it("prints a font by its name and an unset toggle as Off", function()
         local all = byLabel(options.rows(manifest["options-displays-all"]))
         assert.are.equal("Arial Narrow", all["Font"].default)
-        local toggles = options.rows(manifest["options-toggles"])
-        for _, r in ipairs(toggles) do
+        local pause
+        for _, r in ipairs(options.rows(manifest["options-toggles"])) do
             if r.label == "Pause" and r.type == "toggle" then
-                assert.are.equal("Off", r.default)
+                pause = r
             end
         end
+        assert.are.equal("Off", pause and pause.default)
+    end)
+
+    it("does not end a description's first sentence at e.g. or i.e.", function()
+        local text = require("tools.wiki.text")
+        assert.are.equal("Shown while it holds, e.g. a buff is up.", text.sentence("Shown while it holds, e.g. a buff is up. More."))
+        assert.are.equal("One.", text.sentence("One. Two."))
     end)
 end)

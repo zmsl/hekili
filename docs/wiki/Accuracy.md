@@ -4,7 +4,7 @@ Type: Reference
 Audience: everyone
 Prerequisites: None.
 -->
-The **Accuracy** page reports, for each specialization and priority, how closely Hekili Forever's recommendations follow the rotations from [wowsims.com](https://wowsims.com), and how much the values the game hides cost. All numbers come from test simulations run outside the game. None was measured in live play.
+The **Accuracy** page reports, for most specializations and priorities, how closely Hekili Forever's recommendations follow the rotations from [wowsims.com](https://wowsims.com), and how much the values the game hides cost. All numbers come from test simulations run outside the game. None was measured in live play.
 
 <!-- GENERATED:accuracy-meta -->
 <!-- /GENERATED -->
