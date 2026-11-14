@@ -20,6 +20,7 @@
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 
+- Hunter: Bestial Wrath now costs the 12% of base mana it costs in game. The traps (Explosive, Freezing, Frost) share Immolation Trap's 30 second cooldown, and Survivalist's Discipline and Improved Stings shorten the trap, Deterrence and Viper Sting cooldowns. Scorpid and Viper Sting, Concussive, Scatter and Distracting Shot, Tranquilizing Shot, Volley, Intimidation, Counterattack, Deterrence, Disengage, Feign Death, Flare, Scare Beast, Trueshot Aura, Mend Pet and the Monkey, Pack, Wild and Viper aspects are now known to the addon, so casting one by hand spends its mana and starts its cooldown, and the Cooldown Manager shows their buffs.
 ### Known issues
 
 ### Upgrade notes
