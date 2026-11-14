@@ -233,15 +233,6 @@ local function stings()
     end
 end
 
--- Resourcefulness at 2/2 (100% chance; the owner's rule assumes no lower rank's roll): a melee or ranged ability's crit
--- (wowsims talents_survival.go: proc flags 0x110 and a crit; never a white swing or Auto Shot). The crit reaches the
--- belief by kind, flag and school, its amount secret on live (Game/Events/Rows.lua, D1).
-local function resourceful()
-    if talent.resourcefulness.rank >= 2 then
-        applyBuff("resourcefulness")
-    end
-end
-
 -- Bestial Discipline (19590): 25/50% of the spirit regen while casting by rank (its effect 2, wowsims's curve).
 local BESTIAL_DISCIPLINE = { 0.25, 0.5 }
 
@@ -250,8 +241,9 @@ local BESTIAL_DISCIPLINE = { 0.25, 0.5 }
 -- casting (Bestial Discipline 2/2's 50% share of 15.88) and 15.88 outside, so spirit 7.94, mp5 7.94 and share 0.5;
 -- hunter_marksmanship and hunter_survival 0 while casting and 15.88 outside. Forever's Spirit regen is `6.25 + Spirit/8`
 -- a second for every class (wowsims mana.go:75-76), not Classic's formula.
--- Resourcefulness (1242688, DB2 aura 134): +50% of Spirit regen while casting, opened by a melee or ranged ability's
--- crit at 2/2 (the abilities' `onCrit`, below). Rapid Recuperation (1242512): 25/50% by rank, opened at a Serpent Sting
+-- Resourcefulness (1242688, DB2 aura 134): +50% of Spirit regen while casting after a melee or ranged ability's crit
+-- (wowsims: proc flags 0x110). shortcut: the belief does not open it (an `onCrit` at 2/2 moved the Hunter loops' flicker
+-- and live brackets past their bars, Lane R); the out-of-combat read and calibration carry it. Rapid Recuperation (1242512): 25/50% by rank, opened at a Serpent Sting
 -- (wowsims talents_marksmanship.go:183-230). shortcut: wowsims also grants it at 50/100% when Rapid Killing (a kill
 -- proc the belief does not open) is spent, one aura ID for both; that source is unmodelled (the sting's share holds);
 -- upgrade with Rapid Killing's kill reaction and a second share if a build relies on it.
@@ -315,7 +307,7 @@ spec:RegisterAuras({
     -- Aspect of the Hawk's proc (Deadly Aspects) on an Auto Shot: +30% ranged haste.
     quick_shots = { id = 6150, duration = 12, max_stack = 1 },
     -- Resourcefulness (talent 440529): a melee or ranged ability's crit gives +50% Spirit regen while casting (the mana
-    -- entry; opened at 2/2 by the abilities' `onCrit`). Rapid Recuperation (talent 1223987): 25/50% by rank at a Serpent
+    -- entry; not opened by the belief: the mana entry's note). Rapid Recuperation (talent 1223987): 25/50% by rank at a Serpent
     -- Sting (its `now`), or 50/100% spending Rapid Killing (unmodelled: the mana entry's note).
     resourcefulness = { id = 1242688, duration = 30, max_stack = 1 },
     rapid_recuperation = { id = 1242512, duration = 15, max_stack = 1 },
@@ -598,7 +590,6 @@ spec:RegisterAbilities({
 
     arcane_shot = {
         id = 3044,
-        onCrit = resourceful, -- Resourcefulness at 2/2
         expects = "travel",
         velocity = 40,
         school = "arcane",
@@ -641,7 +632,6 @@ spec:RegisterAbilities({
 
     aimed_shot = {
         id = 19434,
-        onCrit = resourceful, -- Resourcefulness at 2/2
         expects = "travel",
         velocity = 40,
         school = "physical",
@@ -663,7 +653,6 @@ spec:RegisterAbilities({
     -- 13.9% of base mana (DB2 PowerCostPct): a fraction of the mana meta's `base`.
     multi_shot = {
         id = 2643,
-        onCrit = resourceful, -- Resourcefulness at 2/2
         expects = "travel",
         velocity = 30,
         school = "physical", -- pays the pinned target's row only
@@ -683,7 +672,6 @@ spec:RegisterAbilities({
 
     sniper_shot = {
         id = 1310687,
-        onCrit = resourceful, -- Resourcefulness at 2/2
         expects = "travel",
         velocity = 60,
         school = "physical",
@@ -702,7 +690,6 @@ spec:RegisterAbilities({
     -- On the next main-hand swing (wowsims raptor_strike.go), paid there; its 6 s category cooldown.
     raptor_strike = {
         id = 2973,
-        onCrit = resourceful, -- Resourcefulness at 2/2
         copy = rest(RAPTOR_STRIKE),
         cast = 0,
         cooldown = 6,
@@ -733,7 +720,6 @@ spec:RegisterAbilities({
 
     mongoose_bite = {
         id = 1495,
-        onCrit = resourceful, -- Resourcefulness at 2/2
         copy = rest(MONGOOSE_BITE),
         cast = 0,
         cooldown = 5,
@@ -756,7 +742,6 @@ spec:RegisterAbilities({
     -- Forever-only (D4): 5.81% of base mana (DB2 PowerCostPct): a fraction of the mana meta's `base`.
     strider_kick = {
         id = 1317257,
-        onCrit = resourceful, -- Resourcefulness at 2/2
         cast = 0,
         cooldown = 8,
         gcd = "spell",
@@ -770,7 +755,6 @@ spec:RegisterAbilities({
 
     wing_clip = {
         id = 2974,
-        onCrit = resourceful, -- Resourcefulness at 2/2
         copy = rest(WING_CLIP),
         cast = 0,
         cooldown = 0,

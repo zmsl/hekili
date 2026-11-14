@@ -133,30 +133,12 @@ describe("Forever Hunter", function()
         assert.are.same({ { 0, 1 }, { 0.25, 2 }, { 0.5, 2 } }, got) -- the sting's dot, and the buff once talented
     end)
 
-    -- Resourcefulness (440529 2/2, wowsims talents_survival.go): a melee or ranged ability's crit (proc flags 0x110: not a
-    -- white swing or Auto Shot) gives its 30 s buff, 50/100% by rank; the owner's rule assumes it at 2/2 only. The crit
-    -- reaches the belief by kind, flag and school with its amount secret (Rows.lua, D1): the ability's `onCrit`.
-    it("opens Resourcefulness at a melee or ranged ability's crit at 2/2", function()
-        local A = w.abilities
-        for _, key in ipairs({
-            "arcane_shot",
-            "aimed_shot",
-            "multi_shot",
-            "sniper_shot",
-            "raptor_strike",
-            "mongoose_bite",
-            "strider_kick",
-            "wing_clip",
-        }) do
-            for rank = 1, 2 do
-                local e = ld.env(w)
-                e.talent.resourcefulness = { rank = rank }
-                assert.is_function(A[key].onCrit, key)
-                ld.run(A[key].onCrit, e)
-                assert.are.same(rank == 2 and { "resourcefulness" } or {}, e.applied, key .. " rank " .. rank)
-            end
+    -- Resourcefulness (440529): the belief opens it at no crit (Lane R's onCrit carved out: the loops' bars), so no
+    -- ability declares one
+    it("opens Resourcefulness at no crit", function()
+        for key, a in pairs(w.abilities) do
+            assert.is_nil(a.onCrit, key)
         end
-        assert.is_nil(A.auto_shot.onCrit)
     end)
 
     it("anchors the ranged clock on Auto Shot, off the GCD", function()
@@ -1027,47 +1009,5 @@ describe("Forever Hunter Movement (R8)", function()
         local far, near = world("multi_shot", 11), world("multi_shot", 3)
         assert.are.same({ "multi_shot", "aspect_of_the_hawk" }, { far(false), near(false) })
         assert.are.same({ "multi_shot", "multi_shot" }, { far(true), near(true) })
-    end)
-end)
-
--- Lane R (Fable decision 3): the worlds grant Resourcefulness on an ability's own crit row, the one the client shows
--- (rank / 2 of a crit, wowsims talents_survival.go), never on a second roll beside it.
-describe("the Hunter worlds' Resourcefulness", function()
-    local hw = require("Forever.helpers.hunter_world")
-
-    it("opens on an ability's crit row only, rank / 2 of the crit", function()
-        local C = hw.Survival -- Resourcefulness 2/2
-        local H = headless.new({ character = C.character(), pack = "Survival (wowsims.com)" })
-        local p = C.resolve("arcane_shot", H)
-        local applied, chances = {}, {}
-        local function fake(flag)
-            local W = { t = 1 }
-            W.rng = {
-                chance = function(x)
-                    chances[#chances + 1] = x
-                    return true
-                end,
-            }
-            function W.hit(e)
-                e.lastHit = { act = "WOUND", flag = flag }
-                return e.lastHit
-            end
-            function W.applyAura(_, id)
-                applied[#applied + 1] = id
-            end
-            return W
-        end
-        local e = { cdUntil = {}, target = {} }
-        p.effect(fake(""), e)
-        assert.are.same({}, applied) -- a plain hit: nothing
-        p.effect(fake("CRITICAL"), e)
-        assert.are.same({ 1242688 }, applied)
-        assert.are.same({ 1 }, chances) -- 2/2: every crit
-        -- every ability whose crit the pack's onCrit counts, Wing Clip's included (a main-hand special, wowsims)
-        for _, key in ipairs({ "wing_clip", "multi_shot", "strider_kick" }) do
-            applied = {}
-            C.resolve(key, H).effect(fake("CRITICAL"), e)
-            assert.are.same({ 1242688 }, applied, key)
-        end
     end)
 end)
