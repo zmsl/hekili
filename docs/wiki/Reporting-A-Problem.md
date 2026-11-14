@@ -3,25 +3,49 @@ Purpose: Take a snapshot, capture Lua errors, and open a useful issue.
 Type: How-to
 Audience: players with a problem
 Prerequisites: None.
-Status: stub (phase 1). Each bullet is a fact to write up, with its source. Write to the Style-Guide page.
 -->
-TODO: the lead. Take a snapshot, capture Lua errors, and open a useful issue.
+This page shows how to report a problem with Hekili Forever so that it can be fixed: take a snapshot while the problem is on screen, capture any Lua error, and open an issue on GitHub. Check [Troubleshooting and FAQ](Troubleshooting-And-FAQ) first; the problem may have a known fix.
+
+Hekili Forever problems go to the Hekili Forever issue tracker only, never to the original Hekili project.
 
 ## Take a snapshot
 
-- `/hekili snapshot` or the Snapshot keybind (ALT-SHIFT-[ by default) while the problem is on screen; copy it from the Snapshots tab. Source: `src/Hekili/Engine/Snapshot.lua`, `src/Hekili/Options/Options.lua` (snapshots)
-- TODO-SCREENSHOT: the Snapshots tab with a snapshot selected
+A snapshot records how Hekili Forever chose the recommendations on screen at that moment: your talents, settings and toggles, the enemies counted, your buffs and debuffs, and each line of the priority it tested. It is the most useful part of a report about a wrong recommendation. [Reading a snapshot](Reading-A-Snapshot) explains what it contains.
+
+1. Wait until the problem is on screen, for example the wrong ability in the first icon. A snapshot from before the pull does not show a problem that happens twenty seconds into a fight.
+2. Take the snapshot in one of these ways:
+   - press the **Snapshot** key, ALT-SHIFT-[ by default;
+   - press the **Pause** key, ALT-SHIFT-P by default, which also freezes the displays (press it again to resume);
+   - type `/hekili snapshot`, or `/hek snap`, for example from a macro.
+3. Open **/hekili > Snapshots (Troubleshooting)**.
+4. Choose the snapshot in **Select a Snapshot**. Each entry starts with the time it was taken and the display it describes.
+5. Click the text box that appears, press Ctrl+A to select all of it, then Ctrl+C to copy it. A snapshot is hundreds of lines long.
+6. Paste it into a text file and save it, to attach to the issue.
+
+With **Take Screenshot** checked, Hekili Forever also takes a game screenshot when you take a snapshot. A screenshot of the displays at that moment helps too.
+
+<!-- TODO-SCREENSHOT: the Snapshots tab with a snapshot selected -->
 
 ## Capture Lua errors
 
-- TODO: the game's error display or an error-catching addon. Source: `src/Hekili/Options/Options.lua` (errors)
+A Lua error is a message about a fault in an addon's code. Capture its full text:
+
+- with an error-catching addon such as BugSack with BugGrabber: reproduce the error, open BugSack and copy its text; or
+- with the game's own error display: type `/console scriptErrors 1`, then reproduce the error and copy the text from the error window. <!-- UNVERIFIED: that the Forever client's error window offers copyable text with scriptErrors on. -->
+
+Hekili Forever also keeps its own list of problems it noticed while running, on **/hekili > Warnings**, and copies it into each snapshot under "Warnings".
 
 ## Open an issue
 
-- At [github.com/zmsl/hekili/issues](https://github.com/zmsl/hekili/issues), with class, specialization, level, version, what you expected and what you saw, and the snapshot. Never to the original Hekili project. Source: `README.md`
-- Include: the Hekili Forever version, class, specialization and level; what you expected and what you saw; the snapshot (paste it or attach the file); any Lua error text. Report here, on GitHub, and nowhere else.
+Open a new issue at [github.com/zmsl/hekili/issues](https://github.com/zmsl/hekili/issues). Include:
+
+- the Hekili Forever version (the first lines of a snapshot give it), your class, specialization and level;
+- what you expected to see, and what Hekili Forever showed instead;
+- the snapshot, attached as a text file or pasted into the issue;
+- the full text of any Lua error.
+
+One issue per problem makes each one easier to follow.
 
 ## See also
 
-- [Reading a snapshot](Reading-A-Snapshot)
-- [Troubleshooting and FAQ](Troubleshooting-And-FAQ)
+- [Accuracy](Accuracy): known differences from the wowsims.com rotations

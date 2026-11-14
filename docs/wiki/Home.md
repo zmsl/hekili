@@ -19,5 +19,5 @@ The Forever client hides resources such as energy, rage and mana, and target hea
 
 ## Getting the addon and help
 
-- Download from TODO-LINK(CurseForge project page) or the [releases page](https://github.com/zmsl/hekili/releases). Update the core and the class addons together.
+- Download from [CurseForge](https://www.curseforge.com/wow/addons/hekili-forever) or the [releases page](https://github.com/zmsl/hekili/releases), as [Installing](Installing) describes. Update the core and the class addons together.
 - For a problem, read [Troubleshooting and FAQ](Troubleshooting-And-FAQ) first. Then open an issue at [github.com/zmsl/hekili/issues](https://github.com/zmsl/hekili/issues) with a snapshot, as [Reporting a problem](Reporting-A-Problem) describes. Problems with Hekili Forever do not go to the original Hekili project.
