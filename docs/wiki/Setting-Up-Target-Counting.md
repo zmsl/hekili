@@ -20,8 +20,7 @@ This page shows how to make Hekili Forever count the enemies near you, so that i
 3. Check **Count Nameplates Near You**.
 4. If **Show Enemy Nameplates** and **Show All Nameplates** appear under **Nameplate Detection**, check both. They change the game's own nameplate settings, and they disappear once both are on.
 
-![The Targeting tab for a Feral Druid, with Count Nameplates Near You checked and both nameplate boxes shown](images/Setting-Up-Target-Counting-1.png)
-<!-- shot: TODO, Druid Feral -->
+<!-- TODO-SCREENSHOT: the Targeting tab for a Feral Druid, with Count Nameplates Near You checked and both nameplate boxes shown (images/Setting-Up-Target-Counting-1.png) -->
 
 ## Set the radius
 
