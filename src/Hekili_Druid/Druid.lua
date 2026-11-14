@@ -133,6 +133,22 @@ local REGROWTH = { 8936, 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858 }
 local REGROWTH_COST = { 70, 125, 170, 210, 250, 305, 370, 445, 525 }
 local REJUVENATION = { 774, 1058, 1430, 2090, 2091, 3627, 8910, 9839, 9840, 9841, 25299 }
 local REJUVENATION_COST = { 25, 40, 75, 105, 135, 160, 195, 235, 280, 335, 360 }
+-- The manual-press Restoration kit (wowsims pin spells_auto_gen.go: cast, cost, cooldown; a cost below 1 is a percent of
+-- base mana). Registered so a press costs what it costs and starts its cooldown; no priority recommends them.
+local SWIFTMEND = { 18562 }
+local WILD_GROWTH = { 408120, 1238214, 1238215 }
+local WILD_GROWTH_COST = { 550, 755, 1050 }
+local TRANQUILITY = { 740, 8918, 9862, 9863 }
+local TRANQUILITY_COST = { 375, 505, 695, 925 }
+local REBIRTH = { 20484, 20739, 20742, 20747, 20748 }
+local HIBERNATE = { 2637, 18657, 18658 }
+local HIBERNATE_COST = { 90, 120, 150 }
+local SOOTHE_ANIMAL = { 2908, 8955, 9901 }
+local SOOTHE_ANIMAL_COST = { 50, 75, 100 }
+local ABOLISH_POISON = { 2893 }
+local CURE_POISON = { 8946 }
+local REMOVE_CURSE = { 2782 }
+local REVIVE = { 1237951 }
 
 -- Gear (gear-aware spec §4; r33 section 0): the item and set IDs the pack's set_bonus reads (wowsims/forever at
 -- e2842f0a78, db.json). Registered on the kit: every tree reads the same keys.
@@ -420,7 +436,8 @@ spec:RegisterAuras({
     },
     bash = {
         id = 5211,
-        copy = rest(BASH),
+        -- 1324487/8/90: the debuff ids the Cooldown Manager's Bash entry links
+        copy = { 6798, 8983, 1324487, 1324488, 1324490 },
         duration = function()
             return (BASH_STUN[knownRank(BASH)] or 2) + 0.5 * talent.brutal_impact.rank
         end,
@@ -541,6 +558,7 @@ spec:RegisterAuras({
     },
     feral_charge_effect = {
         id = 19675,
+        copy = { 414923 }, -- the Cooldown Manager's Feral Charge entry links it too
         duration = 4,
         max_stack = 1,
     },
@@ -557,6 +575,7 @@ spec:RegisterAuras({
     },
     frenzied_regeneration = {
         id = 22842,
+        copy = { 22845 }, -- the buff the Cooldown Manager links
         duration = 10,
         tick_time = 1,
         max_stack = 1,
@@ -699,6 +718,16 @@ spec:RegisterAuras({
         duration = 3600,
         max_stack = 1,
     },
+    -- Auras the Cooldown Manager's buff entries link (cdm fixture, the owner's export): every rank, the pin's durations.
+    -- Nothing reads them but the map; Wild Growth's and Abolish Poison's land on the healed ally.
+    wild_growth = { id = 408120, copy = { 1238214, 1238215 }, duration = 7, max_stack = 1 },
+    tranquility = { id = 740, copy = { 8918, 9862, 9863 }, duration = 10, max_stack = 1 },
+    hibernate = { id = 2637, copy = { 18657, 18658 }, duration = 40, max_stack = 1 },
+    soothe_animal = { id = 2908, copy = { 8955, 9901 }, duration = 15, max_stack = 1 },
+    abolish_poison = { id = 2893, duration = 8, max_stack = 1 },
+    starfire_stun = { id = 16922, duration = 3, max_stack = 1 }, -- Improved Starfire's stun
+    leader_of_the_pack = { id = 24932, duration = 3600, max_stack = 1 },
+    moonkin_aura = { id = 24907, duration = 3600, max_stack = 1 },
 })
 
 -- Clearcasting (16870): aura 108 misc 14 (cost) -100% on the abilities its class masks name (15973374 / 100664659 /
@@ -709,7 +738,7 @@ spec:RegisterAuras({
 --     join SpellPower p on p.SpellID=o.SpellID where o.SpellClassSet=7 and (p.ManaCost>0 or p.PowerCostPct>0) and not
 --     ((o.SpellClassMask_0 & 15973374)=0 and (o.SpellClassMask_1 & 100664659)=0 and (o.SpellClassMask_2 & 1024)=0
 --     and (o.SpellClassMask_3 & 142606400)=0)
--- Covered but unregistered: Tranquility, Swiftmend, the rune spells. Not covered: Wrath, Faerie Fire, Cower,
+-- Covered but unregistered: the rune spells. Not covered: Wrath, Faerie Fire, Cower,
 -- Challenging Roar, Mark and Gift of the Wild, Shifting Power. Checkpoint Q6 confirms Primal Bite and Demoralizing Roar
 -- (usable at 0 rage with Clearcasting up).
 spec:RegisterCostMod({
@@ -741,6 +770,8 @@ spec:RegisterCostMod({
         16689,
         407995,
         99,
+        740,
+        18562,
     },
 })
 
@@ -855,7 +886,9 @@ spec:RegisterAbilities({
         id = 5211,
         copy = rest(BASH),
         cast = 0,
-        cooldown = 60, -- Brutal Impact's -30 s unmodelled (a cooldown modifier)
+        cooldown = function()
+            return 60 - 15 * talent.brutal_impact.rank -- Brutal Impact 16940 effect 1: -15 / -30 s on Bash
+        end,
         gcd = "spell",
 
         spend = 10,
@@ -1096,7 +1129,9 @@ spec:RegisterAbilities({
     entangling_roots = {
         id = 339,
         copy = rest(ROOTS),
-        cast = 1.5,
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 1.5
+        end,
         cooldown = 0,
         gcd = "spell",
 
@@ -1110,10 +1145,12 @@ spec:RegisterAbilities({
         nobuff = "feral_form",
 
         now = function()
+            removeBuff("natures_swiftness")
             applyDebuff("target", "entangling_roots", ROOTS_DURATION[knownRank(ROOTS)] or 12)
         end,
 
         handler = function()
+            removeBuff("natures_swiftness")
             applyDebuff("target", "entangling_roots")
         end,
     },
@@ -1286,19 +1323,32 @@ spec:RegisterAbilities({
         id = 5185,
         copy = rest(HEALING_TOUCH),
         cast = function()
-            return byRank(HEALING_TOUCH_CAST, HEALING_TOUCH)
+            if buff.natures_swiftness.up then
+                return 0
+            end
+            -- Naturalist 17069 effect 0: -0.1 s a rank on Healing Touch (and Wild Growth)
+            return byRank(HEALING_TOUCH_CAST, HEALING_TOUCH) - 0.1 * talent.improved_healing_touch.rank
         end,
         cooldown = 0,
         gcd = "spell",
 
         spend = function()
-            return byRank(HEALING_TOUCH_COST, HEALING_TOUCH)
+            -- Tranquil Spirit 24968: -2% a rank on Healing Touch and Tranquility
+            return byRank(HEALING_TOUCH_COST, HEALING_TOUCH) * (1 - 0.02 * talent.tranquil_spirit.rank)
         end,
         spendType = "mana",
 
         startsCombat = false,
         known = knows(HEALING_TOUCH),
         nobuff = "feral_form",
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
     },
 
     hurricane = {
@@ -1561,7 +1611,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return byRank(NATURES_GRASP_COST, NATURES_GRASP)
+            return byRank(NATURES_GRASP_COST, NATURES_GRASP) * moonglow(talent.moonglow.rank)
         end,
         spendType = "mana",
 
@@ -1713,7 +1763,9 @@ spec:RegisterAbilities({
     regrowth = {
         id = 8936,
         copy = rest(REGROWTH),
-        cast = 2,
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 2
+        end,
         cooldown = 0,
         gcd = "spell",
 
@@ -1725,6 +1777,14 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows(REGROWTH),
         nobuff = "feral_form",
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
     },
 
     rejuvenation = {
@@ -1940,6 +2000,207 @@ spec:RegisterAbilities({
         handler = function()
             swap_form("travel_form")
         end,
+    },
+
+    -- Swiftmend (consumes a Rejuvenation or Regrowth: no HoT aura in the pack, so only the press is modelled).
+    swiftmend = {
+        id = 18562,
+        cast = 0,
+        cooldown = 15,
+        gcd = "spell",
+
+        spend = 0.2,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(SWIFTMEND),
+        nobuff = "feral_form",
+    },
+
+    wild_growth = {
+        id = 408120,
+        copy = rest(WILD_GROWTH),
+        cast = function()
+            return 3 - 0.1 * talent.improved_healing_touch.rank -- Naturalist's mask holds Wild Growth
+        end,
+        cooldown = 6,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(WILD_GROWTH_COST, WILD_GROWTH)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(WILD_GROWTH),
+        nobuff = "feral_form",
+    },
+
+    tranquility = {
+        id = 740,
+        copy = rest(TRANQUILITY),
+        cast = 10,
+        channeled = true,
+        cooldown = function()
+            return 300 * (1 - 0.3 * talent.improved_tranquility.rank) -- Improved Tranquility 17123 effect 1: -30 / -60%
+        end,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(TRANQUILITY_COST, TRANQUILITY) * (1 - 0.02 * talent.tranquil_spirit.rank)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(TRANQUILITY),
+        nobuff = "feral_form",
+    },
+
+    rebirth = {
+        id = 20484,
+        copy = rest(REBIRTH),
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 2
+        end,
+        cooldown = 1800,
+        gcd = "spell",
+
+        spend = 0.85,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(REBIRTH),
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
+    },
+
+    hibernate = {
+        id = 2637,
+        copy = rest(HIBERNATE),
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 1.5
+        end,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(HIBERNATE_COST, HIBERNATE)
+        end,
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(HIBERNATE),
+        nobuff = "feral_form",
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
+    },
+
+    soothe_animal = {
+        id = 2908,
+        copy = rest(SOOTHE_ANIMAL),
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 1.5
+        end,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(SOOTHE_ANIMAL_COST, SOOTHE_ANIMAL)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(SOOTHE_ANIMAL),
+        nobuff = "feral_form",
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
+    },
+
+    abolish_poison = {
+        id = 2893,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.16,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(ABOLISH_POISON),
+        nobuff = "feral_form",
+    },
+
+    cure_poison = {
+        id = 8946,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.16,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(CURE_POISON),
+        nobuff = "feral_form",
+    },
+
+    remove_curse = {
+        id = 2782,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.1,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(REMOVE_CURSE),
+        nobuff = "feral_form",
+    },
+
+    revive = {
+        id = 1237951,
+        cast = 10,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.75,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(REVIVE),
+        nobuff = "feral_form",
+    },
+
+    -- Cat Form's Feral Charge (the pin's 414924: 30 s, the spell GCD, no cost, Cat stance only); the Bear Form charge
+    -- above spends 5 rage.
+    feral_charge_cat = {
+        id = 414924,
+        cast = 0,
+        cooldown = 30,
+        gcd = "spell",
+
+        startsCombat = true,
+        known = knows(FERAL_CHARGE),
+        form = "cat_form",
     },
 
     wrath = {
