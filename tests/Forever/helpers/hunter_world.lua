@@ -59,7 +59,7 @@ local COST = {
     wing_clip = { 40, 40, 60, 80 },
     immolation_trap = { 50, 90, 135, 190, 245 },
     blood_fury = 0,
-    bestial_wrath = 0,
+    bestial_wrath = 0.12 * 1720, -- 206.4: 12% of base mana (the pin row CostPct 12; wowsims pays 206.0 in hunter_beast_mastery_turret.log:429)
 }
 
 -- UNMEASURED: the hits' amounts.
@@ -632,7 +632,9 @@ local function content(name)
             cost = costOf(key, idsOf(key), H),
             pt = MANA,
             -- Improved Arcane Shot (19454): -0.3 s a rank, as the kit
+            -- Survivalist's Discipline (1310496): -20% a rank on the trap (the world's truth, restated from the pin's curve)
             cooldown = key == "arcane_shot" and 6 - 0.3 * talentRank(H, 19454)
+                or key == "immolation_trap" and 30 * (1 - 0.2 * talentRank(H, 1310496))
                 or tonumber(a.cooldown)
                 or S.action[key].cooldown
                 or 0,
