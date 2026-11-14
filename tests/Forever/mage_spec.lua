@@ -678,6 +678,10 @@ describe("Forever Mage priorities", function()
         assert.are.same({ "Arcane (wowsims.com)", "Fire (wowsims.com)", "Frost (wowsims.com)" }, names)
     end)
 
+    it("starts combat with Polymorph (a hostile target's)", function()
+        assert.is_true(ld.load(nil, FILE, "MAGE").abilities.polymorph.startsCombat)
+    end)
+
     it("shares the wards' category cooldown, cheapens Frost Ward by Frost Channeling, and applies the buffs", function()
         local w = ld.load(nil, FILE, "MAGE")
         w.game.known[543], w.game.known[10225], w.game.known[28609] = true, true, true

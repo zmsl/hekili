@@ -1050,6 +1050,9 @@ do
             usable = unlocked("arcane"),
         },
 
+        -- shortcut: the mana it drains a point absorbed (wowsims defensives.go registerManaShieldSpell, less with
+        -- Arcane Shielding by rank) is unmodelled (no damage taken is); the live mana read corrects it. Upgrade if a
+        -- priority casts it.
         mana_shield = {
             id = 1463,
             school = "arcane",
@@ -1107,8 +1110,10 @@ do
             handler = warded("frost_ward", "fire_ward"),
         },
 
-        -- Forever's Frost Blast (a 1.5 s Frostbolt of the same masks: wowsims's older data, not in the pin; the live
-        -- Cooldown Manager lists it). `known` keeps it dormant where the spellbook lacks it.
+        -- Forever's Frost Blast (a 1.5 s Frostbolt: wowsims's older data; the live Cooldown Manager lists 1326053).
+        -- It is not in the pin, so its class mask is unchecked: the Clearcasting, Arcane Power and Frost Channeling
+        -- reaches assume Frostbolt's (needs in-game check: learnable, cost). `known` keeps it dormant where the spellbook
+        -- lacks it.
         frost_blast = {
             id = 1326053,
             expects = "travel",
@@ -1146,7 +1151,7 @@ do
             spend = byRank(POLYMORPH_COST, POLYMORPH),
             spendType = "mana",
 
-            startsCombat = false,
+            startsCombat = true,
             known = knows(POLYMORPH),
             usable = unlocked("arcane"),
 
@@ -1271,9 +1276,13 @@ do
         },
     })
 
-    -- The Cooldown Manager's "Mana Gems" item (1318827): the client's use spell, its cooldown tracked; the bag item is
-    -- Hekili_Shared's mana_gem. The spell's own data is unknown (not in the pin).
+    -- The Cooldown Manager's "Mana Gems" item (1318827, a bag item's use spell; not in the pin): a passive registration
+    -- only names its ID for the Cooldown Manager map. No ability is made and nothing is tracked (Tracked.lua tracks a
+    -- spellbook rank; an item's use is never in the spellbook): the gem's cooldown is Hekili_Shared's mana_gem's.
     spec:RegisterAbility("mana_gems", { id = 1318827, passive = true })
+
+    -- Not registered (one line each): Slow Fall (a reagent utility, no forecast use), Remove Lesser Curse (a dispel:
+    -- no curse on us is read), Conjure Food / Water / Mana Gem and the Teleports and Portals (out of combat).
 end
 
 -- Talents: { talent tree (1 Arcane, 2 Fire, 3 Frost: the dominant tree picks the spec), rank 1's spell, max rank }:

@@ -592,6 +592,10 @@ describe("Forever Warlock", function()
         assert.is_nil(lt.spend)
     end)
 
+    it("starts combat with Banish (a hostile target's)", function()
+        assert.is_true(w.abilities.banish.startsCombat)
+    end)
+
     it("channels Drain Life, Drain Soul, Wrack, Rain of Fire, Hellfire and the funnel and drain, unhasted", function()
         local out = {}
         for _, key in ipairs({

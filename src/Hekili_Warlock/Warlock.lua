@@ -1169,7 +1169,7 @@ do
             spend = byRank(BANISH_COST, BANISH),
             spendType = "mana",
 
-            startsCombat = false,
+            startsCombat = true,
             known = knows(BANISH),
             usable = unlocked("shadow"),
 
@@ -1394,11 +1394,17 @@ do
         },
     })
 
-    -- Cooldown Manager items whose spells are bag items' uses (Healthstone, Soulstone Resurrection): tracked by spell ID
-    -- (the pin has no cooldown row for them); the bag item itself is Hekili_Shared's healthstone.
+    -- Cooldown Manager items whose spells are bag items' uses (Healthstone, Soulstone Resurrection; no pin row): a
+    -- passive registration only names each ID for the Cooldown Manager map. No ability is made and nothing is tracked
+    -- (Tracked.lua tracks a spellbook rank; an item's use is never in the spellbook): the cooldown is Hekili_Shared's
+    -- healthstone's.
     for _, id in ipairs({ 6262, 6263, 5720, 5723, 11732, 20707, 20762, 20763, 20764, 20765 }) do
         spec:RegisterAbility("track_use_" .. id, { id = id, passive = true })
     end
+
+    -- Not registered (one line each): Create Healthstone / Soulstone / Firestone / Spellstone (out of combat, a shard),
+    -- Unending Breath (utility), Sense Demons (tracking), Eye of Kilrogg (a channel that moves the camera), Ritual of
+    -- Summoning and Ritual of Doom (group rituals), Curse of Idiocy (the pin's row has no learn level: not trained).
 end
 
 -- Talents: { talent tree (1 Affliction, 2 Demonology, 3 Destruction: the dominant tree picks the spec), rank 1's spell,
