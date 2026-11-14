@@ -37,6 +37,9 @@ describe("the English text a player sees", function()
             for i = 1, math.min(#diff, MAX_DIFF) do
                 shown[i] = diff[i]
             end
+            if #diff == 0 then
+                assert.are.equal(want, text) -- a difference no line shows (a trailing newline)
+            end
             error(
                 ("%d differing line(s)%s:\n%s"):format(
                     #diff,

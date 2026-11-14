@@ -23,7 +23,7 @@
 
 ### Known issues
 - The Hunter Turret priorities have not been checked in the game yet.
-- Fury's forecast does not yet see the rage Reckless Swings gives per swing; the addon's live rage count does.
+- Fury: when Hekili looks ahead to your next few abilities, it does not yet add the rage Reckless Swings gives on each swing; the icon for now is right.
 
 ### Upgrade notes
 
