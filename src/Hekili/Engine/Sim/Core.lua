@@ -427,7 +427,7 @@ function Hekili:CheckChannel( ability, prio )
         if modifiers.interrupt and modifiers.interrupt() then
             local timing = last_tick or ( state.query_time - state.buff.casting.applied ) % tick_time < 0.25
             if self.ActiveDebug then self:Debug( "CC: Interrupt - GCD: %s, Timing: %s.", tostringall( gcd, timing ) ) end
-            if val then
+            if gcd and timing then
                 state.this_action = act
                 return true
             end

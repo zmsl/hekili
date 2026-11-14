@@ -27,6 +27,9 @@
 - In a dungeon, raid or other instance with enemy nameplates turned off, the addon now tells you once that it counts only your target, instead of silently staying on single-target.
 - Rogues and Feral Druids: when your combo points move to a new target, the recommendation now updates at once instead of up to a moment later.
 - Melee specializations: the Enemy Range Radius slider now shows 10 yards, the radius target counting already used, instead of an empty value.
+- Importing a priority no longer breaks lines that use min(), max() or the ^ operator. Re-importing Fury (wowsims.com) or Enhancement (wowsims.com) from a copy's Source tab now keeps every line intact.
+- `prev.last` in a priority condition now names the last ability you cast, and `prev.<ability>` is true when it was that ability. Before, for the ability Hekili shows first, `prev.last` read "none" and `prev.<ability>` was always false.
+- A priority line's `interrupt=` option now works: while you channel that spell, Hekili shows the next ability at the channel's next tick once your global cooldown is ready. Before, `interrupt=` did nothing.
 
 ### Known issues
 - The Hunter Turret priorities have not been checked in the game yet.
