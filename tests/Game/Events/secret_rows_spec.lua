@@ -300,6 +300,34 @@ describe("rows with a secret amount (kind-only routing)", function()
             assert.are.same({ 0, 0 }, { count(VS.Obs.Avoided), L.tieBack })
         end)
 
+        -- live, a non-crit tick's row is secret too, so no tick is paid and the schedule's own `done` never moves: the
+        -- due tick is found by the schedule's phase at t
+        it("gives nothing back for a wound at a later tick of our physical schedule, no tick paid", function()
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-0", fs.SPENDER_S) -- ticks due 13.375, 16.375, ...
+            T.school[ticket(X.TICKS)] = 1
+            ctl.now = 15.85
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 16.32
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+            assert.are.equal(1, L.tieHeld)
+            wound(16.40) -- the swing's core band and the second tick's band
+            settle(18)
+            assert.are.same({ 0, 0 }, { count(VS.Obs.Avoided), L.tieBack })
+        end)
+
+        it("gives nothing back once the tied cast was paid (its crit landed in its own frame)", function()
+            tie()
+            ctl.now = 5.01
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 1) -- the cast's own crit: it landed
+            wound(5.08)
+            settle(6.2)
+            assert.are.same({ 0, 0 }, { count(VS.Obs.Avoided), L.tieBack })
+            assert.is_nil(missRow(fs.SPENDER_C))
+        end)
+
         it("tests a first swing's landing by its whole window, the cast's ticket closed by then", function()
             ctl.now = 4.52
             ctl.Fire("PLAYER_ENTER_COMBAT")
