@@ -98,6 +98,7 @@ return {
         ["null_cooldown"] = 12,
         ["power_infusion"] = 1,
         ["prowl"] = 1,
+        ["purge"] = 1,
         ["shadowform"] = 1,
         ["travel_time"] = 4,
         ["voidbinding"] = 2,

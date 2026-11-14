@@ -109,6 +109,7 @@ local CHAIN_HEAL_COST = { 260, 315, 405 }
 local RIPTIDE = { 408521, 1239242, 1239243 }
 local RIPTIDE_COST = { 150, 180, 230 }
 local GHOST_WOLF = { 2645, 415233, 1238640 }
+local PURGE = { 370, 8012 }
 local CURE_POISON = { 526 }
 local CURE_DISEASE = { 2870 }
 local TOTEMIC_CALL = { 437009 }
@@ -529,10 +530,8 @@ spec:RegisterAuras({
     },
     -- Water Shield (408510, Forever's): 3 globes (wowsims's ProcCharges), each hit on us spending one (a spell crit's
     -- too: not modelled); their mana not modelled.
-    -- 52127: the id the Cooldown Manager's unnamed utility entry links.
     water_shield = {
         id = 408510,
-        copy = { 52127 },
         duration = 600,
         max_stack = 3,
         consumedBy = { WOUND = true, BLOCKED = true },
@@ -661,8 +660,8 @@ spec:RegisterAuras({
     frost_shock = { id = 8056, copy = { 8058, 10472, 10473 }, duration = 8, max_stack = 1 },
     riptide = { id = 408521, copy = { 1239242, 1239243 }, duration = 15, max_stack = 1 },
     ghost_wolf = { id = 2645, copy = { 415233, 1238640 }, duration = 3600, max_stack = 1 },
-    earthbound = { id = 1238289, duration = 3600, max_stack = 1 },
-    ancestral_fortitude = { id = 16177, duration = 10, max_stack = 1 }, -- Ancestral Healing's buff
+    earthbound = { id = 1238289, duration = 5, max_stack = 1 }, -- the pin: a 5 s root on enemies
+    ancestral_fortitude = { id = 16177, duration = 15, max_stack = 1 }, -- Ancestral Healing's buff
     grounding = { id = 8178, copy = { 8179 }, duration = 45, max_stack = 1 }, -- the totem's passive: no summon applies it
     -- Rage of the Farseer (425336): +30% melee and ranged attack speed (DB2 aura 342) for 25 s; nothing reads it here.
     rage_of_the_farseer = { id = 425336, duration = 25, max_stack = 1 },
@@ -888,7 +887,7 @@ spec:RegisterAbilities({
     },
 
     -- Healing Wave: Improved Healing Wave 16182 -0.1 s a rank on the cast, Tidal Focus 16179 -1% a rank on the cost
-    -- (Healing Wave, Lesser Healing Wave, Chain Heal, Riptide); Nature's Swiftness makes it, Chain Heal and Ghost Wolf instant.
+    -- (Healing Wave, Lesser Healing Wave, Chain Heal, Riptide); Nature's Swiftness makes it, Lesser Healing Wave, Chain Heal and Ghost Wolf instant.
     healing_wave = {
         id = 331,
         copy = rest(HEALING_WAVE),
@@ -920,7 +919,9 @@ spec:RegisterAbilities({
     lesser_healing_wave = {
         id = 8004,
         copy = rest(LESSER_HEALING_WAVE),
-        cast = 1.5,
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 1.5
+        end,
         cooldown = 0,
         gcd = "spell",
 
@@ -931,6 +932,13 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(LESSER_HEALING_WAVE),
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
     },
 
     chain_heal = {
@@ -1002,6 +1010,20 @@ spec:RegisterAbilities({
         end,
     },
 
+    purge = {
+        id = 370,
+        copy = rest(PURGE),
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.1,
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(PURGE),
+    },
+
     cure_poison = {
         id = 526,
         cast = 0,
@@ -1035,7 +1057,9 @@ spec:RegisterAbilities({
         cooldown = 30,
         gcd = "spell",
 
-        spend = 0.25,
+        spend = function()
+            return 0.25 * (1 - 0.05 * talent.totemic_focus.rank) -- Totemic Focus 16173's mask holds Totemic Call
+        end,
         spendType = "mana",
 
         startsCombat = false,

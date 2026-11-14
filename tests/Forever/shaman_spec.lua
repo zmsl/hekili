@@ -59,6 +59,7 @@ local KIT = {
     chain_heal = { { 1064, 10622, 10623 }, 405, 0, "spell" },
     riptide = { { 408521, 1239242, 1239243 }, 230, 12, "spell" },
     ghost_wolf = { { 2645, 415233, 1238640 }, 100, 0, "spell" },
+    purge = { { 370, 8012 }, 0.1, 0, "spell" },
     cure_poison = { { 526 }, 0.09, 0, "spell" },
     cure_disease = { { 2870 }, 0.09, 0, "spell" },
     totemic_call = { { 437009 }, 0.25, 30, "spell" },
@@ -150,7 +151,7 @@ describe("Forever Shaman", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(45, n)
+        assert.are.equal(46, n)
         assert.are.equal("SHAMAN", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.elemental_mastery.toggle)
@@ -1208,5 +1209,45 @@ describe("Forever Shaman manual-press kit", function()
         assert.is_near(100 * 0.75, ld.run(w.abilities.mana_spring_totem.spend, e), 1e-9)
         assert.are.equal(13, ld.run(w.abilities.grounding_totem.cooldown, e))
         assert.are.equal(30, ld.run(w.abilities.stoneclaw_totem.cooldown, e))
+        assert.is_near(0.25 * 0.75, ld.run(w.abilities.totemic_call.spend, e), 1e-9)
+    end)
+
+    it("spends Nature's Swiftness on every spell its mask holds, instant", function()
+        for _, key in ipairs({ "healing_wave", "lesser_healing_wave", "chain_heal", "ghost_wolf" }) do
+            local e = ld.env(w)
+            e.buff = buffs({ natures_swiftness = true })
+            assert.are.equal(0, ld.run(w.abilities[key].cast, e), key)
+            for _, f in ipairs({ "now", "handler" }) do
+                e.removed = {}
+                ld.run(w.abilities[key][f], e)
+                assert.are.same({ "natures_swiftness" }, e.removed, key .. " " .. f)
+            end
+        end
+    end)
+
+    it("carries the Cooldown Manager's links and the pin's durations on the new auras", function()
+        local function has(a, id)
+            for _, v in ipairs(idsOf(a)) do
+                if v == id then
+                    return true
+                end
+            end
+        end
+        for aura, id in pairs({
+            frost_shock = 10473,
+            riptide = 1239243,
+            ghost_wolf = 1238640,
+            earthbound = 1238289,
+            ancestral_fortitude = 16177,
+            grounding = 8179,
+            flurry = 16256,
+            elemental_devastation = 30160,
+            improved_stormstrike = 1223031,
+            stormstrike = 410156,
+        }) do
+            assert.is_true(has(w.auras[aura], id), aura)
+        end
+        assert.are.same({ 5, 15 }, { w.auras.earthbound.duration, w.auras.ancestral_fortitude.duration })
+        assert.is_nil(has(w.auras.water_shield, 52127)) -- the CDM item 200334 is a dead entry (no such spell)
     end)
 end)

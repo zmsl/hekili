@@ -90,6 +90,7 @@ local ALLOW_IDS = {
     [1032] = "a source line in a known-nil note in the harness (Scripts.lua:1032); it collides with Devotion Aura rank 5's ID",
     [10] = "a count, time and percent everywhere in core and the harness; it collides with Blizzard rank 1's ID",
     [120] = "a time (seconds) in the harness's fights and specs; it collides with Cone of Cold rank 1's ID",
+    [370] = "a mana amount in the harness's near-cost specs; it collides with Purge rank 1's ID",
     [122] = "the ASCII code of 'z' (Engine/Sim/AplWarnings.lua); it collides with Frost Nova rank 1's ID",
 }
 

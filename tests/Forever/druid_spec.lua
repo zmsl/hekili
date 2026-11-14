@@ -109,7 +109,7 @@ local KIT = {
     abolish_poison = { { 2893 }, 199, "mana", 0, "spell" },
     cure_poison = { { 8946 }, 199, "mana", 0, "spell" },
     remove_curse = { { 2782 }, 124, "mana", 0, "spell" },
-    revive = { { 1237951 }, 933, "mana", 0, "spell" },
+    revive = { { 1237951 }, 933, "mana", 0, "off" },
     feral_charge_cat = { { 414924 }, 0, nil, 30, "spell" },
 }
 
@@ -186,6 +186,7 @@ local COVERED = {
     99,
     740,
     18562,
+    408120,
 }
 
 local function rank(n)
@@ -761,6 +762,14 @@ describe("Forever Druid", function()
                 tranquility = 9863,
             }) do
                 assert.is_true(has(w.auras[aura], id), aura)
+            end
+        end)
+
+        it("lasts Hibernate by rank as the pin has it", function()
+            local e = ld.env(w)
+            for r, want in ipairs({ 20, 30, 40 }) do
+                w.game.known[({ 2637, 18657, 18658 })[r]] = true
+                assert.are.equal(want, ld.run(w.auras.hibernate.duration, e))
             end
         end)
 

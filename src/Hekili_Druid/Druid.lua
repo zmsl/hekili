@@ -143,6 +143,7 @@ local TRANQUILITY_COST = { 375, 505, 695, 925 }
 local REBIRTH = { 20484, 20739, 20742, 20747, 20748 }
 local HIBERNATE = { 2637, 18657, 18658 }
 local HIBERNATE_COST = { 90, 120, 150 }
+local HIBERNATE_DURATION = { 20, 30, 40 }
 local SOOTHE_ANIMAL = { 2908, 8955, 9901 }
 local SOOTHE_ANIMAL_COST = { 50, 75, 100 }
 local ABOLISH_POISON = { 2893 }
@@ -722,7 +723,14 @@ spec:RegisterAuras({
     -- Nothing reads them but the map; Wild Growth's and Abolish Poison's land on the healed ally.
     wild_growth = { id = 408120, copy = { 1238214, 1238215 }, duration = 7, max_stack = 1 },
     tranquility = { id = 740, copy = { 8918, 9862, 9863 }, duration = 10, max_stack = 1 },
-    hibernate = { id = 2637, copy = { 18657, 18658 }, duration = 40, max_stack = 1 },
+    hibernate = {
+        id = 2637,
+        copy = { 18657, 18658 },
+        duration = function()
+            return HIBERNATE_DURATION[knownRank(HIBERNATE)] or 20 -- the pin: 20 / 30 / 40 s by rank
+        end,
+        max_stack = 1,
+    },
     soothe_animal = { id = 2908, copy = { 8955, 9901 }, duration = 15, max_stack = 1 },
     abolish_poison = { id = 2893, duration = 8, max_stack = 1 },
     starfire_stun = { id = 16922, duration = 3, max_stack = 1 }, -- Improved Starfire's stun
@@ -738,7 +746,7 @@ spec:RegisterAuras({
 --     join SpellPower p on p.SpellID=o.SpellID where o.SpellClassSet=7 and (p.ManaCost>0 or p.PowerCostPct>0) and not
 --     ((o.SpellClassMask_0 & 15973374)=0 and (o.SpellClassMask_1 & 100664659)=0 and (o.SpellClassMask_2 & 1024)=0
 --     and (o.SpellClassMask_3 & 142606400)=0)
--- Covered but unregistered: the rune spells. Not covered: Wrath, Faerie Fire, Cower,
+-- Covered but unregistered: the rune spells. Wild Growth (408120, mask word 1 bit 26) is covered. Not covered: Wrath, Faerie Fire, Cower,
 -- Challenging Roar, Mark and Gift of the Wild, Shifting Power. Checkpoint Q6 confirms Primal Bite and Demoralizing Roar
 -- (usable at 0 rage with Clearcasting up).
 spec:RegisterCostMod({
@@ -772,6 +780,7 @@ spec:RegisterCostMod({
         99,
         740,
         18562,
+        408120,
     },
 })
 
@@ -2070,6 +2079,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(REBIRTH),
+        nobuff = "feral_form",
 
         now = function()
             removeBuff("natures_swiftness")
@@ -2180,7 +2190,7 @@ spec:RegisterAbilities({
         id = 1237951,
         cast = 10,
         cooldown = 0,
-        gcd = "spell",
+        gcd = "off", -- the pin's row has no GCD
 
         spend = 0.75,
         spendType = "mana",

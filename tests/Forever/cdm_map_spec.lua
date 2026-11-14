@@ -127,6 +127,7 @@ local GAPS = {
     },
     ROGUE = {},
     SHAMAN = {
+        [200334] = { "?", "unmapped, cat 1; no aura has any of 52127; a dead entry: item 200334 links spell 52127, which has no name and no spell on Forever (the owner export); the real Water Shield is 200335" },
         [200330] = { "Lava Burst", "unmapped, cat 0; no aura has any of 408490,1238299,1238300; lane cov-shaman: skipped, the spell is gone from the game (owner 2026-11-07, the sim dropped it)" },
     },
     WARLOCK = {
