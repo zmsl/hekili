@@ -63,7 +63,8 @@ reducer untouched.
   review, S2). (Amended 2026-11-14, L972) A build no longer zeroes the proof of an id whose mapping is unchanged
   (decision 124); strikes and silent counts still start over at every build. The router counts the builds per trigger
   (`loaded`, `hotfixed`, `override`: the viewer's three events; `belief`: a belief build; `other`: a provider or panel
-  switch, the start) and the viewer's events received in combat (`evInCombat`: each restarts every dark).
+  switch, the start), the viewer's events received in combat (`evInCombat`: each restarts every dark; none in game,
+  L1009) and, at the last build, the proven ids kept and dropped (`carried`, `dropped`).
 
 ### 2.2 The dark count and its start (decision 118; amended 2026-11-10 after the Fable 5.2 review, M2)
 
@@ -214,7 +215,7 @@ nothing.
   strike or pdark this fight.
 - `presence-proof mappedNeverLit=<keys or ->` (mapped auras none of whose cooldownIDs lit this build; an item that lit
   and was struck or suspended is not listed) and `presence-proof repoints=%d struck=%d suspended=%d builds=%d
-  loaded=%d hotfixed=%d override=%d belief=%d other=%d evInCombat=%d` (§2.1; the per-trigger counts added 2026-11-14, L972) (per
+  loaded=%d hotfixed=%d override=%d belief=%d other=%d evInCombat=%d carried=%d dropped=%d` (§2.1; the per-trigger counts added 2026-11-14, L972) (per
   fight re-points seen by the leaf; per build the cooldownIDs whose proof the strikes dropped and the times silent
   verdicts suspended a proof; per session the leaf's builds, never reset per fight). `verdicts=%d` counts closes that
   folded (amended 2026-11-10 after the Fable 5.2 review, M1/M3/S2).
@@ -289,5 +290,5 @@ verdict off for the A/B; `Hekili.cdmOff` remains the only global switch; the per
 | V6 | `I.verdictOff` harness switch left in Game/ | A/B needs it | delete after Task 10 or keep as debug like `cdmOff` (owner) |
 | V7 | Travel is `rMax / velocity` with the ability's rMax as read from the client; an ability whose range was never read has rMax 0, so a projectile falls back to W0 (Tickets.lua assumes 40 yd there) | no pack ability with velocity lacks a range read today | Task 10 shows a strike on a projectile aura |
 | V8 | Rule 1's close (`closes()`, a `Read` with b 0) has M1's fold-order hole: a recast folded first in the drain of a seen-rule DOWN is closed (amended 2026-11-10 after the Fable 5.2 review: found, not fixed here) | older code, rarer trigger (needs a NONE: the item lit this application, then dark, and the recast in that drain) | next belief lane touching `closes()`: stage it with the verdict's kind (the judged applied time) |
-| V9 | (resolved 2026-11-14, L972: decision 124 as amended carries the proof across a build for an unchanged mapping) Proof died at every build; builds were frequent (1-3 a fight in the owner's 11-10 session) | the 11-10 snapshots showed `builds` rising within a session's fights | open item: which trigger rebuilds (the snapshot's per-trigger counts) and how often the viewer's events restart the dark in combat (`evInCombat`) |
+| V9 | (resolved 2026-11-14, L972: decision 124 as amended carries the proof across a build for an unchanged mapping) Proof died at every build; builds were frequent (1-3 a fight in the owner's 11-10 session) | the 11-10 snapshots showed `builds` rising within a session's fights | the owner's in-game result (L1009): the viewer's reload events fire only out of combat, at form shifts (the pre-pull shift rebuilds the map), never in combat, so the in-combat dark restart does not occur; `carried`/`dropped` in the snapshot show whether a form-shift build keeps each proven item's mapping |
 | V10 | A cooldownID shown on two frames at once is struck or counted silent once per frame | the client keeps one frame per cooldownID; conservative (suspends or retires sooner) | a snapshot shows `struck`/`suspended` after a single wrong verdict |
