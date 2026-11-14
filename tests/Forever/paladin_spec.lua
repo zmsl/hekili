@@ -42,6 +42,25 @@ local KIT = {
     seal_of_light = { { 20165, 20347, 20348, 20349 }, 210, 0, "spell" },
     seal_of_wisdom = { { 20166, 20356, 20357 }, 200, 0, "spell" },
     templars_bulwark = { { 1311015 }, 110, 300, "off" }, -- audit B2 (wowsims: 110 mana, 300 s, an absorb for 8 s)
+    -- Lane A (coverage): the pin's sim/paladin/spell_data_auto_gen.go ladders with spells_auto_gen.go's rows
+    holy_light = { { 635, 639, 647, 1026, 1042, 3472, 10328, 10329, 25292 }, 660, 0, "spell" },
+    flash_of_light = { { 19750, 19939, 19940, 19941, 19942, 19943 }, 140, 0, "spell" },
+    lay_on_hands = { { 633, 2800, 10310 }, 0, 1200, "spell" },
+    holy_wrath = { { 2812, 10318 }, 805, 60, "spell" },
+    hammer_of_justice = { { 853, 5588, 5589, 10308 }, 100, 60, "spell" },
+    cleanse = { { 4987 }, 0.08, 0, "spell" },
+    purify = { { 1152 }, 0.08, 0, "spell" },
+    blessing_of_freedom = { { 1044 }, 0.1, 20, "spell" },
+    blessing_of_protection = { { 1022, 5599, 10278 }, 0.07, 300, "spell" },
+    blessing_of_sacrifice = { { 6940, 20729 }, 100, 0, "spell" },
+    divine_shield = { { 642, 1020 }, 110, 300, "spell" },
+    divine_protection = { { 498, 5573 }, 35, 300, "spell" },
+    repentance = { { 20066 }, 60, 60, "spell" },
+    turn_undead = { { 2878, 5627, 10326, 1328374, 1328373, 1328372 }, 75, 30, "spell" }, -- the last three: Turn Evil's
+    divine_intervention = { { 19752 }, 0, 3600, "spell" },
+    lights_vigil = { { 1310911, 1311590, 1311595 }, 1340, 6, "spell" },
+    oath_of_light = { { 1328548 }, 0.08, 0, "spell" },
+    voice_of_truth = { { 1310897 }, 0, 180, "off" },
 }
 
 local function idsOf(a)
@@ -105,7 +124,7 @@ describe("Forever Paladin", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(19, n)
+        assert.are.equal(37, n)
         assert.are.equal("PALADIN", w.class)
         assert.is_nil(w.options)
     end)
@@ -203,6 +222,176 @@ describe("Forever Paladin", function()
         end
     )
 
+    -- Purifying Power (429144; the pin's curves {-10, -20} % on Cleanse's and Purify's cost, {-17, -33} % on Exorcism's and Holy
+    -- Wrath's cooldown), Sacred Duty (1224697, flat -30/-60 s on Divine Shield, Divine Protection and Templar's Bulwark),
+    -- Guardian's Favor (20174, -60/-120 s on Blessing of Protection), Improved Hammer of Justice (20487, -5/-10/-15 s),
+    -- Turn Evil (1328370, Turn Undead -0.5/-1 s cast, -5/-10 s cooldown).
+    it("applies the talents' cooldown and cast cuts to the abilities the audit found unregistered", function()
+        local e = ld.env(w)
+        local function cd(key, t, r)
+            e.talent = talents({ [t] = r })
+            return math.floor(ld.run(w.abilities[key].cooldown, e) * 1000 + 0.5) / 1000
+        end
+        assert.are.same({ 15, 12.45, 10.05 }, {
+            cd("exorcism", "purifying_power", 0),
+            cd("exorcism", "purifying_power", 1),
+            cd("exorcism", "purifying_power", 2),
+        })
+        assert.are.same({ 60, 49.8, 40.2 }, {
+            cd("holy_wrath", "purifying_power", 0),
+            cd("holy_wrath", "purifying_power", 1),
+            cd("holy_wrath", "purifying_power", 2),
+        })
+        for _, key in ipairs({ "divine_shield", "divine_protection" }) do
+            assert.are.same(
+                { 300, 270, 240 },
+                { cd(key, "sacred_duty", 0), cd(key, "sacred_duty", 1), cd(key, "sacred_duty", 2) },
+                key
+            )
+        end
+        assert.are.same({ 300, 240, 180 }, {
+            cd("blessing_of_protection", "guardians_favor", 0),
+            cd("blessing_of_protection", "guardians_favor", 1),
+            cd("blessing_of_protection", "guardians_favor", 2),
+        })
+        assert.are.same({ 60, 55, 50, 45 }, {
+            cd("hammer_of_justice", "improved_hammer_of_justice", 0),
+            cd("hammer_of_justice", "improved_hammer_of_justice", 1),
+            cd("hammer_of_justice", "improved_hammer_of_justice", 2),
+            cd("hammer_of_justice", "improved_hammer_of_justice", 3),
+        })
+        assert.are.same(
+            { 30, 25, 20 },
+            { cd("turn_undead", "turn_evil", 0), cd("turn_undead", "turn_evil", 1), cd("turn_undead", "turn_evil", 2) }
+        )
+        e.talent = talents({ turn_evil = 2 })
+        assert.are.equal(0.5, ld.run(w.abilities.turn_undead.cast, e))
+        e.talent = talents({})
+        assert.are.equal(1.5, ld.run(w.abilities.turn_undead.cast, e))
+    end)
+
+    it(
+        "prices Cleanse and Purify under Purifying Power and Benediction; Templar's Bulwark under Benediction",
+        function()
+            w.game.known[4987], w.game.known[1152], w.game.known[1311015] = true, true, true
+            local e = ld.env(w)
+            local function price(key, ranks)
+                e.talent = talents(ranks)
+                return math.floor(ld.run(w.abilities[key].spend, e) * 100000 + 0.5) / 100000
+            end
+            for _, key in ipairs({ "cleanse", "purify" }) do
+                assert.are.same({ 0.08, 0.072, 0.064, 0.0576 }, {
+                    price(key, {}),
+                    price(key, { purifying_power = 1 }),
+                    price(key, { purifying_power = 2 }),
+                    price(key, { purifying_power = 2, benediction = 5 }),
+                }, key)
+            end
+            assert.are.same(
+                { 110, 99 },
+                { price("templars_bulwark", {}), price("templars_bulwark", { benediction = 5 }) }
+            )
+        end
+    )
+
+    -- Sanctified Judgement (1311074): a 33/66/100% chance to return 20/40/60% of the seal's base cost: the mean at every rank.
+    it("refunds Sanctified Judgement's expected mana at every rank", function()
+        w.game.known[20920] = true
+        for _, field in ipairs({ "now", "handler" }) do
+            for r, want in ipairs({ 210 * 0.33 * 0.2, 210 * 0.66 * 0.4, 210 * 0.6 }) do
+                local e = ld.env(w)
+                e.talent = talents({ sanctified_judgement = r })
+                e.buff = buffs({ seal_of_command = true })
+                ld.run(w.abilities.judgement[field], e)
+                assert.are.equal(1, #e.gained, field .. r)
+                assert.is_true(math.abs(e.gained[1][1] - want) < 1e-9, field .. r .. " " .. tostring(e.gained[1][1]))
+            end
+        end
+    end)
+
+    it("registers the heals, the utility spells and the Forbearance ones with the pin's costs", function()
+        -- Holy Light and Flash of Light spend Divine Favor, as Holy Shock does
+        for _, key in ipairs({ "holy_light", "flash_of_light" }) do
+            for _, field in ipairs({ "now", "handler" }) do
+                local e = ld.env(w)
+                ld.run(w.abilities[key][field], e)
+                assert.are.same({ "divine_favor" }, e.removed, key .. field)
+            end
+        end
+        assert.are.equal(2.5, ld.run(w.abilities.holy_light.cast, ld.env(w)))
+        assert.are.equal(1.5, ld.run(w.abilities.flash_of_light.cast, ld.env(w)))
+        assert.are.equal(2, ld.run(w.abilities.holy_wrath.cast, ld.env(w)))
+        -- Lay on Hands drains the mana left (wowsims lay_on_hands.go)
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = ld.env(w)
+            ld.run(w.abilities.lay_on_hands[field], e)
+            assert.are.same({ { 1000, "mana" } }, e.spent, field)
+        end
+        -- Divine Shield, Divine Protection and Blessing of Protection bring Forbearance (60 s less Sacred Duty's 5 s a rank)
+        -- and refuse under it
+        for _, key in ipairs({ "divine_shield", "divine_protection", "blessing_of_protection" }) do
+            for _, field in ipairs({ "now", "handler" }) do
+                local e = ld.env(w)
+                e.talent = talents({ sacred_duty = 2 })
+                ld.run(w.abilities[key][field], e)
+                assert.is_true(e.durations.forbearance == 50, key .. field)
+            end
+            assert.is_true(ld.run(w.abilities[key].usable, ld.env(w)))
+            local e = ld.env(w)
+            e.buff = buffs({ forbearance = true })
+            assert.is_false((ld.run(w.abilities[key].usable, e)))
+        end
+        local e = ld.env(w)
+        ld.run(w.abilities.divine_shield.handler, e)
+        assert.is_true(e.durations.divine_shield == 12 or e.durations.divine_shield == 10)
+    end)
+
+    -- Divine Shield and Divine Protection share Category 37 (pin: 642/1020/498/5573, CategoryCooldownMs 300000), cut by
+    -- Sacred Duty's 30 s a rank: one press starts the other's cooldown.
+    it("puts Divine Shield and Divine Protection on one category cooldown (shortened by Sacred Duty)", function()
+        for me, other in pairs({ divine_shield = "divine_protection", divine_protection = "divine_shield" }) do
+            for _, field in ipairs({ "now", "handler" }) do
+                for rank = 0, 2 do
+                    local e = ld.env(w)
+                    e.talent = talents({ sacred_duty = rank })
+                    ld.run(w.abilities[me][field], e)
+                    local got = {}
+                    for _, c in ipairs(e.cooldowns) do
+                        got[c[1]] = c[2]
+                    end
+                    assert.are.equal(300 - 30 * rank, got[other], me .. " " .. field .. " rank " .. rank)
+                    assert.is_nil(got[me], me .. " " .. field)
+                end
+            end
+        end
+    end)
+
+    -- The auras the Cooldown Manager links (cdm/paladin.lua), under their own spell IDs.
+    it("registers the Cooldown Manager's linked auras under their own spell IDs", function()
+        local A = w.auras
+        for aura, ids in pairs({
+            hammer_of_justice = { 1324513, 1324515, 1324516, 1324517 },
+            turn_undead = { 1324543, 1324545, 1324546 },
+            repentance = { 1324538 },
+            blessing_of_freedom = { 1044 },
+            blessing_of_sacrifice = { 6940, 20729 },
+            blessing_of_protection = { 1022, 5599, 10278 },
+            divine_shield = { 498, 642, 5573, 1020 },
+            iron_creed = { 440668 },
+            redoubt = { 20127 },
+            reckoning = { 20177 },
+        }) do
+            assert.is_table(A[aura], aura)
+            local have = { [A[aura].id] = true }
+            for _, c in ipairs(A[aura].copy or {}) do
+                have[c] = true
+            end
+            for _, id in ipairs(ids) do
+                assert.is_true(have[id] == true, aura .. " " .. id)
+            end
+        end
+    end)
+
     it("cuts Consecration's, Hammer of Wrath's and Exorcism's cost 20% a rank of Holy Conduit (DB2 1237268)", function()
         for key, top in pairs({ consecration = 20924, hammer_of_wrath = 24239, exorcism = 10314 }) do
             w.game.known[top] = true
@@ -243,7 +432,7 @@ describe("Forever Paladin", function()
                 assert.is_true(math.abs(e.gained[1][1] - 138.6) < 1e-9, field)
                 assert.are.equal("mana", e.gained[1][2], field)
                 e = ld.env(w)
-                e.talent = talents({ sanctified_judgement = 2 }) -- a chance under 100%: no refund believed
+                e.talent = talents({ sanctified_judgement = 0 })
                 e.buff = buffs({ seal_of_command = true })
                 ld.run(w.abilities.judgement[field], e)
                 assert.are.same({}, e.gained, field)

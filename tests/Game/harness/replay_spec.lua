@@ -1055,7 +1055,7 @@ describe("the replay's ranged auto attack", function()
     }, "\n")
 
     it("emits each completed shot as the rangedSwing ability's cast, its speed the usual gap", function()
-        local abilities = { volley = { key = "volley", id = 900070, gcd = "off", rangedSwing = true } }
+        local abilities = { salvo = { key = "salvo", id = 900070, gcd = "off", rangedSwing = true } }
         for k, a in pairs(H.Hekili.Class.abilities) do
             abilities[k] = a
         end

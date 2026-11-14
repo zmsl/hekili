@@ -22,7 +22,7 @@ local KIT = {
     aspect_of_the_cheetah = { { 5118 }, 40, 0, "spell" },
     rapid_fire = { { 3045 }, 100, 300, "off" },
     -- the BM talent (19574): its pet's 18 s rage, autocast as a major cooldown in wowsims's BM log
-    bestial_wrath = { { 19574 }, 0, 120, "off" },
+    bestial_wrath = { { 19574 }, 0.12, 120, "off" }, -- 12% of base mana (the pin's row CostPct 12; the DB2 had it free)
     serpent_sting = { { 1978, 13549, 13550, 13551, 13552, 13553, 13554, 13555, 25295 }, 250, 0, "spell" },
     arcane_shot = { { 3044, 14281, 14282, 14283, 14284, 14285, 14286, 14287 }, 190, 6, "spell" },
     summon_hawk = { { 1293241, 1293525, 1293526, 1293527 }, 190, 6, "spell" },
@@ -35,7 +35,52 @@ local KIT = {
     wing_clip = { { 2974, 1310180, 14267, 14268 }, 80, 0, "spell" },
     -- wowsims's Melee Weave casts it in melee range (category cooldown 30 s, SpellCooldowns)
     immolation_trap = { { 13795, 14302, 14303, 14304, 14305 }, 245, 30, "spell" },
+    -- Lane A (coverage): the pin's sim/hunter/spell_data_auto_gen.go ladders with spells_auto_gen.go's rows (cost, cooldown,
+    -- GCD); Forever's own Freezing Trap rows (1324500-2) come first, as the CDM links them (cdm/hunter.lua)
+    explosive_trap = { { 13813, 14316, 14317 }, 520, 30, "spell" },
+    freezing_trap = { { 1324500, 1324501, 1324502, 1499, 14310, 14311 }, 100, 30, "spell" },
+    frost_trap = { { 13809 }, 60, 30, "spell" },
+    scorpid_sting = { { 3043 }, 0.09, 0, "spell" },
+    viper_sting = { { 3034, 14279, 14280 }, 215, 15, "spell" },
+    concussive_shot = { { 5116 }, 0.08, 12, "spell" },
+    scatter_shot = { { 19503 }, 0.08, 30, "spell" },
+    intimidation = { { 19577 }, 0.08, 60, "spell" },
+    counterattack = { { 19306, 1242634, 20909, 20910 }, 85, 5, "spell" },
+    deterrence = { { 19263 }, 0, 300, "off" },
+    disengage = { { 781, 14272, 14273 }, 150, 5, "spell" },
+    feign_death = { { 5384 }, 80, 30, "off" },
+    flare = { { 1543 }, 50, 15, "spell" },
+    distracting_shot = { { 20736, 14274, 15629, 15630, 15631, 15632 }, 110, 8, "spell" },
+    tranquilizing_shot = { { 19801 }, 270, 20, "spell" },
+    volley = { { 1510, 14294, 14295 }, 490, 0, "spell" },
+    scare_beast = { { 1513, 14326, 14327 }, 75, 30, "spell" },
+    trueshot_aura = { { 1299346, 1299348, 19506, 20905, 20906 }, 525, 0, "spell" },
+    mend_pet = { { 136, 3111, 3661, 3662, 13542, 13543, 13544 }, 480, 0, "spell" },
+    aspect_of_the_monkey = { { 13163 }, 20, 0, "spell" },
+    aspect_of_the_pack = { { 13159 }, 100, 0, "spell" },
+    aspect_of_the_wild = { { 20043, 20190 }, 115, 0, "spell" },
+    aspect_of_the_viper = { { 415423 }, 0, 0, "spell" },
 }
+
+-- one aspect at a time: each cast takes every other aspect down, in this order
+local ASPECTS = {
+    "aspect_of_the_hawk",
+    "aspect_of_the_beast",
+    "aspect_of_the_cheetah",
+    "aspect_of_the_monkey",
+    "aspect_of_the_pack",
+    "aspect_of_the_wild",
+    "aspect_of_the_viper",
+}
+local function OTHER_ASPECTS(key)
+    local out = {}
+    for _, k in ipairs(ASPECTS) do
+        if k ~= key then
+            out[#out + 1] = k
+        end
+    end
+    return out
+end
 
 local function idsOf(a)
     local out = { a.id }
@@ -80,7 +125,7 @@ describe("Forever Hunter", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(18, n)
+        assert.are.equal(41, n)
         assert.are.equal("HUNTER", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.rapid_fire.toggle)
@@ -110,6 +155,134 @@ describe("Forever Hunter", function()
         assert.are.same(1242688, w.auras.resourcefulness.id)
         assert.are.same(1242512, w.auras.rapid_recuperation.id)
         assert.are.same({ 2, 1223987, 2 }, w.talents.rapid_recuperation)
+    end)
+
+    -- Survivalist's Discipline (1310496, curve {-20, -40} %, PCT on the cooldown: its mask is every trap placement and
+    -- Deterrence, talents_survival.go:135) and Improved Stings (1310661: Viper Sting -2/-4/-6 s, mask 1:128).
+    it(
+        "cuts the traps' and Deterrence's cooldown by Survivalist's Discipline, Viper Sting's by Improved Stings",
+        function()
+            local e = ld.env(w)
+            local function cd(key, talent, rank)
+                e.talent[talent] = { rank = rank, enabled = rank > 0 }
+                return math.floor(ld.run(w.abilities[key].cooldown, e) * 1000 + 0.5) / 1000
+            end
+            for _, key in ipairs({ "immolation_trap", "explosive_trap", "freezing_trap", "frost_trap" }) do
+                assert.are.same({ 30, 24, 18 }, {
+                    cd(key, "survivalists_discipline", 0),
+                    cd(key, "survivalists_discipline", 1),
+                    cd(key, "survivalists_discipline", 2),
+                }, key)
+            end
+            assert.are.same({ 300, 240, 180 }, {
+                cd("deterrence", "survivalists_discipline", 0),
+                cd("deterrence", "survivalists_discipline", 1),
+                cd("deterrence", "survivalists_discipline", 2),
+            })
+            assert.are.same({ 15, 13, 11, 9 }, {
+                cd("viper_sting", "improved_stings", 0),
+                cd("viper_sting", "improved_stings", 1),
+                cd("viper_sting", "improved_stings", 2),
+                cd("viper_sting", "improved_stings", 3),
+            })
+        end
+    )
+
+    it("puts every trap on one 30 s category cooldown (shortened by Survivalist's Discipline)", function()
+        local traps = { "immolation_trap", "explosive_trap", "freezing_trap", "frost_trap" }
+        for _, me in ipairs(traps) do
+            for _, field in ipairs({ "now", "handler" }) do
+                local e = ld.env(w)
+                e.talent.survivalists_discipline = { rank = 2, enabled = true }
+                ld.run(w.abilities[me][field], e)
+                local got = {}
+                for _, c in ipairs(e.cooldowns) do
+                    got[c[1]] = c[2]
+                end
+                for _, other in ipairs(traps) do
+                    assert.are.equal(other ~= me and 18 or nil, got[other], me .. " " .. field .. " -> " .. other)
+                end
+            end
+        end
+    end)
+
+    it(
+        "prices the new shots, stings and traps under Efficiency and Resourcefulness, Mend Pet under Improved Mend Pet",
+        function()
+            for key, want in pairs(KIT) do
+                if key ~= "bestial_wrath" then
+                    w.game.known[want[1][#want[1]]] = true
+                end
+            end
+            local e = ld.env(w)
+            local function price(key, res, eff, mend)
+                e.talent.resourcefulness = { rank = res, enabled = res > 0 }
+                e.talent.efficiency = { rank = eff, enabled = eff > 0 }
+                e.talent.improved_mend_pet = { rank = mend or 0, enabled = (mend or 0) > 0 }
+                return math.floor(ld.run(w.abilities[key].spend, e) * 100000 + 0.5) / 100000
+            end
+            -- Efficiency's mask (19416, 5/5 = -15%): the stings, Concussive, Scatter, Distracting, Tranquilizing, Counterattack,
+            -- Volley; not the traps
+            for key, want in pairs({
+                viper_sting = { 215, 182.75 },
+                scorpid_sting = { 0.09, 0.0765 },
+                concussive_shot = { 0.08, 0.068 },
+                scatter_shot = { 0.08, 0.068 },
+                distracting_shot = { 110, 93.5 },
+                volley = { 490, 416.5 },
+                tranquilizing_shot = { 270, 229.5 },
+                counterattack = { 85, 72.25 },
+                explosive_trap = { 520, 520 },
+                freezing_trap = { 100, 100 },
+                frost_trap = { 60, 60 },
+            }) do
+                assert.are.same(want, { price(key, 0, 0), price(key, 0, 5) }, key)
+            end
+            -- Resourcefulness's mask (440529, 2/2 = -60%): the traps and Counterattack; not the stings or Scatter Shot
+            for key, want in pairs({
+                explosive_trap = { 520, 208 },
+                freezing_trap = { 100, 40 },
+                frost_trap = { 60, 24 },
+                counterattack = { 85, 34 },
+                viper_sting = { 215, 215 },
+                scatter_shot = { 0.08, 0.08 },
+            }) do
+                assert.are.same(want, { price(key, 0, 0), price(key, 2, 0) }, key)
+            end
+            -- Improved Mend Pet (19572's second row: -10% a rank)
+            assert.are.same(
+                { 480, 432, 384 },
+                { price("mend_pet", 0, 0, 0), price("mend_pet", 0, 0, 1), price("mend_pet", 0, 0, 2) }
+            )
+        end
+    )
+
+    -- The auras the Cooldown Manager links (cdm/hunter.lua): the buff's own spell ID, every rank.
+    it("registers the Cooldown Manager's linked auras under their own spell IDs", function()
+        local A = w.auras
+        for aura, ids in pairs({
+            sniper_shot = { 1310687, 1310785, 1310786 },
+            immolation_trap = { 13797, 14298, 14299, 14300, 14301 },
+            freezing_trap = { 3355, 14308, 14309, 1324500, 1324501, 1324502 },
+            frost_trap = { 13810 },
+            trueshot_aura = { 1299346, 1299348, 19506, 20905, 20906 },
+            scare_beast = { 1324506, 1324507, 1324510 },
+            intimidation = { 1324494 },
+            scatter_shot = { 1324499 },
+            deterrence = { 19263 },
+            entrapment = { 19185 },
+            improved_concussive_shot = { 1324511 },
+            frenzy = { 19621 },
+        }) do
+            assert.is_table(A[aura], aura)
+            local have = { [A[aura].id] = true }
+            for _, c in ipairs(A[aura].copy or {}) do
+                have[c] = true
+            end
+            for _, id in ipairs(ids) do
+                assert.is_true(have[id] == true, aura .. " " .. id)
+            end
+        end
     end)
 
     it("anchors the ranged clock on Auto Shot, off the GCD", function()
@@ -156,9 +329,13 @@ describe("Forever Hunter", function()
             { "hunters_mark", { "hunters_mark" }, {} },
             { "serpent_sting", { "serpent_sting" }, {} },
             { "rapid_fire", { "rapid_fire" }, {} },
-            { "aspect_of_the_hawk", { "aspect_of_the_hawk" }, { "aspect_of_the_beast", "aspect_of_the_cheetah" } },
-            { "aspect_of_the_beast", { "aspect_of_the_beast" }, { "aspect_of_the_hawk", "aspect_of_the_cheetah" } },
-            { "aspect_of_the_cheetah", { "aspect_of_the_cheetah" }, { "aspect_of_the_hawk", "aspect_of_the_beast" } },
+            { "aspect_of_the_hawk", { "aspect_of_the_hawk" }, OTHER_ASPECTS("aspect_of_the_hawk") },
+            { "aspect_of_the_beast", { "aspect_of_the_beast" }, OTHER_ASPECTS("aspect_of_the_beast") },
+            { "aspect_of_the_cheetah", { "aspect_of_the_cheetah" }, OTHER_ASPECTS("aspect_of_the_cheetah") },
+            { "aspect_of_the_monkey", { "aspect_of_the_monkey" }, OTHER_ASPECTS("aspect_of_the_monkey") },
+            { "aspect_of_the_pack", { "aspect_of_the_pack" }, OTHER_ASPECTS("aspect_of_the_pack") },
+            { "aspect_of_the_wild", { "aspect_of_the_wild" }, OTHER_ASPECTS("aspect_of_the_wild") },
+            { "aspect_of_the_viper", { "aspect_of_the_viper" }, OTHER_ASPECTS("aspect_of_the_viper") },
         }) do
             for _, field in ipairs({ "now", "handler" }) do
                 local e = ld.env(w)
@@ -447,6 +624,27 @@ describe("Forever Hunter priorities", function()
             "Survival Turret (wowsims.com)",
         }, names)
         assert.is_truthy(src:find('spec:RetirePacks({ "BeastMastery", "Marksmanship", "Survival" })', 1, true))
+    end)
+
+    -- Ledger L682: every Hunter pack carries the racials wowsims's autocast would use for a Hunter's races (rule 13's racial block,
+    -- tools/wowsims/apl.lua M.RACIALS over CLASS_RACES.ClassHunter: Night Elf's Elune's Light, Orc's Blood Fury, Troll's
+    -- Berserking; Stoneform and Shatter Curse are tanks' only), from the racial block and not from the sampled log.
+    it("carries Elune's Light, Blood Fury and Berserking in every pack", function()
+        local n = 0
+        for name, p in pairs(packs) do
+            n = n + 1
+            local have = {}
+            for _, entries in pairs(p.lists) do
+                for _, e in ipairs(entries) do
+                    have[e.action] = true
+                end
+            end
+            for _, key in ipairs({ "elunes_light", "blood_fury", "berserking" }) do
+                assert.is_true(have[key] == true, name .. " " .. key)
+            end
+            assert.is_nil(have.stoneform, name)
+        end
+        assert.are.equal(7, n)
     end)
 
     it("names only registered abilities, auras, settings and the hawk", function()

@@ -108,6 +108,33 @@ local BASE_MANA = 1720 -- a fraction cost is of this (wowsims's ExtraClassBaseSt
 local CRYPTSTALKER = { 22436, 22437, 22438, 22439, 22440, 22441, 22442, 22443, 23067 }
 local IMMOLATION_TRAP = { 13795, 14302, 14303, 14304, 14305 }
 local IMMOLATION_TRAP_COST = { 50, 90, 135, 190, 245 }
+-- Lane A (coverage; the pin's sim/hunter/spell_data_auto_gen.go ladders, costs and cooldowns from its spells_auto_gen.go):
+-- every other ability a Hunter presses. A percent cost is a fraction of BASE_MANA. Forever's own Freezing Trap rows
+-- (1324500-2, as the Cooldown Manager links them) lead, the classic rows follow with the same costs.
+local EXPLOSIVE_TRAP = { 13813, 14316, 14317 }
+local EXPLOSIVE_TRAP_COST = { 275, 395, 520 }
+local FREEZING_TRAP = { 1324500, 1324501, 1324502, 1499, 14310, 14311 }
+local FREEZING_TRAP_COST = { 50, 75, 100, 50, 75, 100 }
+local FROST_TRAP = { 13809 }
+local FROST_TRAP_COST = { 60 }
+local VIPER_STING = { 3034, 14279, 14280 }
+local VIPER_STING_COST = { 135, 175, 215 }
+local COUNTERATTACK = { 19306, 1242634, 20909, 20910 }
+local COUNTERATTACK_COST = { 30, 45, 65, 85 }
+local DISENGAGE = { 781, 14272, 14273 }
+local DISENGAGE_COST = { 50, 100, 150 }
+local DISTRACTING_SHOT = { 20736, 14274, 15629, 15630, 15631, 15632 }
+local DISTRACTING_SHOT_COST = { 20, 30, 50, 70, 90, 110 }
+local VOLLEY = { 1510, 14294, 14295 }
+local VOLLEY_COST = { 350, 420, 490 }
+local SCARE_BEAST = { 1513, 14326, 14327 }
+local SCARE_BEAST_COST = { 35, 50, 75 }
+local TRUESHOT_AURA = { 1299346, 1299348, 19506, 20905, 20906 }
+local TRUESHOT_AURA_COST = { 180, 245, 325, 425, 525 }
+local MEND_PET = { 136, 3111, 3661, 3662, 13542, 13543, 13544 }
+local MEND_PET_COST = { 50, 90, 155, 225, 300, 385, 480 }
+local ASPECT_OF_THE_WILD = { 20043, 20190 }
+local ASPECT_OF_THE_WILD_COST = { 90, 115 }
 
 local function rest(ids)
     local out = {}
@@ -166,16 +193,28 @@ local function rangedCast(base)
     end
 end
 
--- One aspect at a time (wowsims aspects.go): each removes the other.
-local function aspectEffect(key, other, other2)
+-- One aspect at a time (wowsims aspects.go): each removes every other.
+local ASPECTS = {
+    "aspect_of_the_hawk",
+    "aspect_of_the_beast",
+    "aspect_of_the_cheetah",
+    "aspect_of_the_monkey",
+    "aspect_of_the_pack",
+    "aspect_of_the_wild",
+    "aspect_of_the_viper",
+}
+local function aspectEffect(key)
     return function()
-        removeBuff(other)
-        removeBuff(other2)
+        for i = 1, #ASPECTS do
+            if ASPECTS[i] ~= key then
+                removeBuff(ASPECTS[i])
+            end
+        end
         applyBuff(key)
     end
 end
 
-local function aspect(key, other, other2, ids, costs)
+local function aspect(key, ids, costs)
     return {
         id = ids[1],
         copy = rest(ids),
@@ -189,8 +228,8 @@ local function aspect(key, other, other2, ids, costs)
         startsCombat = false,
         known = knows(ids),
 
-        now = aspectEffect(key, other, other2),
-        handler = aspectEffect(key, other, other2),
+        now = aspectEffect(key),
+        handler = aspectEffect(key),
     }
 end
 
@@ -219,6 +258,30 @@ end
 local function removes(key)
     return function()
         removeBuff(key)
+    end
+end
+
+-- The traps share one 30 s category cooldown (DB2 SpellCooldowns: Immolation, Explosive, Freezing and Frost Trap), which
+-- Survivalist's Discipline (1310496: curve {-20, -40} %, mask every trap placement and Deterrence) shortens, as does
+-- Deterrence's own 300 s. `base` is the unshortened cooldown.
+local function trapCooldown(base)
+    base = base or 30
+    return function()
+        return base * (1 - 0.2 * talent.survivalists_discipline.rank)
+    end
+end
+local TRAPS = { "immolation_trap", "explosive_trap", "freezing_trap", "frost_trap" }
+local function trapCast(me)
+    return function()
+        local cd = 30 * (1 - 0.2 * talent.survivalists_discipline.rank)
+        for i = 1, #TRAPS do
+            if TRAPS[i] ~= me then
+                setCooldown(TRAPS[i], cd)
+            end
+        end
+        if me == "immolation_trap" then
+            applyDebuff("target", "immolation_trap")
+        end
     end
 end
 
@@ -294,11 +357,35 @@ spec:RegisterAuras({
     -- Kick's speed (1317257, 3 s), Lacerating Strikes' bleed and Immolation Trap's burn (target debuffs, from our casts):
     -- registered as the pin states them (wowsims sim/hunter); no list reads them, so only the burn has a handler.
     rapid_killing = { id = 415407, duration = 20, max_stack = 1 },
-    sniper_shot = { id = 1310786, duration = 10, max_stack = 3 },
+    sniper_shot = { id = 1310786, copy = { 1310687, 1310785 }, duration = 10, max_stack = 3 }, -- the Cooldown Manager links all three
     expose_prey = { id = 1310726, duration = 10, max_stack = 1 },
     strider_kick = { id = 1317257, duration = 3, max_stack = 1 },
     lacerating_strikes = { id = 1310536, duration = 21, tick_time = 3, dot = "debuff", max_stack = 1 },
-    immolation_trap = { id = 14301, duration = 15, dot = "debuff", max_stack = 1 },
+    immolation_trap = {
+        id = 14301,
+        copy = { 13797, 14298, 14299, 14300 },
+        duration = 15,
+        dot = "debuff",
+        max_stack = 1,
+    },
+    -- The auras the abilities below apply, under the spell IDs the Cooldown Manager links (cdm/hunter.lua); durations from
+    -- the pin's rows (Freezing Trap's by rank, Deterrence's 10 s, Trueshot Aura's 30 min), the Forever-only ones as the
+    -- pin's talents state them. None is applied by a handler but Deterrence's and Trueshot Aura's: a trap's effect lands
+    -- when its target springs it, the rest are the target's.
+    freezing_trap = { id = 3355, copy = { 14308, 14309, 1324500, 1324501, 1324502 }, duration = 20, max_stack = 1 },
+    frost_trap = { id = 13810, duration = 30, max_stack = 1 },
+    scare_beast = { id = 1324506, copy = { 1324507, 1324510 }, duration = 20, max_stack = 1 },
+    intimidation = { id = 1324494, duration = 3, max_stack = 1 }, -- the pet's stun
+    scatter_shot = { id = 1324499, duration = 4, max_stack = 1 },
+    deterrence = { id = 19263, duration = 10, max_stack = 1 },
+    entrapment = { id = 19185, duration = 4, max_stack = 1 },
+    improved_concussive_shot = { id = 1324511, duration = 3, max_stack = 1 },
+    frenzy = { id = 19621, duration = 8, max_stack = 1 }, -- the pet's haste
+    trueshot_aura = { id = 1299346, copy = rest(TRUESHOT_AURA), duration = 1800, max_stack = 1 },
+    aspect_of_the_monkey = { id = 13163, duration = 3600, max_stack = 1 },
+    aspect_of_the_pack = { id = 13159, duration = 3600, max_stack = 1 },
+    aspect_of_the_wild = { id = 20043, copy = { 20190 }, duration = 3600, max_stack = 1 },
+    aspect_of_the_viper = { id = 415423, duration = 3600, max_stack = 1 },
     -- Mongoose Bite's window after we dodge (Defensive State, 5 s), timed from the plain usability flip (reset_precast).
     defensive_state = { id = 5302, duration = 5, max_stack = 1 },
     -- Raptor Strike queued on the next main-hand swing (C_Spell.IsCurrentSpell, applied in reset_precast).
@@ -493,27 +580,13 @@ spec:RegisterAbilities({
         handler = applies("hunters_mark", true),
     },
 
-    aspect_of_the_hawk = aspect(
-        "aspect_of_the_hawk",
-        "aspect_of_the_beast",
-        "aspect_of_the_cheetah",
-        ASPECT_OF_THE_HAWK,
-        ASPECT_OF_THE_HAWK_COST
-    ),
-    aspect_of_the_beast = aspect(
-        "aspect_of_the_beast",
-        "aspect_of_the_hawk",
-        "aspect_of_the_cheetah",
-        ASPECT_OF_THE_BEAST,
-        ASPECT_OF_THE_BEAST_COST
-    ),
-    aspect_of_the_cheetah = aspect(
-        "aspect_of_the_cheetah",
-        "aspect_of_the_hawk",
-        "aspect_of_the_beast",
-        ASPECT_OF_THE_CHEETAH,
-        ASPECT_OF_THE_CHEETAH_COST
-    ),
+    aspect_of_the_hawk = aspect("aspect_of_the_hawk", ASPECT_OF_THE_HAWK, ASPECT_OF_THE_HAWK_COST),
+    aspect_of_the_beast = aspect("aspect_of_the_beast", ASPECT_OF_THE_BEAST, ASPECT_OF_THE_BEAST_COST),
+    aspect_of_the_cheetah = aspect("aspect_of_the_cheetah", ASPECT_OF_THE_CHEETAH, ASPECT_OF_THE_CHEETAH_COST),
+    aspect_of_the_monkey = aspect("aspect_of_the_monkey", { 13163 }, { 20 }),
+    aspect_of_the_pack = aspect("aspect_of_the_pack", { 13159 }, { 100 }),
+    aspect_of_the_wild = aspect("aspect_of_the_wild", ASPECT_OF_THE_WILD, ASPECT_OF_THE_WILD_COST),
+    aspect_of_the_viper = aspect("aspect_of_the_viper", { 415423 }, { 0 }), -- a rune: no cost row
 
     rapid_fire = {
         id = 3045,
@@ -534,12 +607,16 @@ spec:RegisterAbilities({
         handler = applies("rapid_fire"),
     },
 
-    -- the Beast Mastery talent (DB2 19574: 2 min, free, off the GCD); its 18 s rage is the pet's, so no player aura
+    -- the Beast Mastery talent (2 min, off the GCD; 12% of base mana: the pin's row CostPct 12, wowsims's SpellConfig
+    -- charges it, the DB2 had it free); its 18 s rage is the pet's, so no player aura
     bestial_wrath = {
         id = 19574,
         cast = 0,
         cooldown = 120,
         gcd = "off",
+
+        spend = 0.12,
+        spendType = "mana",
 
         toggle = "cooldowns",
         startsCombat = false,
@@ -751,7 +828,7 @@ spec:RegisterAbilities({
         id = 13795,
         copy = rest(IMMOLATION_TRAP),
         cast = 0,
-        cooldown = 30,
+        cooldown = trapCooldown(),
         gcd = "spell",
 
         spend = discounted(cost(IMMOLATION_TRAP_COST, IMMOLATION_TRAP), true, false),
@@ -760,8 +837,296 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows(IMMOLATION_TRAP),
 
-        now = applies("immolation_trap", true),
-        handler = applies("immolation_trap", true),
+        now = trapCast("immolation_trap"),
+        handler = trapCast("immolation_trap"),
+    },
+
+    -- Lane A (coverage): the other traps (one 30 s category cooldown, Survivalist's Discipline cuts it), the stings, the
+    -- shots and the utility the pin carries (spells_auto_gen.go rows; sim/hunter ladders). Resourcefulness's mask takes
+    -- the traps and Counterattack, Efficiency's the stings, Concussive, Scatter, Distracting, Tranquilizing, Volley and
+    -- Counterattack. No priority casts them: registered so a manual press costs mana and starts its cooldown.
+    explosive_trap = {
+        id = 13813,
+        copy = rest(EXPLOSIVE_TRAP),
+        cast = 0,
+        cooldown = trapCooldown(),
+        gcd = "spell",
+
+        spend = discounted(cost(EXPLOSIVE_TRAP_COST, EXPLOSIVE_TRAP), true, false),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(EXPLOSIVE_TRAP),
+
+        now = trapCast("explosive_trap"),
+        handler = trapCast("explosive_trap"),
+    },
+
+    freezing_trap = {
+        id = 1324500,
+        copy = rest(FREEZING_TRAP),
+        cast = 0,
+        cooldown = trapCooldown(),
+        gcd = "spell",
+
+        spend = discounted(cost(FREEZING_TRAP_COST, FREEZING_TRAP), true, false),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(FREEZING_TRAP),
+
+        now = trapCast("freezing_trap"),
+        handler = trapCast("freezing_trap"),
+    },
+
+    frost_trap = {
+        id = 13809,
+        cast = 0,
+        cooldown = trapCooldown(),
+        gcd = "spell",
+
+        spend = discounted(cost(FROST_TRAP_COST, FROST_TRAP), true, false),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(FROST_TRAP),
+
+        now = trapCast("frost_trap"),
+        handler = trapCast("frost_trap"),
+    },
+
+    scorpid_sting = {
+        id = 3043,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = discounted(0.09, false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows({ 3043 }),
+    },
+
+    -- Improved Stings (1310661): -2 s a rank.
+    viper_sting = {
+        id = 3034,
+        copy = rest(VIPER_STING),
+        cast = 0,
+        cooldown = function()
+            return 15 - 2 * talent.improved_stings.rank
+        end,
+        gcd = "spell",
+
+        spend = discounted(cost(VIPER_STING_COST, VIPER_STING), false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(VIPER_STING),
+    },
+
+    concussive_shot = {
+        id = 5116,
+        cast = 0,
+        cooldown = 12,
+        gcd = "spell",
+
+        spend = discounted(0.08, false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows({ 5116 }),
+    },
+
+    scatter_shot = {
+        id = 19503,
+        cast = 0,
+        cooldown = 30,
+        gcd = "spell",
+
+        spend = discounted(0.08, false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows({ 19503 }),
+    },
+
+    -- The pet's stun: 8% of base mana, 60 s (no talent mask touches its price).
+    intimidation = {
+        id = 19577,
+        cast = 0,
+        cooldown = 60,
+        gcd = "spell",
+
+        spend = 0.08,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows({ 19577 }),
+    },
+
+    -- Usable after a parry (like Mongoose Bite's window; no window is modelled: the usability read decides).
+    counterattack = {
+        id = 19306,
+        copy = rest(COUNTERATTACK),
+        cast = 0,
+        cooldown = 5,
+        gcd = "spell",
+
+        spend = discounted(cost(COUNTERATTACK_COST, COUNTERATTACK), true, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(COUNTERATTACK),
+    },
+
+    -- Survivalist's Discipline (1310496): -20/-40% cooldown; off the GCD, no cost.
+    deterrence = {
+        id = 19263,
+        cast = 0,
+        cooldown = trapCooldown(300),
+        gcd = "off",
+
+        startsCombat = false,
+        known = knows({ 19263 }),
+
+        now = applies("deterrence"),
+        handler = applies("deterrence"),
+    },
+
+    disengage = {
+        id = 781,
+        copy = rest(DISENGAGE),
+        cast = 0,
+        cooldown = 5,
+        gcd = "spell",
+
+        spend = cost(DISENGAGE_COST, DISENGAGE),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(DISENGAGE),
+    },
+
+    feign_death = {
+        id = 5384,
+        cast = 0,
+        cooldown = 30,
+        gcd = "off",
+
+        spend = 80,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows({ 5384 }),
+    },
+
+    flare = {
+        id = 1543,
+        cast = 0,
+        cooldown = 15,
+        gcd = "spell",
+
+        spend = 50,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows({ 1543 }),
+    },
+
+    distracting_shot = {
+        id = 20736,
+        copy = rest(DISTRACTING_SHOT),
+        cast = 0,
+        cooldown = 8,
+        gcd = "spell",
+
+        spend = discounted(cost(DISTRACTING_SHOT_COST, DISTRACTING_SHOT), false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(DISTRACTING_SHOT),
+    },
+
+    tranquilizing_shot = {
+        id = 19801,
+        cast = 0,
+        cooldown = 20,
+        gcd = "spell",
+
+        spend = discounted(270, false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows({ 19801 }),
+    },
+
+    -- A 6 s channel, a tick a second.
+    volley = {
+        id = 1510,
+        copy = rest(VOLLEY),
+        cast = 6,
+        channeled = true,
+        tick_time = 1,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = discounted(cost(VOLLEY_COST, VOLLEY), false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(VOLLEY),
+    },
+
+    scare_beast = {
+        id = 1513,
+        copy = rest(SCARE_BEAST),
+        cast = 1.5,
+        cooldown = 30,
+        gcd = "spell",
+
+        spend = cost(SCARE_BEAST_COST, SCARE_BEAST),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(SCARE_BEAST),
+    },
+
+    -- Raid ranged attack power; the ranged-power half is no resource, the 30 min aura is for display.
+    trueshot_aura = {
+        id = 1299346,
+        copy = rest(TRUESHOT_AURA),
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = cost(TRUESHOT_AURA_COST, TRUESHOT_AURA),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(TRUESHOT_AURA),
+
+        now = applies("trueshot_aura"),
+        handler = applies("trueshot_aura"),
+    },
+
+    -- A 5 s channel on the pet; Improved Mend Pet (19572): -10% cost a rank.
+    mend_pet = {
+        id = 136,
+        copy = rest(MEND_PET),
+        cast = 5,
+        channeled = true,
+        tick_time = 1,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = function()
+            return (MEND_PET_COST[knownRank(MEND_PET)] or MEND_PET_COST[1]) * (1 - 0.1 * talent.improved_mend_pet.rank)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(MEND_PET),
     },
 })
 
