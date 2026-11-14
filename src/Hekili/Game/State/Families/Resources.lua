@@ -53,7 +53,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- `sinceShort[r]`: the lowest top a short answer set since our last spend from slot r (math.huge: none), and the
 -- estimate just after it (`sinceShortEst[r]`: what the slot gained since moves that top with it); `sinceYes[r]` /
 -- `sinceSnap[r]`: whether a usable answer raised its floor / its estimate since then. An avoided cast's refund
--- (I.Refund) is dated at that cast: the answers heard since already saw it.
+-- (I.Refund) is dated at that cast: the answers heard since already saw it. `raised[r]`: how many usable answers raised
+-- the floor or the estimate (never reset but at a build; a late refund compares it with its cast's, past a spend).
 -- `over[r]`: how far the modelled floor sits above the measured one (lo0): a regenerating slot that rests at its
 -- maximum is built at rest (est, and this floor: lo0 + over), and the floor then moves with everything that moves lo0;
 -- a measurement the floor contradicts (a short answer below it, a pin's top under it, an exact read) drops it to lo0
@@ -142,6 +143,7 @@ local R = {
     sinceShortEst = {},
     sinceYes = {},
     sinceSnap = {},
+    raised = {},
     over = {},
     assume = {},
     pinN = {}, -- the fight's flips at an unchanged cost (the providers audit, I.PinError)
@@ -416,6 +418,7 @@ I.OnBuild(function(def, now)
         R.pinN[r], R.pinErr[r] = 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
+        R.raised[r] = 0
         R.capT[r], R.capB[r] = -1e9, false
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
@@ -1408,6 +1411,9 @@ I.On(Obs.Usable, function(o, t, lag)
     else
         R.sinceYes[r] = R.sinceYes[r] or R.lo0[r] > lo1
         R.sinceSnap[r] = R.sinceSnap[r] or R.est0[r] > e1
+        if R.lo0[r] > lo1 or R.est0[r] > e1 then
+            R.raised[r] = R.raised[r] + 1
+        end
     end
     keepFloor = false -- this apply's only (remeasure)
 end)
@@ -1858,18 +1864,20 @@ end
 --- 2026-10-20; the target's avoid only reports it later): est and hi take it, clamped by the lowest top a short answer
 --- set since the cast plus what the slot gained since that answer (the answer already saw the refunded pool; regen or
 --- a credit after it adds to the truth); lo takes it only when no usable answer raised lo since the cast, est only
---- when none raised est (else that answer's bound already holds the refund). Allocates nothing.
-function I.Refund(r, d, t)
+--- when none raised est (else that answer's bound already holds the refund). `held`: an answer since the cast raised
+--- either, before a later spend reset those marks (a late refund: the CDM verdict's), so lo and est stay. Allocates
+--- nothing.
+function I.Refund(r, d, t, held)
     local lo, e, top = R.lo0[r], R.est0[r], R.sinceShort[r]
     if top < math.huge then
         local moved = e - R.sinceShortEst[r]
         top = top + (moved > 0 and moved or 0)
     end
     I.ResourceShift(r, d, t, Obs.Avoided)
-    if R.sinceYes[r] then
+    if held or R.sinceYes[r] then
         R.lo0[r] = lo
     end
-    if R.sinceSnap[r] then
+    if held or R.sinceSnap[r] then
         R.est0[r] = e
     end
     if R.hi0[r] > top then

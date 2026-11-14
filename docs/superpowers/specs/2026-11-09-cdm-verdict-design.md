@@ -12,7 +12,7 @@ builds are counted. Each changed passage carries the note with its finding.
 - L364: "after a certain time dark means dark; a wrong belief must not carry the full duration." For a PROVEN item (per
   cooldownID, lit before in this build) continuously dark for W (from the latest of the write, the last UP and the start
   of the watched dark; W per cast, >= 1.0 s plus travel) close the record of ANY opener (our cast, a walk read of ours, a
-  CDM open), no refund; a strike counter caps wrong verdicts at 2 per item; two verdicts with no light of the item
+  CDM open), no refund (reversed by L1029, 2026-11-14: see §2.3); a strike counter caps wrong verdicts at 2 per item; two verdicts with no light of the item
   between them suspend its proof until it lights again; unproven items and the non-current mob after a swap stay
   belief-only; unknown never closes. ("the start of the watched dark" and the suspension: amended 2026-11-10 after the
   Fable 5.2 review, M2 and M3.)
@@ -111,7 +111,18 @@ verdict finds the record closed and does nothing (§2.3 keys on the record's app
   (`Sources/Auras.lua`), which sets `verdictAt[k] = t`, `verdictN[k] += 1`, drops `lastE/lastSt/longE` (§2.6) and feeds
   the silent count (§2.5). A dropped close counts nothing and leaves no strike window: the recast is a new application
   with its own W (amended 2026-11-10 after the Fable 5.2 review, M1).
-  No refund, no ticket change (brief-1 M1/N3: tickets expire on their own). The close label stays `expired`.
+  No ticket change (brief-1 M1/N3: tickets expire on their own). The close label stays `expired`.
+  Refund (L1029, owner 2026-11-14, reverses L318(3); amended): when the close folds, a target record our cast wrote
+  (`ours[k] == BY_CAST`, `oursAp[k]` the application judged) that never read UP since that write (`upAt[k] < applied`)
+  is that cast's miss: `I.AuraVerdictClosed(k, t, applied)` calls Families/Now.lua's `I.VerdictRefund`, which gives the
+  cast's `refundOnAvoid` share of what it paid through the avoid's own `I.Refund`. Now.lua keeps, per target aura, the
+  refundable cast whose own `now` wrote the record (ability, success time, paid, applied, the slot's spend and raise
+  serials). Exactly once: an avoid or a hand-back of the cast (`Obs.Avoided`) refunded first clears it; the verdict's
+  refund clears every record of that cast and consumes the latest-cast undo when it still names it, so a later avoid
+  undoes and refunds nothing. Past another spend since the cast, an answer since the cast that raised the slot held the
+  refund (`I.Refund`'s `held`: lo and est stay). Landed then removed: a record that read UP since the write refunds
+  nothing; the error is a refresh into a still-lit item (the old application's light reads UP), whose miss is not
+  refunded. A wrong verdict (a strike) does not take the refund back.
 - W per record: `I.AuraOurs(u, j, travel)` (Families/Now.lua passes `travel = rMax / velocity` seconds for an ability
   with `A.velocity[a] > 0`, else 0); `W[k] = max(W0, travel + TOL)`, W0 = 1.0 s, TOL = 0.3 s (viewer tail 0.12 s + one
   frame + margin; tune from Task 10's P1). A walk read or a CDM open sets `W[k] = W0`.

@@ -1602,7 +1602,7 @@ describe("now handlers", function()
                 drain(t)
             end
             assert.are.equal(38, rage(9).est)
-            assert.are.equal(1, I.verdictRefunds)
+            assert.are.equal(1, I.auraVerdict.refunds[k])
         end)
 
         it("another cast of ours between the miss and the verdict: the miss is still refunded, once", function()
@@ -1633,7 +1633,7 @@ describe("now handlers", function()
             end
             assert.are.equal(1, I.auraVerdict.n[k])
             assert.are.equal(38, rage(7.5).est)
-            assert.are.equal(0, I.verdictRefunds)
+            assert.are.equal(0, I.auraVerdict.refunds[k])
         end)
 
         it(
@@ -1664,7 +1664,7 @@ describe("now handlers", function()
             assert.is_nil(VS.Aura("target", fs.SPENDER_C, 7.5))
             assert.are.equal(1, I.auraVerdict.n[k])
             assert.are.equal(30, rage(7.5).est)
-            assert.are.equal(0, I.verdictRefunds)
+            assert.are.equal(0, I.auraVerdict.refunds[k])
         end)
 
         it(

@@ -240,7 +240,7 @@ I.On(Obs.Read, function(o, t)
         -- (Fable 5.2 review M1; F3's pattern). Only a close that happened is counted (Sources/Auras.lua).
         if U.exp0[u][j] > 0 and U.applied[u][j] == o.b then
             set(u, j, 0, 0, 0, t, "observed", Obs.Read)
-            I.AuraVerdictClosed(o.a, o.t)
+            I.AuraVerdictClosed(o.a, o.t, o.b)
         end
         return
     end

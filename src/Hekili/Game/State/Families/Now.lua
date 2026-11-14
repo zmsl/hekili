@@ -96,6 +96,10 @@ local undoJ, undoE, undoAp, undoSt = {}, {}, {}, {}
 for k = 1, UNDO do
     undoJ[k], undoE[k], undoAp[k], undoSt[k] = 0, 0, 0, 0
 end
+-- By target aura index (L1029): the refundable cast whose own `now` wrote that record (vA its ability, 0 none; vT its
+-- success time, the undo's undoT; vPaid; vAp the record's applied time then; vSpends / vRaised the slot's spend and
+-- raise serials after its spend), for the CDM verdict's refund (I.VerdictRefund). Filled at OnBuild.
+local vA, vT, vPaid, vAp, vSpends, vRaised = {}, {}, {}, {}, {}, {}
 local refund = {} -- by resource slot: the class's default share (the resource meta's `refundOnAvoid`), 0 none
 A.refund = {} -- by ability index: the share of its cost an avoid gives back (the ability's `refundOnAvoid`), 0 none
 I.avoidsRun = 0
@@ -387,6 +391,15 @@ local function aura(u, key, duration, stacks)
     -- verdict's window (cdm-verdict §2.3; velocity > 0 only: the client raises on x/0)
     local v = A.velocity[curA] or 0
     I.AuraOurs(u, j, v > 0 and (A.rMax[curA] or 0) / v or 0)
+    if u == 2 and journal then -- the cast's own write: what a verdict that it missed gives back (L1029)
+        local r = curA > 0 and A.slot[curA] or 0
+        if after > 0 and r > 0 and paid > 0 and A.refund[curA] > 0 then
+            vA[j], vT[j], vPaid[j], vAp[j] = curA, undoT, paid, I.auras.applied[2][j]
+            vSpends[j], vRaised[j] = I.res.spends[r], I.res.raised[r]
+        else
+            vA[j] = 0
+        end
+    end
     I.Log.Aura(u, j, auraSpell[j], before, after, T)
 end
 -- Hekili's own signatures (State.lua), so a Classic handler's lines port by copying.
@@ -664,6 +677,7 @@ I.OnBuild(function(def)
     for j = 1, #def.auras do
         local key = def.auras[j].key
         auraSpell[j] = def.auraIds[j][1]
+        vA[j], vT[j], vPaid[j], vAp[j], vSpends[j], vRaised[j] = 0, 0, 0, 0, 0, 0
         local d = rawget(def.auras[j], "duration")
         auraDur[j] = type(d) == "number" and d or false
         auraFn[j] = type(d) == "function" and d or false
@@ -889,6 +903,11 @@ I.On(Obs.Avoided, function(o, t)
         return
     end
     undoA = 0
+    for j = 1, I.auras.nAura do -- refunded here: the CDM verdict's refund (I.VerdictRefund) gives it nothing more
+        if vA[j] == o.a and vT[j] == o.b then
+            vA[j] = 0
+        end
+    end
     for k = 1, I.curSwapN == undoSwap and undoN or 0 do -- another target since the cast: its auras are not these
         local j = undoJ[k]
         local rec = VS.Aura("target", auraSpell[j], t)
@@ -902,6 +921,31 @@ I.On(Obs.Avoided, function(o, t)
     end
     I.avoidsRun = I.avoidsRun + 1
 end)
+
+--- The CDM verdict closed target aura j's application `ap` as missed (Sources/Auras.lua, L1029): the cast whose own
+--- write it was gets back its `refundOnAvoid` share, as an avoid's (I.Refund), once: an avoid or a hand-back of that
+--- cast (Obs.Avoided) before it cleared it, and this consumes the cast's undo so neither after it undoes or refunds;
+--- every record of that cast is cleared (two debuffs of one cast refund once). Past another spend, an answer since the
+--- cast that raised the slot already held the refund (I.Refund's `held`). Returns the cast's success time, or nil.
+--- Allocates nothing.
+function I.VerdictRefund(j, ap, t)
+    local a = vA[j]
+    if not a or a == 0 or vAp[j] ~= ap then
+        return nil
+    end
+    local castT, r = vT[j], A.slot[a]
+    for i = 1, I.auras.nAura do
+        if vA[i] == a and vT[i] == castT then
+            vA[i] = 0
+        end
+    end
+    if undoA == a and undoT == castT then
+        undoA = 0
+    end
+    local R = I.res
+    I.Refund(r, vPaid[j] * A.refund[a], t, R.spends[r] ~= vSpends[j] and R.raised[r] ~= vRaised[j])
+    return castT
+end
 
 -- The other settled outcomes reactions run on (re-pin design §3a): our white swing's (Obs.SwingSettled, Events/Rows.lua:
 -- its avoid's own outcome, then every "swing" reaction of its hand), a hit on us (Obs.PlayerHit, Obs.PlayerCrit:
