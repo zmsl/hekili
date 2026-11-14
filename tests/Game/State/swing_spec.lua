@@ -288,6 +288,21 @@ describe("swings", function()
             end
         )
 
+        -- L967 side bug: the ranged speed came from the stat cache, which UNIT_ATTACK_SPEED did not refresh; a ranged
+        -- haste change out of combat (a quiver, a buff) fires UNIT_RANGEDDAMAGE (wow-ui-source forever branch).
+        it("re-reads the ranged speed out of combat on UNIT_ATTACK_SPEED and UNIT_RANGEDDAMAGE", function()
+            VS.Start(api)
+            at(2, "PLAYER_ENTERING_WORLD")
+            assert.are.equal(3.1, VS.SwingSpeed(3, 2).est)
+            ctl.ranged[1] = 2.8
+            at(3, "UNIT_ATTACK_SPEED", "player")
+            assert.are.equal(2.8, VS.SwingSpeed(3, 3).est)
+            ctl.ranged[1] = 2.5
+            at(4, "UNIT_RANGEDDAMAGE", "player")
+            assert.are.equal(2.5, VS.SwingSpeed(3, 4).est)
+            assert.are.equal(2.5, (VS.Stat("UnitRangedDamage"))) -- the cache follows too
+        end)
+
         it("anchors at a PLAYER_SWING of swingType 2 with weight 1 and takes its duration as the speed", function()
             VS.Start(api)
             at(9.9, "PLAYER_REGEN_DISABLED")

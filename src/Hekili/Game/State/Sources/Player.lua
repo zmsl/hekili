@@ -184,6 +184,10 @@ S.On("UNIT_ATTACK_POWER", "player", onPlayerStats)
 -- a talent): read again, so a pre-pull `now` (this cache) and the simulation (the plain read) price one amount (L967;
 -- all three events are Forever's: wow-ui-source's forever branch). The last two carry no unit.
 S.On("UNIT_STATS", "player", onPlayerStats)
+-- The attack speed and the ranged weapon (UnitRangedDamage's speed is the ranged hand's: Sources/Swing.lua reads it
+-- from this cache on the same events, after this file's handlers, the TOC order).
+S.On("UNIT_ATTACK_SPEED", "player", onPlayerStats)
+S.On("UNIT_RANGEDDAMAGE", "player", onPlayerStats)
 S.On("SPELL_POWER_CHANGED", nil, readStats)
 S.On("COMBAT_RATING_UPDATE", nil, readStats)
 

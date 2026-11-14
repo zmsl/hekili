@@ -2,8 +2,8 @@
 -- Swing sources (spec §4.2): PLAYER_SWING (payload swingDuration, swingType; plain in combat) is a `Swing` with
 -- a = swingType + 1, b = the duration, c = 4 ("swung": the swing clock's; it fires on avoided swings too, so it
 -- pays nothing: Game/Events/Rows.lua stages c = 1, landed, when the swing's wound arrives), staged on the urgent
--- lane (Hekili's `state.swings` come from the swing rows, Game/Events/Rows.lua). Out of combat,
--- UNIT_ATTACK_SPEED and PLAYER_EQUIPMENT_CHANGED (and login, and combat end) read both hands' speeds (c = 0), the
+-- lane (Hekili's `state.swings` come from the swing rows, Game/Events/Rows.lua). Out of combat, UNIT_ATTACK_SPEED,
+-- UNIT_RANGEDDAMAGE and PLAYER_EQUIPMENT_CHANGED (and login, and combat end) read both hands' speeds (c = 0), the
 -- unhasted base speeds (c = 2, speed x (1 + melee haste / 100)) and the melee haste multiplier (`Haste`, c = 1).
 -- The ranged hand (a = 3, class-completion C7): swingType 2 (UNMEASURED: whether Forever fires it is a checkpoint) and
 -- UnitRangedDamage's speed (c = 0, the stat cache's) out of combat on the same events.
@@ -62,6 +62,7 @@ local function outOfCombat(api, t)
     end
 end
 S.On("UNIT_ATTACK_SPEED", "player", outOfCombat)
+S.On("UNIT_RANGEDDAMAGE", "player", outOfCombat) -- a ranged speed change (L967)
 S.On("PLAYER_EQUIPMENT_CHANGED", nil, outOfCombat)
 S.On("PLAYER_REGEN_ENABLED", nil, outOfCombat)
 S.OnStart(outOfCombat)

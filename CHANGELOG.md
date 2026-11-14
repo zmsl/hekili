@@ -20,6 +20,7 @@
 - Shaman: Stormstrike, Poison and Disease Cleansing Totem, Earthbind Totem and Grounding Totem now cost their percent of your base mana at your level, as the game charges, instead of the level-60 amount.
 - Hekili now notices a Spirit, spell power or rating change out of combat (a buff, food, a talent) right away, so a Life Tap or a Spirit-based effect before the pull is worked out from your current stats instead of older ones.
 - Custom priorities: `weapon_offhand_dps` now reads your off-hand weapon's damage instead of the main hand's.
+- Hunters and wand users: a change to your ranged attack speed out of combat (a new ranged weapon, quiver or buff) is now picked up at once for the shot timer.
 - Mana users: drinking a Major Mana Potion or using a Demonic Rune now adds its mana to Hekili's mana estimate (the average of what it can restore), so spells you can afford again after one are recommended right away.
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
