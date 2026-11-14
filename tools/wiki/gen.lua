@@ -96,11 +96,18 @@ local function enus()
     return out
 end
 
-local OUT = "build/wiki/"
+local OUT = ((arg[2] or "build/wiki"):gsub("/*$", "/")) -- the second argument is for the tests
 
 local function build()
-    os.execute("rm -rf " .. OUT .. " && mkdir -p " .. OUT .. " && cp -r " .. DIR .. ". " .. OUT)
-    os.execute("rm -rf " .. OUT .. "README.md " .. OUT .. "data " .. OUT .. ".gitkeep") -- contributor files, not wiki
+    -- Contributor files (README.md, data/, .gitkeep) are not wiki content.
+    os.execute("rm -rf " .. OUT .. " && mkdir -p " .. OUT)
+    os.execute(
+        "tar -C "
+            .. DIR
+            .. " --exclude=./README.md --exclude=./data --exclude=.gitkeep -cf - . | tar -C "
+            .. OUT
+            .. " -xf -"
+    )
     local n = 0
     for name, s in pairs(pages()) do
         local f = assert(io.open(OUT .. name .. ".md", "wb"))
@@ -124,6 +131,11 @@ local function run()
         known[region] = true
     end
     add(errors, check.markers(ps, known))
+    local retired = {}
+    for line in (slurp(DIR .. "data/retired-pages.txt") or ""):gmatch("[^\n]+") do
+        retired[#retired + 1] = line
+    end
+    add(errors, check.retired(ps, retired))
     local e, w = check.links(ps, exists)
     add(errors, e)
     add(warnings, w)

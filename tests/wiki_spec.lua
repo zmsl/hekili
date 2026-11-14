@@ -70,6 +70,14 @@ describe("wiki-check", function()
         assert.truthy(errs[1]:find("never closed", 1, true))
     end)
 
+    it("fails on a retired page name that collides with a page", function()
+        assert.are.same({}, check.retired({ P = "" }, { "Old.md" }))
+        assert.are.same(
+            { "retired-pages.txt: P.md is retired but docs/wiki has that page" },
+            check.retired({ P = "" }, { "P.md" })
+        )
+    end)
+
     it("fails on a bold label or path segment that names no option, and passes a real one", function()
         local labels = { ["Targeting"] = true, ["Enemy Range Radius"] = true, ["Priorities"] = true }
         local enus = labels
@@ -169,6 +177,11 @@ describe("the expression check", function()
 end)
 
 describe("make wiki-build", function()
+    local OUT = "/tmp/wiki-build-spec" -- not build/, so a gate run leaves the tree as it found it
+    local function build()
+        local ok = os.execute(".lua/bin/lua tools/wiki/gen.lua build " .. OUT .. " >/dev/null 2>&1")
+        assert.is_true(ok == 0 or ok == true)
+    end
     local function slurp(path)
         local f = assert(io.open(path, "rb"))
         local s = f:read("*a")
@@ -182,24 +195,22 @@ describe("make wiki-build", function()
         return s
     end
 
-    it("keeps the source's regions empty, fills a copy under build/wiki/ and leaves the source alone", function()
+    it("keeps the source's regions empty, fills a copy outside the source and leaves the source alone", function()
         local before = tree()
-        assert.is_true(
-            os.execute("make wiki-build >/dev/null 2>&1") == 0 or os.execute("make wiki-build >/dev/null 2>&1") == true
-        )
+        assert.is_true(build())
         assert.are.equal(before, tree())
-        local src, out = slurp("docs/wiki/Slash-Commands.md"), slurp("build/wiki/Slash-Commands.md")
+        local src, out = slurp("docs/wiki/Slash-Commands.md"), slurp(OUT .. "/Slash-Commands.md")
         assert.are.equal(src, markers.strip(src, "S"), "docs/wiki/ holds only bare markers")
         assert.are_not.equal(src, out)
         assert.truthy(out:find(markers.NOTE, 1, true))
         assert.are.equal(src, markers.strip(out, "S"), "the copy differs only inside the regions")
-        assert.is_nil(io.open("build/wiki/README.md"))
-        assert.is_nil(io.open("build/wiki/data/commands.lua"))
+        assert.is_nil(io.open(OUT .. "/README.md"))
+        assert.is_nil(io.open(OUT .. "/data/commands.lua"))
     end)
 
     it("is idempotent", function()
-        local first = slurp("build/wiki/Slash-Commands.md")
-        os.execute("make wiki-build >/dev/null 2>&1")
-        assert.are.equal(first, slurp("build/wiki/Slash-Commands.md"))
+        local first = slurp(OUT .. "/Slash-Commands.md")
+        build()
+        assert.are.equal(first, slurp(OUT .. "/Slash-Commands.md"))
     end)
 end)

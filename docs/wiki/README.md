@@ -9,7 +9,7 @@ edits made on GitHub's wiki editor are lost.
 `.github/workflows/wiki.yml` runs when a final release is published. It checks out the release tag, runs
 `make wiki-build` and `make wiki-check`, then clones the wiki repository, copies `build/wiki/` over it (this folder
 with the generated tables filled in, without `README.md`, `data/` and `.gitkeep`), fills the `{{VERSION}}` line of `_Footer.md` with the tag, and commits and pushes only if a
-page changed. It never deletes a page that exists only on the wiki, never runs `git init` and never force-pushes, so
+page changed. It never deletes a page that exists only on the wiki, except the retired pages listed in `data/retired-pages.txt` (one file name per line, e.g. `Report-an-issue.md`): the job removes exactly those files from the clone before copying and logs each removal. `make wiki-check` fails if a retired name is also a page here. It runs no blanket `--delete`, never runs `git init` and never force-pushes, so
 the wiki's history is kept. A wiki page therefore always describes the latest release, never unreleased work.
 
 ## Pages

@@ -42,6 +42,20 @@ function M.markers(pages, known)
     return sorted(out)
 end
 
+--- Retired page file names (docs/wiki/data/retired-pages.txt, one per line) that collide with a page of docs/wiki.
+function M.retired(pages, retired)
+    local out = {}
+    for _, file in ipairs(retired) do
+        local name = file:match("^(.+)%.md$")
+        if not name then
+            out[#out + 1] = ("retired-pages.txt: %s is not a page file name (Name.md)"):format(file)
+        elseif pages[name] then
+            out[#out + 1] = ("retired-pages.txt: %s is retired but docs/wiki has that page"):format(file)
+        end
+    end
+    return sorted(out)
+end
+
 --- GitHub's anchor for a heading.
 function M.slug(heading)
     return (heading:lower():gsub("[^%w%- ]", ""):gsub(" ", "-"))

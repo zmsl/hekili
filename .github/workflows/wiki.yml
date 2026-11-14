@@ -1,7 +1,7 @@
 # Publishes the filled build/wiki/ (make wiki-build from docs/wiki/) to the GitHub wiki (github.com/zmsl/hekili/wiki) when a final release is published, so the wiki
 # always describes the latest release (docs/wiki/README.md). It runs wiki-build and wiki-check at the tag and stops if either fails.
 # The wiki keeps its history: the job clones the wiki repository, copies the pages over it without --delete (a page
-# only on the wiki stays), commits only when something changed and does a plain push. It never runs `git init` and
+# only on the wiki stays, except the retired pages named in docs/wiki/data/retired-pages.txt, removed one by one), commits only when something changed and does a plain push. It never runs `git init` and
 # never force-pushes. Only `published` fires it, like publish.yml.
 name: wiki
 
@@ -34,6 +34,14 @@ jobs:
           TOKEN: ${{ github.token }}
         run: |
           git clone "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" "$RUNNER_TEMP/wiki"
+          # Retired pages (docs/wiki/data/retired-pages.txt): exactly these files are removed, each logged; never a blanket --delete.
+          while IFS= read -r page; do
+            [ -z "$page" ] && continue
+            if [ -f "$RUNNER_TEMP/wiki/$page" ]; then
+              git -C "$RUNNER_TEMP/wiki" rm -q -- "$page"
+              echo "retired page removed: $page"
+            fi
+          done < docs/wiki/data/retired-pages.txt
           rsync -a --exclude .git build/wiki/ "$RUNNER_TEMP/wiki/"
           sed -i "s/{{VERSION}}/${TAG}/" "$RUNNER_TEMP/wiki/_Footer.md"
           cd "$RUNNER_TEMP/wiki"

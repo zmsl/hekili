@@ -19,7 +19,7 @@ TODO: the lead. Take a snapshot, capture Lua errors, and open a useful issue.
 ## Open an issue
 
 - At [github.com/zmsl/hekili/issues](https://github.com/zmsl/hekili/issues), with class, specialization, level, version, what you expected and what you saw, and the snapshot. Never to the original Hekili project. Source: `README.md`
-- The current wiki's Report-an-issue page (its post template and checklist) is folded in here.
+- Include: the Hekili Forever version, class, specialization and level; what you expected and what you saw; the snapshot (paste it or attach the file); any Lua error text. Report here, on GitHub, and nowhere else.
 
 ## See also
 
