@@ -115,6 +115,15 @@ local auras = {
         dot = "buff",
     },
 
+    -- Innervate on the player, a Druid's own or another's (DB2 29166, 20 s); its regen is the entry below.
+    innervate = {
+        id = 29166,
+        duration = 20,
+        max_stack = 1,
+        shared = "player",
+        dot = "buff",
+    },
+
     -- Thunderfury's slow (the weapon's proc; no cast of ours applies it, so it reads up only from the client: a target's
     -- auras are secret in combat, hence down there): registered so the wowsims priorities' `!debuff.thunderfury.up` term translates.
     thunderfury = {
@@ -142,3 +151,11 @@ auras.dispellable_magic = { generate = auras.reversible_magic.generate }
 for key, def in pairs(auras) do
     shared:RegisterAura(key, def)
 end
+
+-- Innervate (DB2 29166), as wowsims/forever applies its two effects (sim/core/spelldata/parse_effects_table.go): aura 110
+-- +400% (the spirit regen x 5) and aura 134 100% (all of it while casting), so 5 x the full spirit regen inside the
+-- five-second rule too (its Feral log: 108.75 = 5 x 21.75 a second). On every mana user: the Druid casting it on
+-- itself, or another Druid's on the player. Its seconds weigh the calibration. Seen on a non-Druid only through the
+-- player's out-of-combat aura walk (an Innervate before the pull): in combat the player's auras are not plain and no
+-- cast of ours opens it.
+shared:RegisterRegenMod({ resource = "mana", aura = "innervate", spirit = 5, share = 1 })

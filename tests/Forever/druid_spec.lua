@@ -854,9 +854,10 @@ describe("Forever Druid", function()
         end
     )
 
-    it("declares Innervate as wowsims applies it: the spirit regen x 5, inside the five-second rule too", function()
-        local m = w.resources[0].models
-        assert.are.same({ aura = "innervate", spirit = 5, share = 1 }, m.innervate)
+    -- Innervate's regen is the shared entry every mana user has (Hekili_Shared/Shared/Auras.lua; tests/Forever/
+    -- shared_spec.lua): the Druid's own would count it twice (x 25)
+    it("leaves Innervate's regen to the shared entry (spirit x 5, inside the five-second rule too)", function()
+        assert.is_nil(w.resources[0].models.innervate)
     end)
 
     it("declares the Serenity Field trinket's Spirit: +72 Spirit, 9 a second, from the read Spirit", function()

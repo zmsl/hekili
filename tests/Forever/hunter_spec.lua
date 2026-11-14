@@ -1073,15 +1073,12 @@ describe("the Hunter worlds' Resourcefulness", function()
 
     -- Lane R2: the worlds grant it as the game would, at the export's own crit rate and on the queued Raptor Strike's crit
     it("rolls a Resourcefulness build's ability crits at its log's rate; the queued Raptor Strike crits too", function()
-        assert.are.same(
-            { 13 / 91, 11 / 93, 11 / 93, 7 / 41 },
-            {
-                hw.Marksmanship.WORLD.crit,
-                hw.Survival.WORLD.crit,
-                hw.SurvivalRanged.WORLD.crit,
-                hw.SurvivalTurret.WORLD.crit,
-            }
-        )
+        assert.are.same({ 13 / 91, 11 / 93, 11 / 93, 7 / 41 }, {
+            hw.Marksmanship.WORLD.crit,
+            hw.Survival.WORLD.crit,
+            hw.SurvivalRanged.WORLD.crit,
+            hw.SurvivalTurret.WORLD.crit,
+        })
         assert.is_nil(hw.BeastMastery.WORLD.crit) -- no Resourcefulness: world.CRIT
         local C = hw.Survival
         local H = headless.new({ character = C.character(), pack = "Survival (wowsims.com)" })
