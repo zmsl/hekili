@@ -6754,8 +6754,10 @@ do
             -- Delay to end of GCD.
             if dispName == "Primary" or dispName == "AOE" then
                 local delay = 0
+                -- a pack with use_while_casting lines hands the cast to the event loop, as can_dual_cast does
+                local info = scripts.PackInfo[ state.system.packName ]
 
-                if not state.spec.can_dual_cast and state.buff.casting.up and state.buff.casting.v3 ~= 1 then -- v3=1 means it's channeled.
+                if not state.spec.can_dual_cast and not ( info and info.hasWhileCasting ) and state.buff.casting.up and state.buff.casting.v3 ~= 1 then -- v3=1 means it's channeled.
                     delay = max( delay, state.buff.casting.remains )
                 end
 
@@ -7541,7 +7543,8 @@ function state:TimeToReady( action, pool )
 
     if not state.channel_breakable and not ability.dual_cast then
         z = self.buff.casting.remains
-        if z > wait then
+        -- use_while_casting=1 (SimC): the line need not wait for the player's cast or channel (read only when it would)
+        if z > wait and not self.safebool( self.args.use_while_casting ) then
             wait = z
         end
     end
@@ -7569,6 +7572,18 @@ function state:TimeToReady( action, pool )
         z = ability.readySpend
         if z then
             spend = z
+        end
+    end
+
+    -- max_energy=1 (SimC): wait for the cost plus the most extra the ability converts (its `excess_cap`, pack data), at
+    -- most the pool's maximum (an unknown maximum, 0, caps nothing). Readiness only: the cost and the handler's spend
+    -- stay the ability's own.
+    if spend and resource and self.safebool( self.args.max_energy ) then
+        z = ability.excess_cap
+        if z then
+            spend = spend + z
+            z = self[ resource ].max
+            if z and z > 0 and spend > z then spend = z end
         end
     end
 
