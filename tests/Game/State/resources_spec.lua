@@ -2447,6 +2447,44 @@ describe("resources", function()
             within(12, I.res.spE[1]) -- (1 - c)S
         end)
 
+        -- The anchor (L914): inside the window a share-only entry's casting share of the spirit regen is priced at the
+        -- out-of-combat read, not at the in-combat calibration; the spirit part's spread opens only when the
+        -- calibration departs from that read by more than REGEN_SPREAD_MIN of it. Read M 2, S 17.31; one in-combat
+        -- spirit measurement 16.81 leaves the calibration at 17.31 + ALPHA x (16.81 - 17.31) (within 2%) or, at 15.31,
+        -- at 16.71 (beyond it).
+        local function drifted(m)
+            shaped({ spirit = 10, mp5 = 12 }, { { aura = "focus", share = 0.5 } })
+            readPair(105, 19.31, 2 + 0.5 * 17.31)
+            read(105, 500)
+            I.ResourceShift(1, -100, 105, Obs.CastSuccess) -- the window to 110
+            read(112, 400 + 2 * 7 + (0.5 * 5 + 2) * m) -- 105-110 casting, 110-112 outside
+            I.ResourceShift(1, -100, 112, Obs.CastSuccess) -- the window to 117
+            return 17.31 + I.ALPHA * (m - 17.31)
+        end
+
+        it(
+            "prices a share-only entry's in-window spirit share at the out-of-combat read, not the calibration",
+            function()
+                local cal = drifted(16.81)
+                within(cal, I.res.spE[1]) -- the calibration keeps running (17.16)
+                within(2 + 0.5 * 17.31, VS.Regen(MANA, 113).est) -- inside: the read's share
+                within(2 + cal, VS.Regen(MANA, 118).est) -- outside: the calibration
+                within(I.res.est0[1] + 5 * (2 + 0.5 * 17.31), VS.Power(MANA, 117).est)
+            end
+        )
+
+        it("opens the spirit part's spread only when the calibration departs from the read", function()
+            local cal = drifted(16.81)
+            local rec = VS.Regen(MANA, 118)
+            within(2 + cal, rec.lo) -- within 2% of the read: no spread
+            within(2 + cal, rec.hi)
+            within(VS.Power(MANA, 120).est, VS.Power(MANA, 120).lo)
+            cal = drifted(15.31)
+            rec = VS.Regen(MANA, 118)
+            assert.is_true(rec.lo < rec.est and rec.hi > rec.est) -- 16.71 vs 17.31: the spread opens
+            within(2 + cal, rec.est)
+        end)
+
         it("rescales the stored split by the total when the shares reach all of the spirit regen (C9)", function()
             shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "focus", share = 0.5 } })
             readPair(105, 33, 33) -- the total only: 22 stored, 33 read

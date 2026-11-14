@@ -42,7 +42,9 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- the mp5 part is wowsims's casting rate M + cS and the spirit part (1 - c)S. `shaped[r]`: the slot has an `fsr` or a
 -- regen entry (else its regen is the plain rate x dt). `pinA[r]` / `pinB[r]`: the integrals of each part's weight
 -- (coefAt's fa and fb) since the last pin (the calibration's weights); `pinX[r]`: pinB less the share-only entries'
--- weight inside the window (coefAt's fx: what picks the part a measurement calibrates).
+-- weight inside the window (coefAt's fx: what picks the part a measurement calibrates). That inside weight (b - x) is
+-- priced at spDecl, the latest out-of-combat read, in est, lo and hi alike (the anchor, L914): the in-combat calibration
+-- prices only the spirit weight outside the window.
 -- `liftE/L/H[r]` and `liftT[r]`: how far a rung lifted a swing-paid slot's est, lo and hi (our cast's success, a usable
 -- answer, a flip's pin: the game held more than we believed) and the latest lifting rung's time; a landed swing at or
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
@@ -717,9 +719,9 @@ I.OnAdvance(function(from, to)
         if R.swing[r] == 0 and (learned or R.shaped[r]) then
             local max, a, b, k, x = R.max[r], spans(r, from, dt)
             if learned or k ~= 0 then -- a slot with no learned regen still gains an `mp5` entry's k (as VS.Power does)
-                R.est0[r] = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + k, max)
-                R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * x + R.spE[r] * (b - x) + k, max)
-                R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * x + R.spE[r] * (b - x) + k, max)
+                R.est0[r] = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * x + R.spDecl[r] * (b - x) + k, max)
+                R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * x + R.spDecl[r] * (b - x) + k, max)
+                R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * x + R.spDecl[r] * (b - x) + k, max)
                 R.pinA[r], R.pinB[r], R.pinX[r] = R.pinA[r] + a, R.pinB[r] + b, R.pinX[r] + x
                 R.pinDelta[r] = R.pinDelta[r] + k -- an `mp5` entry's known gain, kept out of the measurement
                 norm(r)
@@ -837,6 +839,12 @@ local function calibrate(r, m, t)
         elseif R.pinX[r] >= I.PIN_GAP then
             local _, _, _, so = readAt(r, t) -- the share-only entries up: the floor scales by the rest
             ok = ema(r, (m - R.regE[r] * a) / b, R.spDecl[r], R.spE, R.spL, R.spH, R.spDev, nil, so < 1 and 1 - so or 0) -- nonzero: b >= 1
+            -- the anchor (L914): under a share-only entry the out-of-combat read stands while the calibration stays
+            -- within the spread floor's own resolution of it (REGEN_SPREAD_MIN of the read); the spread opens only on
+            -- a departure past it (the EMA and its deviation keep running either way)
+            if ok and so > 0 and abs(R.spE[r] - R.spDecl[r]) <= R.spDecl[r] * I.REGEN_SPREAD_MIN then
+                R.spL[r], R.spH[r] = R.spE[r], R.spE[r]
+            end
         end
         if ok then
             I.Sample(R.regen[r], "modelled", R.regE[r] + R.spE[r], t, Obs.Usable)
@@ -930,10 +938,10 @@ local function ladder(r, c, affordable, t, lag)
     if lag > 0 and R.swing[r] == 0 then
         local a, b, k, x = spans(r, t - lag, lag)
         if affordable then
-            c = c + R.regL[r] * a + R.spL[r] * x + R.spE[r] * (b - x) + k
+            c = c + R.regL[r] * a + R.spL[r] * x + R.spDecl[r] * (b - x) + k
             c = c < R.max[r] and c or R.max[r] -- the pool caps the regen since the answer
         else
-            c = c + R.regH[r] * a + R.spH[r] * x + R.spE[r] * (b - x) + k
+            c = c + R.regH[r] * a + R.spH[r] * x + R.spDecl[r] * (b - x) + k
             if c - I.EPS < R.lo0[r] then
                 return false
             end
@@ -1302,8 +1310,9 @@ I.On(Obs.Usable, function(o, t, lag)
     keepFloor = false
     if now == SHORT and r ~= 0 and R.swing[r] == 0 and lag <= 0 then
         local c = I.CostOf(a)
-        local ga, gb, gk = spans(r, o.t - I.GAIN_SHOWS, I.GAIN_SHOWS)
-        keepFloor = c - I.EPS >= R.est0[r] - R.regE[r] * ga - R.spE[r] * gb - gk and R.lo0[r] + R.over[r] >= c - I.EPS
+        local ga, gb, gk, gx = spans(r, o.t - I.GAIN_SHOWS, I.GAIN_SHOWS)
+        local gain = R.regE[r] * ga + R.spE[r] * gx + R.spDecl[r] * (gb - gx) + gk
+        keepFloor = c - I.EPS >= R.est0[r] - gain and R.lo0[r] + R.over[r] >= c - I.EPS
     end
     local was, wasT = usable[a], ansT[a]
     usable[a], ansT[a] = now, o.t
@@ -1378,7 +1387,7 @@ I.On(Obs.Usable, function(o, t, lag)
             end
         else
             local wa, wb, wk, wx = spans(r, shortT[a], t - shortT[a])
-            local width = R.regH[r] * wa + R.spH[r] * wx + R.spE[r] * (wb - wx) + wk
+            local width = R.regH[r] * wa + R.spH[r] * wx + R.spDecl[r] * (wb - wx) + wk
             pin(r, c, t - shortT[a] <= I.PIN_EXACT and 0 or width, t, "pinned", Obs.Usable)
         end
     else
@@ -1417,7 +1426,7 @@ I.On(Obs.Read, function(o, t, lag)
         if lag > 0 and R.swing[r] == 0 then
             local a, b, k, x = spans(r, t - lag, lag)
             local width = (R.regH[r] - R.regL[r]) * a + (R.spH[r] - R.spL[r]) * x
-            pin(r, o.b + R.regL[r] * a + R.spL[r] * x + R.spE[r] * (b - x) + k, width, t, "observed", Obs.Read)
+            pin(r, o.b + R.regL[r] * a + R.spL[r] * x + R.spDecl[r] * (b - x) + k, width, t, "observed", Obs.Read)
         else
             pin(r, o.b, 0, t, "observed", Obs.Read)
         end
@@ -1761,9 +1770,9 @@ local function window(r, t, u)
     R.pinX[r] = R.pinX[r] - dx -- apart from d: at a full casting share the window moves fx alone
     if d ~= 0 or dx ~= 0 then
         local max = R.max[r]
-        R.est0[r] = clamp(R.est0[r] - R.spE[r] * d, max)
-        R.lo0[r] = clamp(R.lo0[r] - R.spL[r] * dx - R.spE[r] * (d - dx), max)
-        R.hi0[r] = clamp(R.hi0[r] - R.spH[r] * dx - R.spE[r] * (d - dx), max)
+        R.est0[r] = clamp(R.est0[r] - R.spE[r] * dx - R.spDecl[r] * (d - dx), max)
+        R.lo0[r] = clamp(R.lo0[r] - R.spL[r] * dx - R.spDecl[r] * (d - dx), max)
+        R.hi0[r] = clamp(R.hi0[r] - R.spH[r] * dx - R.spDecl[r] * (d - dx), max)
         R.pinB[r] = R.pinB[r] - d
         norm(r)
     end
@@ -1946,9 +1955,9 @@ function VS.Power(powerType, now)
     end
     local a, b, k, x = spans(r, I.clock, dt)
     gain = gain + k
-    local est = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + gain, max)
-    local lo = clamp(R.lo0[r] + R.over[r] + R.regL[r] * a + R.spL[r] * x + R.spE[r] * (b - x) + gain, max)
-    local hi = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * x + R.spE[r] * (b - x) + gain, max)
+    local est = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * x + R.spDecl[r] * (b - x) + gain, max)
+    local lo = clamp(R.lo0[r] + R.over[r] + R.regL[r] * a + R.spL[r] * x + R.spDecl[r] * (b - x) + gain, max)
+    local hi = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * x + R.spDecl[r] * (b - x) + gain, max)
     local rest = R.rest[r]
     local drop = decayAhead(r, now, est > rest)
     if drop > 0 then -- a swing-paid slot too: its decay runs by time (I.OnAdvance)
@@ -2001,8 +2010,8 @@ function VS.Regen(powerType, now, mode)
         rec.conf = s > 0 and 1 - sp / s or 0 -- nonzero: s > 0 checked
     else
         local fa, fb, k, fx = coefAt(r, now, R.fsr[r] and (mode == VS.CASTING or mode == nil and now < R.fsrUntil[r]))
-        local est = R.regE[r] * fa + R.spE[r] * fb + k
-        local inS = R.spE[r] * (fb - fx) -- a share-only entry's in-window spirit weight: priced at the estimate
+        local inS = R.spDecl[r] * (fb - fx) -- a share-only entry's in-window spirit weight: priced at the read
+        local est = R.regE[r] * fa + R.spE[r] * fx + inS + k
         rec.est, rec.lo, rec.hi =
             est, R.regL[r] * fa + R.spL[r] * fx + inS + k, R.regH[r] * fa + R.spH[r] * fx + inS + k
         local conf = est ~= 0 and 1 - (rec.hi - est) / abs(est) or 0 -- nonzero: est ~= 0 checked
