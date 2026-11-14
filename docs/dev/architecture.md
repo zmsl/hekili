@@ -337,9 +337,10 @@ member of a set the client's Cooldown Manager shows as one entry, one member up 
 others down, in `now` and `handler`). An entry whose every candidate spell names a member of one family (no untracked
 or secret candidate, no member switched off in the Cooldown Manager panel) is a family item
 (`Game/State/Sources/Presence/CooldownViewer.lua`): the client shows whether some member is up but, after an
-in-combat change, not which (probes L725/L726), so each sweep counts the item for the family's latest application in
-the belief (the member up, or the one that fell last: our last cast, or a later plain read) and treats it as that
-member's one-aura item (rules 1-4, the seen rule, the verdict). With no member applied yet it stays ambiguous. A plain
+in-combat change, not which (probes L725/L726), so each sweep counts the item for the member the belief holds up (our
+last cast, or a later plain read) and treats it as that member's one-aura item while it is up (rules 1-4, the seen
+rule, the verdict). With no member up it stays ambiguous: a light then may be another member's (a cast we did not
+see), so it opens nothing and never re-establishes a member past its modelled duration. A plain
 direct read still wins: a form aura the shapeshift read owns is never judged by the Cooldown Manager. The family name
 is the pack's own; the core only compares it.
 

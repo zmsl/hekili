@@ -12,9 +12,9 @@
 -- GetChildren, GetNumChildren and IsVisible; no hooks of any kind (§3.3, §3.5).
 -- Aura families (owner rule L727): an ambiguous item whose every candidate names a member of one family (the packs'
 -- aura field `family`) is a family item. The client's light says some member is up and its silence that none is, but
--- not which (probes L725/L726: identity goes secret after an in-combat change), so the sweep counts it for the family's
--- latest application in the belief (our last cast, or a later plain read): a one-aura item of that member from then on.
--- With no member applied yet it stays an ambiguous item.
+-- not which (probes L725/L726: identity goes secret after an in-combat change), so the sweep counts it for the member
+-- the belief holds up (our last cast, or a later plain read): a one-aura item of that member while it is up. With no
+-- member up it stays an ambiguous item: a light then may be another member's, so it never opens or re-establishes one.
 -- The idea of reading the viewer's items for presence, the all-viewers presence bit, the hidden-viewer rule and the
 -- spell mapping are TellMeWhen's (Cybeloras), GPL-3.0; ideas only, no code copied.
 
@@ -399,22 +399,21 @@ local function reduce(t)
     nTouched = 0
 end
 
--- Family f's identity on unit u (L727): the member with the latest application in the belief, up (its applied time)
--- or fallen (the applied time of the application that fell); 0 none yet. Allocates nothing.
-local function member(f, u)
+-- Family f's identity on unit u at t (L727): the member believed up with the latest application; 0 none. A light only
+-- confirms that member within its modelled duration: once it is down the light may be another member's (a cast we did
+-- not see), so it names none and opens nothing. Allocates nothing.
+local function member(f, u, t)
     local U = I.auras
     if u < 1 or u > U.n then
         return 0
     end
-    local e, ap, fell = U.exp0[u], U.applied[u], U.fellFrom[u]
+    local e, ap = U.exp0[u], U.applied[u]
     local list, best, bt = famJs[f], 0, 0
     for n = 1, #list do
         local j = list[n]
-        if j <= U.nAura then -- (4a review m5) an in-combat rebuild may shrink the set under this map
-            local at = e[j] > 0 and ap[j] or fell[j]
-            if at > bt then
-                best, bt = j, at
-            end
+        -- (4a review m5) an in-combat rebuild may shrink the set under this map
+        if j <= U.nAura and e[j] > t and ap[j] >= bt then
+            best, bt = j, ap[j]
         end
     end
     return best
@@ -455,10 +454,10 @@ local function sweep(t)
             sCd[s] = id or 0
         end
         local m = id ~= nil and Plain(api, rawget(item, "layoutIndex")) ~= nil and cdvToJ[id]
-        if m and m < 0 and ambFam[-m] > 0 then -- a family item: counted for the family's latest application (L727)
+        if m and m < 0 and ambFam[-m] > 0 then -- a family item: counted for the member believed up (L727)
             local unit = Plain(api, rawget(item, "auraDataUnit"))
             local fu = unit ~= nil and UNIT[unit] or sUnit[s] -- silent: the unit it last held for
-            local fj = member(ambFam[-m], fu)
+            local fj = member(ambFam[-m], fu, t)
             if fj > 0 then
                 m = fj
             end

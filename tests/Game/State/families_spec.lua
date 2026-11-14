@@ -1,7 +1,7 @@
 -- tests/Game/State/families_spec.lua: aura families on the Cooldown Manager (owner rule L727). A pack declares
 -- `family = "<name>"` on each member aura; a Cooldown Manager entry whose candidates all name one family's members is a
--- family item: its light says some member is up, its silence that none is, and the member is the family's latest
--- application in the belief (our last cast, or a later plain read). Synthetic IDs only (fake_spec's two auras).
+-- family item: its light says some member is up, its silence that none is, and the member is the one the belief holds
+-- up (our last cast, or a later plain read); with none up a light names none. Synthetic IDs only (fake_spec's two auras).
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
@@ -106,7 +106,7 @@ describe("aura families on the Cooldown Manager (L727)", function()
             start(def("pair", "pair"))
         end)
 
-        it("lit past the model's expiry re-establishes the last cast member, never the other", function()
+        it("lit past the model's expiry: the last cast member ends there, the light opens no member", function()
             cast(M1, 10, 5)
             ctl.ViewerAuraBySpell("player", A, true, "player")
             for t = 10.5, 14.5, 0.5 do
@@ -117,8 +117,31 @@ describe("aura families on the Cooldown Manager (L727)", function()
             for t = 15, 16.5, 0.5 do
                 poll(t)
             end
-            assert.is_true((est(A, 16.5) or 0) > 1000) -- held HOLD past the model's expiry: LONG (rule 4, L310)
+            -- the light names no member once ours is down (another member, cast unseen, lights it too): no LONG
+            assert.is_nil(VS.Aura("player", A, 16.5))
             assert.is_nil(VS.Aura("player", C, 16.5))
+        end)
+
+        it("a light while the last cast member is down opens no member, before or after our cast folds", function()
+            cast(M2, 10, 5)
+            ctl.ViewerAuraBySpell("player", C, true, "player")
+            for t = 10.2, 14.8, 0.2 do
+                poll(t)
+            end
+            ctl.ViewerAuraBySpell("player", C, false, "player")
+            for t = 15, 30, 0.2 do
+                poll(t)
+            end
+            ctl.ViewerAuraBySpell("player", A, true, "player") -- the client lights for M1 a sweep before our cast folds
+            poll(30.2)
+            assert.is_nil(VS.Aura("player", C, 30.2)) -- the fallen member is not reopened
+            assert.is_nil(VS.Aura("player", A, 30.2))
+            cast(M1, 30.3, 30)
+            for t = 30.4, 32, 0.2 do
+                poll(t)
+            end
+            assert.are.equal(60.3, est(A, 32))
+            assert.is_nil(VS.Aura("player", C, 32))
         end)
 
         it("silent after a light closes the last cast member (consumed or removed unseen)", function()
