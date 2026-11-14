@@ -92,7 +92,7 @@ toolchain_lines() {
 # A git-quoted path (non-ASCII or control bytes) is never docs.
 docs_only() {
     case "$1" in
-    README.md | CHANGELOG.md | docs/publishing/*) return 1 ;;
+    README.md | CHANGELOG.md | docs/publishing/* | docs/wiki/*) return 1 ;; # docs/wiki: make wiki-check reads it
     docs/*.md) return 0 ;;
     */* | \"*) return 1 ;;
     *.md) return 0 ;;
