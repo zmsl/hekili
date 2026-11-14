@@ -20,6 +20,8 @@
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 - When a fight starts, the first icon now switches to its in-combat choice at once instead of one update late.
+- An ability waiting on mana now counts down evenly and turns ready closer to when you really have the mana, instead of jumping by up to a tenth of a second from one update to the next.
+- Warriors and Bear Druids: the rage from your first swing of a fight is now expected when that swing lands, so the first icons of a pull follow it.
 
 ### Known issues
 

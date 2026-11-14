@@ -1284,9 +1284,13 @@ end
 -- Central fix 29: a slice on a tick reads a phase of 0 or a hair under L through the clock's rounding; the latter
 -- padded about 1e-11 s, under the clock's own rounding, so the forecast at the answer read X a rounding error short and
 -- a `>=` recheck there failed. The pad is at least 1e-6 s (the tick after instead moved Feral and Balance's flicker up).
+-- L755 / owner ruling L960: with no tick seen (last_tick 0: a secret pool) the phase was read off the poll clock, an
+-- arbitrary grid, so the pad jumped between nothing and a whole tick from one poll to the next. It pads nothing there
+-- (fix 29's 1e-6): measured against the world's ticks the shown waits run late, and no pad is the truest fixed choice.
 local function tickReach( t, a, dt )
     local L = rawget( t, "tick_rate" )
     if not L or L <= 0 then return a + dt end
+    if ( rawget( t, "last_tick" ) or 0 ) <= 0 then return a + 1e-6 + dt end
     return a + max( 1e-6, L - ( ( a - ( rawget( t, "last_tick" ) or 0 ) ) % L ) ) + dt
 end
 
