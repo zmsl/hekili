@@ -1977,7 +1977,7 @@ describe("resources", function()
             I.Settle(10)
             read(10, 500)
             I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
-            I.AuraModel(1, 1, 10, 30, 1, 10, 0) -- up 10 to 30
+            I.AuraModel(1, 1, 9, 30, 1, 10, 0) -- up 9 to 30 (an edge at the pin's instant would measure nothing)
             within(400 + 50 * 2, VS.Power(MANA, 12).est) -- 5 x 10 inside the window
             assert.are.same({ 50, 50 }, { VS.Regen(MANA, 12).est, VS.Regen(MANA, 12, VS.CASTING).est })
             read(14, 400 + 55 * 4) -- 11 a second of spirit, x 5
@@ -2348,6 +2348,44 @@ describe("resources", function()
             assert.are.same({ 320, 320 }, { VS.Regen(MANA, 12).est, VS.Regen(MANA, 16).est })
         end)
 
+        -- the game credits regen in ticks, so a rate change (an entry's edge) lands on a grid the belief does not see:
+        -- the interval across it is off by up to a tick of the new rate (the Fire replay's first Evocation tick, 55 mana
+        -- under a x 16 entry, cut the spirit part 11.43 -> 10.58)
+        it("takes no measurement across a regen entry's edge, and measures inside it", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "surge", spirit = 16, share = 1 } })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 1, 11.5, 30, 1, 11.5, 0) -- surge from 11.5: 2 + 16 x 20 = 322 a second
+            local v = 400 + 12 * 1.5 + 322 * 0.4 -- the game's tick at 12 not yet in: a tenth of a second short
+            read(12, v)
+            assert.are.same({ 12, 10 }, { I.res.regE[1], I.res.spE[1] })
+            -- a second inside it: spirit weight (16 - 0.5) / 0.5 = 31, so 31 more is a spirit part of 11
+            read(13, v + 322 + 31)
+            local sp = 10 + I.ALPHA * 1
+            within(sp, I.res.spE[1])
+            assert.are.equal(12, I.res.regE[1])
+            -- its end, swept from the record before the next pin (a fall by time keeps fellAt), measures nothing
+            I.AuraModel(1, 1, 11.5, 13.5, 1, 13, 0)
+            I.Settle(14)
+            assert.are.equal(0, I.auras.exp0[1][1])
+            read(15, v + 322 + 31 + (12 + sp * 31) * 0.5 + 12 * 1.5 + 60) -- a tick of it more than the model's
+            within(sp, I.res.spE[1])
+            assert.are.equal(12, I.res.regE[1])
+        end)
+
+        it(
+            "takes no measurement from an interval starting at an entry's edge (the pin at the cast's instant)",
+            function()
+                shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "surge", spirit = 16, share = 1 } })
+                read(10, 500)
+                I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+                read(11, 412)
+                I.AuraModel(1, 1, 11, 30, 1, 11, 0) -- surge from 11, the pin's own instant
+                read(12, 412 + 322 * 0.9) -- the game's first tick after 11 not yet in
+                assert.are.same({ 12, 10 }, { I.res.regE[1], I.res.spE[1] })
+            end
+        )
+
         it("multiplies overlapping `spirit` auras and adds their shares", function()
             shaped(
                 { spirit = 10, mp5 = 2 },
@@ -2371,7 +2409,7 @@ describe("resources", function()
             shaped({ spirit = 10, mp5 = 0 }, { { aura = "focus", share = 0.5 } })
             read(10, 500)
             I.ResourceShift(1, -100, 10, Obs.CastSuccess)
-            I.AuraModel(1, 2, 10, 30, 1, 10, 0)
+            I.AuraModel(1, 2, 9, 30, 1, 10, 0) -- up before the pin (an edge at its instant would measure nothing)
             read(14, 400 + 5.5 * 4) -- 11 a second of spirit, half of it in the window
             within(10 + I.ALPHA * 1, I.res.spE[1])
             assert.are.equal(0, I.res.regE[1])
