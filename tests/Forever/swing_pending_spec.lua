@@ -46,22 +46,25 @@ describe("the rage forecast of a pending swing (GAP AK)", function()
     end)
 
     -- L872 (2): in the opener the model's anchor is the combat start (no swing landed yet: the pseudo swing), and the
-    -- fight's first swing lands more than half a swing after it; that pending swing is newer than the anchor, so its
-    -- gain is forecast and the swings after it run off it, not off the combat start.
-    it("forecasts a pending swing newer than the model's anchor, the next one a swing after it", function()
-        local speed, p = 2.1, st.now - 0.09
-        st.swings.mh_actual, st.swings.mh_pseudo = 0, st.now - 1.3 -- the combat start, 1.21 s before the swing
-        st.swings.mh_speed, st.mainhand_speed, st.swings.mh_pending = speed, speed, p
-        st.rage.actual = 0
-        st:ForecastSwingbasedResources()
-        local t = {}
-        for i = 1, st.rage.fcount do
-            local f = st.rage.forecast[i]
-            if f.e == "mainhand" then
-                t[#t + 1] = f.t - p
+    -- fight's first swing lands after it; that pending swing is newer than the anchor, so its gain is forecast and the
+    -- swings after it run off it, not off the combat start, however soon after the pull it lands (review I1: a gap
+    -- under half a swing too).
+    for _, gap in ipairs({ 1.21, 0.5 }) do
+        it("forecasts a pending swing " .. gap .. " s newer than the model's anchor, the next one a swing after it", function()
+            local speed, p = 2.1, st.now - 0.09
+            st.swings.mh_actual, st.swings.mh_pseudo = 0, p - gap -- the combat start, gap s before the swing
+            st.swings.mh_speed, st.mainhand_speed, st.swings.mh_pending = speed, speed, p
+            st.rage.actual = 0
+            st:ForecastSwingbasedResources()
+            local t = {}
+            for i = 1, st.rage.fcount do
+                local f = st.rage.forecast[i]
+                if f.e == "mainhand" then
+                    t[#t + 1] = f.t - p
+                end
             end
-        end
-        assert.is_true(math.abs(t[1] - 2 * H.ns.VirtualStateInternal.Log.ORACLE_MIN) < 1e-6, tostring(t[1]))
-        assert.is_true(math.abs(t[2] - speed) < 1e-3, tostring(t[2]))
-    end)
+            assert.is_true(math.abs(t[1] - 2 * H.ns.VirtualStateInternal.Log.ORACLE_MIN) < 1e-6, tostring(t[1]))
+            assert.is_true(math.abs(t[2] - speed) < 1e-3, tostring(t[2]))
+        end)
+    end
 end)
