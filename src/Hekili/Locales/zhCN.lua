@@ -47,6 +47,9 @@ L["The %s, and |cFFFFD100%s|r priorities were reverted."] = "%s和|cFFFFD100%s|r
 -- L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = ""
 -- L["%s, picked from your talents."] = ""
 
+-- Hekili/Engine/Sim/Targets.lua
+-- L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = ""
+
 -- Hekili/Options/ChatCommands.lua
 L["Invalid command. Type '/hekili help' to see the available commands."] = "无效的命令。输入“/hekili help”查看可用命令。"
 L["Target Swap minimum time to die set to %d seconds."] = "切换目标的最短存活时间已设为 %d 秒。"

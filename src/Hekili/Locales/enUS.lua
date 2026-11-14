@@ -38,6 +38,9 @@ L["The %s, and |cFFFFD100%s|r priorities were reverted."] = true
 L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = true
 L["%s, picked from your talents."] = true
 
+-- Hekili/Engine/Sim/Targets.lua
+L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = true
+
 -- Hekili/Options/ChatCommands.lua
 L["Invalid command. Type '/hekili help' to see the available commands."] = true
 L["Target Swap minimum time to die set to %d seconds."] = true
