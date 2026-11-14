@@ -51,13 +51,18 @@ describe("a talent's spell an aura lists as its copy", function()
         end)
     end
 
+    -- on the Smite character, out of form at login (the Shadow one logs in shifted: its form read keeps the aura up)
     it("Shadowform, whose own ID is the talent: its permanent listing still reads up", function()
-        local H = boot("priest_world", "Shadow")
+        local H = boot("priest_world", "Smite")
         local class = H.Hekili.Class
         assert.are.equal(class.auras.shadowform.id, class.talents.shadowform[2])
-        local t = H.ctl.now + 1
-        list(H, t, 15473, 0)
-        assert.is_not_nil(H.ns.VirtualState.Aura("player", 15473, t + 0.1))
+        local VS, t = H.ns.VirtualState, H.ctl.now + 1
+        list(H, t, nil)
+        assert.is_nil(VS.Aura("player", 15473, t + 0.1)) -- down before the listing: the walk's read sets it up
+        list(H, t + 1, 15473, 0)
+        assert.is_not_nil(VS.Aura("player", 15473, t + 1.1))
+        list(H, t + 2, 15473, 0)
+        assert.is_not_nil(VS.Aura("player", 15473, t + 2.1)) -- and stays up on the next walk
         assert.are.same({}, H.errors)
     end)
 end)
