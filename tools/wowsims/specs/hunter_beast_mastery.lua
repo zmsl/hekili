@@ -6,12 +6,12 @@
 -- consumables (flask, food, elixirs, Demonic Rune, the Major Mana and Major Frenzy potions, EZ-Thro Dynamite II, Goblin
 -- Sapper Charge), Kings, Might 2 and Wisdom 2, the top ranks: R25), converted by `make wowsims-siml`
 -- (tests/Forever/wowsims/hunter_beast_mastery.build.json). Raid buffs and debuffs stay unsent, as for every spec.
--- Disagreements below are the e2842f0a78 numbers, STALE until the 0.7 floors are re-measured (P7, after R51), decisions on-GCD 0.929 (70) top [summon_hawk ->
--- arcane_shot 2; arcane_shot -> serpent_sting 1; multi_shot -> serpent_sting 1]:
---   summon_hawk -> arcane_shot (13.50, 19.62) and summon_hawk -> wing_clip (7.50): wowsims's own HHA sequence. The log
---   casts Summon Hawk at 1.50, 7.50, 13.50 and 19.62 and its first Arcane Shot at 27.20: APLActionSequence advances
---   its index only when the cast (or its queued action) fires (sim/core/apl_actions_sequences.go:75-90), so two hawks
---   did not count; the kit's stepped window counts each cast, and ours there is the sequence's third step. Oracle quirk.
+-- Owner policy (2026-11-12): replace wowsims's atomic Hawk/Hawk/Arcane sequence with the live priority: maintain two
+-- hawks first; for one target use Aimed Shot then Arcane Shot; for a group use Multi-Shot, Volley, then Arcane Shot as
+-- the fallback when Volley is unusable (including insufficient mana). Summon Hawk shares its cooldown with Arcane Shot;
+-- Aimed Shot shares its cooldown with Multi-Shot. Volley has no cooldown in Forever.
+-- Disagreements below are the e2842f0a78 numbers, STALE until the 0.7 floors are re-measured (P7, after R51), decisions
+-- on-GCD 0.929 (70); the old HHA sequence disagreements no longer describe this owner policy.
 --   Serpent Sting a beat early (class B; 31.37, 47.71): the kit applies the target's dot at the cast (`now`), wowsims at the landing
 --   (0.33 s later in every log); with EARLY_EXIT (0.2 s, Core.lua) a refresh due inside 0.2 s ends the list, so it
 --   outranks a shot ready now. The belief has no landing hook for a kit aura (Tickets.lua anchors only the tick
@@ -55,12 +55,29 @@ return {
         strider_kick = { 0, 5 },
         wing_clip = { 0, 5 },
         arcane_shot = { 8, 35 },
+        aimed_shot = { 8, 35 },
         multi_shot = { 8, 35 },
         serpent_sting = { 8, 35 },
     },
-    -- below 25 (Summon Hawk's learn level) the HHA window never reaches Arcane Shot, so the L10 character stings and
-    -- waits 13.4 s: wowsims's own non-hawk line (`cast arcane_shot if $use_arcane_shot and not $use_summon_hawk`),
-    -- keyed on Summon Hawk being known, not on the setting (R41: a real rotation shot, silent at 60); its range gate
-    -- written in (rule 19 reaches APL lines only)
-    leveling = { "arcane_shot,if=!action.summon_hawk.known&target.outside8" },
+    -- The upstream HHA sequence is atomic, so omitting Summon Hawk rejects that sequence as a whole. Arcane Shot's
+    -- condition also omits its separate upstream fallback; the explicit lines below implement the owner priority.
+    condition = {
+        summon_hawk = false,
+        arcane_shot = false,
+        aimed_shot = false,
+    },
+    guard = {
+        multi_shot = "active_enemies>1",
+        serpent_sting = 'target.creature_type!="elemental"&target.creature_type!="mechanical"',
+    },
+    extra = {
+        { before = "multi_shot", line = "summon_hawk,if=action.summon_hawk.known&pet.hawk.count<2" },
+        {
+            before = "multi_shot",
+            line = "aimed_shot,if=active_enemies=1&target.outside8&!moving",
+        },
+        { before = "call_action_list", line = "volley,if=active_enemies>1&target.outside8&!moving" },
+        { before = "call_action_list", line = "arcane_shot,if=target.outside8" },
+    },
+    leveling = {},
 }
