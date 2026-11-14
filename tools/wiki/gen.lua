@@ -96,6 +96,18 @@ local function enus()
     return out
 end
 
+-- The English strings of the shared option library the Profiles page shows (AceDBOptions-3.0 keeps them in the
+-- `local L = {` table at the top of its file), stripped as option labels are.
+local function lib()
+    local out = {}
+    local s = assert(slurp("src/Hekili/Libs/AceDBOptions-3.0/AceDBOptions-3.0.lua"))
+    local body = assert(s:match("local L = {\n(.-)\n}"), "AceDBOptions-3.0: no English table")
+    for value in ("\n" .. body .. "\n"):gmatch('\n%s+[%w_]+ = "(.-)",?%s-\n') do
+        out[text.strip(value)] = true
+    end
+    return out
+end
+
 local OUT = ((arg[2] or "build/wiki"):gsub("/*$", "/")) -- the second argument is for the tests
 
 local function ran(r)
@@ -159,7 +171,7 @@ local function run()
     local e, w = check.links(ps, exists)
     add(errors, e)
     add(warnings, w)
-    add(errors, check.labels(ps, collector("options").labels(), enus()))
+    add(errors, check.labels(ps, collector("options").labels(), enus(), lib()))
     add(errors, check.commands(ps, collector("commands").words()))
     local _, _, problems = collector("commands").load()
     add(errors, problems)

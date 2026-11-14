@@ -100,6 +100,36 @@ describe("wiki-check", function()
         )
     end)
 
+    it(
+        "accepts a filled-in %s string, a choice's (Default) and a shared-library label, and still rejects others",
+        function()
+            local labels = {}
+            local enus =
+                { ["Show in Separate %s Cooldowns Display"] = true, ["Automatic"] = true, ["Active During %s"] = true }
+            local lib = { ["Reset Profile"] = true }
+            local page = table.concat({
+                "## H",
+                "",
+                "**Show in Separate Defensives Cooldowns Display**, **Active During Combat**, **Automatic (Default)**,",
+                "**Reset Profile**, **Show Elsewhere Cooldowns Display** and **Manual (Default)**.",
+            }, "\n")
+            assert.are.same({
+                "P: the label **Manual (Default)** names no option",
+                "P: the label **Show Elsewhere Cooldowns Display** names no option",
+            }, check.labels({ P = page }, labels, enus, lib))
+        end
+    )
+
+    it("keeps a bold path that ends in an italic placeholder whole", function()
+        local labels = { ["Priorities"] = true, ["Targeting"] = true }
+        local page =
+            "## H\n\nSee **/hekili > Priorities > *your specialization***, then **/hekili > Priorities > Targetting > *x***."
+        assert.are.same(
+            { "P: the path segment **Targetting** names no option" },
+            check.labels({ P = page }, labels, labels)
+        )
+    end)
+
     it("fails on a command that is not published", function()
         local words = { set = true, snap = true }
         assert.are.same(
@@ -312,5 +342,19 @@ describe("make wiki-build", function()
         local first = slurp(OUT .. "/Slash-Commands.md")
         build()
         assert.are.equal(first, slurp(OUT .. "/Slash-Commands.md"))
+    end)
+end)
+
+describe("the options collector", function()
+    local options = require("tools.wiki.collect.options")
+
+    it("leaves out an always-hidden option from the rows but keeps its label for the check", function()
+        local rows = options.rows({ path = { "packs", "<spec>" }, exclude = { "<pack>" }, depth = 3 })
+        local labels = {}
+        for _, r in ipairs(rows) do
+            labels[r.label] = true
+        end
+        assert.is_nil(labels["Filter by Time-to-Die"], "a hidden option is not a row")
+        assert.is_true(options.labels()["Filter by Time-to-Die"], "its label is still a known option label")
     end)
 end)

@@ -126,12 +126,62 @@ local function labelLike(span, after)
     return true
 end
 
+-- The bold spans of `text` as { at, span, after }: a span ends at the last two stars of a run, so a bold path that ends in
+-- an italic placeholder (`**... *x***`) keeps its placeholder whole.
+local function bolds(text)
+    local out, pos = {}, 1
+    while true do
+        local at = text:find("**", pos, true)
+        if not at then
+            break
+        end
+        local close = at + 2
+        while close do
+            close = text:find("**", close, true)
+            if not close or text:sub(close + 2, close + 2) ~= "*" then
+                break
+            end
+            close = close + 1
+        end
+        if not close then
+            break
+        end
+        out[#out + 1] = { at, text:sub(at + 2, close - 1), text:sub(close + 2, close + 2) }
+        pos = close + 2
+    end
+    return out
+end
+
+-- Whether `label` is an English string with a `%s` in it filled in (every `%s` stands for any text), or the same with
+-- the " (Default)" a choice shows after its name.
+local function templated(label, enus)
+    for key in pairs(enus) do
+        if key:find("%s", 1, true) then
+            local pat = "^" .. key:gsub("%%s", "\1"):gsub("%p", "%%%0"):gsub("\1", ".+") .. "$"
+            if label:match(pat) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 --- Bold UI labels and bold option paths (**/hekili > A > *placeholder* > B**) that name no option. `labels` is the
---- set of option labels in the walked tree, `enus` the set of English strings in Locales/enUS.lua (both stripped).
-function M.labels(pages, labels, enus)
+--- set of option labels in the walked tree, `enus` the set of English strings in Locales/enUS.lua (both stripped),
+--- `lib` the English strings of the shared option libraries (the Profiles page's AceDBOptions): a label from there is
+--- known outright. A label that is an enUS string with its `%s` filled in, or a choice's name plus " (Default)", is
+--- known when the string (or the name) is an English string.
+function M.labels(pages, labels, enus, lib)
     local out = {}
     local function check(name, label, what)
-        if not labels[label] then
+        local base = label:match("^(.-) %(Default%)$")
+        if lib and lib[label] then
+            return
+        elseif base and enus[base] then
+            return
+        elseif templated(label, enus) then
+            return
+        elseif not labels[label] then
             out[#out + 1] = ("%s: %s **%s** names no option"):format(name, what, label)
         elseif not enus[label] then
             out[#out + 1] = ("%s: %s **%s** is not an English string in Locales/enUS.lua"):format(name, what, label)
@@ -142,7 +192,8 @@ function M.labels(pages, labels, enus)
             local text = nocode(prose(s))
             local firstHeading = ("\n" .. text):find("\n## ") or (#text + 1)
             local first = true
-            for at, span, after in text:gmatch("()%*%*(.-)%*%*(.?)") do
+            for _, b in ipairs(bolds(text)) do
+                local at, span, after = b[1], b[2], b[3]
                 local title = first and at < firstHeading
                 first = false
                 if span:match("^/hekili >") then

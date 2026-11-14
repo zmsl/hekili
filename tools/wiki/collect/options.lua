@@ -1,7 +1,8 @@
 -- tools/wiki/collect/options.lua: the options a player sees under one node of the options tree (Hekili.Options, as
 -- built in a headless boot), one row per option: its section, label, type, default (the option's own `get` on a
--- fresh profile), values and description. Spacers, headers and text-only rows are left out; so is an option hidden
--- for good (`hidden = true`). A conditional `hidden` (a function) is kept: the option shows in some states.
+-- fresh profile), values and description. Spacers, headers and text-only rows are left out; so is an option that is
+-- hidden for good (`hidden = true`, or a `hidden` function that answers true at the headless boot). A function that
+-- answers false there is kept: the option shows in some states. M.labels() still lists every option.
 local boot = require("tools.wiki.boot")
 local text = require("tools.wiki.text")
 
@@ -162,7 +163,7 @@ end
 local function walk(node, info, inherited, section, rows, o, depth)
     for _, kv in ipairs(children(node)) do
         local key, child = kv[1], kv[2]
-        if not o.exclude[key] and type(child) == "table" and child.hidden ~= true then
+        if not o.exclude[key] and type(child) == "table" and not call(child.hidden, info) then
             local ci = {}
             for i, s in ipairs(info) do
                 ci[i] = s
