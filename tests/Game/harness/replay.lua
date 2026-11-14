@@ -365,7 +365,7 @@ function M.new(text, H, o)
         return ok and tonumber(v) or nil
     end
     -- spell ID -> ability key (every rank), the key's IDs and cooldown; aura ID -> duration
-    local keyOf, itemOf, rankIDs, cd, dur, form, spacing, engine = {}, {}, {}, {}, {}, {}, {}, {}
+    local keyOf, itemOf, rankIDs, cd, dur, form, spacing, engine, useOf = {}, {}, {}, {}, {}, {}, {}, {}, {}
     local keys = {}
     for key, a in pairs(class.abilities) do
         if type(key) == "string" and type(a) == "table" and a.key == key then
@@ -392,6 +392,12 @@ function M.new(text, H, o)
         for _, id in ipairs(type(a.items) == "table" and a.items or { rawget(a, "item") }) do
             if type(id) == "number" then
                 itemOf[id] = itemOf[id] or key
+            end
+        end
+        -- an item's use spell (L481): its first positive ID (the kit's `copy`; an item's own `id` is negative)
+        for _, id in ipairs(rankIDs[key]) do
+            if useOf[key] == nil and id > 0 and (a.items or rawget(a, "item")) then
+                useOf[key] = id
             end
         end
     end
@@ -781,9 +787,13 @@ function M.new(text, H, o)
             -- the GCD likewise: else a GCD cast on a late line of its timestamp ends after the next cast's GCD rise (an
             -- earlier line of its own timestamp) and clears the client's GCD flag inside that GCD
             local gcdk = (e.gcd or 0) > 0 and e.gcd - (T - (R.pull + e.t)) or nil
-            if key and not e.id then -- an item: its cooldown only
+            if key and not e.id then -- an item: its cooldown, and its use spell's success when the kit names one (L481)
                 if cd[key] > 0 then
                     us.cdUntil[key] = T + cdk
+                end
+                local use = useOf[key]
+                if use and e.kind == "completed" then
+                    W.emit({ kind = "cast", src = us, dst = mob, spell = use })
                 end
             elseif e.kind == "completed" and e.other == M.RANGED_AUTO and R.rangedSpeed then -- R18: the ranged auto attack
                 W.emit({ kind = "cast", src = us, dst = mob, spell = R.shootSpell })

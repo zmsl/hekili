@@ -137,6 +137,23 @@ describe("now handlers", function()
         assert.is_true(VS.Cooldown(2687, 9.1).est > 60) -- the declared cooldown
     end)
 
+    -- L481: a roll the belief cannot see (a potion's restore) credits its average, the floor and the top its ends.
+    it("shifts est by a `gain` with a spread, lo by the amount less it and hi by the amount plus it", function()
+        register("rage_test", {
+            id = 2687,
+            cooldown = 60,
+            now = function()
+                gain(20, "rage", 5) -- luacheck: ignore 113 (the `now` context's verb)
+            end,
+        })
+        start()
+        local before = VS.Power(fs.RAGE, 9)
+        local est, lo, hi = before.est, before.lo, before.hi
+        cast(2687, 9)
+        local after = VS.Power(fs.RAGE, 9.1)
+        assert.are.same({ est + 20, lo + 15, math.min(hi + 25, 100) }, { after.est, after.lo, after.hi })
+    end)
+
     it("keeps a `now` gain over a short answer read before the gain can show, and caps on one after", function()
         register("rage_test", {
             id = 2687,

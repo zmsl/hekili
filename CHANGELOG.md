@@ -17,6 +17,7 @@
 - The options' Priorities list now opens on your current spec, and marks the priority that is active with a green check.
 
 ### Fixed
+- Mana users: drinking a Major Mana Potion or using a Demonic Rune now adds its mana to Hekili's mana estimate (the average of what it can restore), so spells you can afford again after one are recommended right away.
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 

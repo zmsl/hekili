@@ -42,6 +42,8 @@ local format = string.format
 -- 14 (2026-11-11, aura audit C8-C12): the `now` names `instant`, `cast_start` and `target.health`, the ability fields
 -- `onLand` and `now_finish`, `spec:RegisterGcdMod`: an older core never runs the fields, reads nil for the names and
 -- raises on the call.
+--   Since then, without a bump: the `now` verb `gain`'s third argument, a roll's spread (L481); an older core ignores
+--   it and shifts the floor and the top by the average too.
 local CONTENT_API = 14
 
 local done, notice = false, nil

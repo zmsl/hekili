@@ -122,10 +122,13 @@ shared:RegisterAbility("healthstone", {
 -- The mana and energy consumables (C12), best first: item IDs from ItemSparse (DB2 1.60.1.70338); each cooldown from
 -- wowsims/forever's db.json (MIT, a reference only): the potion's own 2 min category, and the 2 min category the rune,
 -- the tea and the gems share (Thistle Tea's own 5 min); Mana Agate's row is absent there and is taken as its ranks'.
--- Read in game (checkpoint). Offered while one is in the bags and the client calls it usable; none has a `now`.
+-- Read in game (checkpoint). Offered while one is in the bags and the client calls it usable.
 -- Under the Potions toggle (user ruling 2026-10-21: buff and resource consumables go under Potions, health ones under
 -- Defensives); with Potions off their lines are skipped and the list falls through to the next.
-local function consume(key, items, cooldown, name)
+-- A mana refill (`spell`, `mid`, `spread`: its use spell and that spell's restore, mid +- spread) is the use spell's
+-- cast success, which the belief tracks (`copy`). The roll is unseen, so it credits the average (owner L969): the `now`
+-- puts the estimate at the midpoint and the floor and top at the ends, the simulation's `handler` gains the midpoint.
+local function consume(key, items, cooldown, name, spell, mid, spread)
     local function best()
         return inBags(items)
     end
@@ -134,6 +137,7 @@ local function consume(key, items, cooldown, name)
         cast = 0,
         cooldown = cooldown,
         gcd = "off",
+        copy = spell and { spell } or nil,
 
         item = best,
         items = items,
@@ -149,10 +153,21 @@ local function consume(key, items, cooldown, name)
             end
             return IsUsableItem(item) == true, "not usable"
         end,
+
+        now = spell and function()
+            gain(mid, "mana", spread)
+        end or nil,
+        handler = spell and function()
+            gain(mid, "mana")
+        end or nil,
     })
 end
 
-consume("major_mana_potion", { 13444 }, 120)
-consume("demonic_rune", { 12662 }, 120)
+-- The restores: the wowsims pin's spelldata (sim/core/spelldata/spells_auto_gen.go; the DB2's rows): 17531 Restore Mana
+-- 1800 +- 450 (1350-2250), 16666 Demonic Rune 1200 +- 300 (900-1500): BasePoints, Variance 0.5 (half either side).
+-- shortcut: the mana gems' four ranks share one ability, so their restore (one use spell a rank) is not credited;
+-- split the gems per rank when a pack prompts them.
+consume("major_mana_potion", { 13444 }, 120, nil, 17531, 1800, 450)
+consume("demonic_rune", { 12662 }, 120, nil, 16666, 1200, 300)
 consume("thistle_tea", { 7676 }, 300)
 consume("mana_gem", { 8008, 8007, 5513, 5514 }, 120, "Mana Gem") -- Ruby, Citrine, Jade, Agate

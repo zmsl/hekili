@@ -294,8 +294,10 @@ describe("shared content", function()
         for _, key in ipairs({ "major_mana_potion", "demonic_rune", "thistle_tea", "mana_gem" }) do
             assert.are.same({ "off", false, true }, { a[key].gcd, a[key].startsCombat, a[key].bagItem }, key)
             assert.are.equal("potions", a[key].toggle, key) -- a resource consumable: under Potions (user, 2026-10-21)
-            assert.is_nil(a[key].now, key) -- an item action: no cast the belief sees
             assert.is_false((a[key].usable()), key)
+        end
+        for _, key in ipairs({ "thistle_tea", "mana_gem" }) do
+            assert.is_nil(a[key].now, key) -- no use spell the belief tracks
         end
         assert.are.equal(5514, a.mana_gem.item()) -- the lowest rank when none is in the bags
         bags[5513], bags[8007] = 1, 1
@@ -303,6 +305,27 @@ describe("shared content", function()
         assert.is_true(a.mana_gem.usable())
         bags[7676] = 2
         assert.is_true(a.thistle_tea.usable())
+    end)
+
+    -- L481 (owner L969): the belief cannot know the roll, so a refill credits its average (the midpoint of the use
+    -- spell's range, wowsims pin spelldata: 17531 BasePoints 1800, 16666 1200, both Variance 0.5: +-450, +-300), est at
+    -- the midpoint and the floor and top at the range's ends; the simulation gains the midpoint.
+    it("credits a mana potion's and a Demonic Rune's average restore at their use spell", function()
+        load({ "Consumables" })
+        local a = all.abilities
+        for key, want in pairs({ major_mana_potion = { 17531, 1800, 450 }, demonic_rune = { 16666, 1200, 300 } }) do
+            assert.are.equal(a[key], a[want[1]], key) -- the use spell's success is the item's cast
+            local got = {}
+            local env = {
+                gain = function(...)
+                    got[#got + 1] = { ... }
+                end,
+            }
+            setfenv(a[key].now, env)()
+            setfenv(a[key].handler, env)()
+            assert.are.same({ { want[2], "mana", want[3] }, { want[2], "mana" } }, got, key)
+            assert.are_not.equal(a[key].now, a[key].handler, key) -- the belief rejects a `now` that is its handler
+        end
     end)
 
     it("uses the best Healthstone in the bags, and the Minor one when there is none", function()

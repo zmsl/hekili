@@ -310,7 +310,7 @@ end
 ----------------------------------------------------------------------------------------------------------------------
 -- Writes: Hekili's verbs, as `modelled` belief samples at T (and the combat log's aura and energize rows).
 
-local function shift(n, resource)
+local function shift(n, resource, spread)
     if not live then
         return
     end
@@ -321,13 +321,20 @@ local function shift(n, resource)
     if type(n) ~= "number" or n == 0 then
         return
     end
-    I.ResourceShift(r, n, T, CAST)
+    if n > 0 and type(spread) == "number" and spread > 0 then
+        I.ResourceGainSpread(r, n, spread, T, CAST)
+    else
+        I.ResourceShift(r, n, T, CAST)
+    end
     if n > 0 then
         I.Log.Energize(A.qid[curA] or 0, n, I.res.type[r], I.res.max[r], T) -- a reaction's: no ability (curA 0)
     end
 end
-function NAMES.gain(amount, resource)
-    shift(amount, resource)
+-- The `now` context's third argument is a roll's half-width the belief cannot see (L481: a potion's restore, `amount`
+-- its average): the floor takes amount - spread, the top amount + spread; a non-number is ignored. The simulation's
+-- third argument is `overcap`, so a `handler` never passes the spread.
+function NAMES.gain(amount, resource, spread)
+    shift(amount, resource, spread)
 end
 function NAMES.spend(amount, resource)
     shift(type(amount) == "number" and -amount or amount, resource)

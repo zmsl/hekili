@@ -574,6 +574,8 @@ describe("the replay's casts: tags, items, pets, totems", function()
         "[1.00] [Tester (#1)] Completed cast {ItemID: 800001}",
         "[2.00] [Tester (#1) - Wolf] Casting {SpellID: 900001} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
         "[2.00] [Tester (#1) - Wolf] Completed cast {SpellID: 900001}",
+        "[3.00] [Tester (#1)] Casting {ItemID: 800003} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)",
+        "[3.00] [Tester (#1)] Completed cast {ItemID: 800003}",
     }, "\n")
     local HT = {
         Hekili = {
@@ -582,6 +584,15 @@ describe("the replay's casts: tags, items, pets, totems", function()
                     strike = { key = "strike", id = 900001, gcd = "spell" },
                     fire_post = { key = "fire_post", id = 900005, gcd = "totem" },
                     rune = { key = "rune", id = -101, items = { 800002, 800001 }, cooldown = 120, gcd = "off" },
+                    -- L481: an item whose use spell the kit names (`copy`): the client's success of that spell
+                    tonic = {
+                        key = "tonic",
+                        id = -102,
+                        copy = { 900077 },
+                        items = { 800003 },
+                        cooldown = 120,
+                        gcd = "off",
+                    },
                 },
                 auras = {},
             },
@@ -595,7 +606,7 @@ describe("the replay's casts: tags, items, pets, totems", function()
         for i, d in ipairs(R.decisions) do
             keys[i] = d.key
         end
-        assert.are.same({ "fire_post", "rune" }, keys)
+        assert.are.same({ "fire_post", "rune", "tonic" }, keys)
         local W = at(R.world(setmetatable({ tag = "-t" }, { __index = WO }), 1), R.pull + 1.5)
         local us = W.ents[1]
         local tt = W.totem(us, 1)
@@ -606,6 +617,13 @@ describe("the replay's casts: tags, items, pets, totems", function()
             casts = casts + (ev.kind == "cast" and 1 or 0)
         end
         assert.are.equal(1, casts) -- the totem's; the proc, the item and the pet emit none
+        W.run(R.pull + 3.5)
+        local use
+        for _, ev in ipairs(W.truth) do
+            use = use or (ev.kind == "cast" and ev.spell == 900077 and ev)
+        end
+        assert.is_truthy(use) -- the item with a named use spell: its success, as the client sends it
+        assert.is_true(math.abs(us.cdUntil.tonic - (R.pull + 3 + 120)) < 1e-3)
     end)
 end)
 

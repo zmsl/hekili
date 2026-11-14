@@ -1885,6 +1885,16 @@ function I.ResourceSet(r, v, width, t, event)
     R.lo0[r], R.over[r], R.hi0[r], R.topNext[r] = clamp(v, max), 0, clamp(v + width, max), 0
 end
 
+--- Our own cast gained `d` (> 0) to slot r by a roll the belief does not see, `spread` either side (L481: a potion's
+--- restore): the estimate takes the average as a cast's change (I.ResourceShift), the floor the roll's low end and the
+--- top its high end, each from where it was. Allocates nothing.
+function I.ResourceGainSpread(r, d, spread, t, event)
+    local lo, hi, max = R.lo0[r], R.hi0[r], R.max[r]
+    I.ResourceShift(r, d, t, event)
+    R.lo0[r], R.hi0[r] = clamp(lo + d - spread, max), clamp(hi + d + spread, max)
+    norm(r)
+end
+
 -- What slot r's out-of-combat decay takes from the clock to `now`, as a fold from the clock to `now` (I.OnAdvance)
 -- takes it from each of the estimate, lo and the top above rest: the continuous fall, or the grid's quanta at or before
 -- `now` (`up`: the projected estimate is above rest, as a gain before the decay starts it; with the estimate resting,
