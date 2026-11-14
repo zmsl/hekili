@@ -1565,7 +1565,7 @@ describe("now handlers", function()
             h.Class.resources.rage.state.meta = { refundOnAvoid = 0.8 }
             h.Class.abilities.spender_c.refundOnAvoid = true
             h.cdmOff = off
-            ctl.viewer.sets[2] = { 502 }
+            table.insert(ctl.viewer.sets[2], 502)
             ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
             ti = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
             start()
@@ -1700,6 +1700,94 @@ describe("now handlers", function()
             assert.are.equal(1, I.auraVerdict.n[k])
             local r = rage(7.3)
             assert.is_true(r.lo <= 8 and r.est <= 8 + 1e-9, ("lo %.2f est %.2f, truth 8"):format(r.lo, r.est))
+        end)
+
+        it(
+            "a late light with no cast of ours (a strike) proves the verdict wrong: the refund comes back out, once",
+            function()
+                begin(40)
+                cast(fs.SPENDER_C, 5)
+                for t = 5.3, 6.9, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(38, rage(6.9).est)
+                ctl.ViewerAura(ti, "target") -- the item lights late (decision 122): it did land
+                for t = 7, 7.6, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(1, I.auraVerdict.strikes[k])
+                assert.are.equal(30, rage(7.6).est) -- the post-cast value
+                assert.are.equal(1, I.auraVerdict.back[k])
+                ctl.ViewerClear(ti)
+                for t = 7.8, 10, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(30, rage(10).est)
+                assert.are.equal(1, I.auraVerdict.back[k])
+            end
+        )
+
+        it("our recast's light after the verdict is no strike: the refund stands", function()
+            begin(40)
+            cast(fs.SPENDER_C, 5)
+            for t = 5.3, 6.3, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(38, rage(6.3).est)
+            cast(fs.SPENDER_C, 6.5) -- pressed again: 10 more
+            ctl.ViewerAura(ti, "target")
+            for t = 6.7, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(0, I.auraVerdict.strikes[k])
+            assert.are.equal(28, rage(7.5).est)
+        end)
+
+        -- seals and forms (L727 families) are player auras: the refund is for our missed cast's target aura only
+        local function player(family)
+            h.Class.abilities.spender_a.refundOnAvoid = true
+            h.Class.auras.spender_a.family = family
+            table.insert(ctl.viewer.sets[2], 501)
+            ctl.viewer.infos[501] = family and { spellID = 9000, linkedSpellIDs = { fs.SPENDER_A } }
+                or { spellID = fs.SPENDER_A }
+            local pi = ctl.ViewerItem("BuffIconCooldownViewer", 2, 501)
+            begin(40)
+            ctl.auras.player.HELPFUL[1] = fake.SECRET
+            ctl.Fire("UNIT_AURA", "player")
+            cast(fs.SPENDER_A, 4.6) -- the item proven on our buff up, then dark
+            ctl.ViewerAura(pi, "player")
+            drain(4.8)
+            ctl.ViewerClear(pi)
+            drain(5)
+            return pi, I.auras.bySpell[fs.SPENDER_A]
+        end
+
+        it("a player buff our cast wrote, closed by the verdict (dark from the cast), refunds nothing", function()
+            local _, kp = player(nil)
+            cast(fs.SPENDER_A, 5.2)
+            local spent = rage(5.3).est
+            for t = 5.5, 8, 0.25 do
+                drain(t)
+            end
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 8))
+            assert.is_true(I.auraVerdict.n[kp] >= 1)
+            assert.are.equal(spent, rage(8).est)
+            assert.are.equal(0, I.auraVerdict.refunds[kp])
+        end)
+
+        it("a seal of a family closed by its entry's silence after a light refunds nothing", function()
+            local pi, kp = player("seals")
+            cast(fs.SPENDER_A, 5.2)
+            local spent = rage(5.3).est
+            ctl.ViewerAura(pi, "player")
+            drain(5.4)
+            ctl.ViewerClear(pi)
+            for t = 5.6, 8, 0.2 do
+                drain(t)
+            end
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 8))
+            assert.are.equal(spent, rage(8).est)
+            assert.are.equal(0, I.auraVerdict.refunds[kp])
         end)
 
         it("the Cooldown Manager off (Hekili.cdmOff): no verdict, no refund, the record stands", function()
