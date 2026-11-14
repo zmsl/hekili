@@ -242,18 +242,21 @@ end
 --- (the world's rates: casting while the five-second window our last spend or a paid channel opened is still open, as
 --- the game, wowsims's mana.go:215-237 and the belief keep it with no combat condition; idle after), else the world's
 --- out-of-combat `decay` ({ pt, rate, interval }: stepped, the first quantum at combat's end: already taken when the
---- world's own stop came, else now), else nil (the content's start: combo points go with their target).
-function M.rest(W, e, pt, v, decay, max)
+--- world's own stop came, else now), else nil (the content's start: combo points go with their target). `past`: how far
+--- the instances' clocks ran beyond the world's (a kill's combat end, observer.COMBAT_END): regen covers it too, as the
+--- belief's gap does (next base = its clock + M.GAP).
+function M.rest(W, e, pt, v, decay, max, past)
     local rate = W.regenRate(e, pt, "idle")
     if rate > 0 then
-        local left = 0
+        local gap, left = M.GAP + (past or 0), 0
         if W.fsr[pt] then
             left = math.max(0, (e.spentAt[pt] or -1e9) + 5 - W.t, (e.heldUntil[pt] or 0) - W.t)
-            left = math.min(M.GAP, left)
+            left = math.min(gap, left)
         end
-        return math.min(max, v + W.regenRate(e, pt, "casting") * left + rate * (M.GAP - left))
+        return math.min(max, v + W.regenRate(e, pt, "casting") * left + rate * (gap - left))
     elseif decay and decay.pt == pt then
         local q = math.floor(M.GAP / decay.interval) + (W.combat and 1 or 0)
+        -- shortcut: decay keeps M.GAP, so after a kill it is one second short; widen it to `past` if a decay loop drifts
         return math.max(0, v - q * decay.rate * decay.interval)
     end
     return nil
@@ -918,9 +921,10 @@ function M.run(L, seed, o, drivers)
     end
     run.t = t
     if not R then
-        local c = { power = M.rest(W, us, us.pt, us.power, wo.decay, us.powerMax), res = {} }
+        local past = tEnd - W.t -- the instances' clocks ran to tEnd: the next base is that + M.GAP
+        local c = { power = M.rest(W, us, us.pt, us.power, wo.decay, us.powerMax, past), res = {} }
         for pt, r in pairs(us.res) do
-            c.res[pt] = M.rest(W, us, pt, r.cur, wo.decay, r.max)
+            c.res[pt] = M.rest(W, us, pt, r.cur, wo.decay, r.max, past)
         end
         L.carry = L.carry or {}
         L.carry[drivers[1].H] = c

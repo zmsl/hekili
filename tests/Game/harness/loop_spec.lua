@@ -384,6 +384,28 @@ describe("the headless loop's pools between two fights (loop.rest)", function()
         assert.is_true(math.abs(b.us.power0 - want) < 1e-6, ("start %.3f, want %.3f"):format(b.us.power0, want))
     end)
 
+    it(
+        "rests from the instances' clock after a kill: the combat end's second counts, as the belief's gap does",
+        function()
+            local L = loop.new(stub(3, { level = 60, max = 100, mobHealth = 1e9, power = 100, regen = { [3] = 1 } }))
+            local o = {
+                duration = 20,
+                on = function(run, _, t)
+                    if t >= 3.5 and t < 3.7 then -- dry, then the kill at this tick
+                        local us = run.us
+                        run.W.emit({ kind = "gain", src = us, rage = -us.power })
+                        run.W.emit({ kind = "spell", act = "WOUND", src = us, dst = us.target, amount = 2e9 })
+                    end
+                end,
+            }
+            local a = loop.run(L, 1, o, { { H = L.us } })
+            local b = loop.run(L, 2, { duration = 1 }, { { H = L.us } })
+            assert.are.equal(a.W.t, a.W.killAt) -- the world stopped at the kill's tick
+            -- the instances' clocks ran to the kill + observer.COMBAT_END (1 s) before their gap
+            assert.is_true(math.abs(b.us.power0 - (a.us.power + loop.GAP + 1)) < 1e-6, "start " .. b.us.power0)
+        end
+    )
+
     it("decays a pool by the world's stepped out-of-combat decay through the gap", function()
         local decay = { pt = 1, rate = 1, interval = 1 }
         local L = loop.new(stub(1, { level = 60, max = 100, mobHealth = 1e9, decay = decay }))
