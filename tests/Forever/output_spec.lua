@@ -474,6 +474,19 @@ describe("Engine.Output (headless Arms)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- L842: at the pull the whole list changes at once (time-gated lines open); a hold there showed the pre-pull icon
+    -- one more update.
+    it("steady icons: entering combat shows the next set at once, as after our own cast", function()
+        local acts, acted = 0, H.ns.Output.Acted
+        H.ns.Output.Acted = function()
+            acts = acts + 1
+        end
+        H.Fire("PLAYER_REGEN_DISABLED")
+        H.ns.Output.Acted = acted
+        assert.are.equal(1, acts)
+        assert.are.same({}, H.errors)
+    end)
+
     it("never shows a half-built set: recs and version hold until the swap, then every record is complete", function()
         assert.are.same({}, H.errors)
         local v0, recs0, before = out.version, out.recs, names(2)
