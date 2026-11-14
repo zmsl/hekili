@@ -94,4 +94,20 @@ describe("the rage forecast of a pending swing (GAP AK)", function()
             end
         )
     end
+
+    -- L872 (2) with (3): a pending swing newer than the anchor (the opener's combat-start pseudo swing, the first swing
+    -- landing over half a swing later) is forecast too, so it still holds the first charge: with one charge, the
+    -- pending main-hand swing (0.09 s ago) pays the 5, not the off hand's next swing 0.05 s from now.
+    it("gives a pending swing newer than the anchor the first Reckless charge (L872 (2) + (3))", function()
+        local speed, p = 2.1, st.now - 0.09
+        st.swings.mh_actual, st.swings.mh_pseudo = 0, st.now - 1.3
+        st.swings.mh_speed, st.mainhand_speed, st.swings.mh_pending = speed, speed, p
+        st.swings.oh_actual, st.swings.oh_speed, st.offhand_speed, st.swings.oh_pending = st.now - 2.05, speed, speed, 0
+        st.applyBuff("reckless_swings", 8, 1)
+        local model = st.rage.regenModel
+        local orc = 2 * H.ns.VirtualStateInternal.Log.ORACLE_MIN
+        assert.are.equal(5, model.reckless_mainhand.value(p + orc), "the pending main-hand swing")
+        assert.are.equal(0, model.reckless_offhand.value(st.now + 0.05), "the off hand's next swing")
+        assert.are.equal(0, model.reckless_mainhand.value(p + speed), "the main hand's next swing")
+    end)
 end)

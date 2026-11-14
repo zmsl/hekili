@@ -229,19 +229,30 @@ end
 -- the stack as the reset read it, so the swings count from the reset (state.now); an unpaid pending swing (the reset's
 -- mh_pending / oh_pending, forecast by State.lua's GAP AK branch) still holds its charge (the reaction runs at its row)
 -- and is counted at its own time, before the forecast's own swings. Allocates nothing.
--- shortcut: the pending test repeats State.lua forecastResources' (`l > p - i / 2`), and a pending event is told from
--- the grid swings by its time off the hand's grid (GRID); upgrade if the core passes the event's kind to `value`.
+-- shortcut: the pending tests repeat State.lua forecastResources' GAP AK branches (`l > p - i / 2`, and L872 (2)'s
+-- `p > l`), and a pending event is told from the grid swings by its time off the hand's grid (GRID); upgrade if the core
+-- passes the event's kind to `value`.
 local GRID = 0.005 -- the forecast rounds each swing step to 1 ms (State.lua's roundDown)
 
--- Hand h's pending swing time (0: none) at speed i, as the forecast's GAP AK test accepts it.
-local function pendingSwing(h, i)
-    local p = h == 1 and state.swings.mh_pending or state.swings.oh_pending
-    local anchor = h == 1 and state.swings.mainhand or state.swings.offhand
-    if not p or p <= 0 or anchor <= 0 then
-        return 0
+-- Hand h's forecast swings: its speed, its grid's origin (0: none) and its pending swing's time (0: none), as
+-- forecastResources places them: GAP AK's pending swing keeps the anchor's grid; one newer than the anchor (L872 (2):
+-- the opener's combat-start pseudo swing) is the origin of the swings after it.
+local function hand(h)
+    local s = h == 1 and state.mainhand_speed or state.offhand_speed
+    local a = h == 1 and state.swings.mainhand or state.swings.offhand
+    if s <= 0 or a <= 0 then
+        return s, 0, 0
     end
-    local l = anchor + floor((state.query_time - anchor) / i) * i
-    return l > p - i / 2 and p or 0
+    local p = (h == 1 and state.swings.mh_pending or state.swings.oh_pending) or 0
+    if p > 0 then
+        local l = a + floor((state.query_time - a) / s) * s
+        if l > p - s / 2 then
+            return s, a, p
+        elseif p > l then
+            return s, p, p
+        end
+    end
+    return s, a, 0
 end
 
 -- The Reckless Swings rage of hand `own`'s forecast swing at `now` (nil: CombinedResourceRegen's rate read, 0).
@@ -250,16 +261,13 @@ local function recklessRage(own, now)
     if not now or stack <= 0 then
         return 0
     end
-    local i = own == 1 and state.mainhand_speed or state.offhand_speed
-    local anchor = own == 1 and state.swings.mainhand or state.swings.offhand
-    local pOwn = i > 0 and pendingSwing(own, i) or 0
-    local x = i > 0 and (now - anchor) / i or 0
+    local i, g, pOwn = hand(own)
+    local x = i > 0 and (now - g) / i or 0
     local isPending = pOwn > 0 and math.abs(x - floor(x + 0.5)) * i > GRID
     local before = 0
     for h = 1, 2 do
-        local s = h == 1 and state.mainhand_speed or state.offhand_speed
+        local s, a, p = hand(h)
         if s > 0 then
-            local p = pendingSwing(h, s)
             if isPending then -- the pending swing: only an older pending one is before it (main first at a tie)
                 if h ~= own and p > 0 and (p < pOwn or (p == pOwn and h == 1)) then
                     before = before + 1
@@ -268,7 +276,6 @@ local function recklessRage(own, now)
                 if p > 0 then
                     before = before + 1
                 end
-                local a = h == 1 and state.swings.mainhand or state.swings.offhand
                 if a > 0 then -- the grid swings in (state.now, now): k from the first after the reset to the last before now
                     local k0 = floor((state.now - a) / s) + 1
                     local k1 = floor((now - a - GRID) / s)
