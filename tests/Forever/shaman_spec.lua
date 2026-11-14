@@ -59,7 +59,6 @@ local KIT = {
     chain_heal = { { 1064, 10622, 10623 }, 405, 0, "spell" },
     riptide = { { 408521, 1239242, 1239243 }, 230, 12, "spell" },
     ghost_wolf = { { 2645, 415233, 1238640 }, 100, 0, "spell" },
-    purge = { { 370, 8012 }, 0.1, 0, "spell" },
     cure_poison = { { 526 }, 0.09, 0, "spell" },
     cure_disease = { { 2870 }, 0.09, 0, "spell" },
     totemic_call = { { 437009 }, 0.25, 30, "spell" },
@@ -151,7 +150,7 @@ describe("Forever Shaman", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(46, n)
+        assert.are.equal(45, n)
         assert.are.equal("SHAMAN", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.elemental_mastery.toggle)

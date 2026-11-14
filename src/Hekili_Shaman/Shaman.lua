@@ -109,7 +109,6 @@ local CHAIN_HEAL_COST = { 260, 315, 405 }
 local RIPTIDE = { 408521, 1239242, 1239243 }
 local RIPTIDE_COST = { 150, 180, 230 }
 local GHOST_WOLF = { 2645, 415233, 1238640 }
-local PURGE = { 370, 8012 }
 local CURE_POISON = { 526 }
 local CURE_DISEASE = { 2870 }
 local TOTEMIC_CALL = { 437009 }
@@ -1001,20 +1000,6 @@ spec:RegisterAbilities({
         handler = function()
             removeBuff("natures_swiftness")
         end,
-    },
-
-    purge = {
-        id = 370,
-        copy = rest(PURGE),
-        cast = 0,
-        cooldown = 0,
-        gcd = "spell",
-
-        spend = 0.1,
-        spendType = "mana",
-
-        startsCombat = true,
-        known = knows(PURGE),
     },
 
     cure_poison = {

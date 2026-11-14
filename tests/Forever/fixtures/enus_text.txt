@@ -6689,39 +6689,6 @@ options.abilities.pummel.toggle	values.interrupts	Interrupts
 options.abilities.pummel.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.pummel.toggle	values.none	None
 options.abilities.pummel.toggle	values.potions	Potions
-options.abilities.purge	name	Spell 370
-options.abilities.purge.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 370 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 370 can be recommended in any type of fight.
-options.abilities.purge.boss	name	Boss Encounter Only
-options.abilities.purge.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 370 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
-options.abilities.purge.clash	name	Clash
-options.abilities.purge.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 370.
-options.abilities.purge.disabled	name	Disable |T136000:0|t Spell 370
-options.abilities.purge.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
-options.abilities.purge.dotCap	name	Maximum Applications
-options.abilities.purge.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
-options.abilities.purge.hasIcon	name	Icon Replacement
-options.abilities.purge.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
-options.abilities.purge.keybind	name	Override Keybind Text
-options.abilities.purge.lineBreak1	name	\032
-options.abilities.purge.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
-options.abilities.purge.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
-options.abilities.purge.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
-options.abilities.purge.noIcon	name	Icon Replacement
-options.abilities.purge.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 370 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
-options.abilities.purge.targetMax	name	Maximum Targets
-options.abilities.purge.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 370 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
-options.abilities.purge.targetMin	name	Minimum Targets
-options.abilities.purge.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
-options.abilities.purge.toggle	name	Require Toggle
-options.abilities.purge.toggle	values.cooldowns	Cooldowns
-options.abilities.purge.toggle	values.custom1	Custom 1
-options.abilities.purge.toggle	values.custom2	Custom 2
-options.abilities.purge.toggle	values.default	Default |cffffd100(none)|r
-options.abilities.purge.toggle	values.defensives	Defensives
-options.abilities.purge.toggle	values.interrupts	Interrupts
-options.abilities.purge.toggle	values.minor_cooldowns	Minor CDs
-options.abilities.purge.toggle	values.none	None
-options.abilities.purge.toggle	values.potions	Potions
 options.abilities.pyroblast	name	Spell 11366
 options.abilities.pyroblast.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 11366 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 11366 can be recommended in any type of fight.
 options.abilities.pyroblast.boss	name	Boss Encounter Only
@@ -20474,7 +20441,6 @@ options.packs.elemental.Elemental (wowsims.com).lists.action	values.open_window	
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.poison_cleansing_totem	|T136000:0|t Spell 8166
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
-options.packs.elemental.Elemental (wowsims.com).lists.action	values.purge	|T136000:0|t Spell 370
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.riptide	|T136000:0|t Spell 408521
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.rockbiter_weapon	|T136000:0|t Spell 8017
@@ -20559,7 +20525,6 @@ options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.open_wi
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.poison_cleansing_totem	|T136000:0|t Spell 8166
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
-options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.purge	|T136000:0|t Spell 370
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.riptide	|T136000:0|t Spell 408521
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.rockbiter_weapon	|T136000:0|t Spell 8017
@@ -20825,7 +20790,6 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.open_win
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.poison_cleansing_totem	|T136000:0|t Spell 8166
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.purge	|T136000:0|t Spell 370
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.riptide	|T136000:0|t Spell 408521
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.rockbiter_weapon	|T136000:0|t Spell 8017
@@ -20910,7 +20874,6 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.ope
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.poison_cleansing_totem	|T136000:0|t Spell 8166
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
-options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.purge	|T136000:0|t Spell 370
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.riptide	|T136000:0|t Spell 408521
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.rockbiter_weapon	|T136000:0|t Spell 8017
