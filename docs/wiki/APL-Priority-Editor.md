@@ -25,7 +25,7 @@ The **Priorities** page itself has **Create a New Priority**, with **Priority Na
 
 ## Every field
 
-The table below lists every field, shown for the Warrior's Arms priority: list names such as `cd_racials`, the action counts and the **Specialization** choices are that priority's. The **Action Lists** fields shown depend on the entry's action, and the Shown column marks those that appear only in some cases: for example **Variable Name** appears only on a `variable` line. **Stress Test Results** has no description: it shows the automatic stress test's result and the warnings about this priority, made when the export string is built. The field that pools for the next entry is shown as "Pool for Next Entry" followed by the next line's ability.
+The table below lists every field, shown for the Warrior's Arms priority: list names such as `cd_racials`, the action counts and the **Specialization** choices are that priority's. The Shown column is taken with the first line of the Arms `default` list selected, a `call_action_list` line, so the second **Action List** field (the list that line names) reads Yes; it shows only on a `call_action_list` or `run_action_list` line. The **Action Lists** fields shown depend on the entry's action, and the Shown column marks those that appear only in some cases: for example **Variable Name** appears only on a `variable` line. **Stress Test Results** has no description: it shows the automatic stress test's result and the warnings about this priority, made when the export string is built. The field that pools for the next entry is shown as "Pool for Next Entry" followed by the next line's ability.
 
 <!-- GENERATED:options-editor -->
 <!-- /GENERATED -->

@@ -24,7 +24,7 @@ Every page is exactly one type, named in the comment at the top of its file.
 | Lead first | The text before the first level-two heading is the lead, with no "Introduction" heading. One to three short paragraphs. |
 | Subject in bold, once | On explanation and reference pages, the first sentence bolds the page's subject. |
 | Neutral tone | No "powerful", "simply", "just", "easy" or "perfect". Say what a thing does. |
-| Date changeable facts | Write "As of v0.8.1, the game hides ...", never "currently" or "recently". |
+| Date changeable facts | State the fact plainly ("the game hides ..."), never "currently" or "recently"; the footer carries the version. |
 | Link the first mention | Link another page at its first mention only, plus See also. |
 | Define jargon on first use | For example: "An action priority list (APL), the text form of a priority". Developer pages define belief, band and facade, or link the [Glossary](Glossary). |
 | See also | Lists only pages not already linked in the body, each with a few words when the name is not clear. |

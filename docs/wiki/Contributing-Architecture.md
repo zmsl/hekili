@@ -44,7 +44,7 @@ On each update the engine copies the belief into its simulated state, walks the 
 
 ### Content addons
 
-`Hekili_Shared` holds what every class uses, such as racials, consumables and items. Each `Hekili_<Class>` addon is a class pack: one class file with the class's abilities, auras, talents and settings, and its generated priorities. A pack calls `Hekili:NewClass`, `Hekili:NewShared` or `Hekili:NewRace` and the `Register*` calls on the object they return, and nothing else of the core ([Pack overview](Pack-Overview)).
+`Hekili_Shared` holds what every class uses, such as racials, consumables and items. Each `Hekili_<Class>` addon is a class pack: one class file with the class's abilities, auras, talents and settings, and its generated priorities. A class pack calls `Hekili:NewClass`, `Hekili:NewShared` or `Hekili:NewRace` and the `Register*` calls on the object they return, and nothing else of the core ([Pack overview](Pack-Overview)).
 
 ## The hard rules
 

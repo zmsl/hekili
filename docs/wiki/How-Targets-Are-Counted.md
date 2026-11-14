@@ -24,14 +24,14 @@ A rising count is used at once. A falling count is held for a moment, so that th
 
 ### In dungeons and raids
 
-In dungeons and raids, the game hides which enemy each nameplate belongs to. As of v0.8.1, Hekili Forever still counts the nameplates there, and tells the enemies apart by their nameplates. With enemy nameplates or **Count Nameplates Near You** off, it counts one enemy.
+In dungeons and raids, the game hides which enemy each nameplate belongs to. Hekili Forever counts the nameplates there, and tells the enemies apart by their nameplates. With enemy nameplates or **Count Nameplates Near You** off, it counts one enemy.
 
 ## Damaged enemies
 
 With **Count Damaged Enemies** checked, an enemy the player has damaged counts for several seconds afterwards (**Timeout**). Its options can include enemies damaged by the player's pets and enemies carrying the player's damage-over-time effects, and leave out enemies with no nameplate on screen.
 
 > [!NOTE]
-> **On Forever:** As of v0.8.1, the game does not report the hits the player lands on other enemies, so **Count Damaged Enemies** finds fewer targets than it did in retail Hekili. Counting nameplates is the more reliable method.
+> **On Forever:** The game does not report the hits the player lands on other enemies, so **Count Damaged Enemies** finds fewer targets than it did in retail Hekili. Counting nameplates is the more reliable method.
 
 ## Target swaps
 

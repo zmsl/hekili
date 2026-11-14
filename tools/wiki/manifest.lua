@@ -6,8 +6,8 @@
 -- cell, the note under the table that says what it means. A name a page uses that is not here is an error.
 local OPTION_COLUMNS = { "section", "label", "type", "shown", "default", "range", "description" }
 local OPTION_HEADERS = { "Section", "Option", "Type", "Shown by default", "Default", "Values", "Description" }
-local SHOWN_NOTE = "Shown by default: Yes means the option shows with the default settings; it can still hide when "
-    .. "another setting changes. In some cases means it is hidden with the default settings and appears only in some "
+local SHOWN_NOTE = "Shown by default: Yes means the option shows when this tab is open with its default settings; it can "
+    .. "still hide when another setting changes. In some cases means it is hidden then and appears only in some "
     .. "cases, for example while another option is on, for a class with a pet, for one kind of entry, or with "
     .. "Advanced checked."
 local OPTION_NOTE = "n/a: no fixed default (a keybind not set, or a value that follows the game or another option), "
@@ -33,6 +33,7 @@ local function display(path)
     return {
         collector = "options",
         path = { "displays", "Primary", path },
+        exclude = path == "main" and { "enabled" } or nil, -- hidden for every display, so it never shows
         columns = OPTION_COLUMNS,
         headers = OPTION_HEADERS,
         note = OPTION_NOTE,
@@ -81,6 +82,8 @@ return {
         exclude = { "<pack>", "cycleGroup" }, -- the priority editor: options-editor; Filter by Time-to-Die, always hidden
         noSettings = true, -- the class settings: spec-settings
         perSpec = { "package", "potion" },
+        perSpecDefault = { "nameplateRange" }, -- the default is per specialization (Setting-Up-Target-Counting)
+        noDefault = { "nameplateShowEnemies", "nameplateShowAll" }, -- they follow the game's nameplate settings
         columns = OPTION_COLUMNS,
         headers = OPTION_HEADERS,
         note = OPTION_NOTE,

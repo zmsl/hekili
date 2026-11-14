@@ -27,7 +27,7 @@ Notes on the table:
 
 - **Count Targets Near Your Pet** appears only for classes that have a pet ability it can use.
 - **Filter by Time-to-Die** is not listed: it is always hidden on Forever, because the game hides target health, so the time until an enemy dies is unknown.
-- The **Nameplate Detection** options appear only while **Count Nameplates Near You** is checked, and **Enemy Range Radius** only once **Show Enemy Nameplates** and **Show All Nameplates** are both on.
+- The **Nameplate Detection** options appear only while **Count Nameplates Near You** is checked, and **Enemy Range Radius** only once **Show Enemy Nameplates** and **Show All Nameplates** are both on. Those two settings follow the game's own nameplate settings and disappear once both are on, so they have no default here. The default of **Enemy Range Radius** is set per specialization: [Default radius by specialization](Setting-Up-Target-Counting#default-radius-by-specialization) lists it.
 - A specialization with no priorities on Forever shows a notice in place of these options.
 
 Each priority of the specialization has its own page below these tabs, with its summary, its source, its action lists and its export string. The [APL priority editor](APL-Priority-Editor) page describes them.

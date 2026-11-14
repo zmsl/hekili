@@ -62,7 +62,7 @@ The AOE minimum is **Minimum Targets for Dedicated AOE Recommendations**, on eac
 
 ## The minimap menu
 
-A left click on the Hekili Forever minimap button, or on its entry in the game's addon compartment, opens a menu of quick changes: "Enable", **Pause**, the **Display Mode**, each toggle under **Toggles**, and, for the current specialization, Recommend Target Swaps, the preferred potion and the class's own on/off and choice settings. A right click opens the options window. Hovering over the button shows the display mode and whether **Major Cooldowns**, **Interrupts** and either **Minor Cooldowns** or **Defensives** are on. **/hekili > General > Hide Minimap Icon** hides the button; the addon compartment entry stays.
+A left click on the Hekili Forever minimap button, or on its entry in the game's addon compartment, opens a menu of quick changes: "Enable", **Pause**, the **Display Mode**, the toggles Cooldowns, Minor CDs, Interrupts, Defensives, Potions and Movement, and, for the current specialization, Recommend Target Swaps, the preferred potion and the class's own on/off and choice settings. A right click opens the options window. Hovering over the button shows the display mode and whether **Major Cooldowns**, **Interrupts** and either **Minor Cooldowns** or **Defensives** are on. **/hekili > General > Hide Minimap Icon** hides the button; the addon compartment entry stays.
 
 ## See also
 

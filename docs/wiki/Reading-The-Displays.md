@@ -11,7 +11,7 @@ The **displays** are the on-screen frames where Hekili Forever shows its recomme
 | Display | What it shows |
 |---|---|
 | **Primary** | The main recommendations. Its first icon is the ability to press now. |
-| **AOE** | Recommendations planned for two or more enemies. It shows only in the Dual and Reactive Dual display modes ([Toggles](Toggles#display-modes)). |
+| **AOE** | Recommendations planned for at least the AOE minimum of enemies (2 by default). It shows only in the Dual and Reactive Dual display modes ([Toggles](Toggles#display-modes)). |
 | **Cooldowns** | Abilities that need the **Major Cooldowns** toggle, when that toggle is set to show them separately. |
 | **Interrupts** | Interrupts, when the **Interrupts** toggle is set to show them separately. |
 | **Defensives** | Defensive abilities, when the **Defensives** toggle is set to show them separately. |

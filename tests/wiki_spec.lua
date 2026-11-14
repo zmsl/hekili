@@ -373,12 +373,36 @@ describe("the options collector", function()
         end
     )
 
+    it(
+        "drops the never-shown display Enabled row, keeps the radius slider's range, and starts at a hidden node",
+        function()
+            for _, r in ipairs(options.rows(manifest["options-display-icons"])) do
+                assert.is_false(r.section == "Icons" and r.label == "Enabled", "the display Enabled row never shows")
+            end
+            local spec = byLabel(options.rows(manifest["options-spec"]))
+            assert.are.equal("Set per specialization", spec["Enemy Range Radius"].default)
+            assert.are.equal("0 to 100, step 1", spec["Enemy Range Radius"].range)
+            assert.is_nil(spec["Show Enemy Nameplates"].default)
+            for _, r in ipairs(options.rows(manifest["options-display-timeline"])) do
+                assert.are.equal("In some cases", r.shown, r.section .. " > " .. r.label) -- the tab is hidden by default
+            end
+        end
+    )
+
+    it("keeps a colour's alpha when it is not 1", function()
+        local found
+        for _, r in ipairs(options.rows(manifest["options-display-timeline"])) do
+            found = found or (r.type == "colour" and tostring(r.default):find(" at %d+%%$"))
+        end
+        assert.truthy(found)
+    end)
+
     it("prints a colour default as hex", function()
         local n = 0
         for _, r in ipairs(options.rows(manifest["options-display-classic"])) do
             if r.type == "colour" then
                 n = n + 1
-                assert.truthy(tostring(r.default):match("^#%x%x%x%x%x%x$"), r.section .. " > " .. r.label)
+                assert.truthy(tostring(r.default):match("^#%x%x%x%x%x%x"), r.section .. " > " .. r.label)
             end
         end
         assert.is_true(n > 0)

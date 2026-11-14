@@ -42,6 +42,7 @@ actions+=/shifting_power,if=((!action.cat_form.known|buff.cat_form.up)&energy.lo
 
 - The importer splits a line's options only at commas outside parentheses, so a condition such as `min(a,b)` or `max(a,b)` imports whole.
 - The importer keeps a line to its end, including any `^` or `$`.
+- A line with an opening `(` that is never closed (for example `label=(burst`) is split at every comma, and the **Import Log** names the line: "Unclosed '(' ... split at every comma". Check the `if=` condition of such a line.
 - A priority source accepts only the options `tools/make_pack.lua` knows, and stops the build on any other.
 
 ## Operators and precedence

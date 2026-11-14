@@ -32,12 +32,16 @@ local function call(v, info)
 end
 
 -- A colour getter's answer ((r, g, b) or {r, g, b}) as "#RRGGBB", or nil.
-local function hex(a, b, c)
+local function hex(a, b, c, d)
     if type(a) == "table" then
-        a, b, c = a[1] or a.r, a[2] or a.g, a[3] or a.b
+        a, b, c, d = a[1] or a.r, a[2] or a.g, a[3] or a.b, a[4] or a.a
     end
     if type(a) == "number" and type(b) == "number" and type(c) == "number" then
-        return ("#%02X%02X%02X"):format(a * 255 + 0.5, b * 255 + 0.5, c * 255 + 0.5)
+        local out = ("#%02X%02X%02X"):format(a * 255 + 0.5, b * 255 + 0.5, c * 255 + 0.5)
+        if type(d) == "number" and d ~= 1 then -- an alpha other than 1 is part of the default
+            out = out .. " at " .. text.num(d * 100, 1) .. "%"
+        end
+        return out
     end
 end
 
@@ -45,19 +49,19 @@ end
 local function current(node, info, inherited)
     local get = node.get or inherited.get
     local handler = node.handler or inherited.handler
-    local ok, a, b, c
+    local ok, a, b, c, d
     if type(get) == "string" then
         if not handler or type(handler[get]) ~= "function" then
             return nil
         end
-        ok, a, b, c = pcall(handler[get], handler, info)
+        ok, a, b, c, d = pcall(handler[get], handler, info)
     elseif type(get) == "function" then
-        ok, a, b, c = pcall(get, info)
+        ok, a, b, c, d = pcall(get, info)
     end
     if not ok then
         return nil
     elseif node.type == "color" then
-        return hex(a, b, c)
+        return hex(a, b, c, d)
     elseif node.type == "toggle" and a == nil and not node.tristate then
         return false -- AceConfig draws a toggle whose getter answers nil unchecked
     end
@@ -199,14 +203,23 @@ local function walk(node, info, inherited, section, rows, o, depth, sometimes)
             elseif not SKIP_TYPES[child.type] and label ~= "" then
                 local desc = call(child.desc, ci)
                 local perSpec = o.perSpec[key]
+                local default, values
+                if perSpec then
+                    default = "Set per specialization"
+                    values = perSpec == "default" and range(child, ci) or "The specialization's own"
+                elseif not o.noDefault[key] then
+                    default, values = shown(child, ci, current(child, ci, inh)), range(child, ci)
+                else
+                    values = range(child, ci)
+                end
                 rows[#rows + 1] = {
                     key = key,
                     section = section,
                     label = label,
                     type = TYPE_NAMES[child.type] or child.type,
                     shown = cond and "In some cases" or "Yes",
-                    default = perSpec and "Set per specialization" or shown(child, ci, current(child, ci, inh)),
-                    range = perSpec and "The specialization's own" or range(child, ci),
+                    default = default,
+                    range = values,
                     description = desc and (o.rename and o.rename(text.sentence(desc)) or text.sentence(desc)) or nil,
                 }
             end
@@ -251,7 +264,15 @@ function M.rows(def)
     for _, k in ipairs(def.perSpec or {}) do
         perSpec[k] = true
     end
+    for _, k in ipairs(def.perSpecDefault or {}) do
+        perSpec[k] = "default" -- the default differs per spec; the range is the same for all
+    end
+    local noDefault = {}
+    for _, k in ipairs(def.noDefault or {}) do
+        noDefault[k] = true -- a setting that follows the game's own: no default
+    end
     local o = {
+        noDefault = noDefault,
         root = root,
         exclude = exclude,
         perSpec = perSpec, -- keys whose default and values differ per spec: not one spec's
@@ -261,7 +282,7 @@ function M.rows(def)
         end,
     }
     local rows = {}
-    walk(node, info, inherited, "", rows, o, 1)
+    walk(node, info, inherited, "", rows, o, 1, call(node.hidden, info)) -- a node hidden at the boot: every row below shows only in some cases
     local top = text.strip(call(node.name, info)) -- an option straight under the node: its section is the node
     for _, r in ipairs(rows) do
         if r.section == "" then

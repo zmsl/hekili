@@ -14,7 +14,6 @@ The Forever client is a modern game client that hides many combat values from ad
 | Read directly | Combo points, ability usability, cooldown ready or not, shapeshift form, melee swings, nameplates |
 | Estimated | Energy, rage, mana, cooldown times, buff and debuff times |
 | Not available | Target health, hits landed on a target |
-| As of | Hekili Forever v0.8.1 |
 
 ## What the game reports
 
