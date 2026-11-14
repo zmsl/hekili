@@ -52,6 +52,17 @@ local KIT = {
     earthbind_totem = { { 2484 }, 91, 15, "totem" },
     stoneclaw_totem = { { 5730, 6390, 6391, 6392, 10427, 10428 }, 140, 30, "totem" },
     grounding_totem = { { 8177 }, 91, 15, "totem" },
+    -- the manual-press kit (wowsims pin spells_auto_gen.go); a percent cost is the fraction
+    frost_shock = { { 8056, 8058, 10472, 10473 }, 430, 6, "spell" },
+    healing_wave = { { 331, 332, 547, 913, 939, 959, 8005, 10395, 10396, 25357 }, 620, 0, "spell" },
+    lesser_healing_wave = { { 8004, 8008, 8010, 10466, 10467, 10468 }, 380, 0, "spell" },
+    chain_heal = { { 1064, 10622, 10623 }, 405, 0, "spell" },
+    riptide = { { 408521, 1239242, 1239243 }, 230, 12, "spell" },
+    ghost_wolf = { { 2645, 415233, 1238640 }, 100, 0, "spell" },
+    purge = { { 370, 8012 }, 0.1, 0, "spell" },
+    cure_poison = { { 526 }, 0.09, 0, "spell" },
+    cure_disease = { { 2870 }, 0.09, 0, "spell" },
+    totemic_call = { { 437009 }, 0.25, 30, "spell" },
 }
 
 -- Each totem's element and its ranks' durations (DB2 duration_ms).
@@ -140,7 +151,7 @@ describe("Forever Shaman", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(36, n)
+        assert.are.equal(46, n)
         assert.are.equal("SHAMAN", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.elemental_mastery.toggle)
@@ -186,7 +197,7 @@ describe("Forever Shaman", function()
         local ms = r.models.mana_spring
         assert.are.equal("mana_spring", ms.aura)
         assert.are.same(
-            { 10494, { "mana_spring_totem", 5677, 10491, 10493 } },
+            { 10494, { "mana_spring_totem", 5677, 10491, 10493, 5678, 5675, 10495, 10496, 10497 } },
             { w.auras.mana_spring.id, w.auras.mana_spring.copy }
         )
         for _, id in ipairs({ 5675, 10495, 10496 }) do
@@ -209,6 +220,12 @@ describe("Forever Shaman", function()
             for _, l in ipairs(lower) do
                 copy[#copy + 1] = l
             end
+            if key == "mana_spring" then
+                copy[#copy + 1] = 5678 -- the Cooldown Manager's rank 1 link
+            end
+            for _, l in ipairs(KIT[key .. "_totem"][1]) do -- the totem's own spell ids (the CDM entry links both)
+                copy[#copy + 1] = l
+            end
             local a = w.auras[key]
             assert.are.same({ id, copy, duration, 1 }, { a.id, a.copy, a.duration, a.max_stack }, key)
         end
@@ -219,13 +236,14 @@ describe("Forever Shaman", function()
             "sentry",
             "earthbind",
             "stoneclaw",
-            "grounding",
             "searing",
             "magma",
         }) do
             assert.is_nil(w.auras[key], key)
             assert.is_nil(w.auras[key .. "_totem"], key)
         end
+        -- Grounding's passive (8178/8179) is registered for the Cooldown Manager's entry only: no summon applies it
+        assert.is_nil(w.auras.grounding_totem)
     end)
 
     it("registers each totem with its element and durations, and its summon fills that slot for its rank's", function()
@@ -331,15 +349,16 @@ describe("Forever Shaman", function()
 
     it("makes Clearcasting a charged -100% on the elemental spells", function()
         assert.are.same({
-            { aura = "clearcasting", pct = -1, charges = 1, spells = { 403, 421, 8042, 8050, 408341 } },
+            { aura = "clearcasting", pct = -1, charges = 1, spells = { 403, 421, 8042, 8050, 408341, 8056 } },
         }, w.costMods)
         assert.are.same({ 16246, 15 }, { w.auras.clearcasting.id, w.auras.clearcasting.duration })
     end)
 
     it("shares the shocks' 6 s cooldown; Flame Shock leaves its DoT", function()
         for _, case in ipairs({
-            { "earth_shock", "flame_shock", {} },
-            { "flame_shock", "earth_shock", { "flame_shock" } },
+            { "earth_shock", { "flame_shock", "frost_shock" }, {} },
+            { "flame_shock", { "earth_shock", "frost_shock" }, { "flame_shock" } },
+            { "frost_shock", { "earth_shock", "flame_shock" }, { "frost_shock" } },
         }) do
             for _, field in ipairs({ "now", "handler" }) do
                 local e = ld.env(w)
@@ -348,7 +367,11 @@ describe("Forever Shaman", function()
                     cds[#cds + 1] = { k, v }
                 end
                 ld.run(w.abilities[case[1]][field], e)
-                assert.are.same({ { { case[2], 6 } }, case[3] }, { cds, e.applied }, case[1] .. " " .. field)
+                assert.are.same(
+                    { { { case[2][1], 6 }, { case[2][2], 6 } }, case[3] },
+                    { cds, e.applied },
+                    case[1] .. " " .. field
+                )
             end
         end
         local e = ld.env(w)
@@ -667,7 +690,7 @@ describe("Forever Shaman", function()
             cds[#cds + 1] = { k, v }
         end
         ld.run(w.abilities.earth_shock.handler, e)
-        assert.are.same({ { "flame_shock", 5 } }, cds)
+        assert.are.same({ { "flame_shock", 5 }, { "frost_shock", 5 } }, cds)
     end)
 
     -- Shamanistic Focus (1223030, aura 108 misc 14, -45% on mask 0x90100400: the shocks and Lightning Shield); wowsims's
@@ -1146,5 +1169,45 @@ describe("Forever Shaman through the engine", function()
         assert.is_not_nil(VS.Aura("target", id, t + 2)) -- Chain Lightning right after the bolt still sees it
         assert.is_nil(VS.Aura("target", id, t + 4))
         assert.are.same({}, H.errors)
+    end)
+end)
+
+describe("Forever Shaman manual-press kit", function()
+    local w
+
+    before_each(function()
+        w = ld.load(nil, FILE, "SHAMAN")
+    end)
+
+    local function ranks(t)
+        return setmetatable(t, {
+            __index = function()
+                return { rank = 0, enabled = false }
+            end,
+        })
+    end
+
+    it("cuts the healing spells by Improved Healing Wave, Tidal Focus and Nature's Swiftness", function()
+        local e = ld.env(w)
+        w.game.known[25357], w.game.known[10468], w.game.known[10623], w.game.known[1239243] = true, true, true, true
+        e.talent = ranks({ improved_healing_wave = { rank = 5 }, tidal_focus = { rank = 5 } })
+        assert.is_near(2.5, ld.run(w.abilities.healing_wave.cast, e), 1e-9)
+        assert.is_near(620 * 0.95, ld.run(w.abilities.healing_wave.spend, e), 1e-9)
+        assert.is_near(380 * 0.95, ld.run(w.abilities.lesser_healing_wave.spend, e), 1e-9)
+        assert.is_near(405 * 0.95, ld.run(w.abilities.chain_heal.spend, e), 1e-9)
+        assert.is_near(230 * 0.95, ld.run(w.abilities.riptide.spend, e), 1e-9)
+        e.talent = ranks({ improved_ghost_wolf = { rank = 2 } })
+        assert.are.equal(0, ld.run(w.abilities.ghost_wolf.cast, e))
+        e.talent = ranks({})
+        assert.are.equal(3, ld.run(w.abilities.ghost_wolf.cast, e))
+    end)
+
+    it("prices totems by Totemic Focus and Grounding Totem's cooldown by Guardian Totems", function()
+        local e = ld.env(w)
+        w.game.known[10497] = true
+        e.talent = ranks({ totemic_focus = { rank = 5 }, guardian_totems = { rank = 2 } })
+        assert.is_near(100 * 0.75, ld.run(w.abilities.mana_spring_totem.spend, e), 1e-9)
+        assert.are.equal(13, ld.run(w.abilities.grounding_totem.cooldown, e))
+        assert.are.equal(30, ld.run(w.abilities.stoneclaw_totem.cooldown, e))
     end)
 end)
