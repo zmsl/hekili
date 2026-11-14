@@ -670,7 +670,7 @@ function M.new(text, H, o)
                 setfenv(sh, H.Hekili.State)
                 local ok, v = pcall(sh)
                 setfenv(sh, env)
-                sh = ok and tonumber(v) or nil
+                sh = assert(ok and tonumber(v), "replay: a casting share's function raised or answered no number")
             end
             if a and a.id and sh then
                 shares[a.id] = sh
