@@ -848,6 +848,22 @@ describe("Forever Rogue combo points on the current target (L90)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- L103: a generator on B at A's count moves the points with no power event; COMBO_TARGET_CHANGED forces the
+    -- update (the belief's re-read: tests/Game/State/combo_target_spec.lua)
+    it("forces an update at once on COMBO_TARGET_CHANGED", function()
+        assert.are.equal(0, at(1, 0, "Creature-B"))
+        H.ctl.comboPoints.target = 1
+        local f = H.ns.EngineFrame
+        f.criticalUpdate = false
+        H.Fire("COMBO_TARGET_CHANGED")
+        assert.is_true(f.criticalUpdate)
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        S.reset("Primary", true)
+        assert.are.equal(1, S.combo_points.current)
+        assert.are.same({}, H.errors)
+    end)
+
     it("reads 0 with no target and on a secret answer", function()
         assert.are.equal(0, at(3, false))
         assert.are.equal(0, at(3, require("Game.State.helpers.fake_api").SECRET))
