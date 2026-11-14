@@ -197,13 +197,16 @@ local KNOWN_MISSING = {
             { "evocation", "arcane" },
             { "fire_blast", "fire" },
             { "fireball", "fire" },
+            { "frost_armor", "frost" },
             { "frost_nova", "frost" },
             { "frostbolt", "frost" },
             { "frostfire_bolt", "fire" },
             { "frostfire_bolt", "frost" },
+            { "ice_armor", "frost" },
             { "ice_barrier", "frost" },
             { "ice_block", "frost" },
             { "ice_lance", "frost" },
+            { "mage_armor", "arcane" },
             { "pyroblast", "fire" },
             { "scorch", "fire" }
         )

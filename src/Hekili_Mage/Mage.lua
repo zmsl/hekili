@@ -217,17 +217,22 @@ end
 
 -- Arcane Meditation (18462): 17/33/50% of the spirit regen while casting by rank (wowsims's curve, e5a9cd2a2d).
 local ARCANE_MEDITATION = { 0.17, 0.33, 0.5 }
+-- Mage Armor's spirit regen while casting: 50% on every rank (the pin's and the DB2's aura 134 on 6117, 22782, 22783;
+-- the Arcane log's casting rate equals its outside one at Arcane Meditation 3/3). Ice and Frost Armor: none.
+local MAGE_ARMOR_SHARE = 0.5
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
 -- the in-combat calibration replace, as wowsims's logs measure them at 60 (the P1 gear, 29.13 a second outside the
 -- rule in every build): Arcane all of it while casting (Arcane Meditation 3/3's 50% + Mage Armor 50%: share 1), so
 -- spirit 0 and mp5 29.13; Fire and Frostfire half (Mage Armor's 50%: share 0.5), 14.57 / 14.56 (the logs' Tag 2 /
--- Tag 1). The share follows Arcane Meditation's rank (the belief reads it after its talent walk), the seeds the spec's
--- build (gear and its talents; the out-of-combat read replaces them).
+-- Tag 1); the seeds the spec's build (gear and its talents; the out-of-combat read replaces them).
 -- Forever's Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76). UNMEASURED in game.
--- shortcut: Mage Armor assumed up, as every wowsims export pre-buffs it (30 min): its aura is registered (below) but the
--- static share does not read it: a Mage in Ice Armor still has its Evocation counted double (gaps.md BX). Upgrade with
--- a share entry on the aura when such a build matters.
+-- The static share (L961/L963): the armor believed up (Mage Armor's 50%) + Arcane Meditation's rank. The out-of-combat
+-- regen pair is the game's own (casting M + cS, the rest (1 - c)S), so the share only unmixes S for Evocation's x 16
+-- and moves the parts when our own armor cast changes it mid-fight (Resources.lua I.ShareRead); no regen entry, so the
+-- calibration is undisturbed. It is the regen instance of the stored-parts rule (L971): the armor's part is c's 0.5 of
+-- S, removed or added exactly at our swap. Read at the build, at each combat start and after each of our casts.
+-- shortcut: an armor lost mid-fight without our cast (a dispel) keeps its share until our next cast or pull.
 -- Evocation (12051, 8 s): spirit regen +1500% (aura 110) and all of it while casting (aura 134): the learned spirit
 -- regen x 16 in and out of the rule (wowsims evocation.go:11-27; its logs 466 a second).
 -- state.spec: the functions run in the state's environment (the file's `spec` is the class).
@@ -246,7 +251,8 @@ spec:RegisterResource(
                 return state.spec.arcane and 29.13 or 14.56
             end,
             share = function()
-                return (ARCANE_MEDITATION[talent.arcane_meditation.rank] or 0) + 0.5
+                return (buff.mage_armor.up and MAGE_ARMOR_SHARE or 0)
+                    + (ARCANE_MEDITATION[talent.arcane_meditation.rank] or 0)
             end,
         },
         base = 1213, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
@@ -878,6 +884,89 @@ spec:RegisterAbilities({
         handler = blocked(),
     },
 })
+
+-- The armors (cov-mage-warlock's casts, here for the regen share's swap, L963: keep the two in step at the merge; the
+-- pin's rows: 30 min, on the GCD, no cooldown); Ice and Frost Armor share Frost Channeling's mask bit 19 (their word 0
+-- 0x2080000), Mage Armor not. One armor is up at a time, so a cast ends the other two.
+do
+    local MAGE_ARMOR = { 6117, 22782, 22783 }
+    local MAGE_ARMOR_COST = { 270, 380, 490 }
+    local ICE_ARMOR = { 7302, 7320, 10219, 10220 }
+    local ICE_ARMOR_COST = { 240, 320, 410, 500 }
+    local FROST_ARMOR = { 168, 7300, 7301 }
+    local FROST_ARMOR_COST = { 60, 110, 170 }
+    local ARMORS = { "mage_armor", "ice_armor", "frost_armor" }
+
+    local function armored(aura)
+        return function()
+            for i = 1, #ARMORS do
+                if ARMORS[i] ~= aura then
+                    removeBuff(ARMORS[i])
+                end
+            end
+            applyBuff(aura)
+        end
+    end
+
+    spec:RegisterAbilities({
+        mage_armor = {
+            id = 6117,
+            school = "arcane",
+            copy = rest(MAGE_ARMOR),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(MAGE_ARMOR_COST, MAGE_ARMOR),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(MAGE_ARMOR),
+            usable = unlocked("arcane"),
+
+            now = armored("mage_armor"),
+            handler = armored("mage_armor"),
+        },
+
+        ice_armor = {
+            id = 7302,
+            school = "frost",
+            copy = rest(ICE_ARMOR),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = frostChanneled(ICE_ARMOR_COST, ICE_ARMOR),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(ICE_ARMOR),
+            usable = unlocked("frost"),
+
+            now = armored("ice_armor"),
+            handler = armored("ice_armor"),
+        },
+
+        frost_armor = {
+            id = 168,
+            school = "frost",
+            copy = rest(FROST_ARMOR),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = frostChanneled(FROST_ARMOR_COST, FROST_ARMOR),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(FROST_ARMOR),
+            usable = unlocked("frost"),
+
+            now = armored("frost_armor"),
+            handler = armored("frost_armor"),
+        },
+    })
+end
 
 -- Talents: { talent tree (1 Arcane, 2 Fire, 3 Frost: the dominant tree picks the spec), rank 1's spell, max rank }:
 -- Forever's tree as wowsims/forever's ui/sim/talents/trees/mage.json lists it (tools/wowsims/talents.lua writes it;

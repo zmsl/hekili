@@ -803,6 +803,7 @@ local function run(o, t)
         call(A.now[a], a, t)
         rawset(NAMES, "cast_start", 0)
         rawset(NAMES, "instant", false)
+        I.ShareRead() -- the `now` may have moved what a regen share reads (Families/Resources.lua)
     end
 end
 -- CastSuccess only: a channel stages ChannelStart and CastSuccess both (Sources/Casts.lua), and must run once.

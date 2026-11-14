@@ -35,6 +35,10 @@ local KIT = {
     blizzard = { { 10, 6141, 8427, 10185, 10186, 10187 }, 1400, 0, "spell" },
     frost_nova = { { 122, 865, 6131, 10230 }, 145, 25, "spell" },
     ice_block = { { 11958 }, 15, 300, "spell" },
+    -- the armors (cov-mage-warlock's rows, for the regen share's swap: L963): one up at a time
+    mage_armor = { { 6117, 22782, 22783 }, 490, 0, "spell" },
+    ice_armor = { { 7302, 7320, 10219, 10220 }, 500, 0, "spell" },
+    frost_armor = { { 168, 7300, 7301 }, 170, 0, "spell" },
 }
 
 local function idsOf(a)
@@ -99,7 +103,7 @@ describe("Forever Mage", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(21, n)
+        assert.are.equal(24, n)
         for _, key in ipairs({ "arcane_power", "presence_of_mind", "combustion", "cold_snap" }) do
             assert.are.equal("cooldowns", w.abilities[key].toggle, key)
         end
@@ -125,19 +129,27 @@ describe("Forever Mage", function()
                 w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
                 return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
             end
-            assert.are.same({ 0, 29.13, 0.5 }, seed("arcane"))
-            assert.are.same({ 14.57, 14.56, 0.5 }, seed("fire")) -- Mage Armor's 50% (Fire and Frostfire)
-            -- the static share: Arcane Meditation's rank (17/33/50%, wowsims's curve), never the spec, + the armor's 50%
-            local shares = {}
-            for rank = 0, 3 do
-                e.talent.arcane_meditation = { rank = rank }
-                shares[#shares + 1] = ld.run(r.meta.fsr.share, e)
+            assert.are.same({ 0, 29.13, 0 }, seed("arcane"))
+            assert.are.same({ 14.57, 14.56, 0 }, seed("fire")) -- no armor up, no talent: none while casting
+            -- the static share (L961): the armor believed up (Mage Armor 50% on every rank, the pin's aura 134; Ice
+            -- and Frost Armor none) + Arcane Meditation's rank (17/33/50%, wowsims's curve), never the spec
+            local function shares(armor)
+                e.buff = buffs(armor and { [armor] = 1 } or {})
+                local out = {}
+                for rank = 0, 3 do
+                    e.talent.arcane_meditation = { rank = rank }
+                    out[#out + 1] = ld.run(r.meta.fsr.share, e)
+                end
+                return out
             end
-            assert.are.same({ 0.5, 0.17 + 0.5, 0.33 + 0.5, 1 }, shares)
+            assert.are.same({ 0.5, 0.17 + 0.5, 0.33 + 0.5, 1 }, shares("mage_armor"))
+            assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares("ice_armor"))
+            assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares("frost_armor"))
+            assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares(nil))
             assert.are.equal(1213, r.meta.base)
             assert.are.same({ aura = "evocation", spirit = 16, share = 1 }, r.models.evocation) -- DB2 12051: 110, 134
-            -- B2: the armor is a registered aura only; the share assumes it up (a regen entry would end the out-of-combat
-            -- read's calibration: Resources.lua readAt)
+            -- B2: the armor is no regen entry (one would end the out-of-combat read's calibration: Resources.lua
+            -- readAt); the static share reads it at the combat start and after our own cast (I.ShareRead)
             assert.is_nil(r.models.mage_armor)
         end
     )
@@ -450,6 +462,30 @@ describe("Forever Mage", function()
         end
         ld.run(cs.handler, e)
         assert.are.same({ true, "casting" }, { called, cs.debuff })
+    end)
+
+    it("casts one armor at a time, Frost Channeling cheapening Ice and Frost Armor (mask bit 19)", function()
+        w.game.known[22783], w.game.known[10220], w.game.known[7301] = true, true, true
+        local e = ld.env(w)
+        e.talent.frost_channeling = { rank = 3 }
+        assert.are.same({ 490, 500 * 0.85, 170 * 0.85 }, {
+            ld.run(w.abilities.mage_armor.spend, e),
+            ld.run(w.abilities.ice_armor.spend, e),
+            ld.run(w.abilities.frost_armor.spend, e),
+        })
+        for _, key in ipairs({ "mage_armor", "ice_armor", "frost_armor" }) do
+            for _, field in ipairs({ "now", "handler" }) do
+                e = ld.env(w)
+                ld.run(w.abilities[key][field], e)
+                local others = {}
+                for _, k in ipairs({ "mage_armor", "ice_armor", "frost_armor" }) do
+                    if k ~= key then
+                        others[#others + 1] = k
+                    end
+                end
+                assert.are.same({ { key }, others }, { e.applied, e.removed }, key .. " " .. field)
+            end
+        end
     end)
 end)
 

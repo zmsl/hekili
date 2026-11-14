@@ -1740,6 +1740,36 @@ function VS.TakenRate(powerType, now)
     return sum / I.TAKEN_WINDOW -- nonzero: a constant
 end
 
+-- One band's parts (casting reg = M + cS, spirit sp = (1 - c)S) at static share n instead of c: S as coefAt takes it
+-- (shortcut there: at c = 1 the mp5 part is all of S, exact without mp5).
+local function reshare(reg, sp, c, n)
+    local s = c < 1 and sp / (1 - c) or reg -- nonzero: c < 1
+    return reg + (n - c) * s, (1 - n) * s
+end
+
+--- (L961/L963) Re-reads each slot's function static share after our own cast's `now` (Families/Now.lua): the cast may
+--- have changed what it reads (an armor's casting share). In combat a change from c to n moves (n - c) x S between the
+--- parts, every band and the declared rates alike, and the interval across it measures nothing; out of combat only the
+--- share moves (the poll's out-of-combat regen read keeps the parts the game's). A raise keeps c. The stored parts are
+--- the game's pair as read, so the combat start's re-read (refresh) moves none. Allocates nothing.
+function I.ShareRead()
+    for r = 1, R.n do
+        local n = type(R.shareDef[r]) == "function" and finite(R.shareDef[r])
+        if n then
+            n = n < 0 and 0 or n > 1 and 1 or n
+            local c = R.share[r]
+            if n ~= c and fighting then
+                R.regE[r], R.spE[r] = reshare(R.regE[r], R.spE[r], c, n)
+                R.regL[r], R.spL[r] = reshare(R.regL[r], R.spL[r], c, n)
+                R.regH[r], R.spH[r] = reshare(R.regH[r], R.spH[r], c, n)
+                R.decl[r], R.spDecl[r] = reshare(R.decl[r], R.spDecl[r], c, n)
+                R.pinValid[r] = false
+            end
+            R.share[r] = n
+        end
+    end
+end
+
 I.On(Obs.CombatStart, function(o, t)
     fighting, fightT = true, t
     refresh()

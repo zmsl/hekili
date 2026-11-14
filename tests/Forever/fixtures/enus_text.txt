@@ -3400,6 +3400,39 @@ options.abilities.frenzied_regeneration.toggle	values.interrupts	Interrupts
 options.abilities.frenzied_regeneration.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.frenzied_regeneration.toggle	values.none	None
 options.abilities.frenzied_regeneration.toggle	values.potions	Potions
+options.abilities.frost_armor	name	Spell 168
+options.abilities.frost_armor.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 168 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 168 can be recommended in any type of fight.
+options.abilities.frost_armor.boss	name	Boss Encounter Only
+options.abilities.frost_armor.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 168 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.frost_armor.clash	name	Clash
+options.abilities.frost_armor.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 168.
+options.abilities.frost_armor.disabled	name	Disable |T136000:0|t Spell 168
+options.abilities.frost_armor.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.frost_armor.dotCap	name	Maximum Applications
+options.abilities.frost_armor.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.frost_armor.hasIcon	name	Icon Replacement
+options.abilities.frost_armor.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.frost_armor.keybind	name	Override Keybind Text
+options.abilities.frost_armor.lineBreak1	name	\032
+options.abilities.frost_armor.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.frost_armor.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.frost_armor.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.frost_armor.noIcon	name	Icon Replacement
+options.abilities.frost_armor.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 168 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.frost_armor.targetMax	name	Maximum Targets
+options.abilities.frost_armor.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 168 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.frost_armor.targetMin	name	Minimum Targets
+options.abilities.frost_armor.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.frost_armor.toggle	name	Require Toggle
+options.abilities.frost_armor.toggle	values.cooldowns	Cooldowns
+options.abilities.frost_armor.toggle	values.custom1	Custom 1
+options.abilities.frost_armor.toggle	values.custom2	Custom 2
+options.abilities.frost_armor.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.frost_armor.toggle	values.defensives	Defensives
+options.abilities.frost_armor.toggle	values.interrupts	Interrupts
+options.abilities.frost_armor.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.frost_armor.toggle	values.none	None
+options.abilities.frost_armor.toggle	values.potions	Potions
 options.abilities.frost_nova	name	Spell 122
 options.abilities.frost_nova.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 122 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 122 can be recommended in any type of fight.
 options.abilities.frost_nova.boss	name	Boss Encounter Only
@@ -4357,6 +4390,39 @@ options.abilities.hurricane.toggle	values.interrupts	Interrupts
 options.abilities.hurricane.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.hurricane.toggle	values.none	None
 options.abilities.hurricane.toggle	values.potions	Potions
+options.abilities.ice_armor	name	Spell 7302
+options.abilities.ice_armor.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 7302 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 7302 can be recommended in any type of fight.
+options.abilities.ice_armor.boss	name	Boss Encounter Only
+options.abilities.ice_armor.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 7302 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.ice_armor.clash	name	Clash
+options.abilities.ice_armor.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 7302.
+options.abilities.ice_armor.disabled	name	Disable |T136000:0|t Spell 7302
+options.abilities.ice_armor.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.ice_armor.dotCap	name	Maximum Applications
+options.abilities.ice_armor.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.ice_armor.hasIcon	name	Icon Replacement
+options.abilities.ice_armor.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.ice_armor.keybind	name	Override Keybind Text
+options.abilities.ice_armor.lineBreak1	name	\032
+options.abilities.ice_armor.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.ice_armor.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.ice_armor.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.ice_armor.noIcon	name	Icon Replacement
+options.abilities.ice_armor.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 7302 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ice_armor.targetMax	name	Maximum Targets
+options.abilities.ice_armor.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 7302 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ice_armor.targetMin	name	Minimum Targets
+options.abilities.ice_armor.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.ice_armor.toggle	name	Require Toggle
+options.abilities.ice_armor.toggle	values.cooldowns	Cooldowns
+options.abilities.ice_armor.toggle	values.custom1	Custom 1
+options.abilities.ice_armor.toggle	values.custom2	Custom 2
+options.abilities.ice_armor.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.ice_armor.toggle	values.defensives	Defensives
+options.abilities.ice_armor.toggle	values.interrupts	Interrupts
+options.abilities.ice_armor.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.ice_armor.toggle	values.none	None
+options.abilities.ice_armor.toggle	values.potions	Potions
 options.abilities.ice_barrier	name	Spell 11426
 options.abilities.ice_barrier.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 11426 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 11426 can be recommended in any type of fight.
 options.abilities.ice_barrier.boss	name	Boss Encounter Only
@@ -5083,6 +5149,39 @@ options.abilities.lightwell.toggle	values.interrupts	Interrupts
 options.abilities.lightwell.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.lightwell.toggle	values.none	None
 options.abilities.lightwell.toggle	values.potions	Potions
+options.abilities.mage_armor	name	Spell 6117
+options.abilities.mage_armor.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 6117 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 6117 can be recommended in any type of fight.
+options.abilities.mage_armor.boss	name	Boss Encounter Only
+options.abilities.mage_armor.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 6117 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.mage_armor.clash	name	Clash
+options.abilities.mage_armor.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 6117.
+options.abilities.mage_armor.disabled	name	Disable |T136000:0|t Spell 6117
+options.abilities.mage_armor.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.mage_armor.dotCap	name	Maximum Applications
+options.abilities.mage_armor.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.mage_armor.hasIcon	name	Icon Replacement
+options.abilities.mage_armor.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.mage_armor.keybind	name	Override Keybind Text
+options.abilities.mage_armor.lineBreak1	name	\032
+options.abilities.mage_armor.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.mage_armor.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.mage_armor.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.mage_armor.noIcon	name	Icon Replacement
+options.abilities.mage_armor.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 6117 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.mage_armor.targetMax	name	Maximum Targets
+options.abilities.mage_armor.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 6117 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.mage_armor.targetMin	name	Minimum Targets
+options.abilities.mage_armor.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.mage_armor.toggle	name	Require Toggle
+options.abilities.mage_armor.toggle	values.cooldowns	Cooldowns
+options.abilities.mage_armor.toggle	values.custom1	Custom 1
+options.abilities.mage_armor.toggle	values.custom2	Custom 2
+options.abilities.mage_armor.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.mage_armor.toggle	values.defensives	Defensives
+options.abilities.mage_armor.toggle	values.interrupts	Interrupts
+options.abilities.mage_armor.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.mage_armor.toggle	values.none	None
+options.abilities.mage_armor.toggle	values.potions	Potions
 options.abilities.magma_totem	name	Spell 8190
 options.abilities.magma_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8190 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8190 can be recommended in any type of fight.
 options.abilities.magma_totem.boss	name	Boss Encounter Only
@@ -16103,13 +16202,16 @@ options.packs.arcane.Arcane (wowsims.com).lists.action	values.demonic_rune	|T0:0
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.evocation	|T136000:0|t Spell 12051
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.fireball	|T136000:0|t Spell 133
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.frost_armor	|T136000:0|t Spell 168
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.frost_nova	|T136000:0|t Spell 122
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.frostbolt	|T136000:0|t Spell 116
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.mage_armor	|T136000:0|t Spell 6117
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -16161,13 +16263,16 @@ options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.demonic_rune	
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.fireball	|T136000:0|t Spell 133
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.frost_armor	|T136000:0|t Spell 168
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.frost_nova	|T136000:0|t Spell 122
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.frostbolt	|T136000:0|t Spell 116
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.mage_armor	|T136000:0|t Spell 6117
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -20833,13 +20938,16 @@ options.packs.fire.Fire (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [
 options.packs.fire.Fire (wowsims.com).lists.action	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Fire (wowsims.com).lists.action	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.fire.Fire (wowsims.com).lists.action	values.fireball	|T136000:0|t Spell 133
+options.packs.fire.Fire (wowsims.com).lists.action	values.frost_armor	|T136000:0|t Spell 168
 options.packs.fire.Fire (wowsims.com).lists.action	values.frost_nova	|T136000:0|t Spell 122
 options.packs.fire.Fire (wowsims.com).lists.action	values.frostbolt	|T136000:0|t Spell 116
 options.packs.fire.Fire (wowsims.com).lists.action	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.fire.Fire (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.fire.Fire (wowsims.com).lists.action	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.fire.Fire (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
 options.packs.fire.Fire (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
 options.packs.fire.Fire (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
+options.packs.fire.Fire (wowsims.com).lists.action	values.mage_armor	|T136000:0|t Spell 6117
 options.packs.fire.Fire (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Fire (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -20891,13 +20999,16 @@ options.packs.fire.Fire (wowsims.com).lists.action_name	values.demonic_rune	|T0:
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.fireball	|T136000:0|t Spell 133
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.frost_armor	|T136000:0|t Spell 168
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.frost_nova	|T136000:0|t Spell 122
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.frostbolt	|T136000:0|t Spell 116
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.mage_armor	|T136000:0|t Spell 6117
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -21075,13 +21186,16 @@ options.packs.fire.Frostfire (wowsims.com).lists.action	values.demonic_rune	|T0:
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.fireball	|T136000:0|t Spell 133
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.frost_armor	|T136000:0|t Spell 168
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.frost_nova	|T136000:0|t Spell 122
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.frostbolt	|T136000:0|t Spell 116
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.mage_armor	|T136000:0|t Spell 6117
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -21130,13 +21244,16 @@ options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.demonic_rune
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.fireball	|T136000:0|t Spell 133
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.frost_armor	|T136000:0|t Spell 168
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.frost_nova	|T136000:0|t Spell 122
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.frostbolt	|T136000:0|t Spell 116
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.mage_armor	|T136000:0|t Spell 6117
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]
@@ -21376,13 +21493,16 @@ options.packs.frost.Frost (wowsims.com).lists.action	values.demonic_rune	|T0:0|t
 options.packs.frost.Frost (wowsims.com).lists.action	values.evocation	|T136000:0|t Spell 12051
 options.packs.frost.Frost (wowsims.com).lists.action	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.frost.Frost (wowsims.com).lists.action	values.fireball	|T136000:0|t Spell 133
+options.packs.frost.Frost (wowsims.com).lists.action	values.frost_armor	|T136000:0|t Spell 168
 options.packs.frost.Frost (wowsims.com).lists.action	values.frost_nova	|T136000:0|t Spell 122
 options.packs.frost.Frost (wowsims.com).lists.action	values.frostbolt	|T136000:0|t Spell 116
 options.packs.frost.Frost (wowsims.com).lists.action	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.frost.Frost (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.frost.Frost (wowsims.com).lists.action	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.frost.Frost (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
 options.packs.frost.Frost (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
 options.packs.frost.Frost (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
+options.packs.frost.Frost (wowsims.com).lists.action	values.mage_armor	|T136000:0|t Spell 6117
 options.packs.frost.Frost (wowsims.com).lists.action	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.frost.Frost (wowsims.com).lists.action	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.frost.Frost (wowsims.com).lists.action	values.mana_gem	|T0:0|t [Item 5514]
@@ -21432,13 +21552,16 @@ options.packs.frost.Frost (wowsims.com).lists.action_name	values.demonic_rune	|T
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.evocation	|T136000:0|t Spell 12051
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.fire_blast	|T136000:0|t Spell 2136
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.fireball	|T136000:0|t Spell 133
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.frost_armor	|T136000:0|t Spell 168
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.frost_nova	|T136000:0|t Spell 122
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.frostbolt	|T136000:0|t Spell 116
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.frostfire_bolt	|T136000:0|t Spell 401502
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.mage_armor	|T136000:0|t Spell 6117
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.main_hand	|T136243:0|t |cff00ccff[INVTYPE_WEAPONMAINHAND]|r
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.major_mana_potion	|T0:0|t [Item 13444]
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.mana_gem	|T0:0|t [Item 5514]

@@ -2641,6 +2641,101 @@ describe("resources", function()
         end)
     end)
 
+    -- L961/L963: the static share reads an aura our own cast moves (an armor's casting share); the stored pair is the
+    -- game's, so only a change after it moves the parts: (c' - c) x S between casting M + cS and the spirit (1 - c)S.
+    describe("a static share our own cast changes (spirit regen S 20, mp5 M 2)", function()
+        local MANA = 0
+
+        local function bootShare(full)
+            boot({
+                abilities = {
+                    {
+                        key = "don",
+                        now = function()
+                            applyBuff("ward", 1800) -- luacheck: ignore 113 (the `now` context's verb)
+                        end,
+                    },
+                    {
+                        key = "doff",
+                        now = function()
+                            removeBuff("ward") -- luacheck: ignore 113 (the `now` context's verb)
+                        end,
+                    },
+                },
+                abilityIds = { { 1101 }, { 1102 } },
+                abilitySlot = { 0, 0 },
+                resources = {
+                    {
+                        key = "mana",
+                        type = MANA,
+                        token = "MANA",
+                        max = 1000,
+                        rest = true,
+                        -- full: the ward's 0.5 on a talent's 0.5 (all of it: the mp5 part holds M + S, M 0)
+                        fsr = {
+                            spirit = full and 0 or 10,
+                            mp5 = full and 20 or 12,
+                            share = function()
+                                return (buff.ward.up and 0.5 or 0) + (full and 0.5 or 0) -- luacheck: ignore 113
+                            end,
+                        },
+                        mult = { { aura = "surge", spirit = 16, share = 1 } },
+                    },
+                },
+                auras = { { key = "ward", id = 1021 }, { key = "surge", id = 1022 } },
+                auraIds = { { 1021 }, { 1022 } },
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.AuraModel(1, 1, 1, 1801, 1, 1, 0) -- worn before the pull
+            I.Settle(10)
+            obs(Obs.CombatStart, 10, 0, 0, 0)
+            I.Fold(10, false)
+        end
+
+        local function parts()
+            local R = I.res
+            return { R.share[1], R.regE[1], R.spE[1], R.decl[1], R.spDecl[1] }
+        end
+
+        it("moves half of S from casting to the spirit part when our cast takes the ward off, and back", function()
+            bootShare(false)
+            assert.are.same({ 0.5, 12, 10, 12, 10 }, parts())
+            obs(Obs.CastSuccess, 11, 2)
+            I.Fold(11, false)
+            assert.are.same({ 0, 2, 20, 2, 20 }, parts())
+            assert.are.same({ 2, 22 }, { VS.Regen(MANA, 11, VS.CASTING).est, VS.Regen(MANA, 11, VS.NOT_CASTING).est })
+            obs(Obs.CastSuccess, 12, 1)
+            I.Fold(12, false)
+            assert.are.same({ 0.5, 12, 10, 12, 10 }, parts())
+            -- the interval across the change measures nothing
+            assert.is_false(I.res.pinValid[1])
+        end)
+
+        it("takes S from the mp5 part when the share was all of it (shortcut: M 0)", function()
+            bootShare(true)
+            assert.are.same({ 1, 20, 0, 20, 0 }, parts())
+            obs(Obs.CastSuccess, 11, 2)
+            I.Fold(11, false)
+            assert.are.same({ 0.5, 10, 10, 10, 10 }, parts())
+            I.AuraModel(1, 2, 12, 20, 1, 12, 0) -- a x 16 surge: M + 16 x S whatever the share
+            assert.are.equal(320, VS.Regen(MANA, 13).est)
+            obs(Obs.CastSuccess, 14, 1)
+            I.Fold(14, false)
+            assert.are.same({ 1, 20, 0, 20, 0 }, parts())
+            assert.are.equal(320, VS.Regen(MANA, 15).est)
+        end)
+
+        it("moves only the share out of combat: the poll's regen read keeps the parts the game's", function()
+            bootShare(false)
+            obs(Obs.CombatEnd, 10.5, 0, 0, 0)
+            I.Fold(10.5, false)
+            obs(Obs.CastSuccess, 11, 2)
+            I.Fold(11, false)
+            assert.are.same({ 0, 12, 10, 12, 10 }, parts())
+        end)
+    end)
+
     describe("a regen `mult` (C3b: energy 10/s, x2 while rate_aura is up)", function()
         local RATE_AURA = 1
 
