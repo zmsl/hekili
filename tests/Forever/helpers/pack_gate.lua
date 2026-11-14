@@ -399,7 +399,8 @@ M.FLICKER = {
     -- flicker 0 -> 0.14, readyShort 0 -> 1, heldReady 152 -> 138
     -- re-measured on 246abf322 (L757 M2): flicker 0.13 / 0.12 / 0.05, heldReady 136 / 138 / 126 (the bar is the worst
     -- set); every flip is a mana wait against Stormstrike's cooldown at the mana crossing: the tick pad, with no tick
-    -- seen, jumps between nothing and a whole tick from one poll to the next (Engine/Sim/State.lua tickReach; flicker-085)
+    -- seen, jumps between nothing and a whole tick from one poll to the next (Engine/Sim/State.lua tickReach; flicker-085).
+    -- With no pad at no tick seen (b97e59df0, ruling L960): flicker 0.02 / 0.03 / 0.08, heldReady 132 / 136 / 129
     ["Enhancement"] = { flicker = 0.14, retracted = 0, heldReady = 138, readyShort = 1 },
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
