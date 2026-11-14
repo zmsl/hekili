@@ -646,10 +646,12 @@ local function stuns(key)
     end
 end
 -- A shield: the invulnerability (one aura for both shields: the Cooldown Manager's item links both) and Forbearance.
-local function shielded(ids, short, long)
+-- Both shields share Category 37 (pin: 300 s, Sacred Duty -30 s a rank), so a press starts the other's cooldown.
+local function shielded(ids, short, long, other)
     return function()
         applyBuff("divine_shield", knownRank(ids) >= 2 and long or short)
         applyBuff("forbearance", forbearanceTime(talent, set_bonus))
+        setCooldown(other, 300 - 30 * talent.sacred_duty.rank)
     end
 end
 
@@ -1107,8 +1109,8 @@ spec:RegisterAbilities({
             return not buff.forbearance.up, "forbearance"
         end,
 
-        now = shielded(DIVINE_SHIELD, 10, 12),
-        handler = shielded(DIVINE_SHIELD, 10, 12),
+        now = shielded(DIVINE_SHIELD, 10, 12, "divine_protection"),
+        handler = shielded(DIVINE_SHIELD, 10, 12, "divine_protection"),
     },
 
     divine_protection = {
@@ -1130,8 +1132,8 @@ spec:RegisterAbilities({
             return not buff.forbearance.up, "forbearance"
         end,
 
-        now = shielded(DIVINE_PROTECTION, 6, 8),
-        handler = shielded(DIVINE_PROTECTION, 6, 8),
+        now = shielded(DIVINE_PROTECTION, 6, 8, "divine_shield"),
+        handler = shielded(DIVINE_PROTECTION, 6, 8, "divine_shield"),
     },
 
     repentance = {

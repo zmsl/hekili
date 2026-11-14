@@ -123,8 +123,8 @@ M.MAP = {
     judgement = {
         effect = function(W, e, _, X)
             W.hit(e, e.target, AMOUNT.judgement, 2, up(e, X, "seal_of_the_crusader") and "none" or nil)
-            -- shortcut: the world refunds only at 3/3 (the belief's rule) and has no proc chance below it; model the
-            -- 33/66% chance if a world build takes 1-2 ranks.
+            -- shortcut: the world refunds only at 3/3 (a sure 60%); at ranks 1-2 the belief counts the mean (33/66% x
+            -- 20/40%) while the truth would be a roll. No world build takes 1-2 ranks; model the roll if one does.
             if X.sanctified then -- Sanctified Judgement 3/3: 60% of the seal's base cost x (2 - its multiplier)
                 for _, key in ipairs(SEALS) do
                     if up(e, X, key) then
@@ -294,7 +294,8 @@ local function classData(H, C)
         end
     end
     local talent = H.Hekili.State.talent
-    -- Sanctified Judgement's refund, as the class file believes it (only at 3/3, a sure one): the seals' cost multiplier
+    -- Sanctified Judgement's refund in the world: only at 3/3, a sure one (the class file counts the mean at 1-2, the
+    -- world builds take none there): the seals' cost multiplier
     X.S, X.sanctified = H.Hekili.State, (talent.sanctified_judgement.rank or 0) >= 3
     X.mult = 1 - 0.02 * (talent.benediction.rank or 0)
     return X

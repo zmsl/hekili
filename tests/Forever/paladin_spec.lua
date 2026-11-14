@@ -346,6 +346,26 @@ describe("Forever Paladin", function()
         assert.is_true(e.durations.divine_shield == 12 or e.durations.divine_shield == 10)
     end)
 
+    -- Divine Shield and Divine Protection share Category 37 (pin: 642/1020/498/5573, CategoryCooldownMs 300000), cut by
+    -- Sacred Duty's 30 s a rank: one press starts the other's cooldown.
+    it("puts Divine Shield and Divine Protection on one category cooldown (shortened by Sacred Duty)", function()
+        for me, other in pairs({ divine_shield = "divine_protection", divine_protection = "divine_shield" }) do
+            for _, field in ipairs({ "now", "handler" }) do
+                for rank = 0, 2 do
+                    local e = ld.env(w)
+                    e.talent = talents({ sacred_duty = rank })
+                    ld.run(w.abilities[me][field], e)
+                    local got = {}
+                    for _, c in ipairs(e.cooldowns) do
+                        got[c[1]] = c[2]
+                    end
+                    assert.are.equal(300 - 30 * rank, got[other], me .. " " .. field .. " rank " .. rank)
+                    assert.is_nil(got[me], me .. " " .. field)
+                end
+            end
+        end
+    end)
+
     -- The auras the Cooldown Manager links (cdm/paladin.lua), under their own spell IDs.
     it("registers the Cooldown Manager's linked auras under their own spell IDs", function()
         local A = w.auras
