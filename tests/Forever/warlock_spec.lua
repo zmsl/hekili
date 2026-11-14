@@ -153,6 +153,23 @@ describe("Forever Warlock", function()
         assert.are.equal(1373, r.meta.base)
     end)
 
+    -- Soul Harvest (437032, 2 ranks; buff 1242853, 10 s: aura 110 regen +100% and aura 134 100%, scaled 50/100% by rank,
+    -- wowsims talents_affliction.go applySoulHarvest): the belief opens it at our kill (the "kill" reaction)
+    it("opens Soul Harvest at our kill, its regen and casting share 50/100% by rank", function()
+        local m = w.resources[0].models.soul_harvest
+        assert.are.equal("soul_harvest", m.aura)
+        local got = {}
+        for rank = 0, 2 do
+            local e = ld.env(w)
+            e.talent.soul_harvest = { rank = rank }
+            ld.run(w.reactions.soul_harvest.now, e)
+            got[#got + 1] = { ld.run(m.spirit, e), ld.run(m.share, e), #e.applied }
+        end
+        assert.are.same({ { 1, 0, 0 }, { 1.5, 0.5, 1 }, { 2, 1, 1 } }, got)
+        assert.are.same({ "target", "kill" }, { w.reactions.soul_harvest.who, w.reactions.soul_harvest.outcome })
+        assert.are.same({ 1242853, 10 }, { w.auras.soul_harvest.id, w.auras.soul_harvest.duration })
+    end)
+
     it("declares Fel Energy: 2% of max mana every 4 s while the Voidwalker sacrifice's aura is up", function()
         local m = w.resources[0].models.fel_energy
         w.state.type = type
