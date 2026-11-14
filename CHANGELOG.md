@@ -18,6 +18,7 @@
 
 ### Fixed
 - Shaman: Stormstrike, Poison and Disease Cleansing Totem, Earthbind Totem and Grounding Totem now cost their percent of your base mana at your level, as the game charges, instead of the level-60 amount.
+- Shaman: Totemic Focus now lowers your totems' mana cost in Hekili's forecast, and no longer makes Stormstrike look cheaper than it is.
 - Hekili now notices a Spirit, spell power or rating change out of combat (a buff, food, a talent) right away, so a Life Tap or a Spirit-based effect before the pull is worked out from your current stats instead of older ones.
 - Custom priorities: `weapon_offhand_dps` now reads your off-hand weapon's damage instead of the main hand's.
 - Hunters and wand users: a change to your ranged attack speed out of combat (a new ranged weapon, quiver or buff) is now picked up at once for the shot timer.

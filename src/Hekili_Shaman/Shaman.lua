@@ -294,6 +294,8 @@ local function summon(key)
     end
 end
 
+-- Totemic Focus (16173, aura 108 misc 14: -5% a rank on mask 0x20081018, every totem here; wowsims pin
+-- spells_auto_gen.go:13198): on the fraction too, so the client's cut cost read teaches the true base (I.LearnBases).
 local function totemAbility(key)
     local t = TOTEMS[key]
     return {
@@ -303,7 +305,9 @@ local function totemAbility(key)
         cooldown = t.cooldown or 0,
         gcd = "totem",
 
-        spend = cost(t.cost, t.ids),
+        spend = function()
+            return byRank(t.cost, t.ids) * (1 - 0.05 * talent.totemic_focus.rank)
+        end,
         spendType = "mana",
 
         startsCombat = false,

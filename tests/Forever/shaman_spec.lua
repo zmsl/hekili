@@ -984,6 +984,50 @@ describe("Forever Shaman through the engine", function()
         end
     )
 
+    -- L41: the percent-of-base costs price from the level-60 base 1520 (the mana meta's) before any cost read.
+    it("prices the percent-of-base costs at 60 from base mana 1520: 152, 91, 121", function()
+        local S, VS = H.Hekili.State, H.ns.VirtualState
+        assert.are.same({ 1520, 152, 152, 91, 91, 121 }, {
+            VS.BasePower(0),
+            S.action.poison_cleansing_totem.cost,
+            S.action.disease_cleansing_totem.cost,
+            S.action.earthbind_totem.cost,
+            S.action.grounding_totem.cost,
+            S.action.stormstrike.cost,
+        })
+    end)
+
+    -- Totemic Focus (16173, aura 108 misc 14, -5% a rank on mask 0x20081018: every totem, not Stormstrike; wowsims pin
+    -- spells_auto_gen.go:13198): the client's totem cost read carries the cut, so the base it teaches (I.LearnBases)
+    -- stays 1520 only when the totem's declared cost carries it too.
+    it("keeps base mana 1520 and Stormstrike at 121 under a Totemic Focus 5/5 totem cost read", function()
+        local c = character()
+        c.talents = { [16173] = 5 }
+        local T = headless.new({ character = c, pack = "Enhancement (wowsims.com)" })
+        local S, VS, I = T.Hekili.State, T.ns.VirtualState, T.ns.VirtualStateInternal
+        T.ctl.costs[8166] = { { type = 0, cost = 114 } } -- Poison Cleansing Totem: floor(0.1 x 1520) x 0.75
+        T.Fire("SPELLS_CHANGED")
+        local function belief(key) -- the belief's price at the cast (I.CostOf)
+            for a = 1, I.ab.n do
+                if I.ab.key[a] == key then
+                    return I.CostOf(a)
+                end
+            end
+        end
+        assert.are.same({ 1520, 121, 114, 65 * 0.75 }, {
+            VS.BasePower(0),
+            belief("stormstrike"),
+            belief("poison_cleansing_totem"),
+            belief("sentry_totem"),
+        })
+        -- the simulation's prices alike
+        assert.are.same(
+            { 121, 114, 65 * 0.75 },
+            { S.action.stormstrike.cost, S.action.poison_cleansing_totem.cost, S.action.sentry_totem.cost }
+        )
+        assert.are.same({}, T.loadErrors)
+    end)
+
     it("reads a totem buff through the engine by either name without an error", function()
         local S = H.Hekili.State
         for _, k in ipairs({ "stoneskin_totem", "stoneskin", "windfury_totem", "flametongue", "mana_tide_totem" }) do
