@@ -8533,7 +8533,8 @@ do
 
     -- A line's options: split at the commas outside parentheses, so min(a,b) and max(a,b) stay in their condition.
     -- Quotes are not counted: conditions have no string literals, and an apostrophe in label= text must not swallow
-    -- the commas after it.
+    -- the commas after it. A `(` still open at the line's end (in label= or caption text) would swallow the options
+    -- after it, if= included: then every comma splits, and the second return is true so the caller warns.
     local function splitOptions( str )
         local result, from, depth = {}, 1, 0
 
@@ -8546,6 +8547,16 @@ do
                 insert( result, str:sub( from, pos - 1 ) )
                 from = pos + 1
             end
+        end
+
+        if depth > 0 then
+            result, from = {}, 1
+            for pos in str:gmatch( "()," ) do
+                insert( result, str:sub( from, pos - 1 ) )
+                from = pos + 1
+            end
+            insert( result, str:sub( from ) )
+            return result, true
         end
 
         insert( result, str:sub( from ) )
@@ -8646,8 +8657,12 @@ do
                 end
             end
 
-            local components = splitOptions( i )
+            local components, unclosed = splitOptions( i )
             local result = {}
+
+            if unclosed then
+                insert( warnings, format( L["Line %s: Unclosed '(' in '%s'; split at every comma."], line, i ) )
+            end
 
             for a, str in ipairs( components ) do
                 -- First element is the action, if supported.

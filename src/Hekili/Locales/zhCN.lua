@@ -833,6 +833,7 @@ L["Line %s: Removed unnecessary expel_harm cooldown check from action entry for 
 L["Line %s: Removed unnecessary energy cap check from action entry for fists_of_fury (%sx)."] = "第 %s 行：已从 fists_of_fury 的动作条目中移除不必要的能量上限检查（%sx）。"
 L["Line %s: Unsupported action '%s'."] = "第 %s 行：不支持的动作“%s”。"
 -- L["Line %s: Unknown window '%s'; entry disabled."] = ""
+-- L["Line %s: Unclosed '(' in '%s'; split at every comma."] = ""
 L["Line %s: focus=%s is not a tier (a whole number, 1 highest); ignored."] = "第 %s 行：focus=%s 不是有效等级（应为整数，1 为最高）；已忽略。"
 L["Line %s: Unsupported use_item action [ %s]; entry disabled."] = "第 %s 行：不支持的 use_item 动作 [ %s]；条目已禁用。"
 L["Line %s: Unable to convert wait_for_cooldown,name=X to wait,sec=cooldown.X.remains; entry disabled."] = "第 %s 行：无法将 wait_for_cooldown,name=X 转换为 wait,sec=cooldown.X.remains；条目已禁用。"

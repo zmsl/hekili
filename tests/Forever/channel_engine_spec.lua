@@ -70,32 +70,39 @@ describe("the engine on the harness's channel and cast events", function()
     end)
 
     -- a pack's interrupt= on a channel (Core.lua CheckChannel) breaks it for another ability when the GCD is ready and
-    -- the channel is at a tick, as interrupt_if= does; never mid-tick
-    it("breaks a channel on its interrupt= modifier at a tick, not mid-tick", function()
-        H.Hekili.Class.abilities.cannibalize.tick_time = 2
-        W.t = 1
-        assert.is_true(
-            W.press(us, "cannibalize", { spell = CANNIBALIZE, gcd = 1.5, channel = { length = 10, tick = 2 } })
-        )
-        W.run(20)
-        local channels = {
-            cannibalize = {
-                interrupt = function()
-                    return true
-                end,
-            },
-        }
-        upTo(3.1) -- 2.1 s in: just past the first tick
-        st.buff.casting.v1 = CANNIBALIZE -- the harness's UnitChannelInfo names no spell
-        H.Hekili.Scripts.Channels[st.system.packName] = channels
-        assert.is_true(st.cooldown.global_cooldown.ready)
-        assert.is_true(H.Hekili:CheckChannel("slam"))
-        upTo(4) -- 3 s in: mid-tick
-        st.buff.casting.v1 = CANNIBALIZE
-        H.Hekili.Scripts.Channels[st.system.packName] = channels
-        assert.is_true(st.cooldown.global_cooldown.ready)
-        assert.is_false(H.Hekili:CheckChannel("slam"))
-    end)
+    -- the channel is at a tick, as interrupt_if= does; never mid-tick, never while the GCD runs
+    it(
+        "breaks a channel on its interrupt= modifier at a tick with the GCD ready, not mid-tick or in the GCD",
+        function()
+            H.Hekili.Class.abilities.cannibalize.tick_time = 2
+            W.t = 1
+            assert.is_true(
+                W.press(us, "cannibalize", { spell = CANNIBALIZE, gcd = 1.5, channel = { length = 10, tick = 2 } })
+            )
+            W.run(20)
+            local channels = {
+                cannibalize = {
+                    interrupt = function()
+                        return true
+                    end,
+                },
+            }
+            upTo(3.1) -- 2.1 s in: just past the first tick
+            st.buff.casting.v1 = CANNIBALIZE -- the harness's UnitChannelInfo names no spell
+            H.Hekili.Scripts.Channels[st.system.packName] = channels
+            assert.is_true(st.cooldown.global_cooldown.ready)
+            assert.is_true(H.Hekili:CheckChannel("slam"))
+            -- the same tick with the GCD running (the harness's channel press starts none the instance sees)
+            st.setCooldown("global_cooldown", 1)
+            assert.is_false(st.cooldown.global_cooldown.ready)
+            assert.is_false(H.Hekili:CheckChannel("slam"))
+            upTo(4) -- 3 s in: mid-tick
+            st.buff.casting.v1 = CANNIBALIZE
+            H.Hekili.Scripts.Channels[st.system.packName] = channels
+            assert.is_true(st.cooldown.global_cooldown.ready)
+            assert.is_false(H.Hekili:CheckChannel("slam"))
+        end
+    )
 
     it("reads a hard cast as casting from its UNIT_SPELLCAST_START, not as a channel", function()
         local slam = H.Hekili.Class.abilities.slam

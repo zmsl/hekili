@@ -20,7 +20,7 @@
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 - Importing a priority no longer breaks lines that use min(), max() or the ^ operator. Re-importing Fury (wowsims.com) or Enhancement (wowsims.com) from a copy's Source tab now keeps every line intact.
-- `prev.last` in a priority condition now names the last ability you cast; before, it always read "none".
+- `prev.last` in a priority condition now names the last ability you cast, and `prev.<ability>` is true when it was that ability. Before, for the ability Hekili shows first, `prev.last` read "none" and `prev.<ability>` was always false.
 - A priority line's `interrupt=` option now works: while you channel that spell, Hekili shows the next ability at the channel's next tick once your global cooldown is ready. Before, `interrupt=` did nothing.
 
 ### Known issues

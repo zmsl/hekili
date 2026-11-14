@@ -933,11 +933,9 @@ describe("Forever Hunter Movement (R8)", function()
         assert(headless.cycle(H, t))
         local list = {}
         for _, l in ipairs(lines(key)) do
-            if not l:find("max%(") then -- ParseActionList splits a line at its commas: the weave arm's max(a,b) stays out
-                local parsed = H.Hekili:ParseActionList(l)
-                parsed[1].enabled = true
-                list[#list + 1] = parsed[1]
-            end
+            local parsed = H.Hekili:ParseActionList(l)
+            parsed[1].enabled = true
+            list[#list + 1] = parsed[1]
         end
         list[#list + 1] = { enabled = true, action = "aspect_of_the_hawk" }
         H.Hekili.DB.profile.packs[PACK].lists = { precombat = {}, default = list }
