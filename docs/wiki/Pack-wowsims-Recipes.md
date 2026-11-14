@@ -6,7 +6,7 @@ Prerequisites: [Contributing](Contributing).
 -->
 A **wowsims recipe** is the Lua file from which one "(wowsims.com)" priority pack is generated. It names the wowsims.com build to export (race, gear, talents, options) and holds the translation data, mostly a map from wowsims's spell IDs to the addon's keys. This page describes the recipe and the three steps that turn it into the priorities the class addons ship: export, translate and pack.
 
-Every default priority in Hekili Forever comes from a recipe. There are no hand-built priorities. A pack follows wowsims as closely as the Forever client allows: a difference the client forces is recorded with its reason, and any other difference is a gap to fix in the layer that is wrong (the class kit, the translator, the test harness or the core). [APL wowsims packs explained](APL-wowsims-Packs-Explained) gives the background for players.
+Every default priority in Hekili Forever comes from a recipe. There are no hand-built priorities. A priority follows wowsims as closely as the Forever client allows: a difference the client forces is recorded with its reason, and any other difference is a gap to fix in the layer that is wrong (the class kit, the translator, the test harness or the core). [wowsims priorities explained](APL-wowsims-Packs-Explained) gives the background for players.
 
 ## The recipe
 
@@ -17,7 +17,7 @@ Each recipe is `tools/wowsims/specs/<class>_<spec>.lua`. The file name is the sp
 | Field | Meaning |
 |---|---|
 | `class` | The class token, such as `"WARRIOR"`. |
-| `pack` | The pack name, such as `"Arms (wowsims.com)"`. |
+| `pack` | The priority name, such as `"Arms (wowsims.com)"`. |
 | `spec` | The spec key, such as `"arms"`. |
 | `name` | The wowsims spec name written in the log header. |
 | `talentTree` | The wowsims talent tree file. |
@@ -26,7 +26,7 @@ Each recipe is `tools/wowsims/specs/<class>_<spec>.lua`. The file name is the sp
 | `build` | Instead of `player`: a preset build file taken whole, with `gear` replacing its equipment. |
 | `siml` | Instead of `player`, `build` and `apl`: a `.siml` build in the checkout, converted to the checked-in `tests/Forever/wowsims/<spec>.build.json`. |
 | `tank`, `healingModel` | For a tank spec: the player becomes the raid's tank and receives the preset's incoming healing, as wowsims's own interface does. |
-| `vars` | APL variables that a build's simple rotation overrides. The request carries them, so the pack follows. |
+| `vars` | APL variables that a build's simple rotation overrides. The request carries them, so the priority follows. |
 
 ### Translation fields
 
@@ -42,14 +42,14 @@ Each recipe is `tools/wowsims/specs/<class>_<spec>.lua`. The file name is the sp
 | `leveling` | Lines appended to `actions` for lower levels. |
 | `levelingFirst` | Lines put first in `actions`: a form the simulation starts in and the APL never casts. |
 | `extra` | `{ { before = action, line = text } }`: a line put immediately before the first line of `before` (its last, with `last = true`). |
-| `settings` | `{ [key] = { default = bool, desc = text } }`: a pack setting a recipe line reads as `settings.<key>`. |
+| `settings` | `{ [key] = { default = bool, desc = text } }`: a class setting a recipe line reads as `settings.<key>`. |
 | `maintenance` | `{ [action] = setting key }`: a raid debuff kept up; off in game, on in the test harness ([Pack translator rules](Pack-Translator-Rules), rule 15). |
 | `select` | A cast whose spell a class option picks (rule 16). |
 | `exclusive` | `{ [spell ID] = true }`: auras wowsims gives an exclusive effect (rule 10). |
 | `windowVars` | `{ [variable] = window }`: an APL variable read from a window the class kit registers (rule 10). |
 | `knownAs` | `{ [aura ID] = talent key }`: that aura's "is known" test reads the talent (rule 4). |
 | `executePhase` | The key the kit's execute-phase read answers. |
-| `notes` | Sentences added to the pack's in-game description, such as what a toggle hides. |
+| `notes` | Sentences added to the priority's in-game description, such as what a toggle hides. |
 
 A key that names no APL entry, a `maintenance` key no line casts, an `extra` with no line to go before, and a `condition` or `prepullSkip` with no line to act on are errors: the build stops rather than dropping the entry silently.
 
@@ -147,7 +147,7 @@ Read its `# Omitted:` lines after each translation. A `spell N`, `aura N` or `it
 
 ### Packing
 
-`make packs` runs `tools/make_pack.lua` for every class. It reads the class's manifest, `src/Hekili_<Class>/APLs/packs.lua`, and each `.simc` beside it, and rewrites the class file's generated priority blocks. A class's pack date changes only when one of its blocks changed, so running it on a clean tree changes nothing.
+`make packs` runs `tools/make_pack.lua` for every class. It reads the class's manifest, `src/Hekili_<Class>/APLs/packs.lua`, and each `.simc` beside it, and rewrites the class file's generated priority blocks. The date of a class's priorities changes only when one of its blocks changed, so running it on a clean tree changes nothing.
 
 ### The packs check
 
@@ -156,6 +156,6 @@ Read its `# Omitted:` lines after each translation. A `spell N`, `aura N` or `it
 ## See also
 
 - [Pack translator rules](Pack-Translator-Rules)
-- [APL wowsims packs explained](APL-wowsims-Packs-Explained)
-- [Pack testing and gates](Pack-Testing-And-Gates): the replay that measures a pack against wowsims's fight
+- [wowsims priorities explained](APL-wowsims-Packs-Explained)
+- [Pack testing and gates](Pack-Testing-And-Gates): the replay that measures a priority against wowsims's fight
 - [Pack adding a spec or class](Pack-Adding-A-Spec-Or-Class)

@@ -12,11 +12,11 @@ The core is a generic engine. It names no class, spell, aura or talent, and a ne
 
 - Every default priority is generated from wowsims.com: a spec's priority is wowsims/forever's own rotation, translated by a recipe ([Pack wowsims recipes](Pack-wowsims-Recipes)). There are no hand-built priorities. A spec with no wowsims rotation is registered as unsupported and has no priority.
 - Exporting a new spec needs a wowsims/forever checkout at the pinned commit and its command-line simulator, described in [Pack wowsims recipes](Pack-wowsims-Recipes#exporting).
-- A new pack must pass the gates described in [Pack testing and gates](Pack-Testing-And-Gates), and its first measurement sets its floors.
+- A new priority must pass the gates described in [Pack testing and gates](Pack-Testing-And-Gates), and its first measurement sets its floors.
 
 ## Adding a spec to an existing class
 
-In these steps `<class>_<spec>` is the recipe name (`warrior_arms`), `<Pack>` the pack name (`Arms (wowsims.com)`), `<key>` the spec key (`arms`) and `<Class>` the addon's class (`Warrior`).
+In these steps `<class>_<spec>` is the recipe name (`warrior_arms`), `<Pack>` the priority name (`Arms (wowsims.com)`), `<key>` the spec key (`arms`) and `<Class>` the addon's class (`Warrior`).
 
 1. **Add the spec entry.** In the class file, add the spec to the `specs` list of `Hekili:NewClass` ([The spec entry](#the-spec-entry) below). A spec that shares its talent tree with another needs a selector that picks it from the talents ([Pack talents, specs and selectors](Pack-Talents-Specs-And-Selectors)).
 2. **Write the recipe.** Create `tools/wowsims/specs/<class>_<spec>.lua`, with a header comment naming the wowsims files and lines its values come from.
@@ -27,7 +27,7 @@ In these steps `<class>_<spec>` is the recipe name (`warrior_arms`), `<Pack>` th
    .lua/bin/lua tools/check_pack_levels.lua "src/Hekili_<Class>/APLs/<Pack>.simc"
    ```
 
-5. **Register the pack.** In `src/Hekili_<Class>/APLs/packs.lua`, add `<Pack>` to `packs` and map it to `<key>` in `specs`. Set the spec entry's `package` to `<Pack>`. For each `# Setting` line in the pack's header, register the setting on the spec, as in `src/Hekili_Warrior/Warrior.lua`:
+5. **Register the priority.** In `src/Hekili_<Class>/APLs/packs.lua`, add `<Pack>` to `packs` and map it to `<key>` in `specs`. Set the spec entry's `package` to `<Pack>`. For each `# Setting` line in the priority's header, register the setting on the spec, as in `src/Hekili_Warrior/Warrior.lua`:
 
    ```lua
    spec:RegisterSetting("wowsims_stance_dance", false, {
@@ -38,12 +38,12 @@ In these steps `<class>_<spec>` is the recipe name (`warrior_arms`), `<Pack>` th
    }, "arms") -- the spec key it belongs to
    ```
 
-   Then run `make packs`, which writes the pack's block into the class file.
+   Then run `make packs`, which writes the priority's block into the class file.
 6. **Close kit gaps.** For each ability wowsims casts that the class file lacks or models differently (cast time, cooldown, a talent's effect, a proc window), fix the class file, with a test in `tests/Forever/<class>_spec.lua`.
-7. **Extend the class test world.** Add the pack's content to `tests/Forever/helpers/<class>_world.lua`: the build's talents, and a press for every ability the pack recommends.
-8. **Add the replay and leveling gates.** In `tests/Forever/wowsims_<class>_spec.lua`, add the pack's replay gate and its leveling gate at three levels. Run the replay first with a floor of 0, work through the top disagreements reported on its line (a kit gap, a missing `map` entry, a limit of the replay, or a difference in wowsims itself), and record each in the recipe's header. Then set the floor to the measured value.
-9. **Add the loop gate.** Create `tests/Forever/loop_<class>_<spec>_spec.lua` for the pack's 20-fight gate, tagged with the class's gate tag, and set its flicker limits in `tests/Forever/helpers/pack_gate.lua`.
-10. **Record the focus tiers** of the pack's lines in `tests/Forever/focus_roles_spec.lua`.
+7. **Extend the class test world.** Add the priority's content to `tests/Forever/helpers/<class>_world.lua`: the build's talents, and a press for every ability the priority recommends.
+8. **Add the replay and leveling gates.** In `tests/Forever/wowsims_<class>_spec.lua`, add the priority's replay gate and its leveling gate at three levels. Run the replay first with a floor of 0, work through the top disagreements reported on its line (a kit gap, a missing `map` entry, a limit of the replay, or a difference in wowsims itself), and record each in the recipe's header. Then set the floor to the measured value.
+9. **Add the loop gate.** Create `tests/Forever/loop_<class>_<spec>_spec.lua` for the priority's 20-fight gate, tagged with the class's gate tag, and set its flicker limits in `tests/Forever/helpers/pack_gate.lua`.
+10. **Record the focus tiers** of the priority's lines in `tests/Forever/focus_roles_spec.lua`.
 11. **Run the checks.** Run `make check`, then `make gate`. Commit the recipe, the checked-in request and log, the generated files and the tests together.
 
 ## Adding a class
@@ -68,10 +68,10 @@ A new class follows these steps, then the spec checklist above for each of its s
    Druid.lua
    ```
 
-   The class pack is load-on-demand: the core loads `Hekili_Shared`, then the player's class pack, at login. `## X-Hekili-ContentAPI` must equal `CONTENT_API` in `src/Hekili/Engine/Content.lua`; on a mismatch the core shows a notice and does not load the pack. The core raises that number only when the content surface (the registration API, the client facade or the names a pack's code can read) changes. `tests/Forever/content_spec.lua` checks that every content TOC agrees with the core, and `tests/Forever/publication_spec.lua` checks the title, author, credit, website, icon and version fields shared by every TOC.
-3. **Write the class file.** The file `src/Hekili_<Class>/<Class>.lua` returns at once for any other class, then calls `Hekili:NewClass(token, def)`, which returns the class kit, and registers everything on that kit: talents, resources, auras, abilities, settings and packs ([Pack class file anatomy](Pack-Class-File-Anatomy)). `NewClass` returns nil when the token is not the player's class.
+   The class pack is load-on-demand: the core loads `Hekili_Shared`, then the player's class pack, at login. `## X-Hekili-ContentAPI` must equal `CONTENT_API` in `src/Hekili/Engine/Content.lua`; on a mismatch the core shows a notice and does not load the class pack. The core raises that number only when the content surface (the registration API, the client facade or the names a class pack's code can read) changes. `tests/Forever/content_spec.lua` checks that every content TOC agrees with the core, and `tests/Forever/publication_spec.lua` checks the title, author, credit, website, icon and version fields shared by every TOC.
+3. **Write the class file.** The file `src/Hekili_<Class>/<Class>.lua` returns at once for any other class, then calls `Hekili:NewClass(token, def)`, which returns the class kit, and registers everything on that kit: talents, resources, auras, abilities, settings and priorities ([Pack class file anatomy](Pack-Class-File-Anatomy)). `NewClass` returns nil when the token is not the player's class.
 4. **Add the string table.** The class file reads its text through `local L = Hekili:GetLocale("Hekili_<Class>")`. Run `python3 tools/locales.py` to write `Locales/enUS.lua` and the language files; it finds a new addon by itself. The TOC lists the `Locales` files before the class file.
-5. **Add the pack manifest.** `src/Hekili_<Class>/APLs/packs.lua` holds the class token, the packs in block order, and each pack's spec key. The `APLs/` folder is development-only: no TOC lists it, and the packager leaves it out. From `src/Hekili_Druid/APLs/packs.lua`, shortened:
+5. **Add the priority manifest.** `src/Hekili_<Class>/APLs/packs.lua` holds the class token, the priorities in block order, and each priority's spec key. The `APLs/` folder is development-only: no TOC lists it, and the packager leaves it out. From `src/Hekili_Druid/APLs/packs.lua`, shortened:
 
    ```lua
    return {
@@ -95,6 +95,8 @@ A new class follows these steps, then the spec checklist above for each of its s
    - `tests/boundary_lib.lua`: the class file's loader;
    - `tests/Forever/cdm_map_spec.lua`: the class's entry in `CLASSES`, with a Cooldown Manager export from the game client under `tests/Forever/fixtures/cdm/`;
    - the class lists in `tests/Forever/packs_spec.lua` and `tests/Forever/make_pack_spec.lua`.
+   - the repository `README.md`: the folder list and the folder count ("eleven") in its install section;
+   - the wiki's [Installing](Installing) page: the folder list under "Before you start" and each folder count.
 7. **Write the learn table.** Run `make wowsims-learn CLASS=<TOKEN>`. It writes `tests/Forever/wowsims/learn_<class>.lua`, the level at which each rank of each ability is learned, which the leveling gates read.
 8. **Add the class tests.** Create `tests/Forever/<class>_spec.lua` for the class file's registrations (loading the class file through `tests/Forever/helpers/load_druid.lua`, with the class's file and token), the class test world `tests/Forever/helpers/<class>_world.lua`, `tests/Forever/loop_<class>_spec.lua` for the world's boot checks and short gates, and `tests/Forever/wowsims_<class>_spec.lua` for the replay gates.
 9. **Add each spec** with the checklist above.
@@ -108,7 +110,7 @@ Each entry of `def.specs` in `Hekili:NewClass` describes one spec. The fields, f
 
 | Field | Meaning |
 |---|---|
-| `key` | The spec key, such as `feral`. Packs and settings name the spec by it. |
+| `key` | The spec key, such as `feral`. Priorities and settings name the spec by it. |
 | `name` | The spec's display name, from the class's string table. |
 | `tree` | The talent tree (1 to 3) the spec rides. Two specs may share a tree. |
 | `icon` | The spec's icon (a file ID). |

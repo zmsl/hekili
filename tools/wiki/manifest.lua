@@ -4,10 +4,13 @@
 -- and `make wiki-build` fills the pair in a copy under build/wiki/ and docs/wiki/ keeps the pair empty (tools/wiki/gen.lua). Each entry names its
 -- collector (tools/wiki/collect/<collector>.lua), the collector's arguments, the table's headers and, for an "n/a"
 -- cell, the note under the table that says what it means. A name a page uses that is not here is an error.
-local OPTION_COLUMNS = { "section", "label", "type", "default", "range", "description" }
-local OPTION_HEADERS = { "Section", "Option", "Type", "Default", "Values", "Description" }
+local OPTION_COLUMNS = { "section", "label", "type", "shown", "default", "range", "description" }
+local OPTION_HEADERS = { "Section", "Option", "Type", "Shown", "Default", "Values", "Description" }
+local SHOWN_NOTE = "Shown: In some cases means the option appears only in some cases, for example while another "
+    .. "option is on, for a class with a pet, for one kind of entry, or with Advanced checked."
 local OPTION_NOTE = "n/a: no fixed default (a keybind not set, or a value that follows the game or another option), "
-    .. "no range, or no description."
+    .. "no range, or no description. "
+    .. SHOWN_NOTE
 local RESOURCE_ORDER = {
     "current",
     "lo",
@@ -73,7 +76,7 @@ return {
     ["options-spec"] = {
         collector = "options",
         path = { "packs", "<spec>" },
-        exclude = { "<pack>" }, -- the priority editor: options-editor
+        exclude = { "<pack>", "cycleGroup" }, -- the priority editor: options-editor; Filter by Time-to-Die, always hidden
         noSettings = true, -- the class settings: spec-settings
         perSpec = { "package", "potion" },
         columns = OPTION_COLUMNS,
@@ -83,9 +86,9 @@ return {
     ["options-editor"] = {
         collector = "options",
         path = { "packs", "<spec>", "<pack>" },
-        columns = { "section", "label", "type", "range", "description" },
-        headers = { "Section", "Field", "Type", "Values", "Description" },
-        note = "n/a: free text, or no description.",
+        columns = { "section", "label", "type", "shown", "range", "description" },
+        headers = { "Section", "Field", "Type", "Shown", "Values", "Description" },
+        note = "n/a: free text, or no description. " .. SHOWN_NOTE,
     },
     ["options-displays-all"] = {
         collector = "options",

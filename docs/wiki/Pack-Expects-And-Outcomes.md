@@ -4,7 +4,7 @@ Type: Reference
 Audience: Lua developers
 Prerequisites: [Pack abilities reference](Pack-Abilities-Reference).
 -->
-An ability's `expects` field tells the core what the cast's hit looks like: whether it hits at once, flies to the target, lands with the next swing, ticks, or deals no damage at all. The Forever client gives addons no combat log, so the core cannot ask which cast caused a hit. Instead it opens a **ticket** for each cast and pays each outcome it sees on the target (a hit, a miss, a tick) to the cast that should have made it. `expects`, with `school` and `velocity`, is plain data on the ability that tells the core what to wait for.
+An ability's **`expects`** field tells the core what the cast's hit looks like: whether it hits at once, flies to the target, lands with the next swing, ticks, or deals no damage at all. The Forever client gives addons no combat log, so the core cannot ask which cast caused a hit. Instead it opens a **ticket** for each cast and pays each outcome it sees on the target (a hit, a miss, a tick) to the cast that should have made it. `expects`, with `school` and `velocity`, is plain data on the ability that tells the core what to wait for.
 
 | expects | |
 |---|---|
@@ -26,7 +26,7 @@ An ability's `expects` field tells the core what the cast's hit looks like: whet
 | `"ticks"` | A damage-over-time effect with no direct hit: one row per tick | An aura with `tick_time` and `dot = "debuff"` |
 | `"channel"` | One row per tick of a channel | An aura with `tick_time` |
 
-`"melee"` is the core's own kind for white swings; a pack cannot declare it. `"channel"` is accepted but no shipped pack uses it, and it has not been checked in the game.
+`"melee"` is the core's own kind for white swings; a class pack cannot declare it. `"channel"` is accepted but no shipped class pack uses it, and it has not been checked in the game.
 
 ## Fields
 
@@ -101,8 +101,8 @@ A declaration that breaks the table's rules is malformed: an `"instant"` with no
 - A `"debuff"` fails when any rank has a damaging effect.
 
 > [!NOTE]
-> **On Forever:** The game hides the amounts and kinds of most hits on the target, so many target rows cannot be paid to a cast in the game. The tickets still close in time, and a cast's `now` does not wait for them. The fields matter most where rows are plain: in the test harness, in replays, and in any area where the game shows them.
-<!-- UNVERIFIED: the extent to which target rows are hidden in each area of the game; the note follows the architecture notes on hidden target rows. -->
+> **On Forever:** The game hides the amounts and kinds of most hits on the target, so many target rows cannot be paid to a cast in the game; in the open world on the live client, none was paid when measured. The tickets still close in time, and a cast's `now` does not wait for them. The fields matter most where rows are plain: in the test harness, in replays, and in any area where the game shows them.
+<!-- UNVERIFIED: the open world was measured on the live client; other areas (dungeons, raids, battlegrounds) were not. -->
 
 ## See also
 

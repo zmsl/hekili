@@ -1,3 +1,9 @@
+<!--
+Purpose: Make Hekili Forever count the enemies near you: nameplates and Enemy Range Radius.
+Type: How-to
+Audience: players
+Prerequisites: None.
+-->
 This page shows how to make Hekili Forever count the enemies near you, so that its area-of-effect recommendations start when several enemies are in range. It covers nameplate counting and the **Enemy Range Radius** setting. For why the count can differ from what you see on screen, read [How targets are counted](How-Targets-Are-Counted).
 
 | Enemy Range Radius | |

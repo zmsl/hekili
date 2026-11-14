@@ -11,7 +11,7 @@ A **rotation window** is a named span of time during a fight that a class pack r
 A window is registered by a class pack with `RegisterWindow`, under a name such as `hha` or `riposte`. It is either open or closed. While open it has an opening time, an end time and, for a stepped window, a current step.
 
 - Hekili Forever opens and closes the real windows from what the game reports: each window can have a test, run on every update, and the window opens when the test becomes true. A cast the player makes can also open or close it, and combat end closes every window.
-- A window lasts a fixed number of seconds, until the end of combat, or as long as a length the pack works out at each opening. A window can also close when its test becomes false again.
+- A window lasts a fixed number of seconds, until the end of combat, or as long as a length the class pack works out at each opening. A window can also close when its test becomes false again.
 - A stepped window holds a sequence of abilities. Each cast of the step that is due moves it to the next step. At the end it closes, or starts again for a window that loops.
 
 On every update the forecast copies the windows as they stand. Lines and simulated casts change only that copy, for the rest of the walk; nothing a walk does to a window reaches the next update ([APL overview](APL-Overview#each-evaluation-stands-alone)).
@@ -56,7 +56,7 @@ actions+=/close_window,name=<window>[,if=<condition>]
 - The lines run in list order, like `variable` lines, and show no icon.
 - `open_window` opens the window at the point of the forecast where its condition first holds, and opens it only once per walk while the condition keeps holding. If the condition does not hold yet, the line is rechecked like any other, so it can open the window later in the forecast.
 - `duration=` replaces the registered length for this opening.
-- `refresh=1` lets the line restart a window that is already open, within the caps the pack sets. Without it, a line does not restart an open window unless the pack's registration allows it.
+- `refresh=1` lets the line restart a window that is already open, within the caps the class pack sets. Without it, a line does not restart an open window unless the class pack's registration allows it.
 - `close_window` closes the window when its condition holds and the window is open.
 - The importer switches a line off, with an "Unknown window" warning in the **Import Log**, when the class registers no window of that name. The editor's **Window Name** field offers only registered names.
 

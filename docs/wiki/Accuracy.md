@@ -1,3 +1,9 @@
+<!--
+Purpose: How closely the recommendations follow wowsims.com, and what the hidden values cost.
+Type: Reference
+Audience: everyone
+Prerequisites: None.
+-->
 The **Accuracy** page reports, for each specialization and priority, how closely Hekili Forever's recommendations follow the rotations from [wowsims.com](https://wowsims.com), and how much the values the game hides cost. All numbers come from test simulations run outside the game. None was measured in live play.
 
 <!-- GENERATED:accuracy-meta -->
@@ -31,6 +37,7 @@ The three measures are:
 - Live play. The tests have no boss mechanics, no movement and a single target.
 - Damage. The numbers count matching decisions, not damage done.
 - Priorities that are not in the table. They were not measured.
+- Priorities added after the version in the facts table. The measurements predate the Hunter Turret priorities, which are now the Hunter defaults, and the Frost, Holy Shock and Survival Melee priorities; none of them has a row yet. The Hunter rows measure the priorities that weave melee strikes in between shots.
 
 ## See also
 

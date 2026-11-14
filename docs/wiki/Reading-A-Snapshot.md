@@ -51,7 +51,7 @@ player_buffs:
 - `Toggles` shows each toggle's state at that moment. A toggle shown as false explains why the abilities tied to it were skipped.
 - `Warnings` lists problems Hekili Forever noticed while running, and problems found in the priority when it was loaded, such as a line that tests target health, which the game hides.
 - `Targets` shows how many enemies were counted and from where. Here nameplate counting was off, so only the current target counted.
-- `Auras` lists each buff and debuff by its name in the priority. A remaining time of 3600 means no end time is known. <!-- UNVERIFIED: the A. columns are read from the game's aura list and the S. columns from Hekili Forever's own records (Engine/Snapshot.lua); not checked in game. -->
+- `Auras` lists each buff and debuff by its name in the priority. The **A.** columns (count and remaining time) are the game's aura list as read; the **S.** columns are Hekili Forever's own record of the same aura. A remaining time of 3600 means no end time is known. <!-- UNVERIFIED: column meanings from src/Hekili/Engine/Snapshot.lua; not checked in game. -->
 
 ## The walk
 

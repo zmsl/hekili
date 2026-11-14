@@ -16,6 +16,7 @@ The **glossary** defines the terms used across this wiki: the player terms of th
 | Belief | Hekili Forever's running estimate of the game values that the client hides, such as energy, rage, mana and cooldown times. Each value is a band, plus how it was learned ([Pack belief and simulation](Pack-Belief-And-Simulation)). |
 | Built-in priority | A priority shipped with a class addon. When an update changes it, the new version replaces the saved one; to change one, copy it first. |
 | Class addon | The addon folder of one class, such as `Hekili_Druid`, with that class's abilities, auras, talents and priorities ([Installing](Installing)). |
+| Class pack | The developer pages' name for a class addon ([Pack overview](Pack-Overview)). |
 | Clash | An ability option: treat the ability as ready this many seconds early, so that it wins over one that is ready only slightly sooner ([Abilities and items](Abilities-And-Items)). |
 | Cooldown Manager | The game's own bars of cooldowns and auras. Hekili Forever reads them to learn whether a buff or debuff is up ([Cooldown Manager](Cooldown-Manager)). |
 | Custom priority | A priority made or imported by the player. It is never replaced by an update. |
@@ -28,7 +29,7 @@ The **glossary** defines the terms used across this wiki: the player terms of th
 | Forecast | The simulated look ahead: Hekili Forever plays the priority forward over the next few seconds to fill the queue of icons. |
 | Hidden value | A value the game shows on its own frames but does not let an addon read, compare or calculate with, such as energy or target health. Developer pages call it a secret value. |
 | Kit | A class's abilities, auras and talents, shared by all its specializations. |
-| Pack | A priority, also called an action pack. On developer pages, also the class addon that ships a class's kit and priorities. |
+| Pack | A priority, also called an action pack or priority pack; the editor's labels use this sense. Developer pages call the class addon a class pack. |
 | Priority | The ordered list of abilities, with conditions, that a display follows. Each specialization has a default one ([Choosing a priority](Choosing-A-Priority)). |
 | Profile | One complete set of Hekili Forever settings ([Profiles and sharing](Profiles-And-Sharing)). |
 | Recipe | The data from which a built-in priority is generated: a wowsims.com rotation and the rules that translate it ([wowsims recipes](Pack-wowsims-Recipes)). |

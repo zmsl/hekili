@@ -20,7 +20,7 @@ The table is generated from the definitions. The "Offered by" column names the o
 <!-- GENERATED:register-api -->
 <!-- /GENERATED -->
 
-Calls registered on the class kit reach every spec of the class. A function a call stores (a state expression, a hook, an ability's `handler`) runs in the simulation with the simulated `state` as its environment, unless the call says otherwise. `kit:RetirePacks(names)` is not in the table, because its name does not start with `Register`; it is described under [Packs and settings](#packs-and-settings).
+Calls registered on the class kit reach every spec of the class. A function a call stores (a state expression, a hook, an ability's `handler`) runs in the simulation with the simulated `state` as its environment, unless the call says otherwise. `kit:RetirePacks(names)` is not in the table, because its name does not start with `Register`; it is described under [Priorities and settings](#priorities-and-settings).
 
 ## Examples
 
@@ -52,7 +52,7 @@ shared:RegisterAura("potion", {
 })
 ```
 
-A race ability registers on every character, but is known only to that race. `RegisterPower` and `RegisterPowers` are inherited from the original Hekili; no pack uses them.
+A race ability registers on every character, but is known only to that race. `RegisterPower` and `RegisterPowers` are inherited from the original Hekili; no class pack uses them.
 
 ### Resources
 
@@ -97,7 +97,7 @@ Both layers read both kinds of modifier, so an ability's own `spend` and `gcd` n
 
 ### Talents, specs and gear
 
-`RegisterTalents({ [key] = { tree, spellID, maxRank } })` lists the class's talents. `RegisterSelector(key, { spec, pack }, condition)` picks a spec and its pack from the talents. Both are on [Pack talents, specs and selectors](Pack-Talents-Specs-And-Selectors). `RegisterPvpTalents` is inherited; no pack uses it.
+`RegisterTalents({ [key] = { tree, spellID, maxRank } })` lists the class's talents. `RegisterSelector(key, { spec, pack }, condition)` picks a spec and its priority from the talents. Both are on [Pack talents, specs and selectors](Pack-Talents-Specs-And-Selectors). `RegisterPvpTalents` is inherited; no class pack uses it.
 
 `RegisterGear(key, itemID, ...)` names an item or a set by item IDs, and `RegisterSetBonus(key, spellID)` a set bonus by its hidden aura; both are read as `set_bonus.<key>`. From `src/Hekili_Hunter/Hunter.lua`:
 
@@ -106,7 +106,7 @@ spec:RegisterGear("cryptstalker", unpack(CRYPTSTALKER))
 spec:RegisterSetBonus("cryptstalker_2pc", 28755)
 ```
 
-`RegisterSetBonuses(key, spellID, ...)` registers several pairs at once; no pack uses it.
+`RegisterSetBonuses(key, spellID, ...)` registers several pairs at once; no class pack uses it.
 
 ### Pets and totems
 
@@ -118,7 +118,7 @@ spec:RegisterPets({
 })
 ```
 
-`RegisterTotems({ [key] = { id, copy } })` names the totems; the Shaman's file builds its table from its totem list and passes it. `RegisterPet` and `RegisterTotem` are the single forms; no pack calls them directly.
+`RegisterTotems({ [key] = { id, copy } })` names the totems; the Shaman's file builds its table from its totem list and passes it. `RegisterPet` and `RegisterTotem` are the single forms; no class pack calls them directly.
 
 ### Simulation extensions
 
@@ -167,7 +167,7 @@ spec:RegisterEvent("PLAYER_REGEN_ENABLED", function()
 end)
 ```
 
-`RegisterUnitEvent`, `RegisterCombatLogEvent`, `RegisterCycle`, `RegisterVariable`, `RegisterPhase`, `RegisterPhasedVariable`, `RegisterRecheck`, `RegisterRanges`, `RegisterRangeFilter` and `RegisterOptions` are inherited from the original Hekili; no shipped pack uses them. `RegisterPotion`, `RegisterPotions` and `RegisterPriority` are kept for old class files and do nothing.
+`RegisterUnitEvent`, `RegisterCombatLogEvent`, `RegisterCycle`, `RegisterVariable`, `RegisterPhase`, `RegisterPhasedVariable`, `RegisterRecheck`, `RegisterRanges`, `RegisterRangeFilter` and `RegisterOptions` are inherited from the original Hekili; no shipped class pack uses them. `RegisterPotion`, `RegisterPotions` and `RegisterPriority` are kept for old class files and do nothing.
 
 ### Windows and reactions
 
@@ -181,7 +181,7 @@ spec:RegisterWindow("riposte", {
 })
 ```
 
-### Packs and settings
+### Priorities and settings
 
 `RegisterSetting(key, default, option, specKey, ...)` adds a class setting ([Pack settings](Pack-Settings)). `RegisterPack(name, version, string)` registers a built-in priority; `make packs` writes these blocks, and they are never edited by hand. `RetirePacks({ name, ... })` names built-in priorities the class no longer ships: when the profile's defaults are restored, a saved copy of one leaves the profile (a player's own priority of the same name stays), and a spec that chose it falls back to its default. From `src/Hekili_Druid/Druid.lua`:
 

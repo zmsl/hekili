@@ -6,7 +6,7 @@ Prerequisites: [APL overview](APL-Overview).
 -->
 The **APL Forever differences** are the expressions and line options that behave differently in Hekili Forever than in SimulationCraft or in retail Hekili, the original addon this fork comes from. Most differences follow from one fact: the Forever client hides many combat values from addons ([What Hekili Forever can and cannot know](What-Hekili-Forever-Can-And-Cannot-Know)). The others are additions this fork made. A priority copied from SimulationCraft or retail Hekili should be checked against the tables below.
 
-As of the current release, the tables list every difference known. The pages they link give the details.
+The tables list the differences a priority author meets. The importer also rewrites a few retail-only forms that are not listed. The pages they link give the details.
 
 ## Expressions
 

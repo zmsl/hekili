@@ -10,7 +10,7 @@ The other pages in this group are references: [APL syntax reference](APL-Syntax-
 
 ## What a priority is
 
-A priority is a named bundle of action lists for one specialization. Each specialization has one active priority, chosen under **/hekili > Priorities**, on the page of that specialization. The built-in priorities are generated from the rotations at [wowsims.com](https://wowsims.com) and carry "(wowsims.com)" in their names ([APL wowsims packs explained](APL-wowsims-Packs-Explained)). A player can copy a built-in priority and edit the copy, or write a new one.
+A priority is a named bundle of action lists for one specialization. Each specialization has one active priority, chosen under **/hekili > Priorities**, on the page of that specialization. The built-in priorities are generated from the rotations at [wowsims.com](https://wowsims.com) and carry "(wowsims.com)" in their names ([wowsims priorities explained](APL-wowsims-Packs-Explained)). A player can copy a built-in priority and edit the copy, or write a new one.
 
 Each line of an APL names one action and, after `if=`, its condition. From Feral (wowsims.com):
 

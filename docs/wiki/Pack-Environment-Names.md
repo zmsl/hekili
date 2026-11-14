@@ -4,7 +4,7 @@ Type: Reference
 Audience: Lua developers
 Prerequisites: [Pack API reference](Pack-API-Reference).
 -->
-A content function, such as an ability's `now` or `handler`, runs with an environment the core sets, so a bare name inside it, like `buff` or `gain`, answers from that environment rather than from Lua's globals. There are two environments: the simulated `state`, where `handler`, field functions, state expressions and hooks run, and the belief's `now` context, where `now`, `onCrit`, `onLand`, `now_finish`, reactions and window evaluators run. This page lists the names each environment offers, and the verbs that write to it. Why there are two is explained on [Pack belief and simulation](Pack-Belief-And-Simulation).
+A content function, such as an ability's `now` or `handler`, runs with an **environment** the core sets, so a bare name inside it, like `buff` or `gain`, answers from that environment rather than from Lua's globals. There are two environments: the simulated `state`, where `handler`, field functions, state expressions and hooks run, and the belief's `now` context, where `now`, `onCrit`, `onLand`, `now_finish`, reactions and window evaluators run. This page lists the names each environment offers, and the verbs that write to it. Why there are two is explained on [Pack belief and simulation](Pack-Belief-And-Simulation).
 
 | Environment names | |
 |---|---|
@@ -66,7 +66,7 @@ The simulated `state` holds every value a priority line can read: `cooldown.<key
 
 ### Helpers at file level
 
-A function defined at the top of a class file keeps the file's environment, not the layer's. Inside it, `buff`, `talent` and the verbs are Lua globals, which do not exist. A helper that needs the known rank takes it from a local set once as `local rankOf = state.knownRank`, which gives the same answer in both layers; anything else it needs is passed as an argument by the pack function that calls it.
+A function defined at the top of a class file keeps the file's environment, not the layer's. Inside it, `buff`, `talent` and the verbs are Lua globals, which do not exist. A helper that needs the known rank takes it from a local set once as `local rankOf = state.knownRank`, which gives the same answer in both layers; anything else it needs is passed as an argument by the class pack function that calls it.
 
 ## Verbs
 

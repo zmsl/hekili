@@ -24,7 +24,7 @@ To follow along on a branch, first delete the three Barkskin entries from `src/H
 
 ## Gather the spell data
 
-Look up the facts the pack needs before writing any code. For Barkskin they are:
+Look up the facts the class pack needs before writing any code. For Barkskin they are:
 
 | Fact | Value |
 |---|---|
@@ -145,13 +145,13 @@ Run the full check before committing:
 make check
 ```
 
-It runs lint, formatting, the type check, every headless spec (including the short replay and loop gates), the API and boundary checks and the packs check. A pack change that can move recommendations is also measured by the class's 20-fight loops, which `make gate` runs for every class before a merge. To run only the Druid's:
+It runs lint, formatting, the type check, every headless spec (including the short replay and loop gates), the API and boundary checks and the packs check. A class pack change that can move recommendations is also measured by the class's 20-fight loops, which `make gate` runs for every class before a merge. To run only the Druid's:
 
 ```sh
 make test-druid
 ```
 
-When the ability is new to the class's priorities, its priority lines come from the wowsims recipe, not from a hand edit of the pack ([Pack wowsims recipes](Pack-wowsims-Recipes)).
+When the ability is new to the class's priorities, its priority lines come from the wowsims recipe, not from a hand edit of the generated priority ([Pack wowsims recipes](Pack-wowsims-Recipes)).
 
 ## Next steps
 

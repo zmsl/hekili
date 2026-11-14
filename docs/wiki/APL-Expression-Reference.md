@@ -1,3 +1,9 @@
+<!--
+Purpose: Every value a priority line can test, with its type and how Forever provides it.
+Type: Reference
+Audience: theorycrafters
+Prerequisites: None.
+-->
 The **APL expression reference** lists the values that a priority line can test in its conditions on Hekili Forever. An expression such as `energy.lo>=60` or `buff.cat_form.up` names a value by a root (`energy`, `buff`), an optional key (`cat_form`) and a field (`lo`, `up`). The page covers resources, time to die, buffs and debuffs, cooldowns, actions, talents, the target, toggles, settings, previous casts and the other values of the fight.
 
 Expressions follow the SimulationCraft action-list dialect that the original Hekili used, with the changes listed in [APL Forever differences](APL-Forever-Differences). Operators and the line grammar are in [APL syntax reference](APL-Syntax-Reference). The resource and time-to-die tables are generated from the addon; the others are written by hand and list the keys priorities use. In every table, `<key>` stands for an ability's or aura's key, such as `rake`.
@@ -57,7 +63,7 @@ When a comparison asks a resource to reach a value, as in `energy.lo>=60` or `60
 | `buff.<key>.max_stack` | number | The most stacks the aura can have | Modelled | `buff.heating_up.max_stack>1` |
 | `buff.<key>.refreshable` | boolean | The aura is down, or has less than 30% of its duration left | Estimated | `buff.battle_shout.refreshable` |
 | `buff.<key>.react` | number | Stacks, for a proc aura | Estimated | `buff.clearcasting.react>0` |
-| `buff.<key>.icd_ready` | boolean | The aura's internal cooldown has passed, for a proc aura the pack gives one | Modelled | `buff.clearcasting.icd_ready` |
+| `buff.<key>.icd_ready` | boolean | The aura's internal cooldown has passed, for a proc aura the class pack gives one | Modelled | `buff.clearcasting.icd_ready` |
 | `buff.<key>.icd_remains` | seconds | Time until that internal cooldown passes | Modelled | `buff.clearcasting.icd_remains<1` |
 | `debuff.<key>.up` | boolean | The aura is on the target | Estimated | `debuff.rake.up` |
 | `debuff.<key>.remains` | seconds | Time until it ends on the target | Estimated | `debuff.rip.remains>=2` |
@@ -131,7 +137,7 @@ actions=call_action_list,name=move_to_melee,if=(!action.holy_strike.known|!actio
 
 ### The leveling guard
 
-The built-in priorities wrap each read of another ability in a test of whether it is known: `(!action.cat_form.known|buff.cat_form.up)` reads "Cat Form is up, or the character has not learned it yet". A character below the level of an ability then skips the test instead of waiting for an ability it cannot have. [APL wowsims packs explained](APL-wowsims-Packs-Explained#why-a-built-in-looks-verbose) explains why the guards are there.
+The built-in priorities wrap each read of another ability in a test of whether it is known: `(!action.cat_form.known|buff.cat_form.up)` reads "Cat Form is up, or the character has not learned it yet". A character below the level of an ability then skips the test instead of waiting for an ability it cannot have. [wowsims priorities explained](APL-wowsims-Packs-Explained#why-a-built-in-looks-verbose) explains why the guards are there.
 
 ### Edge cases
 
@@ -223,11 +229,11 @@ actions+=/mind_flay,if=((action.inner_focus.known&prev.1.inner_focus)|(!action.i
 |---|---|---|---|---|
 | `time` | seconds | Time since combat started; 0 out of combat | Read | `time>=0` |
 | `active_enemies` | number | Enemies counted ([How targets are counted](How-Targets-Are-Counted)), at least 1 | Read | `active_enemies>=3` |
-| `spell_targets.<key>` | number | Enemies counted for the ability; `active_enemies` unless the pack limits it | Read | `spell_targets.swipe_bear>=3` |
+| `spell_targets.<key>` | number | Enemies counted for the ability; `active_enemies` unless the class pack limits it | Read | `spell_targets.swipe_bear>=3` |
 | `gcd.remains` | seconds | Time until the running GCD ends | Read | `gcd.remains<=0` |
 | `gcd.max` | seconds | The length of a GCD | Modelled | `gcd.max<1.5` |
 | `health.pct` | percent | The player's health | Read; 100 while hidden | `health.pct<=30` |
-| `totem.<element>.up` | boolean | A totem of that element is down | Read | `!totem.fire.up` |
+| `totem.<element>.up` | boolean | A totem of that element is placed | Read | `!totem.fire.up` |
 | `totem.<element>.remains` | seconds | Time until it expires | Estimated | `totem.fire.remains<2` |
 | `main_hand.<kind>`, `off_hand.<kind>` | boolean | The weapon in that hand is of a kind, such as `dagger` or `two_handed` | Read | `main_hand.dagger` |
 | `equipped.shield` | boolean | A shield is equipped | Read | `equipped.shield` |

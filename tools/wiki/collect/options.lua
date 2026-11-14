@@ -1,8 +1,9 @@
 -- tools/wiki/collect/options.lua: the options a player sees under one node of the options tree (Hekili.Options, as
 -- built in a headless boot), one row per option: its section, label, type, default (the option's own `get` on a
 -- fresh profile), values and description. Spacers, headers and text-only rows are left out; so is an option that is
--- hidden for good (`hidden = true`, or a `hidden` function that answers true at the headless boot). A function that
--- answers false there is kept: the option shows in some states. M.labels() still lists every option.
+-- hidden for good (`hidden = true`; an always-hidden function is named in the manifest's `exclude`). An option whose
+-- `hidden` function (its own or a group's) answers true at the headless boot is kept with `shown` "In some cases": it
+-- shows in other states (a pet, an entry's action, Advanced checked). M.labels() still lists every option.
 local boot = require("tools.wiki.boot")
 local text = require("tools.wiki.text")
 
@@ -28,27 +29,35 @@ local function call(v, info)
     return v
 end
 
--- The value `get` answers for `node` (inherited from its groups, as AceConfig does), or nil.
+-- A colour getter's answer ((r, g, b) or {r, g, b}) as "#RRGGBB", or nil.
+local function hex(a, b, c)
+    if type(a) == "table" then
+        a, b, c = a[1] or a.r, a[2] or a.g, a[3] or a.b
+    end
+    if type(a) == "number" and type(b) == "number" and type(c) == "number" then
+        return ("#%02X%02X%02X"):format(a * 255 + 0.5, b * 255 + 0.5, c * 255 + 0.5)
+    end
+end
+
+-- The value `get` answers for `node` (inherited from its groups, as AceConfig does), or nil. A colour reads as hex.
 local function current(node, info, inherited)
     local get = node.get or inherited.get
     local handler = node.handler or inherited.handler
+    local ok, a, b, c
     if type(get) == "string" then
         if not handler or type(handler[get]) ~= "function" then
             return nil
         end
-        local ok, r = pcall(handler[get], handler, info)
-        if ok then
-            return r
-        end
+        ok, a, b, c = pcall(handler[get], handler, info)
     elseif type(get) == "function" then
-        local ok, a, b, c = pcall(get, info)
-        if node.type == "color" and ok and type(a) == "number" then
-            return ("#%02X%02X%02X"):format(a * 255 + 0.5, b * 255 + 0.5, c * 255 + 0.5)
-        end
-        if ok then
-            return a
-        end
+        ok, a, b, c = pcall(get, info)
     end
+    if not ok then
+        return nil
+    elseif node.type == "color" then
+        return hex(a, b, c)
+    end
+    return a
 end
 
 local function valueList(node, info)
@@ -74,18 +83,20 @@ local function valueList(node, info)
 end
 
 local function shown(node, info, value)
-    if value == nil then
-        return nil
-    end
     local t = node.type
-    if t == "toggle" then
+    if t == "toggle" and not node.tristate then
+        return value and "On" or "Off" -- AceConfig draws a nil toggle unchecked
+    elseif value == nil then
+        return nil
+    elseif t == "toggle" then
         return value and "On" or "Off"
     elseif t == "range" then
         local pct = node.isPercent and type(value) == "number"
         return pct and (text.num(value * 100, 1) .. "%") or text.num(value, 2)
     elseif t == "select" then
         local _, values = valueList(node, info)
-        if type(values) == "table" and values[value] ~= nil then
+        local media = tostring(node.dialogControl):find("^LSM30_") -- LibSharedMedia: the key is the name, the value a path
+        if not media and type(values) == "table" and values[value] ~= nil then
             return text.strip(values[value])
         end
         return text.strip(value)
@@ -116,8 +127,9 @@ local function range(node, info)
             return ("%d choices"):format(#keys)
         end
         local out = {}
+        local media = tostring(node.dialogControl):find("^LSM30_")
         for _, k in ipairs(keys) do
-            out[#out + 1] = text.strip(values[k])
+            out[#out + 1] = text.strip(media and k or values[k])
         end
         return table.concat(out, "; ")
     end
@@ -160,10 +172,11 @@ local function children(node)
     return out
 end
 
-local function walk(node, info, inherited, section, rows, o, depth)
+local function walk(node, info, inherited, section, rows, o, depth, sometimes)
     for _, kv in ipairs(children(node)) do
         local key, child = kv[1], kv[2]
-        if not o.exclude[key] and type(child) == "table" and not call(child.hidden, info) then
+        if not o.exclude[key] and type(child) == "table" and child.hidden ~= true then
+            local cond = sometimes or call(child.hidden, info) -- hidden at the boot, so shown only in some states
             local ci = {}
             for i, s in ipairs(info) do
                 ci[i] = s
@@ -178,7 +191,7 @@ local function walk(node, info, inherited, section, rows, o, depth)
             if child.type == "group" then
                 if depth < o.depth then
                     local sub = label == "" and section or section ~= "" and (section .. " > " .. label) or label
-                    walk(child, ci, inh, sub, rows, o, depth + 1)
+                    walk(child, ci, inh, sub, rows, o, depth + 1, cond)
                 end
             elseif not SKIP_TYPES[child.type] and label ~= "" then
                 local desc = call(child.desc, ci)
@@ -188,6 +201,7 @@ local function walk(node, info, inherited, section, rows, o, depth)
                     section = section,
                     label = label,
                     type = TYPE_NAMES[child.type] or child.type,
+                    shown = cond and "In some cases" or "Yes",
                     default = perSpec and "Set per specialization" or shown(child, ci, current(child, ci, inh)),
                     range = perSpec and "The specialization's own" or range(child, ci),
                     description = desc and (o.rename and o.rename(text.sentence(desc)) or text.sentence(desc)) or nil,

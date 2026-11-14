@@ -4,7 +4,7 @@ Type: Explanation
 Audience: Lua developers
 Prerequisites: [Pack overview](Pack-Overview).
 -->
-Hekili Forever keeps two models of the game, and a class pack describes each ability's effect once for each of them. The belief is the addon's running estimate of what has happened in the game, built from observed events. The simulation is the forecast of the casts ahead, which picks the recommendations. An ability's `now` function writes its effect into the belief; its `handler` function writes the same effect into the simulation. This page explains why there are two layers, how the two functions differ, and what the belief's estimates look like.
+Hekili Forever keeps two models of the game, the **belief** and the **simulation**, and a class pack describes each ability's effect once for each of them. The belief is the addon's running estimate of what has happened in the game, built from observed events. The simulation is the forecast of the casts ahead, which picks the recommendations. An ability's `now` function writes its effect into the belief; its `handler` function writes the same effect into the simulation. This page explains why there are two layers, how the two functions differ, and what the belief's estimates look like.
 
 | Two layers | |
 |---|---|
@@ -17,14 +17,14 @@ Hekili Forever keeps two models of the game, and a class pack describes each abi
 
 ## Two layers
 
-The Forever client hides many values from addons: resources such as energy, rage and mana at all times, and cooldown times, aura durations and target health during combat. The game's own frames can show a hidden value, but an addon cannot read it, compare it or calculate with it ([What Hekili Forever can and cannot know](What-Hekili-Forever-Can-And-Cannot-Know)). The original Hekili read all of these values on every update, so its simulation cannot start from the game directly.
+The Forever client hides many values from addons: resources such as energy, rage and mana, and target health, at all times, and cooldown times and aura durations during combat. The game's own frames can show a hidden value, but an addon cannot read it, compare it or calculate with it ([What Hekili Forever can and cannot know](What-Hekili-Forever-Can-And-Cannot-Know)). The original Hekili read all of these values on every update, so its simulation cannot start from the game directly.
 
 Hekili Forever keeps the original simulation and puts the belief in front of it.
 
 - **The belief** starts from what the client still answers plainly: values read out of combat, the player's own casts, whether an ability is usable, and whether a cooldown is ready. It carries those values forward with the models the class pack registers (costs, regeneration, durations) and corrects itself whenever the client reveals something new. It lives in `src/Hekili/Game/`.
 - **The simulation** is the original Hekili's forecast, in `src/Hekili/Engine/Sim/`. On each update the engine copies the belief into the simulated state, walks the active priority, picks the first ability whose conditions hold, advances the simulated clock past that cast, and walks the priority again. The repeated walk fills the queue of recommendations.
 
-The belief answers "what is true now"; the simulation answers "what happens if the player presses these abilities". Both run pack code, and both need to know what an ability does.
+The belief answers "what is true now"; the simulation answers "what happens if the player presses these abilities". Both run class pack code, and both need to know what an ability does.
 
 ## now and handler
 
@@ -103,7 +103,7 @@ The names each context offers are listed on [Pack environment names](Pack-Enviro
 - Write both from the same source of truth. A duration or amount that depends on a talent, a rank or gear is computed the same way in each, usually through a shared table or the aura's own `duration` function. An `applyBuff` with no duration, in either layer, uses the aura's registered duration.
 - A `now` never assigns a global. The context raises on any assignment, which counts as an error, so that one cast cannot shadow a verb for every later cast.
 - A helper defined at file level keeps the file's environment, not the layer's. A class file that needs the known rank in a helper takes it once as `local rankOf = state.knownRank`, which gives the same answer in both layers, and passes anything else the helper needs as an argument.
-- The ability fields a pack writes as functions (`spend`, `cooldown`, `cast`, `known`, `usable`, an aura's `duration`) run in the simulation under `state`. The belief evaluates the ones it prices with (`spend`, `cooldown`, `gcdTime`, an aura's `duration`) in its own context, so those read only names both contexts have.
+- The ability fields a class pack writes as functions (`spend`, `cooldown`, `cast`, `known`, `usable`, an aura's `duration`) run in the simulation under `state`. The belief evaluates the ones it prices with (`spend`, `cooldown`, `gcdTime`, an aura's `duration`) in its own context, so those read only names both contexts have.
 
 ### Fields with no twin
 
@@ -129,7 +129,7 @@ Each belief estimate of a hidden value is a band: a low end, a best guess and a 
 | Low end | The least the value can be, given everything observed |
 | Best guess | The estimate the forecast starts from |
 | High end | The most the value can be |
-| How it was learned | Observed (read plainly), pinned by an event (such as a usability answer), or modelled (carried forward by the pack's models) |
+| How it was learned | Observed (read plainly), pinned by an event (such as a usability answer), or modelled (carried forward by the class pack's models) |
 
 A write from `now` is a modelled sample at the cast's time. A later observation overrides it: if the client reports that an ability cannot be used for lack of rage, the rage must be below its cost, and the band moves to agree. A `now` that is slightly wrong therefore corrects itself at the next observation, while a missing `now` leaves the belief wrong until then.
 
@@ -147,7 +147,7 @@ local Facade = Hekili.Client
 local C_Spell, UnitClassBase = Facade.C_Spell, Facade.UnitClassBase
 ```
 
-A content addon never names a game API global. `make check` runs `tools/check_api_reads.sh`, which fails on a game API read outside the facade. This keeps one rule in one place: what the client hides, and how each hidden read is answered, is decided in the facade and the belief, not in each pack.
+A content addon never names a game API global. `make check` runs `tools/check_api_reads.sh`, which fails on a game API read outside the facade. This keeps one rule in one place: what the client hides, and how each hidden read is answered, is decided in the facade and the belief, not in each class pack.
 
 ## See also
 

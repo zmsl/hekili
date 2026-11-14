@@ -16,7 +16,7 @@ A profile is one complete set of settings. All characters share the profile name
 - To start over, press "Reset Profile". The active profile goes back to the default settings.
 - To delete a profile that is not in use, choose it in "Delete a Profile".
 
-"Enable spec profiles" lets each of the character's talent specializations use its own profile, switched automatically. <!-- UNVERIFIED: how spec profiles (LibDualSpec) behave on the Forever client, which tracks talent trees rather than retail specializations. -->
+"Enable spec profiles" switches profiles when the game reports a change of specialization. The Forever client reports one specialization for each class, so the option may have no effect there; it has not been checked on Forever. <!-- UNVERIFIED: LibDualSpec keys on C_SpecializationInfo (Libs/LibDualSpec-1.0/LibDualSpec-1.0.lua); Forever reports one pseudo-spec per class, so it cannot follow talent trees. Not tested in game. -->
 
 Switching profiles for a macro:
 

@@ -4,7 +4,7 @@ Type: Reference
 Audience: Lua developers
 Prerequisites: [Pack API reference](Pack-API-Reference).
 -->
-A **class setting** is an option a class pack adds to its specializations' options pages, such as the Druid's Always Behind. A pack registers it with `RegisterSetting`, the player changes it on the spec's page or with `/hekili set`, and priorities and pack code read it as `settings.<key>`. This page describes the call, the kinds of setting, how each layer reads a setting, and lists every class setting the packs ship.
+A **class setting** is an option a class pack adds to its specializations' options pages, such as the Druid's Always Behind. The class pack registers it with `RegisterSetting`, the player changes it on the spec's page or with `/hekili set`, and priorities and class pack code read it as `settings.<key>`. This page describes the call, the kinds of setting, how each layer reads a setting, and lists every class setting the class packs ship.
 
 | Class settings | |
 |---|---|
@@ -98,7 +98,7 @@ actions+=/curse_of_recklessness,if=settings.assigned_curse='recklessness'&...
 
 The script language passes a quoted string through as it is, so a candidate key may contain any name.
 
-Pack code reads the same name in both layers:
+Class pack code reads the same name in both layers:
 
 - **In the simulation** (a `handler`, a `usable`, a state expression), `settings.<key>` reads the active spec's value from the profile at the moment of the read. An unset value reads the setting's default.
 - **In the belief** (a `now`, a window's evaluator), `settings.<key>` reads a plain copy of the active spec's values, which the core refreshes whenever a setting changes.
@@ -109,7 +109,7 @@ The wowsims translator turns some of wowsims's switches into settings whose keys
 
 ## Every class setting
 
-The table below lists every class setting the shipped packs register, generated from the class files.
+The table below lists every class setting the shipped class packs register, generated from the class files.
 
 <!-- GENERATED:pack-settings -->
 <!-- /GENERATED -->

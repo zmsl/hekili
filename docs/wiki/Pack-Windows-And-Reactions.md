@@ -12,7 +12,7 @@ A **rotation window** is a named span of time that a class pack registers when t
 | Defined in | `src/Hekili/Engine/Schema/Spec.lua` |
 | Belief side | `src/Hekili/Game/State/Families/Windows.lua`, `Now.lua` |
 | Read in a priority as | `window.<name>.up`, `.remains`, `.elapsed`, `.step`, `.next.<ability>` |
-| Shipped examples | Windows in the Rogue, Hunter and Paladin packs; reactions in the Warrior and Paladin packs |
+| Shipped examples | Windows in the Rogue, Hunter and Paladin class packs; reactions in the Warrior and Paladin class packs |
 
 Use the first that fits: an aura when the game shows one; a usability flip when the game's answer for an ability changes at the span's edges; a reaction only where only an outcome reveals the span.
 

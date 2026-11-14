@@ -348,13 +348,47 @@ end)
 describe("the options collector", function()
     local options = require("tools.wiki.collect.options")
 
-    it("leaves out an always-hidden option from the rows but keeps its label for the check", function()
-        local rows = options.rows({ path = { "packs", "<spec>" }, exclude = { "<pack>" }, depth = 3 })
-        local labels = {}
+    local manifest = require("tools.wiki.manifest")
+    local function byLabel(rows)
+        local out = {}
         for _, r in ipairs(rows) do
-            labels[r.label] = true
+            out[r.label] = out[r.label] or r
         end
-        assert.is_nil(labels["Filter by Time-to-Die"], "a hidden option is not a row")
+        return out
+    end
+
+    it("keeps an option hidden only in some states, and leaves out the always-hidden one named in the manifest", function()
+        local rows = byLabel(options.rows(manifest["options-spec"]))
+        assert.is_nil(rows["Filter by Time-to-Die"], "the always-hidden option is not a row")
         assert.is_true(options.labels()["Filter by Time-to-Die"], "its label is still a known option label")
+        assert.are.equal("In some cases", rows["Enemy Range Radius"].shown)
+        assert.are.equal("In some cases", rows["Count Targets Near Your Pet"].shown)
+        assert.are.equal("Yes", rows["Frame Budget"].shown)
+        local editor = byLabel(options.rows(manifest["options-editor"]))
+        for _, field in ipairs({ "Use Off GCD", "Focus Tier", "Label", "Cycle Targets", "Variable Name" }) do
+            assert.are.equal("In some cases", editor[field] and editor[field].shown, field)
+        end
+    end)
+
+    it("prints a colour default as hex", function()
+        local n = 0
+        for _, r in ipairs(options.rows(manifest["options-display-classic"])) do
+            if r.type == "colour" then
+                n = n + 1
+                assert.truthy(tostring(r.default):match("^#%x%x%x%x%x%x$"), r.section .. " > " .. r.label)
+            end
+        end
+        assert.is_true(n > 0)
+    end)
+
+    it("prints a font by its name and an unset toggle as Off", function()
+        local all = byLabel(options.rows(manifest["options-displays-all"]))
+        assert.are.equal("Arial Narrow", all["Font"].default)
+        local toggles = options.rows(manifest["options-toggles"])
+        for _, r in ipairs(toggles) do
+            if r.label == "Pause" and r.type == "toggle" then
+                assert.are.equal("Off", r.default)
+            end
+        end
     end)
 end)

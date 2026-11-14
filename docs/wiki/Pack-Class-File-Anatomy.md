@@ -4,18 +4,18 @@ Type: Explanation
 Audience: Lua developers
 Prerequisites: [Pack overview](Pack-Overview).
 -->
-A class file is the one Lua file of a class pack, `src/Hekili_<Class>/<Class>.lua`, that declares everything the core knows about the class. This page follows the Druid's, `src/Hekili_Druid/Druid.lua`, from top to bottom, in the order its sections are written, and explains what each section is for. The examples are shortened from that file, with comments written for this page. Each call is listed with its parameters on [Pack API reference](Pack-API-Reference).
+A **class file** is the one Lua file of a class pack, `src/Hekili_<Class>/<Class>.lua`, that declares everything the core knows about the class. This page follows the Druid's, `src/Hekili_Druid/Druid.lua`, from top to bottom, in the order its sections are written, and explains what each section is for. The examples are shortened from that file, with comments written for this page. Each call is listed with its parameters on [Pack API reference](Pack-API-Reference).
 
 | Druid class file | |
 |---|---|
 | File | `src/Hekili_Druid/Druid.lua` |
 | Specs | Balance, Feral, Guardian; Restoration registered as unsupported |
-| Order | Header and class check, `NewClass`, rank lists and helpers, resources, talents, selectors, gear, auras, cost and GCD modifiers, state expressions and functions, hooks, abilities, settings, packs |
+| Order | Header and class check, `NewClass`, rank lists and helpers, resources, talents, selectors, gear, auras, cost and GCD modifiers, state expressions and functions, hooks, abilities, settings, priorities |
 | Tests | `tests/Forever/druid_spec.lua` and the Druid loop and replay specs |
 
 ## The header and the class check
 
-The file opens with the facade, the pack's string table and the class check:
+The file opens with the facade, the class pack's string table and the class check:
 
 ```lua
 local Facade = Hekili.Client
@@ -124,7 +124,7 @@ spec:RegisterTalents({
 })
 ```
 
-Code reads a talent as `talent.<key>.rank`. The points per tree decide the active spec. A selector refines that choice: the Druid's picks Guardian, with its pack, when Feral Combat leads and Thick Hide is at 3/3.
+Code reads a talent as `talent.<key>.rank`. The points per tree decide the active spec. A selector refines that choice: the Druid's picks Guardian, with its priority, when Feral Combat leads and Thick Hide is at 3/3.
 
 ```lua
 spec:RegisterSelector("guardian", { spec = "guardian", pack = "Guardian (wowsims.com)" }, function(tab1, tab2, tab3)
@@ -136,7 +136,7 @@ See [Pack talents, specs and selectors](Pack-Talents-Specs-And-Selectors).
 
 ## Gear
 
-`spec:RegisterGear(key, item, ...)` names an item or a set by its item IDs; `spec:RegisterSetBonus(key, spellID)` names a set bonus by its hidden aura. Priorities and pack code read them as `set_bonus.<key>`: a set's count of worn pieces, and 1 or 0 for a bonus such as `set_bonus.haruspex_3pc`.
+`spec:RegisterGear(key, item, ...)` names an item or a set by its item IDs; `spec:RegisterSetBonus(key, spellID)` names a set bonus by its hidden aura. Priorities and class pack code read them as `set_bonus.<key>`: a set's count of worn pieces, and 1 or 0 for a bonus such as `set_bonus.haruspex_3pc`.
 
 ```lua
 spec:RegisterGear("haruspex", 19613, 19838, 19839, 19840, 19955)
@@ -239,7 +239,7 @@ spec:RegisterAbilities({
 
 Here the `now` computes the stun's duration from the known rank and the Brutal Impact talent, while the `handler` lets the aura's own `duration` function do the same. Why each ability has two effect functions is explained on [Pack belief and simulation](Pack-Belief-And-Simulation); every field is on [Pack abilities reference](Pack-Abilities-Reference).
 
-## Settings and packs
+## Settings and priorities
 
 `spec:RegisterSetting(key, default, option, ...)` adds a class setting, shown on the spec's options page and read by priorities as `settings.<key>`. The spec keys after `option` limit it to those specs:
 

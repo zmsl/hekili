@@ -29,7 +29,7 @@ The `# Omitted:` lines list the rotation entries the translator left out, by lis
 
 ## What (wowsims.com) in a name means
 
-A priority whose name ends in "(wowsims.com)" is the translation of that specialization's wowsims.com rotation. There is one for each supported specialization, and it is the default. A specialization for which wowsims.com has no rotation has no built-in priority.
+A priority whose name ends in "(wowsims.com)" is the translation of that specialization's wowsims.com rotation. Each supported specialization has at least one, and one of them is its default. The name is not always the specialization's: Discipline's is Smite, the Hunter defaults are the Turret priorities, and some specializations have two or three ([Supported classes and priorities](Supported-Classes-And-Priorities)). A specialization for which wowsims.com has no rotation has no built-in priority.
 
 The translation follows wowsims.com as closely as the Forever client allows. Where the client forces a difference, the translator records it. The main ones:
 

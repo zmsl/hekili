@@ -1,3 +1,9 @@
+<!--
+Purpose: Which game values are read, which are estimated, and what that means for recommendations.
+Type: Explanation
+Audience: everyone
+Prerequisites: None.
+-->
 **What Hekili Forever can and cannot know** describes which game values the addon reads directly on the WoW Forever client, which it estimates, and how the estimates affect its recommendations.
 
 The Forever client is a modern game client that hides many combat values from addons. The game's own frames can still show a hidden value, but an addon cannot read it, compare it or calculate with it. There is no combat log. Hekili Forever keeps the original Hekili's simulation of the fight ahead. Where the original read a value directly, Hekili Forever uses an estimate built from what the game still reports.

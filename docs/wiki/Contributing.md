@@ -79,7 +79,7 @@ A gate fails when a measured score falls below its floor, the lowest score that 
 
 - **Changelog.** Every change a player can see adds one line under "Unreleased" in `CHANGELOG.md`, in the same commit. Write it for players: name the ability and say what they will see.
 - **Text a player sees.** Write it as `L["English text"]`, then run `python3 tools/locales.py`, so that the translation files pick it up.
-- **Priorities.** The built-in priorities are generated, never edited by hand ([APL wowsims packs explained](APL-wowsims-Packs-Explained)). Change the recipe, then run `make wowsims-packs` and `make packs`, and commit the regenerated files with the change that caused them.
+- **Priorities.** The built-in priorities are generated, never edited by hand ([wowsims priorities explained](APL-wowsims-Packs-Explained)). Change the recipe, then run `make wowsims-packs` and `make packs`, and commit the regenerated files with the change that caused them.
 
 ## Docs
 

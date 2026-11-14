@@ -116,8 +116,8 @@ Declare a form requirement with `form`, never through `buff` or a `usable` funct
 `now` and `handler`, and `now_finish` and `finish`, must be separate functions: the belief refuses a pair that is one function. Why each effect is written twice is explained on [Pack belief and simulation](Pack-Belief-And-Simulation).
 
 > [!NOTE]
-> **On Forever:** The game hides the amounts and kinds of most hits on the target, so `onCrit` and `onLand` run only where a hit's row is plain. Treat them as corrections, not as the only source of an effect the recommendations need.
-<!-- UNVERIFIED: that onCrit rarely runs in the game follows the architecture notes on hidden target rows (onLand is documented so); not measured in game for onCrit. -->
+> **On Forever:** The game hides the amounts and kinds of most hits on the target, so `onCrit` and `onLand` run only where a hit's row is plain. In the open world on the live client, no target row was plain when measured, so neither ran there. Treat them as corrections, not as the only source of an effect the recommendations need.
+<!-- UNVERIFIED: areas other than the open world (dungeons, raids, battlegrounds) were not measured. -->
 
 ## Outcome
 
@@ -135,7 +135,7 @@ These fields tell the belief what the cast's hit looks like, so that it can pay 
 
 ## Other fields
 
-The original Hekili's ability table has more fields (for example `dual_cast`, `channeling`, `max_targets`, `noOverride`, `spec`, `nospec` and `suffix`). The core still reads them, but no shipped pack uses them. A field the core does not read is kept on the ability and ignored.
+The original Hekili's ability table has more fields (for example `dual_cast`, `channeling`, `max_targets`, `noOverride`, `spec`, `nospec` and `suffix`). The core still reads them, but no shipped class pack uses them. A field the core does not read is kept on the ability and ignored.
 
 ## See also
 

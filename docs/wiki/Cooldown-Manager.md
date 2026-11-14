@@ -10,7 +10,7 @@ The **Cooldown Manager** is a feature of the game client: bars of icons that sho
 |---|---|
 | Where | **/hekili > Cooldown Manager** |
 | Needs | The game's Cooldown Manager turned on, with the aura on one of its bars |
-| Switches | One per aura, on by default; saved per specialization |
+| Switches | One per aura, on by default unless the class addon says otherwise; saved per specialization |
 | Applies | After combat |
 
 ## What it provides

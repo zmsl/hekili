@@ -12,7 +12,7 @@ Priority text reaches the addon by three paths, which read it slightly different
 |---|---|---|
 | The importer | The **Priority (SimulationCraft Action Priority List)** box on a priority's Source tab, then **Import** | Converts some SimulationCraft forms and reports each change in the **Import Log** |
 | The editor | The **Conditions** box of one entry on the Action Lists tab | Stores the text as typed |
-| A pack source | The `.simc` files of a class pack, built into the addon by `make packs` | Developer path ([Pack overview](Pack-Overview)) |
+| A priority source | The `.simc` files of a class pack, built into the addon by `make packs` | Developer path ([Pack overview](Pack-Overview)) |
 
 Where the paths differ, the tables below say so.
 
@@ -42,7 +42,7 @@ actions+=/shifting_power,if=((!action.cat_form.known|buff.cat_form.up)&energy.lo
 
 - The importer splits a line at every comma, so a condition pasted into the importer cannot contain a comma. Write `min(a,b)` and `max(a,b)` in the editor instead, or use the `<?` and `>?` operators.
 - The importer ends a line at a `^` or `$` character. Use `^` only in the editor.
-- A pack source accepts only the options `tools/make_pack.lua` knows, and stops the build on any other.
+- A priority source accepts only the options `tools/make_pack.lua` knows, and stops the build on any other.
 
 ## Operators and precedence
 
@@ -85,12 +85,12 @@ actions+=/innervate,if=((!action.cat_form.known|buff.cat_form.up)&cooldown.inner
 ### Arithmetic
 
 - `/` is division. The WoW client raises an error on division by zero, unlike standard Lua, so a value that can be zero must not be a divisor.
-- In the editor and in a pack source, `%` is the remainder (modulo), as in Lua.
+- In the editor and in a priority source, `%` is the remainder (modulo), as in Lua.
 - The importer follows SimulationCraft: it turns `%` into `/` (division) and `%%` into `%` (remainder), and notes each change in the **Import Log**.
 
 ### Short forms
 
-A bare resource name stands for its current value: `energy>=40` reads `energy.current>=40`. The same holds for `health`, `rune` and `spell_targets` (read as `spell_targets.any`), and `gcd` reads `gcd.execute`.
+A bare resource name stands for its current value: `energy>=40` reads `energy.current>=40`. The same holds for `health` and `spell_targets` (read as `spell_targets.any`), and `gcd` reads `gcd.execute`.
 
 The importer also rewrites a few SimulationCraft forms and lists each in the **Import Log**: `talent.<key>` becomes `talent.<key>.enabled`, `toggle.essences` becomes `toggle.minor_cooldowns`, and a bare `gcd` becomes `gcd.max`.
 
@@ -132,7 +132,7 @@ A line reads it as `variable.<name>`. The value is worked out when a line reads 
 | `floor`, `ceil` | "Floor of Value", "Ceiling of Value" | Rounds the current value |
 
 - A variable name has at least three characters (**Variable Name** in the editor).
-- A class pack can register a variable of the same name. The pack's value then wins, and the line is ignored.
+- A class pack can register a variable of the same name. The class pack's value then wins, and the line is ignored.
 - A true or false `value` is stored as 1 or 0. Test it as `variable.<name>` or `variable.<name>>0`.
 - Each walk works variables out again from nothing ([APL overview](APL-Overview#each-evaluation-stands-alone)).
 
@@ -154,7 +154,7 @@ The importer turns SimulationCraft's `wait_for_cooldown,name=<ability>` into `wa
 A line that starts with `#` is a comment.
 
 - In the importer, a comment attaches to the next line as its description, shown when the display is paused and the icon is hovered. A comment in the form `<caption>::<description>` also sets the line's caption, the short text that can appear on the icon.
-- In a pack source, the `#` lines at the top of the file are the priority's description. Other `#` lines are dropped.
+- In a priority source, the `#` lines at the top of the file are the priority's description. Other `#` lines are dropped.
 
 ## See also
 

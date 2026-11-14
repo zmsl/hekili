@@ -49,16 +49,20 @@ The **Display Mode** sets how many enemies the **Primary** and **AOE** displays 
 |---|---|---|
 | Automatic (Default) | `automatic` (also `auto`) | **Primary** plans for the number of enemies Hekili Forever counts. |
 | Single-Target | `single` | **Primary** plans for one enemy, however many are counted. |
-| AOE (Multi-Target) | `aoe` | **Primary** plans for at least two enemies. |
-| Dual | `dual` | **Primary** plans for one enemy; **AOE** plans for at least two, always shown. |
-| Reactive Dual Display | `reactive` | **Primary** plans for one enemy; **AOE** appears only while two or more enemies are counted. |
+| AOE (Multi-Target) | `aoe` | **Primary** plans for at least the AOE minimum of enemies (2 by default). |
+| Dual | `dual` | **Primary** plans for one enemy; **AOE** plans for at least the AOE minimum (2 by default), always shown. |
+| Reactive Dual Display | `reactive` | **Primary** plans for one enemy; **AOE** appears only while the number of enemies counted reaches the AOE minimum (2 by default). |
 
-The minimum used by the AOE plans is **Minimum Targets for Dedicated AOE Recommendations**, on each specialization's **Targeting** tab. How enemies are counted is explained in [How targets are counted](How-Targets-Are-Counted).
+The AOE minimum is **Minimum Targets for Dedicated AOE Recommendations**, on each specialization's **Targeting** tab. How enemies are counted is explained in [How targets are counted](How-Targets-Are-Counted).
 
 ## Pause and snapshot
 
 - **Pause** freezes every display. While paused, hovering over an icon shows what it recommends. Pausing also takes a snapshot. Press the key again to resume.
 - **Snapshot** records why the current recommendations were chosen, without pausing. Snapshots are read on the **Snapshots (Troubleshooting)** page; [Reporting a problem](Reporting-A-Problem) explains how to send one.
+
+## The minimap menu
+
+A left click on the Hekili Forever minimap button, or on its entry in the game's addon compartment, opens a menu of quick changes: "Enable", **Pause**, the **Display Mode**, each toggle under **Toggles**, and, for the current specialization, Recommend Target Swaps, the preferred potion and the class's own on/off and choice settings. A right click opens the options window. Hovering over the button shows the display mode and which toggles are on. **/hekili > General > Hide Minimap Icon** hides the button; the addon compartment entry stays.
 
 ## See also
 

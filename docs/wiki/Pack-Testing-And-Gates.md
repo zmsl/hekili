@@ -4,7 +4,7 @@ Type: How-to
 Audience: Lua developers
 Prerequisites: [Contributing](Contributing).
 -->
-**Pack testing and gates** covers how a class pack is tested: the headless tests that run the whole addon without the game, the class test world the priorities fight in, and the two make targets every change passes, `make check` and `make gate`. A gate is a test that measures a pack against a reference and fails when a score falls below its floor.
+**Pack testing and gates** covers how a class pack is tested: the headless tests that run the whole addon without the game, the class test world the priorities fight in, and the two make targets every change passes, `make check` and `make gate`. A gate is a test that measures a priority against a reference and fails when a score falls below its floor.
 
 Every change starts with a failing test. The tests run under busted, a Lua test framework, in a Linux shell; setting up the toolchain is described in [Contributing](Contributing).
 
@@ -25,25 +25,25 @@ A file of tagged gates runs one tag with `--tags`, for example `.lua/bin/busted 
 | File | What it checks |
 |---|---|
 | `tests/Forever/<class>_spec.lua` | The class file's registrations (abilities, costs, cooldowns, auras, talents) against the game's spell data. The class file is loaded through a recording stand-in for Hekili (`tests/Forever/helpers/load_druid.lua`, which the other classes reuse with their own file and token; the Warrior has `load_warrior.lua`), and its handlers can be run against a stand-in state. |
-| `tests/Forever/helpers/<class>_world.lua` | The class test world: the class's content for the headless loop, one entry per pack. It gives the character the instance logs in as (the build's talents), what each ability's press does in the world, and the client's usability answers. |
-| `tests/Forever/loop_<class>_spec.lua` | Boot checks of the world (every ability a pack can recommend is mapped) and the short 3-fight gates, tagged `#slow`. |
-| `tests/Forever/loop_<class>_<spec>_spec.lua` | One pack's 20-fight gate, one file per pack so each runs in its own process, tagged with the class's gate tag. |
-| `tests/Forever/wowsims_<class>_spec.lua` | The replay gate and the leveling gate of each of the class's packs, tagged `#slow #wowsims`. |
+| `tests/Forever/helpers/<class>_world.lua` | The class test world: the class's content for the headless loop, one entry per priority. A world is the stand-in for the game that the loop fights in: the character, the enemies and what each press does. It gives the character the instance logs in as (the build's talents), what each ability's press does in the world, and the client's usability answers. |
+| `tests/Forever/loop_<class>_spec.lua` | Boot checks of the world (every ability a priority can recommend is mapped) and the short 3-fight gates, tagged `#slow`. |
+| `tests/Forever/loop_<class>_<spec>_spec.lua` | One priority's 20-fight gate, one file per priority so each runs in its own process, tagged with the class's gate tag: the busted tag, such as `druid`, that `make test-<tag>` and `make gate` select it by. |
+| `tests/Forever/wowsims_<class>_spec.lua` | The replay gate and the leveling gate of each of the class's priorities, tagged `#slow #wowsims`. |
 
-Some specs cover every pack at once:
+Some specs cover every priority at once:
 
-- `tests/Forever/packs_spec.lua` checks the generated priorities: no bare aura alias in a condition and no time-to-die limits on an ability; and, for each class in its own class list, `use_off_gcd=1` on exactly the off-GCD abilities, every setting a priority reads registered on its spec, and a spec opted into the Movement toggle exactly when its pack reads `toggle.movement`.
-- `tests/Forever/wowsims_levels_spec.lua` runs `tools/check_pack_levels.lua` over every pack: each read of another ability must sit inside a guard that drops it while that ability is unlearned ([Pack translator rules](Pack-Translator-Rules), rule 6).
-- `tests/Forever/make_pack_spec.lua` round-trips the packs of each class in its own class list through the share format, and checks that those class files match their `APLs/` sources.
-- `tests/Forever/focus_roles_spec.lua` holds the generated packs' focus tiers in a hand-written table, so a new pack's tiers are added there by hand.
-- `tests/Forever/cdm_map_spec.lua` boots each class headless and maps every entry of a Cooldown Manager export, taken from the live game client, onto the class pack, the way the addon maps it in game. An entry that maps to several auras, or to none, must be listed in the spec's `GAPS` table with a reason. The same export's talent tree is compared with the pack's talents, and every difference must be in `TALENT_GAPS`. Both lists may only shrink: a listed entry that is no longer a gap also fails, so its line is deleted when the class pack catches up.
+- `tests/Forever/packs_spec.lua` checks the generated priorities: no bare aura alias in a condition and no time-to-die limits on an ability; and, for each class in its own class list, `use_off_gcd=1` on exactly the off-GCD abilities, every setting a priority reads registered on its spec, and a spec opted into the Movement toggle exactly when its priority reads `toggle.movement`.
+- `tests/Forever/wowsims_levels_spec.lua` runs `tools/check_pack_levels.lua` over every priority: each read of another ability must sit inside a guard that drops it while that ability is unlearned ([Pack translator rules](Pack-Translator-Rules), rule 6).
+- `tests/Forever/make_pack_spec.lua` round-trips the priorities of each class in its own class list through the share format, and checks that those class files match their `APLs/` sources.
+- `tests/Forever/focus_roles_spec.lua` holds the generated priorities' focus tiers in a hand-written table, so a new priority's tiers are added there by hand.
+- `tests/Forever/cdm_map_spec.lua` boots each class headless and maps every entry of a Cooldown Manager export, taken from the live game client, onto the class pack, the way the addon maps it in game. An entry that maps to several auras, or to none, must be listed in the spec's `GAPS` table with a reason. The same export's talent tree is compared with the class pack's talents, and every difference must be in `TALENT_GAPS`. Both lists may only shrink: a listed entry that is no longer a gap also fails, so its line is deleted when the class pack catches up.
 
 ## The replay and the loops
 
-Two kinds of gate measure a pack.
+Two kinds of gate measure a priority.
 
-- **The replay.** The pack runs beside wowsims's own fight, read from the checked-in log. At each of wowsims's casts it compares the addon's first recommendation with what wowsims cast. Its line reports `decisions on-GCD`, the share of those casts the addon agreed with, and the top disagreements. The same spec file runs the leveling gate: the pack plays at three levels and must raise no error, press at least once, and never sit idle longer than its limit while an on-GCD ability is usable.
-- **The loops.** The pack fights seeded mobs in the class test world, twenty fights a pack. In the first run the addon drives and an oracle shadows it. The oracle is the same engine reading a client with no secrets, so it shows what perfect knowledge would pick. In the second run, on the same seeds, the oracle drives.
+- **The replay.** The priority runs beside wowsims's own fight, read from the checked-in log. At each of wowsims's casts it compares the addon's first recommendation with what wowsims cast. Its line reports `decisions on-GCD`, the share of those casts the addon agreed with, and the top disagreements. The same spec file runs the leveling gate: the priority plays at three levels and must raise no error, press at least once, and never sit idle longer than its limit while an on-GCD ability is usable.
+- **The loops.** The priority fights seeded mobs in the class test world, twenty fights a priority. A seed fixes the random choices of one fight, so the same seed replays the same fight. In the first run the addon drives and an oracle shadows it. The oracle is the same engine reading a client with no secrets, so it shows what perfect knowledge would pick. In the second run, on the same seeds, the oracle drives.
 
 Each gate prints a summary line. It reports how often the addon agreed with the reference, how many presses the simulated client refused, and the addon's flicker beside the oracle's. The developer documentation (`docs/dev/layout.md`) explains every field. The [Accuracy](Accuracy) page summarises the results per specialization.
 
@@ -53,7 +53,7 @@ Each gate has a floor: the lowest score it accepts. A floor is set from the firs
 
 ### Flicker is an acceptance metric
 
-Flicker is the first icon changing and changing back within a few updates. Jittery recommendations are a defect, so flicker is judged beside agreement. Every gate line prints the addon's flicker per minute beside the oracle's. Flicker has limits of its own, which work the other way round from floors: a limit only ever tightens. A change that raises a pack's flicker needs a reason. Between two equally good fixes, prefer the one that keeps the display still.
+Flicker is the first icon changing and changing back within a few updates. Jittery recommendations are a defect, so flicker is judged beside agreement. Every gate line prints the addon's flicker per minute beside the oracle's. Flicker has limits of its own, which work the other way round from floors: a limit only ever tightens. A change that raises a priority's flicker needs a reason. Between two equally good fixes, prefer the one that keeps the display still.
 
 ## make check and make gate
 
@@ -88,7 +88,7 @@ Work happens on a branch from `forever`.
 
 1. Keep `make check` green on every commit.
 2. Run `make gate` before asking for a merge.
-3. Have the change reviewed against the core's rules and the gate's output. A pack change's review also checks that the pack still mirrors wowsims, that every addition uses one of the allowed recipe keys, and that no floor fell.
+3. Have the change reviewed against the core's rules and the gate's output. A priority change's review also checks that the priority still mirrors wowsims, that every addition uses one of the allowed recipe keys, and that no floor fell.
 4. Merge into `forever`. Never force-push it.
 
 A change that moves a gate line says why in its commit message.

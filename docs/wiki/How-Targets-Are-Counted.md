@@ -31,7 +31,7 @@ In dungeons and raids, the game hides which enemy each nameplate belongs to. As 
 With **Count Damaged Enemies** checked, an enemy the player has damaged counts for several seconds afterwards (**Timeout**). Its options can include enemies damaged by the player's pets and enemies carrying the player's damage-over-time effects, and leave out enemies with no nameplate on screen.
 
 > [!NOTE]
-> **On Forever:** As of v0.8.1, the game does not report the hits you land on other enemies, so **Count Damaged Enemies** finds fewer targets than it did in retail Hekili. Counting nameplates is the more reliable method.
+> **On Forever:** As of v0.8.1, the game does not report the hits the player lands on other enemies, so **Count Damaged Enemies** finds fewer targets than it did in retail Hekili. Counting nameplates is the more reliable method.
 
 ## Target swaps
 

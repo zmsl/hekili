@@ -30,6 +30,8 @@ Examples:
 /hek snap
 ```
 
+`behind` is a Druid setting; other classes have their own ([Specializations reference](Specializations-Reference#class-settings)).
+
 ## Word aliases
 
 A few words after `/hekili` have shorter forms. `/hekili prio` is `/hekili priority`, and `/hekili snap` is `/hekili snapshot`. Inside `/hekili set`, the words in the table below can be shortened.

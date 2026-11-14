@@ -4,7 +4,7 @@ Type: Reference
 Audience: Lua developers
 Prerequisites: [Pack API reference](Pack-API-Reference).
 -->
-A class pack declares each resource its class uses with `RegisterResource`: the power type, how the resource comes in (regeneration entries), and a few meta fields such as its base rate and its out-of-combat decay. The game hides energy, rage and mana from addons, so these declarations are what the belief uses to carry each estimate forward between observations, and what the simulation uses to forecast it. This page describes the call, every kind of regeneration entry, the meta fields and refunds.
+A class pack declares each **resource** its class uses with `RegisterResource`: the power type, how the resource comes in (regeneration entries), and a few meta fields such as its base rate and its out-of-combat decay. The game hides energy, rage and mana from addons, so these declarations are what the belief uses to carry each estimate forward between observations, and what the simulation uses to forecast it. This page describes the call, every kind of regeneration entry, the meta fields and refunds.
 
 | Resources | |
 |---|---|
@@ -24,7 +24,7 @@ kit:RegisterResource(powerType, regen, model, meta)
 |---|---|
 | `powerType` | The game's power type, such as `Enum.PowerType.Energy`. The resource's key (`energy`, `rage`, `mana`, `combo_points`) comes from it. |
 | `regen` | A table of named regeneration entries, or nil ([below](#regeneration-entries)) |
-| `model` | A replacement for the simulation's resource table. Packs pass nil. |
+| `model` | A replacement for the simulation's resource table. Class packs pass nil. |
 | `meta` | A table of meta fields, or nil ([below](#meta-fields)) |
 
 The first resource a class registers is its primary resource, which an ability with no `spendType` pays. A resource the client reports plainly needs no entries. From `src/Hekili_Druid/Druid.lua`:
@@ -45,7 +45,7 @@ In both layers the resource reads as `<key>.current` (the best guess), `<key>.lo
 
 ## Regeneration entries
 
-Each entry of `regen` has a name of the pack's choosing and one of four shapes. Functions in an entry run in the simulation under `state`; the belief reads the fields named below in its own context.
+Each entry of `regen` has a name of the class pack's choosing and one of four shapes. Functions in an entry run in the simulation under `state`; the belief reads the fields named below in its own context.
 
 ### Swing entries
 

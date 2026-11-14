@@ -74,7 +74,7 @@ Another player imports it in **/hekili > Priorities > Import / Export**, on the 
 
 ## Next steps
 
-- **Your copy does not follow updates.** When a new version of the addon changes the built-in Feral priority, the copy keeps its old lines. Compare it with the built-in one after an update, and copy again if you want the new version ([APL wowsims packs explained](APL-wowsims-Packs-Explained#a-copy-freezes)).
+- **Your copy does not follow updates.** When a new version of the addon changes the built-in Feral priority, the copy keeps its old lines. Compare it with the built-in one after an update, and copy again if you want the new version ([wowsims priorities explained](APL-wowsims-Packs-Explained#a-copy-freezes)).
 - **Write a priority from scratch.** In **/hekili > Priorities**, enter a **Priority Name**, choose the **Specialization** and click **Create New Pack**. Then paste text into **Priority (SimulationCraft Action Priority List)** on its **Source** tab and click **Import**. This short Feral priority imports with no warnings:
 
   ```simc

@@ -53,6 +53,10 @@ Close the options and target an enemy. The display shows at its new place, in it
 
 **Share Styles**, under **/hekili > Displays**, makes an export string of the chosen displays' settings, or applies one. [Profiles and sharing](Profiles-And-Sharing) has the steps.
 
+## Use with WeakAuras
+
+When WeakAuras is loaded, Hekili Forever sends it each recommendation of the **Primary**, **AOE**, **Cooldowns**, **Defensives** and **Interrupts** displays, so a WeakAura with a custom trigger can show them in its own way. A display that is hidden sends nothing new: Hekili Forever does not work out recommendations only for WeakAuras. [Contributing display styles and integrations](Contributing-Display-Styles-And-Integrations#the-weakauras-bridge) describes the event and its arguments.
+
 ## See also
 
 - [Displays reference](Displays-Reference): every display option, with its default

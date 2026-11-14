@@ -4,7 +4,7 @@ Type: Reference
 Audience: Lua developers
 Prerequisites: [Pack API reference](Pack-API-Reference).
 -->
-This page describes how a class pack declares its talents and specializations (specs), how Hekili Forever numbers the specs, and how selectors pick the active spec and its priority from the player's talents. The Forever client reports one pseudo-spec per class, so the core works out the spec itself, from the talent points and the pack's declarations.
+This page describes how a class pack declares its **talents** and **specializations** (specs), how Hekili Forever numbers the specs, and how **selectors** pick the active spec and its priority from the player's talents. The Forever client reports one pseudo-spec per class, so the core works out the spec itself, from the talent points and the class pack's declarations.
 
 | Talents, specs and selectors | |
 |---|---|
@@ -47,7 +47,7 @@ Each entry of `specs` in `Hekili:NewClass(token, { specs = { ... } })` is one sp
 
 | Field | Meaning |
 |---|---|
-| `key` | The spec's key, such as `"feral"`. Used by `RegisterSetting`, selectors, the pack manifest, exports and `/hekili spec`. |
+| `key` | The spec's key, such as `"feral"`. Used by `RegisterSetting`, selectors, the priority manifest, exports and `/hekili spec`. |
 | `name` | The name shown to the player, as `L["Feral"]` |
 | `tree` | The talent tree the spec rides, 1 to 3. Two specs may share a tree. |
 | `icon` | The spec's icon, a texture file ID |
@@ -105,7 +105,7 @@ spec:RegisterSelector("guardian", { spec = "guardian", pack = "Guardian (wowsims
 end)
 ```
 
-Feral Combat ahead with all three ranks of Thick Hide picks Guardian and its pack. Anything else on that tree falls to Feral, the tree's first spec.
+Feral Combat ahead with all three ranks of Thick Hide picks Guardian and its priority. Anything else on that tree falls to Feral, the tree's first spec.
 
 Selectors are kept in registration order, and the first whose condition holds wins, so register the specific before the general. A selector whose spec is unsupported is skipped. A condition that raises counts as false; the snapshot's `spec:` line shows the count of such errors and the last message.
 
@@ -124,8 +124,8 @@ With no points spent, or a tie between trees, the last spec settled with points 
 
 A selector also sets its priority, but only over the spec's default or over a priority an earlier selector set. A priority the player chose, a custom priority, or no priority stays as it is. When no selector holds any more, a priority a selector set goes back to the default. A notice tells the player when a selector switches the priority, or the spec after the first settle.
 
-> [!IMPORTANT]
-> **Not in retail Hekili:** Retail Hekili takes the spec from the game. On the Forever client the game reports one spec per class, so Hekili Forever picks the spec and its priority from the talents.
+> [!WARNING]
+> **Different from retail Hekili:** Retail Hekili takes the spec from the game. On the Forever client the game reports one spec per class, so Hekili Forever picks the spec and its priority from the talents.
 
 ## See also
 

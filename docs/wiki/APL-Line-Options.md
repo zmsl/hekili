@@ -88,7 +88,7 @@ The importer drops SimulationCraft lines for `snapshot_stats`, `flask`, `food` a
 
 - **The importer** reads every option above. It warns in the **Import Log** about an unsupported action, a `use_item` it cannot match to an item (the line is switched off), an unknown window name (the line is switched off) and a `focus` that is not a whole number (the option is dropped).
 - **The editor** shows only the fields that apply to the line's action.
-- **A pack source** (`tools/make_pack.lua`) accepts `name`, `buff_name`, `use_off_gcd`, `cycle_targets`, `max_cycle_targets`, `other_target`, `focus`, `label`, `label_if`, `icon`, `icon_if` and `if`, and stops the build on any other option.
+- **A priority source** (`tools/make_pack.lua`) accepts `name`, `buff_name`, `use_off_gcd`, `cycle_targets`, `max_cycle_targets`, `other_target`, `focus`, `label`, `label_if`, `icon`, `icon_if` and `if`, and stops the build on any other option.
 
 ## See also
 

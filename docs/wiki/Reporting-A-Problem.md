@@ -31,7 +31,7 @@ With **Take Screenshot** checked, Hekili Forever also takes a game screenshot wh
 A Lua error is a message about a fault in an addon's code. Capture its full text:
 
 - with an error-catching addon such as BugSack with BugGrabber: reproduce the error, open BugSack and copy its text; or
-- with the game's own error display: type `/console scriptErrors 1`, then reproduce the error and copy the text from the error window. <!-- UNVERIFIED: that the Forever client's error window offers copyable text with scriptErrors on. -->
+- with the game's own error display: type `/console scriptErrors 1`, then reproduce the error and copy the text from the error window. <!-- UNVERIFIED: the client UI source gives the error window an edit box (ScriptErrorsFrameMixin:GetEditBox), so its text is selectable; not clicked in game. -->
 
 Hekili Forever also keeps its own list of problems it noticed while running, on **/hekili > Warnings**, and copies it into each snapshot under "Warnings".
 
