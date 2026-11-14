@@ -283,6 +283,8 @@ local KNOWN_MISSING = {
             { "siphon_life", "shadow" },
             { "soul_fire", "fire" },
             { "soul_fire", "shadow" },
+            { "subjugate_demon", "fire" },
+            { "subjugate_demon", "shadow" },
             { "summon_felhunter", "fire" },
             { "summon_felhunter", "shadow" },
             { "summon_imp", "shadow" },

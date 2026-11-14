@@ -9473,6 +9473,39 @@ options.abilities.strider_kick.toggle	values.interrupts	Interrupts
 options.abilities.strider_kick.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.strider_kick.toggle	values.none	None
 options.abilities.strider_kick.toggle	values.potions	Potions
+options.abilities.subjugate_demon	name	Spell 1098
+options.abilities.subjugate_demon.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1098 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1098 can be recommended in any type of fight.
+options.abilities.subjugate_demon.boss	name	Boss Encounter Only
+options.abilities.subjugate_demon.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 1098 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.subjugate_demon.clash	name	Clash
+options.abilities.subjugate_demon.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 1098.
+options.abilities.subjugate_demon.disabled	name	Disable |T136000:0|t Spell 1098
+options.abilities.subjugate_demon.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.subjugate_demon.dotCap	name	Maximum Applications
+options.abilities.subjugate_demon.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.subjugate_demon.hasIcon	name	Icon Replacement
+options.abilities.subjugate_demon.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.subjugate_demon.keybind	name	Override Keybind Text
+options.abilities.subjugate_demon.lineBreak1	name	\032
+options.abilities.subjugate_demon.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.subjugate_demon.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.subjugate_demon.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.subjugate_demon.noIcon	name	Icon Replacement
+options.abilities.subjugate_demon.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1098 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.subjugate_demon.targetMax	name	Maximum Targets
+options.abilities.subjugate_demon.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 1098 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.subjugate_demon.targetMin	name	Minimum Targets
+options.abilities.subjugate_demon.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.subjugate_demon.toggle	name	Require Toggle
+options.abilities.subjugate_demon.toggle	values.cooldowns	Cooldowns
+options.abilities.subjugate_demon.toggle	values.custom1	Custom 1
+options.abilities.subjugate_demon.toggle	values.custom2	Custom 2
+options.abilities.subjugate_demon.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.subjugate_demon.toggle	values.defensives	Defensives
+options.abilities.subjugate_demon.toggle	values.interrupts	Interrupts
+options.abilities.subjugate_demon.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.subjugate_demon.toggle	values.none	None
+options.abilities.subjugate_demon.toggle	values.potions	Potions
 options.abilities.summon_felhunter	name	Spell 691
 options.abilities.summon_felhunter.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 691 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 691 can be recommended in any type of fight.
 options.abilities.summon_felhunter.boss	name	Boss Encounter Only
@@ -16257,6 +16290,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action	values.shadow_war
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.shadowburn	|T136000:0|t Spell 17877
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.siphon_life	|T136000:0|t Spell 18265
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.soul_fire	|T136000:0|t Spell 6353
+options.packs.affliction.Affliction (wowsims.com).lists.action	values.subjugate_demon	|T136000:0|t Spell 1098
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.summon_felhunter	|T136000:0|t Spell 691
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.summon_imp	|T136000:0|t Spell 688
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.summon_incubus	|T136000:0|t Spell 713
@@ -16336,6 +16370,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.shado
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.shadowburn	|T136000:0|t Spell 17877
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.siphon_life	|T136000:0|t Spell 18265
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.soul_fire	|T136000:0|t Spell 6353
+options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.subjugate_demon	|T136000:0|t Spell 1098
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.summon_felhunter	|T136000:0|t Spell 691
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.summon_imp	|T136000:0|t Spell 688
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.summon_incubus	|T136000:0|t Spell 713
@@ -16567,6 +16602,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.shadow_ward	|
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.shadowburn	|T136000:0|t Spell 17877
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.siphon_life	|T136000:0|t Spell 18265
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.soul_fire	|T136000:0|t Spell 6353
+options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.subjugate_demon	|T136000:0|t Spell 1098
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.summon_felhunter	|T136000:0|t Spell 691
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.summon_imp	|T136000:0|t Spell 688
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.summon_incubus	|T136000:0|t Spell 713
@@ -16647,6 +16683,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.shadow_w
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.shadowburn	|T136000:0|t Spell 17877
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.siphon_life	|T136000:0|t Spell 18265
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.soul_fire	|T136000:0|t Spell 6353
+options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.subjugate_demon	|T136000:0|t Spell 1098
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.summon_felhunter	|T136000:0|t Spell 691
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.summon_imp	|T136000:0|t Spell 688
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.summon_incubus	|T136000:0|t Spell 713
@@ -19289,6 +19326,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action	values.shadow_war
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.shadowburn	|T136000:0|t Spell 17877
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.siphon_life	|T136000:0|t Spell 18265
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.soul_fire	|T136000:0|t Spell 6353
+options.packs.demonology.Demonology (wowsims.com).lists.action	values.subjugate_demon	|T136000:0|t Spell 1098
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.summon_felhunter	|T136000:0|t Spell 691
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.summon_imp	|T136000:0|t Spell 688
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.summon_incubus	|T136000:0|t Spell 713
@@ -19369,6 +19407,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.shado
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.shadowburn	|T136000:0|t Spell 17877
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.siphon_life	|T136000:0|t Spell 18265
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.soul_fire	|T136000:0|t Spell 6353
+options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.subjugate_demon	|T136000:0|t Spell 1098
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.summon_felhunter	|T136000:0|t Spell 691
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.summon_imp	|T136000:0|t Spell 688
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.summon_incubus	|T136000:0|t Spell 713
@@ -19600,6 +19639,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.shadow_w
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.shadowburn	|T136000:0|t Spell 17877
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.siphon_life	|T136000:0|t Spell 18265
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.soul_fire	|T136000:0|t Spell 6353
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.subjugate_demon	|T136000:0|t Spell 1098
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.summon_felhunter	|T136000:0|t Spell 691
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.summon_imp	|T136000:0|t Spell 688
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.summon_incubus	|T136000:0|t Spell 713
@@ -19680,6 +19720,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.sha
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.shadowburn	|T136000:0|t Spell 17877
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.siphon_life	|T136000:0|t Spell 18265
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.soul_fire	|T136000:0|t Spell 6353
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.subjugate_demon	|T136000:0|t Spell 1098
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.summon_felhunter	|T136000:0|t Spell 691
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.summon_imp	|T136000:0|t Spell 688
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.summon_incubus	|T136000:0|t Spell 713
@@ -19981,6 +20022,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action	values.shadow_w
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.shadowburn	|T136000:0|t Spell 17877
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.siphon_life	|T136000:0|t Spell 18265
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.soul_fire	|T136000:0|t Spell 6353
+options.packs.destruction.Destruction (wowsims.com).lists.action	values.subjugate_demon	|T136000:0|t Spell 1098
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.summon_felhunter	|T136000:0|t Spell 691
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.summon_imp	|T136000:0|t Spell 688
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.summon_incubus	|T136000:0|t Spell 713
@@ -20064,6 +20106,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.sha
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.shadowburn	|T136000:0|t Spell 17877
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.siphon_life	|T136000:0|t Spell 18265
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.soul_fire	|T136000:0|t Spell 6353
+options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.subjugate_demon	|T136000:0|t Spell 1098
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.summon_felhunter	|T136000:0|t Spell 691
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.summon_imp	|T136000:0|t Spell 688
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.summon_incubus	|T136000:0|t Spell 713

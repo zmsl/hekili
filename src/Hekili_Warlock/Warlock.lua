@@ -1076,6 +1076,8 @@ do
     local HOWL_OF_TERROR_COST = { 150, 200 }
     local BANISH = { 710, 18647 }
     local BANISH_COST = { 100, 200 }
+    local SUBJUGATE_DEMON = { 1098, 11725, 11726 }
+    local SUBJUGATE_DEMON_COST = { 300, 500, 700 }
     local SHADOW_WARD = { 6229, 11739, 11740, 28610 }
     local SHADOW_WARD_COST = { 135, 195, 255, 320 }
     local DEMON_SKIN = { 687, 696 }
@@ -1099,7 +1101,7 @@ do
             applyBuff(aura)
         end
     end
-    -- A debuff on the target (Fear, Howl of Terror, Banish).
+    -- A debuff on the target (Fear, Howl of Terror, Banish, Subjugate Demon).
     local function debuffed(aura)
         return function()
             applyDebuff("target", aura)
@@ -1170,6 +1172,28 @@ do
 
             now = debuffed("banish"),
             handler = debuffed("banish"),
+        },
+
+        -- 3 s cast, a Soul Shard (the pin's rows; its 300 s is the control's duration, no cooldown row).
+        subjugate_demon = {
+            id = 1098,
+            school = "shadow",
+            copy = rest(SUBJUGATE_DEMON),
+            cast = function()
+                return 3 * haste
+            end,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(SUBJUGATE_DEMON_COST, SUBJUGATE_DEMON),
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(SUBJUGATE_DEMON),
+            usable = sharded(),
+
+            now = debuffed("subjugate_demon"),
+            handler = debuffed("subjugate_demon"),
         },
 
         -- 30 s category cooldown; the absorb's size is unmodelled.

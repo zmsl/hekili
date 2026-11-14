@@ -57,6 +57,7 @@ local KIT = {
     curse_of_tongues = { { 1714, 11719 }, 110, 0, "spell" },
     curse_of_exhaustion = { { 18223 }, 0.08, 0, "spell" },
     fel_domination = { { 18708 }, 0, 300, "off" },
+    subjugate_demon = { { 1098, 11725, 11726 }, 700, 0, "spell" }, -- 3 s cast, a Soul Shard; 300 s is its duration
 }
 
 local function idsOf(a)
@@ -134,7 +135,7 @@ describe("Forever Warlock", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(40, n)
+        assert.are.equal(41, n)
         assert.are.equal("cooldowns", w.abilities.amplify_curse.toggle)
         for _, key in ipairs({
             "summon_imp",
