@@ -282,6 +282,31 @@ describe("rotation windows (belief)", function()
             assert.is_false(W("w")[1])
         end)
 
+        -- `combat` reads 0 out of combat (as the sim's), so an evaluator `combat > 0` falls at combat end and rises again
+        -- at the next pull: a "combat" window reopens each fight (a kept pull start left it closed after the first)
+        it("an evaluator on `combat` falls at combat end and reopens at the next pull", function()
+            declare("w", {
+                evaluator = function()
+                    return combat > 0 -- luacheck: ignore 113 (the now context)
+                end,
+                duration = "combat",
+            })
+            start()
+            ctl.now = 2
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            drain(2.1)
+            assert.are.same({ true, 2.1, math.huge, 0, 0 }, W("w"))
+            ctl.now = 4
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            drain(4.1)
+            drain(5)
+            assert.is_false(W("w")[1])
+            ctl.now = 6
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            drain(6.1)
+            assert.are.same({ true, 6.1, math.huge, 0, 0 }, W("w"))
+        end)
+
         it("a raising evaluator counts in I.nowErrors and reads false", function()
             declare("w", {
                 duration = 6,
