@@ -7,7 +7,6 @@ codes = true
 
 exclude_files = {
     "src/Hekili/Libs/",
-    "archive/",
     ".claude/",
     ".lua/",
     ".release/",
