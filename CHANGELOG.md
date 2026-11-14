@@ -9,6 +9,7 @@
 - The priority editor (Action Lists) now has Label, Label Condition, Icon and Icon Condition fields under Caption, so labels and icon overrides can be set without importing a line. The Icon field previews the texture it resolves to and says so when a path is not a texture file.
 
 ### Changed
+- Mage: Arcane Explosion, Flamestrike, Blast Wave, Blink, Mana Shield, Fire Ward, Frost Ward, Frost Blast, Polymorph, Arcane Intellect, Dampen Magic and Amplify Magic are now known to the addon, so using one by hand spends its mana and starts its cooldown in Hekili's forecast; Clearcasting, Arcane Power and Frost Channeling reach the ones they apply to. The Cooldown Manager now shows their buffs and debuffs (and Ignite, Frostbite, Impact, Chilled, Improved Counterspell and the Mana Gem use).
 - Warrior: Improved Berserker Rage now gives 5 or 10 rage, and Improved Intercept, Improved Shield Wall and Improved Disarm now shorten those cooldowns as the talents do.
 - Hunter: the Turret priorities are now the default for Beast Mastery, Marksmanship and Survival; the melee-weave priorities and Survival Melee are still there to pick by hand. A Hunter who never picked a priority moves to the Turret one; a priority you picked stays.
 - An ability that becomes affordable just after the global cooldown ends now keeps its place instead of briefly giving way to a lower one, so there are fewer brief icon flashes (for example Shifting Power for Feral).

@@ -44,6 +44,19 @@ local KIT = {
     summon_felhunter = { { 691 }, 1, 0, "spell" },
     -- no cost, cooldown or GCD row (DB2; wowsims: "no cast time, cost or cooldown")
     demonic_sacrifice = { { 18788 }, 0, 0, "off" },
+    -- the rest of the kit (coverage lane; the pin's spell rows): Fear, Howl of Terror, Banish, the wards and armors, the
+    -- curses, Inferno, Fel Domination (300 s, no GCD row)
+    fear = { { 5782, 6213, 6215 }, 0.15, 0, "spell" },
+    howl_of_terror = { { 5484, 17928 }, 200, 40, "spell" },
+    banish = { { 710, 18647 }, 200, 0, "spell" },
+    shadow_ward = { { 6229, 11739, 11740, 28610 }, 320, 30, "spell" },
+    inferno = { { 1122 }, 0, 3600, "spell" },
+    demon_skin = { { 687, 696 }, 120, 0, "spell" },
+    demon_armor = { { 706, 1086, 11733, 11734, 11735 }, 1580, 0, "spell" },
+    detect_invisibility = { { 132, 2970, 11743 }, 140, 0, "spell" },
+    curse_of_tongues = { { 1714, 11719 }, 110, 0, "spell" },
+    curse_of_exhaustion = { { 18223 }, 0.08, 0, "spell" },
+    fel_domination = { { 18708 }, 0, 300, "off" },
 }
 
 local function idsOf(a)
@@ -121,7 +134,7 @@ describe("Forever Warlock", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(29, n)
+        assert.are.equal(40, n)
         assert.are.equal("cooldowns", w.abilities.amplify_curse.toggle)
         for _, key in ipairs({
             "summon_imp",
@@ -446,12 +459,12 @@ describe("Forever Warlock", function()
         "registers the Warlock's remaining own auras (Soul Harvest, Bane of Havoc, demon and armor auras, channels)",
         function()
             local want = {
-                soul_harvest = { 1242853, 10 },
+                soul_harvest = { 1242853, 10, { 437032 } }, -- the talent's id: the Cooldown Manager links it
                 fel_domination = { 18708, 15 },
                 soul_link = { 19028, 3600, 25228 },
                 demonic_knowledge = { 412732, 3600 },
                 master_demonologist = { 23785, 3600 },
-                demon_armor = { 11735, 1800 },
+                demon_armor = { 11735, 1800, { 706, 1086, 11733, 11734 } },
                 blood_pact = { 11767, 3600 },
                 hellfire_channel = { 11684, 15 },
                 rain_of_fire_channel = { 11678, 8 },
@@ -465,6 +478,50 @@ describe("Forever Warlock", function()
             end
         end
     )
+
+    it("carries the ids the Cooldown Manager links on the coverage auras", function()
+        local want = {
+            shadow_trance = { 17941, 18094 }, -- Nightfall's
+            decimation = { 440873, 440870 },
+            bane_of_havoc = { 1225228, 1324473 },
+            aftermath = { 18118, 18119 },
+            fear = { 1324448, 1324451, 1324453 },
+            howl_of_terror = { 5484, 17928 },
+            death_coil = { 1324459 },
+            banish = { 1324462, 1324463 },
+            demon_skin = { 687, 696 },
+            detect_invisibility = { 132, 2970, 11743 },
+            shadow_ward = { 6229, 11739, 11740, 28610 },
+            subjugate_demon = { 1324468 },
+            curse_of_tongues = { 1714, 11719 },
+            curse_of_exhaustion = { 18223 },
+        }
+        for key, ids in pairs(want) do
+            assert.are.same(ids, idsOf(w.auras[key]), key)
+        end
+    end)
+
+    it("shortens a summon 5.5 s and halves its cost under Fel Domination, and spends the buff", function()
+        local A = w.abilities
+        local e = env({ master_summoner = 2 })
+        e.buff = buffs({ fel_domination = 1 })
+        assert.are.same({ 0.5, 0.1 }, {
+            near(ld.run(A.summon_imp.cast, e)),
+            near(ld.run(A.summon_succubus.spend, e)),
+        })
+        e = env({})
+        e.buff = buffs({ fel_domination = 1 })
+        assert.are.same({ 4.5, 0.3 }, {
+            near(ld.run(A.summon_imp.cast, e)),
+            near(ld.run(A.summon_imp.spend, e)),
+        }) -- 10 - 5.5 s; 0.8 - 0.5
+        e = env({})
+        ld.run(A.summon_imp.handler, e)
+        assert.is_true(#e.removed > 0)
+        e = env({})
+        ld.run(A.fel_domination.handler, e)
+        assert.are.same({ "fel_domination" }, e.applied)
+    end)
 
     it("brands the target from Searing Pain, 2 charges a rank of Demonic Brand", function()
         local sp = w.abilities.searing_pain

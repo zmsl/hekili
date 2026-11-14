@@ -262,14 +262,14 @@ spec:RegisterCostMod({
     charges = 1,
     -- Cone of Cold, Ice Lance, Blizzard and Frost Nova too (the mask's bits 9, 17, 7, 6; Ice Barrier and Ice Block not):
     -- wowsims's Frost log casts Cone of Cold for 0 under it (72.00)
-    spells = { 400574, 2136, 133, 116, 401502, 11366, 2948, 1326079, 120, 1312002, 10, 122 },
+    spells = { 400574, 2136, 133, 116, 401502, 11366, 2948, 1326079, 120, 1312002, 10, 122, 1449, 2120, 11113, 1326053 },
 })
 spec:RegisterCostMod({ aura = "clearcasting", pct = -1, charges = 1, spells = { 5143 }, unless = "missile_barrage" })
 spec:RegisterCostMod({ aura = "missile_barrage", pct = -1, charges = 1, spells = { 5143 } })
 spec:RegisterCostMod({
     aura = "arcane_power",
     pct = 0.3,
-    spells = { 400574, 5143, 2136, 133, 116, 401502, 11366, 2948, 1326079 },
+    spells = { 400574, 5143, 2136, 133, 116, 401502, 11366, 2948, 1326079, 1449, 2120, 11113, 1326053 },
 })
 
 spec:RegisterAuras({
@@ -875,6 +875,329 @@ spec:RegisterAbilities({
         handler = blocked(),
     },
 })
+
+-- The rest of the kit (coverage lane: a manual press costs what it costs and starts its cooldown; no priority casts
+-- these, wowsims's sim/mage/ casts none of the buffs): the AoE casts, Blink, the wards and Mana Shield, Frost Blast,
+-- Polymorph and the buffs. Ranks, costs, cooldowns and durations from the pin's spell rows (spells_auto_gen.go).
+-- Frost Channeling (bit 19) reaches Frost Ward and Frost Blast; Clearcasting and Arcane Power reach Arcane Explosion,
+-- Flamestrike, Blast Wave and Frost Blast (the class masks, above). Improved Fire Ward / Frost Warding's reflect and the
+-- absorbs' sizes are unmodelled (no damage is predicted).
+-- The Cooldown Manager's items: every aura below carries the buff ID the client links (CooldownViewer.lua build).
+spec:RegisterAuras({
+    -- Blast Wave's slow on the target (6 s)
+    blast_wave = { id = 11113, copy = { 13018, 13019, 13020, 13021 }, duration = 6, max_stack = 1 },
+    -- the wards and Mana Shield on the player (30 s, 60 s; the pin's rows)
+    fire_ward = { id = 543, copy = { 8457, 8458, 10223, 10225 }, duration = 30, max_stack = 1 },
+    frost_ward = { id = 6143, copy = { 8461, 8462, 10177, 28609 }, duration = 30, max_stack = 1 },
+    mana_shield = { id = 1463, copy = { 8494, 8495, 10191, 10192, 10193 }, duration = 60, max_stack = 1 },
+    -- the buffs (1 h, 10 min); Arcane Brilliance's 23028 is the group's
+    arcane_intellect = { id = 1459, copy = { 1460, 1461, 10156, 10157, 23028 }, duration = 3600, max_stack = 1 },
+    dampen_magic = { id = 604, copy = { 8450, 8451, 10173, 10174 }, duration = 600, max_stack = 1 },
+    amplify_magic = { id = 1008, copy = { 8455, 10169, 10170 }, duration = 600, max_stack = 1 },
+    -- Frost Blast's slow (9 s; the Forever-only ranks 1326053-5, wowsims's older data)
+    frost_blast = { id = 1326053, copy = { 1326054, 1326055 }, duration = 9, max_stack = 1 },
+    -- Polymorph on the target (the client's ranks 1320379, 1324187-9; 50 s at the top rank, the pin's 20-50 s ladder)
+    polymorph = { id = 1320379, copy = { 1324187, 1324188, 1324189 }, duration = 50, max_stack = 1 },
+    -- The talents' target auras, shown by the Cooldown Manager, never applied here (their producers are unseen crits,
+    -- chills and interrupts): Ignite's DoT (4 s), Frostbite's root (5 s), Impact's stun (2 s), Improved Blizzard's and
+    -- Frost Armor's chill (1.5 s, 5 s), Improved Counterspell's silence (4 s: the 10 s school lockout is the shared one).
+    ignite = { id = 412538, duration = 4, max_stack = 1 },
+    frostbite = { id = 12494, duration = 5, max_stack = 1 },
+    impact_stun = { id = 12355, duration = 2, max_stack = 1 }, -- `impact` is a core identifier
+    improved_blizzard_chill = { id = 12484, duration = 1.5, max_stack = 1 },
+    chilled = { id = 6136, duration = 5, max_stack = 1 },
+    counterspell_silenced = { id = 1324401, copy = { 1329553 }, duration = 4, max_stack = 1 },
+})
+
+do
+    local ARCANE_EXPLOSION = { 1449, 8437, 8438, 8439, 10201, 10202 }
+    local ARCANE_EXPLOSION_COST = { 75, 120, 185, 250, 315, 390 }
+    local FLAMESTRIKE = { 2120, 2121, 8422, 8423, 10215, 10216 }
+    local FLAMESTRIKE_COST = { 195, 330, 490, 650, 815, 990 }
+    local BLAST_WAVE = { 11113, 13018, 13019, 13020, 13021 }
+    local BLAST_WAVE_COST = { 215, 270, 355, 450, 545 }
+    local MANA_SHIELD = { 1463, 8494, 8495, 10191, 10192, 10193 }
+    local MANA_SHIELD_COST = { 40, 60, 80, 100, 120, 140 }
+    local FIRE_WARD = { 543, 8457, 8458, 10223, 10225 }
+    local FROST_WARD = { 6143, 8461, 8462, 10177, 28609 }
+    local WARD_COST = { 85, 135, 195, 255, 320 } -- both wards
+    local FROST_BLAST = { 1326053, 1326054, 1326055 }
+    local FROST_BLAST_COST = { 40, 65, 90 }
+    local POLYMORPH = { 118, 12824, 12825, 12826 }
+    local POLYMORPH_COST = { 60, 90, 120, 150 }
+    local ARCANE_INTELLECT = { 1459, 1460, 1461, 10156, 10157 }
+    local ARCANE_INTELLECT_COST = { 60, 185, 520, 945, 1510 }
+    local DAMPEN_MAGIC = { 604, 8450, 8451, 10173, 10174 }
+    local DAMPEN_MAGIC_COST = { 100, 200, 300, 400, 500 }
+    local AMPLIFY_MAGIC = { 1008, 8455, 10169, 10170 }
+    local AMPLIFY_MAGIC_COST = { 150, 250, 350, 450 }
+
+    -- The wards share a 30 s category cooldown (category 56): each sets the other's.
+    local function warded(aura, other)
+        return function()
+            applyBuff(aura)
+            setCooldown(other, 30)
+        end
+    end
+    -- A buff cast on ourselves.
+    local function buffed(aura)
+        return function()
+            applyBuff(aura)
+        end
+    end
+    local function blasted()
+        return function()
+            if buff.fingers_of_frost.up then
+                removeStack("fingers_of_frost")
+            end
+            applyDebuff("target", "blast_wave")
+        end
+    end
+
+    spec:RegisterAbilities({
+        arcane_explosion = {
+            id = 1449,
+            school = "arcane",
+            copy = rest(ARCANE_EXPLOSION),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(ARCANE_EXPLOSION_COST, ARCANE_EXPLOSION),
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(ARCANE_EXPLOSION),
+            usable = unlocked("arcane"),
+
+            now = fingered(),
+            handler = fingered(),
+        },
+
+        flamestrike = {
+            id = 2120,
+            school = "fire",
+            copy = rest(FLAMESTRIKE),
+            cast = function()
+                return buff.presence_of_mind.up and 0 or 3 * haste
+            end,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(FLAMESTRIKE_COST, FLAMESTRIKE),
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(FLAMESTRIKE),
+            usable = unlocked("fire"),
+
+            now = casts(),
+            handler = casts(true),
+            onCrit = mastered(FLAMESTRIKE_COST, FLAMESTRIKE),
+        },
+
+        blast_wave = {
+            id = 11113,
+            school = "fire",
+            copy = rest(BLAST_WAVE),
+            cast = 0,
+            cooldown = 45,
+            gcd = "spell",
+
+            spend = byRank(BLAST_WAVE_COST, BLAST_WAVE),
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(BLAST_WAVE),
+            usable = unlocked("fire"),
+
+            now = blasted(),
+            handler = blasted(),
+            onCrit = mastered(BLAST_WAVE_COST, BLAST_WAVE),
+        },
+
+        -- 35% of base mana, 15 s, on the GCD (the pin's row; wowsims blink.go).
+        blink = {
+            id = 1953,
+            school = "arcane",
+            cast = 0,
+            cooldown = 15,
+            gcd = "spell",
+
+            spend = 0.35,
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows({ 1953 }),
+            usable = unlocked("arcane"),
+        },
+
+        mana_shield = {
+            id = 1463,
+            school = "arcane",
+            copy = rest(MANA_SHIELD),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(MANA_SHIELD_COST, MANA_SHIELD),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(MANA_SHIELD),
+            usable = unlocked("arcane"),
+
+            now = buffed("mana_shield"),
+            handler = buffed("mana_shield"),
+        },
+
+        fire_ward = {
+            id = 543,
+            school = "fire",
+            copy = rest(FIRE_WARD),
+            cast = 0,
+            cooldown = 30,
+            gcd = "spell",
+
+            spend = byRank(WARD_COST, FIRE_WARD),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(FIRE_WARD),
+            usable = unlocked("fire"),
+
+            now = warded("fire_ward", "frost_ward"),
+            handler = warded("fire_ward", "frost_ward"),
+        },
+
+        frost_ward = {
+            id = 6143,
+            school = "frost",
+            copy = rest(FROST_WARD),
+            cast = 0,
+            cooldown = 30,
+            gcd = "spell",
+
+            spend = frostChanneled(WARD_COST, FROST_WARD),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(FROST_WARD),
+            usable = unlocked("frost"),
+
+            now = warded("frost_ward", "fire_ward"),
+            handler = warded("frost_ward", "fire_ward"),
+        },
+
+        -- Forever's Frost Blast (a 1.5 s Frostbolt of the same masks: wowsims's older data, not in the pin; the live
+        -- Cooldown Manager lists it). `known` keeps it dormant where the spellbook lacks it.
+        frost_blast = {
+            id = 1326053,
+            expects = "travel",
+            velocity = 28,
+            school = "frost",
+            copy = rest(FROST_BLAST),
+            cast = function()
+                return buff.presence_of_mind.up and 0 or 1.5 * haste
+            end,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = frostChanneled(FROST_BLAST_COST, FROST_BLAST),
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(FROST_BLAST),
+            usable = unlocked("frost"),
+
+            now = chilled(),
+            handler = chilled(true),
+            onCrit = mastered(FROST_BLAST_COST, FROST_BLAST),
+        },
+
+        polymorph = {
+            id = 118,
+            school = "arcane",
+            copy = rest(POLYMORPH),
+            cast = function()
+                return buff.presence_of_mind.up and 0 or 1.5 * haste
+            end,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(POLYMORPH_COST, POLYMORPH),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(POLYMORPH),
+            usable = unlocked("arcane"),
+
+            now = casts(),
+            handler = casts(),
+        },
+
+        arcane_intellect = {
+            id = 1459,
+            school = "arcane",
+            copy = rest(ARCANE_INTELLECT),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(ARCANE_INTELLECT_COST, ARCANE_INTELLECT),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(ARCANE_INTELLECT),
+            usable = unlocked("arcane"),
+
+            now = buffed("arcane_intellect"),
+            handler = buffed("arcane_intellect"),
+        },
+
+        dampen_magic = {
+            id = 604,
+            school = "arcane",
+            copy = rest(DAMPEN_MAGIC),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(DAMPEN_MAGIC_COST, DAMPEN_MAGIC),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(DAMPEN_MAGIC),
+            usable = unlocked("arcane"),
+
+            now = buffed("dampen_magic"),
+            handler = buffed("dampen_magic"),
+        },
+
+        amplify_magic = {
+            id = 1008,
+            school = "arcane",
+            copy = rest(AMPLIFY_MAGIC),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(AMPLIFY_MAGIC_COST, AMPLIFY_MAGIC),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(AMPLIFY_MAGIC),
+            usable = unlocked("arcane"),
+
+            now = buffed("amplify_magic"),
+            handler = buffed("amplify_magic"),
+        },
+    })
+
+    -- The Cooldown Manager's "Mana Gems" item (1318827): the client's use spell, its cooldown tracked; the bag item is
+    -- Hekili_Shared's mana_gem. The spell's own data is unknown (not in the pin).
+    spec:RegisterAbility("mana_gems", { id = 1318827, passive = true })
+end
 
 -- Talents: { talent tree (1 Arcane, 2 Fire, 3 Frost: the dominant tree picks the spec), rank 1's spell, max rank }:
 -- Forever's tree as wowsims/forever's ui/sim/talents/trees/mage.json lists it (tools/wowsims/talents.lua writes it;
