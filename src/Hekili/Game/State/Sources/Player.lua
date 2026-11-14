@@ -1,7 +1,7 @@
 -- Game/State/Sources/Player.lua
 -- Player sources (spec §4.2): combat start and end, movement, spell haste, the player's level, health (poll 1.5), the
 -- out-of-combat stat cache (login, PLAYER_REGEN_ENABLED, PLAYER_EQUIPMENT_CHANGED, UNIT_DAMAGE, UNIT_ATTACK_POWER,
--- PLAYER_LEVEL_UP) and every hit on the player (UNIT_COMBAT, plain) as a `PlayerHit`.
+-- UNIT_STATS, SPELL_POWER_CHANGED, COMBAT_RATING_UPDATE, PLAYER_LEVEL_UP) and every hit on the player (UNIT_COMBAT, plain) as a `PlayerHit`.
 -- Credits: secret-value handling after Catnip's (Durts) research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Player.lua.
 
@@ -180,6 +180,12 @@ local function onPlayerStats(api, t, unit)
 end
 S.On("UNIT_DAMAGE", "player", onPlayerStats)
 S.On("UNIT_ATTACK_POWER", "player", onPlayerStats)
+-- A stat, the spell power or a rating changes out of combat with no weapon or attack power event (a Spirit buff, food,
+-- a talent): read again, so a pre-pull `now` (this cache) and the simulation (the plain read) price one amount (L967;
+-- all three events are Forever's: wow-ui-source's forever branch). The last two carry no unit.
+S.On("UNIT_STATS", "player", onPlayerStats)
+S.On("SPELL_POWER_CHANGED", nil, readStats)
+S.On("COMBAT_RATING_UPDATE", nil, readStats)
 
 S.On("PLAYER_LEVEL_UP", nil, function(api, t, level)
     I.level = Plain(api, level) or I.level -- the new level (UnitLevel may still answer the old one)
