@@ -100,7 +100,7 @@ local nowEnv = {
     "talent",
     "buff", "debuff", "knownRank", "stat", "swingBase", "healthMax", "now", "combat", "rage", "energy", "mana", "focus",
     "runic_power", "totem", "action", "settings", "haste", "instant", "cast_start", "target",
-    "set_bonus", "equipped",
+    "set_bonus", "equipped", "victim_channel",
     "openWindow", "closeWindow", "lastSwing", "nextSwing", "usable", -- the windows (Families/Windows.lua)
 }
 files["tests/Game/State/"] = { std = "+busted", read_globals = nowEnv }
@@ -169,7 +169,7 @@ end
 files["src/Hekili_Priest/Priest.lua"] = { globals = priestEnv }
 -- The Warlock's further `state` names.
 local warlockEnv = {
-    "mana", "instant",
+    "mana", "instant", "victim_channel",
     "min", "max", "level", "pet", "summonPet", "dismissPet", "soul_shards", "locked_out_shadow", "locked_out_fire",
 }
 for _, k in ipairs(stateEnv) do

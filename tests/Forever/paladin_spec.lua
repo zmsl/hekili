@@ -146,7 +146,13 @@ describe("Forever Paladin", function()
         end
         assert.are.same({ 13.65, 8.25 }, seed("retribution")) -- wowsims's logs: 21.9 outside, 8.25 while casting
         assert.are.same({ 17.38, 0 }, seed("protection"))
-        assert.is_nil(fsr.share)
+        -- the static share follows Reverence's rank (15/30%, wowsims's curve), never the spec
+        local shares = {}
+        for rank = 0, 2 do
+            e.talent.reverence = { rank = rank }
+            shares[#shares + 1] = ld.run(fsr.share, e)
+        end
+        assert.are.same({ 0, 0.15, 0.3 }, shares)
     end)
 
     it(

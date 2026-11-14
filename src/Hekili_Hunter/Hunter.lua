@@ -284,22 +284,47 @@ local function trapCast(me)
         end
     end
 end
+-- Serpent Sting's dot, and Rapid Recuperation's buff when talented (wowsims grants it on a landed sting; no damage
+-- needed). shortcut: no landed signal reaches a sting on live, and an avoid undoes only target auras
+-- (Families/Now.lua),
+-- so a missed sting keeps the buff in the belief: 15 s of +50% spirit regen while casting the game did not give, ready
+-- while short; the player aura read where plain (not under the Map restriction) corrects it, upgrade with a landed
+-- signal for a sting. A new function each call: an ability's `now` must not be its handler (Families/Now.lua).
+local function stings()
+    return function()
+        applyDebuff("target", "serpent_sting")
+        if talent.rapid_recuperation.rank > 0 then
+            applyBuff("rapid_recuperation")
+        end
+    end
+end
+
+-- Bestial Discipline (19590): 25/50% of the spirit regen while casting by rank (its effect 2, wowsims's curve).
+local BESTIAL_DISCIPLINE = { 0.25, 0.5 }
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
 -- the in-combat calibration replace, as wowsims's logs measure them at 60: hunter_beast_mastery 7.94 a second while
 -- casting (Bestial Discipline 2/2's 50% share of 15.88) and 15.88 outside, so spirit 7.94, mp5 7.94 and share 0.5;
 -- hunter_marksmanship and hunter_survival 0 while casting and 15.88 outside. Forever's Spirit regen is `6.25 + Spirit/8`
 -- a second for every class (wowsims mana.go:75-76), not Classic's formula.
--- Resourcefulness (1242688, DB2 aura 134) and Rapid Recuperation (1242512) are +50% of Spirit regen while casting.
--- shortcut: Rapid Recuperation's share is 25/50% on a Serpent Sting hit and 50/100% on spending Rapid Killing by rank,
--- one aura ID for both (wowsims talents_marksmanship.go:160-200); 0.5 is the common rank; upgrade if a build's rank or
--- source differs.
+-- Resourcefulness (1242688, DB2 aura 134): +50% of Spirit regen while casting after a melee or ranged ability's crit
+-- (wowsims: proc flags 0x110). shortcut: the belief does not open it (an `onCrit` at 2/2 moved the Hunter loops'
+-- flicker and live brackets past their bars, Lane R); the out-of-combat read and calibration carry it.
+-- Rapid Recuperation (1242512): 25/50% by rank, opened at a Serpent Sting's cast (wowsims
+-- talents_marksmanship.go:183-230; the sting's `shortcut:` above names the missed-sting over-count).
+-- shortcut: wowsims also grants it at 50/100% when Rapid Killing (a kill proc the belief does not open) is spent, one aura ID for both; that source is unmodelled (the sting's share holds);
+-- upgrade with Rapid Killing's kill reaction and a second share if a build relies on it.
 -- state.spec: the functions run in the state's environment (the file's `spec` is the class).
 spec:RegisterResource(
     Enum.PowerType.Mana,
     {
         resourcefulness = { aura = "resourcefulness", share = 0.5 },
-        rapid_recuperation = { aura = "rapid_recuperation", share = 0.5 },
+        rapid_recuperation = {
+            aura = "rapid_recuperation",
+            share = function()
+                return 0.25 * talent.rapid_recuperation.rank
+            end,
+        },
     },
     nil,
     {
@@ -310,8 +335,8 @@ spec:RegisterResource(
             mp5 = function()
                 return state.spec.beast_mastery and 7.94 or 0
             end,
-            share = function()
-                return state.spec.beast_mastery and 0.5 or 0
+            share = function() -- Bestial Discipline's rank (the belief reads it after its talent walk), never the spec
+                return BESTIAL_DISCIPLINE[talent.bestial_discipline.rank] or 0
             end,
         },
         base = BASE_MANA, -- a fraction cost is of base mana (Spec.lua)
@@ -349,7 +374,8 @@ spec:RegisterAuras({
     -- Aspect of the Hawk's proc (Deadly Aspects) on an Auto Shot: +30% ranged haste.
     quick_shots = { id = 6150, duration = 12, max_stack = 1 },
     -- Resourcefulness (talent 440529): a melee or ranged ability's crit gives +50% Spirit regen while casting (the mana
-    -- entry). Rapid Recuperation (talent 1223987): the same share on a Serpent Sting hit or spending Rapid Killing.
+    -- entry; not opened by the belief: the mana entry's note). Rapid Recuperation (talent 1223987): 25/50% by rank at a Serpent
+    -- Sting (its `now`), or 50/100% spending Rapid Killing (unmodelled: the mana entry's note).
     resourcefulness = { id = 1242688, duration = 30, max_stack = 1 },
     rapid_recuperation = { id = 1242512, duration = 15, max_stack = 1 },
     -- Rapid Killing's buff (415407, a kill proc: +20% on the next Shot, 20 s, one charge), Sniper Shot's (1310786: 10 s,
@@ -639,8 +665,8 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(SERPENT_STING),
 
-        now = applies("serpent_sting", true),
-        handler = applies("serpent_sting", true),
+        now = stings(),
+        handler = stings(),
     },
 
     arcane_shot = {

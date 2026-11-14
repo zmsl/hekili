@@ -470,6 +470,102 @@ describe("reactions", function()
         end)
     end)
 
+    -- outcome "kill" (Lane R, L695): our PARTY_KILL of a victim that yields XP, the client's own answer (Fable decision 5:
+    -- UnitIsTrivial on a token still bound to it, a plain false only); no GUID (the Map restriction's secret one, which
+    -- Plain drops), a nil or secret answer runs nothing
+    describe('outcome "kill" (who = "target")', function()
+        local NONE = {} -- UnitIsTrivial answers nil
+        local function kill(killer, trivial, level)
+            build({ reaction("killed", "target", "kill") })
+            ctl.level.player, ctl.level.target = 60, level or 55
+            ctl.trivial.target = trivial ~= NONE and trivial or nil
+            if trivial == NONE then
+                api.UnitIsTrivial = function() end
+            end
+            ctl.now = 5
+            ctl.Fire("PARTY_KILL", killer, "Creature-1")
+            drain(5.1)
+            return runs.killed
+        end
+
+        it("our kill of a victim the client calls non-trivial runs it at the kill; a boss's too; ours only", function()
+            assert.are.equal(1, kill("Player-1", false))
+            assert.are.same({ true, 5, 11, 0, 0 }, W("killed"))
+            assert.are.equal(1, kill("Player-1", false, -1)) -- a boss: never trivial
+            assert.are.equal(1, kill("Player-1", false, 40)) -- the client's line, not a level rule
+            assert.are.equal(0, kill("Player-2", false)) -- another's kill
+            assert.are.equal(0, I.nowErrors)
+        end)
+
+        it("runs nothing for a trivial victim, a nil or secret answer", function()
+            assert.are.equal(0, kill("Player-1", true))
+            assert.are.equal(0, kill("Player-1", true, 59)) -- grey whatever its level
+            assert.are.equal(0, kill("Player-1", fake.SECRET))
+            assert.are.equal(0, kill("Player-1", NONE))
+        end)
+
+        it("runs nothing for a secret killer GUID (Map restriction) or an unknown victim", function()
+            assert.are.equal(0, kill(nil, false))
+            build({ reaction("killed", "target", "kill") })
+            ctl.level.player = 60
+            ctl.Fire("PARTY_KILL", "Player-1", "Creature-77")
+            drain(ctl.now + 0.1)
+            assert.are.equal(0, runs.killed)
+        end)
+
+        -- victim_channel: our channel in progress at the kill when the victim is our target (a pack's "only while our
+        -- channel is on the victim", Fable decision 2), its stop in the same instant either side of the kill
+        it("names our channel on the victim at the kill, in either same-instant order with its stop", function()
+            local seen
+            local r = reaction("killed", "target", "kill")
+            r.now = function()
+                seen = victim_channel
+            end
+            build({ r })
+            ctl.level.player = 60
+            ctl.guid.nameplate2 = "Creature-7"
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+            local function chanKill(t, victim, order)
+                seen = "not run"
+                ctl.now = t
+                ctl.channel = { t * 1000, (t + 15) * 1000 }
+                ctl.Fire("UNIT_SPELLCAST_CHANNEL_START", "player", "Cast-9", fs.SPENDER_H)
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", fs.SPENDER_H)
+                drain(t + 0.01)
+                ctl.now = t + 2
+                if order == "stop first" then
+                    ctl.channel = nil
+                    ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-9", fs.SPENDER_H)
+                end
+                ctl.Fire("PARTY_KILL", "Player-1", victim)
+                ctl.channel = nil
+                ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-9", fs.SPENDER_H)
+                drain(t + 2.01)
+                return seen
+            end
+            assert.are.equal("spender_h", chanKill(10, "Creature-1", "kill first"))
+            assert.are.equal("spender_h", chanKill(30, "Creature-1", "stop first"))
+            assert.is_false(chanKill(50, "Creature-7", "kill first")) -- a nameplate's mob, not our target
+            ctl.now = 70
+            ctl.Fire("PARTY_KILL", "Player-1", "Creature-1") -- no channel
+            seen = "not run"
+            drain(70.01)
+            assert.is_false(seen)
+            ctl.now = 90
+            ctl.channel = { 89000, 104000 }
+            ctl.Fire("UNIT_SPELLCAST_CHANNEL_START", "player", "Cast-9", fs.SPENDER_H)
+            ctl.channel = nil
+            ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-9", fs.SPENDER_H)
+            drain(90.01)
+            ctl.now = 91 -- a stop an instant earlier than the kill: no longer ours
+            seen = "not run"
+            ctl.Fire("PARTY_KILL", "Player-1", "Creature-1")
+            drain(91.01)
+            assert.is_false(seen)
+            assert.are.equal(0, I.nowErrors)
+        end)
+    end)
+
     describe('outcomes "deflect" and "evade"', function()
         it("on us (victim-side UNIT_COMBAT): each runs its own reaction", function()
             build({ reaction("deflected", "player", "deflect"), reaction("evaded", "player", "evade") })

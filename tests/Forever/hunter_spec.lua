@@ -147,14 +147,53 @@ describe("Forever Hunter", function()
             w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
-        assert.are.same({ 7.94, 7.94, 0.5 }, seed("beast_mastery")) -- Bestial Discipline
+        assert.are.same({ 7.94, 7.94, 0 }, seed("beast_mastery"))
         assert.are.same({ 15.88, 0, 0 }, seed("marksmanship"))
         assert.are.same({ 15.88, 0, 0 }, seed("survival"))
+        -- the static share follows Bestial Discipline's rank (25/50%, wowsims's curve), never the spec
+        local shares = {}
+        for rank = 0, 2 do
+            e.talent.bestial_discipline = { rank = rank }
+            shares[#shares + 1] = ld.run(r.meta.fsr.share, e)
+        end
+        assert.are.same({ 0, 0.25, 0.5 }, shares)
         assert.are.same({ aura = "resourcefulness", share = 0.5 }, r.models.resourcefulness)
-        assert.are.same({ aura = "rapid_recuperation", share = 0.5 }, r.models.rapid_recuperation)
+        assert.are.same("rapid_recuperation", r.models.rapid_recuperation.aura)
         assert.are.same(1242688, w.auras.resourcefulness.id)
         assert.are.same(1242512, w.auras.rapid_recuperation.id)
         assert.are.same({ 2, 1223987, 2 }, w.talents.rapid_recuperation)
+    end)
+
+    -- Rapid Recuperation (1223987, wowsims talents_marksmanship.go): 25/50% of the spirit regen while casting by rank for
+    -- 15 s when a Serpent Sting lands (the listener needs no damage); the belief opens it at the cast
+    it("opens Rapid Recuperation at a Serpent Sting, its casting share 25/50% by rank", function()
+        local rr = w.resources[0].models.rapid_recuperation
+        local got = {}
+        for rank = 0, 2 do
+            local e = ld.env(w)
+            e.talent.rapid_recuperation = { rank = rank }
+            ld.run(w.abilities.serpent_sting.now, e)
+            got[#got + 1] = { ld.run(rr.share, e), #e.applied }
+        end
+        assert.are.same({ { 0, 1 }, { 0.25, 2 }, { 0.5, 2 } }, got) -- the sting's dot, and the buff once talented
+    end)
+
+    -- shortcut (Hunter.lua stings()): a missed sting keeps the buff, as no landed signal reaches it on live; a landed
+    -- signal that fixes this changes this expectation on purpose
+    it("keeps Rapid Recuperation in the belief on a missed Serpent Sting (the named over-count)", function()
+        local e = ld.env(w)
+        e.talent.rapid_recuperation = { rank = 2 }
+        ld.run(w.abilities.serpent_sting.now, e) -- the cast; no landed signal follows on a miss
+        assert.are.same(2, #e.applied)
+        assert.are.same(0.5, ld.run(w.resources[0].models.rapid_recuperation.share, e))
+    end)
+
+    -- Resourcefulness (440529): the belief opens it at no crit (Lane R's onCrit carved out: the loops' bars), so no
+    -- ability declares one
+    it("opens Resourcefulness at no crit", function()
+        for key, a in pairs(w.abilities) do
+            assert.is_nil(a.onCrit, key)
+        end
     end)
 
     -- Survivalist's Discipline (1310496, curve {-20, -40} %, PCT on the cooldown: its mask is every trap placement and

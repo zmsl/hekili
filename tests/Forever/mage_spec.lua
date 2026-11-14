@@ -125,8 +125,15 @@ describe("Forever Mage", function()
                 w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
                 return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
             end
-            assert.are.same({ 0, 29.13, 1 }, seed("arcane")) -- Arcane Meditation 50% + Mage Armor 50%: all while casting
+            assert.are.same({ 0, 29.13, 0.5 }, seed("arcane"))
             assert.are.same({ 14.57, 14.56, 0.5 }, seed("fire")) -- Mage Armor's 50% (Fire and Frostfire)
+            -- the static share: Arcane Meditation 3/3's 50% (ranks 1-2 carved out, Lane R), never the spec, + the armor's
+            local shares = {}
+            for rank = 0, 3 do
+                e.talent.arcane_meditation = { rank = rank }
+                shares[#shares + 1] = ld.run(r.meta.fsr.share, e)
+            end
+            assert.are.same({ 0.5, 0.5, 0.5, 1 }, shares)
             assert.are.equal(1213, r.meta.base)
             assert.are.same({ aura = "evocation", spirit = 16, share = 1 }, r.models.evocation) -- DB2 12051: 110, 134
             -- B2: the armor is a registered aura only; the share assumes it up (a regen entry would end the out-of-combat

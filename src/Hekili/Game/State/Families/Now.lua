@@ -57,6 +57,9 @@ local NAMES = {
     -- a start flag staged at UNIT_SPELLCAST_START itself if a pack's instant-only spend shows it live
     cast_start = 0,
     instant = false,
+    -- `now`-only (Lane R): inside a "kill" reaction, the key of our channel in progress on the victim (our target), its
+    -- stop read at the kill's own instant included; false elsewhere (Obs.Kill below)
+    victim_channel = false,
 }
 I.weapon, I.equipped = NAMES.weapon, NAMES.equipped
 -- equipped.<key>: the core's mt_equipped (Engine/Sim/State.lua:4848), set_bonus.<key> > 0; the raw `shield` stays
@@ -549,8 +552,9 @@ NAMES.window = setmetatable({}, {
 -- 2 off: a "swing" reaction's filter), preallocated at load, refilled at the build.
 
 local WHO, HAND = { player = 1, target = 2 }, { main = 1, off = 2 }
-local OUTCOME = { dodge = 1, parry = 2, block = 3, miss = 4, deflect = 5, evade = 6, crit = 7, swing = 8, land = 9 }
-local CRIT, SWING, LAND = OUTCOME.crit, OUTCOME.swing, OUTCOME.land
+local OUTCOME =
+    { dodge = 1, parry = 2, block = 3, miss = 4, deflect = 5, evade = 6, crit = 7, swing = 8, land = 9, kill = 10 }
+local CRIT, SWING, LAND, KILL = OUTCOME.crit, OUTCOME.swing, OUTCOME.land, OUTCOME.kill
 local OUTCOME_OF = {} -- by I.HitKind: the outcome slot (0: no reaction outcome)
 for name, kind in pairs(I.HitKind) do
     local o = OUTCOME[name:lower()]
@@ -560,7 +564,7 @@ OUTCOME_OF[I.HitKind.BLOCKED] = OUTCOME.block -- `block` covers BLOCK and BLOCKE
 local NO_REACTIONS = {}
 local react = { {}, {} } -- react[who][outcome] = { n = count, bound functions... }
 for w = 1, 2 do
-    for o = 1, LAND do
+    for o = 1, KILL do
         react[w][o] = { n = 0, hand = {} }
     end
 end
@@ -568,7 +572,7 @@ I.reactionsRun = 0
 
 local function bindReactions(list)
     for w = 1, 2 do
-        for o = 1, LAND do
+        for o = 1, KILL do
             local l = react[w][o]
             for k = 1, l.n do
                 l[k], l.hand[k] = nil, nil
@@ -824,6 +828,7 @@ end)
 local FINISH_TOL = 0.05 -- UNMEASURED: CHANNEL_STOP at a full channel's end is read at or just after it
 local FINISH_LATE = 0.5 -- a stop later than this past the end is another channel's (one whose start was secret)
 local chanA, chanEnd = 0, 0
+local stopA, stopT = 0, -1 -- the last stopped channel and its stop's time (a kill in the same instant still sees it)
 I.On(Obs.ChannelStart, function(o)
     chanA, chanEnd = o.a, o.b
 end)
@@ -837,11 +842,25 @@ I.On(Obs.ChannelStop, function(o)
     if o.a ~= a then
         return
     end
-    chanA = 0
+    chanA, stopA, stopT = 0, a, o.t
     if A.finish[a] and A.key[a] and not A.extra[a] and o.t >= chanEnd - FINISH_TOL and o.t <= chanEnd + FINISH_LATE then
         journal = false
         call(A.finish[a], a, o.t)
         journal = true
+    end
+end)
+
+-- Our kill (Sources/Units.lua): the target "kill" reactions run at it when the victim yields XP, the client's grey
+-- line (L695, Fable decision 5): a plain UnitIsTrivial false only (a nil or secret answer stages nothing). The
+-- reactions read `victim_channel`: our channel in progress (or stopped at this very instant: a kill ends the channel,
+-- and the stop may be read first) when the victim is our target. shortcut: "our target" stands for "the channel's
+-- target" (a retarget mid-channel names the wrong mob); upgrade with the channel's target GUID if a pack needs it.
+I.On(Obs.Kill, function(o)
+    if o.a == 0 then
+        local a = chanA ~= 0 and chanA or stopT == o.t and stopA or 0
+        rawset(NAMES, "victim_channel", o.b == 1 and A.key[a] or false)
+        fire(2, KILL, o.t)
+        rawset(NAMES, "victim_channel", false)
     end
 end)
 

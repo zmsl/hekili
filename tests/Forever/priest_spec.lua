@@ -142,8 +142,16 @@ describe("Forever Priest", function()
             w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
-        assert.are.same({ 14.79, 26.88, 0.5 }, seed("shadow")) -- Meditation's 50%, before Dark Inspiration
+        assert.are.same({ 14.79, 26.88, 0 }, seed("shadow")) -- before Dark Inspiration
         assert.are.same({ 20.12, 35.73, 0 }, seed("discipline")) -- the Smite build's
+        -- the static share follows Meditation's rank (17/33/50%, wowsims's curve), never the spec
+        local shares = {}
+        for rank = 0, 3 do
+            e.talent.meditation = { rank = rank }
+            shares[#shares + 1] = ld.run(r.meta.fsr.share, e)
+        end
+        e.talent.meditation = nil
+        assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares)
         assert.are.equal(1376, r.meta.base)
         -- the regen functions run under the stand-in's w.state, as the sim's: Spirit is UnitStat(5)'s second return
         local di, ds = r.models.dark_inspiration, r.models.dark_sacrifice
@@ -159,6 +167,32 @@ describe("Forever Priest", function()
         assert.are.same({ 1, 320 }, { setfenv(di.spirit, w.state)(), setfenv(ds.value, w.state)() }) -- before the first stat read: inert, never NaN
         w.state.query_time, w.state.buff.dark_sacrifice = 17.4, { applied = 10.2 }
         assert.is_true(math.abs(ds.last() - 16.2) < 1e-9) -- the last 3 s tick since the aura's application
+    end)
+
+    -- Spirit Tap (15270 5/5, buff 15271, wowsims talents_shadow.go applySpiritTap): Spirit +100% and 50% of the regen
+    -- while casting for 15 s after a kill that yields XP; the belief opens it at our kill (the "kill" reaction) at 5/5
+    -- only (the lower ranks' 20-80% chance stays unassumed)
+    it("opens Spirit Tap at our kill at 5/5: Spirit x 2 and half the spirit regen while casting", function()
+        local st = w.resources[0].models.spirit_tap
+        assert.are.same({ "spirit_tap", 0.5 }, { st.aura, st.share })
+        w.state.stat = function()
+            return 0, 187
+        end
+        local s = 6.25 + 187 / 8
+        assert.is_true(math.abs(setfenv(st.spirit, w.state)() - (s + 187 / 8) / s) < 1e-9)
+        w.state.stat = function()
+            return 0, 0
+        end
+        assert.are.equal(1, setfenv(st.spirit, w.state)()) -- before the first stat read: inert
+        assert.are.same({ 15271, 15 }, { w.auras.spirit_tap.id, w.auras.spirit_tap.duration })
+        local r = w.reactions.spirit_tap
+        assert.are.same({ "target", "kill" }, { r.who, r.outcome })
+        for rank = 4, 5 do
+            local e = ld.env(w)
+            e.talent.spirit_tap = { rank = rank }
+            ld.run(r.now, e)
+            assert.are.same(rank == 5 and { "spirit_tap" } or {}, e.applied, "rank " .. rank)
+        end
     end)
 
     it("channels Mind Flay (3 s), Starshards (6 s), Penance (2 s), a tick a second, and Shoot a wand speed", function()

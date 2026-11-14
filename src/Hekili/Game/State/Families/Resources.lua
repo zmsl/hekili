@@ -169,8 +169,19 @@ R.auraRegen = G
 -- Regen entries (C3b, built from each resource's `mult` list), wowsims's mana PseudoStats while the player's aura j is
 -- believed up: `mult` the whole rate x n (default 1), `spirit` the spirit regen x m (default 1), `share` + s of the
 -- spirit regen while casting (default 0; capped with the slot's static share at all of it), `mp5` + x a second in and
--- out of the window (default 0). See coefAt.
-local M = { n = 0, slot = {}, aura = {}, mult = {}, spirit = {}, share = {}, mp5 = {}, spiritDef = {}, mp5Def = {} }
+-- out of the window (default 0); `spirit`, `share` and `mp5` may be functions (refresh). See coefAt.
+local M = {
+    n = 0,
+    slot = {},
+    aura = {},
+    mult = {},
+    spirit = {},
+    share = {},
+    mp5 = {},
+    spiritDef = {},
+    mp5Def = {},
+    shareDef = {},
+}
 R.regenMult = M
 -- I.FSR: the five-second rule's window after our own spend of an `fsr` slot, in seconds: the core's constant
 -- (def.fsr), set at the build below; read only by the fold.
@@ -346,9 +357,10 @@ local function refresh()
         R.share[r] = c < 0 and 0 or c > 1 and 1 or c
     end
     for i = 1, M.n do
-        local m, x = finite(M.spiritDef[i]), finite(M.mp5Def[i])
+        local m, x, sh = finite(M.spiritDef[i]), finite(M.mp5Def[i]), finite(M.shareDef[i])
         M.spirit[i] = m and m > 0 and m or 1
         M.mp5[i] = x and x > 0 and x or 0
+        M.share[i] = sh and sh > 0 and sh <= 1 and sh or 0
     end
     for g = 1, G.n do
         local v = finite(G.def[g])
@@ -439,7 +451,7 @@ I.OnBuild(function(def, now)
             -- pauses the slot, and a read under it teaches nothing); a function spirit or mp5 is read here once
             local f, sh, m, x = e.mult, e.share, e.spirit, e.mp5
             f = type(f) == "number" and f >= 0 and f or nil
-            sh = type(sh) == "number" and sh > 0 and sh <= 1 and sh or nil
+            sh = (type(sh) == "function" or type(sh) == "number" and sh > 0 and sh <= 1) and sh or nil
             local live = f
                 or sh
                 or type(m) == "function"
@@ -450,7 +462,7 @@ I.OnBuild(function(def, now)
                 if def.auras[i].key == e.aura then
                     M.n = M.n + 1
                     M.slot[M.n], M.aura[M.n] = r, i
-                    M.mult[M.n], M.share[M.n], M.spiritDef[M.n], M.mp5Def[M.n] = f or 1, sh or 0, m, x
+                    M.mult[M.n], M.spiritDef[M.n], M.mp5Def[M.n], M.shareDef[M.n] = f or 1, m, x, sh
                     R.shaped[r] = true
                 end
             end

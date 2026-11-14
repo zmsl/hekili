@@ -29,10 +29,12 @@ local mt_resource = ns.metatables.mt_resource
 -- with the `fsr` meta's `share` capped at all of it; `mp5` + x a second in and out of the window (an MP5 aura). On an
 -- `fsr` resource the four combine as wowsims does: inside the window (MP5 + S x m x min(c + s, 1)) x f, outside
 -- (MP5 + S x m) x f. Rate fields are no forecast event: they move out of the regen model into `state.regenMult` here.
--- `fsr`'s `share` (c, 0-1) is the static casting share the learned split already holds (talents, a pre-buffed armor).
--- An `fsr` part may be a function, read once at the build (Tracked.lua: it may name the spec's tree). A rate field's
--- `spirit` or `mp5` and an aura regen's `value` may be functions (no arguments), read at the build and at each combat
--- start, in the belief's context as well as the sim's; a result that is not a valid number makes the field inert.
+-- `fsr`'s `share` (c, 0-1) is the static casting share the learned split already holds (talents, by rank).
+-- An `fsr` `spirit` or `mp5` may be a function, read once at the build (Tracked.lua: it may name the spec's tree); a
+-- function `share` is the belief's, read in its context after its talent walk and at each combat start (a talent's
+-- rank, never the spec). A rate field's `spirit`, `mp5` or `share` and an aura regen's `value` may be functions (no
+-- arguments), read at the build and at each combat start, in the belief's context as well as the sim's; a result that
+-- is not a valid number makes the field inert.
 -- shortcut: the sim's forecast takes the belief's regen rate at `now` as a constant (Game/API/Facade.lua's
 -- GetPowerRegenForPowerType), so it sees neither a rate aura expire mid-forecast nor a simulated cast apply one;
 -- upgrade with a per-forecast multiplier when a pack's pooling misjudges across a rate aura's edge.

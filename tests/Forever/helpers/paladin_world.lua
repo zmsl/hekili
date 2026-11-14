@@ -200,9 +200,10 @@ local PACKS = {
             "exorcism",
             "retribution_aura",
         },
-        talents = { [1310735] = 1, [20375] = 1 },
+        talents = { [1310735] = 1, [20375] = 1, [1310899] = 2 }, -- Reverence 2/2: its export's (paladin_retribution.log)
         weapon = { 150, 230, 3.6 },
-        fsr = { 13.65, 8.25 }, -- the true regen parts: wowsims's logs at 60 (the class file declares the same, per spec)
+        -- the true regen parts: wowsims's logs at 60 (the class file declares the same, per spec); they hold Reverence's 30%
+        fsr = { 13.65, 8.25, share = 0.3 },
         uptime = { "consecrated_ground" },
     },
     -- Seal of Fury, Holy Shield and Swift Judgement, a one-hander and a shield; the mob's swings at us blocked.
@@ -269,7 +270,7 @@ local PACKS = {
             [1311084] = 3, -- Champion of the Light
         },
         weapon = { 100, 160, 2.2 },
-        fsr = { 18.37, 7.88 },
+        fsr = { 18.37, 7.88, share = 0.3 }, -- Reverence 2/2 (its talents above): the parts hold its 30%
         max = 4667,
         uptime = { "consecrated_ground" },
     },
