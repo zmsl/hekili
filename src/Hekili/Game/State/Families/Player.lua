@@ -95,12 +95,13 @@ local function splitAtPull(t)
             local v, ok = I.Eval(d, t, true)
             P.add[k] = ok and type(v) == "number" and v == v and v or 0 -- v == v: not NaN
         elseif type(d) == "table" then
-            -- shortcut: an aura no walk has found yet (only our cast or the Cooldown Manager opened it) counts 0, and a
-            -- rank change mid-fight is not followed; upgrade if either shows in game.
+            -- shortcut: the rank the last player walk found (U.sid, cleared only at a build): an aura no walk has found
+            -- counts 0, one gained mid-fight at another rank than the last walked counts that one (over by one rank's
+            -- delta when lower), and a rank change mid-fight is not followed; upgrade if either shows in game.
             P.add[k] = d[I.auras.sid[P.j[k]]] or 0
         end
     end
-    if split[0] then
+    if split[0] and hasteReadT > 0 then -- no plain read (a reload in combat): no base, the default stands
         derive(0, 1 + hasteRead / 100, hasteReadT, t)
     end
     for q = 1, 5 do
