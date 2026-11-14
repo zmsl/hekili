@@ -111,7 +111,11 @@ local PACKS = {
         -- 5 misses are Serpent Sting: the belief starts its debuff at the cast, about 0.33 s before it lands (central belief
         -- work, no landing hook; not worked around); the 5th is the strike ordering (strider_kick -> multi_shot), the walk
         -- the replay cannot forecast (omitted weave waits, CN19). Ledger L160.
-        0.94,
+        -- 0.94 -> 0.93 (0.935 of 92 measured; flicker-085 P1, L755 / ruling L960: a mana pool with no tick seen pads
+        -- nothing, so the waits run less late; loop Survival wait error +.19 -> +.13 s, est - truth unchanged): one more
+        -- miss, wowsims casts Mongoose Bite where ours shows Strider Kick (mana) at a near-tie with Mongoose Bite's
+        -- cooldown.
+        0.93,
         { [10] = 6, [40] = 7.6, [60] = 14.0 },
         -- 2.4 -> 0.7 (0.67 measured): R51's weave position bounces (above) are gone with the new weave
         0.7,
