@@ -1029,3 +1029,39 @@ describe("Forever Hunter Movement (R8)", function()
         assert.are.same({ "multi_shot", "multi_shot" }, { far(true), near(true) })
     end)
 end)
+
+-- Lane R (Fable decision 3): the worlds grant Resourcefulness on an ability's own crit row, the one the client shows
+-- (rank / 2 of a crit, wowsims talents_survival.go), never on a second roll beside it.
+describe("the Hunter worlds' Resourcefulness", function()
+    local hw = require("Forever.helpers.hunter_world")
+
+    it("opens on an ability's crit row only, rank / 2 of the crit", function()
+        local C = hw.Survival -- Resourcefulness 2/2
+        local H = headless.new({ character = C.character(), pack = "Survival (wowsims.com)" })
+        local p = C.resolve("arcane_shot", H)
+        local applied, chances = {}, {}
+        local function fake(flag)
+            local W = { t = 1 }
+            W.rng = {
+                chance = function(x)
+                    chances[#chances + 1] = x
+                    return true
+                end,
+            }
+            function W.hit(e)
+                e.lastHit = { act = "WOUND", flag = flag }
+                return e.lastHit
+            end
+            function W.applyAura(_, id)
+                applied[#applied + 1] = id
+            end
+            return W
+        end
+        local e = { cdUntil = {}, target = {} }
+        p.effect(fake(""), e)
+        assert.are.same({}, applied) -- a plain hit: nothing
+        p.effect(fake("CRITICAL"), e)
+        assert.are.same({ 1242688 }, applied)
+        assert.are.same({ 1 }, chances) -- 2/2: every crit
+    end)
+end)

@@ -26,11 +26,9 @@ local GCD = { spell = 1.5, off = 0 }
 -- The default regen parts (a pack's `fsr` replaces them; the class file declares them per spec, as wowsims's logs).
 local FSR = { 18, 3 }
 local RESOURCEFULNESS = 1242688 -- its aura: +50% of the spirit regen while casting, 30 s (talent 440529)
--- The share of a landed melee or ranged ability (not Auto Shot) that crits, counted in wowsims's logs (the abilities
--- that gave Resourcefulness there: Raptor Strike, Mongoose Bite, Arcane Shot, Multi-Shot, Strider Kick): Marksmanship
--- 5 of 43, Survival 8 of 42. The world's shots do not roll crits, so the aura rolls this itself.
--- Survival Turret: 7 of its 41 Arcane and Aimed Shots crit in its log (hunter_survival_turret.log).
-local CRIT = { Marksmanship = 5 / 43, Survival = 8 / 42, SurvivalRanged = 8 / 42, SurvivalTurret = 7 / 41 }
+-- Its proc rides an ability's own crit (W.hit's roll at W.crit, the row the client shows). shortcut: W.crit (0.12)
+-- stands in for the logs' ability crit rates (Marksmanship 5 of 43, Survival 8 of 42, Survival Turret 7 of 41), and
+-- the queued Raptor Strike (behaviours' strike) rolls no crit; give the worlds the logs' rates if a gate needs them.
 local DEADLY_ASPECTS = 19552 -- wowsims aspects.go: Quick Shots' chance is Deadly Aspects' 2% a rank (5 ranks: 10%)
 local AUTO_SHOT = 75
 
@@ -125,11 +123,10 @@ local function drop(W, e, X, key) -- aura `key` off us, if up
     end
 end
 
--- Resourcefulness: a landed ability of a build that has the talent (`rate`: its measured crit rate) crits. The hit's row
--- stays a plain wound (the shots' damage has no crits here), so the belief's crit route (the abilities' `onCrit`) is not
--- exercised by these worlds: their belief never opens the aura (as before); the replays feed the log's crits.
+-- Resourcefulness: an ability's crit row (the client sees it: the belief's `onCrit` route) of a build that has the
+-- talent gives it at `rate` (rank / 2), one roll on the crit as wowsims (talents_survival.go).
 local function resourceful(W, e, rate, X)
-    if rate and W.rng.chance(rate) then
+    if rate and e.lastHit and e.lastHit.flag == "CRITICAL" and W.rng.chance(rate) then
         aura(W, X, e, "resourcefulness")
     end
 end
@@ -488,7 +485,7 @@ local function content(name)
     local C = { PACK = P.pack, IDS = {} }
     -- Resourcefulness's proc: 50% a rank of a crit (wowsims: 440529 effect 2); nil: the build lacks the talent
     local res = P.talents and P.talents[440529]
-    local rate = res and CRIT[name] * res / 2
+    local rate = res and res / 2
     local recup = P.talents and (P.talents[1223987] or 0) > 0 -- Rapid Recuperation (its log header's rank)
     C.SPEC = ({
         BeastMastery = 100031,
@@ -549,13 +546,8 @@ local function content(name)
         if not us.auras[asp.id] then
             W.applyAura(us, asp.id, asp.duration, 1, asp.max_stack)
         end
-        us.landed = function(W, act) -- the queued Raptor Strike's swing: the next of ours to land
-            if us.raptorQueued then
-                us.raptorQueued = false
-                if act == "WOUND" then
-                    resourceful(W, us, rate, X)
-                end
-            end
+        us.landed = function() -- the queued Raptor Strike's swing: the next of ours to land (it rolls no crit: no proc)
+            us.raptorQueued = false
         end
         if not P.ranged then
             return
