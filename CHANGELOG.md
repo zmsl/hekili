@@ -19,10 +19,15 @@
 - Hunter: Rapid Recuperation now counts for 15 seconds after each Serpent Sting (25% or 50% of your Spirit regeneration while casting, by rank).
 - Priest: with 5/5 Spirit Tap, your Spirit and mana regeneration while casting rise for 15 seconds after you kill an enemy that gives experience. Not in dungeons or raids, where the game hides who made the kill.
 - Warlock: with Soul Harvest, your mana regeneration rises for 10 seconds after you kill an enemy that gives experience while your Drain Soul is on it. Not in dungeons or raids, where the game hides who made the kill.
+- Druid: Reflection now counts 17/33/50% of your Spirit regeneration while casting, by rank, so a Druid with Reflection is no longer shown short of mana too long, and Innervate is valued in full.
+- Hunter: Resourcefulness now counts for 30 seconds after a melee or ranged ability crits (not Auto Shot or white swings), 50% of your Spirit regeneration while casting at 2/2.
+- Innervate now counts for every mana user, not only the Druid who casts it on themselves: an Innervate from another Druid that is on you when a fight starts raises your mana regeneration (in combat Hekili cannot see one cast on you).
+- Shaman: the Polished Driftwood Icon relic now counts its 8% of your Spirit regeneration while casting.
 
 ### Fixed
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
+- A buff that shares its talent's spell ID (Soul Harvest, Nature's Grace, Spirit Tap and others) is no longer read as always up if the game lists the talent's own passive on you.
 
 ### Known issues
 
