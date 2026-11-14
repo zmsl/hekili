@@ -24,6 +24,7 @@ local NONE = {} -- a hand-built def may carry no `windows`
 local W = {
     n = 0,
     byKey = {},
+    key = {}, -- by window index: its name
     eval = {}, -- the evaluator bound to the `now` context, or false
     dur = {}, -- seconds (math.huge: "combat")
     durFn = {}, -- `now_duration` bound to the `now` context, or false
@@ -192,11 +193,11 @@ I.On(Obs.CombatEnd, function()
 end)
 
 I.OnSnapshot(function(out)
-    for k, w in pairs(W.byKey) do
+    for w = 1, W.n do
         local a = W.devAb[w]
         out[#out + 1] = string.format(
             "window %s up=%s step=%d/%d opened=%.2f expires=%.2f refreshes=%d eval=%s combat=%.2f dev=%s@%.2f due=%d",
-            k,
+            W.key[w],
             tostring(W.up[w]),
             W.step[w],
             W.nSteps[w],
@@ -230,7 +231,7 @@ I.OnBuild(function(def)
     W.n = #list
     for w = 1, W.n do
         local d = list[w]
-        W.byKey[d.key] = w
+        W.byKey[d.key], W.key[w] = w, d.key
         local f = d.evaluator
         W.eval[w] = type(f) == "function" and setfenv(f, I.nowCtx) or false
         W.dur[w] = d.duration == "combat" and math.huge or type(d.duration) == "number" and d.duration or 0
