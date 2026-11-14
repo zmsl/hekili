@@ -973,6 +973,41 @@ describe("the replay's mana regen (wowsims's regen lines)", function()
         assert.is_true(math.abs(R.manaCasting - 2) < 1e-9, tostring(R.manaCasting)) -- the 0.5 share's unboosted rate
     end)
 
+    it("splits a casting-only log by the static share and the character's Spirit (no not-casting line)", function()
+        -- every tick inside the five-second rule: 1.261 a tick = M + c x S at c 0.5, Spirit 139 (S = 6.25 + 139 / 8 =
+        -- 23.625), so M = 0.7975 and the not-casting rate M + S = 24.4225 (wowsims's Balance log, Reflection 3/3)
+        local text = log({ { 0.5, 1.261, 1 }, { 0.6, 1.261, 1 } })
+        local function booted(share)
+            return {
+                Hekili = {
+                    Class = {
+                        abilities = {},
+                        auras = {},
+                        resources = { mana = { state = { meta = { fsr = { spirit = 22, mp5 = 0, share = share } } } } },
+                    },
+                    State = { talent = { reflection = { rank = 3 } } },
+                },
+            }
+        end
+        local R = replay.new(
+            text,
+            booted(function()
+                return 0.5 * talent.reflection.rank / 3 -- luacheck: ignore 113
+            end),
+            {}
+        )
+        local W = R.world(setmetatable({ tag = "-s", stats = { [5] = 139 } }, { __index = WO }), 1)
+        local us = W.ents[1]
+        local idle, casting = W.regenRate(us, 0, "idle"), W.regenRate(us, 0, "casting")
+        assert.is_true(math.abs(idle - 24.4225) < 1e-9 and math.abs(casting - 12.61) < 1e-9, idle .. " / " .. casting)
+        -- no static share: the casting rate stands for both, as before
+        R = replay.new(text, booted(nil), {})
+        W = R.world(setmetatable({ tag = "-s", stats = { [5] = 139 } }, { __index = WO }), 1)
+        us = W.ents[1]
+        idle, casting = W.regenRate(us, 0, "idle"), W.regenRate(us, 0, "casting")
+        assert.is_true(math.abs(idle - 12.61) < 1e-9 and math.abs(casting - 12.61) < 1e-9, idle .. " / " .. casting)
+    end)
+
     it(
         "keeps the content's mp5 auras that the log gains out of the part A, the client's read following them",
         function()

@@ -236,7 +236,8 @@ end
 --- The mana regen rates per second the log's regen lines show: not casting, casting; nil without any. Each is its
 --- tag's most frequent amount a tick (partial ticks at the five-second rule's edges are rarer). A casting rate above
 --- the not-casting one is a temporary boost (Innervate: wowsims's casting rate is the mp5 part plus at most all of the
---- spirit part), so the casting rate is then 0; with no not-casting line the casting rate stands for both.
+--- spirit part), so the casting rate is then 0; with no not-casting line the casting rate stands for both (a third
+--- return true: R.world splits it by the static share and the Spirit).
 function M.manaRegen(ev, shares)
     local count, best = { {}, {} }, { 0, 0 }
     local up, boost = {}, 0 -- the declared casting-share auras up (shares: { [aura id] = share }) and their total
@@ -273,7 +274,7 @@ function M.manaRegen(ev, shares)
     if idle == 0 and casting == 0 then
         return nil
     elseif idle == 0 then
-        return casting, casting
+        return casting, casting, true
     end
     return idle, casting <= idle and casting or 0
 end
@@ -662,22 +663,28 @@ function M.new(text, H, o)
 
     -- the class's declared casting-share auras (a regen entry with a `share`): their ticks are not the unboosted rate
     local shares, Class = {}, H.Hekili.Class
+    local function answer(sh) -- a rank's value: the booted character's answer (its talents set at boot)
+        if type(sh) == "function" then
+            local env = getfenv(sh)
+            setfenv(sh, H.Hekili.State)
+            local ok, v = pcall(sh)
+            setfenv(sh, env)
+            sh = assert(ok and tonumber(v), "replay: a casting share's function raised or answered no number")
+        end
+        return sh
+    end
     for _, rs in pairs(Class.resources or {}) do
         for _, m in ipairs(rs.state and rs.state.regenMult or {}) do
-            local a, sh = m.share and m.aura and Class.auras[m.aura], m.share
-            if type(sh) == "function" then -- a rank's value: the booted character's answer (its talents set at boot)
-                local env = getfenv(sh)
-                setfenv(sh, H.Hekili.State)
-                local ok, v = pcall(sh)
-                setfenv(sh, env)
-                sh = assert(ok and tonumber(v), "replay: a casting share's function raised or answered no number")
-            end
+            local a, sh = m.share and m.aura and Class.auras[m.aura], answer(m.share)
             if a and a.id and sh then
                 shares[a.id] = sh
             end
         end
     end
-    R.manaIdle, R.manaCasting = M.manaRegen(p.ev, shares)
+    local mana = Class.resources and Class.resources.mana
+    local fsr = mana and mana.state and mana.state.meta and mana.state.meta.fsr
+    R.manaShare = fsr and answer(fsr.share) or 0 -- the static casting share (talents by rank)
+    R.manaIdle, R.manaCasting, R.manaNoIdle = M.manaRegen(p.ev, shares)
     R.gained = {} -- the player auras the log gains (an `mp5` aura of the content's fsr is inside its modal casting tick)
     for _, e in ipairs(p.ev) do
         if e.kind == "aura" and e.unit == "player" and e.verb ~= "faded" then
@@ -749,14 +756,26 @@ function M.new(text, H, o)
         if R.manaIdle then -- the log's own mana regen wins over the content's: { spirit part, mp5 part } (W.fsr)
             -- the content's `mp5` auras (no share or spirit part) that the log gains stay in the world's fsr: the logged
             -- casting rate holds their mp5, so the rate without them is the part A, and the client's read follows them
-            local auras, without = nil, R.manaCasting
+            local auras, without, idle = nil, R.manaCasting, R.manaIdle
+            -- a log with no not-casting line (every tick inside the five-second rule) under a static share c: its
+            -- casting rate is M + c x S, S the character's spirit regen (6.25 + Spirit / 8 for every class, wowsims
+            -- mana.go:76), so the client's not-casting read is M + S (else the casting rate stands for both)
+            local spirit = wo.stats and wo.stats[5]
+            if R.manaNoIdle and R.manaShare > 0 and spirit then
+                local S = 6.25 + spirit / 8
+                assert(
+                    R.manaCasting >= R.manaShare * S - 1e-6,
+                    "replay: the casting rate is below c x the Spirit's regen"
+                )
+                idle = R.manaCasting + (1 - R.manaShare) * S
+            end
             for id, x in pairs(wo.fsr and wo.fsr[0] and wo.fsr[0].auras or {}) do
                 if x.mp5 and not x.share and not x.spirit and R.gained[id] then
                     auras, without = auras or {}, without - x.mp5
                     auras[id] = x
                 end
             end
-            W.rates[0], W.fsr[0] = 0, { R.manaIdle - R.manaCasting, math.max(0, without), auras = auras }
+            W.rates[0], W.fsr[0] = 0, { idle - R.manaCasting, math.max(0, without), auras = auras }
         end
         local function show(dst, id, a) -- an aura change the client sees (not a hidden one)
             if not hidden[id] then
