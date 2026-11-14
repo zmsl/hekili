@@ -35,7 +35,7 @@ With **Count Damaged Enemies** checked, an enemy the player has damaged counts f
 
 ## Target swaps
 
-With **Allow Target Swaps** checked, a priority that keeps a debuff on several enemies can suggest using an ability on another enemy. The suggestion shows as a small indicator on the icon. Target swaps are off by default; they can also be turned on with Recommend Target Swaps on a display's right-click menu, or with `/hekili set cycle on`.
+With **Allow Target Swaps** checked, a priority that keeps a debuff on several enemies can suggest using an ability on another enemy. The suggestion shows as a small indicator on the icon. Target swaps are off by default; they can also be turned on with Recommend Target Swaps on the menu that a left click on the Hekili Forever minimap button opens, or with `/hekili set cycle on`.
 
 Target swaps need enemy nameplates: **Show Enemy Nameplates** and **Show All Nameplates** on, in the open world too. Hekili Forever remembers the debuffs placed on each enemy that was targeted. An enemy whose nameplate disappears is forgotten, so its debuff may be suggested again. On enemies other than the current target, the time left on a debuff is estimated, not read.
 

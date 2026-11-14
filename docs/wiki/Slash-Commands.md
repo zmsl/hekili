@@ -18,7 +18,7 @@ Notes on the table:
 - `/hekili set` takes a toggle name ([Toggles](Toggles)), `mode` with a display mode, `cycle` to turn target swaps on or off, or `spec` with the name of a specialization setting. `/hekili help` lists the current specialization's settings and the values each one accepts.
 - `/hekili priority` with a name switches to the first of your specialization's priorities whose name starts with what you typed; capitals do not matter. `/hekili priority default` returns to the built-in default ([Choosing a priority](Choosing-A-Priority)).
 - `/hekili spec` takes a specialization's short name, such as `feral` or `guardian`.
-- `/hekili move` and `/hekili unlock` do nothing in combat.
+- `/hekili move`, `/hekili unlock` and `/hekili lock` do nothing in combat.
 
 Examples:
 

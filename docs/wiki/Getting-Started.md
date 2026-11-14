@@ -15,8 +15,7 @@ This tutorial takes a newly installed Hekili Forever from the first login to a p
 ## Open the options
 
 1. Type `/hekili` in chat. The short form `/hek` does the same. The options window opens, and every display shows on the screen while it is open.
-2. Open **Getting Started** on the left for the addon's own short guide. This tutorial covers the same ground.
-3. Type `/hekili help` to list the chat commands in the chat window. [Slash commands](Slash-Commands) lists them all.
+2. Type `/hekili help` to list the chat commands in the chat window. [Slash commands](Slash-Commands) lists them all.
 
 ## Check your specialization
 

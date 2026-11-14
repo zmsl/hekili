@@ -37,7 +37,7 @@ Problems with Hekili Forever are reported to the Hekili Forever project ([Report
 - **The player's health.** While the game hides it, the player's health reads as full, so a defensive line based on low health does not fire.
 - **Counting damaged enemies.** The game does not report hits landed on other enemies, so **Count Damaged Enemies** finds fewer targets. Nameplate counting is the reliable method ([How targets are counted](How-Targets-Are-Counted)).
 - **Resource pooling.** `pool_resource` works only in its `for_next=1` form, which waits for the next line's cost. Other forms are ignored: the forecast already waits until a cost is covered.
-- **Minor Cooldowns.** The toggle that retail Hekili called Essences is **Minor Cooldowns**. `/hekili set essences` still works, for old macros.
+- **Minor Cooldowns.** In `/hekili set`, the **Minor Cooldowns** toggle is `minor_cooldowns`; the older word `essences`, used by retail macros, still works.
 - **SpellFlash.** SpellFlash support was removed; it never worked on Forever.
 - **Imported priorities.** A priority exported from retail Hekili names another game's specializations and abilities. It needs translating before it works ([APL Forever differences](APL-Forever-Differences)).
 

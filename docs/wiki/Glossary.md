@@ -14,7 +14,7 @@ The **glossary** defines the terms used across this wiki: the player terms of th
 | Action priority list (APL) | The text form of a priority: one line per ability, each with conditions, in the SimulationCraft dialect the original Hekili read ([APL overview](APL-Overview)). |
 | Band | The range of an estimate: a low end, a best guess and a high end. A priority line that tests `energy.lo` reads the low end. |
 | Belief | Hekili Forever's running estimate of the game values that the client hides, such as energy, rage, mana and cooldown times. Each value is a band, plus how it was learned ([Pack belief and simulation](Pack-Belief-And-Simulation)). |
-| Built-in priority | A priority shipped with a class addon. It is replaced at each update; to change one, copy it first. |
+| Built-in priority | A priority shipped with a class addon. When an update changes it, the new version replaces the saved one; to change one, copy it first. |
 | Class addon | The addon folder of one class, such as `Hekili_Druid`, with that class's abilities, auras, talents and priorities ([Installing](Installing)). |
 | Clash | An ability option: treat the ability as ready this many seconds early, so that it wins over one that is ready only slightly sooner ([Abilities and items](Abilities-And-Items)). |
 | Cooldown Manager | The game's own bars of cooldowns and auras. Hekili Forever reads them to learn whether a buff or debuff is up ([Cooldown Manager](Cooldown-Manager)). |

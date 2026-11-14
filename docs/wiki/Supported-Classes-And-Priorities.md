@@ -18,7 +18,7 @@ Notes on the table:
 - A specialization is one talent tree. Feral Combat has two: Feral and Guardian.
 - "None: no priorities on Forever" marks a healing specialization. Hekili Forever recommends nothing while it is active, and its page under **Priorities** says so.
 - Some other built-in priorities are picked automatically from your talents; [Choosing a priority](Choosing-A-Priority) explains when. Any of them can be chosen by hand.
-- The Hunter Turret priorities stand and shoot, with no melee. The other Hunter priorities weave melee strikes in.
+- The Hunter Turret priorities stand and shoot, with no melee. Survival Melee fights in melee with two weapons. The other Hunter priorities weave melee strikes in between shots.
 
 ## See also
 

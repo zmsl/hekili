@@ -56,7 +56,7 @@ To import a priority:
 
 An imported priority is a custom priority: it is not updated when Hekili Forever is updated, and only priorities written for Hekili Forever work. A priority exported from the original Hekili names specializations and abilities of another game version, and needs translating first ([APL Forever differences](APL-Forever-Differences)).
 
-The built-in priorities are replaced with each update of Hekili Forever, and edits made to them are lost. To change a built-in priority, copy it first with the copy button on its **Summary** tab, and edit the copy. [APL tutorial: your first custom priority](APL-Tutorial-Your-First-Custom-Priority) has the steps.
+When an update of Hekili Forever changes a built-in priority, the new version replaces the saved one, and edits made to it are lost; a chat notice names each priority replaced. To change a built-in priority, copy it first with the copy button on its **Summary** tab, and edit the copy. [APL tutorial: your first custom priority](APL-Tutorial-Your-First-Custom-Priority) has the steps.
 
 ## Check that it works
 

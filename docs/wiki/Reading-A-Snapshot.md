@@ -96,7 +96,7 @@ Here `rage.lo[15.00]>=90` reads: the low end of the rage estimate was 15, so the
 
 ## Lines for the developers
 
-Some lines in a record are written for the developers rather than for players. Lines that begin with `[vs]`, the block that begins `VirtualState`, and lines such as `read UnitPower: secret` record each value Hekili Forever asked the game for and how it got the answer. Lines that begin with `TimeData` record how long each step took, and a `Performance` table at the end records the update rate. Keep all of them when sending a snapshot.
+Some lines in a record are written for the developers rather than for players. The `[vs]` lines, and the block of `read ...` lines just below the `New Recommendations` line, record each value Hekili Forever asked the game for, and whether the game answered it or Hekili Forever estimated it. Lines that begin with `TimeData` record how long each step took, and a `Performance` table at the end records the update rate. Keep all of them when sending a snapshot.
 
 <!-- TODO-SCREENSHOT: a short snapshot with each section numbered -->
 

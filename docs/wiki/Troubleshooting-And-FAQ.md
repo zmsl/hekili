@@ -48,7 +48,7 @@ Hekili Forever switches to area-of-effect abilities only when it counts several 
 
 ## Old data after an upgrade
 
-- **Built-in priorities are replaced at each update.** A chat notice names each priority that was updated. Changes made to a built-in priority are lost; make changes in a copy instead.
+- **Built-in priorities are replaced when an update changes them.** A chat notice names each priority that was updated. Changes made to a built-in priority are then lost; make changes in a copy instead.
 - **A retired priority.** When a built-in priority is removed, a notice says so, and specializations that used it switch to their default priority.
 - **Settings from an older Hekili.** Hekili Forever keeps the original Hekili's saved settings. If displays or toggles behave strangely after moving from another version, reset the profile on the Profiles page of **/hekili**, then type `/reload`. Resetting returns every setting of that profile to its default.
 
