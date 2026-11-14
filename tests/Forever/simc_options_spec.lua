@@ -284,6 +284,28 @@ describe("use_while_casting on a line", function()
             end
         end)
     end
+
+    -- SimC means the flag for instants used mid-cast: a flagged ability with its own cast time still waits the
+    -- player's cast out (it would end it)
+    it("=1 on an ability with a cast time: still waits for the channel to end", function()
+        local H, W, us, upTo =
+            rig({ line("slam", { use_while_casting = 1 }), line("bloodrage", { use_while_casting = 1 }) })
+        H.Hekili.Class.abilities.slam.spend = 0 -- rage is secret here: free Slam, so only the channel can hold it
+        W.t = 1
+        assert.is_true(
+            W.press(us, "cannibalize", { spell = CANNIBALIZE, gcd = 1.5, channel = { length = 10, tick = 2 } })
+        )
+        W.run(20)
+        upTo(5)
+        local st = H.Hekili.State
+        st.reset("Primary", true)
+        assert.is_true(st.channeling)
+        st.scriptID = ww.PACK .. ":default:2"
+        assert.is_true(st:TimeToReady("bloodrage") < 0.3, "the flagged instant goes now")
+        st.scriptID = ww.PACK .. ":default:1"
+        local t = st:TimeToReady("slam")
+        assert.is_true(t > st.channel_remains - 0.1, tostring(t) .. " vs " .. tostring(st.channel_remains))
+    end)
 end)
 
 describe("the three options through the importer", function()
