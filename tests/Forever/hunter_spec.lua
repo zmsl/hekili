@@ -398,6 +398,30 @@ describe("Forever Hunter", function()
         })
     end)
 
+    -- L1058: The Beast Within (1223758; DB2 effects A_DUMMY 10 and -50 on the caster, no mask; the pin has no row):
+    -- our Bestial Wrath's 18 s on us, every mana cost -50%. Bestial Wrath only with the pet out alive (wowsims's
+    -- ExtraCastCondition pet.IsEnabled, talents_beast_mastery.go:136-138).
+    it("puts Bestial Wrath's 18 s on us at the cast, halving every mana cost, and casts it only with the pet out", function()
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = ld.env(w)
+            ld.run(w.abilities.bestial_wrath[field], e)
+            assert.are.same({ "bestial_wrath" }, e.applied, field)
+        end
+        assert.are.same({ 19574, 18 }, { w.auras.bestial_wrath.id, w.auras.bestial_wrath.duration })
+        local mods = {}
+        for _, m in ipairs(w.costMods) do
+            if m.aura == "bestial_wrath" then
+                mods[#mods + 1] = { m.pct, m.charges or false, m.spells or false }
+            end
+        end
+        assert.are.same({ { -0.5, false, false } }, mods)
+        local e = ld.env(w)
+        e.pet_out = false
+        assert.is_false((ld.run(w.abilities.bestial_wrath.usable, e)))
+        e.pet_out = true
+        assert.is_true((ld.run(w.abilities.bestial_wrath.usable, e)))
+    end)
+
     it("shortens Rapid Fire's cooldown by Rapid Killing's curve {-60, -120} s (talents_marksmanship.go:100)", function()
         local e = ld.env(w)
         local cd = {}
@@ -797,6 +821,51 @@ describe("Forever Hunter through the engine", function()
         assert.are.equal(2, S.pet.hawk.count)
         H.ctl.now = t + 6 + 18 + 0.1 -- the second dive's hawk is gone, the third's is up
         assert.are.same({ true, false }, { (H.ns.Facade.GetTotemInfo(6)), (H.ns.Facade.GetTotemInfo(7)) })
+        assert.are.same({}, H.errors)
+    end)
+
+    -- L1058: pet_out is the pet unit (UnitExists / UnitIsDead of "pet", plain), not the simulation's pet.up, which a
+    -- hawk's summon also makes true; The Beast Within's -50% holds Bestial Wrath's 18 s in both layers, through an
+    -- in-combat walk of our auras (the buff is the pet's: never on us).
+    it("gates Bestial Wrath on the pet out alive, and halves the shots' cost for its 18 s in both layers", function()
+        local I, VS, S = H.ns.VirtualStateInternal, H.ns.VirtualState, H.Hekili.State
+        local arcane = I.ab.bySpell[3044]
+        local function at(t)
+            assert.is_true(headless.cycle(H, t))
+            VS.Drain(t)
+            S.reset("Primary", true)
+        end
+        local t = H.ctl.now + 1
+        H.ctl.exists.pet = nil
+        at(t + 0.1)
+        assert.is_false((S:IsUsable("bestial_wrath")))
+        S.summonPet("hawk", 18) -- the forecast's dive (Summon Hawk's handler): pet.up, but no pet out
+        assert.are.same({ true, false }, { S.pet.up, S.pet_out })
+        assert.is_false((S:IsUsable("bestial_wrath")))
+        H.ctl.exists.pet, H.ctl.dead.pet = true, true
+        at(t + 0.2)
+        assert.is_false((S:IsUsable("bestial_wrath")))
+        H.ctl.dead.pet = nil
+        at(t + 0.3)
+        assert.is_true((S:IsUsable("bestial_wrath")))
+        local full = I.CostOf(arcane)
+        assert.are.same({ false, full }, { S.buff.bestial_wrath.up, S.action.arcane_shot.cost })
+
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        t = t + 1
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-BW", 19574)
+        at(t + 0.1)
+        H.Fire("UNIT_AURA", "player")
+        at(t + 0.2)
+        assert.is_true(full > 0)
+        assert.are.same(
+            { true, full / 2, full / 2 },
+            { S.buff.bestial_wrath.up, I.CostOf(arcane), S.action.arcane_shot.cost }
+        )
+        at(t + 18.1)
+        assert.are.same({ false, full, full }, { S.buff.bestial_wrath.up, I.CostOf(arcane), S.action.arcane_shot.cost })
         assert.are.same({}, H.errors)
     end)
 
