@@ -96,6 +96,29 @@ local HOLY_SHOCK_COST = { 160, 225, 275, 325 }
 local HOLY_SHIELD = { 20925, 20927, 20928, 1239570 }
 local HOLY_SHIELD_COST = { 100, 150, 195, 240 }
 local RETRIBUTION_AURA = { 7294, 10298, 10299, 10300, 10301 }
+-- Lane A (coverage; the pin's sim/paladin/spell_data_auto_gen.go ladders, costs and cooldowns from its spells_auto_gen.go).
+local HOLY_LIGHT = { 635, 639, 647, 1026, 1042, 3472, 10328, 10329, 25292 }
+local HOLY_LIGHT_COST = { 35, 60, 110, 190, 275, 365, 465, 580, 660 }
+local FLASH_OF_LIGHT = { 19750, 19939, 19940, 19941, 19942, 19943 }
+local FLASH_OF_LIGHT_COST = { 35, 50, 70, 90, 115, 140 }
+local LAY_ON_HANDS = { 633, 2800, 10310 }
+local HOLY_WRATH = { 2812, 10318 }
+local HOLY_WRATH_COST = { 645, 805 }
+local HAMMER_OF_JUSTICE = { 853, 5588, 5589, 10308 }
+local HAMMER_OF_JUSTICE_COST = { 30, 50, 75, 100 }
+local BLESSING_OF_PROTECTION = { 1022, 5599, 10278 }
+local BLESSING_OF_PROTECTION_COST = { 25, 45, 0.07 } -- rank 3 is 7% of base mana
+local BLESSING_OF_SACRIFICE = { 6940, 20729 }
+local BLESSING_OF_SACRIFICE_COST = { 80, 100 }
+local DIVINE_SHIELD = { 642, 1020 }
+local DIVINE_SHIELD_COST = { 75, 110 }
+local DIVINE_PROTECTION = { 498, 5573 }
+local DIVINE_PROTECTION_COST = { 15, 35 }
+-- Turn Evil (talent 1328370) overrides the three Turn Undead ranks with its own (1328374, 1328373, 1328372: same costs)
+local TURN_UNDEAD = { 2878, 5627, 10326, 1328374, 1328373, 1328372 }
+local TURN_UNDEAD_COST = { 35, 50, 75, 35, 50, 75 }
+local LIGHTS_VIGIL = { 1310911, 1311590, 1311595 }
+local LIGHTS_VIGIL_COST = { 730, 1000, 1340 }
 local RIGHTEOUS_FURY = { 25780, 407627 } -- 407627: the rune's (D4: registered, inert unless learned)
 
 local function rest(ids)
@@ -368,11 +391,18 @@ spec:RegisterAuras({
     -- Own procs (B3; no priority reads them, the Cooldown Manager follows their presence): Vengeance 5 stacks 30 s, a
     -- landed crit; Redoubt 5 charges 10 s, one a block; Reckoning's stored extra attacks (4, until the next swing).
     vengeance = { id = 20050, duration = 30, max_stack = 5 },
-    redoubt = { id = 20128, duration = 10, max_stack = 5, consumedBy = { BLOCK = true, BLOCKED = true } },
-    reckoning = { id = 1326084, duration = 3600, max_stack = 4 },
+    -- (the Cooldown Manager's items link the talents' own IDs too: 20127, 20177)
+    redoubt = {
+        id = 20128,
+        copy = { 20127 },
+        duration = 10,
+        max_stack = 5,
+        consumedBy = { BLOCK = true, BLOCKED = true },
+    },
+    reckoning = { id = 1326084, copy = { 20177 }, duration = 3600, max_stack = 4 },
     -- Iron Creed's 6 s (-2/4/6% damage taken, a Holy Strike under Righteous Fury) and Shieldsworn's spell block (6 s, a
     -- landed Holy Strike with a shield): modelled from our Holy Strikes, neither has a Cooldown Manager item.
-    iron_creed = { id = 1311033, duration = 6, max_stack = 1 },
+    iron_creed = { id = 1311033, copy = { 440668 }, duration = 6, max_stack = 1 }, -- 440668: the ID the Cooldown Manager links
     shieldsworn_block = { id = 1328551, duration = 6, max_stack = 1 },
 
     -- The Paladin auras (B6, one up at a time), Consecration's ranks (B7: wowsims registers each rank's dot; the Cooldown
@@ -408,16 +438,29 @@ spec:RegisterAuras({
     },
     blessing_of_salvation = { id = 1038, copy = { 25895 }, duration = 300, max_stack = 1 },
     blessing_of_light = { id = 19977, copy = { 19978, 19979, 25890 }, duration = 300, max_stack = 1 },
+    -- The auras the abilities above apply, under the spell IDs the Cooldown Manager links (cdm/paladin.lua). One aura
+    -- a Cooldown Manager item: Divine Shield's and Divine Protection's invulnerability is one (the item links both).
+    hammer_of_justice = { id = 1324513, copy = { 1324515, 1324516, 1324517 }, duration = 6, max_stack = 1 },
+    turn_undead = { id = 1324543, copy = { 1324545, 1324546 }, duration = 20, max_stack = 1 },
+    repentance = { id = 1324538, duration = 6, max_stack = 1 },
+    blessing_of_freedom = { id = 1044, duration = 10, max_stack = 1 },
+    blessing_of_sacrifice = { id = 6940, copy = { 20729 }, duration = 30, max_stack = 1 },
+    blessing_of_protection = { id = 1022, copy = { 5599, 10278 }, duration = 10, max_stack = 1 },
+    divine_shield = { id = 642, copy = { 1020, 498, 5573 }, duration = 12, max_stack = 1 },
+    voice_of_truth = { id = 1310897, duration = 6, max_stack = 1 },
     -- Librams (item_librams.go; item-level, external: the walk reads them where plain).
     holy_alacrity = { id = 449982, duration = 10, max_stack = 1 },
     tenets_of_the_silver_hand = { id = 1302545, duration = 3600, max_stack = 1 },
 })
 
+-- Purifying Power's cooldown cut by rank (429144's second curve {-17, -33} %): Exorcism and Holy Wrath.
+local PURIFYING_POWER_CD = { [0] = 0, 0.17, 0.33 }
+
 -- Any seal up: Judgement's requirement.
 -- Sanctified Judgement (1311074, Forever-only, 3 ranks: a 33/66/100% chance to return 20/40/60%): 60% of the seal's
 -- base cost x (2 - its cost multiplier) at 3/3 (tests/Forever/wowsims/paladin_retribution.log:439, Seal of Command
--- up: "Gained 161.280 mana from {SpellID: 1311074}" = 210 x 1.28 x 0.6): the belief counts the refund only at 3/3,
--- a sure one.
+-- up: "Gained 161.280 mana from {SpellID: 1311074}" = 210 x 1.28 x 0.6); below 3/3 the belief and the forecast count
+-- the mean (chance x refund), as the Rogue's Relentless Strikes.
 -- The fourth field is the judgement debuff the seal puts on the target (none for Command and Righteousness: damage only).
 local SEAL_BASE = {
     { "seal_of_command", SEAL_OF_COMMAND_COST, SEAL_OF_COMMAND },
@@ -428,6 +471,8 @@ local SEAL_BASE = {
     { "seal_of_light", SEAL_OF_LIGHT_COST, SEAL_OF_LIGHT, "judgement_of_light" },
     { "seal_of_wisdom", SEAL_OF_WISDOM_COST, SEAL_OF_WISDOM, "judgement_of_wisdom" },
 }
+local SJ_CHANCE = { 0.33, 0.66, 1 }
+local SJ_REFUND = { 0.2, 0.4, 0.6 }
 -- A Judgement's cast effect, Judgement's and Swift Judgement's (the `now` and the `handler`, two closures so each gets
 -- its own environment): the seal's judgement debuff, and the refund.
 local function judgementCast()
@@ -438,10 +483,12 @@ local function judgementCast()
                 if s[4] then
                     applyDebuff("target", s[4])
                 end
-                if talent.sanctified_judgement.rank >= 3 then
+                local sj = talent.sanctified_judgement.rank
+                if sj > 0 then
                     local mult = sealMult(talent)
                     local cost = byRank(s[2], s[3])
-                    gain((cost < 1 and cost * BASE_MANA or cost) * (2 - mult) * 0.6, "mana") -- Justice's is a fraction
+                    -- the mean: chance 33/66/100% x refund 20/40/60% (the talent's two curves, wowsims's spell data)
+                    gain((cost < 1 and cost * BASE_MANA or cost) * (2 - mult) * SJ_CHANCE[sj] * SJ_REFUND[sj], "mana") -- Justice's is a fraction
                 end
                 return
             end
@@ -551,12 +598,58 @@ local function holyLanded()
     end
 end
 
--- Templar's Bulwark's effects (the `now` and the `handler`): the absorb, and Forbearance 5 s shorter a rank of Sacred
--- Duty (wowsims forbearance.go) and 10 s shorter under the Justice Battleplate 5-piece (1301697).
+-- Forbearance's length: 60 s, 5 s shorter a rank of Sacred Duty (wowsims forbearance.go) and 10 s shorter under the
+-- Justice Battleplate 5-piece (1301697); given the caller's `talent` and `set_bonus` (a cost or effect function runs in
+-- the state's environment, this helper in the file's).
+local function forbearanceTime(t, sb)
+    return 60 - 5 * t.sacred_duty.rank - (sb.justice_battleplate_5pc > 0 and 10 or 0)
+end
+
+-- Templar's Bulwark's effects (the `now` and the `handler`): the absorb, and Forbearance.
 local function templarsBulwark()
     return function()
         applyBuff("templars_bulwark")
-        applyBuff("forbearance", 60 - 5 * talent.sacred_duty.rank - (set_bonus.justice_battleplate_5pc > 0 and 10 or 0))
+        applyBuff("forbearance", forbearanceTime(talent, set_bonus))
+    end
+end
+
+-- The coverage abilities' shared pieces (each returns a function that runs in the state's environment).
+local function plainCost(costs, ids)
+    return function()
+        return byRank(costs, ids)
+    end
+end
+local function benedictionCost(costs, ids)
+    return function()
+        return byRank(costs, ids) * (1 - 0.02 * talent.benediction.rank)
+    end
+end
+-- Purifying Power (429144): -10% a rank on Cleanse and Purify, 8% of base mana.
+local function cleanseCost()
+    return function()
+        return 0.08 * (1 - 0.1 * talent.purifying_power.rank) * (1 - 0.02 * talent.benediction.rank)
+    end
+end
+local function spendsFavor()
+    return function()
+        removeBuff("divine_favor")
+    end
+end
+local function drainsMana()
+    return function()
+        spend(mana.current, "mana")
+    end
+end
+local function stuns(key)
+    return function()
+        applyDebuff("target", key)
+    end
+end
+-- A shield: the invulnerability (one aura for both shields: the Cooldown Manager's item links both) and Forbearance.
+local function shielded(ids, short, long)
+    return function()
+        applyBuff("divine_shield", knownRank(ids) >= 2 and long or short)
+        applyBuff("forbearance", forbearanceTime(talent, set_bonus))
     end
 end
 
@@ -692,7 +785,9 @@ spec:RegisterAbilities({
         id = 879,
         copy = rest(EXORCISM),
         cast = 0,
-        cooldown = 15,
+        cooldown = function() -- Purifying Power (429144): -17/-33% (the pin's curve; mask 1:2097152, 2:1073750016)
+            return 15 * (1 - PURIFYING_POWER_CD[talent.purifying_power.rank])
+        end,
         gcd = "spell",
 
         spend = conduitCost(EXORCISM_COST, EXORCISM),
@@ -779,7 +874,9 @@ spec:RegisterAbilities({
         end,
         gcd = "off",
 
-        spend = 110,
+        spend = function() -- Benediction's mask names Bulwark (2:2097152)
+            return 110 * (1 - 0.02 * talent.benediction.rank)
+        end,
         spendType = "mana",
 
         startsCombat = false,
@@ -792,6 +889,359 @@ spec:RegisterAbilities({
 
         now = templarsBulwark(),
         handler = templarsBulwark(),
+    },
+
+    -- Lane A (coverage): the heals, the blessings and shields, and the utility spells a Paladin presses (a manual press
+    -- costs what it costs and starts its cooldown). Values: the pin's rows; Benediction's mask (20101) takes the stuns,
+    -- cleanses, blessings, shields, Repentance and Templar's Bulwark, not the heals, Holy Wrath, Turn Undead or Light's Vigil.
+    -- A heal or Holy Shock spends Divine Favor (its mask 0:2149605376: Holy Light, Flash of Light, Holy Shock).
+    holy_light = {
+        id = 635,
+        copy = rest(HOLY_LIGHT),
+        cast = 2.5,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = plainCost(HOLY_LIGHT_COST, HOLY_LIGHT),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(HOLY_LIGHT),
+
+        now = spendsFavor(),
+        handler = spendsFavor(),
+    },
+
+    flash_of_light = {
+        id = 19750,
+        copy = rest(FLASH_OF_LIGHT),
+        cast = 1.5,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = plainCost(FLASH_OF_LIGHT_COST, FLASH_OF_LIGHT),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(FLASH_OF_LIGHT),
+
+        now = spendsFavor(),
+        handler = spendsFavor(),
+    },
+
+    -- Heals for the maximum health and drains all the mana left (wowsims lay_on_hands.go); 20 min.
+    lay_on_hands = {
+        id = 633,
+        copy = rest(LAY_ON_HANDS),
+        cast = 0,
+        cooldown = 1200,
+        gcd = "spell",
+
+        startsCombat = false,
+        known = knows(LAY_ON_HANDS),
+
+        now = drainsMana(),
+        handler = drainsMana(),
+    },
+
+    -- Holy Conduit's cost cut and Purifying Power's cooldown cut (neither Benediction: not in its mask); Undead and Demons.
+    holy_wrath = {
+        id = 2812,
+        copy = rest(HOLY_WRATH),
+        cast = 2,
+        cooldown = function()
+            return 60 * (1 - PURIFYING_POWER_CD[talent.purifying_power.rank])
+        end,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(HOLY_WRATH_COST, HOLY_WRATH) * (1 - 0.2 * talent.holy_conduit.rank)
+        end,
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(HOLY_WRATH),
+
+        usable_on = function()
+            return UNDEAD_DEMON
+        end,
+    },
+
+    -- Improved Hammer of Justice (20487): -5 s a rank.
+    hammer_of_justice = {
+        id = 853,
+        copy = rest(HAMMER_OF_JUSTICE),
+        cast = 0,
+        cooldown = function()
+            return 60 - 5 * talent.improved_hammer_of_justice.rank
+        end,
+        gcd = "spell",
+
+        spend = benedictionCost(HAMMER_OF_JUSTICE_COST, HAMMER_OF_JUSTICE),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(HAMMER_OF_JUSTICE),
+
+        now = stuns("hammer_of_justice"),
+        handler = stuns("hammer_of_justice"),
+    },
+
+    -- Purifying Power (429144): -10/-20% cost.
+    cleanse = {
+        id = 4987,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = cleanseCost(),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows({ 4987 }),
+    },
+
+    purify = {
+        id = 1152,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = cleanseCost(),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows({ 1152 }),
+    },
+
+    -- Guardian's Favor (20174): Freedom lasts 3 s longer a rank, Protection's cooldown is 60 s shorter a rank.
+    blessing_of_freedom = {
+        id = 1044,
+        cast = 0,
+        cooldown = 20,
+        gcd = "spell",
+
+        spend = function()
+            return 0.1 * (1 - 0.02 * talent.benediction.rank)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows({ 1044 }),
+
+        now = function()
+            applyBuff("blessing_of_freedom", 10 + 3 * talent.guardians_favor.rank)
+        end,
+        handler = function()
+            applyBuff("blessing_of_freedom", 10 + 3 * talent.guardians_favor.rank)
+        end,
+    },
+
+    blessing_of_protection = {
+        id = 1022,
+        copy = rest(BLESSING_OF_PROTECTION),
+        cast = 0,
+        cooldown = function()
+            return 300 - 60 * talent.guardians_favor.rank
+        end,
+        gcd = "spell",
+
+        spend = benedictionCost(BLESSING_OF_PROTECTION_COST, BLESSING_OF_PROTECTION),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(BLESSING_OF_PROTECTION),
+
+        usable = function()
+            return not buff.forbearance.up, "forbearance"
+        end,
+
+        now = function()
+            applyBuff("blessing_of_protection")
+            applyBuff("forbearance", forbearanceTime(talent, set_bonus))
+        end,
+        handler = function()
+            applyBuff("blessing_of_protection")
+            applyBuff("forbearance", forbearanceTime(talent, set_bonus))
+        end,
+    },
+
+    blessing_of_sacrifice = {
+        id = 6940,
+        copy = rest(BLESSING_OF_SACRIFICE),
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = benedictionCost(BLESSING_OF_SACRIFICE_COST, BLESSING_OF_SACRIFICE),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(BLESSING_OF_SACRIFICE),
+
+        now = function()
+            applyBuff("blessing_of_sacrifice")
+        end,
+        handler = function()
+            applyBuff("blessing_of_sacrifice")
+        end,
+    },
+
+    -- Sacred Duty (1224697): -30/-60 s on both shields' cooldown; both bring Forbearance and refuse under it.
+    divine_shield = {
+        id = 642,
+        copy = rest(DIVINE_SHIELD),
+        cast = 0,
+        cooldown = function()
+            return 300 - 30 * talent.sacred_duty.rank
+        end,
+        gcd = "spell",
+
+        spend = benedictionCost(DIVINE_SHIELD_COST, DIVINE_SHIELD),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(DIVINE_SHIELD),
+
+        usable = function()
+            return not buff.forbearance.up, "forbearance"
+        end,
+
+        now = shielded(DIVINE_SHIELD, 10, 12),
+        handler = shielded(DIVINE_SHIELD, 10, 12),
+    },
+
+    divine_protection = {
+        id = 498,
+        copy = rest(DIVINE_PROTECTION),
+        cast = 0,
+        cooldown = function()
+            return 300 - 30 * talent.sacred_duty.rank
+        end,
+        gcd = "spell",
+
+        spend = benedictionCost(DIVINE_PROTECTION_COST, DIVINE_PROTECTION),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(DIVINE_PROTECTION),
+
+        usable = function()
+            return not buff.forbearance.up, "forbearance"
+        end,
+
+        now = shielded(DIVINE_PROTECTION, 6, 8),
+        handler = shielded(DIVINE_PROTECTION, 6, 8),
+    },
+
+    repentance = {
+        id = 20066,
+        cast = 0,
+        cooldown = 60,
+        gcd = "spell",
+
+        spend = function()
+            return 60 * (1 - 0.02 * talent.benediction.rank)
+        end,
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows({ 20066 }),
+
+        now = stuns("repentance"),
+        handler = stuns("repentance"),
+    },
+
+    -- Turn Evil (1328370): -0.5/-1 s cast, -5/-10 s cooldown (its three ranks override these; same costs).
+    turn_undead = {
+        id = 2878,
+        copy = rest(TURN_UNDEAD),
+        cast = function()
+            return 1.5 - 0.5 * talent.turn_evil.rank
+        end,
+        cooldown = function()
+            return 30 - 5 * talent.turn_evil.rank
+        end,
+        gcd = "spell",
+
+        spend = plainCost(TURN_UNDEAD_COST, TURN_UNDEAD),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(TURN_UNDEAD),
+
+        now = stuns("turn_undead"),
+        handler = stuns("turn_undead"),
+    },
+
+    divine_intervention = {
+        id = 19752,
+        cast = 0,
+        cooldown = 3600,
+        gcd = "spell",
+
+        startsCombat = false,
+        known = knows({ 19752 }),
+    },
+
+    -- The Holy talent (1310911): a 30 s buff on the target and the caster; its Holy Shock cooldown skip is unmodelled.
+    lights_vigil = {
+        id = 1310911,
+        copy = rest(LIGHTS_VIGIL),
+        cast = 1.5,
+        cooldown = 6,
+        gcd = "spell",
+
+        spend = plainCost(LIGHTS_VIGIL_COST, LIGHTS_VIGIL),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(LIGHTS_VIGIL),
+
+        now = function()
+            applyBuff("lights_vigil")
+        end,
+        handler = function()
+            applyBuff("lights_vigil")
+        end,
+    },
+
+    oath_of_light = {
+        id = 1328548,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.08,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows({ 1328548 }),
+
+        now = function()
+            applyBuff("oath_of_light")
+        end,
+        handler = function()
+            applyBuff("oath_of_light")
+        end,
+    },
+
+    -- Forever-only (level 20, 180 s): pushback and mechanic immunity for 6 s; no cost row.
+    voice_of_truth = {
+        id = 1310897,
+        cast = 0,
+        cooldown = 180,
+        gcd = "off",
+
+        startsCombat = false,
+        known = knows({ 1310897 }),
+
+        now = function()
+            applyBuff("voice_of_truth")
+        end,
+        handler = function()
+            applyBuff("voice_of_truth")
+        end,
     },
 
     righteous_fury = selfBuff("righteous_fury", RIGHTEOUS_FURY, {
