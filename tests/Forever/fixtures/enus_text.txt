@@ -15230,6 +15230,8 @@ options.items	name	Gear and Items
 options.items.deadly_poison	name	Deadly Poison
 options.items.deadly_poison.boss	desc	If checked, the addon will not recommend [Item 2892] via [Use Items] unless you are in a boss fight (or encounter).  If left unchecked, [Item 2892] can be recommended in any type of fight.
 options.items.deadly_poison.boss	name	Boss Encounter Only
+options.items.deadly_poison.clash	desc	If set above zero, the addon will pretend [Item 2892] has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.items.deadly_poison.clash	name	Clash
 options.items.deadly_poison.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using [Item 2892].
 options.items.deadly_poison.disabled	name	Disable [Item 2892]
 options.items.deadly_poison.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if the addon incorrectly detects your keybindings.
@@ -15252,6 +15254,8 @@ options.items.deadly_poison.toggle	values.potions	Potions
 options.items.demonic_rune	name	Item 12662
 options.items.demonic_rune.boss	desc	If checked, the addon will not recommend [Item 12662] via [Use Items] unless you are in a boss fight (or encounter).  If left unchecked, [Item 12662] can be recommended in any type of fight.
 options.items.demonic_rune.boss	name	Boss Encounter Only
+options.items.demonic_rune.clash	desc	If set above zero, the addon will pretend [Item 12662] has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.items.demonic_rune.clash	name	Clash
 options.items.demonic_rune.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using [Item 12662].
 options.items.demonic_rune.disabled	name	Disable [Item 12662]
 options.items.demonic_rune.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if the addon incorrectly detects your keybindings.
@@ -15284,6 +15288,8 @@ options.items.disable_items	name	Disable Gear and Items
 options.items.healthstone	name	Healthstone
 options.items.healthstone.boss	desc	If checked, the addon will not recommend [Item 5512] via [Use Items] unless you are in a boss fight (or encounter).  If left unchecked, [Item 5512] can be recommended in any type of fight.
 options.items.healthstone.boss	name	Boss Encounter Only
+options.items.healthstone.clash	desc	If set above zero, the addon will pretend [Item 5512] has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.items.healthstone.clash	name	Clash
 options.items.healthstone.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using [Item 5512].
 options.items.healthstone.disabled	name	Disable [Item 5512]
 options.items.healthstone.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if the addon incorrectly detects your keybindings.
@@ -15306,6 +15312,8 @@ options.items.healthstone.toggle	values.potions	Potions
 options.items.instant_poison	name	Instant Poison
 options.items.instant_poison.boss	desc	If checked, the addon will not recommend [Item 6947] via [Use Items] unless you are in a boss fight (or encounter).  If left unchecked, [Item 6947] can be recommended in any type of fight.
 options.items.instant_poison.boss	name	Boss Encounter Only
+options.items.instant_poison.clash	desc	If set above zero, the addon will pretend [Item 6947] has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.items.instant_poison.clash	name	Clash
 options.items.instant_poison.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using [Item 6947].
 options.items.instant_poison.disabled	name	Disable [Item 6947]
 options.items.instant_poison.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if the addon incorrectly detects your keybindings.
@@ -15328,6 +15336,8 @@ options.items.instant_poison.toggle	values.potions	Potions
 options.items.major_mana_potion	name	Item 13444
 options.items.major_mana_potion.boss	desc	If checked, the addon will not recommend [Item 13444] via [Use Items] unless you are in a boss fight (or encounter).  If left unchecked, [Item 13444] can be recommended in any type of fight.
 options.items.major_mana_potion.boss	name	Boss Encounter Only
+options.items.major_mana_potion.clash	desc	If set above zero, the addon will pretend [Item 13444] has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.items.major_mana_potion.clash	name	Clash
 options.items.major_mana_potion.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using [Item 13444].
 options.items.major_mana_potion.disabled	name	Disable [Item 13444]
 options.items.major_mana_potion.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if the addon incorrectly detects your keybindings.
@@ -15350,6 +15360,8 @@ options.items.major_mana_potion.toggle	values.potions	Potions
 options.items.mana_gem	name	Mana Gem
 options.items.mana_gem.boss	desc	If checked, the addon will not recommend [Item 5514] via [Use Items] unless you are in a boss fight (or encounter).  If left unchecked, [Item 5514] can be recommended in any type of fight.
 options.items.mana_gem.boss	name	Boss Encounter Only
+options.items.mana_gem.clash	desc	If set above zero, the addon will pretend [Item 5514] has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.items.mana_gem.clash	name	Clash
 options.items.mana_gem.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using [Item 5514].
 options.items.mana_gem.disabled	name	Disable [Item 5514]
 options.items.mana_gem.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if the addon incorrectly detects your keybindings.
@@ -15372,6 +15384,8 @@ options.items.mana_gem.toggle	values.potions	Potions
 options.items.potion	name	Potion
 options.items.potion.boss	desc	If checked, the addon will not recommend Potion via [Use Items] unless you are in a boss fight (or encounter).  If left unchecked, Potion can be recommended in any type of fight.
 options.items.potion.boss	name	Boss Encounter Only
+options.items.potion.clash	desc	If set above zero, the addon will pretend Potion has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.items.potion.clash	name	Clash
 options.items.potion.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using Potion.
 options.items.potion.disabled	name	Disable Potion
 options.items.potion.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if the addon incorrectly detects your keybindings.
@@ -15420,6 +15434,8 @@ options.items.spec	values.100113	|W|T132276:0::::64:64:4:60:4:60|t Guardian|w
 options.items.thistle_tea	name	Item 7676
 options.items.thistle_tea.boss	desc	If checked, the addon will not recommend [Item 7676] via [Use Items] unless you are in a boss fight (or encounter).  If left unchecked, [Item 7676] can be recommended in any type of fight.
 options.items.thistle_tea.boss	name	Boss Encounter Only
+options.items.thistle_tea.clash	desc	If set above zero, the addon will pretend [Item 7676] has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.items.thistle_tea.clash	name	Clash
 options.items.thistle_tea.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using [Item 7676].
 options.items.thistle_tea.disabled	name	Disable [Item 7676]
 options.items.thistle_tea.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if the addon incorrectly detects your keybindings.

@@ -3509,6 +3509,18 @@ found = true end
                 step = 1,
                 order = 6,
             },
+
+            clash = {
+                type = "range",
+                name = L["Clash"],
+                desc = format( L["If set above zero, the addon will pretend %s has come off cooldown this much sooner than it actually has.  " ..
+                    "This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner."], k ),
+                width = 1.5,
+                min = -1.5,
+                max = 1.5,
+                step = 0.05,
+                order = 7,
+            },
         }
 
         db.args.items.plugins.equipment[ v ] = option
@@ -3613,6 +3625,18 @@ found = true end
                         max = 15,
                         step = 1,
                         order = 6,
+                    },
+
+                    clash = {
+                        type = "range",
+                        name = L["Clash"],
+                        desc = format( L["If set above zero, the addon will pretend %s has come off cooldown this much sooner than it actually has.  " ..
+                            "This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner."], ( ability.item and ability.link or k ) ),
+                        width = 1.5,
+                        min = -1.5,
+                        max = 1.5,
+                        step = 0.05,
+                        order = 7,
                     },
                 }
             }

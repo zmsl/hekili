@@ -7713,7 +7713,7 @@ function state:ClashOffset( action )
     local spec = rawget( Hekili.Engine.settings.specs, state.spec.id )
     if not spec then return 0 end
 
-    local option = spec.abilities[ action ]
+    local option = a.item and spec.items[ action ] or spec.abilities[ action ]
 
     return ns.callHook( "clash", option.clash, action )
 end
