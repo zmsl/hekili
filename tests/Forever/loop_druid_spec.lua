@@ -106,8 +106,11 @@ describe("the Balance loop at a hard cast's end (gap BD) #slow", function()
                     )
                 end
                 -- (2) A -> B -> A with no cast, spend, avoid or aura between the first two polls: a pick computed
-                -- from the cast's end that flips back at the end tick
-                local q = ev.cast[i] or ev.spend[i] or ev.avoid[i] or ev.aura[i]
+                -- from the cast's end that flips back at the end tick. A press of B at its tick or the next is no flip
+                -- (the owner's rule, loop.flips): its cast event is the next tick's (Lane R2: seed 1 tick 288, Starfire
+                -- shown and pressed the poll its usable answer lifted the floor to its cost, then the next pick)
+                local pressedB = a.pressed[i] == s[i] or a.pressed[i + 1] == s[i]
+                local q = ev.cast[i] or ev.spend[i] or ev.avoid[i] or ev.aura[i] or pressedB
                 if i < a.combat and s[i - 1] ~= s[i] and s[i + 1] == s[i - 1] and not q then
                     flips[#flips + 1] = ("seed %d tick %d %s -> %s"):format(seed, i, tostring(s[i - 1]), tostring(s[i]))
                 end
