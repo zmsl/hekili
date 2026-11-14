@@ -229,16 +229,16 @@ end
 -- the stack as the reset read it, so the swings count from the reset (state.now); an unpaid pending swing (the reset's
 -- mh_pending / oh_pending, forecast by State.lua's GAP AK branch) still holds its charge (the reaction runs at its row)
 -- and is counted at its own time, before the forecast's own swings. Allocates nothing.
--- shortcut: hand() repeats forecastResources' pending-swing rule (GAP AK's `l > p - i / 2`, L872 (2)'s `p > l`, the
--- swings after it from max(l, p): flicker-085's P3), and a pending event is told from the grid swings by its time off
--- the hand's grid (GRID); MERGE DEPENDENCY: read the core's accepted pending swing time on the regen entry instead once
--- flicker-085 adds that field (and drop the copy), or if the core passes the event's kind to `value`.
+-- shortcut: hand() repeats forecastResources' pending-swing rule as flicker-085 5922dc27d has it (every pending swing
+-- forecast; the swings after it run off it when it is newer than the last swing row, mh_actual / oh_actual + 1 ms, else
+-- off the anchor's grid, keeping a parry-haste pull), and a pending event is told from the grid swings by its time off
+-- the hand's grid (GRID); MERGE DEPENDENCY: once flicker-085 is in, read the regen entry's `pending` (the accepted
+-- pending swing time, 0: none) and `resume` the core sets on reckless_mainhand / reckless_offhand, and drop the copy.
 local GRID = 0.005 -- the forecast rounds each swing step to 1 ms (State.lua's roundDown)
 
 -- Hand h's forecast swings: its speed, its grid's origin (0: none) and its pending swing's time (0: none), as
--- forecastResources places them: the swings after an accepted pending swing run from the later of the anchor's last
--- grid swing and the pending swing (a pending swing newer than the anchor, L872 (2): the opener's combat-start pseudo
--- swing, is their origin).
+-- forecastResources places them (the rule above: a pending swing newer than the last swing row, L872 (2)'s opener
+-- swing after the combat-start pseudo swing or an early swing, is the origin of the swings after it).
 local function hand(h)
     local s = h == 1 and state.mainhand_speed or state.offhand_speed
     local a = h == 1 and state.swings.mainhand or state.swings.offhand
@@ -247,10 +247,8 @@ local function hand(h)
     end
     local p = (h == 1 and state.swings.mh_pending or state.swings.oh_pending) or 0
     if p > 0 then
-        local l = a + floor((state.query_time - a) / s) * s
-        if l > p - s / 2 or p > l then
-            return s, p > l and p or a, p
-        end
+        local actual = (h == 1 and state.swings.mh_actual or state.swings.oh_actual) or 0
+        return s, p > actual + 0.001 and p or a, p
     end
     return s, a, 0
 end

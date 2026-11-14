@@ -110,4 +110,21 @@ describe("the rage forecast of a pending swing (GAP AK)", function()
         assert.are.equal(0, model.reckless_offhand.value(st.now + 0.05), "the off hand's next swing")
         assert.are.equal(0, model.reckless_mainhand.value(p + speed), "the main hand's next swing")
     end)
+
+    -- flicker-085 review I1 (5922dc27d): a pending swing that is the last swing row's own (mh_actual, within 1 ms) is
+    -- the anchor's swing: a parry-haste pull moved the anchor (mh_pseudo), and the swings after it keep the pulled phase.
+    it("keeps a parry-pulled anchor's phase after the anchor's own pending swing (flicker-085 I1)", function()
+        local speed = 2.6
+        local actual = st.now - 0.05
+        local pseudo = actual - 0.4 -- a parry-haste pull of 0.4 s
+        st.swings.mh_actual, st.swings.mh_pseudo, st.swings.mh_pending = actual, pseudo, actual
+        st.swings.mh_speed, st.mainhand_speed = speed, speed
+        st.swings.oh_actual, st.swings.oh_speed, st.offhand_speed, st.swings.oh_pending = 0, 0, 0, 0
+        st.applyBuff("reckless_swings", 8, 2)
+        local model = st.rage.regenModel
+        local orc = 2 * H.ns.VirtualStateInternal.Log.ORACLE_MIN
+        assert.are.equal(5, model.reckless_mainhand.value(actual + orc), "the pending swing: the first charge")
+        assert.are.equal(5, model.reckless_mainhand.value(pseudo + speed), "the pulled grid's next swing: the second")
+        assert.are.equal(0, model.reckless_mainhand.value(pseudo + 2 * speed), "the one after: no charge left")
+    end)
 end)
