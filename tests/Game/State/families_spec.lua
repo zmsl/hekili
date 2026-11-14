@@ -220,7 +220,9 @@ describe("aura families on the Cooldown Manager (L727)", function()
                 ctl.ViewerAuraBySpell("player", A, true, "player")
                 poll(10.5)
                 poll(11.5)
-                ctl.ViewerClear(item) -- the item goes dark while the plain read still says member 1
+                -- the item goes dark while the plain read still says member 1 (A's removal: a hand clear would leave
+                -- A applied, and the fake's refresh would show it again at C's removal)
+                ctl.ViewerAuraBySpell("player", A, false, "player")
                 poll(12)
                 poll(13.5)
                 assert.are.equal(40.3, est(A, 13.5)) -- the plain read owns the record: the family item closes nothing

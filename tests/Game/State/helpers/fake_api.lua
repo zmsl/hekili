@@ -1035,11 +1035,24 @@ function M.new()
             end
         end
     end
+    -- A removal clears only the item holding that aura (litBy nil: lit by hand, any removal clears it), then the
+    -- client's refresh shows another aura it names that is still up (an entry naming several auras: a family's).
     local function light(item, unit, up, spellID)
         if up then
             ctl.ViewerAura(item, unit, spellID)
-        elseif item.auraInstanceID ~= nil then
+        elseif item.auraInstanceID ~= nil and (item.litBy == nil or item.litBy == spellID and item.litUnit == unit) then
             clearAura(item)
+            local info = ctl.viewer.infos[item.cooldownID]
+            for _, a in ipairs(ctl.viewer.applied) do
+                if item.auraInstanceID == nil and a[1] == unit and names(info, a[2]) then
+                    if ctl.viewer.lag then -- as a re-point's refresh: at the next Tick
+                        local p = ctl.viewer.pending
+                        p[#p + 1] = { item, a[1], true, a[2] }
+                        break
+                    end
+                    ctl.ViewerAura(item, a[1], a[2])
+                end
+            end
         end
     end
     --- An aura of `spellID` goes up or down on `unit`: every configured, non-`silent` item in any viewer whose info
