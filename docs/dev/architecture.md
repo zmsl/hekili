@@ -375,6 +375,13 @@ unmixed, not dropped: the client's casting rate is M + (c + s)S and the rest (1 
 M + cS and (1 - c)S; when c + s reaches all of it the pair holds only the total, which rescales the stored split. An
 entry with a `spirit` multiple (Evocation) still makes the pair no news.
 
+**The static share c** (the `fsr` meta's `share`, a number or a function: a talent's rank, an armor believed up) is
+read at the build, at each combat start and after each of our casts' `now` (`I.ShareRead`). The stored pair is the
+game's as read, so a combat start's re-read moves no part; a change our cast makes in combat (an armor swap) moves
+(c' - c)S from the spirit part to the casting one (S = spE / (1 - c), or the mp5 part at c = 1), and the interval
+across it measures nothing. Calibration also skips an `fsr` slot's interval that holds a regen entry's edge: the
+game lands the new rate on its tick grid, off by up to a tick of it (Evocation's first, 55 mana).
+
 **Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Shared`
 (`## Dependencies: Hekili`, `## LoadOnDemand: 1`; Shared auras, consumables, items, and the race packs), then one pack
 per class: `Hekili_Warrior`, `Hekili_Druid`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman`, `Hekili_Hunter`, `Hekili_Mage`, `Hekili_Priest`, `Hekili_Warlock` (`## Dependencies: Hekili, Hekili_Shared`,
