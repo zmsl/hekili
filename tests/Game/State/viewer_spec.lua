@@ -1088,17 +1088,40 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         assert.are.same({ true, 2, 0, 0 }, { Q.proven[502], Q.provenU[502], Q.strikes[502], Q.silent[502] })
         assert.are.same({ 1, 0 }, { Q.carried, Q.dropped })
         assert.are.same({ 1, 4 }, { dark(1, 2), since(1, 2) }) -- dark from the build's own sweep
-        local d2 = fs.def(fs.new(9)) -- a belief rebuild that reorders the auras: 502's aura is j = 2 now
-        d2.auras[1], d2.auras[2] = d2.auras[2], d2.auras[1]
-        d2.auraIds[1], d2.auraIds[2] = d2.auraIds[2], d2.auraIds[1]
-        Q.Activate(api, 5, d2)
+        -- a belief rebuild refills the same def in place (Tracked.lua buildDef): the auras reordered, 502's aura is j = 2
+        d.auras[1], d.auras[2] = d.auras[2], d.auras[1]
+        d.auraIds[1], d.auraIds[2] = d.auraIds[2], d.auraIds[1]
+        Q.Activate(api, 5, d)
         assert.are.same({ 2, true, 2 }, { Q.map[502], Q.proven[502], Q.provenU[502] }) -- same aura key: carried
-        ctl.viewer.infos[502] = { spellID = C } -- now names aura 2's spell under d (j = 2, another key)
+        assert.are.same({ 1, 0 }, { Q.carried, Q.dropped })
+        d.auras[2] = { key = "another", id = A } -- refilled in place: another aura at the same index, same spell
         Q.Activate(api, 6, d)
-        assert.are.same({ 2, false, 0 }, { Q.map[502], Q.proven[502], Q.provenU[502] })
+        assert.are.same({ 2, false, 0 }, { Q.map[502], Q.proven[502], Q.provenU[502] }) -- another key: dropped
         assert.are.same({ 0, 1 }, { Q.carried, Q.dropped })
         assert.is_true(Q.NeverLit(2))
     end)
+
+    it(
+        "L1025: a carried proof keeps its silent count (no light at a build): the second silent verdict suspends",
+        function()
+            ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            start()
+            up(A, "target")
+            sweep(2)
+            down(A, "target")
+            sweep(3)
+            assert.are.equal(1, dark(1, 2))
+            Q.Silent(1, 2) -- one silent verdict
+            assert.are.same({ 1, true }, { Q.silent[502], Q.proven[502] })
+            Q.Activate(api, 4, d) -- an unchanged map: carried with its count
+            assert.are.same({ true, 1, 0 }, { Q.proven[502], Q.silent[502], Q.suspended })
+            assert.are.equal(1, dark(1, 2))
+            Q.Silent(1, 2) -- the second, with no light between: suspended as before
+            assert.are.same({ false, 2, 1 }, { Q.proven[502], Q.silent[502], Q.suspended })
+            Q.Activate(api, 5, d) -- suspended (unproven): not carried
+            assert.are.same({ false, 0 }, { Q.proven[502], Q.silent[502] })
+        end
+    )
 
     it("builds are counted per session (review S2): one per build, never reset by a fight", function()
         start()
