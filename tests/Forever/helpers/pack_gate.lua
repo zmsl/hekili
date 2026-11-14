@@ -89,7 +89,9 @@ M.FLICKER = {
     -- ledger cause credit, reason cost) has one of those readyShort presses inside its ready window (traced per event)
     -- regen phase lane, cause harness: the indexed poll clock (ledger L606/L667; a rage world has no regen grid) (R6;
     -- seeds 1-20 / 21-40 / 41-60 flicker 0.24 / 0.32 / 0.40, retracted 0.20 / 0.00 / 0.00, readyShort 26 / 7 / 1,
-    -- heldReady 150 / 136 / 228): flicker 0.31 -> 0.41
+    -- heldReady 150 / 136 / 228): flicker 0.31 -> 0.41. The 21-40 / 41-60 rise predates that lane (L757 I1, bisected
+    -- on seeds 41-60: 0.30 at a9a6fff9f, 0.40 at 79feadc67): translator-2's merge above (the Bloodrage line), whose
+    -- re-measure covered seeds 1-20 only
     -- 0.41 -> 0.49 (L871): wowsims's per-swing Reckless Swings (world and addon) puts the opener's rage between Death Wish's
     -- 10 and Sunder's 15. 4 of the 6 opener flips (seeds 1-20) are a cooldown near-tie at the EARLY_EXIT edge (src/Hekili/Engine/Sim/Core.lua: the EARLY_EXIT list exit and the 0.05 s clash pad);
     -- 2 involve a landed, unpaid swing. Measured .48 / .39 / .44 (seeds 1-20 / 21-40 / 41-60) after the world charge fix 8a5dfbf2a.
@@ -395,7 +397,10 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.13 / 0.10 / 0.05, retracted 0.00 / 0.00 / 0.00, readyShort 1 / 0 / 0, heldReady 136 / 138 / 126):
     -- flicker 0 -> 0.14, readyShort 0 -> 1, heldReady 152 -> 138
-    ["Enhancement"] = { flicker = 0.14, retracted = 0, heldReady = 138, readyShort = 1 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
+    -- re-measured on 246abf322 (L757 M2): flicker 0.13 / 0.12 / 0.05, heldReady 136 / 138 / 126 (the bar is the worst
+    -- set); every flip is a mana wait against Stormstrike's cooldown at the mana crossing: the tick pad, with no tick
+    -- seen, jumps between nothing and a whole tick from one poll to the next (Engine/Sim/State.lua tickReach; flicker-085)
+    ["Enhancement"] = { flicker = 0.14, retracted = 0, heldReady = 138, readyShort = 1 },
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
@@ -413,7 +418,9 @@ M.FLICKER = {
     -- 0.7 re-pin e5a9cd2a2d (lane mage, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 171 / 174 / 180, agreement .995 / .994 / .997): heldReady 182 -> 180 (the Fire Arcane Concentration 5/5 stream; cost crossings as before)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.02 / 0.00, readyShort 1 / 1 / 0, heldReady 169 / 173 / 175):
-    -- retracted 0 -> 0.02, readyShort 0 -> 1, heldReady 180 -> 175
+    -- retracted 0 -> 0.02, readyShort 0 -> 1, heldReady 180 -> 175. The 21-40 / 41-60 readyShort and retracted predate
+    -- that lane (L757 I1, bisected on seeds 21-40: readyShort 0 / retracted 0 at 2a65a4d79, 2 / 0.03 at 1e75b58e2, the
+    -- aura-paladin-mage merge's Mage auras); the lane measured them first
     ["Fire"] = { flicker = 0, retracted = 0.02, heldReady = 175, readyShort = 1 }, -- 0 / 0 / 0, 0
     -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits
     -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
