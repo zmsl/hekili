@@ -95,6 +95,24 @@ local WINDFURY_WEAPON_COST = { 90, 115, 140, 165 }
 local FROSTBRAND_WEAPON = { 8033, 8038, 10456, 16355, 16356 }
 local FROSTBRAND_WEAPON_COST = { 60, 85, 110, 135, 160 }
 local CHAIN_LIGHTNING = { 421, 930, 2860, 10605 }
+-- The manual-press kit (wowsims pin spells_auto_gen.go: casts, costs, cooldowns). Registered so a press costs what it
+-- costs and starts its cooldown; no priority recommends them.
+local FROST_SHOCK = { 8056, 8058, 10472, 10473 }
+local FROST_SHOCK_COST = { 115, 225, 325, 430 }
+local HEALING_WAVE = { 331, 332, 547, 913, 939, 959, 8005, 10395, 10396, 25357 }
+local HEALING_WAVE_COST = { 25, 45, 80, 155, 200, 265, 340, 440, 560, 620 }
+local HEALING_WAVE_CAST = { 1.5, 2, 2.5, 3, 3, 3, 3, 3, 3, 3 }
+local LESSER_HEALING_WAVE = { 8004, 8008, 8010, 10466, 10467, 10468 }
+local LESSER_HEALING_WAVE_COST = { 105, 145, 185, 235, 305, 380 }
+local CHAIN_HEAL = { 1064, 10622, 10623 }
+local CHAIN_HEAL_COST = { 260, 315, 405 }
+local RIPTIDE = { 408521, 1239242, 1239243 }
+local RIPTIDE_COST = { 150, 180, 230 }
+local GHOST_WOLF = { 2645, 415233, 1238640 }
+local PURGE = { 370, 8012 }
+local CURE_POISON = { 526 }
+local CURE_DISEASE = { 2870 }
+local TOTEMIC_CALL = { 437009 }
 -- Chain Lightning's costs: wowsims 4b0030a44b's spell data (spells_auto_gen.go Powers), every rank (re-pin 0.7: up from
 -- 145/200/250/315; the Elemental log's 445.5 is rank 4's 495 x 0.9 Convection). Lava Burst is gone from the game
 -- (owner, 2026-11-07; the sim dropped it at 4fe09d45b7).
@@ -299,10 +317,16 @@ local function totemAbility(key)
         id = t.ids[1],
         copy = rest(t.ids),
         cast = 0,
-        cooldown = t.cooldown or 0,
+        cooldown = function()
+            -- Guardian Totems 16258 effect 1: Grounding Totem's cooldown -1 / -2 s
+            return (t.cooldown or 0) - (key == "grounding_totem" and talent.guardian_totems.rank or 0)
+        end,
         gcd = "totem",
 
-        spend = cost(t.cost, t.ids),
+        spend = function()
+            -- Totemic Focus 16173: -5% a rank on every totem
+            return byRank(t.cost, t.ids) * (1 - 0.05 * talent.totemic_focus.rank)
+        end,
         spendType = "mana",
 
         startsCombat = false,
@@ -358,12 +382,15 @@ local function shockCooldown()
     return 6 - 0.2 * talent.reverberation.rank
 end
 
-local function shockEffect(other, debuffKey)
+local function shockEffect(other, other2, debuffKey)
     return function()
         -- shockCooldown's formula, repeated: called from here it runs outside the handler's state environment (no
         -- `talent`)
         setCooldown(other, 6 - 0.2 * talent.reverberation.rank)
-        if debuffKey then
+        setCooldown(other2, 6 - 0.2 * talent.reverberation.rank)
+        if debuffKey == "frost_shock" then
+            applyDebuff("target", debuffKey, 8)
+        elseif debuffKey then
             -- the aura's duration, explicit for `now`
             applyDebuff(
                 "target",
@@ -411,7 +438,7 @@ local function shield(key, other)
     end
 end
 
-local function shock(other, ids, costs, debuffKey)
+local function shock(other, other2, ids, costs, debuffKey)
     return {
         id = ids[1],
         copy = rest(ids),
@@ -425,8 +452,8 @@ local function shock(other, ids, costs, debuffKey)
         startsCombat = true,
         known = knows(ids),
 
-        now = shockEffect(other, debuffKey),
-        handler = shockEffect(other, debuffKey),
+        now = shockEffect(other, other2, debuffKey),
+        handler = shockEffect(other, other2, debuffKey),
     }
 end
 
@@ -483,6 +510,15 @@ for key, t in pairs(TOTEMS) do
 end
 spec:RegisterTotems(registered)
 
+-- A totem buff's `copy` with the totem's own spell ids too: the Cooldown Manager's totem entries link the summons and the
+-- buffs together (one entry, one aura).
+local function withTotem(key, copy)
+    for _, id in ipairs(TOTEMS[key].ids) do
+        copy[#copy + 1] = id
+    end
+    return copy
+end
+
 spec:RegisterAuras({
     -- 3 charges (DB2 ProcCharges), each hit that lands on us spending one.
     lightning_shield = {
@@ -494,7 +530,12 @@ spec:RegisterAuras({
     },
     -- Water Shield (408510, Forever's): 3 globes (wowsims's ProcCharges), each hit on us spending one (a spell crit's
     -- too: not modelled); their mana not modelled.
-    water_shield = { id = 408510, duration = 600, max_stack = 3, consumedBy = { WOUND = true, BLOCKED = true } },
+    water_shield = {
+        id = 408510,
+        duration = 600,
+        max_stack = 3,
+        consumedBy = { WOUND = true, BLOCKED = true },
+    },
     -- Elemental Mastery (16166; wowsims's data, absent from the DB2): 15 s, not spent by a cast (wowsims: the tooltip's
     -- "Lasts"; its TODO: in game).
     elemental_mastery = { id = 16166, duration = 15, max_stack = 1 },
@@ -511,66 +552,91 @@ spec:RegisterAuras({
     -- Flurry (16257, wowsims: 15 s, 3 charges, set on a melee crit, spent by landed white swings) and Elemental
     -- Devastation (30165: 10 s, +3/6/9% melee crit after a spell crit): registered for reads; crits are unobservable
     -- live, so nothing here applies them. Windfury Totem's proc buff (10610: 1 s, 2 charges): the same.
-    flurry = { id = 16257, duration = 15, max_stack = 3 },
-    elemental_devastation = { id = 30165, duration = 10, max_stack = 1 },
+    flurry = { id = 16257, copy = { 16256 }, duration = 15, max_stack = 3 }, -- 16256: the talent's CDM item
+    elemental_devastation = { id = 30165, copy = { 30160 }, duration = 10, max_stack = 1 },
     windfury_attack = { id = 10610, duration = 1, max_stack = 2 },
     -- Nature's Swiftness (16188): until used (wowsims DurationMs -1), one charge; the next Lightning Bolt or Chain
     -- Lightning (its mask) is instant and spends it.
     natures_swiftness = { id = 16188, duration = 3600, max_stack = 1 },
     -- Improved Stormstrike (DB2 1238931): Stormstrike's 15 s buff, +50% Spirit regen while casting (the mana entry).
-    improved_stormstrike = { id = 1238931, duration = 15, max_stack = 1 },
+    improved_stormstrike = { id = 1238931, copy = { 1223031 }, duration = 15, max_stack = 1 }, -- 1223031: the talent's CDM item
     -- The totems' buffs on us (wowsims e2842f0a78's ids, ranks 1..n; copy leads with the `<name>_totem` alias), read like
     -- any aura: observed out of combat, applied by the summon (TOTEM_BUFF; owner 2026-11-11, as wowsims does). Mana
     -- Spring's is up while its water totem stands (the mana entry). Tremor, the cleansers, Sentry, Earthbind, Stoneclaw, Grounding, Searing and Magma leave none.
-    mana_spring = { id = 10494, copy = { "mana_spring_totem", 5677, 10491, 10493 }, duration = 300, max_stack = 1 },
+    mana_spring = {
+        id = 10494,
+        copy = withTotem("mana_spring_totem", { "mana_spring_totem", 5677, 10491, 10493, 5678 }),
+        duration = 300,
+        max_stack = 1,
+    },
     stoneskin = {
         id = 10405,
-        copy = { "stoneskin_totem", 8072, 8156, 8157, 10403, 10404 },
+        copy = withTotem("stoneskin_totem", { "stoneskin_totem", 8072, 8156, 8157, 10403, 10404 }),
         duration = 300,
         max_stack = 1,
     },
     strength_of_earth = {
         id = 25362,
-        copy = { "strength_of_earth_totem", 8076, 8162, 8163, 10441 },
+        copy = withTotem("strength_of_earth_totem", { "strength_of_earth_totem", 8076, 8162, 8163, 10441 }),
         duration = 300,
         max_stack = 1,
     },
-    grace_of_air = { id = 25360, copy = { "grace_of_air_totem", 8836, 10626 }, duration = 300, max_stack = 1 },
+    grace_of_air = {
+        id = 25360,
+        copy = withTotem("grace_of_air_totem", { "grace_of_air_totem", 8836, 10626 }),
+        duration = 300,
+        max_stack = 1,
+    },
     -- Mana Tide's 13 s buff (rank 4, 1325257, is Forever's)
-    mana_tide = { id = 1325257, copy = { "mana_tide_totem", 16191, 17355, 17360 }, duration = 13, max_stack = 1 },
+    mana_tide = {
+        id = 1325257,
+        copy = withTotem("mana_tide_totem", { "mana_tide_totem", 16191, 17355, 17360 }),
+        duration = 13,
+        max_stack = 1,
+    },
     healing_stream = {
         id = 10461,
-        copy = { "healing_stream_totem", 5672, 6371, 6372, 10460 },
+        copy = withTotem("healing_stream_totem", { "healing_stream_totem", 5672, 6371, 6372, 10460 }),
         duration = 300,
         max_stack = 1,
     },
     fire_resistance = {
         id = 10535,
-        copy = { "fire_resistance_totem", 8185, 10534 },
+        copy = withTotem("fire_resistance_totem", { "fire_resistance_totem", 8185, 10534 }),
         duration = 300,
         max_stack = 1,
     },
     frost_resistance = {
         id = 10477,
-        copy = { "frost_resistance_totem", 8182, 10476 },
+        copy = withTotem("frost_resistance_totem", { "frost_resistance_totem", 8182, 10476 }),
         duration = 300,
         max_stack = 1,
     },
     nature_resistance = {
         id = 10599,
-        copy = { "nature_resistance_totem", 10596, 10598 },
+        copy = withTotem("nature_resistance_totem", { "nature_resistance_totem", 10596, 10598 }),
         duration = 300,
         max_stack = 1,
     },
-    windwall = { id = 15110, copy = { "windwall_totem", 15108, 15109 }, duration = 300, max_stack = 1 },
+    windwall = {
+        id = 15110,
+        copy = withTotem("windwall_totem", { "windwall_totem", 15108, 15109 }),
+        duration = 300,
+        max_stack = 1,
+    },
     -- the party's proc-trigger auras (the 1 s attack-power buff Windfury's proc applies is windfury_attack, above)
     flametongue = {
         id = 15036,
-        copy = { "flametongue_totem", 8230, 8250, 10521 },
+        copy = withTotem("flametongue_totem", { "flametongue_totem", 8230, 8250, 10521 }),
         duration = 300,
         max_stack = 1,
     },
-    windfury = { id = 10612, copy = { "windfury_totem", 8515, 10609 }, duration = 300, max_stack = 1 },
+    windfury = {
+        id = 10612,
+        copy = withTotem("windfury_totem", { "windfury_totem", 8515, 10609 }),
+        duration = 300,
+        max_stack = 1,
+    },
     -- Elemental Focus's Clearcasting (16246): the next elemental damage spell costs nothing (1 charge, 15 s).
     clearcasting = { id = 16246, duration = 15, max_stack = 1 },
     -- The target's DoT, modelled from our cast (target auras are unreadable in combat).
@@ -589,7 +655,14 @@ spec:RegisterAuras({
     -- by the next landed Lightning Bolt, Chain Lightning or Earth Shock of ours (effect 2's mask 1048579 = 1 | 2 | 1048576).
     -- Spent at the hit: Earth Shock's and Chain Lightning's (no travel modelled) at the cast, Lightning Bolt's when it lands (the flight);
     -- the target aura only, so Chain Lightning's other targets never touch it.
-    stormstrike = { id = 17364, duration = 12, max_stack = 1 },
+    stormstrike = { id = 17364, copy = { 410156 }, duration = 12, max_stack = 1 }, -- 410156: the CDM's Stormstrike link
+    -- Auras the Cooldown Manager's entries link (cdm fixture, the owner's export), every rank; the pin's durations.
+    frost_shock = { id = 8056, copy = { 8058, 10472, 10473 }, duration = 8, max_stack = 1 },
+    riptide = { id = 408521, copy = { 1239242, 1239243 }, duration = 15, max_stack = 1 },
+    ghost_wolf = { id = 2645, copy = { 415233, 1238640 }, duration = 3600, max_stack = 1 },
+    earthbound = { id = 1238289, duration = 5, max_stack = 1 }, -- the pin: a 5 s root on enemies
+    ancestral_fortitude = { id = 16177, duration = 15, max_stack = 1 }, -- Ancestral Healing's buff
+    grounding = { id = 8178, copy = { 8179 }, duration = 45, max_stack = 1 }, -- the totem's passive: no summon applies it
     -- Rage of the Farseer (425336): +30% melee and ranged attack speed (DB2 aura 342) for 25 s; nothing reads it here.
     rage_of_the_farseer = { id = 425336, duration = 25, max_stack = 1 },
 })
@@ -597,12 +670,12 @@ spec:RegisterAuras({
 -- Clearcasting (16246): aura 108 misc 14 (cost) -100% on the spells its class mask names (-1743781885 / 4096 against
 -- SpellClassSet 11); the registered ones: Lightning Bolt, Chain Lightning,
 -- Earth Shock, Flame Shock, Fire Nova (rank 1 IDs, the others through each ability's `copy`). Covered but
--- unregistered: Frost Shock, the rune shocks.
+-- unregistered: the rune shocks.
 spec:RegisterCostMod({
     aura = "clearcasting",
     pct = -1,
     charges = 1,
-    spells = { 403, 421, 8042, 8050, 408341 },
+    spells = { 403, 421, 8042, 8050, 408341, 8056 },
 })
 
 spec:RegisterAbilities({
@@ -785,8 +858,9 @@ spec:RegisterAbilities({
         end,
     },
 
-    earth_shock = shock("flame_shock", EARTH_SHOCK, EARTH_SHOCK_COST),
-    flame_shock = shock("earth_shock", FLAME_SHOCK, FLAME_SHOCK_COST, "flame_shock"),
+    earth_shock = shock("flame_shock", "frost_shock", EARTH_SHOCK, EARTH_SHOCK_COST),
+    flame_shock = shock("earth_shock", "frost_shock", FLAME_SHOCK, FLAME_SHOCK_COST, "flame_shock"),
+    frost_shock = shock("earth_shock", "flame_shock", FROST_SHOCK, FROST_SHOCK_COST, "frost_shock"),
 
     -- Hits around the fire totem up (wowsims fire_totems.go): unusable without one; its 10 s cooldown is DB2 category 35,
     -- Improved Fire Nova (16086, aura 107 misc 11: rank 1's -2000 ms x the rank) taking 4 s off at 2/2.
@@ -810,6 +884,186 @@ spec:RegisterAbilities({
         usable = function()
             return totem.fire.up, "requires a fire totem"
         end,
+    },
+
+    -- Healing Wave: Improved Healing Wave 16182 -0.1 s a rank on the cast, Tidal Focus 16179 -1% a rank on the cost
+    -- (Healing Wave, Lesser Healing Wave, Chain Heal, Riptide); Nature's Swiftness makes it, Lesser Healing Wave, Chain Heal and Ghost Wolf instant.
+    healing_wave = {
+        id = 331,
+        copy = rest(HEALING_WAVE),
+        cast = function()
+            if buff.natures_swiftness.up then
+                return 0
+            end
+            return byRank(HEALING_WAVE_CAST, HEALING_WAVE) - 0.1 * talent.improved_healing_wave.rank
+        end,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(HEALING_WAVE_COST, HEALING_WAVE) * (1 - 0.01 * talent.tidal_focus.rank)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(HEALING_WAVE),
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
+    },
+
+    lesser_healing_wave = {
+        id = 8004,
+        copy = rest(LESSER_HEALING_WAVE),
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 1.5
+        end,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(LESSER_HEALING_WAVE_COST, LESSER_HEALING_WAVE) * (1 - 0.01 * talent.tidal_focus.rank)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(LESSER_HEALING_WAVE),
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
+    },
+
+    chain_heal = {
+        id = 1064,
+        copy = rest(CHAIN_HEAL),
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 2.5
+        end,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(CHAIN_HEAL_COST, CHAIN_HEAL) * (1 - 0.01 * talent.tidal_focus.rank)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(CHAIN_HEAL),
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
+    },
+
+    -- Riptide (a Restoration talent's heal): 12 s apart (category), its HoT on the ally.
+    riptide = {
+        id = 408521,
+        copy = rest(RIPTIDE),
+        cast = 0,
+        cooldown = 12,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(RIPTIDE_COST, RIPTIDE) * (1 - 0.01 * talent.tidal_focus.rank)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(RIPTIDE),
+    },
+
+    -- Ghost Wolf: 3 s cast, Improved Ghost Wolf 16262 -1 / -3 s; the form ends when cancelled (not modelled).
+    ghost_wolf = {
+        id = 2645,
+        copy = rest(GHOST_WOLF),
+        cast = function()
+            if buff.natures_swiftness.up then
+                return 0
+            end
+            return 3 - (talent.improved_ghost_wolf.rank >= 2 and 3 or talent.improved_ghost_wolf.rank)
+        end,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 100,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(GHOST_WOLF),
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
+    },
+
+    purge = {
+        id = 370,
+        copy = rest(PURGE),
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.1,
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(PURGE),
+    },
+
+    cure_poison = {
+        id = 526,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.09,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(CURE_POISON),
+    },
+
+    cure_disease = {
+        id = 2870,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.09,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(CURE_DISEASE),
+    },
+
+    -- Recalls the totems for a quarter of the base mana (its refund is not modelled).
+    totemic_call = {
+        id = 437009,
+        cast = 0,
+        cooldown = 30,
+        gcd = "spell",
+
+        spend = function()
+            return 0.25 * (1 - 0.05 * talent.totemic_focus.rank) -- Totemic Focus 16173's mask holds Totemic Call
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(TOTEMIC_CALL),
     },
 
     searing_totem = totemAbility("searing_totem"),
