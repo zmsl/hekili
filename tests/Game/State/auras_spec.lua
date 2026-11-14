@@ -1125,6 +1125,45 @@ describe("auras", function()
             assert.is_nil(VS.Aura("player", fs.SPENDER_A, 20.5))
         end)
 
+        -- The same claim for an out-of-combat walk read of ours on an `icd` aura, whose fold writes an applied time the
+        -- stage could not know: a first-walk sighting (one ICD back) and a re-application while up (the read's t). The
+        -- next fight's NONE closes it (rule 1). Red before the fix: ours named the stage's guess, so it stood.
+        for _, c in ipairs({ { "a first-walk sighting", false, 1 }, { "a re-application while up", true, 14 } }) do
+            it("a walk read of ours on an icd aura (" .. c[1] .. "): ours, closed by the next fight's NONE", function()
+                local def = fs.def(fs.new(9))
+                def.auras[SHOUT].icd = 10
+                start(def)
+                ctl.now = 11
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                local mine = { spellId = fs.SPENDER_A, expirationTime = 30, applications = 0, sourceUnit = "player" }
+                if c[2] then -- a clean walk with nothing up, then a gain the walks saw at 12
+                    ctl.auras.player.HELPFUL[1] = nil
+                    ctl.Fire("UNIT_AURA", "player")
+                    poll(11)
+                    ctl.now = 12
+                    ctl.auras.player.HELPFUL[1] = mine
+                    ctl.Fire("UNIT_AURA", "player")
+                    poll(12)
+                    ctl.now = 14
+                    mine.expirationTime = 50 -- a re-proc: a later expiry
+                end
+                ctl.auras.player.HELPFUL[1] = mine
+                ctl.Fire("UNIT_AURA", "player")
+                poll(ctl.now)
+                assert.are.equal(c[3], select(3, VS.Aura("player", fs.SPENDER_A, ctl.now)))
+                ctl.now = 15
+                ctl.Fire("PLAYER_REGEN_DISABLED")
+                ctl.auras.player.HELPFUL[1] = fake.SECRET
+                ctl.Fire("UNIT_AURA", "player")
+                ctl.ViewerAura(pi, "player")
+                poll(15)
+                poll(15.5)
+                ctl.ViewerClear(pi)
+                poll(16)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 16))
+            end)
+        end
+
         it("C: a CDM UP with no model record opens at once; no numeric duration: long on the target too", function()
             local def = fs.def(fs.new(9))
             def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }
