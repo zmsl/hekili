@@ -102,7 +102,10 @@ local Q = {
     repoints = 0, -- per fight: plain cooldownID changes of a slot that held another one (§2.4)
     struck = 0, -- per build: cooldownIDs whose proof the strikes dropped (§2.5)
     suspended = 0, -- per build: the times silent verdicts suspended a cooldownID's proof (§2.5, review M3)
-    builds = 0, -- per session, never reset: the map's builds; each one zeroes every proof (review S2)
+    builds = 0, -- per session, never reset: the map's builds (review S2)
+    -- at the last build (L972): the proven cooldownIDs whose proof it kept (same aura) and dropped (another or none)
+    carried = 0,
+    dropped = 0,
 }
 local active, api0, broken = false, nil, false
 
@@ -151,11 +154,13 @@ local function build(api, def)
     for id in pairs(carryKey) do
         carryKey[id], carryU[id] = nil, nil
     end
+    local nProven = 0
     for id, m in pairs(cdvToJ) do
         -- a proven id names one aura (m > 0); keyed by the aura, not j: a belief rebuild may reorder the def
         local rec = provenCd[id] and defMap and defMap.auras[m]
         if rec and rec.key ~= nil then
             carryKey[id], carryU[id] = rec.key, provenU[id]
+            nProven = nProven + 1
         end
         cdvToJ[id] = nil
     end
@@ -169,7 +174,7 @@ local function build(api, def)
     for id in pairs(provenCd) do -- zeroed at every build; the proof of an unchanged mapping comes back below (decision 124)
         provenCd[id], provenU[id], strikesCd[id], silentCd[id] = nil, nil, nil, nil
     end
-    Q.struck, Q.suspended = 0, 0
+    Q.struck, Q.suspended, Q.carried, Q.dropped = 0, 0, 0, nProven
     local CV = api.C_CooldownViewer
     if not CV or not def then
         return false
@@ -226,6 +231,9 @@ local function build(api, def)
                         local rec = m > 0 and carryKey[id] ~= nil and def.auras[m]
                         local carry = rec and rec.key == carryKey[id] or false
                         provenCd[id], provenU[id], strikesCd[id], silentCd[id] = carry, carry and carryU[id] or 0, 0, 0
+                        if carry then
+                            Q.carried, Q.dropped = Q.carried + 1, Q.dropped - 1
+                        end
                     end
                 end
             end

@@ -1985,7 +1985,8 @@ describe("auras", function()
                     end
                     poll(14.5)
                     assert.is_nil(VS.Aura("target", fs.SPENDER_C, 14.5))
-                    assert.are.same({ 1, true }, { I.auraVerdict.n[kT()], I.PRESENCE.viewer.proven[502] })
+                    local Q = I.PRESENCE.viewer
+                    assert.are.same({ 1, true, 1, 0 }, { I.auraVerdict.n[kT()], Q.proven[502], Q.carried, Q.dropped })
                 end
             )
 
@@ -2001,14 +2002,16 @@ describe("auras", function()
                 local Q = I.PRESENCE.viewer
                 local snap = VS.Snapshot()
                 local want = string.format(
-                    "builds=%d loaded=%d hotfixed=%d override=%d belief=%d other=%d evInCombat=%d",
+                    "builds=%d loaded=%d hotfixed=%d override=%d belief=%d other=%d evInCombat=%d carried=%d dropped=%d",
                     Q.builds,
                     by[1],
                     by[2] + 1,
                     by[3] + 1,
                     by[4] + 1,
                     by[5],
-                    n0 + 2
+                    n0 + 2,
+                    Q.carried,
+                    Q.dropped
                 )
                 assert.is_truthy(snap:find(want, 1, true), snap)
                 local sum = 0

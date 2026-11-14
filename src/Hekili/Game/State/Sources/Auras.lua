@@ -797,7 +797,7 @@ I.OnSnapshot(function(out, now)
     local by = P.buildsBy or NO_BY -- the builds per trigger and the viewer's events in combat (L972)
     out[#out + 1] = string.format(
         "presence-proof repoints=%d struck=%d suspended=%d builds=%d loaded=%d hotfixed=%d override=%d belief=%d"
-            .. " other=%d evInCombat=%d",
+            .. " other=%d evInCombat=%d carried=%d dropped=%d",
         leaf.repoints or 0,
         leaf.struck or 0,
         leaf.suspended or 0,
@@ -807,6 +807,8 @@ I.OnSnapshot(function(out, now)
         by[3] or 0,
         by[4] or 0,
         by[5] or 0,
-        P.evInCombat or 0
+        P.evInCombat or 0,
+        leaf.carried or 0,
+        leaf.dropped or 0
     )
 end)

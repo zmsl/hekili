@@ -1086,6 +1086,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         assert.are.same({ true, 2, 1 }, { Q.proven[502], Q.provenU[502], Q.strikes[502] })
         Q.Activate(api, 4, d) -- an unchanged map
         assert.are.same({ true, 2, 0, 0 }, { Q.proven[502], Q.provenU[502], Q.strikes[502], Q.silent[502] })
+        assert.are.same({ 1, 0 }, { Q.carried, Q.dropped })
         assert.are.same({ 1, 4 }, { dark(1, 2), since(1, 2) }) -- dark from the build's own sweep
         local d2 = fs.def(fs.new(9)) -- a belief rebuild that reorders the auras: 502's aura is j = 2 now
         d2.auras[1], d2.auras[2] = d2.auras[2], d2.auras[1]
@@ -1095,6 +1096,7 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
         ctl.viewer.infos[502] = { spellID = C } -- now names aura 2's spell under d (j = 2, another key)
         Q.Activate(api, 6, d)
         assert.are.same({ 2, false, 0 }, { Q.map[502], Q.proven[502], Q.provenU[502] })
+        assert.are.same({ 0, 1 }, { Q.carried, Q.dropped })
         assert.is_true(Q.NeverLit(2))
     end)
 
