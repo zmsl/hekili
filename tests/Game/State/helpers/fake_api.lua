@@ -342,7 +342,10 @@ function M.new()
     function api.UnitHealthMax(unit)
         return ctl.unitHealthMax[unit] or ctl.healthMax
     end
-    function api.UnitSpellHaste()
+    function api.UnitSpellHaste() -- secret in combat, as the game's [W PR2, PR4] (the stat split's case, L971)
+        if ctl.combat then
+            return SECRET
+        end
         return ctl.spellHaste
     end
     function api.GetMeleeHaste()

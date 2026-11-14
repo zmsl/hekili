@@ -85,6 +85,19 @@ describe("Forever Priest", function()
         w = ld.load(nil, FILE, "PRIEST")
     end)
 
+    -- The stat split (L971): Divine Spirit's Spirit by our known rank (wowsims spells_auto_gen.go aura 29, misc 4:
+    -- 17/23/33/40), Spirit Tap's +100% (15271: aura 137, misc 4).
+    it("declares Divine Spirit's Spirit part by our known rank and Spirit Tap's x2 (L971)", function()
+        local e = ld.env(w)
+        local ds = w.auras.divine_spirit.stats[5]
+        assert.are.equal(17, ld.run(ds, e)) -- none known: the first rank's
+        w.game.known[14819] = true
+        assert.are.equal(33, ld.run(ds, e))
+        w.game.known[27841] = true
+        assert.are.equal(40, ld.run(ds, e))
+        assert.are.same({ [5] = 2 }, w.auras.spirit_tap.statsPct)
+    end)
+
     it("declares Discipline and Shadow on trees 1 and 3 with their wowsims.com packs, Holy unsupported", function()
         assert.are.equal("PRIEST", w.class)
         local out = {}

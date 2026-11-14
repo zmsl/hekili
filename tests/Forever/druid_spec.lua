@@ -213,6 +213,18 @@ describe("Forever Druid", function()
         w = ld.load()
     end)
 
+    -- The stat split (L971): Mark and Gift of the Wild's Spirit by our known rank (wowsims spells_auto_gen.go aura 29,
+    -- misc -1: Mark 3/5/8/11/14/16 at ranks 2-7, rank 1 armor only; Gift 14/16).
+    it("declares Mark and Gift of the Wild's Spirit part by our known rank (L971)", function()
+        local e = ld.env(w)
+        local mark, gift = w.auras.mark_of_the_wild.stats[5], w.auras.gift_of_the_wild.stats[5]
+        assert.are.same({ 0, 14 }, { ld.run(mark, e), ld.run(gift, e) }) -- none known: the first rank's
+        w.game.known[9885], w.game.known[21850] = true, true
+        assert.are.same({ 16, 16 }, { ld.run(mark, e), ld.run(gift, e) })
+        w.game.known[9885], w.game.known[8907] = false, true
+        assert.are.equal(11, ld.run(mark, e))
+    end)
+
     it(
         "registers the kit with the DB2's ranks, costs, cooldowns and GCDs, and no rune or Tiger's Fury spell",
         function()

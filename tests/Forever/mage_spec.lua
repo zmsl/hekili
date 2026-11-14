@@ -66,6 +66,25 @@ describe("Forever Mage", function()
         w = ld.load(nil, FILE, "MAGE")
     end)
 
+    -- The stat split (L971, accuracy-085 item 4), worked example 3: Arcane Intellect needs no part. Intellect moves the
+    -- maximum mana, which is plain in combat (the UnitPowerMax hybrid answers the client's: Game/API/Facade.lua), and no
+    -- pack reads Intellect itself (UnitStat 4).
+    it("declares no Intellect part: the maximum mana in combat is the client's plain read (L971)", function()
+        for key, a in pairs(w.auras) do
+            assert.is_nil(type(a.stats) == "table" and a.stats[4] or nil, key)
+            assert.is_nil(type(a.statsPct) == "table" and a.statsPct[4] or nil, key)
+        end
+        local headless = require("Game.harness.headless")
+        local mw = require("Forever.helpers.mage_world")
+        local H = headless.new({ character = mw.Frost.character(), pack = mw.Frost.PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local max0 = H.Hekili.Client.UnitPowerMax("player", 0)
+        H.ctl.powerMax[0] = max0 + 300 -- Arcane Intellect lands in combat
+        assert.are.equal(max0 + 300, H.Hekili.Client.UnitPowerMax("player", 0))
+    end)
+
     it("declares Arcane, Fire and Frost on trees 1, 2 and 3 with their wowsims.com packs", function()
         assert.are.equal("MAGE", w.class)
         local out = {}

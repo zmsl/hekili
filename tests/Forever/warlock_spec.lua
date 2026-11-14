@@ -518,6 +518,44 @@ describe("Forever Warlock", function()
         assert.is_nil(lt.spend)
     end)
 
+    -- The stat split (L971, accuracy-085 item 4), worked example 2: a +40 Spirit buff up at the pre-pull read (Spirit
+    -- 261 = 221 + 40) falls mid-fight; the belief's Spirit (VS.Stat, the `now` context's `stat`) drops by exactly its
+    -- part at once, and Life Tap's Spirit term with it. A generic aura: no aura the Warlock pack registers moves Spirit.
+    it("taps the Spirit a buff's fall in combat leaves, at once (L971)", function()
+        local vload = require("Game.State.helpers.load")
+        local fake = require("Game.State.helpers.fake_api")
+        local fs = require("Game.State.helpers.fake_spec")
+        local api = fake.new()
+        local ctl = api.ctl
+        local ns = vload.module()
+        local VS, I = ns.VirtualState, ns.VirtualStateInternal
+        local def = fs.def(fs.new(9))
+        def.auras[1] = { key = "spender_a", id = fs.SPENDER_A, duration = 120, stats = { [5] = 40 } }
+        I.Build(def, 90)
+        api.UnitStat = function(_, i)
+            return i, i == 5 and 261 or 0, 0, 0
+        end
+        I.AuraModel(1, 1, 90, 110, 1, 90, 0) -- up at the read, runs out at 110
+        ctl.now = 95
+        VS.Start(api)
+        ctl.now = 99
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        I.Sources.Flush()
+        I.Fold(99)
+        local lt = w.abilities.life_tap
+        w.game.known[11689] = true
+        local function tap(t)
+            local e = env({ improved_life_tap = 2 })
+            function e.stat(name, arg)
+                return VS.Stat(name, arg, t)
+            end
+            ld.run(lt.now, e)
+            return e.gained[1][1]
+        end
+        assert.are.equal(822, tap(100)) -- (424 + 261) x 1.2
+        assert.are.equal(774, tap(111)) -- (424 + 221) x 1.2: the 40 went with the buff
+    end)
+
     it("channels Drain Life, Drain Soul, Wrack, Rain of Fire and Hellfire, unhasted; Wrack's debuff", function()
         local out = {}
         for _, key in ipairs({ "drain_life", "drain_soul", "wrack", "rain_of_fire", "hellfire" }) do
