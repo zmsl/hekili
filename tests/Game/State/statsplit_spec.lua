@@ -169,4 +169,130 @@ describe("the stat split (L971)", function()
         drain(99)
         near(230, spirit(100))
     end)
+
+    -- Review round 1 (M1): UNIT_STATS one frame BEFORE the UNIT_AURA that walks the change. The player's UNIT_AURA out
+    -- of combat reads the stats again, so the read is never older than the walk: a gain is divided out once, a cancel
+    -- is not taken out twice.
+    local function row(id, expires)
+        ctl.auras.player.HELPFUL[1] = id and { spellId = id, expirationTime = expires, applications = 0 } or nil
+    end
+    local function stats(sp)
+        api.UnitStat = function(_, i)
+            return i, i == 5 and sp or 0, 0, 0
+        end
+    end
+
+    it("counts a gain once when UNIT_STATS lands a frame before its UNIT_AURA (M1)", function()
+        build({ duration = 3600, stats = { [5] = 40 } })
+        stats(260)
+        at(95)
+        VS.Start(api)
+        ctl.Fire("UNIT_AURA", "player") -- the first clean walk: nothing up
+        drain(95)
+        at(96)
+        stats(300) -- the buff's Spirit is in the stats first
+        ctl.Fire("UNIT_STATS", "player")
+        drain(96)
+        at(96.1)
+        row(fs.SPENDER_A, 3696)
+        ctl.Fire("UNIT_AURA", "player")
+        drain(96.1)
+        at(99)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        drain(99)
+        near(300, spirit(100))
+    end)
+
+    it("takes a cancel out once when UNIT_STATS lands a frame before its UNIT_AURA (M1)", function()
+        build({ duration = 3600, stats = { [5] = 40 } })
+        stats(300)
+        row(fs.SPENDER_A, 3690)
+        at(90)
+        VS.Start(api)
+        ctl.Fire("UNIT_AURA", "player")
+        drain(90)
+        at(96)
+        stats(260) -- cancelled: the stats first
+        ctl.Fire("UNIT_STATS", "player")
+        drain(96)
+        at(96.1)
+        row(nil)
+        ctl.Fire("UNIT_AURA", "player")
+        drain(96.1)
+        at(99)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        drain(99)
+        near(260, spirit(100))
+    end)
+
+    -- M3: no plain spell haste read at all (a reload in combat): no base is derived, the belief keeps its default.
+    it("derives no haste base without a plain read, so a `spellHaste` fall leaves no negative haste (M3)", function()
+        build({ duration = 15, spellHaste = 1.1 })
+        api.UnitSpellHaste = function()
+            return nil
+        end
+        row(fs.SPENDER_A, 105) -- up at the first walk
+        at(95)
+        VS.Start(api)
+        ctl.Fire("UNIT_AURA", "player")
+        drain(95)
+        at(99)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        drain(99)
+        near(0, VS.SpellHaste(106).est)
+    end)
+
+    -- M7: a `stats` part by spell ID takes the rank the last player walk found the aura under, at the pull.
+    local BY_ID = { [fs.SPENDER_C] = 10, [fs.SPENDER_C_R2] = 30 }
+
+    it("takes a by-ID part at the rank the walk found it under (M7)", function()
+        build({ duration = 120 }, { duration = 3600, stats = { [5] = BY_ID } })
+        stats(330)
+        row(fs.SPENDER_C_R2, 3690) -- rank 2 up at the read: 330 = 300 + 30
+        at(90)
+        VS.Start(api)
+        ctl.Fire("UNIT_AURA", "player")
+        drain(90)
+        at(99)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        drain(99)
+        near(330, spirit(100))
+        I.AuraModel(1, 2, 0, 0, 0, 101, 0) -- it falls in combat
+        near(300, spirit(102))
+    end)
+
+    it("counts a by-ID aura no walk has found as 0: the read stands after its fall (M7, the shortcut)", function()
+        build({ duration = 120 }, { duration = 3600, stats = { [5] = BY_ID } })
+        stats(330)
+        I.AuraModel(1, 2, 90, 3690, 1, 90, 0) -- up at the read, opened without a walk (sid 0)
+        at(95)
+        VS.Start(api)
+        drain(95)
+        at(99)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        drain(99)
+        I.AuraModel(1, 2, 0, 0, 0, 101, 0)
+        near(330, spirit(102)) -- as before the split: over by its part
+    end)
+
+    it("takes a by-ID part at the last walk's rank, stale after a fall (M7, M5: over by one rank's delta)", function()
+        build({ duration = 120 }, { duration = 3600, stats = { [5] = BY_ID } })
+        stats(330)
+        row(fs.SPENDER_C_R2, 3690) -- rank 2 walked, then cancelled before the read
+        at(90)
+        VS.Start(api)
+        ctl.Fire("UNIT_AURA", "player")
+        drain(90)
+        at(91)
+        stats(300)
+        row(nil)
+        ctl.Fire("UNIT_AURA", "player")
+        drain(91)
+        at(99)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        drain(99)
+        near(300, spirit(100))
+        I.AuraModel(1, 2, 101, 3701, 1, 101, 0) -- rank 1 gained in combat, never walked: counts rank 2's 30
+        near(330, spirit(102))
+    end)
 end)
