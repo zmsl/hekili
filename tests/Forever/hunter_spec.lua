@@ -60,6 +60,9 @@ local KIT = {
     aspect_of_the_pack = { { 13159 }, 100, 0, "spell" },
     aspect_of_the_wild = { { 20043, 20190 }, 115, 0, "spell" },
     aspect_of_the_viper = { { 415423 }, 0, 0, "spell" },
+    -- L1059: the pet's calls (the pin's rows: Call Pet free and instant; Revive Pet 100% of base mana, 10 s cast)
+    call_pet = { { 883 }, 0, 0, "spell" },
+    revive_pet = { { 982 }, 1, 0, "spell" },
 }
 
 -- one aspect at a time: each cast takes every other aspect down, in this order
@@ -125,7 +128,7 @@ describe("Forever Hunter", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(41, n)
+        assert.are.equal(43, n)
         assert.are.equal("HUNTER", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.rapid_fire.toggle)
@@ -425,6 +428,35 @@ describe("Forever Hunter", function()
         end
     )
 
+    -- L1059: Revive Pet's cast and cost by Improved Revive Pet's rank (the pin's 24443 curve: {-3000, -6000} ms,
+    -- {-20, -40}%), its cost a fraction of base mana at any magnitude; each call only while the client says usable
+    -- (Revive Pet also when only short of mana).
+    it(
+        "prices Revive Pet by Improved Revive Pet's rank and offers each call only while the client says usable",
+        function()
+            local rp, e = w.abilities.revive_pet, ld.env(w)
+            assert.is_true(rp.spendBase)
+            local out = {}
+            for r = 0, 2 do
+                e.talent.improved_revive_pet = { rank = r, enabled = r > 0 }
+                out[#out + 1] = { ld.run(rp.cast, e), math.floor(ld.run(rp.spend, e) * 100 + 0.5) / 100 }
+            end
+            assert.are.same({ { 10, 1 }, { 7, 0.8 }, { 4, 0.6 } }, out)
+            local function usable(key, id, u)
+                w.game.usable[id] = u
+                return (ld.run(w.abilities[key].usable, ld.env(w)))
+            end
+            assert.are.same({ true, false, false, true, true, false }, {
+                usable("call_pet", 883, { true, false }),
+                usable("call_pet", 883, { false, true }),
+                usable("call_pet", 883, nil),
+                usable("revive_pet", 982, { true, false }),
+                usable("revive_pet", 982, { false, true }),
+                usable("revive_pet", 982, nil),
+            })
+        end
+    )
+
     it("shortens Rapid Fire's cooldown by Rapid Killing's curve {-60, -120} s (talents_marksmanship.go:100)", function()
         local e = ld.env(w)
         local cd = {}
@@ -674,6 +706,26 @@ describe("Forever Hunter priorities", function()
         end
     end)
 
+    -- L1059 (owner): no pet out, call it; the pet dead, revive it; at the top of every list (a Lone Wolf Hunter wants
+    -- none out).
+    it("leads every list with Call Pet and Revive Pet", function()
+        local n = 0
+        for name, p in pairs(packs) do
+            for _, list in ipairs({ "precombat", "default" }) do
+                local e = p.lists[list]
+                n = n + 1
+                assert.are.same({
+                    { "call_pet", "!pet_out&!pet.dead&!talent.lone_wolf.enabled" },
+                    { "revive_pet", "pet.dead" },
+                }, {
+                    { e[1].action, e[1].criteria },
+                    { e[2].action, e[2].criteria },
+                }, name .. " " .. list)
+            end
+        end
+        assert.are.equal(14, n)
+    end)
+
     it("keeps the class file's generated blocks in step with APLs/ and retires the hand-built lists", function()
         local mp = assert(loadfile("tools/make_pack.lua"))("lib")
         local f = assert(io.open(FILE))
@@ -750,7 +802,8 @@ describe("Forever Hunter priorities", function()
                         if kinds[kind] then
                             assert.is_true(kinds[kind][key] ~= nil, where .. ": " .. key)
                         elseif kind == "pet" then
-                            assert.is_true(cls.pets[key] ~= nil, where .. ": pet " .. key)
+                            -- `dead`: the engine's pet-unit read (State.lua), Revive Pet's line (L1059)
+                            assert.is_true(cls.pets[key] ~= nil or key == "dead", where .. ": pet " .. key)
                         elseif kind == "action" then
                             assert.is_true(cls.abilities[key] ~= nil, where .. ": action " .. key)
                         end
@@ -869,6 +922,35 @@ describe("Forever Hunter through the engine", function()
         )
         at(t + 18.1)
         assert.are.same({ false, full, full }, { S.buff.bestial_wrath.up, I.CostOf(arcane), S.action.arcane_shot.cost })
+        assert.are.same({}, H.errors)
+    end)
+
+    -- L1059: the pack's first pick with no pet out (Call Pet), the pet dead (Revive Pet), the pet out alive (neither),
+    -- and neither while the client calls the spell unusable (no tamed pet, no corpse).
+    it("recommends Call Pet with no pet out and Revive Pet for a dead one, only while usable", function()
+        H.ctl.level.target, H.ctl.distance.target = 60, 25
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        local t = H.ctl.now
+        local function first(exists, dead)
+            H.ctl.exists.pet, H.ctl.dead.pet = exists, dead
+            t = t + 0.2
+            assert.is_true(headless.cycle(H, t))
+            local recs = H.Hekili.Engine.Output.Primary.recs
+            return recs[1] and recs[1].actionName
+        end
+        H.ctl.usable[883], H.ctl.usable[982] = { true, false }, { true, false }
+        assert.are.equal("call_pet", first(nil, nil))
+        assert.are.equal("revive_pet", first(true, true))
+        local up = first(true, nil)
+        assert.is_true(up ~= "call_pet" and up ~= "revive_pet", tostring(up))
+        H.ctl.usable[883], H.ctl.usable[982] = nil, nil
+        local none = first(nil, nil)
+        assert.is_true(none ~= "call_pet" and none ~= "revive_pet", tostring(none))
+        none = first(true, true)
+        assert.is_true(none ~= "call_pet" and none ~= "revive_pet", tostring(none))
         assert.are.same({}, H.errors)
     end)
 
