@@ -162,10 +162,20 @@ describe("Forever Warlock", function()
         for rank = 0, 2 do
             local e = ld.env(w)
             e.talent.soul_harvest = { rank = rank }
+            e.victim_channel = "drain_soul"
             ld.run(w.reactions.soul_harvest.now, e)
             got[#got + 1] = { ld.run(m.spirit, e), ld.run(m.share, e), #e.applied }
         end
         assert.are.same({ { 1, 0, 0 }, { 1.5, 0.5, 1 }, { 2, 1, 1 } }, got)
+        -- only with our Drain Soul on the victim (Fable decision 2, wowsims talents_affliction.go): not without a
+        -- channel, not with another one
+        for _, chan in ipairs({ false, "drain_life" }) do
+            local e = ld.env(w)
+            e.talent.soul_harvest = { rank = 2 }
+            e.victim_channel = chan
+            ld.run(w.reactions.soul_harvest.now, e)
+            assert.are.same({}, e.applied, tostring(chan))
+        end
         assert.are.same({ "target", "kill" }, { w.reactions.soul_harvest.who, w.reactions.soul_harvest.outcome })
         assert.are.same({ 1242853, 10 }, { w.auras.soul_harvest.id, w.auras.soul_harvest.duration })
     end)

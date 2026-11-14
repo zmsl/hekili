@@ -1076,7 +1076,7 @@ spec:RegisterPack(
 )
 
 -- Spirit Tap (15270, 5 ranks: 20-100% chance; wowsims talents_shadow.go applySpiritTap): its buff after a kill that
--- yields XP. The belief opens it at our kill (the "kill" reaction: under 10 levels below us or a boss, the owner's rule)
+-- yields XP. The belief opens it at our kill (the "kill" reaction: the client's grey line, UnitIsTrivial)
 -- at 5/5 only, where the chance is 100%; the lower ranks' rolls stay unassumed (dim). shortcut: wowsims and the tooltip
 -- also grant it when an enemy afflicted by our Vampiric Embrace dies (any killer; the pin: always, at any rank), which
 -- needs a death of a unit holding our debuff: not modelled, upgrade with a "death" reaction outcome if a VE build

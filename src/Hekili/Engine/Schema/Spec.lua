@@ -486,7 +486,8 @@ local HekiliSpecMixin = {
     -- tells no white swing from a special) runs once per white swing of ours at its settled outcome, whatever it is;
     -- optional `hand` "main" or "off" (the hand the belief paired the swing to) filters it. Outcome "kill" (who
     -- "target" only) runs at our killing blow on a victim that yields XP (the client's grey line: a plain UnitIsTrivial
-    -- false), never under the Map restriction (the GUIDs are secret). Not an ability: no index,
+    -- false), never under the Map restriction (the GUIDs are secret); its `now` reads `victim_channel`, the key of our
+    -- channel on the victim (our target) or false. Not an ability: no index,
     -- cast history, ticket, GCD or options row. The belief runs it in the `now` context at the settled outcome's time
     -- (Game/State/Families/Now.lua); the sim never sees it.
     RegisterReaction = function( self, name, data )

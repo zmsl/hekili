@@ -229,6 +229,7 @@ function M.env(w)
     e.combat, e.active_enemies, e.group = 0, 1, false
     e.set_bonus, e.equipped = default(0), default(false) -- no gear headless (State.lua's)
     e.level = 60 -- Hekili's state.level (UnitLevel), the belief's `level` (Families/Now.lua)
+    e.victim_channel = false -- the belief's, outside a "kill" reaction (Families/Now.lua)
     e.pairs, e.ipairs = pairs, ipairs -- Hekili's state has them (State.lua)
     e.min = math.min -- state.min (State.lua)
     -- no duration: the aura's own duration function (the belief's `now` does the same)

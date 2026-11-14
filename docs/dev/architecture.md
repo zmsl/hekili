@@ -257,7 +257,8 @@ payments and a white swing's `Obs.SwingSettled`: a final credit, a provisional o
 window's close), never an ability (no index, cast history, `prev_gcd`, ticket, GCD or options row) and with no
 forecast: its window reaches the core in the next copy. `kill` (who `target` only; Lane R) runs at our `PARTY_KILL` of a
 victim that yields XP (the client's grey line: a plain `UnitIsTrivial` false, read from a token still bound to it,
-`Sources/Units.lua` -> `Obs.Kill`; a nil or secret answer runs nothing); under the Map restriction the GUIDs are secret and nothing runs. `swing` (who `target` only; a hit on us tells no white swing
+`Sources/Units.lua` -> `Obs.Kill`; a nil or secret answer runs nothing), its `now` reading `victim_channel` (the key of
+our channel in progress on the victim, our target, a stop at the kill's own instant included; else false); under the Map restriction the GUIDs are secret and nothing runs. `swing` (who `target` only; a hit on us tells no white swing
 from a special) runs once per white swing of ours whatever its outcome, `hand` (swing and land only) filtering by the
 hand the belief paired it to; a swing closing with no row runs only `land`, and a spell of ours blocked fires nothing
 (`docs/dev/gaps.md` CO). `land` (who `target` only; aura audit C3) runs once per white swing of ours that landed: a

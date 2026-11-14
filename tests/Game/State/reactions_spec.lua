@@ -512,6 +512,58 @@ describe("reactions", function()
             drain(ctl.now + 0.1)
             assert.are.equal(0, runs.killed)
         end)
+
+        -- victim_channel: our channel in progress at the kill when the victim is our target (a pack's "only while our
+        -- channel is on the victim", Fable decision 2), its stop in the same instant either side of the kill
+        it("names our channel on the victim at the kill, in either same-instant order with its stop", function()
+            local seen
+            local r = reaction("killed", "target", "kill")
+            r.now = function()
+                seen = victim_channel
+            end
+            build({ r })
+            ctl.level.player = 60
+            ctl.guid.nameplate2 = "Creature-7"
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+            local function chanKill(t, victim, order)
+                seen = "not run"
+                ctl.now = t
+                ctl.channel = { t * 1000, (t + 15) * 1000 }
+                ctl.Fire("UNIT_SPELLCAST_CHANNEL_START", "player", "Cast-9", fs.SPENDER_H)
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", fs.SPENDER_H)
+                drain(t + 0.01)
+                ctl.now = t + 2
+                if order == "stop first" then
+                    ctl.channel = nil
+                    ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-9", fs.SPENDER_H)
+                end
+                ctl.Fire("PARTY_KILL", "Player-1", victim)
+                ctl.channel = nil
+                ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-9", fs.SPENDER_H)
+                drain(t + 2.01)
+                return seen
+            end
+            assert.are.equal("spender_h", chanKill(10, "Creature-1", "kill first"))
+            assert.are.equal("spender_h", chanKill(30, "Creature-1", "stop first"))
+            assert.is_false(chanKill(50, "Creature-7", "kill first")) -- a nameplate's mob, not our target
+            ctl.now = 70
+            ctl.Fire("PARTY_KILL", "Player-1", "Creature-1") -- no channel
+            seen = "not run"
+            drain(70.01)
+            assert.is_false(seen)
+            ctl.now = 90
+            ctl.channel = { 89000, 104000 }
+            ctl.Fire("UNIT_SPELLCAST_CHANNEL_START", "player", "Cast-9", fs.SPENDER_H)
+            ctl.channel = nil
+            ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-9", fs.SPENDER_H)
+            drain(90.01)
+            ctl.now = 91 -- a stop an instant earlier than the kill: no longer ours
+            seen = "not run"
+            ctl.Fire("PARTY_KILL", "Player-1", "Creature-1")
+            drain(91.01)
+            assert.is_false(seen)
+            assert.are.equal(0, I.nowErrors)
+        end)
     end)
 
     describe('outcomes "deflect" and "evade"', function()

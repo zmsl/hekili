@@ -1188,16 +1188,17 @@ spec:RegisterPack(
     [[Hekili:TR16UTTnu4NL8hhlup5lPoRnioaTRyyDRRRyUa7FsMwI2M1sIcIuXZab(zFhQBMsMuwYXnjyBOObk8Y5opx(ATgA9vRPUio26ZJgm66HdhE1GbdSMY3gITMgICwJwcFeG8HFoDfYLUz3S3hHcC3nR7g6ggXNz6q9nehERhf5ki48yIh)JbwZvsBwi2XA6F9U)8t)Xp9B34I9Pbup6YTwtxrCDXPxdZCQNH3SBgFfE3SS16VGgHVhhTBMlEbk2JVB27(YN2ndwE3SQ0jM0xieS(BqrEuN19Ddz9fcTlRVqESzjxWEU48MjBy(ngnWOhWuynMhOvaH4uHqqy7MHCDPbxcFSgVLzUB2hqC0nkeUU)(h)kqKvCEi7M(9xs4RINl0N(voQbqtqhWJrV1XDeAK7chGSVhl2otZ)GWYrCkuloYdhWbQpfJIibl3n7lisWUzEyKll7oEegq1UeoSW80Rje)GuPlouOHiwHGl0i6MG87THgdwcWvhrxq8GicKdNqdyMHryqhMJ4tYTCuWd8RhS9RM03HgffhkwVhzXKlCXZJxSWC)QMXHfxCsmdBt4yFwpXx0flSx64ozyXba65MAfSJIdW6pLp6B0iBFuaYoKMWCTh1b55zN(R2c1UNi4FcdmOEyBFiYIyZrrlXCBN4iGiqOl4eKiWkSN3csewOFIvVhBJdW(em7Ujx1HtxceY0NEp2hCxD6Q4ijK3KgZzex8ydzIphfiKBBxk1V3cQtmBYibJwqwUIBhH9bxo7UmRQ8HnDJJqcQitnwAKIDiClzQ1TBUJj38M(uio8bLRNX3Bhzo2OZfP03uM4M4)g7eZHFTt3louLnEOQoB0yxsMZWLYtDfhA2BI)TKJTgADxdOLdL6bpccyPMYmZrjNX6ay)oGzw7Mp0TBjF6pm2OFDUvJBhA0Po6DHQBdV4nmEOozuZTEqFC7giPgjaCHL8HsjgsmlPzRmj(qYK7XU2s7BIdqZ9WUDs4SiDOhkl1qNIaZSZFFSxaocnN4r4BLIpvUDEyAU6kZtheJ)kfRd57b(BZj(ydPyBzPnp02OfzbkzQA0tsvSols5evN7kfGzuoRkIVY2Hs8kZB5N0Pmx1ocMxdX9ilepBdtiTiNSzOJ4b3TxnOt58yxpqxmKo6P3kLWiGjQmwuMu1QJKQFs63WBbOIQn2ljnoRNZwNIKrqghzxhdZfHhmteJrwgab7jKyYL5x(srsXUn4y5vlvjb7FvcAxXjGkVR9Wmwa83Sx0A5J8zpKxLOKsETbJw3e(KFUd5rbfe5L6CHEtsan5JlLYXCm)MiDTkD5K8CLnvcVxvJrjxZrmiTXb3qr6FZEVC(CsEU9I)tPx7P8zzdu9ZQNtDRttY7yaTKgSTsZLTVlLov3iHSIockxC92XhvYkpesnXqDvoDshLTAlDK8oYADNU6LxIVpvmZzJK28dRvwloWPlPA69(jZPx74oPNQOX4Jk1LdioFbanIZfU2ZJRuINfJHmbhhHxJkpYBP(6uo(H29QFUfv(Y8gVFt9JOuZek6fg9Z1OWuiMG2JsDTxehT9fGbz44xcwemKspAneI()wKnkhwTTc0JuzQutBYqnIzPbPovpvDY)OrNOzf8)5ZBn66bd6ipL3RhzC4yEGgAn9Eiqeyvf8IfaRWsWPofzx4ZpNGBDgmbwV3AQuCRyZmGjtxpbarloq1gEjziff37QgEVdazuC5xx5Y5hUk0rP6PDks7hPzybDhRHU54oaCic08ickDVhnkKcMEDfMUNfnh)X9IQ82afe1)eojGp)Ow(udYKFVGM8W(G2RcYeQSk8gTQq1h3TlMOAlecE92gYR7AkVu3iQGvdhuJR5elhC2H6SoSoBDUqXmvncTZgABlsGNyoRMiRiWAFfOs24VxWM(SIBAILOA25wMqRK3iHGvtBlzf1Js45cm1MKIyOUAd7rFvTuFikSnfg2e2QR0rE7eLy6XWNnHIvRlOkkwCUQ51RJZ14JocuUwI)mT4F0rv9lOra1fdUF4UssOQPdtz(XkGxJiPefjyz5j)tA7OiussKAayvNlOMFsb16fcCL1gJOs4F0(TNnGMpFin)cY3vTKWb(UC6(O9BplWm)e)KSbk)5XVX139RIePLgwiZG0MMeppOoE4yojhOChavZLixSxvXLMd9O6AxY8UU2JYi8ja)4E(MVxjUYL7)TfZXNIGPYUHupqH2npYOi1HgYrqVSgOPonquAdMf7r18z2iDmiV(UyLAkcn7r68)IwjDJBOBwZwlGpwT7qCpRdPlLJRCY(Y60hbmONMzV94GMMKudampPv7k7mUD8PvstvzOM1B1JSeyZrZRMgd3xeRLYC7lD2g5njgbfZxrJSM(l41epYUzD)5S)RdNST1)m]]
 )
 
--- Soul Harvest: its buff after a kill of a target that yields XP (the owner's rule from the tooltip: the "kill"
--- reaction, under 10 levels below us or a boss). DIFFERENCE: wowsims (e5a9cd2a2d talents_affliction.go) grants it only
--- when the killed target carries our Drain Soul (its row states no proc; wowsims takes Drain Soul's kill flag): an
--- in-game check decides; to follow wowsims, add our Drain Soul channel's check here (`buff.drain_soul_channel.up`). Under the Map restriction no kill is
--- seen (the GUIDs are secret): nothing opens.
+-- Soul Harvest: its buff after our kill of a target that yields XP (the "kill" reaction: the client's grey line) while
+-- our Drain Soul is on it, as wowsims (e5a9cd2a2d talents_affliction.go: Drain Soul's kill flag; the talent row states
+-- no proc of its own; Fable decision 2, FABLE-FOR-OWNER, until an in-game check). To grant it at any XP kill (the
+-- tooltip's reading), drop the `victim_channel` test: one line. shortcut: a Drain Soul stop read an instant before the
+-- kill is lost (the belief keeps only a stop at the kill's own instant): the dim side. Under the Map restriction no
+-- kill is seen (the GUIDs are secret): nothing opens.
 spec:RegisterReaction("soul_harvest", {
     who = "target",
     outcome = "kill",
     now = function()
-        if talent.soul_harvest.rank > 0 then
+        if talent.soul_harvest.rank > 0 and victim_channel == "drain_soul" then
             applyBuff("soul_harvest")
         end
     end,
