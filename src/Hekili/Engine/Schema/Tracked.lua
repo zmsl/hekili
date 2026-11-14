@@ -260,7 +260,9 @@ local function buildDef()
         local model = r.state and r.state.regenModel
         if model then
             for name, m in pairs(model) do
-                if m.swing == "offhand" then
+                if m.forecastOnly then -- luacheck: ignore 542
+                    -- the sim's forecast only: the belief pays it another way (a reaction), so it never reads it
+                elseif m.swing == "offhand" then
                     offValue, offCrit = m.value, m.crit
                 elseif m.swing and HANDS[m.swing] and swing == 0 then
                     swing, value, swingAura = HANDS[m.swing], m.value, m.aura -- `aura`: swings pay only while it is up
