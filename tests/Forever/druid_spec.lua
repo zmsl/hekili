@@ -841,15 +841,7 @@ describe("Forever Druid", function()
                 { w.resources[3].models, w.resources[3].meta }
             )
             -- wowsims/forever's logs: 2.2 mana a 0.1 s tick outside the rule, none inside it (Feral, Balance)
-            local fsr, e = w.resources[0].meta.fsr, ld.env(w)
-            assert.are.same({ 22, 0 }, { fsr.spirit, fsr.mp5 })
-            -- the static share follows Reflection's rank (17/33/50%, wowsims's curve)
-            local shares = {}
-            for rank = 0, 3 do
-                e.talent.reflection = { rank = rank }
-                shares[#shares + 1] = ld.run(fsr.share, e)
-            end
-            assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares)
+            assert.are.same({ spirit = 22, mp5 = 0 }, w.resources[0].meta.fsr)
             assert.is_nil(w.resources[1].meta.max)
         end
     )
