@@ -9,6 +9,7 @@
 - The priority editor (Action Lists) now has Label, Label Condition, Icon and Icon Condition fields under Caption, so labels and icon overrides can be set without importing a line. The Icon field previews the texture it resolves to and says so when a path is not a texture file.
 - Custom priorities: `interrupt_global=1` on a channeled spell's line now works. While you channel that spell, any line above it in the priority, in any list, may be recommended at once, breaking the channel.
 - Custom priorities: the Max Energy option (`max_energy=1`) on a Ferocious Bite line now works: the line waits until you have full energy, so Bite gets its whole bonus from extra energy.
+- Custom priorities: the Use While Casting option (`use_while_casting=1`) now works: that line can be recommended while you are casting or channeling, instead of after the cast ends. Lines without it still wait for the cast.
 
 ### Changed
 - Warrior: Improved Berserker Rage now gives 5 or 10 rage, and Improved Intercept, Improved Shield Wall and Improved Disarm now shorten those cooldowns as the talents do.

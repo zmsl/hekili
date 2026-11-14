@@ -1334,6 +1334,8 @@ function Hekili:GetNextPrediction( dispName, packName, slot )
         end
     end
 
+    -- shortcut: the dual_cast whitelist also hides use_while_casting lines in a spec that declares dual_cast abilities
+    -- (no Forever spec does); skip the whitelist for a pack whose PackInfo.hasWhileCasting is set when one appears
     if not state.channel_breakable and state.buff.casting.up and state.spec.can_dual_cast then
         self:Debug( "Whitelist of castable-while-casting spells applied [ %d, %.2f ]", state.buff.casting.v1, state.buff.casting.remains )
         state:SetWhitelist( state.spec.dual_cast )
@@ -1553,6 +1555,7 @@ function Hekili.Update()
             for i = #Stack, 1, -1 do tinsert( StackPool, tremove( Stack, i ) ) end
             for i = #Block, 1, -1 do tinsert( StackPool, tremove( Block, i ) ) end
 
+            state.system.packName = packName -- before the reset: it reads the pack's info (use_while_casting)
             state.reset( dispName )
 
             -- Clear the stack in case we interrupted ourselves.
@@ -1560,7 +1563,6 @@ function Hekili.Update()
 
             state.system.specID   = specID
             state.system.specInfo = spec
-            state.system.packName = packName
             state.system.packInfo = pack
             state.system.display  = dispName
             state.system.dispInfo = display
@@ -1681,6 +1683,12 @@ function Hekili.Update()
                                         break
                                     end
                                 end
+                            end
+
+                            -- use_while_casting lines may go during the cast: walk before the event (the others wait it out)
+                            if ( casting or ( channeling and not shouldBreak ) ) and not shouldCheck then
+                                local info = scripts.PackInfo[ packName ]
+                                shouldCheck = info and info.hasWhileCasting or false
                             end
 
 
@@ -1939,7 +1947,7 @@ function Hekili.Update()
                             state.setCooldown( "global_cooldown", gcdLength( action ) )
                         end
 
-                        if state.buff.casting.up and not ability.dual_cast then
+                        if state.buff.casting.up and not ability.dual_cast and not state.safebool( state.args.use_while_casting ) then
                             state.stopChanneling( false, action )
                             state.removeBuff( "casting" )
                         end

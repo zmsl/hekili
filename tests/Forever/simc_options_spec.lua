@@ -186,3 +186,47 @@ describe("max_energy on a line", function()
         end
     end)
 end)
+
+describe("use_while_casting on a line", function()
+    -- Bloodrage (off the GCD by use_off_gcd=1) above the spell being cast; 0.5 s into Slam's 1.5 s cast, or 4 s into
+    -- Cannibalize's 10 s channel, Primary's first recommendation.
+    local function firstMidCast(kind, flag)
+        local H, W, us, upTo = rig({
+            line("bloodrage", { use_off_gcd = 1, use_while_casting = flag }),
+            line("battle_shout"),
+        })
+        W.t = 1
+        if kind == "cast" then
+            local slam = H.Hekili.Class.abilities.slam
+            assert.is_true(W.press(us, "slam", { spell = slam.id, gcd = 1.5, cast = 1.5 }))
+        else
+            assert.is_true(
+                W.press(us, "cannibalize", { spell = CANNIBALIZE, gcd = 1.5, channel = { length = 10, tick = 2 } })
+            )
+        end
+        W.run(20)
+        local out = upTo(kind == "cast" and 1.5 or 5)
+        local name, t = out.recs[1].actionName, out.recs[1].time
+        local r2 = out.recs[2]
+        H.Hekili.State.reset("Primary", true)
+        assert.is_true(H.Hekili.State.buff.casting.up, "still casting at the update")
+        return name, t, r2
+    end
+
+    for _, kind in ipairs({ "cast", "channel" }) do
+        it("=1: recommended during a " .. kind .. "; the next line still waits for its end", function()
+            local name, t, r2 = firstMidCast(kind, 1)
+            assert.are.equal("bloodrage", name)
+            assert.is_true(t < 0.3, tostring(t))
+            assert.are.equal("battle_shout", r2.actionName)
+            assert.is_true(r2.time > (kind == "cast" and 0.9 or 5.5), tostring(r2.time))
+        end)
+
+        it("absent and =0: waits for the " .. kind .. " to end", function()
+            for _, flag in ipairs({ false, 0 }) do
+                local name, t = firstMidCast(kind, flag or nil)
+                assert.is_true(t > 0.5, tostring(flag) .. ": " .. tostring(name) .. " at " .. tostring(t))
+            end
+        end)
+    end
+end)

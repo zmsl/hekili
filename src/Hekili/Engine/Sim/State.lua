@@ -6754,8 +6754,10 @@ do
             -- Delay to end of GCD.
             if dispName == "Primary" or dispName == "AOE" then
                 local delay = 0
+                -- a pack with use_while_casting lines hands the cast to the event loop, as can_dual_cast does
+                local info = scripts.PackInfo[ state.system.packName ]
 
-                if not state.spec.can_dual_cast and state.buff.casting.up and state.buff.casting.v3 ~= 1 then -- v3=1 means it's channeled.
+                if not state.spec.can_dual_cast and not ( info and info.hasWhileCasting ) and state.buff.casting.up and state.buff.casting.v3 ~= 1 then -- v3=1 means it's channeled.
                     delay = max( delay, state.buff.casting.remains )
                 end
 
@@ -7541,7 +7543,8 @@ function state:TimeToReady( action, pool )
 
     if not state.channel_breakable and not ability.dual_cast then
         z = self.buff.casting.remains
-        if z > wait then
+        -- use_while_casting=1 (SimC): the line need not wait for the player's cast or channel (read only when it would)
+        if z > wait and not self.safebool( self.args.use_while_casting ) then
             wait = z
         end
     end
