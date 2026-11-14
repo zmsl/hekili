@@ -301,6 +301,9 @@ describe("rotation windows (belief)", function()
             drain(4.1)
             drain(5)
             assert.is_false(W("w")[1])
+            -- the snapshot names a window's state and its evaluator's last value
+            local line = "window w up=false step=0/0 opened=0.00 expires=0.00 refreshes=0 eval=false combat=0.00"
+            assert.is_truthy(VS.Snapshot():find(line, 1, true), VS.Snapshot())
             ctl.now = 6
             ctl.Fire("PLAYER_REGEN_DISABLED")
             drain(6.1)
@@ -483,6 +486,8 @@ describe("rotation windows (belief)", function()
                 open(2)
                 cast(TWO, 3)
                 assert.are.same({ true, 1 }, { W("w")[1], W("w")[5] })
+                assert.is_truthy(VS.Snapshot():find("step=1/3", 1, true))
+                assert.is_truthy(VS.Snapshot():find("dev=w_two@3.00 due=1", 1, true), VS.Snapshot())
                 drain(31.99)
                 assert.is_true(W("w")[1])
                 drain(32)
