@@ -345,6 +345,16 @@ inverse, as the client rescales a running swing. The next PLAYER_SWING's duratio
 is never divided again; out of combat (or for a fall before the pull) nothing is rescaled: the plain speed reads say
 it. One multiplier for every hand; the sim's own forecast of a haste cast inside its window is not rescaled.
 
+**A buff's part of a stat (the stat split, L971).** `RegisterAura{ spellHaste = <multiplier> }`, `stats = { [index] =
+<points or function> }` and `statsPct = { [index] = <multiplier> }` (UnitStat's indices; a function runs in the `now`
+context at the pull, so a value follows the talent ranks) declare what a player aura does to the spell haste and to
+UnitStat's effective value. Both are secret in combat. At the pull (`Families/Player.lua`) the belief splits the last
+out-of-combat read into a base and the parts of the declared auras that were up at the read's own time; in the fight
+it answers (base + the flat parts up) x the percent parts up (haste: base x the multipliers up) from its own aura
+records, so a buff that falls removes exactly its part and one gained adds it. Out of combat, and after any newer plain
+read, the read stands. `VS.Stat` and `VS.SpellHaste` answer the composed value, so the facade hybrids, the GCD and a
+`now`'s `haste` and `stat(...)` all see it. Melee haste keeps `swingHaste`'s event form.
+
 **What only a landed hit or a full channel gives** (aura audit C10, C11). An ability's `onLand` (bound like `onCrit`)
 runs in the `now` context once its cast is settled as landed: `Game/Events/Rows.lua` stages `Obs.Landed` once per
 direct-hit ticket (not a tick's or a swing's), when a wound or crit is paid to it or a provisional payment is final.

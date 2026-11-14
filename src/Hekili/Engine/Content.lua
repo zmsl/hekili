@@ -44,6 +44,8 @@ local format = string.format
 -- raises on the call.
 --   Since then, without a bump: the `now` verb `gain`'s third argument, a roll's spread (L481); an older core ignores
 --   it and shifts the floor and the top by the average too.
+--   Also without a bump: the aura fields `spellHaste`, `stats` and `statsPct` (the stat split, L971); an older core
+--   ignores them and holds the out-of-combat spell haste and stats through a fight, as before.
 local CONTENT_API = 14
 
 local done, notice = false, nil

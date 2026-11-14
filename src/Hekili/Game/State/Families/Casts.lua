@@ -176,7 +176,8 @@ function I.GcdLen(a, t, t0)
     end
     local len = I.gcdLearned[1]
     if len <= 0 then
-        -- spell haste (UnitSpellHaste %, plain), never melee haste: attack speed does not shorten a GCD on Forever
+        -- spell haste (the belief's UnitSpellHaste %, composed in a fight: Families/Player.lua), never melee haste: attack
+        -- speed does not shorten a GCD on Forever
         local h = VS.SpellHaste and VS.SpellHaste(t).est or 0
         len = max(1.0, 1.5 / (1 + (h > 0 and h or 0) / 100)) -- 1 + h/100 >= 1: h > 0 checked
     end

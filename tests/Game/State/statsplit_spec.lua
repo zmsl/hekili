@@ -14,7 +14,8 @@ describe("the stat split (L971)", function()
     local function near(want, got)
         assert.is_true(math.abs(want - got) < 1e-9, ("%.6f vs %.6f"):format(got, want))
     end
-    local function drain(t) -- the fold, then the settle (its sweep takes an aura down by time)
+    local function drain(t) -- the frame's flush, the fold, then the settle (its sweep takes an aura down by time)
+        I.Sources.Flush()
         I.Fold(t)
         I.Settle(t)
     end
@@ -43,35 +44,38 @@ describe("the stat split (L971)", function()
         ctl = api.ctl
     end)
 
-    it("composes the spell haste from the read's base and the `spellHaste` auras up (a cooldown used in combat)", function()
-        build({ duration = 15, spellHaste = 1.1 })
-        at(95)
-        ctl.spellHaste = 5 -- the out-of-combat read, the aura down
-        VS.Start(api)
-        drain(95)
-        at(99)
-        ctl.Fire("PLAYER_REGEN_DISABLED")
-        drain(99)
-        near(5, VS.SpellHaste(100).est)
-        near(1.5 / 1.05, I.GcdLen(1, 100))
-        I.AuraModel(1, 1, 101, 116, 1, 101, 0) -- up at 101 in combat: 1.05 x 1.1
-        near(15.5, VS.SpellHaste(101).est)
-        near(1.5 / 1.155, I.GcdLen(1, 101))
-        near(1 / 1.155, I.Haste(101)) -- a `now`'s `haste`
-        near(5, VS.SpellHaste(116.5).est) -- ran out at 116
-        assert.are.equal(
-            0,
-            alloc.bytes(function()
-                VS.SpellHaste(105)
-            end, 2000)
-        )
-        at(130)
-        ctl.spellHaste = 6 -- out of combat the read stands
-        ctl.Fire("PLAYER_REGEN_ENABLED")
-        drain(130)
-        I.AuraModel(1, 1, 131, 146, 1, 131, 0)
-        near(6, VS.SpellHaste(132).est)
-    end)
+    it(
+        "composes the spell haste from the read's base and the `spellHaste` auras up (a cooldown used in combat)",
+        function()
+            build({ duration = 15, spellHaste = 1.1 })
+            at(95)
+            ctl.spellHaste = 5 -- the out-of-combat read, the aura down
+            VS.Start(api)
+            drain(95)
+            at(99)
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            drain(99)
+            near(5, VS.SpellHaste(100).est)
+            near(1.5 / 1.05, I.GcdLen(1, 100))
+            I.AuraModel(1, 1, 101, 116, 1, 101, 0) -- up at 101 in combat: 1.05 x 1.1
+            near(15.5, VS.SpellHaste(101).est)
+            near(1.5 / 1.155, I.GcdLen(1, 101))
+            near(1 / 1.155, I.Haste(101)) -- a `now`'s `haste`
+            near(5, VS.SpellHaste(116.5).est) -- ran out at 116
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    VS.SpellHaste(105)
+                end, 2000)
+            )
+            at(130)
+            ctl.spellHaste = 6 -- out of combat the read stands
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            drain(130)
+            I.AuraModel(1, 1, 131, 146, 1, 131, 0)
+            near(6, VS.SpellHaste(132).est)
+        end
+    )
 
     it("divides out a `spellHaste` aura the read held, so its fall in combat removes exactly its part", function()
         build({ duration = 15, spellHaste = 1.1 })
@@ -94,11 +98,14 @@ describe("the stat split (L971)", function()
     end)
 
     it("composes UnitStat from the read's base, the flat parts and the percent parts up in combat", function()
-        build({ duration = 120, stats = {
-            [5] = function()
-                return 40 -- a function: the belief's `now` context (talent ranks), evaluated at the pull
-            end,
-        } }, { duration = 15, statsPct = { [5] = 1.15 } })
+        build({
+            duration = 120,
+            stats = {
+                [5] = function()
+                    return 40 -- a function: the belief's `now` context (talent ranks), evaluated at the pull
+                end,
+            },
+        }, { duration = 15, statsPct = { [5] = 1.15 } })
         api.UnitStat = function(_, i)
             return i, i == 5 and 300 or i * 10, 0, 0
         end
