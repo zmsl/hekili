@@ -152,7 +152,8 @@ end
 -- character knows (every rank), `talents` wowsims/forever's preset build's ({ [rank-1 spell] = rank }; presets.ts
 -- Arcane 0552205003100311531-03-0515, Fire 0502205-23550000130135031-005), `uptime` the debuffs reported.
 -- `max` the mana pool and `casting` the share of SPIRIT that continues inside the five-second rule (wowsims's logs: the
--- Arcane build's 2.913 a tick inside it too, Arcane Meditation 3/3 on Mage Armor; the Fire build's 1.456, Mage Armor's).
+-- Arcane build's 2.913 a tick inside it too, Arcane Meditation 3/3 on Mage Armor; the Fire build's, Arcane Meditation
+-- 1/3 on Mage Armor).
 local PACKS = {
     Arcane = {
         pack = "Arcane (wowsims.com)",
@@ -195,7 +196,7 @@ local PACKS = {
         pack = "Fire (wowsims.com)",
         spec = 100082,
         max = 6168,
-        casting = 0.5,
+        casting = 0.67, -- Arcane Meditation 1/3 (17%) on Mage Armor's 50% (its log casts at 0.67 of the outside rate)
         kit = {
             "scorch",
             "pyroblast",
@@ -225,6 +226,7 @@ local PACKS = {
             [11124] = 3, -- Fire Power
             [11129] = 1, -- Combustion
             [29438] = 3, -- Elemental Precision (wowsims 5; the DB2's 3)
+            [18462] = 1, -- Arcane Meditation (its export's, mage_fire.log)
         },
         uptime = { "fire_vulnerability" },
     },
