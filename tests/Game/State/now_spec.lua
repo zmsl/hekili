@@ -1341,6 +1341,23 @@ describe("now handlers", function()
             assert.are.equal(0, I.avoidsRun)
         end)
 
+        -- L972 option A (Fable decision 2026-11-14): live, the swing's landed row is a WOUND whose amount alone is secret;
+        -- in its core band it says the swing landed, so the avoid the tie gave it was the cast's (Events/Rows.lua)
+        it("the swing's secret wound in its core band gives the tied avoid back: undo and refund", function()
+            begin()
+            ctl.now = 4.526
+            ctl.Fire("PLAYER_SWING", 3.6, 0)
+            castOutcome(fs.SPENDER_C, 5, "DODGE", 0, fake.SECRET)
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est) -- held by the swing
+            ctl.now = 5.08
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+            ctl.Tick(5.1)
+            VS.Drain(5.1)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.2))
+            assert.are.equal(8, VS.Power(fs.RAGE, 5.2).est) -- 10 paid, 8 back (the 0.8 share)
+            assert.are.equal(1, I.avoidsRun)
+        end)
+
         it("a white swing's miss due 0.3 s after the cast is the swing's: the debuff stays, no SPELL_MISSED", function()
             begin()
             ctl.now = 4.83
