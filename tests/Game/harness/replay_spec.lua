@@ -563,6 +563,49 @@ describe("the replay world", function()
     end)
 end)
 
+describe("the replay's move-only casts (an ability's `movesOnly`)", function()
+    local LOG = table.concat({
+        "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+        "[-1.00] [Tester (#1)] Casting {SpellID: 900070} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[-1.00] [Tester (#1)] Completed cast {SpellID: 900070}",
+        "[1.00] [Tester (#1)] Casting {SpellID: 900001} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[1.00] [Tester (#1)] Completed cast {SpellID: 900001}",
+    }, "\n")
+    local HM = {
+        Hekili = {
+            Class = {
+                abilities = {
+                    strike = { key = "strike", id = 900001, gcd = "spell" },
+                    leap = { key = "leap", id = 900070, cooldown = 15, gcd = "spell", movesOnly = true },
+                },
+                auras = {},
+            },
+        },
+    }
+
+    it("is a cast in the world (its GCD, its cooldown) but neither a decision nor a next press", function()
+        local R = replay.new(LOG, HM, {})
+        local keys, casts = {}, {}
+        for i, d in ipairs(R.decisions) do
+            keys[i] = d.key
+        end
+        for i, d in ipairs(R.casts) do
+            casts[i] = d.key
+        end
+        assert.are.same({ "strike" }, keys)
+        assert.are.same({ "leap", "strike" }, casts) -- timing.new walks every mapped Casting line by R.casts' index
+        assert.are.equal("strike", R.next(R.pull - 2))
+        local W = at(R.world(setmetatable({ tag = "-mv" }, { __index = WO }), 1), R.pull)
+        local leap
+        for _, ev in ipairs(W.truth) do
+            leap = leap or (ev.kind == "cast" and ev.spell == 900070 and ev)
+        end
+        assert.is_truthy(leap)
+        assert.is_true(math.abs(leap.gcd - 1.5) < 1e-3)
+        assert.is_true(math.abs(leap.cd - 15) < 1e-3)
+    end)
+end)
+
 describe("the replay's casts: tags, items, pets, totems", function()
     local LOG = table.concat({
         "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",

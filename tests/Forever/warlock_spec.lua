@@ -44,6 +44,22 @@ local KIT = {
     summon_felhunter = { { 691 }, 1, 0, "spell" },
     -- no cost, cooldown or GCD row (DB2; wowsims: "no cast time, cost or cooldown")
     demonic_sacrifice = { { 18788 }, 0, 0, "off" },
+    -- the rest of the kit (coverage lane; the pin's spell rows): Fear, Howl of Terror, Banish, the wards and armors, the
+    -- curses, Inferno, Fel Domination (300 s, no GCD row)
+    fear = { { 5782, 6213, 6215 }, 0.15, 0, "spell" },
+    howl_of_terror = { { 5484, 17928 }, 200, 40, "spell" },
+    banish = { { 710, 18647 }, 200, 0, "spell" },
+    shadow_ward = { { 6229, 11739, 11740, 28610 }, 320, 30, "spell" },
+    inferno = { { 1122 }, 1, 3600, "spell" }, -- 100% of base mana (CostPct 100)
+    demon_skin = { { 687, 696 }, 120, 0, "spell" },
+    demon_armor = { { 706, 1086, 11733, 11734, 11735 }, 1580, 0, "spell" },
+    detect_invisibility = { { 132, 2970, 11743 }, 140, 0, "spell" },
+    curse_of_tongues = { { 1714, 11719 }, 110, 0, "spell" },
+    curse_of_exhaustion = { { 18223 }, 0.08, 0, "spell" },
+    fel_domination = { { 18708 }, 0, 300, "off" },
+    subjugate_demon = { { 1098, 11725, 11726 }, 700, 0, "spell" }, -- 3 s cast, a Soul Shard; 300 s is its duration
+    health_funnel = { { 755, 3698, 3699, 3700, 11693, 11694, 11695 }, 0, 0, "spell" }, -- health, not mana (unmodelled)
+    drain_mana = { { 5138, 6226, 11703, 11704 }, 310, 0, "spell" },
 }
 
 local function idsOf(a)
@@ -121,7 +137,7 @@ describe("Forever Warlock", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(29, n)
+        assert.are.equal(43, n)
         assert.are.equal("cooldowns", w.abilities.amplify_curse.toggle)
         for _, key in ipairs({
             "summon_imp",
@@ -298,9 +314,24 @@ describe("Forever Warlock", function()
     it("keeps one Curse and one Bane on the target, Amplify Curse spent by Agony and Weakness", function()
         local A = w.abilities
         for _, case in ipairs({
-            { "curse_of_the_elements", { "curse_of_recklessness", "curse_of_weakness" } },
-            { "curse_of_recklessness", { "curse_of_the_elements", "curse_of_weakness" } },
-            { "curse_of_weakness", { "curse_of_the_elements", "curse_of_recklessness", "amplify_curse" } },
+            {
+                "curse_of_the_elements",
+                { "curse_of_recklessness", "curse_of_weakness", "curse_of_tongues", "curse_of_exhaustion" },
+            },
+            {
+                "curse_of_recklessness",
+                { "curse_of_the_elements", "curse_of_weakness", "curse_of_tongues", "curse_of_exhaustion" },
+            },
+            {
+                "curse_of_weakness",
+                {
+                    "curse_of_the_elements",
+                    "curse_of_recklessness",
+                    "curse_of_tongues",
+                    "curse_of_exhaustion",
+                    "amplify_curse",
+                },
+            },
             { "bane_of_agony", { "bane_of_doom", "amplify_curse" } },
             { "bane_of_doom", { "bane_of_agony" } },
             { "corruption", {} },
@@ -473,12 +504,12 @@ describe("Forever Warlock", function()
         "registers the Warlock's remaining own auras (Soul Harvest, Bane of Havoc, demon and armor auras, channels)",
         function()
             local want = {
-                soul_harvest = { 1242853, 10 },
+                soul_harvest = { 1242853, 10, { 437032 } }, -- the talent's id: the Cooldown Manager links it
                 fel_domination = { 18708, 15 },
                 soul_link = { 19028, 3600, 25228 },
                 demonic_knowledge = { 412732, 3600 },
                 master_demonologist = { 23785, 3600 },
-                demon_armor = { 11735, 1800 },
+                demon_armor = { 11735, 1800, { 706, 1086, 11733, 11734 } },
                 blood_pact = { 11767, 3600 },
                 hellfire_channel = { 11684, 15 },
                 rain_of_fire_channel = { 11678, 8 },
@@ -492,6 +523,49 @@ describe("Forever Warlock", function()
             end
         end
     )
+
+    it("carries the ids the Cooldown Manager links on the coverage auras", function()
+        local want = {
+            bane_of_havoc = { 1225228, 1324473 },
+            aftermath = { 18118, 18119 },
+            fear = { 1324448, 1324451, 1324453 },
+            howl_of_terror = { 5484, 17928 },
+            death_coil = { 1324459 },
+            banish = { 1324462, 1324463 },
+            demon_skin = { 687, 696 },
+            detect_invisibility = { 132, 2970, 11743 },
+            shadow_ward = { 6229, 11739, 11740, 28610 },
+            subjugate_demon = { 1324468 },
+            curse_of_tongues = { 1714, 11719 },
+            curse_of_exhaustion = { 18223 },
+        }
+        for key, ids in pairs(want) do
+            assert.are.same(ids, idsOf(w.auras[key]), key)
+        end
+    end)
+
+    it("shortens a summon 5.5 s and halves its cost under Fel Domination, and spends the buff", function()
+        local A = w.abilities
+        local e = env({ master_summoner = 2 })
+        e.buff = buffs({ fel_domination = 1 })
+        assert.are.same({ 0.5, 0.1 }, {
+            near(ld.run(A.summon_imp.cast, e)),
+            near(ld.run(A.summon_succubus.spend, e)),
+        })
+        e = env({})
+        e.buff = buffs({ fel_domination = 1 })
+        assert.are.same({ 4.5, 0.4 }, {
+            near(ld.run(A.summon_imp.cast, e)),
+            near(ld.run(A.summon_imp.spend, e)),
+        }) -- 10 - 5.5 s; 0.8 x (1 - 0.5)
+        e = env({})
+        e.summonPet, e.dismissPet = function() end, function() end
+        ld.run(A.summon_imp.handler, e)
+        assert.are.equal("fel_domination", e.removed[1])
+        e = env({})
+        ld.run(A.fel_domination.handler, e)
+        assert.are.same({ "fel_domination" }, e.applied)
+    end)
 
     it("brands the target from Searing Pain, 2 charges a rank of Demonic Brand", function()
         local sp = w.abilities.searing_pain
@@ -545,9 +619,21 @@ describe("Forever Warlock", function()
         assert.is_nil(lt.spend)
     end)
 
-    it("channels Drain Life, Drain Soul, Wrack, Rain of Fire and Hellfire, unhasted; Wrack's debuff", function()
+    it("starts combat with Banish (a hostile target's)", function()
+        assert.is_true(w.abilities.banish.startsCombat)
+    end)
+
+    it("channels Drain Life, Drain Soul, Wrack, Rain of Fire, Hellfire and the funnel and drain, unhasted", function()
         local out = {}
-        for _, key in ipairs({ "drain_life", "drain_soul", "wrack", "rain_of_fire", "hellfire" }) do
+        for _, key in ipairs({
+            "drain_life",
+            "drain_soul",
+            "wrack",
+            "rain_of_fire",
+            "hellfire",
+            "health_funnel",
+            "drain_mana",
+        }) do
             local a = w.abilities[key]
             out[#out + 1] = { key, a.channeled, a.cast, a.tick_time }
             assert.is_nil(a.handler, key) -- a channel's handler never runs in Hekili's simulation
@@ -558,6 +644,8 @@ describe("Forever Warlock", function()
             { "wrack", true, 6, 1 },
             { "rain_of_fire", true, 8, 2 },
             { "hellfire", true, 15, 1 },
+            { "health_funnel", true, 10, 1 },
+            { "drain_mana", true, 5, 1 },
         }, out)
         for _, field in ipairs({ "now", "start" }) do
             local e = env()
@@ -602,12 +690,12 @@ describe("Forever Warlock", function()
             for _, field in ipairs({ "now", "handler" }) do
                 local e = run(field)
                 assert.are.same(
-                    { { "imp" }, { "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" } },
+                    { { "imp" }, { "fel_domination", "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" } },
                     { e.summoned, e.removed },
                     field
                 )
                 e = run(field, { demonic_pact = 1 })
-                assert.are.same({ { "imp" }, { "burning_shadow" } }, { e.summoned, e.removed }, field)
+                assert.are.same({ { "imp" }, { "fel_domination", "burning_shadow" } }, { e.summoned, e.removed }, field)
                 -- the simulation dismisses only the demon out first (wowsims summon.go: the same demon included)
                 assert.are.same({ "-succubus", "imp" }, run(field, nil, "succubus").summoned, field)
                 assert.are.same({ "-imp", "imp" }, run(field, nil, "imp").summoned, field)
