@@ -806,9 +806,6 @@ describe("Forever Warlock through the engine", function()
         ctl.now, ctl.combat = t + 1, true
         H.Fire("PLAYER_REGEN_DISABLED")
         assert.is_true(headless.cycle(H, t + 1.1))
-        ctl.now, ctl.auras.player.HELPFUL[1] = t + 20.5, nil -- it ran out at t + 20
-        H.Fire("UNIT_AURA", "player")
-        assert.is_true(headless.cycle(H, t + 20.6))
         local _, w = character()
         w.game.known[11689] = true
         local function tap(at)
@@ -822,6 +819,9 @@ describe("Forever Warlock through the engine", function()
             return e.gained[1][1]
         end
         assert.are.equal(822, tap(t + 10)) -- (424 + 261) x 1.2
+        ctl.now, ctl.auras.player.HELPFUL[1] = t + 20.5, nil -- it ran out at t + 20
+        H.Fire("UNIT_AURA", "player")
+        assert.is_true(headless.cycle(H, t + 20.6))
         assert.are.equal(774, tap(t + 20.6)) -- (424 + 221) x 1.2: the 40 went with the buff
         assert.are.same({}, H.errors)
     end)

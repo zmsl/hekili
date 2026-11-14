@@ -38,12 +38,13 @@ local function healthUnknown(t, event)
 end
 
 -- The stat split (owner rule L971; accuracy-085 item 4): a pack's player aura declares what it does to the spell haste
--- (`spellHaste`, a multiplier) or to UnitStat (`stats`, flat points by index: a number or a function of the talent ranks,
--- run in the `now` context at the pull; `statsPct`, a multiplier by index, after the flat parts as the client applies
--- them). At the pull the belief splits each out-of-combat read into a base and the parts of the declared auras up at
--- the READ's time (stat reads land directly, aura reads fold later: judging at the read's time neither divides out a
--- buff the read never held nor misses one it did); in the fight the value is composed from its own aura records, so a
--- fall removes exactly its part and a gain adds it. Out of combat, and after any newer plain read, the read stands.
+-- (`spellHaste`, a multiplier) or to UnitStat (`stats`, flat points by index: a number, a function of the talent ranks
+-- run in the `now` context at the pull, or a table by spell ID: the rank the player walk last found the aura under, at
+-- the pull, so another player's buff counts at its own rank; `statsPct`, a multiplier by index, after the flat parts
+-- as the client applies them). At the pull the belief splits each out-of-combat read into a base and the parts of the
+-- declared auras up at the READ's time (stat reads land directly, aura reads fold later: judging at the read's time
+-- neither divides out a buff the read never held nor misses one it did); in the fight the value is composed from its
+-- own aura records, so a fall removes exactly its part and a gain adds it. Out of combat, and after any newer plain read, the read stands.
 -- Quantity 0 is the spell haste (a multiplier, 1 + percent / 100), 1-5 UnitStat's indices (I.STATS slots 1-5).
 local P = { n = 0, j = {}, q = {}, def = {}, add = {}, mul = {} }
 local split = {} -- [q] = a part is declared for it
@@ -93,6 +94,10 @@ local function splitAtPull(t)
         if type(d) == "function" then
             local v, ok = I.Eval(d, t, true)
             P.add[k] = ok and type(v) == "number" and v == v and v or 0 -- v == v: not NaN
+        elseif type(d) == "table" then
+            -- shortcut: an aura no walk has found yet (only our cast or the Cooldown Manager opened it) counts 0, and a
+            -- rank change mid-fight is not followed; upgrade if either shows in game.
+            P.add[k] = d[I.auras.sid[P.j[k]]] or 0
         end
     end
     if split[0] then
@@ -139,7 +144,7 @@ I.OnBuild(function(def, now)
         end
         for q = 1, 5 do
             local v = type(st) == "table" and st[q]
-            if type(v) == "number" or type(v) == "function" then
+            if type(v) == "number" or type(v) == "function" or type(v) == "table" then
                 part(j, q, v, 1)
             end
             local m = type(pct) == "table" and pct[q]

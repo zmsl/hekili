@@ -124,10 +124,6 @@ local MARK_OF_THE_WILD = { 1126, 5232, 6756, 5234, 8907, 9884, 9885 }
 local MARK_OF_THE_WILD_COST = { 20, 50, 100, 160, 240, 340, 445 }
 local GIFT_OF_THE_WILD = { 21849, 21850 }
 local GIFT_OF_THE_WILD_COST = { 900, 1200 }
--- Their Spirit (every stat) by rank (wowsims spells_auto_gen.go: aura 29, misc -1; Mark rank 1 is armor only): the
--- auras' part of Spirit (the stat split, L971). Improved Mark of the Wild is not in Forever's tree.
-local MARK_OF_THE_WILD_STAT = { 0, 3, 5, 8, 11, 14, 16 }
-local GIFT_OF_THE_WILD_STAT = { 14, 16 }
 local THORNS = { 467, 782, 1075, 8914, 9756, 9910 }
 local THORNS_COST = { 35, 60, 105, 170, 240, 320 }
 local HEALING_TOUCH = { 5185, 5186, 5187, 5188, 5189, 6778, 8903, 9758, 9888, 9889, 25297 }
@@ -565,19 +561,7 @@ spec:RegisterAuras({
         tick_time = 1,
         max_stack = 1,
     },
-    -- shortcut: another Druid's buff counts at our known rank (the first rank's before one is known); upgrade if the
-    -- aura's applied rank becomes readable.
-    gift_of_the_wild = {
-        id = 21849,
-        copy = rest(GIFT_OF_THE_WILD),
-        duration = 3600,
-        max_stack = 1,
-        stats = {
-            [5] = function()
-                return byRank(GIFT_OF_THE_WILD_STAT, GIFT_OF_THE_WILD)
-            end,
-        },
-    },
+    -- mark_of_the_wild and gift_of_the_wild are Hekili_Shared/Shared/Auras.lua's: every class carries them (L971).
     growl = {
         id = 6795,
         duration = 3,
@@ -616,18 +600,6 @@ spec:RegisterAuras({
         duration = 15,
         tick_time = 3,
         max_stack = 5,
-    },
-    mark_of_the_wild = {
-        id = 1126,
-        -- 1291335/1310503: Forever's own rank 7 (level 60) beside 9885, same name
-        copy = { 5232, 6756, 5234, 8907, 9884, 9885, 1291335, 1310503 },
-        duration = 3600,
-        max_stack = 1,
-        stats = {
-            [5] = function()
-                return byRank(MARK_OF_THE_WILD_STAT, MARK_OF_THE_WILD)
-            end,
-        },
     },
     -- Maul queued on the next swing (C_Spell.IsCurrentSpell, applied in reset_precast), a full swing long.
     maul = {

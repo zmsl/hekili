@@ -346,8 +346,9 @@ is never divided again; out of combat (or for a fall before the pull) nothing is
 it. One multiplier for every hand; the sim's own forecast of a haste cast inside its window is not rescaled.
 
 **A buff's part of a stat (the stat split, L971).** `RegisterAura{ spellHaste = <multiplier> }`, `stats = { [index] =
-<points or function> }` and `statsPct = { [index] = <multiplier> }` (UnitStat's indices; a function runs in the `now`
-context at the pull, so a value follows the talent ranks) declare what a player aura does to the spell haste and to
+<points, function or { [spellID] = points }> }` and `statsPct = { [index] = <multiplier> }` (UnitStat's indices; a
+function runs in the `now` context at the pull, so a value follows the talent ranks; a table by spell ID takes the rank
+the player aura walk last found the aura under, so another player's buff counts at its own rank) declare what a player aura does to the spell haste and to
 UnitStat's effective value. Both are secret in combat. At the pull (`Families/Player.lua`) the belief splits the last
 out-of-combat read into a base and the parts of the declared auras that were up at the read's own time; in the fight
 it answers (base + the flat parts up) x the percent parts up (haste: base x the multipliers up) from its own aura

@@ -45,7 +45,7 @@ local DROPPED = {
 local STUBS = { "voidbinding", "voidform", "shadowform", "adrenaline_rush" }
 -- Keys `all` gave up to the class or race file that registers them.
 local OWNERS = {
-    mark_of_the_wild = "Hekili_Druid/Druid.lua",
+    mark_of_the_wild = "Hekili_Shared/Shared/Auras.lua", -- back from the Druid pack: every class carries it (L971)
     battle_shout = "Hekili_Warrior/Warrior.lua",
     berserking = "Hekili_Shared/Races/Troll.lua",
     blood_fury = "Hekili_Shared/Races/Orc.lua",
@@ -183,7 +183,10 @@ describe("shared content", function()
             "dispellable_disease",
             "dispellable_magic",
             "dispellable_poison",
+            "divine_spirit",
+            "gift_of_the_wild",
             "main_hand_enchant",
+            "mark_of_the_wild",
             "off_hand_enchant",
             "power_infusion",
             "revelation_1248808",
@@ -206,6 +209,30 @@ describe("shared content", function()
             assert.are.same({ id, 15, 1 }, { a.id, a.duration, a.max_stack })
         end
         assert.are.same({ 10060, 15 }, { all.auras.power_infusion.id, all.auras.power_infusion.duration })
+        -- The Spirit buffs another class puts on us (the stat split, L971): every rank's ID (the DB2's families,
+        -- Forever's own Mark rank 7 IDs included), each one's Spirit by its own ID (wowsims spells_auto_gen.go aura 29).
+        local function ids(a)
+            local out = { a.id, unpack(a.copy) }
+            table.sort(out)
+            return out
+        end
+        local ds, mark, gift = all.auras.divine_spirit, all.auras.mark_of_the_wild, all.auras.gift_of_the_wild
+        assert.are.same({ 14752, 14818, 14819, 27681, 27841 }, ids(ds))
+        assert.are.same({ 1126, 5232, 5234, 6756, 8907, 9884, 9885, 1291335, 1310503 }, ids(mark))
+        assert.are.same({ 21849, 21850 }, ids(gift))
+        assert.are.same({ [14752] = 17, [14818] = 23, [14819] = 33, [27841] = 40, [27681] = 40 }, ds.stats[5])
+        assert.are.same({ 3, 5, 8, 11, 14, 16, 16, 16 }, {
+            mark.stats[5][5232],
+            mark.stats[5][6756],
+            mark.stats[5][5234],
+            mark.stats[5][8907],
+            mark.stats[5][9884],
+            mark.stats[5][9885],
+            mark.stats[5][1291335],
+            mark.stats[5][1310503],
+        })
+        assert.is_nil(mark.stats[5][1126]) -- rank 1 is armor only
+        assert.are.same({ [21849] = 14, [21850] = 16 }, gift.stats[5])
         assert.are.same(
             { 0, 1 },
             { all.auras.main_hand_enchant.weaponEnchant, all.auras.off_hand_enchant.weaponEnchant }

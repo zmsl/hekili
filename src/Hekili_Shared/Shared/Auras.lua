@@ -3,7 +3,8 @@
 -- put on the player, which the player's aura walk reads in combat (lust, Power Infusion, dispellable
 -- debuffs), the per-school lockouts, and four id-less stubs for the keys core still reads by name. Lusts and lockouts
 -- Forever's DB2 lacks, the target-side reads (a target's auras are secret in combat, but Thunderfury's slow, which a priority names) and the absorbs are left out (spec §4.1);
--- class buffs live in their class files and racials in the race packs.
+-- class buffs live in their class files, except the Spirit buffs every class carries from others (below), and racials
+-- in the race packs.
 
 local Client = Hekili.Client
 local C_LossOfControl = Client.C_LossOfControl
@@ -113,6 +114,45 @@ local auras = {
         max_stack = 1,
         shared = "player",
         dot = "buff",
+    },
+
+    -- The Spirit buffs another class puts on the player, here so every class's belief knows them (the stat split, L971:
+    -- a fall in combat takes its Spirit out of Life Tap and the Spirit regen), each one's Spirit by the aura's own spell
+    -- ID, which names its rank (wowsims spells_auto_gen.go, aura 29 A_MOD_STAT): Divine Spirit misc 4, +17/23/33/40,
+    -- Prayer of Spirit +40; Mark of the Wild misc -1 (every stat), +3/5/8/11/14/16 at ranks 2-7 (rank 1 is armor only),
+    -- Gift of the Wild +14/16. The Priest and Druid packs cast them (their abilities apply these keys).
+    divine_spirit = {
+        id = 14752,
+        copy = { 14818, 14819, 27841, 27681 }, -- 27681: Prayer of Spirit
+        duration = 3600,
+        max_stack = 1,
+        stats = { [5] = { [14752] = 17, [14818] = 23, [14819] = 33, [27841] = 40, [27681] = 40 } },
+    },
+    mark_of_the_wild = {
+        id = 1126,
+        -- 1291335/1310503: Forever's own rank 7 (level 60) beside 9885, same name; not in wowsims's data: assumed 9885's
+        copy = { 5232, 6756, 5234, 8907, 9884, 9885, 1291335, 1310503 },
+        duration = 3600,
+        max_stack = 1,
+        stats = {
+            [5] = {
+                [5232] = 3,
+                [6756] = 5,
+                [5234] = 8,
+                [8907] = 11,
+                [9884] = 14,
+                [9885] = 16,
+                [1291335] = 16,
+                [1310503] = 16,
+            },
+        },
+    },
+    gift_of_the_wild = {
+        id = 21849,
+        copy = { 21850 },
+        duration = 3600,
+        max_stack = 1,
+        stats = { [5] = { [21849] = 14, [21850] = 16 } },
     },
 
     -- Thunderfury's slow (the weapon's proc; no cast of ours applies it, so it reads up only from the client: a target's

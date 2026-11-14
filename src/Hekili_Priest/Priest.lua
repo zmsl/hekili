@@ -386,17 +386,7 @@ spec:RegisterAuras({
     abolish_disease = { id = 552, duration = 20, max_stack = 1 },
     mind_soothe = { id = 453, copy = { 8192, 10953 }, duration = 15, max_stack = 1 },
     shadow_protection = { id = 976, copy = { 10957, 10958, 27683 }, duration = 600, max_stack = 1 },
-    -- Spirit +17/23/33/40 by rank, Prayer of Spirit (27681) +40 (wowsims spells_auto_gen.go: aura 29, misc 4): its part
-    -- of Spirit (the stat split, L971) at our own known rank.
-    -- shortcut: another Priest's buff counts at our known rank (the first rank's before one is known); upgrade if the
-    -- aura's applied rank becomes readable.
-    divine_spirit = {
-        id = 14752,
-        copy = { 14818, 14819, 27841, 27681 },
-        duration = 3600,
-        max_stack = 1,
-        stats = { [5] = byRank({ 17, 23, 33, 40 }, { 14752, 14818, 14819, 27841 }) },
-    },
+    -- divine_spirit (Prayer of Spirit's too) is Hekili_Shared/Shared/Auras.lua's: every class carries it (L971).
     blessed_recovery = { id = 27811, copy = { 27813 }, duration = 6, max_stack = 1 },
     inspiration = { id = 14892, copy = { 14893 }, duration = 15, max_stack = 1 },
     spirit_of_redemption = { id = 20711, copy = { 27827 }, duration = 15, max_stack = 1 },

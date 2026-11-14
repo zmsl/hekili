@@ -42,6 +42,7 @@ local U = {
     haste = {}, -- by aura: its RegisterAura `swingHaste` (the swing speed's multiplier while up), 0 none
     hasteOn = {}, -- by aura: its `swingHaste` gain was applied and its fall not yet (pairs every gain with one fall)
     firstWalk = {}, -- by unit: the time of its first clean walk (Sources/Auras.lua), 0 none yet
+    sid = {}, -- by player aura: the spell ID the player walk last found it under (its rank: a `stats` by ID), 0 none
     openFold = {}, -- by unit and aura: the I.folds of its last Cooldown Manager open (I.CastAura), 0 none
     -- by unit and aura: its last fall (I.AuraAsOf): when, and the fallen application's applied time, expiry and stacks
     fellAt = {},
@@ -86,6 +87,7 @@ I.OnBuild(function(def, now)
         local haste = rawget(auras[j], "swingHaste")
         U.haste[j] = type(haste) == "number" and haste > 0 and haste or 0
         U.hasteOn[j] = false
+        U.sid[j] = 0
         if auras[j].key ~= nil then
             U.byKey[auras[j].key] = j
         end

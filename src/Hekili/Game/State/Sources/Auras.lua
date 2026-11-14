@@ -227,6 +227,9 @@ local function walk(api, u, unit, t)
                         end
                     end
                     Direct(Obs.Read, t, k, remaining, ReadOf.Aura + stacks * I.AURA_STACK)
+                    if u == 1 then
+                        U.sid[j] = id -- its rank, for a `stats` part by spell ID (Families/Player.lua)
+                    end
                     U.harm[u][j] = filter == "HARMFUL"
                 end
             end
