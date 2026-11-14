@@ -327,6 +327,38 @@ describe("the world's press", function()
         assert.is_not_nil(us.avoidAt.DODGE)
     end)
 
+    it(
+        "a queued strike that crits (`crits`) shows its crit doubled; one without never crits; our `struck` sees it",
+        function()
+            local function strikes(crits)
+                setup()
+                mob.avoid = { miss = 0, dodge = 0, parry = 0 }
+                W.crit = 1
+                local seen = {}
+                us.struck = function(_, act, flag)
+                    seen[#seen + 1] = { act, flag }
+                end
+                behaviours.melee({ land = observer.lag(), phase = { 2, 9 } })(W, us)
+                W.run(1)
+                local p =
+                    { spell = fs.SPENDER_B, offGcd = true, onNextSwing = true, amount = { 70, 70 }, crits = crits }
+                assert.is_true(W.press(us, "spender_b", p))
+                W.run(2.5)
+                local strike
+                for _, ev in ipairs(W.truth) do
+                    strike = ev.kind == "strike" and ev or strike
+                end
+                return { strike.act, strike.flag, strike.amount }, seen
+            end
+            local row, seen = strikes(true)
+            assert.are.same({ "WOUND", "CRITICAL", 140 }, row)
+            assert.are.same({ { "WOUND", "CRITICAL" } }, seen)
+            row, seen = strikes(nil)
+            assert.are.same({ "WOUND", "", 70 }, row)
+            assert.are.same({ { "WOUND", "" } }, seen)
+        end
+    )
+
     it("crits an instant hit at world.CRIT, doubled", function()
         setup()
         mob.avoid = { miss = 0, dodge = 0, parry = 0 }
