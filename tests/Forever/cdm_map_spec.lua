@@ -161,6 +161,8 @@ local GAPS = {
     WARLOCK = {
         [199871] = { "Curses", "ambiguous, cat 0; auras curse_of_the_elements,curse_of_recklessness,curse_of_weakness; abilities curse_of_the_elements,curse_of_recklessness,curse_of_weakness; no aura has 11719,1714,18223; lane core: one item for a family of auras, ambiguous by the map's one-aura rule" },
         [199776] = { "Curses", "ambiguous, cat 2; auras curse_of_recklessness,curse_of_the_elements,curse_of_weakness; abilities curse_of_recklessness,curse_of_the_elements,curse_of_weakness; no aura has 18223,1714,11719; lane core: one item for a family of auras, ambiguous by the map's one-aura rule" },
+        [199820] = { "Nightfall", "ambiguous, cat 2; auras shadow_trance; no aura has 18094; lane cov-warlock: the talent ID on the aura makes the wowsims translator emit `talent.nightfall.enabled&` in the generated priorities (priorities must not change): controller's call" },
+        [199822] = { "Decimation", "unmapped, cat 2; no aura has any of 440870; lane cov-warlock: the same translator side effect (`talent.decimation.enabled|`)" },
         [199821] = { "Demonic Sacrifice", "ambiguous, cat 2; auras fel_energy,burning_shadow,fel_stamina,touch_of_fire; lane core: one item for a family of auras, ambiguous by the map's one-aura rule" },
     },
     WARRIOR = {

@@ -496,8 +496,6 @@ describe("Forever Warlock", function()
 
     it("carries the ids the Cooldown Manager links on the coverage auras", function()
         local want = {
-            shadow_trance = { 17941, 18094 }, -- Nightfall's
-            decimation = { 440873, 440870 },
             bane_of_havoc = { 1225228, 1324473 },
             aftermath = { 18118, 18119 },
             fear = { 1324448, 1324451, 1324453 },

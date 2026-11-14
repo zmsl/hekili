@@ -334,8 +334,8 @@ spec:RegisterAuras({
     -- The player's. The procs (their rolls unseen; the player aura walk reads them where plain, in combat the glow of
     -- the spell they light: `overlay`, needs in-game check): Nightfall's next Shadow Bolt instant; Decimation's
     -- faster Soul Fire with no shard (below 35% target health).
-    shadow_trance = { id = 17941, copy = { 18094 }, duration = 10, max_stack = 1, overlay = 686 }, -- 18094: Nightfall's
-    decimation = { id = 440873, copy = { 440870 }, duration = 10, max_stack = 1, overlay = 6353 }, -- 440870: the talent's
+    shadow_trance = { id = 17941, duration = 10, max_stack = 1, overlay = 686 },
+    decimation = { id = 440873, duration = 10, max_stack = 1, overlay = 6353 },
     amplify_curse = { id = 18288, duration = 30, max_stack = 1 },
     -- The Doomcaller's Attire bonuses' hidden auras: tracked so set_bonus.doomcaller_* reads them.
     doomcaller_3pc = { id = 26116, duration = 3600, max_stack = 1 },
