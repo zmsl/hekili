@@ -875,6 +875,23 @@ I.On(Obs.Landed, function(o)
     end
 end)
 
+--- (L972 option A, the presence veto) Whether the latest cast, ability `a` at `at`, wrote a target aura that was down
+--- before it and that the presence router has read UP since (Sources/Auras.lua's upAt): the cast landed, so no swing's
+--- wound gives its tied avoid back (Events/Rows.lua). False for any other cast (its undo is gone anyway). Allocates
+--- nothing.
+function I.UndoLit(a, at)
+    if a ~= undoA or at ~= undoT or I.curSwapN ~= undoSwap then
+        return false
+    end
+    local up = I.auraUpAt
+    for k = 1, undoN do
+        if undoE[k] <= at and (up[I.AURA_UNIT + undoJ[k]] or 0) >= at then
+            return true
+        end
+    end
+    return false
+end
+
 -- Our cast's own avoid (Events/Rows.lua): the latest cast, when it is the one avoided, loses the target auras its `now`
 -- wrote (each back as it was, when the target is still the cast's) and gets back the ability's `refundOnAvoid` share of
 -- the cost it paid; both `modelled` at the outcome. Any other cast's avoid changes nothing (its effects are no longer

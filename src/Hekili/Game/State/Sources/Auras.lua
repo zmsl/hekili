@@ -59,6 +59,7 @@ local KEY = {} -- aura index -> its key, for the Snapshot lines
 local BY_CAST, BY_CDM, BY_WALK = 1, 2, 3
 local ours, oursAp, upAt = {}, {}, {}
 I.auraOurs = ours
+I.auraUpAt = upAt -- read by Families/Now.lua's I.UndoLit (the L972 hand-back's presence veto)
 -- Rules 3-4 (C2, decision 112 as amended by the owner's rule, L310: trust the belief's duration). A CDM UP with no model
 -- record behind it opens one at once: its registered duration (DUR[j], -1 none) from max(fact.t, applied) when that
 -- outlasts HOLD, else LONG. A record believed up is never extended: at the model's expiry it goes down on its own;

@@ -642,6 +642,8 @@ local function kindWound(t, g)
     end
     if n ~= 1 or ownDue(t, g) then
         return
+    elseif hold > 0 and I.UndoLit and I.UndoLit(tieAb[hold], tieAt[hold]) then
+        tieP[hold], L.tieVeto = 0, L.tieVeto + 1 -- presence read its debuff UP since the cast: it landed (veto)
     elseif hold > 0 then
         handBack(hold)
     elseif T.state[last] == T.OPEN then
