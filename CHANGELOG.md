@@ -15,6 +15,10 @@
 - Rogue: Relentless Strikes now counts the energy it gives on average at every rank and combo-point count, not only at 5/5 with 5 points. Feint, Gouge, Kidney Shot, Cheap Shot, Sap, Blind, Evasion, Sprint and Distract are now known to the addon, so using one by hand spends its energy and starts its cooldown in Hekili's forecast. Elusiveness, Endurance, Camouflage, Dirty Tricks and Dirty Deeds change their cooldowns and costs as the talents do. Preparation now finishes the cooldown of every other Rogue ability, as it does in the game.
 - Priest: the heals and utility spells (Flash Heal, Heal, Greater Heal, Renew, Prayer of Healing, Prayer of Mending, Fade, Psychic Scream, dispels and others) are now known to the addon, so casting one by hand spends its mana and starts its cooldown in Hekili's forecast. Soul Warding, Improved Healing, Divine Fury, Improved Mana Burn and Improved Psychic Scream now change those spells' costs, cast times and cooldowns as the talents do.
 - The options' Priorities list now opens on your current spec, and marks the priority that is active with a green check.
+- Mana regeneration while casting now follows your talent ranks instead of your spec: Meditation and Mindfulness (17/33/50%), Bestial Discipline (25/50%), Reverence (15/30%) and Arcane Meditation at 3/3. Mindfulness now gives its full 50% at 3/3.
+- Hunter: Rapid Recuperation now counts for 15 seconds after each Serpent Sting (25% or 50% of your Spirit regeneration while casting, by rank).
+- Priest: with 5/5 Spirit Tap, your Spirit and mana regeneration while casting rise for 15 seconds after you kill an enemy that gives experience. Not in dungeons or raids, where the game hides who made the kill.
+- Warlock: with Soul Harvest, your mana regeneration rises for 10 seconds after you kill an enemy that gives experience while your Drain Soul is on it. Not in dungeons or raids, where the game hides who made the kill.
 
 ### Fixed
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
