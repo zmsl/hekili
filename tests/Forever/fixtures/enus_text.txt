@@ -15634,7 +15634,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.list_name	values.multi_t
 options.packs.affliction.Affliction (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.affliction.Affliction (wowsims.com).lists.list_name	values.single_multi_target_curse_logic	single_multi_target_curse_logic
 options.packs.affliction.Affliction (wowsims.com).lists.list_name	values.single_target_dot_logic	single_target_dot_logic
-options.packs.affliction.Affliction (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.affliction.Affliction (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.affliction.Affliction (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.affliction.Affliction (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.affliction.Affliction (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -15912,7 +15912,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.listName	desc	Select the ac
 options.packs.affliction.SM Ruin (wowsims.com).lists.listName	name	Action List
 options.packs.affliction.SM Ruin (wowsims.com).lists.listName	values.default	|cFF00B4FFdefault|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.list_name	name	Action List
-options.packs.affliction.SM Ruin (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.affliction.SM Ruin (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.affliction.SM Ruin (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.affliction.SM Ruin (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.affliction.SM Ruin (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -16224,7 +16224,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.listName	values.precombat	|cFF00
 options.packs.arcane.Arcane (wowsims.com).lists.list_name	name	Action List
 options.packs.arcane.Arcane (wowsims.com).lists.list_name	values.evocation	evocation
 options.packs.arcane.Arcane (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.arcane.Arcane (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.arcane.Arcane (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.arcane.Arcane (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.arcane.Arcane (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.arcane.Arcane (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -16608,7 +16608,7 @@ options.packs.arms.Arms (wowsims.com).lists.list_name	values.pre_pull_move	pre_p
 options.packs.arms.Arms (wowsims.com).lists.list_name	values.pre_pull_stance	pre_pull_stance
 options.packs.arms.Arms (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.arms.Arms (wowsims.com).lists.list_name	values.sunder_armor	sunder_armor
-options.packs.arms.Arms (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.arms.Arms (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.arms.Arms (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.arms.Arms (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.arms.Arms (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -16958,7 +16958,7 @@ options.packs.assassination.Assassination (wowsims.com).lists.listName	values.de
 options.packs.assassination.Assassination (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.assassination.Assassination (wowsims.com).lists.list_name	name	Action List
 options.packs.assassination.Assassination (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.assassination.Assassination (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.assassination.Assassination (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.assassination.Assassination (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.assassination.Assassination (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.assassination.Assassination (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -17321,7 +17321,7 @@ options.packs.balance.Balance (wowsims.com).lists.listName	values.default	|cFF00
 options.packs.balance.Balance (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.balance.Balance (wowsims.com).lists.list_name	name	Action List
 options.packs.balance.Balance (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.balance.Balance (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.balance.Balance (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.balance.Balance (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.balance.Balance (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.balance.Balance (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -17655,7 +17655,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.listName	values.de
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.list_name	name	Action List
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -17895,7 +17895,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.listName	va
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.list_name	name	Action List
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -18241,7 +18241,7 @@ options.packs.combat.Combat (wowsims.com).lists.listName	values.default	|cFF00B4
 options.packs.combat.Combat (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.combat.Combat (wowsims.com).lists.list_name	name	Action List
 options.packs.combat.Combat (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.combat.Combat (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.combat.Combat (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.combat.Combat (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.combat.Combat (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.combat.Combat (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -18592,7 +18592,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.list_name	values.multi_t
 options.packs.demonology.Demonology (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.demonology.Demonology (wowsims.com).lists.list_name	values.single_multi_target_curse_logic	single_multi_target_curse_logic
 options.packs.demonology.Demonology (wowsims.com).lists.list_name	values.single_target_dot_logic	single_target_dot_logic
-options.packs.demonology.Demonology (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.demonology.Demonology (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.demonology.Demonology (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.demonology.Demonology (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.demonology.Demonology (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -18880,7 +18880,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	values.multi
 options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	values.single_multi_target_curse_logic	single_multi_target_curse_logic
 options.packs.demonology.Shadow Brand (wowsims.com).lists.list_name	values.single_target_dot_logic	single_target_dot_logic
-options.packs.demonology.Shadow Brand (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.demonology.Shadow Brand (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.demonology.Shadow Brand (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -19241,7 +19241,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.list_name	values.multi
 options.packs.destruction.Destruction (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.destruction.Destruction (wowsims.com).lists.list_name	values.single_multi_target_curse_logic	single_multi_target_curse_logic
 options.packs.destruction.Destruction (wowsims.com).lists.list_name	values.single_target_dot_logic	single_target_dot_logic
-options.packs.destruction.Destruction (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.destruction.Destruction (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.destruction.Destruction (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.destruction.Destruction (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.destruction.Destruction (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -19603,7 +19603,7 @@ options.packs.discipline.Smite (wowsims.com).lists.listName	values.default	|cFF0
 options.packs.discipline.Smite (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.discipline.Smite (wowsims.com).lists.list_name	name	Action List
 options.packs.discipline.Smite (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.discipline.Smite (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.discipline.Smite (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.discipline.Smite (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.discipline.Smite (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.discipline.Smite (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -19935,7 +19935,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.listName	values.default	|c
 options.packs.elemental.Elemental (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.elemental.Elemental (wowsims.com).lists.list_name	name	Action List
 options.packs.elemental.Elemental (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.elemental.Elemental (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.elemental.Elemental (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.elemental.Elemental (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.elemental.Elemental (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.elemental.Elemental (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -20271,7 +20271,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.list_name	name	Action 
 options.packs.enhancement.Enhancement (wowsims.com).lists.list_name	values.aoe_rotation	aoe_rotation
 options.packs.enhancement.Enhancement (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.list_name	values.single_target_rotation	single_target_rotation
-options.packs.enhancement.Enhancement (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.enhancement.Enhancement (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.enhancement.Enhancement (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.enhancement.Enhancement (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.enhancement.Enhancement (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -20643,7 +20643,7 @@ options.packs.feral.Feral (wowsims.com).lists.list_name	name	Action List
 options.packs.feral.Feral (wowsims.com).lists.list_name	values.bear	bear
 options.packs.feral.Feral (wowsims.com).lists.list_name	values.bear_precombat	bear_precombat
 options.packs.feral.Feral (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.feral.Feral (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.feral.Feral (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.feral.Feral (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.feral.Feral (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.feral.Feral (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -20954,7 +20954,7 @@ options.packs.fire.Fire (wowsims.com).lists.listName	values.precombat	|cFF00B4FF
 options.packs.fire.Fire (wowsims.com).lists.list_name	name	Action List
 options.packs.fire.Fire (wowsims.com).lists.list_name	values.evocation	evocation
 options.packs.fire.Fire (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.fire.Fire (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.fire.Fire (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.fire.Fire (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.fire.Fire (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.fire.Fire (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -21193,7 +21193,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.listName	values.precombat	|cFF0
 options.packs.fire.Frostfire (wowsims.com).lists.list_name	name	Action List
 options.packs.fire.Frostfire (wowsims.com).lists.list_name	values.evocation	evocation
 options.packs.fire.Frostfire (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.fire.Frostfire (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.fire.Frostfire (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.fire.Frostfire (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.fire.Frostfire (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.fire.Frostfire (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -21497,7 +21497,7 @@ options.packs.frost.Frost (wowsims.com).lists.list_name	name	Action List
 options.packs.frost.Frost (wowsims.com).lists.list_name	values.aoe	aoe
 options.packs.frost.Frost (wowsims.com).lists.list_name	values.mana_tools	mana_tools
 options.packs.frost.Frost (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.frost.Frost (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.frost.Frost (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.frost.Frost (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.frost.Frost (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.frost.Frost (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -21873,7 +21873,7 @@ options.packs.fury.Fury (wowsims.com).lists.list_name	values.overpower_weaving	o
 options.packs.fury.Fury (wowsims.com).lists.list_name	values.pre_pull_move	pre_pull_move
 options.packs.fury.Fury (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.fury.Fury (wowsims.com).lists.list_name	values.sunder_armor	sunder_armor
-options.packs.fury.Fury (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.fury.Fury (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.fury.Fury (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.fury.Fury (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.fury.Fury (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -22252,7 +22252,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.list_name	name	Action List
 options.packs.guardian.Guardian (wowsims.com).lists.list_name	values.cat	cat
 options.packs.guardian.Guardian (wowsims.com).lists.list_name	values.cat_precombat	cat_precombat
 options.packs.guardian.Guardian (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.guardian.Guardian (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.guardian.Guardian (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.guardian.Guardian (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.guardian.Guardian (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.guardian.Guardian (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -22582,7 +22582,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.listName	values.defa
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.list_name	name	Action List
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -22821,7 +22821,7 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.listName	valu
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.list_name	name	Action List
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -23310,7 +23310,7 @@ options.packs.protection.Protection (wowsims.com).lists.listName	values.precomba
 options.packs.protection.Protection (wowsims.com).lists.list_name	name	Action List
 options.packs.protection.Protection (wowsims.com).lists.list_name	values.cd_racials	cd_racials
 options.packs.protection.Protection (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.protection.Protection (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.protection.Protection (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.protection.Protection (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.protection.Protection (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.protection.Protection (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -23648,7 +23648,7 @@ options.packs.retribution.Holy Shock (wowsims.com).lists.list_name	values.activa
 options.packs.retribution.Holy Shock (wowsims.com).lists.list_name	values.cast_assigned_judgement	cast_assigned_judgement
 options.packs.retribution.Holy Shock (wowsims.com).lists.list_name	values.cast_selected_seal	cast_selected_seal
 options.packs.retribution.Holy Shock (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.retribution.Holy Shock (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.retribution.Holy Shock (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.retribution.Holy Shock (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.retribution.Holy Shock (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.retribution.Holy Shock (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -23915,7 +23915,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.list_name	values.conse
 options.packs.retribution.Retribution (wowsims.com).lists.list_name	values.exorcism	exorcism
 options.packs.retribution.Retribution (wowsims.com).lists.list_name	values.move_to_melee	move_to_melee
 options.packs.retribution.Retribution (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.retribution.Retribution (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.retribution.Retribution (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.retribution.Retribution (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.retribution.Retribution (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.retribution.Retribution (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -24280,7 +24280,7 @@ options.packs.shadow.Shadow (wowsims.com).lists.listName	values.default	|cFF00B4
 options.packs.shadow.Shadow (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.shadow.Shadow (wowsims.com).lists.list_name	name	Action List
 options.packs.shadow.Shadow (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.shadow.Shadow (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.shadow.Shadow (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.shadow.Shadow (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.shadow.Shadow (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.shadow.Shadow (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -24680,7 +24680,7 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.listName	values.default	|cFF
 options.packs.subtlety.Subtlety (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.list_name	name	Action List
 options.packs.subtlety.Subtlety (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.subtlety.Subtlety (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.subtlety.Subtlety (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.subtlety.Subtlety (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.subtlety.Subtlety (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.subtlety.Subtlety (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -25006,7 +25006,7 @@ options.packs.survival.Survival (wowsims.com).lists.listName	values.default	|cFF
 options.packs.survival.Survival (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.survival.Survival (wowsims.com).lists.list_name	name	Action List
 options.packs.survival.Survival (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.survival.Survival (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.survival.Survival (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.survival.Survival (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.survival.Survival (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.survival.Survival (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -25254,7 +25254,7 @@ options.packs.survival.Survival Melee (wowsims.com).lists.listName	values.walk_i
 options.packs.survival.Survival Melee (wowsims.com).lists.list_name	name	Action List
 options.packs.survival.Survival Melee (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
 options.packs.survival.Survival Melee (wowsims.com).lists.list_name	values.walk_in	walk_in
-options.packs.survival.Survival Melee (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.survival.Survival Melee (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.survival.Survival Melee (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.survival.Survival Melee (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.survival.Survival Melee (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
@@ -25493,7 +25493,7 @@ options.packs.survival.Survival Turret (wowsims.com).lists.listName	values.defau
 options.packs.survival.Survival Turret (wowsims.com).lists.listName	values.precombat	|cFF00B4FFprecombat|r
 options.packs.survival.Survival Turret (wowsims.com).lists.list_name	name	Action List
 options.packs.survival.Survival Turret (wowsims.com).lists.list_name	values.precombat	|cFF00B4FFprecombat|r
-options.packs.survival.Survival Turret (wowsims.com).lists.max_energy	desc	When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus.
+options.packs.survival.Survival Turret (wowsims.com).lists.max_energy	desc	When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy.
 options.packs.survival.Survival Turret (wowsims.com).lists.max_energy	name	Max Energy
 options.packs.survival.Survival Turret (wowsims.com).lists.modAPL.strict	desc	If checked, the Conditions (above) must be met immediately for this action to be recommended or used.
 options.packs.survival.Survival Turret (wowsims.com).lists.modAPL.strict	name	Test Conditions Immediately
