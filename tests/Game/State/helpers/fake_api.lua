@@ -849,8 +849,8 @@ function M.new()
     -- either (CDV_FRAME 5609).
     ctl.viewer = {
         available = true,
-        sets = { [0] = {}, [1] = {}, [2] = {}, [3] = {} },
-        unlearned = { [0] = {}, [1] = {}, [2] = {}, [3] = {} }, -- added by GetCooldownViewerCategorySet(c, true)
+        sets = { [0] = {}, {}, {}, {}, {}, {}, {}, {}, {} }, -- the client's categories 0-8 (a fixture's 5 and 7 too)
+        unlearned = { [0] = {}, {}, {}, {}, {}, {}, {}, {}, {} }, -- added by GetCooldownViewerCategorySet(c, true)
         infos = {},
         items = {}, -- [viewer name] = its children in order (items, unconfigured items, non-item children)
         shown = {}, -- [viewer name] = false: that viewer is not visible (nil: visible)
