@@ -72,7 +72,9 @@ local methods = {
     -- own crit (Primal Fury's `gain( 5, "rage" )`); the belief's only, the sim does not predict crits. `onLand`, the
     -- same way: what only a landed hit gives (a mana return), run once the cast's hit is settled as landed, never on an
     -- avoid (aura audit C10). `now_finish`: a channel's `finish` twin in the belief, run when the channel ran to its
-    -- end (aura audit C11). `spendBase = true`:
+    -- end (aura audit C11). `landsAfterTravel = true`, beside a `velocity`: the belief starts the auras its `now` puts on
+    -- the target at the cast's landing, the target's believed distance over the velocity after the cast (a projectile
+    -- DoT, L482); the sim's `handler` still applies at the cast. `spendBase = true`:
     -- its `spend` (scalar or function) is a fraction of its pool's base power at any magnitude, floored, in both layers
     -- (a percent-of-base cost a stacking aura raises past 100%); without it only a cost between 0 and 1 is a fraction.
     -- Hekili's `form = key` (or a function returning one): the form or stance aura the ability needs (state:IsUsable);

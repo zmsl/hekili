@@ -114,6 +114,54 @@ describe("now handlers", function()
         assert.are.equal(1.0, I.auraVerdict.W[k])
     end)
 
+    -- L482: a cast that `landsAfterTravel` starts its `now`'s target auras at its landing, the target's believed
+    -- distance over its velocity after the cast (wowsims's WaitTravelTime); with no range known, at the cast as before.
+    describe("an ability that lands after its travel (landsAfterTravel)", function()
+        local function begin()
+            register("sting_test", {
+                id = 2688,
+                expects = "travel",
+                school = "nature",
+                velocity = 40,
+                landsAfterTravel = true,
+                now = function()
+                    applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
+                end,
+            })
+            start()
+        end
+        local function debuffAt(t) -- its expiry and applied time at t (nil: down)
+            local rec, _, applied = VS.Aura("target", fs.SPENDER_C, t)
+            return rec and rec.est, applied
+        end
+
+        it("starts the debuff at the cast plus the target's distance over its velocity", function()
+            begin()
+            I.Sources.Direct(VS.Obs.TargetRange, 4, 10, 15) -- the bracket's middle: 12.5 yd, 0.3125 s at 40 yd/s
+            VS.Drain(4)
+            cast(2688, 5)
+            local e, applied = debuffAt(5.1) -- in flight: believed up (no second cast), from its landing
+            assert.is_true(math.abs(e - 20.3125) < 1e-9, e)
+            assert.is_true(math.abs(applied - 5.3125) < 1e-9, applied)
+            assert.is_truthy(debuffAt(20.2)) -- up past the cast's own 15 s
+            assert.is_nil(debuffAt(20.32))
+        end)
+
+        it("starts it at the cast with no range known (the old timing)", function()
+            begin()
+            cast(2688, 5)
+            assert.are.same({ 20, 5 }, { debuffAt(5.1) })
+        end)
+
+        it("leaves an ability without the field at the cast whatever the range", function()
+            begin()
+            I.Sources.Direct(VS.Obs.TargetRange, 4, 10, 15)
+            VS.Drain(4)
+            cast(fs.SPENDER_C, 5)
+            assert.are.same({ 20, 5 }, { debuffAt(5.1) })
+        end)
+    end)
+
     it("shifts a resource by `gain` (est, lo and hi) and writes its energize row back-dated to the cast", function()
         register("rage_test", {
             id = 2687,

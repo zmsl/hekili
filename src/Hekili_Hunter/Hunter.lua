@@ -551,6 +551,7 @@ spec:RegisterAbilities({
         expects = "ticks",
         school = "nature",
         velocity = 40, -- its debuff dot aura: 3 s over 15 s
+        landsAfterTravel = true, -- the DoT starts at its landing (wowsims WaitTravelTime; L482)
         copy = rest(SERPENT_STING),
         cast = 0,
         cooldown = 0,

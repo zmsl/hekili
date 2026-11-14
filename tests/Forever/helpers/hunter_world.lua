@@ -198,10 +198,22 @@ M.MAP = {
         end,
     },
     serpent_sting = {
+        -- the DoT starts at its landing, the world's distance over velocity 40 after the cast (wowsims WaitTravelTime;
+        -- L482); no distance: at the cast. The outcome stays rolled and reported at the cast (the old timing).
         effect = function(W, e, _, X)
             if W.hit(e, e.target, nil, 8).act == "WOUND" then
-                aura(W, X, e.target, "serpent_sting")
-                W.dot(e, e.target, 3, 5, 60, 8) -- nature
+                local v = e.target
+                local function land()
+                    if not v.dead then
+                        aura(W, X, v, "serpent_sting")
+                        W.dot(e, v, 3, 5, 60, 8) -- nature
+                    end
+                end
+                if (W.distance or 0) > 0 then
+                    W.at(W.t + W.distance / 40, land)
+                else
+                    land()
+                end
             end
         end,
     },
