@@ -367,26 +367,13 @@ function Hekili:CheckChannel( ability, prio )
         return true
     end
 
-    local modifiers = scripts.Channels[ state.system.packName ]
-    modifiers = modifiers and modifiers[ channel ] or default_modifiers
-
-    -- interrupt_global=1 on the channel's line: break_any for that line; any line above it in the whole priority (the
-    -- walk stops at the channel's own line) may break the channel, at once (Hekili 09cfecf33's meaning).
-    if channel ~= ability and modifiers.interrupt_global then
-        local act = state.this_action
-        state.this_action = channel
-        local val = state.safebool( modifiers.interrupt_global() )
-        state.this_action = act
-        if val then
-            if self.ActiveDebug then self:Debug( "CC: %s's interrupt_global is true; break it.", channel ) end
-            return true
-        end
-    end
-
     if not a.tick_time and ( not aura or not aura.tick_time ) then
         if self.ActiveDebug then self:Debug( "CC: No aura / no aura.tick_time to forecast channel breaktimes; don't break it." ) end
         return false
     end
+
+    local modifiers = scripts.Channels[ state.system.packName ]
+    modifiers = modifiers and modifiers[ channel ] or default_modifiers
 
     local tick_time = a.tick_time or aura.tick_time
     local remains = state.channel_remains
@@ -1334,8 +1321,6 @@ function Hekili:GetNextPrediction( dispName, packName, slot )
         end
     end
 
-    -- shortcut: the dual_cast whitelist also hides use_while_casting lines in a spec that declares dual_cast abilities
-    -- (no Forever spec does); skip the whitelist for a pack whose PackInfo.hasWhileCasting is set when one appears
     if not state.channel_breakable and state.buff.casting.up and state.spec.can_dual_cast then
         self:Debug( "Whitelist of castable-while-casting spells applied [ %d, %.2f ]", state.buff.casting.v1, state.buff.casting.remains )
         state:SetWhitelist( state.spec.dual_cast )
@@ -1555,7 +1540,6 @@ function Hekili.Update()
             for i = #Stack, 1, -1 do tinsert( StackPool, tremove( Stack, i ) ) end
             for i = #Block, 1, -1 do tinsert( StackPool, tremove( Block, i ) ) end
 
-            state.system.packName = packName -- before the reset: it reads the pack's info (use_while_casting)
             state.reset( dispName )
 
             -- Clear the stack in case we interrupted ourselves.
@@ -1563,6 +1547,7 @@ function Hekili.Update()
 
             state.system.specID   = specID
             state.system.specInfo = spec
+            state.system.packName = packName
             state.system.packInfo = pack
             state.system.display  = dispName
             state.system.dispInfo = display
@@ -1683,12 +1668,6 @@ function Hekili.Update()
                                         break
                                     end
                                 end
-                            end
-
-                            -- use_while_casting lines may go during the cast: walk before the event (the others wait it out)
-                            if ( casting or ( channeling and not shouldBreak ) ) and not shouldCheck then
-                                local info = scripts.PackInfo[ packName ]
-                                shouldCheck = info and info.hasWhileCasting or false
                             end
 
 
@@ -1947,7 +1926,7 @@ function Hekili.Update()
                             state.setCooldown( "global_cooldown", gcdLength( action ) )
                         end
 
-                        if state.buff.casting.up and not ability.dual_cast and not state.safebool( state.args.use_while_casting ) then
+                        if state.buff.casting.up and not ability.dual_cast then
                             state.stopChanneling( false, action )
                             state.removeBuff( "casting" )
                         end
