@@ -19,6 +19,7 @@
 ### Fixed
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
+- Paladins: Judgement being usable now corrects Hekili's mana estimate, so abilities are no longer held back after a seal. Rogue finishers being usable now correct the energy estimate the same way.
 
 ### Known issues
 

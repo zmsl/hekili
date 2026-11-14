@@ -512,6 +512,17 @@ describe("resources", function()
             within(20 - I.EPS, VS.Power(ENERGY, 11).est)
         end)
 
+        it("takes a `ladder = false` ability's usable answer as a floor, never its short one", function()
+            I.Fold(10, false)
+            I.ResourceShift(1, -80, 10, Obs.CastSuccess) -- 20, under noladder's 50
+            obs(Obs.Usable, 10, NOLADDER, 1, 0) -- usable: at least 50, whatever else it needs
+            I.Fold(10, false)
+            assert.are.same({ 50, 50 }, { VS.Power(ENERGY, 10).est, I.res.lo0[1] })
+            obs(Obs.Usable, 10, NOLADDER, 0, 1) -- short: maybe its other requirement, no cap
+            I.Fold(10, false)
+            assert.are.same({ 50, 50 }, { VS.Power(ENERGY, 10).est, I.res.lo0[1] })
+        end)
+
         it("allocates nothing evaluating the precondition", function()
             local t = 10
             assert.are.equal(

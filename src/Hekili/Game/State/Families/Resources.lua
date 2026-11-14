@@ -230,8 +230,8 @@ local usable, ansT, shortCost, shortT, shortGain, shortCast, shortEst = {}, {}, 
 local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, math.huge }, { 0, 0 }
 -- Per hand: the latest usability answer's time that set a rung above its slot's floor and could show that hand's gain
 local heardT = { 0, 0 }
--- By ability index: its ladder precondition (C9): false for `ladder = false` (its answers are no rungs), its `usable`
--- function (a short answer while it fails names another requirement, such as a finisher's combo points), or true.
+-- By ability index: its ladder precondition (C9): false for `ladder = false` (its short answers are no rungs), its
+-- `usable` function (a short answer while it fails names another requirement, such as a finisher's combo points), or true.
 local pre = {}
 
 -- The usability oracle (harness design §2): per credit record k (Events/Rows.lua's record id, a landed swing's `b`),
@@ -1299,7 +1299,8 @@ I.On(Obs.Usable, function(o, t, lag)
     local was, wasT = usable[a], ansT[a]
     usable[a], ansT[a] = now, o.t
     local c = r ~= 0 and I.CostOf(a) or 0
-    local rung = r ~= 0 and now ~= NOT and not R.readable[r] and not I.ab.multiCost[a] and pre[a]
+    -- a usable answer proves the cost whatever else it needs (`ladder = false` makes only a short answer ambiguous)
+    local rung = r ~= 0 and now ~= NOT and not R.readable[r] and not I.ab.multiCost[a] and (pre[a] or now == YES)
     -- only a rung above the floor can show a pending swing's gain (an answer below it proves nothing); a short one only
     -- where the pending swings' low steps would have reached it (above, a paid swing answers short too); a yes shows a
     -- hand's gain only where the other hand's alone could not reach it (neither: the earlier swing's)
