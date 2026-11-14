@@ -85,9 +85,10 @@ M.ARMS = {
             mobAvoid = { miss = 0.08, dodge = 0.08, parry = 0.04, block = 0, spellMiss = 0.2 },
         },
     },
-    -- (L972) the non-landing world with live's secret amounts and a map build before each fight but the first (the
-    -- owner's live session rebuilt 1-3 times a fight: loop.lua `rebuild`): a missed opener is judged only if the
-    -- proof survives the build
+    -- (L972) the non-landing world with live's secret amounts, our avoid rows lost (observer lostAvoid: no undo, as
+    -- live's opener) and a map build before each fight but the first (the owner's live session rebuilt 1-3 times a
+    -- fight: loop.lua `rebuild`): a missed debuff before the item's first light of the fight is closed only if the
+    -- proof survived the build
     ["viewer-rebuild"] = {
         outcomes = "default",
         presence = "router",
@@ -95,7 +96,7 @@ M.ARMS = {
         layout = "buffs",
         edge = true,
         rebuild = true,
-        observe = { secretAmount = true },
+        observe = { secretAmount = true, lostAvoid = true },
         world = {
             auraOnAvoid = false,
             mobAvoid = { miss = 0.08, dodge = 0.08, parry = 0.04, block = 0, spellMiss = 0.2 },

@@ -401,8 +401,6 @@ function M.run(L, seed, o, drivers)
         if first and layout then -- the viewer is on from boot (no option), so its map predates the instance's first
             -- layout: the client's data-loaded event, once (as at login; later fights reuse the frames and the map)
             d.H.Fire("COOLDOWN_VIEWER_DATA_LOADED")
-        elseif layout and arm.rebuild then -- (L972) a later fight: the map rebuilt first, out of combat, as on live
-            d.H.Fire("COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED")
         end
         ctl.combat, ctl.form, ctl.stealthed = false, L.form, false
         if aw.followCycle then -- option D's arms (ab.lua; every other arm leaves all this at the defaults)
@@ -490,6 +488,8 @@ function M.run(L, seed, o, drivers)
             layout = layout, -- the viewer arm's fight events and the next one's index (M.viewerLayout)
             li = 1,
             edge = (arm.world or arm.edge) and layout and VI and VI.presence and edgestats.start(d.H, VI) or nil, -- a stress arm's record
+            -- (L972, L1009) a later fight's map rebuilt just before the pull, out of combat, as live's pre-pull form shift
+            rebuild = layout ~= nil and arm.rebuild and not first or false,
         }
     end
     local errors0 = {}
@@ -634,6 +634,12 @@ function M.run(L, seed, o, drivers)
         end
         polls = polls + 1
         t = polls * tick
+        for _, st in ipairs(steps) do
+            if st.rebuild and t >= wo.pull then -- before this tick's stream: its PLAYER_REGEN_DISABLED comes after
+                st.rebuild = false
+                st.H.Fire("COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED")
+            end
+        end
         step(t)
         if vt then -- this tick's closes against the world as the drain saw it: before this tick's press
             if not vt.pulled and t >= wo.pull then -- the belief zeroed its counts at this tick's PLAYER_REGEN_DISABLED:
