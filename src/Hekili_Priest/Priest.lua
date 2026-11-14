@@ -17,8 +17,8 @@
 -- Where the DB2 and wowsims's newer data (build 70450) disagree and wowsims's log casts its own (the Mage lane's ruling
 -- M9 precedent; wowsims packs Task 14; in-game checks): Devouring Plague's cooldown 24 s (DB2 60 s), Shadow Word:
 -- Death's 18 s (DB2 15 s).
--- Unmodelled: the procs' rolls (Holy Purpose from Searing Light, Spirit Tap on a kill, Shadow Weaving: unseen; the
--- player aura walk reads the player's where plain). Dark Inspiration is applied by a Mind Blast (in the mana regen
+-- Unmodelled: the procs' rolls (Holy Purpose from Searing Light, Spirit Tap below 5/5, Shadow Weaving: unseen; the
+-- player aura walk reads the player's where plain). Spirit Tap 5/5 opens at our kill (the "kill" reaction, below). Dark Inspiration is applied by a Mind Blast (in the mana regen
 -- and the world; a Mind Flay's full channel is not: a channel's handler never runs, and the full-channel roll is unseen:
 -- accepted, the aura read corrects it). Also unmodelled: the DoTs' resists, Shadow Word: Death's backlash, Inner Focus's crit, pushback, the healing spells Shadowform forbids (no
 -- priority casts one).
@@ -239,6 +239,16 @@ spec:RegisterResource(
                 return s > 0 and 1 + 0.15 * (s / 8) / (6.25 + s / 8) or 1
             end,
         },
+        -- Spirit Tap (15271, 15 s): Spirit +100% (aura 137) and 50% of the regen while casting (aura 134): the spirit
+        -- part x (6.25 + 2 x Spirit/8) / (6.25 + Spirit/8), Spirit the belief's out-of-combat read (1 before it)
+        spirit_tap = {
+            aura = "spirit_tap",
+            spirit = function()
+                local _, s = stat("UnitStat", 5)
+                return s > 0 and 1 + (s / 8) / (6.25 + s / 8) or 1
+            end,
+            share = 0.5,
+        },
         dark_sacrifice = {
             aura = "dark_sacrifice",
 
@@ -362,8 +372,9 @@ spec:RegisterAuras({
     inner_focus = { id = 14751, duration = 3600, max_stack = 1 }, -- until the next spell (DB2 -1)
     power_word_shield = { id = 17, copy = rest(POWER_WORD_SHIELD), duration = 30, max_stack = 1 },
     weakened_soul = { id = 6788, duration = 15, max_stack = 1 },
-    -- The procs (unseen, observed only: no producer, the player aura walk reads them where plain): Spirit Tap on a kill, Dark Inspiration from Mind
-    -- Blast and a full Mind Flay (wowsims's: absent from the DB2), Holy Purpose from Holy Fire's ticks (Searing Light).
+    -- The procs (unseen, observed only: no producer, the player aura walk reads them where plain): Spirit Tap below
+    -- 5/5 (5/5 opens at our kill: the "kill" reaction), Dark Inspiration from Mind Blast and a full Mind Flay (wowsims's:
+    -- absent from the DB2), Holy Purpose from Holy Fire's ticks (Searing Light).
     spirit_tap = { id = 15271, copy = { 15270 }, duration = 15, max_stack = 1 },
     dark_inspiration = { id = 1326168, duration = 10, max_stack = 1 },
     -- The utility spells' auras (no priority casts them; registered for the displays and custom priorities).
@@ -1063,3 +1074,19 @@ spec:RegisterPack(
     20261107001,
     [[Hekili:LsvyVnnmq0Fl8fyvuLKMX2GkYKabi2emnH3NDIJ9LgZsTTSDwv)s(TZ5SSUMs7yaQsvw39U37YDpB6m6nuIG5b6vPjPNoBwYzjjZOe)Adqjgg)w2c8GITe)NSu6HUIJwPx5KlDrC9YjbqRB0mrGOYwzJ)cfTCVC6maNsU(hx8zYnZfshxAAKkK3APqa3xf447xN5Df(Am4qS4kTfUdSDfcOI1247k(W1FRRad3v8q9TY4GMUyJvcoFSW4IdTOWf7cqY9yuPAruFWOF60QjtrDSmLRb7FbEwh0v66kycHw9k8WTWAxuxXNyE2890ph99lUbjP27nU5XXlK(62YWNq8oqNGCITnCc7DCrklvuXJWPPvxjBWHcJ7LALlYybS4sMpZOxb2CPQQ1HzM26GCDvv(cUiBw3Ld4ZC1ATFCYPYQSLmflYW95n63Nnlzd(xNfxRBwNxjTW0knV1LLgWF0leqzBvv0MSrTMxoIL0Kj))0C(EPrPVJ1x(J1AATgTRV8a47GCqblX965zhpIaxntOxLVsBf5gMuTD78q3SlgK1TPWakMIdHkUpy0qKilWeRhPwWi9Bd40KFdt3LucU1dRUDUx0iDEx)9W7TY4XR6VxIAw2ac6hPKT2NHKdUd8ovyBtjClQGvYOKD2Zupk2oC9i4)42PFj)OABGrj9d1a3Oah)VlW5plbEZocmcEWRmsZNPNjq8jhSZFcNY2t)Xjh31NEGUEWlTTA7ZLfO4SdqrVJ6GR90(1(BFYA94pYM3w(BSCJFgQNiKkwRVwBPKVc3kBK4ZGFz4vU(00F9]]
 )
+
+-- Spirit Tap (15270, 5 ranks: 20-100% chance; wowsims talents_shadow.go applySpiritTap): its buff after a kill that
+-- yields XP. The belief opens it at our kill (the "kill" reaction: under 10 levels below us or a boss, the owner's rule)
+-- at 5/5 only, where the chance is 100%; the lower ranks' rolls stay unassumed (dim). shortcut: wowsims and the tooltip
+-- also grant it when an enemy afflicted by our Vampiric Embrace dies (any killer; the pin: always, at any rank), which
+-- needs a death of a unit holding our debuff: not modelled, upgrade with a "death" reaction outcome if a VE build
+-- matters. Under the Map restriction no kill is seen (the GUIDs are secret): nothing opens.
+spec:RegisterReaction("spirit_tap", {
+    who = "target",
+    outcome = "kill",
+    now = function()
+        if talent.spirit_tap.rank >= 5 then
+            applyBuff("spirit_tap")
+        end
+    end,
+})

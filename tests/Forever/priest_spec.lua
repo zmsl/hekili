@@ -169,6 +169,32 @@ describe("Forever Priest", function()
         assert.is_true(math.abs(ds.last() - 16.2) < 1e-9) -- the last 3 s tick since the aura's application
     end)
 
+    -- Spirit Tap (15270 5/5, buff 15271, wowsims talents_shadow.go applySpiritTap): Spirit +100% and 50% of the regen
+    -- while casting for 15 s after a kill that yields XP; the belief opens it at our kill (the "kill" reaction) at 5/5
+    -- only (the lower ranks' 20-80% chance stays unassumed)
+    it("opens Spirit Tap at our kill at 5/5: Spirit x 2 and half the spirit regen while casting", function()
+        local st = w.resources[0].models.spirit_tap
+        assert.are.same({ "spirit_tap", 0.5 }, { st.aura, st.share })
+        w.state.stat = function()
+            return 0, 187
+        end
+        local s = 6.25 + 187 / 8
+        assert.is_true(math.abs(setfenv(st.spirit, w.state)() - (s + 187 / 8) / s) < 1e-9)
+        w.state.stat = function()
+            return 0, 0
+        end
+        assert.are.equal(1, setfenv(st.spirit, w.state)()) -- before the first stat read: inert
+        assert.are.same({ 15271, 15 }, { w.auras.spirit_tap.id, w.auras.spirit_tap.duration })
+        local r = w.reactions.spirit_tap
+        assert.are.same({ "target", "kill" }, { r.who, r.outcome })
+        for rank = 4, 5 do
+            local e = ld.env(w)
+            e.talent.spirit_tap = { rank = rank }
+            ld.run(r.now, e)
+            assert.are.same(rank == 5 and { "spirit_tap" } or {}, e.applied, "rank " .. rank)
+        end
+    end)
+
     it("channels Mind Flay (3 s), Starshards (6 s), Penance (2 s), a tick a second, and Shoot a wand speed", function()
         local A, out, ranged = w.abilities, {}, 0
         w.state.stat = function(name) -- the belief's stat read (Families/Player.lua VS.Stat)
