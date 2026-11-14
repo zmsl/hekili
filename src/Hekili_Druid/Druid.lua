@@ -294,6 +294,9 @@ spec:RegisterResource(
     }
 )
 
+-- Reflection (17106): 17/33/50% of the spirit regen while casting by rank (wowsims's curve, e5a9cd2a2d).
+local REFLECTION = { 0.17, 0.33, 0.5 }
+
 -- Mana: secret even out of combat. A cost below 1 is a percent of base mana (DB2 PowerCostPct: the forms, Shifting
 -- Power, Innervate), priced in both layers from `base`: wowsims's 1244 at 60 (its log: Shifting Power and Cat Form
 -- 684 = 55%, Innervate 62 = 5%, whole mana rounded down) until the client's cost read teaches the player's own. The
@@ -311,7 +314,7 @@ spec:RegisterResource(
         -- The Serenity Field trinket's buff (item 272439; DB2 aura 1291103: aura 29 Spirit +72, 15 s; an item's buff any
         -- Druid may wear; the other classes' packs: docs/dev/gaps.md): Spirit +72 raises the spirit regen S = 6.25 +
         -- Spirit/8 by 9 a second, so the part x (S + 9) / S, Spirit the belief's out-of-combat read (druid_balance.log:
-        -- Tag 2 22.0 -> 31.0 over 114.9-126 s at Spirit 126); 1 before that read.
+        -- 12.61 -> 17.11 a second casting at Spirit 139 and Reflection 3/3, + 0.5 x 9); 1 before that read.
         serenity_field = {
             aura = "serenity_field",
             item = 272439, -- the replay's key: wowsims logs the buff by its item
@@ -323,7 +326,16 @@ spec:RegisterResource(
     },
     nil,
     {
-        fsr = { spirit = 22, mp5 = 0 },
+        -- the share: Reflection's rank (the belief reads it after its talent walk). shortcut: the seeds are the
+        -- unreflected builds' (Feral, Guardian); a Reflection build (wowsims's Balance export, 3/3) starts from them
+        -- until the out-of-combat read splits its own parts.
+        fsr = {
+            spirit = 22,
+            mp5 = 0,
+            share = function()
+                return REFLECTION[talent.reflection.rank] or 0
+            end,
+        },
         base = 1244, -- wowsims's ExtraClassBaseStats, level 60
     }
 )

@@ -32,8 +32,8 @@ local GROUP = { feral_form = { [FORM.cat_form] = true, [FORM.bear_form] = true }
 local OMEN = 0.1
 -- Innervate (29166) as wowsims/forever applies it: the spirit regen x 5, inside the five-second rule too (its Feral
 -- log: 108.75 = 5 x 21.75 a second over 22-41 s); W.regenRate's `fsr` auras, in the worlds that keep mana
-local function manaFsr(spirit)
-    return { [MANA] = { spirit, 0, auras = { [29166] = { spirit = 5, share = 1 } } } }
+local function manaFsr(spirit, mp5, share)
+    return { [MANA] = { spirit, mp5 or 0, share = share, auras = { [29166] = { spirit = 5, share = 1 } } } }
 end
 -- the generic hits' non-physical schools (DB2); the rest physical (1)
 local SCHOOL = { faerie_fire = 8, moonfire = 64 }
@@ -347,14 +347,18 @@ local PACKS = {
             "mark_of_the_wild",
             "thorns",
         },
-        talents = { [408248] = 1 }, -- Eclipse (the placeholder node): Wrath's charges
+        -- Eclipse (the placeholder node): Wrath's charges; Reflection 3/3 (the log header's 17106=3): half the spirit
+        -- regen while casting
+        talents = { [408248] = 1, [17106] = 3 },
         power = { type = MANA, token = TOKENS[MANA], max = 4000 },
         res = {},
         form = "moonkin_form",
         weapon = { 40, 60, 2.0 },
-        -- the five-second rule's { spirit, mp5 } parts a second: wowsims/forever's Balance log (2.2 mana a 0.1 s tick
-        -- outside the rule, none inside it but Innervate's; prebis gear)
-        world = { power = 4000, fsr = manaFsr(22), stats = { [5] = 126 } },
+        -- the five-second rule's parts a second, wowsims/forever's Balance log (prebis gear, Reflection 3/3, every tick
+        -- inside the rule): 1.261 a 0.1 s tick casting = M + 0.5 S, 11.893 under Innervate = M + 5 S, so S = 23.625
+        -- (Spirit 139: 6.25 + 139 / 8) and M = 0.7975 (Serenity Field's +9 to S checks both: 1.711 and 16.393);
+        -- { outside-only part (1 - c) S, casting part M + c S, share c }
+        world = { power = 4000, fsr = manaFsr(0.5 * 23.625, 0.7975 + 0.5 * 23.625, 0.5), stats = { [5] = 139 } },
         uptime = { "moonfire", "insect_swarm" },
     },
 }
