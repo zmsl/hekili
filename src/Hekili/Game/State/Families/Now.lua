@@ -846,12 +846,10 @@ I.On(Obs.ChannelStop, function(o)
     end
 end)
 
--- Our kill (Sources/Units.lua): the target "kill" reactions run at it when the victim yields XP, the owner's rule
--- (L695): under KILL_LEVELS levels below the player's, or a boss (-1). The player's level unknown (0): none.
-local KILL_LEVELS = 10
+-- Our kill (Sources/Units.lua): the target "kill" reactions run at it when the victim yields XP, the client's grey
+-- line (L695, Fable decision 5): a plain UnitIsTrivial false only (a nil or secret answer stages nothing).
 I.On(Obs.Kill, function(o)
-    local mine, level = I.level or 0, o.a
-    if mine > 0 and (level == -1 or level > mine - KILL_LEVELS) then
+    if o.a == 0 then
         fire(2, KILL, o.t)
     end
 end)

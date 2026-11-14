@@ -470,31 +470,42 @@ describe("reactions", function()
         end)
     end)
 
-    -- outcome "kill" (Lane R, L695): our PARTY_KILL of a victim that yields XP (the owner's rule: under 10 levels below
-    -- the player, or a boss's -1), its level read from a token still bound to it; no GUID (the Map restriction's secret
-    -- one, which Plain drops) or no plain level runs nothing
+    -- outcome "kill" (Lane R, L695): our PARTY_KILL of a victim that yields XP, the client's own answer (Fable decision 5:
+    -- UnitIsTrivial on a token still bound to it, a plain false only); no GUID (the Map restriction's secret one, which
+    -- Plain drops), a nil or secret answer runs nothing
     describe('outcome "kill" (who = "target")', function()
-        local function kill(killer, level, player)
+        local NONE = {} -- UnitIsTrivial answers nil
+        local function kill(killer, trivial, level)
             build({ reaction("killed", "target", "kill") })
-            ctl.level.player, ctl.level.target = player or 60, level
+            ctl.level.player, ctl.level.target = 60, level or 55
+            ctl.trivial.target = trivial ~= NONE and trivial or nil
+            if trivial == NONE then
+                api.UnitIsTrivial = function() end
+            end
             ctl.now = 5
             ctl.Fire("PARTY_KILL", killer, "Creature-1")
             drain(5.1)
             return runs.killed
         end
 
-        it("our kill of a victim 9 levels below runs it at the kill; 10 below, a boss (-1) and ours only", function()
-            assert.are.equal(1, kill("Player-1", 51))
+        it("our kill of a victim the client calls non-trivial runs it at the kill; a boss's too; ours only", function()
+            assert.are.equal(1, kill("Player-1", false))
             assert.are.same({ true, 5, 11, 0, 0 }, W("killed"))
-            assert.are.equal(0, kill("Player-1", 50))
-            assert.are.equal(1, kill("Player-1", -1))
-            assert.are.equal(0, kill("Player-2", 60)) -- another's kill
+            assert.are.equal(1, kill("Player-1", false, -1)) -- a boss: never trivial
+            assert.are.equal(1, kill("Player-1", false, 40)) -- the client's line, not a level rule
+            assert.are.equal(0, kill("Player-2", false)) -- another's kill
             assert.are.equal(0, I.nowErrors)
         end)
 
-        it("runs nothing for a secret killer GUID (Map restriction), a secret level or an unknown victim", function()
-            assert.are.equal(0, kill(nil, 60))
-            assert.are.equal(0, kill("Player-1", nil))
+        it("runs nothing for a trivial victim, a nil or secret answer", function()
+            assert.are.equal(0, kill("Player-1", true))
+            assert.are.equal(0, kill("Player-1", true, 59)) -- grey whatever its level
+            assert.are.equal(0, kill("Player-1", fake.SECRET))
+            assert.are.equal(0, kill("Player-1", NONE))
+        end)
+
+        it("runs nothing for a secret killer GUID (Map restriction) or an unknown victim", function()
+            assert.are.equal(0, kill(nil, false))
             build({ reaction("killed", "target", "kill") })
             ctl.level.player = 60
             ctl.Fire("PARTY_KILL", "Player-1", "Creature-77")

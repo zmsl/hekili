@@ -366,9 +366,10 @@ end)
 S.On("PLAYER_TARGET_DIED", nil, function(api, t)
     kill(tokUid[1], t, "event")
 end)
--- Our kill also stages Kill with the victim's level, read from a token still bound to it (a plain answer only); a
--- victim no token names, or whose level is secret, stages nothing. Under the Map restriction the GUIDs are secret:
--- Plain passes them as nil, so no kill is ours and nothing is staged (the dim side: no kill proc assumed).
+-- Our kill also stages Kill with the client's grey answer, UnitIsTrivial on a token still bound to the victim (a plain
+-- boolean only: 1 trivial, 0 not); a victim no token names, or a nil or secret answer, stages nothing. Under the Map
+-- restriction the GUIDs are secret: Plain passes them as nil, so no kill is ours and nothing is staged (the dim side:
+-- no kill proc assumed).
 S.On("PARTY_KILL", nil, function(api, t, killer, victim)
     if killer ~= nil and killer == U.player then
         local u = U.Find(victim)
@@ -376,9 +377,9 @@ S.On("PARTY_KILL", nil, function(api, t, killer, victim)
             uOurs[u] = true
             for i = 1, NTOK do
                 if tokUid[i] == u then
-                    local level = Plain(api, api.UnitLevel(TOKENS[i]))
-                    if type(level) == "number" and level ~= 0 then
-                        Stage(Obs.Kill, t, level)
+                    local trivial = Plain(api, api.UnitIsTrivial(TOKENS[i]))
+                    if type(trivial) == "boolean" then
+                        Stage(Obs.Kill, t, trivial and 1 or 0)
                         return
                     end
                 end
