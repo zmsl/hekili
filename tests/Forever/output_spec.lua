@@ -487,6 +487,22 @@ describe("Engine.Output (headless Arms)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- review M3: the behaviour, not the call: a countdown icon replaced by another at the first publish after the pull
+    -- shows at once; the same swap with no pull between is held one publish.
+    for _, pull in ipairs({ true, false }) do
+        it("steady icons: a countdown swap " .. (pull and "after the pull shows at once" or "is held"), function()
+            local Out = H.ns.Output
+            pub(Out, { { "bloodrage", 1.0 } })
+            if pull then
+                H.Fire("PLAYER_REGEN_DISABLED")
+            end
+            pub(Out, { { "battle_shout", 0.8 } })
+            assert.are.equal(not pull, Out.Primary.held[1])
+            assert.are.equal(pull and "battle_shout" or "bloodrage", Out.Primary.recs[1].actionName)
+            assert.are.same({}, H.errors)
+        end)
+    end
+
     it("never shows a half-built set: recs and version hold until the swap, then every record is complete", function()
         assert.are.same({}, H.errors)
         local v0, recs0, before = out.version, out.recs, names(2)

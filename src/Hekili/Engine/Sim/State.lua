@@ -1287,6 +1287,9 @@ end
 -- L755 / owner ruling L960: with no tick seen (last_tick 0: a secret pool) the phase was read off the poll clock, an
 -- arbitrary grid, so the pad jumped between nothing and a whole tick from one poll to the next. It pads nothing there
 -- (fix 29's 1e-6): measured against the world's ticks the shown waits run late, and no pad is the truest fixed choice.
+-- Review M4: it is truest only because the believed floor lags the truth at cost waits (est - truth -0.5 to -3.6);
+-- with an exact floor no pad is early by half a tick on average and a half-tick pad is the unbiased one. Re-measure
+-- none against half a tick when the floor-lag fix lands.
 local function tickReach( t, a, dt )
     local L = rawget( t, "tick_rate" )
     if not L or L <= 0 then return a + dt end
