@@ -125,13 +125,13 @@ describe("Forever Mage", function()
                 w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
                 return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
             end
-            assert.are.same({ 0, 29.13, 1 }, seed("arcane")) -- Arcane Meditation 50% + Mage Armor 50%: all while casting
-            assert.are.same({ 14.57, 14.56, 0.5 }, seed("fire")) -- Mage Armor's 50% (Fire and Frostfire)
+            -- the static parts: Arcane Meditation's 50% (Arcane) or none; Mage Armor's 50% is the aura entry below
+            assert.are.same({ 14.57, 14.56, 0.5 }, seed("arcane"))
+            assert.are.same({ 29.13, 0, 0 }, seed("fire"))
             assert.are.equal(1213, r.meta.base)
             assert.are.same({ aura = "evocation", spirit = 16, share = 1 }, r.models.evocation) -- DB2 12051: 110, 134
-            -- B2: the armor is a registered aura only; the share assumes it up (a regen entry would end the out-of-combat
-            -- read's calibration: Resources.lua readAt)
-            assert.is_nil(r.models.mage_armor)
+            -- C9: Mage Armor's 50% while casting is a share entry the belief reads from the aura
+            assert.are.same({ aura = "mage_armor", share = 0.5 }, r.models.mage_armor)
         end
     )
 

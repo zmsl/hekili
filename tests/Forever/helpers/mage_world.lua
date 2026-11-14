@@ -640,12 +640,15 @@ local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, SPEC = P.spec, IDS = {} }
     local MAX = P.max
-    -- { spirit part, the part that continues }; Evocation (12051): spirit x 16, all of it while casting
+    -- { spirit part, the part that continues }; Evocation (12051): spirit x 16, all of it while casting. Mage Armor's
+    -- 50% while casting (22783) follows its aura (wowsims mana.go's MageArmor aura): the static share is the rest, so
+    -- the out-of-combat read before the pull (the armor is applied at it, below) sees the armor-down rates.
+    local c = P.casting - 0.5
     local FSR = {
-        SPIRIT * (1 - P.casting),
-        SPIRIT * P.casting,
-        share = P.casting,
-        auras = { [12051] = { spirit = 16, share = 1 } },
+        SPIRIT * (1 - c),
+        SPIRIT * c,
+        share = c,
+        auras = { [12051] = { spirit = 16, share = 1 }, [22783] = { share = 0.5 } },
     }
 
     function C.character()
@@ -678,7 +681,7 @@ local function content(name)
     -- (hunter_world's reason: a kill ends the loop before the client sees it).
     local function hooks(W, us)
         us.health, us.healthMax = 1e9, 1e9
-        -- every wowsims export pre-buffs Mage Armor (defaultMageArmor, 30 min): the share reads it
+        -- every wowsims export pre-buffs Mage Armor (defaultMageArmor, 30 min): its casting share follows it (FSR)
         W.applyAura(us, 22783, 1800, 1, 1)
     end
     C.WORLD = {
