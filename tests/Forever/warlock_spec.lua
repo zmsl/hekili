@@ -788,6 +788,44 @@ describe("Forever Warlock through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- The stat split's shared buffs (L971): a Priest's Divine Spirit on a Warlock. Hekili_Shared registers it for every
+    -- class, its Spirit by the aura's own spell ID (27841, rank 4: +40; wowsims spells_auto_gen.go aura 29, misc 4). Up
+    -- at the out-of-combat read (Spirit 261 = 221 + 40), it falls mid-fight: the belief's Spirit drops by its 40 at
+    -- once, and Life Tap's mana with it.
+    it("taps less once another Priest's Divine Spirit falls in combat (L971)", function()
+        local H = headless.new({ character = character() })
+        assert.are.same({}, H.loadErrors)
+        local VS, ctl = H.ns.VirtualState, H.ctl
+        local t = ctl.now + 1
+        ctl.now, ctl.stats[5] = t, 261
+        ctl.auras.player.HELPFUL[1] =
+            { spellId = 27841, expirationTime = t + 20, applications = 0, sourceUnit = "party1" }
+        H.Fire("UNIT_AURA", "player")
+        H.Fire("UNIT_STATS", "player")
+        assert.is_true(headless.cycle(H, t + 0.1))
+        ctl.now, ctl.combat = t + 1, true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        assert.is_true(headless.cycle(H, t + 1.1))
+        ctl.now, ctl.auras.player.HELPFUL[1] = t + 20.5, nil -- it ran out at t + 20
+        H.Fire("UNIT_AURA", "player")
+        assert.is_true(headless.cycle(H, t + 20.6))
+        local _, w = character()
+        w.game.known[11689] = true
+        local function tap(at)
+            local e = ld.env(w)
+            e.min, e.max = math.min, math.max
+            e.talent.improved_life_tap = { rank = 2, enabled = true }
+            function e.stat(name, arg)
+                return VS.Stat(name, arg, at)
+            end
+            ld.run(w.abilities.life_tap.now, e)
+            return e.gained[1][1]
+        end
+        assert.are.equal(822, tap(t + 10)) -- (424 + 261) x 1.2
+        assert.are.equal(774, tap(t + 20.6)) -- (424 + 221) x 1.2: the 40 went with the buff
+        assert.are.same({}, H.errors)
+    end)
+
     -- Option D (owner decisions 1 and 2): Destruction's Bane of Havoc line (other_target=1) through the belief's real
     -- count: shown only with Recommend Target Swaps on and two enemies, with the cycle icon; once it lands on mob A, a
     -- tab to mob B finds it remembered there (one Havoc at a time), so it is not shown again.
