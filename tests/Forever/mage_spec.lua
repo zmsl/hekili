@@ -35,6 +35,23 @@ local KIT = {
     blizzard = { { 10, 6141, 8427, 10185, 10186, 10187 }, 1400, 0, "spell" },
     frost_nova = { { 122, 865, 6131, 10230 }, 145, 25, "spell" },
     ice_block = { { 11958 }, 15, 300, "spell" },
+    -- the rest of the kit (coverage lane; the pin's spell rows): AoE, Blink, wards, Mana Shield, Frost Blast, buffs
+    arcane_explosion = { { 1449, 8437, 8438, 8439, 10201, 10202 }, 390, 0, "spell" },
+    flamestrike = { { 2120, 2121, 8422, 8423, 10215, 10216 }, 990, 0, "spell" },
+    blast_wave = { { 11113, 13018, 13019, 13020, 13021 }, 545, 45, "spell" },
+    blink = { { 1953 }, 0.35, 15, "spell" },
+    mana_shield = { { 1463, 8494, 8495, 10191, 10192, 10193 }, 140, 0, "spell" },
+    fire_ward = { { 543, 8457, 8458, 10223, 10225 }, 320, 30, "spell" },
+    frost_ward = { { 6143, 8461, 8462, 10177, 28609 }, 320, 30, "spell" },
+    frost_blast = { { 1326053, 1326054, 1326055 }, 90, 0, "spell" },
+    polymorph = { { 118, 12824, 12825, 12826 }, 150, 0, "spell" },
+    arcane_intellect = { { 1459, 1460, 1461, 10156, 10157 }, 1510, 0, "spell" },
+    dampen_magic = { { 604, 8450, 8451, 10173, 10174 }, 500, 0, "spell" },
+    amplify_magic = { { 1008, 8455, 10169, 10170 }, 450, 0, "spell" },
+    -- the armors (fix round 1, review finding 4): one up at a time
+    mage_armor = { { 6117, 22782, 22783 }, 490, 0, "spell" },
+    ice_armor = { { 7302, 7320, 10219, 10220 }, 500, 0, "spell" },
+    frost_armor = { { 168, 7300, 7301 }, 170, 0, "spell" },
 }
 
 local function idsOf(a)
@@ -99,7 +116,7 @@ describe("Forever Mage", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(21, n)
+        assert.are.equal(36, n)
         for _, key in ipairs({ "arcane_power", "presence_of_mind", "combustion", "cold_snap" }) do
             assert.are.equal("cooldowns", w.abilities[key].toggle, key)
         end
@@ -401,11 +418,36 @@ describe("Forever Mage", function()
         end
         assert.are.same({
             -- Frost's too: Blizzard, Cone of Cold, Frost Nova, Ice Lance (the mask's bits 7, 9, 6, 17)
-            clearcasting = { -1, 1, { 10, 116, 120, 122, 133, 2136, 2948, 11366, 400574, 401502, 1312002, 1326079 } },
+            clearcasting = {
+                -1,
+                1,
+                {
+                    10,
+                    116,
+                    120,
+                    122,
+                    133,
+                    1449,
+                    2120,
+                    2136,
+                    2948,
+                    11113,
+                    11366,
+                    400574,
+                    401502,
+                    1312002,
+                    1326053,
+                    1326079,
+                },
+            },
             ["clearcasting unless missile_barrage"] = { -1, 1, { 5143 } },
             missile_barrage = { -1, 1, { 5143 } },
             -- Arcane Wrath too: wowsims's mask (0x9000 of word 1 covers its 0x8000), its log's 513.5 = 395 x 1.3
-            arcane_power = { 0.3, false, { 116, 133, 2136, 2948, 5143, 11366, 400574, 401502, 1326079 } },
+            arcane_power = {
+                0.3,
+                false,
+                { 116, 133, 1449, 2120, 2136, 2948, 5143, 11113, 11366, 400574, 401502, 1326053, 1326079 },
+            },
         }, by)
     end)
 
@@ -641,6 +683,71 @@ describe("Forever Mage priorities", function()
             names[#names + 1] = sp.package or "none"
         end
         assert.are.same({ "Arcane (wowsims.com)", "Fire (wowsims.com)", "Frost (wowsims.com)" }, names)
+    end)
+
+    it("starts combat with Polymorph (a hostile target's)", function()
+        assert.is_true(ld.load(nil, FILE, "MAGE").abilities.polymorph.startsCombat)
+    end)
+
+    it("shares the wards' category cooldown, cheapens Frost Ward by Frost Channeling, and applies the buffs", function()
+        local w = ld.load(nil, FILE, "MAGE")
+        w.game.known[543], w.game.known[10225], w.game.known[28609] = true, true, true
+        local e = ld.env(w)
+        e.talent.frost_channeling = { rank = 3 }
+        assert.are.equal(320 * 0.85, ld.run(w.abilities.frost_ward.spend, e))
+        assert.are.equal(320, ld.run(w.abilities.fire_ward.spend, e))
+        for _, k in ipairs({ "fire_ward", "frost_ward", "mana_shield", "blast_wave" }) do
+            assert.is_not_nil(w.abilities[k].handler, k)
+        end
+    end)
+
+    it("casts one armor at a time, Frost Channeling cheapening Ice and Frost Armor (mask bit 19)", function()
+        local w = ld.load(nil, FILE, "MAGE")
+        w.game.known[22783], w.game.known[10220], w.game.known[7301] = true, true, true
+        local e = ld.env(w)
+        e.talent.frost_channeling = { rank = 3 }
+        assert.are.same({ 490, 500 * 0.85, 170 * 0.85 }, {
+            ld.run(w.abilities.mage_armor.spend, e),
+            ld.run(w.abilities.ice_armor.spend, e),
+            ld.run(w.abilities.frost_armor.spend, e),
+        })
+        for _, key in ipairs({ "mage_armor", "ice_armor", "frost_armor" }) do
+            for _, field in ipairs({ "now", "handler" }) do
+                e = ld.env(w)
+                ld.run(w.abilities[key][field], e)
+                local others = {}
+                for _, k in ipairs({ "mage_armor", "ice_armor", "frost_armor" }) do
+                    if k ~= key then
+                        others[#others + 1] = k
+                    end
+                end
+                assert.are.same({ { key }, others }, { e.applied, e.removed }, key .. " " .. field)
+            end
+        end
+    end)
+
+    it("carries the buff ids the Cooldown Manager links on the new auras", function()
+        local w = ld.load(nil, FILE, "MAGE")
+        local want = {
+            blast_wave = { 11113, 13018, 13019, 13020, 13021 },
+            fire_ward = { 543, 8457, 8458, 10223, 10225 },
+            frost_ward = { 6143, 8461, 8462, 10177, 28609 },
+            mana_shield = { 1463, 8494, 8495, 10191, 10192, 10193 },
+            polymorph = { 1320379, 1324187, 1324188, 1324189 },
+            ignite = { 412538 },
+            frostbite = { 12494 },
+            impact_stun = { 12355 },
+            improved_blizzard_chill = { 12484 },
+            chilled = { 6136 },
+            frost_blast = { 1326053, 1326054, 1326055 },
+            counterspell_silenced = { 1324401, 1329553 },
+            arcane_intellect = { 1459, 1460, 1461, 10156, 10157, 23028 },
+            dampen_magic = { 604, 8450, 8451, 10173, 10174 },
+            amplify_magic = { 1008, 8455, 10169, 10170 },
+        }
+        for key, ids in pairs(want) do
+            assert.are.same(ids, idsOf(w.auras[key]), key)
+        end
     end)
 
     it("names only registered abilities and auras", function()

@@ -69,6 +69,40 @@ describe("auras", function()
         assert.are.equal(20, readA(21, 35.2)) -- within I.AURA_REFRESH: the same application
     end)
 
+    -- An aura may copy its talent's spell ID (the Cooldown Manager links both): the talent's own passive aura, if the
+    -- client lists it, reads permanent (no expiry) and is not the buff
+    it(
+        "skips a talent's spell read permanent on the player; the same ID with an expiry, or the aura's own, counts",
+        function()
+            local def = fs.def(fs.new(9))
+            def.auraIds[SHOUT] = { fs.SPENDER_A, 1011 } -- 1011: talent_a's spell
+            I.Build(def, 1)
+            local function walk(t, id, expires)
+                ctl.now = t
+                ctl.auras.player.HELPFUL[1] = { spellId = id, expirationTime = expires, applications = 0 }
+                ctl.Fire("UNIT_AURA", "player")
+                fold(t)
+                return VS.Aura("player", fs.SPENDER_A, t)
+            end
+            assert.is_nil(walk(10, 1011, 0)) -- the talent's passive
+            assert.are.equal(25, walk(11, 1011, 25).est) -- a timed one under the talent's ID: the buff
+            ctl.auras.player.HELPFUL[1] = nil
+            ctl.Fire("UNIT_AURA", "player")
+            fold(12)
+            assert.is_not_nil(walk(13, fs.SPENDER_A, 0)) -- the aura's own ID, permanent: up
+            -- an aura whose own ID is the talent's (a form, an until-used buff): its permanent read is the buff
+            def = fs.def(fs.new(9))
+            def.auras[SHOUT] = setmetatable({ id = 1011 }, { __index = def.auras[SHOUT] })
+            def.auraIds[SHOUT] = { 1011 }
+            I.Build(def, 20)
+            ctl.now = 21
+            ctl.auras.player.HELPFUL[1] = { spellId = 1011, expirationTime = 0, applications = 0 }
+            ctl.Fire("UNIT_AURA", "player")
+            fold(21)
+            assert.is_not_nil(VS.Aura("player", 1011, 21))
+        end
+    )
+
     it("finds a tracked aura past the 40th slot of one filter", function()
         ctl.now = 10
         for i = 1, 40 do
@@ -1104,6 +1138,65 @@ describe("auras", function()
             poll(25.8)
             assert.is_true(math.abs(est("target", fs.SPENDER_C, 25.8) - 40.8) < 1e-9) -- opened at once from its light
         end)
+
+        -- A close and a CDM open of one record staged in one drain (the harness's Retribution live-auras trace at 87.6):
+        -- the close folds first, so the open writes a new application at its own t. It is ours (the CDM opened it): its
+        -- NONE closes it (rule 1). Red before the fix: ours named the closed application's applied time (10), so the
+        -- record stood its whole registered duration.
+        it("a close then a CDM open in one drain: a new application, ours, closed by its NONE", function()
+            cast(1, SHOUT, 10, 10) -- ours, applied 10, the model's expiry 20; the item never lit (UNKNOWN)
+            for t = 10.5, 19.5, 0.5 do
+                poll(t)
+            end
+            ctl.now = 20
+            S.Direct(Obs.Read, 20, SHOUT, 0, I.ReadOf.Aura) -- a down logged first in the drain
+            ctl.ViewerAura(pi, "player") -- a lone light at the model's expiry: poll 15 opens the record
+            poll(20)
+            local rec, _, applied = VS.Aura("player", fs.SPENDER_A, 20)
+            assert.are.same({ 140, 20 }, { rec and rec.est, applied })
+            ctl.ViewerClear(pi)
+            poll(20.5)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 20.5))
+        end)
+
+        -- The same claim for an out-of-combat walk read of ours on an `icd` aura, whose fold writes an applied time the
+        -- stage could not know: a first-walk sighting (one ICD back) and a re-application while up (the read's t). The
+        -- next fight's NONE closes it (rule 1). Red before the fix: ours named the stage's guess, so it stood.
+        for _, c in ipairs({ { "a first-walk sighting", false, 1 }, { "a re-application while up", true, 14 } }) do
+            it("a walk read of ours on an icd aura (" .. c[1] .. "): ours, closed by the next fight's NONE", function()
+                local def = fs.def(fs.new(9))
+                def.auras[SHOUT].icd = 10
+                start(def)
+                ctl.now = 11
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                local mine = { spellId = fs.SPENDER_A, expirationTime = 30, applications = 0, sourceUnit = "player" }
+                if c[2] then -- a clean walk with nothing up, then a gain the walks saw at 12
+                    ctl.auras.player.HELPFUL[1] = nil
+                    ctl.Fire("UNIT_AURA", "player")
+                    poll(11)
+                    ctl.now = 12
+                    ctl.auras.player.HELPFUL[1] = mine
+                    ctl.Fire("UNIT_AURA", "player")
+                    poll(12)
+                    ctl.now = 14
+                    mine.expirationTime = 50 -- a re-proc: a later expiry
+                end
+                ctl.auras.player.HELPFUL[1] = mine
+                ctl.Fire("UNIT_AURA", "player")
+                poll(ctl.now)
+                assert.are.equal(c[3], select(3, VS.Aura("player", fs.SPENDER_A, ctl.now)))
+                ctl.now = 15
+                ctl.Fire("PLAYER_REGEN_DISABLED")
+                ctl.auras.player.HELPFUL[1] = fake.SECRET
+                ctl.Fire("UNIT_AURA", "player")
+                ctl.ViewerAura(pi, "player")
+                poll(15)
+                poll(15.5)
+                ctl.ViewerClear(pi)
+                poll(16)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 16))
+            end)
+        end
 
         it("C: a CDM UP with no model record opens at once; no numeric duration: long on the target too", function()
             local def = fs.def(fs.new(9))

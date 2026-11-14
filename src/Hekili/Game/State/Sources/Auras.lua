@@ -56,8 +56,9 @@ local KEY = {} -- aura index -> its key, for the Snapshot lines
 -- BY_CAST our cast (Families/Now.lua, I.AuraOurs), BY_CDM a CDM UP that opened it, BY_WALK an out-of-combat walk read with source
 -- player or pet; valid only while the record's applied time is still oursAp[k] (another application, a target swap's
 -- other mob, an undone cast or a close all move it). upAt[k]: the last poll the reduced fact read UP.
+-- claimT[k]: the t of the CDM UP or walk read that set ours; its fold re-anchors oursAp (I.AuraClaimFolded).
 local BY_CAST, BY_CDM, BY_WALK = 1, 2, 3
-local ours, oursAp, upAt = {}, {}, {}
+local ours, oursAp, upAt, claimT = {}, {}, {}, {}
 I.auraOurs = ours
 -- Rules 3-4 (C2, decision 112 as amended by the owner's rule, L310: trust the belief's duration). A CDM UP with no model
 -- record behind it opens one at once: its registered duration (DUR[j], -1 none) from max(fact.t, applied) when that
@@ -117,6 +118,11 @@ I.presenceVerdict, I.presenceStrike = verdictN, strikeN -- the harness's names (
 local function zeroVerdict(k)
     W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k], refundN[k] = W0, 0, 0, 0, 0, 0, 0
 end
+-- The class's talent spells (def.talents) that a tracked aura lists as a `copy` (not its own ID), set at the build: an
+-- aura that copies its talent's ID (the Cooldown Manager links both) must not read the talent's own passive aura, which
+-- has no expiry, as the buff (the walk below). An aura whose own ID is the talent's (a form, an until-used buff) reads
+-- as before.
+local TALENT_COPY = {}
 local function zeroEdge(k)
     anAp[k], emcN[k], emcSum[k], emcLast[k] = 0, 0, 0, 0
     cyT[k], cyD[k], cyAp[k], cyE[k], cyN[k], cySum[k], cyObs[k], cyMod[k], seedAp[k] = 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -124,6 +130,21 @@ end
 
 I.OnBuild(function(def)
     local U = I.auras
+    for id in pairs(TALENT_COPY) do
+        TALENT_COPY[id] = nil
+    end
+    local talent = {}
+    for k = 1, #(def.talents or talent) do
+        talent[def.talents[k].spell] = true
+    end
+    for j = 1, U.nAura do
+        local ids, own = def.auraIds[j], rawget(def.auras[j], "id")
+        for i = 1, #ids do
+            if ids[i] ~= own and talent[ids[i]] then
+                TALENT_COPY[ids[i]] = true
+            end
+        end
+    end
     for u = 1, U.n do
         WALK[u] = "aura walk " .. tostring(def.units[u])
         local f, s = {}, {}
@@ -145,9 +166,9 @@ I.OnBuild(function(def)
         KEY[j] = tostring(def.auras[j].key)
         local d = rawget(def.auras[j], "duration")
         DUR[j], floor[j] = type(d) == "number" and d or -1, 0
-        facts[j], disagree[j], staged[j], exitFix[j], ours[j], oursAp[j], upAt[j] = 0, 0, 0, 0, 0, 0, 0
+        facts[j], disagree[j], staged[j], exitFix[j], ours[j], oursAp[j], upAt[j], claimT[j] = 0, 0, 0, 0, 0, 0, 0, 0
         local k = I.AURA_UNIT + j
-        facts[k], disagree[k], staged[k], exitFix[k], ours[k], oursAp[k], upAt[k] = 0, 0, 0, 0, 0, 0, 0
+        facts[k], disagree[k], staged[k], exitFix[k], ours[k], oursAp[k], upAt[k], claimT[k] = 0, 0, 0, 0, 0, 0, 0, 0
         lastE[j], lastSt[j], longE[j], lastE[k], lastSt[k], longE[k] = 0, 0, 0, 0, 0, 0
         zeroEdge(j)
         zeroEdge(k)
@@ -199,6 +220,9 @@ local function walk(api, u, unit, t)
                 break
             end
             local j = U.bySpell[id]
+            if j and u == 1 and TALENT_COPY[id] and Plain(api, data.expirationTime) == 0 then
+                j = nil -- the talent's passive aura (no expiry), not the buff that copies its ID
+            end
             if j then
                 local exp, apps = Plain(api, data.expirationTime), Plain(api, data.applications)
                 if type(exp) ~= "number" then
@@ -222,7 +246,7 @@ local function walk(api, u, unit, t)
                     if u <= 2 and not I.inCombat then -- rule 2.5.1: its source says whose it is (out of combat only)
                         local src = Plain(api, data.sourceUnit)
                         if src == "player" or src == "pet" then
-                            ours[k], oursAp[k], W[k] = BY_WALK, foldApplied(u, j, t), W0
+                            ours[k], oursAp[k], W[k], claimT[k] = BY_WALK, foldApplied(u, j, t), W0, t
                         elseif not (again and ours[k] == BY_WALK) then -- ours and a partner's in one walk: ours
                             ours[k] = 0
                         end
@@ -324,6 +348,18 @@ S.Poll(11, function(api, t)
         end
     end
 end)
+
+--- The Read a CDM UP or walk claimed at t folded up on key k with applied time ap (Families/Auras.lua): foldApplied's
+--- guess at the stage misses a close folded first in the same drain (the open is then a new application at t), so ours
+--- names the application the fold wrote. Our cast's write since then (BY_CAST) stands. Allocates nothing.
+function I.AuraClaimFolded(k, t, ap)
+    if claimT[k] == t and ours[k] ~= BY_CAST then
+        if seedAp[k] == oursAp[k] and seedAp[k] ~= 0 then
+            seedAp[k] = ap
+        end
+        oursAp[k] = ap
+    end
+end
 
 --- Our cast wrote record (u, j) (Families/Now.lua's aura()): this application is ours (rule 2.5.1); `travel` (seconds,
 --- 0 or nil none) widens its verdict window (cdm-verdict §2.3). Allocates nothing.
@@ -445,7 +481,7 @@ local function apply(j, u, up, t, edge)
     end
     local stacks = 0
     if up then -- an UP stages only on a record still down
-        ours[k], oursAp[k], W[k] = BY_CDM, foldApplied(u, j, t), W0 -- a CDM UP opened it
+        ours[k], oursAp[k], W[k], claimT[k] = BY_CDM, foldApplied(u, j, t), W0, t -- a CDM UP opened it
         stacks = lastSt[k] -- re-established: the model's last stacks (else 0)
         if seed then
             seedAp[k] = oursAp[k]

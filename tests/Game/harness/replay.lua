@@ -590,10 +590,15 @@ function M.new(text, H, o)
     for _, e in ipairs(p.ev) do
         if e.kind == "casting" and keyFor(e) then
             local d = { t = e.wt - M.EPS / 2, key = keyFor(e), gcd = e.cast > 0 or e.gcd > 0 }
-            R.decisions[#R.decisions + 1], R.casts[#R.casts + 1] = d, d
+            R.casts[#R.casts + 1] = d
+            -- a move-only cast (the kit's `movesOnly`: a move step Hekili never recommends) is the world's cast only
+            local a = class.abilities[d.key]
+            if not a.movesOnly then
+                R.decisions[#R.decisions + 1] = d
+            end
             -- an on-next-swing strike's paid cast is its swing's landing, not a press (its free cast queued it): not a
             -- next cast for the agreement
-            if not (class.abilities[d.key].onNextSwing and ((e.cost or 0) > 0 or e.landed)) then
+            if not (a.movesOnly or a.onNextSwing and ((e.cost or 0) > 0 or e.landed)) then
                 presses[#presses + 1] = d
             end
         end
