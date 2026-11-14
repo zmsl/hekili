@@ -7543,8 +7543,9 @@ function state:TimeToReady( action, pool )
 
     if not state.channel_breakable and not ability.dual_cast then
         z = self.buff.casting.remains
-        -- use_while_casting=1 (SimC): the line need not wait for the player's cast or channel (read only when it would)
-        if z > wait and not self.safebool( self.args.use_while_casting ) then
+        -- use_while_casting=1 (SimC): an instant need not wait for the player's cast or channel (read only when it
+        -- would); one with its own cast time would end that cast, so it still waits
+        if z > wait and not ( self.safebool( self.args.use_while_casting ) and ( ability.cast or 0 ) == 0 ) then
             wait = z
         end
     end
