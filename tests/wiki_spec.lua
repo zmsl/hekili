@@ -146,7 +146,7 @@ describe("the expression check", function()
         }
         local H = {
             Hekili = { State = { pool = setmetatable({ actual_lo = 1 }, mt) } },
-            ns = { metatables = { mt_resource = mt } },
+            ns = { metatables = { mt_resource = mt, mt_x = mt } },
         }
         local scanned = expressions.scan(SOURCE, "mt_x", "<resource>")
         local d = {

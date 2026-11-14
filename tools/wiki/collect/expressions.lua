@@ -84,6 +84,9 @@ function M.problems(def, H, scanned, d)
     H = H or boot.get(def.class)
     d = d or data()
     local out = {}
+    if def.root and not H.ns.metatables[def.root] then -- the root as the running code exports it
+        out[#out + 1] = ("tools/wiki/manifest.lua: %s is not in ns.metatables"):format(def.root)
+    end
     if def.root then
         scanned = scanned or M.scan(slurp(M.STATE), def.root, def.prefix)
         for k in pairs(scanned) do

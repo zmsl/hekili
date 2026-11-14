@@ -80,13 +80,18 @@ local function exists(path)
     return slurp(DIR .. path) ~= nil
 end
 
--- Every English string of Locales/enUS.lua, stripped as option labels are.
+-- Every English string of every addon's Locales/enUS.lua (the core's and each class pack's), stripped as option
+-- labels are.
 local function enus()
     local out = {}
-    local s = assert(slurp("src/Hekili/Locales/enUS.lua"))
-    for key in s:gmatch('\nL%["(.-)"%]%s*=') do
-        out[text.strip((key:gsub("\\n", "\n")))] = true
+    local p = assert(io.popen("ls src/*/Locales/enUS.lua"))
+    for path in p:lines() do
+        local s = assert(slurp(path))
+        for key in s:gmatch('\nL%["(.-)"%]%s*=') do
+            out[text.strip((key:gsub("\\n", "\n")))] = true
+        end
     end
+    p:close()
     return out
 end
 

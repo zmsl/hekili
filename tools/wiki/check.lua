@@ -44,7 +44,7 @@ end
 
 local function anchors(s)
     local out = {}
-    for h in (s .. "\n"):gmatch("\n#+ ([^\n]+)") do
+    for h in ("\n" .. s .. "\n"):gmatch("\n#+ ([^\n]+)") do
         out[M.slug(h)] = true
     end
     return out
@@ -121,7 +121,7 @@ function M.labels(pages, labels, enus)
     for name, s in pairs(pages) do
         if name:sub(1, 1) ~= "_" then
             local text = nocode(prose(s))
-            local firstHeading = text:find("\n## ") or #text
+            local firstHeading = ("\n" .. text):find("\n## ") or (#text + 1)
             local first = true
             for at, span, after in text:gmatch("()%*%*(.-)%*%*(.?)") do
                 local title = first and at < firstHeading
