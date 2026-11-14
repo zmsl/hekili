@@ -61,7 +61,7 @@ reducer untouched.
   suspends it until the item's next visible light (amended 2026-11-10 after the Fable 5.2 review, M3).
 - `Q.builds` counts the leaf's builds per session (never reset per fight; amended 2026-11-10 after the Fable 5.2
   review, S2). (Amended 2026-11-14, L972) A build no longer zeroes the proof of an id whose mapping is unchanged
-  (decision 124); strikes and silent counts still start over at every build. The router counts the builds per trigger
+  (decision 124), nor its silent count (a build is no light, L1025); strikes still start over at every build. The router counts the builds per trigger
   (`loaded`, `hotfixed`, `override`: the viewer's three events; `belief`: a belief build; `other`: a provider or panel
   switch, the start), the viewer's events received in combat (`evInCombat`: each restarts every dark; none in game,
   L1009) and, at the last build, the proven ids kept and dropped (`carried`, `dropped`).
@@ -241,6 +241,10 @@ seeds):
 - `viewer-recast`: the non-landing world where an avoided aura press is pressed again at the next free GCD (the recast
   in or beside the verdict's drain: M1, and the `>=` tie).
 - `viewer-swap-dark`: `viewer-swap` with a non-atomic reshuffle (a moved lit frame reads dark until the next flush).
+- `viewer-rebuild` (L972, L1009): the `viewer-nonland` world with secret amounts, the viewer's override event (a map
+  build) just before each later pull as live's pre-pull form shift, and the observer knob `lostAvoid`: our presses'
+  avoid rows on others (the world's `spell` outcomes) are not delivered, as live's opener (its row goes to the first
+  swing's tie with no hand-back), so only the verdict can close a missed debuff.
 
 Metric "phantom seconds" = edgestats `staleUp` (the belief up while the viewer is dark, in combat, tracked auras),
 WITHOUT form and enchant auras (the leaf never judges them), reported player/target.
@@ -276,7 +280,7 @@ verdict off for the A/B; `Hekili.cdmOff` remains the only global switch; the per
 | 121 | Identity is the cooldownID: proof, strikes and the silent count carry across frame re-points; a re-pointed frame restarts its dark and starts with NO seen memory (amended 2026-11-10 after the Fable 5.2 review, S1: the inherited seen memory answered NONE with no settle); no "cooldownID changed since the cast" block | Blizzard reshuffles every frame at every full update; a frame-keyed rule is blind after every swap (L375 "too rigid"); the verdict covers the re-pointed dark after W |
 | 122 | Strikes per cooldownID: a verdict followed by an UP within 2.0 s with no new cast = wrong; 2 strikes drop the proof for the build. (amended 2026-11-10 after the Fable 5.2 review, M1/M3) A verdict is one whose close folded: the close names its application and a recast folded first drops it, uncounted. Silent verdicts per cooldownID: 2 since the item's last light suspend the proof until it lights again | caps a flaky item at one flip per cast, then silence (no-jitter rule); a strike needs a light, so only the silent count bounds an item that never lights for some casts |
 | 123 | Snapshot: verdicts, strikes, pdark, mapped-never-lit, re-points, struck, suspended, builds per session (amended 2026-11-10) | Task 10 reads them; user reports show silent items |
-| 124 | No rebuild on rank change; the pack audit covers ranks in id/copy. (amended 2026-11-14, L972) A build keeps the proof and its unit of a cooldownID that was proven and maps to the same aura key; any other id starts unproven; strikes and silent counts start over at every build, so a struck or suspended id (unproven) is not carried and decision 122 is unchanged. Replaces "proof zeroes at every build" | owner L375; the owner's live session rebuilt the map 1-3 times a fight, so the first missed Rake or Faerie Fire after each build stood its full duration (V9, rake-miss-cdm-investigation); proof per cooldownID already gives F12's guard, which needs no wipe when the mapping is unchanged |
+| 124 | No rebuild on rank change; the pack audit covers ranks in id/copy. (amended 2026-11-14, L972) A build keeps the proof, its unit and its silent count of a cooldownID that was proven and maps to the same aura key (the key recorded when the map was made, so a def refilled in place is compared by key, not index); any other id starts unproven; strikes start over at every build (decision 122 unchanged), and a struck or suspended id (unproven) is not carried. (L1025) A map build is not a light: the silent count stays, so two silent verdicts with no light between still suspend the proof across builds (at most two wrong closes until a light). Replaces "proof zeroes at every build" | owner L375; the owner's live session rebuilt the map 1-3 times a fight, so the first missed Rake or Faerie Fire after each build stood its full duration (V9, rake-miss-cdm-investigation); proof per cooldownID already gives F12's guard, which needs no wipe when the mapping is unchanged |
 
 ## 8. Deferral candidates
 
