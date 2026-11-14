@@ -19,6 +19,7 @@
 ### Fixed
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
+- Melee specializations: the Enemy Range Radius slider now shows 10 yards, the radius target counting already used, instead of an empty value.
 
 ### Known issues
 
