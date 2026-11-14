@@ -176,7 +176,6 @@ shared addon holds the content every class uses. Nothing dev-only ships. Details
 | `tests/Forever/wowsims/` | Each spec's exported wowsims request and fight log, checked in |
 | `tools/` | Pack generation, the API and boundary checks, the release tools |
 | `docs/` | References, specs, plans and research |
-| `archive/` | Upstream class files from earlier expansions, kept for reference and never loaded |
 
 ## 4. How the core is developed
 

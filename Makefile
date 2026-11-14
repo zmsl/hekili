@@ -167,6 +167,8 @@ tools-test:
 # exit code. The begin and write lines hold no $(MAKE), so `make -n` never runs them; make stops at the first failing
 # line, so write (the stamp) runs only after both stages pass. A command-line override other than FULL (a subset or
 # another tool) or -i/-e (errors ignored, environment over the Makefile) never skips and never stamps.
+# FULL=1 also runs the Warlock 20-fight gate (make test-warlock, L633): a lane that edits it sees its red before integration
+# does; `make gate` runs every tag itself, so a plain check-full leaves it out.
 # shortcut: a failed or killed run leaves its start manifest in /tmp; harmless, write is the only reader.
 STAMP_START := $(shell mktemp -u /tmp/hekili-check-start.XXXXXX)
 STAMP_OFF := $(strip $(filter-out FULL=%,$(MAKEOVERRIDES)) $(findstring i,$(firstword -$(MAKEFLAGS))) $(findstring e,$(firstword -$(MAKEFLAGS))))
@@ -176,6 +178,7 @@ check:
 check-full:
 	@$(if $(STAMP_OFF),echo "check: command-line overrides or -i/-e; this run leaves no stamp",scripts/check_stamp.sh begin $(STAMP_START))
 	$(MAKE) -j4 -Otarget lint fmt-check typecheck test
+	$(if $(FULL),$(MAKE) test-warlock)
 	$(MAKE) syntax api-check packs-check tools-test
 	@$(if $(STAMP_OFF),:,scripts/check_stamp.sh write $(STAMP_START))
 

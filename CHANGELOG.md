@@ -9,6 +9,7 @@
 - The priority editor (Action Lists) now has Label, Label Condition, Icon and Icon Condition fields under Caption, so labels and icon overrides can be set without importing a line. The Icon field previews the texture it resolves to and says so when a path is not a texture file.
 
 ### Changed
+- Warrior: Improved Bloodrage now adds 25% a rank to the rage Bloodrage gives each second, not only to the first burst.
 - Warrior: Improved Berserker Rage now gives 5 or 10 rage, and Improved Intercept, Improved Shield Wall and Improved Disarm now shorten those cooldowns as the talents do.
 - Hunter: the Turret priorities are now the default for Beast Mastery, Marksmanship and Survival; the melee-weave priorities and Survival Melee are still there to pick by hand. A Hunter who never picked a priority moves to the Turret one; a priority you picked stays.
 - An ability that becomes affordable just after the global cooldown ends now keeps its place instead of briefly giving way to a lower one, so there are fewer brief icon flashes (for example Shifting Power for Feral).
@@ -21,6 +22,8 @@
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 
 ### Known issues
+- The Hunter Turret priorities have not been checked in the game yet.
+- Fury's forecast does not yet see the rage Reckless Swings gives per swing; the addon's live rage count does.
 
 ### Upgrade notes
 

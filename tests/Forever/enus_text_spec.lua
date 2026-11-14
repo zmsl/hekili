@@ -5,6 +5,7 @@
 local enus = require("Forever.helpers.enus_text")
 
 local PATH = "tests/Forever/fixtures/enus_text.txt"
+local MAX_DIFF = 40
 
 local function lines(s)
     local out = {}
@@ -25,11 +26,25 @@ describe("the English text a player sees", function()
         local f = assert(io.open(PATH, "rb"), "no golden: write it at the merge base (localization plan, Task 1)")
         local want = f:read("*a")
         f:close()
-        if want ~= text then -- name the first line that differs, not all of them
-            local a, b = lines(want), lines(text)
+        if want ~= text then -- every differing line (capped), not only the first
+            local a, b, diff = lines(want), lines(text), {}
             for i = 1, math.max(#a, #b) do
-                assert.are.equal(a[i], b[i], "golden line " .. i)
+                if a[i] ~= b[i] then
+                    diff[#diff + 1] = ("line %d\n  golden: %s\n  now:    %s"):format(i, tostring(a[i]), tostring(b[i]))
+                end
             end
+            local shown = {}
+            for i = 1, math.min(#diff, MAX_DIFF) do
+                shown[i] = diff[i]
+            end
+            error(
+                ("%d differing line(s)%s:\n%s"):format(
+                    #diff,
+                    #diff > MAX_DIFF and (", first %d shown"):format(MAX_DIFF) or "",
+                    table.concat(shown, "\n")
+                ),
+                0
+            )
         end
         assert.are.equal(want, text)
     end)

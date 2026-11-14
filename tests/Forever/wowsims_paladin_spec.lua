@@ -45,9 +45,13 @@ local function set(...)
     return out
 end
 
+-- Replay alias example: wowsims logs Holy Shock's damage row 25902; the kit casts it as rank 3, 20930 (DB2 20930 is a
+-- dummy the server turns into 25902 or the heal 25903).
 -- Holy Shock (wowsims.com)'s floors (new pack, 2026-11-12, R6 first measurement): replay decisions on-GCD 0.97 (0.977,
 -- 43 of 44: seal_of_righteousness -> consecration once, the recipe's header), its ON flicker ceiling 0.7 (0.67/min
--- measured, 2 flips), the live limits per level: L40 4.8 and L60 4.8 under the 6 s bar; L10 8.4, traced 2026-11-13:
+-- measured, 2 flips; traced 2026-11-13, both drop out once the log's own presses are applied (loop.flips with a press
+-- array; a replay passes none): divine_favor -> holy_strike -> divine_favor at 25.4 s and hammer_of_wrath -> holy_strike
+-- -> hammer_of_wrath at 188.2 s each show Holy Strike one tick before the log presses it, so none is a flip live), the live limits per level: L40 4.8 and L60 4.8 under the 6 s bar; L10 8.4, traced 2026-11-13:
 -- Retribution L10's shape, nothing useful to cast (t 5.0-13.2): Holy Strike cooling (10 s, no Shieldsworn yet; 8.4 s
 -- left at 5.0), Seal of Righteousness and Retribution Aura up, Judgement (off the GCD) cooling, Exorcism (level 20),
 -- Consecration and Holy Shock (talents) not reachable at 10. Re-measured after the seeded regen phase (forever
