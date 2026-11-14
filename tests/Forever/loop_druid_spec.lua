@@ -47,6 +47,25 @@ describe("the Druid loop worlds", function()
     end
 end)
 
+describe("the Feral loop world's press", function()
+    -- druid_loop_world prices the GCD kind from the ability as the engine reads it (no function branch of its own, as
+    -- druid_world has): the kit's form-dependent kind resolves through the engine's ability table (ledger L757)
+    it("prices a form-dependent GCD kind from the believed form: the totem kind in Cat Form, the spell kind else", function()
+        local C = dlw.Feral
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local got = {}
+        for _, form in ipairs({ dlw.FORM.cat_form, dlw.FORM.bear_form }) do
+            H.ctl.form = form
+            H.Fire("UPDATE_SHAPESHIFT_FORM")
+            headless.cycle(H, H.ctl.now + 0.2)
+            H.Hekili.State.reset("Primary", true)
+            got[#got + 1] = C.resolve("faerie_fire", H).gcd
+        end
+        local dw = require("Forever.helpers.druid_world")
+        assert.are.same({ dw.GCD.totem, dw.GCD.spell }, got)
+    end)
+end)
+
 describe("the Guardian loop world's press", function()
     -- review fix: the press is checked at the cost the client sees (0 under Clearcasting); the swing prices it
     it("accepts a Maul pressed under Clearcasting with rage below its cost, and takes nothing at the queue", function()
