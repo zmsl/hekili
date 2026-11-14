@@ -19,7 +19,7 @@ local KIT = {
     earth_shock = { { 8042, 8044, 8045, 8046, 10412, 10413, 10414 }, 450, 6, "spell" },
     flame_shock = { { 8050, 8052, 8053, 10447, 10448, 29228 }, 410, 6, "spell" },
     fire_nova = { { 408341, 408342, 408343, 408344, 408345 }, 375, 10, "spell" }, -- the game's (owner's tooltips, every rank; DB2 520)
-    stormstrike = { { 17364 }, 121, 6, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat)
+    stormstrike = { { 17364 }, 0.08, 6, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat)
     searing_totem = { { 3599, 6363, 6364, 6365, 10437, 10438 }, 170, 0, "totem" },
     flametongue_totem = { { 8227, 8249, 10526, 16387 }, 275, 0, "totem" },
     strength_of_earth_totem = { { 8075, 8160, 8161, 10442, 25361 }, 275, 0, "totem" },
@@ -46,12 +46,12 @@ local KIT = {
     nature_resistance_totem = { { 10595, 10600, 10601 }, 180, 0, "totem" },
     windwall_totem = { { 15107, 15111, 15112 }, 225, 0, "totem" },
     tremor_totem = { { 8143 }, 60, 0, "totem" },
-    poison_cleansing_totem = { { 8166 }, 152, 0, "totem" },
-    disease_cleansing_totem = { { 8170 }, 152, 0, "totem" },
+    poison_cleansing_totem = { { 8166 }, 0.1, 0, "totem" },
+    disease_cleansing_totem = { { 8170 }, 0.1, 0, "totem" },
     sentry_totem = { { 6495 }, 65, 0, "totem" },
-    earthbind_totem = { { 2484 }, 91, 15, "totem" },
+    earthbind_totem = { { 2484 }, 0.06, 15, "totem" },
     stoneclaw_totem = { { 5730, 6390, 6391, 6392, 10427, 10428 }, 140, 30, "totem" },
-    grounding_totem = { { 8177 }, 91, 15, "totem" },
+    grounding_totem = { { 8177 }, 0.06, 15, "totem" },
 }
 
 -- Each totem's element and its ranks' durations (DB2 duration_ms).
